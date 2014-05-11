@@ -209,23 +209,25 @@ $(HELPOUT):
 	@echo "		$(RUNMAKE) $(BASE).$(EXTENSION)"
 	@echo ""
 	@echo "	Be clear about what you want (or, for multiple or differently named input files):"
-	@echo "		$(COMPOSE) BASE=$(EXAMPLE_OUTPUT) LIST=\"$(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)\" TYPE=$(TYPE_HTML)"
+	@echo "		$(COMPOSE) LIST=\"$(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)\" BASE=$(EXAMPLE_OUTPUT) TYPE=$(TYPE_HTML)"
 	@echo ""
 	@echo "Makefile Examples:"
 	@echo ""
 	@echo "	Simple, with filename targets and automagic detection of them:"
 	@echo "		include $(COMPOSER)"
+	@echo "		.PHONY: $(BASE) $(EXAMPLE_TARGET)"
+	@echo "		$(BASE): # so \"clean\" will catch the below files"
 	@echo "		$(EXAMPLE_TARGET): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
-	@echo "		$(BASE): # so \"clean\" will catch the above files"
 	@echo "		$(EXAMPLE_SECOND).$(EXTENSION):"
 	@echo ""
 	@echo "	Advanced, with user-defined targets and manual enumeration of them:"
 	@echo "		COMPOSER_TARGETS := $(BASE) $(EXAMPLE_TARGET)"
 	@echo "		include $(COMPOSER)"
+	@echo "		.PHONY: $(BASE) $(EXAMPLE_TARGET)"
 	@echo "		$(BASE): $(BASE).$(EXTENSION)"
-	@echo "		$(EXAMPLE_TARGET):"
-	@echo "			"'$$'"(COMPOSE) BASE=$(EXAMPLE_OUTPUT) LIST=\"$(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)\" TYPE=$(TYPE_HTML)"
-	@echo "			"'$$'"(COMPOSE) BASE=$(EXAMPLE_OUTPUT) LIST=\"$(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)\" TYPE=$(TYPE_LPDF)"
+	@echo "		$(EXAMPLE_TARGET): $(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)"
+	@echo "			"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=$(EXAMPLE_OUTPUT) TYPE=$(TYPE_HTML)"
+	@echo "			"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=$(EXAMPLE_OUTPUT) TYPE=$(TYPE_LPDF)"
 	@echo "		$(EXAMPLE_TARGET)-clean:"
 	@echo "			"'$$'"(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@echo ""
@@ -295,19 +297,19 @@ $(BASE).$(EXTENSION): $(LIST)
 	$(PANDOC)
 
 %.$(TYPE_HTML): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(*).$(MARKDOWN)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
 
 %.$(SHOW_EXTN): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(*).$(MARKDOWN)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
 
 %.$(PRES_EXTN): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(*).$(MARKDOWN)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
 
 %.$(TYPE_LPDF): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(*).$(MARKDOWN)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
 
 %.$(TYPE_EPUB): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(*).$(MARKDOWN)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
 
 ################################################################################
 # End Of File
