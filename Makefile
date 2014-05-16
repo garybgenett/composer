@@ -92,7 +92,8 @@ override CSS_DST			:= $(COMPOSER_DIR)/markdown-viewer.css
 # https://github.com/hakimel/reveal.js
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DST			:= $(COMPOSER_DIR)/revealjs
-override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/default.css
+#override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/default.css
+override REVEALJS_CSS			:= $(REVEALJS_DST).css
 
 # http://www.w3.org/Talks/Tools/Slidy2/Overview.html#%283%29
 override SLIDY_FILES			:= scripts/slidy.js styles/slidy.css graphics/fold-dim.gif graphics/fold.gif graphics/nofold-dim.gif graphics/unfold-dim.gif graphics/unfold.gif

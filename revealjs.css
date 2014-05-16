@@ -1,0 +1,27 @@
+@import url("revealjs/css/theme/default.css");
+
+body {
+	background-image:	url("screenshot.png");
+	background-repeat:	no-repeat;
+	background-position:	98% 2%;
+	background-size:	auto 20%;
+}
+
+.reveal h1 {
+	font-size:	200%;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6,
+.reveal p {
+	text-align:	left;
+}
+
+.reveal ol,
+.reveal ul {
+	display:	block;
+}
