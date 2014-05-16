@@ -14,7 +14,7 @@ override MAKEFILE			:= Makefile
 override MAKEFLAGS			:=
 
 override COMPOSER_STAMP			:= .composed
-override COMPOSER_CSS			:= default.css
+override COMPOSER_CSS			:= composer.css
 override MARKDOWN			:= md
 
 ########################################
