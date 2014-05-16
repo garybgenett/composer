@@ -42,6 +42,7 @@ override HELPALL			:= help
 override UPGRADE			:= update
 override INSTALL			:= install
 override TESTOUT			:= test
+override EXAMPLE			:= template
 
 override COMPOSER_ABSPATH		:= "'$$'"(abspath "'$$'"(dir "'$$'"(lastword "'$$'"(MAKEFILE_LIST))))
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
@@ -256,6 +257,7 @@ HELP_TARGETS:
 	@$(HELPOUT1) "$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
 	@$(HELPOUT1) "$(INSTALL)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
 	@$(HELPOUT1) "$(TESTOUT)"		"Build example/test directory using all features and test/validate success"
+	@$(HELPOUT1) "$(EXAMPLE)"		"Print out example/template '$(MAKEFILE)' (helpful shortcut for creating recursive files)"
 	@echo ""
 	@echo "Helper Targets:"
 	@$(HELPOUT1) "all"			"Create all of the default output formats or configured targets"
@@ -456,6 +458,29 @@ HELP_FOOTER:
 	@$(HELPLVL1)
 
 ########################################
+
+.PHONY: $(EXAMPLE)
+$(EXAMPLE):
+	@echo "### HEADERS"
+	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
+	@echo "override COMPOSER_TEACHER := "'$$'"(abspath "'$$'"(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo ""
+	@echo "### DEFINITIONS"
+	@echo "override COMPOSER_TARGETS ?= $(COMPOSER_TARGETS)"
+	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
+	@echo "override COMPOSER_DEPENDS ?= $(COMPOSER_DEPENDS)"
+	@echo ""
+	@echo "### VARIABLES"
+	@echo "# "'$$'"(eval override DCSS ?= "'$$'"(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
+	@echo "# override NAME ?="
+	@echo "# override OPTS ?="
+	@echo ""
+	@echo "### INCLUDE"
+	@echo "include "'$$'"(COMPOSER_TEACHER)"
+	@echo ".DEFAULT_GOAL := all"
+	@echo ""
+	@echo "### MAKEFILE"
+	@echo "# (Contents of file go here.)"
 
 override TEST_DIRECTORIES := \
 	$(COMPOSER_DIR)/test_dir \
