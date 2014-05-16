@@ -56,12 +56,12 @@ override EXTENSION			:= $(TYPE)
 
 override TYPE_HTML			:= html
 override TYPE_LPDF			:= pdf
-override TYPE_SHOW			:= slidy
 override TYPE_PRES			:= revealjs
+override TYPE_SHOW			:= slidy
 override TYPE_EPUB			:= epub
 
-override SHOW_EXTN			:= $(TYPE_SHOW).$(TYPE_HTML)
 override PRES_EXTN			:= $(TYPE_PRES).$(TYPE_HTML)
+override SHOW_EXTN			:= $(TYPE_SHOW).$(TYPE_HTML)
 
 ifeq ($(TYPE),$(TYPE_HTML))
 override OUTPUT				:= html5
@@ -69,19 +69,19 @@ endif
 ifeq ($(TYPE),$(TYPE_LPDF))
 override OUTPUT				:= latex
 endif
-ifeq ($(TYPE),$(TYPE_SHOW))
-override OUTPUT				:= slidy
-override EXTENSION			:= $(SHOW_EXTN)
-endif
 ifeq ($(TYPE),$(TYPE_PRES))
 override OUTPUT				:= revealjs
 override EXTENSION			:= $(PRES_EXTN)
 endif
+ifeq ($(TYPE),$(TYPE_SHOW))
+override OUTPUT				:= slidy
+override EXTENSION			:= $(SHOW_EXTN)
+endif
 
 override HTML_DESC			:= HTML: HyperText Markup Language
 override LPDF_DESC			:= PDF: Portable Document Format
+override PRES_DESC			:= HTML/JS Presentation: Reveal.js
 override SHOW_DESC			:= HTML/JS Slideshow: W3C Slidy2
-override PRES_DESC			:= HTML/JS Slideshow: Reveal.js
 override EPUB_DESC			:= ePUB: Electronic Publication
 
 ########################################
@@ -221,8 +221,8 @@ HELP_OPTIONS:
 	@$(HELPOUT1) "[Type]"		"[Extension]"	"[Description]"
 	@$(HELPOUT1) "$(TYPE_HTML)"	"$(TYPE_HTML)"	"$(HTML_DESC)"
 	@$(HELPOUT1) "$(TYPE_LPDF)"	"$(TYPE_LPDF)"	"$(LPDF_DESC)"
-	@$(HELPOUT1) "$(TYPE_SHOW)"	"$(SHOW_EXTN)"	"$(SHOW_DESC)"
 	@$(HELPOUT1) "$(TYPE_PRES)"	"$(PRES_EXTN)"	"$(PRES_DESC)"
+	@$(HELPOUT1) "$(TYPE_SHOW)"	"$(SHOW_EXTN)"	"$(SHOW_DESC)"
 	@$(HELPOUT1) "$(TYPE_EPUB)"	"$(TYPE_EPUB)"	"$(EPUB_DESC)"
 	@echo ""
 	@echo "Any other types specified will be passed directly through to Pandoc."
@@ -333,8 +333,8 @@ else
 all: \
 	$(BASE).$(TYPE_HTML) \
 	$(BASE).$(TYPE_LPDF) \
-	$(BASE).$(SHOW_EXTN) \
 	$(BASE).$(PRES_EXTN) \
+	$(BASE).$(SHOW_EXTN) \
 	$(BASE).$(TYPE_EPUB)
 endif
 
@@ -346,8 +346,8 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 			"$(FILE)" \
 			"$(FILE).$(TYPE_HTML)" \
 			"$(FILE).$(TYPE_LPDF)" \
-			"$(FILE).$(SHOW_EXTN)" \
 			"$(FILE).$(PRES_EXTN)" \
+			"$(FILE).$(SHOW_EXTN)" \
 			"$(FILE).$(TYPE_EPUB)"
 	)
 	$(RM) $(COMPOSER_STAMP)
@@ -389,11 +389,11 @@ $(BASE).$(EXTENSION): $(LIST)
 %.$(TYPE_LPDF): %.$(MARKDOWN)
 	$(MAKEDOC) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
 
-%.$(SHOW_EXTN): %.$(MARKDOWN)
-	$(MAKEDOC) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
-
 %.$(PRES_EXTN): %.$(MARKDOWN)
 	$(MAKEDOC) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
+
+%.$(SHOW_EXTN): %.$(MARKDOWN)
+	$(MAKEDOC) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
 
 %.$(TYPE_EPUB): %.$(MARKDOWN)
 	$(MAKEDOC) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
