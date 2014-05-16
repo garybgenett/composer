@@ -30,8 +30,10 @@ override OPTS				?=
 ################################################################################
 
 override COMPOSER_TARGET		:= compose
+override COMPOSER_PANDOC		:= pandoc
 override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER_SRC)
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
+override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 override HELPOUT			:= help
 override UPGRADE			:= update
@@ -300,25 +302,29 @@ $(COMPOSER_STAMP): *.$(MARKDOWN)
 
 .PHONY: $(COMPOSER_TARGET)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
+
+.PHONY: $(COMPOSER_PANDOC)
+$(COMPOSER_PANDOC): $(LIST)
+	$(PANDOC)
 	$(TIMESTAMP) $(COMPOSER_STAMP)
 
 $(BASE).$(EXTENSION): $(LIST)
-	$(PANDOC)
+	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(^)"
 
 %.$(TYPE_HTML): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
+	$(MAKEDOC) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
 
 %.$(SHOW_EXTN): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
+	$(MAKEDOC) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
 
 %.$(PRES_EXTN): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
+	$(MAKEDOC) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
 
 %.$(TYPE_LPDF): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
+	$(MAKEDOC) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
 
 %.$(TYPE_EPUB): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
+	$(MAKEDOC) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
 
 ################################################################################
 # End Of File
