@@ -43,11 +43,15 @@ override UPGRADE			:= update
 override INSTALL			:= install
 
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
+override COMPOSER_SUBDIRS		?=
+override COMPOSER_DEPENDS		?=
 
+ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
 override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" $(COMPOSER_SRC))
 else
 override COMPOSER_TARGETS		?= $(BASE)
+endif
 endif
 
 ########################################
@@ -289,10 +293,11 @@ EXAMPLE_MAKEFILE_1:
 
 .PHONY: EXAMPLE_MAKEFILE_2
 EXAMPLE_MAKEFILE_2:
-	@echo "# Advanced, with user-defined targets and manual enumeration of them:"
-	@echo "COMPOSER_TARGETS := $(BASE) $(EXAMPLE_TARGET)"
+	@echo "# Advanced, with manual enumeration of user-defined targets and per-target variables:"
+	@echo "override COMPOSER_TARGETS ?= $(BASE) $(EXAMPLE_TARGET) $(EXAMPLE_SECOND).$(EXTENSION)"
 	@echo "# include $(COMPOSER)"
 	@echo ".PHONY: $(BASE) $(EXAMPLE_TARGET)"
+	@echo "$(BASE): export OPTS := --table-of-contents --toc-depth=1"
 	@echo "$(BASE): $(BASE).$(EXTENSION)"
 	@echo "$(EXAMPLE_TARGET): $(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)"
 	@echo "	"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
@@ -351,6 +356,11 @@ $(UPGRADE):
 ########################################
 
 .PHONY: all
+ifeq ($(COMPOSER_DEPENDS),)
+all: whoami
+else
+all: whoami subdirs
+endif
 ifneq ($(COMPOSER_TARGETS),$(BASE))
 all: \
 	$(COMPOSER_TARGETS)
@@ -361,6 +371,9 @@ all: \
 	$(BASE).$(PRES_EXTN) \
 	$(BASE).$(SHOW_EXTN) \
 	$(BASE).$(TYPE_EPUB)
+endif
+ifeq ($(COMPOSER_DEPENDS),)
+all: subdirs
 endif
 
 .PHONY: clean
@@ -377,6 +390,23 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 	)
 	$(RM) $(COMPOSER_STAMP)
 
+.PHONY: whoami
+whoami:
+	@$(HELPLVL1)
+	@$(HELPOUT2) "CURDIR:"			"[$(CURDIR)]"
+	@$(HELPOUT2) "COMPOSER_TARGETS:"	"[$(COMPOSER_TARGETS)]"
+	@$(HELPOUT2) "COMPOSER_SUBDIRS:"	"[$(COMPOSER_SUBDIRS)]"
+	@$(HELPOUT2) "COMPOSER_DEPENDS:"	"[$(COMPOSER_DEPENDS)]"
+	@$(HELPLVL2)
+	@$(HELPOUT2) "TYPE:"	"[$(TYPE)]"
+	@$(HELPOUT2) "BASE:"	"[$(BASE)]"
+	@$(HELPOUT2) "LIST:"	"[$(LIST)]"
+	@$(HELPOUT2) "CSS:"	"[$(CSS)]"
+	@$(HELPOUT2) "DCSS:"	"[$(DCSS)]"
+	@$(HELPOUT2) "NAME:"	"[$(NAME)]"
+	@$(HELPOUT2) "OPTS:"	"[$(OPTS)]"
+	@$(HELPLVL1)
+
 .PHONY: settings
 settings:
 	@$(HELPLVL2)
@@ -389,6 +419,11 @@ settings:
 	@$(HELPOUT2) "NAME:   [$(NAME)]"
 	@$(HELPOUT2) "OPTS:   [$(OPTS)]"
 	@$(HELPLVL2)
+
+.PHONY: subdirs $(COMPOSER_SUBDIRS)
+subdirs: $(COMPOSER_SUBDIRS)
+$(COMPOSER_SUBDIRS):
+	$(MAKE) --directory "$(CURDIR)/$(@)"
 
 .PHONY: print
 print: $(COMPOSER_STAMP)
