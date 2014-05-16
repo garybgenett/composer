@@ -2,8 +2,9 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 
-override COMPOSER			:= $(lastword $(MAKEFILE_LIST))
-override COMPOSER_DIR			:= $(dir $(COMPOSER))
+override COMPOSER			:= $(abspath $(lastword $(MAKEFILE_LIST)))
+override COMPOSER_SRC			:= $(abspath $(firstword $(MAKEFILE_LIST)))
+override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
 
 override MAKEFLAGS			:=
 override MARKDOWN			:= md
@@ -14,7 +15,7 @@ TYPE					?= html
 BASE					?= README
 LIST					?= $(BASE).$(MARKDOWN)
 
-DCSS					?= $(COMPOSER_DIR)default.css
+DCSS					?= $(COMPOSER_DIR)/default.css
 NAME					?=
 OPTS					?=
 
@@ -25,11 +26,11 @@ override COMPOSER_STAMP			:= .composed
 override COMPOSER_TARGET		:= compose
 override UPGRADE			:= update
 override HELPOUT			:= help
-override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER)
+override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER_SRC)
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 
-ifneq ($(firstword $(MAKEFILE_LIST)),$(COMPOSER))
-override COMPOSER_TARGETS		?= $(shell $(SED) -n "s/^([^\#.][^:]+)[:].*$$/\1/gp" $(firstword $(MAKEFILE_LIST)))
+ifneq ($(COMPOSER),$(COMPOSER_SRC))
+override COMPOSER_TARGETS		?= $(shell $(SED) -n "s/^([^\#.][^:]+)[:].*$$/\1/gp" $(COMPOSER_SRC))
 else
 override COMPOSER_TARGETS		?= $(BASE)
 endif
@@ -74,17 +75,17 @@ override EPUB_DESC			:= ePUB: Electronic Publication
 
 # https://github.com/Thiht/markdown-viewer
 override CSS_SRC			:= https://raw.githubusercontent.com/Thiht/markdown-viewer/master/chrome/skin/markdown-viewer.css
-override CSS_DST			:= $(COMPOSER_DIR)markdown-viewer.css
+override CSS_DST			:= $(COMPOSER_DIR)/markdown-viewer.css
 
 # https://github.com/hakimel/reveal.js
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
-override REVEALJS_DST			:= $(COMPOSER_DIR)revealjs
+override REVEALJS_DST			:= $(COMPOSER_DIR)/revealjs
 override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/default.css
 
 # http://www.w3.org/Talks/Tools/Slidy2/Overview.html#%283%29
 override SLIDY_FILES			:= scripts/slidy.js styles/slidy.css graphics/fold-dim.gif graphics/fold.gif graphics/nofold-dim.gif graphics/unfold-dim.gif graphics/unfold.gif
 override SLIDY_SRC			:= http://www.w3.org/Talks/Tools/Slidy2
-override SLIDY_DST			:= $(COMPOSER_DIR)slidy
+override SLIDY_DST			:= $(COMPOSER_DIR)/slidy
 override SLIDY_CSS			:= $(SLIDY_DST)/styles/slidy.css
 
 override SLIDE_LEVEL			:= 2
@@ -134,7 +135,7 @@ override SED				:= $(call REALPATH,sed) -r
 override TIMESTAMP			:= $(call REALPATH,date) --rfc-2822 >
 
 override WGET				:= $(call REALPATH,wget) --verbose --restrict-file-names=windows --server-response --timestamping
-override WGET_FILE			= $(WGET) --directory-prefix="$(dir $(1))"
+override WGET_FILE			= $(WGET) --directory-prefix="$(abspath $(dir $(1)))"
 
 ################################################################################
 
