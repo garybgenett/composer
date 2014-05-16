@@ -19,13 +19,13 @@ override MARKDOWN			:= md
 
 ########################################
 
-TYPE					?= html
-BASE					?= README
-LIST					?= $(BASE).$(MARKDOWN)
+override TYPE				?= html
+override BASE				?= README
+override LIST				?= $(BASE).$(MARKDOWN)
 
-DCSS					?= $(COMPOSER_DIR)/$(COMPOSER_CSS)
-NAME					?=
-OPTS					?=
+override DCSS				?= $(COMPOSER_DIR)/$(COMPOSER_CSS)
+override NAME				?=
+override OPTS				?=
 
 ################################################################################
 
@@ -306,19 +306,19 @@ $(BASE).$(EXTENSION): $(LIST)
 	$(PANDOC)
 
 %.$(TYPE_HTML): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
 
 %.$(SHOW_EXTN): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
 
 %.$(PRES_EXTN): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
 
 %.$(TYPE_LPDF): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
 
 %.$(TYPE_EPUB): %.$(MARKDOWN)
-	$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)" DCSS="$(DCSS)" NAME="$(NAME)" OPTS="$(OPTS)"
+	$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
 
 ################################################################################
 # End Of File
