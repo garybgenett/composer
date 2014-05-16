@@ -42,6 +42,7 @@ override HELPALL			:= help
 override UPGRADE			:= update
 override INSTALL			:= install
 
+override COMPOSER_ABSPATH		:= "'$$'"(abspath "'$$'"(dir "'$$'"(lastword "'$$'"(MAKEFILE_LIST))))
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
@@ -194,6 +195,8 @@ $(HELPALL): \
 	HELP_TARGETS \
 	HELP_COMMANDS \
 	EXAMPLE_MAKEFILES \
+	HELP_SYSTEM \
+	EXAMPLE_MAKEFILE \
 	HELP_FOOTER
 
 .PHONY: HELP_HEADER
@@ -310,6 +313,134 @@ EXAMPLE_MAKEFILE_2:
 EXAMPLE_MAKEFILES_FOOTER:
 	@echo "# Then, from the command line:"
 	@echo "make clean && make all"
+	@echo ""
+
+.PHONY: HELP_SYSTEM
+HELP_SYSTEM: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
+HELP_SYSTEM:
+	@$(HELPLVL1)
+	@echo ""
+	@echo "Completely recursive build system:"
+	@echo ""
+	@echo "# The top-level '$(MAKEFILE)' is the only one which needs a direct reference:"
+	@echo "# (NOTE: This must be an absolute path.)"
+	@echo "include $(COMPOSER)"
+	@echo ""
+	@echo "# All sub-directories then each start with:"
+	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
+	@echo "override COMPOSER_TEACHER := "'$$'"(abspath "'$$'"(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo "override COMPOSER_SUBDIRS ?="
+	@echo ".DEFAULT_GOAL := all"
+	@echo ""
+	@echo "# And end with:"
+	@echo "include "'$$'"(COMPOSER_TEACHER)"
+	@echo ""
+	@echo "# Back in the top-level '$(MAKEFILE)', and in all sub-'$(MAKEFILE)' instances which recurse further down:"
+	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
+	@echo "include [...]"
+	@echo ""
+	@echo "# Create a new '$(MAKEFILE)' using a helpful template:"
+	@echo ""'$$'"(RUNMAKE) --quiet $(EXAMPLE) >$(MAKEFILE)"
+	@echo ""
+	@echo "# Or, recursively initialize the current directory tree:"
+	@echo "# (NOTE: This is a non-destructive operation.)"
+	@echo ""'$$'"(RUNMAKE) $(INSTALL)"
+	@echo ""
+
+.PHONY: EXAMPLE_MAKEFILE
+EXAMPLE_MAKEFILE: \
+	EXAMPLE_MAKEFILE_HEADER \
+	EXAMPLE_MAKEFILE_FULL \
+
+.PHONY: EXAMPLE_MAKEFILE_HEADER
+EXAMPLE_MAKEFILE_HEADER:
+	@$(HELPLVL2)
+	@echo ""
+	@echo "Finally, a completely recursive '$(MAKEFILE)' example:"
+	@echo ""
+
+.PHONY: EXAMPLE_MAKEFILE_FULL
+EXAMPLE_MAKEFILE_FULL: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
+EXAMPLE_MAKEFILE_FULL:
+	@echo "### HEADERS"
+	@echo ""
+	@echo "# These two statements must be at the top of every file:"
+	@echo "#"
+	@echo "# (NOTE: The 'COMPOSER_TEACHER' variable can be modified for custom chaining, but with care.)"
+	@echo ""
+	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
+	@echo "override COMPOSER_TEACHER := "'$$'"(abspath "'$$'"(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo ""
+	@echo "### DEFINITIONS"
+	@echo ""
+	@echo "# These statements are also required:"
+	@echo "#  * Use '?=' declarations and define *before* the upstream 'include' statement"
+	@echo "#  * They pass their values *up* the '$(MAKEFILE)' chain"
+	@echo "#  * Should always be defined, even if empty, to prevent downward propagation of values"
+	@echo "#"
+	@echo "# (NOTE: List of 'all' targets is '$(COMPOSER_ALL_REGEX)' if 'COMPOSER_TARGETS' is empty.)"
+	@echo ""
+	@echo "override COMPOSER_TARGETS ?= $(BASE).$(EXTENSION) $(EXAMPLE_SECOND).$(EXTENSION)"
+	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
+	@echo "override COMPOSER_DEPENDS ?= $(COMPOSER_DEPENDS)"
+	@echo ""
+	@echo "### VARIABLES"
+	@echo ""
+	@echo "# The option variables are not required, but are available for locally-scoped configuration:"
+	@echo "#  * For proper inheritance, use '?=' declarations and define *before* the upstream 'include' statement"
+	@echo "#  * They pass their values *down* the '$(MAKEFILE)' chain"
+	@echo "#  * Do not need to be defined when empty, unless necessary to override upstream values"
+	@echo "#"
+	@echo "# To disable inheritance and/or insulate from environment variables:"
+	@echo "#  * Replace 'override VAR ?=' with 'override VAR :='"
+	@echo "#  * Define *after* the upstream 'include' statement"
+	@echo "#"
+	@echo "# (NOTE: Any settings here will apply to all children, unless 'override' is used downstream.)"
+	@echo ""
+	@echo "# Define the CSS template to use in this entire directory tree:"
+	@echo "#  * Absolute path names should be used, so that children will be able to find it"
+	@echo "#  * The '"'$$'"(COMPOSER_ABSPATH)' variable can be used to simplify this"
+	@echo "#  * If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
+	@echo "#  * If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
+	@echo ""
+	@echo ""'$$'"(eval override DCSS ?= "'$$'"(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
+	@echo ""
+	@echo "# All the other optional variables can also be made global in this directory scope:"
+	@echo ""
+	@echo "override NAME ?="
+	@echo "override OPTS ?= --table-of-contents --toc-depth=2"
+	@echo ""
+	@echo "### INCLUDE"
+	@echo ""
+	@echo "# Necessary include statement:"
+	@echo "#"
+	@echo "# (NOTE: This must be after all references to '"'$$'"(COMPOSER_ABSPATH)' but before '.DEFAULT_GOAL'.)"
+	@echo ""
+	@echo "include "'$$'"(COMPOSER_TEACHER)"
+	@echo ""
+	@echo "# For recursion to work, a default target needs to be defined:"
+	@echo "#  * Needs to be 'all' for directories which must recurse into sub-directories"
+	@echo "#  * The 'subdirs' target can be used manually, if desired, so this can be changed to another value"
+	@echo "#"
+	@echo "# (NOTE: Recursion will cease if not 'all', unless 'subdirs' target is called.)"
+	@echo ""
+	@echo ".DEFAULT_GOAL := all"
+	@echo ""
+	@echo "### RECURSION"
+	@echo ""
+	@echo "# Dependencies can be specified, if needed:"
+	@echo "#"
+	@echo "# (NOTE: This defines the sub-directories which must be built before '$(firstword $(COMPOSER_SUBDIRS))'.)"
+	@echo ""
+	@echo "$(firstword $(COMPOSER_SUBDIRS)): $(wordlist 2,$(words $(COMPOSER_SUBDIRS)),$(COMPOSER_SUBDIRS))"
+	@echo ""
+	@echo "# For parent/child directory dependencies, set '"'$$'"(COMPOSER_DEPENDS)' to a non-empty value."
+	@echo ""
+	@echo "### MAKEFILE"
+	@echo ""
+	@echo "# This is where the rest of the file should be defined."
+	@echo "#"
+	@echo "# In this example, '"'$$'"(COMPOSER_TARGETS)' is used completely in lieu of any explicit targets."
 	@echo ""
 
 .PHONY: HELP_FOOTER
