@@ -41,11 +41,13 @@ override HELPALL			:= help
 
 override UPGRADE			:= update
 override INSTALL			:= install
+override TESTOUT			:= test
 
 override COMPOSER_ABSPATH		:= "'$$'"(abspath "'$$'"(dir "'$$'"(lastword "'$$'"(MAKEFILE_LIST))))
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
+override COMPOSER_TESTING		?=
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
@@ -149,6 +151,7 @@ override PANDOC				:= pandoc \
 
 override PATH_LIST			:= $(subst :, ,$(PATH))
 
+override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -av
 override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -v
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 
@@ -156,6 +159,8 @@ override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) --color=auto --time-style=long-iso -asF -l
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override TIMESTAMP			:= $(call COMPOSER_FIND,$(PATH_LIST),date) --rfc-2822 >
+
+override MKDIR				= if [ ! -d "$(1)" ]; then $(call COMPOSER_FIND,$(PATH_LIST),mkdir) -v "$(1)"; fi
 
 override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --server-response --timestamping
 override WGET_FILE			= $(WGET) --directory-prefix="$(abspath $(dir $(1)))"
@@ -250,6 +255,7 @@ HELP_TARGETS:
 	@echo "Installation Targets:"
 	@$(HELPOUT1) "$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
 	@$(HELPOUT1) "$(INSTALL)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
+	@$(HELPOUT1) "$(TESTOUT)"		"Build example/test directory using all features and test/validate success"
 	@echo ""
 	@echo "Helper Targets:"
 	@$(HELPOUT1) "all"			"Create all of the default output formats or configured targets"
@@ -450,6 +456,51 @@ HELP_FOOTER:
 	@$(HELPLVL1)
 
 ########################################
+
+override TEST_DIRECTORIES := \
+	$(COMPOSER_DIR)/test_dir \
+	$(COMPOSER_DIR)/test_dir/subdir1 \
+	$(COMPOSER_DIR)/test_dir/subdir1/example1 \
+	$(COMPOSER_DIR)/test_dir/subdir2 \
+	$(COMPOSER_DIR)/test_dir/subdir2/example2
+override TEST_DIR_CSSDST := $(word 4,$(TEST_DIRECTORIES))
+override TEST_DIR_DEPEND := $(word 2,$(TEST_DIRECTORIES))
+override TEST_DIR_MAKE_1 := $(word 3,$(TEST_DIRECTORIES))
+override TEST_DIR_MAKE_2 := $(word 5,$(TEST_DIRECTORIES))
+override TEST_DIR_MAKE_F := $(word 1,$(TEST_DIRECTORIES))
+override TEST_DEPEND_SUB := example1
+override TEST_FULLMK_SUB := subdir1 subdir2
+override TEST_IMAGES_WLD := *.png
+
+.PHONY: $(TESTOUT)
+$(TESTOUT):
+	$(foreach FILE,$(TEST_DIRECTORIES),\
+		$(call MKDIR,$(FILE)) && \
+			$(CP) \
+				"$(COMPOSER_DIR)/$(BASE).$(MARKDOWN)" \
+				"$(COMPOSER_DIR)/$(EXAMPLE_SECOND).$(MARKDOWN)" \
+				"$(COMPOSER_DIR)/"$(TEST_IMAGES_WLD) \
+				"$(FILE)"
+	)
+	$(CP) "$(CSS_DST)" "$(TEST_DIR_CSSDST)/$(COMPOSER_CSS)"
+	$(RUNMAKE) --directory "$(COMPOSER_DIR)/test_dir" $(INSTALL)
+ifneq ($(COMPOSER_TESTING),0)
+	$(RUNMAKE) --quiet COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
+endif
+	$(MAKE) --directory "$(COMPOSER_DIR)/test_dir"
+ifneq ($(COMPOSER_TESTING),)
+	$(foreach FILE,$(TEST_DIRECTORIES),\
+		echo "" && \
+		echo "[$(FILE)/$(MAKEFILE)]" && \
+		echo "" && \
+		cat "$(FILE)/$(MAKEFILE)"
+	)
+endif
 
 .PHONY: $(INSTALL)
 $(INSTALL): install-dir
