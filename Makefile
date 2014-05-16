@@ -255,11 +255,11 @@ $(HELPOUT):
 .PHONY: $(UPGRADE)
 $(UPGRADE):
 	$(call WGET_FILE,$(CSS_DST)) "$(CSS_SRC)"
-	if [ ! -d "$(REVEALJS_DST)" ] ; then \
-		$(GIT) clone "$(REVEALJS_SRC)" "$(REVEALJS_DST)" ; \
-		$(MV) "$(REVEALJS_DST)/.git" "$(REVEALJS_DST).git" ; \
-	else \
-		$(GIT) --git-dir="$(realpath $(REVEALJS_DST).git)" --work-tree="$(realpath $(REVEALJS_DST))" pull ; \
+	if [ ! -d "$(REVEALJS_DST)" ]; then
+		$(GIT) clone "$(REVEALJS_SRC)" "$(REVEALJS_DST)"
+		$(MV) "$(REVEALJS_DST)/.git" "$(REVEALJS_DST).git"
+	else
+		$(GIT) --git-dir="$(REVEALJS_DST).git" --work-tree="$(REVEALJS_DST)" pull
 	fi
 	$(foreach FILE,$(SLIDY_FILES),\
 		$(call WGET_FILE,$(SLIDY_DST)/$(FILE)) "$(SLIDY_SRC)/$(FILE)"
