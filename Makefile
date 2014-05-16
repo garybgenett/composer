@@ -23,7 +23,8 @@ override TYPE				?= html
 override BASE				?= README
 override LIST				?= $(BASE).$(MARKDOWN)
 
-override DCSS				?= $(COMPOSER_DIR)/$(COMPOSER_CSS)
+override DCSS_FILE			:= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
+override DCSS				?=
 override NAME				?=
 override OPTS				?=
 
@@ -101,8 +102,10 @@ override SLIDY_CSS			:= $(SLIDY_DST)/styles/slidy.css
 
 override SLIDE_LEVEL			:= 2
 
-ifneq (,$(wildcard $(DCSS)))
+ifneq ($(wildcard $(DCSS)),)
 override CSS				:= $(DCSS)
+else ifneq ($(wildcard $(DCSS_FILE)),)
+override CSS				:= $(DCSS_FILE)
 else ifeq ($(OUTPUT),revealjs)
 override CSS				:= $(REVEALJS_CSS)
 else ifeq ($(OUTPUT),slidy)
@@ -187,7 +190,7 @@ $(HELPOUT):
 	@echo "	LIST	List of input files(s)	[$(LIST)]"
 	@echo ""
 	@echo "Optional Variables:"
-	@echo "	DCSS	Location of CSS file	[$(DCSS)]"
+	@echo "	DCSS	Location of CSS file	[$(DCSS)] (overrides '$(COMPOSER_CSS)')"
 	@echo "	NAME	Document title prefix	[$(NAME)]"
 	@echo "	OPTS	Custom Pandoc options	[$(OPTS)]"
 	@echo ""
