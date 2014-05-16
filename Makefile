@@ -6,6 +6,10 @@ override COMPOSER			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 override COMPOSER_SRC			:= $(abspath $(firstword $(MAKEFILE_LIST)))
 override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
 
+override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
+
+################################################################################
+
 override MAKEFLAGS			:=
 override MARKDOWN			:= md
 
@@ -123,18 +127,17 @@ override PANDOC				:= pandoc \
 
 ########################################
 
-# http://www.gnu.org/software/make/manual/make.html#Call-Function
-override REALPATH			= $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
+override PATH_LIST			:= $(subst :, ,$(PATH))
 
-override MV				:= $(call REALPATH,mv) -v
-override RM				:= $(call REALPATH,rm) -fv
+override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -v
+override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 
-override GIT				:= $(call REALPATH,git)
-override LS				:= $(call REALPATH,ls) --color=auto --time-style=long-iso -asF -l
-override SED				:= $(call REALPATH,sed) -r
-override TIMESTAMP			:= $(call REALPATH,date) --rfc-2822 >
+override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
+override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) --color=auto --time-style=long-iso -asF -l
+override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
+override TIMESTAMP			:= $(call COMPOSER_FIND,$(PATH_LIST),date) --rfc-2822 >
 
-override WGET				:= $(call REALPATH,wget) --verbose --restrict-file-names=windows --server-response --timestamping
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --server-response --timestamping
 override WGET_FILE			= $(WGET) --directory-prefix="$(abspath $(dir $(1)))"
 
 ################################################################################
