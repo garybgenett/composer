@@ -117,6 +117,7 @@ override PANDOC				:= pandoc \
 	\
 	--chapters \
 	--listings \
+	--normalize \
 	--smart \
 	\
 	--slide-level $(SLIDE_LEVEL) \
