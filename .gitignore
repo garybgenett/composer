@@ -1,0 +1,8 @@
+# make test
+test_dir
+
+# make update
+markdown-viewer.css
+revealjs
+revealjs.git
+slidy
