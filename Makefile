@@ -36,7 +36,8 @@ override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER_SRC)
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
-override HELPOUT			:= help
+override HELPOUT			:= usage
+override HELPALL			:= help
 override UPGRADE			:= update
 
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
@@ -158,100 +159,153 @@ override WGET_FILE			= $(WGET) --directory-prefix="$(abspath $(dir $(1)))"
 .ONESHELL:
 .POSIX:
 
-########################################
-
 .DEFAULT_GOAL := $(HELPOUT)
-.DEFAULT:
-	$(RUNMAKE) $(HELPOUT)
 
 ########################################
 
-override HELPLVL1 := printf "=%.0s" {1..40} ; echo
-override HELPLVL2 := printf "=%.0s" {1..20} ; echo
+override HELPLVL1 := printf "\#%.0s" {1..70}; echo
+override HELPLVL2 := printf "\#%.0s" {1..40}; echo
 
-override EXAMPLE_OUTPUT := Users_Guide
+override HELPOUT1 := printf "   %-10s %-25s %s\n"
+override HELPOUT2 := printf "\# %-20s %s\n"
+
 override EXAMPLE_SECOND := LICENSE
 override EXAMPLE_TARGET := manual
+override EXAMPLE_OUTPUT := Users_Guide
 
 .PHONY: $(HELPOUT)
-$(HELPOUT):
+$(HELPOUT): \
+	HELP_HEADER \
+	HELP_OPTIONS \
+	HELP_TARGETS \
+	HELP_COMMANDS \
+	HELP_FOOTER
+
+.PHONY: $(HELPALL)
+$(HELPALL): \
+	HELP_HEADER \
+	HELP_OPTIONS \
+	HELP_TARGETS \
+	HELP_COMMANDS \
+	EXAMPLE_MAKEFILES \
+	HELP_FOOTER
+
+.PHONY: HELP_HEADER
+HELP_HEADER:
 	@$(HELPLVL1)
-	@echo "Composer CMS :: Primary Makefile"
+	@echo "# Composer CMS :: Primary Makefile"
 	@$(HELPLVL1)
 	@echo ""
 	@echo "Usage:"
-	@echo "	$(RUNMAKE) [variables] <filename>.<extension>"
-	@echo "	$(COMPOSE) [variables]"
+	@$(HELPOUT1) "RUNMAKE := $(RUNMAKE)"
+	@$(HELPOUT1) "COMPOSE := $(COMPOSE)"
+	@$(HELPOUT1) ""'$$'"(RUNMAKE) [variables] <filename>.<extension>"
+	@$(HELPOUT1) ""'$$'"(COMPOSE) <variables>"
 	@echo ""
+
+.PHONY: HELP_OPTIONS
+HELP_OPTIONS:
 	@$(HELPLVL2)
 	@echo ""
 	@echo "Variables:"
-	@echo "	TYPE	Desired output format	[$(TYPE)]"
-	@echo "	BASE	Base of output file(s)	[$(BASE)]"
-	@echo "	LIST	List of input files(s)	[$(LIST)]"
+	@$(HELPOUT1) "TYPE"	"Desired output format"		"[$(TYPE)]"
+	@$(HELPOUT1) "BASE"	"Base of output file(s)"	"[$(BASE)]"
+	@$(HELPOUT1) "LIST"	"List of input files(s)"	"[$(LIST)]"
 	@echo ""
 	@echo "Optional Variables:"
-	@echo "	DCSS	Location of CSS file	[$(DCSS)] (overrides '$(COMPOSER_CSS)')"
-	@echo "	NAME	Document title prefix	[$(NAME)]"
-	@echo "	OPTS	Custom Pandoc options	[$(OPTS)]"
+	@$(HELPOUT1) "DCSS"	"Location of CSS file"		"[$(DCSS)] (overrides '$(COMPOSER_CSS)')"
+	@$(HELPOUT1) "NAME"	"Document title prefix"		"[$(NAME)]"
+	@$(HELPOUT1) "OPTS"	"Custom Pandoc options"		"[$(OPTS)]"
 	@echo ""
 	@echo "Pre-Defined Types:"
-	@echo "	[Type]		[Extension]	[Description]"
-	@echo "	$(TYPE_HTML)		$(TYPE_HTML)		$(HTML_DESC)"
-	@echo "	$(TYPE_LPDF)		$(TYPE_LPDF)		$(LPDF_DESC)"
-	@echo "	$(TYPE_SHOW)		$(SHOW_EXTN)	$(SHOW_DESC)"
-	@echo "	$(TYPE_PRES)	$(PRES_EXTN)	$(PRES_DESC)"
-	@echo "	$(TYPE_EPUB)		$(TYPE_EPUB)		$(EPUB_DESC)"
+	@$(HELPOUT1) "[Type]"		"[Extension]"	"[Description]"
+	@$(HELPOUT1) "$(TYPE_HTML)"	"$(TYPE_HTML)"	"$(HTML_DESC)"
+	@$(HELPOUT1) "$(TYPE_LPDF)"	"$(TYPE_LPDF)"	"$(LPDF_DESC)"
+	@$(HELPOUT1) "$(TYPE_SHOW)"	"$(SHOW_EXTN)"	"$(SHOW_DESC)"
+	@$(HELPOUT1) "$(TYPE_PRES)"	"$(PRES_EXTN)"	"$(PRES_DESC)"
+	@$(HELPOUT1) "$(TYPE_EPUB)"	"$(TYPE_EPUB)"	"$(EPUB_DESC)"
 	@echo ""
 	@echo "Any other types specified will be passed directly through to Pandoc."
 	@echo ""
+
+.PHONY: HELP_TARGETS
+HELP_TARGETS:
 	@$(HELPLVL2)
 	@echo ""
 	@echo "Primary Targets:"
-	@echo "	$(HELPOUT)	This help/usage output"
-	@echo "	$(UPGRADE)	Download/update all 3rd party components (need to do this at least once)"
-	@echo "	$(COMPOSER_TARGET)	Main target used to build/format documents"
+	@$(HELPOUT1) "$(HELPOUT)"		"Basic help output"
+	@$(HELPOUT1) "$(HELPALL)"		"Complete help output"
+	@$(HELPOUT1) "$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
+	@$(HELPOUT1) "$(COMPOSER_TARGET)"	"Main target used to build/format documents"
+	@$(HELPOUT1) "$(COMPOSER_PANDOC)"	"Helper target which calls Pandoc directly (for internal use only)"
 	@echo ""
 	@echo "Helper Targets:"
-	@echo "	all	Create all of the default output formats or specified targets"
-	@echo "	clean	Remove all of the default output files or specified targets"
-	@echo "	print	List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
+	@$(HELPOUT1) "all"			"Create all of the default output formats or specified targets"
+	@$(HELPOUT1) "clean"			"Remove all of the default output files or specified targets"
+	@$(HELPOUT1) "print"			"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
 	@echo ""
-	@$(HELPLVL2)
+
+.PHONY: HELP_COMMANDS
+HELP_COMMANDS:
+	@$(HELPLVL1)
 	@echo ""
 	@echo "Command Examples:"
 	@echo ""
-	@echo "	Have Composer do all the work for you:"
-	@echo "		$(RUNMAKE) $(BASE).$(EXTENSION)"
+	@echo "# Have the system do all the work:"
+	@echo ""'$$'"(RUNMAKE) $(BASE).$(EXTENSION)"
 	@echo ""
-	@echo "	Be clear about what you want (or, for multiple or differently named input files):"
-	@echo "		$(COMPOSE) LIST=\"$(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)\" BASE=$(EXAMPLE_OUTPUT) TYPE=$(TYPE_HTML)"
+	@echo "# Be clear about what is wanted (or, for multiple or differently named input files):"
+	@echo ""'$$'"(COMPOSE) LIST=\"$(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
 	@echo ""
-	@echo "Makefile Examples:"
+
+.PHONY: EXAMPLE_MAKEFILES
+EXAMPLE_MAKEFILES: \
+	EXAMPLE_MAKEFILES_HEADER \
+	EXAMPLE_MAKEFILE_1 \
+	EXAMPLE_MAKEFILE_2 \
+	EXAMPLE_MAKEFILES_FOOTER
+
+.PHONY: EXAMPLE_MAKEFILES_HEADER
+EXAMPLE_MAKEFILES_HEADER:
+	@$(HELPLVL2)
 	@echo ""
-	@echo "	Simple, with filename targets and automagic detection of them:"
-	@echo "		include $(COMPOSER)"
-	@echo "		.PHONY: $(BASE) $(EXAMPLE_TARGET)"
-	@echo "		$(BASE): # so \"clean\" will catch the below files"
-	@echo "		$(EXAMPLE_TARGET): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
-	@echo "		$(EXAMPLE_SECOND).$(EXTENSION):"
+	@echo "Calling from children '$(MAKEFILE)' files:"
 	@echo ""
-	@echo "	Advanced, with user-defined targets and manual enumeration of them:"
-	@echo "		COMPOSER_TARGETS := $(BASE) $(EXAMPLE_TARGET)"
-	@echo "		include $(COMPOSER)"
-	@echo "		.PHONY: $(BASE) $(EXAMPLE_TARGET)"
-	@echo "		$(BASE): $(BASE).$(EXTENSION)"
-	@echo "		$(EXAMPLE_TARGET): $(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)"
-	@echo "			"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=$(EXAMPLE_OUTPUT) TYPE=$(TYPE_HTML)"
-	@echo "			"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=$(EXAMPLE_OUTPUT) TYPE=$(TYPE_LPDF)"
-	@echo "		$(EXAMPLE_TARGET)-clean:"
-	@echo "			"'$$'"(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
+
+.PHONY: EXAMPLE_MAKEFILE_1
+EXAMPLE_MAKEFILE_1:
+	@echo "# Simple, with filename targets and \"automagic\" detection of them:"
+	@echo "# include $(COMPOSER)"
+	@echo ".PHONY: $(BASE) $(EXAMPLE_TARGET)"
+	@echo "$(BASE): # so \"clean\" will catch the below files"
+	@echo "$(EXAMPLE_TARGET): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
+	@echo "$(EXAMPLE_SECOND).$(EXTENSION):"
 	@echo ""
-	@echo "	Then, from the command line:"
-	@echo "		make clean && make all"
+
+.PHONY: EXAMPLE_MAKEFILE_2
+EXAMPLE_MAKEFILE_2:
+	@echo "# Advanced, with user-defined targets and manual enumeration of them:"
+	@echo "COMPOSER_TARGETS := $(BASE) $(EXAMPLE_TARGET)"
+	@echo "# include $(COMPOSER)"
+	@echo ".PHONY: $(BASE) $(EXAMPLE_TARGET)"
+	@echo "$(BASE): $(BASE).$(EXTENSION)"
+	@echo "$(EXAMPLE_TARGET): $(BASE).$(MARKDOWN) $(EXAMPLE_SECOND).$(MARKDOWN)"
+	@echo "	"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
+	@echo "	"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_LPDF)\""
+	@echo "$(EXAMPLE_TARGET)-clean:"
+	@echo "	"'$$'"(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@echo ""
+
+.PHONY: EXAMPLE_MAKEFILES_FOOTER
+EXAMPLE_MAKEFILES_FOOTER:
+	@echo "# Then, from the command line:"
+	@echo "make clean && make all"
+	@echo ""
+
+.PHONY: HELP_FOOTER
+HELP_FOOTER:
 	@$(HELPLVL1)
-	@echo "Happy Hacking!"
+	@echo "# Happy Hacking!"
 	@$(HELPLVL1)
 
 ########################################
