@@ -38,7 +38,9 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 override HELPOUT			:= usage
 override HELPALL			:= help
+
 override UPGRADE			:= update
+override INSTALL			:= install
 
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
 
@@ -240,6 +242,7 @@ HELP_TARGETS:
 	@echo ""
 	@echo "Installation Targets:"
 	@$(HELPOUT1) "$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
+	@$(HELPOUT1) "$(INSTALL)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
 	@echo ""
 	@echo "Helper Targets:"
 	@$(HELPOUT1) "all"			"Create all of the default output formats or configured targets"
@@ -311,6 +314,26 @@ HELP_FOOTER:
 	@$(HELPLVL1)
 
 ########################################
+
+.PHONY: $(INSTALL)
+$(INSTALL): install-dir
+	@$(SED) --in-place "s|^(include[ ]).+$$|\1$(COMPOSER)|g" "$(CURDIR)/$(MAKEFILE)"
+
+.PHONY: $(INSTALL)-dir
+$(INSTALL)-dir:
+	if [ -f "$(CURDIR)/$(MAKEFILE)" ]; then
+		@echo "[SKIPPING] $(CURDIR)/$(MAKEFILE)"
+	else
+		@echo "[CREATING] $(CURDIR)/$(MAKEFILE)"
+		$(RUNMAKE) --quiet \
+			COMPOSER_TARGETS="$(sort $(subst .$(MARKDOWN),.$(TYPE_HTML),$(wildcard *.$(MARKDOWN))))" \
+			COMPOSER_SUBDIRS="$(sort $(subst /,,$(wildcard */)))" \
+			COMPOSER_DEPENDS="$(COMPOSER_DEPENDS)" \
+			$(EXAMPLE) >"$(CURDIR)/$(MAKEFILE)"
+	fi
+	$(foreach FILE,$(sort $(subst /,,$(wildcard */))),\
+		$(RUNMAKE) --quiet --directory "$(CURDIR)/$(FILE)" $(INSTALL)-dir
+	)
 
 .PHONY: $(UPGRADE)
 $(UPGRADE):
