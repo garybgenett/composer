@@ -36,8 +36,10 @@ override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 override HELPOUT			:= help
 override UPGRADE			:= update
 
+override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
+
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
-override COMPOSER_TARGETS		?= $(shell $(SED) -n "s/^([^\#.][^:]+)[:].*$$/\1/gp" $(COMPOSER_SRC))
+override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" $(COMPOSER_SRC))
 else
 override COMPOSER_TARGETS		?= $(BASE)
 endif
