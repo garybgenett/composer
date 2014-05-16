@@ -10,7 +10,11 @@ override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(
 
 ################################################################################
 
+override MAKEFILE			:= Makefile
 override MAKEFLAGS			:=
+
+override COMPOSER_STAMP			:= .composed
+override COMPOSER_CSS			:= default.css
 override MARKDOWN			:= md
 
 ########################################
@@ -19,19 +23,18 @@ TYPE					?= html
 BASE					?= README
 LIST					?= $(BASE).$(MARKDOWN)
 
-DCSS					?= $(COMPOSER_DIR)/default.css
+DCSS					?= $(COMPOSER_DIR)/$(COMPOSER_CSS)
 NAME					?=
 OPTS					?=
 
 ################################################################################
 
-override COMPOSER_STAMP			:= .composed
-
 override COMPOSER_TARGET		:= compose
-override UPGRADE			:= update
-override HELPOUT			:= help
 override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER_SRC)
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
+
+override HELPOUT			:= help
+override UPGRADE			:= update
 
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
 override COMPOSER_TARGETS		?= $(shell $(SED) -n "s/^([^\#.][^:]+)[:].*$$/\1/gp" $(COMPOSER_SRC))
