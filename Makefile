@@ -352,6 +352,19 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 	)
 	$(RM) $(COMPOSER_STAMP)
 
+.PHONY: settings
+settings:
+	@$(HELPLVL2)
+	@$(HELPOUT2) "CURDIR: [$(CURDIR)]"
+	@$(HELPOUT2) "TYPE:   [$(TYPE)]"
+	@$(HELPOUT2) "BASE:   [$(BASE)]"
+	@$(HELPOUT2) "LIST:   [$(LIST)]"
+	@$(HELPOUT2) "CSS:    [$(CSS)]"
+	@$(HELPOUT2) "DCSS:   [$(DCSS)]"
+	@$(HELPOUT2) "NAME:   [$(NAME)]"
+	@$(HELPOUT2) "OPTS:   [$(OPTS)]"
+	@$(HELPLVL2)
+
 .PHONY: print
 print: $(COMPOSER_STAMP)
 $(COMPOSER_STAMP): *.$(MARKDOWN)
@@ -363,7 +376,7 @@ $(COMPOSER_STAMP): *.$(MARKDOWN)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(LIST)
+$(COMPOSER_PANDOC): settings $(LIST)
 	$(PANDOC)
 	$(TIMESTAMP) $(COMPOSER_STAMP)
 
