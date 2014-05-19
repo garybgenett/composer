@@ -19,6 +19,7 @@ body {
 .reveal h6,
 .reveal p {
 	text-align:	left;
+	text-transform:	none;
 }
 
 .reveal ol,
