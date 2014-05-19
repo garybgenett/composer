@@ -348,7 +348,7 @@ HELP_SYSTEM:
 	@echo "include [...]"
 	@echo ""
 	@echo "# Create a new '$(MAKEFILE)' using a helpful template:"
-	@echo ""'$$'"(RUNMAKE) --quiet $(EXAMPLE) >$(MAKEFILE)"
+	@echo ""'$$'"(RUNMAKE) --quiet COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
 	@echo ""
 	@echo "# Or, recursively initialize the current directory tree:"
 	@echo "# (NOTE: This is a non-destructive operation.)"
