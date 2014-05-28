@@ -68,6 +68,7 @@ override TYPE_HTML			:= html
 override TYPE_LPDF			:= pdf
 override TYPE_PRES			:= revealjs
 override TYPE_SHOW			:= slidy
+override TYPE_DOCX			:= docx
 override TYPE_EPUB			:= epub
 
 override PRES_EXTN			:= $(TYPE_PRES).$(TYPE_HTML)
@@ -92,6 +93,7 @@ override HTML_DESC			:= HTML: HyperText Markup Language
 override LPDF_DESC			:= PDF: Portable Document Format
 override PRES_DESC			:= HTML/JS Presentation: Reveal.js
 override SHOW_DESC			:= HTML/JS Slideshow: W3C Slidy2
+override DOCX_DESC			:= DocX: Microsoft Office Open XML
 override EPUB_DESC			:= ePUB: Electronic Publication
 
 ########################################
@@ -238,6 +240,7 @@ HELP_OPTIONS:
 	@$(HELPOUT1) "$(TYPE_LPDF)"	"$(TYPE_LPDF)"	"$(LPDF_DESC)"
 	@$(HELPOUT1) "$(TYPE_PRES)"	"$(PRES_EXTN)"	"$(PRES_DESC)"
 	@$(HELPOUT1) "$(TYPE_SHOW)"	"$(SHOW_EXTN)"	"$(SHOW_DESC)"
+	@$(HELPOUT1) "$(TYPE_DOCX)"	"$(TYPE_DOCX)"	"$(DOCX_DESC)"
 	@$(HELPOUT1) "$(TYPE_EPUB)"	"$(TYPE_EPUB)"	"$(EPUB_DESC)"
 	@echo ""
 	@echo "Any other types specified will be passed directly through to Pandoc."
@@ -577,6 +580,7 @@ all: \
 	$(BASE).$(TYPE_LPDF) \
 	$(BASE).$(PRES_EXTN) \
 	$(BASE).$(SHOW_EXTN) \
+	$(BASE).$(TYPE_DOCX) \
 	$(BASE).$(TYPE_EPUB)
 endif
 ifeq ($(COMPOSER_DEPENDS),)
@@ -593,6 +597,7 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 			"$(FILE).$(TYPE_LPDF)" \
 			"$(FILE).$(PRES_EXTN)" \
 			"$(FILE).$(SHOW_EXTN)" \
+			"$(FILE).$(TYPE_DOCX)" \
 			"$(FILE).$(TYPE_EPUB)"
 	)
 	$(RM) $(COMPOSER_STAMP)
@@ -661,6 +666,9 @@ $(BASE).$(EXTENSION): $(LIST)
 
 %.$(SHOW_EXTN): %.$(MARKDOWN)
 	$(MAKEDOC) TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
+
+%.$(TYPE_DOCX): %.$(MARKDOWN)
+	$(MAKEDOC) TYPE="$(TYPE_DOCX)" BASE="$(*)" LIST="$(^)"
 
 %.$(TYPE_EPUB): %.$(MARKDOWN)
 	$(MAKEDOC) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"

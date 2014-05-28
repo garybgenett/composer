@@ -123,6 +123,7 @@ following were absolute necessities:
   * HTML
   * PDF
   * Presentation / Slideshow
+  * DocX (completely negotiable, but valuable)
   * ePUB (somewhat negotiable, but highly desired)
 
 A thorough review and test of the large number of available input
