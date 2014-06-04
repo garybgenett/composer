@@ -26,3 +26,9 @@ body {
 .reveal ul {
 	display:	block;
 }
+
+.reveal figure {
+	/* percent does not seem to work here */
+	/* optimized for 1024x768 fullscreen */
+	height:		18em;
+}
