@@ -134,7 +134,7 @@ a number of reasons:
   * [Markdown] is an increasingly universal/portable and popular
     plain-text format.
   * Required formats worked "out of the box", and intermediary formats
-    like [LaTeX] were almost completely abstrated.
+    like [LaTeX] were almost completely abstracted.
   * Did not require any expertise with output or intermediary formats to
     accomplish advanced results/output.
   * Supported a large number of input and output formats, and was
