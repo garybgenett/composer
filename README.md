@@ -176,6 +176,13 @@ GNU Make 3.82
 Built for x86_64-pc-linux-gnu
 ```
 
+Output of `pandoc --version` on development system:
+
+```
+pandoc 1.12.3.3
+Compiled with texmath 0.6.6, highlighting-kate 0.5.6.1.
+```
+
 If you discover issues, please contact the author directly, with advance
 thanks.  It is highly desirable for [Composer] to be as "run anywhere"
 as possible.
