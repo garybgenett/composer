@@ -18,7 +18,7 @@
   <p class="author">
 Gary B. Genett
   </p>
-  <p class="date">v1.3 (2014-06-03)</p>
+  <p class="date">v1.4 (2014-06-12)</p>
 </div>
 <div id="composer-cms" class="slide section level2">
 <h1>Composer CMS</h1>
@@ -99,7 +99,7 @@ Gary B. Genett
 <p>A thorough review and test of the large number of available input formats and formatting engines resulted in a very short list of projects which could support the above requirements. <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> was selected for a number of reasons:</p>
 <ul>
 <li><a href="http://daringfireball.net/projects/markdown">Markdown</a> is an increasingly universal/portable and popular plain-text format.</li>
-<li>Required formats worked “out of the box”, and intermediary formats like <a href="http://www.tug.org">LaTeX</a> were almost completely abstrated.</li>
+<li>Required formats worked “out of the box”, and intermediary formats like <a href="http://www.tug.org">LaTeX</a> were almost completely abstracted.</li>
 <li>Did not require any expertise with output or intermediary formats to accomplish advanced results/output.</li>
 <li>Supported a large number of input and output formats, and was designed very intelligently to allow translation from any supported input format to any supported output format.</li>
 <li>Internally, normalizes documents into a single data structure which can be manipulated or modified.</li>
@@ -115,6 +115,9 @@ Gary B. Genett
 <p>Output of <code>make --version</code> on development system:</p>
 <pre><code>GNU Make 3.82
 Built for x86_64-pc-linux-gnu</code></pre>
+<p>Output of <code>pandoc --version</code> on development system:</p>
+<pre><code>pandoc 1.12.3.3
+Compiled with texmath 0.6.6, highlighting-kate 0.5.6.1.</code></pre>
 <p>If you discover issues, please contact the author directly, with advance thanks. It is highly desirable for <a href="#composer-cms">Composer</a> to be as “run anywhere” as possible.</p>
 <p>Running the commands in the <a href="#quick-start">Quick Start</a> section will help you validate whether your system will work as expected. In particular, the <code>make test</code> command validates the proper functioning of all the supported features and uses of <a href="#composer-cms">Composer</a>.</p>
 <!-- ########################### -->
