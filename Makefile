@@ -6,7 +6,9 @@
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
 
 #TODO
-# add vim/less and needed files to bindir
+# vim/less
+#	add to check target
+#	add binaries and needed files to bindir
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
 # enable https certificates for wget/git?
@@ -419,11 +421,6 @@ override LIB_ICNV_TAR_DST		:= $(COMPOSER_BUILD)/libs/libiconv-$(LIB_ICNV_VERSION
 override LIB_GTXT_VERSION		:= 0.19.3
 override LIB_GTXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
 override LIB_GTXT_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
-# https://www.gnu.org/software/ncurses (license: custom = as-is)
-# https://www.gnu.org/software/ncurses
-override LIB_NCRS_VERSION		:= 5.9
-override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
-override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/ncurses-$(LIB_NCRS_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override LIB_OSSL_VERSION		:= 1.0.1j
@@ -444,6 +441,16 @@ override LIB_FTYP_TAR_DST		:= $(COMPOSER_BUILD)/libs/freetype-$(LIB_FTYP_VERSION
 override LIB_FCFG_VERSION		:= 2.11.1
 override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
 override LIB_FCFG_TAR_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSION)
+# https://www.gnu.org/software/ncurses (license: custom = as-is)
+# https://www.gnu.org/software/ncurses
+override LIB_NCRS_VERSION		:= 5.9
+override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
+override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/ncurses-$(LIB_NCRS_VERSION)
+# http://www.pcre.org (license: BSD)
+# http://www.pcre.org
+override LIB_PCRE_VERSION		:= 8.36
+override LIB_PCRE_TAR_SRC		:= ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-$(LIB_PCRE_VERSION).tar.gz
+override LIB_PCRE_TAR_DST		:= $(COMPOSER_BUILD)/libs/pcre-$(LIB_PCRE_VERSION)
 
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
@@ -1251,11 +1258,12 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-pcre$(_D)"		"Build/compile of PCRE from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
@@ -2104,11 +2112,12 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
-$(STRAPIT)-libs: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+$(STRAPIT)-libs: $(STRAPIT)-libs-ncurses
+$(STRAPIT)-libs: $(STRAPIT)-libs-pcre
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
@@ -2198,19 +2207,6 @@ $(STRAPIT)-libs-libiconv2:
 	$(call LIBICONV_FETCH)
 	$(call LIBICONV_BUILD)
 
-.PHONY: $(STRAPIT)-libs-ncurses
-$(STRAPIT)-libs-ncurses:
-	$(call CURL_FILE,$(LIB_NCRS_TAR_SRC))
-	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
-ifneq ($(BUILD_MUSL),)
-	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-shared \
-		--enable-static \
-	)
-else
-	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
-endif
-
 .PHONY: $(STRAPIT)-libs-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
@@ -2299,6 +2295,35 @@ else ifneq ($(BUILD_MSYS),)
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-ncurses
+$(STRAPIT)-libs-ncurses:
+	$(call CURL_FILE,$(LIB_NCRS_TAR_SRC))
+	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else ifneq ($(BUILD_MSYS),)
+	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-pcre
+$(STRAPIT)-libs-pcre:
+	$(call CURL_FILE,$(LIB_PCRE_TAR_SRC))
+	$(call UNTAR,$(LIB_PCRE_TAR_DST),$(LIB_PCRE_TAR_SRC))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_PCRE_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_PCRE_TAR_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(FETCHIT)-make
@@ -2694,6 +2719,13 @@ endif
 #>			-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VERSION_LIB)|g" \
 #>			"$(FILE)"
 #>	)
+
+#WORK
+# https://ghc.haskell.org/trac/ghc/wiki/Building/Architecture
+# https://ghc.haskell.org/trac/ghc/wiki/Building/Modifying
+# https://ghc.haskell.org/trac/ghc/wiki/Building/Shake
+# https://ghc.haskell.org/trac/ghc/wiki/CrossCompilation
+#WORK
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
