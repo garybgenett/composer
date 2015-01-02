@@ -3,6 +3,8 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 
+#TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
+
 #TODO
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
@@ -398,6 +400,11 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 override LIB_ZLIB_VERSION		:= 1.2.8
 override LIB_ZLIB_BIN_SRC		:= http://www.zlib.net/zlib-$(LIB_ZLIB_VERSION).tar.xz
 override LIB_ZLIB_BIN_DST		:= $(COMPOSER_BUILD)/libs/zlib-$(LIB_ZLIB_VERSION)
+# https://gmplib.org (license: GPL, LGPL)
+# https://gmplib.org
+override LIB_LGMP_VERSION		:= 6.0.0a
+override LIB_LGMP_BIN_SRC		:= https://gmplib.org/download/gmp/gmp-$(LIB_LGMP_VERSION).tar.xz
+override LIB_LGMP_BIN_DST		:= $(COMPOSER_BUILD)/libs/gmp-$(subst a,,$(LIB_LGMP_VERSION))
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
 # https://www.gnu.org/software/libiconv
 override LIB_ICNV_VERSION		:= 1.14
@@ -1215,6 +1222,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
@@ -2041,6 +2049,7 @@ $(STRAPIT)-msys-dll:
 
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
+$(STRAPIT)-libs: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
@@ -2059,6 +2068,23 @@ ifneq ($(BUILD_MUSL),)
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-gmp
+$(STRAPIT)-libs-gmp:
+	$(call CURL_FILE,$(LIB_LGMP_BIN_SRC))
+	$(call UNTAR,$(LIB_LGMP_BIN_DST),$(LIB_LGMP_BIN_SRC))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_BIN_DST),$(COMPOSER_ABODE),\
+		ABI=32 \
+		,\
+		--host=$(CHOST) \
+		--disable-assembly \
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_BIN_DST),$(COMPOSER_ABODE))
 endif
 
 override define LIBICONV_PULL =
@@ -2191,10 +2217,13 @@ else ifneq ($(BUILD_MSYS),)
 	echo WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
 		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include:$(COMPOSER_ABODE)/include/freetype2" \
+		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
 		EXPAT_CFLAGS="$(CFLAGS)" \
-		EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include\" -lexpat" \
+		EXPAT_LIBS="-lexpat -liconv -lintl" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
 		FREETYPE_LIBS="-lfreetype" \
+		CFLAGS="$(CFLAGS) -L\"$(COMPOSER_ABODE)/lib\"" \
+		LDFLAGS="$(LDFLAGS) -L\"$(COMPOSER_ABODE)/lib\"" \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE))
