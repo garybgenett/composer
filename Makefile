@@ -3313,7 +3313,7 @@ $(FETCHIT)-haskell-packages:
 #	then by: https://github.com/irungentoo/toxcore/pull/94
 $(FETCHIT)-haskell-prep:
 ifeq ($(BUILD_PLAT),Msys)
-	$(ECHO) "WORK\n"
+	$(ECHO) "WORKING\n"
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 #	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
 	$(SED) -i \
