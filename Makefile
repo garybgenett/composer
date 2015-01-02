@@ -328,8 +328,7 @@ override BUILD_MSYS			:=
 override BUILD_PLAT			:= Linux
 override BUILD_ARCH			:= i686
 override CHOST				:= $(BUILD_ARCH)-pc-linux-gnu
-endif
-ifeq ($(BUILD_PLAT),Msys)
+else ifeq ($(BUILD_PLAT),Msys)
 override BUILD_MUSL			:=
 override BUILD_MSYS			:= 32
 override BUILD_PLAT			:= Msys
@@ -2124,7 +2123,7 @@ $(STRAPIT)-libs-openssl:
 	$(call UNTAR,$(LIB_OSSL_BIN_DST),$(LIB_OSSL_BIN_SRC))
 ifneq ($(BUILD_MUSL),)
 	$(CP) "$(LIB_OSSL_BIN_DST)/Configure" "$(LIB_OSSL_BIN_DST)/configure"
-else
+else ifeq ($(BUILD_MSYS),)
 	$(CP) "$(LIB_OSSL_BIN_DST)/config" "$(LIB_OSSL_BIN_DST)/configure"
 endif
 	$(SED) -i \
@@ -2142,6 +2141,10 @@ ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE),,\
 		linux-generic32 \
 		no-shared \
+	)
+else ifneq ($(BUILD_MSYS),)
+	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE),,\
+		linux-generic$(BUILD_MSYS) \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE))
@@ -2343,7 +2346,7 @@ $(STRAPIT)-git-pull:
 $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
 
-#WORK
+#WORK : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
 
 .PHONY: $(STRAPIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
