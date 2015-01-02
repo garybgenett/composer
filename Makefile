@@ -4,10 +4,11 @@
 ################################################################################
 
 #WORKING
+# _ add coreutils, sed, etc. until all referenced programs are included (rename WINDOWS_BINARY_LIST and make the default) (goal is composer should function as a chroot)
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
-# _ template inherit & archive target
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
+# _ template inherit & archive target
 #WORKING
 
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
@@ -335,7 +336,8 @@ override CC				?=
 override CHOST				:=
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
-override LD_LIBRARY_PATH		:= $(COMPOSER_ABODE)/lib:$(LD_LIBRARY_PATH)
+#WORK : will need this to implement "chroot" composer
+#override LD_LIBRARY_PATH		?= $(COMPOSER_ABODE)/lib:$(LD_LIBRARY_PATH)
 
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_PLAT),Linux)
@@ -397,6 +399,11 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 override LIB_PERL_VERSION		:= 5.20.1
 override LIB_PERL_TAR_SRC		:= http://www.cpan.org/src/5.0/perl-$(LIB_PERL_VERSION).tar.gz
 override LIB_PERL_TAR_DST		:= $(BUILD_STRAP)/perl-$(LIB_PERL_VERSION)
+# http://www.bzip.org (license: custom = BSD)
+# http://www.bzip.org
+override LIB_BZIP_VERSION		:= 1.0.6
+override LIB_BZIP_TAR_SRC		:= http://www.bzip.org/$(LIB_BZIP_VERSION)/bzip2-$(LIB_BZIP_VERSION).tar.gz
+override LIB_BZIP_TAR_DST		:= $(BUILD_STRAP)/bzip2-$(LIB_BZIP_VERSION)
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
 override LIB_ZLIB_VERSION		:= 1.2.8
@@ -422,11 +429,6 @@ override LIB_GTXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(LIB_GTXT_VERSION)
 override LIB_NCRS_VERSION		:= 5.9
 override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
 override LIB_NCRS_TAR_DST		:= $(BUILD_STRAP)/ncurses-$(LIB_NCRS_VERSION)
-# http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html (license: GPL)
-# http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html
-override LIB_RDLN_VERSION		:= 6.3
-override LIB_RDLN_TAR_SRC		:= ftp://ftp.cwru.edu/pub/bash/readline-$(LIB_RDLN_VERSION).tar.gz
-override LIB_RDLN_TAR_DST		:= $(BUILD_STRAP)/readline-$(LIB_RDLN_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override LIB_OSSL_VERSION		:= 1.0.1j
@@ -472,7 +474,7 @@ override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= 4.0
+override MAKE_CMT			:= 4.1
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -658,6 +660,8 @@ override BUILD_BINARY_LIST		:= \
 # second group is for mintty
 override WINDOWS_BINARY_LIST		:= \
 	cat \
+	chmod \
+	chown \
 	cp \
 	date \
 	echo \
@@ -899,9 +903,18 @@ override define DO_TEXTFILE		=
 		"$(1)"
 endef
 
-override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
+ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
+override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
+else ifneq ($(wildcard $(COMPOSER_PROGS)/ca-bundle.crt),)
+override CURL_CA_BUNDLE			?= $(COMPOSER_PROGS)/ca-bundle.crt
+else
+override CURL_CA_BUNDLE			?=
+endif
+
 override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
+override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
 override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../../pandoc/data))
+override PANDOC_DATA_BUILD		:=
 
 ifeq ($(TEXMFDIST),)
 ifneq ($(TEXMFDIST_BUILD),)
@@ -912,7 +925,6 @@ override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
 
 ifneq ($(PANDOC_DATA),)
 override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
-override PANDOC_DATA_BUILD		:=
 #TODO : some better way to do this?
 ifeq ($(BUILD_PLAT),Linux)
 override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/data
@@ -934,6 +946,7 @@ override BUILD_ENV			:= \
 	USER="$(USER)" \
 	HOME="$(COMPOSER_ABODE)" \
 	PATH="$(BUILD_PATH)" \
+	CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" \
 	TEXMFDIST="$(TEXMFDIST)" \
 	TEXMFVAR="$(TEXMFVAR)"
 ifeq ($(BUILD_PLAT),Msys)
@@ -1291,8 +1304,10 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "$(_C)LANG$(_D)"			"Locale default language"	"[$(_M)$(LANG)$(_D)] $(_N)(NOTE: use UTF-8)"
 	@$(HELPOUT1) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
 	@$(HELPOUT1) "$(_C)CC$(_D)"			"C compiler"			"[$(_M)$(CC)$(_D)]"
-	@$(HELPOUT1) "$(_C)LD_LIBRARY_PATH$(_D)"	"Linker library directories"	"[$(_M)$(LD_LIBRARY_PATH)$(_D)]"
+#WORK : will need this to implement "chroot" composer
+#	@$(HELPOUT1) "$(_C)LD_LIBRARY_PATH$(_D)"	"Linker library directories"	"[$(_M)$(LD_LIBRARY_PATH)$(_D)]"
 	@$(HELPOUT1) "$(_C)PATH$(_D)"			"Run-time binary directories"	"[$(_M)$(BUILD_PATH)$(_D)]"
+	@$(HELPOUT1) "$(_C)CURL_CA_BUNDLE$(_D)"		"SSL certificate bundle"	"[$(_M)$(CURL_CA_BUNDLE)$(_D)]"
 	@echo
 	@$(HELPER) "All of these can be set on the command line or in the environment."
 	@echo
@@ -1362,13 +1377,13 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-perl$(_D)"		"Build/compile of Perl from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-readline$(_D)"		"Build/compile of Readline from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
@@ -1870,6 +1885,7 @@ $(BUILDIT)-bindir:
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)"* "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
+	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 ifeq ($(BUILD_PLAT),Linux)
@@ -1897,12 +1913,13 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
-	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
-		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
-		sort --unique | \
-		while read FILE; do \
-			$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"; \
-		done
+#WORKING : should only need the two msys-*.dll files
+#	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
+#		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
+#		sort --unique | \
+#		while read FILE; do \
+#			$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"; \
+#		done
 	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
 endif
 
@@ -2246,17 +2263,18 @@ $(STRAPIT)-msys-pkg:
 .PHONY: $(STRAPIT)-msys-dll
 $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
+#WORKING : should only need the two msys-*.dll files
+#	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs: $(STRAPIT)-libs-perl
+$(STRAPIT)-libs: $(STRAPIT)-libs-bzip
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs: $(STRAPIT)-libs-ncurses
-$(STRAPIT)-libs: $(STRAPIT)-libs-readline
 $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
@@ -2266,8 +2284,14 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-perl:
 	$(call CURL_FILE,$(LIB_PERL_TAR_SRC))
 	$(call UNTAR,$(LIB_PERL_TAR_DST),$(LIB_PERL_TAR_SRC))
-	$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"
-	$(call AUTOTOOLS_BUILD,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+#WORKING
+#	$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"
+#	$(call AUTOTOOLS_BUILD,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+	cd "$(LIB_PERL_TAR_DST)" && \
+		$(BUILD_ENV) ./configure.gnu --prefix="$(COMPOSER_ABODE)" && \
+		$(BUILD_ENV) $(MAKE) && \
+		$(BUILD_ENV) $(MAKE) install
+#WORKING
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call CURL_FILE,$(word 2,$(subst |, ,$(FILE)))); \
 		$(call UNTAR,$(LIB_PERL_TAR_DST)/$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
@@ -2275,6 +2299,16 @@ $(STRAPIT)-libs-perl:
 			$(BUILD_ENV) perl Makefile.PL && \
 			$(BUILD_ENV) $(MAKE) && \
 			$(BUILD_ENV) $(MAKE) install; \
+	)
+
+.PHONY: $(STRAPIT)-libs-bzip
+$(STRAPIT)-libs-bzip:
+	$(call CURL_FILE,$(LIB_BZIP_TAR_SRC))
+	$(call UNTAR,$(LIB_BZIP_TAR_DST),$(LIB_BZIP_TAR_SRC))
+	echo >"$(LIB_BZIP_TAR_DST)/configure"
+	chmod 755 "$(LIB_BZIP_TAR_DST)/configure"
+	$(call AUTOTOOLS_BUILD,$(LIB_BZIP_TAR_DST),$(COMPOSER_ABODE),\
+		PREFIX="$(COMPOSER_ABODE)" \
 	)
 
 .PHONY: $(STRAPIT)-libs-zlib
@@ -2335,18 +2369,10 @@ $(STRAPIT)-libs-ncurses:
 	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
 	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
 	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
+#WORKING : not building with wide characters on msys
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-shared \
-		--enable-static \
-	)
-
-.PHONY: $(STRAPIT)-libs-readline
-$(STRAPIT)-libs-readline:
-	$(call CURL_FILE,$(LIB_RDLN_TAR_SRC))
-	$(call UNTAR,$(LIB_RDLN_TAR_DST),$(LIB_RDLN_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-shared \
-		--enable-static \
+		--enable-widec \
+		--without-shared \
 	)
 
 .PHONY: $(STRAPIT)-libs-openssl
@@ -2417,14 +2443,12 @@ $(STRAPIT)-libs-freetype:
 	)
 
 .PHONY: $(STRAPIT)-libs-fontconfig
-# thanks for the 'freetype' fix below: https://www.ffmpeg.org/pipermail/ffmpeg-user/2012-September/009469.html
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_TAR_SRC))
 	$(call UNTAR,$(LIB_FCFG_TAR_DST),$(LIB_FCFG_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
-		FREETYPE_CFLAGS="$(CFLAGS)" \
+		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_LIBS="-lfreetype" \
 		,\
 		--enable-iconv \
@@ -2448,13 +2472,19 @@ $(FETCHIT)-bash-pull:
 
 .PHONY: $(FETCHIT)-bash-prep
 $(FETCHIT)-bash-prep:
+	$(SED) -i \
+		-e "s|[-]lcurses|-lncurses|g" \
+		"$(BASH_TAR_DST)/configure"
 
 .PHONY: $(BUILDIT)-bash
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
+# thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/development/chapter05/bash.html
 $(BUILDIT)-bash:
 	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
 		bash_cv_func_sigsetjmp="missing" \
+		,\
+		--without-bash-malloc \
 	)
 
 .PHONY: $(FETCHIT)-less
@@ -2487,7 +2517,9 @@ $(FETCHIT)-vim-prep:
 
 .PHONY: $(BUILDIT)-vim
 $(BUILDIT)-vim:
-	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-acl \
+	)
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
@@ -2518,8 +2550,15 @@ $(FETCHIT)-infozip: $(FETCHIT)-infozip-prep
 $(FETCHIT)-infozip-pull:
 	$(call CURL_FILE,$(IZIP_TAR_SRC))
 	$(call CURL_FILE,$(UZIP_TAR_SRC))
+	$(call CURL_FILE,$(LIB_BZIP_TAR_SRC))
 	$(call UNTAR,$(IZIP_TAR_DST),$(IZIP_TAR_SRC))
 	$(call UNTAR,$(UZIP_TAR_DST),$(UZIP_TAR_SRC))
+	$(call UNTAR,$(LIB_BZIP_TAR_DST),$(LIB_BZIP_TAR_SRC))
+	$(MKDIR) \
+		"$(IZIP_TAR_DST)/bzip2" \
+		"$(UZIP_TAR_DST)/bzip2"
+	$(CP) "$(LIB_BZIP_TAR_DST)/"* "$(IZIP_TAR_DST)/bzip2/"
+	$(CP) "$(LIB_BZIP_TAR_DST)/"* "$(UZIP_TAR_DST)/bzip2/"
 
 .PHONY: $(FETCHIT)-infozip-prep
 $(FETCHIT)-infozip-prep:
@@ -2556,21 +2595,30 @@ $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
 .PHONY: $(STRAPIT)-curl-prep
+# thanks for the 'CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
+#	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(STRAPIT)-curl-prep:
-	cd "$(CURL_TAR_DST)" && \
-		$(BUILD_ENV) $(MAKE) ca-bundle
+	$(SED) -i \
+		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
+		"$(CURL_TAR_DST)/configure"
 
 .PHONY: $(FETCHIT)-curl-prep
+# thanks for the 'CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
+#	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) autoreconf --force --install
-	cd "$(CURL_DST)" && \
-		$(BUILD_ENV) $(MAKE) ca-bundle
+	$(SED) -i \
+		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
+		"$(CURL_DST)/configure"
 
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
+	cd "$(CURL_TAR_DST)" && \
+		$(BUILD_ENV) $(MAKE) ca-bundle && \
+		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
-		--with-ca-bundle="$(CURL_TAR_DST)/lib/ca-bundle.crt" \
+		--with-ca-bundle="./ca-bundle.crt" \
 		--without-libidn \
 		--disable-shared \
 		--enable-static \
@@ -2578,8 +2626,11 @@ $(STRAPIT)-curl-build:
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
+	cd "$(CURL_DST)" && \
+		$(BUILD_ENV) $(MAKE) ca-bundle && \
+		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
-		--with-ca-bundle="$(CURL_DST)/lib/ca-bundle.crt" \
+		--with-ca-bundle="./ca-bundle.crt" \
 		--without-libidn \
 		--disable-shared \
 		--enable-static \
@@ -2611,10 +2662,10 @@ $(STRAPIT)-git-prep:
 	cd "$(GIT_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) configure
 	$(SED) -i \
-		-e "s|([-]lcurl)(.[^-])|\1 -lrt -lz -lssl -lcrypto\2|g" \
+		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
 		"$(GIT_TAR_DST)/configure"
 	$(SED) -i \
-		-e "s|([-]lcurl)$$|\1 -lrt -lz -lssl -lcrypto|g" \
+		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
 		"$(GIT_TAR_DST)/Makefile"
 
 .PHONY: $(FETCHIT)-git-prep
@@ -2625,10 +2676,10 @@ $(FETCHIT)-git-prep:
 	cd "$(GIT_DST)" && \
 		$(BUILD_ENV) $(MAKE) configure
 	$(SED) -i \
-		-e "s|([-]lcurl)(.[^-])|\1 -lrt -lz -lssl -lcrypto\2|g" \
+		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
 		"$(GIT_TAR_DST)/configure"
 	$(SED) -i \
-		-e "s|([-]lcurl)$$|\1 -lrt -lz -lssl -lcrypto|g" \
+		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
 		"$(GIT_TAR_DST)/Makefile"
 
 .PHONY: $(STRAPIT)-git-build
@@ -2659,11 +2710,10 @@ ifeq ($(BUILD_PLAT),Msys)
 endif
 
 .PHONY: $(FETCHIT)-tex-prep
-#WORK http://tex.aanhet.net/mingtex
-#WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
-#WORK https://duckduckgo.com/?q=texlive+mingw+patch+hbf2gf+2014
 $(FETCHIT)-tex-prep:
-	echo WORK
+	$(SED) -i \
+		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz -lpng\1|g" \
+		"$(TEX_TAR_DST)/texk/web2c/configure"
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(CP) \
 #		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
@@ -2681,28 +2731,25 @@ $(FETCHIT)-tex-prep:
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
-ifeq ($(BUILD_PLAT),Msys)
-	echo WORK
-	cd "$(TEX_TAR_DST)" && \
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
-			--disable-multiplatform \
-			--without-ln-s \
-			--without-x
-else
-	echo WORK
-#			--enable-cxx-runtime-hack \
-#
-	cd "$(TEX_TAR_DST)" && \
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
-			--disable-multiplatform \
-			--without-ln-s \
-			--without-x
-endif
-#>	$(call AUTOTOOLS_BUILD,$(TEX_TAR_DST),$(COMPOSER_ABODE),,\
+	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" \
+		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
+		./Build \
+		--with-fontconfig-includes="$(COMPOSER_ABODE)/include/fontconfig" \
+		--disable-multiplatform \
+		--without-ln-s \
+		--without-x \
+		--disable-shared \
+		--enable-static
+#>	$(call AUTOTOOLS_BUILD,$(TEX_TAR_DST),$(COMPOSER_ABODE)/texlive,\
+#>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
+#>		,\
 #>		--enable-build-in-source-tree \
+#>		--with-fontconfig-includes="$(COMPOSER_ABODE)/include/fontconfig" \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
 #>		--without-x \
+#>		--disable-shared \
+#>		--enable-static \
 #>	)
 	$(CP) "$(TEX_TEXMF_DST)/"* "$(COMPOSER_ABODE)/texlive/"
 	# call recursively instead of using dependencies, so that environment variables update
