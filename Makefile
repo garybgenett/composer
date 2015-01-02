@@ -1971,24 +1971,24 @@ endif
 	@$(HELPOUT1) "- $(_C)Library"		"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"		"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HELPLINE)
-	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_D)$(shell $(BUILD_ENV) which bash)"
-	@$(HELPOUT1) "- $(_C)Less"		"$(_D)$(shell $(BUILD_ENV) which less)"
-	@$(HELPOUT1) "- $(_C)Vim"		"$(_D)$(shell $(BUILD_ENV) which vim)"
-	@$(HELPOUT1) "$(_C)GNU Make"		"$(_D)$(shell $(BUILD_ENV) which make)"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"	"$(_D)$(shell $(BUILD_ENV) which zip)"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"	"$(_D)$(shell $(BUILD_ENV) which unzip)"
-	@$(HELPOUT1) "- $(_C)cURL"		"$(_D)$(shell $(BUILD_ENV) which curl)"
-	@$(HELPOUT1) "- $(_C)Git SCM"		"$(_D)$(shell $(BUILD_ENV) which git)"
-	@$(HELPOUT1) "$(_C)Pandoc"		"$(_D)$(shell $(BUILD_ENV) which pandoc)"
+	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_D)$(shell $(BUILD_ENV) which bash			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)Less"		"$(_D)$(shell $(BUILD_ENV) which less			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)Vim"		"$(_D)$(shell $(BUILD_ENV) which vim			2>/dev/null)"
+	@$(HELPOUT1) "$(_C)GNU Make"		"$(_D)$(shell $(BUILD_ENV) which make			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"	"$(_D)$(shell $(BUILD_ENV) which zip			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"	"$(_D)$(shell $(BUILD_ENV) which unzip			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)cURL"		"$(_D)$(shell $(BUILD_ENV) which curl			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)Git SCM"		"$(_D)$(shell $(BUILD_ENV) which git			2>/dev/null)"
+	@$(HELPOUT1) "$(_C)Pandoc"		"$(_D)$(shell $(BUILD_ENV) which pandoc			2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Types"		"$(_E)(no binary to report)"
 	@$(HELPOUT1) "- $(_C)TeXMath"		"$(_E)(no binary to report)"
 	@$(HELPOUT1) "- $(_C)Highlighting-Kate"	"$(_E)(no binary to report)"
-	@$(HELPOUT1) "- $(_C)CiteProc"		"$(_D)$(shell $(BUILD_ENV) which pandoc-citeproc)"
-	@$(HELPOUT1) "$(_C)TeX Live"		"$(_D)$(shell $(BUILD_ENV) which tex)"
-	@$(HELPOUT1) "- $(_C)PDFLaTeX"		"$(_D)$(shell $(BUILD_ENV) which pdflatex)"
+	@$(HELPOUT1) "- $(_C)CiteProc"		"$(_D)$(shell $(BUILD_ENV) which pandoc-citeproc	2>/dev/null)"
+	@$(HELPOUT1) "$(_C)TeX Live"		"$(_D)$(shell $(BUILD_ENV) which tex			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)PDFLaTeX"		"$(_D)$(shell $(BUILD_ENV) which pdflatex		2>/dev/null)"
 	@$(HELPOUT1) "$(_C)Haskell"		"$(_E)(no binary to report)"
-	@$(HELPOUT1) "- $(_C)GHC"		"$(_D)$(shell $(BUILD_ENV) which ghc)"
-	@$(HELPOUT1) "- $(_C)Cabal"		"$(_D)$(shell $(BUILD_ENV) which cabal)"
+	@$(HELPOUT1) "- $(_C)GHC"		"$(_D)$(shell $(BUILD_ENV) which ghc			2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)Cabal"		"$(_D)$(shell $(BUILD_ENV) which cabal			2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_E)(no binary to report)"
 	@$(HELPLINE)
 	@$(BUILD_ENV) which bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal 2>/dev/null | \
@@ -2524,6 +2524,9 @@ $(FETCHIT)-vim-prep:
 $(BUILDIT)-vim:
 	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
+		--disable-gpm \
+		--disable-gui \
+		--without-x \
 	)
 
 .PHONY: $(FETCHIT)-make
