@@ -922,6 +922,7 @@ override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
 override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
 
 override COREUTILS_INSTALL		= $(call DO_COREUTILS_INSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
+override COREUTILS_UNINSTALL		= $(call DO_COREUTILS_UNINSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
 override define DO_COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"
 	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
