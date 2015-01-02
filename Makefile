@@ -722,7 +722,7 @@ override BUILD_BINARY_LIST		:= \
 	tex \
 	pdflatex \
 	\
-	ghc \
+	ghc ghc-pkg \
 	cabal
 
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
