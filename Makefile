@@ -1831,12 +1831,12 @@ $(CHECKIT):
 	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifneq ($(BUILD_MUSL),)
-	@$(HELPOUT1) "$(MARKER) $(_E)MUSL LibC"	"$(_E)$(MUSL_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(BUILD_MUSL) --version	2>/dev/null | $(SED) -n "s|^gcc.*[ ]([0-9.]+)$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)MUSL LibC"	"$(_E)$(MUSL_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(BUILD_MUSL) --version	2>/dev/null | $(SED) -n "s|^(gcc.*[ ][0-9.]+)$$|\1|gp")"
 endif
 ifneq ($(BUILD_MSYS),)
 	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"	"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[0-9.]+).*$$|\1|gp")"
 endif
-	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(SED) -n "s|^.*[,][ ]version[ ]([0-9.]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Less"		"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) less --version		2>/dev/null | $(SED) -n "s|^less[ ]([0-9]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Vim"		"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(BUILD_ENV) vim --version		2>/dev/null | $(SED) -n "s|^.*Vi[ ]IMproved[ ]([0-9.]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([0-9.]+).*$$|\1|gp")"
@@ -2415,11 +2415,16 @@ $(FETCHIT)-bash-prep:
 
 .PHONY: $(BUILDIT)-bash
 # thanks for the 'malloc' fix below: https://www.marshut.net/kqrrik/bash-fix-linking-for-static-builds-with-uclibc-toolchains.html
+# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 $(BUILDIT)-bash:
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-static-link \
 		--without-bash-malloc \
+	)
+else ifneq ($(BUILD_MSYS),)
+	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
+		bash_cv_func_sigsetjmp="missing" \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE))
@@ -2883,13 +2888,15 @@ $(STRAPIT)-ghc-build:
 ifneq ($(BUILD_MUSL),)
 	echo WORK
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),\
-		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(subst -static,,$(CFLAGS))))" \
-		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(subst -static,,$(LDFLAGS))))" \
-		SRC_HC_OPTS="$(subst -optc-static,,$(subst -optl-static,,$(subst -static,,$(SRC_HC_OPTS))))" \
-	,,\
+		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS)))" \
+		,,\
 		show \
 	)
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP))
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP),\
+		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS)))" \
+	)
 	echo WORK; exit 1
 else ifneq ($(BUILD_MSYS),)
 	$(MKDIR) "$(BUILD_STRAP)"
