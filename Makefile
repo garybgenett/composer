@@ -577,6 +577,48 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
 	hxt|9.3.1.4
 
+override TEXLIVE_DIRECTORY_LIST		:= \
+		fonts/enc/dvips/lm \
+		fonts/map/pdftex/updmap \
+		fonts/tfm/jknappen/ec \
+		fonts/tfm/public/amsfonts/symbols \
+		fonts/tfm/public/lm \
+		fonts/type1/public/lm \
+		tex/generic/ifxetex \
+		tex/generic/oberdiek \
+		tex/latex/amsfonts \
+		tex/latex/amsmath \
+		tex/latex/base \
+		tex/latex/graphics \
+		tex/latex/hyperref \
+		tex/latex/latexconfig \
+		tex/latex/listings \
+		tex/latex/lm \
+		tex/latex/oberdiek \
+		tex/latex/pdftex-def \
+		tex/latex/url
+
+#WORK
+override WINDOWS_BINARY_LIST		:= \
+		bash \
+		cat \
+		cp \
+		cygpath \
+		date \
+		env \
+		install \
+		ls \
+		mv \
+		patch \
+		rm \
+		sed \
+		sh \
+		tar \
+		uname \
+		unzip \
+		wget \
+		zip
+
 ########################################
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
@@ -1250,6 +1292,10 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
+#WORK
+ifeq ($(wildcard $(SHELL)),)
+override SHELL := $(call COMPOSER_FIND,$(PATH_LIST),sh)
+endif
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
@@ -1261,7 +1307,7 @@ $(STRAPIT): $(STRAPIT)-check
 else
 #WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
-#WORK $(STRAPIT): $(STRAPIT)-git
+$(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 
 .PHONY: $(FETCHIT)
@@ -1273,7 +1319,7 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
-$(BUILDIT): $(BUILDIT)-tex
+#WORK $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1308,27 +1354,7 @@ $(BUILDIT)-bindir:
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
-	$(foreach FILE,\
-		fonts/enc/dvips/lm \
-		fonts/map/pdftex/updmap \
-		fonts/tfm/jknappen/ec \
-		fonts/tfm/public/amsfonts/symbols \
-		fonts/tfm/public/lm \
-		fonts/type1/public/lm \
-		tex/generic/ifxetex \
-		tex/generic/oberdiek \
-		tex/latex/amsfonts \
-		tex/latex/amsmath \
-		tex/latex/base \
-		tex/latex/graphics \
-		tex/latex/hyperref \
-		tex/latex/latexconfig \
-		tex/latex/listings \
-		tex/latex/lm \
-		tex/latex/oberdiek \
-		tex/latex/pdftex-def \
-		tex/latex/url \
-		,\
+	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
 		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
 		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
 	)
@@ -1339,7 +1365,9 @@ $(BUILDIT)-bindir:
 	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
 	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/bin/pdflatex"
 ifneq ($(BUILD_MSYS),)
-	$(CP) "$(MSYS_BIN_DST)/usr/bin/"{,un}zip.exe "$(COMPOSER_PROGS)/bin/"
+	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/bin/"
+	)
 	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/bin/"
 	done
