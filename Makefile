@@ -3100,19 +3100,17 @@ $(FETCHIT)-tex-prep:
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
 		"$(TEX_TAR_DST)/Build"
-#WORKING
 	# make sure we link in all the right libraries
-#	$(SED) -i \
-#		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
-#		"$(TEX_TAR_DST)/m4/kpse-fontconfig-flags.m4" \
-#		"$(TEX_TAR_DST)/texk/web2c/configure"
+#WORKING
+	$(SED) -i \
+		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
+		"$(TEX_TAR_DST)/m4/kpse-fontconfig-flags.m4" \
+		"$(TEX_TAR_DST)/texk/web2c/configure"
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
-#WORKING
 	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
-		FONTCONFIG_LIBS="-lfontconfig -lfreetype -lexpat -liconv -lz" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
@@ -3121,7 +3119,6 @@ $(BUILDIT)-tex:
 		--enable-static
 #>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),\
 #>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
-#>		FONTCONFIG_LIBS="-lfontconfig -lfreetype -lexpat -liconv -lz" \
 #>		,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
