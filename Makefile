@@ -603,10 +603,6 @@ override define PATCH			=
 		$(call COMPOSER_FIND,$(PATH_LIST),patch) -p1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
 
-#WORK
-override PATH_LIST			:= $(subst :, ,$(PATH))
-#WORK
-
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
@@ -1219,7 +1215,6 @@ $(UPGRADE):
 	$(call GIT_REPO,$(MDVIEWER_DST),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
 	cd "$(MDVIEWER_DST)" &&
 		chmod 755 ./build.sh &&
-		echo WORK &&
 		$(BUILD_ENV) ./build.sh
 	$(call GIT_REPO,$(REVEALJS_DST),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	$(call WGET_FILE,$(W3CSLIDY_SRC))
@@ -1284,14 +1279,10 @@ endif
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/bin"
 	$(MKDIR) "$(COMPOSER_PROGS)/libexec"
-#WORK	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
-	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git}* "$(COMPOSER_PROGS)/bin/"
+	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/libexec/"
 ifneq ($(BUILD_MSYS),)
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"{,un}zip.exe "$(COMPOSER_PROGS)/bin/"
-	echo WORK
-	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe || true
-	echo WORK
 	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/libexec/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/bin/"
 	done
@@ -1557,7 +1548,6 @@ $(BUILDIT)-make:
 
 .PHONY: $(STRAPIT)-git
 $(STRAPIT)-git:
-	echo "WORK:$(SHELL)"
 	$(call WGET_FILE,$(GIT_BIN_SRC))
 	$(call UNTAR,$(GIT_BIN_DST),$(GIT_BIN_SRC))
 	cd "$(GIT_BIN_DST)" &&
