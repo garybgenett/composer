@@ -1471,11 +1471,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-haskell$(_D):"	"$(_E)$(FETCHIT)-haskell-pull$(_D)"		"Download of Haskell Platform source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell-packages$(_D)"		"Download/preparation of Haskell Platform packages"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell-prep$(_D)"		"Preparation of Haskell Platform source repository"
-	@$(HELPOUT1) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-type$(_D)"		"Download of Pandoc-Types source repository"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-math$(_D)"		"Download of TeXMath source repository"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-high$(_D)"		"Download of Highlighting-Kate source repository"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-cite$(_D)"		"Download of Pandoc-CiteProc source repository"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repositories"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
@@ -1492,9 +1488,6 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
 	@$(HELPOUT1) "$(_E)$(BUILDIT)-tex$(_D):"	"$(_E)$(BUILDIT)-tex-fmt$(_D)"			"Build/install TeX Live format files"
 	@$(HELPOUT1) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-type$(_D)"		"Build/compile of Pandoc-Types from source"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-math$(_D)"		"Build/compile of TeXMath from source"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-high$(_D)"		"Build/compile of Highlighting-Kate from source"
 	@$(HELPOUT1) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes Bash configuration file"
 	@$(HELPOUT1) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
 	@echo
@@ -2793,10 +2786,10 @@ $(FETCHIT)-git-prep:
 		$(BUILD_ENV) $(MAKE) configure
 	$(SED) -i \
 		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
-		"$(GIT_TAR_DST)/configure"
+		"$(GIT_DST)/configure"
 	$(SED) -i \
 		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
-		"$(GIT_TAR_DST)/Makefile"
+		"$(GIT_DST)/Makefile"
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
@@ -2806,7 +2799,7 @@ $(STRAPIT)-git-build:
 
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
-	$(call AUTOTOOLS_BUILD,$(GIT_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
 
@@ -3099,64 +3092,33 @@ $(BUILDIT)-haskell:
 #>		)
 
 .PHONY: $(FETCHIT)-pandoc
-$(FETCHIT)-pandoc: $(FETCHIT)-pandoc-type
-$(FETCHIT)-pandoc: $(FETCHIT)-pandoc-math
-$(FETCHIT)-pandoc: $(FETCHIT)-pandoc-high
-$(FETCHIT)-pandoc: $(FETCHIT)-pandoc-cite
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-pull
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-prep
 
-.PHONY: $(FETCHIT)-pandoc-type
-$(FETCHIT)-pandoc-type:
-	$(call GIT_REPO,$(PANDOC_TYPE_DST),$(PANDOC_TYPE_SRC),$(PANDOC_TYPE_CMT))
-
-.PHONY: $(FETCHIT)-pandoc-math
-$(FETCHIT)-pandoc-math:
-	$(call GIT_REPO,$(PANDOC_MATH_DST),$(PANDOC_MATH_SRC),$(PANDOC_MATH_CMT))
-
-.PHONY: $(FETCHIT)-pandoc-high
-$(FETCHIT)-pandoc-high:
-	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
-
-.PHONY: $(FETCHIT)-pandoc-cite
-$(FETCHIT)-pandoc-cite:
-	$(call GIT_REPO,$(PANDOC_CITE_DST),$(PANDOC_CITE_SRC),$(PANDOC_CITE_CMT))
-
 .PHONY: $(FETCHIT)-pandoc-pull
 $(FETCHIT)-pandoc-pull:
+	$(call GIT_REPO,$(PANDOC_TYPE_DST),$(PANDOC_TYPE_SRC),$(PANDOC_TYPE_CMT))
+	$(call GIT_REPO,$(PANDOC_MATH_DST),$(PANDOC_MATH_SRC),$(PANDOC_MATH_CMT))
+	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
+	$(call GIT_REPO,$(PANDOC_CITE_DST),$(PANDOC_CITE_SRC),$(PANDOC_CITE_CMT))
 	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
 	$(call GIT_SUBMODULE,$(PANDOC_DST))
 
 .PHONY: $(FETCHIT)-pandoc-prep
 $(FETCHIT)-pandoc-prep:
-	$(SED) -i \
-		$(foreach FILE,$(PANDOC_UPGRADE_LIST),\
-			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE))))[ ]+([^,]+)|\1 == $(word 2,$(subst |, ,$(FILE)))|g" \
-		) \
-		"$(PANDOC_DST)/pandoc.cabal"
+#WORKING
+#	$(SED) -i \
+#		$(foreach FILE,$(PANDOC_UPGRADE_LIST),\
+#			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE))))[ ]+([^,]+)|\1 == $(word 2,$(subst |, ,$(FILE)))|g" \
+#		) \
+#		"$(PANDOC_DST)/pandoc.cabal"
+#WORKING
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
 		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
-		"$(PANDOC_DST)/pandoc.cabal"
-	$(SED) -i \
 		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
-		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal"
-
-override define PANDOC_BUILD =
-	cd "$(1)" && \
-		$(HELPER) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(CABAL) configure \
-			--prefix="$(COMPOSER_ABODE)" \
-			--flags="make-pandoc-man-pages embed_data_files network-uri https" \
-			--enable-tests \
-			&& \
-		$(HELPER) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(CABAL) build && \
-		$(HELPER) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(CABAL) test && \
-		$(HELPER) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
-endef
+		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
+		"$(PANDOC_DST)/pandoc.cabal"
 
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
@@ -3175,24 +3137,28 @@ $(BUILDIT)-pandoc-deps:
 	cd "$(PANDOC_HIGH_DST)" && \
 		$(BUILD_ENV_MINGW) $(MAKE) prep
 
-.PHONY: $(BUILDIT)-pandoc-type
-$(BUILDIT)-pandoc-type:
-	$(call PANDOC_BUILD,$(PANDOC_TYPE_DST))
-
-.PHONY: $(BUILDIT)-pandoc-math
-$(BUILDIT)-pandoc-math:
-	$(call PANDOC_BUILD,$(PANDOC_MATH_DST))
-
-.PHONY: $(BUILDIT)-pandoc-high
-$(BUILDIT)-pandoc-high:
-	$(call PANDOC_BUILD,$(PANDOC_HIGH_DST))
+override define PANDOC_BUILD =
+	cd "$(1)" && \
+		$(HELPER) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)" && \
+		$(BUILD_ENV_MINGW) $(CABAL) configure \
+			--prefix="$(COMPOSER_ABODE)" \
+			--flags="make-pandoc-man-pages embed_data_files network-uri https" \
+			--enable-tests \
+			&& \
+		$(HELPER) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)" && \
+		$(BUILD_ENV_MINGW) $(CABAL) build && \
+		$(HELPER) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)" && \
+		$(BUILD_ENV_MINGW) $(CABAL) test && \
+		$(HELPER) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)" && \
+		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
+endef
 
 .PHONY: $(BUILDIT)-pandoc
 $(BUILDIT)-pandoc: $(BUILDIT)-pandoc-deps
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-type
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-math
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-high
 $(BUILDIT)-pandoc:
+	$(call PANDOC_BUILD,$(PANDOC_TYPE_DST))
+	$(call PANDOC_BUILD,$(PANDOC_MATH_DST))
+	$(call PANDOC_BUILD,$(PANDOC_HIGH_DST))
 	$(call PANDOC_BUILD,$(PANDOC_DST))
 	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
 	@echo
