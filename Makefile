@@ -1320,7 +1320,7 @@ endif
 ifeq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-check
 else
-$(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
+#WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
 $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
@@ -1450,6 +1450,7 @@ $(SHELLIT):
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT)-msys:
 	@if [ ! -d "$(MSYS_BIN_DST)/home/$(USERNAME)" ]; then
+		$(MKDIR) "$(MSYS_BIN_DST)/home"
 		$(CP) "$(MSYS_BIN_DST)/etc/skel" "$(MSYS_BIN_DST)/home/$(USERNAME)"
 	fi
 	@cd "$(MSYS_BIN_DST)" &&
@@ -1664,6 +1665,7 @@ $(STRAPIT)-fix:
 	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --init
 	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --populate msys2
 	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --refresh-keys
+	$(BUILD_ENV) $(PACMAN) ca-certificates
 
 .PHONY: $(STRAPIT)-dlls
 $(STRAPIT)-dlls:
