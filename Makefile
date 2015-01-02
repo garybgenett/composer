@@ -477,7 +477,64 @@ override PACMAN_PACKAGES_LIST		:= \
 	\
 	libcurl-devel \
 	libiconv-devel \
-	zlib-devel
+	zlib-devel \
+
+#WORK : did fontconfig fix it?
+# fifth group is for texlive build
+#	\
+#	mingw-w64-i686-fontconfig \
+#	mingw-w64-x86_64-fontconfig
+
+#WORK
+# second group is for mintty
+override WINDOWS_BINARY_LIST		:= \
+	bash \
+	cat \
+	cp \
+	date \
+	echo \
+	env \
+	install \
+	ls \
+	mv \
+	patch \
+	printf \
+	rm \
+	sed \
+	sh \
+	tar \
+	uname \
+	unzip \
+	wget \
+	zip \
+	\
+	cygpath \
+	cygwin-console-helper \
+	less \
+	ls \
+	mintty \
+	vim
+
+override TEXLIVE_DIRECTORY_LIST		:= \
+	fonts/enc/dvips/lm \
+	fonts/map/pdftex/updmap \
+	fonts/tfm/jknappen/ec \
+	fonts/tfm/public/amsfonts/symbols \
+	fonts/tfm/public/lm \
+	fonts/type1/public/lm \
+	tex/generic/ifxetex \
+	tex/generic/oberdiek \
+	tex/latex/amsfonts \
+	tex/latex/amsmath \
+	tex/latex/base \
+	tex/latex/graphics \
+	tex/latex/hyperref \
+	tex/latex/latexconfig \
+	tex/latex/listings \
+	tex/latex/lm \
+	tex/latex/oberdiek \
+	tex/latex/pdftex-def \
+	tex/latex/url
 
 override GHC_LIBRARIES_LIST		:= \
 	alex|3.1.3 \
@@ -576,57 +633,6 @@ override HASKELL_PATCH_LIST		:= \
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
 	hxt|9.3.1.4
-
-override TEXLIVE_DIRECTORY_LIST		:= \
-		fonts/enc/dvips/lm \
-		fonts/map/pdftex/updmap \
-		fonts/tfm/jknappen/ec \
-		fonts/tfm/public/amsfonts/symbols \
-		fonts/tfm/public/lm \
-		fonts/type1/public/lm \
-		tex/generic/ifxetex \
-		tex/generic/oberdiek \
-		tex/latex/amsfonts \
-		tex/latex/amsmath \
-		tex/latex/base \
-		tex/latex/graphics \
-		tex/latex/hyperref \
-		tex/latex/latexconfig \
-		tex/latex/listings \
-		tex/latex/lm \
-		tex/latex/oberdiek \
-		tex/latex/pdftex-def \
-		tex/latex/url
-
-#WORK
-# second group is for mintty
-override WINDOWS_BINARY_LIST		:= \
-		bash \
-		cat \
-		cp \
-		date \
-		echo \
-		env \
-		install \
-		ls \
-		mv \
-		patch \
-		printf \
-		rm \
-		sed \
-		sh \
-		tar \
-		uname \
-		unzip \
-		wget \
-		zip \
-		\
-		cygpath \
-		cygwin-console-helper \
-		less \
-		ls \
-		mintty \
-		vim
 
 ########################################
 
@@ -1313,6 +1319,7 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
+$(UPGRADE):	override SHELL := $(MSYS_SHELL)
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
@@ -1701,12 +1708,18 @@ $(FETCHIT)-tex:
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
+	echo WORK
+#ifneq ($(BUILD_MSYS),)
+#	cd "$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config" &&
+#		$(CP) ./mh-mingw64 ./mh-unknown
+#endif
+	echo WORK : better success with MINGW?
 	cd "$(TEX_BIN_DST)" &&
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+		$(BUILD_ENV_MINGW) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x
-#>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
+#>	$(call AUTOTOOLS_BUILD_MINGW,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
@@ -1812,10 +1825,19 @@ $(BUILDIT)-ghc:
 			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
 			"$(FILE)"
 	)
+#WORK
+#ifneq ($(BUILD_MSYS),)
+#	$(SED) -i \
+#		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
+#		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
+#		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
+#endif
+#WORK
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-	$(RM) "$(BUILD_STRAP)/bin/ghc"*
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE)) \
-		Cabal-$(CABAL_VERSION_LIB)
+	echo WORK
+#	$(RM) "$(BUILD_STRAP)/bin/ghc"*
+#	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE)) \
+#		Cabal-$(CABAL_VERSION_LIB)
 
 .PHONY: $(FETCHIT)-haskell
 $(FETCHIT)-haskell:
