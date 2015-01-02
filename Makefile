@@ -337,7 +337,7 @@ override CHOST				:=
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 #WORK : will need this to implement "chroot" composer
-#override LD_LIBRARY_PATH		?= $(COMPOSER_ABODE)/lib:$(LD_LIBRARY_PATH)
+#override LD_LIBRARY_PATH		:= $(COMPOSER_PROGS)/lib.so:$(LD_LIBRARY_PATH)
 
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_PLAT),Linux)
