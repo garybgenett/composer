@@ -2616,7 +2616,8 @@ $(FETCHIT)-curl-prep:
 $(STRAPIT)-curl-build:
 	cd "$(CURL_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) ca-bundle && \
-		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
+		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/" && \
+		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(CURL_TAR_DST)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--without-libidn \
@@ -2628,7 +2629,8 @@ $(STRAPIT)-curl-build:
 $(BUILDIT)-curl:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) ca-bundle && \
-		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
+		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/" && \
+		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(CURL_DST)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--without-libidn \
