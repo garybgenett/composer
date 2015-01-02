@@ -663,18 +663,15 @@ override define GIT_SUBMODULE		=
 	done
 endef
 
-override PANDOC_DATA			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data)
-ifneq ($(wildcard $(PANDOC_DATA)),)
+override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
+override TEXMFVAR			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-var))
+override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data))
 override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
-endif
 
-override TEXMFDIST			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist)
-override TEXMFVAR			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-var)
-ifeq ($(wildcard $(TEXMFDIST)),)
-override TEXMFDIST			:= $(COMPOSER_ABODE)/texlive/texmf-dist
-endif
-ifeq ($(wildcard $(TEXMFVAR)),)
-override TEXMFVAR			:= $(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var
+ifeq ($(BUILD_MSYS),)
+override PANDOC_DATA			:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
+else
+override PANDOC_DATA			:= $(COMPOSER_ABODE)/WORK
 endif
 
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
@@ -1363,17 +1360,6 @@ ifneq ($(BUILD_MSYS),)
 	done
 endif
 
-#WORK : location for this?
-.PHONY: setup
-setup:
-ifeq ($(BUILD_MSYS),)
-	PANDOC_DATA="$(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data"
-else
-	PANDOC_DATA="$(COMPOSER_ABODE)/WORK"
-endif
-	$(MKDIR) "$${PANDOC_DATA}"
-	$(CP) "$(COMPOSER_PROGS)/pandoc/data/reference.docx" "$${PANDOC_DATA}/"
-
 .PHONY: $(CHECKIT)
 $(CHECKIT):
 	@$(HELPOUT1) "Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -1997,6 +1983,15 @@ settings:
 	@$(HELPOUT2) "LVL:    [$(LVL)]"
 	@$(HELPOUT2) "OPT:    [$(OPT)]"
 	@$(HELPLVL2)
+
+.PHONY: setup
+setup:
+ifneq ($(wildcard $(COMPOSER_PROGS)/pandoc/data),)
+ifeq ($(wildcard $(PANDOC_DATA)),)
+	$(MKDIR) "$(PANDOC_DATA)"
+	$(CP) "$(COMPOSER_PROGS)/pandoc/data/reference.docx" "$(PANDOC_DATA)/"
+endif
+endif
 
 .PHONY: subdirs $(COMPOSER_SUBDIRS)
 subdirs: $(COMPOSER_SUBDIRS)
