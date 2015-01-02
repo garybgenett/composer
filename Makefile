@@ -13,7 +13,6 @@
 #	remove from msys2 package list
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
-#	is WINDOWS_PATH (cygpath) still needed?
 # enable https certificates for wget/git?
 #	simply copy '/etc/ssl' to $COMPOSER_ABODE and $COMPOSER_PROGS?
 # double-check all "thanks" comments; some are things you should have known
@@ -360,9 +359,17 @@ override CFLAGS				:= $(CFLAGS) -static
 #WORK : search/replace LDFLAGS, if this works
 override LDFLAGS			:= $(LDFLAGS) -static
 #WORK : does this variable even work?
-override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
+override SRC_HC_OPTS			:= $(SRC_HC_OPTS) -static \
+	-pgmc \"$(BUILD_MUSL)\" -optc-static \
+	-pgml \"$(BUILD_MUSL)\" -optl-static
 endif
 endif
+#WORK
+#ifneq ($(BUILD_MSYS),)
+#override SRC_HC_OPTS			:= $(SRC_HC_OPTS) \
+#	-pgmc \"$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc\" \
+#	-pgml \"$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld\"
+#endif
 
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_GHC_78),)
@@ -399,6 +406,45 @@ override GNU_CFG_CMT			:=
 override MUSL_VERSION			:= 1.1.5
 override MUSL_TAR_SRC			:= http://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
 override MUSL_TAR_DST			:= $(COMPOSER_BUILD)/musl-$(MUSL_VERSION)
+# https://gcc.gnu.org (license: WORK : need URLS and LIC for libraries also)
+# https://gcc.gnu.org/releases.html
+#WORK $(GCC_TAR_DST)/contrib/download_prerequisites
+#WORK http://stackoverflow.com/questions/9253695/building-gcc-requires-gmp-4-2-mpfr-2-3-1-and-mpc-0-8-0
+#WORK http://source.kohlerville.com/2012/09/easy-gcc-compile-using-download_prerequisites-in-contrib
+#WORK http://www.openwall.com/lists/musl/2013/07/24/19
+#WORK http://www.openwall.com/lists/musl/2013/07/24/5
+override GCC_VERSION			:= 4.8.3
+override GCC_GMP_VERSION		:= 4.3.2
+override GCC_MPF_VERSION		:= 2.4.2
+override GCC_MPC_VERSION		:= 0.8.1
+override GCC_UTL_VERSION		:= 2.24
+override GCC_TAR_SRC			:= ftp://gcc.gnu.org/pub/gcc/releases/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz
+override GCC_GMP_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-$(GCC_GMP_VERSION).tar.bz2
+override GCC_MPF_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpfr-$(GCC_MPF_VERSION).tar.bz2
+override GCC_MPC_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$(GCC_MPC_VERSION).tar.gz
+override GCC_UTL_TAR_SRC		:= http://ftp.gnu.org/gnu/binutils/binutils-$(GCC_UTL_VERSION).tar.gz
+override GCC_TAR_DST			:= $(COMPOSER_BUILD)/gcc-$(GCC_VERSION)
+override GCC_GMP_TAR_DST		:= $(COMPOSER_BUILD)/gcc-libs/gmp-$(GCC_GMP_VERSION)
+override GCC_MPF_TAR_DST		:= $(COMPOSER_BUILD)/gcc-libs/mpfr-$(GCC_MPF_VERSION)
+override GCC_MPC_TAR_DST		:= $(COMPOSER_BUILD)/gcc-libs/mpc-$(GCC_MPC_VERSION)
+override GCC_UTL_TAR_DST		:= $(COMPOSER_BUILD)/gcc-libs/binutils-$(GCC_UTL_VERSION)
+#WORK https://github.com/GregorR/musl-cross/archive/28ce654ae248e3b222baa24064ff223bed2e55d7.zip
+#WORK http://www.musl-libc.org/faq.html
+#WORK https://bitbucket.org/GregorR/musl-cross
+#WORK https://bitbucket.org/GregorR/musl-gcc-patches
+#WORK https://github.com/GregorR/musl-gcc-patches
+#WORK : this should go somewhere else if it works
+override GCC_PATCH_LIST			:= \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/libstdc++-generic.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/gcc-config-musl.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/gomp-posix.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/unwind-dliterate.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/gcc-autoconf-musl.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/kill-fixincludes.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/x86.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/sh.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/bug_61801.diff \
+	/|https://raw.githubusercontent.com/GregorR/musl-gcc-patches/gcc-$(GCC_VERSION)/universal_initializer.diff
 
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
 # http://sourceforge.net/projects/msys2
@@ -550,17 +596,13 @@ override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(
 endif
 override CABAL_VERSION			:= 1.20.0.2
 override CABAL_VERSION_LIB		:= 1.20.0.1
-override GHC_TAR_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-src.tar.bz2
 override CBL_TAR_SRC			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VERSION)/cabal-install-$(CABAL_VERSION).tar.gz
-override GHC_BIN_DST			:= $(BUILD_STRAP)/ghc-bin/ghc-$(GHC_VERSION)
-override GHC_TAR_DST			:= $(BUILD_STRAP)/ghc-src/ghc-$(GHC_VERSION)
+override GHC_BIN_DST			:= $(BUILD_STRAP)/ghc-$(GHC_VERSION)
 override CBL_TAR_DST			:= $(BUILD_STRAP)/cabal-install-$(CABAL_VERSION)
 
 # https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
-#TODO : windows git suddenly not taking self-signed certificate?
-#>override GHC_SRC			:= https://git.haskell.org/ghc.git
-override GHC_SRC			:= http://git.haskell.org/ghc.git
+override GHC_SRC			:= https://git.haskell.org/ghc.git
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 override GHC_CMT			:= ghc-$(GHC_VERSION)-release
 override GHC_BRANCH			:= ghc-$(GHC_VERSION)
@@ -602,31 +644,36 @@ override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3#>704cfc1e3c2b6bc97cc315c92671dc47e
 #override PANDOC_VERSION			:= $(PANDOC_CMT)
 override PANDOC_VERSION			:= 1.13.2
 
+override BUILD_PATH_MINGW		:=
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifneq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 endif
+ifneq ($(BUILD_MSYS),)
 override BUILD_PATH_MINGW		:=               $(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
+endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
+ifeq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
-
-ifeq ($(BUILD_MSYS),)
-override BUILD_TOOLS			:=
-else
-override BUILD_TOOLS			:= $(BUILD_TOOLS) \
-	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
-	--with-cpp="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/cpp" \
-	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld"
 endif
 
+override BUILD_TOOLS			:=
+override WINDOWS_ACL			:=
+override PACMAN_DB_UPGRADE		:=
+override PACMAN_KEY			:=
+override PACMAN				:=
+ifneq ($(BUILD_MSYS),)
+override BUILD_TOOLS			:= $(BUILD_TOOLS) \
+	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
+	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld"
 override WINDOWS_ACL			:= /c/Windows/System32/icacls
-override CYGPATH			:= "$(MSYS_BIN_DST)/usr/bin/cygpath"
 override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
 override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
+endif
 override CABAL				:= cabal --verbose
 override CABAL_INSTALL			= $(CABAL) install \
 	$(BUILD_TOOLS) \
@@ -650,28 +697,6 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-binutils-git \
 	mingw-w64-x86_64-gcc \
 	msys2-devel
-
-#WORK : need to trim this list, and use '$(STRAPIT)' targets instead
-# second group is for '$(STRAPIT)-libs'
-# third group is for '$(STRAPIT)-curl'
-#	\
-#	zlib \
-#	zlib-devel \
-#	libiconv \
-#	libiconv-devel \
-#	gettext \
-#	gettext-devel \
-#	openssl \
-#	openssl-devel \
-#	expat \
-#	mingw-w64-i686-freetype \
-#	mingw-w64-x86_64-freetype \
-#	mingw-w64-i686-fontconfig \
-#	mingw-w64-x86_64-fontconfig \
-#	\
-#	curl \
-#	libcurl \
-#	libcurl-devel \
 
 override BUILD_BINARY_LIST		:= \
 	bash \
@@ -707,7 +732,6 @@ override WINDOWS_BINARY_LIST		:= \
 	true \
 	uname \
 	\
-	cygpath \
 	cygwin-console-helper \
 	dircolors \
 	dirname \
@@ -831,12 +855,6 @@ override PANDOC_UPGRADE_LIST		:= \
 
 ########################################
 
-ifeq ($(BUILD_MSYS),)
-override WINDOWS_PATH			= $(1)
-else
-override WINDOWS_PATH			= $(shell $(CYGPATH) --absolute --windows "$(1)")
-endif
-
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
 
@@ -850,6 +868,7 @@ override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override TIMESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 
+# note that "--insecure" option is also mirrored in "$(STRAPIT)-ghc-prep" target
 override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --insecure --location --remote-time
 override define CURL_FILE		=
 	$(MKDIR) "$(COMPOSER_STORE)"
@@ -952,6 +971,7 @@ override BUILD_ENV			:= \
 	TEXMFDIST="$(TEXMFDIST)" \
 	TEXMFVAR="$(TEXMFVAR)"
 ifneq ($(BUILD_MSYS),)
+#TODO : is this still true?
 # adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
 override BUILD_ENV			:= $(BUILD_ENV) \
 	CC="$(MSYS_BIN_DST)/usr/bin/gcc" \
@@ -1190,8 +1210,8 @@ HELP_OPTIONS_SUB:
 	@echo
 	@$(HELPER) "$(_H)Build Options:"
 	@$(HELPOUT1) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
-	@$(HELPOUT1) "$(_C)BUILD_MUSL$(_D)"		"Force MUSL C library (static)"	"[$(_M)$(BUILD_MUSL)$(_D)] $(_N)(valid: empty or 1)"
-	@$(HELPOUT1) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)BUILD_MUSL$(_D)"		"Force Linux/MUSL static build"	"[$(_M)$(BUILD_MUSL)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)BUILD_MSYS$(_D)"		"Force Windows/MSYS detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
 	@$(HELPOUT1) "$(_C)BUILD_GHC_78$(_D)"		"GHC 7.8 instead of 7.6"	"[$(_M)$(BUILD_GHC_78)$(_D)] $(_N)(valid: empty or 1)"
 	@$(HELPOUT1) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
 	@$(HELPOUT1) "$(_C)BUILD_ARCH$(_D)"		"Overrides 'uname -m'"		"[$(_M)$(BUILD_ARCH)$(_D)]"
@@ -1258,7 +1278,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(HELPOUT1) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC and GCC from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
@@ -1591,8 +1611,8 @@ ifneq ($(COMPOSER_TESTING),0)
 	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
 	$(RUNMAKE) --silent COMPOSER_ESCAPES= EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
 	$(RUNMAKE) --silent COMPOSER_ESCAPES= EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS= COMPOSER_SUBDIRS= $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS= COMPOSER_SUBDIRS= $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
 	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
 endif
 	$(MKDIR) "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)"
@@ -1655,7 +1675,7 @@ $(REPLICA):
 	echo -en "$(_C)"
 	$(GIT_REPLICA) archive \
 		--format="tar" \
-		--prefix="" \
+		--prefix= \
 		"$(COMPOSER_VERSION)" \
 		$(foreach FILE,$(COMPOSER_FILES),"$(FILE)") \
 		| \
@@ -1690,21 +1710,20 @@ $(UPGRADE):
 
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
-$(STRAPIT): $(STRAPIT)-config
 ifneq ($(BUILD_MUSL),)
-#TODO : need to move '-libs' and '-curl' back down to '-git'
 $(STRAPIT): $(STRAPIT)-musl
 endif
 ifneq ($(BUILD_MSYS),)
-#TODO $(STRAPIT): $(STRAPIT)-msys
+$(STRAPIT): $(STRAPIT)-msys
 endif
+$(STRAPIT): $(STRAPIT)-config
 $(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-curl $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc
 
 .PHONY: $(FETCHIT)
-$(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
+$(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
@@ -1713,7 +1732,7 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
-#TODO $(BUILDIT): $(BUILDIT)-tex
+$(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1904,7 +1923,8 @@ $(SHELLIT)-bashrc:
 		export HISTIGNORE=
 		#
 		export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
-		export PATH="$(BUILD_PATH):$(PATH)"
+		#WORK : this doubles-up the PATH, and is an ugly hack; need a better way to force use of built bash
+		#export PATH="$(BUILD_PATH):$(PATH)"
 		#
 		export PROMPT_DIRTRIM="1"
 		export PS1=
@@ -2071,18 +2091,86 @@ $(STRAPIT)-exit:
 	@$(HELPLVL1)
 	@exit 1
 
+#WORK : document sub-targets!
+
 .PHONY: $(STRAPIT)-musl
+# call recursively instead of using dependencies, so that environment variables update
 $(STRAPIT)-musl:
+	$(RUNMAKE) $(STRAPIT)-musl-gcc1
+	$(RUNMAKE) $(STRAPIT)-musl-build
+	$(RUNMAKE) $(STRAPIT)-musl-gcc2
+
+.PHONY: $(STRAPIT)-musl-build
+$(STRAPIT)-musl-build:
 	$(call CURL_FILE,$(MUSL_TAR_SRC))
 	$(call UNTAR,$(MUSL_TAR_DST),$(MUSL_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(MUSL_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(MUSL_TAR_DST),$(COMPOSER_ABODE),\
+		CC="$(COMPOSER_ABODE)/bin/gcc" \
+	)
+
+override define GCC_FETCH =
+	$(call CURL_FILE,$(GCC_TAR_SRC))
+	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
+	$(call CURL_FILE,$(GCC_MPF_TAR_SRC))
+	$(call CURL_FILE,$(GCC_MPC_TAR_SRC))
+	$(call CURL_FILE,$(GCC_UTL_TAR_SRC))
+	# start with fresh source directory, due to multiple passes
+	$(RM) -r "$(GCC_TAR_DST)"
+	$(call UNTAR,$(GCC_TAR_DST),$(GCC_TAR_SRC))
+	$(call UNTAR,$(GCC_GMP_TAR_DST),$(GCC_GMP_TAR_SRC))
+	$(call UNTAR,$(GCC_MPF_TAR_DST),$(GCC_MPF_TAR_SRC))
+	$(call UNTAR,$(GCC_MPC_TAR_DST),$(GCC_MPC_TAR_SRC))
+	$(call UNTAR,$(GCC_UTL_TAR_DST),$(GCC_UTL_TAR_SRC))
+	$(MKDIR) "$(GCC_TAR_DST)/gmp"		&& $(CP) "$(GCC_GMP_TAR_DST)/"* "$(GCC_TAR_DST)/gmp/"
+	$(MKDIR) "$(GCC_TAR_DST)/mpfr"		&& $(CP) "$(GCC_MPF_TAR_DST)/"* "$(GCC_TAR_DST)/mpfr/"
+	$(MKDIR) "$(GCC_TAR_DST)/mpc"		&& $(CP) "$(GCC_MPC_TAR_DST)/"* "$(GCC_TAR_DST)/mpc/"
+	$(MKDIR) "$(GCC_TAR_DST)/binutils"	&& $(CP) "$(GCC_UTL_TAR_DST)/"* "$(GCC_TAR_DST)/binutils/"
+	echo WORK
+	$(foreach FILE,$(GCC_PATCH_LIST),\
+		$(call PATCH,$(GCC_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
+	)
+endef
+
+.PHONY: $(STRAPIT)-musl-gcc1
+$(STRAPIT)-musl-gcc1:
+	$(call GCC_FETCH)
+	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),\
+		CC= \
+		CFLAGS="$(subst -static,,$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))) -O0 -g0" \
+		CXXFLAGS="$(subst -static,,$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))) -O0 -g0" \
+		LDFLAGS="$(subst -static,,$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS))))" \
+		,\
+		--disable-bootstrap \
+		--host="$(CHOST)" \
+		--target="$(BUILD_ARCH)-linux-musl" \
+		--enable-languages="c" \
+		--disable-shared \
+		--enable-static \
+	)
+
+.PHONY: $(STRAPIT)-musl-gcc2
+# define this in a variable, so the comma doesn't get interpreted as syntax
+$(STRAPIT)-musl-gcc2: override GCC_LANGUAGES := c,c++
+$(STRAPIT)-musl-gcc2:
+	$(call GCC_FETCH)
+	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),\
+		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		CXXFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS)))" \
+		,\
+		--host="$(BUILD_ARCH)-linux-musl" \
+		--target="$(BUILD_ARCH)-linux-musl" \
+		--enable-languages="$(GCC_LANGUAGES)" \
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-msys
 $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-dll
+$(STRAPIT)-msys: $(STRAPIT)-msys-dll
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2172,7 +2260,7 @@ ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_TAR_DST),$(COMPOSER_ABODE),\
 		ABI=32 \
 		,\
-		--host=$(CHOST) \
+		--host="$(CHOST)" \
 		--disable-assembly \
 		--disable-shared \
 		--enable-static \
@@ -2181,7 +2269,7 @@ else ifneq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_TAR_DST),$(COMPOSER_ABODE),\
 		ABI=$(BUILD_MSYS) \
 		,\
-		--host=$(CHOST) \
+		--host="$(CHOST)" \
 		--disable-assembly \
 		--disable-shared \
 		--enable-static \
@@ -2733,6 +2821,7 @@ $(BUILDIT)-tex:
 ifneq ($(BUILD_MUSL),)
 	echo WORK
 #		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
+#			--enable-cxx-runtime-hack \
 #
 	cd "$(TEX_TAR_DST)" &&
 		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
@@ -2765,6 +2854,7 @@ endif
 #>		--without-x \
 #>	)
 	$(CP) "$(TEX_TEXMF_DST)/"* "$(COMPOSER_ABODE)/texlive/"
+	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-tex-fmt
 
 .PHONY: $(BUILDIT)-tex-fmt
@@ -2782,10 +2872,6 @@ $(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 
 .PHONY: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc-pull:
-ifneq ($(BUILD_MUSL),)
-	$(call CURL_FILE,$(GHC_TAR_SRC))
-	$(call UNTAR,$(GHC_TAR_DST),$(GHC_TAR_SRC))
-endif
 	$(call CURL_FILE,$(GHC_BIN_SRC))
 	$(call CURL_FILE,$(CBL_TAR_SRC))
 	$(call UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
@@ -2811,23 +2897,15 @@ $(FETCHIT)-ghc-pull:
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-prep:
-ifneq ($(BUILD_MUSL),)
-	cd "$(GHC_TAR_DST)" &&
-		$(BUILD_ENV_MINGW) ./boot
-	echo WORK
-	$(SED) -i \
-		-e "s|([^y]?)(execvpe[(])|\1my\2|g" \
-		"$(GHC_TAR_DST)/libraries/process/cbits/runProcess.c" \
-		"$(GHC_TAR_DST)/libraries/unix/cbits/execvpe.c" \
-		"$(GHC_TAR_DST)/libraries/unix/include/execvpe.h"
-else ifneq ($(BUILD_MSYS),)
+ifneq ($(BUILD_MSYS),)
 	@cat >"$(CBL_TAR_DST)/bootstrap.patch.sh" <<'_EOF_'
 		#!/usr/bin/env bash
-		$(SED) -i \
+		[ -f "$(CBL_TAR_DST)/network-"*"/include/HsNet.h" ] && $(SED) -i \
 			-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
 			-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
 			-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
 			"$(CBL_TAR_DST)/network-"*"/include/HsNet.h"
+		exit 0
 		# end of file
 	_EOF_
 	$(SED) -i \
@@ -2840,6 +2918,9 @@ endif
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
+	$(SED) -i \
+		-e "s|([{]CURL[}][ ])([-]L)|\1--insecure \2|g" \
+		"$(CBL_TAR_DST)/bootstrap.sh"
 
 .PHONY: $(FETCHIT)-ghc-prep
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
@@ -2847,7 +2928,14 @@ $(FETCHIT)-ghc-prep:
 	$(call GIT_SUBMODULE,$(GHC_DST))
 	cd "$(GHC_DST)" &&
 		$(BUILD_ENV_MINGW) ./boot
-ifneq ($(BUILD_MSYS),)
+ifneq ($(BUILD_MUSL),)
+	echo WORK
+	$(SED) -i \
+		-e "s|([^y]?)(execvpe[(])|\1my\2|g" \
+		"$(GHC_DST)/libraries/process/cbits/runProcess.c" \
+		"$(GHC_DST)/libraries/unix/cbits/execvpe.c" \
+		"$(GHC_DST)/libraries/unix/include/execvpe.h"
+else ifneq ($(BUILD_MSYS),)
 	$(foreach FILE,\
 		$(GHC_DST)/driver/ghci/ghc.mk \
 		$(GHC_DST)/ghc/ghc.mk \
@@ -2882,42 +2970,78 @@ endif
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Modifying
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Shake
 # https://ghc.haskell.org/trac/ghc/wiki/CrossCompilation
+# https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/options-phases.html
 #WORK
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
 ifneq ($(BUILD_MUSL),)
-	echo WORK
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),\
 		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		CXXFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
 		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS)))" \
 		,,\
 		show \
 	)
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP),\
-		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
-		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS)))" \
-	)
-	echo WORK; exit 1
+	cd "$(CBL_TAR_DST)" &&
+		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
+			CFLAGS="$(subst -static,,$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS))))" \
+			CXXFLAGS="$(subst -static,,$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS))))" \
+			LDFLAGS="$(subst -static,,$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS))))" \
+			./bootstrap.sh --global
 else ifneq ($(BUILD_MSYS),)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
-else
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
-endif
 	cd "$(CBL_TAR_DST)" &&
-		$(BUILD_ENV_MINGW) PREFIX="$(call WINDOWS_PATH,$(BUILD_STRAP))" \
+		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
 			./bootstrap.sh --global
+else
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,\
+		show
+	)
+	cd "$(CBL_TAR_DST)" &&
+		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
+			./bootstrap.sh --global
+endif
 	$(RUNMAKE) $(FETCHIT)-cabal
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(call WINDOWS_PATH,$(BUILD_STRAP))) \
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
+
+#WORK
+# Warning: -rtsopts and -with-rtsopts have no effect with -shared.
+#     Call hs_init_ghc() from your main() function to set these options.
+# /usr/lib/gcc/i686-pc-linux-gnu/4.8.1/../../../../i686-pc-linux-gnu/bin/ld: cannot find -lHSghc-prim-0.3.0.0-ghc7.6.3
+# collect2: error: ld returned 1 exit status
+# libraries/integer-gmp/ghc.mk:4: recipe for target 'libraries/integer-gmp/dist-install/build/libHSinteger-gmp-0.5.0.0-ghc7.6.3.so' failed
+# make[1]: *** [libraries/integer-gmp/dist-install/build/libHSinteger-gmp-0.5.0.0-ghc7.6.3.so] Error 1
+# Makefile:64: recipe for target 'all' failed
+# make: *** [all] Error 2
+#WORK
+#			-optl-L$(GHC_DST)/libraries/integer-gmp/dist-install/build \
+#			-optl-L$(GHC_DST)/libraries/ghc-prim/dist-install/build \
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE),\
+		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		CXXFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS)))" \
+		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS)))" \
+		SRC_HC_OPTS="$(SRC_HC_OPTS) \
+			" \
+	)
+	echo WORK; exit 1
+else ifneq ($(BUILD_MSYS),)
+	echo "WORK : move this to 'prep' if it works..."
+#	$(SED) -i \
+#		-e "s|(cygpath[ ])[-][-]mixed|\1--unix|g" \
+#		-e "s|(cygpath[ ])[-]m|\1--unix|g" \
+#		"$(GHC_DST)/aclocal.m4" \
+#		"$(GHC_DST)/configure"
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-#WORK
-ifneq ($(BUILD_MSYS),)
-	$(RM) -r "$(BUILD_STRAP)/mingw"*
+	echo WORK; $(RM) -r "$(BUILD_STRAP)/mingw"*
+else
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 endif
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
@@ -2959,12 +3083,19 @@ $(FETCHIT)-haskell-packages:
 #	found by: https://github.com/irungentoo/toxcore/issues/92
 #	then by: https://github.com/irungentoo/toxcore/pull/94
 $(FETCHIT)-haskell-prep:
+ifneq ($(BUILD_MSYS),)
 	echo WORK
 #	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
-ifneq ($(BUILD_MSYS),)
 	$(SED) -i \
 		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
 		"$(HASKELL_TAR)/packages/core.packages"
+	$(SED) -i \
+		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+		-e "s|WSPIAPI[_]H|WS2TCPIP_H|g" \
+		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
+		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
 endif
 	$(foreach FILE,\
 		$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/haskell-platform.cabal \
@@ -2985,15 +3116,6 @@ endif
 	$(SED) -i \
 		-e "s|^([ ]+programFindLocation[ ][=][ ].x)([ ][-])|\1 _\2|g" \
 		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
-ifneq ($(BUILD_MSYS),)
-	$(SED) -i \
-		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-		-e "s|WSPIAPI[_]H|WS2TCPIP_H|g" \
-		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
-		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
-endif
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
