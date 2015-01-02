@@ -432,7 +432,7 @@ override CURL_BIN_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VERSION)
 override CURL_SRC			:= https://github.com/bagder/curl.git
 override CURL_BIN_DST			:= $(BUILD_STRAP)/curl-$(CURL_VERSION)
 override CURL_DST			:= $(COMPOSER_BUILD)/curl
-override CURL_CMT			:= $(CURL_VERSION)
+override CURL_CMT			:= curl-$(subst .,_,$(CURL_VERSION))
 
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
