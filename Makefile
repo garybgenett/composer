@@ -26,6 +26,7 @@
 # test install in gary-os
 #	ifconfig eth0 down before make build
 #	standalone pandoc binary without build directory
+#	try building non-BUILD_DIST version
 # test install in fresh cygwin
 #	hack setup.bat
 #	try "build" without networking available
@@ -33,7 +34,10 @@
 #BUILD TEST
 
 #OTHER NOTES
-# add msys/mingw-w64 project to dependencies/credits list
+# dependencies/credits list
+#	add msys/mingw-w64 project
+#	add musl project (and libraries)
+#	replace wget with curl project
 # now need zip/unzip in path
 #	add zip/unzip [ -x ... ] checks and message (read ENTER) if not
 # markdown-viewer xpi package
@@ -300,8 +304,9 @@ endif
 
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
 #	found by: https://github.com/faylang/fay/issues/261
-override LANG				?= C.UTF-8
+override LANG				?= en_US.UTF-8
 override TERM				?= ansi
+override CC				:=
 override CHOST				:=
 override CFLAGS				:=
 override LDFLAGS			:=
@@ -319,6 +324,13 @@ override BUILD_MSYS			:= 32
 override CHOST				:= $(BUILD_ARCH)-pc-msys$(BUILD_MSYS)
 endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
+endif
+#WORK
+override MUSL_GCC			:= $(COMPOSER_ABODE)/bin/musl-gcc
+#override MUSL_GCC			:= TODO
+ifneq ($(wildcard $(MUSL_GCC)),)
+override CC				:= $(MUSL_GCC)
+override CFLAGS				:= $(CFLAGS) -static
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
@@ -350,6 +362,48 @@ endif
 override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
+
+# http://www.musl-libc.org/intro.html (license: MIT)
+# http://www.musl-libc.org/how.html
+override MUSL_VERSION			:= 1.1.5
+override MUSL_SRC			:= git://git.musl-libc.org/musl
+override MUSL_DST			:= $(COMPOSER_BUILD)/musl
+override MUSL_CMT			:= v$(MUSL_VERSION)
+# http://www.info-zip.org/license.html (license: BSD)
+# http://www.info-zip.org
+override MUSL_IZIP_VERSION		:= 3.0
+override MUSL_UZIP_VERSION		:= 6.0
+override MUSL_IZIP_BIN_SRC		:= http://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/$(MUSL_IZIP_VERSION)/zip$(subst .,,$(MUSL_IZIP_VERSION)).tar.gz
+override MUSL_UZIP_BIN_SRC		:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(MUSL_UZIP_VERSION)/unzip$(subst .,,$(MUSL_UZIP_VERSION)).tar.gz
+override MUSL_IZIP_BIN_DST		:= $(COMPOSER_BUILD)/musl/zip$(subst .,,$(MUSL_IZIP_VERSION))
+override MUSL_UZIP_BIN_DST		:= $(COMPOSER_BUILD)/musl/unzip$(subst .,,$(MUSL_UZIP_VERSION))
+#WORK : see if any of the below are in 'git' archives
+#WORK : if so, fix "repository" wording to "repositories" in HELP_TARGETS_SUB
+# http://www.zlib.net/zlib_license.html (license: custom = as-is)
+# http://www.zlib.net
+override MUSL_ZLIB_VERSION		:= 1.2.8
+override MUSL_ZLIB_BIN_SRC		:= http://www.zlib.net/zlib-$(MUSL_ZLIB_VERSION).tar.xz
+override MUSL_ZLIB_BIN_DST		:= $(COMPOSER_BUILD)/musl/zlib-$(MUSL_ZLIB_VERSION)
+# https://www.openssl.org/source/license.html (license: BSD)
+# https://www.openssl.org
+override MUSL_OSSL_VERSION		:= 1.0.1j
+override MUSL_OSSL_BIN_SRC		:= https://www.openssl.org/source/openssl-$(MUSL_OSSL_VERSION).tar.gz
+override MUSL_OSSL_BIN_DST		:= $(COMPOSER_BUILD)/musl/openssl-$(MUSL_OSSL_VERSION)
+# http://www.curl.haxx.se/docs/copyright.html (license: MIT)
+# http://www.curl.haxx.se
+override MUSL_CURL_VERSION		:= 7.39.0
+override MUSL_CURL_BIN_SRC		:= http://www.curl.haxx.se/download/curl-$(MUSL_CURL_VERSION).tar.gz
+override MUSL_CURL_BIN_DST		:= $(COMPOSER_BUILD)/musl/curl-$(MUSL_CURL_VERSION)
+# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
+# https://www.gnu.org/software/libiconv
+override MUSL_ICNV_VERSION		:= 1.14
+override MUSL_ICNV_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(MUSL_ICNV_VERSION).tar.gz
+override MUSL_ICNV_BIN_DST		:= $(COMPOSER_BUILD)/musl/libiconv-$(MUSL_ICNV_VERSION)
+# http://sourceforge.net/projects/expat (license: MIT)
+# http://expat.sourceforge.net
+override MUSL_EXPT_VERSION		:= 2.1.0
+override MUSL_EXPT_BIN_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(MUSL_EXPT_VERSION)/expat-$(MUSL_EXPT_VERSION).tar.gz
+override MUSL_EXPT_BIN_DST		:= $(COMPOSER_BUILD)/musl/expat-$(MUSL_EXPT_VERSION)
 
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
@@ -500,11 +554,11 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-gcc \
 	msys2-devel \
 	\
+	curl \
 	patch \
 	tar \
 	unzip \
 	vim \
-	wget \
 	zip \
 	\
 	gettext-devel \
@@ -538,11 +592,11 @@ override WINDOWS_BINARY_LIST		:= \
 	true \
 	uname \
 	\
+	curl \
 	patch \
 	tar \
 	unzip \
 	vim \
-	wget \
 	zip \
 	\
 	cygwin-console-helper \
@@ -697,8 +751,8 @@ override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override TIMESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 
-override WGET				:= "$(call COMPOSER_FIND,$(PATH_LIST),wget)" --verbose --restrict-file-names=windows --no-check-certificate --server-response --timestamping
-override WGET_FILE			= $(WGET) --directory-prefix="$(COMPOSER_STORE)" "$(1)"
+override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --insecure --location --remote-time
+override CURL_FILE			= $(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
 
 override define UNZIP			=
 	"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
@@ -711,7 +765,7 @@ override define UNTAR			=
 endef
 override define PATCH			=
 	cd "$(1)" && \
-		$(call WGET_FILE,$(2)) && \
+		$(call CURL_FILE,$(2)) && \
 		"$(call COMPOSER_FIND,$(PATH_LIST),patch)" --strip=1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
 
@@ -776,8 +830,10 @@ endif
 endif
 
 override BUILD_ENV			:= \
+	LC_ALL="$(LANG)" \
 	LANG="$(LANG)" \
 	TERM="$(TERM)" \
+	CC="$(CC)" \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
@@ -1040,12 +1096,15 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-prep$(_D)"			"Preparation of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-build$(_D)"		"Build/compile of Git from source archive"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-musl$(_D)"			"Download/preparation of MUSL LibC source repository/archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git$(_D)"			"Download/preparation of Git source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-musl$(_D):"	"$(_E)$(FETCHIT)-musl-pull$(_D)"		"Download of MUSL LibC source repository/archives"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-musl-prep$(_D)"		"Preparation of MUSL LibC source repository/archives"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-make$(_D):"	"$(_E)$(FETCHIT)-make-pull$(_D)"		"Download of GNU Make source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make-prep$(_D)"		"Preparation of GNU Make source repository"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-git$(_D):"	"$(_E)$(FETCHIT)-git-pull$(_D)"			"Download of Git source repository"
@@ -1065,12 +1124,19 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-musl$(_D)"			"Build/compile of MUSL LibC (and libraries/utilities) from source/archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
+	@$(HELPOUT1) "$(_E)$(BUILDIT)-musl$(_D):"	"$(_E)$(BUILDIT)-musl-infozip$(_D)"		"Build/compile of Info-ZIP from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-musl-zlib$(_D)"		"Build/compile of Zlib from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-musl-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-musl-curl$(_D)"		"Build/compile of cURL from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-musl-libiconv$(_D)"		"Build/compile of Libiconv from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-musl-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) "$(_E)$(BUILDIT)-tex$(_D):"	"$(_E)$(BUILDIT)-tex-fmt$(_D)"			"Build/install TeX Live format files"
 	@$(HELPOUT1) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-type$(_D)"		"Build/compile of Pandoc-Types from source"
@@ -1390,7 +1456,7 @@ $(UPGRADE):
 		chmod 755 ./build.sh &&
 		$(BUILD_ENV) ./build.sh
 	$(call GIT_REPO,$(REVEALJS_DST),$(REVEALJS_SRC),$(REVEALJS_CMT))
-	$(call WGET_FILE,$(W3CSLIDY_SRC))
+	$(call CURL_FILE,$(W3CSLIDY_SRC))
 	$(call UNZIP,$(W3CSLIDY_DST),$(W3CSLIDY_SRC))
 
 ########################################
@@ -1406,11 +1472,17 @@ $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
+ifeq ($(BUILD_MSYS),)
+$(FETCHIT): $(FETCHIT)-musl
+endif
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
+ifeq ($(BUILD_MSYS),)
+$(BUILDIT): $(BUILDIT)-musl
+endif
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
@@ -1443,6 +1515,7 @@ endif
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
+	$(CP) "$(COMPOSER_ABODE)/bin/"{curl,zip,unzip}* "$(COMPOSER_PROGS)/usr/bin/"
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/usr/bin/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
@@ -1492,7 +1565,9 @@ $(CHECKIT):
 	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifneq ($(BUILD_MSYS),)
-	@$(HELPOUT1) "$(_C)MSYS2"		"$(_M)$(MSYS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"	"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
+else
+	@$(HELPOUT1) "$(MARKER) $(_E)MUSL LibC"	"$(_E)$(MUSL_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(MUSL_GCC) --version	2>/dev/null | $(SED) -n "s|^gcc.*[ ]([^ ]+)$$|\1|gp")"
 endif
 	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_VERSION)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
@@ -1507,7 +1582,7 @@ endif
 	@$(HELPOUT1) "- $(_C)GHC"		"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Cabal"		"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "$(MARKER)"		"$(_C)GHC Library:"		"$(_M)$(GHC_VERSION_LIB)"
+	@$(HELPOUT1) "$(MARKER)"		"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -1540,6 +1615,11 @@ $(SHELLIT)-bashrc:
 		set -o vi
 		eval $$(dircolors 2>/dev/null)
 		#
+		export LANG="$(LANG)"
+		export LC_ALL="$${LANG}"
+		export LC_COLLATE="C"
+		export LC_ALL=
+		#
 		$(MKDIR) "$(COMPOSER_ABODE)/.bash_history"
 		export HISTFILE="$(COMPOSER_ABODE)/.bash_history/$$(date +%Y-%m)"
 		export HISTSIZE="$$(( (2**31)-1 ))"
@@ -1560,11 +1640,9 @@ $(SHELLIT)-bashrc:
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
 		unset VISUAL
 		#
+		alias ll='$(LS)'
 		alias more="$${PAGER}"
 		alias vi="$${EDITOR}"
-		#
-		export LC_COLLATE="C"
-		alias ll='$(LS)'
 		#
 		alias composer='$(RUNMAKE)'
 		alias compose='$(COMPOSE)'
@@ -1634,21 +1712,13 @@ $(SHELLIT)-vimrc:
 
 override define AUTOTOOLS_BUILD =
 	cd "$(1)" &&
-		$(BUILD_ENV) ./configure \
-			--exec-prefix="$(2)" \
-			--prefix="$(2)" \
-			$(3) \
-			&&
+		$(BUILD_ENV) ./configure --prefix="$(2)" $(3) &&
 		$(BUILD_ENV) $(MAKE) $(4) &&
 		$(BUILD_ENV) $(MAKE) install
 endef
 override define AUTOTOOLS_BUILD_MINGW =
 	cd "$(1)" &&
-		$(BUILD_ENV_MINGW) ./configure \
-			--exec-prefix="$(2)" \
-			--prefix="$(2)" \
-			$(3) \
-			&&
+		$(BUILD_ENV_MINGW) ./configure --prefix="$(2)" $(3) &&
 		$(BUILD_ENV_MINGW) $(MAKE) $(4) &&
 		$(BUILD_ENV_MINGW) $(MAKE) install
 endef
@@ -1705,8 +1775,8 @@ else
 endif
 
 .PHONY: $(STRAPIT)-msys
-#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-bin
-#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-init
+$(STRAPIT)-msys: $(STRAPIT)-msys-bin
+$(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
 $(STRAPIT)-msys: $(STRAPIT)-msys-dll
@@ -1714,7 +1784,7 @@ $(STRAPIT)-msys: $(STRAPIT)-check
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
-	$(call WGET_FILE,$(MSYS_BIN_SRC))
+	$(call CURL_FILE,$(MSYS_BIN_SRC))
 	$(call UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
 
 .PHONY: $(STRAPIT)-msys-init
@@ -1729,7 +1799,7 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2)
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
 		@$(HELPLVL1)
-		@read ENTER
+#WORK		@read ENTER
 		$(RUNMAKE) $(SHELLIT)-msys
 		@$(HELPLVL1)
 		@$(HELPOUT2) "The shell window has been launched."
@@ -1738,7 +1808,7 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2)
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
 		@$(HELPLVL1)
-		@read ENTER
+#WORK		@read ENTER
 	fi
 
 .PHONY: $(STRAPIT)-msys-fix
@@ -1768,6 +1838,128 @@ $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
+.PHONY: $(FETCHIT)-musl
+$(FETCHIT)-musl: $(FETCHIT)-musl-pull
+$(FETCHIT)-musl: $(FETCHIT)-musl-prep
+
+.PHONY: $(FETCHIT)-musl-pull
+$(FETCHIT)-musl-pull:
+	$(call GIT_REPO,$(MUSL_DST),$(MUSL_SRC),$(MUSL_CMT))
+#WORK
+#	$(call CURL_FILE,$(MUSL_IZIP_BIN_SRC))
+#	$(call CURL_FILE,$(MUSL_UZIP_BIN_SRC))
+#	$(call CURL_FILE,$(MUSL_ZLIB_BIN_SRC))
+#	$(call CURL_FILE,$(MUSL_OSSL_BIN_SRC))
+#	$(call CURL_FILE,$(MUSL_CURL_BIN_SRC))
+#	$(call CURL_FILE,$(MUSL_ICNV_BIN_SRC))
+#	$(call CURL_FILE,$(MUSL_EXPT_BIN_SRC))
+	$(call UNTAR,$(MUSL_IZIP_BIN_DST),$(MUSL_IZIP_BIN_SRC))
+	$(call UNTAR,$(MUSL_UZIP_BIN_DST),$(MUSL_UZIP_BIN_SRC))
+	$(call UNTAR,$(MUSL_ZLIB_BIN_DST),$(MUSL_ZLIB_BIN_SRC))
+	$(call UNTAR,$(MUSL_OSSL_BIN_DST),$(MUSL_OSSL_BIN_SRC))
+	$(call UNTAR,$(MUSL_CURL_BIN_DST),$(MUSL_CURL_BIN_SRC))
+	$(call UNTAR,$(MUSL_ICNV_BIN_DST),$(MUSL_ICNV_BIN_SRC))
+	$(call UNTAR,$(MUSL_EXPT_BIN_DST),$(MUSL_EXPT_BIN_SRC))
+
+.PHONY: $(FETCHIT)-musl-prep
+$(FETCHIT)-musl-prep:
+	$(SED) -i \
+		-e "s|^(prefix[ ][=][ ]).+$$|\1$(COMPOSER_ABODE)|g" \
+		"$(MUSL_IZIP_BIN_DST)/unix/Makefile" \
+		"$(MUSL_UZIP_BIN_DST)/unix/Makefile"
+ifneq ($(BUILD_DIST),)
+	$(CP) "$(MUSL_OSSL_BIN_DST)/Configure" "$(MUSL_OSSL_BIN_DST)/configure"
+else
+	$(CP) "$(MUSL_OSSL_BIN_DST)/config" "$(MUSL_OSSL_BIN_DST)/configure"
+endif
+	$(SED) -i \
+		-e "s|(TERMIO)([^S])|\1S\2|g" \
+		-e "s|(termio)([^s])|\1s\2|g" \
+		"$(MUSL_OSSL_BIN_DST)/configure" \
+		"$(MUSL_OSSL_BIN_DST)/crypto/ui/ui_openssl.c"
+
+.PHONY: $(BUILDIT)-musl
+$(BUILDIT)-musl:
+	echo WORK
+	$(call AUTOTOOLS_BUILD,$(MUSL_DST),$(COMPOSER_ABODE))
+	$(RUNMAKE) $(BUILDIT)-musl-infozip
+	$(RUNMAKE) $(BUILDIT)-musl-zlib
+	$(RUNMAKE) $(BUILDIT)-musl-openssl
+	$(RUNMAKE) $(BUILDIT)-musl-curl
+#	$(RUNMAKE) $(BUILDIT)-musl-libiconv
+#	$(RUNMAKE) $(BUILDIT)-musl-expat
+#WORK
+	$(RUNMAKE) do-make
+	$(RUNMAKE) do-git
+	$(RUNMAKE) do-git
+#WORK
+
+.PHONY: $(BUILDIT)-musl-infozip
+$(BUILDIT)-musl-infozip:
+ifeq ($(CC),$(MUSL_GCC))
+	$(SED) -i \
+		-e "s|^(CC[ ][=][ ]).+$$|\1$(CC) -static|g" \
+		"$(MUSL_IZIP_BIN_DST)/unix/Makefile" \
+		"$(MUSL_UZIP_BIN_DST)/unix/Makefile"
+endif
+	cd "$(MUSL_IZIP_BIN_DST)" &&
+		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic &&
+		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
+	cd "$(MUSL_UZIP_BIN_DST)" &&
+		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic &&
+		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
+
+.PHONY: $(BUILDIT)-musl-zlib
+$(BUILDIT)-musl-zlib:
+	$(call AUTOTOOLS_BUILD,$(MUSL_ZLIB_BIN_DST),$(COMPOSER_ABODE),\
+		--static \
+	)
+
+.PHONY: $(BUILDIT)-musl-openssl
+# thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
+$(BUILDIT)-musl-openssl:
+ifeq ($(CC),$(MUSL_GCC))
+	$(SED) -i \
+		-e "s|(gcc[:])([-]D)|\1-static \2|g" \
+		"$(MUSL_OSSL_BIN_DST)/Configure" \
+		"$(MUSL_OSSL_BIN_DST)/configure"
+endif
+ifneq ($(BUILD_DIST),)
+	$(call AUTOTOOLS_BUILD,$(MUSL_OSSL_BIN_DST),$(COMPOSER_ABODE),\
+		linux-generic32 \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(MUSL_OSSL_BIN_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(BUILDIT)-musl-curl
+$(BUILDIT)-musl-curl:
+ifeq ($(CC),$(MUSL_GCC))
+	$(SED) -i \
+		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
+		"$(MUSL_CURL_BIN_DST)/"*"/Makefile.in"
+endif
+	$(call AUTOTOOLS_BUILD,$(MUSL_CURL_BIN_DST),$(COMPOSER_ABODE),\
+		--disable-shared \
+		--enable-static \
+		\
+		--without-libidn \
+	)
+
+.PHONY: $(BUILDIT)-musl-libiconv
+$(BUILDIT)-musl-libiconv:
+	$(call AUTOTOOLS_BUILD,$(MUSL_ICNV_BIN_DST),$(COMPOSER_ABODE),\
+		--disable-shared \
+		--enable-static \
+	)
+
+.PHONY: $(BUILDIT)-musl-expat
+$(BUILDIT)-musl-expat:
+	$(call AUTOTOOLS_BUILD,$(MUSL_EXPT_BIN_DST),$(COMPOSER_ABODE),\
+		--disable-shared \
+		--enable-static \
+	)
+
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
 $(FETCHIT)-make: $(FETCHIT)-make-prep
@@ -1785,7 +1977,9 @@ $(FETCHIT)-make-prep:
 
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
-	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),\
+		--without-guile \
+	)
 
 .PHONY: $(STRAPIT)-git
 $(STRAPIT)-git: $(STRAPIT)-git-pull
@@ -1798,7 +1992,7 @@ $(FETCHIT)-git: $(FETCHIT)-git-prep
 
 .PHONY: $(STRAPIT)-git-pull
 $(STRAPIT)-git-pull:
-	$(call WGET_FILE,$(GIT_BIN_SRC))
+	$(call CURL_FILE,$(GIT_BIN_SRC))
 	$(call UNTAR,$(GIT_BIN_DST),$(GIT_BIN_SRC))
 
 .PHONY: $(FETCHIT)-git-pull
@@ -1833,12 +2027,12 @@ $(FETCHIT)-tex: $(FETCHIT)-tex-prep
 
 .PHONY: $(FETCHIT)-tex-pull
 $(FETCHIT)-tex-pull:
-	$(call WGET_FILE,$(TEX_TEXMF_SRC))
-	$(call WGET_FILE,$(TEX_BIN_SRC))
+	$(call CURL_FILE,$(TEX_TEXMF_SRC))
+	$(call CURL_FILE,$(TEX_BIN_SRC))
 	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
 ifneq ($(BUILD_MSYS),)
-	$(call WGET_FILE,$(TEX_WINDOWS_SRC))
+	$(call CURL_FILE,$(TEX_WINDOWS_SRC))
 	$(call UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
 endif
 
@@ -1877,8 +2071,8 @@ $(BUILDIT)-tex-fmt:
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-bin:
-	$(call WGET_FILE,$(GHC_BIN_SRC))
-	$(call WGET_FILE,$(CBL_BIN_SRC))
+	$(call CURL_FILE,$(GHC_BIN_SRC))
+	$(call CURL_FILE,$(CBL_BIN_SRC))
 	$(call UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
 	$(call UNTAR,$(CBL_BIN_DST),$(CBL_BIN_SRC))
 ifeq ($(BUILD_MSYS),)
