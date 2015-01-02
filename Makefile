@@ -1927,6 +1927,24 @@ $(FETCHIT)-pandoc:
 	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
 	$(call GIT_SUBMODULE,$(PANDOC_DST))
 
+#>			--enable-tests
+#>		echo && echo "$(HELPMARK) Test [$(1)]" &&
+#>		$(BUILD_ENV_MINGW) $(CABAL) test &&
+override define PANDOC_BUILD =
+	cd "$(1)" &&
+		echo && echo "$(HELPMARK) Configure [$(1)]" &&
+		$(BUILD_ENV_MINGW) $(CABAL) configure \
+			--prefix="$(COMPOSER_ABODE)" \
+			--flags="embed_data_files http-conduit" \
+			--disable-executable-dynamic \
+			--disable-shared \
+			&&
+		echo && echo "$(HELPMARK) Build [$(1)]" &&
+		$(BUILD_ENV_MINGW) $(CABAL) build &&
+		echo && echo "$(HELPMARK) Install [$(1)]" &&
+		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE))
+endef
+
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
 	echo && echo "$(HELPMARK) Dependencies"
@@ -1966,24 +1984,6 @@ $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
 	@echo
 	$(BUILD_ENV) pandoc --version
-
-#>			--enable-tests
-#>		echo && echo "$(HELPMARK) Test [$(1)]" &&
-#>		$(BUILD_ENV_MINGW) $(CABAL) test &&
-override define PANDOC_BUILD =
-	cd "$(1)" &&
-		echo && echo "$(HELPMARK) Configure [$(1)]" &&
-		$(BUILD_ENV_MINGW) $(CABAL) configure \
-			--prefix="$(COMPOSER_ABODE)" \
-			--flags="embed_data_files http-conduit" \
-			--disable-executable-dynamic \
-			--disable-shared \
-			&&
-		echo && echo "$(HELPMARK) Build [$(1)]" &&
-		$(BUILD_ENV_MINGW) $(CABAL) build &&
-		echo && echo "$(HELPMARK) Install [$(1)]" &&
-		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE))
-endef
 
 ########################################
 
