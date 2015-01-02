@@ -441,8 +441,9 @@ override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 
+ifeq ($(BUILD_MSYS),)
 override BUILD_TOOLS			:=
-ifneq ($(BUILD_MSYS),)
+else
 override BUILD_TOOLS			:= $(BUILD_TOOLS) \
 	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
 	--with-cpp="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/cpp" \
@@ -800,7 +801,7 @@ endif
 override HELPLVL1 := printf "\#%.0s" {1..70}; echo
 override HELPLVL2 := printf "\#%.0s" {1..40}; echo
 
-override HELPOUT1 := printf "   %-15s %-25s %s\n"
+override HELPOUT1 := printf "   %-20s %-30s %s\n"
 override HELPOUT2 := printf "\# %-20s %s\n"
 override HELPMARK := "\>\>"
 
@@ -876,33 +877,35 @@ HELP_OPTIONS_SUB:
 	@echo ""
 	@echo "Following is the complete list of exposed/configurable variables:"
 	@echo ""
-	@echo "Options (^ := COMPOSER):"
-	@$(HELPOUT1) "^_GITREPO"	"Source repository"		"[$(COMPOSER_GITREPO)]"
-	@$(HELPOUT1) "^_VERSION"	"Version for cloning"		"[$(COMPOSER_VERSION)] (valid: any Git tag or commit)"
-	@$(HELPOUT1) "^_STAMP"		"Timestamp file"		"[$(COMPOSER_STAMP)]"
-	@$(HELPOUT1) "^_CSS"		"Default CSS file"		"[$(COMPOSER_CSS)]"
-	@$(HELPOUT1) "^_EXT"		"Markdown file extension"	"[$(COMPOSER_EXT)]"
-	@$(HELPOUT1) "^_FILES"		"List for '$(REPLICA)' target"	"[$(COMPOSER_FILES)]"
+	@echo "Options:"
+	@$(HELPOUT1) "COMPOSER_GITREPO"		"Source repository"		"[$(COMPOSER_GITREPO)]"
+	@$(HELPOUT1) "COMPOSER_VERSION"		"Version for cloning"		"[$(COMPOSER_VERSION)] (valid: any Git tag or commit)"
 	@echo ""
-	@echo "Recursion Options (^ := COMPOSER):"
-	@$(HELPOUT1) "^_TARGETS"	"Default targets"		"[$(COMPOSER_TARGETS)]"
-	@$(HELPOUT1) "^_SUBDIRS"	"Sub-directories list"		"[$(COMPOSER_SUBDIRS)]"
-	@$(HELPOUT1) "^_DEPENDS"	"Sub-directory dependency"	"[$(COMPOSER_DEPENDS)] (valid: empty or 1)"
-	@$(HELPOUT1) "^_TESTING"	"Modifies '$(TESTOUT)' target"	"[$(COMPOSER_TESTING)] (valid: empty, 0 or 1)"
+	@echo "File Options:"
+	@$(HELPOUT1) "COMPOSER_STAMP"		"Timestamp file"		"[$(COMPOSER_STAMP)]"
+	@$(HELPOUT1) "COMPOSER_CSS"		"Default CSS file"		"[$(COMPOSER_CSS)]"
+	@$(HELPOUT1) "COMPOSER_EXT"		"Markdown file extension"	"[$(COMPOSER_EXT)]"
+	@$(HELPOUT1) "COMPOSER_FILES"		"List for '$(REPLICA)' target"	"[$(COMPOSER_FILES)]"
 	@echo ""
-	@echo "Location Options (^ := COMPOSER):"
-	@$(HELPOUT1) "^_ABODE"		"Install/binary directory"	"[$(COMPOSER_ABODE)]"
-	@$(HELPOUT1) "^_STORE"		"Source files directory"	"[$(COMPOSER_STORE)]"
-	@$(HELPOUT1) "^_BUILD"		"Build directory"		"[$(COMPOSER_BUILD)]"
-	@$(HELPOUT1) "^_PROGS"		"Built binaries directory"	"[$(COMPOSER_PROGS)]"
-	@$(HELPOUT1) "^_PROGS_USE"	"Use repository binaries"	"[$(COMPOSER_PROGS_USE)] (valid: empty or 1)"
+	@echo "Recursion Options:"
+	@$(HELPOUT1) "COMPOSER_TARGETS"		"Default targets"		"[$(COMPOSER_TARGETS)]"
+	@$(HELPOUT1) "COMPOSER_SUBDIRS"		"Sub-directories list"		"[$(COMPOSER_SUBDIRS)]"
+	@$(HELPOUT1) "COMPOSER_DEPENDS"		"Sub-directory dependency"	"[$(COMPOSER_DEPENDS)] (valid: empty or 1)"
+	@$(HELPOUT1) "COMPOSER_TESTING"		"Modifies '$(TESTOUT)' target"	"[$(COMPOSER_TESTING)] (valid: empty, 0 or 1)"
 	@echo ""
-	@echo "Build Options (^ := BUILD):"
-	@$(HELPOUT1) "^_DIST"		"Build generic binaries"	"[$(BUILD_DIST)] (valid: empty or 1)"
-	@$(HELPOUT1) "^_MSYS"		"Force Windows detection"	"[$(BUILD_MSYS)] (valid: empty or 1)"
-	@$(HELPOUT1) "^_GHC_78"		"GHC 7.8 instead of 7.6"	"[$(BUILD_GHC_78)] (valid: empty or 1)"
-	@$(HELPOUT1) "^_PLAT"		"Overrides 'uname -o'"		"[$(BUILD_PLAT)]"
-	@$(HELPOUT1) "^_ARCH"		"Overrides 'uname -m'"		"[$(BUILD_ARCH)]"
+	@echo "Location Options:"
+	@$(HELPOUT1) "COMPOSER_ABODE"		"Install/binary directory"	"[$(COMPOSER_ABODE)]"
+	@$(HELPOUT1) "COMPOSER_STORE"		"Source files directory"	"[$(COMPOSER_STORE)]"
+	@$(HELPOUT1) "COMPOSER_BUILD"		"Build directory"		"[$(COMPOSER_BUILD)]"
+	@$(HELPOUT1) "COMPOSER_PROGS"		"Built binaries directory"	"[$(COMPOSER_PROGS)]"
+	@$(HELPOUT1) "COMPOSER_PROGS_USE"	"Use repository binaries"	"[$(COMPOSER_PROGS_USE)] (valid: empty or 1)"
+	@echo ""
+	@echo "Build Options:"
+	@$(HELPOUT1) "BUILD_DIST"		"Build generic binaries"	"[$(BUILD_DIST)] (valid: empty or 1)"
+	@$(HELPOUT1) "BUILD_MSYS"		"Force Windows detection"	"[$(BUILD_MSYS)] (valid: empty or 1)"
+	@$(HELPOUT1) "BUILD_GHC_78"		"GHC 7.8 instead of 7.6"	"[$(BUILD_GHC_78)] (valid: empty or 1)"
+	@$(HELPOUT1) "BUILD_PLAT"		"Overrides 'uname -o'"		"[$(BUILD_PLAT)]"
+	@$(HELPOUT1) "BUILD_ARCH"		"Overrides 'uname -m'"		"[$(BUILD_ARCH)]"
 	@echo ""
 	@echo "All of these can be set on the command line or in the environment."
 	@echo ""
@@ -968,8 +971,18 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"			"Download/preparation of Pandoc source repository"
+	@$(HELPOUT1) "$(FETCHIT)-make:"		"$(FETCHIT)-make-pull"			"Download of GNU Make source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-make-prep"			"Preparation of GNU Make source repository"
+	@$(HELPOUT1) "$(FETCHIT)-git:"		"$(FETCHIT)-git-pull"			"Download of Git source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"			"Preparation of Git source repository"
+	@$(HELPOUT1) "$(FETCHIT)-git-prep:"	"$(FETCHIT)-git-prep-patch"		"Download/apply patches to Git source repository"
+	@$(HELPOUT1) "$(FETCHIT)-tex:"		"$(FETCHIT)-tex-pull"			"Download of TeX Live source archives"
+	@$(HELPOUT1) ""				"$(FETCHIT)-tex-prep"			"Preparation of TeX Live source archives"
 	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"			"Download of GHC source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-ghc-prep"			"Preparation of GHC source repository"
+	@$(HELPOUT1) "$(FETCHIT)-haskell:"	"$(FETCHIT)-haskell-pull"		"Download of Haskell Platform source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-prep"		"Preparation of Haskell Platform source repository"
+	@$(HELPOUT1) "$(FETCHIT)-haskell-prep:"	"$(FETCHIT)-haskell-prep-packages"	"Download/preparation of Haskell Platform packages"
 	@$(HELPOUT1) "$(FETCHIT)-pandoc:"	"$(FETCHIT)-pandoc-type"		"Download/preparation of Pandoc-Types source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"		"Download/preparation of TeXMath source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"		"Download/preparation of Highlighting-Kate source repository"
@@ -1435,25 +1448,25 @@ endif
 
 .PHONY: $(CHECKIT)
 $(CHECKIT):
-	@$(HELPOUT1) "Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
-	@$(HELPOUT1) "----------"	"--------------------"		"--------------------"
+	@$(HELPOUT1) "Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
+	@$(HELPOUT1) "----------"		"--------------------"		"--------------------"
 ifneq ($(BUILD_MSYS),)
-	@$(HELPOUT1) "MSYS2"		"$(MSYS_VERSION)"	"$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "MSYS2"			"$(MSYS_VERSION)"	"$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
 endif
-	@$(HELPOUT1) "GNU Make"		"$(MAKE_VERSION)"	"$(shell $(BUILD_ENV) make --version			2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "Git SCM"		"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "Pandoc"		"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
-	@$(HELPOUT1) "- Types"		"$(PANDOC_TYPE_CMT)"	"$(shell $(BUILD_ENV) cabal info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- TeXMath"	"$(PANDOC_MATH_CMT)"	"$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- HighlightKate"	"$(PANDOC_HIGH_CMT)"	"$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- CiteProc"	"$(PANDOC_CITE_CMT)"	"$(shell $(BUILD_ENV) pandoc-citeproc --version		2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "TeX Live"		"$(TEX_VERSION)"	"$(shell $(BUILD_ENV) tex --version			2>/dev/null | $(SED) -n "s|^.*TeX[ ]Live[ ]([0-9]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- PDFLaTeX"	"$(TEX_PDF_VERSION)"	"$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
-	@$(HELPOUT1) "Haskell"		"$(HASKELL_CMT)"	"$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- GHC"		"$(GHC_VERSION)"	"$(shell $(BUILD_ENV) ghc --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- Cabal"		"$(CABAL_VERSION)"	"$(shell $(BUILD_ENV) cabal --version			2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- Library"	"$(CABAL_VERSION_LIB)"	"$(shell $(BUILD_ENV) cabal info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "$(HELPMARK)"	"GHC Library:"		"$(GHC_VERSION_LIB)"
+	@$(HELPOUT1) "GNU Make"			"$(MAKE_VERSION)"	"$(shell $(BUILD_ENV) make --version			2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "Git SCM"			"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "Pandoc"			"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
+	@$(HELPOUT1) "- Types"			"$(PANDOC_TYPE_CMT)"	"$(shell $(BUILD_ENV) cabal info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- TeXMath"		"$(PANDOC_MATH_CMT)"	"$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- Highlighting-Kate"	"$(PANDOC_HIGH_CMT)"	"$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- CiteProc"		"$(PANDOC_CITE_CMT)"	"$(shell $(BUILD_ENV) pandoc-citeproc --version		2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "TeX Live"			"$(TEX_VERSION)"	"$(shell $(BUILD_ENV) tex --version			2>/dev/null | $(SED) -n "s|^.*TeX[ ]Live[ ]([0-9]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- PDFLaTeX"		"$(TEX_PDF_VERSION)"	"$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
+	@$(HELPOUT1) "Haskell"			"$(HASKELL_CMT)"	"$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- GHC"			"$(GHC_VERSION)"	"$(shell $(BUILD_ENV) ghc --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- Cabal"			"$(CABAL_VERSION)"	"$(shell $(BUILD_ENV) cabal --version			2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- Library"		"$(CABAL_VERSION_LIB)"	"$(shell $(BUILD_ENV) cabal info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "$(HELPMARK)"		"GHC Library:"		"$(GHC_VERSION_LIB)"
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -1683,8 +1696,14 @@ $(STRAPIT)-dll:
 	$(CP) "$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(FETCHIT)-make
-$(FETCHIT)-make:
+$(FETCHIT)-make: $(FETCHIT)-make-pull $(FETCHIT)-make-prep
+
+.PHONY: $(FETCHIT)-make-pull
+$(FETCHIT)-make-pull:
 	$(call GIT_REPO,$(MAKE_DST),$(MAKE_SRC),$(MAKE_CMT))
+
+.PHONY: $(FETCHIT)-make-prep
+$(FETCHIT)-make-prep:
 	cd "$(MAKE_DST)" &&
 		$(BUILD_ENV) autoreconf -i &&
 		$(BUILD_ENV) ./configure &&
@@ -1702,12 +1721,7 @@ $(STRAPIT)-git:
 		$(BUILD_ENV) $(MAKE) configure
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE))
 
-#WORK : sort out git targets
-#WORK : standardize -pull -prep across the board; document variants, remove antiquated targets in documentation
-
 .PHONY: $(FETCHIT)-git
-#WORK
-# thanks for the 'socket.h' fix below: https://stackoverflow.com/questions/25736266/fatal-error-sys-socket-h-no-such-file-or-directory-x86-64-w64-mingw32-mode
 $(FETCHIT)-git: $(FETCHIT)-git-pull $(FETCHIT)-git-prep
 
 .PHONY: $(FETCHIT)-git-pull
@@ -1715,43 +1729,39 @@ $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
 
 .PHONY: $(FETCHIT)-git-prep
-$(FETCHIT)-git-prep: $(FETCHIT)-git-prep-patch $(FETCHIT)-git-prep-configure
+$(FETCHIT)-git-prep: $(FETCHIT)-git-prep-patch
+	cd "$(GIT_DST)" &&
+		$(BUILD_ENV) $(MAKE) configure
 
 .PHONY: $(FETCHIT)-git-prep-patch
 $(FETCHIT)-git-prep-patch:
 ifneq ($(BUILD_MSYS),)
-#>	$(SED) -i \
-#>		-e "s|sys[/]socket[.]h|ws2tcpip.h|g" \
-#>		"$(GIT_DST)/aclocal.m4"
 	$(foreach FILE,$(GIT_MSYS_PATCH_LIST),\
 		$(call PATCH,$(GIT_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
 	)
 endif
-
-.PHONY: $(FETCHIT)-git-prep-configure
-$(FETCHIT)-git-prep-configure:
-	cd "$(GIT_DST)" &&
-		$(BUILD_ENV) $(MAKE) configure
 
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(FETCHIT)-tex
-$(FETCHIT)-tex:
+$(FETCHIT)-tex: $(FETCHIT)-tex-pull $(FETCHIT)-tex-prep
+
+.PHONY: $(FETCHIT)-tex-pull
+$(FETCHIT)-tex-pull:
 	$(call WGET_FILE,$(TEX_TEXMF_SRC))
 	$(call WGET_FILE,$(TEX_BIN_SRC))
 	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
 	true
 
+.PHONY: $(FETCHIT)-tex-prep
+$(FETCHIT)-tex-prep:
+
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
 	echo WORK
-#ifneq ($(BUILD_MSYS),)
-#	cd "$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config" &&
-#		$(CP) ./mh-mingw64 ./mh-unknown
-#endif
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
@@ -1832,6 +1842,7 @@ $(FETCHIT)-ghc-pull:
 		$(BUILD_ENV) ./sync-all reset --hard
 
 .PHONY: $(FETCHIT)-ghc-prep
+# thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(FETCHIT)-ghc-prep:
 	$(call GIT_SUBMODULE,$(GHC_DST))
 #>	$(foreach FILE,\
@@ -1850,10 +1861,6 @@ $(FETCHIT)-ghc-prep:
 #>	)
 	cd "$(GHC_DST)" &&
 		$(BUILD_ENV) ./boot
-
-.PHONY: $(BUILDIT)-ghc
-# thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
-$(BUILDIT)-ghc:
 ifneq ($(BUILD_MSYS),)
 	$(foreach FILE,\
 		$(GHC_DST)/driver/ghci/ghc.mk \
@@ -1869,14 +1876,58 @@ ifneq ($(BUILD_MSYS),)
 		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
 		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
 endif
+
+.PHONY: $(BUILDIT)-ghc
+$(BUILDIT)-ghc:
 	$(call AUTOTOOLS_BUILD,$(GHC_DST),$(COMPOSER_ABODE))
 	$(RM) "$(BUILD_STRAP)/bin/ghc"*
 	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
 
 .PHONY: $(FETCHIT)-haskell
-$(FETCHIT)-haskell:
+$(FETCHIT)-haskell: $(FETCHIT)-haskell-pull $(FETCHIT)-haskell-prep
+
+.PHONY: $(FETCHIT)-haskell-pull
+$(FETCHIT)-haskell-pull:
 	$(call GIT_REPO,$(HASKELL_DST),$(HASKELL_SRC),$(HASKELL_CMT))
+
+.PHONY: $(FETCHIT)-haskell-prep
+# thanks for the 'GHC_PACKAGE_PATH' fix below: https://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
+# thanks for the 'programFindLocation' fix below: https://github.com/albertov/hdbc-postgresql/commit/d4cef4dd288432141dab6365699317f2bb26c489
+#	found by: https://github.com/haskell/cabal/issues/1467
+# thanks for the 'wspiapi.h' fix below: https://github.com/nurupo/InsertProjectNameHere/commit/23f13cd95d5d9afaadd859a4d256986817e613b9
+#	found by: https://github.com/irungentoo/toxcore/issues/92
+#	then by: https://github.com/irungentoo/toxcore/pull/94
+$(FETCHIT)-haskell-prep: $(FETCHIT)-haskell-prep-packages
+	$(SED) -i \
+		-e "s|^([ ]+GHC_PACKAGE_PATH[=].+)|#\1|g" \
+		"$(HASKELL_TAR)/scripts/build.sh"
+	$(SED) -i \
+		-e "s|^([ ]+programFindLocation[ ][=][ ].x)([ ][-])|\1 _\2|g" \
+		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
+ifneq ($(BUILD_MSYS),)
+	$(SED) -i \
+		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
+		"$(HASKELL_TAR)/packages/core.packages"
+	$(foreach FILE,\
+		$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/haskell-platform.cabal \
+		$(HASKELL_TAR)/packages/platform.packages \
+		,\
+		$(SED) -i \
+			-e "/(GLU|OpenGL)/d" \
+			"$(FILE)"
+	)
+	$(SED) -i \
+		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+		-e "s|WSPIAPI[_]H|WS2TCPIP_H|g" \
+		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
+		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
+endif
+
+.PHONY: $(FETCHIT)-haskell-prep-packages
+$(FETCHIT)-haskell-prep-packages:
 	$(SED) -i \
 		-e "s|(GHC_VER[=])[.0-9]+$$|\1$(GHC_VERSION)|g" \
 		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
@@ -1890,47 +1941,15 @@ $(FETCHIT)-haskell:
 		"$(HASKELL_DST)/src/generic/prepare.sh"
 	cd "$(HASKELL_DST)/src/generic" &&
 		$(BUILD_ENV) ./prepare.sh
-ifneq ($(BUILD_MSYS),)
-	$(SED) -i \
-		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
-		"$(HASKELL_TAR)/packages/core.packages"
-	$(foreach FILE,\
-		$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/haskell-platform.cabal \
-		$(HASKELL_TAR)/packages/platform.packages \
-		,\
-		$(SED) -i \
-			-e "/(GLU|OpenGL)/d" \
-			"$(FILE)"
-	)
-endif
 	$(foreach FILE,$(HASKELL_PATCH_LIST),\
 		$(call PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
 	)
 
 .PHONY: $(BUILDIT)-haskell
-# thanks for the 'GHC_PACKAGE_PATH' fix below: https://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
-# thanks for the 'programFindLocation' fix below: https://github.com/albertov/hdbc-postgresql/commit/d4cef4dd288432141dab6365699317f2bb26c489
-#	found by: https://github.com/haskell/cabal/issues/1467
-# thanks for the 'wspiapi.h' fix below: https://github.com/nurupo/InsertProjectNameHere/commit/23f13cd95d5d9afaadd859a4d256986817e613b9
-#	found by: https://github.com/irungentoo/toxcore/issues/92
-#	then by: https://github.com/irungentoo/toxcore/pull/94
 $(BUILDIT)-haskell:
-	$(SED) -i \
-		-e "s|^([ ]+GHC_PACKAGE_PATH[=].+)|#\1|g" \
-		"$(HASKELL_TAR)/scripts/build.sh"
-	$(SED) -i \
-		-e "s|^([ ]+programFindLocation[ ][=][ ].x)([ ][-])|\1 _\2|g" \
-		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
 ifeq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD,$(HASKELL_TAR),$(COMPOSER_ABODE),--disable-user-install)
 else
-	$(SED) -i \
-		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-		-e "s|WSPIAPI[_]H|WS2TCPIP_H|g" \
-		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
-		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
 	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(shell cat "$(HASKELL_TAR)/packages/platform.packages"),\
 			"$(HASKELL_TAR)/packages/$(FILE)" \
