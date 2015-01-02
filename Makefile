@@ -325,8 +325,8 @@ override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CC				?= gcc
 override CHOST				:=
-override CFLAGS				:=
-override LDFLAGS			:=
+override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib
+override LDFLAGS			:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib
 override SRC_HC_OPTS			:=
 
 ifneq ($(BUILD_DIST),)
@@ -348,6 +348,7 @@ endif
 
 #TODO : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
 #TODO : need to ldd final binaries to see what libraries they compile in
+#TODO : need to ldd final windows binaries to make sure they linked against the compiled libraries
 #TODO : double-check / remove 'libidn'
 ifneq ($(BUILD_MUSL),)
 override BUILD_MUSL			:= $(COMPOSER_ABODE)/bin/musl-gcc
@@ -430,6 +431,11 @@ override LIB_GTXT_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
 override LIB_NCRS_VERSION		:= 5.9
 override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
 override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/ncurses-$(LIB_NCRS_VERSION)
+# http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html (license: GPL)
+# http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html
+override LIB_RDLN_VERSION		:= 6.3
+override LIB_RDLN_TAR_SRC		:= ftp://ftp.cwru.edu/pub/bash/readline-$(LIB_RDLN_VERSION).tar.gz
+override LIB_RDLN_TAR_DST		:= $(COMPOSER_BUILD)/libs/readline-$(LIB_RDLN_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override LIB_OSSL_VERSION		:= 1.0.1j
@@ -1269,6 +1275,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-readline$(_D)"		"Build/compile of Readline from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
@@ -1737,8 +1744,11 @@ $(FETCHIT)-cabal:
 #WORK
 # https://duckduckgo.com/?q=ghc+musl
 # https://stackoverflow.com/questions/22880650/statically-linking-musl-with-ghc
-# http://stackoverflow.com/questions/10539857/statically-link-gmp-to-an-haskell-application-using-ghc-llvm/10549484#10549484
-# http://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
+# https://stackoverflow.com/questions/10539857/statically-link-gmp-to-an-haskell-application-using-ghc-llvm/10549484#10549484
+# https://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
+# https://duckduckgo.com/?q=static+ghc+binary
+# https://ghc.haskell.org/trac/ghc/ticket/8376
+#	https://ghc.haskell.org/trac/ghc/wiki/DynamicGhcPrograms
 #WORK
 #		-e "s|^([ ][ ][-][-][ ]gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
 #		-e "s|^([ ][ ][-][-][ ]hpc[-]options[:]).*$$|\1 $(SRC_HC_OPTS)|g" \
@@ -1891,6 +1901,7 @@ $(SHELLIT)-bashrc:
 		export HISTIGNORE=
 		#
 		export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
+		export PATH="$(BUILD_PATH):$(PATH)"
 		#
 		export PROMPT_DIRTRIM="1"
 		export PS1=
@@ -2132,6 +2143,7 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs: $(STRAPIT)-libs-ncurses
+$(STRAPIT)-libs: $(STRAPIT)-libs-readline
 $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
@@ -2241,6 +2253,22 @@ else ifneq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-readline
+$(STRAPIT)-libs-readline:
+	$(call CURL_FILE,$(LIB_RDLN_TAR_SRC))
+	$(call UNTAR,$(LIB_RDLN_TAR_DST),$(LIB_RDLN_TAR_SRC))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else ifneq ($(BUILD_MSYS),)
+	echo WORK
+	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE))
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(STRAPIT)-libs-openssl
