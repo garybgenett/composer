@@ -408,12 +408,12 @@ override LIB_LGMP_BIN_DST		:= $(COMPOSER_BUILD)/libs/gmp-$(subst a,,$(LIB_LGMP_V
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
 # https://www.gnu.org/software/libiconv
 override LIB_ICNV_VERSION		:= 1.14
-override LIB_ICNV_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIB_ICNV_VERSION).tar.gz
+override LIB_ICNV_BIN_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIB_ICNV_VERSION).tar.gz
 override LIB_ICNV_BIN_DST		:= $(COMPOSER_BUILD)/libs/libiconv-$(LIB_ICNV_VERSION)
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
 override LIB_GTXT_VERSION		:= 0.19.3
-override LIB_GTXT_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
+override LIB_GTXT_BIN_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
 override LIB_GTXT_BIN_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
@@ -943,9 +943,9 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 
 ########################################
 
-# thanks for the 'regex' fix below: http://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
-#	also to: http://stackoverflow.com/questions/9691508/how-can-i-use-macros-to-generate-multiple-makefile-targets-rules-inside-foreach
-#	also to: http://stackoverflow.com/questions/3063507/list-goals-targets-in-gnu-make
+# thanks for the 'regex' fix below: https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
+#	also to: https://stackoverflow.com/questions/9691508/how-can-i-use-macros-to-generate-multiple-makefile-targets-rules-inside-foreach
+#	also to: https://stackoverflow.com/questions/3063507/list-goals-targets-in-gnu-make
 #	also to: http://backreference.org/2010/05/31/working-with-blocks-in-sed
 
 override .ALL_TARGETS := \
@@ -2440,16 +2440,18 @@ endif
 .PHONY: $(FETCHIT)-tex-prep
 #WORK http://tex.aanhet.net/mingtex
 #WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
+#WORK https://duckduckgo.com/?q=texlive%20mingw%20patch%20hbf2gf%202014
 $(FETCHIT)-tex-prep:
-ifneq ($(BUILD_MUSL),)
-	$(SED) -i \
-		-e "s|[_][_](off64[_]t)|\1|g" \
-		"$(TEX_BIN_DST)/utils/pmx/pmx-"*"/libf2c/sysdep1.h"
-endif
-ifneq ($(BUILD_MSYS),)
-	$(CP) \
-		"$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
-		"$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
+	echo WORK
+#ifneq ($(BUILD_MUSL),)
+#	$(SED) -i \
+#		-e "s|[_][_](off64[_]t)|\1|g" \
+#		"$(TEX_BIN_DST)/utils/pmx/pmx-"*"/libf2c/sysdep1.h"
+#endif
+#ifneq ($(BUILD_MSYS),)
+#	$(CP) \
+#		"$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
+#		"$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
 #WORK this was needed for mingw?
 #	$(SED) -i \
 #		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
@@ -2459,14 +2461,14 @@ ifneq ($(BUILD_MSYS),)
 #	$(SED) -i \
 #		-e "s|^([#]define header)|#undef header\n\1|g" \
 #		"$(TEX_BIN_DST)/texk/cjkutils/hbf2gf.c"
-endif
+#endif
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
 ifneq ($(BUILD_MUSL),)
 	echo WORK
 	cd "$(TEX_BIN_DST)" &&
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x \
@@ -2524,6 +2526,12 @@ $(FETCHIT)-ghc-pull:
 		$(BUILD_ENV_MINGW) ./sync-all fetch --all &&
 		$(BUILD_ENV_MINGW) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) &&
 		$(BUILD_ENV_MINGW) ./sync-all reset --hard
+
+#WORK
+# https://stackoverflow.com/questions/22880650/statically-linking-musl-with-ghc
+# http://stackoverflow.com/questions/10539857/statically-link-gmp-to-an-haskell-application-using-ghc-llvm/10549484#10549484
+# http://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
+#WORK
 
 .PHONY: $(STRAPIT)-ghc-prep
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
@@ -2639,7 +2647,7 @@ $(FETCHIT)-haskell-packages:
 	)
 
 .PHONY: $(FETCHIT)-haskell-prep
-# thanks for the 'OpenGL' fix below: http://stackoverflow.com/questions/18116201/how-can-i-disable-opengl-in-the-haskell-platform
+# thanks for the 'OpenGL' fix below: https://stackoverflow.com/questions/18116201/how-can-i-disable-opengl-in-the-haskell-platform
 # thanks for the 'GHC_PACKAGE_PATH' fix below: https://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
 # thanks for the 'programFindLocation' fix below: https://github.com/albertov/hdbc-postgresql/commit/d4cef4dd288432141dab6365699317f2bb26c489
 #	found by: https://github.com/haskell/cabal/issues/1467
