@@ -3063,14 +3063,18 @@ $(FETCHIT)-tex-prep:
 	$(CP) \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
-	# "$(BUILD_PLAT),Msys" does not support symlinks
-	$(SED) -i \
-		-e "s|(as[_]ln[_]s[=].)ln[ ][-]s(.)|\1cp -pR\2|g" \
-		"$(TEX_TAR_DST)/configure"
+#WORKING
+#	# "$(BUILD_PLAT),Msys" does not support symlinks
+#	$(SED) -i \
+#		-e "s|(as[_]ln[_]s[=].)ln[ ][-]s(.)|\1cp -pR\2|g" \
+#		"$(TEX_TAR_DST)/configure"
 #WORKING
 	# "$(BUILD_PLAT),Msys" doesn't seem to build these files
 	$(SED) -i \
 		-e "s|allcm[:]allec||g" \
+		-e "s|fmtutil[:]mktexfmt||g" \
+		-e "s|kpsetool[:]kpsexpand||g" \
+		-e "s|kpsetool[:]kpsepath||g" \
 		"$(TEX_TAR_DST)/texk/texlive/tl_scripts/Makefile.in"
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
@@ -3089,7 +3093,7 @@ $(BUILDIT)-tex:
 		--without-x \
 		--disable-shared \
 		--enable-static
-#>	$(call AUTOTOOLS_BUILD,$(TEX_TAR_DST),$(COMPOSER_ABODE),\
+#>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),\
 #>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
 #>		,\
 #>		--enable-build-in-source-tree \
