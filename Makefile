@@ -418,7 +418,7 @@ override LIB_FCFG_BIN_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSI
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= 4.0
+override MAKE_CMT			:= 4.1
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -441,7 +441,7 @@ override CURL_CMT			:= $(CURL_VERSION)
 
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
-override GIT_VERSION			:= 1.9.4
+override GIT_VERSION			:= 2.2.0
 override GIT_BIN_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
 override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
 override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
@@ -923,7 +923,7 @@ $(foreach FILE,\
 	$(eval $(FILE): .set_title-$(FILE))\
 )
 .set_title-%:
-	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) [$(*)] :: $(CURDIR)\a"
+	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) :: $(CURDIR)\a"
 endif
 
 ########################################
@@ -1073,7 +1073,7 @@ HELP_OPTIONS_SUB:
 	@echo
 	@$(HELPER) "$(_H)Build Options:"
 	@$(HELPOUT1) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
-	@$(HELPOUT1) "$(_C)BUILD_MUSL$(_D)"		"Force MUSL library (static)"	"[$(_M)$(BUILD_MUSL)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)BUILD_MUSL$(_D)"		"Force MUSL C library (static)"	"[$(_M)$(BUILD_MUSL)$(_D)] $(_N)(valid: empty or 1)"
 	@$(HELPOUT1) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
 	@$(HELPOUT1) "$(_C)BUILD_GHC_78$(_D)"		"GHC 7.8 instead of 7.6"	"[$(_M)$(BUILD_GHC_78)$(_D)] $(_N)(valid: empty or 1)"
 	@$(HELPOUT1) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
@@ -1548,7 +1548,6 @@ $(UPGRADE):
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
 ifneq ($(BUILD_MUSL),)
-#WORK : need to reset the environment, so later "bootstrap" targets pick up on "BUILD_MUSL = musl-gcc"
 #WORK : need to move '-libs' and '-curl' back down to '-git'
 $(STRAPIT): $(STRAPIT)-musl $(STRAPIT)-libs $(STRAPIT)-curl
 endif
@@ -1823,41 +1822,59 @@ endif
 
 .PHONY: $(STRAPIT)-check
 $(STRAPIT)-check:
-ifeq ($(BUILD_MSYS),)
-	@if [ ! -f "$(shell ls /{,usr/}lib*/$(CHECK_LIB_DST) 2>/dev/null | tail -n1)" ]; then
-		@$(HELPLVL1)
-		@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
-		@$(HELPOUT2) "$(_N)Could not find '$(_C)$(CHECK_LIB_DST)$(_N)' library file."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
-		@$(HELPOUT2) "The pre-built GHC requires this specific file in order to run, but not necessarily this version of $(CHECK_LIB_NAME)."
-		@$(HELPOUT2) "You can likely '$(_M)ln -s$(_D)' one of the files below to something like '$(_M)/usr/lib/$(CHECK_LIB_DST)$(_D)' to work around this."
-		@echo
-		@$(LS) /{,usr/}lib*/$(CHECK_LIB_SRC)* 2>/dev/null || true
-		@echo
-		@$(HELPOUT2) "If no files are listed above, you may need to install some version of the $(CHECK_LIB_NAME) library to continue."
-		$(RUNMAKE) --silent $(STRAPIT)-exit
-	fi
-else
-	@if [ ! -n "$(MSYSTEM)" ]; then
-		@$(HELPLVL1)
-		@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
-		@$(HELPOUT2) "$(_N)Must use MSYS2 on Windows systems."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
-		@$(HELPOUT2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
-		@$(HELPOUT2) "You should run the '$(_M)$(STRAPIT)-msys$(_D)' target to install the MSYS2 environment."
-		@$(HELPOUT2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
-		$(RUNMAKE) --silent $(STRAPIT)-exit
-	fi
+	@EXIT=
+ifneq ($(CC),$(BUILD_MUSL))
+	@$(HELPLVL1)
+	@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
+	@$(HELPOUT2) "$(_N)Must install MUSL LibC before calling other targets."
+	@$(HELPOUT2)
+	@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
+	@$(HELPOUT2) "The '$(_C)BUILD_MUSL$(_D)' option is enabled, but MUSL LibC is not detected."
+	@$(HELPOUT2) "You should run the '$(_M)$(STRAPIT)-musl$(_D)' target to install MUSL LibC."
+	@$(HELPOUT2) "Then you can try '$(_C)$(STRAPIT)$(_D)' again."
+	@$(HELPLVL1)
+	@EXIT=1
 endif
+ifeq ($(BUILD_MSYS),)
+ifeq ($(shell $(LS) /{,usr/}lib*/$(CHECK_LIB_DST) 2>/dev/null),)
+	@$(HELPLVL1)
+	@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
+	@$(HELPOUT2) "$(_N)Could not find '$(_C)$(CHECK_LIB_DST)$(_N)' library file."
+	@$(HELPOUT2)
+	@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
+	@$(HELPOUT2) "The pre-built GHC requires this specific file in order to run, but not necessarily this version of $(CHECK_LIB_NAME)."
+	@$(HELPOUT2) "You can likely '$(_M)ln -s$(_D)' one of the files below to something like '$(_M)/usr/lib/$(CHECK_LIB_DST)$(_D)' to work around this."
+	@echo
+	@$(LS) /{,usr/}lib*/$(CHECK_LIB_SRC)* 2>/dev/null || true
+	@echo
+	@$(HELPOUT2) "If no files are listed above, you may need to install some version of the $(CHECK_LIB_NAME) library to continue."
+	@$(HELPLVL1)
+	@EXIT=1
+endif
+endif
+ifneq ($(BUILD_MSYS),)
+ifeq ($(MSYSTEM),)
+	@$(HELPLVL1)
+	@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
+	@$(HELPOUT2) "$(_N)Must use MSYS2 on Windows systems."
+	@$(HELPOUT2)
+	@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
+	@$(HELPOUT2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
+	@$(HELPOUT2) "You should run the '$(_M)$(STRAPIT)-msys$(_D)' target to install the MSYS2 environment."
+	@$(HELPOUT2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
+	@$(HELPLVL1)
+	@EXIT=1
+endif
+endif
+	@[ -n "$${EXIT}" ] && $(RUNMAKE) --silent $(STRAPIT)-exit
+	@exit 0
 
 .PHONY: $(STRAPIT)-exit
 $(STRAPIT)-exit:
-	@$(HELPOUT2)
+	@$(HELPLVL1)
 	@$(HELPOUT2) "$(_H)$(MARKER) NOTES:"
 	@$(HELPOUT2) "This message was produced by $(_H)$(COMPOSER_FULLNAME)$(_D)."
-	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
+	@$(HELPOUT2) "If you know the above to be incorrect, you can remove the check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
 	@$(HELPOUT2) "$(INDENTING)$(_M)$(COMPOSER)"
 	@$(HELPLVL1)
 	@exit 1
