@@ -325,7 +325,7 @@ endif
 # http://sourceforge.net/projects/msys2
 # http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
 # https://www.archlinux.org/groups
-override MSYS_VERSION			:= 20140704
+override MSYS_VERSION			:= 20141003
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 
@@ -443,7 +443,7 @@ override BUILD_TOOLS			:= $(BUILD_TOOLS) \
 	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld"
 endif
 
-override WINDOWS_CMD			:= /c/Windows/System32/cmd /c
+override WINDOWS_ACL			:= /c/Windows/System32/icacls
 override MSYS_SHELL			:=  $(MSYS_BIN_DST)/usr/bin/sh
 override CYGPATH			:= "$(MSYS_BIN_DST)/usr/bin/cygpath"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
@@ -746,8 +746,8 @@ override BUILD_ENV_VARS_MINGW		:= $(BUILD_ENV_BASE) \
 	PATH="$(BUILD_PATH_MINGW)" \
 	MSYSTEM="$(MSYSTEM_MINGW)"
 endif
-override BUILD_ENV			:= $(call COMPOSER_FIND,$(subst :, ,$(PATH)),env) - $(BUILD_ENV_VARS)
-override BUILD_ENV_MINGW		:= $(call COMPOSER_FIND,$(subst :, ,$(PATH)),env) - $(BUILD_ENV_VARS_MINGW)
+override BUILD_ENV			:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV_VARS)
+override BUILD_ENV_MINGW		:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV_VARS_MINGW)
 
 ifeq ($(BUILD_MSYS),)
 override MINGW_PATH			= $(1)
@@ -1433,8 +1433,8 @@ ifneq ($(COMPOSER_PROGS_USE),)
 else
 	@cd "$(MSYS_BIN_DST)" &&
 endif
-		$(BUILD_ENV) $(WINDOWS_CMD) icacls msys2_shell.bat /grant:r $(USERNAME):f && exec \
-		$(BUILD_ENV) $(WINDOWS_CMD) msys2_shell.bat || true
+		$(BUILD_ENV) $(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && exec \
+		$(BUILD_ENV) ./msys2_shell.bat || true
 
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
@@ -1628,7 +1628,9 @@ $(STRAPIT)-msys:
 	@$(HELPOUT2) "Hit ENTER to proceed, or CTRL-C to quit."
 	@$(HELPLVL1)
 	@read ENTER
-	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
+	cd "$(MSYS_BIN_DST)" &&
+		$(BUILD_ENV) $(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f &&
+		$(BUILD_ENV) ./autorebase.bat || true
 	$(BUILD_ENV) $(PACMAN) --refresh
 	$(BUILD_ENV) $(PACMAN) \
 		--needed \
