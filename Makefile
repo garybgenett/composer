@@ -269,6 +269,9 @@ else ifeq ($(BUILD_PLAT),Cygwin)
 override BUILD_PLAT			:= Msys
 endif
 
+override COMPOSER_PROGS			?= $(COMPOSER_DIR)/bin/$(BUILD_PLAT)
+override COMPOSER_PROGS_USE		?=
+
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(BUILD_ARCH),x86_64)
 override BUILD_MSYS			:= 64
@@ -296,8 +299,6 @@ override CHOST_MINGW			:= $(BUILD_ARCH)-pc-mingw32
 endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
-
-override COMPOSER_PROGS			?= $(COMPOSER_DIR)/bin/$(BUILD_PLAT)
 
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_GHC_78),)
@@ -403,15 +404,23 @@ override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
 
+#WORK
+# https://www.tug.org/texlive
+# ftp://tug.org/historic/systems/texlive
+override TEX_YEAR			:= 2014
+override TEX_VERSION			:= $(TEX_YEAR)0525
+override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
+override TEX_BIN_DST			:= $(BUILD_STRAP)/texlive-$(TEX_VERSION)
+#WORK
+
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
+ifneq ($(COMPOSER_PROGS_USE),)
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
+endif
 override BUILD_PATH_MINGW		:= $(BUILD_PATH)
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
-ifneq ($(COMPOSER_PROGS_USE),)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/bin
-endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
@@ -607,9 +616,12 @@ override define PATCH			=
 		$(call COMPOSER_FIND,$(PATH_LIST),patch) -p1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
 
-#WORK : static compile "git", or detect "libexec" directory (.home/bin and bin/$BUILD_PLAT/bin)
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
-override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
+override GIT_EXEC			:= $(shell $(GIT) --exec-path)
+ifeq ($(wildcard $(GIT_EXEC)),)
+override GIT_EXEC			:= $(abspath $(dir $(GIT))../git-core)
+endif
+override GIT_RUN			= cd "$(1)" && $(GIT) --exec-path="$(GIT_EXEC)" --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
 	$(MKDIR) "$(COMPOSER_STORE)"
 	$(MKDIR) "$(1)"
@@ -685,6 +697,12 @@ override MINGW_PATH			= $(1)
 else
 override MINGW_PATH			= $(shell $(CYGPATH) --absolute --windows "$(1)")
 endif
+
+#WORK
+#>>>override PANDOC_DATA			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data)
+#>>>ifneq ($(wildcard $(PANDOC_DATA)),)
+#>>>override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
+#>>>endif
 
 ################################################################################
 
@@ -865,6 +883,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(FETCHIT):"		"$(FETCHIT)-cabal"			"Updates Cabal database"
 	@$(HELPOUT1) ""				"$(FETCHIT)-make"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-git"			"Download/preparation of Git source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-tex"			"Download/preparation of WORK source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"			"Download/preparation of Pandoc source repository"
@@ -876,6 +895,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(BUILDIT)-bindir"			"Copies compiled binaries to repository binaries directory"
 	@$(HELPOUT1) ""				"$(BUILDIT)-make"			"Build/compile of GNU Make from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-git"			"Build/compile of Git from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-tex"			"Build/compile of WORK from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"			"Build/compile of Haskell Platform from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
@@ -1247,10 +1267,14 @@ $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
+#WORK
+$(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
+#WORK
+$(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1281,12 +1305,13 @@ endif
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/bin"
-	$(MKDIR) "$(COMPOSER_PROGS)/libexec"
+	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
-	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/libexec/"
+	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
 ifneq ($(BUILD_MSYS),)
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"{,un}zip.exe "$(COMPOSER_PROGS)/bin/"
-	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/libexec/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
+	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/bin/"
 	done
 endif
@@ -1300,6 +1325,7 @@ ifneq ($(BUILD_MSYS),)
 endif
 	@$(HELPOUT1) "GNU Make"		"$(MAKE_VERSION)"	"$(shell $(BUILD_ENV) make --version			2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "Git"		"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "WORK"		"$(TEX_VERSION)"	"$(shell $(BUILD_ENV) echo WORK				2>/dev/null)"
 	@$(HELPOUT1) "Pandoc"		"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- Types"		"$(PANDOC_TYPE_CMT)"	"$(shell $(BUILD_ENV) cabal info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- TeXMath"	"$(PANDOC_MATH_CMT)"	"$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
@@ -1566,6 +1592,17 @@ $(FETCHIT)-git:
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(FETCHIT)-tex
+$(FETCHIT)-tex:
+	echo WORK
+	$(call WGET_FILE,$(TEX_BIN_SRC))
+	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
+
+.PHONY: $(BUILDIT)-tex
+$(BUILDIT)-tex:
+	echo WORK
+	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-ghc-bin
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
@@ -1894,12 +1931,12 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): settings $(LIST)
+$(COMPOSER_PANDOC): $(LIST) settings
 	$(BUILD_ENV) $(PANDOC)
 	$(TIMESTAMP) "$(CURDIR)/$(COMPOSER_STAMP)"
 
 $(BASE).$(EXTENSION): $(LIST)
-	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(^)"
+	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 
 %.$(TYPE_HTML): %.$(COMPOSER_EXT)
 	$(MAKEDOC) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
