@@ -16,6 +16,7 @@
 #	standalone pandoc binary without build directory
 # test install in fresh cygwin
 #	hack setup.bat
+#	try "build" without networking available
 #BUILD TEST
 
 #OTHER NOTES
@@ -30,15 +31,8 @@
 #	alias to "make shell"
 # _sync clean
 #	symlink ".bash_history" to "composer" directory in ".history"
-# _builds/composer
-#	mkdir bin libexec
-#	cd bin
-#	ln ../../../_windows/.home/bin/{git,make,pandoc}* ./
-#	ln ../../../_windows/.home/msys32/usr/bin/{un,}zip.exe ./
-#	ln ../../../_windows/.home/msys32/usr/bin/msys-{2.0,bz2-1,crypto-1.0.0,gcc_s-1,iconv-2,intl-8,z}.dll ./
-#		ldd ./bin/Msys/bin/*.exe ./bin/Msys/libexec/git-core/{,*/}* | grep msys | cut -d= -f1 | sort | uniq
-#	cd libexec
-#	ln ../../../_windows/.home/libexec/git-core ./
+# add composer to gary-os
+#	use same git method as for gary-os repo, which should be "rsync" then "git reset --hard"
 #AFTER NOTES
 
 override COMPOSER_SETTINGS		:= .composer.mk
@@ -78,14 +72,14 @@ override MAKEFLAGS			:=
 
 override COMPOSER_STAMP			?= .composed
 override COMPOSER_CSS			?= composer.css
-override COMPOSER_EXT			?= md
 
+override COMPOSER_EXT			?= md
 override COMPOSER_IMG			:= png
-override COMPOSER_FILES			:= \
-	$(MAKEFILE) \
-	*.$(COMPOSER_EXT) \
-	*.$(COMPOSER_IMG) \
-	*.css
+override COMPOSER_FILES			?=
+#>	$(MAKEFILE) \
+#>	*.$(COMPOSER_EXT) \
+#>	*.$(COMPOSER_IMG) \
+#>	*.css
 
 ########################################
 
@@ -303,6 +297,8 @@ endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
 
+override COMPOSER_PROGS			?= $(COMPOSER_DIR)/bin/$(BUILD_PLAT)
+
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_GHC_78),)
 override GHC_BIN_PLAT			:= linux-deb7
@@ -413,9 +409,9 @@ override BUILD_PATH_MINGW		:= $(BUILD_PATH)
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)/bin
+override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
 
 override BUILD_TOOLS			:=
 ifneq ($(BUILD_MSYS),)
@@ -425,8 +421,8 @@ override BUILD_TOOLS			:= $(BUILD_TOOLS) \
 	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld.exe"
 endif
 
-override WINDOWS_CMD			:= "/c/Windows/System32/cmd" /c
-override MSYS_SHELL			:= "$(MSYS_BIN_DST)/usr/bin/sh"
+override WINDOWS_CMD			:= /c/Windows/System32/cmd /c
+override MSYS_SHELL			:=  $(MSYS_BIN_DST)/usr/bin/sh
 override CYGPATH			:= "$(MSYS_BIN_DST)/usr/bin/cygpath"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
 override CABAL				:= cabal --verbose
@@ -483,7 +479,7 @@ override GHC_LIBRARIES_LIST		:= \
 
 ifneq ($(BUILD_GHC_78),)
 override GHC_BASE_LIBRARIES_LIST	:= \
-	Win32|WORK \
+	Win32|2.3.0.2 \
 	array|0.5.0.0 \
 	base|4.7.0.0 \
 	binary|0.7.1.0 \
@@ -577,7 +573,7 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 
 ########################################
 
-override PATH_LIST			:= $(subst :, ,$(PATH))
+override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
@@ -606,6 +602,10 @@ override define PATCH			=
 		$(call WGET_FILE,$(2)) && \
 		$(call COMPOSER_FIND,$(PATH_LIST),patch) -p1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
+
+#WORK
+override PATH_LIST			:= $(subst :, ,$(PATH))
+#WORK
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
@@ -783,6 +783,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "^_STAMP"		"Timestamp file"		"[$(COMPOSER_STAMP)]"
 	@$(HELPOUT1) "^_CSS"		"Default CSS file"		"[$(COMPOSER_CSS)]"
 	@$(HELPOUT1) "^_EXT"		"Markdown file extension"	"[$(COMPOSER_EXT)]"
+	@$(HELPOUT1) "^_FILES"		"List for '$(REPLICA)' target"	"[$(COMPOSER_FILES)]"
 	@echo ""
 	@echo "Recursion Options (^ := COMPOSER):"
 	@$(HELPOUT1) "^_TARGETS"	"Default targets"		"[$(COMPOSER_TARGETS)]"
@@ -794,6 +795,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "^_ABODE"		"Install/binary directory"	"[$(COMPOSER_ABODE)]"
 	@$(HELPOUT1) "^_STORE"		"Source files directory"	"[$(COMPOSER_STORE)]"
 	@$(HELPOUT1) "^_BUILD"		"Build directory"		"[$(COMPOSER_BUILD)]"
+	@$(HELPOUT1) "^_PROGS"		"Built binaries directory"	"[$(COMPOSER_PROGS)]"
 	@echo ""
 	@echo "Build Options (^ := BUILD):"
 	@$(HELPOUT1) "^_DIST"		"Build generic binaries"	"[$(BUILD_DIST)] (valid: empty or 1)"
@@ -868,7 +870,9 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"		"Download/preparation of TeXMath source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"		"Download/preparation of Highlighting-Kate source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-cite"		"Download/preparation of Pandoc-CiteProc source repository"
-	@$(HELPOUT1) "$(BUILDIT):"		"$(BUILDIT)-make"			"Build/compile of GNU Make from source"
+	@$(HELPOUT1) "$(BUILDIT):"		"$(BUILDIT)-clean"			"Archives/restores source files and removes temporary build files"
+	@$(HELPOUT1) ""				"$(BUILDIT)-bindir"			"Copies compiled binaries to repository binaries directory"
+	@$(HELPOUT1) ""				"$(BUILDIT)-make"			"Build/compile of GNU Make from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-git"			"Build/compile of Git from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"			"Build/compile of Haskell Platform from source"
@@ -1200,13 +1204,9 @@ $(REPLICA):
 		$(foreach FILE,$(COMPOSER_FILES),"$(FILE)") \
 		| \
 		$(TAR) -C "$(CURDIR)" -f -
-#WORK : need a COMPOSER_MASTER concept?
-#WORK : what is REPLICA really supposed to be doing?
-#WORK : is COMPOSER_FILES a complete list?
 	if [ -f "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" ]; then
 		$(CP) "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" "$(CURDIR)/$(COMPOSER_SETTINGS)"
 	fi
-#WORK	$(MAKE) --directory "$(CURDIR)" $(UPGRADE)
 	$(TIMESTAMP) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
 
 $(REPLICA)-%:
@@ -1219,7 +1219,8 @@ $(UPGRADE):
 	$(call GIT_REPO,$(MDVIEWER_DST),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
 	cd "$(MDVIEWER_DST)" &&
 		chmod 755 ./build.sh &&
-		./build.sh
+		echo WORK &&
+		$(BUILD_ENV) ./build.sh
 	$(call GIT_REPO,$(REVEALJS_DST),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	$(call WGET_FILE,$(W3CSLIDY_SRC))
 	$(call UNZIP,$(W3CSLIDY_DST),$(W3CSLIDY_SRC))
@@ -1227,12 +1228,10 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
-ifneq ($(wildcard $(subst \",,$(MSYS_SHELL))),)
-$(UPGRADE):	override SHELL := $(subst \",,$(MSYS_SHELL))
-$(STRAPIT)-git:	override SHELL := $(subst \",,$(MSYS_SHELL))
-$(FETCHIT)-%:	override SHELL := $(subst \",,$(MSYS_SHELL))
-$(BUILDIT)-%:	override SHELL := $(subst \",,$(MSYS_SHELL))
-$(CHECKIT):	override SHELL := $(subst \",,$(MSYS_SHELL))
+ifneq ($(wildcard $(MSYS_SHELL)),)
+$(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
+$(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
+$(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
 endif
 endif
 
@@ -1247,25 +1246,25 @@ $(STRAPIT): $(FETCHIT)-make $(BUILDIT)-make
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 
 .PHONY: $(FETCHIT)
+$(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
+$(BUILDIT): $(BUILDIT)-bindir
 $(BUILDIT): $(BUILDIT)-clean
+$(BUILDIT): $(CHECKIT)
 
-#WORK : sort out fixes {in fetch or build?}
+do-%: $(FETCHIT)-% $(BUILDIT)-%
+	@echo >/dev/null
 
-#WORK : needs a new location
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
 	$(BUILD_ENV_MINGW) $(CABAL) update
 
-#WORK : need to document
-#WORK : needs a new location
 .PHONY: $(BUILDIT)-clean
 $(BUILDIT)-clean:
 	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
@@ -1281,8 +1280,22 @@ ifneq ($(BUILD_MSYS),)
 	$(RM) "$(COMPOSER_ABODE)/"*.exe
 endif
 
-do-%: $(FETCHIT)-% $(BUILDIT)-%
-	@echo >/dev/null
+.PHONY: $(BUILDIT)-bindir
+$(BUILDIT)-bindir:
+	$(MKDIR) "$(COMPOSER_PROGS)/bin"
+	$(MKDIR) "$(COMPOSER_PROGS)/libexec"
+#WORK	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
+	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git}* "$(COMPOSER_PROGS)/bin/"
+	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/libexec/"
+ifneq ($(BUILD_MSYS),)
+	$(CP) "$(MSYS_BIN_DST)/usr/bin/"{,un}zip.exe "$(COMPOSER_PROGS)/bin/"
+	echo WORK
+	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe || true
+	echo WORK
+	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/libexec/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/bin/"
+	done
+endif
 
 .PHONY: $(CHECKIT)
 $(CHECKIT):
@@ -1544,6 +1557,7 @@ $(BUILDIT)-make:
 
 .PHONY: $(STRAPIT)-git
 $(STRAPIT)-git:
+	echo "WORK:$(SHELL)"
 	$(call WGET_FILE,$(GIT_BIN_SRC))
 	$(call UNTAR,$(GIT_BIN_DST),$(GIT_BIN_SRC))
 	cd "$(GIT_BIN_DST)" &&
