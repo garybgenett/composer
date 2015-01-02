@@ -1419,13 +1419,14 @@ HELP_TARGETS_SUB:
 	@echo
 	@$(ESCAPE) "$(_H)Hidden Sub-Targets:"
 	@$(TABLE_I3) "$(_C)$(_N)%$(_D):"		"$(_E).set_title-$(_N)*$(_D)"			"Set window title to current target using escape sequence"
-	@$(TABLE_I3) "$(_C)$(DEBUGIT) .all_targets$(_D):"	"$(_E).make_database$(_D)"			"Output internal Make database, based on current '$(MAKEFILE)'"
+	@$(TABLE_I3) "$(_C)$(DEBUGIT)$(_D):"		"$(_E).make_database$(_D)"			"Output internal Make database, based on current '$(MAKEFILE)'"
 	@$(TABLE_I3) "$(_C)$(TARGETS)$(_D):"		"$(_E).all_targets$(_D)"			"Dynamically parse and print all potential targets"
 	@$(TABLE_I3) "$(_C)$(EXAMPLE)$(_D):"		"$(_E).$(EXAMPLE)$(_D)"				"Prints raw template, with escape sequences"
 	@echo
 	@$(ESCAPE) "$(_H)Static Sub-Targets:"
 	@$(TABLE_I3) "$(_C)$(COMPOSER_TARGET)$(_D):"	"$(_E)$(COMPOSER_PANDOC)$(_D)"			"Wrapper target which calls Pandoc directly"
-	@$(TABLE_I3) "$(_C)$(COMPOSER_PANDOC)$(_D):"	"$(_E)settings$(_D)"				"Prints marker and variable values, for readability"
+	@$(TABLE_I3) "$(_E)$(COMPOSER_PANDOC)$(_D):"	"$(_E)settings$(_D)"				"Prints marker and variable values, for readability"
+	@$(TABLE_I3) ""					"$(_E)setup$(_D)"				"Does essential configuration for correct building of documents"
 	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
@@ -2243,6 +2244,7 @@ export LC_ALL="$${LANG}"
 export LC_COLLATE="C"
 export LC_ALL=
 #
+if [ -f "$(COMPOSER_ABODE)/.bash_history" ]; then $(RM) "$(COMPOSER_ABODE)/.bash_history"; fi
 $(MKDIR) "$(COMPOSER_ABODE)/.bash_history"
 export HISTFILE="$(COMPOSER_ABODE)/.bash_history/$$(date +%Y-%m)"
 export HISTSIZE="$$(( (2**31)-1 ))"
@@ -2674,6 +2676,7 @@ $(STRAPIT)-libs-fontconfig:
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_LIBS="-lfreetype" \
 		,\
+		--disable-docs \
 		--enable-iconv \
 		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
 		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
@@ -2965,8 +2968,6 @@ $(STRAPIT)-curl-pull:
 $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
-#WORKING : archive certdata.txt in $COMPOSER_STORE
-
 .PHONY: $(STRAPIT)-curl-prep
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
@@ -2992,10 +2993,13 @@ $(FETCHIT)-curl-prep:
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(CURL_DST)/configure"
 
+#WORKING : archive certdata.txt in $COMPOSER_STORE
+
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
 	cd "$(CURL_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
+		$(MKDIR) "$(COMPOSER_ABODE)" && \
 		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
@@ -3008,6 +3012,7 @@ $(STRAPIT)-curl-build:
 $(BUILDIT)-curl:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
+		$(MKDIR) "$(COMPOSER_ABODE)" && \
 		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
