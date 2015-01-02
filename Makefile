@@ -460,7 +460,7 @@ override LIB_FCFG_TAR_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSI
 
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
-override BASH_VERSION			:= 4.3
+override BASH_VERSION			:= 4.3.30
 override BASH_TAR_SRC			:= https://ftp.gnu.org/pub/gnu/bash/bash-$(BASH_VERSION).tar.gz
 override BASH_TAR_DST			:= $(COMPOSER_BUILD)/bash-$(BASH_VERSION)
 
@@ -2402,14 +2402,28 @@ $(FETCHIT)-bash: $(FETCHIT)-bash-prep
 .PHONY: $(FETCHIT)-bash-pull
 $(FETCHIT)-bash-pull:
 	$(call CURL_FILE,$(BASH_TAR_SRC))
+ifneq ($(BUILD_MSYS),)
+	$(MKDIR) "$(abspath $(dir $(BASH_TAR_DST)))" &&
+		cd "$(abspath $(dir $(BASH_TAR_DST)))" &&
+		$(TAR) --exclude="$(notdir $(BASH_TAR_DST))/ChangeLog" --file "$(COMPOSER_STORE)/$(notdir $(BASH_TAR_SRC))"
+else
 	$(call UNTAR,$(BASH_TAR_DST),$(BASH_TAR_SRC))
+endif
 
 .PHONY: $(FETCHIT)-bash-prep
 $(FETCHIT)-bash-prep:
 
 .PHONY: $(BUILDIT)-bash
+# thanks for the 'malloc' fix below: https://www.marshut.net/kqrrik/bash-fix-linking-for-static-builds-with-uclibc-toolchains.html
 $(BUILDIT)-bash:
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),,\
+		--enable-static-link \
+		--without-bash-malloc \
+	)
+else
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE))
+endif
 
 .PHONY: $(FETCHIT)-less
 $(FETCHIT)-less: $(FETCHIT)-less-pull
@@ -2609,6 +2623,13 @@ ifneq ($(BUILD_MUSL),)
 	$(SED) -i \
 		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
 		"$(GIT_TAR_DST)/Makefile"
+else ifneq ($(BUILD_MSYS),)
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
+		"$(GIT_TAR_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
+		"$(GIT_TAR_DST)/Makefile"
 endif
 
 .PHONY: $(FETCHIT)-git-prep
@@ -2618,6 +2639,13 @@ $(FETCHIT)-git-prep:
 	cd "$(GIT_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
 ifneq ($(BUILD_MUSL),)
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
+		"$(GIT_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
+		"$(GIT_DST)/Makefile"
+else ifneq ($(BUILD_MSYS),)
 	$(SED) -i \
 		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
 		"$(GIT_DST)/configure"
@@ -2778,9 +2806,9 @@ $(FETCHIT)-ghc-pull:
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-prep:
 ifneq ($(BUILD_MUSL),)
-	echo WORK
 	cd "$(GHC_TAR_DST)" &&
 		$(BUILD_ENV_MINGW) ./boot
+	echo WORK
 	$(SED) -i \
 		-e "s|([^y]?)(execvpe[(])|\1my\2|g" \
 		"$(GHC_TAR_DST)/libraries/process/cbits/runProcess.c" \
@@ -2853,7 +2881,14 @@ endif
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
 ifneq ($(BUILD_MUSL),)
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
+	echo WORK
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),\
+		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(subst -static,,$(CFLAGS))))" \
+		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(subst -static,,$(LDFLAGS))))" \
+		SRC_HC_OPTS="$(subst -static,,$(SRC_HC_OPTS))" \
+	,,\
+		show \
+	)
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP))
 	echo WORK; exit 1
 else ifneq ($(BUILD_MSYS),)
