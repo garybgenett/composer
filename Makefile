@@ -354,14 +354,11 @@ override BUILD_MUSL			:= $(COMPOSER_ABODE)/bin/musl-gcc
 ifneq ($(wildcard $(BUILD_MUSL)),)
 override CC				:= $(BUILD_MUSL)
 override CFLAGS				:= $(CFLAGS) -static
-#WORK override LDFLAGS			:= $(LDFLAGS) -static
-#WORK override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
-override SRC_HC_OPTS			:= -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
-endif
-else ifneq ($(BUILD_MSYS),)
+#WORK : search/replace LDFLAGS, if this works
+override LDFLAGS			:= $(LDFLAGS) -static
+override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
 #WORK
-override CFLAGS				:= $(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\"
-override LDFLAGS			:= $(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\"
+endif
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
@@ -1720,8 +1717,9 @@ endef
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
-	$(RM) "$(COMPOSER_ABODE)/.cabal/config"
-	$(RM) "$(APPDATA)/cabal/config"
+	echo WORK
+#	$(RM) "$(COMPOSER_ABODE)/.cabal/config"
+#	$(RM) "$(APPDATA)/cabal/config"
 	$(BUILD_ENV) $(CABAL) update
 #WORK
 # https://duckduckgo.com/?q=ghc+musl
@@ -2299,25 +2297,37 @@ ifneq ($(BUILD_MUSL),)
 		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
 		FREETYPE_LIBS="-lfreetype" \
-		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
 		,\
+		--enable-iconv \
+		--with-libiconv-includes="\"$(COMPOSER_ABODE)/include\"" \
+		--with-libiconv-lib="\"$(COMPOSER_ABODE)/lib\"" \
 		--disable-shared \
 		--enable-static \
 	)
 else ifneq ($(BUILD_MSYS),)
 	echo WORK
+#		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include:$(COMPOSER_ABODE)/include/freetype2" \
+#		EXPAT_CFLAGS="$(CFLAGS)" \
+#		EXPAT_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
+#		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
+#WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include:$(COMPOSER_ABODE)/include/freetype2" \
-		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
-		EXPAT_CFLAGS="$(CFLAGS)" \
-		EXPAT_LIBS="-lexpat -liconv -lintl" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
-		FREETYPE_LIBS="-lfreetype" \
-		CFLAGS="$(CFLAGS) -L\"$(COMPOSER_ABODE)/lib\"" \
-		LDFLAGS="$(LDFLAGS) -L\"$(COMPOSER_ABODE)/lib\"" \
+		FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		,\
+		--enable-iconv \
+		--with-libiconv-includes="\"$(COMPOSER_ABODE)/include\"" \
+		--with-libiconv-lib="\"$(COMPOSER_ABODE)/lib\"" \
+		--with-expat-includes="\"$(COMPOSER_ABODE)/include\"" \
+		--with-expat-lib=\""$(COMPOSER_ABODE)/lib\"" \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),,\
+		--enable-iconv \
+		--with-libiconv-includes="\"$(COMPOSER_ABODE)/include\"" \
+		--with-libiconv-lib="\"$(COMPOSER_ABODE)/lib\"" \
+	)
 endif
 
 .PHONY: $(FETCHIT)-make
