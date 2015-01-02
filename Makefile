@@ -660,7 +660,7 @@ override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
 #	https://github.com/jgm/pandoc/commit/2956ef251c815c332679ff4666031a5b7a65aadc
 override PANDOC_TYPE_CMT		:= 1.12.4
 override PANDOC_MATH_CMT		:= 0.8.0.1
-override PANDOC_HIGH_CMT		:= 0.5.8.5
+override PANDOC_HIGH_CMT		:= 0.5.11.1
 override PANDOC_CITE_CMT		:= 0.5
 override PANDOC_CMT			:= 1.13.2
 override PANDOC_VERSION			:= $(PANDOC_CMT)
