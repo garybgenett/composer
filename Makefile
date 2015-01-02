@@ -251,6 +251,7 @@ override W3CSLIDY_SRC			:= http://www.w3.org/Talks/Tools/Slidy2/slidy.zip
 override W3CSLIDY_DST			:= $(COMPOSER_DIR)/slidy/Slidy2
 override W3CSLIDY_CSS			:= $(W3CSLIDY_DST)/styles/slidy.css
 
+override _CSS				:= $(MDVIEWER_CSS)
 ifneq ($(wildcard $(CSS)),)
 override _CSS				:= $(CSS)
 else ifneq ($(wildcard $(CSS_FILE)),)
@@ -259,19 +260,16 @@ else ifeq ($(OUTPUT),revealjs)
 override _CSS				:= $(REVEALJS_CSS)
 else ifeq ($(OUTPUT),slidy)
 override _CSS				:= $(W3CSLIDY_CSS)
-else
-override _CSS				:= $(MDVIEWER_CSS)
 endif
 
+override _TOC				:=
 ifneq ($(TOC),)
 override _TOC				:= \
 	--table-of-contents \
 	--toc-depth $(TOC)
-else
-override _TOC				:=
 endif
 
-override PANDOC				:= pandoc \
+override PANDOC_OPTIONS			:= \
 	--standalone \
 	--self-contained \
 	\
@@ -466,11 +464,6 @@ override FONTCONFIG_VERSION		:= 2.11.1
 override FONTCONFIG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FONTCONFIG_VERSION).tar.gz
 override FONTCONFIG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(FONTCONFIG_VERSION)
 
-# http://dev.perl.org/licenses (license: custom = GPL, Artistic)
-# https://www.perl.org/get.html
-override PERL_VERSION			:= 5.20.1
-override PERL_TAR_SRC			:= http://www.cpan.org/src/5.0/perl-$(PERL_VERSION).tar.gz
-override PERL_TAR_DST			:= $(BUILD_STRAP)/perl-$(PERL_VERSION)
 # https://www.gnu.org/software/coreutils (license: GPL)
 # https://www.gnu.org/software/coreutils
 override COREUTILS_VERSION		:= 8.23
@@ -501,6 +494,11 @@ override BZIP_TAR_DST			:= $(BUILD_STRAP)/bzip2-$(BZIP_VERSION)
 override TAR_VERSION			:= 1.28
 override TAR_TAR_SRC			:= https://ftp.gnu.org/gnu/tar/tar-$(TAR_VERSION).tar.xz
 override TAR_TAR_DST			:= $(BUILD_STRAP)/tar-$(TAR_VERSION)
+# http://dev.perl.org/licenses (license: custom = GPL, Artistic)
+# https://www.perl.org/get.html
+override PERL_VERSION			:= 5.20.1
+override PERL_TAR_SRC			:= http://www.cpan.org/src/5.0/perl-$(PERL_VERSION).tar.gz
+override PERL_TAR_DST			:= $(BUILD_STRAP)/perl-$(PERL_VERSION)
 
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
@@ -656,29 +654,6 @@ ifeq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 endif
 
-override BUILD_TOOLS			:=
-override WINDOWS_ACL			:=
-override PACMAN_DB_UPGRADE		:=
-override PACMAN_KEY			:=
-override PACMAN				:=
-ifeq ($(BUILD_PLAT),Msys)
-override BUILD_TOOLS			:= $(BUILD_TOOLS) \
-	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
-	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld"
-override WINDOWS_ACL			:= $(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)
-override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
-override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
-override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
-endif
-override CABAL				:= cabal --verbose
-override CABAL_INSTALL			= $(CABAL) install \
-	$(BUILD_TOOLS) \
-	--prefix="$(1)" \
-	--global \
-	--reinstall \
-	--force-reinstalls
-#>	--avoid-reinstalls
-
 override PACMAN_BASE_LIST		:= \
 	msys2-runtime \
 	msys2-runtime-devel \
@@ -695,20 +670,23 @@ override PACMAN_PACKAGES_LIST		:= \
 	msys2-devel
 
 #TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
+# this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override MSYS_BINARY_LIST		:= \
 	cygwin-console-helper \
 	mintty
 
+# this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override BUILD_BINARY_LIST		:= \
 	coreutils \
 	find \
 	patch \
 	sed \
 	tar \
+	perl \
 	\
 	bash sh \
 	less \
-	vim vimdiff \
+	vim \
 	\
 	make \
 	zip \
@@ -858,7 +836,22 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 
 ########################################
 
+# this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
+
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
+override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
+
+#WORK : comment
+override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
+override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
+
+override WINDOWS_ACL			:= $(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)
+override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
+override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
+override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
+
+override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
+override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 
 #WORK : if COMPOSER_PROGS coreutils does this, they will always override the system utilities!
 #WORK : need a new disposable location?  should COMPOSER_ABODE be split up into an actual install location COMPOSER_BUILT and home COMPOSER_ABODE?
@@ -875,8 +868,6 @@ $(shell \
 	done; \
 	$(COREUTILS) --coreutils-prog=echo -en "#!$(COREUTILS_PATH) --coreutils-prog-shebang=ginstall" >"$(COMPOSER_ABODE)/bin/install"; \
 	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/install"; \
-	$(COREUTILS) --coreutils-prog=echo -en "#!$(call COMPOSER_FIND,$(PATH_LIST),sh)\ntype -P \"\$${@}\"\n# end of file" >"$(COMPOSER_ABODE)/bin/which"; \
-	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/which"; \
 )
 endif
 
@@ -886,6 +877,7 @@ override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override DIRCOLORS			:= "$(call COMPOSER_FIND,$(PATH_LIST),dircolors)"
 override ECHO				:= "$(call COMPOSER_FIND,$(PATH_LIST),echo)" -en
+override ENV				:= "$(call COMPOSER_FIND,$(PATH_LIST),env)"
 override HEAD				:= "$(call COMPOSER_FIND,$(PATH_LIST),head)"
 override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
 override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
@@ -898,39 +890,47 @@ override TOUCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
 #WORK : comment
-override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
 override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
-#WORK : comment
-override WHICH				:= "$(call COMPOSER_FIND,$(PATH_LIST),which)"
-
-#WORK : comment
-override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)"
-override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
+override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
 #WORK : comment
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
-override SH				:= "$(call COMPOSER_FIND,$(PATH_LIST),sh)"
+override SH				:= "$(SHELL)"
 override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
 override VIM				:= "$(call COMPOSER_FIND,$(PATH_LIST),vim)" -u "$(COMPOSER_ABODE)/.vimrc" -i NONE -p
+
+override MAKE				:= "$(call COMPOSER_FIND,$(PATH_LIST),make)"
+override ZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),zip)"
+override UNZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),unzip)"
+override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --location --remote-time
+override GIT_PATH			:=  $(call COMPOSER_FIND,$(PATH_LIST),git)
+override GIT				:= "$(GIT_PATH)"
+
+override PANDOC				:= "$(call COMPOSER_FIND,$(PATH_LIST),pandoc)" $(PANDOC_OPTIONS)
+override PANDOC_CITEPROC		:= "$(call COMPOSER_FIND,$(PATH_LIST),pandoc-citeproc)"
+override TEX				:= "$(call COMPOSER_FIND,$(PATH_LIST),tex)"
+override PDFLATEX			:= "$(call COMPOSER_FIND,$(PATH_LIST),pdflatex)"
+override GHC				:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc)"
+override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
+override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
 
 override define DO_PATCH		=
 	$(call CURL_FILE,$(2)); \
 	cd "$(1)" && $(PATCH) <"$(COMPOSER_STORE)/$(notdir $(2))"
 endef
-override define UNTAR			=
+override define DO_UNTAR		=
 	if [ ! -d "$(1)" ]; then \
 		$(MKDIR) "$(abspath $(dir $(1)))"; \
 		$(TAR) -C "$(abspath $(dir $(1)))" -f "$(COMPOSER_STORE)/$(notdir $(2))" --exclude "$(3)"; \
 	fi
 endef
-override define UNZIP			=
-	"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(notdir $(2))"
+override define DO_UNZIP		=
+	$(UNZIP) -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(notdir $(2))"
 endef
 
-override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --location --remote-time
 override define CURL_FILE		=
 	$(MKDIR) "$(COMPOSER_STORE)"; \
 	$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
@@ -940,8 +940,7 @@ override define CURL_FILE_GNU_CFG	=
 	$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"
 endef
 
-override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
-override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT))../../git-core))
+override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT_PATH))../../git-core))
 ifneq ($(GIT_EXEC),)
 override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
@@ -982,6 +981,20 @@ override define DO_GIT_SUBMODULE_GHC	=
 		cd "$(1)/$${FILE}" && $(GIT) --git-dir="$(3)/modules/$${FILE}" config --local --replace-all core.worktree "$(1)/$${FILE}"; \
 	done
 endef
+
+override BUILD_TOOLS			:=
+ifeq ($(BUILD_PLAT),Msys)
+override BUILD_TOOLS			:= $(BUILD_TOOLS) \
+	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
+	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld"
+endif
+override CABAL_INSTALL			= $(CABAL) install \
+	$(BUILD_TOOLS) \
+	--prefix="$(1)" \
+	--global \
+	--reinstall \
+	--force-reinstalls
+#>	--avoid-reinstalls
 
 # thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
 #	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
@@ -1062,7 +1075,7 @@ override BUILD_ENV			:= $(BUILD_ENV) \
 	LOCALAPPDATA="$(COMPOSER_ABODE)" \
 	TEMP="$(COMPOSER_ABODE)"
 endif
-override BUILD_ENV			:= "$(call COMPOSER_FIND,$(PATH_LIST),env)" - $(BUILD_ENV)
+override BUILD_ENV			:= $(ENV) - $(BUILD_ENV)
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
@@ -1486,14 +1499,14 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-patch$(_D)"		"Build/compile of GNU Patch from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-sed$(_D)"			"Build/compile of GNU Sed from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
@@ -1911,7 +1924,7 @@ $(UPGRADE):
 	@$(call GIT_REPO,$(REVEALJS_DST),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call CURL_FILE,$(W3CSLIDY_SRC))
 	@$(ECHO) "$(_E)"
-	@$(call UNZIP,$(W3CSLIDY_DST),$(W3CSLIDY_SRC))
+	@$(call DO_UNZIP,$(W3CSLIDY_DST),$(W3CSLIDY_SRC))
 	@$(ECHO) "$(_D)"
 
 ########################################
@@ -2046,6 +2059,7 @@ start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 :: end of file
 endef
 
+# this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 .PHONY: $(CHECKIT)
 $(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
@@ -2053,65 +2067,87 @@ $(CHECKIT):
 	@$(HELPOUT1) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifeq ($(BUILD_PLAT),Msys)
-	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_E)Cygwin-Console-Helper"	"$(_E)$(MARKER)"		"$(_N)$(shell $(CYGWIN_CONSOLE_HELPER) --version	2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_E)$(MARKER)"		"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
 endif
-	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(BUILD_ENV) ls --version			2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(BUILD_ENV) find --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(BUILD_ENV) patch --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(BUILD_ENV) sed --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(BUILD_ENV) tar --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) less --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(BUILD_ENV) vim --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "$(_C)GNU Make"			"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(HELPOUT1) "- $(_C)cURL"			"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Git SCM"			"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(BUILD_ENV) pandoc-citeproc --version	2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "$(_C)TeX Live"			"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(BUILD_ENV) tex --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "$(_C)Haskell"			"$(_M)$(HASKELL_CMT)"		"$(_D)$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)GHC"			"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)Perl"			"$(_E)$(PERL_VERSION)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(LESS) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)GNU Make"			"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(HELPOUT1) "- $(_C)cURL"			"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Git SCM"			"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(GIT) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL) info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL) info texmath			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL) info highlighting-kate		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)TeX Live"			"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)Haskell"			"$(_M)$(HASKELL_CMT)"		"$(_D)$(shell $(CABAL) info haskell-platform		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)GHC"			"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HELPLINE)
-	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(shell $(BUILD_ENV) $(WHICH) coreutils		2>/dev/null)"
-	@$(HELPOUT1) "- $(_E)GNU Find"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) find		2>/dev/null)"
-	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) patch		2>/dev/null)"
-	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) sed			2>/dev/null)"
-	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) tar			2>/dev/null)"
-	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) bash		2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)Less"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) less		2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)Vim"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) vim			2>/dev/null)"
-	@$(HELPOUT1) "$(_C)GNU Make"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) make		2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"		"$(_D)$(shell $(BUILD_ENV) $(WHICH) zip			2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"		"$(_D)$(shell $(BUILD_ENV) $(WHICH) unzip		2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)cURL"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) curl		2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)Git SCM"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) git			2>/dev/null)"
-	@$(HELPOUT1) "$(_C)Pandoc"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) pandoc		2>/dev/null)"
+	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst \",,$(word 1,$(COREUTILS)))"
+	@$(HELPOUT1) "- $(_E)GNU Find"			"$(_N)$(subst \",,$(word 1,$(FIND)))"
+	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_N)$(subst \",,$(word 1,$(PATCH)))"
+	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_N)$(subst \",,$(word 1,$(SED)))"
+	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_N)$(subst \",,$(word 1,$(TAR)))"
+	@$(HELPOUT1) "- $(_E)Perl"			"$(_N)$(subst \",,$(word 1,$(PERL)))"
+	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_D)$(subst \",,$(word 1,$(BASH))) $(_S)($(subst \",,$(word 1,$(SH))))"
+	@$(HELPOUT1) "- $(_C)Less"			"$(_D)$(subst \",,$(word 1,$(LESS)))"
+	@$(HELPOUT1) "- $(_C)Vim"			"$(_D)$(subst \",,$(word 1,$(VIM)))"
+	@$(HELPOUT1) "$(_C)GNU Make"			"$(_D)$(subst \",,$(word 1,$(MAKE)))"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"		"$(_D)$(subst \",,$(word 1,$(ZIP)))"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"		"$(_D)$(subst \",,$(word 1,$(UNZIP)))"
+	@$(HELPOUT1) "- $(_C)cURL"			"$(_D)$(subst \",,$(word 1,$(CURL)))"
+	@$(HELPOUT1) "- $(_C)Git SCM"			"$(_D)$(subst \",,$(word 1,$(GIT)))"
+	@$(HELPOUT1) "$(_C)Pandoc"			"$(_D)$(subst \",,$(word 1,$(PANDOC)))"
 	@$(HELPOUT1) "- $(_C)Types"			"$(_E)(no binary to report)"
 	@$(HELPOUT1) "- $(_C)TeXMath"			"$(_E)(no binary to report)"
 	@$(HELPOUT1) "- $(_C)Highlighting-Kate"		"$(_E)(no binary to report)"
-	@$(HELPOUT1) "- $(_C)CiteProc"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) pandoc-citeproc	2>/dev/null)"
-	@$(HELPOUT1) "$(_C)TeX Live"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) tex			2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)PDFLaTeX"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) pdflatex		2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)CiteProc"			"$(_D)$(subst \",,$(word 1,$(PANDOC_CITEPROC)))"
+	@$(HELPOUT1) "$(_C)TeX Live"			"$(_D)$(subst \",,$(word 1,$(TEX)))"
+	@$(HELPOUT1) "- $(_C)PDFLaTeX"			"$(_D)$(subst \",,$(word 1,$(PDFLATEX)))"
 	@$(HELPOUT1) "$(_C)Haskell"			"$(_E)(no binary to report)"
-	@$(HELPOUT1) "- $(_C)GHC"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) ghc			2>/dev/null)"
-	@$(HELPOUT1) "- $(_C)Cabal"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) cabal		2>/dev/null)"
+	@$(HELPOUT1) "- $(_C)GHC"			"$(_D)$(subst \",,$(word 1,$(GHC))) $(_S)($(subst \",,$(word 1,$(GHC_PKG))))"
+	@$(HELPOUT1) "- $(_C)Cabal"			"$(_D)$(subst \",,$(word 1,$(CABAL)))"
 	@$(HELPOUT1) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HELPLINE)
-	@$(BUILD_ENV) $(WHICH) $(BUILD_BINARY_LIST) 2>/dev/null | \
-		while read FILE; do \
-			$(LDD) "$${FILE}"; \
-		done | \
-		$(SED) "s|[(][^)]+[)]||g" | \
-		$(SORT)
+	@$(LDD) \
+		$(word 1,$(COREUTILS)) \
+		$(word 1,$(FIND)) \
+		$(word 1,$(PATCH)) \
+		$(word 1,$(SED)) \
+		$(word 1,$(TAR)) \
+		$(word 1,$(PERL)) \
+		$(word 1,$(BASH)) $(word 1,$(SH)) \
+		$(word 1,$(LESS)) \
+		$(word 1,$(VIM)) \
+		$(word 1,$(MAKE)) \
+		$(word 1,$(ZIP)) \
+		$(word 1,$(UNZIP)) \
+		$(word 1,$(CURL)) \
+		$(word 1,$(GIT)) \
+		$(word 1,$(PANDOC)) \
+		$(word 1,$(PANDOC_CITEPROC)) \
+		$(word 1,$(TEX)) \
+		$(word 1,$(PDFLATEX)) \
+		$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
+		$(word 1,$(CABAL)) \
+		2>/dev/null \
+		| $(SED) -e "/^[:/]/d" -e "s|[(][^)]+[)]||g" \
+		| $(SORT)
 	@$(HELPLINE)
 
 .PHONY: $(SHELLIT)
@@ -2337,7 +2373,7 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-dll
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
 	$(call CURL_FILE,$(MSYS_BIN_SRC))
-	$(call UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
+	$(call DO_UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
 
 .PHONY: $(STRAPIT)-msys-init
 $(STRAPIT)-msys-init:
@@ -2435,7 +2471,7 @@ $(STRAPIT)-libs:
 .PHONY: $(STRAPIT)-libs-linux
 $(STRAPIT)-libs-linux:
 	$(call CURL_FILE,$(LINUX_TAR_SRC))
-	$(call UNTAR,$(LINUX_TAR_DST),$(LINUX_TAR_SRC))
+	$(call DO_UNTAR,$(LINUX_TAR_DST),$(LINUX_TAR_SRC))
 	cd "$(LINUX_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) mrproper && \
 		$(BUILD_ENV) $(MAKE) INSTALL_HDR_PATH="$(COMPOSER_ABODE)" headers_install
@@ -2443,7 +2479,7 @@ $(STRAPIT)-libs-linux:
 .PHONY: $(STRAPIT)-libs-glibc
 $(STRAPIT)-libs-glibc:
 	$(call CURL_FILE,$(GLIBC_TAR_SRC))
-	$(call UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
+	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
 	$(MKDIR) "$(GLIBC_TAR_DST).build"
 	$(ECHO) "\"$(GLIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(GLIBC_TAR_DST).build/configure"
 	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
@@ -2454,7 +2490,7 @@ $(STRAPIT)-libs-glibc:
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(ZLIB_TAR_SRC))
-	$(call UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
+	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
 ifeq ($(BUILD_BITS),64)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
 		--64 \
@@ -2469,7 +2505,7 @@ endif
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
 	$(call CURL_FILE,$(GMP_TAR_SRC))
-	$(call UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
+	$(call DO_UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
 		ABI="$(BUILD_BITS)" \
 		,\
@@ -2482,7 +2518,7 @@ override define LIBICONV_BUILD =
 	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with gettext
 	$(RM) -r "$(LIBICONV_TAR_DST)"
-	$(call UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
+	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux)
 	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux)
@@ -2499,7 +2535,7 @@ $(STRAPIT)-libs-libiconv1:
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
 	$(call CURL_FILE,$(GETTEXT_TAR_SRC))
-	$(call UNTAR,$(GETTEXT_TAR_DST),$(GETTEXT_TAR_SRC))
+	$(call DO_UNTAR,$(GETTEXT_TAR_DST),$(GETTEXT_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(GETTEXT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2512,7 +2548,7 @@ $(STRAPIT)-libs-libiconv2:
 .PHONY: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs-ncurses:
 	$(call CURL_FILE,$(NCURSES_TAR_SRC))
-	$(call UNTAR,$(NCURSES_TAR_DST),$(NCURSES_TAR_SRC))
+	$(call DO_UNTAR,$(NCURSES_TAR_DST),$(NCURSES_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(NCURSES_TAR_DST))
 	$(call AUTOTOOLS_BUILD,$(NCURSES_TAR_DST),$(COMPOSER_ABODE),,\
@@ -2523,7 +2559,7 @@ $(STRAPIT)-libs-ncurses:
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
 	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
-	$(call UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
+	$(call DO_UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
 	$(CP) "$(OPENSSL_TAR_DST)/Configure" "$(OPENSSL_TAR_DST)/configure"
@@ -2569,7 +2605,7 @@ endif
 .PHONY: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs-expat:
 	$(call CURL_FILE,$(EXPAT_TAR_SRC))
-	$(call UNTAR,$(EXPAT_TAR_DST),$(EXPAT_TAR_SRC))
+	$(call DO_UNTAR,$(EXPAT_TAR_DST),$(EXPAT_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(EXPAT_TAR_DST)/conftools)
 	$(call AUTOTOOLS_BUILD,$(EXPAT_TAR_DST),$(COMPOSER_ABODE),,\
@@ -2580,7 +2616,7 @@ $(STRAPIT)-libs-expat:
 .PHONY: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs-freetype:
 	$(call CURL_FILE,$(FREETYPE_TAR_SRC))
-	$(call UNTAR,$(FREETYPE_TAR_DST),$(FREETYPE_TAR_SRC))
+	$(call DO_UNTAR,$(FREETYPE_TAR_DST),$(FREETYPE_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(FREETYPE_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2589,7 +2625,7 @@ $(STRAPIT)-libs-freetype:
 .PHONY: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(FONTCONFIG_TAR_SRC))
-	$(call UNTAR,$(FONTCONFIG_TAR_DST),$(FONTCONFIG_TAR_SRC))
+	$(call DO_UNTAR,$(FONTCONFIG_TAR_DST),$(FONTCONFIG_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
 	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
@@ -2607,8 +2643,6 @@ $(STRAPIT)-libs-fontconfig:
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-util-perl
-	$(RUNMAKE) $(STRAPIT)-util-perl-modules
 #WORKING : fails to build on "$(BUILD_PLAT),Msys"
 #	$(RUNMAKE) $(STRAPIT)-util-coreutils
 	$(RUNMAKE) $(STRAPIT)-util-findutils
@@ -2620,11 +2654,69 @@ $(STRAPIT)-util:
 #		--with-xz=PROG          use PROG as xz compressor program
 #WORKING
 	$(RUNMAKE) $(STRAPIT)-util-tar
+	$(RUNMAKE) $(STRAPIT)-util-perl
+	$(RUNMAKE) $(STRAPIT)-util-perl-modules
+
+.PHONY: $(STRAPIT)-util-coreutils
+$(STRAPIT)-util-coreutils:
+	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
+	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
+		--enable-single-binary="shebangs" \
+		--disable-acl \
+		--disable-xattr \
+	)
+
+.PHONY: $(STRAPIT)-util-findutils
+$(STRAPIT)-util-findutils:
+	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
+	$(call DO_UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(FINDUTILS_TAR_DST)/build-aux)
+	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-util-patch
+$(STRAPIT)-util-patch:
+	$(call CURL_FILE,$(PATCH_TAR_SRC))
+	$(call DO_UNTAR,$(PATCH_TAR_DST),$(PATCH_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-xattr \
+	)
+
+.PHONY: $(STRAPIT)-util-sed
+$(STRAPIT)-util-sed:
+	$(call CURL_FILE,$(SED_TAR_SRC))
+	$(call DO_UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(SED_TAR_DST)/build-aux)
+	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-acl \
+	)
+
+.PHONY: $(STRAPIT)-util-bzip
+$(STRAPIT)-util-bzip:
+	$(call CURL_FILE,$(BZIP_TAR_SRC))
+	$(call DO_UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
+	$(ECHO) >"$(BZIP_TAR_DST)/configure"
+	$(CHMOD) "$(BZIP_TAR_DST)/configure"
+	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE),\
+		PREFIX="$(COMPOSER_ABODE)" \
+	)
+
+.PHONY: $(STRAPIT)-util-tar
+$(STRAPIT)-util-tar:
+	$(call CURL_FILE,$(TAR_TAR_SRC))
+	$(call DO_UNTAR,$(TAR_TAR_DST),$(TAR_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-acl \
+		--without-posix-acls \
+		--without-xattrs \
+	)
 
 .PHONY: $(STRAPIT)-util-perl
 $(STRAPIT)-util-perl:
 	$(call CURL_FILE,$(PERL_TAR_SRC))
-	$(call UNTAR,$(PERL_TAR_DST),$(PERL_TAR_SRC))
+	$(call DO_UNTAR,$(PERL_TAR_DST),$(PERL_TAR_SRC))
 ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" requires some patches
 	if [ ! -f "$(PERL_TAR_DST)/Configure.perl" ]; then \
@@ -2657,7 +2749,7 @@ endif
 
 override define PERL_MODULES_BUILD =
 	$(call CURL_FILE,$(2)); \
-	$(call UNTAR,$(PERL_TAR_DST)/$(1),$(2)); \
+	$(call DO_UNTAR,$(PERL_TAR_DST)/$(1),$(2)); \
 	cd "$(PERL_TAR_DST)/$(1)" && \
 		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
 		$(BUILD_ENV) $(MAKE) && \
@@ -2670,62 +2762,6 @@ $(STRAPIT)-util-perl-modules:
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
 
-.PHONY: $(STRAPIT)-util-coreutils
-$(STRAPIT)-util-coreutils:
-	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
-	$(call UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
-		--enable-single-binary="shebangs" \
-		--disable-acl \
-		--disable-xattr \
-	)
-
-.PHONY: $(STRAPIT)-util-findutils
-$(STRAPIT)-util-findutils:
-	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
-	$(call UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(FINDUTILS_TAR_DST)/build-aux)
-	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
-
-.PHONY: $(STRAPIT)-util-patch
-$(STRAPIT)-util-patch:
-	$(call CURL_FILE,$(PATCH_TAR_SRC))
-	$(call UNTAR,$(PATCH_TAR_DST),$(PATCH_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-xattr \
-	)
-
-.PHONY: $(STRAPIT)-util-sed
-$(STRAPIT)-util-sed:
-	$(call CURL_FILE,$(SED_TAR_SRC))
-	$(call UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(SED_TAR_DST)/build-aux)
-	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-acl \
-	)
-
-.PHONY: $(STRAPIT)-util-bzip
-$(STRAPIT)-util-bzip:
-	$(call CURL_FILE,$(BZIP_TAR_SRC))
-	$(call UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
-	$(ECHO) >"$(BZIP_TAR_DST)/configure"
-	$(CHMOD) "$(BZIP_TAR_DST)/configure"
-	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE),\
-		PREFIX="$(COMPOSER_ABODE)" \
-	)
-
-.PHONY: $(STRAPIT)-util-tar
-$(STRAPIT)-util-tar:
-	$(call CURL_FILE,$(TAR_TAR_SRC))
-	$(call UNTAR,$(TAR_TAR_DST),$(TAR_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-acl \
-		--without-posix-acls \
-		--without-xattrs \
-	)
-
 .PHONY: $(FETCHIT)-bash
 $(FETCHIT)-bash: $(FETCHIT)-bash-pull
 $(FETCHIT)-bash: $(FETCHIT)-bash-prep
@@ -2734,7 +2770,7 @@ $(FETCHIT)-bash: $(FETCHIT)-bash-prep
 $(FETCHIT)-bash-pull:
 	$(call CURL_FILE,$(BASH_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
-	$(call UNTAR,$(BASH_TAR_DST),$(BASH_TAR_SRC),$(notdir $(BASH_TAR_DST))/ChangeLog)
+	$(call DO_UNTAR,$(BASH_TAR_DST),$(BASH_TAR_SRC),$(notdir $(BASH_TAR_DST))/ChangeLog)
 
 .PHONY: $(FETCHIT)-bash-prep
 $(FETCHIT)-bash-prep:
@@ -2762,7 +2798,7 @@ $(FETCHIT)-less: $(FETCHIT)-less-prep
 .PHONY: $(FETCHIT)-less-pull
 $(FETCHIT)-less-pull:
 	$(call CURL_FILE,$(LESS_TAR_SRC))
-	$(call UNTAR,$(LESS_TAR_DST),$(LESS_TAR_SRC))
+	$(call DO_UNTAR,$(LESS_TAR_DST),$(LESS_TAR_SRC))
 
 .PHONY: $(FETCHIT)-less-prep
 $(FETCHIT)-less-prep:
@@ -2781,7 +2817,7 @@ $(FETCHIT)-vim: $(FETCHIT)-vim-prep
 .PHONY: $(FETCHIT)-vim-pull
 $(FETCHIT)-vim-pull:
 	$(call CURL_FILE,$(VIM_TAR_SRC))
-	$(call UNTAR,$(VIM_TAR_DST),$(VIM_TAR_SRC))
+	$(call DO_UNTAR,$(VIM_TAR_DST),$(VIM_TAR_SRC))
 
 .PHONY: $(FETCHIT)-vim-prep
 $(FETCHIT)-vim-prep:
@@ -2806,7 +2842,7 @@ $(FETCHIT)-make-pull:
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
 	cd "$(MAKE_DST)" && \
-		$(BUILD_ENV) $(AUTORECONF) --force --install && \
+		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
 
@@ -2825,9 +2861,9 @@ $(FETCHIT)-infozip-pull:
 	$(call CURL_FILE,$(IZIP_TAR_SRC))
 	$(call CURL_FILE,$(UZIP_TAR_SRC))
 	$(call CURL_FILE,$(BZIP_TAR_SRC))
-	$(call UNTAR,$(IZIP_TAR_DST),$(IZIP_TAR_SRC))
-	$(call UNTAR,$(UZIP_TAR_DST),$(UZIP_TAR_SRC))
-	$(call UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
+	$(call DO_UNTAR,$(IZIP_TAR_DST),$(IZIP_TAR_SRC))
+	$(call DO_UNTAR,$(UZIP_TAR_DST),$(UZIP_TAR_SRC))
+	$(call DO_UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
 	$(MKDIR) \
 		"$(IZIP_TAR_DST)/bzip2" \
 		"$(UZIP_TAR_DST)/bzip2"
@@ -2862,7 +2898,7 @@ $(FETCHIT)-curl: $(FETCHIT)-curl-prep
 .PHONY: $(STRAPIT)-curl-pull
 $(STRAPIT)-curl-pull:
 	$(call CURL_FILE,$(CURL_TAR_SRC))
-	$(call UNTAR,$(CURL_TAR_DST),$(CURL_TAR_SRC))
+	$(call DO_UNTAR,$(CURL_TAR_DST),$(CURL_TAR_SRC))
 
 .PHONY: $(FETCHIT)-curl-pull
 $(FETCHIT)-curl-pull:
@@ -2886,7 +2922,7 @@ $(STRAPIT)-curl-prep:
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
-		$(BUILD_ENV) $(AUTORECONF) --force --install && \
+		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure
 	$(SED) -i \
 		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
@@ -2931,7 +2967,7 @@ $(FETCHIT)-git: $(FETCHIT)-git-prep
 .PHONY: $(STRAPIT)-git-pull
 $(STRAPIT)-git-pull:
 	$(call CURL_FILE,$(GIT_TAR_SRC))
-	$(call UNTAR,$(GIT_TAR_DST),$(GIT_TAR_SRC))
+	$(call DO_UNTAR,$(GIT_TAR_DST),$(GIT_TAR_SRC))
 
 .PHONY: $(FETCHIT)-git-pull
 $(FETCHIT)-git-pull:
@@ -2985,11 +3021,11 @@ $(FETCHIT)-tex: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-pull:
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
 	$(call CURL_FILE,$(TEX_TAR_SRC))
-	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
-	$(call UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
+	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
+	$(call DO_UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
 ifeq ($(BUILD_PLAT),Msys)
 	$(call CURL_FILE,$(TEX_WINDOWS_SRC))
-	$(call UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
+	$(call DO_UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
 endif
 
 .PHONY: $(FETCHIT)-tex-prep
@@ -3058,8 +3094,8 @@ $(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 $(STRAPIT)-ghc-pull:
 	$(call CURL_FILE,$(GHC_BIN_SRC))
 	$(call CURL_FILE,$(CBL_TAR_SRC))
-	$(call UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
-	$(call UNTAR,$(CBL_TAR_DST),$(CBL_TAR_SRC))
+	$(call DO_UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
+	$(call DO_UNTAR,$(CBL_TAR_DST),$(CBL_TAR_SRC))
 
 .PHONY: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc-pull:
@@ -3336,7 +3372,7 @@ $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_DST))
 	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
 	@echo
-	@$(BUILD_ENV) pandoc --version
+	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
 
 ########################################
 
