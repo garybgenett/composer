@@ -2,6 +2,16 @@
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
+#
+#TODO : portability
+# Every attempt has been made to make this as portable as possible:
+#	http://www.gnu.org/software/make/manual/make.html#toc-Features-of-GNU-make
+#	http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Make
+#	http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Shell
+#
+# Please report any cross-platform issues, or issues with other versions of Make
+#
+################################################################################
 
 #WORKING
 # _ add "licenses" or "info" option, to display list of included programs and licenses
@@ -11,17 +21,13 @@
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
 # _ template inherit & archive target
+# _ comments, comments, comments (& formatting :)
 #WORKING
 
-#TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
-#TODO : http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
-#TODO : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
-
-#WORKING
-# http://www.gnu.org/software/make/manual/make.html#toc-Features-of-GNU-make
-# http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Make
-# http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Shell
-#WORKING
+#TODO : new features
+# http://www.html5rocks.com/en/tutorials/webcomponents/imports
+# http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
+#TODO
 
 #TODO
 # bash/less/vim
