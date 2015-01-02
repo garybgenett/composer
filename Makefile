@@ -3065,12 +3065,6 @@ $(FETCHIT)-tex-prep:
 	$(CP) \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
-#WORKING
-#	# "$(BUILD_PLAT),Msys" does not support symlinks
-#	$(SED) -i \
-#		-e "s|(as[_]ln[_]s[=].)ln[ ][-]s(.)|\1cp -pR\2|g" \
-#		"$(TEX_TAR_DST)/configure"
-#WORKING
 	# "$(BUILD_PLAT),Msys" doesn't seem to build these files
 	$(SED) -i \
 		-e "s|allcm[:]allec||g" \
@@ -3078,9 +3072,11 @@ $(FETCHIT)-tex-prep:
 		-e "s|kpsetool[:]kpsexpand||g" \
 		-e "s|kpsetool[:]kpsepath||g" \
 		"$(TEX_TAR_DST)/texk/texlive/tl_scripts/Makefile.in"
+	# dear texlive, please don't remove the destination directory before installing to it...
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
 		"$(TEX_TAR_DST)/Build"
+	# make sure we link in all the right libraries
 	$(SED) -i \
 		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
 		"$(TEX_TAR_DST)/texk/web2c/configure"
