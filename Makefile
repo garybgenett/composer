@@ -2416,8 +2416,9 @@ $(STRAPIT)-msys-dll:
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-libs-linux
+#WORK
 #ifeq ($(BUILD_PLAT),Linux)
+#	$(RUNMAKE) $(STRAPIT)-libs-linux
 #	$(RUNMAKE) $(STRAPIT)-libs-glibc
 #endif
 	$(RUNMAKE) $(STRAPIT)-libs-zlib
