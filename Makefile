@@ -253,24 +253,6 @@ override BUILD_GHC_78			?=
 override BUILD_PLAT			?= $(shell uname -o)
 override BUILD_ARCH			?= $(shell uname -m)
 
-override CHOST				:=
-override CHOST_MINGW			:=
-override CFLAGS				:=
-ifneq ($(BUILD_DIST),)
-ifeq ($(BUILD_MSYS),)
-override BUILD_PLAT			:= Linux
-override BUILD_ARCH			:= i686
-override CHOST				:= $(BUILD_ARCH)-pc-linux-gnu
-override CHOST_MINGW			:= $(CHOST)
-else
-override BUILD_PLAT			:= Msys
-override BUILD_ARCH			:= i686
-override CHOST				:= $(BUILD_ARCH)-pc-msys
-override CHOST_MINGW			:= $(BUILD_ARCH)-pc-mingw32
-endif
-override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
-endif
-
 ifneq ($(BUILD_MSYS),)
 override BUILD_PLAT			:= Msys
 endif
@@ -289,6 +271,24 @@ override BUILD_MSYS			:= 32
 endif
 override MSYSTEM_MSYS			:= MSYS$(BUILD_MSYS)
 override MSYSTEM_MINGW			:= MINGW$(BUILD_MSYS)
+endif
+
+override CHOST				:=
+override CHOST_MINGW			:=
+override CFLAGS				:=
+ifneq ($(BUILD_DIST),)
+ifeq ($(BUILD_MSYS),)
+override BUILD_PLAT			:= Linux
+override BUILD_ARCH			:= i686
+override CHOST				:= $(BUILD_ARCH)-pc-linux-gnu
+override CHOST_MINGW			:= $(CHOST)
+else
+override BUILD_PLAT			:= Msys
+override BUILD_ARCH			:= i686
+override CHOST				:= $(BUILD_ARCH)-pc-msys
+override CHOST_MINGW			:= $(BUILD_ARCH)-pc-mingw32
+endif
+override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
