@@ -6,6 +6,8 @@
 #WORKING
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
 # _ template inherit & archive target
+# _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
+# _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
 #WORKING
 
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
@@ -392,56 +394,61 @@ override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 
+# http://dev.perl.org/licenses (license: custom = GPL, Artistic)
+# https://www.perl.org/get.html
+override LIB_PERL_VERSION		:= 5.20.1
+override LIB_PERL_TAR_SRC		:= http://www.cpan.org/src/5.0/perl-$(LIB_PERL_VERSION).tar.gz
+override LIB_PERL_TAR_DST		:= $(BUILD_STRAP)/perl-$(LIB_PERL_VERSION)
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
 override LIB_ZLIB_VERSION		:= 1.2.8
 override LIB_ZLIB_TAR_SRC		:= http://www.zlib.net/zlib-$(LIB_ZLIB_VERSION).tar.xz
-override LIB_ZLIB_TAR_DST		:= $(COMPOSER_BUILD)/libs/zlib-$(LIB_ZLIB_VERSION)
+override LIB_ZLIB_TAR_DST		:= $(BUILD_STRAP)/zlib-$(LIB_ZLIB_VERSION)
 # https://gmplib.org (license: GPL, LGPL)
 # https://gmplib.org
 override LIB_LGMP_VERSION		:= 6.0.0a
 override LIB_LGMP_TAR_SRC		:= https://gmplib.org/download/gmp/gmp-$(LIB_LGMP_VERSION).tar.xz
-override LIB_LGMP_TAR_DST		:= $(COMPOSER_BUILD)/libs/gmp-$(subst a,,$(LIB_LGMP_VERSION))
+override LIB_LGMP_TAR_DST		:= $(BUILD_STRAP)/gmp-$(subst a,,$(LIB_LGMP_VERSION))
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
 # https://www.gnu.org/software/libiconv
 override LIB_ICNV_VERSION		:= 1.14
 override LIB_ICNV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIB_ICNV_VERSION).tar.gz
-override LIB_ICNV_TAR_DST		:= $(COMPOSER_BUILD)/libs/libiconv-$(LIB_ICNV_VERSION)
+override LIB_ICNV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIB_ICNV_VERSION)
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
 override LIB_GTXT_VERSION		:= 0.19.3
 override LIB_GTXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
-override LIB_GTXT_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
+override LIB_GTXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(LIB_GTXT_VERSION)
 # https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
 override LIB_NCRS_VERSION		:= 5.9
 override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
-override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/ncurses-$(LIB_NCRS_VERSION)
+override LIB_NCRS_TAR_DST		:= $(BUILD_STRAP)/ncurses-$(LIB_NCRS_VERSION)
 # http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html (license: GPL)
 # http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html
 override LIB_RDLN_VERSION		:= 6.3
 override LIB_RDLN_TAR_SRC		:= ftp://ftp.cwru.edu/pub/bash/readline-$(LIB_RDLN_VERSION).tar.gz
-override LIB_RDLN_TAR_DST		:= $(COMPOSER_BUILD)/libs/readline-$(LIB_RDLN_VERSION)
+override LIB_RDLN_TAR_DST		:= $(BUILD_STRAP)/readline-$(LIB_RDLN_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override LIB_OSSL_VERSION		:= 1.0.1j
 override LIB_OSSL_TAR_SRC		:= https://www.openssl.org/source/openssl-$(LIB_OSSL_VERSION).tar.gz
-override LIB_OSSL_TAR_DST		:= $(COMPOSER_BUILD)/libs/openssl-$(LIB_OSSL_VERSION)
+override LIB_OSSL_TAR_DST		:= $(BUILD_STRAP)/openssl-$(LIB_OSSL_VERSION)
 # http://sourceforge.net/projects/expat (license: MIT)
 # http://expat.sourceforge.net
 override LIB_EXPT_VERSION		:= 2.1.0
 override LIB_EXPT_TAR_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(LIB_EXPT_VERSION)/expat-$(LIB_EXPT_VERSION).tar.gz
-override LIB_EXPT_TAR_DST		:= $(COMPOSER_BUILD)/libs/expat-$(LIB_EXPT_VERSION)
+override LIB_EXPT_TAR_DST		:= $(BUILD_STRAP)/expat-$(LIB_EXPT_VERSION)
 # http://www.freetype.org/license.html (license: custom = BSD, GPL)
 # http://www.freetype.org/download.html
 override LIB_FTYP_VERSION		:= 2.5.3
 override LIB_FTYP_TAR_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(LIB_FTYP_VERSION).tar.gz
-override LIB_FTYP_TAR_DST		:= $(COMPOSER_BUILD)/libs/freetype-$(LIB_FTYP_VERSION)
+override LIB_FTYP_TAR_DST		:= $(BUILD_STRAP)/freetype-$(LIB_FTYP_VERSION)
 # http://www.freedesktop.org/software/fontconfig/fontconfig-devel/ln12.html (license: custom = as-is)
 # http://www.freedesktop.org/wiki/Software/fontconfig
 override LIB_FCFG_VERSION		:= 2.11.1
 override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
-override LIB_FCFG_TAR_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSION)
+override LIB_FCFG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(LIB_FCFG_VERSION)
 
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
@@ -677,6 +684,13 @@ override WINDOWS_BINARY_LIST		:= \
 	dirname \
 	mintty
 
+override PERL_MODULES_LIST := \
+	Encode-Locale-1.03|https://cpan.metacpan.org/authors/id/G/GA/GAAS/Encode-Locale-1.03.tar.gz \
+	HTTP-Date-6.02|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Date-6.02.tar.gz \
+	HTTP-Message-6.06|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Message-6.06.tar.gz \
+	URI-1.65|https://cpan.metacpan.org/authors/id/E/ET/ETHER/URI-1.65.tar.gz \
+	libwww-perl-6.08|https://cpan.metacpan.org/authors/id/M/MS/MSCHILLI/libwww-perl-6.08.tar.gz
+
 override TEXLIVE_DIRECTORY_LIST		:= \
 	fonts/enc/dvips/lm \
 	fonts/map/pdftex/updmap \
@@ -811,26 +825,26 @@ override TIMESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 # note that "--insecure" option is also mirrored in "$(STRAPIT)-ghc-prep" target
 override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --insecure --location --remote-time
 override define CURL_FILE		=
-	@$(MKDIR) "$(COMPOSER_STORE)"
-	@$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
+	$(MKDIR) "$(COMPOSER_STORE)"; \
+	$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
 endef
 override define CURL_FILE_GNU_CFG	=
-	@$(MKDIR) "$(GNU_CFG_DST)"
-	@$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"
+	$(MKDIR) "$(GNU_CFG_DST)"; \
+	$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"
 endef
 
 override define UNZIP			=
-	@"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(notdir $(2))"
+	"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(notdir $(2))"
 endef
 override define UNTAR			=
-	@if [ ! -d "$(1)" ]; then \
+	if [ ! -d "$(1)" ]; then \
 		$(MKDIR) "$(abspath $(dir $(1)))"; \
 		$(TAR) --directory "$(abspath $(dir $(1)))" --file "$(COMPOSER_STORE)/$(notdir $(2))" --exclude="$(3)"; \
 	fi
 endef
 override define PATCH			=
-	@$(call CURL_FILE,$(2))
-	@"$(call COMPOSER_FIND,$(PATH_LIST),patch)" --directory="$(1)" --strip=1 <"$(COMPOSER_STORE)/$(notdir $(2))"
+	$(call CURL_FILE,$(2)); \
+	"$(call COMPOSER_FIND,$(PATH_LIST),patch)" --directory="$(1)" --strip=1 <"$(COMPOSER_STORE)/$(notdir $(2))"
 endef
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
@@ -842,35 +856,35 @@ endif
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
 override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_REPO		=
-	@$(MKDIR) "$(COMPOSER_STORE)"
-	@$(MKDIR) "$(1)"
-	@if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) "$(1).git"  "$(5)"; fi
-	@if [ ! -d "$(5)" ] && [ -d "$(1)/.git" ]; then $(MV) "$(1)/.git" "$(5)"; fi
-	@if [ ! -d "$(5)" ]; then \
+	$(MKDIR) "$(COMPOSER_STORE)"; \
+	$(MKDIR) "$(1)"; \
+	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) "$(1).git"  "$(5)"; fi; \
+	if [ ! -d "$(5)" ] && [ -d "$(1)/.git" ]; then $(MV) "$(1)/.git" "$(5)"; fi; \
+	if [ ! -d "$(5)" ]; then \
 		$(call GIT_RUN,$(1),init); \
 		$(call GIT_RUN,$(1),remote add origin "$(2)"); \
-	fi
-	@echo "gitdir: $(5)" >"$(1)/.git"
-	@$(call GIT_RUN,$(1),config --local --replace-all core.worktree "$(1)")
-	@$(call GIT_RUN,$(1),fetch --all)
-	@if [ -n "$(3)" ] && [ -n "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(4) $(3)); fi
-	@if [ -n "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(BUILD_BRANCH) $(3)); fi
-	@if [ -z "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force master); fi
-	@$(call GIT_RUN,$(1),reset --hard)
+	fi; \
+	echo "gitdir: $(5)" >"$(1)/.git"; \
+	$(call GIT_RUN,$(1),config --local --replace-all core.worktree "$(1)"); \
+	$(call GIT_RUN,$(1),fetch --all); \
+	if [ -n "$(3)" ] && [ -n "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(4) $(3)); fi; \
+	if [ -n "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(BUILD_BRANCH) $(3)); fi; \
+	if [ -z "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force master); fi; \
+	$(call GIT_RUN,$(1),reset --hard)
 endef
 override define GIT_SUBMODULE		=
-	@if [ -f "$(1)/.gitmodules" ]; then \
+	if [ -f "$(1)/.gitmodules" ]; then \
 		$(call GIT_RUN,$(1),submodule update --init --force); \
 	fi
 endef
 override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(2),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_SUBMODULE_GHC	=
-	@cd "$(1)" && find ./ -mindepth 2 -type d -name ".git" 2>/dev/null | $(SED) -e "s|^[.][/]||g" -e "s|[/][.]git$$||g" | while read FILE; do \
+	cd "$(1)" && find ./ -mindepth 2 -type d -name ".git" 2>/dev/null | $(SED) -e "s|^[.][/]||g" -e "s|[/][.]git$$||g" | while read FILE; do \
 		$(MKDIR) "$(3)/modules/$${FILE}"; \
 		$(RM) -r "$(3)/modules/$${FILE}"; \
 		$(MV) "$(1)/$${FILE}/.git" "$(3)/modules/$${FILE}"; \
-	done
-	@cd "$(3)" && find ./modules -type f -name "index" 2>/dev/null | $(SED) -e "s|^[.][/]modules[/]||g" -e "s|[/]index$$||g" | while read FILE; do \
+	done; \
+	cd "$(3)" && find ./modules -type f -name "index" 2>/dev/null | $(SED) -e "s|^[.][/]modules[/]||g" -e "s|[/]index$$||g" | while read FILE; do \
 		$(MKDIR) "$(1)/$${FILE}"; \
 		echo "gitdir: $(3)/modules/$${FILE}" >"$(1)/$${FILE}/.git"; \
 		cd "$(1)/$${FILE}" && $(GIT) --git-dir="$(3)/modules/$${FILE}" config --local --replace-all core.worktree "$(1)/$${FILE}"; \
@@ -880,9 +894,9 @@ endef
 # thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
 #	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
 override define DO_TEXTFILE		=
-	@$(MKDIR) "$(abspath $(dir $(1)))"
-	@echo '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"
-	@$(SED) -i \
+	$(MKDIR) "$(abspath $(dir $(1)))"; \
+	echo '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"; \
+	$(SED) -i \
 		-e "s|[[]B[]]|\\\|g" \
 		-e "s|[[]N[]]|\n|g" \
 		-e "s|[[]Q[]]|'|g" \
@@ -976,6 +990,7 @@ endif
 	@$(HELPOUT2) "Use '$(_M)targets$(_D)' to get a list of available targets for this '$(MAKEFILE)'."
 	@$(HELPOUT2) "Or, review the output of '$(_M)$(HELPOUT)$(_D)' and/or '$(_M)$(HELPALL)$(_D)' for more information."
 	@$(HELPLVL1)
+	@exit 1
 
 ########################################
 
@@ -1345,13 +1360,13 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-check$(_D):"	"$(_E)$(STRAPIT)-exit$(_D)"			"Exits with supporting help text"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-perl$(_D)"		"Build/compile of Perl from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
@@ -1959,7 +1974,7 @@ endif
 	@$(HELPOUT1) "- $(_C)Cabal"		"$(_D)$(shell $(BUILD_ENV) which cabal)"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_E)(no binary to report)"
 	@$(HELPLINE)
-	@$(BUILD_ENV) which bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal | \
+	@$(BUILD_ENV) which bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal 2>/dev/null | \
 		while read FILE; do \
 			ldd $${FILE}; \
 		done | \
@@ -2168,11 +2183,6 @@ ifneq ($(CHECK_MSYS),)
 	@$(HELPLVL1)
 endif
 ifneq ($(CHECK_FAILED),)
-	@$(RUNMAKE) --silent $(STRAPIT)-exit
-endif
-
-.PHONY: $(STRAPIT)-exit
-$(STRAPIT)-exit:
 	@$(HELPLVL1)
 	@$(HELPOUT2) "$(_H)$(MARKER) NOTES:"
 	@$(HELPOUT2) "This message was produced by $(_H)$(COMPOSER_FULLNAME)$(_D)."
@@ -2180,6 +2190,7 @@ $(STRAPIT)-exit:
 	@$(HELPOUT2) "$(INDENTING)$(_M)$(COMPOSER)"
 	@$(HELPLVL1)
 	@exit 1
+endif
 
 .PHONY: $(STRAPIT)-msys
 $(STRAPIT)-msys: $(STRAPIT)-msys-bin
@@ -2242,6 +2253,7 @@ $(STRAPIT)-msys-dll:
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
+$(STRAPIT)-libs: $(STRAPIT)-libs-perl
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
@@ -2253,6 +2265,21 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+
+.PHONY: $(STRAPIT)-libs-perl
+$(STRAPIT)-libs-perl:
+	$(call CURL_FILE,$(LIB_PERL_TAR_SRC))
+	$(call UNTAR,$(LIB_PERL_TAR_DST),$(LIB_PERL_TAR_SRC))
+	$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"
+	$(call AUTOTOOLS_BUILD,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+	$(foreach FILE,$(PERL_MODULES_LIST),\
+		$(call CURL_FILE,$(word 2,$(subst |, ,$(FILE)))); \
+		$(call UNTAR,$(LIB_PERL_TAR_DST)/$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+		cd "$(LIB_PERL_TAR_DST)/$(word 1,$(subst |, ,$(FILE)))" && \
+			$(BUILD_ENV) perl Makefile.PL && \
+			$(BUILD_ENV) $(MAKE) && \
+			$(BUILD_ENV) $(MAKE) install; \
+	)
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
@@ -2534,15 +2561,20 @@ $(FETCHIT)-curl-pull:
 
 .PHONY: $(STRAPIT)-curl-prep
 $(STRAPIT)-curl-prep:
+	cd "$(CURL_TAR_DST)" && \
+		$(BUILD_ENV) $(MAKE) ca-bundle
 
 .PHONY: $(FETCHIT)-curl-prep
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) autoreconf --force --install
+	cd "$(CURL_DST)" && \
+		$(BUILD_ENV) $(MAKE) ca-bundle
 
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
+		--with-ca-bundle="$(CURL_TAR_DST)/lib/ca-bundle.crt" \
 		--without-libidn \
 		--disable-shared \
 		--enable-static \
@@ -2551,6 +2583,7 @@ $(STRAPIT)-curl-build:
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
+		--with-ca-bundle="$(CURL_DST)/lib/ca-bundle.crt" \
 		--without-libidn \
 		--disable-shared \
 		--enable-static \
@@ -2661,11 +2694,10 @@ ifeq ($(BUILD_PLAT),Msys)
 			--without-x
 else
 	echo WORK
-#		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
 #			--enable-cxx-runtime-hack \
 #
 	cd "$(TEX_TAR_DST)" && \
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x
