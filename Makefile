@@ -642,18 +642,15 @@ override PANDOC_MATH_DST		:= $(COMPOSER_BUILD)/pandoc-texmath
 override PANDOC_HIGH_DST		:= $(COMPOSER_BUILD)/pandoc-highlighting
 override PANDOC_CITE_DST		:= $(COMPOSER_BUILD)/pandoc-citeproc
 override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
-#WORK : pandoc css windows
-#	https://github.com/rstudio/rmarkdown/issues/238
+#WORKING : pandoc css windows
+#	https://github.com/jgm/pandoc/issues/1558
+#	https://github.com/jgm/pandoc/commit/2956ef251c815c332679ff4666031a5b7a65aadc
 override PANDOC_TYPE_CMT		:= 1.12.4
-#override PANDOC_MATH_CMT		:= 0.6.6.3
-override PANDOC_MATH_CMT		:= 178df262f2cc2b146d70#>178df262f2cc2b146d7043de29506aa7d17254f5 0.8
+override PANDOC_MATH_CMT		:= 0.8.0.1
 override PANDOC_HIGH_CMT		:= 0.5.8.5
-#override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CITE_CMT		:= 0.5
-#override PANDOC_CMT			:= 1.12.4.2
-override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3#>704cfc1e3c2b6bc97cc315c92671dc47e9c76977 1.13.2
-#override PANDOC_VERSION			:= $(PANDOC_CMT)
-override PANDOC_VERSION			:= 1.13.2
+override PANDOC_CMT			:= 1.13.2
+override PANDOC_VERSION			:= $(PANDOC_CMT)
 
 override BUILD_PATH_MINGW		:=
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
