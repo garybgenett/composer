@@ -937,13 +937,17 @@ endef
 
 # thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
 #	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
+#WORK : this is a really, really ugly hack; it should be removed and then banished!
+override CYGWIN_ESCAPE			:=
+ifneq ($(CYGWIN_ROOT),)
+override CYGWIN_ESCAPE			:= \\
+endif
 override define DO_TEXTFILE		=
 	$(MKDIR) "$(abspath $(dir $(1)))"; \
 	echo '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"; \
 	$(SED) -i \
-		-e "s|[[]B[]]|\\\|g" \
-		-e "s|[[]N[]]|\n|g" \
-		-e "s|[[]Q[]]|'|g" \
+		-e "s|[[]B[]]|$(CYGWIN_ESCAPE)$(CYGWIN_ESCAPE)\\\\|g" \
+		-e "s|[[]N[]]|$(CYGWIN_ESCAPE)\\n|g" \
 		"$(1)"
 endef
 
@@ -2054,6 +2058,7 @@ $(SHELLIT):
 
 .PHONY: $(SHELLIT)-msys
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
+$(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys:
 ifneq ($(COMPOSER_PROGS_USE),)
 ifneq ($(wildcard $(COMPOSER_PROGS)),)
@@ -2118,14 +2123,14 @@ export PAGER="less -rX"
 export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
 unset VISUAL
 #
-alias ll=[Q]$(LS)[Q]
+alias ll="$(subst ",[B]",$(LS))"
 alias less="$${PAGER}"
 alias more="$${PAGER}"
 alias vi="$${EDITOR}"
 #
-alias .composer_root=[Q]cd "$(COMPOSER_DIR)"[Q]
-alias .composer=[Q]$(RUNMAKE)[Q]
-alias .compose=[Q]$(COMPOSE)[Q]
+alias .composer_root="cd [B]"$(COMPOSER_DIR)[B]""
+alias .composer="$(subst ",[B]",$(RUNMAKE))"
+alias .compose="$(subst ",[B]",$(COMPOSE))"
 #
 cd "$(COMPOSER_DIR)"
 source "$(COMPOSER_ABODE)/.bashrc.custom"
@@ -2280,7 +2285,6 @@ $(STRAPIT)-msys-init:
 	@$(HELPLVL1)
 	@read -s -n1 ENTER
 	@$(RUNMAKE) --silent $(SHELLIT)-msys
-	@$(TIMESTAMP) "$(MSYS_BIN_DST)/.$(COMPOSER_BASENAME)"
 	@$(HELPLVL1)
 	@$(HELPOUT2) "The shell window has been launched."
 	@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
@@ -2323,9 +2327,30 @@ $(STRAPIT)-msys-dll:
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
-ifeq ($(BUILD_PLAT),Linux)
-$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
-endif
+#WORKING : causes build errors
+#make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
+#make[3]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14'
+#make[3]: Nothing to be done for `am--refresh'.
+#make[3]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14'
+#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c allocator.c
+#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c areadlink.c
+#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c careadlinkat.c
+#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c malloca.c
+#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c progname.c
+#In file included from progname.c:26:0:
+#./stdio.h:1010:1: error: ‘gets’ undeclared here (not in a function)
+# _GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");
+#  ^
+#  make[2]: *** [progname.o] Error 1
+#  make[2]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
+#  make[1]: *** [all] Error 2
+#  make[1]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
+#  make: *** [all] Error 2
+#  make: *** [bootstrap-libs-libiconv1] Error 2
+#WORKING
+#ifeq ($(BUILD_PLAT),Linux)
+#$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
+#endif
 $(STRAPIT)-libs: $(STRAPIT)-libs-perl
 $(STRAPIT)-libs: $(STRAPIT)-libs-bzip
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
