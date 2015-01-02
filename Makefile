@@ -366,41 +366,6 @@ endif
 override MUSL_VERSION			:= 1.1.5
 override MUSL_BIN_SRC			:= http://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
 override MUSL_BIN_DST			:= $(COMPOSER_BUILD)/musl-$(MUSL_VERSION)
-# http://www.zlib.net/zlib_license.html (license: custom = as-is)
-# http://www.zlib.net
-override MUSL_ZLIB_VERSION		:= 1.2.8
-override MUSL_ZLIB_BIN_SRC		:= http://www.zlib.net/zlib-$(MUSL_ZLIB_VERSION).tar.xz
-override MUSL_ZLIB_BIN_DST		:= $(MUSL_BIN_DST)/zlib-$(MUSL_ZLIB_VERSION)
-# https://www.gnu.org/software/gettext (license: GPL, LGPL)
-# https://www.gnu.org/software/gettext
-override MUSL_GTXT_VERSION		:= 0.19.3
-override MUSL_GTXT_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/gettext/gettext-$(MUSL_GTXT_VERSION).tar.gz
-override MUSL_GTXT_BIN_DST		:= $(MUSL_BIN_DST)/gettext-$(MUSL_GTXT_VERSION)
-# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
-# https://www.gnu.org/software/libiconv
-override MUSL_ICNV_VERSION		:= 1.14
-override MUSL_ICNV_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(MUSL_ICNV_VERSION).tar.gz
-override MUSL_ICNV_BIN_DST		:= $(MUSL_BIN_DST)/libiconv-$(MUSL_ICNV_VERSION)
-# https://www.openssl.org/source/license.html (license: BSD)
-# https://www.openssl.org
-override MUSL_OSSL_VERSION		:= 1.0.1j
-override MUSL_OSSL_BIN_SRC		:= https://www.openssl.org/source/openssl-$(MUSL_OSSL_VERSION).tar.gz
-override MUSL_OSSL_BIN_DST		:= $(MUSL_BIN_DST)/openssl-$(MUSL_OSSL_VERSION)
-# http://sourceforge.net/projects/expat (license: MIT)
-# http://expat.sourceforge.net
-override MUSL_EXPT_VERSION		:= 2.1.0
-override MUSL_EXPT_BIN_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(MUSL_EXPT_VERSION)/expat-$(MUSL_EXPT_VERSION).tar.gz
-override MUSL_EXPT_BIN_DST		:= $(MUSL_BIN_DST)/expat-$(MUSL_EXPT_VERSION)
-# http://www.freetype.org/license.html (license: custom = BSD, GPL)
-# http://www.freetype.org/download.html
-override MUSL_FTYP_VERSION		:= 2.5.3
-override MUSL_FTYP_BIN_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(MUSL_FTYP_VERSION).tar.gz
-override MUSL_FTYP_BIN_DST		:= $(MUSL_BIN_DST)/freetype-$(MUSL_FTYP_VERSION)
-# http://www.freedesktop.org/software/fontconfig/fontconfig-devel/ln12.html (license: custom = as-is)
-# http://www.freedesktop.org/wiki/Software/fontconfig
-override MUSL_FCFG_VERSION		:= 2.11.1
-override MUSL_FCFG_BIN_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(MUSL_FCFG_VERSION).tar.gz
-override MUSL_FCFG_BIN_DST		:= $(MUSL_BIN_DST)/fontconfig-$(MUSL_FCFG_VERSION)
 
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
 # http://sourceforge.net/projects/msys2
@@ -409,6 +374,42 @@ override MUSL_FCFG_BIN_DST		:= $(MUSL_BIN_DST)/fontconfig-$(MUSL_FCFG_VERSION)
 override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
+
+# http://www.zlib.net/zlib_license.html (license: custom = as-is)
+# http://www.zlib.net
+override LIB_ZLIB_VERSION		:= 1.2.8
+override LIB_ZLIB_BIN_SRC		:= http://www.zlib.net/zlib-$(LIB_ZLIB_VERSION).tar.xz
+override LIB_ZLIB_BIN_DST		:= $(COMPOSER_BUILD)/libs/zlib-$(LIB_ZLIB_VERSION)
+# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
+# https://www.gnu.org/software/libiconv
+override LIB_ICNV_VERSION		:= 1.14
+override LIB_ICNV_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIB_ICNV_VERSION).tar.gz
+override LIB_ICNV_BIN_DST		:= $(COMPOSER_BUILD)/libs/libiconv-$(LIB_ICNV_VERSION)
+# https://www.gnu.org/software/gettext (license: GPL, LGPL)
+# https://www.gnu.org/software/gettext
+override LIB_GTXT_VERSION		:= 0.19.3
+override LIB_GTXT_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
+override LIB_GTXT_BIN_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
+# https://www.openssl.org/source/license.html (license: BSD)
+# https://www.openssl.org
+override LIB_OSSL_VERSION		:= 1.0.1j
+override LIB_OSSL_BIN_SRC		:= https://www.openssl.org/source/openssl-$(LIB_OSSL_VERSION).tar.gz
+override LIB_OSSL_BIN_DST		:= $(COMPOSER_BUILD)/libs/openssl-$(LIB_OSSL_VERSION)
+# http://sourceforge.net/projects/expat (license: MIT)
+# http://expat.sourceforge.net
+override LIB_EXPT_VERSION		:= 2.1.0
+override LIB_EXPT_BIN_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(LIB_EXPT_VERSION)/expat-$(LIB_EXPT_VERSION).tar.gz
+override LIB_EXPT_BIN_DST		:= $(COMPOSER_BUILD)/libs/expat-$(LIB_EXPT_VERSION)
+# http://www.freetype.org/license.html (license: custom = BSD, GPL)
+# http://www.freetype.org/download.html
+override LIB_FTYP_VERSION		:= 2.5.3
+override LIB_FTYP_BIN_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(LIB_FTYP_VERSION).tar.gz
+override LIB_FTYP_BIN_DST		:= $(COMPOSER_BUILD)/libs/freetype-$(LIB_FTYP_VERSION)
+# http://www.freedesktop.org/software/fontconfig/fontconfig-devel/ln12.html (license: custom = as-is)
+# http://www.freedesktop.org/wiki/Software/fontconfig
+override LIB_FCFG_VERSION		:= 2.11.1
+override LIB_FCFG_BIN_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
+override LIB_FCFG_BIN_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSION)
 
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
@@ -421,10 +422,10 @@ override MAKE_CMT			:= 4.0
 # http://www.info-zip.org
 override IZIP_VERSION			:= 3.0
 override UZIP_VERSION			:= 6.0
-override IZIP_BIN_SRC			:= http://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/$(MUSL_IZIP_VERSION)/zip$(subst .,,$(MUSL_IZIP_VERSION)).tar.gz
-override UZIP_BIN_SRC			:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(MUSL_UZIP_VERSION)/unzip$(subst .,,$(MUSL_UZIP_VERSION)).tar.gz
-override IZIP_BIN_DST			:= $(COMPOSER_BUILD)/zip$(subst .,,$(MUSL_IZIP_VERSION))
-override UZIP_BIN_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(MUSL_UZIP_VERSION))
+override IZIP_BIN_SRC			:= http://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/$(IZIP_VERSION)/zip$(subst .,,$(IZIP_VERSION)).tar.gz
+override UZIP_BIN_SRC			:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(UZIP_VERSION)/unzip$(subst .,,$(UZIP_VERSION)).tar.gz
+override IZIP_BIN_DST			:= $(COMPOSER_BUILD)/zip$(subst .,,$(IZIP_VERSION))
+override UZIP_BIN_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VERSION))
 
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
 # http://curl.haxx.se/dev/source.html
@@ -549,9 +550,9 @@ override CABAL_INSTALL			= $(CABAL) install \
 	$(BUILD_TOOLS) \
 	--prefix="$(1)" \
 	--global \
-	--avoid-reinstalls
-#>	--reinstall
-#>	--force-reinstalls
+	--reinstall \
+	--force-reinstalls
+#>	--avoid-reinstalls
 
 override PACMAN_BASE_LIST		:= \
 	msys2-runtime \
@@ -1093,26 +1094,25 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(HELPOUT1) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(HELPOUT1) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC (and libraries/utilities) from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-check$(_D):"	"$(_E)$(STRAPIT)-exit$(_D)"			"Exits with supporting help text"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-musl$(_D):"	"$(_E)$(STRAPIT)-musl-pull$(_D)"		"Download of MUSL LibC (and library/utility) source archives"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-prep$(_D)"		"Preparation of MUSL LibC (and library/utility) source archives"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-build$(_D)"		"Build/compile of MUSL LibC from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-zlib$(_D)"		"Build/compile of Zlib from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-gettext$(_D)"		"Build/compile of Gettext from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-libiconv$(_D)"		"Build/compile of Libiconv from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-expat$(_D)"		"Build/compile of Expat from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-freetype$(_D)"		"Build/compile of FreeType from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (without Gettext) from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (with Gettext) from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-git$(_D):"	"$(_E)$(STRAPIT)-git-pull$(_D)"			"Download of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-prep$(_D)"			"Preparation of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-build$(_D)"		"Build/compile of Git from source archive"
@@ -1258,7 +1258,7 @@ HELP_SYSTEM:
 	@$(HELPER) "include [...]"
 	@echo
 	@$(HELPOUT2) "$(_E)Create a new '$(MAKEFILE)' using a helpful template:"
-	@$(HELPER) "$(_M)$(~)(RUNMAKE) --quiet COMPOSER_NOCOLOR=\"1\" COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
+	@$(HELPER) "$(_M)$(~)(RUNMAKE) --silent COMPOSER_NOCOLOR=\"1\" COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
 	@echo
 	@$(HELPOUT2) "$(_E)Or, recursively initialize the current directory tree:"
 	@$(HELPOUT2) "$(_N)(NOTE: This is a non-destructive operation.)"
@@ -1400,12 +1400,12 @@ $(TESTOUT):
 	$(CP) "$(MDVIEWER_CSS)" "$(TEST_DIR_CSSDST)/$(COMPOSER_CSS)"
 	$(RUNMAKE) --directory "$(TESTOUT_DIR)" $(INSTALL)
 ifneq ($(COMPOSER_TESTING),0)
-	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
 endif
 	$(MKDIR) "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)"
 	$(RUNMAKE) --directory "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)" $(REPLICA)
@@ -1430,7 +1430,7 @@ $(INSTALL)-dir:
 		@echo "[SKIPPING] $(CURDIR)/$(MAKEFILE)"
 	else
 		@echo "[CREATING] $(CURDIR)/$(MAKEFILE)"
-		$(RUNMAKE) --quiet \
+		$(RUNMAKE) --silent \
 			COMPOSER_NOCOLOR="1" \
 			COMPOSER_TARGETS="$(sort $(subst .$(COMPOSER_EXT),.$(TYPE_HTML),$(wildcard *.$(COMPOSER_EXT))))" \
 			COMPOSER_SUBDIRS="$(sort $(subst /,,$(wildcard */)))" \
@@ -1438,7 +1438,7 @@ $(INSTALL)-dir:
 			$(EXAMPLE) >"$(CURDIR)/$(MAKEFILE)"
 	fi
 	$(foreach FILE,$(sort $(subst /,,$(wildcard */))),\
-		$(RUNMAKE) --quiet --directory "$(CURDIR)/$(FILE)" $(INSTALL)-dir
+		$(RUNMAKE) --silent --directory "$(CURDIR)/$(FILE)" $(INSTALL)-dir
 	)
 
 override REPLICA_GIT := $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
@@ -1491,7 +1491,7 @@ endif
 ifneq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-msys
 endif
-$(STRAPIT): $(STRAPIT)-git
+$(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc
 
 .PHONY: $(FETCHIT)
@@ -1508,6 +1508,32 @@ $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
 $(BUILDIT): $(CHECKIT)
+
+#WORK : list of targets
+# http://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
+.PHONY: list
+list:
+	@$(RUNMAKE) --question --print-data-base --no-builtin-variables --no-builtin-rules : 2>/dev/null 
+#	|
+#		awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' |
+#		sort |
+#		egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+
+#WORK : set title when running
+#override COMPOSER_TITLE ?= $(COMPOSER_BASENAME)
+
+#.PHONY: title
+#title: export COMPOSER_TITLE_ := $(COMPOSER_TITLE)
+#title:
+#	@echo title $(COMPOSER_TITLE)
+#	@echo -en "\e]0;$(MARKER) $(COMPOSER_BASENAME) [$(COMPOSER_TITLE_)]: $(CURDIR)\a"
+
+#%: $(shell echo -en "\e]0;$(MARKER) $(COMPOSER_BASENAME) [$(@)]: $(CURDIR)\a")
+#$(CHECKIT): $(eval echo -en "$(@)")
+#%: export COMPOSER_TITLE = $(@)
+#%: title
+#	@echo wildcard $(COMPOSER_TITLE)
+#WORK
 
 do-%: $(FETCHIT)-% $(BUILDIT)-%
 	@echo >/dev/null
@@ -1770,7 +1796,7 @@ ifeq ($(BUILD_MSYS),)
 		@$(LS) /{,usr/}lib*/$(CHECK_LIB_SRC)* 2>/dev/null || true
 		@echo
 		@$(HELPOUT2) "If no files are listed above, you may need to install some version of the $(CHECK_LIB_NAME) library to continue."
-		$(RUNMAKE) --quiet $(STRAPIT)-exit
+		$(RUNMAKE) --silent $(STRAPIT)-exit
 	fi
 else
 	@if [ ! -n "$(MSYSTEM)" ]; then
@@ -1782,7 +1808,7 @@ else
 		@$(HELPOUT2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
 		@$(HELPOUT2) "You should run the '$(_M)$(STRAPIT)-msys$(_D)' target to install the MSYS2 environment."
 		@$(HELPOUT2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
-		$(RUNMAKE) --quiet $(STRAPIT)-exit
+		$(RUNMAKE) --silent $(STRAPIT)-exit
 	fi
 endif
 
@@ -1797,110 +1823,10 @@ $(STRAPIT)-exit:
 	@exit 1
 
 .PHONY: $(STRAPIT)-musl
-$(STRAPIT)-musl: $(STRAPIT)-musl-pull
-$(STRAPIT)-musl: $(STRAPIT)-musl-prep
-$(STRAPIT)-musl: $(STRAPIT)-musl-build
 $(STRAPIT)-musl:
-	$(RUNMAKE) $(STRAPIT)-musl-zlib
-	$(RUNMAKE) $(STRAPIT)-musl-gettext
-	$(RUNMAKE) $(STRAPIT)-musl-libiconv
-	$(RUNMAKE) $(STRAPIT)-musl-openssl
-	$(RUNMAKE) $(STRAPIT)-musl-expat
-	$(RUNMAKE) $(STRAPIT)-musl-freetype
-	$(RUNMAKE) $(STRAPIT)-musl-fontconfig
-
-.PHONY: $(STRAPIT)-musl-pull
-$(STRAPIT)-musl-pull:
 	$(call CURL_FILE,$(MUSL_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_ZLIB_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_GTXT_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_ICNV_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_OSSL_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_EXPT_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_FTYP_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_FCFG_BIN_SRC))
 	$(call UNTAR,$(MUSL_BIN_DST),$(MUSL_BIN_SRC))
-	$(call UNTAR,$(MUSL_ZLIB_BIN_DST),$(MUSL_ZLIB_BIN_SRC))
-	$(call UNTAR,$(MUSL_GTXT_BIN_DST),$(MUSL_GTXT_BIN_SRC))
-	$(call UNTAR,$(MUSL_ICNV_BIN_DST),$(MUSL_ICNV_BIN_SRC))
-	$(call UNTAR,$(MUSL_OSSL_BIN_DST),$(MUSL_OSSL_BIN_SRC))
-	$(call UNTAR,$(MUSL_EXPT_BIN_DST),$(MUSL_EXPT_BIN_SRC))
-	$(call UNTAR,$(MUSL_FTYP_BIN_DST),$(MUSL_FTYP_BIN_SRC))
-	$(call UNTAR,$(MUSL_FCFG_BIN_DST),$(MUSL_FCFG_BIN_SRC))
-
-.PHONY: $(STRAPIT)-musl-prep
-$(STRAPIT)-musl-prep:
-	$(SED) -i \
-		-e "s|(cp[ ][.]libs)|#\1|g" \
-		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
-		"$(MUSL_ICNV_BIN_DST)/preload/Makefile.in" \
-		"$(MUSL_ICNV_BIN_DST)/preload/configure"*
-ifneq ($(BUILD_DIST),)
-	$(CP) "$(MUSL_OSSL_BIN_DST)/Configure" "$(MUSL_OSSL_BIN_DST)/configure"
-else
-	$(CP) "$(MUSL_OSSL_BIN_DST)/config" "$(MUSL_OSSL_BIN_DST)/configure"
-endif
-	$(SED) -i \
-		-e "s|(TERMIO)([^S])|\1S\2|g" \
-		-e "s|(termio)([^s])|\1s\2|g" \
-		"$(MUSL_OSSL_BIN_DST)/configure" \
-		"$(MUSL_OSSL_BIN_DST)/crypto/ui/ui_openssl.c"
-
-.PHONY: $(STRAPIT)-musl-build
-$(STRAPIT)-musl-build:
 	$(call AUTOTOOLS_BUILD,$(MUSL_BIN_DST),$(COMPOSER_ABODE))
-
-.PHONY: $(STRAPIT)-musl-zlib
-$(STRAPIT)-musl-zlib:
-ifeq ($(CC),$(BUILD_MUSL))
-	$(call AUTOTOOLS_BUILD,$(MUSL_ZLIB_BIN_DST),$(COMPOSER_ABODE),\
-		--static \
-	)
-else
-	$(call AUTOTOOLS_BUILD,$(MUSL_ZLIB_BIN_DST),$(COMPOSER_ABODE))
-endif
-
-.PHONY: $(STRAPIT)-musl-gettext
-$(STRAPIT)-musl-gettext:
-	$(call AUTOTOOLS_BUILD,$(MUSL_GTXT_BIN_DST),$(COMPOSER_ABODE))
-
-.PHONY: $(STRAPIT)-musl-libiconv
-$(STRAPIT)-musl-libiconv:
-	$(call AUTOTOOLS_BUILD,$(MUSL_ICNV_BIN_DST),$(COMPOSER_ABODE))
-
-.PHONY: $(STRAPIT)-musl-openssl
-# thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
-$(STRAPIT)-musl-openssl:
-ifeq ($(CC),$(BUILD_MUSL))
-	$(SED) -i \
-		-e "s|(gcc[:])([-]D)|\1-static \2|g" \
-		"$(MUSL_OSSL_BIN_DST)/Configure" \
-		"$(MUSL_OSSL_BIN_DST)/configure"
-endif
-ifneq ($(BUILD_DIST),)
-	$(call AUTOTOOLS_BUILD,$(MUSL_OSSL_BIN_DST),$(COMPOSER_ABODE),\
-		linux-generic32 \
-	)
-else
-	$(call AUTOTOOLS_BUILD,$(MUSL_OSSL_BIN_DST),$(COMPOSER_ABODE))
-endif
-
-.PHONY: $(STRAPIT)-musl-expat
-$(STRAPIT)-musl-expat:
-	$(call AUTOTOOLS_BUILD,$(MUSL_EXPT_BIN_DST),$(COMPOSER_ABODE))
-
-.PHONY: $(STRAPIT)-musl-freetype
-$(STRAPIT)-musl-freetype:
-	$(call AUTOTOOLS_BUILD,$(MUSL_FTYP_BIN_DST),$(COMPOSER_ABODE))
-
-.PHONY: $(STRAPIT)-musl-fontconfig
-$(STRAPIT)-musl-fontconfig:
-	echo WORK
-#	$(call AUTOTOOLS_BUILD,$(MUSL_FCFG_BIN_DST),$(COMPOSER_ABODE))
-	cd "$(MUSL_FCFG_BIN_DST)" &&
-		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" ./configure --prefix="$(COMPOSER_ABODE)" &&
-		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) &&
-		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) install
 
 .PHONY: $(STRAPIT)-msys
 $(STRAPIT)-msys: $(STRAPIT)-msys-bin
@@ -1966,6 +1892,100 @@ $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
+.PHONY: $(STRAPIT)-libs
+$(STRAPIT)-libs: $(STRAPIT)-libs-zlib
+$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv
+$(STRAPIT)-libs: $(STRAPIT)-libs-gettext
+$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv
+#WORK : need to get "gettext" to link against static "libiconv"
+$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
+$(STRAPIT)-libs: $(STRAPIT)-libs-expat
+$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
+$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+
+.PHONY: $(STRAPIT)-libs-zlib
+$(STRAPIT)-libs-zlib:
+	$(call CURL_FILE,$(LIB_ZLIB_BIN_SRC))
+	$(call UNTAR,$(LIB_ZLIB_BIN_DST),$(LIB_ZLIB_BIN_SRC))
+ifeq ($(CC),$(BUILD_MUSL))
+	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE),\
+		--static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-libiconv
+$(STRAPIT)-libs-libiconv:
+	$(call CURL_FILE,$(LIB_ICNV_BIN_SRC))
+	# start with fresh source directory, due to circular dependency with gettext
+	$(RM) -r "$(LIB_ICNV_BIN_DST)"
+	$(call UNTAR,$(LIB_ICNV_BIN_DST),$(LIB_ICNV_BIN_SRC))
+	$(SED) -i \
+		-e "s|(cp[ ][.]libs)|#\1|g" \
+		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
+		"$(LIB_ICNV_BIN_DST)/preload/Makefile.in" \
+		"$(LIB_ICNV_BIN_DST)/preload/configure"*
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-libs-gettext
+$(STRAPIT)-libs-gettext:
+	$(call CURL_FILE,$(LIB_GTXT_BIN_SRC))
+	$(call UNTAR,$(LIB_GTXT_BIN_DST),$(LIB_GTXT_BIN_SRC))
+	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_BIN_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-libs-openssl
+# thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
+$(STRAPIT)-libs-openssl:
+	$(call CURL_FILE,$(LIB_OSSL_BIN_SRC))
+	$(call UNTAR,$(LIB_OSSL_BIN_DST),$(LIB_OSSL_BIN_SRC))
+ifneq ($(BUILD_DIST),)
+	$(CP) "$(LIB_OSSL_BIN_DST)/Configure" "$(LIB_OSSL_BIN_DST)/configure"
+else
+	$(CP) "$(LIB_OSSL_BIN_DST)/config" "$(LIB_OSSL_BIN_DST)/configure"
+endif
+	$(SED) -i \
+		-e "s|(TERMIO)([^S])|\1S\2|g" \
+		-e "s|(termio)([^s])|\1s\2|g" \
+		"$(LIB_OSSL_BIN_DST)/configure" \
+		"$(LIB_OSSL_BIN_DST)/crypto/ui/ui_openssl.c"
+ifeq ($(CC),$(BUILD_MUSL))
+	$(SED) -i \
+		-e "s|(gcc[:])([-]D)|\1-static \2|g" \
+		"$(LIB_OSSL_BIN_DST)/Configure" \
+		"$(LIB_OSSL_BIN_DST)/configure"
+endif
+ifneq ($(BUILD_DIST),)
+	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE),\
+		linux-generic32 \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-expat
+$(STRAPIT)-libs-expat:
+	$(call CURL_FILE,$(LIB_EXPT_BIN_SRC))
+	$(call UNTAR,$(LIB_EXPT_BIN_DST),$(LIB_EXPT_BIN_SRC))
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-libs-freetype
+$(STRAPIT)-libs-freetype:
+	$(call CURL_FILE,$(LIB_FTYP_BIN_SRC))
+	$(call UNTAR,$(LIB_FTYP_BIN_DST),$(LIB_FTYP_BIN_SRC))
+	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_BIN_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-libs-fontconfig
+$(STRAPIT)-libs-fontconfig:
+	$(call CURL_FILE,$(LIB_FCFG_BIN_SRC))
+	$(call UNTAR,$(LIB_FCFG_BIN_DST),$(LIB_FCFG_BIN_SRC))
+	echo WORK
+#	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE))
+	cd "$(LIB_FCFG_BIN_DST)" &&
+		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" ./configure --prefix="$(COMPOSER_ABODE)" &&
+		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) &&
+		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) install
+
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
 $(FETCHIT)-make: $(FETCHIT)-make-prep
@@ -1993,30 +2013,30 @@ $(FETCHIT)-infozip: $(FETCHIT)-infozip-prep
 
 .PHONY: $(FETCHIT)-infozip-pull
 $(FETCHIT)-infozip-pull:
-	$(call CURL_FILE,$(MUSL_IZIP_BIN_SRC))
-	$(call CURL_FILE,$(MUSL_UZIP_BIN_SRC))
-	$(call UNTAR,$(MUSL_IZIP_BIN_DST),$(MUSL_IZIP_BIN_SRC))
-	$(call UNTAR,$(MUSL_UZIP_BIN_DST),$(MUSL_UZIP_BIN_SRC))
+	$(call CURL_FILE,$(IZIP_BIN_SRC))
+	$(call CURL_FILE,$(UZIP_BIN_SRC))
+	$(call UNTAR,$(IZIP_BIN_DST),$(IZIP_BIN_SRC))
+	$(call UNTAR,$(UZIP_BIN_DST),$(UZIP_BIN_SRC))
 
 .PHONY: $(FETCHIT)-infozip-prep
 $(FETCHIT)-infozip-prep:
 	$(SED) -i \
 		-e "s|^(prefix[ ][=][ ]).+$$|\1$(COMPOSER_ABODE)|g" \
-		"$(MUSL_IZIP_BIN_DST)/unix/Makefile" \
-		"$(MUSL_UZIP_BIN_DST)/unix/Makefile"
+		"$(IZIP_BIN_DST)/unix/Makefile" \
+		"$(UZIP_BIN_DST)/unix/Makefile"
 
 .PHONY: $(BUILDIT)-infozip
 $(BUILDIT)-infozip:
 ifeq ($(CC),$(BUILD_MUSL))
 	$(SED) -i \
 		-e "s|^(CC[ ][=][ ]).+$$|\1$(CC) -static|g" \
-		"$(MUSL_IZIP_BIN_DST)/unix/Makefile" \
-		"$(MUSL_UZIP_BIN_DST)/unix/Makefile"
+		"$(IZIP_BIN_DST)/unix/Makefile" \
+		"$(UZIP_BIN_DST)/unix/Makefile"
 endif
-	cd "$(MUSL_IZIP_BIN_DST)" &&
+	cd "$(IZIP_BIN_DST)" &&
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic &&
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
-	cd "$(MUSL_UZIP_BIN_DST)" &&
+	cd "$(UZIP_BIN_DST)" &&
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic &&
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
 
@@ -2036,7 +2056,7 @@ $(BUILDIT)-curl:
 ifeq ($(CC),$(BUILD_MUSL))
 	$(SED) -i \
 		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
-		"$(MUSL_CURL_BIN_DST)/"*"/Makefile.in"
+		"$(CURL_DST)/"*"/Makefile.in"
 endif
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE))
 
@@ -2258,6 +2278,7 @@ $(BUILDIT)-ghc:
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
+	$(RUNMAKE) $(FETCHIT)-cabal
 
 .PHONY: $(FETCHIT)-haskell
 $(FETCHIT)-haskell: $(FETCHIT)-haskell-pull
