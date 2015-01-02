@@ -480,11 +480,26 @@ override LIB_FCFG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(LIB_FCFG_VERSION)
 override COREUTILS_VERSION		:= 8.23
 override COREUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/coreutils/coreutils-$(COREUTILS_VERSION).tar.xz
 override COREUTILS_TAR_DST		:= $(COMPOSER_BUILD)/coreutils-$(COREUTILS_VERSION)
-#WORKING : these tools need to be added
-#	find
-#	patch
-#	sed
-#	tar
+# https://www.gnu.org/software/findutils (license: GPL)
+# https://www.gnu.org/software/findutils
+override FINDUTILS_VERSION		:= 4.4.2
+override FINDUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/findutils/findutils-$(FINDUTILS_VERSION).tar.gz
+override FINDUTILS_TAR_DST		:= $(COMPOSER_BUILD)/findutils-$(FINDUTILS_VERSION)
+# https://savannah.gnu.org/projects/patch (license: GPL)
+# https://savannah.gnu.org/projects/patch
+override PATCH_VERSION			:= 2.7
+override PATCH_TAR_SRC			:= https://ftp.gnu.org/gnu/patch/patch-$(PATCH_VERSION).tar.xz
+override PATCH_TAR_DST			:= $(COMPOSER_BUILD)/patch-$(PATCH_VERSION)
+# https://savannah.gnu.org/projects/sed (license: GPL)
+# https://savannah.gnu.org/projects/sed
+override SED_VERSION			:= 4.2
+override SED_TAR_SRC			:= https://ftp.gnu.org/gnu/sed/sed-$(SED_VERSION).tar.gz
+override SED_TAR_DST			:= $(COMPOSER_BUILD)/sed-$(SED_VERSION)
+# https://www.gnu.org/software/tar (license: GPL)
+# https://www.gnu.org/software/tar
+override TAR_VERSION			:= 1.28
+override TAR_TAR_SRC			:= https://ftp.gnu.org/gnu/tar/tar-$(TAR_VERSION).tar.xz
+override TAR_TAR_DST			:= $(COMPOSER_BUILD)/tar-$(TAR_VERSION)
 
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
@@ -627,7 +642,6 @@ override PANDOC_VERSION			:= 1.13.2
 
 override BUILD_PATH_MINGW		:=
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifneq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
@@ -679,6 +693,11 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-gcc \
 	msys2-devel
 
+#TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
+override MSYS_BINARY_LIST		:= \
+	cygwin-console-helper \
+	mintty
+
 override BUILD_BINARY_LIST		:= \
 	coreutils \
 	find \
@@ -696,12 +715,14 @@ override BUILD_BINARY_LIST		:= \
 	curl \
 	git \
 	\
-	pandoc
-
-#TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
-override WINDOWS_BINARY_LIST		:= \
-	cygwin-console-helper \
-	mintty
+	pandoc \
+	pandoc-citeproc \
+	\
+	tex \
+	pdflatex \
+	\
+	ghc \
+	cabal
 
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 override PERL_PATCH_LIST		:= \
@@ -850,6 +871,7 @@ override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 #WORK : if COMPOSER_PROGS coreutils does this, they will always override the system utilities!
 #WORK : need a new disposable location?  should COMPOSER_ABODE be split up into an actual install location COMPOSER_BUILT and home COMPOSER_ABODE?
 
+# thanks for the 'which' hack below: http://www.linuxfromscratch.org/blfs/view/svn/general/which.html
 override COREUTILS_PATH			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
 override COREUTILS			:= "$(COREUTILS_PATH)"
 ifneq ($(wildcard $(COREUTILS_PATH)),)
@@ -870,12 +892,14 @@ endif
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override ECHO				:= "$(call COMPOSER_FIND,$(PATH_LIST),echo)" -en
+override HEAD				:= "$(call COMPOSER_FIND,$(PATH_LIST),head)"
 override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
 override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
 override MV				:= "$(call COMPOSER_FIND,$(PATH_LIST),mv)" -fv
 override PRINTF				:= printf
 override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
 override SORT				:= "$(call COMPOSER_FIND,$(PATH_LIST),sort)" -u
+override TAIL				:= "$(call COMPOSER_FIND,$(PATH_LIST),tail)"
 override TOUCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
@@ -1470,7 +1494,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils$(_D)"		"Download/preparation of GNU Coreutils source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils$(_D)"		"Download/preparation of GNU Coreutils source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
@@ -1482,8 +1506,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
-	@$(HELPOUT1) "$(_E)$(FETCHIT)-coreutils$(_D):"	"$(_E)$(FETCHIT)-coreutils-pull$(_D)"		"Download of GNU Coreutils source archive"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils-prep$(_D)"		"Preparation of GNU Coreutils source archive"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-coreutils$(_D):"	"$(_E)$(FETCHIT)-coreutils-pull$(_D)"		"Download of GNU Coreutils source archives"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils-prep$(_D)"		"Preparation of GNU Coreutils source archives"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-bash$(_D):"	"$(_E)$(FETCHIT)-bash-pull$(_D)"		"Download of Bash source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash-prep$(_D)"		"Preparation of Bash source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
@@ -1509,7 +1533,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of Bash from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
@@ -1955,35 +1979,13 @@ endif
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
-	$(foreach FILE,$(BUILD_BINARY_LIST),\
-		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)"* "$(COMPOSER_PROGS)/usr/bin/"; \
-	)
-	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
-	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
-	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
-ifeq ($(BUILD_PLAT),Linux)
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
-else ifeq ($(BUILD_PLAT),Msys)
-	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
-else
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
-endif
-	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
-		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)"; \
-		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"; \
-	)
-	$(MKDIR)								"$(COMPOSER_PROGS)/texmf-dist/web2c"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"		"$(COMPOSER_PROGS)/texmf-dist/web2c/"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"			"$(COMPOSER_PROGS)/texmf-dist/"
-	$(MKDIR)								"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
-	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"				"$(COMPOSER_PROGS)/usr/bin/pdflatex"
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
 	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
+#WORKING : probably need this for linux, too
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
 	$(CP) "$(MSYS_BIN_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
-	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
+	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 #WORK : should only need the two msys-*.dll files
@@ -1998,6 +2000,28 @@ ifeq ($(BUILD_PLAT),Msys)
 #			$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"; \
 #		done
 	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
+endif
+	$(foreach FILE,$(BUILD_BINARY_LIST),\
+		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)"* "$(COMPOSER_PROGS)/usr/bin/"; \
+	)
+	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
+	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
+	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
+		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)"; \
+		$(CP) "$(COMPOSER_ABODE)/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"; \
+	)
+	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-dist/web2c"
+	$(CP) "$(COMPOSER_ABODE)/texmf-dist/web2c/texmf.cnf"		"$(COMPOSER_PROGS)/texmf-dist/web2c/"
+	$(CP) "$(COMPOSER_ABODE)/texmf-dist/ls-R"			"$(COMPOSER_PROGS)/texmf-dist/"
+	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
+	$(CP) "$(COMPOSER_ABODE)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
+	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
+ifeq ($(BUILD_PLAT),Linux)
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
+else ifeq ($(BUILD_PLAT),Msys)
+	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
+else
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
 
 override define TEXTFILE_MSYS_SHELL =
@@ -2014,12 +2038,6 @@ start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 :: end of file
 endef
 
-#WORKING : these tools need to be added
-#	find
-#	patch
-#	sed
-#	tar
-
 .PHONY: $(CHECKIT)
 $(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
@@ -2027,31 +2045,39 @@ $(CHECKIT):
 	@$(HELPOUT1) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifeq ($(BUILD_PLAT),Msys)
-	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 endif
-	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(BUILD_ENV) ls --version			2>/dev/null | $(SED) -n "s|^ls[ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(SED) -n "s|^.*[,][ ]version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) less --version		2>/dev/null | $(SED) -n "s|^less[ ]([^c][^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(BUILD_ENV) vim --version		2>/dev/null | $(SED) -n "s|^.*Vi[ ]IMproved[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)GNU Make"			"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(SED) -n "s|^This[ ]is[ ]Zip[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(SED) -n "s|^UnZip[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)cURL"			"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Git SCM"			"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(BUILD_ENV) ls --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(BUILD_ENV) find --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(BUILD_ENV) patch --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(BUILD_ENV) sed --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(BUILD_ENV) tar --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) less --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(BUILD_ENV) vim --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)GNU Make"			"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(HELPOUT1) "- $(_C)cURL"			"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Git SCM"			"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(BUILD_ENV) pandoc-citeproc --version	2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)TeX Live"			"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(BUILD_ENV) tex --version		2>/dev/null | $(SED) -n "s|^TeX[ ](.+)TeX[ ]Live[ ](.+)$$|\1\2|gp")"
-	@$(HELPOUT1) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(BUILD_ENV) pandoc-citeproc --version	2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "$(_C)TeX Live"			"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(BUILD_ENV) tex --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "$(_C)Haskell"			"$(_M)$(HASKELL_CMT)"		"$(_D)$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)GHC"			"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)GHC"			"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HELPLINE)
 	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(shell $(BUILD_ENV) $(WHICH) coreutils		2>/dev/null)"
+	@$(HELPOUT1) "- $(_E)GNU Find"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) find		2>/dev/null)"
+	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) patch		2>/dev/null)"
+	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) sed			2>/dev/null)"
+	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_N)$(shell $(BUILD_ENV) $(WHICH) tar			2>/dev/null)"
 	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) bash		2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Less"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) less		2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Vim"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) vim			2>/dev/null)"
@@ -2072,9 +2098,9 @@ endif
 	@$(HELPOUT1) "- $(_C)Cabal"			"$(_D)$(shell $(BUILD_ENV) $(WHICH) cabal		2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HELPLINE)
-	@$(BUILD_ENV) $(WHICH) coreutils bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal 2>/dev/null | \
+	@$(BUILD_ENV) $(WHICH) $(BUILD_BINARY_LIST) 2>/dev/null | \
 		while read FILE; do \
-			ldd $${FILE}; \
+			ldd "$${FILE}"; \
 		done | \
 		$(SED) "s|[(][^)]+[)]||g" | \
 		$(SORT)
@@ -2627,7 +2653,15 @@ $(FETCHIT)-coreutils: $(FETCHIT)-coreutils-prep
 .PHONY: $(FETCHIT)-coreutils-pull
 $(FETCHIT)-coreutils-pull:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
+	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
+	$(call CURL_FILE,$(PATCH_TAR_SRC))
+	$(call CURL_FILE,$(SED_TAR_SRC))
+	$(call CURL_FILE,$(TAR_TAR_SRC))
 	$(call UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+	$(call UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
+	$(call UNTAR,$(PATCH_TAR_DST),$(PATCH_TAR_SRC))
+	$(call UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
+	$(call UNTAR,$(TAR_TAR_DST),$(TAR_TAR_SRC))
 
 .PHONY: $(FETCHIT)-coreutils-prep
 $(FETCHIT)-coreutils-prep:
@@ -2639,6 +2673,10 @@ $(BUILDIT)-coreutils:
 		--disable-acl \
 		--disable-xattr \
 	)
+	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(FETCHIT)-bash
 $(FETCHIT)-bash: $(FETCHIT)-bash-pull
@@ -2928,7 +2966,7 @@ $(FETCHIT)-tex-prep:
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
-	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" \
+	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
 		./Build \
 		--with-fontconfig-includes="$(COMPOSER_ABODE)/include/fontconfig" \
@@ -2937,7 +2975,7 @@ $(BUILDIT)-tex:
 		--without-x \
 		--disable-shared \
 		--enable-static
-#>	$(call AUTOTOOLS_BUILD,$(TEX_TAR_DST),$(COMPOSER_ABODE)/texlive,\
+#>	$(call AUTOTOOLS_BUILD,$(TEX_TAR_DST),$(COMPOSER_ABODE),\
 #>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
 #>		,\
 #>		--enable-build-in-source-tree \
@@ -2948,7 +2986,8 @@ $(BUILDIT)-tex:
 #>		--disable-shared \
 #>		--enable-static \
 #>	)
-	$(CP) "$(TEX_TEXMF_DST)/"* "$(COMPOSER_ABODE)/texlive/"
+	$(CP) "$(TEX_TEXMF_DST)/"*		"$(COMPOSER_ABODE)/"
+	$(CP) "$(COMPOSER_ABODE)/bin/pdftex"	"$(COMPOSER_ABODE)/bin/pdflatex"
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-tex-fmt
 
