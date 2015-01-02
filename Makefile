@@ -824,6 +824,20 @@ override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override TIMESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 
+override define PATCH			=
+	$(call CURL_FILE,$(2)); \
+	"$(call COMPOSER_FIND,$(PATH_LIST),patch)" --directory="$(1)" --strip=1 <"$(COMPOSER_STORE)/$(notdir $(2))"
+endef
+override define UNTAR			=
+	if [ ! -d "$(1)" ]; then \
+		$(MKDIR) "$(abspath $(dir $(1)))"; \
+		$(TAR) --directory "$(abspath $(dir $(1)))" --file "$(COMPOSER_STORE)/$(notdir $(2))" --exclude="$(3)"; \
+	fi
+endef
+override define UNZIP			=
+	"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(notdir $(2))"
+endef
+
 override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --location --remote-time
 override define CURL_FILE		=
 	$(MKDIR) "$(COMPOSER_STORE)"; \
@@ -832,20 +846,6 @@ endef
 override define CURL_FILE_GNU_CFG	=
 	$(MKDIR) "$(GNU_CFG_DST)"; \
 	$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"
-endef
-
-override define UNZIP			=
-	"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(notdir $(2))"
-endef
-override define UNTAR			=
-	if [ ! -d "$(1)" ]; then \
-		$(MKDIR) "$(abspath $(dir $(1)))"; \
-		$(TAR) --directory "$(abspath $(dir $(1)))" --file "$(COMPOSER_STORE)/$(notdir $(2))" --exclude="$(3)"; \
-	fi
-endef
-override define PATCH			=
-	$(call CURL_FILE,$(2)); \
-	"$(call COMPOSER_FIND,$(PATH_LIST),patch)" --directory="$(1)" --strip=1 <"$(COMPOSER_STORE)/$(notdir $(2))"
 endef
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
@@ -910,6 +910,9 @@ override CURL_CA_BUNDLE			?= $(COMPOSER_PROGS)/ca-bundle.crt
 else
 override CURL_CA_BUNDLE			?=
 endif
+#WORKING
+override CURL				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(CURL)
+override GIT				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(GIT)
 
 override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
 override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
@@ -2292,6 +2295,7 @@ $(STRAPIT)-libs-perl:
 		$(BUILD_ENV) $(MAKE) && \
 		$(BUILD_ENV) $(MAKE) install
 #WORKING
+#WORKING make PERL_MODULES_LIST below look more like GIT_REPO = $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_STORE)/$(notdir $(1)).git)
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call CURL_FILE,$(word 2,$(subst |, ,$(FILE)))); \
 		$(call UNTAR,$(LIB_PERL_TAR_DST)/$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
@@ -2594,20 +2598,28 @@ $(STRAPIT)-curl-pull:
 $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
+#WORKING : archive certdata.txt in $COMPOSER_STORE
+
 .PHONY: $(STRAPIT)-curl-prep
-# thanks for the 'CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
+# thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(STRAPIT)-curl-prep:
+	$(SED) -i \
+		-e "s|(out[ ][=][ ].)curl|\1$(subst ",\",$(CURL))|g" \
+		"$(CURL_TAR_DST)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(CURL_TAR_DST)/configure"
 
 .PHONY: $(FETCHIT)-curl-prep
-# thanks for the 'CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
+# thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) autoreconf --force --install
+	$(SED) -i \
+		-e "s|(out[ ][=][ ].)curl|\1$(subst ",\",$(CURL))|g" \
+		"$(CURL_DST)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(CURL_DST)/configure"
@@ -2616,8 +2628,7 @@ $(FETCHIT)-curl-prep:
 $(STRAPIT)-curl-build:
 	cd "$(CURL_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) ca-bundle && \
-		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/" && \
-		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(CURL_TAR_DST)/"
+		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--without-libidn \
@@ -2629,8 +2640,7 @@ $(STRAPIT)-curl-build:
 $(BUILDIT)-curl:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) ca-bundle && \
-		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/" && \
-		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(CURL_DST)/"
+		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--without-libidn \
