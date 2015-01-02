@@ -334,11 +334,10 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-ifeq ($(BUILD_MSYS),)
 #WORK 4.1 segfault in linux 32-bit
+ifeq ($(BUILD_MSYS),)
 override MAKE_VERSION			:= 4.0
 else
-#WORK built make causes build errors in git (and others?)
 override MAKE_VERSION			:= 4.1
 endif
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
@@ -1371,16 +1370,12 @@ $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-#WORK $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
-$(FETCHIT): $(FETCHIT)-git
-#WORK
+$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-#WORK $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
-$(BUILDIT): $(BUILDIT)-git
-#WORK
+$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
 #WORK $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
