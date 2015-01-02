@@ -839,6 +839,11 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
+#WORK : this is a really, really ugly hack; it should be removed and then banished!
+#WORK : for this one, would be nice to have some type of variable/option; something like USE_LOCAL_ENV=1 or COMPOSER_PROGS_ENV=
+ifneq ($(CYGWIN_ROOT),)
+override PATH_LIST			:= $(subst :, ,$(PATH):$(BUILD_PATH))
+endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
 #WORK : comment
@@ -855,6 +860,8 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 
 #WORK : if COMPOSER_PROGS coreutils does this, they will always override the system utilities!
 #WORK : need a new disposable location?  should COMPOSER_ABODE be split up into an actual install location COMPOSER_BUILT and home COMPOSER_ABODE?
+#WORK : better bet would be to $(notdir $(COREUTILS_PATH)) and make sure it is either $(COMPOSER_ABODE)/bin or $(COMPOSER_PROGS)/bin
+#WORK : in actuality, this whole business should probably live in the "coreutils" target and "bindir", via a COREUTILS_INSTALL define
 
 # thanks for the 'which' hack below: http://www.linuxfromscratch.org/blfs/view/svn/general/which.html
 override COREUTILS_PATH			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
@@ -998,11 +1005,6 @@ override CABAL_INSTALL			= $(CABAL) install \
 
 # thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
 #	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
-#WORK : this is a really, really ugly hack; it should be removed and then banished!
-override CYGWIN_ESCAPE			:=
-ifneq ($(CYGWIN_ROOT),)
-override CYGWIN_ESCAPE			:= \\
-endif
 override define DO_TEXTFILE		=
 	$(MKDIR) "$(abspath $(dir $(1)))"; \
 	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"; \
@@ -3023,6 +3025,7 @@ $(FETCHIT)-tex-pull:
 	$(call CURL_FILE,$(TEX_TAR_SRC))
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call DO_UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
+#WORKING
 ifeq ($(BUILD_PLAT),Msys)
 	$(call CURL_FILE,$(TEX_WINDOWS_SRC))
 	$(call DO_UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
@@ -3030,16 +3033,12 @@ endif
 
 .PHONY: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-prep:
-	$(SED) -i \
-		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
-		"$(TEX_TAR_DST)/Build"
-	$(SED) -i \
-		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
-		"$(TEX_TAR_DST)/texk/web2c/configure"
+#WORKING
 #ifeq ($(BUILD_PLAT),Msys)
-#	$(CP) \
-#		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
-#		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
+	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
+	$(CP) \
+		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
+		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
 #WORK this was needed for mingw?
 #	$(SED) -i \
 #		-e "s|([^Y])(INPUT)|\1MY\2|g" \
@@ -3050,6 +3049,12 @@ $(FETCHIT)-tex-prep:
 #		-e "s|^([#]define header)|#undef header\n\1|g" \
 #		"$(TEX_TAR_DST)/texk/cjkutils/hbf2gf.c"
 #endif
+	$(SED) -i \
+		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
+		"$(TEX_TAR_DST)/Build"
+	$(SED) -i \
+		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
+		"$(TEX_TAR_DST)/texk/web2c/configure"
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
