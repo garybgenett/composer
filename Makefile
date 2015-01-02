@@ -2683,8 +2683,12 @@ $(BUILDIT)-coreutils:
 		--disable-xattr \
 	)
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
-	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE))
-	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-xattr \
+	)
+	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-acl \
+	)
 #WORKING
 #		--with-gzip=PROG        use PROG as gzip compressor program
 #		--with-bzip2=PROG       use PROG as bzip2 compressor program
