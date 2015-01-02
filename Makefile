@@ -335,7 +335,11 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
 #WORK 4.1 segfault in linux 32-bit
+ifeq ($(BUILD_MSYS),)
 override MAKE_VERSION			:= 4.0
+else
+override MAKE_VERSION			:= 4.1
+endif
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
@@ -479,14 +483,14 @@ override PACMAN_PACKAGES_LIST		:= \
 	vim \
 	wget \
 	zip \
-	\
-	mingw-w64-i686-fontconfig \
-	mingw-w64-x86_64-fontconfig
 
 #WORK : git
 #	mingw-w64-i686-curl \
 #	mingw-w64-x86_64-curl \
-#	\
+
+#WORK : tex
+#	mingw-w64-i686-fontconfig \
+#	mingw-w64-x86_64-fontconfig \
 
 #WORK
 # second group is for mintty
@@ -1774,6 +1778,7 @@ $(FETCHIT)-tex-pull:
 $(FETCHIT)-tex-prep:
 
 .PHONY: $(BUILDIT)-tex
+#WORK http://tex.aanhet.net/mingtex
 $(BUILDIT)-tex:
 	echo WORK
 	cd "$(TEX_BIN_DST)" &&
