@@ -2551,6 +2551,51 @@ $(BUILDIT)-pandoc:
 	@echo
 	$(BUILD_ENV) pandoc --version
 
+#WORK
+######################################################################
+# >> Composer CMS v1.4 :: /c/.composer/Makefile
+# COMPOSER_TARGETS    [README]
+# COMPOSER_SUBDIRS    []
+# COMPOSER_DEPENDS    []
+# CURDIR              [/c/.composer]
+########################################
+# TYPE                [html]
+# BASE                [README]
+# LIST                [README.md]
+# _CSS                [/c/.composer/markdown-viewer/chrome/skin/markdown-viewer.css]
+# CSS                 []
+# TTL                 []
+# TOC                 []
+# LVL                 [2]
+# OPT                 []
+######################################################################
+#make --makefile "/c/.composer/Makefile" pandoc TYPE="html" BASE="README" LIST="README.md"
+#make[1]: Entering directory '/c/.composer'
+########################################
+# >> Composer CMS v1.4 :: /c/.composer/Makefile
+# CURDIR        [/c/.composer]
+########################################
+# TYPE          [html]
+# BASE          [README]
+# LIST          [README.md]
+# _CSS          [/c/.composer/markdown-viewer/chrome/skin/markdown-viewer.css]
+# CSS           []
+# TTL           []
+# TOC           []
+# LVL           [2]
+# OPT           []
+########################################
+#"/c/.composer/.home/msys32/usr/bin/env" - LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8" TERM="xterm-256color" CC="" CHOST="i686-pc-msys32" CFLAGS="-m32 -march=i686 -mtune=generic" CXXFLAGS="-m32 -march=i686 -mtune=generic" LDFLAGS="" USER="admin" HOME="/c/.composer/.home" PATH="/c/.composer/.home/bin:/c/.composer/.home/texlive/bin:/c/.composer/build/bootstrap/bin:/c/.composer/bin/Msys/usr/bin:/c/.composer/.home/msys32/usr/bin:/usr/local/bin:/usr/bin:/bin:/opt/bin:/c/.composer/.home/bin:/c/.composer/.home/texlive/bin:/c/.composer/build/bootstrap/bin:/c/.composer/bin/Msys/usr/bin:/usr/bin:/home:/home/commands:/home/scripts:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/usr/bin:/sbin:/usr/games/bin:/usr/lib/perl5/core_perl/bin:/c/WINDOWS:/c/WINDOWS/system32:/c/.composer/bin/Msys/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/c/.composer/bin/Msys/usr/bin" TEXMFDIST="" TEXMFVAR="" MSYSTEM="MSYS32" USERNAME="admin" HOMEPATH="/c/.composer/.home" ALLUSERSPROFILE="/c/.composer/.home" APPDATA="/c/.composer/.home" LOCALAPPDATA="/c/.composer/.home" TEMP="/c/.composer/.home" pandoc --standalone --self-contained --css "/c/.composer/markdown-viewer/chrome/skin/markdown-viewer.css" --title-prefix "" --output "README.html" --from "markdown" --to "html5"  --slide-level 2 --variable "revealjs-url:/c/.composer/revealjs" --variable "slidy-url:/c/.composer/slidy/Slidy2" --chapters --listings --normalize --smart  README.md
+#"/c/.composer/.home/msys32/usr/bin/date" --rfc-2822 > "/c/.composer/.composed"
+#pandoc.exe: Failed to retrieve C:/.composer/markdown-viewer/chrome/skin/markdown-viewer.css
+#InvalidUrlException "C:/.composer/markdown-viewer/chrome/skin/markdown-viewer.css" "Invalid scheme"
+#/c/.composer/Makefile:2695: recipe for target 'pandoc' failed
+#make[1]: *** [pandoc] Error 61
+#make[1]: Leaving directory '/c/.composer'
+#Makefile:2699: recipe for target 'README.html' failed
+#make: *** [README.html] Error 2
+#WORK
+
 ########################################
 
 .PHONY: targets
