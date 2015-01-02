@@ -6,6 +6,7 @@
 # shell.sh/shell.bat scripts
 # enable https certificates for wget/git
 # static linking using embedded libc for linux
+# fix linux 32-bit make 4.1 segfault
 # double-check "true" instances
 #TODO
 
@@ -336,7 +337,7 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= 3.82
+override MAKE_VERSION			:= 4.0
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
@@ -345,7 +346,7 @@ override MAKE_CMT			:= $(MAKE_VERSION)
 
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
-override GIT_VERSION			:= 1.8.5.5
+override GIT_VERSION			:= 1.9.4
 override GIT_BIN_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
 override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
 override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
@@ -484,7 +485,6 @@ override PACMAN_PACKAGES_LIST		:= \
 	zip \
 	\
 	gettext-devel \
-	texinfo \
 	\
 	libcurl-devel \
 	libiconv-devel \
@@ -1759,7 +1759,7 @@ $(FETCHIT)-make-pull:
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
 	cd "$(MAKE_DST)" &&
-		$(BUILD_ENV) autoreconf -i &&
+		$(BUILD_ENV) autoreconf --force --install &&
 		$(BUILD_ENV) ./configure &&
 		$(BUILD_ENV) $(MAKE) update
 
