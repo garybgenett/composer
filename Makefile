@@ -420,16 +420,6 @@ override LIB_KAPI_TAR_DST		:= $(BUILD_STRAP)/linux-$(LIB_KAPI_VERSION)
 override LIB_LIBC_VERSION		:= 2.20
 override LIB_LIBC_TAR_SRC		:= https://ftp.gnu.org/gnu/glibc/glibc-$(LIB_LIBC_VERSION).tar.gz
 override LIB_LIBC_TAR_DST		:= $(BUILD_STRAP)/glibc-$(LIB_LIBC_VERSION)
-# http://dev.perl.org/licenses (license: custom = GPL, Artistic)
-# https://www.perl.org/get.html
-override LIB_PERL_VERSION		:= 5.20.1
-override LIB_PERL_TAR_SRC		:= http://www.cpan.org/src/5.0/perl-$(LIB_PERL_VERSION).tar.gz
-override LIB_PERL_TAR_DST		:= $(BUILD_STRAP)/perl-$(LIB_PERL_VERSION)
-# http://www.bzip.org (license: custom = BSD)
-# http://www.bzip.org
-override LIB_BZIP_VERSION		:= 1.0.6
-override LIB_BZIP_TAR_SRC		:= http://www.bzip.org/$(LIB_BZIP_VERSION)/bzip2-$(LIB_BZIP_VERSION).tar.gz
-override LIB_BZIP_TAR_DST		:= $(BUILD_STRAP)/bzip2-$(LIB_BZIP_VERSION)
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
 override LIB_ZLIB_VERSION		:= 1.2.8
@@ -476,31 +466,41 @@ override LIB_FCFG_VERSION		:= 2.11.1
 override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
 override LIB_FCFG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(LIB_FCFG_VERSION)
 
+# http://dev.perl.org/licenses (license: custom = GPL, Artistic)
+# https://www.perl.org/get.html
+override LIB_PERL_VERSION		:= 5.20.1
+override LIB_PERL_TAR_SRC		:= http://www.cpan.org/src/5.0/perl-$(LIB_PERL_VERSION).tar.gz
+override LIB_PERL_TAR_DST		:= $(BUILD_STRAP)/perl-$(LIB_PERL_VERSION)
 # https://www.gnu.org/software/coreutils (license: GPL)
 # https://www.gnu.org/software/coreutils
 override COREUTILS_VERSION		:= 8.23
 override COREUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/coreutils/coreutils-$(COREUTILS_VERSION).tar.xz
-override COREUTILS_TAR_DST		:= $(COMPOSER_BUILD)/coreutils-$(COREUTILS_VERSION)
+override COREUTILS_TAR_DST		:= $(BUILD_STRAP)/coreutils-$(COREUTILS_VERSION)
 # https://www.gnu.org/software/findutils (license: GPL)
 # https://www.gnu.org/software/findutils
 override FINDUTILS_VERSION		:= 4.4.2
 override FINDUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/findutils/findutils-$(FINDUTILS_VERSION).tar.gz
-override FINDUTILS_TAR_DST		:= $(COMPOSER_BUILD)/findutils-$(FINDUTILS_VERSION)
+override FINDUTILS_TAR_DST		:= $(BUILD_STRAP)/findutils-$(FINDUTILS_VERSION)
 # https://savannah.gnu.org/projects/patch (license: GPL)
 # https://savannah.gnu.org/projects/patch
 override PATCH_VERSION			:= 2.7
 override PATCH_TAR_SRC			:= https://ftp.gnu.org/gnu/patch/patch-$(PATCH_VERSION).tar.xz
-override PATCH_TAR_DST			:= $(COMPOSER_BUILD)/patch-$(PATCH_VERSION)
+override PATCH_TAR_DST			:= $(BUILD_STRAP)/patch-$(PATCH_VERSION)
 # https://savannah.gnu.org/projects/sed (license: GPL)
 # https://savannah.gnu.org/projects/sed
 override SED_VERSION			:= 4.2
 override SED_TAR_SRC			:= https://ftp.gnu.org/gnu/sed/sed-$(SED_VERSION).tar.gz
-override SED_TAR_DST			:= $(COMPOSER_BUILD)/sed-$(SED_VERSION)
+override SED_TAR_DST			:= $(BUILD_STRAP)/sed-$(SED_VERSION)
+# http://www.bzip.org (license: custom = BSD)
+# http://www.bzip.org
+override LIB_BZIP_VERSION		:= 1.0.6
+override LIB_BZIP_TAR_SRC		:= http://www.bzip.org/$(LIB_BZIP_VERSION)/bzip2-$(LIB_BZIP_VERSION).tar.gz
+override LIB_BZIP_TAR_DST		:= $(BUILD_STRAP)/bzip2-$(LIB_BZIP_VERSION)
 # https://www.gnu.org/software/tar (license: GPL)
 # https://www.gnu.org/software/tar
 override TAR_VERSION			:= 1.28
 override TAR_TAR_SRC			:= https://ftp.gnu.org/gnu/tar/tar-$(TAR_VERSION).tar.xz
-override TAR_TAR_DST			:= $(COMPOSER_BUILD)/tar-$(TAR_VERSION)
+override TAR_TAR_DST			:= $(BUILD_STRAP)/tar-$(TAR_VERSION)
 
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
@@ -880,6 +880,7 @@ $(shell \
 )
 endif
 
+#WORK : comment
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
@@ -896,16 +897,20 @@ override TAIL				:= "$(call COMPOSER_FIND,$(PATH_LIST),tail)"
 override TOUCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
+#WORK : comment
+override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
 override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
+#WORK : comment
 override WHICH				:= "$(call COMPOSER_FIND,$(PATH_LIST),which)"
 
+#WORK : comment
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)"
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
-override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
+#WORK : comment
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
 override SH				:= "$(call COMPOSER_FIND,$(PATH_LIST),sh)"
 override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
@@ -1470,8 +1475,6 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-perl$(_D)"		"Build/compile of Perl from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
@@ -1482,12 +1485,13 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
-#WORKING : name is just a tad too long...
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs-perl$(_D):"	"$(_E)$(STRAPIT)-libs-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-patch$(_D)"		"Build/compile of GNU Patch from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-sed$(_D)"			"Build/compile of GNU Sed from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
@@ -2414,8 +2418,6 @@ $(STRAPIT)-libs:
 #ifeq ($(BUILD_PLAT),Linux)
 #	$(RUNMAKE) $(STRAPIT)-libs-glibc
 #endif
-	$(RUNMAKE) $(STRAPIT)-libs-perl
-	$(RUNMAKE) $(STRAPIT)-libs-bzip
 	$(RUNMAKE) $(STRAPIT)-libs-zlib
 	$(RUNMAKE) $(STRAPIT)-libs-gmp
 	$(RUNMAKE) $(STRAPIT)-libs-libiconv1
@@ -2441,67 +2443,6 @@ $(STRAPIT)-libs-glibc:
 	$(CHMOD) "$(LIB_LIBC_TAR_DST).build/configure"
 	$(call AUTOTOOLS_BUILD,$(LIB_LIBC_TAR_DST).build,$(COMPOSER_ABODE),\
 		CFLAGS="$(CFLAGS) -O2" \
-	)
-
-.PHONY: $(STRAPIT)-libs-perl
-$(STRAPIT)-libs-perl:
-	$(call CURL_FILE,$(LIB_PERL_TAR_SRC))
-	$(call UNTAR,$(LIB_PERL_TAR_DST),$(LIB_PERL_TAR_SRC))
-ifeq ($(BUILD_PLAT),Msys)
-	# "$(BUILD_PLAT),Msys" requires some patches
-	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
-		$(SED) -i \
-			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
-			"$(LIB_PERL_TAR_DST)/Makefile.SH"; \
-		$(foreach FILE,$(PERL_PATCH_LIST),\
-			$(call DO_PATCH,$(LIB_PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-		) \
-	fi
-	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
-	$(SED) -i \
-		-e "s|^(case[ ][\"])[$$]d_readlink|\1NULL|g" \
-		"$(LIB_PERL_TAR_DST)/Configure"
-	$(SED) -i \
-		-e "s|[$$]issymlink|test -f|g" \
-		"$(LIB_PERL_TAR_DST)/Makefile.SH"
-endif
-	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
-	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
-		$(MV) "$(LIB_PERL_TAR_DST)/Configure" "$(LIB_PERL_TAR_DST)/Configure.perl"; \
-		$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"; \
-		$(SED) -i \
-			-e "s|(Configure)([^.])|\1.perl\2|g" \
-			"$(LIB_PERL_TAR_DST)/Configure.perl" \
-			"$(LIB_PERL_TAR_DST)/MANIFEST" \
-			"$(LIB_PERL_TAR_DST)/configure"; \
-	fi
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
-	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-libs-perl-modules
-
-override define PERL_MODULES_BUILD =
-	$(call CURL_FILE,$(2)); \
-	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
-	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
-		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
-		$(BUILD_ENV) $(MAKE) && \
-		$(BUILD_ENV) $(MAKE) install
-endef
-
-.PHONY: $(STRAPIT)-libs-perl-modules
-$(STRAPIT)-libs-perl-modules:
-	$(foreach FILE,$(PERL_MODULES_LIST),\
-		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-	)
-
-.PHONY: $(STRAPIT)-libs-bzip
-$(STRAPIT)-libs-bzip:
-	$(call CURL_FILE,$(LIB_BZIP_TAR_SRC))
-	$(call UNTAR,$(LIB_BZIP_TAR_DST),$(LIB_BZIP_TAR_SRC))
-	$(ECHO) >"$(LIB_BZIP_TAR_DST)/configure"
-	$(CHMOD) "$(LIB_BZIP_TAR_DST)/configure"
-	$(call AUTOTOOLS_BUILD,$(LIB_BZIP_TAR_DST),$(COMPOSER_ABODE),\
-		PREFIX="$(COMPOSER_ABODE)" \
 	)
 
 .PHONY: $(STRAPIT)-libs-zlib
@@ -2660,17 +2601,68 @@ $(STRAPIT)-libs-fontconfig:
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-util-perl
+	$(RUNMAKE) $(STRAPIT)-util-perl-modules
 #WORKING : fails to build on "$(BUILD_PLAT),Msys"
 #	$(RUNMAKE) $(STRAPIT)-util-coreutils
 	$(RUNMAKE) $(STRAPIT)-util-findutils
 	$(RUNMAKE) $(STRAPIT)-util-patch
 	$(RUNMAKE) $(STRAPIT)-util-sed
 #WORKING
+	$(RUNMAKE) $(STRAPIT)-util-bzip
 #		--with-gzip=PROG        use PROG as gzip compressor program
-#		--with-bzip2=PROG       use PROG as bzip2 compressor program
 #		--with-xz=PROG          use PROG as xz compressor program
 #WORKING
 	$(RUNMAKE) $(STRAPIT)-util-tar
+
+.PHONY: $(STRAPIT)-util-perl
+$(STRAPIT)-util-perl:
+	$(call CURL_FILE,$(LIB_PERL_TAR_SRC))
+	$(call UNTAR,$(LIB_PERL_TAR_DST),$(LIB_PERL_TAR_SRC))
+ifeq ($(BUILD_PLAT),Msys)
+	# "$(BUILD_PLAT),Msys" requires some patches
+	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
+		$(SED) -i \
+			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
+			"$(LIB_PERL_TAR_DST)/Makefile.SH"; \
+		$(foreach FILE,$(PERL_PATCH_LIST),\
+			$(call DO_PATCH,$(LIB_PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+		) \
+	fi
+	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
+	$(SED) -i \
+		-e "s|^(case[ ][\"])[$$]d_readlink|\1NULL|g" \
+		"$(LIB_PERL_TAR_DST)/Configure"
+	$(SED) -i \
+		-e "s|[$$]issymlink|test -f|g" \
+		"$(LIB_PERL_TAR_DST)/Makefile.SH"
+endif
+	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
+	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
+		$(MV) "$(LIB_PERL_TAR_DST)/Configure" "$(LIB_PERL_TAR_DST)/Configure.perl"; \
+		$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"; \
+		$(SED) -i \
+			-e "s|(Configure)([^.])|\1.perl\2|g" \
+			"$(LIB_PERL_TAR_DST)/Configure.perl" \
+			"$(LIB_PERL_TAR_DST)/MANIFEST" \
+			"$(LIB_PERL_TAR_DST)/configure"; \
+	fi
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+
+override define PERL_MODULES_BUILD =
+	$(call CURL_FILE,$(2)); \
+	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
+	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
+		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
+		$(BUILD_ENV) $(MAKE) && \
+		$(BUILD_ENV) $(MAKE) install
+endef
+
+.PHONY: $(STRAPIT)-util-perl-modules
+$(STRAPIT)-util-perl-modules:
+	$(foreach FILE,$(PERL_MODULES_LIST),\
+		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+	)
 
 .PHONY: $(STRAPIT)-util-coreutils
 $(STRAPIT)-util-coreutils:
@@ -2706,6 +2698,16 @@ $(STRAPIT)-util-sed:
 	$(call GNU_CFG_INSTALL,$(SED_TAR_DST)/build-aux)
 	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
+	)
+
+.PHONY: $(STRAPIT)-util-bzip
+$(STRAPIT)-util-bzip:
+	$(call CURL_FILE,$(LIB_BZIP_TAR_SRC))
+	$(call UNTAR,$(LIB_BZIP_TAR_DST),$(LIB_BZIP_TAR_SRC))
+	$(ECHO) >"$(LIB_BZIP_TAR_DST)/configure"
+	$(CHMOD) "$(LIB_BZIP_TAR_DST)/configure"
+	$(call AUTOTOOLS_BUILD,$(LIB_BZIP_TAR_DST),$(COMPOSER_ABODE),\
+		PREFIX="$(COMPOSER_ABODE)" \
 	)
 
 .PHONY: $(STRAPIT)-util-tar
