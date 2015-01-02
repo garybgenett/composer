@@ -902,6 +902,7 @@ HELP_TARGETS:
 	@echo ""
 	@echo "Compilation Targets:"
 	@$(HELPOUT1) "$(STRAPIT)"		"Download and configure binary GHC bootstrap environment"
+	@$(HELPOUT1) "$(STRAPIT)-fix"		"Fixes common MSYS2 issues (to be run within '$(SHELLIT)-msys' window)"
 	@$(HELPOUT1) "$(FETCHIT)"		"Download/update GNU Make and Haskell/Pandoc source repositories"
 	@$(HELPOUT1) "$(BUILDIT)"		"Build/compile local GNU Make and Haskell/Pandoc binaries from source"
 	@$(HELPOUT1) "$(CHECKIT)"		"Diagnostic version information (for verification and/or troubleshooting)"
@@ -1656,6 +1657,14 @@ $(STRAPIT)-msys:
 		$(PACMAN_PACKAGES_LIST)
 	$(BUILD_ENV) $(PACMAN) --clean
 
+.PHONY: $(STRAPIT)-fix
+# thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
+$(STRAPIT)-fix:
+	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
+	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --init
+	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --populate msys2
+	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --refresh-keys
+
 .PHONY: $(STRAPIT)-dlls
 $(STRAPIT)-dlls:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
@@ -1670,7 +1679,6 @@ $(FETCHIT)-make:
 		$(BUILD_ENV) $(MAKE) update
 
 .PHONY: $(BUILDIT)-make
-# thanks for the 'texinfo' fix below: http://gnu-make.2324884.n4.nabble.com/Cannot-build-the-GNU-make-manual-with-development-version-of-Texinfo-td4530.html
 $(BUILDIT)-make:
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE))
 
