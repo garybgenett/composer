@@ -981,7 +981,7 @@ endif
 #>.ONESHELL:
 .SHELLFLAGS: -e
 
-#WORKING : make default header?
+#WORK : make default header?
 
 .DEFAULT_GOAL := $(HELPOUT)
 .DEFAULT:
@@ -1005,7 +1005,7 @@ endif
 
 #WORK : move all this somewhere else?
 
-#WORKING : turn 'targets' and 'debug' into variables, like '$TESTOUT'?  others?
+#WORK : turn 'targets' and 'debug' into variables, like '$TESTOUT'?  others?
 
 #WORK : document!
 .PHONY: debug
@@ -1913,7 +1913,7 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
-#WORKING : should only need the two msys-*.dll files
+#WORK : should only need the two msys-*.dll files
 #	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
 #		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
 #		sort --unique | \
@@ -2263,7 +2263,7 @@ $(STRAPIT)-msys-pkg:
 .PHONY: $(STRAPIT)-msys-dll
 $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-#WORKING : should only need the two msys-*.dll files
+#WORK : should only need the two msys-*.dll files
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
