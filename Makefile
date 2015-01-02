@@ -549,12 +549,12 @@ override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
 #	https://github.com/rstudio/rmarkdown/issues/238
 override PANDOC_TYPE_CMT		:= 1.12.4
 #override PANDOC_MATH_CMT		:= 0.6.6.3
-override PANDOC_MATH_CMT		:= \#> 0.8
+override PANDOC_MATH_CMT		:= 178df262f2cc2b146d70 #>178df262f2cc2b146d7043de29506aa7d17254f5 0.8
 override PANDOC_HIGH_CMT		:= 0.5.8.5
 #override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CITE_CMT		:= 0.5
 #override PANDOC_CMT			:= 1.12.4.2
-override PANDOC_CMT			:= \#> 1.13.1
+override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3 #>704cfc1e3c2b6bc97cc315c92671dc47e9c76977 1.13.1
 
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
@@ -1988,7 +1988,7 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys: $(STRAPIT)-msys-dll
+#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-dll
 $(STRAPIT)-msys: $(STRAPIT)-check
 
 .PHONY: $(STRAPIT)-msys-bin
@@ -2027,11 +2027,10 @@ $(STRAPIT)-msys-fix:
 	cd "$(MSYS_BIN_DST)" &&
 		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f &&
 		./autorebase.bat
-#WORK
-#	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
-#	$(BUILD_ENV) $(PACMAN_KEY) --init		|| true
-#	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| true
-#	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| true
+	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
+	$(BUILD_ENV) $(PACMAN_KEY) --init		|| true
+	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| true
+	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| true
 
 .PHONY: $(STRAPIT)-msys-pkg
 $(STRAPIT)-msys-pkg:
@@ -2082,6 +2081,13 @@ ifneq ($(BUILD_MUSL),)
 		--disable-assembly \
 		--disable-shared \
 		--enable-static \
+	)
+else ifneq ($(BUILD_MSYS),)
+	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_BIN_DST),$(COMPOSER_ABODE),\
+		ABI=$(BUILD_MSYS) \
+		,\
+		--host=$(CHOST) \
+		--disable-assembly \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_BIN_DST),$(COMPOSER_ABODE))
