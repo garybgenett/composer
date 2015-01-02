@@ -402,9 +402,9 @@ override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_M
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
 #WORK : will "make" and "git" work from these directories?  what about the "git" directory "libexec" of helpers?
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)
+override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)/bin
 
 override BUILD_TOOLS			:=
 ifneq ($(BUILD_MSYS),)
