@@ -14,6 +14,8 @@
 # test install in gary-os
 #	ifconfig eth0 down before make build
 #	standalone pandoc binary without build directory
+# test install in fresh cygwin
+#	hack setup.bat
 #BUILD TEST
 
 #OTHER NOTES
@@ -28,6 +30,15 @@
 #	alias to "make shell"
 # _sync clean
 #	symlink ".bash_history" to "composer" directory in ".history"
+# _builds/composer
+#	mkdir bin libexec
+#	cd bin
+#	ln ../../../_windows/.home/bin/{git,make,pandoc}* ./
+#	ln ../../../_windows/.home/msys32/usr/bin/{un,}zip.exe ./
+#	ln ../../../_windows/.home/msys32/usr/bin/msys-{2.0,bz2-1,crypto-1.0.0,gcc_s-1,iconv-2,intl-8,z}.dll ./
+#		ldd ./bin/Msys/bin/*.exe ./bin/Msys/libexec/git-core/{,*/}* | grep msys | cut -d= -f1 | sort | uniq
+#	cd libexec
+#	ln ../../../_windows/.home/libexec/git-core ./
 #AFTER NOTES
 
 override COMPOSER_SETTINGS		:= .composer.mk
@@ -401,7 +412,6 @@ override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH)
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
-#WORK : will "make" and "git" work from these directories?  what about the "git" directory "libexec" of helpers?
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_DIR)/bin/$(BUILD_PLAT)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
@@ -458,6 +468,7 @@ override PACMAN_PACKAGES_LIST		:= \
 	unzip \
 	vim \
 	wget \
+	zip \
 	\
 	gettext-devel \
 	texinfo \
@@ -1216,11 +1227,13 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
-$(UPGRADE):	override SHELL := $(subst ",,$(MSYS_SHELL))
-$(STRAPIT)-git:	override SHELL := $(subst ",,$(MSYS_SHELL))
-$(FETCHIT)-%:	override SHELL := $(subst ",,$(MSYS_SHELL))
-$(BUILDIT)-%:	override SHELL := $(subst ",,$(MSYS_SHELL))
-$(CHECKIT):	override SHELL := $(subst ",,$(MSYS_SHELL))
+ifneq ($(wildcard $(subst \",,$(MSYS_SHELL))),)
+$(UPGRADE):	override SHELL := $(subst \",,$(MSYS_SHELL))
+$(STRAPIT)-git:	override SHELL := $(subst \",,$(MSYS_SHELL))
+$(FETCHIT)-%:	override SHELL := $(subst \",,$(MSYS_SHELL))
+$(BUILDIT)-%:	override SHELL := $(subst \",,$(MSYS_SHELL))
+$(CHECKIT):	override SHELL := $(subst \",,$(MSYS_SHELL))
+endif
 endif
 
 .PHONY: $(STRAPIT)
