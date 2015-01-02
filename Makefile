@@ -408,10 +408,14 @@ override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH)
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
+ifneq ($(COMPOSER_PROGS_USE),)
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/bin
+endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
+override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
+override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/bin
 
 override BUILD_TOOLS			:=
 ifneq ($(BUILD_MSYS),)
@@ -603,6 +607,7 @@ override define PATCH			=
 		$(call COMPOSER_FIND,$(PATH_LIST),patch) -p1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
 
+#WORK : static compile "git", or detect "libexec" directory (.home/bin and bin/$BUILD_PLAT/bin)
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
@@ -792,6 +797,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "^_STORE"		"Source files directory"	"[$(COMPOSER_STORE)]"
 	@$(HELPOUT1) "^_BUILD"		"Build directory"		"[$(COMPOSER_BUILD)]"
 	@$(HELPOUT1) "^_PROGS"		"Built binaries directory"	"[$(COMPOSER_PROGS)]"
+	@$(HELPOUT1) "^_PROGS_USE"	"Use repository binaries"	"[$(COMPOSER_PROGS_USE)] (valid: empty or 1)"
 	@echo ""
 	@echo "Build Options (^ := BUILD):"
 	@$(HELPOUT1) "^_DIST"		"Build generic binaries"	"[$(BUILD_DIST)] (valid: empty or 1)"
