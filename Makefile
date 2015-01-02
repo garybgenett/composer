@@ -2180,6 +2180,8 @@ else ifneq ($(BUILD_MSYS),)
 		,\
 		--host=$(CHOST) \
 		--disable-assembly \
+		--disable-shared \
+		--enable-static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_TAR_DST),$(COMPOSER_ABODE))
@@ -2208,7 +2210,10 @@ else ifneq ($(BUILD_MSYS),)
 override define LIBICONV_BUILD =
 	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
 	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
-	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 endef
 else
 override define LIBICONV_BUILD =
@@ -2226,6 +2231,11 @@ $(STRAPIT)-libs-gettext:
 	$(call CURL_FILE,$(LIB_GTXT_TAR_SRC))
 	$(call UNTAR,$(LIB_GTXT_TAR_DST),$(LIB_GTXT_TAR_SRC))
 ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else ifneq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2250,7 +2260,10 @@ ifneq ($(BUILD_MUSL),)
 	)
 else ifneq ($(BUILD_MSYS),)
 	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
-	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
 endif
@@ -2266,7 +2279,10 @@ ifneq ($(BUILD_MUSL),)
 	)
 else ifneq ($(BUILD_MSYS),)
 	echo WORK
-	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE))
 endif
@@ -2313,7 +2329,10 @@ ifneq ($(BUILD_MUSL),)
 	)
 else ifneq ($(BUILD_MSYS),)
 	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
-	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE))
 endif
@@ -2323,6 +2342,11 @@ $(STRAPIT)-libs-freetype:
 	$(call CURL_FILE,$(LIB_FTYP_TAR_SRC))
 	$(call UNTAR,$(LIB_FTYP_TAR_DST),$(LIB_FTYP_TAR_SRC))
 ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else ifneq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2357,6 +2381,8 @@ else ifneq ($(BUILD_MSYS),)
 		--enable-iconv \
 		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
 		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
+		--disable-shared \
+		--enable-static \
 		--with-expat-includes="$(COMPOSER_ABODE)/include" \
 		--with-expat-lib="$(COMPOSER_ABODE)/lib" \
 	)
@@ -2519,6 +2545,12 @@ ifneq ($(BUILD_MUSL),)
 		--disable-shared \
 		--enable-static \
 	)
+else ifneq ($(BUILD_MSYS),)
+	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
+		--without-libidn \
+		--disable-shared \
+		--enable-static \
+	)
 else
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
 		--without-libidn \
@@ -2528,6 +2560,12 @@ endif
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
 ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
+		--without-libidn \
+		--disable-shared \
+		--enable-static \
+	)
+else ifneq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--without-libidn \
 		--disable-shared \
@@ -2659,8 +2697,19 @@ $(FETCHIT)-tex-prep:
 $(BUILDIT)-tex:
 ifneq ($(BUILD_MUSL),)
 	echo WORK
+#		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
+#
 	cd "$(TEX_TAR_DST)" &&
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" LIBS="-lexpat" ./Build \
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+			--disable-multiplatform \
+			--without-ln-s \
+			--without-x \
+			--disable-shared \
+			--enable-static
+else ifneq ($(BUILD_MSYS),)
+	echo WORK
+	cd "$(TEX_TAR_DST)" &&
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x \
