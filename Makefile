@@ -58,6 +58,7 @@
 #	linux 32-bit stage3 BUILD_DIST=1
 #	windows 64-bit BUILD_DIST=
 #	windows 32-bit BUILD_DIST=1
+# do a "diff -qr" of build chroot after completion
 #BUILD TEST
 
 #OTHER NOTES
@@ -1466,7 +1467,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-perl$(_D)"		"Build/compile of Perl from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
@@ -1479,6 +1480,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
+#WORKING : name is just a tad too long...
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs-perl$(_D):"	"$(_E)$(STRAPIT)-libs-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
@@ -2379,7 +2382,6 @@ $(STRAPIT)-msys-dll:
 		"$(COMPOSER_ABODE)/bin/"
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
-.PHONY: $(STRAPIT)-libs
 #WORK : causes build errors
 #make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
 #make[3]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14'
@@ -2401,21 +2403,25 @@ $(STRAPIT)-msys-dll:
 #  make: *** [all] Error 2
 #  make: *** [bootstrap-libs-libiconv1] Error 2
 #WORK
+
+.PHONY: $(STRAPIT)-libs
+$(STRAPIT)-libs:
+	# call recursively instead of using dependencies, so that environment variables update
 #ifeq ($(BUILD_PLAT),Linux)
-#$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
+#	$(RUNMAKE) $(STRAPIT)-libs-glibc
 #endif
-$(STRAPIT)-libs: $(STRAPIT)-libs-perl
-$(STRAPIT)-libs: $(STRAPIT)-libs-bzip
-$(STRAPIT)-libs: $(STRAPIT)-libs-zlib
-$(STRAPIT)-libs: $(STRAPIT)-libs-gmp
-$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
-$(STRAPIT)-libs: $(STRAPIT)-libs-gettext
-$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
-$(STRAPIT)-libs: $(STRAPIT)-libs-ncurses
-$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
-$(STRAPIT)-libs: $(STRAPIT)-libs-expat
-$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
-$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+	$(RUNMAKE) $(STRAPIT)-libs-perl
+	$(RUNMAKE) $(STRAPIT)-libs-bzip
+	$(RUNMAKE) $(STRAPIT)-libs-zlib
+	$(RUNMAKE) $(STRAPIT)-libs-gmp
+	$(RUNMAKE) $(STRAPIT)-libs-libiconv1
+	$(RUNMAKE) $(STRAPIT)-libs-gettext
+	$(RUNMAKE) $(STRAPIT)-libs-libiconv2
+	$(RUNMAKE) $(STRAPIT)-libs-ncurses
+	$(RUNMAKE) $(STRAPIT)-libs-openssl
+	$(RUNMAKE) $(STRAPIT)-libs-expat
+	$(RUNMAKE) $(STRAPIT)-libs-freetype
+	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
 
 .PHONY: $(STRAPIT)-libs-glibc
 $(STRAPIT)-libs-glibc:
@@ -2432,15 +2438,6 @@ $(STRAPIT)-libs-glibc:
 	$(call AUTOTOOLS_BUILD,$(LIB_LIBC_TAR_DST).build,$(COMPOSER_ABODE),\
 		CFLAGS="$(CFLAGS) -O2" \
 	)
-
-override define PERL_MODULES_BUILD =
-	$(call CURL_FILE,$(2)); \
-	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
-	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
-		$(BUILD_ENV) $(PERL) ./Makefile.PL && \
-		$(BUILD_ENV) $(MAKE) && \
-		$(BUILD_ENV) $(MAKE) install
-endef
 
 .PHONY: $(STRAPIT)-libs-perl
 $(STRAPIT)-libs-perl:
@@ -2475,6 +2472,20 @@ endif
 			"$(LIB_PERL_TAR_DST)/configure"; \
 	fi
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-libs-perl-modules
+
+override define PERL_MODULES_BUILD =
+	$(call CURL_FILE,$(2)); \
+	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
+	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
+		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
+		$(BUILD_ENV) $(MAKE) && \
+		$(BUILD_ENV) $(MAKE) install
+endef
+
+.PHONY: $(STRAPIT)-libs-perl-modules
+$(STRAPIT)-libs-perl-modules:
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
