@@ -708,7 +708,7 @@ override BUILD_BINARY_LIST		:= \
 	\
 	bash sh \
 	less \
-	vim \
+	vim vimdiff \
 	\
 	make \
 	zip \
@@ -2003,7 +2003,7 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
-		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)"* "$(COMPOSER_PROGS)/usr/bin/"; \
+		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
@@ -2685,7 +2685,16 @@ $(BUILDIT)-coreutils:
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
 	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE))
 	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE))
-	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE))
+#WORKING
+#		--with-gzip=PROG        use PROG as gzip compressor program
+#		--with-bzip2=PROG       use PROG as bzip2 compressor program
+#		--with-xz=PROG          use PROG as xz compressor program
+#WORKING
+	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-acl \
+		--without-posix-acls \
+		--without-xattrs \
+	)
 
 .PHONY: $(FETCHIT)-bash
 $(FETCHIT)-bash: $(FETCHIT)-bash-pull
