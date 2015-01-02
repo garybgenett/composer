@@ -70,6 +70,10 @@ override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(
 
 ########################################
 
+override COMPOSER_VERSION_CURRENT	:= v1.4
+override COMPOSER_BASENAME		:= Composer
+override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
+
 ifneq ($(wildcard $(COMPOSER_DIR).git),)
 override COMPOSER_GITREPO		?= $(COMPOSER_DIR).git
 else ifneq ($(wildcard $(COMPOSER_DIR)/.git),)
@@ -78,11 +82,8 @@ else
 override COMPOSER_GITREPO		?= https://github.com/garybgenett/composer.git
 endif
 
-override COMPOSER_VERSION		?= v1.4
-override COMPOSER_BASENAME		:= Composer
-override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
-
-override COMPOSER_NOCOLOR		?=
+override COMPOSER_VERSION		?= $(COMPOSER_VERSION_CURRENT)
+override COMPOSER_ESCAPES		?= 1
 
 ################################################################################
 
@@ -331,6 +332,7 @@ override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
 
 #WORK : need to ldd final binaries to see what libraries they compile in
+#WORK : double-check / remove 'libidn'
 ifneq ($(BUILD_MUSL),)
 override BUILD_MUSL			:= $(COMPOSER_ABODE)/bin/musl-gcc
 endif
@@ -428,10 +430,14 @@ override IZIP_BIN_DST			:= $(COMPOSER_BUILD)/zip$(subst .,,$(IZIP_VERSION))
 override UZIP_BIN_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VERSION))
 
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
-# http://curl.haxx.se/dev/source.html
+# http://www.curl.haxx.se/download.html
+# http://www.curl.haxx.se/dev/source.html
+override CURL_VERSION			:= 7.39.0
+override CURL_BIN_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VERSION).tar.gz
 override CURL_SRC			:= https://github.com/bagder/curl.git
+override CURL_BIN_DST			:= $(BUILD_STRAP)/curl-$(CURL_VERSION)
 override CURL_DST			:= $(COMPOSER_BUILD)/curl
-override CURL_CMT			:= 7.39.0
+override CURL_CMT			:= $(CURL_VERSION)
 
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
@@ -559,10 +565,10 @@ override PACMAN_BASE_LIST		:= \
 	msys2-runtime-devel \
 	pacman
 
-# second group is for composer
-# third group is for make build
-# fourth group is for git build
-# fifth group is for texlive build
+#WORK : need to trim this list, and use '$(STRAPIT)' targets instead
+# second group is for '$(STRAPIT)-libs'
+# third group is for '$(STRAPIT)-curl'
+# fourth group is for composer
 #>	mingw-w64-i686-toolchain
 #>	mingw-w64-x86_64-toolchain
 override PACMAN_PACKAGES_LIST		:= \
@@ -573,16 +579,25 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-gcc \
 	msys2-devel \
 	\
-	vim \
-	\
-	gettext-devel \
-	libiconv-devel \
-	\
-	libcurl-devel \
+	zlib \
 	zlib-devel \
-	\
+	libiconv \
+	libiconv-devel \
+	gettext \
+	gettext-devel \
+	openssl \
+	openssl-devel \
+	expat \
+	mingw-w64-i686-freetype \
+	mingw-w64-x86_64-freetype \
 	mingw-w64-i686-fontconfig \
-	mingw-w64-x86_64-fontconfig
+	mingw-w64-x86_64-fontconfig \
+	\
+	curl \
+	libcurl \
+	libcurl-devel \
+	\
+	vim
 
 #TODO
 # second group is for mintty
@@ -603,6 +618,7 @@ override WINDOWS_BINARY_LIST		:= \
 	rm \
 	sed \
 	sh \
+	sort \
 	true \
 	uname \
 	\
@@ -888,6 +904,30 @@ endif
 
 ########################################
 
+# thanks for the 'regex' fix below: http://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
+#	also to: http://stackoverflow.com/questions/9691508/how-can-i-use-macros-to-generate-multiple-makefile-targets-rules-inside-foreach
+#	also to: http://stackoverflow.com/questions/3063507/list-goals-targets-in-gnu-make
+#	also to: http://backreference.org/2010/05/31/working-with-blocks-in-sed
+
+.PHONY: .all_targets
+.all_targets:
+	@$(RUNMAKE) --question --print-data-base --no-builtin-variables --no-builtin-rules : 2>/dev/null |
+		$(SED) -n -e "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p;" |
+		$(SED) -n -e "s|^$(COMPOSER_ALL_REGEX)[ ]?(.*)$$|\1: \2|gp" |
+		sort --unique |
+		$(SED) -e "s|[ ][.]set_title-$(COMPOSER_ALL_REGEX)?||g"
+
+ifneq ($(COMPOSER_ESCAPES),)
+$(foreach FILE,\
+	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) "s|[:].*$$||g"),\
+	$(eval $(FILE): .set_title-$(FILE))\
+)
+.set_title-%:
+	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) [$(*)] :: $(CURDIR)\a"
+endif
+
+########################################
+
 # http://en.wikipedia.org/wiki/ANSI_escape_code
 # http://ascii-table.com/ansi-escape-sequences.php
 #	default	= light gray
@@ -897,7 +937,7 @@ endif
 #	note	= red
 #	extra	= magenta
 #	syntax	= dark blue
-ifeq ($(COMPOSER_NOCOLOR),)
+ifneq ($(COMPOSER_ESCAPES),)
 override _D := \e[0;37m
 override _H := \e[0;32m
 override _C := \e[0;36m
@@ -915,6 +955,8 @@ override _E :=
 override _S :=
 endif
 
+########################################
+
 override NULL		:=
 override MARKER		:= >>
 override INDENTING	:= $(NULL) $(NULL) $(NULL)
@@ -923,7 +965,7 @@ override COMMENTED	:= $(_S)\#$(_D) $(NULL)
 override HELPLINE	:= echo -en "$(_H)$(INDENTING)";	printf  "~%0.0s" {1..70}; echo -en "$(_D)\n"
 override HELPLVL1	:= echo -en "$(_S)";			printf "\#%0.0s" {1..70}; echo -en "$(_D)\n"
 override HELPLVL2	:= echo -en "$(_S)";			printf "\#%0.0s" {1..40}; echo -en "$(_D)\n"
-ifeq ($(COMPOSER_NOCOLOR),)
+ifneq ($(COMPOSER_ESCAPES),)
 override HELPOUT1	:= printf "$(INDENTING)%b\e[128D\e[22C%b\e[128D\e[52C%b$(_D)\n"
 override HELPOUT2	:= printf "$(COMMENTED)%b\e[128D\e[22C%b$(_D)\n"
 override HELPER		:= printf "%b$(_D)\n"
@@ -936,6 +978,8 @@ endif
 override EXAMPLE_SECOND := LICENSE
 override EXAMPLE_TARGET := manual
 override EXAMPLE_OUTPUT := Users_Guide
+
+########################################
 
 .PHONY: $(HELPOUT)
 $(HELPOUT): \
@@ -1006,7 +1050,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPER) "$(_H)Options:"
 	@$(HELPOUT1) "$(_C)COMPOSER_GITREPO$(_D)"	"Source repository"		"[$(_M)$(COMPOSER_GITREPO)$(_D)]"
 	@$(HELPOUT1) "$(_C)COMPOSER_VERSION$(_D)"	"Version for cloning"		"[$(_M)$(COMPOSER_VERSION)$(_D)] $(_N)(valid: any Git tag or commit)"
-	@$(HELPOUT1) "$(_C)COMPOSER_NOCOLOR$(_D)"	"Disable colors in output"	"[$(_M)$(COMPOSER_NOCOLOR)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)COMPOSER_ESCAPES$(_D)"	"Enable color/title sequences"	"[$(_M)$(COMPOSER_ESCAPES)$(_D)] $(_N)(valid: empty or 1)"
 	@echo
 	@$(HELPER) "$(_H)File Options:"
 	@$(HELPOUT1) "$(_C)COMPOSER_STAMP$(_D)"		"Timestamp file"		"[$(_M)$(COMPOSER_STAMP)$(_D)]"
@@ -1015,7 +1059,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "$(_C)COMPOSER_FILES$(_D)"		"List for '$(REPLICA)' target"	"[$(_M)$(COMPOSER_FILES)$(_D)]"
 	@echo
 	@$(HELPER) "$(_H)Recursion Options:"
-	@$(HELPOUT1) "$(_C)COMPOSER_TARGETS$(_D)"	"Default targets"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_TARGETS$(_D)"	"Target list for 'all'"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
 	@$(HELPOUT1) "$(_C)COMPOSER_SUBDIRS$(_D)"	"Sub-directories list"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
 	@$(HELPOUT1) "$(_C)COMPOSER_DEPENDS$(_D)"	"Sub-directory dependency"	"[$(_M)$(COMPOSER_DEPENDS)$(_D)] $(_N)(valid: empty or 1)"
 	@$(HELPOUT1) "$(_C)COMPOSER_TESTING$(_D)"	"Modifies '$(TESTOUT)' target"	"[$(_M)$(COMPOSER_TESTING)$(_D)] $(_N)(valid: empty, 0 or 1)"
@@ -1073,6 +1117,7 @@ HELP_TARGETS:
 	@$(HELPOUT1) "$(_C)$(SHELLIT)-msys$(_D)"	"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) environment"
 	@echo
 	@$(HELPER) "$(_H)Helper Targets:"
+	@$(HELPOUT1) "$(_C)targets$(_D)"		"Parse '$(MAKEFILE)' for all potential targets (for verification and/or troubleshooting)"
 	@$(HELPOUT1) "$(_C)all$(_D)"			"Create all of the default output formats or configured targets"
 	@$(HELPOUT1) "$(_C)clean$(_D)"			"Remove all of the default output files or configured targets"
 	@$(HELPOUT1) "$(_C)print$(_D)"			"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
@@ -1097,6 +1142,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-check$(_D):"	"$(_E)$(STRAPIT)-exit$(_D)"			"Exits with supporting help text"
@@ -1113,6 +1159,9 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-git$(_D):"	"$(_E)$(STRAPIT)-git-pull$(_D)"			"Download of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-prep$(_D)"			"Preparation of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-build$(_D)"		"Build/compile of Git from source archive"
@@ -1171,6 +1220,10 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_C)all$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)$(_D)"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
 	@$(HELPOUT1) "$(_C)clean$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)-clean$(_D)"	"[$(_M)$(addsuffix -clean,$(COMPOSER_TARGETS))$(_D)]"
 	@$(HELPOUT1) "$(_C)subdirs$(_D):"		"$(_E)$(~)(COMPOSER_SUBDIRS)$(_D)"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
+	@echo
+	@$(HELPER) "$(_H)Hidden Sub-Targets:"
+	@$(HELPOUT1) "$(_C)targets$(_D):"		"$(_E).all_targets$(_D)"			"Dynamically parse and print all potential targets"
+	@$(HELPOUT1) "$(_C)$(_N)%$(_D):"		"$(_E).set_title-$(_N)*$(_D)"			"Set window title to current target using escape sequence"
 	@echo
 	@$(HELPER) "These do not need to be used directly during normal use, and are only documented for completeness."
 	@echo
@@ -1258,7 +1311,7 @@ HELP_SYSTEM:
 	@$(HELPER) "include [...]"
 	@echo
 	@$(HELPOUT2) "$(_E)Create a new '$(MAKEFILE)' using a helpful template:"
-	@$(HELPER) "$(_M)$(~)(RUNMAKE) --silent COMPOSER_NOCOLOR=\"1\" COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
+	@$(HELPER) "$(_M)$(~)(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
 	@echo
 	@$(HELPOUT2) "$(_E)Or, recursively initialize the current directory tree:"
 	@$(HELPOUT2) "$(_N)(NOTE: This is a non-destructive operation.)"
@@ -1400,12 +1453,12 @@ $(TESTOUT):
 	$(CP) "$(MDVIEWER_CSS)" "$(TEST_DIR_CSSDST)/$(COMPOSER_CSS)"
 	$(RUNMAKE) --directory "$(TESTOUT_DIR)" $(INSTALL)
 ifneq ($(COMPOSER_TESTING),0)
-	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --silent COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
 endif
 	$(MKDIR) "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)"
 	$(RUNMAKE) --directory "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)" $(REPLICA)
@@ -1413,9 +1466,9 @@ endif
 	$(MAKE) --directory "$(TESTOUT_DIR)"
 ifneq ($(COMPOSER_TESTING),)
 	$(foreach FILE,$(TEST_DIRECTORIES),\
-		echo && \
-		echo "[$(FILE)/$(MAKEFILE)]" && \
-		echo && \
+		$(HELPLINE) && \
+		$(HELPOUT1) "$(_H)$(MARKER) $(_M)$(FILE)/$(MAKEFILE)" && \
+		$(HELPLINE) && \
 		cat "$(FILE)/$(MAKEFILE)"
 	)
 endif
@@ -1427,11 +1480,11 @@ $(INSTALL): install-dir
 .PHONY: $(INSTALL)-dir
 $(INSTALL)-dir:
 	if [ -f "$(CURDIR)/$(MAKEFILE)" ]; then
-		@echo "[SKIPPING] $(CURDIR)/$(MAKEFILE)"
+		@$(HELPOUT1) "$(_H)$(MARKER) $(_N)Skipping$(_D) :: $(_E)$(CURDIR)/$(MAKEFILE)"
 	else
-		@echo "[CREATING] $(CURDIR)/$(MAKEFILE)"
+		@$(HELPOUT1) "$(_H)$(MARKER) $(_H)Creating$(_D) :: $(_M)$(CURDIR)/$(MAKEFILE)"
 		$(RUNMAKE) --silent \
-			COMPOSER_NOCOLOR="1" \
+			COMPOSER_ESCAPES= \
 			COMPOSER_TARGETS="$(sort $(subst .$(COMPOSER_EXT),.$(TYPE_HTML),$(wildcard *.$(COMPOSER_EXT))))" \
 			COMPOSER_SUBDIRS="$(sort $(subst /,,$(wildcard */)))" \
 			COMPOSER_DEPENDS="$(COMPOSER_DEPENDS)" \
@@ -1451,6 +1504,12 @@ $(REPLICA)-%:
 
 .PHONY: $(REPLICA)
 $(REPLICA):
+	@$(HELPLVL1)
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_E)COMPOSER_VERSION$(_D)"	"[$(_N)$(COMPOSER_VERSION)$(_D)]"
+	@$(HELPOUT2) "$(_E)COMPOSER_FILES$(_D)"		"[$(_N)$(COMPOSER_FILES)$(_D)]"
+	@$(HELPOUT2) "$(_C)CURDIR$(_D)"			"[$(_M)$(CURDIR)$(_D)]"
+	@$(HELPLVL1)
 	if [ ! -d "$(REPLICA_GIT)" ]; then
 		$(GIT_REPLICA) init --bare
 		$(GIT_REPLICA) remote add origin "$(COMPOSER_GITREPO)"
@@ -1458,6 +1517,7 @@ $(REPLICA):
 	$(GIT_REPLICA) remote remove origin
 	$(GIT_REPLICA) remote add origin "$(COMPOSER_GITREPO)"
 	$(GIT_REPLICA) fetch --all
+	echo -en "$(_C)"
 	$(GIT_REPLICA) archive \
 		--format="tar" \
 		--prefix="" \
@@ -1465,11 +1525,13 @@ $(REPLICA):
 		$(foreach FILE,$(COMPOSER_FILES),"$(FILE)") \
 		| \
 		$(TAR) --directory "$(CURDIR)" --file -
+	echo -en "$(_E)"
 	if [ -f "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" ] &&
 	   [ "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" != "$(CURDIR)/$(COMPOSER_SETTINGS)" ]; then
 		$(CP) "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" "$(CURDIR)/$(COMPOSER_SETTINGS)"
 	fi
 	$(TIMESTAMP) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
+	echo -en "$(_D)"
 
 .PHONY: $(UPGRADE)
 $(UPGRADE):
@@ -1486,12 +1548,14 @@ $(UPGRADE):
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
 ifneq ($(BUILD_MUSL),)
-$(STRAPIT): $(STRAPIT)-musl
+#WORK : need to reset the environment, so later "bootstrap" targets pick up on "BUILD_MUSL = musl-gcc"
+#WORK : need to move '-libs' and '-curl' back down to '-git'
+$(STRAPIT): $(STRAPIT)-musl $(STRAPIT)-libs $(STRAPIT)-curl
 endif
 ifneq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-msys
 endif
-$(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-git
+$(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc
 
 .PHONY: $(FETCHIT)
@@ -1508,32 +1572,6 @@ $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
 $(BUILDIT): $(CHECKIT)
-
-#WORK : list of targets
-# http://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
-.PHONY: list
-list:
-	@$(RUNMAKE) --question --print-data-base --no-builtin-variables --no-builtin-rules : 2>/dev/null 
-#	|
-#		awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' |
-#		sort |
-#		egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
-
-#WORK : set title when running
-#override COMPOSER_TITLE ?= $(COMPOSER_BASENAME)
-
-#.PHONY: title
-#title: export COMPOSER_TITLE_ := $(COMPOSER_TITLE)
-#title:
-#	@echo title $(COMPOSER_TITLE)
-#	@echo -en "\e]0;$(MARKER) $(COMPOSER_BASENAME) [$(COMPOSER_TITLE_)]: $(CURDIR)\a"
-
-#%: $(shell echo -en "\e]0;$(MARKER) $(COMPOSER_BASENAME) [$(@)]: $(CURDIR)\a")
-#$(CHECKIT): $(eval echo -en "$(@)")
-#%: export COMPOSER_TITLE = $(@)
-#%: title
-#	@echo wildcard $(COMPOSER_TITLE)
-#WORK
 
 do-%: $(FETCHIT)-% $(BUILDIT)-%
 	@echo >/dev/null
@@ -1587,7 +1625,7 @@ ifneq ($(BUILD_MSYS),)
 		set BINDIR=/usr/bin
 		set PATH=%WD%%BINDIR%;%PATH%
 		set OPTIONS=
-		set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_BASENAME) MSYS2"
+		set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) :: MSYS2 Shell"
 		set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
 		start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 		:: end of file
@@ -1606,6 +1644,7 @@ endif
 
 .PHONY: $(CHECKIT)
 $(CHECKIT):
+	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
 	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifneq ($(BUILD_MUSL),)
@@ -1631,6 +1670,7 @@ endif
 	@$(HELPOUT1) "- $(_C)Cabal"		"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"		"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
+	@$(HELPLINE)
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -1680,9 +1720,9 @@ $(SHELLIT)-bashrc:
 		#
 		export PROMPT_DIRTRIM="1"
 		export PS1=
-		export PS1="$${PS1}\[\e]0;$(MARKER) $(COMPOSER_BASENAME) \w\a\]\n"				# title escape, new line (for spacing)
-		export PS1="$${PS1}$(_H)$(MARKER) $(COMPOSER_BASENAME) $(_C)\D{%FT%T%z}\n"		# title, date (iso format)
-		export PS1="$${PS1}[\#/\!] ($(_M)\u@\h \w$(_C))\\$$$(_D) "	# history counters, username@hostname, directory, prompt
+		export PS1="$${PS1}\[\e]0;$(MARKER) $(COMPOSER_FULLNAME) :: \w\a\]\n"		# title escape, new line (for spacing)
+		export PS1="$${PS1}$(_H)$(MARKER) $(COMPOSER_FULLNAME) :: $(_C)\D{%FT%T%z}\n"	# title, date (iso format)
+		export PS1="$${PS1}$(_C)[\#/\!] ($(_M)\u@\h \w$(_C))\\$$$(_D) "			# history counters, username@hostname, directory, prompt
 		#
 		export PAGER="less -rX"
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
@@ -1816,7 +1856,7 @@ endif
 $(STRAPIT)-exit:
 	@$(HELPOUT2)
 	@$(HELPOUT2) "$(_H)$(MARKER) NOTES:"
-	@$(HELPOUT2) "This message was produced by $(COMPOSER_BASENAME)."
+	@$(HELPOUT2) "This message was produced by $(_H)$(COMPOSER_FULLNAME)$(_D)."
 	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
 	@$(HELPOUT2) "$(INDENTING)$(_M)$(COMPOSER)"
 	@$(HELPLVL1)
@@ -2040,16 +2080,33 @@ endif
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic &&
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
 
+.PHONY: $(STRAPIT)-curl
+$(STRAPIT)-curl: $(STRAPIT)-curl-pull
+$(STRAPIT)-curl: $(STRAPIT)-curl-prep
+$(STRAPIT)-curl: $(STRAPIT)-curl-build
+
 .PHONY: $(FETCHIT)-curl
 $(FETCHIT)-curl: $(FETCHIT)-curl-pull
 $(FETCHIT)-curl: $(FETCHIT)-curl-prep
+
+.PHONY: $(STRAPIT)-curl-pull
+$(STRAPIT)-curl-pull:
+	$(call CURL_FILE,$(CURL_BIN_SRC))
+	$(call UNTAR,$(CURL_BIN_DST),$(CURL_BIN_SRC))
 
 .PHONY: $(FETCHIT)-curl-pull
 $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
+.PHONY: $(STRAPIT)-curl-prep
+$(STRAPIT)-curl-prep:
+
 .PHONY: $(FETCHIT)-curl-prep
 $(FETCHIT)-curl-prep:
+
+.PHONY: $(STRAPIT)-curl-build
+$(STRAPIT)-curl-build:
+	$(call AUTOTOOLS_BUILD,$(CURL_BIN_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
@@ -2461,6 +2518,45 @@ $(BUILDIT)-pandoc:
 	$(BUILD_ENV) pandoc --version
 
 ########################################
+
+.PHONY: targets
+targets:
+	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT1) "$(_H)Targets$(_D) :: $(_M)$(COMPOSER_SRC)"
+	@$(HELPLINE)
+	@echo -en "$(_C)"
+	@$(RUNMAKE) --silent .all_targets | $(SED) \
+		-e "/^HELP[_]/d" \
+		-e "/^EXAMPLE[_]/d" \
+		-e "/^$(HELPOUT)(:|-)/d" \
+		-e "/^$(HELPALL)(:|-)/d" \
+		-e "/^$(COMPOSER_TARGET)(:|-)/d" \
+		-e "/^$(COMPOSER_PANDOC)(:|-)/d" \
+		-e "/^$(UPGRADE)(:|-)/d" \
+		-e "/^$(REPLICA)(:|-)/d" \
+		-e "/^$(INSTALL)(:|-)/d" \
+		-e "/^$(TESTOUT)(:|-)/d" \
+		-e "/^$(EXAMPLE)(:|-)/d" \
+		-e "/^$(STRAPIT)(:|-)/d" \
+		-e "/^$(FETCHIT)(:|-)/d" \
+		-e "/^$(BUILDIT)(:|-)/d" \
+		-e "/^$(CHECKIT)(:|-)/d" \
+		-e "/^$(SHELLIT)(:|-)/d" \
+		-e "/^.*[.]$(COMPOSER_EXT)(:|-)/d" \
+		-e "/^all:/d" \
+		-e "/^clean:/d" \
+		-e "/^whoami:/d" \
+		-e "/^settings:/d" \
+		-e "/^setup:/d" \
+		-e "/^subdirs:/d" \
+		-e "/^print:/d" \
+		-e "/^$(@):/d" \
+		-e "/^$$/d"
+	@$(HELPLINE)
+	@$(HELPOUT1) "$(_H)$(MARKER) all";	echo -en "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]|\n|g" | sort --unique
+	@$(HELPOUT1) "$(_H)$(MARKER) clean";	echo -en "$(addsuffix -clean,$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | sort --unique
+	@$(HELPOUT1) "$(_H)$(MARKER) subdirs";	echo -en "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]|\n|g" | sort --unique
+	@$(HELPLINE)
 
 .PHONY: all
 ifeq ($(COMPOSER_DEPENDS),)
