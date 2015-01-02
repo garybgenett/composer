@@ -7,6 +7,7 @@
 # add 'make check' to list; it's where you get current version information
 # if using cygwin, need to map cygdrive to /
 #	asssume "/c" paths
+# if using windows, the $APPDATA/cabal directory
 #BUILD NOTES
 
 #BUILD TEST
@@ -19,7 +20,7 @@
 # now need zip/unzip in path
 #	add zip/unzip [ -x ... ] checks and message (read ENTER) if not
 # markdown-viewer xpi package
-# still a texlive dependency?
+# no more texlive dependency
 #OTHER NOTES
 
 #AFTER NOTES
@@ -1238,14 +1239,12 @@ $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
+$(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 
-#WORK
-# sort out fixes {in fetch or build?}
-# archive/restore $(COMPOSER_ABODE)/.cabal/packages/hackage.haskell.org
-#	need to be careful of index files: directories only?
+#WORK : sort out fixes {in fetch or build?}
 
 #WORK : needs a new location
 .PHONY: $(FETCHIT)-cabal
@@ -1256,7 +1255,18 @@ $(FETCHIT)-cabal:
 #WORK : needs a new location
 .PHONY: $(BUILDIT)-clean
 $(BUILDIT)-clean:
+	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
+	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
+ifneq ($(BUILD_MSYS),)
+	$(MKDIR) "$(APPDATA)/cabal"
+	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/"
+	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/"
+endif
+	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/"
+	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/"
+ifneq ($(BUILD_MSYS),)
 	$(RM) "$(COMPOSER_ABODE)/"*.exe
+endif
 
 do-%: $(FETCHIT)-% $(BUILDIT)-%
 	@echo >/dev/null
@@ -1270,7 +1280,7 @@ ifneq ($(BUILD_MSYS),)
 endif
 	@$(HELPOUT1) "GNU Make"		"$(MAKE_VERSION)"	"$(shell $(BUILD_ENV) make --version			2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "Git"		"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "Pandoc"		"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "Pandoc"		"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- Types"		"$(PANDOC_TYPE_CMT)"	"$(shell $(BUILD_ENV) cabal info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- TeXMath"	"$(PANDOC_MATH_CMT)"	"$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- HighlightKate"	"$(PANDOC_HIGH_CMT)"	"$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
