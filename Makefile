@@ -2682,7 +2682,10 @@ $(STRAPIT)-util:
 $(STRAPIT)-util-coreutils:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
-#WORKING : fails to build on "$(BUILD_PLAT),Msys"
+	# "$(BUILD_PLAT),Msys" can't build "*.so" files, so disabling "stdbuf" which requires "libstdbuf.so"
+	$(SED) -i \
+		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
+		"$(COREUTILS_TAR_DST)/configure"
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
