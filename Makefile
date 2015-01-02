@@ -1818,6 +1818,7 @@ endif
 .PHONY: $(STRAPIT)-check
 $(STRAPIT)-check:
 	@EXIT=
+ifneq ($(BUILD_MUSL),)
 ifneq ($(CC),$(BUILD_MUSL))
 	@$(HELPLVL1)
 	@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
@@ -1829,6 +1830,7 @@ ifneq ($(CC),$(BUILD_MUSL))
 	@$(HELPOUT2) "Then you can try '$(_C)$(STRAPIT)$(_D)' again."
 	@$(HELPLVL1)
 	@EXIT=1
+endif
 endif
 ifeq ($(BUILD_MSYS),)
 ifeq ($(shell $(LS) /{,usr/}lib*/$(CHECK_LIB_DST) 2>/dev/null),)
@@ -1946,21 +1948,22 @@ $(STRAPIT)-msys-dll:
 
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
-$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv
+$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
-$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv
-#WORK : need to get "gettext" to link against static "libiconv", and vice versa
-	exit 1
+$(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
+#WORK : need to get "gettext" to link against static "libiconv"
 #$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 #$(STRAPIT)-libs: $(STRAPIT)-libs-expat
 #$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
 #$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+$(STRAPIT)-libs:
+	exit 1
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(LIB_ZLIB_BIN_SRC))
 	$(call UNTAR,$(LIB_ZLIB_BIN_DST),$(LIB_ZLIB_BIN_SRC))
-ifeq ($(CC),$(BUILD_MUSL))
+ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE),\
 		--static \
 	)
@@ -1968,8 +1971,9 @@ else
 	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE))
 endif
 
-.PHONY: $(STRAPIT)-libs-libiconv
-$(STRAPIT)-libs-libiconv:
+#WORK : update documentation
+
+override define LIBICONV =
 	$(call CURL_FILE,$(LIB_ICNV_BIN_SRC))
 	# start with fresh source directory, due to circular dependency with gettext
 	$(RM) -r "$(LIB_ICNV_BIN_DST)"
@@ -1980,6 +1984,15 @@ $(STRAPIT)-libs-libiconv:
 		"$(LIB_ICNV_BIN_DST)/preload/Makefile.in" \
 		"$(LIB_ICNV_BIN_DST)/preload/configure"*
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE))
+endef
+
+.PHONY: $(STRAPIT)-libs-libiconv1
+$(STRAPIT)-libs-libiconv1:
+	$(call LIBICONV)
+
+.PHONY: $(STRAPIT)-libs-libiconv2
+$(STRAPIT)-libs-libiconv2:
+	$(call LIBICONV)
 
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
@@ -2002,7 +2015,7 @@ endif
 		-e "s|(termio)([^s])|\1s\2|g" \
 		"$(LIB_OSSL_BIN_DST)/configure" \
 		"$(LIB_OSSL_BIN_DST)/crypto/ui/ui_openssl.c"
-ifeq ($(CC),$(BUILD_MUSL))
+ifneq ($(BUILD_MUSL),)
 	$(SED) -i \
 		-e "s|(gcc[:])([-]D)|\1-static \2|g" \
 		"$(LIB_OSSL_BIN_DST)/Configure" \
@@ -2080,7 +2093,7 @@ $(FETCHIT)-infozip-prep:
 
 .PHONY: $(BUILDIT)-infozip
 $(BUILDIT)-infozip:
-ifeq ($(CC),$(BUILD_MUSL))
+ifneq ($(BUILD_MUSL),)
 	$(SED) -i \
 		-e "s|^(CC[ ][=][ ]).+$$|\1$(CC) -static|g" \
 		"$(IZIP_BIN_DST)/unix/Makefile" \
@@ -2116,6 +2129,11 @@ $(STRAPIT)-curl-prep:
 
 .PHONY: $(FETCHIT)-curl-prep
 $(FETCHIT)-curl-prep:
+ifneq ($(BUILD_MUSL),)
+	$(SED) -i \
+		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
+		"$(CURL_DST)/"*"/Makefile.in"
+endif
 
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
@@ -2123,11 +2141,6 @@ $(STRAPIT)-curl-build:
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
-ifeq ($(CC),$(BUILD_MUSL))
-	$(SED) -i \
-		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
-		"$(CURL_DST)/"*"/Makefile.in"
-endif
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-git
@@ -2154,9 +2167,19 @@ $(STRAPIT)-git-prep:
 		$(BUILD_ENV) $(MAKE) configure
 
 .PHONY: $(FETCHIT)-git-prep
+# thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
+#	also to: http://www.makelinux.net/alp/021
 $(FETCHIT)-git-prep:
 	cd "$(GIT_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
+ifneq ($(BUILD_MUSL),)
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
+		"$(GIT_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
+		"$(GIT_DST)/Makefile"
+endif
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
@@ -2165,17 +2188,7 @@ $(STRAPIT)-git-build:
 	)
 
 .PHONY: $(BUILDIT)-git
-# thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
-#	also to: http://www.makelinux.net/alp/021
 $(BUILDIT)-git:
-ifeq ($(CC),$(BUILD_MUSL))
-	$(SED) -i \
-		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
-		"$(GIT_DST)/configure"
-	$(SED) -i \
-		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
-		"$(GIT_DST)/Makefile"
-endif
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
 		--without-tcltk \
 	)
@@ -2199,6 +2212,11 @@ endif
 #WORK http://tex.aanhet.net/mingtex
 #WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
 $(FETCHIT)-tex-prep:
+ifneq ($(BUILD_MUSL),)
+	$(SED) -i \
+		-e "s|[_][_](off64[_]t)|\1|g" \
+		"$(TEX_BIN_DST)/utils/pmx/pmx-"*"/libf2c/sysdep1.h"
+endif
 ifneq ($(BUILD_MSYS),)
 	$(SED) -i \
 		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
@@ -2212,11 +2230,6 @@ endif
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
-ifeq ($(CC),$(BUILD_MUSL))
-	$(SED) -i \
-		-e "s|[_][_](off64[_]t)|\1|g" \
-		"$(TEX_BIN_DST)/utils/pmx/pmx-"*"/libf2c/sysdep1.h"
-endif
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV_MINGW) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
