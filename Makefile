@@ -165,6 +165,19 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 override HELPOUT			:= usage
 override HELPALL			:= help
 
+#WORKING : turn remaining targets into variables, as well...
+#	# grep PHONY Makefile
+#	.make_database
+#	.all_targets
+#	.dist
+#	all
+#	clean
+#	whoami
+#	settings
+#	setup
+#	subdirs
+#	print
+
 override DEBUGIT			:= debug
 override TARGETS			:= targets
 
@@ -1023,18 +1036,6 @@ override CABAL_INSTALL			= $(CABAL) install \
 	--force-reinstalls
 #>	--avoid-reinstalls
 
-# thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
-#	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
-override define DO_TEXTFILE		=
-	$(MKDIR) "$(abspath $(dir $(1)))"; \
-	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"; \
-	$(SED) -i \
-		-e "s|[[]B[]]|\\\\|g" \
-		-e "s|[[]N[]]|\\n|g" \
-		-e "s|[[]Q[]]|\'|g" \
-		"$(1)"
-endef
-
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
 override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
 else ifneq ($(wildcard $(COMPOSER_PROGS)/ca-bundle.crt),)
@@ -1155,6 +1156,15 @@ override NULL		:=
 override define NEWLINE	=
 $(NULL)
 $(NULL)
+endef
+
+# thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
+#	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
+override define DO_HEREDOC		=
+	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(1)))' | $(SED) \
+			-e "s|[[]B[]]|\\\\|g" \
+			-e "s|[[]N[]]|\\n|g" \
+			-e "s|[[]Q[]]|\'|g"
 endef
 
 override MARKER		:= >>
@@ -2039,7 +2049,8 @@ endif
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
 ifeq ($(BUILD_PLAT),Msys)
-	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
+	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
+	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
 	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
 #WORK : probably need this for linux, too
@@ -2081,7 +2092,7 @@ endif
 		"$(COMPOSER_PROGS)/usr/bin/"ghc-pkg \
 		"$(COMPOSER_PROGS)/usr/bin/"cabal
 
-override define TEXTFILE_MSYS_SHELL =
+override define HEREDOC_MSYS_SHELL =
 @echo off
 if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
 if not defined MSYSCON set MSYSCON=mintty.exe
@@ -2228,24 +2239,26 @@ endif
 
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
-	@$(call DO_TEXTFILE,$(COMPOSER_ABODE)/.bash_profile,TEXTFILE_BASH_PROFILE)
-	@$(call DO_TEXTFILE,$(COMPOSER_ABODE)/.bashrc,TEXTFILE_BASHRC)
+	@$(MKDIR) "$(COMPOSER_ABODE)"
+	@$(call DO_HEREDOC,HEREDOC_BASH_PROFILE)	>"$(COMPOSER_ABODE)/.bash_profile"
+	@$(call DO_HEREDOC,HEREDOC_BASHRC)		>"$(COMPOSER_ABODE)/.bashrc"
 	@if [ ! -f "$(COMPOSER_ABODE)/.bashrc.custom" ]; then \
 		$(ECHO) >"$(COMPOSER_ABODE)/.bashrc.custom"; \
 	fi
 
 .PHONY: $(SHELLIT)-vimrc
 $(SHELLIT)-vimrc:
-	@$(call DO_TEXTFILE,$(COMPOSER_ABODE)/.vimrc,TEXTFILE_VIMRC)
+	@$(MKDIR) "$(COMPOSER_ABODE)"
+	@$(call DO_HEREDOC,HEREDOC_VIMRC)		>"$(COMPOSER_ABODE)/.vimrc"
 	@if [ ! -f "$(COMPOSER_ABODE)/.vimrc.custom" ]; then \
 		$(ECHO) >"$(COMPOSER_ABODE)/.vimrc.custom"; \
 	fi
 
-override define TEXTFILE_BASH_PROFILE =
+override define HEREDOC_BASH_PROFILE =
 source "$(COMPOSER_ABODE)/.bashrc"
 endef
 
-override define TEXTFILE_BASHRC =
+override define HEREDOC_BASHRC =
 #!/usr/bin/env bash
 umask 022
 unalias -a
@@ -2292,7 +2305,7 @@ source "$(COMPOSER_ABODE)/.bashrc.custom"
 # end of file
 endef
 
-override define TEXTFILE_VIMRC =
+override define HEREDOC_VIMRC =
 " vimrc
 "TODO
 set nocompatible
@@ -3121,8 +3134,7 @@ $(FETCHIT)-tex-prep:
 	# make sure we link in all the right libraries
 #WORKING
 	$(SED) -i \
-		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
-		"$(TEX_TAR_DST)/m4/kpse-fontconfig-flags.m4" \
+		-e "s|^(LIBS[=][\"])[$$]kpse_cv_fontconfig_libs([ ][$$]LIBS[\"])$$|\1-lfontconfig -lfreetype -lexpat -liconv -lz\2|g" \
 		"$(TEX_TAR_DST)/texk/web2c/configure"
 
 .PHONY: $(BUILDIT)-tex
@@ -3184,7 +3196,8 @@ $(FETCHIT)-ghc-pull:
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-prep:
 ifeq ($(BUILD_PLAT),Msys)
-	$(call DO_TEXTFILE,$(CBL_TAR_DST)/bootstrap.patch.sh,TEXTFILE_CABAL_BOOTSTRAP)
+	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CBL_TAR_DST)/bootstrap.patch.sh"
+	$(CHMOD) "$(CBL_TAR_DST)/bootstrap.patch.sh"
 	$(SED) -i \
 		-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(CBL_TAR_DST)/bootstrap.patch.sh\"|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
@@ -3196,8 +3209,8 @@ endif
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
 
-override define TEXTFILE_CABAL_BOOTSTRAP =
-#!/usr/bin/env bash
+override define HEREDOC_CABAL_BOOTSTRAP =
+#!$(SHELL)
 [ -f "$(CBL_TAR_DST)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
 	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
 	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
@@ -3433,15 +3446,15 @@ override .DIST_SCREENSHOT	:= iVBORw0KGgoAAAANSUhEUgAAAeQAAADjCAIAAADbvvCiAAAABmJ
 
 .PHONY: .dist
 .dist:
-	@$(ECHO) "$(.DIST_ICON)"	| $(BASE64) -d >"$(CURDIR)/icon.png"
-	@$(ECHO) "$(.DIST_SCREENSHOT)"	| $(BASE64) -d >"$(CURDIR)/screenshot.png"
-	@$(CP) "$(COMPOSER_SRC)"	"$(CURDIR)/$(MAKEFILE)" || $(TRUE)
-	@$(call DO_TEXTFILE,$(CURDIR)/.gitignore,.TEXTFILE_DIST_GITIGNORE)
-	@$(call DO_TEXTFILE,$(CURDIR)/Composer.bat,.TEXTFILE_DIST_COMPOSER_BAT)
-	@$(call DO_TEXTFILE,$(CURDIR)/Composer.sh,.TEXTFILE_DIST_COMPOSER_SH)
-	@$(call DO_TEXTFILE,$(CURDIR)/LICENSE.$(COMPOSER_EXT),.TEXTFILE_DIST_LICENSE)
-	@$(call DO_TEXTFILE,$(CURDIR)/README.$(COMPOSER_EXT),.TEXTFILE_DIST_README)
-	@$(call DO_TEXTFILE,$(CURDIR)/revealjs.css,.TEXTFILE_DIST_REVEALJS_CSS)
+	@$(CP) "$(COMPOSER_SRC)"			"$(CURDIR)/$(MAKEFILE)" || $(TRUE)
+	@$(ECHO) "$(.DIST_ICON)"	| $(BASE64) -d	>"$(CURDIR)/icon.png"
+	@$(ECHO) "$(.DIST_SCREENSHOT)"	| $(BASE64) -d	>"$(CURDIR)/screenshot.png"
+	@$(call DO_HEREDOC,HEREDOC_DIST_GITIGNORE)	>"$(CURDIR)/.gitignore"
+	@$(call DO_HEREDOC,HEREDOC_DIST_COMPOSER_BAT)	>"$(CURDIR)/Composer.bat"
+	@$(call DO_HEREDOC,HEREDOC_DIST_COMPOSER_SH)	>"$(CURDIR)/Composer.sh"
+	@$(call DO_HEREDOC,HEREDOC_DIST_LICENSE)	>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"
+	@$(call DO_HEREDOC,HEREDOC_DIST_README)		>"$(CURDIR)/README.$(COMPOSER_EXT)"
+	@$(call DO_HEREDOC,HEREDOC_DIST_REVEALJS_CSS)	>"$(CURDIR)/revealjs.css"
 	@$(CHMOD) \
 		"$(CURDIR)/$(MAKEFILE)" \
 		"$(CURDIR)/Composer.bat" \
@@ -3449,7 +3462,7 @@ override .DIST_SCREENSHOT	:= iVBORw0KGgoAAAANSUhEUgAAAeQAAADjCAIAAADbvvCiAAAABmJ
 	@$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE)
 	@$(RUNMAKE) --directory "$(CURDIR)" all
 
-override define .TEXTFILE_DIST_GITIGNORE =
+override define .HEREDOC_DIST_GITIGNORE =
 # make compose
 /.composed
 /.composer.mk
@@ -3466,7 +3479,7 @@ override define .TEXTFILE_DIST_GITIGNORE =
 /test.dir/
 endef
 
-override define .TEXTFILE_DIST_COMPOSER_BAT =
+override define .HEREDOC_DIST_COMPOSER_BAT =
 @echo off
 set _COMPOSER=%~dp0
 set _SYS=Msys
@@ -3475,7 +3488,7 @@ start /b make --makefile %_COMPOSER%/Makefile COMPOSER_PROGS_USE="1" shell-msys
 :: end of file
 endef
 
-override define .TEXTFILE_DIST_COMPOSER_SH =
+override define .HEREDOC_DIST_COMPOSER_SH =
 #!/usr/bin/env sh
 _COMPOSER="`dirname "$${0}"`"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
@@ -3484,7 +3497,7 @@ make --makefile "$${_COMPOSER}/Makefile" COMPOSER_PROGS_USE="1" shell
 # end of file
 endef
 
-override define .TEXTFILE_DIST_LICENSE =
+override define .HEREDOC_DIST_LICENSE =
 # Composer CMS License
 <!-- ############################################################### -->
 
@@ -3535,7 +3548,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- ############################################################### -->
 endef
 
-override define .TEXTFILE_DIST_README =
+override define .HEREDOC_DIST_README =
 % Composer CMS: User Guide & Example File
 % Gary B. Genett
 % $(COMPOSER_VERSION) ($(shell $(DATE)))
@@ -3840,7 +3853,7 @@ decide for themselves if [Composer] will be beneficial for their needs.
 <!-- ############################################################### -->
 endef
 
-override define .TEXTFILE_DIST_REVEALJS_CSS =
+override define .HEREDOC_DIST_REVEALJS_CSS =
 @import url("revealjs/css/theme/default.css");
 
 body {
