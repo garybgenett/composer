@@ -584,6 +584,7 @@ override TEX_TAR_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Tools
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Windows
 # https://www.haskell.org/haskellwiki/Windows
+# https://downloads.haskell.org/~ghc/7.8.3/docs/html/users_guide/options-phases.html
 ifneq ($(BUILD_GHC_78),)
 override GHC_VERSION			:= 7.8.3
 override GHC_VERSION_LIB		:= 1.18.1.3
@@ -805,9 +806,6 @@ override GHC_LIBRARIES_LIST		:= \
 	alex|3.1.3 \
 	happy|1.19.4
 
-# second group is for dependency resolution
-# third group is for build fixes
-# fourth group is for missing directories
 override HASKELL_VERSION_LIST		:= \
 	GHC|$(GHC_VERSION) \
 	ghc|$(GHC_VERSION) \
@@ -815,30 +813,6 @@ override HASKELL_VERSION_LIST		:= \
 	Cabal|$(CABAL_VERSION_LIB) \
 	$(GHC_BASE_LIBRARIES_LIST) \
 	$(GHC_LIBRARIES_LIST) \
-
-#WORKING
-#	\
-#	HTTP|4000.2.9 \
-#	async|2.0.1.5 \
-#	parallel|3.2.0.4 \
-#	primitive|0.5.1.0 \
-#	\
-#	cgi|3001.1.8.5 \
-#	haskell-src|1.0.1.6 \
-#	unordered-containers|0.2.3.3 \
-#	vector|0.10.9.1 \
-#	\
-#	MonadCatchIO-mtl|0.3.1.0 \
-#	MonadCatchIO-transformers|0.3.1.0 \
-#	extensible-exceptions|0.1.1.4 \
-#	monads-tf|0.1.0.2
-
-# thanks for the 'cgi' patch below: https://www.google.com/search?q=haskell+cgi+Module+Data.Typeable+mkTyCon+patch
-#	details are at: https://ghc.haskell.org/trac/ghc/wiki/GhcKinds/PolyTypeable
-override HASKELL_PATCH_LIST		:= \
-
-#WORKING
-#	/packages/cgi-3001.1.8.5|http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/dev-haskell/cgi/files/cgi-3001.1.8.5-ghc78.patch
 
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
@@ -2778,7 +2752,7 @@ ifeq ($(BUILD_PLAT),Msys)
 			"$(PERL_TAR_DST)/Makefile.SH"; \
 		$(foreach FILE,$(PERL_PATCH_LIST),\
 			$(call DO_PATCH,$(PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-		) \
+		)
 	fi
 	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
 	$(SED) -i \
@@ -3088,16 +3062,11 @@ $(FETCHIT)-tex-prep:
 		-e "s|(as[_]ln[_]s[=].)ln[ ][-]s(.)|\1cp -pR\2|g" \
 		"$(TEX_TAR_DST)/configure"
 #WORKING
-#ifeq ($(BUILD_PLAT),Msys)
-#WORK this was needed for mingw?
-#	$(SED) -i \
-#		-e "s|([^Y])(INPUT)|\1MY\2|g" \
-#		"$(TEX_TAR_DST)/texk/web2c/otps/otp-"*
-#WORK thanks for the 'header' fix below: https://build.opensuse.org/package/view_file?project=windows%3Amingw%3Awin32&package=mingw32-texlive&file=texlive-20110705-source-header.patch&rev=048df827a351be452769105398cad811
-#	$(SED) -i \
-#		-e "s|^([#]define header)|#undef header\n\1|g" \
-#		"$(TEX_TAR_DST)/texk/cjkutils/hbf2gf.c"
-#endif
+	# "$(BUILD_PLAT),Msys" doesn't seem to build these files
+	$(SED) -i \
+		-e "s|allcm[:]allec||g" \
+		"$(TEX_TAR_DST)/texk/texlive/tl_scripts/Makefile.in"
+endif
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
 		"$(TEX_TAR_DST)/Build"
@@ -3235,14 +3204,6 @@ $(FETCHIT)-ghc-prep:
 #>			"$(FILE)"; \
 #>	)
 
-#WORK
-# https://ghc.haskell.org/trac/ghc/wiki/Building/Architecture
-# https://ghc.haskell.org/trac/ghc/wiki/Building/Modifying
-# https://ghc.haskell.org/trac/ghc/wiki/Building/Shake
-# https://ghc.haskell.org/trac/ghc/wiki/CrossCompilation
-# https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/options-phases.html
-#WORK
-
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
 ifeq ($(BUILD_PLAT),Msys)
@@ -3266,7 +3227,7 @@ $(STRAPIT)-ghc-depends:
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
 ifeq ($(BUILD_PLAT),Msys)
-	$(ECHO) "WORK : move this to 'prep' if it works...\n"
+	$(ECHO) "WORKING : move this to 'prep' if it works...\n"
 #	$(SED) -i \
 #		-e "s|(cygpath[ ])[-][-]mixed|\1--unix|g" \
 #		-e "s|(cygpath[ ])[-]m|\1--unix|g" \
@@ -3304,9 +3265,6 @@ $(FETCHIT)-haskell-packages:
 		"$(HASKELL_DST)/src/generic/prepare.sh"
 	cd "$(HASKELL_DST)/src/generic" && \
 		$(BUILD_ENV_MINGW) $(SH) ./prepare.sh
-	$(foreach FILE,$(HASKELL_PATCH_LIST),\
-		$(call DO_PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-	)
 
 .PHONY: $(FETCHIT)-haskell-prep
 # thanks for the 'OpenGL' fix below: https://stackoverflow.com/questions/18116201/how-can-i-disable-opengl-in-the-haskell-platform
