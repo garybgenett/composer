@@ -23,7 +23,6 @@
 # now need zip/unzip in path
 #	add zip/unzip [ -x ... ] checks and message (read ENTER) if not
 # markdown-viewer xpi package
-# no more texlive dependency
 #OTHER NOTES
 
 #AFTER NOTES
@@ -386,6 +385,18 @@ override PANDOC_HIGH_CMT		:= 0.5.8.5
 override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CMT			:= 1.12.4.2
 
+# https://www.tug.org/texlive
+# https://www.tug.org/texlive/build.html
+# ftp://tug.org/historic/systems/texlive
+# http://www.slackbuilds.org/repository/14.0/office/texlive
+override TEX_YEAR			:= 2014
+override TEX_VERSION			:= $(TEX_YEAR)0525
+override TEX_PDF_VERSION		:= 1.40.15
+override TEX_TEXMF_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
+override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
+override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
+override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
+
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
 override MAKE_VERSION			:= 3.82
@@ -404,17 +415,11 @@ override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
 
-#WORK
-# https://www.tug.org/texlive
-# ftp://tug.org/historic/systems/texlive
-override TEX_YEAR			:= 2014
-override TEX_VERSION			:= $(TEX_YEAR)0525
-override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
-override TEX_BIN_DST			:= $(BUILD_STRAP)/texlive-$(TEX_VERSION)
-#WORK
-
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
+#WORK
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
+#WORK /x86_64-unknown-linux-gnu
 ifneq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
 endif
@@ -698,11 +703,10 @@ else
 override MINGW_PATH			= $(shell $(CYGPATH) --absolute --windows "$(1)")
 endif
 
-#WORK
-#>>>override PANDOC_DATA			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data)
-#>>>ifneq ($(wildcard $(PANDOC_DATA)),)
-#>>>override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
-#>>>endif
+#>override PANDOC_DATA			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data)
+#>ifneq ($(wildcard $(PANDOC_DATA)),)
+#>override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
+#>endif
 
 ################################################################################
 
@@ -883,7 +887,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(FETCHIT):"		"$(FETCHIT)-cabal"			"Updates Cabal database"
 	@$(HELPOUT1) ""				"$(FETCHIT)-make"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-git"			"Download/preparation of Git source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-tex"			"Download/preparation of WORK source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-tex"			"Download/preparation of TeX Live source archives"
 	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"			"Download/preparation of Pandoc source repository"
@@ -895,7 +899,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(BUILDIT)-bindir"			"Copies compiled binaries to repository binaries directory"
 	@$(HELPOUT1) ""				"$(BUILDIT)-make"			"Build/compile of GNU Make from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-git"			"Build/compile of Git from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-tex"			"Build/compile of WORK from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-tex"			"Build/compile of TeX Live from source archives"
 	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"			"Build/compile of Haskell Platform from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
@@ -1267,13 +1271,11 @@ $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
-#WORK
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
-#WORK
 $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
@@ -1307,6 +1309,8 @@ $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/bin"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
+#WORK
+	$(CP) "$(COMPOSER_ABODE)/texlive/bin/"*"/pdftex" "$(COMPOSER_PROGS)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
 ifneq ($(BUILD_MSYS),)
@@ -1324,13 +1328,14 @@ ifneq ($(BUILD_MSYS),)
 	@$(HELPOUT1) "MSYS2"		"$(MSYS_VERSION)"	"$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
 endif
 	@$(HELPOUT1) "GNU Make"		"$(MAKE_VERSION)"	"$(shell $(BUILD_ENV) make --version			2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "Git"		"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "WORK"		"$(TEX_VERSION)"	"$(shell $(BUILD_ENV) echo WORK				2>/dev/null)"
+	@$(HELPOUT1) "Git SCM"		"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "Pandoc"		"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- Types"		"$(PANDOC_TYPE_CMT)"	"$(shell $(BUILD_ENV) cabal info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- TeXMath"	"$(PANDOC_MATH_CMT)"	"$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- HighlightKate"	"$(PANDOC_HIGH_CMT)"	"$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- CiteProc"	"$(PANDOC_CITE_CMT)"	"$(shell $(BUILD_ENV) pandoc-citeproc --version		2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "TeX Live"		"$(TEX_VERSION)"	"$(shell $(BUILD_ENV) tex --version			2>/dev/null | $(SED) -n "s|^.*TeX[ ]Live[ ]([0-9]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- PDFLaTeX"	"$(TEX_PDF_VERSION)"	"$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
 	@$(HELPOUT1) "Haskell"		"$(HASKELL_CMT)"	"$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- GHC"		"$(GHC_VERSION)"	"$(shell $(BUILD_ENV) ghc --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- Cabal"		"$(CABAL_VERSION)"	"$(shell $(BUILD_ENV) cabal --version			2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
@@ -1595,14 +1600,24 @@ $(BUILDIT)-git:
 
 .PHONY: $(FETCHIT)-tex
 $(FETCHIT)-tex:
-	echo WORK
+	$(call WGET_FILE,$(TEX_TEXMF_SRC))
 	$(call WGET_FILE,$(TEX_BIN_SRC))
+	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
-	echo WORK
-	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE))
+	cd "$(TEX_BIN_DST)" &&
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+			--disable-multiplatform \
+			--without-x
+#>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
+#>		--enable-build-in-source-tree \
+#>		--disable-multiplatform \
+#>		--without-x \
+#>	)
+	$(CP) "$(TEX_TEXMF_DST)/"* "$(COMPOSER_ABODE)/texlive/"
+	$(BUILD_ENV) fmtutil --all
 
 .PHONY: $(STRAPIT)-ghc-bin
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
@@ -1730,7 +1745,7 @@ endif
 	)
 
 .PHONY: $(BUILDIT)-haskell
-# thanks for the 'GHC_PACKAGE_PATH' fix below: http://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
+# thanks for the 'GHC_PACKAGE_PATH' fix below: https://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
 # thanks for the 'programFindLocation' fix below: https://github.com/albertov/hdbc-postgresql/commit/d4cef4dd288432141dab6365699317f2bb26c489
 #	found by: https://github.com/haskell/cabal/issues/1467
 # thanks for the 'wspiapi.h' fix below: https://github.com/nurupo/InsertProjectNameHere/commit/23f13cd95d5d9afaadd859a4d256986817e613b9
