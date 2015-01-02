@@ -1131,20 +1131,6 @@ override _E	:=
 override _S	:=
 endif
 
-ifneq ($(COMPOSER_ESCAPES),)
-$(foreach FILE,\
-	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) -n \
-		$(foreach FILE,$(.ALL_TARGETS),\
-			-e "/^$(FILE)/p" \
-		) \
-		| $(SED) "s|[:].*$$||g" \
-	),\
-	$(eval $(FILE): .set_title-$(FILE))\
-)
-.set_title-%:
-	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
-endif
-
 ########################################
 
 override NULL		:=
@@ -1177,28 +1163,6 @@ override EXAMPLE_TARGET	:= manual
 override EXAMPLE_OUTPUT	:= Users_Guide
 
 ########################################
-
-.DEFAULT_GOAL := $(HELPOUT)
-.DEFAULT:
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
-	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"
-	@$(TABLE_C2) "$(_E)CURDIR$(_D)"		"[$(_N)$(CURDIR)$(_D)]"
-	@$(HEADER_1)
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
-	@$(TABLE_C2) "$(_N)Target '$(_C)$(@)$(_N)' is not defined."
-	@$(TABLE_C2)
-	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
-	@$(TABLE_C2) "You either need to define this target, or call a target which is already defined."
-	@$(TABLE_C2) "Use '$(_M)targets$(_D)' to get a list of available targets for this '$(MAKEFILE)'."
-	@$(TABLE_C2) "Or, review the output of '$(_M)$(HELPOUT)$(_D)' and/or '$(_M)$(HELPALL)$(_D)' for more information."
-	@$(HEADER_1)
-	@exit 1
-
-########################################
-
-#WORK : turn 'targets' and 'debug' into variables, like '$TESTOUT'?  others?
 
 # thanks for the 'regex' fix below: https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
 #	also to: https://stackoverflow.com/questions/9691508/how-can-i-use-macros-to-generate-multiple-makefile-targets-rules-inside-foreach
@@ -1251,6 +1215,42 @@ override .ALL_TARGETS := \
 	subdirs[:] \
 	print[:]
 
+ifneq ($(COMPOSER_ESCAPES),)
+$(foreach FILE,\
+	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) -n \
+		$(foreach FILE,$(.ALL_TARGETS),\
+			-e "/^$(FILE)/p" \
+		) \
+		| $(SED) "s|[:].*$$||g" \
+	),\
+	$(eval $(FILE): .set_title-$(FILE))\
+)
+.set_title-%:
+	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
+endif
+
+########################################
+
+.DEFAULT_GOAL := $(HELPOUT)
+.DEFAULT:
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"
+	@$(TABLE_C2) "$(_E)CURDIR$(_D)"		"[$(_N)$(CURDIR)$(_D)]"
+	@$(HEADER_1)
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
+	@$(TABLE_C2) "$(_N)Target '$(_C)$(@)$(_N)' is not defined."
+	@$(TABLE_C2)
+	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
+	@$(TABLE_C2) "You either need to define this target, or call a target which is already defined."
+	@$(TABLE_C2) "Use '$(_M)targets$(_D)' to get a list of available targets for this '$(MAKEFILE)'."
+	@$(TABLE_C2) "Or, review the output of '$(_M)$(HELPOUT)$(_D)' and/or '$(_M)$(HELPALL)$(_D)' for more information."
+	@$(HEADER_1)
+	@exit 1
+
+#WORK : turn 'targets' and 'debug' into variables, like '$TESTOUT'?  others?
+
 #WORK : document!
 .PHONY: debug
 debug:
@@ -1276,7 +1276,7 @@ debug:
 	@$(TABLE_C2) "$(_H) Diagnostics"
 	@$(HEADER_1)
 	@echo
-	@$(RUNMAKE) --silent check
+	@$(RUNMAKE) --silent $(CHECKIT)
 	@echo
 	@$(HEADER_2)
 	@echo
@@ -2064,6 +2064,7 @@ endef
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
+# "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
 $(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
@@ -2078,13 +2079,13 @@ endif
 	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VERSION)"		"$(_N)$(shell $(BZIP) --help				2>&1        | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VERSION)"		"$(_N)$(shell BZIP= $(BZIP) --help			2>&1        | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VERSION)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VERSION)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VERSION)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(LESS) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
