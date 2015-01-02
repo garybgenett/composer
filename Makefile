@@ -164,17 +164,20 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 override HELPOUT			:= usage
 override HELPALL			:= help
 
+override DEBUGIT			:= debug
+override TARGETS			:= targets
+
+override EXAMPLE			:= template
+override TESTING			:= test
+override INSTALL			:= install
+override REPLICA			:= clone
+override UPGRADE			:= update
+
 override STRAPIT			:= bootstrap
 override FETCHIT			:= fetch
 override BUILDIT			:= build
 override CHECKIT			:= check
 override SHELLIT			:= shell
-
-override UPGRADE			:= update
-override REPLICA			:= clone
-override INSTALL			:= install
-override TESTOUT			:= test
-override EXAMPLE			:= template
 
 override ~				:= "'$$'"
 override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
@@ -191,10 +194,10 @@ endif
 
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
-override COMPOSER_TESTING		?=
 override COMPOSER_DEBUGIT		?=
+override COMPOSER_TESTING		?=
 
-override TESTOUT_DIR			:= $(COMPOSER_DIR)/$(TESTOUT).dir
+override TESTING_DIR			:= $(COMPOSER_DIR)/$(TESTING).dir
 
 ########################################
 
@@ -941,6 +944,8 @@ override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT_PATH))../../git-core))
 ifneq ($(GIT_EXEC),)
 override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
+override REPLICA_GIT_DIR		:= $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
+override REPLICA_GIT			:= cd "$(CURDIR)" && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
 override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_REPO		=
@@ -1144,7 +1149,6 @@ override DIVIDE		:= ::
 override INDENTING	:= $(NULL) $(NULL) $(NULL)
 override COMMENTED	:= $(_S)\#$(_D) $(NULL)
 
-#WORK : rename these!
 override HEADER_L	:= $(ECHO) "$(_H)$(INDENTING)";	$(PRINTF)  "~%.0s" {1..70}; $(ECHO) "$(_D)\n"
 override HEADER_1	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..70}; $(ECHO) "$(_D)\n"
 override HEADER_2	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..40}; $(ECHO) "$(_D)\n"
@@ -1169,7 +1173,6 @@ override EXAMPLE_OUTPUT	:= Users_Guide
 #	also to: https://stackoverflow.com/questions/3063507/list-goals-targets-in-gnu-make
 #	also to: http://backreference.org/2010/05/31/working-with-blocks-in-sed
 
-#WORK : document!
 .PHONY: .make_database
 .make_database:
 	@$(RUNMAKE) \
@@ -1187,26 +1190,25 @@ override EXAMPLE_OUTPUT	:= Users_Guide
 		$(SED) -n -e "/^$(COMPOSER_ALL_REGEX)[:]/p" | \
 		$(SORT)
 
-#WORK : document!
 override .ALL_TARGETS := \
 	HELP[_] \
 	EXAMPLE[_] \
-	$(HELPOUT)[:-] \
-	$(HELPALL)[:-] \
 	$(COMPOSER_TARGET)[:-] \
 	$(COMPOSER_PANDOC)[:-] \
-	$(UPGRADE)[:-] \
-	$(REPLICA)[:-] \
-	$(INSTALL)[:-] \
-	$(TESTOUT)[:-] \
+	$(HELPOUT)[:-] \
+	$(HELPALL)[:-] \
+	$(DEBUGIT)[:] \
+	$(TARGETS)[:] \
 	$(EXAMPLE)[:-] \
+	$(TESTING)[:-] \
+	$(INSTALL)[:-] \
+	$(REPLICA)[:-] \
+	$(UPGRADE)[:-] \
 	$(STRAPIT)[:-] \
 	$(FETCHIT)[:-] \
 	$(BUILDIT)[:-] \
 	$(CHECKIT)[:-] \
 	$(SHELLIT)[:-] \
-	debug[:] \
-	targets[:] \
 	all[:] \
 	clean[:] \
 	whoami[:] \
@@ -1244,70 +1246,10 @@ endif
 	@$(TABLE_C2)
 	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
 	@$(TABLE_C2) "You either need to define this target, or call a target which is already defined."
-	@$(TABLE_C2) "Use '$(_M)targets$(_D)' to get a list of available targets for this '$(MAKEFILE)'."
+	@$(TABLE_C2) "Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets for this '$(MAKEFILE)'."
 	@$(TABLE_C2) "Or, review the output of '$(_M)$(HELPOUT)$(_D)' and/or '$(_M)$(HELPALL)$(_D)' for more information."
 	@$(HEADER_1)
 	@exit 1
-
-#WORK : turn 'targets' and 'debug' into variables, like '$TESTOUT'?  others?
-
-#WORK : document!
-.PHONY: debug
-debug:
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
-	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"		"[$(_N)$(MAKEFILE_LIST)$(_D)]"
-	@$(TABLE_C2) "$(_E)CURDIR$(_D)"			"[$(_N)$(CURDIR)$(_D)]"
-	@$(TABLE_C2) "$(_C)COMPOSER_DEBUGIT$(_D)"	"[$(_M)$(COMPOSER_DEBUGIT)$(_D)]"
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H)$(MARKER) DEBUG:"
-	@$(TABLE_C2) "$(_N)This is the output of the '$(_C)debug$(_N)' target."
-	@$(TABLE_C2)
-	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
-	@$(TABLE_C2) "This target runs several key sub-targets and diagnostic commands."
-	@$(TABLE_C2) "The goal is to provide all needed troubleshooting information in one place."
-	@$(TABLE_C2) "Set the '$(_M)COMPOSER_DEBUGIT$(_D)' variable to troubleshoot a particular list of targets $(_E)(they may be run)$(_D)."
-	@$(HEADER_1)
-	@echo
-	@$(RUNMAKE) --silent HELP_HEADER
-	@$(RUNMAKE) --silent HELP_OPTIONS
-	@$(RUNMAKE) --silent HELP_OPTIONS_SUB
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H) Diagnostics"
-	@$(HEADER_1)
-	@echo
-	@$(RUNMAKE) --silent $(CHECKIT)
-	@echo
-	@$(HEADER_2)
-	@echo
-	@$(RUNMAKE) --silent targets
-	@echo
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H) Targets Debug"
-	@$(HEADER_1)
-	@echo
-	@$(RUNMAKE) --silent --debug --just-print $(COMPOSER_DEBUGIT) || $(TRUE)
-	@echo
-	@$(foreach FILE,$(MAKEFILE_LIST),\
-		$(HEADER_L); \
-		$(TABLE_I3) "$(_H)$(MARKER) $(_M)$(FILE)"; \
-		$(HEADER_L); \
-		cat "$(FILE)"; \
-		echo; \
-	)
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H) Make Database Dump"
-	@$(HEADER_1)
-	@echo
-	@$(RUNMAKE) --silent .make_database
-	@echo
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H) Composer Directory Listing"
-	@$(HEADER_1)
-	@echo
-	@$(LS) -R "$(COMPOSER_DIR)"
-	@echo
-	@$(RUNMAKE) --silent HELP_FOOTER
 
 ########################################
 
@@ -1392,8 +1334,8 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)COMPOSER_TARGETS$(_D)"	"Target list for 'all'"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_SUBDIRS$(_D)"	"Sub-directories list"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_DEPENDS$(_D)"	"Sub-directory dependency"	"[$(_M)$(COMPOSER_DEPENDS)$(_D)] $(_N)(valid: empty or 1)"
-	@$(TABLE_I3) "$(_C)COMPOSER_TESTING$(_D)"	"Modifies '$(TESTOUT)' target"	"[$(_M)$(COMPOSER_TESTING)$(_D)] $(_N)(valid: empty, 0 or 1)"
-	@$(TABLE_I3) "$(_C)COMPOSER_DEBUGIT$(_D)"	"Modifies 'debug' target"	"[$(_M)$(COMPOSER_DEBUGIT)$(_D)] $(_N)(valid: any target)"
+	@$(TABLE_I3) "$(_C)COMPOSER_DEBUGIT$(_D)"	"Modifies '$(DEBUGIT)' target"	"[$(_M)$(COMPOSER_DEBUGIT)$(_D)] $(_N)(valid: any target)"
+	@$(TABLE_I3) "$(_C)COMPOSER_TESTING$(_D)"	"Modifies '$(TESTING)' target"	"[$(_M)$(COMPOSER_TESTING)$(_D)] $(_N)(valid: empty, 0 or 1)"
 	@echo
 	@$(ESCAPE) "$(_H)Location Options:"
 	@$(TABLE_I3) "$(_C)COMPOSER_ABODE$(_D)"		"Install/binary directory"	"[$(_M)$(COMPOSER_ABODE)$(_D)]"
@@ -1434,28 +1376,30 @@ HELP_TARGETS:
 	@$(TABLE_I3) "$(_C)$(HELPOUT)$(_D)"		"Basic help output"
 	@$(TABLE_I3) "$(_C)$(HELPALL)$(_D)"		"Complete help output"
 	@$(TABLE_I3) "$(_C)$(COMPOSER_TARGET)$(_D)"	"Main target used to build/format documents"
-	@$(TABLE_I3) "$(_C)$(COMPOSER_PANDOC)$(_D)"	"Wrapper target which calls Pandoc directly (used internally)"
-	@echo
-	@$(ESCAPE) "$(_H)Installation Targets:"
-	@$(TABLE_I3) "$(_C)$(UPGRADE)$(_D)"		"Download/update all 3rd party components (need to do this at least once)"
-	@$(TABLE_I3) "$(_C)$(REPLICA)$(_D)"		"Clone key components into current directory (for inclusion in content repositories)"
-	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
-	@$(TABLE_I3) "$(_C)$(TESTOUT)$(_D)"		"Build example/test directory using all features and test/validate success"
-	@$(TABLE_I3) "$(_C)$(EXAMPLE)$(_D)"		"Print out example/template '$(MAKEFILE)' (helpful shortcut for creating recursive files)"
-	@echo
-	@$(ESCAPE) "$(_H)Compilation Targets:"
-	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D)"		"Download and configure binary GHC bootstrap environment"
-	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D)"		"Download/update GNU Make and Haskell/Pandoc source repositories"
-	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D)"		"Build/compile local GNU Make and Haskell/Pandoc binaries from source"
-	@$(TABLE_I3) "$(_C)$(CHECKIT)$(_D)"		"Diagnostic version information (for verification and/or troubleshooting)"
-	@$(TABLE_I3) "$(_C)$(SHELLIT)$(_D)"		"$(COMPOSER_BASENAME) sub-shell environment, using native tools"
-	@$(TABLE_I3) "$(_C)$(SHELLIT)-msys$(_D)"	"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) environment"
 	@echo
 	@$(ESCAPE) "$(_H)Helper Targets:"
-	@$(TABLE_I3) "$(_C)targets$(_D)"		"Parse '$(MAKEFILE)' for all potential targets (for verification and/or troubleshooting)"
 	@$(TABLE_I3) "$(_C)all$(_D)"			"Create all of the default output formats or configured targets"
 	@$(TABLE_I3) "$(_C)clean$(_D)"			"Remove all of the default output files or configured targets"
 	@$(TABLE_I3) "$(_C)print$(_D)"			"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
+	@echo
+	@$(ESCAPE) "$(_H)Diagnostic Targets:"
+	@$(TABLE_I3) "$(_C)$(DEBUGIT)$(_D)"		"Runs several key sub-targets and commands, to provide all helpful information in one place"
+	@$(TABLE_I3) "$(_C)$(TARGETS)$(_D)"		"Parse '$(MAKEFILE)' for all potential targets (for verification and/or troubleshooting)"
+	@echo
+	@$(ESCAPE) "$(_H)Installation Targets:"
+	@$(TABLE_I3) "$(_C)$(EXAMPLE)$(_D)"		"Print out example/template '$(MAKEFILE)' (helpful shortcut for creating recursive files)"
+	@$(TABLE_I3) "$(_C)$(TESTING)$(_D)"		"Build example/test directory using all features and test/validate success"
+	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
+	@$(TABLE_I3) "$(_C)$(REPLICA)$(_D)"		"Clone key components into current directory (for inclusion in content repositories)"
+	@$(TABLE_I3) "$(_C)$(UPGRADE)$(_D)"		"Download/update all 3rd party components (need to do this at least once)"
+	@echo
+	@$(ESCAPE) "$(_H)Compilation Targets:"
+	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D)"		"Download and build/compile essential libraries and tools"
+	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D)"		"Download/update and prepare all source repositories and archives"
+	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D)"		"Build/compile specific versions of all tools necessary for $(COMPOSER_BASENAME) operation"
+	@$(TABLE_I3) "$(_C)$(CHECKIT)$(_D)"		"Diagnostic version information (for verification and/or troubleshooting)"
+	@$(TABLE_I3) "$(_C)$(SHELLIT)$(_D)"		"Launches into $(COMPOSER_BASENAME) sub-shell environment"
+	@$(TABLE_I3) "$(_C)$(SHELLIT)-msys$(_D)"	"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) sub-shell environment"
 	@echo
 	@$(ESCAPE) "$(_H)Wildcard Targets:"
 	@$(TABLE_I3) "$(_C)$(REPLICA)-$(_N)%$(_D):"	"$(_E)$(REPLICA) COMPOSER_VERSION=$(_N)*$(_D)"	""
@@ -1468,11 +1412,23 @@ HELP_TARGETS_SUB:
 	@echo
 	@$(ESCAPE) "These are all the rest of the sub-targets used by the main targets above:"
 	@echo
+	@$(ESCAPE) "$(_H)Dynamic Sub-Targets:"
+	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)$(_D)"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
+	@$(TABLE_I3) "$(_C)clean$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)-clean$(_D)"	"[$(_M)$(addsuffix -clean,$(COMPOSER_TARGETS))$(_D)]"
+	@$(TABLE_I3) "$(_C)subdirs$(_D):"		"$(_E)$(~)(COMPOSER_SUBDIRS)$(_D)"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
+	@echo
+	@$(ESCAPE) "$(_H)Hidden Sub-Targets:"
+	@$(TABLE_I3) "$(_C)$(_N)%$(_D):"		"$(_E).set_title-$(_N)*$(_D)"			"Set window title to current target using escape sequence"
+	@$(TABLE_I3) "$(_C)$(DEBUGIT) .all_targets$(_D):"	"$(_E).make_database$(_D)"			"Output internal Make database, based on current '$(MAKEFILE)'"
+	@$(TABLE_I3) "$(_C)$(TARGETS)$(_D):"		"$(_E).all_targets$(_D)"			"Dynamically parse and print all potential targets"
+	@$(TABLE_I3) "$(_C)$(EXAMPLE)$(_D):"		"$(_E).$(EXAMPLE)$(_D)"				"Prints raw template, with escape sequences"
+	@echo
 	@$(ESCAPE) "$(_H)Static Sub-Targets:"
-	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
+	@$(TABLE_I3) "$(_C)$(COMPOSER_TARGET)$(_D):"	"$(_E)$(COMPOSER_PANDOC)$(_D)"			"Wrapper target which calls Pandoc directly"
 	@$(TABLE_I3) "$(_C)$(COMPOSER_PANDOC)$(_D):"	"$(_E)settings$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
+	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
@@ -1571,15 +1527,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
-	@echo
-	@$(ESCAPE) "$(_H)Dynamic Sub-Targets:"
-	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)$(_D)"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
-	@$(TABLE_I3) "$(_C)clean$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)-clean$(_D)"	"[$(_M)$(addsuffix -clean,$(COMPOSER_TARGETS))$(_D)]"
-	@$(TABLE_I3) "$(_C)subdirs$(_D):"		"$(_E)$(~)(COMPOSER_SUBDIRS)$(_D)"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
-	@echo
-	@$(ESCAPE) "$(_H)Hidden Sub-Targets:"
-	@$(TABLE_I3) "$(_C)targets$(_D):"		"$(_E).all_targets$(_D)"			"Dynamically parse and print all potential targets"
-	@$(TABLE_I3) "$(_C)$(_N)%$(_D):"		"$(_E).set_title-$(_N)*$(_D)"			"Set window title to current target using escape sequence"
 	@echo
 	@$(ESCAPE) "These do not need to be used directly during normal use, and are only documented for completeness."
 	@echo
@@ -1751,28 +1698,6 @@ EXAMPLE_MAKEFILE_FULL:
 	@$(TABLE_C2) "$(_N)(NOTE: In this example, 'COMPOSER_TARGETS' is used completely in lieu of any explicit targets.)"
 	@echo
 
-.PHONY: EXAMPLE_MAKEFILE_TEMPLATE
-EXAMPLE_MAKEFILE_TEMPLATE:
-	@$(HEADER_2)
-	@echo
-	@$(ESCAPE) "$(_H)With the current settings, the output of '$(EXAMPLE)' would be:"
-	@echo
-	@$(RUNMAKE) --silent .$(EXAMPLE)
-	@echo
-
-.PHONY: HELP_FOOTER
-HELP_FOOTER:
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H)Happy Hacking!"
-	@$(HEADER_1)
-
-########################################
-
-.PHONY: $(EXAMPLE)
-$(EXAMPLE):
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)
-
-#WORK : document!
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(TABLE_C2) "$(_H)$(MARKER) HEADERS"
@@ -1798,12 +1723,110 @@ $(EXAMPLE):
 	@$(TABLE_C2) "$(_H)$(MARKER) MAKEFILE"
 	@$(TABLE_C2) "$(_N)(Contents of file go here.)"
 
+.PHONY: EXAMPLE_MAKEFILE_TEMPLATE
+EXAMPLE_MAKEFILE_TEMPLATE:
+	@$(HEADER_2)
+	@echo
+	@$(ESCAPE) "$(_H)With the current settings, the output of '$(EXAMPLE)' would be:"
+	@echo
+	@$(RUNMAKE) --silent .$(EXAMPLE)
+	@echo
+
+.PHONY: HELP_FOOTER
+HELP_FOOTER:
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H)Happy Hacking!"
+	@$(HEADER_1)
+
+########################################
+
+.PHONY: $(DEBUGIT)
+$(DEBUGIT):
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"		"[$(_N)$(MAKEFILE_LIST)$(_D)]"
+	@$(TABLE_C2) "$(_E)CURDIR$(_D)"			"[$(_N)$(CURDIR)$(_D)]"
+	@$(TABLE_C2) "$(_C)COMPOSER_DEBUGIT$(_D)"	"[$(_M)$(COMPOSER_DEBUGIT)$(_D)]"
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H)$(MARKER) DEBUG:"
+	@$(TABLE_C2) "$(_N)This is the output of the '$(_C)debug$(_N)' target."
+	@$(TABLE_C2)
+	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
+	@$(TABLE_C2) "This target runs several key sub-targets and diagnostic commands."
+	@$(TABLE_C2) "The goal is to provide all needed troubleshooting information in one place."
+	@$(TABLE_C2) "Set the '$(_M)COMPOSER_DEBUGIT$(_D)' variable to troubleshoot a particular list of targets $(_E)(they may be run)$(_D)."
+	@$(HEADER_1)
+	@echo
+	@$(RUNMAKE) --silent HELP_HEADER
+	@$(RUNMAKE) --silent HELP_OPTIONS
+	@$(RUNMAKE) --silent HELP_OPTIONS_SUB
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H) Diagnostics"
+	@$(HEADER_1)
+	@echo
+	@$(RUNMAKE) --silent $(CHECKIT)
+	@echo
+	@$(HEADER_2)
+	@echo
+	@$(RUNMAKE) --silent $(TARGETS)
+	@echo
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H) Targets Debug"
+	@$(HEADER_1)
+	@echo
+	@$(RUNMAKE) --silent --debug --just-print $(COMPOSER_DEBUGIT) || $(TRUE)
+	@echo
+	@$(foreach FILE,$(MAKEFILE_LIST),\
+		$(HEADER_L); \
+		$(TABLE_I3) "$(_H)$(MARKER) $(_M)$(FILE)"; \
+		$(HEADER_L); \
+		cat "$(FILE)"; \
+		echo; \
+	)
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H) Make Database Dump"
+	@$(HEADER_1)
+	@echo
+	@$(RUNMAKE) --silent .make_database
+	@echo
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H) Composer Directory Listing"
+	@$(HEADER_1)
+	@echo
+	@$(LS) -R "$(COMPOSER_DIR)"
+	@echo
+	@$(RUNMAKE) --silent HELP_FOOTER
+
+.PHONY: $(TARGETS)
+$(TARGETS):
+	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(TABLE_I3) "$(_H)Targets$(_D) $(DIVIDE) $(_M)$(COMPOSER_SRC)"
+	@$(HEADER_L)
+	@$(ECHO) "$(_C)"
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) \
+		$(foreach FILE,$(.ALL_TARGETS),\
+			-e "/^$(FILE)/d" \
+		) \
+		-e "/^[^:]*[.]$(COMPOSER_EXT)[:]/d" \
+		-e "/^$$/d"
+	@$(HEADER_L)
+	@$(TABLE_I3) "$(_H)$(MARKER) all";	$(ECHO) "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
+	@$(TABLE_I3) "$(_H)$(MARKER) clean";	$(ECHO) "$(addsuffix -clean,$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | $(SORT)
+	@$(TABLE_I3) "$(_H)$(MARKER) subdirs";	$(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
+	@$(HEADER_L)
+
+########################################
+
+.PHONY: $(EXAMPLE)
+$(EXAMPLE):
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)
+
 override TEST_DIRECTORIES	:= \
-	$(TESTOUT_DIR) \
-	$(TESTOUT_DIR)/subdir1 \
-	$(TESTOUT_DIR)/subdir1/example1 \
-	$(TESTOUT_DIR)/subdir2 \
-	$(TESTOUT_DIR)/subdir2/example2
+	$(TESTING_DIR) \
+	$(TESTING_DIR)/subdir1 \
+	$(TESTING_DIR)/subdir1/example1 \
+	$(TESTING_DIR)/subdir2 \
+	$(TESTING_DIR)/subdir2/example2
 override TEST_DIR_CSSDST	:= $(word 4,$(TEST_DIRECTORIES))
 override TEST_DIR_DEPEND	:= $(word 2,$(TEST_DIRECTORIES))
 override TEST_DIR_MAKE_1	:= $(word 3,$(TEST_DIRECTORIES))
@@ -1812,8 +1835,8 @@ override TEST_DIR_MAKE_F	:= $(word 1,$(TEST_DIRECTORIES))
 override TEST_DEPEND_SUB	:= example1
 override TEST_FULLMK_SUB	:= subdir1 subdir2
 
-.PHONY: $(TESTOUT)
-$(TESTOUT):
+.PHONY: $(TESTING)
+$(TESTING):
 	@$(foreach FILE,$(TEST_DIRECTORIES),\
 		$(MKDIR) "$(FILE)"; \
 		$(CP) \
@@ -1822,7 +1845,7 @@ $(TESTOUT):
 			"$(FILE)/"; \
 	)
 	@$(CP) "$(MDVIEWER_CSS)" "$(TEST_DIR_CSSDST)/$(COMPOSER_CSS)"
-	@$(RUNMAKE) --directory "$(TESTOUT_DIR)" $(INSTALL)
+	@$(RUNMAKE) --directory "$(TESTING_DIR)" $(INSTALL)
 ifneq ($(COMPOSER_TESTING),0)
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
@@ -1831,12 +1854,12 @@ ifneq ($(COMPOSER_TESTING),0)
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_TARGETS= COMPOSER_SUBDIRS= $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
 endif
-	@$(MKDIR) "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)"
-	@$(RUNMAKE) --directory "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)" $(REPLICA)
+	@$(MKDIR) "$(TESTING_DIR)/$(COMPOSER_BASENAME)"
+	@$(RUNMAKE) --directory "$(TESTING_DIR)/$(COMPOSER_BASENAME)" $(REPLICA)
 ifeq ($(COMPOSER_TESTING),2)
-	@$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1\$$(COMPOSER_ABSPATH)/$(COMPOSER_BASENAME)/$(MAKEFILE)|g" "$(TESTOUT_DIR)/$(MAKEFILE)"
+	@$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1\$$(COMPOSER_ABSPATH)/$(COMPOSER_BASENAME)/$(MAKEFILE)|g" "$(TESTING_DIR)/$(MAKEFILE)"
 endif
-	@$(MAKE) --directory "$(TESTOUT_DIR)"
+	@$(MAKE) --directory "$(TESTING_DIR)"
 ifneq ($(COMPOSER_TESTING),)
 	@$(foreach FILE,$(TEST_DIRECTORIES),\
 		echo; \
@@ -1848,7 +1871,7 @@ ifneq ($(COMPOSER_TESTING),)
 endif
 
 .PHONY: $(INSTALL)
-$(INSTALL): install-dir
+$(INSTALL): $(INSTALL)-dir
 	@$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1$(COMPOSER)|g" "$(CURDIR)/$(MAKEFILE)"
 
 .PHONY: $(INSTALL)-dir
@@ -1868,10 +1891,6 @@ $(INSTALL)-dir:
 		$(RUNMAKE) --silent --directory "$(CURDIR)/$(FILE)" $(INSTALL)-dir; \
 	)
 
-#WORK : move up by GIT_* variables?
-override REPLICA_GIT	:= $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
-override GIT_REPLICA	:= cd "$(CURDIR)" && $(GIT) --git-dir="$(REPLICA_GIT)"
-
 $(REPLICA)-%:
 	@$(RUNMAKE) --silent --directory "$(CURDIR)" \
 		COMPOSER_VERSION="$(*)" \
@@ -1886,16 +1905,16 @@ $(REPLICA):
 	@$(TABLE_C2) "$(_C)COMPOSER_VERSION$(_D)"	"[$(_M)$(COMPOSER_VERSION)$(_D)]"
 	@$(TABLE_C2) "$(_C)COMPOSER_FILES$(_D)"		"[$(_M)$(COMPOSER_FILES)$(_D)]"
 	@$(HEADER_1)
-	@if [ ! -d "$(REPLICA_GIT)" ]; then \
-		$(MKDIR) "$(abspath $(dir $(REPLICA_GIT)))"; \
-		$(GIT_REPLICA) init --bare; \
-		$(GIT_REPLICA) remote add origin "$(COMPOSER_GITREPO)"; \
+	@if [ ! -d "$(REPLICA_GIT_DIR)" ]; then \
+		$(MKDIR) "$(abspath $(dir $(REPLICA_GIT_DIR)))"; \
+		$(REPLICA_GIT) init --bare; \
+		$(REPLICA_GIT) remote add origin "$(COMPOSER_GITREPO)"; \
 	fi
-	@$(GIT_REPLICA) remote remove origin
-	@$(GIT_REPLICA) remote add origin "$(COMPOSER_GITREPO)"
-	@$(GIT_REPLICA) fetch --all
+	@$(REPLICA_GIT) remote remove origin
+	@$(REPLICA_GIT) remote add origin "$(COMPOSER_GITREPO)"
+	@$(REPLICA_GIT) fetch --all
 	@$(ECHO) "$(_C)"
-	@$(GIT_REPLICA) archive \
+	@$(REPLICA_GIT) archive \
 		--format="tar" \
 		--prefix= \
 		"$(COMPOSER_VERSION)" \
@@ -2388,11 +2407,9 @@ endif
 .PHONY: $(STRAPIT)-msys
 $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
-ifneq ($(MSYSTEM),)
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
 #WORK $(STRAPIT)-msys: $(STRAPIT)-msys-dll
-endif
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2948,7 +2965,7 @@ $(STRAPIT)-curl-pull:
 $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
-#WORK : archive certdata.txt in $COMPOSER_STORE
+#WORKING : archive certdata.txt in $COMPOSER_STORE
 
 .PHONY: $(STRAPIT)-curl-prep
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
@@ -3386,24 +3403,6 @@ $(BUILDIT)-pandoc:
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
 
 ########################################
-
-.PHONY: targets
-targets:
-	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
-	@$(TABLE_I3) "$(_H)Targets$(_D) $(DIVIDE) $(_M)$(COMPOSER_SRC)"
-	@$(HEADER_L)
-	@$(ECHO) "$(_C)"
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) \
-		$(foreach FILE,$(.ALL_TARGETS),\
-			-e "/^$(FILE)/d" \
-		) \
-		-e "/^[^:]*[.]$(COMPOSER_EXT)[:]/d" \
-		-e "/^$$/d"
-	@$(HEADER_L)
-	@$(TABLE_I3) "$(_H)$(MARKER) all";	$(ECHO) "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
-	@$(TABLE_I3) "$(_H)$(MARKER) clean";	$(ECHO) "$(addsuffix -clean,$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | $(SORT)
-	@$(TABLE_I3) "$(_H)$(MARKER) subdirs";	$(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
-	@$(HEADER_L)
 
 .PHONY: all
 ifeq ($(COMPOSER_DEPENDS),)
