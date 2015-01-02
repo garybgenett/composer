@@ -878,8 +878,6 @@ $(shell \
 )
 endif
 
-#WORKING : find all commands and make sure they get variables
-#WORKING : what the f is up with printf?
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
@@ -889,7 +887,7 @@ override HEAD				:= "$(call COMPOSER_FIND,$(PATH_LIST),head)"
 override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
 override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
 override MV				:= "$(call COMPOSER_FIND,$(PATH_LIST),mv)" -fv
-override PRINTF				:= printf
+override PRINTF				:= "$(call COMPOSER_FIND,$(PATH_LIST),printf)"
 override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
 override SORT				:= "$(call COMPOSER_FIND,$(PATH_LIST),sort)" -u
 override TAIL				:= "$(call COMPOSER_FIND,$(PATH_LIST),tail)"
@@ -1275,9 +1273,9 @@ override INDENTING	:= $(NULL) $(NULL) $(NULL)
 override COMMENTED	:= $(_S)\#$(_D) $(NULL)
 
 #WORK : rename these!
-override HELPLINE	:= $(ECHO) "$(_H)$(INDENTING)";	$(PRINTF)  "~%0.0s" {1..70}; $(ECHO) "$(_D)\n"
-override HELPLVL1	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%0.0s" {1..70}; $(ECHO) "$(_D)\n"
-override HELPLVL2	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%0.0s" {1..40}; $(ECHO) "$(_D)\n"
+override HELPLINE	:= $(ECHO) "$(_H)$(INDENTING)";	$(PRINTF)  "~%.0s" {1..70}; $(ECHO) "$(_D)\n"
+override HELPLVL1	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..70}; $(ECHO) "$(_D)\n"
+override HELPLVL2	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..40}; $(ECHO) "$(_D)\n"
 ifneq ($(COMPOSER_ESCAPES),)
 override HELPOUT1	:= $(PRINTF) "$(INDENTING)%b\e[128D\e[22C%b\e[128D\e[52C%b$(_D)\n"
 override HELPOUT2	:= $(PRINTF) "$(COMMENTED)%b\e[128D\e[22C%b$(_D)\n"
