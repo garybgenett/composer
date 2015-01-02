@@ -374,43 +374,40 @@ override MUSL_IZIP_VERSION		:= 3.0
 override MUSL_UZIP_VERSION		:= 6.0
 override MUSL_IZIP_BIN_SRC		:= http://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/$(MUSL_IZIP_VERSION)/zip$(subst .,,$(MUSL_IZIP_VERSION)).tar.gz
 override MUSL_UZIP_BIN_SRC		:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(MUSL_UZIP_VERSION)/unzip$(subst .,,$(MUSL_UZIP_VERSION)).tar.gz
-override MUSL_IZIP_BIN_DST		:= $(COMPOSER_BUILD)/musl/zip$(subst .,,$(MUSL_IZIP_VERSION))
-override MUSL_UZIP_BIN_DST		:= $(COMPOSER_BUILD)/musl/unzip$(subst .,,$(MUSL_UZIP_VERSION))
+override MUSL_IZIP_BIN_DST		:= $(MUSL_BIN_DST)/zip$(subst .,,$(MUSL_IZIP_VERSION))
+override MUSL_UZIP_BIN_DST		:= $(MUSL_BIN_DST)/unzip$(subst .,,$(MUSL_UZIP_VERSION))
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
 override MUSL_ZLIB_VERSION		:= 1.2.8
 override MUSL_ZLIB_BIN_SRC		:= http://www.zlib.net/zlib-$(MUSL_ZLIB_VERSION).tar.xz
-override MUSL_ZLIB_BIN_DST		:= $(COMPOSER_BUILD)/musl/zlib-$(MUSL_ZLIB_VERSION)
+override MUSL_ZLIB_BIN_DST		:= $(MUSL_BIN_DST)/zlib-$(MUSL_ZLIB_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override MUSL_OSSL_VERSION		:= 1.0.1j
 override MUSL_OSSL_BIN_SRC		:= https://www.openssl.org/source/openssl-$(MUSL_OSSL_VERSION).tar.gz
-override MUSL_OSSL_BIN_DST		:= $(COMPOSER_BUILD)/musl/openssl-$(MUSL_OSSL_VERSION)
+override MUSL_OSSL_BIN_DST		:= $(MUSL_BIN_DST)/openssl-$(MUSL_OSSL_VERSION)
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
 # http://www.curl.haxx.se
 override MUSL_CURL_VERSION		:= 7.39.0
 override MUSL_CURL_BIN_SRC		:= http://www.curl.haxx.se/download/curl-$(MUSL_CURL_VERSION).tar.gz
-override MUSL_CURL_BIN_DST		:= $(COMPOSER_BUILD)/musl/curl-$(MUSL_CURL_VERSION)
+override MUSL_CURL_BIN_DST		:= $(MUSL_BIN_DST)/curl-$(MUSL_CURL_VERSION)
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
 # https://www.gnu.org/software/libiconv
 override MUSL_ICNV_VERSION		:= 1.14
 override MUSL_ICNV_BIN_SRC		:= http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(MUSL_ICNV_VERSION).tar.gz
-override MUSL_ICNV_BIN_DST		:= $(COMPOSER_BUILD)/musl/libiconv-$(MUSL_ICNV_VERSION)
+override MUSL_ICNV_BIN_DST		:= $(MUSL_BIN_DST)/libiconv-$(MUSL_ICNV_VERSION)
 # http://sourceforge.net/projects/expat (license: MIT)
 # http://expat.sourceforge.net
 override MUSL_EXPT_VERSION		:= 2.1.0
 override MUSL_EXPT_BIN_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(MUSL_EXPT_VERSION)/expat-$(MUSL_EXPT_VERSION).tar.gz
-override MUSL_EXPT_BIN_DST		:= $(COMPOSER_BUILD)/musl/expat-$(MUSL_EXPT_VERSION)
+override MUSL_EXPT_BIN_DST		:= $(MUSL_BIN_DST)/expat-$(MUSL_EXPT_VERSION)
 
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= 4.0
-override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
-override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= $(MAKE_VERSION)
+override MAKE_CMT			:= 4.0
 
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
@@ -1568,7 +1565,7 @@ endif
 	@$(HELPOUT1) "- $(_E)Info-ZIP (Zip)"	"$(_E)$(MUSL_IZIP_VERSION)"	"$(_N)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(SED) -n "s|^This[ ]is[ ]Zip[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_E)Info-ZIP (UnZip)"	"$(_E)$(MUSL_UZIP_VERSION)"	"$(_N)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(SED) -n "s|^UnZip[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_E)cURL"		"$(_E)$(MUSL_CURL_VERSION)"	"$(_N)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_VERSION)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_CMT)"		"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
@@ -1859,6 +1856,7 @@ $(STRAPIT)-musl-pull:
 	$(call CURL_FILE,$(MUSL_CURL_BIN_SRC))
 	$(call CURL_FILE,$(MUSL_ICNV_BIN_SRC))
 	$(call CURL_FILE,$(MUSL_EXPT_BIN_SRC))
+	$(call UNTAR,$(MUSL_BIN_DST),$(MUSL_BIN_SRC))
 	$(call UNTAR,$(MUSL_IZIP_BIN_DST),$(MUSL_IZIP_BIN_SRC))
 	$(call UNTAR,$(MUSL_UZIP_BIN_DST),$(MUSL_UZIP_BIN_SRC))
 	$(call UNTAR,$(MUSL_ZLIB_BIN_DST),$(MUSL_ZLIB_BIN_SRC))
