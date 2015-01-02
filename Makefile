@@ -676,7 +676,11 @@ override PACMAN_PACKAGES_LIST		:= \
 #TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override MSYS_BINARY_LIST		:= \
-	mintty cygwin-console-helper
+	mintty cygwin-console-helper \
+	\
+	msys-2.0.dll \
+	msys-gcc_s-1.dll \
+	msys-ssp-0.dll
 
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override BUILD_BINARY_LIST		:= \
@@ -1493,7 +1497,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
+#WORK	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
@@ -2014,26 +2018,17 @@ endif
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
 ifeq ($(BUILD_PLAT),Msys)
+	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
 	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
 #WORK : probably need this for linux, too
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
 	$(CP) "$(MSYS_BIN_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
+#WORK
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"; \
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
-#WORK : should only need the two msys-*.dll files
-	$(CP) \
-		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
-		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
-		"$(COMPOSER_PROGS)/usr/bin/"
-#	$(BUILD_ENV) $(LDD) "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
-#		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
-#		$(SORT) | \
-#		while read FILE; do \
-#			$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"; \
-#		done
-	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
+	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
@@ -2058,6 +2053,10 @@ else ifeq ($(BUILD_PLAT),Msys)
 else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
+	$(RM) \
+		"$(COMPOSER_PROGS)/usr/bin/"ghc \
+		"$(COMPOSER_PROGS)/usr/bin/"ghc-pkg \
+		"$(COMPOSER_PROGS)/usr/bin/"cabal
 
 override define TEXTFILE_MSYS_SHELL =
 @echo off
@@ -2401,7 +2400,7 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-init
 ifneq ($(MSYSTEM),)
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys: $(STRAPIT)-msys-dll
+#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-dll
 endif
 
 .PHONY: $(STRAPIT)-msys-bin
@@ -2451,15 +2450,17 @@ $(STRAPIT)-msys-pkg:
 		$(PACMAN_PACKAGES_LIST)
 	$(BUILD_ENV) $(PACMAN) --clean
 
-.PHONY: $(STRAPIT)-msys-dll
-$(STRAPIT)-msys-dll:
-	$(MKDIR) "$(COMPOSER_ABODE)/bin"
+#WORK
+#.PHONY: $(STRAPIT)-msys-dll
+#$(STRAPIT)-msys-dll:
+#	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 #WORK : should only need the two msys-*.dll files
-	$(CP) \
-		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
-		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
-		"$(COMPOSER_ABODE)/bin/"
+#	$(CP) \
+#		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
+#		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
+#		"$(COMPOSER_ABODE)/bin/"
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
+#WORK
 
 #WORK : causes build errors
 #make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
@@ -3271,13 +3272,10 @@ ifeq ($(BUILD_PLAT),Msys)
 #		-e "s|(cygpath[ ])[-]m|\1--unix|g" \
 #		"$(GHC_DST)/aclocal.m4" \
 #		"$(GHC_DST)/configure"
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 	$(ECHO) "WORKING\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
 else
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-#WORKING
-	$(LS) "$(COMPOSER_ABODE)/bin/ghc"*
-	exit 1
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 endif
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
