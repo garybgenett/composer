@@ -1161,7 +1161,7 @@ endef
 # thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
 #	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
 override define DO_HEREDOC		=
-	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(1)))' | $(SED) \
+	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(1)))[N]' | $(SED) \
 			-e "s|[[]B[]]|\\\\|g" \
 			-e "s|[[]N[]]|\\n|g" \
 			-e "s|[[]Q[]]|\'|g"
