@@ -2425,15 +2425,19 @@ $(FETCHIT)-bash: $(FETCHIT)-bash-prep
 .PHONY: $(FETCHIT)-bash-pull
 $(FETCHIT)-bash-pull:
 	$(call CURL_FILE,$(BASH_TAR_SRC))
-	# $(BUILD_PLAT),Msys does not support symlinks, so we have to exclude some files
+	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
 	$(call UNTAR,$(BASH_TAR_DST),$(BASH_TAR_SRC),$(notdir $(BASH_TAR_DST))/ChangeLog)
 
 .PHONY: $(FETCHIT)-bash-prep
 $(FETCHIT)-bash-prep:
 
 .PHONY: $(BUILDIT)-bash
+# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 $(BUILDIT)-bash:
-	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE))
+	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
+	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
+		bash_cv_func_sigsetjmp="missing" \
+	)
 
 .PHONY: $(FETCHIT)-less
 $(FETCHIT)-less: $(FETCHIT)-less-pull
