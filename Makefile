@@ -966,7 +966,6 @@ override define GIT_SUBMODULE		=
 	fi
 endef
 override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(COMPOSER_STORE)/$(notdir $(1)).git)
-#WORKING
 override define DO_GIT_SUBMODULE_GHC	=
 	$(ECHO) "gitdir: $(2)" >"$(1)/.git"; \
 	$(SED) -i \
@@ -2047,7 +2046,7 @@ else ifeq ($(BUILD_PLAT),Msys)
 else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
-	#WORKING
+#WORK
 	$(RM) \
 		"$(COMPOSER_PROGS)/usr/bin/"perl \
 		"$(COMPOSER_PROGS)/usr/bin/"ghc \
@@ -3147,7 +3146,6 @@ $(STRAPIT)-ghc-pull:
 .PHONY: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc-pull:
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
-#WORKING
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 
 .PHONY: $(STRAPIT)-ghc-prep
