@@ -1880,19 +1880,18 @@ endif
 
 .PHONY: $(BUILDIT)-musl
 $(BUILDIT)-musl:
-	echo WORK
 	$(call AUTOTOOLS_BUILD,$(MUSL_DST),$(COMPOSER_ABODE))
 	$(RUNMAKE) $(BUILDIT)-musl-infozip
 	$(RUNMAKE) $(BUILDIT)-musl-zlib
 	$(RUNMAKE) $(BUILDIT)-musl-openssl
 	$(RUNMAKE) $(BUILDIT)-musl-curl
-#	$(RUNMAKE) $(BUILDIT)-musl-libiconv
-#	$(RUNMAKE) $(BUILDIT)-musl-expat
 #WORK
-	$(RUNMAKE) do-make
-	$(RUNMAKE) do-git
-	$(RUNMAKE) do-git
+	$(RUNMAKE) $(BUILDIT)-musl-libiconv
+	$(RUNMAKE) $(BUILDIT)-musl-expat
 #WORK
+#	$(RUNMAKE) do-make
+	$(RUNMAKE) do-git
+#	$(RUNMAKE) do-git
 
 .PHONY: $(BUILDIT)-musl-infozip
 $(BUILDIT)-musl-infozip:
@@ -1911,9 +1910,13 @@ endif
 
 .PHONY: $(BUILDIT)-musl-zlib
 $(BUILDIT)-musl-zlib:
+ifeq ($(CC),$(MUSL_GCC))
 	$(call AUTOTOOLS_BUILD,$(MUSL_ZLIB_BIN_DST),$(COMPOSER_ABODE),\
 		--static \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(MUSL_ZLIB_BIN_DST),$(COMPOSER_ABODE))
+endif
 
 .PHONY: $(BUILDIT)-musl-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
@@ -1939,26 +1942,15 @@ ifeq ($(CC),$(MUSL_GCC))
 		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
 		"$(MUSL_CURL_BIN_DST)/"*"/Makefile.in"
 endif
-	$(call AUTOTOOLS_BUILD,$(MUSL_CURL_BIN_DST),$(COMPOSER_ABODE),\
-		--disable-shared \
-		--enable-static \
-		\
-		--without-libidn \
-	)
+	$(call AUTOTOOLS_BUILD,$(MUSL_CURL_BIN_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(BUILDIT)-musl-libiconv
 $(BUILDIT)-musl-libiconv:
-	$(call AUTOTOOLS_BUILD,$(MUSL_ICNV_BIN_DST),$(COMPOSER_ABODE),\
-		--disable-shared \
-		--enable-static \
-	)
+	$(call AUTOTOOLS_BUILD,$(MUSL_ICNV_BIN_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(BUILDIT)-musl-expat
 $(BUILDIT)-musl-expat:
-	$(call AUTOTOOLS_BUILD,$(MUSL_EXPT_BIN_DST),$(COMPOSER_ABODE),\
-		--disable-shared \
-		--enable-static \
-	)
+	$(call AUTOTOOLS_BUILD,$(MUSL_EXPT_BIN_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
@@ -2016,7 +2008,18 @@ $(STRAPIT)-git-build:
 	)
 
 .PHONY: $(BUILDIT)-git
+# thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
+#	also to: http://www.makelinux.net/alp/021
 $(BUILDIT)-git:
+	echo "WORK : this may not work in a single pass, similar to RUNMAKE hacks for MUSL above."
+ifeq ($(CC),$(MUSL_GCC))
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
+		"$(GIT_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
+		"$(GIT_DST)/Makefile"
+endif
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
 		--without-tcltk \
 	)
