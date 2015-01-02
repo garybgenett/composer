@@ -642,7 +642,7 @@ override PANDOC_VERSION			:= 1.13.2
 override BUILD_PATH_MINGW		:=
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
-ifneq ($(COMPOSER_PROGS_USE),)
+ifeq ($(COMPOSER_PROGS_USE),1)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 endif
 ifeq ($(BUILD_PLAT),Msys)
@@ -839,17 +839,15 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
-#WORK : this is a really, really ugly hack; it should be removed and then banished!
-#WORK : for this one, would be nice to have some type of variable/option; something like USE_LOCAL_ENV=1 or COMPOSER_PROGS_ENV=
-ifneq ($(CYGWIN_ROOT),)
-override PATH_LIST			:= $(subst :, ,$(PATH):$(BUILD_PATH))
+ifeq ($(COMPOSER_PROGS_USE),0)
+override PATH_LIST			:= $(subst :, ,$(PATH))
 endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 
-override WINDOWS_ACL			:= $(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)
+override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
 override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
 override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
@@ -997,8 +995,8 @@ override define DO_TEXTFILE		=
 	$(MKDIR) "$(abspath $(dir $(1)))"; \
 	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"; \
 	$(SED) -i \
-		-e "s|[[]B[]]|$(CYGWIN_ESCAPE)$(CYGWIN_ESCAPE)\\\\|g" \
-		-e "s|[[]N[]]|$(CYGWIN_ESCAPE)\\n|g" \
+		-e "s|[[]B[]]|\\\\|g" \
+		-e "s|[[]N[]]|\\n|g" \
 		"$(1)"
 endef
 
@@ -1391,7 +1389,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "$(_C)COMPOSER_STORE$(_D)"		"Source files directory"	"[$(_M)$(COMPOSER_STORE)$(_D)]"
 	@$(HELPOUT1) "$(_C)COMPOSER_BUILD$(_D)"		"Build directory"		"[$(_M)$(COMPOSER_BUILD)$(_D)]"
 	@$(HELPOUT1) "$(_C)COMPOSER_PROGS$(_D)"		"Built binaries directory"	"[$(_M)$(COMPOSER_PROGS)$(_D)]"
-	@$(HELPOUT1) "$(_C)COMPOSER_PROGS_USE$(_D)"	"Prefer repository binaries"	"[$(_M)$(COMPOSER_PROGS_USE)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)COMPOSER_PROGS_USE$(_D)"	"Prefer repository binaries"	"[$(_M)$(COMPOSER_PROGS_USE)$(_D)] $(_N)(valid: empty, 0 or 1)"
 	@echo
 	@$(HELPER) "$(_H)Build Options:"
 	@$(HELPOUT1) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
@@ -2150,7 +2148,7 @@ $(SHELLIT):
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys:
-ifneq ($(COMPOSER_PROGS_USE),)
+ifeq ($(COMPOSER_PROGS_USE),1)
 ifneq ($(wildcard $(COMPOSER_PROGS)),)
 	@cd "$(COMPOSER_PROGS)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
@@ -2160,6 +2158,10 @@ else
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
 		$(BUILD_ENV) ./msys2_shell.bat
 endif
+else
+	@cd "$(MSYS_BIN_DST)" && \
+		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
+		$(BUILD_ENV) ./msys2_shell.bat
 endif
 
 .PHONY: $(SHELLIT)-bashrc
