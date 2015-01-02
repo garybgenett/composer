@@ -2033,7 +2033,9 @@ else ifeq ($(BUILD_PLAT),Msys)
 else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
+	#WORKING
 	$(RM) \
+		"$(COMPOSER_PROGS)/usr/bin/"perl \
 		"$(COMPOSER_PROGS)/usr/bin/"ghc \
 		"$(COMPOSER_PROGS)/usr/bin/"ghc-pkg \
 		"$(COMPOSER_PROGS)/usr/bin/"cabal
