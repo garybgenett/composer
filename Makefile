@@ -16,6 +16,12 @@
 #TODO : http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
 #TODO : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
 
+#WORKING
+# http://www.gnu.org/software/make/manual/make.html#toc-Features-of-GNU-make
+# http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Make
+# http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Shell
+#WORKING
+
 #TODO
 # bash/less/vim
 #	add needed files to bindir
@@ -2797,12 +2803,11 @@ $(FETCHIT)-curl-prep:
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(CURL_DST)/configure"
 
+
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
-	#WORKING : remove curl binary if it exists?  how do we make this re-entrant?
-	@echo -en "\n\nCURL_CA_BUNDLE [$${CRUL_CA_BUNDLE}]\n\n"
 	cd "$(CURL_TAR_DST)" && \
-		$(BUILD_ENV) $(MAKE) ca-bundle && \
+		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="ca-bundle.crt" \
@@ -2813,10 +2818,8 @@ $(STRAPIT)-curl-build:
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
-	#WORKING : remove curl binary if it exists?  how do we make this re-entrant?
-	@echo -en "\n\nCURL_CA_BUNDLE [$${CRUL_CA_BUNDLE}]\n\n"
 	cd "$(CURL_DST)" && \
-		$(BUILD_ENV) $(MAKE) ca-bundle && \
+		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="ca-bundle.crt" \
