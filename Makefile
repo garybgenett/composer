@@ -366,7 +366,7 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 # http://www.musl-libc.org/intro.html (license: MIT)
 # http://www.musl-libc.org/how.html
 override MUSL_VERSION			:= 1.1.5
-override MUSL_BIN_SRC			:= https://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
+override MUSL_BIN_SRC			:= http://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
 override MUSL_BIN_DST			:= $(COMPOSER_BUILD)/musl
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
