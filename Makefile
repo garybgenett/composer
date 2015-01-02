@@ -12,6 +12,7 @@
 #	remove from msys2 package list
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
+#	is WINDOWS_PATH (cygpath) still needed?
 # enable https certificates for wget/git?
 #	simply copy '/etc/ssl' to $COMPOSER_ABODE and $COMPOSER_PROGS?
 # double-check all "thanks" comments; some are things you should have known
@@ -639,8 +640,6 @@ override PACMAN_BASE_LIST		:= \
 	msys2-runtime-devel \
 	pacman
 
-#WORK : need to trim this list, and use '$(STRAPIT)' targets instead
-# fourth group is for composer
 #>	mingw-w64-i686-toolchain
 #>	mingw-w64-x86_64-toolchain
 override PACMAN_PACKAGES_LIST		:= \
@@ -649,9 +648,9 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-i686-gcc \
 	mingw-w64-x86_64-binutils-git \
 	mingw-w64-x86_64-gcc \
-	msys2-devel \
-	\
-	vim
+	msys2-devel
+
+#WORK : need to trim this list, and use '$(STRAPIT)' targets instead
 # second group is for '$(STRAPIT)-libs'
 # third group is for '$(STRAPIT)-curl'
 #	\
@@ -673,11 +672,22 @@ override PACMAN_PACKAGES_LIST		:= \
 #	libcurl \
 #	libcurl-devel \
 
+override BUILD_BINARY_LIST		:= \
+	bash \
+	less \
+	vim \
+	\
+	make \
+	zip \
+	unzip \
+	curl \
+	git \
+	\
+	pandoc
+
 #TODO
 # second group is for mintty
-# third group is for command line
 override WINDOWS_BINARY_LIST		:= \
-	bash \
 	cat \
 	cp \
 	date \
@@ -696,15 +706,11 @@ override WINDOWS_BINARY_LIST		:= \
 	true \
 	uname \
 	\
-	cygwin-console-helper \
-	dirname \
-	mintty \
-	\
 	cygpath \
-	diff \
+	cygwin-console-helper \
 	dircolors \
-	less \
-	vim
+	dirname \
+	mintty
 
 override TEXLIVE_DIRECTORY_LIST		:= \
 	fonts/enc/dvips/lm \
@@ -785,9 +791,8 @@ override GHC_BASE_LIBRARIES_LIST	:= \
 endif
 
 # second group is for dependency resolution
-# third group is for 'OpenGL' fix
-# fourth group is for build fixes
-# fifth group is for missing directories
+# third group is for build fixes
+# fourth group is for missing directories
 override HASKELL_UPGRADE_LIST		:= \
 	GHC|$(GHC_VERSION) \
 	ghc|$(GHC_VERSION) \
@@ -800,11 +805,6 @@ override HASKELL_UPGRADE_LIST		:= \
 	async|2.0.1.5 \
 	parallel|3.2.0.4 \
 	primitive|0.5.1.0 \
-	\
-	GLURaw|1.4.0.1 \
-	GLUT|2.5.1.1 \
-	OpenGLRaw|1.5.0.0 \
-	OpenGL|2.9.2.0 \
 	\
 	cgi|3001.1.8.5 \
 	haskell-src|1.0.1.6 \
@@ -1778,7 +1778,9 @@ endif
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
-	$(CP) "$(COMPOSER_ABODE)/bin/"{make,zip,unzip,curl,git,pandoc}* "$(COMPOSER_PROGS)/usr/bin/"
+	$(foreach FILE,$(BUILD_BINARY_LIST),\
+		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)"* "$(COMPOSER_PROGS)/usr/bin/"
+	)
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 ifeq ($(BUILD_MSYS),)
