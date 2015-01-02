@@ -1515,6 +1515,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-depends$(_D)"		"Build/compile of GHC prerequisites"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
@@ -1955,10 +1956,13 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 $(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-tex
-$(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
-$(BUILDIT): $(BUILDIT)-clean
-$(BUILDIT): $(BUILDIT)-bindir
-$(BUILDIT): $(CHECKIT)
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(BUILDIT)-ghc
+	$(RUNMAKE) $(BUILDIT)-haskell
+	$(RUNMAKE) $(BUILDIT)-pandoc
+	$(RUNMAKE) $(BUILDIT)-clean
+	$(RUNMAKE) $(BUILDIT)-bindir
+	$(RUNMAKE) $(CHECKIT)
 
 do-%: $(FETCHIT)-% $(BUILDIT)-%
 	@$(ECHO) >/dev/null
@@ -2384,9 +2388,11 @@ endif
 .PHONY: $(STRAPIT)-msys
 $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
+ifneq ($(MSYSTEM),)
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
 $(STRAPIT)-msys: $(STRAPIT)-msys-dll
+endif
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2661,8 +2667,7 @@ $(STRAPIT)-libs-fontconfig:
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
 	# call recursively instead of using dependencies, so that environment variables update
-#WORKING : fails to build on "$(BUILD_PLAT),Msys"
-#	$(RUNMAKE) $(STRAPIT)-util-coreutils
+	$(RUNMAKE) $(STRAPIT)-util-coreutils
 	$(RUNMAKE) $(STRAPIT)-util-findutils
 	$(RUNMAKE) $(STRAPIT)-util-patch
 	$(RUNMAKE) $(STRAPIT)-util-sed
@@ -2677,6 +2682,7 @@ $(STRAPIT)-util:
 $(STRAPIT)-util-coreutils:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+#WORKING : fails to build on "$(BUILD_PLAT),Msys"
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
@@ -3115,6 +3121,7 @@ $(BUILDIT)-tex-fmt:
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-prep
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-build
+$(STRAPIT)-ghc: $(STRAPIT)-ghc-depends
 
 .PHONY: $(FETCHIT)-ghc
 $(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
@@ -3231,6 +3238,9 @@ endif
 	cd "$(CBL_TAR_DST)" && \
 		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
 			$(SH) ./bootstrap.sh --global
+
+.PHONY: $(STRAPIT)-ghc-depends
+$(STRAPIT)-ghc-depends:
 	$(RUNMAKE) $(FETCHIT)-cabal
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
