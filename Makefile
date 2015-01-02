@@ -2058,7 +2058,7 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
-$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+#WORK $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
