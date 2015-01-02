@@ -864,6 +864,37 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
+override COREUTILS_INSTALL		= $(call DO_COREUTILS_INSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
+override COREUTILS_UNINSTALL		= $(call DO_COREUTILS_UNINSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
+override define DO_COREUTILS_INSTALL	=
+	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
+	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+		if [ -f "$(2)/$${FILE}" ]; then \
+			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+		else \
+			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+		fi; \
+	done; \
+	if [ -f "$(2)/install" ]; then \
+		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+	else \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
+	fi
+endef
+override define DO_COREUTILS_UNINSTALL	=
+	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+		if [ -f "$(2)/$${FILE}" ]; then \
+			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
+		fi; \
+	done
+endef
+ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
+$(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils))
+endif
 override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
@@ -911,35 +942,6 @@ override PDFLATEX			:= "$(call COMPOSER_FIND,$(PATH_LIST),pdflatex)"
 override GHC				:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc)"
 override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
 override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
-
-override COREUTILS_INSTALL		= $(call DO_COREUTILS_INSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
-override COREUTILS_UNINSTALL		= $(call DO_COREUTILS_UNINSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
-override define DO_COREUTILS_INSTALL	=
-	"$(1)" --coreutils-prog=ginstall -dv "$(2)"
-	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		if [ -f "$(2)/$${FILE}" ]; then \
-			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
-			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
-		else \
-			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
-			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
-		fi; \
-	done
-	if [ -f "$(2)/install" ]; then \
-		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
-		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
-	else \
-		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
-		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
-	fi
-endef
-override define DO_COREUTILS_UNINSTALL	=
-	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		if [ -f "$(2)/$${FILE}" ]; then \
-			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
-		fi; \
-	done
-endef
 
 override define DO_PATCH		=
 	$(call CURL_FILE,$(2)); \
@@ -1108,6 +1110,8 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 endif
 
 ################################################################################
+
+#WORK : move these to top of file?
 
 .NOTPARALLEL:
 .POSIX:
@@ -2064,7 +2068,6 @@ endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
-	$(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils)
 	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
