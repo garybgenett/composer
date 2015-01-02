@@ -592,7 +592,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override TIMESTAMP			:= $(call COMPOSER_FIND,$(PATH_LIST),date) --rfc-2822 >
 
-override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --server-response --timestamping
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --no-check-certificate --server-response --timestamping
 override WGET_FILE			= $(WGET) --directory-prefix="$(COMPOSER_STORE)" "$(1)"
 
 override define UNZIP			=
@@ -1574,6 +1574,7 @@ $(STRAPIT)-msys:
 	@$(HELPOUT2) "Hit ENTER to proceed, or CTRL-C to quit."
 	@$(HELPLVL1)
 	@read ENTER
+	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
 	$(BUILD_ENV) $(PACMAN) --refresh
 	$(BUILD_ENV) $(PACMAN) \
 		--needed \
