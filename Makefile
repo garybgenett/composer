@@ -394,6 +394,16 @@ override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 
+# https://www.kernel.org (license: GPL, WORKING)
+# https://www.kernel.org
+override LIB_KAPI_VERSION		:= 3.18.1
+override LIB_KAPI_TAR_SRC		:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$(LIB_KAPI_VERSION).tar.gz
+override LIB_KAPI_TAR_DST		:= $(BUILD_STRAP)/linux-$(LIB_KAPI_VERSION)
+# https://www.gnu.org/software/libc (license: GPL, WORKING)
+# https://www.gnu.org/software/libc
+override LIB_LIBC_VERSION		:= 2.20
+override LIB_LIBC_TAR_SRC		:= https://ftp.gnu.org/gnu/glibc/glibc-$(LIB_LIBC_VERSION).tar.gz
+override LIB_LIBC_TAR_DST		:= $(BUILD_STRAP)/glibc-$(LIB_LIBC_VERSION)
 # http://dev.perl.org/licenses (license: custom = GPL, Artistic)
 # https://www.perl.org/get.html
 override LIB_PERL_VERSION		:= 5.20.1
@@ -488,7 +498,7 @@ override UZIP_TAR_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VERSION))
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
 # http://www.curl.haxx.se/download.html
 # http://www.curl.haxx.se/dev/source.html
-override CURL_VERSION			:= 7.39.0
+override CURL_VERSION			:= 7.38.0
 override CURL_TAR_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VERSION).tar.gz
 override CURL_SRC			:= https://github.com/bagder/curl.git
 override CURL_TAR_DST			:= $(BUILD_STRAP)/curl-$(CURL_VERSION)
@@ -686,7 +696,11 @@ override WINDOWS_BINARY_LIST		:= \
 	dirname \
 	mintty
 
-override PERL_MODULES_LIST := \
+# thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
+override PERL_PATCH_LIST		:= \
+	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/perl/perl-5.20.0-msys2.patch
+
+override PERL_MODULES_LIST		:= \
 	Encode-Locale-1.03|https://cpan.metacpan.org/authors/id/G/GA/GAAS/Encode-Locale-1.03.tar.gz \
 	HTTP-Date-6.02|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Date-6.02.tar.gz \
 	HTTP-Message-6.06|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Message-6.06.tar.gz \
@@ -804,7 +818,9 @@ override HASKELL_PATCH_LIST		:= \
 
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
-	hxt|9.3.1.4
+	hxt|9.3.1.4 \
+	network-uri|2.6.0.1 \
+	network|2.6.0.1
 
 override PANDOC_UPGRADE_LIST		:= \
 	zip-archive|0.2.2.1
@@ -910,9 +926,6 @@ override export CURL_CA_BUNDLE		?= $(COMPOSER_PROGS)/ca-bundle.crt
 else
 override export CURL_CA_BUNDLE		?=
 endif
-#WORKING
-#override CURL				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(CURL)
-#override GIT				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(GIT)
 
 override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
 override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
@@ -1041,7 +1054,6 @@ debug:
 	@echo
 	@$(RUNMAKE) --silent targets
 	@echo
-ifneq ($(COMPOSER_DEBUGIT),)
 	@$(HELPLVL1)
 	@$(HELPOUT2) "$(_H) Targets Debug"
 	@$(HELPLVL1)
@@ -1055,7 +1067,6 @@ ifneq ($(COMPOSER_DEBUGIT),)
 		cat "$(FILE)"; \
 		echo; \
 	)
-endif
 	@$(HELPLVL1)
 	@$(HELPOUT2) "$(_H) Make Database Dump"
 	@$(HELPLVL1)
@@ -1379,7 +1390,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-perl$(_D)"		"Build/compile of Perl from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-perl$(_D)"		"Build/compile of Perl from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
@@ -1826,8 +1838,11 @@ ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(STRAPIT)-msys
 endif
 $(STRAPIT): $(STRAPIT)-config
-$(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-curl $(STRAPIT)-git
-$(STRAPIT): $(STRAPIT)-ghc
+$(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-curl
+$(STRAPIT):
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-git
+	$(RUNMAKE) $(STRAPIT)-ghc
 
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
@@ -1918,6 +1933,10 @@ ifeq ($(BUILD_PLAT),Msys)
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 #WORK : should only need the two msys-*.dll files
+	$(CP) \
+		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
+		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
+		"$(COMPOSER_PROGS)/usr/bin/"
 #	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
 #		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
 #		sort --unique | \
@@ -2021,7 +2040,7 @@ endif
 
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
-	@$(call DO_TEXTFILE,$(COMPOSER_ABODE)/.bashrc_profile,TEXTFILE_BASH_PROFILE)
+	@$(call DO_TEXTFILE,$(COMPOSER_ABODE)/.bash_profile,TEXTFILE_BASH_PROFILE)
 	@$(call DO_TEXTFILE,$(COMPOSER_ABODE)/.bashrc,TEXTFILE_BASHRC)
 	@if [ ! -f "$(COMPOSER_ABODE)/.bashrc.custom" ]; then \
 		echo >"$(COMPOSER_ABODE)/.bashrc.custom"; \
@@ -2268,9 +2287,17 @@ $(STRAPIT)-msys-pkg:
 $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 #WORK : should only need the two msys-*.dll files
+	$(CP) \
+		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
+		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
+		"$(COMPOSER_ABODE)/bin/"
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
+#WORKING
+#ifeq ($(BUILD_PLAT),Linux)
+#$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
+#endif
 $(STRAPIT)-libs: $(STRAPIT)-libs-perl
 $(STRAPIT)-libs: $(STRAPIT)-libs-bzip
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
@@ -2284,26 +2311,71 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 
+.PHONY: $(STRAPIT)-libs-glibc
+$(STRAPIT)-libs-glibc:
+	$(call CURL_FILE,$(LIB_KAPI_TAR_SRC))
+	$(call CURL_FILE,$(LIB_LIBC_TAR_SRC))
+	$(call UNTAR,$(LIB_KAPI_TAR_DST),$(LIB_KAPI_TAR_SRC))
+	$(call UNTAR,$(LIB_LIBC_TAR_DST),$(LIB_LIBC_TAR_SRC))
+	cd "$(LIB_KAPI_TAR_DST)" && \
+		$(BUILD_ENV) $(MAKE) mrproper && \
+		$(BUILD_ENV) $(MAKE) INSTALL_HDR_PATH="$(COMPOSER_ABODE)" headers_install
+	$(MKDIR) "$(LIB_LIBC_TAR_DST).build"
+	echo "\"$(LIB_LIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(LIB_LIBC_TAR_DST).build/configure"
+	chmod 755 "$(LIB_LIBC_TAR_DST).build/configure"
+	$(call AUTOTOOLS_BUILD,$(LIB_LIBC_TAR_DST).build,$(COMPOSER_ABODE),\
+		CFLAGS="$(CFLAGS) -O2" \
+		,\
+		--host="$(CHOST)" \
+		--disable-nscd \
+		--disable-shared \
+		--enable-static-nss \
+	)
+
+override define PERL_MODULES_BUILD =
+	$(call CURL_FILE,$(2)); \
+	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
+	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
+		$(BUILD_ENV) perl Makefile.PL && \
+		$(BUILD_ENV) $(MAKE) && \
+		$(BUILD_ENV) $(MAKE) install
+endef
+
 .PHONY: $(STRAPIT)-libs-perl
 $(STRAPIT)-libs-perl:
 	$(call CURL_FILE,$(LIB_PERL_TAR_SRC))
 	$(call UNTAR,$(LIB_PERL_TAR_DST),$(LIB_PERL_TAR_SRC))
-#WORKING
-#	$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"
-#	$(call AUTOTOOLS_BUILD,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
-	cd "$(LIB_PERL_TAR_DST)" && \
-		$(BUILD_ENV) ./configure.gnu --prefix="$(COMPOSER_ABODE)" && \
-		$(BUILD_ENV) $(MAKE) && \
-		$(BUILD_ENV) $(MAKE) install
-#WORKING
-#WORKING make PERL_MODULES_LIST below look more like GIT_REPO = $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_STORE)/$(notdir $(1)).git)
+ifeq ($(BUILD_PLAT),Msys)
+	# "$(BUILD_PLAT),Msys" requires some patches
+	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
+		$(SED) -i \
+			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
+			"$(LIB_PERL_TAR_DST)/Makefile.SH"; \
+		$(foreach FILE,$(PERL_PATCH_LIST),\
+			$(call PATCH,$(LIB_PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+		) \
+	fi
+	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
+	$(SED) -i \
+		-e "s|^(case[ ][\"])[$$]d_readlink|\1NULL|g" \
+		"$(LIB_PERL_TAR_DST)/Configure"
+	$(SED) -i \
+		-e "s|[$$]issymlink|test -f|g" \
+		"$(LIB_PERL_TAR_DST)/Makefile.SH"
+endif
+	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
+	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
+		$(MV) "$(LIB_PERL_TAR_DST)/Configure" "$(LIB_PERL_TAR_DST)/Configure.perl"; \
+		$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"; \
+		$(SED) -i \
+			-e "s|(Configure)([^.])|\1.perl\2|g" \
+			"$(LIB_PERL_TAR_DST)/Configure.perl" \
+			"$(LIB_PERL_TAR_DST)/MANIFEST" \
+			"$(LIB_PERL_TAR_DST)/configure"; \
+	fi
+	$(call AUTOTOOLS_BUILD,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
 	$(foreach FILE,$(PERL_MODULES_LIST),\
-		$(call CURL_FILE,$(word 2,$(subst |, ,$(FILE)))); \
-		$(call UNTAR,$(LIB_PERL_TAR_DST)/$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-		cd "$(LIB_PERL_TAR_DST)/$(word 1,$(subst |, ,$(FILE)))" && \
-			$(BUILD_ENV) perl Makefile.PL && \
-			$(BUILD_ENV) $(MAKE) && \
-			$(BUILD_ENV) $(MAKE) install; \
+		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
 
 .PHONY: $(STRAPIT)-libs-bzip
@@ -2374,8 +2446,18 @@ $(STRAPIT)-libs-ncurses:
 	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
 	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
 	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
-#WORKING : not building with wide characters on msys
+#WORKING
+#ifeq ($(BUILD_PLAT),Msys)
+	# "$(BUILD_PLAT),Msys" initially fails to build when wide character support is enabled
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
+		--without-shared \
+	)
+#	$(RM) -r "$(COMPOSER_ABODE)/include/ncursesw"
+#	$(MV) "$(COMPOSER_ABODE)/include/ncurses" "$(COMPOSER_ABODE)/include/ncursesw"
+#endif
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),\
+		CFLAGS="-I$(COMPOSER_ABODE)/include/ncurses $(CFLAGS)" \
+		,\
 		--enable-widec \
 		--without-shared \
 	)
@@ -2392,7 +2474,7 @@ else
 	$(CP) "$(LIB_OSSL_TAR_DST)/config" "$(LIB_OSSL_TAR_DST)/configure"
 endif
 else ifeq ($(BUILD_PLAT),Msys)
-	# windows is case-insensitive, so 'Configure' is already 'configure'
+	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
 else
 	$(CP) "$(LIB_OSSL_TAR_DST)/config" "$(LIB_OSSL_TAR_DST)/configure"
 endif
@@ -2948,7 +3030,7 @@ $(FETCHIT)-haskell-packages:
 		) \
 		"$(HASKELL_DST)/haskell-platform.cabal"
 	$(SED) -i \
-		-e "s|^(for[ ]pkg[ ]in[ ].[{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
+		-e "s|^(for[ ]pkg[ ]in[ ][$$][{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
 		"$(HASKELL_DST)/src/generic/prepare.sh"
 	cd "$(HASKELL_DST)/src/generic" && \
 		$(BUILD_ENV_MINGW) ./prepare.sh
@@ -3046,13 +3128,20 @@ $(FETCHIT)-pandoc-prep:
 			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE))))[ ]+([^,]+)|\1 == $(word 2,$(subst |, ,$(FILE)))|g" \
 		) \
 		"$(PANDOC_DST)/pandoc.cabal"
+	# make sure GHC looks for libraries in the right place
+	$(SED) -i \
+		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
+		"$(PANDOC_DST)/pandoc.cabal"
+	$(SED) -i \
+		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
+		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal"
 
 override define PANDOC_BUILD =
 	cd "$(1)" && \
 		$(HELPER) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)" && \
 		$(BUILD_ENV_MINGW) $(CABAL) configure \
 			--prefix="$(COMPOSER_ABODE)" \
-			--flags="embed_data_files http-conduit" \
+			--flags="make-pandoc-man-pages embed_data_files network-uri https" \
 			--enable-tests \
 			&& \
 		$(HELPER) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)" && \
