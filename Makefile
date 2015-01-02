@@ -1093,16 +1093,11 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(HELPOUT1) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(HELPOUT1) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC (and libraries/utilities) from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-check$(_D):"	"$(_E)$(STRAPIT)-exit$(_D)"			"Exits with supporting help text"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-musl$(_D):"	"$(_E)$(STRAPIT)-musl-pull$(_D)"		"Download of MUSL LibC (and library/utility) source archives"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-prep$(_D)"		"Preparation of MUSL LibC (and library/utility) source archives"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-build$(_D)"		"Build/compile of MUSL LibC from source archive"
@@ -1113,12 +1108,17 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-git$(_D):"	"$(_E)$(STRAPIT)-git-pull$(_D)"			"Download of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-prep$(_D)"			"Preparation of Git source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-build$(_D)"		"Build/compile of Git from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
@@ -1158,7 +1158,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
 	@$(HELPOUT1) "$(_E)$(BUILDIT)-tex$(_D):"	"$(_E)$(BUILDIT)-tex-fmt$(_D)"			"Build/install TeX Live format files"
 	@$(HELPOUT1) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-type$(_D)"		"Build/compile of Pandoc-Types from source"
@@ -1755,16 +1755,6 @@ override CHECK_LIB_SRC := libgmp.so
 override CHECK_LIB_DST := libgmp.so.3
 endif
 
-.PHONY: $(STRAPIT)-exit
-$(STRAPIT)-exit:
-	@$(HELPOUT2)
-	@$(HELPOUT2) "$(_H)$(MARKER) NOTES:"
-	@$(HELPOUT2) "This message was produced by $(COMPOSER_BASENAME)."
-	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
-	@$(HELPOUT2) "$(INDENTING)$(_M)$(COMPOSER)"
-	@$(HELPLVL1)
-	@exit 1
-
 .PHONY: $(STRAPIT)-check
 $(STRAPIT)-check:
 ifeq ($(BUILD_MSYS),)
@@ -1796,69 +1786,15 @@ else
 	fi
 endif
 
-.PHONY: $(STRAPIT)-msys
-$(STRAPIT)-msys: $(STRAPIT)-msys-bin
-$(STRAPIT)-msys: $(STRAPIT)-msys-init
-$(STRAPIT)-msys: $(STRAPIT)-msys-fix
-$(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys: $(STRAPIT)-msys-dll
-$(STRAPIT)-msys: $(STRAPIT)-check
-
-.PHONY: $(STRAPIT)-msys-bin
-$(STRAPIT)-msys-bin:
-	$(call CURL_FILE,$(MSYS_BIN_SRC))
-	$(call UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
-
-.PHONY: $(STRAPIT)-msys-init
-$(STRAPIT)-msys-init:
-	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ] ||
-	    [ ! -f "$(MSYS_BIN_DST)/etc/group"  ] ||
-	    [ ! -f "$(MSYS_BIN_DST)/etc/passwd" ]; then
-		@$(HELPLVL1)
-		@$(HELPOUT2) "We need to initialize the MSYS2 environment."
-		@$(HELPOUT2) "To do this, we will pause here to open an initial shell window."
-		@$(HELPOUT2) "Once the shell window gets to a command prompt, simply type '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D) to return."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
-		@$(HELPLVL1)
-#WORK		@read ENTER
-#WORK		$(RUNMAKE) $(SHELLIT)-msys
-		@$(HELPLVL1)
-		@$(HELPOUT2) "The shell window has been launched."
-		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
-		@$(HELPOUT2) "If everything was successful $(_E)(no errors above)$(_D), the build process can continue without interaction."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
-		@$(HELPLVL1)
-#WORK		@read ENTER
-	fi
-
-.PHONY: $(STRAPIT)-msys-fix
-# thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
-$(STRAPIT)-msys-fix:
-	$(BUILD_ENV) $(PACMAN) --refresh
-	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
-	cd "$(MSYS_BIN_DST)" &&
-		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f &&
-		./autorebase.bat
-	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
-	$(BUILD_ENV) $(PACMAN_KEY) --init		|| true
-	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| true
-	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| true
-
-.PHONY: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys-pkg:
-	$(BUILD_ENV) $(PACMAN) \
-		--force \
-		--needed \
-		--sysupgrade \
-		$(PACMAN_PACKAGES_LIST)
-	$(BUILD_ENV) $(PACMAN) --clean
-
-.PHONY: $(STRAPIT)-msys-dll
-$(STRAPIT)-msys-dll:
-	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
+.PHONY: $(STRAPIT)-exit
+$(STRAPIT)-exit:
+	@$(HELPOUT2)
+	@$(HELPOUT2) "$(_H)$(MARKER) NOTES:"
+	@$(HELPOUT2) "This message was produced by $(COMPOSER_BASENAME)."
+	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
+	@$(HELPOUT2) "$(INDENTING)$(_M)$(COMPOSER)"
+	@$(HELPLVL1)
+	@exit 1
 
 .PHONY: $(STRAPIT)-musl
 $(STRAPIT)-musl: $(STRAPIT)-musl-pull
@@ -1959,7 +1895,76 @@ $(STRAPIT)-musl-freetype:
 
 .PHONY: $(STRAPIT)-musl-fontconfig
 $(STRAPIT)-musl-fontconfig:
-	$(call AUTOTOOLS_BUILD,$(MUSL_FCFG_BIN_DST),$(COMPOSER_ABODE))
+	echo WORK
+#	$(call AUTOTOOLS_BUILD,$(MUSL_FCFG_BIN_DST),$(COMPOSER_ABODE))
+	cd "$(MUSL_FCFG_BIN_DST)" &&
+		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" ./configure --prefix="$(COMPOSER_ABODE)" &&
+		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) &&
+		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) install
+
+.PHONY: $(STRAPIT)-msys
+$(STRAPIT)-msys: $(STRAPIT)-msys-bin
+$(STRAPIT)-msys: $(STRAPIT)-msys-init
+$(STRAPIT)-msys: $(STRAPIT)-msys-fix
+$(STRAPIT)-msys: $(STRAPIT)-msys-pkg
+$(STRAPIT)-msys: $(STRAPIT)-msys-dll
+$(STRAPIT)-msys: $(STRAPIT)-check
+
+.PHONY: $(STRAPIT)-msys-bin
+$(STRAPIT)-msys-bin:
+	$(call CURL_FILE,$(MSYS_BIN_SRC))
+	$(call UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
+
+.PHONY: $(STRAPIT)-msys-init
+$(STRAPIT)-msys-init:
+	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ] ||
+	    [ ! -f "$(MSYS_BIN_DST)/etc/group"  ] ||
+	    [ ! -f "$(MSYS_BIN_DST)/etc/passwd" ]; then
+		@$(HELPLVL1)
+		@$(HELPOUT2) "We need to initialize the MSYS2 environment."
+		@$(HELPOUT2) "To do this, we will pause here to open an initial shell window."
+		@$(HELPOUT2) "Once the shell window gets to a command prompt, simply type '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D) to return."
+		@$(HELPOUT2)
+		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
+		@$(HELPLVL1)
+#WORK		@read ENTER
+#WORK		$(RUNMAKE) $(SHELLIT)-msys
+		@$(HELPLVL1)
+		@$(HELPOUT2) "The shell window has been launched."
+		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
+		@$(HELPOUT2) "If everything was successful $(_E)(no errors above)$(_D), the build process can continue without interaction."
+		@$(HELPOUT2)
+		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
+		@$(HELPLVL1)
+#WORK		@read ENTER
+	fi
+
+.PHONY: $(STRAPIT)-msys-fix
+# thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
+$(STRAPIT)-msys-fix:
+	$(BUILD_ENV) $(PACMAN) --refresh
+	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
+	cd "$(MSYS_BIN_DST)" &&
+		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f &&
+		./autorebase.bat
+	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
+	$(BUILD_ENV) $(PACMAN_KEY) --init		|| true
+	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| true
+	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| true
+
+.PHONY: $(STRAPIT)-msys-pkg
+$(STRAPIT)-msys-pkg:
+	$(BUILD_ENV) $(PACMAN) \
+		--force \
+		--needed \
+		--sysupgrade \
+		$(PACMAN_PACKAGES_LIST)
+	$(BUILD_ENV) $(PACMAN) --clean
+
+.PHONY: $(STRAPIT)-msys-dll
+$(STRAPIT)-msys-dll:
+	$(MKDIR) "$(COMPOSER_ABODE)/bin"
+	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
