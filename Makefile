@@ -391,14 +391,16 @@ override MUSL_OSSL_BIN_DST		:= $(MUSL_BIN_DST)/openssl-$(MUSL_OSSL_VERSION)
 override MUSL_EXPT_VERSION		:= 2.1.0
 override MUSL_EXPT_BIN_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(MUSL_EXPT_VERSION)/expat-$(MUSL_EXPT_VERSION).tar.gz
 override MUSL_EXPT_BIN_DST		:= $(MUSL_BIN_DST)/expat-$(MUSL_EXPT_VERSION)
-#WORK : freetype
-override MUSL_FTYP_VERSION		:= WORK
-override MUSL_FTYP_BIN_SRC		:= WORK
-override MUSL_FTYP_BIN_DST		:= WORK
-#WORK : fontconfig
-override MUSL_FCFG_VERSION		:= WORK
-override MUSL_FCFG_BIN_SRC		:= WORK
-override MUSL_FCFG_BIN_DST		:= WORK
+# http://www.freetype.org/license.html (license: custom = BSD, GPL)
+# http://www.freetype.org/download.html
+override MUSL_FTYP_VERSION		:= 2.5.3
+override MUSL_FTYP_BIN_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(MUSL_FTYP_VERSION).tar.gz
+override MUSL_FTYP_BIN_DST		:= $(MUSL_BIN_DST)/freetype-$(MUSL_FTYP_VERSION)
+# http://www.freedesktop.org/software/fontconfig/fontconfig-devel/ln12.html (license: custom = as-is)
+# http://www.freedesktop.org/wiki/Software/fontconfig
+override MUSL_FCFG_VERSION		:= 2.11.1
+override MUSL_FCFG_BIN_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(MUSL_FCFG_VERSION).tar.gz
+override MUSL_FCFG_BIN_DST		:= $(MUSL_BIN_DST)/fontconfig-$(MUSL_FCFG_VERSION)
 
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
 # http://sourceforge.net/projects/msys2
@@ -2107,10 +2109,10 @@ ifneq ($(BUILD_MSYS),)
 		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
 		"$(TEX_BIN_DST)/texk/web2c/otps/otp-"*
 #>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
-# WORK thanks for the 'header' fix below: https://build.opensuse.org/package/view_file?project=windows%3Amingw%3Awin32&package=mingw32-texlive&file=texlive-20110705-source-header.patch&rev=048df827a351be452769105398cad811
-	$(SED) -i \
-		-e "s|^([#]define header)|#undef header\n\1|g" \
-		"$(TEX_BIN_DST)/texk/cjkutils/hbf2gf.c"
+#WORK thanks for the 'header' fix below: https://build.opensuse.org/package/view_file?project=windows%3Amingw%3Awin32&package=mingw32-texlive&file=texlive-20110705-source-header.patch&rev=048df827a351be452769105398cad811
+#	$(SED) -i \
+#		-e "s|^([#]define header)|#undef header\n\1|g" \
+#		"$(TEX_BIN_DST)/texk/cjkutils/hbf2gf.c"
 endif
 
 .PHONY: $(BUILDIT)-tex
