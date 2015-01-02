@@ -147,12 +147,12 @@ override EXAMPLE			:= template
 
 override ~				:= "'$$'"
 override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
-override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
+override COMPOSER_ALL_REGEX		:= [a-zA-Z0-9][a-zA-Z0-9_.-]+
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
-#>override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" "$(COMPOSER_SRC)")
-override COMPOSER_TARGETS		:= $(shell sed -r -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" "$(COMPOSER_SRC)")
+#>override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_ALL_REGEX))[:].*$$|\1|gp" "$(COMPOSER_SRC)")
+override COMPOSER_TARGETS		:= $(shell sed -r -n "s|^($(COMPOSER_ALL_REGEX))[:].*$$|\1|gp" "$(COMPOSER_SRC)")
 else
 override COMPOSER_TARGETS		?= $(BASE)
 endif
@@ -937,10 +937,10 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 .PHONY: .all_targets
 .all_targets:
 	@$(RUNMAKE) --question --print-data-base --no-builtin-variables --no-builtin-rules : 2>/dev/null |
-		$(SED) -n -e "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p;" |
-		$(SED) -n -e "s|^$(COMPOSER_ALL_REGEX)[ ]?(.*)$$|\1: \2|gp" |
+		$(SED) -n -e "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" |
+		$(SED) -n -e "/^$(COMPOSER_ALL_REGEX)[:]/p" |
 		sort --unique |
-		$(SED) -e "s|[ ][.]set_title-$(COMPOSER_ALL_REGEX)?||g"
+		$(SED) -e "s|[ ][.]set_title[-]$(COMPOSER_ALL_REGEX)||g"
 
 ifneq ($(COMPOSER_ESCAPES),)
 $(foreach FILE,\
@@ -2686,21 +2686,21 @@ targets:
 	@$(RUNMAKE) --silent .all_targets | $(SED) \
 		-e "/^HELP[_]/d" \
 		-e "/^EXAMPLE[_]/d" \
-		-e "/^$(HELPOUT)(:|-)/d" \
-		-e "/^$(HELPALL)(:|-)/d" \
-		-e "/^$(COMPOSER_TARGET)(:|-)/d" \
-		-e "/^$(COMPOSER_PANDOC)(:|-)/d" \
-		-e "/^$(UPGRADE)(:|-)/d" \
-		-e "/^$(REPLICA)(:|-)/d" \
-		-e "/^$(INSTALL)(:|-)/d" \
-		-e "/^$(TESTOUT)(:|-)/d" \
-		-e "/^$(EXAMPLE)(:|-)/d" \
-		-e "/^$(STRAPIT)(:|-)/d" \
-		-e "/^$(FETCHIT)(:|-)/d" \
-		-e "/^$(BUILDIT)(:|-)/d" \
-		-e "/^$(CHECKIT)(:|-)/d" \
-		-e "/^$(SHELLIT)(:|-)/d" \
-		-e "/^.*[.]$(COMPOSER_EXT)(:|-)/d" \
+		-e "/^$(HELPOUT)[:-]/d" \
+		-e "/^$(HELPALL)[:-]/d" \
+		-e "/^$(COMPOSER_TARGET)[:-]/d" \
+		-e "/^$(COMPOSER_PANDOC)[:-]/d" \
+		-e "/^$(UPGRADE)[:-]/d" \
+		-e "/^$(REPLICA)[:-]/d" \
+		-e "/^$(INSTALL)[:-]/d" \
+		-e "/^$(TESTOUT)[:-]/d" \
+		-e "/^$(EXAMPLE)[:-]/d" \
+		-e "/^$(STRAPIT)[:-]/d" \
+		-e "/^$(FETCHIT)[:-]/d" \
+		-e "/^$(BUILDIT)[:-]/d" \
+		-e "/^$(CHECKIT)[:-]/d" \
+		-e "/^$(SHELLIT)[:-]/d" \
+		-e "/^.*[.]$(COMPOSER_EXT)[:-]/d" \
 		-e "/^all:/d" \
 		-e "/^clean:/d" \
 		-e "/^whoami:/d" \
