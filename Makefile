@@ -4,7 +4,8 @@
 ################################################################################
 
 #WORKING
-# _ add coreutils, sed, etc. until all referenced programs are included (rename WINDOWS_BINARY_LIST and make the default) (goal is composer should function as a chroot)
+# _ add coreutils, sed, etc. until all referenced programs are included (goal is composer should function as a chroot)
+# _ do an initial make in Composer.sh, to ensure dirname is available?
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
@@ -13,23 +14,18 @@
 
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
 #TODO : http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
-
 #TODO : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
-#TODO : need to ldd final binaries to see what libraries they compile in
-#TODO : need to ldd final windows binaries to make sure they linked against the compiled libraries
-#TODO : double-check / remove 'libidn'
-#TODO : upx final binaries
 
 #TODO
 # bash/less/vim
-#	add binaries and needed files to bindir
-#		does the right bash get run with shell-msys?  when in COMPOSER_ABODE?  when in bindir?
-#	remove from msys2 package list
+#	add needed files to bindir
+#	does the right bash get run with shell-msys?  when in COMPOSER_ABODE?  when in bindir?
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
 # double-check all "thanks" comments; some are things you should have known
 # double-check all licenses
 # fix linux 32-bit make 4.1 segfault
+# upx final binaries?
 #TODO
 
 #BUILD NOTES
@@ -671,8 +667,15 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-gcc \
 	msys2-devel
 
+#WORKING : these tools need to be added
+#	find
+#	patch
+#	sed
+#	which
 override BUILD_BINARY_LIST		:= \
-	bash \
+	coreutils \
+	\
+	bash sh \
 	less \
 	vim \
 	\
@@ -684,34 +687,9 @@ override BUILD_BINARY_LIST		:= \
 	\
 	pandoc
 
-#TODO
-# second group is for mintty
+#TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
 override WINDOWS_BINARY_LIST		:= \
-	cat \
-	chmod \
-	chown \
-	cp \
-	date \
-	echo \
-	env \
-	false \
-	find \
-	install \
-	ls \
-	mv \
-	patch \
-	printf \
-	rm \
-	sed \
-	sh \
-	sort \
-	true \
-	uname \
-	which \
-	\
 	cygwin-console-helper \
-	dircolors \
-	dirname \
 	mintty
 
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
@@ -857,36 +835,45 @@ override PANDOC_UPGRADE_LIST		:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
-override COREUTILS			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
+override COREUTILS_PATH			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
+override COREUTILS			:= "$(COREUTILS_PATH)"
 override COREUTILS_PROGRAM_LIST		:=
-ifneq ($(wildcard $(COREUTILS)),)
+ifneq ($(wildcard $(COREUTILS_PATH)),)
 #>override COREUTILS_PROGRAM_LIST	:= $(shell $(COREUTILS) --help | $(SED) -n "s|^[ ][[]||gp")
 override COREUTILS_PROGRAM_LIST		:= $(shell $(COREUTILS) --help | sed -r -n "s|^[ ][[]||gp")
-#WORKING
-#$(shell $(MKDIR) "$(COMPOSER_ABODE)/bin")
-#$(foreach FILE,$(COREUTILS_PROGRAM_LIST),\
-#	$(shell echo '#!$(COREUTILS) --coreutils-prog-shebang=$(FILE)' >"$(COMPOSER_ABODE)/bin/$(FILE)") \
-#)
-#WORKING
-#$(foreach FILE,$(COREUTILS_PROGRAM_LIST),\
-#	$(eval override $(uppercase $(FILE)) := "$(COREUTILS)" --coreutils-prog="$(FILE)") \
-#)
-override COREUTILS			:= "$(COREUTILS)"
 endif
+#WORK : if COMPOSER_PROGS coreutils does this, they will always override the system utilities!  need a new disposable location?  should COMPOSER_ABODE be split up into an actual install location COMPOSER_BUILT and home COMPOSER_ABODE?
+ifneq ($(COREUTILS_PROGRAM_LIST),)
+$(shell $(COREUTILS) --coreutils-prog=ginstall -dv "$(COMPOSER_ABODE)/bin")
+$(foreach FILE,$(COREUTILS_PROGRAM_LIST),$(shell \
+	$(COREUTILS) --coreutils-prog=echo "#!$(COREUTILS_PATH) --coreutils-prog-shebang=$(FILE)" >"$(COMPOSER_ABODE)/bin/$(FILE)"; \
+	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/$(FILE)" \
+))
+$(shell \
+	$(COREUTILS) --coreutils-prog=echo "#!$(COREUTILS_PATH) --coreutils-prog-shebang=ginstall" >"$(COMPOSER_ABODE)/bin/install"; \
+	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/install" \
+)
+endif
+
+override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
+override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
+override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
+override MV				:= "$(call COMPOSER_FIND,$(PATH_LIST),mv)" -fv
+override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
+override TOUCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
+
+#WORKING : find all commands and make sure they get variables
+#WORKING : these tools need to be added
+#	find
+#	patch
+#	sed
+#	which
+override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
+override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
 override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
 override VIM				:= "$(call COMPOSER_FIND,$(PATH_LIST),vim)" -u "$(COMPOSER_ABODE)/.vimrc" -i NONE -p
-
-override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
-override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
-override MV				:= "$(call COMPOSER_FIND,$(PATH_LIST),mv)" -fv
-override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
-
-override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
-override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
-override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
-override TIMESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 
 override define PATCH			=
 	$(call CURL_FILE,$(2)); \
@@ -1860,7 +1847,7 @@ $(REPLICA):
 	    [ "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" != "$(CURDIR)/$(COMPOSER_SETTINGS)" ]; then \
 		$(CP) "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" "$(CURDIR)/$(COMPOSER_SETTINGS)"; \
 	fi
-	@$(TIMESTAMP) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
+	@$(TOUCH) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
 	@echo -en "$(_D)"
 
 .PHONY: $(UPGRADE)
@@ -2013,6 +2000,12 @@ start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 :: end of file
 endef
 
+#WORKING : these tools need to be added
+#	find
+#	patch
+#	sed
+#	which
+
 .PHONY: $(CHECKIT)
 $(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
@@ -2022,6 +2015,7 @@ $(CHECKIT):
 ifeq ($(BUILD_PLAT),Msys)
 	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"	"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
 endif
+	@$(HELPOUT1) "$(_C)Coreutils"		"$(_M)$(COREUTILS_VERSION)"	"$(_D)$(shell $(BUILD_ENV) ls --version			2>/dev/null | $(SED) -n "s|^ls[ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(SED) -n "s|^.*[,][ ]version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Less"		"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) less --version		2>/dev/null | $(SED) -n "s|^less[ ]([^c][^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Vim"		"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(BUILD_ENV) vim --version		2>/dev/null | $(SED) -n "s|^.*Vi[ ]IMproved[ ]([^ ]+).*$$|\1|gp")"
@@ -2043,6 +2037,7 @@ endif
 	@$(HELPOUT1) "- $(_C)Library"		"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"		"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HELPLINE)
+	@$(HELPOUT1) "$(_C)Coreutils"		"$(_D)$(shell $(BUILD_ENV) which ls			2>/dev/null)"
 	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_D)$(shell $(BUILD_ENV) which bash			2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Less"		"$(_D)$(shell $(BUILD_ENV) which less			2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Vim"		"$(_D)$(shell $(BUILD_ENV) which vim			2>/dev/null)"
@@ -2063,7 +2058,7 @@ endif
 	@$(HELPOUT1) "- $(_C)Cabal"		"$(_D)$(shell $(BUILD_ENV) which cabal			2>/dev/null)"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_E)(no binary to report)"
 	@$(HELPLINE)
-	@$(BUILD_ENV) which bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal 2>/dev/null | \
+	@$(BUILD_ENV) which coreutils bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal 2>/dev/null | \
 		while read FILE; do \
 			ldd $${FILE}; \
 		done | \
@@ -2465,12 +2460,10 @@ $(STRAPIT)-libs-zlib:
 ifeq ($(BUILD_BITS),64)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
 		--64 \
-		--archs="$(BUILD_ARCH)" \
 		--static \
 	)
 else
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
-		--archs="$(BUILD_ARCH)" \
 		--static \
 	)
 endif
@@ -2625,8 +2618,6 @@ $(FETCHIT)-coreutils-pull:
 .PHONY: $(FETCHIT)-coreutils-prep
 $(FETCHIT)-coreutils-prep:
 
-#WORKING : coreutils - add to $CHECKIT, somehow...?
-
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),\
@@ -2636,10 +2627,6 @@ $(BUILDIT)-coreutils:
 		--disable-acl \
 		--disable-xattr \
 	)
-#WORKING : coreutils - need to hack around shebang business
-#	$(SED) -i \
-#		-e "s|^[#][!].*(coreutils[ ])|\1|g" \
-#		"$(COMPOSER_ABODE)/bin/"*
 
 .PHONY: $(FETCHIT)-bash
 $(FETCHIT)-bash: $(FETCHIT)-bash-pull
@@ -2665,8 +2652,10 @@ $(BUILDIT)-bash:
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
 		bash_cv_func_sigsetjmp="missing" \
 		,\
+		--enable-static-link \
 		--without-bash-malloc \
 	)
+	$(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"
 
 .PHONY: $(FETCHIT)-less
 $(FETCHIT)-less: $(FETCHIT)-less-pull
@@ -3380,7 +3369,7 @@ $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(LIST) settings setup
 	$(BUILD_ENV) $(PANDOC)
-	@$(TIMESTAMP) "$(CURDIR)/$(COMPOSER_STAMP)"
+	@$(TOUCH) "$(CURDIR)/$(COMPOSER_STAMP)"
 
 $(BASE).$(EXTENSION): $(LIST)
 	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
