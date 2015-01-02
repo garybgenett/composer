@@ -686,6 +686,7 @@ override PACMAN_PACKAGES_LIST		:= \
 	msys2-devel
 
 #TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
+#TODO : probably not all these dlls are needed
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override MSYS_BINARY_LIST		:= \
 	mintty cygwin-console-helper \
@@ -3344,7 +3345,10 @@ endif
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
+#WORKING : must be a better way to do this than the configure option
+	# "$(BUILD_PLAT),Msys" detects the version with a "^M" in it, which requires "unsupported-ghc" option to bypass
 	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),,\
+		--enable-unsupported-ghc-version \
 		--disable-user-install \
 	)
 #>	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
