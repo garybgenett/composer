@@ -2885,7 +2885,7 @@ ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),\
 		CFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(subst -static,,$(CFLAGS))))" \
 		LDFLAGS="$(subst -I$(COMPOSER_ABODE)/include,,$(subst -L$(COMPOSER_ABODE)/lib,,$(subst -static,,$(LDFLAGS))))" \
-		SRC_HC_OPTS="$(subst -static,,$(SRC_HC_OPTS))" \
+		SRC_HC_OPTS="$(subst -optc-static,,$(subst -optl-static,,$(subst -static,,$(SRC_HC_OPTS))))" \
 	,,\
 		show \
 	)
