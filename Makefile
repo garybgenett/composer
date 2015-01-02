@@ -9,7 +9,7 @@
 #	http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Make
 #	http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Shell
 #
-# Please report any cross-platform issues, or issues with other versions of Make
+# Please report any cross-platform issues, or issues with other versions of Make.
 #
 ################################################################################
 
