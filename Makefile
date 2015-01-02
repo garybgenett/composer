@@ -756,10 +756,6 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/pdftex-def \
 	tex/latex/url
 
-override GHC_LIBRARIES_LIST		:= \
-	alex|3.1.3 \
-	happy|1.19.4
-
 ifneq ($(BUILD_GHC_78),)
 override GHC_BASE_LIBRARIES_LIST	:= \
 	Win32|WORKING \
@@ -816,10 +812,14 @@ override GHC_BASE_LIBRARIES_LIST	:= \
 	unix|2.6.0.1
 endif
 
+override GHC_LIBRARIES_LIST		:= \
+	alex|3.1.3 \
+	happy|1.19.4
+
 # second group is for dependency resolution
 # third group is for build fixes
 # fourth group is for missing directories
-override HASKELL_UPGRADE_LIST		:= \
+override HASKELL_VERSION_LIST		:= \
 	GHC|$(GHC_VERSION) \
 	ghc|$(GHC_VERSION) \
 	cabal-install|$(CABAL_VERSION) \
@@ -855,15 +855,6 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
 	hxt|9.3.1.4
 
-#WORKING
-#	network-uri|2.6.0.1 \
-#	network|2.6.0.1 \
-
-override PANDOC_UPGRADE_LIST		:= \
-
-#WORKING
-#	zip-archive|0.2.2.1
-
 ########################################
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
@@ -889,8 +880,10 @@ endif
 
 #WORKING : find all commands and make sure they get variables
 #WORKING : what the f is up with printf?
+override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
+override DIRCOLORS			:= "$(call COMPOSER_FIND,$(PATH_LIST),dircolors)"
 override ECHO				:= "$(call COMPOSER_FIND,$(PATH_LIST),echo)" -en
 override HEAD				:= "$(call COMPOSER_FIND,$(PATH_LIST),head)"
 override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
@@ -909,7 +902,12 @@ override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override WHICH				:= "$(call COMPOSER_FIND,$(PATH_LIST),which)"
 
+override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)"
+override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
+override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
+
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
+override SH				:= "$(call COMPOSER_FIND,$(PATH_LIST),sh)"
 override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
 override VIM				:= "$(call COMPOSER_FIND,$(PATH_LIST),vim)" -u "$(COMPOSER_ABODE)/.vimrc" -i NONE -p
 
@@ -1899,7 +1897,7 @@ $(UPGRADE):
 	@$(ECHO) "$(_C)"
 	@cd "$(MDVIEWER_DST)" && \
 		$(CHMOD) ./build.sh && \
-		$(BUILD_ENV) ./build.sh
+		$(BUILD_ENV) $(SH) ./build.sh
 	@$(ECHO) "$(_D)"
 	@$(call GIT_REPO,$(REVEALJS_DST),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call CURL_FILE,$(W3CSLIDY_SRC))
@@ -1982,7 +1980,7 @@ $(BUILDIT)-bindir:
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
 	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
-#WORKING : probably need this for linux, too
+#WORK : probably need this for linux, too
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
 	$(CP) "$(MSYS_BIN_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
@@ -1993,7 +1991,7 @@ ifeq ($(BUILD_PLAT),Msys)
 		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
 		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
 		"$(COMPOSER_PROGS)/usr/bin/"
-#	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
+#	$(BUILD_ENV) $(LDD) "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
 #		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
 #		$(SORT) | \
 #		while read FILE; do \
@@ -2100,7 +2098,7 @@ endif
 	@$(HELPLINE)
 	@$(BUILD_ENV) $(WHICH) $(BUILD_BINARY_LIST) 2>/dev/null | \
 		while read FILE; do \
-			ldd "$${FILE}"; \
+			$(LDD) "$${FILE}"; \
 		done | \
 		$(SED) "s|[(][^)]+[)]||g" | \
 		$(SORT)
@@ -2151,7 +2149,7 @@ override define TEXTFILE_BASHRC =
 umask 022
 unalias -a
 set -o vi
-eval $$(dircolors 2>/dev/null)
+eval $$($(DIRCOLORS) 2>/dev/null)
 #
 export LANG="$(LANG)"
 export LC_ALL="$${LANG}"
@@ -2242,13 +2240,13 @@ endef
 
 override define AUTOTOOLS_BUILD =
 	cd "$(1)" && \
-		$(BUILD_ENV) $(3) FORCE_UNSAFE_CONFIGURE="1" ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
+		$(BUILD_ENV) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
 		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV) $(3) $(MAKE) install
 endef
 override define AUTOTOOLS_BUILD_MINGW =
 	cd "$(1)" && \
-		$(BUILD_ENV_MINGW) $(3) FORCE_UNSAFE_CONFIGURE="1" ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
+		$(BUILD_ENV_MINGW) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
 endef
@@ -2384,7 +2382,7 @@ $(STRAPIT)-msys-dll:
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
-#WORKING : causes build errors
+#WORK : causes build errors
 #make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
 #make[3]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14'
 #make[3]: Nothing to be done for `am--refresh'.
@@ -2404,7 +2402,7 @@ $(STRAPIT)-msys-dll:
 #  make[1]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
 #  make: *** [all] Error 2
 #  make: *** [bootstrap-libs-libiconv1] Error 2
-#WORKING
+#WORK
 #ifeq ($(BUILD_PLAT),Linux)
 #$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
 #endif
@@ -2441,7 +2439,7 @@ override define PERL_MODULES_BUILD =
 	$(call CURL_FILE,$(2)); \
 	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
 	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
-		$(BUILD_ENV) perl Makefile.PL && \
+		$(BUILD_ENV) $(PERL) ./Makefile.PL && \
 		$(BUILD_ENV) $(MAKE) && \
 		$(BUILD_ENV) $(MAKE) install
 endef
@@ -2758,8 +2756,8 @@ $(FETCHIT)-make-pull:
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
 	cd "$(MAKE_DST)" && \
-		$(BUILD_ENV) autoreconf --force --install && \
-		$(BUILD_ENV) ./configure && \
+		$(BUILD_ENV) $(AUTORECONF) --force --install && \
+		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
 
 .PHONY: $(BUILDIT)-make
@@ -2838,8 +2836,8 @@ $(STRAPIT)-curl-prep:
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
-		$(BUILD_ENV) autoreconf --force --install && \
-		$(BUILD_ENV) ./configure
+		$(BUILD_ENV) $(AUTORECONF) --force --install && \
+		$(BUILD_ENV) $(SH) ./configure
 	$(SED) -i \
 		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
 		"$(CURL_DST)/lib/mk-ca-bundle.pl"
@@ -2968,7 +2966,7 @@ $(FETCHIT)-tex-prep:
 $(BUILDIT)-tex:
 	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
-		./Build \
+		$(SH) ./Build \
 		--with-fontconfig-includes="$(COMPOSER_ABODE)/include/fontconfig" \
 		--disable-multiplatform \
 		--without-ln-s \
@@ -3023,10 +3021,10 @@ $(FETCHIT)-ghc-pull:
 		-e "s|[-]d([ ][^ ]+[.]git)|-f\1|g" \
 		"$(GHC_DST)/sync-all"
 	cd "$(GHC_DST)" && \
-		$(BUILD_ENV_MINGW) ./sync-all get && \
-		$(BUILD_ENV_MINGW) ./sync-all fetch --all && \
-		$(BUILD_ENV_MINGW) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
-		$(BUILD_ENV_MINGW) ./sync-all reset --hard
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all get && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 	# post-process "sync-all" repositories, to ensure source lives in "$(COMPOSER_STORE)"
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 
@@ -3061,7 +3059,7 @@ endef
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(FETCHIT)-ghc-prep:
 	cd "$(GHC_DST)" && \
-		$(BUILD_ENV_MINGW) ./boot
+		$(BUILD_ENV_MINGW) $(PERL) ./boot
 #WORKING
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(foreach FILE,\
@@ -3114,7 +3112,7 @@ else
 endif
 	cd "$(CBL_TAR_DST)" && \
 		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
-			./bootstrap.sh --global
+			$(SH) ./bootstrap.sh --global
 	$(RUNMAKE) $(FETCHIT)-cabal
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
@@ -3151,15 +3149,15 @@ $(FETCHIT)-haskell-packages:
 		-e "s|^(REQUIRED_GHC_VER[=]).+$$|\1$(GHC_VERSION)|g" \
 		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
 	$(SED) -i \
-		$(foreach FILE,$(HASKELL_UPGRADE_LIST),\
+		$(foreach FILE,$(HASKELL_VERSION_LIST),\
 			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE)))[ ]+[=][=])([^,]+)|\1$(word 2,$(subst |, ,$(FILE)))|g" \
 		) \
 		"$(HASKELL_DST)/haskell-platform.cabal"
 	$(SED) -i \
-		-e "s|^(for[ ]pkg[ ]in[ ][$$][{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
+		-e "s|^(for[ ]pkg[ ]in[ ][$$][{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_VERSION_LIST))|g" \
 		"$(HASKELL_DST)/src/generic/prepare.sh"
 	cd "$(HASKELL_DST)/src/generic" && \
-		$(BUILD_ENV_MINGW) ./prepare.sh
+		$(BUILD_ENV_MINGW) $(SH) ./prepare.sh
 	$(foreach FILE,$(HASKELL_PATCH_LIST),\
 		$(call DO_PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
@@ -3214,7 +3212,7 @@ $(BUILDIT)-haskell:
 		--disable-user-install \
 	)
 #>	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-#>		$(foreach FILE,$(shell cat "$(HASKELL_TAR)/packages/platform.packages"),\
+#>		$(foreach FILE,$(shell $(CAT) "$(HASKELL_TAR)/packages/platform.packages"),\
 #>			"$(HASKELL_TAR)/packages/$(FILE)" \
 #>		)
 
@@ -3233,13 +3231,6 @@ $(FETCHIT)-pandoc-pull:
 
 .PHONY: $(FETCHIT)-pandoc-prep
 $(FETCHIT)-pandoc-prep:
-#WORKING
-#	$(SED) -i \
-#		$(foreach FILE,$(PANDOC_UPGRADE_LIST),\
-#			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE))))[ ]+([^,]+)|\1 == $(word 2,$(subst |, ,$(FILE)))|g" \
-#		) \
-#		"$(PANDOC_DST)/pandoc.cabal"
-#WORKING
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
 		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
