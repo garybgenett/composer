@@ -9,6 +9,7 @@
 #TODO
 # bash/less/vim
 #	add binaries and needed files to bindir
+#		does the right bash get run with shell-msys?  when in COMPOSER_ABODE?  when in bindir?
 #	remove from msys2 package list
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
