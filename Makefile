@@ -4,6 +4,7 @@
 ################################################################################
 
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
+#TODO : http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
 
 #TODO
 # bash/less/vim
@@ -2314,34 +2315,28 @@ ifneq ($(BUILD_MUSL),)
 		FREETYPE_LIBS="-lfreetype" \
 		,\
 		--enable-iconv \
-		--with-libiconv-includes="\"$(COMPOSER_ABODE)/include\"" \
-		--with-libiconv-lib="\"$(COMPOSER_ABODE)/lib\"" \
+		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
+		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
 		--disable-shared \
 		--enable-static \
 	)
 else ifneq ($(BUILD_MSYS),)
-	echo WORK
-#		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include:$(COMPOSER_ABODE)/include/freetype2" \
-#		EXPAT_CFLAGS="$(CFLAGS)" \
-#		EXPAT_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
-#		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
-#WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
 		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
-		FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" \
 		,\
 		--enable-iconv \
-		--with-libiconv-includes="\"$(COMPOSER_ABODE)/include\"" \
-		--with-libiconv-lib="\"$(COMPOSER_ABODE)/lib\"" \
-		--with-expat-includes="\"$(COMPOSER_ABODE)/include\"" \
-		--with-expat-lib=\""$(COMPOSER_ABODE)/lib\"" \
+		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
+		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
+		--with-expat-includes="$(COMPOSER_ABODE)/include" \
+		--with-expat-lib="$(COMPOSER_ABODE)/lib" \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-iconv \
-		--with-libiconv-includes="\"$(COMPOSER_ABODE)/include\"" \
-		--with-libiconv-lib="\"$(COMPOSER_ABODE)/lib\"" \
+		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
+		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
 	)
 endif
 
