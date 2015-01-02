@@ -846,7 +846,6 @@ override PATH_LIST			:= $(subst :, ,$(PATH):$(BUILD_PATH))
 endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
-#WORK : comment
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 
@@ -858,27 +857,7 @@ override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --s
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 
-#WORK : if COMPOSER_PROGS coreutils does this, they will always override the system utilities!
-#WORK : need a new disposable location?  should COMPOSER_ABODE be split up into an actual install location COMPOSER_BUILT and home COMPOSER_ABODE?
-#WORK : better bet would be to $(notdir $(COREUTILS_PATH)) and make sure it is either $(COMPOSER_ABODE)/bin or $(COMPOSER_PROGS)/bin
-#WORK : in actuality, this whole business should probably live in the "coreutils" target and "bindir", via a COREUTILS_INSTALL define
-
-# thanks for the 'which' hack below: http://www.linuxfromscratch.org/blfs/view/svn/general/which.html
-override COREUTILS_PATH			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
-override COREUTILS			:= "$(COREUTILS_PATH)"
-ifneq ($(wildcard $(COREUTILS_PATH)),)
-$(shell \
-	$(COREUTILS) --coreutils-prog=ginstall -dv "$(COMPOSER_ABODE)/bin"; \
-	$(COREUTILS) --help | sed -r -n "s|^[ ][[][ ]||gp" | sed -r "s|[ ]|\n|g" | while read FILE; do \
-		$(COREUTILS) --coreutils-prog=echo -en "#!$(COREUTILS_PATH) --coreutils-prog-shebang=$${FILE}" >"$(COMPOSER_ABODE)/bin/$${FILE}"; \
-		$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/$${FILE}"; \
-	done; \
-	$(COREUTILS) --coreutils-prog=echo -en "#!$(COREUTILS_PATH) --coreutils-prog-shebang=ginstall" >"$(COMPOSER_ABODE)/bin/install"; \
-	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/install"; \
-)
-endif
-
-#WORK : comment
+override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
@@ -896,14 +875,12 @@ override TAIL				:= "$(call COMPOSER_FIND,$(PATH_LIST),tail)"
 override TOUCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
-#WORK : comment
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
 override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
-#WORK : comment
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
 override SH				:= "$(SHELL)"
 override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
@@ -923,6 +900,17 @@ override PDFLATEX			:= "$(call COMPOSER_FIND,$(PATH_LIST),pdflatex)"
 override GHC				:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc)"
 override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
 override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
+
+override COREUTILS_INSTALL		= $(call DO_COREUTILS_INSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
+override define DO_COREUTILS_INSTALL	=
+	"$(1)" --coreutils-prog=ginstall -dv "$(2)"
+	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+		"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+	done
+	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"
+	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
+endef
 
 override define DO_PATCH		=
 	$(call CURL_FILE,$(2)); \
@@ -2027,6 +2015,7 @@ endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
+	$(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils)
 	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
@@ -2668,6 +2657,7 @@ $(STRAPIT)-util-coreutils:
 		--disable-acl \
 		--disable-xattr \
 	)
+	$(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils)
 
 .PHONY: $(STRAPIT)-util-findutils
 $(STRAPIT)-util-findutils:
