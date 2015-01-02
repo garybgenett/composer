@@ -368,8 +368,15 @@ override TEX_VERSION			:= $(TEX_YEAR)0525
 override TEX_PDF_VERSION		:= 1.40.15
 override TEX_TEXMF_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
 override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
+ifneq ($(BUILD_MSYS),)
+#>override TEX_WINDOWS_BIN		:= ftp://tug.org/tex-archive/systems/win32/w32tex/w32tex-src.tar.xz
+override TEX_WINDOWS_BIN		:= ftp://tug.org/mirror/rsync.tex.ac.uk/CTAN/systems/win32/w32tex/w32tex-src.tar.xz
+endif
 override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
 override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
+ifneq ($(BUILD_MSYS),)
+override TEX_WINDOWS_DST		:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source-w32tex/ktx
+endif
 
 # https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
@@ -495,13 +502,11 @@ override PACMAN_PACKAGES_LIST		:= \
 	libcurl-devel \
 	libiconv-devel \
 	zlib-devel \
+	\
+	mingw-w64-i686-fontconfig \
+	mingw-w64-x86_64-fontconfig
 
-#WORK : tex
-#	\
-#	mingw-w64-i686-fontconfig \
-#	mingw-w64-x86_64-fontconfig
-
-#WORK
+#TODO
 # second group is for composer
 # third group is for mintty
 override WINDOWS_BINARY_LIST		:= \
@@ -747,7 +752,7 @@ override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
 
 ifneq ($(PANDOC_DATA),)
 override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
-#WORK : some better way to do this?
+#TODO : some better way to do this?
 ifeq ($(BUILD_MSYS),)
 override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
 else
@@ -1379,7 +1384,7 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
-#WORK $(BUILDIT): $(BUILDIT)-tex
+$(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1546,7 +1551,7 @@ $(SHELLIT)-vimrc:
 	@$(MKDIR) "$(COMPOSER_ABODE)"
 	@cat >"$(COMPOSER_ABODE)/.vimrc" <<'_EOF_'
 		" vimrc
-		"WORK
+		"TODO
 		set nocompatible
 		set autoread
 		set secure
@@ -1826,22 +1831,31 @@ $(FETCHIT)-tex: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-pull:
 	$(call WGET_FILE,$(TEX_TEXMF_SRC))
 	$(call WGET_FILE,$(TEX_BIN_SRC))
+ifneq ($(BUILD_MSYS),)
+	$(call WGET_FILE,$(TEX_WINDOWS_SRC))
+endif
 	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
+ifneq ($(BUILD_MSYS),)
+	$(call UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
+endif
 
 .PHONY: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-prep:
+ifneq ($(BUILD_MSYS),)
+	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
+endif
 
 .PHONY: $(BUILDIT)-tex
 #WORK http://tex.aanhet.net/mingtex
+#WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
 $(BUILDIT)-tex:
-	echo WORK
 	cd "$(TEX_BIN_DST)" &&
-		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+		$(BUILD_ENV_MINGW) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x
-#>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
+#>	$(call AUTOTOOLS_BUILD_MINGW,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
