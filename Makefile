@@ -576,12 +576,6 @@ override TEX_TEXMF_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEA
 override TEX_TAR_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
 override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
 override TEX_TAR_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
-#TODO : need this?
-ifeq ($(BUILD_PLAT),Msys)
-#>override TEX_WINDOWS_SRC		:= ftp://ftp.tug.org/tex-archive                /systems/win32/w32tex/w32tex-src.tar.xz
-override TEX_WINDOWS_SRC		:= ftp://ftp.tug.org/mirror/rsync.tex.ac.uk/CTAN/systems/win32/w32tex/w32tex-src.tar.xz
-override TEX_WINDOWS_DST		:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source-w32tex/ktx
-endif
 
 # https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
@@ -660,8 +654,11 @@ override BUILD_PATH_MINGW		:=               $(MSYS_BIN_DST)/mingw$(BUILD_BITS)/b
 override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
 endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
-ifeq ($(COMPOSER_PROGS_USE),)
+ifneq ($(COMPOSER_PROGS_USE),1)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
+endif
+ifeq ($(COMPOSER_PROGS_USE),0)
+override BUILD_PATH			:= $(PATH)
 endif
 
 override PACMAN_BASE_LIST		:= \
@@ -851,9 +848,6 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
-ifeq ($(COMPOSER_PROGS_USE),0)
-override PATH_LIST			:= $(subst :, ,$(PATH))
-endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
@@ -2075,7 +2069,7 @@ $(CHECKIT):
 	@$(HELPLINE)
 ifeq ($(BUILD_PLAT),Msys)
 	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_E)\""			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
@@ -3062,11 +3056,6 @@ $(FETCHIT)-tex-pull:
 	$(call CURL_FILE,$(TEX_TAR_SRC))
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call DO_UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
-#WORKING
-ifeq ($(BUILD_PLAT),Msys)
-	$(call CURL_FILE,$(TEX_WINDOWS_SRC))
-	$(call DO_UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
-endif
 
 .PHONY: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-prep:
@@ -3080,7 +3069,6 @@ $(FETCHIT)-tex-prep:
 #	$(SED) -i \
 #		-e "s|([^Y])(INPUT)|\1MY\2|g" \
 #		"$(TEX_TAR_DST)/texk/web2c/otps/otp-"*
-#>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_TAR_DST)/"
 #WORK thanks for the 'header' fix below: https://build.opensuse.org/package/view_file?project=windows%3Amingw%3Awin32&package=mingw32-texlive&file=texlive-20110705-source-header.patch&rev=048df827a351be452769105398cad811
 #	$(SED) -i \
 #		-e "s|^([#]define header)|#undef header\n\1|g" \
