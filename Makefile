@@ -6,8 +6,7 @@
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
 
 #TODO
-# vim/less
-#	add to check target
+# bash/less/vim
 #	add binaries and needed files to bindir
 #	remove from msys2 package list
 # mingw for windows?
@@ -451,8 +450,27 @@ override LIB_FCFG_VERSION		:= 2.11.1
 override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
 override LIB_FCFG_TAR_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSION)
 
+# https://www.gnu.org/software/bash (license: GPL)
+# https://www.gnu.org/software/bash
+override BASH_VERSION			:= 4.3
+override BASH_TAR_SRC			:= https://ftp.gnu.org/pub/gnu/bash/bash-$(BASH_VERSION).tar.gz
+override BASH_TAR_DST			:= $(COMPOSER_BUILD)/bash-$(BASH_VERSION)
+
+# http://www.greenwoodsoftware.com/less (license: GPL)
+# http://www.greenwoodsoftware.com/less
+override LESS_VERSION			:= 458
+override LESS_TAR_SRC			:= http://www.greenwoodsoftware.com/less/less-$(LESS_VERSION).tar.gz
+override LESS_TAR_DST			:= $(COMPOSER_BUILD)/less-$(LESS_VERSION)
+
+# http://www.vim.org/about.php (license: custom = GPL)
+# http://www.vim.org
+override VIM_VERSION			:= 7.4
+override VIM_TAR_SRC			:= http://ftp.vim.org/pub/vim/unix/vim-$(VIM_VERSION).tar.bz2
+override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
+
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
+# https://www.gnu.org/software/make
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
@@ -485,18 +503,6 @@ override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
 override GIT_TAR_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
-
-# http://www.greenwoodsoftware.com/less (license: GPL)
-# http://www.greenwoodsoftware.com/less
-override LESS_VERSION			:= 458
-override LESS_TAR_SRC			:= http://www.greenwoodsoftware.com/less/less-$(LESS_VERSION).tar.gz
-override LESS_TAR_DST			:= $(COMPOSER_BUILD)/less-$(LESS_VERSION)
-
-# http://www.vim.org/about.php (license: custom = GPL)
-# http://www.vim.org
-override VIM_VERSION			:= 7.4
-override VIM_TAR_SRC			:= http://ftp.vim.org/pub/vim/unix/vim-$(VIM_VERSION).tar.bz2
-override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 
 # https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
 # https://www.tug.org/texlive
@@ -1277,16 +1283,23 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl$(_D)"			"Download/preparation of cURL source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git$(_D)"			"Download/preparation of Git source repository"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-bash$(_D):"	"$(_E)$(FETCHIT)-bash-pull$(_D)"		"Download of Bash source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash-prep$(_D)"		"Preparation of Bash source archive"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less-prep$(_D)"		"Preparation of Less source archive"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-vim$(_D):"	"$(_E)$(FETCHIT)-vim-pull$(_D)"			"Download of Vim source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim-prep$(_D)"			"Preparation of Vim source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-make$(_D):"	"$(_E)$(FETCHIT)-make-pull$(_D)"		"Download of GNU Make source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make-prep$(_D)"		"Preparation of GNU Make source repository"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-infozip$(_D):"	"$(_E)$(FETCHIT)-infozip-pull$(_D)"		"Download of Info-ZIP source archive"
@@ -1295,10 +1308,6 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl-prep$(_D)"		"Preparation of cURL source repository"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-git$(_D):"	"$(_E)$(FETCHIT)-git-pull$(_D)"			"Download of Git source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git-prep$(_D)"			"Preparation of Git source repository"
-	@$(HELPOUT1) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less-prep$(_D)"		"Preparation of Less source archive"
-	@$(HELPOUT1) "$(_E)$(FETCHIT)-vim$(_D):"	"$(_E)$(FETCHIT)-vim-pull$(_D)"			"Download of Vim source archive"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim-prep$(_D)"			"Preparation of Vim source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-tex$(_D):"	"$(_E)$(FETCHIT)-tex-pull$(_D)"			"Download of TeX Live source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex-prep$(_D)"			"Preparation of TeX Live source archives"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
@@ -1314,12 +1323,13 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of Bash from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
@@ -1686,12 +1696,14 @@ $(STRAPIT): $(STRAPIT)-ghc
 $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git $(FETCHIT)-less $(FETCHIT)-vim
+$(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
+$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git $(BUILDIT)-less $(BUILDIT)-vim
+$(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
+$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
 #TODO $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
@@ -1806,26 +1818,29 @@ $(CHECKIT):
 	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifneq ($(BUILD_MUSL),)
-	@$(HELPOUT1) "$(MARKER) $(_E)MUSL LibC"	"$(_E)$(MUSL_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(BUILD_MUSL) --version	2>/dev/null | $(SED) -n "s|^gcc.*[ ]([^ ]+)$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)MUSL LibC"	"$(_E)$(MUSL_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(BUILD_MUSL) --version	2>/dev/null | $(SED) -n "s|^gcc.*[ ]([0-9.]+)$$|\1|gp")"
 endif
 ifneq ($(BUILD_MSYS),)
-	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"	"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"	"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[0-9.]+).*$$|\1|gp")"
 endif
-	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)Info-ZIP (Zip)"	"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(SED) -n "s|^This[ ]is[ ]Zip[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)Info-ZIP (UnZip)"	"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(SED) -n "s|^UnZip[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)cURL"		"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
+	@$(HELPOUT1) "$(_C)GNU Bash"		"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BUILD_ENV) bash --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Less"		"$(_M)$(LESS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) less --version		2>/dev/null | $(SED) -n "s|^less[ ]([0-9]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Vim"		"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(BUILD_ENV) vim --version		2>/dev/null | $(SED) -n "s|^.*Vi[ ]IMproved[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (Zip)"	"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(SED) -n "s|^This[ ]is[ ]Zip[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Info-ZIP (UnZip)"	"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(SED) -n "s|^UnZip[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)cURL"		"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([0-9.]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)TeXMath"		"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Highlighting-Kate"	"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)CiteProc"		"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(BUILD_ENV) pandoc-citeproc --version	2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)CiteProc"		"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(BUILD_ENV) pandoc-citeproc --version	2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([0-9.]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)TeX Live"		"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(BUILD_ENV) tex --version		2>/dev/null | $(SED) -n "s|^.*TeX[ ]Live[ ]([0-9]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)PDFLaTeX"		"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)PDFLaTeX"		"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([0-9.]+)[ ].*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Haskell"		"$(_M)$(HASKELL_CMT)"		"$(_D)$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)GHC"		"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- $(_C)Cabal"		"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)GHC"		"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([0-9.]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Cabal"		"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([0-9.]+).*$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"		"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HELPLINE)
@@ -2330,6 +2345,69 @@ else
 	)
 endif
 
+.PHONY: $(FETCHIT)-bash
+$(FETCHIT)-bash: $(FETCHIT)-bash-pull
+$(FETCHIT)-bash: $(FETCHIT)-bash-prep
+
+.PHONY: $(FETCHIT)-bash-pull
+$(FETCHIT)-bash-pull:
+	$(call CURL_FILE,$(BASH_TAR_SRC))
+	$(call UNTAR,$(BASH_TAR_DST),$(BASH_TAR_SRC))
+
+.PHONY: $(FETCHIT)-bash-prep
+$(FETCHIT)-bash-prep:
+
+.PHONY: $(BUILDIT)-bash
+$(BUILDIT)-bash:
+	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(FETCHIT)-less
+$(FETCHIT)-less: $(FETCHIT)-less-pull
+$(FETCHIT)-less: $(FETCHIT)-less-prep
+
+.PHONY: $(FETCHIT)-less-pull
+$(FETCHIT)-less-pull:
+	$(call CURL_FILE,$(LESS_TAR_SRC))
+	$(call UNTAR,$(LESS_TAR_DST),$(LESS_TAR_SRC))
+
+.PHONY: $(FETCHIT)-less-prep
+$(FETCHIT)-less-prep:
+
+.PHONY: $(BUILDIT)-less
+$(BUILDIT)-less:
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LESS_TAR_DST),$(COMPOSER_ABODE),\
+		LDFLAGS="$(LDFLAGS) -static" \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LESS_TAR_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(FETCHIT)-vim
+$(FETCHIT)-vim: $(FETCHIT)-vim-pull
+$(FETCHIT)-vim: $(FETCHIT)-vim-prep
+
+.PHONY: $(FETCHIT)-vim-pull
+$(FETCHIT)-vim-pull:
+	$(call CURL_FILE,$(VIM_TAR_SRC))
+	$(call UNTAR,$(VIM_TAR_DST),$(VIM_TAR_SRC))
+
+.PHONY: $(FETCHIT)-vim-prep
+$(FETCHIT)-vim-prep:
+
+.PHONY: $(BUILDIT)-vim
+$(BUILDIT)-vim:
+ifneq ($(BUILD_MUSL),)
+	$(SED) -i \
+		-e "s|LINK[_]AS[_]NEEDED[=][$$][(]LINK[_]AS[_]NEEDED[)]||g" \
+		"$(VIM_TAR_DST)/src/Makefile"
+	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE),\
+		LDFLAGS="$(LDFLAGS) -static" \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE))
+endif
+
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
 $(FETCHIT)-make: $(FETCHIT)-make-prep
@@ -2512,53 +2590,6 @@ else
 	$(call AUTOTOOLS_BUILD,$(GIT_TAR_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
-endif
-
-.PHONY: $(FETCHIT)-less
-$(FETCHIT)-less: $(FETCHIT)-less-pull
-$(FETCHIT)-less: $(FETCHIT)-less-prep
-
-.PHONY: $(FETCHIT)-less-pull
-$(FETCHIT)-less-pull:
-	$(call CURL_FILE,$(LESS_TAR_SRC))
-	$(call UNTAR,$(LESS_TAR_DST),$(LESS_TAR_SRC))
-
-.PHONY: $(FETCHIT)-less-prep
-$(FETCHIT)-less-prep:
-
-.PHONY: $(BUILDIT)-less
-$(BUILDIT)-less:
-ifneq ($(BUILD_MUSL),)
-	$(call AUTOTOOLS_BUILD,$(LESS_TAR_DST),$(COMPOSER_ABODE),\
-		LDFLAGS="$(LDFLAGS) -static" \
-	)
-else
-	$(call AUTOTOOLS_BUILD,$(LESS_TAR_DST),$(COMPOSER_ABODE))
-endif
-
-.PHONY: $(FETCHIT)-vim
-$(FETCHIT)-vim: $(FETCHIT)-vim-pull
-$(FETCHIT)-vim: $(FETCHIT)-vim-prep
-
-.PHONY: $(FETCHIT)-vim-pull
-$(FETCHIT)-vim-pull:
-	$(call CURL_FILE,$(VIM_TAR_SRC))
-	$(call UNTAR,$(VIM_TAR_DST),$(VIM_TAR_SRC))
-
-.PHONY: $(FETCHIT)-vim-prep
-$(FETCHIT)-vim-prep:
-
-.PHONY: $(BUILDIT)-vim
-$(BUILDIT)-vim:
-ifneq ($(BUILD_MUSL),)
-	$(SED) -i \
-		-e "s|LINK[_]AS[_]NEEDED[=][$$][(]LINK[_]AS[_]NEEDED[)]||g" \
-		"$(VIM_TAR_DST)/src/Makefile"
-	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE),\
-		LDFLAGS="$(LDFLAGS) -static" \
-	)
-else
-	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(FETCHIT)-tex
