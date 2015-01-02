@@ -1147,9 +1147,9 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs"		"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (without Gettext) from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
-	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (with Gettext) from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
@@ -1563,7 +1563,9 @@ $(STRAPIT): $(STRAPIT)-ghc
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
+#WORK : is curl breaking pandoc css? (see "pandoc css windows" below)
+#$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
+$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
@@ -1802,15 +1804,15 @@ $(SHELLIT)-vimrc:
 
 override define AUTOTOOLS_BUILD =
 	cd "$(1)" &&
-		$(BUILD_ENV) ./configure --prefix="$(2)" $(3) &&
-		$(BUILD_ENV) $(MAKE) $(4) &&
-		$(BUILD_ENV) $(MAKE) install
+		$(BUILD_ENV) $(3) ./configure --prefix="$(2)" $(4) &&
+		$(BUILD_ENV) $(3) $(MAKE) $(5) &&
+		$(BUILD_ENV) $(3) $(MAKE) install
 endef
 override define AUTOTOOLS_BUILD_MINGW =
 	cd "$(1)" &&
-		$(BUILD_ENV_MINGW) ./configure --prefix="$(2)" $(3) &&
-		$(BUILD_ENV_MINGW) $(MAKE) $(4) &&
-		$(BUILD_ENV_MINGW) $(MAKE) install
+		$(BUILD_ENV_MINGW) $(3) ./configure --prefix="$(2)" $(4) &&
+		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) &&
+		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
 endef
 
 ifneq ($(BUILD_GHC_78),)
@@ -1972,14 +1974,12 @@ $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(LIB_ZLIB_BIN_SRC))
 	$(call UNTAR,$(LIB_ZLIB_BIN_DST),$(LIB_ZLIB_BIN_SRC))
 ifneq ($(BUILD_MUSL),)
-	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE),,\
 		--static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE))
 endif
-
-#WORK : update documentation
 
 override define LIBICONV =
 	$(call CURL_FILE,$(LIB_ICNV_BIN_SRC))
@@ -1991,7 +1991,7 @@ override define LIBICONV =
 		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
 		"$(LIB_ICNV_BIN_DST)/preload/Makefile.in" \
 		"$(LIB_ICNV_BIN_DST)/preload/configure"*
-	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE),,\
 		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
 	)
 endef
@@ -2032,7 +2032,7 @@ ifneq ($(BUILD_MUSL),)
 		"$(LIB_OSSL_BIN_DST)/configure"
 endif
 ifneq ($(BUILD_DIST),)
-	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE),,\
 		linux-generic32 \
 	)
 else
@@ -2056,11 +2056,9 @@ $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_BIN_SRC))
 	$(call UNTAR,$(LIB_FCFG_BIN_DST),$(LIB_FCFG_BIN_SRC))
 	echo WORK
-#	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE))
-	cd "$(LIB_FCFG_BIN_DST)" &&
-		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" ./configure --prefix="$(COMPOSER_ABODE)" &&
-		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) &&
-		$(BUILD_ENV) FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" $(MAKE) install
+	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
+		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+	)
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
@@ -2079,7 +2077,7 @@ $(FETCHIT)-make-prep:
 
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
-	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
 		--without-guile \
 	)
 
@@ -2195,13 +2193,13 @@ endif
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
-	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
 
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
-	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
 
@@ -2247,7 +2245,7 @@ $(BUILDIT)-tex:
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x
-#>	$(call AUTOTOOLS_BUILD_MINGW,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
+#>	$(call AUTOTOOLS_BUILD_MINGW,$(TEX_BIN_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
@@ -2356,7 +2354,7 @@ endif
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
 ifeq ($(BUILD_MSYS),)
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,show)
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
 else
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
@@ -2448,7 +2446,7 @@ endif
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
-	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),,\
 		--disable-user-install \
 	)
 #>	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
@@ -2551,7 +2549,8 @@ $(BUILDIT)-pandoc:
 	@echo
 	$(BUILD_ENV) pandoc --version
 
-#WORK
+#WORK : pandoc css windows
+#WORK : https://github.com/rstudio/rmarkdown/issues/238
 ######################################################################
 # >> Composer CMS v1.4 :: /c/.composer/Makefile
 # COMPOSER_TARGETS    [README]
