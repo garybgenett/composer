@@ -1983,7 +1983,9 @@ override define LIBICONV =
 		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
 		"$(LIB_ICNV_BIN_DST)/preload/Makefile.in" \
 		"$(LIB_ICNV_BIN_DST)/preload/configure"*
-	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE),\
+		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
+	)
 endef
 
 .PHONY: $(STRAPIT)-libs-libiconv1
@@ -2134,6 +2136,8 @@ ifneq ($(BUILD_MUSL),)
 		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
 		"$(CURL_DST)/"*"/Makefile.in"
 endif
+	cd "$(CURL_DST)" &&
+		$(BUILD_ENV) autoreconf --force --install
 
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
