@@ -6,6 +6,7 @@
 #TODO : http://www.html5rocks.com/en/tutorials/webcomponents/imports
 
 #TODO
+# add vim/less and needed files to bindir
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
 # enable https certificates for wget/git?
@@ -478,6 +479,12 @@ override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
 override GIT_TAR_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
+
+# http://www.greenwoodsoftware.com/less (license: GPL)
+# http://www.greenwoodsoftware.com/less
+override LESS_VERSION			:= 458
+override LESS_TAR_SRC			:= http://www.greenwoodsoftware.com/less/less-$(LESS_VERSION).tar.gz
+override LESS_TAR_DST			:= $(COMPOSER_BUILD)/less-$(LESS_VERSION)
 
 # http://www.vim.org/about.php (license: custom = GPL)
 # http://www.vim.org
@@ -1264,6 +1271,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl$(_D)"			"Download/preparation of cURL source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git$(_D)"			"Download/preparation of Git source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
@@ -1277,6 +1285,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl-prep$(_D)"		"Preparation of cURL source repository"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-git$(_D):"	"$(_E)$(FETCHIT)-git-pull$(_D)"			"Download of Git source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git-prep$(_D)"			"Preparation of Git source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less-prep$(_D)"		"Preparation of Less source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-vim$(_D):"	"$(_E)$(FETCHIT)-vim-pull$(_D)"			"Download of Vim source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim-prep$(_D)"			"Preparation of Vim source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-tex$(_D):"	"$(_E)$(FETCHIT)-tex-pull$(_D)"			"Download of TeX Live source archives"
@@ -1298,6 +1308,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
@@ -1665,12 +1676,12 @@ $(STRAPIT): $(STRAPIT)-ghc
 $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git $(FETCHIT)-vim
+$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git $(BUILDIT)-vim
+$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git $(BUILDIT)-less $(BUILDIT)-vim
 #TODO $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
@@ -1865,6 +1876,7 @@ $(SHELLIT)-bashrc:
 		unset VISUAL
 		#
 		alias ll='$(LS)'
+		alias less="$${PAGER}"
 		alias more="$${PAGER}"
 		alias vi="$${EDITOR}"
 		#
@@ -2473,6 +2485,22 @@ else
 	)
 endif
 
+.PHONY: $(FETCHIT)-less
+$(FETCHIT)-less: $(FETCHIT)-less-pull
+$(FETCHIT)-less: $(FETCHIT)-less-prep
+
+.PHONY: $(FETCHIT)-less-pull
+$(FETCHIT)-less-pull:
+	$(call CURL_FILE,$(LESS_TAR_SRC))
+	$(call UNTAR,$(LESS_TAR_DST),$(LESS_TAR_SRC))
+
+.PHONY: $(FETCHIT)-less-prep
+$(FETCHIT)-less-prep:
+
+.PHONY: $(BUILDIT)-less
+$(BUILDIT)-less:
+	$(call AUTOTOOLS_BUILD,$(LESS_TAR_DST),$(COMPOSER_ABODE))
+
 .PHONY: $(FETCHIT)-vim
 $(FETCHIT)-vim: $(FETCHIT)-vim-pull
 $(FETCHIT)-vim: $(FETCHIT)-vim-prep
@@ -2484,8 +2512,6 @@ $(FETCHIT)-vim-pull:
 
 .PHONY: $(FETCHIT)-vim-prep
 $(FETCHIT)-vim-prep:
-
-#WORK
 
 .PHONY: $(BUILDIT)-vim
 $(BUILDIT)-vim:
