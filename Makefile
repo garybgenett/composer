@@ -1259,11 +1259,11 @@ $(BUILDIT)-clean:
 	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
 ifneq ($(BUILD_MSYS),)
 	$(MKDIR) "$(APPDATA)/cabal"
-	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/"
-	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/"
+	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/" || true
+	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/" || true
 endif
-	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/"
-	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/"
+	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || true
+	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || true
 ifneq ($(BUILD_MSYS),)
 	$(RM) "$(COMPOSER_ABODE)/"*.exe
 endif
