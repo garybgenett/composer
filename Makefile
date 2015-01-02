@@ -2584,6 +2584,7 @@ $(BUILDIT)-coreutils:
 	)
 #WORKING : still linking against libgmp.so?
 #WORKING : need to hack around shebang business
+#WORKING : add to $CHECKIT, somehow...?
 #>	$(SED) -i \
 #>		-e "s|^[#][!].*(coreutils[ ])|\1|g" \
 #>		"$(COMPOSER_ABODE)/bin/"*
