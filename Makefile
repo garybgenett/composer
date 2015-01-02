@@ -325,7 +325,7 @@ override CHOST				:= $(BUILD_ARCH)-pc-msys$(BUILD_MSYS)
 endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
-#WORK
+#WORK : need to ldd final binaries to see what libraries they compile in
 override MUSL_GCC			:= $(COMPOSER_ABODE)/bin/musl-gcc
 #override MUSL_GCC			:= TODO
 ifneq ($(wildcard $(MUSL_GCC)),)
@@ -1838,6 +1838,8 @@ $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
+#WORK : move musl to bootstrap, and wrap all of muscl in RUNMAKE, so "build" works in a single pass
+
 .PHONY: $(FETCHIT)-musl
 $(FETCHIT)-musl: $(FETCHIT)-musl-pull
 $(FETCHIT)-musl: $(FETCHIT)-musl-prep
@@ -1845,14 +1847,13 @@ $(FETCHIT)-musl: $(FETCHIT)-musl-prep
 .PHONY: $(FETCHIT)-musl-pull
 $(FETCHIT)-musl-pull:
 	$(call GIT_REPO,$(MUSL_DST),$(MUSL_SRC),$(MUSL_CMT))
-#WORK
-#	$(call CURL_FILE,$(MUSL_IZIP_BIN_SRC))
-#	$(call CURL_FILE,$(MUSL_UZIP_BIN_SRC))
-#	$(call CURL_FILE,$(MUSL_ZLIB_BIN_SRC))
-#	$(call CURL_FILE,$(MUSL_OSSL_BIN_SRC))
-#	$(call CURL_FILE,$(MUSL_CURL_BIN_SRC))
-#	$(call CURL_FILE,$(MUSL_ICNV_BIN_SRC))
-#	$(call CURL_FILE,$(MUSL_EXPT_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_IZIP_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_UZIP_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_ZLIB_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_OSSL_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_CURL_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_ICNV_BIN_SRC))
+	$(call CURL_FILE,$(MUSL_EXPT_BIN_SRC))
 	$(call UNTAR,$(MUSL_IZIP_BIN_DST),$(MUSL_IZIP_BIN_SRC))
 	$(call UNTAR,$(MUSL_UZIP_BIN_DST),$(MUSL_UZIP_BIN_SRC))
 	$(call UNTAR,$(MUSL_ZLIB_BIN_DST),$(MUSL_ZLIB_BIN_SRC))
@@ -2011,7 +2012,6 @@ $(STRAPIT)-git-build:
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
 $(BUILDIT)-git:
-	echo "WORK : this may not work in a single pass, similar to RUNMAKE hacks for MUSL above."
 ifeq ($(CC),$(MUSL_GCC))
 	$(SED) -i \
 		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
