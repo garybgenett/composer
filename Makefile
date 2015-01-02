@@ -2714,8 +2714,7 @@ $(STRAPIT)-libs-fontconfig:
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
 	# call recursively instead of using dependencies, so that environment variables update
-#WORKING : does not work for msys
-#	$(RUNMAKE) $(STRAPIT)-util-coreutils
+	$(RUNMAKE) $(STRAPIT)-util-coreutils
 	$(RUNMAKE) $(STRAPIT)-util-findutils
 	$(RUNMAKE) $(STRAPIT)-util-patch
 	$(RUNMAKE) $(STRAPIT)-util-sed
@@ -2731,10 +2730,10 @@ $(STRAPIT)-util-coreutils:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
 #WORKING
-	# "$(BUILD_PLAT),Msys" requires some patches
-	$(foreach FILE,$(COREUTILS_PATCH_LIST),\
-		$(call DO_PATCH,$(COREUTILS_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-	)
+#	# "$(BUILD_PLAT),Msys" requires some patches
+#	$(foreach FILE,$(COREUTILS_PATCH_LIST),\
+#		$(call DO_PATCH,$(COREUTILS_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+#	)
 #WORKING
 	# "$(BUILD_PLAT),Msys" can't build "*.so" files, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
@@ -2745,7 +2744,10 @@ $(STRAPIT)-util-coreutils:
 		--disable-acl \
 		--disable-xattr \
 	)
+#WORKING : does not work for msys
+ifneq ($(BUILD_PLAT),Msys)
 	$(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils)
+endif
 
 .PHONY: $(STRAPIT)-util-findutils
 $(STRAPIT)-util-findutils:
