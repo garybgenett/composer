@@ -412,65 +412,65 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 
 # https://www.kernel.org/pub/linux/kernel/COPYING (license: GPL)
 # https://www.kernel.org
-override LIB_KAPI_VERSION		:= 3.18.1
-override LIB_KAPI_TAR_SRC		:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$(LIB_KAPI_VERSION).tar.gz
-override LIB_KAPI_TAR_DST		:= $(BUILD_STRAP)/linux-$(LIB_KAPI_VERSION)
+override LINUX_VERSION			:= 3.18.1
+override LINUX_TAR_SRC			:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$(LINUX_VERSION).tar.gz
+override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
 # https://www.gnu.org/software/libc (license: GPL)
 # https://www.gnu.org/software/libc
-override LIB_LIBC_VERSION		:= 2.20
-override LIB_LIBC_TAR_SRC		:= https://ftp.gnu.org/gnu/glibc/glibc-$(LIB_LIBC_VERSION).tar.gz
-override LIB_LIBC_TAR_DST		:= $(BUILD_STRAP)/glibc-$(LIB_LIBC_VERSION)
+override GLIBC_VERSION			:= 2.20
+override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
+override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
-override LIB_ZLIB_VERSION		:= 1.2.8
-override LIB_ZLIB_TAR_SRC		:= http://www.zlib.net/zlib-$(LIB_ZLIB_VERSION).tar.xz
-override LIB_ZLIB_TAR_DST		:= $(BUILD_STRAP)/zlib-$(LIB_ZLIB_VERSION)
+override ZLIB_VERSION			:= 1.2.8
+override ZLIB_TAR_SRC			:= http://www.zlib.net/zlib-$(ZLIB_VERSION).tar.xz
+override ZLIB_TAR_DST			:= $(BUILD_STRAP)/zlib-$(ZLIB_VERSION)
 # https://gmplib.org (license: GPL, LGPL)
 # https://gmplib.org
-override LIB_LGMP_VERSION		:= 6.0.0a
-override LIB_LGMP_TAR_SRC		:= https://gmplib.org/download/gmp/gmp-$(LIB_LGMP_VERSION).tar.xz
-override LIB_LGMP_TAR_DST		:= $(BUILD_STRAP)/gmp-$(subst a,,$(LIB_LGMP_VERSION))
+override GMP_VERSION			:= 6.0.0a
+override GMP_TAR_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VERSION).tar.xz
+override GMP_TAR_DST			:= $(BUILD_STRAP)/gmp-$(subst a,,$(GMP_VERSION))
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
 # https://www.gnu.org/software/libiconv
-override LIB_ICNV_VERSION		:= 1.14
-override LIB_ICNV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIB_ICNV_VERSION).tar.gz
-override LIB_ICNV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIB_ICNV_VERSION)
+override LIBICONV_VERSION		:= 1.14
+override LIBICONV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VERSION).tar.gz
+override LIBICONV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIBICONV_VERSION)
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
-override LIB_GTXT_VERSION		:= 0.19.3
-override LIB_GTXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
-override LIB_GTXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(LIB_GTXT_VERSION)
+override GETTEXT_VERSION		:= 0.19.3
+override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
+override GETTEXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(GETTEXT_VERSION)
 # https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
-override LIB_NCRS_VERSION		:= 5.9
-override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
-override LIB_NCRS_TAR_DST		:= $(BUILD_STRAP)/ncurses-$(LIB_NCRS_VERSION)
+override NCURSES_VERSION		:= 5.9
+override NCURSES_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(NCURSES_VERSION).tar.gz
+override NCURSES_TAR_DST		:= $(BUILD_STRAP)/ncurses-$(NCURSES_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
-override LIB_OSSL_VERSION		:= 1.0.1j
-override LIB_OSSL_TAR_SRC		:= https://www.openssl.org/source/openssl-$(LIB_OSSL_VERSION).tar.gz
-override LIB_OSSL_TAR_DST		:= $(BUILD_STRAP)/openssl-$(LIB_OSSL_VERSION)
+override OPENSSL_VERSION		:= 1.0.1j
+override OPENSSL_TAR_SRC		:= https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
+override OPENSSL_TAR_DST		:= $(BUILD_STRAP)/openssl-$(OPENSSL_VERSION)
 # http://sourceforge.net/projects/expat (license: MIT)
 # http://expat.sourceforge.net
-override LIB_EXPT_VERSION		:= 2.1.0
-override LIB_EXPT_TAR_SRC		:= http://sourceforge.net/projects/expat/files/expat/$(LIB_EXPT_VERSION)/expat-$(LIB_EXPT_VERSION).tar.gz
-override LIB_EXPT_TAR_DST		:= $(BUILD_STRAP)/expat-$(LIB_EXPT_VERSION)
+override EXPAT_VERSION			:= 2.1.0
+override EXPAT_TAR_SRC			:= http://sourceforge.net/projects/expat/files/expat/$(EXPAT_VERSION)/expat-$(EXPAT_VERSION).tar.gz
+override EXPAT_TAR_DST			:= $(BUILD_STRAP)/expat-$(EXPAT_VERSION)
 # http://www.freetype.org/license.html (license: custom = BSD, GPL)
 # http://www.freetype.org/download.html
-override LIB_FTYP_VERSION		:= 2.5.3
-override LIB_FTYP_TAR_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(LIB_FTYP_VERSION).tar.gz
-override LIB_FTYP_TAR_DST		:= $(BUILD_STRAP)/freetype-$(LIB_FTYP_VERSION)
+override FREETYPE_VERSION		:= 2.5.3
+override FREETYPE_TAR_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(FREETYPE_VERSION).tar.gz
+override FREETYPE_TAR_DST		:= $(BUILD_STRAP)/freetype-$(FREETYPE_VERSION)
 # http://www.freedesktop.org/software/fontconfig/fontconfig-devel/ln12.html (license: custom = as-is)
 # http://www.freedesktop.org/wiki/Software/fontconfig
-override LIB_FCFG_VERSION		:= 2.11.1
-override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
-override LIB_FCFG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(LIB_FCFG_VERSION)
+override FONTCONFIG_VERSION		:= 2.11.1
+override FONTCONFIG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FONTCONFIG_VERSION).tar.gz
+override FONTCONFIG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(FONTCONFIG_VERSION)
 
 # http://dev.perl.org/licenses (license: custom = GPL, Artistic)
 # https://www.perl.org/get.html
-override LIB_PERL_VERSION		:= 5.20.1
-override LIB_PERL_TAR_SRC		:= http://www.cpan.org/src/5.0/perl-$(LIB_PERL_VERSION).tar.gz
-override LIB_PERL_TAR_DST		:= $(BUILD_STRAP)/perl-$(LIB_PERL_VERSION)
+override PERL_VERSION			:= 5.20.1
+override PERL_TAR_SRC			:= http://www.cpan.org/src/5.0/perl-$(PERL_VERSION).tar.gz
+override PERL_TAR_DST			:= $(BUILD_STRAP)/perl-$(PERL_VERSION)
 # https://www.gnu.org/software/coreutils (license: GPL)
 # https://www.gnu.org/software/coreutils
 override COREUTILS_VERSION		:= 8.23
@@ -493,9 +493,9 @@ override SED_TAR_SRC			:= https://ftp.gnu.org/gnu/sed/sed-$(SED_VERSION).tar.gz
 override SED_TAR_DST			:= $(BUILD_STRAP)/sed-$(SED_VERSION)
 # http://www.bzip.org (license: custom = BSD)
 # http://www.bzip.org
-override LIB_BZIP_VERSION		:= 1.0.6
-override LIB_BZIP_TAR_SRC		:= http://www.bzip.org/$(LIB_BZIP_VERSION)/bzip2-$(LIB_BZIP_VERSION).tar.gz
-override LIB_BZIP_TAR_DST		:= $(BUILD_STRAP)/bzip2-$(LIB_BZIP_VERSION)
+override BZIP_VERSION			:= 1.0.6
+override BZIP_TAR_SRC			:= http://www.bzip.org/$(BZIP_VERSION)/bzip2-$(BZIP_VERSION).tar.gz
+override BZIP_TAR_DST			:= $(BUILD_STRAP)/bzip2-$(BZIP_VERSION)
 # https://www.gnu.org/software/tar (license: GPL)
 # https://www.gnu.org/software/tar
 override TAR_VERSION			:= 1.28
@@ -1474,7 +1474,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
-	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
@@ -2415,6 +2416,7 @@ $(STRAPIT)-msys-dll:
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-libs-linux
 #ifeq ($(BUILD_PLAT),Linux)
 #	$(RUNMAKE) $(STRAPIT)-libs-glibc
 #endif
@@ -2429,42 +2431,45 @@ $(STRAPIT)-libs:
 	$(RUNMAKE) $(STRAPIT)-libs-freetype
 	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
 
-.PHONY: $(STRAPIT)-libs-glibc
-$(STRAPIT)-libs-glibc:
-	$(call CURL_FILE,$(LIB_KAPI_TAR_SRC))
-	$(call CURL_FILE,$(LIB_LIBC_TAR_SRC))
-	$(call UNTAR,$(LIB_KAPI_TAR_DST),$(LIB_KAPI_TAR_SRC))
-	$(call UNTAR,$(LIB_LIBC_TAR_DST),$(LIB_LIBC_TAR_SRC))
-	cd "$(LIB_KAPI_TAR_DST)" && \
+.PHONY: $(STRAPIT)-libs-linux
+$(STRAPIT)-libs-linux:
+	$(call CURL_FILE,$(LINUX_TAR_SRC))
+	$(call UNTAR,$(LINUX_TAR_DST),$(LINUX_TAR_SRC))
+	cd "$(LINUX_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) mrproper && \
 		$(BUILD_ENV) $(MAKE) INSTALL_HDR_PATH="$(COMPOSER_ABODE)" headers_install
-	$(MKDIR) "$(LIB_LIBC_TAR_DST).build"
-	$(ECHO) "\"$(LIB_LIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(LIB_LIBC_TAR_DST).build/configure"
-	$(CHMOD) "$(LIB_LIBC_TAR_DST).build/configure"
-	$(call AUTOTOOLS_BUILD,$(LIB_LIBC_TAR_DST).build,$(COMPOSER_ABODE),\
+
+.PHONY: $(STRAPIT)-libs-glibc
+$(STRAPIT)-libs-glibc:
+	$(call CURL_FILE,$(GLIBC_TAR_SRC))
+	$(call UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
+	$(MKDIR) "$(GLIBC_TAR_DST).build"
+	$(ECHO) "\"$(GLIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(GLIBC_TAR_DST).build/configure"
+	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
+	$(call AUTOTOOLS_BUILD,$(GLIBC_TAR_DST).build,$(COMPOSER_ABODE),\
 		CFLAGS="$(CFLAGS) -O2" \
 	)
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
-	$(call CURL_FILE,$(LIB_ZLIB_TAR_SRC))
-	$(call UNTAR,$(LIB_ZLIB_TAR_DST),$(LIB_ZLIB_TAR_SRC))
+	$(call CURL_FILE,$(ZLIB_TAR_SRC))
+	$(call UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
 ifeq ($(BUILD_BITS),64)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
 		--64 \
 		--static \
 	)
 else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
 		--static \
 	)
 endif
 
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
-	$(call CURL_FILE,$(LIB_LGMP_TAR_SRC))
-	$(call UNTAR,$(LIB_LGMP_TAR_DST),$(LIB_LGMP_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_TAR_DST),$(COMPOSER_ABODE),\
+	$(call CURL_FILE,$(GMP_TAR_SRC))
+	$(call UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
 		ABI="$(BUILD_BITS)" \
 		,\
 		--disable-assembly \
@@ -2473,14 +2478,14 @@ $(STRAPIT)-libs-gmp:
 	)
 
 override define LIBICONV_BUILD =
-	$(call CURL_FILE,$(LIB_ICNV_TAR_SRC))
+	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with gettext
-	$(RM) -r "$(LIB_ICNV_TAR_DST)"
-	$(call UNTAR,$(LIB_ICNV_TAR_DST),$(LIB_ICNV_TAR_SRC))
+	$(RM) -r "$(LIBICONV_TAR_DST)"
+	$(call UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
-	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
-	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux)
+	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux)
+	$(call AUTOTOOLS_BUILD,$(LIBICONV_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
@@ -2492,9 +2497,9 @@ $(STRAPIT)-libs-libiconv1:
 
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
-	$(call CURL_FILE,$(LIB_GTXT_TAR_SRC))
-	$(call UNTAR,$(LIB_GTXT_TAR_DST),$(LIB_GTXT_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(GETTEXT_TAR_SRC))
+	$(call UNTAR,$(GETTEXT_TAR_DST),$(GETTEXT_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(GETTEXT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
@@ -2505,56 +2510,56 @@ $(STRAPIT)-libs-libiconv2:
 
 .PHONY: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs-ncurses:
-	$(call CURL_FILE,$(LIB_NCRS_TAR_SRC))
-	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
+	$(call CURL_FILE,$(NCURSES_TAR_SRC))
+	$(call UNTAR,$(NCURSES_TAR_DST),$(NCURSES_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
-	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call GNU_CFG_INSTALL,$(NCURSES_TAR_DST))
+	$(call AUTOTOOLS_BUILD,$(NCURSES_TAR_DST),$(COMPOSER_ABODE),,\
 		--without-shared \
 	)
 
 .PHONY: $(STRAPIT)-libs-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
-	$(call CURL_FILE,$(LIB_OSSL_TAR_SRC))
-	$(call UNTAR,$(LIB_OSSL_TAR_DST),$(LIB_OSSL_TAR_SRC))
+	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
+	$(call UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
-	$(CP) "$(LIB_OSSL_TAR_DST)/Configure" "$(LIB_OSSL_TAR_DST)/configure"
+	$(CP) "$(OPENSSL_TAR_DST)/Configure" "$(OPENSSL_TAR_DST)/configure"
 else
-	$(CP) "$(LIB_OSSL_TAR_DST)/config" "$(LIB_OSSL_TAR_DST)/configure"
+	$(CP) "$(OPENSSL_TAR_DST)/config" "$(OPENSSL_TAR_DST)/configure"
 endif
 else ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
 else
-	$(CP) "$(LIB_OSSL_TAR_DST)/config" "$(LIB_OSSL_TAR_DST)/configure"
+	$(CP) "$(OPENSSL_TAR_DST)/config" "$(OPENSSL_TAR_DST)/configure"
 endif
 	$(SED) -i \
 		-e "s|(TERMIO)([^S])|\1S\2|g" \
 		-e "s|(termio)([^s])|\1s\2|g" \
-		"$(LIB_OSSL_TAR_DST)/configure" \
-		"$(LIB_OSSL_TAR_DST)/crypto/ui/ui_openssl.c"
+		"$(OPENSSL_TAR_DST)/configure" \
+		"$(OPENSSL_TAR_DST)/crypto/ui/ui_openssl.c"
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
 		no-shared \
 		no-dso \
 	)
 else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		no-shared \
 		no-dso \
 	)
 endif
 else ifeq ($(BUILD_PLAT),Msys)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
 		no-shared \
 		no-dso \
 	)
 else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		no-shared \
 		no-dso \
 	)
@@ -2562,30 +2567,30 @@ endif
 
 .PHONY: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs-expat:
-	$(call CURL_FILE,$(LIB_EXPT_TAR_SRC))
-	$(call UNTAR,$(LIB_EXPT_TAR_DST),$(LIB_EXPT_TAR_SRC))
+	$(call CURL_FILE,$(EXPAT_TAR_SRC))
+	$(call UNTAR,$(EXPAT_TAR_DST),$(EXPAT_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
-	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call GNU_CFG_INSTALL,$(EXPAT_TAR_DST)/conftools)
+	$(call AUTOTOOLS_BUILD,$(EXPAT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs-freetype:
-	$(call CURL_FILE,$(LIB_FTYP_TAR_SRC))
-	$(call UNTAR,$(LIB_FTYP_TAR_DST),$(LIB_FTYP_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(FREETYPE_TAR_SRC))
+	$(call UNTAR,$(FREETYPE_TAR_DST),$(FREETYPE_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(FREETYPE_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-fontconfig:
-	$(call CURL_FILE,$(LIB_FCFG_TAR_SRC))
-	$(call UNTAR,$(LIB_FCFG_TAR_DST),$(LIB_FCFG_TAR_SRC))
+	$(call CURL_FILE,$(FONTCONFIG_TAR_SRC))
+	$(call UNTAR,$(FONTCONFIG_TAR_DST),$(FONTCONFIG_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
-	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_LIBS="-lfreetype" \
 		,\
@@ -2617,42 +2622,42 @@ $(STRAPIT)-util:
 
 .PHONY: $(STRAPIT)-util-perl
 $(STRAPIT)-util-perl:
-	$(call CURL_FILE,$(LIB_PERL_TAR_SRC))
-	$(call UNTAR,$(LIB_PERL_TAR_DST),$(LIB_PERL_TAR_SRC))
+	$(call CURL_FILE,$(PERL_TAR_SRC))
+	$(call UNTAR,$(PERL_TAR_DST),$(PERL_TAR_SRC))
 ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" requires some patches
-	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
+	if [ ! -f "$(PERL_TAR_DST)/Configure.perl" ]; then \
 		$(SED) -i \
 			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
-			"$(LIB_PERL_TAR_DST)/Makefile.SH"; \
+			"$(PERL_TAR_DST)/Makefile.SH"; \
 		$(foreach FILE,$(PERL_PATCH_LIST),\
-			$(call DO_PATCH,$(LIB_PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+			$(call DO_PATCH,$(PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 		) \
 	fi
 	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
 	$(SED) -i \
 		-e "s|^(case[ ][\"])[$$]d_readlink|\1NULL|g" \
-		"$(LIB_PERL_TAR_DST)/Configure"
+		"$(PERL_TAR_DST)/Configure"
 	$(SED) -i \
 		-e "s|[$$]issymlink|test -f|g" \
-		"$(LIB_PERL_TAR_DST)/Makefile.SH"
+		"$(PERL_TAR_DST)/Makefile.SH"
 endif
 	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
-	if [ ! -f "$(LIB_PERL_TAR_DST)/Configure.perl" ]; then \
-		$(MV) "$(LIB_PERL_TAR_DST)/Configure" "$(LIB_PERL_TAR_DST)/Configure.perl"; \
-		$(CP) "$(LIB_PERL_TAR_DST)/configure.gnu" "$(LIB_PERL_TAR_DST)/configure"; \
+	if [ ! -f "$(PERL_TAR_DST)/Configure.perl" ]; then \
+		$(MV) "$(PERL_TAR_DST)/Configure" "$(PERL_TAR_DST)/Configure.perl"; \
+		$(CP) "$(PERL_TAR_DST)/configure.gnu" "$(PERL_TAR_DST)/configure"; \
 		$(SED) -i \
 			-e "s|(Configure)([^.])|\1.perl\2|g" \
-			"$(LIB_PERL_TAR_DST)/Configure.perl" \
-			"$(LIB_PERL_TAR_DST)/MANIFEST" \
-			"$(LIB_PERL_TAR_DST)/configure"; \
+			"$(PERL_TAR_DST)/Configure.perl" \
+			"$(PERL_TAR_DST)/MANIFEST" \
+			"$(PERL_TAR_DST)/configure"; \
 	fi
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_TAR_DST),$(COMPOSER_ABODE))
 
 override define PERL_MODULES_BUILD =
 	$(call CURL_FILE,$(2)); \
-	$(call UNTAR,$(LIB_PERL_TAR_DST)/$(1),$(2)); \
-	cd "$(LIB_PERL_TAR_DST)/$(1)" && \
+	$(call UNTAR,$(PERL_TAR_DST)/$(1),$(2)); \
+	cd "$(PERL_TAR_DST)/$(1)" && \
 		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
 		$(BUILD_ENV) $(MAKE) && \
 		$(BUILD_ENV) $(MAKE) install
@@ -2702,11 +2707,11 @@ $(STRAPIT)-util-sed:
 
 .PHONY: $(STRAPIT)-util-bzip
 $(STRAPIT)-util-bzip:
-	$(call CURL_FILE,$(LIB_BZIP_TAR_SRC))
-	$(call UNTAR,$(LIB_BZIP_TAR_DST),$(LIB_BZIP_TAR_SRC))
-	$(ECHO) >"$(LIB_BZIP_TAR_DST)/configure"
-	$(CHMOD) "$(LIB_BZIP_TAR_DST)/configure"
-	$(call AUTOTOOLS_BUILD,$(LIB_BZIP_TAR_DST),$(COMPOSER_ABODE),\
+	$(call CURL_FILE,$(BZIP_TAR_SRC))
+	$(call UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
+	$(ECHO) >"$(BZIP_TAR_DST)/configure"
+	$(CHMOD) "$(BZIP_TAR_DST)/configure"
+	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE),\
 		PREFIX="$(COMPOSER_ABODE)" \
 	)
 
@@ -2818,15 +2823,15 @@ $(FETCHIT)-infozip: $(FETCHIT)-infozip-prep
 $(FETCHIT)-infozip-pull:
 	$(call CURL_FILE,$(IZIP_TAR_SRC))
 	$(call CURL_FILE,$(UZIP_TAR_SRC))
-	$(call CURL_FILE,$(LIB_BZIP_TAR_SRC))
+	$(call CURL_FILE,$(BZIP_TAR_SRC))
 	$(call UNTAR,$(IZIP_TAR_DST),$(IZIP_TAR_SRC))
 	$(call UNTAR,$(UZIP_TAR_DST),$(UZIP_TAR_SRC))
-	$(call UNTAR,$(LIB_BZIP_TAR_DST),$(LIB_BZIP_TAR_SRC))
+	$(call UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
 	$(MKDIR) \
 		"$(IZIP_TAR_DST)/bzip2" \
 		"$(UZIP_TAR_DST)/bzip2"
-	$(CP) "$(LIB_BZIP_TAR_DST)/"* "$(IZIP_TAR_DST)/bzip2/"
-	$(CP) "$(LIB_BZIP_TAR_DST)/"* "$(UZIP_TAR_DST)/bzip2/"
+	$(CP) "$(BZIP_TAR_DST)/"* "$(IZIP_TAR_DST)/bzip2/"
+	$(CP) "$(BZIP_TAR_DST)/"* "$(UZIP_TAR_DST)/bzip2/"
 
 .PHONY: $(FETCHIT)-infozip-prep
 $(FETCHIT)-infozip-prep:
