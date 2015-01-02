@@ -334,10 +334,11 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-#WORK 4.1 segfault in linux 32-bit
 ifeq ($(BUILD_MSYS),)
+#WORK 4.1 segfault in linux 32-bit
 override MAKE_VERSION			:= 4.0
 else
+#WORK built make causes build errors in git (and others?)
 override MAKE_VERSION			:= 4.1
 endif
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
@@ -979,8 +980,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(FETCHIT)-make:"		"$(FETCHIT)-make-pull"			"Download of GNU Make source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-make-prep"			"Preparation of GNU Make source repository"
 	@$(HELPOUT1) "$(FETCHIT)-git:"		"$(FETCHIT)-git-pull"			"Download of Git source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"			"Preparation of Git source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-git-patch"			"Download/apply patches to Git source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"			"Preparation of Git source repository"
 	@$(HELPOUT1) "$(FETCHIT)-tex:"		"$(FETCHIT)-tex-pull"			"Download of TeX Live source archives"
 	@$(HELPOUT1) ""				"$(FETCHIT)-tex-prep"			"Preparation of TeX Live source archives"
 	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"			"Download of GHC source repository"
@@ -1351,11 +1352,11 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
-$(UPGRADE):	override SHELL := $(MSYS_SHELL)
-$(STRAPIT)-fix:	override SHELL := $(MSYS_SHELL)
-$(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
-$(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
-$(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
+#WORK $(UPGRADE):	override SHELL := $(MSYS_SHELL)
+#WORK $(STRAPIT)-fix:	override SHELL := $(MSYS_SHELL)
+#WORK $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
+#WORK $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
+#WORK $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
 endif
 
 .PHONY: $(STRAPIT)
@@ -1370,12 +1371,16 @@ $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
+#WORK $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
+$(FETCHIT): $(FETCHIT)-git
+#WORK
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
+#WORK $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
+$(BUILDIT): $(BUILDIT)-git
+#WORK
 #WORK $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
@@ -1723,9 +1728,9 @@ $(BUILDIT)-make:
 $(STRAPIT)-git:
 	$(call WGET_FILE,$(GIT_BIN_SRC))
 	$(call UNTAR,$(GIT_BIN_DST),$(GIT_BIN_SRC))
+	$(RUNMAKE) $(STRAPIT)-git-patch
 	cd "$(GIT_BIN_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
-	$(RUNMAKE) $(STRAPIT)-git-patch
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-git-patch
@@ -1738,17 +1743,12 @@ endif
 
 .PHONY: $(FETCHIT)-git
 $(FETCHIT)-git: $(FETCHIT)-git-pull
-$(FETCHIT)-git: $(FETCHIT)-git-prep
 $(FETCHIT)-git: $(FETCHIT)-git-patch
+$(FETCHIT)-git: $(FETCHIT)-git-prep
 
 .PHONY: $(FETCHIT)-git-pull
 $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
-
-.PHONY: $(FETCHIT)-git-prep
-$(FETCHIT)-git-prep:
-	cd "$(GIT_DST)" &&
-		$(BUILD_ENV) $(MAKE) configure
 
 .PHONY: $(FETCHIT)-git-patch
 $(FETCHIT)-git-patch:
@@ -1757,6 +1757,11 @@ ifneq ($(BUILD_MSYS),)
 		$(call PATCH,$(GIT_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
 	)
 endif
+
+.PHONY: $(FETCHIT)-git-prep
+$(FETCHIT)-git-prep:
+	cd "$(GIT_DST)" &&
+		$(BUILD_ENV) $(MAKE) configure
 
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
