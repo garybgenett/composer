@@ -912,11 +912,21 @@ override COREUTILS_INSTALL		= $(call DO_COREUTILS_INSTALL,$(abspath $(1)),$(absp
 override define DO_COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"
 	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
-		"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+		if [ -f "$(2)/$${FILE}" ]; then \
+			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+		else \
+			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+		fi; \
 	done
-	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"
-	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
+	if [ -f "$(2)/install" ]; then \
+		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+	else \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
+	fi
 endef
 
 override define DO_PATCH		=
