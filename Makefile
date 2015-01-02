@@ -316,7 +316,7 @@ override COMPOSER_PROGS_USE		?=
 #	found by: https://github.com/faylang/fay/issues/261
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
-override CC				:=
+override CC				?= gcc
 override CHOST				:=
 override CFLAGS				:=
 override LDFLAGS			:=
@@ -1143,6 +1143,7 @@ HELP_OPTIONS_SUB:
 	@$(HELPER) "$(_H)Environment Options:"
 	@$(HELPOUT1) "$(_C)LANG$(_D)"			"Locale default language"	"[$(_M)$(LANG)$(_D)] $(_N)(NOTE: use UTF-8)"
 	@$(HELPOUT1) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
+	@$(HELPOUT1) "$(_C)CC$(_D)"			"C compiler"			"[$(_M)$(CC)$(_D)]"
 	@echo
 	@$(HELPER) "All of these can be set on the command line or in the environment."
 	@echo
@@ -2083,11 +2084,7 @@ override define LIBICONV_BUILD =
 endef
 else
 override define LIBICONV_BUILD =
-	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE),,\
-		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
-		--disable-static \
-		--enable-shared \
-	)
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE))
 endef
 endif
 
@@ -2111,10 +2108,7 @@ ifneq ($(BUILD_MUSL),)
 		--enable-static \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_BIN_DST),$(COMPOSER_ABODE),,\
-		--disable-static \
-		--enable-shared \
-	)
+	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_BIN_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(STRAPIT)-libs-openssl
@@ -2162,10 +2156,7 @@ ifneq ($(BUILD_MUSL),)
 		--enable-static \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
-		--disable-static \
-		--enable-shared \
-	)
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(STRAPIT)-libs-freetype
@@ -2178,10 +2169,7 @@ ifneq ($(BUILD_MUSL),)
 		--enable-static \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_BIN_DST),$(COMPOSER_ABODE),,\
-		--disable-static \
-		--enable-shared \
-	)
+	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_BIN_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(STRAPIT)-libs-fontconfig
@@ -2199,16 +2187,17 @@ ifneq ($(BUILD_MUSL),)
 		--disable-shared \
 		--enable-static \
 	)
-else
+else ifneq ($(BUILD_MSYS),)
+	echo WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include:$(COMPOSER_ABODE)/include/freetype2" \
+		EXPAT_CFLAGS="$(CFLAGS)" \
+		EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include\" -lexpat" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
 		FREETYPE_LIBS="-lfreetype" \
-		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
-		,\
-		--disable-static \
-		--enable-shared \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(FETCHIT)-make
@@ -2228,19 +2217,9 @@ $(FETCHIT)-make-prep:
 
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
-ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
 		--without-guile \
-		--disable-shared \
-		--enable-static \
 	)
-else
-	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
-		--without-guile \
-		--disable-static \
-		--enable-shared \
-	)
-endif
 
 .PHONY: $(FETCHIT)-infozip
 $(FETCHIT)-infozip: $(FETCHIT)-infozip-pull
@@ -2305,13 +2284,13 @@ $(FETCHIT)-curl-prep:
 $(STRAPIT)-curl-build:
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(CURL_BIN_DST),$(COMPOSER_ABODE),,\
+		--without-libidn \
 		--disable-shared \
 		--enable-static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(CURL_BIN_DST),$(COMPOSER_ABODE),,\
-		--disable-static \
-		--enable-shared \
+		--without-libidn \
 	)
 endif
 
@@ -2319,13 +2298,13 @@ endif
 $(BUILDIT)-curl:
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
+		--without-libidn \
 		--disable-shared \
 		--enable-static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
-		--disable-static \
-		--enable-shared \
+		--without-libidn \
 	)
 endif
 
@@ -2384,16 +2363,10 @@ ifneq ($(BUILD_MUSL),)
 		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
 		,\
 		--without-tcltk \
-		--disable-shared \
-		--enable-static \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
-		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
-		,\
+	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
-		--disable-static \
-		--enable-shared \
 	)
 endif
 
@@ -2404,16 +2377,10 @@ ifneq ($(BUILD_MUSL),)
 		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
 		,\
 		--without-tcltk \
-		--disable-shared \
-		--enable-static \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
-		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
-		,\
+	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
-		--disable-static \
-		--enable-shared \
 	)
 endif
 
@@ -2459,6 +2426,7 @@ endif
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
 ifneq ($(BUILD_MUSL),)
+	echo WORK
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
@@ -2467,13 +2435,12 @@ ifneq ($(BUILD_MUSL),)
 			--disable-shared \
 			--enable-static
 else
+	echo WORK
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
-			--without-x \
-			--disable-static \
-			--enable-shared
+			--without-x
 endif
 #>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
