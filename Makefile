@@ -666,18 +666,24 @@ override PANDOC_CMT			:= 1.13.2
 override PANDOC_VERSION			:= $(PANDOC_CMT)
 
 override BUILD_PATH_MINGW		:=
-override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
-override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
+ifeq ($(COMPOSER_PROGS_USE),0)
+override BUILD_PATH			:= $(PATH)
+else
 ifeq ($(COMPOSER_PROGS_USE),1)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
+override BUILD_PATH			:= $(COMPOSER_ABODE)/.coreutils:$(COMPOSER_PROGS)/usr/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/bin
+else
+override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 endif
+override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifeq ($(BUILD_PLAT),Msys)
 override BUILD_PATH_MINGW		:=               $(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
 endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 ifneq ($(COMPOSER_PROGS_USE),1)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/.coreutils:$(COMPOSER_PROGS)/usr/bin
+endif
 endif
 
 override PACMAN_BASE_LIST		:= \
@@ -847,9 +853,6 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
-ifeq ($(COMPOSER_PROGS_USE),0)
-override PATH_LIST			:= $(subst :, ,$(PATH))
-endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
@@ -864,28 +867,16 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
-override COREUTILS_INSTALL		= $(call DO_COREUTILS_INSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
-override COREUTILS_UNINSTALL		= $(call DO_COREUTILS_UNINSTALL,$(abspath $(1)),$(abspath $(dir $(1))))
-override define DO_COREUTILS_INSTALL	=
+override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
-	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		if [ -f "$(2)/$${FILE}" ]; then \
-			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
-			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
-		else \
-			"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
-			"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
-		fi; \
+	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+		"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
 	done; \
-	if [ -f "$(2)/install" ]; then \
-		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
-		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
-	else \
-		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
-		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
-	fi
+	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
 endef
-override define DO_COREUTILS_UNINSTALL	=
+override define COREUTILS_UNINSTALL	=
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
 		if [ -f "$(2)/$${FILE}" ]; then \
 			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
@@ -893,7 +884,7 @@ override define DO_COREUTILS_UNINSTALL	=
 	done
 endef
 ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
-$(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils))
+$(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils))
 endif
 override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
@@ -2224,15 +2215,9 @@ $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys:
 ifeq ($(COMPOSER_PROGS_USE),1)
-ifneq ($(wildcard $(COMPOSER_PROGS)),)
 	@cd "$(COMPOSER_PROGS)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
 		$(BUILD_ENV) ./msys2_shell.bat
-else
-	@cd "$(MSYS_BIN_DST)" && \
-		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) ./msys2_shell.bat
-endif
 else
 	@cd "$(MSYS_BIN_DST)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
@@ -2744,9 +2729,7 @@ $(STRAPIT)-util-coreutils:
 	)
 #WORK : does not work for msys
 ifeq ($(BUILD_PLAT),Msys)
-	$(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils)
-else
-	$(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils)
+	$(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)
 endif
 
 .PHONY: $(STRAPIT)-util-findutils
