@@ -1235,20 +1235,19 @@ else
 $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
 $(STRAPIT): $(STRAPIT)-git
-$(STRAPIT): $(FETCHIT)-make $(BUILDIT)-make
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 
 .PHONY: $(FETCHIT)
-$(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-cabal
+$(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
-$(BUILDIT): $(BUILDIT)-bindir
 $(BUILDIT): $(BUILDIT)-clean
+$(BUILDIT): $(BUILDIT)-bindir
 $(BUILDIT): $(CHECKIT)
 
 do-%: $(FETCHIT)-% $(BUILDIT)-%
