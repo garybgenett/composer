@@ -329,6 +329,39 @@ override MSYS_VERSION			:= 20141003
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 
+# https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
+# https://www.gnu.org/software/make/manual/make.html
+# https://savannah.gnu.org/projects/make
+override MAKE_VERSION			:= 4.1
+override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
+override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
+override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
+override MAKE_DST			:= $(COMPOSER_BUILD)/make
+override MAKE_CMT			:= $(MAKE_VERSION)
+
+# https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
+# http://git-scm.com
+# https://msysgit.github.io
+override GIT_VERSION			:= 1.8.5.5
+override GIT_BIN_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
+override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
+override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
+override GIT_DST			:= $(COMPOSER_BUILD)/git
+override GIT_CMT			:= v$(GIT_VERSION)
+
+# https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
+# https://www.tug.org/texlive
+# https://www.tug.org/texlive/build.html
+# ftp://tug.org/historic/systems/texlive
+# http://www.slackbuilds.org/repository/14.0/office/texlive
+override TEX_YEAR			:= 2014
+override TEX_VERSION			:= $(TEX_YEAR)0525
+override TEX_PDF_VERSION		:= 1.40.15
+override TEX_TEXMF_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
+override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
+override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
+override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
+
 # https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
 # https://www.haskell.org/cabal/download.html
@@ -387,39 +420,6 @@ override PANDOC_MATH_CMT		:= 0.6.6.3
 override PANDOC_HIGH_CMT		:= 0.5.8.5
 override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CMT			:= 1.12.4.2
-
-# https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
-# https://www.tug.org/texlive
-# https://www.tug.org/texlive/build.html
-# ftp://tug.org/historic/systems/texlive
-# http://www.slackbuilds.org/repository/14.0/office/texlive
-override TEX_YEAR			:= 2014
-override TEX_VERSION			:= $(TEX_YEAR)0525
-override TEX_PDF_VERSION		:= 1.40.15
-override TEX_TEXMF_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
-override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
-override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
-override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
-
-# https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
-# https://www.gnu.org/software/make/manual/make.html
-# https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= 4.1
-override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
-override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
-override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
-override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= $(MAKE_VERSION)
-
-# https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
-# http://git-scm.com
-# https://msysgit.github.io
-override GIT_VERSION			:= 1.8.5.5
-override GIT_BIN_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
-override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
-override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
-override GIT_DST			:= $(COMPOSER_BUILD)/git
-override GIT_CMT			:= v$(GIT_VERSION)
 
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
