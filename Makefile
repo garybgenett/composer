@@ -1304,13 +1304,6 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
-#WORK
-#ifeq ($(wildcard $(SHELL)),)
-#export MSYSTEM := $(MSYSTEM_MSYS)
-#WORK override SHELL := $(call COMPOSER_FIND,$(PATH_LIST),sh)
-#override SHELL := c:\.composer\.home\msys32\usr\bin\sh
-#endif
-#WORK
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
@@ -1383,13 +1376,12 @@ $(BUILDIT)-bindir:
 #	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/usr/bin/pdflatex"
 #WORK
 ifneq ($(BUILD_MSYS),)
-#WORK
 	@cat >"$(COMPOSER_PROGS)/shell.bat" <<'_EOF_'
 		@echo off
 		set WD=%~dp0
 		set BINDIR=/usr/bin
 		set MSYSCON=mintty.exe
-		::WORK set MSYSTEM=$(MSYSTEM_MSYS)
+		set MSYSTEM=$(MSYSTEM_MSYS)
 		set PATH=%WD%%BINDIR%:%PATH%
 		set OPTIONS=
 		set OPTIONS=%OPTIONS% --title "// $(COMPOSER_BASENAME) MSYS2"
@@ -1398,17 +1390,7 @@ ifneq ($(BUILD_MSYS),)
 		:: end of file
 	_EOF_
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
-	$(CP) "$(MSYS_BIN_DST)/etc/fstab" "$(COMPOSER_PROGS)/etc/"
-#WORK
-#	@cat >"$(COMPOSER_PROGS)/etc/profile" <<'_EOF_'
-#		#!/usr/bin/env bash
-#		#WORK : anything better than this hack?
-#		declare COMPOSER_DIR="$$(cygpath -au $$(cygpath -aw /)../../)"
-#		make -C "$${COMPOSER_DIR}" $(SHELLIT)-bashrc
-#		source "$${COMPOSER_DIR}/.home/.bashrc"
-#		# end of file
-#	_EOF_
-#WORK
+	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
 	$(CP) "$(MSYS_BIN_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
 	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
