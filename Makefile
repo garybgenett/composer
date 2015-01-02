@@ -130,7 +130,8 @@ override INSTALL			:= install
 override TESTOUT			:= test
 override EXAMPLE			:= template
 
-override COMPOSER_ABSPATH		:= "'$$'"(abspath "'$$'"(dir "'$$'"(lastword "'$$'"(MAKEFILE_LIST))))
+override _				:= "'$$'"
+override COMPOSER_ABSPATH		:= $(_)(abspath $(_)(dir $(_)(lastword $(_)(MAKEFILE_LIST))))
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
@@ -534,6 +535,7 @@ override WINDOWS_BINARY_LIST		:= \
 	\
 	cygpath \
 	cygwin-console-helper \
+	dirname \
 	less \
 	mintty
 
@@ -698,11 +700,11 @@ override define PATCH			=
 		"$(call COMPOSER_FIND,$(PATH_LIST),patch)" --strip=1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
 
-override GIT				:= "$(call COMPOSER_FIND,$(PATH_LIST),git)"
+override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT))../../git-core))
-override GIT				:= $(GIT) -c http.sslVerify=false
+override GIT				:= "$(GIT)"
 ifneq ($(GIT_EXEC),)
-override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
+override GIT				:= $(GIT) -c http.sslVerify=false --exec-path="$(GIT_EXEC)"
 endif
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
@@ -848,8 +850,8 @@ HELP_HEADER:
 	@echo "Usage:"
 	@$(HELPOUT1) 'RUNMAKE := $(RUNMAKE)'
 	@$(HELPOUT1) 'COMPOSE := $(COMPOSE)'
-	@$(HELPOUT1) ""'$$'"(RUNMAKE) [variables] <filename>.<extension>"
-	@$(HELPOUT1) ""'$$'"(COMPOSE) <variables>"
+	@$(HELPOUT1) "$(_)(RUNMAKE) [variables] <filename>.<extension>"
+	@$(HELPOUT1) "$(_)(COMPOSE) <variables>"
 	@echo ""
 
 .PHONY: HELP_OPTIONS
@@ -965,72 +967,72 @@ HELP_TARGETS_SUB:
 	@echo "These are all the rest of the sub-targets used by the main targets above:"
 	@echo ""
 	@echo "Static Sub-Targets:"
-	@$(HELPOUT1) "$(INSTALL):"		"$(INSTALL)-dir"			"Per-directory engine which does all the work"
-	@$(HELPOUT1) "$(COMPOSER_PANDOC):"	"settings"				"Prints marker and variable values, for readability"
-	@$(HELPOUT1) "all:"			"whoami"				"Prints marker and variable values, for readability"
-	@$(HELPOUT1) ""				"subdirs"				"Aggregates/runs the '"'$$'"(COMPOSER_SUBDIRS)' targets"
-	@$(HELPOUT1) "$(STRAPIT):"		"$(STRAPIT)-check"			"Tries to proactively prevent common errors"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
-	@$(HELPOUT1) ""				"$(STRAPIT)-git"			"Build/compile of Git from source archive"
-	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-bin"			"Pre-built binary GHC installation"
-	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-lib"			"GHC libraries necessary for compilation"
-	@$(HELPOUT1) "$(STRAPIT)-check:"	"$(STRAPIT)-exit"			"Exits with supporting help text"
-	@$(HELPOUT1) "$(STRAPIT)-msys:"		"$(STRAPIT)-msys-bin"			"Installs base MSYS2/MinGW-w64 system"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-init"			"Initializes base MSYS2/MinGW-w64 system"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-fix"			"Proactively fixes common MSYS2/MinGW-w64 issues"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-pkg"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-dll"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
-	@$(HELPOUT1) "$(STRAPIT)-git:"		"$(STRAPIT)-git-pull"			"Download of Git source archive"
-	@$(HELPOUT1) ""				"$(STRAPIT)-git-prep"			"Preparation of Git source archive"
-	@$(HELPOUT1) ""				"$(STRAPIT)-git-build"			"Build/compile of Git from source archive"
-	@$(HELPOUT1) "$(FETCHIT):"		"$(FETCHIT)-cabal"			"Updates Cabal database"
-	@$(HELPOUT1) ""				"$(FETCHIT)-make"			"Download/preparation of GNU Make source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-git"			"Download/preparation of Git source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-tex"			"Download/preparation of TeX Live source archives"
-	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"			"Download/preparation of GHC source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"			"Download/preparation of Haskell Platform source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"			"Download/preparation of Pandoc source repositories"
-	@$(HELPOUT1) "$(FETCHIT)-make:"		"$(FETCHIT)-make-pull"			"Download of GNU Make source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-make-prep"			"Preparation of GNU Make source repository"
-	@$(HELPOUT1) "$(FETCHIT)-git:"		"$(FETCHIT)-git-pull"			"Download of Git source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"			"Preparation of Git source repository"
-	@$(HELPOUT1) "$(FETCHIT)-tex:"		"$(FETCHIT)-tex-pull"			"Download of TeX Live source archives"
-	@$(HELPOUT1) ""				"$(FETCHIT)-tex-prep"			"Preparation of TeX Live source archives"
-	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"			"Download of GHC source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-ghc-prep"			"Preparation of GHC source repository"
-	@$(HELPOUT1) "$(FETCHIT)-haskell:"	"$(FETCHIT)-haskell-pull"		"Download of Haskell Platform source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-packages"		"Download/preparation of Haskell Platform packages"
-	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-prep"		"Preparation of Haskell Platform source repository"
-	@$(HELPOUT1) "$(FETCHIT)-pandoc:"	"$(FETCHIT)-pandoc-type"		"Download of Pandoc-Types source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"		"Download of TeXMath source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"		"Download of Highlighting-Kate source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-cite"		"Download of Pandoc-CiteProc source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-pull"		"Download of Pandoc source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-prep"		"Preparation of Pandoc source repositories"
-	@$(HELPOUT1) "$(BUILDIT):"		"$(BUILDIT)-clean"			"Archives/restores source files and removes temporary build files"
-	@$(HELPOUT1) ""				"$(BUILDIT)-bindir"			"Copies compiled binaries to repository binaries directory"
-	@$(HELPOUT1) ""				"$(BUILDIT)-make"			"Build/compile of GNU Make from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-git"			"Build/compile of Git from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-tex"			"Build/compile of TeX Live from source archives"
-	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"			"Build/compile of GHC from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"			"Build/compile of Haskell Platform from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
-	@$(HELPOUT1) "$(BUILDIT)-tex:"		"$(BUILDIT)-tex-fmt"			"Build/install TeX Live format files"
-	@$(HELPOUT1) "$(BUILDIT)-pandoc:"	"$(BUILDIT)-pandoc-deps"		"Build/compile of Pandoc dependencies from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-type"		"Build/compile of Pandoc-Types from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-math"		"Build/compile of TeXMath from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-high"		"Build/compile of Highlighting-Kate from source"
-	@$(HELPOUT1) "$(SHELLIT)[-msys]:"	"$(SHELLIT)-bashrc"			"Initializes Bash configuration file"
-	@$(HELPOUT1) ""				"$(SHELLIT)-vimrc"			"Initializes Vim configuration file"
+	@$(HELPOUT1) "$(INSTALL):"		"$(INSTALL)-dir"		"Per-directory engine which does all the work"
+	@$(HELPOUT1) "$(COMPOSER_PANDOC):"	"settings"			"Prints marker and variable values, for readability"
+	@$(HELPOUT1) "all:"			"whoami"			"Prints marker and variable values, for readability"
+	@$(HELPOUT1) ""				"subdirs"			"Aggregates/runs the '$(_)(COMPOSER_SUBDIRS)' targets"
+	@$(HELPOUT1) "$(STRAPIT):"		"$(STRAPIT)-check"		"Tries to proactively prevent common errors"
+	@$(HELPOUT1) ""				"$(STRAPIT)-msys"		"Installs MSYS2 environment with MinGW-w64 (for Windows)"
+	@$(HELPOUT1) ""				"$(STRAPIT)-git"		"Build/compile of Git from source archive"
+	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-bin"		"Pre-built binary GHC installation"
+	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-lib"		"GHC libraries necessary for compilation"
+	@$(HELPOUT1) "$(STRAPIT)-check:"	"$(STRAPIT)-exit"		"Exits with supporting help text"
+	@$(HELPOUT1) "$(STRAPIT)-msys:"		"$(STRAPIT)-msys-bin"		"Installs base MSYS2/MinGW-w64 system"
+	@$(HELPOUT1) ""				"$(STRAPIT)-msys-init"		"Initializes base MSYS2/MinGW-w64 system"
+	@$(HELPOUT1) ""				"$(STRAPIT)-msys-fix"		"Proactively fixes common MSYS2/MinGW-w64 issues"
+	@$(HELPOUT1) ""				"$(STRAPIT)-msys-pkg"		"Installs/updates MSYS2/MinGW-w64 packages"
+	@$(HELPOUT1) ""				"$(STRAPIT)-msys-dll"		"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
+	@$(HELPOUT1) "$(STRAPIT)-git:"		"$(STRAPIT)-git-pull"		"Download of Git source archive"
+	@$(HELPOUT1) ""				"$(STRAPIT)-git-prep"		"Preparation of Git source archive"
+	@$(HELPOUT1) ""				"$(STRAPIT)-git-build"		"Build/compile of Git from source archive"
+	@$(HELPOUT1) "$(FETCHIT):"		"$(FETCHIT)-cabal"		"Updates Cabal database"
+	@$(HELPOUT1) ""				"$(FETCHIT)-make"		"Download/preparation of GNU Make source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-git"		"Download/preparation of Git source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-tex"		"Download/preparation of TeX Live source archives"
+	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"		"Download/preparation of GHC source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"		"Download/preparation of Haskell Platform source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"		"Download/preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(FETCHIT)-make:"		"$(FETCHIT)-make-pull"		"Download of GNU Make source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-make-prep"		"Preparation of GNU Make source repository"
+	@$(HELPOUT1) "$(FETCHIT)-git:"		"$(FETCHIT)-git-pull"		"Download of Git source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"		"Preparation of Git source repository"
+	@$(HELPOUT1) "$(FETCHIT)-tex:"		"$(FETCHIT)-tex-pull"		"Download of TeX Live source archives"
+	@$(HELPOUT1) ""				"$(FETCHIT)-tex-prep"		"Preparation of TeX Live source archives"
+	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"		"Download of GHC source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-ghc-prep"		"Preparation of GHC source repository"
+	@$(HELPOUT1) "$(FETCHIT)-haskell:"	"$(FETCHIT)-haskell-pull"	"Download of Haskell Platform source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-packages"	"Download/preparation of Haskell Platform packages"
+	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-prep"	"Preparation of Haskell Platform source repository"
+	@$(HELPOUT1) "$(FETCHIT)-pandoc:"	"$(FETCHIT)-pandoc-type"	"Download of Pandoc-Types source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"	"Download of TeXMath source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"	"Download of Highlighting-Kate source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-cite"	"Download of Pandoc-CiteProc source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-pull"	"Download of Pandoc source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-prep"	"Preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(BUILDIT):"		"$(BUILDIT)-clean"		"Archives/restores source files and removes temporary build files"
+	@$(HELPOUT1) ""				"$(BUILDIT)-bindir"		"Copies compiled binaries to repository binaries directory"
+	@$(HELPOUT1) ""				"$(BUILDIT)-make"		"Build/compile of GNU Make from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-git"		"Build/compile of Git from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-tex"		"Build/compile of TeX Live from source archives"
+	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"		"Build/compile of GHC from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"		"Build/compile of Haskell Platform from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc"		"Build/compile of stand-alone Pandoc(-CiteProc) from source"
+	@$(HELPOUT1) "$(BUILDIT)-tex:"		"$(BUILDIT)-tex-fmt"		"Build/install TeX Live format files"
+	@$(HELPOUT1) "$(BUILDIT)-pandoc:"	"$(BUILDIT)-pandoc-deps"	"Build/compile of Pandoc dependencies from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-type"	"Build/compile of Pandoc-Types from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-math"	"Build/compile of TeXMath from source"
+	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-high"	"Build/compile of Highlighting-Kate from source"
+	@$(HELPOUT1) "$(SHELLIT)[-msys]:"	"$(SHELLIT)-bashrc"		"Initializes Bash configuration file"
+	@$(HELPOUT1) ""				"$(SHELLIT)-vimrc"		"Initializes Vim configuration file"
 	@echo ""
 	@echo "Dynamic Sub-Targets:"
-	@$(HELPOUT1) "all:"			""'$$'"(COMPOSER_TARGETS)"		"[$(COMPOSER_TARGETS)]"
-	@$(HELPOUT1) "clean:"			""'$$'"(COMPOSER_TARGETS)-clean"	"[$(addsuffix -clean,$(COMPOSER_TARGETS))]"
-	@$(HELPOUT1) "subdirs:"			""'$$'"(COMPOSER_SUBDIRS)"		"[$(COMPOSER_SUBDIRS)]"
+	@$(HELPOUT1) "all:"			"$(_)(COMPOSER_TARGETS)"	"[$(COMPOSER_TARGETS)]"
+	@$(HELPOUT1) "clean:"			"$(_)(COMPOSER_TARGETS)-clean"	"[$(addsuffix -clean,$(COMPOSER_TARGETS))]"
+	@$(HELPOUT1) "subdirs:"			"$(_)(COMPOSER_SUBDIRS)"	"[$(COMPOSER_SUBDIRS)]"
 	@echo ""
 	@echo "Wildcard Sub-Targets:"
-	@$(HELPOUT1) "$(REPLICA)-%:"		"$(REPLICA) COMPOSER_VERSION=*"		""
-	@$(HELPOUT1) "do-%:"			"fetch-* build-*"			""
+	@$(HELPOUT1) "$(REPLICA)-%:"		"$(REPLICA) COMPOSER_VERSION=*"	""
+	@$(HELPOUT1) "do-%:"			"fetch-* build-*"		""
 	@echo ""
 	@echo "These do not need to be used directly during normal use, and are only documented for completeness."
 	@echo ""
@@ -1042,10 +1044,10 @@ HELP_COMMANDS:
 	@echo "Command Examples:"
 	@echo ""
 	@$(HELPOUT2) "Have the system do all the work:"
-	@echo ""'$$'"(RUNMAKE) $(BASE).$(EXTENSION)"
+	@echo "$(_)(RUNMAKE) $(BASE).$(EXTENSION)"
 	@echo ""
 	@$(HELPOUT2) "Be clear about what is wanted (or, for multiple or differently named input files):"
-	@echo ""'$$'"(COMPOSE) LIST=\"$(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
+	@echo "$(_)(COMPOSE) LIST=\"$(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
 	@echo ""
 
 .PHONY: EXAMPLE_MAKEFILES
@@ -1081,10 +1083,10 @@ EXAMPLE_MAKEFILE_2:
 	@echo "$(BASE): export TOC := 1"
 	@echo "$(BASE): $(BASE).$(EXTENSION)"
 	@echo "$(EXAMPLE_TARGET): $(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)"
-	@echo "	"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
-	@echo "	"'$$'"(COMPOSE) LIST=\""'$$'"(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_LPDF)\""
+	@echo "	$(_)(COMPOSE) LIST=\"$(_)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
+	@echo "	$(_)(COMPOSE) LIST=\"$(_)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_LPDF)\""
 	@echo "$(EXAMPLE_TARGET)-clean:"
-	@echo "	"'$$'"(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
+	@echo "	$(_)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@echo ""
 
 .PHONY: EXAMPLE_MAKEFILES_FOOTER
@@ -1106,23 +1108,23 @@ HELP_SYSTEM:
 	@echo ""
 	@$(HELPOUT2) "All sub-directories then each start with:"
 	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
-	@echo "override COMPOSER_TEACHER := "'$$'"(abspath "'$$'"(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo "override COMPOSER_TEACHER := $(_)(abspath $(_)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
 	@echo "override COMPOSER_SUBDIRS ?="
 	@echo ".DEFAULT_GOAL := all"
 	@echo ""
 	@$(HELPOUT2) "And end with:"
-	@echo "include "'$$'"(COMPOSER_TEACHER)"
+	@echo "include $(_)(COMPOSER_TEACHER)"
 	@echo ""
 	@$(HELPOUT2) "Back in the top-level '$(MAKEFILE)', and in all sub-'$(MAKEFILE)' instances which recurse further down:"
 	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
 	@echo "include [...]"
 	@echo ""
 	@$(HELPOUT2) "Create a new '$(MAKEFILE)' using a helpful template:"
-	@echo ""'$$'"(RUNMAKE) --quiet COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
+	@echo "$(_)(RUNMAKE) --quiet COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
 	@echo ""
 	@$(HELPOUT2) "Or, recursively initialize the current directory tree:"
 	@$(HELPOUT2) "(NOTE: This is a non-destructive operation.)"
-	@echo ""'$$'"(RUNMAKE) $(INSTALL)"
+	@echo "$(_)(RUNMAKE) $(INSTALL)"
 	@echo ""
 
 .PHONY: EXAMPLE_MAKEFILE
@@ -1147,7 +1149,7 @@ EXAMPLE_MAKEFILE_FULL:
 	@$(HELPOUT2) "(NOTE: The 'COMPOSER_TEACHER' variable can be modified for custom chaining, but with care.)"
 	@echo ""
 	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
-	@echo "override COMPOSER_TEACHER := "'$$'"(abspath "'$$'"(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo "override COMPOSER_TEACHER := $(_)(abspath $(_)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
 	@echo ""
 	@$(HELPOUT2) "$(HELPMARK) DEFINITIONS"
 	@echo ""
@@ -1177,11 +1179,11 @@ EXAMPLE_MAKEFILE_FULL:
 	@echo ""
 	@$(HELPOUT2) "Define the CSS template to use in this entire directory tree:"
 	@$(HELPOUT2) " * Absolute path names should be used, so that children will be able to find it"
-	@$(HELPOUT2) " * The '"'$$'"(COMPOSER_ABSPATH)' variable can be used to simplify this"
+	@$(HELPOUT2) " * The '$(_)(COMPOSER_ABSPATH)' variable can be used to simplify this"
 	@$(HELPOUT2) " * If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
 	@$(HELPOUT2) " * If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
 	@echo ""
-	@echo ""'$$'"(eval override CSS ?= "'$$'"(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
+	@echo "$(_)(eval override CSS ?= $(_)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
 	@echo ""
 	@$(HELPOUT2) "All the other optional variables can also be made global in this directory scope:"
 	@echo ""
@@ -1194,9 +1196,9 @@ EXAMPLE_MAKEFILE_FULL:
 	@echo ""
 	@$(HELPOUT2) "Necessary include statement:"
 	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: This must be after all references to '"'$$'"(COMPOSER_ABSPATH)' but before '.DEFAULT_GOAL'.)"
+	@$(HELPOUT2) "(NOTE: This must be after all references to '$(_)(COMPOSER_ABSPATH)' but before '.DEFAULT_GOAL'.)"
 	@echo ""
-	@echo "include "'$$'"(COMPOSER_TEACHER)"
+	@echo "include $(_)(COMPOSER_TEACHER)"
 	@echo ""
 	@$(HELPOUT2) "For recursion to work, a default target needs to be defined:"
 	@$(HELPOUT2) " * Needs to be 'all' for directories which must recurse into sub-directories"
@@ -1214,13 +1216,13 @@ EXAMPLE_MAKEFILE_FULL:
 	@echo ""
 	@echo "$(firstword $(COMPOSER_SUBDIRS)): $(wordlist 2,$(words $(COMPOSER_SUBDIRS)),$(COMPOSER_SUBDIRS))"
 	@echo ""
-	@$(HELPOUT2) "For parent/child directory dependencies, set '"'$$'"(COMPOSER_DEPENDS)' to a non-empty value."
+	@$(HELPOUT2) "For parent/child directory dependencies, set '$(_)(COMPOSER_DEPENDS)' to a non-empty value."
 	@echo ""
 	@$(HELPOUT2) "$(HELPMARK) MAKEFILE"
 	@echo ""
 	@$(HELPOUT2) "This is where the rest of the file should be defined."
 	@$(HELPOUT2) ""
-	@$(HELPOUT2) "In this example, '"'$$'"(COMPOSER_TARGETS)' is used completely in lieu of any explicit targets."
+	@$(HELPOUT2) "In this example, '$(_)(COMPOSER_TARGETS)' is used completely in lieu of any explicit targets."
 	@echo ""
 
 .PHONY: HELP_FOOTER
@@ -1235,7 +1237,7 @@ HELP_FOOTER:
 $(EXAMPLE):
 	@$(HELPOUT2) "$(HELPMARK) HEADERS"
 	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
-	@echo "override COMPOSER_TEACHER := "'$$'"(abspath "'$$'"(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo "override COMPOSER_TEACHER := $(_)(abspath $(_)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
 	@echo ""
 	@$(HELPOUT2) "$(HELPMARK) DEFINITIONS"
 	@echo "override COMPOSER_TARGETS ?= $(COMPOSER_TARGETS)"
@@ -1243,14 +1245,14 @@ $(EXAMPLE):
 	@echo "override COMPOSER_DEPENDS ?= $(COMPOSER_DEPENDS)"
 	@echo ""
 	@$(HELPOUT2) "$(HELPMARK) VARIABLES"
-	@$(HELPOUT2) ""'$$'"(eval override CSS ?= "'$$'"(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
+	@$(HELPOUT2) "$(_)(eval override CSS ?= $(_)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
 	@$(HELPOUT2) "override TTL ?="
 	@$(HELPOUT2) "override TOC ?="
 	@$(HELPOUT2) "override LVL ?="
 	@$(HELPOUT2) "override OPT ?="
 	@echo ""
 	@$(HELPOUT2) "$(HELPMARK) INCLUDE"
-	@echo "include "'$$'"(COMPOSER_TEACHER)"
+	@echo "include $(_)(COMPOSER_TEACHER)"
 	@echo ".DEFAULT_GOAL := all"
 	@echo ""
 	@$(HELPOUT2) "$(HELPMARK) MAKEFILE"
@@ -1340,15 +1342,14 @@ $(REPLICA):
 	$(GIT_REPLICA) remote add origin "$(COMPOSER_GITREPO)"
 	$(GIT_REPLICA) fetch --all
 	$(GIT_REPLICA) archive \
-		--verbose \
-		--remote="$(COMPOSER_GITREPO)" \
 		--format="tar" \
 		--prefix="" \
 		"$(COMPOSER_VERSION)" \
 		$(foreach FILE,$(COMPOSER_FILES),"$(FILE)") \
 		| \
 		$(TAR) --directory "$(CURDIR)" --file -
-	if [ -f "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" ]; then
+	if [ -f "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" ] &&
+	   [ "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" != "$(CURDIR)/$(COMPOSER_SETTINGS)" ]; then
 		$(CP) "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" "$(CURDIR)/$(COMPOSER_SETTINGS)"
 	fi
 	$(TIMESTAMP) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
@@ -1438,7 +1439,7 @@ ifneq ($(BUILD_MSYS),)
 		if not defined MSYSCON set MSYSCON=mintty.exe
 		set WD=%~dp0
 		set BINDIR=/usr/bin
-		set PATH=%WD%%BINDIR%:%PATH%
+		set PATH=%WD%%BINDIR%;%PATH%
 		set OPTIONS=
 		set OPTIONS=%OPTIONS% --title "// $(COMPOSER_BASENAME) MSYS2"
 		set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
@@ -1535,8 +1536,9 @@ $(SHELLIT)-bashrc:
 		#
 		alias composer='$(RUNMAKE)'
 		alias compose='$(COMPOSE)'
-		alias home="cd $(COMPOSER_DIR)"
+		alias home='cd "$(COMPOSER_DIR)"'
 		#
+		cd "$(COMPOSER_DIR)"
 		source "$(COMPOSER_ABODE)/.bashrc.custom"
 		# end of file
 	_EOF_
@@ -1637,7 +1639,7 @@ $(STRAPIT)-exit:
 	@$(HELPOUT2) "This message was produced by $(COMPOSER_BASENAME)."
 	@$(HELPOUT2)
 	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check"
-	@$(HELPOUT2) "from the '"'$$'"(STRAPIT)-check' target in:"
+	@$(HELPOUT2) "from the '$(_)(STRAPIT)-check' target in:"
 	@$(HELPOUT2)
 	@$(HELPOUT2) "$(COMPOSER)"
 	@$(HELPOUT2)
@@ -1679,7 +1681,7 @@ else
 		@$(HELPOUT2) "DETAILS:"
 		@$(HELPOUT2)
 		@$(HELPOUT2) "This appears to be a Windows system,"
-		@$(HELPOUT2) "but the '"'$$'"MSYSTEM' variable is not set."
+		@$(HELPOUT2) "but the '$(_)MSYSTEM' variable is not set."
 		@$(HELPOUT2)
 		@$(HELPOUT2) "You should run the '$(STRAPIT)-msys' target"
 		@$(HELPOUT2) "to install the MSYS2 environment."
@@ -1691,9 +1693,8 @@ else
 endif
 
 .PHONY: $(STRAPIT)-msys
-#WORK
-#$(STRAPIT)-msys: $(STRAPIT)-msys-bin
-#$(STRAPIT)-msys: $(STRAPIT)-msys-init
+#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-bin
+#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
 $(STRAPIT)-msys: $(STRAPIT)-msys-dll
@@ -1841,10 +1842,13 @@ endif
 #WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
 $(FETCHIT)-tex-prep:
 ifneq ($(BUILD_MSYS),)
+	echo WORK
 	$(SED) -i \
 		-e "s|([( ])INPUT([ )])|\1MYINPUT\2|g" \
 		"$(TEX_BIN_DST)/texk/web2c/otps/"otp-{lexer,parser}*
-#>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
+	echo WORK
+#	$(CP) "$(TEX_WINDOWS_DST)/texk/web2c/otps/"* "$(TEX_BIN_DST)/texk/web2c/otps/"
+	echo WORK
 endif
 
 .PHONY: $(BUILDIT)-tex
