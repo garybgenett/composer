@@ -26,8 +26,6 @@
 #	remove from msys2 package list
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
-# enable https certificates for wget/git?
-#	simply copy '/etc/ssl' to $COMPOSER_ABODE and $COMPOSER_PROGS?
 # double-check all "thanks" comments; some are things you should have known
 # double-check all licenses
 # fix linux 32-bit make 4.1 segfault
@@ -822,8 +820,7 @@ override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override TIMESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 
-# note that "--insecure" option is also mirrored in "$(STRAPIT)-ghc-prep" target
-override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --insecure --location --remote-time
+override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --location --remote-time
 override define CURL_FILE		=
 	$(MKDIR) "$(COMPOSER_STORE)"; \
 	$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
@@ -849,7 +846,6 @@ endef
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT))../../git-core))
-override GIT				:= "$(GIT)" -c http.sslVerify=false
 ifneq ($(GIT_EXEC),)
 override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
@@ -2766,9 +2762,6 @@ ifeq ($(BUILD_PLAT),Msys)
 endif
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
-		"$(CBL_TAR_DST)/bootstrap.sh"
-	$(SED) -i \
-		-e "s|([{]CURL[}][ ])([-]L)|\1--insecure \2|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
 
 override define TEXTFILE_CABAL_BOOTSTRAP =
