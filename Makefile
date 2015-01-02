@@ -44,6 +44,7 @@
 #	ifconfig eth0 down before make build
 #	standalone pandoc binary without build directory
 #	try building non-BUILD_DIST version
+# test install in basic debian, with no devel packages
 # test install in fresh cygwin
 #	hack setup.bat
 #	try "build" without networking available
@@ -332,7 +333,7 @@ override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CC				?=
 override CHOST				:=
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -I$(COMPOSER_ABODE)/include/openssl
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 override LD_LIBRARY_PATH		:= $(COMPOSER_ABODE)/lib:$(LD_LIBRARY_PATH)
 
@@ -2016,8 +2017,6 @@ export HISTCONTROL=
 export HISTIGNORE=
 #
 export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
-#WORK : this doubles-up the PATH, and is an ugly hack; need a better way to force use of built bash
-#export PATH="$(BUILD_PATH):$(PATH)"
 #
 export PROMPT_DIRTRIM="1"
 export PS1=
@@ -2389,31 +2388,12 @@ $(STRAPIT)-libs-freetype:
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_TAR_SRC))
 	$(call UNTAR,$(LIB_FCFG_TAR_DST),$(LIB_FCFG_TAR_SRC))
-#WORK
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
-#		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
-#		FREETYPE_CFLAGS="$(CFLAGS)" \
-#		FREETYPE_LIBS="-L$(COMPOSER_ABODE)/lib -lfreetype" \
-#		,\
-#		--enable-iconv \
-#		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
-#		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
-#		--with-expat-includes="$(COMPOSER_ABODE)/include" \
-#		--with-expat-lib="$(COMPOSER_ABODE)/lib" \
-#		--disable-shared \
-#		--enable-static \
-#	)
-#WORK
-#		--enable-iconv \
-#		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
-#		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
-#WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
 		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
 		FREETYPE_LIBS="-lfreetype" \
 		,\
+		--enable-iconv \
 		--disable-shared \
 		--enable-static \
 	)
