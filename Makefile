@@ -3,10 +3,6 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 
-#READ
-#	http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
-#READ
-
 #TODO
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
@@ -342,6 +338,7 @@ endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
 
+#TODO : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
 #TODO : need to ldd final binaries to see what libraries they compile in
 #TODO : double-check / remove 'libidn'
 ifneq ($(BUILD_MUSL),)
