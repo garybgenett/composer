@@ -452,16 +452,16 @@ override ZLIB_TAR_DST			:= $(BUILD_STRAP)/zlib-$(ZLIB_VERSION)
 override GMP_VERSION			:= 6.0.0a
 override GMP_TAR_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VERSION).tar.xz
 override GMP_TAR_DST			:= $(BUILD_STRAP)/gmp-$(subst a,,$(GMP_VERSION))
-# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
-# https://www.gnu.org/software/libiconv
-override LIBICONV_VERSION		:= 1.14
-override LIBICONV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VERSION).tar.gz
-override LIBICONV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIBICONV_VERSION)
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
 override GETTEXT_VERSION		:= 0.19.3
 override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
 override GETTEXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(GETTEXT_VERSION)
+# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
+# https://www.gnu.org/software/libiconv
+override LIBICONV_VERSION		:= 1.14
+override LIBICONV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VERSION).tar.gz
+override LIBICONV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIBICONV_VERSION)
 # https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
 override NCURSES_VERSION		:= 5.9
@@ -477,6 +477,16 @@ override OPENSSL_TAR_DST		:= $(BUILD_STRAP)/openssl-$(OPENSSL_VERSION)
 override EXPAT_VERSION			:= 2.1.0
 override EXPAT_TAR_SRC			:= http://sourceforge.net/projects/expat/files/expat/$(EXPAT_VERSION)/expat-$(EXPAT_VERSION).tar.gz
 override EXPAT_TAR_DST			:= $(BUILD_STRAP)/expat-$(EXPAT_VERSION)
+# http://www.libpng.org/pub/png/libpng.html (license: custom = as-is)
+# http://www.libpng.org/pub/png/libpng.html
+override LIBPNG_VERSION			:= 1.6.15
+override LIBPNG_TAR_SRC			:= http://sourceforge.net/projects/libpng/files/libpng16/$(LIBPNG_VERSION)/libpng-$(LIBPNG_VERSION).tar.gz
+override LIBPNG_TAR_DST			:= $(BUILD_STRAP)/libpng-$(LIBPNG_VERSION)
+# https://github.com/behdad/harfbuzz/blob/master/COPYING (license: MIT)
+# http://www.freedesktop.org/wiki/Software/HarfBuzz
+override HARFBUZZ_VERSION		:= 0.9.37
+override HARFBUZZ_TAR_SRC		:= http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-$(HARFBUZZ_VERSION).tar.bz2
+override HARFBUZZ_TAR_DST		:= $(BUILD_STRAP)/harfbuzz-$(HARFBUZZ_VERSION)
 # http://www.freetype.org/license.html (license: custom = BSD, GPL)
 # http://www.freetype.org/download.html
 override FREETYPE_VERSION		:= 2.5.3
@@ -737,15 +747,6 @@ override BUILD_BINARY_LIST		:= \
 	ghc ghc-pkg \
 	cabal
 
-#WORKING
-# thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/coreutils
-override COREUTILS_PATCH_LIST		:= \
-	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/002-fix-dummy-man-invocation.patch \
-	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/005-manifest.patch \
-	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/006-msys1-0x0d.patch \
-	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/009-msysize.patch
-#WORKING
-
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 override PERL_PATCH_LIST		:= \
 	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/perl/perl-5.20.0-msys2.patch
@@ -943,7 +944,7 @@ override define DO_COREUTILS_INSTALL	=
 	fi
 endef
 override define DO_COREUTILS_UNINSTALL	=
-	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
 		if [ -f "$(2)/$${FILE}" ]; then \
 			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
 		fi; \
@@ -1484,7 +1485,10 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libpng$(_D)"		"Build/compile of LibPNG from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype1$(_D)"		"Build/compile of FreeType (before HarfBuzz) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-harfbuzz$(_D)"		"Build/compile of HarfBuzz from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype2$(_D)"		"Build/compile of FreeType (after HarfBuzz) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
@@ -1515,7 +1519,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-curl$(_D)"			"Download/preparation of cURL source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-git$(_D)"			"Download/preparation of Git source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-tex$(_D)"			"Download/preparation of TeX Live source archives"
+	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
@@ -1533,8 +1537,8 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-curl-prep$(_D)"		"Preparation of cURL source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-git$(_D):"	"$(_E)$(FETCHIT)-git-pull$(_D)"			"Download of Git source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-git-prep$(_D)"			"Preparation of Git source repository"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-tex$(_D):"	"$(_E)$(FETCHIT)-tex-pull$(_D)"			"Download of TeX Live source archives"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-tex-prep$(_D)"			"Preparation of TeX Live source archives"
+	@$(TABLE_I3) "$(_E)$(FETCHIT)-texlive$(_D):"	"$(_E)$(FETCHIT)-texlive-pull$(_D)"		"Download of TeX Live source archives"
+	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive-prep$(_D)"		"Preparation of TeX Live source archives"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc-prep$(_D)"			"Preparation of GHC source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-haskell$(_D):"	"$(_E)$(FETCHIT)-haskell-pull$(_D)"		"Download of Haskell Platform source repository"
@@ -1551,11 +1555,11 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-tex$(_D):"	"$(_E)$(BUILDIT)-tex-fmt$(_D)"			"Build/install TeX Live format files"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
@@ -2002,13 +2006,13 @@ $(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
-$(FETCHIT): $(FETCHIT)-tex
+$(FETCHIT): $(FETCHIT)-texlive
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
-$(BUILDIT): $(BUILDIT)-tex
+$(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-haskell
@@ -2543,7 +2547,12 @@ $(STRAPIT)-libs:
 	$(RUNMAKE) $(STRAPIT)-libs-ncurses
 	$(RUNMAKE) $(STRAPIT)-libs-openssl
 	$(RUNMAKE) $(STRAPIT)-libs-expat
-	$(RUNMAKE) $(STRAPIT)-libs-freetype
+	# need the "bzip" headers/library for "freetype"
+	$(RUNMAKE) $(STRAPIT)-util-bzip
+	$(RUNMAKE) $(STRAPIT)-libs-libpng
+	$(RUNMAKE) $(STRAPIT)-libs-freetype1
+	$(RUNMAKE) $(STRAPIT)-libs-harfbuzz
+	$(RUNMAKE) $(STRAPIT)-libs-freetype2
 	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
 
 .PHONY: $(STRAPIT)-libs-linux
@@ -2594,7 +2603,7 @@ $(STRAPIT)-libs-gmp:
 
 override define LIBICONV_BUILD =
 	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with gettext
+	# start with fresh source directory, due to circular dependency with "gettext"
 	$(RM) -r "$(LIBICONV_TAR_DST)"
 	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
@@ -2691,14 +2700,44 @@ $(STRAPIT)-libs-expat:
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-libs-freetype
-$(STRAPIT)-libs-freetype:
+.PHONY: $(STRAPIT)-libs-libpng
+$(STRAPIT)-libs-libpng:
+	$(call CURL_FILE,$(LIBPNG_TAR_SRC))
+	$(call DO_UNTAR,$(LIBPNG_TAR_DST),$(LIBPNG_TAR_SRC))
+#WORKING
+	$(call AUTOTOOLS_BUILD,$(LIBPNG_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+
+override define FREETYPE_BUILD =
 	$(call CURL_FILE,$(FREETYPE_TAR_SRC))
+	# start with fresh source directory, due to circular dependency with "harfbuzz"
+	$(RM) -r "$(FREETYPE_TAR_DST)"
 	$(call DO_UNTAR,$(FREETYPE_TAR_DST),$(FREETYPE_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(FREETYPE_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
+endef
+
+.PHONY: $(STRAPIT)-libs-freetype1
+$(STRAPIT)-libs-freetype1:
+	$(call FREETYPE_BUILD)
+
+.PHONY: $(STRAPIT)-libs-harfbuzz
+$(STRAPIT)-libs-harfbuzz:
+	$(call CURL_FILE,$(HARFBUZZ_TAR_SRC))
+	$(call DO_UNTAR,$(HARFBUZZ_TAR_DST),$(HARFBUZZ_TAR_SRC))
+#WORKING
+	$(call AUTOTOOLS_BUILD,$(HARFBUZZ_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+
+.PHONY: $(STRAPIT)-libs-freetype2
+$(STRAPIT)-libs-freetype2:
+	$(call FREETYPE_BUILD)
 
 .PHONY: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-fontconfig:
@@ -2707,7 +2746,7 @@ $(STRAPIT)-libs-fontconfig:
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
 	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
-		FREETYPE_LIBS="-lfreetype" \
+		FREETYPE_LIBS="-lfreetype -lharfbuzz -lpng -lbz2" \
 		,\
 		--disable-docs \
 		--enable-iconv \
@@ -2737,12 +2776,6 @@ $(STRAPIT)-util:
 $(STRAPIT)-util-coreutils:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
-#WORKING
-#	# "$(BUILD_PLAT),Msys" requires some patches
-#	$(foreach FILE,$(COREUTILS_PATCH_LIST),\
-#		$(call DO_PATCH,$(COREUTILS_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-#	)
-#WORKING
 	# "$(BUILD_PLAT),Msys" can't build "*.so" files, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
@@ -3115,19 +3148,19 @@ $(STRAPIT)-git-build:
 $(BUILDIT)-git:
 	$(call GIT_BUILD,$(GIT_DST))
 
-.PHONY: $(FETCHIT)-tex
-$(FETCHIT)-tex: $(FETCHIT)-tex-pull
-$(FETCHIT)-tex: $(FETCHIT)-tex-prep
+.PHONY: $(FETCHIT)-texlive
+$(FETCHIT)-texlive: $(FETCHIT)-texlive-pull
+$(FETCHIT)-texlive: $(FETCHIT)-texlive-prep
 
-.PHONY: $(FETCHIT)-tex-pull
-$(FETCHIT)-tex-pull:
+.PHONY: $(FETCHIT)-texlive-pull
+$(FETCHIT)-texlive-pull:
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
 	$(call CURL_FILE,$(TEX_TAR_SRC))
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call DO_UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
 
-.PHONY: $(FETCHIT)-tex-prep
-$(FETCHIT)-tex-prep:
+.PHONY: $(FETCHIT)-texlive-prep
+$(FETCHIT)-texlive-prep:
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
 	$(CP) \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
@@ -3146,26 +3179,31 @@ $(FETCHIT)-tex-prep:
 	# make sure we link in all the right libraries
 #WORKING
 	$(SED) -i \
-		-e "s|^(LIBS[=][\"])[$$]kpse_cv_fontconfig_libs([ ][$$]LIBS[\"])$$|\1-lfontconfig -lfreetype -lexpat -liconv -lz\2|g" \
+		-e "s|^(LIBS[=][\"])[$$]kpse_cv_fontconfig_libs([ ][$$]LIBS[\"])$$|\1-lfontconfig -lfreetype -lharfbuzz -lpng -lbz2 -lexpat -liconv -lz\2|g" \
 		"$(TEX_TAR_DST)/texk/web2c/configure"
 
-.PHONY: $(BUILDIT)-tex
-$(BUILDIT)-tex:
+.PHONY: $(BUILDIT)-texlive
+$(BUILDIT)-texlive:
 	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
-		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
 		--without-x \
+		--disable-native-texlive-build \
+		--with-system-freetype2 \
+		--with-system-harfbuzz \
+		--with-system-libpng \
 		--disable-shared \
 		--enable-static
-#>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),\
-#>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
-#>		,\
+#>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
 #>		--without-x \
+#>		--disable-native-texlive-build \
+#>		--with-system-freetype2 \
+#>		--with-system-harfbuzz \
+#>		--with-system-libpng \
 #>		--disable-shared \
 #>		--enable-static \
 #>	)
@@ -3173,10 +3211,10 @@ $(BUILDIT)-tex:
 	$(RM)					"$(COMPOSER_ABODE)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/bin/pdftex"	"$(COMPOSER_ABODE)/bin/pdflatex"
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(BUILDIT)-tex-fmt
+	$(RUNMAKE) $(BUILDIT)-texlive-fmtutil
 
-.PHONY: $(BUILDIT)-tex-fmt
-$(BUILDIT)-tex-fmt:
+.PHONY: $(BUILDIT)-texlive-fmtutil
+$(BUILDIT)-texlive-fmtutil:
 	$(BUILD_ENV) fmtutil --all
 
 .PHONY: $(STRAPIT)-ghc
