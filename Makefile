@@ -2440,7 +2440,7 @@ endif
 .PHONY: $(FETCHIT)-tex-prep
 #WORK http://tex.aanhet.net/mingtex
 #WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
-#WORK https://duckduckgo.com/?q=texlive%20mingw%20patch%20hbf2gf%202014
+#WORK https://duckduckgo.com/?q=texlive+mingw+patch+hbf2gf+2014
 $(FETCHIT)-tex-prep:
 	echo WORK
 #ifneq ($(BUILD_MUSL),)
@@ -2528,6 +2528,7 @@ $(FETCHIT)-ghc-pull:
 		$(BUILD_ENV_MINGW) ./sync-all reset --hard
 
 #WORK
+# https://duckduckgo.com/?q=ghc+musl
 # https://stackoverflow.com/questions/22880650/statically-linking-musl-with-ghc
 # http://stackoverflow.com/questions/10539857/statically-link-gmp-to-an-haskell-application-using-ghc-llvm/10549484#10549484
 # http://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
