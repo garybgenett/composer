@@ -368,6 +368,9 @@ endif
 
 # http://git.savannah.gnu.org/gitweb/?p=config.git
 override GNU_CFG_SRC			:= http://git.savannah.gnu.org/r/config.git
+override GNU_CFG_FILE_SRC		:= http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=
+override GNU_CFG_FILE_GUS		:= config.guess
+override GNU_CFG_FILE_SUB		:= config.sub
 override GNU_CFG_DST			:= $(COMPOSER_BUILD)/gnu-config
 override GNU_CFG_CMT			:=
 
@@ -580,39 +583,39 @@ override PACMAN_BASE_LIST		:= \
 	msys2-runtime-devel \
 	pacman
 
-#TODO : need to trim this list, and use '$(STRAPIT)' targets instead
-# second group is for '$(STRAPIT)-libs'
-# third group is for '$(STRAPIT)-curl'
+#WORK : need to trim this list, and use '$(STRAPIT)' targets instead
 # fourth group is for composer
 #>	mingw-w64-i686-toolchain
 #>	mingw-w64-x86_64-toolchain
 override PACMAN_PACKAGES_LIST		:= \
 	base-devel \
-	mingw-w64-i686-binutils-git \
-	mingw-w64-i686-gcc \
-	mingw-w64-x86_64-binutils-git \
-	mingw-w64-x86_64-gcc \
 	msys2-devel \
 	\
-	zlib \
-	zlib-devel \
-	libiconv \
-	libiconv-devel \
-	gettext \
-	gettext-devel \
-	openssl \
-	openssl-devel \
-	expat \
-	mingw-w64-i686-freetype \
-	mingw-w64-x86_64-freetype \
-	mingw-w64-i686-fontconfig \
-	mingw-w64-x86_64-fontconfig \
-	\
-	curl \
-	libcurl \
-	libcurl-devel \
-	\
 	vim
+# second group is for '$(STRAPIT)-libs'
+# third group is for '$(STRAPIT)-curl'
+#	mingw-w64-i686-binutils-git \
+#	mingw-w64-i686-gcc \
+#	mingw-w64-x86_64-binutils-git \
+#	mingw-w64-x86_64-gcc \
+#	\
+#	zlib \
+#	zlib-devel \
+#	libiconv \
+#	libiconv-devel \
+#	gettext \
+#	gettext-devel \
+#	openssl \
+#	openssl-devel \
+#	expat \
+#	mingw-w64-i686-freetype \
+#	mingw-w64-x86_64-freetype \
+#	mingw-w64-i686-fontconfig \
+#	mingw-w64-x86_64-fontconfig \
+#	\
+#	curl \
+#	libcurl \
+#	libcurl-devel \
 
 #TODO
 # second group is for mintty
@@ -795,6 +798,10 @@ override define CURL_FILE		=
 	$(MKDIR) "$(COMPOSER_STORE)"
 	$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
 endef
+override define CURL_FILE_GNU_CFG	=
+	$(MKDIR) "$(GNU_CFG_DST)"
+	$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"
+endef
 
 override define UNZIP			=
 	"$(call COMPOSER_FIND,$(PATH_LIST),unzip)" -ou -d "$(abspath $(dir $(1)))" "$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
@@ -889,6 +896,7 @@ override BUILD_ENV			:= \
 ifneq ($(BUILD_MSYS),)
 # adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
 override BUILD_ENV			:= $(BUILD_ENV) \
+	CC="$(MSYS_BIN_DST)/usr/bin/gcc" \
 	MSYSTEM="MSYS$(BUILD_MSYS)" \
 	USERNAME="$(USERNAME)" \
 	HOMEPATH="$(COMPOSER_ABODE)" \
@@ -900,11 +908,13 @@ override BUILD_ENV			:= $(BUILD_ENV) \
 endif
 override BUILD_ENV			:= "$(call COMPOSER_FIND,$(PATH_LIST),env)" - $(BUILD_ENV)
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
-ifneq ($(BUILD_MSYS),)
-override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
-	MSYSTEM="MINGW$(BUILD_MSYS)" \
-	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
-endif
+#WORK
+#ifneq ($(BUILD_MSYS),)
+#override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
+#	CC="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
+#	MSYSTEM="MINGW$(BUILD_MSYS)" \
+#	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
+#endif
 
 ################################################################################
 
@@ -1155,6 +1165,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(HELPOUT1) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(HELPOUT1) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-musl$(_D)"			"Build/compile of MUSL LibC from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
@@ -1572,14 +1583,15 @@ $(UPGRADE):
 
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
+$(STRAPIT): $(STRAPIT)-config
 ifneq ($(BUILD_MUSL),)
 #TODO : need to move '-libs' and '-curl' back down to '-git'
-$(STRAPIT): $(STRAPIT)-musl $(STRAPIT)-libs $(STRAPIT)-curl
+$(STRAPIT): $(STRAPIT)-musl
 endif
 ifneq ($(BUILD_MSYS),)
-$(STRAPIT): $(STRAPIT)-msys
+#TODO $(STRAPIT): $(STRAPIT)-msys
 endif
-$(STRAPIT): $(STRAPIT)-git
+$(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-curl $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc
 
 .PHONY: $(FETCHIT)
@@ -1601,9 +1613,19 @@ $(BUILDIT): $(CHECKIT)
 do-%: $(FETCHIT)-% $(BUILDIT)-%
 	@echo >/dev/null
 
+.PHONY: $(STRAPIT)-config
+$(STRAPIT)-config:
+	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
+	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
+
 .PHONY: $(FETCHIT)-config
 $(FETCHIT)-config:
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
+
+override define GNU_CFG_INSTALL =
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
+endef
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
@@ -1932,9 +1954,11 @@ $(STRAPIT)-msys-bin:
 
 .PHONY: $(STRAPIT)-msys-init
 $(STRAPIT)-msys-init:
-	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ] ||
-	    [ ! -f "$(MSYS_BIN_DST)/etc/group"  ] ||
-	    [ ! -f "$(MSYS_BIN_DST)/etc/passwd" ]; then
+	echo WORK
+	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ]; then
+#	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ] ||
+#	    [ ! -f "$(MSYS_BIN_DST)/etc/group"  ] ||
+#	    [ ! -f "$(MSYS_BIN_DST)/etc/passwd" ]; then
 		@$(HELPLVL1)
 		@$(HELPOUT2) "We need to initialize the MSYS2 environment."
 		@$(HELPOUT2) "To do this, we will pause here to open an initial shell window."
@@ -1942,8 +1966,8 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2)
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
 		@$(HELPLVL1)
-#TODO		@read ENTER
-#TODO		$(RUNMAKE) $(SHELLIT)-msys
+		@read ENTER
+		$(RUNMAKE) $(SHELLIT)-msys
 		@$(HELPLVL1)
 		@$(HELPOUT2) "The shell window has been launched."
 		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
@@ -1951,7 +1975,7 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2)
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
 		@$(HELPLVL1)
-#TODO		@read ENTER
+		@read ENTER
 	fi
 
 .PHONY: $(STRAPIT)-msys-fix
@@ -2003,41 +2027,69 @@ else
 	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_BIN_DST),$(COMPOSER_ABODE))
 endif
 
-override define LIBICONV =
+override define LIBICONV_PULL =
 	$(call CURL_FILE,$(LIB_ICNV_BIN_SRC))
 	# start with fresh source directory, due to circular dependency with gettext
 	$(RM) -r "$(LIB_ICNV_BIN_DST)"
 	$(call UNTAR,$(LIB_ICNV_BIN_DST),$(LIB_ICNV_BIN_SRC))
+	$(call GNU_CFG_INSTALL,$(LIB_ICNV_BIN_DST)/build-aux)
+	$(call GNU_CFG_INSTALL,$(LIB_ICNV_BIN_DST)/libcharset/build-aux)
 	$(SED) -i \
 		-e "s|(cp[ ][.]libs)|#\1|g" \
 		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
 		"$(LIB_ICNV_BIN_DST)/preload/Makefile.in" \
 		"$(LIB_ICNV_BIN_DST)/preload/configure"*
+endef
+ifneq ($(BUILD_MUSL),)
+override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE),,\
 		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
+		--disable-shared \
+		--enable-static \
 	)
 endef
+else
+override define LIBICONV_BUILD =
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_BIN_DST),$(COMPOSER_ABODE),,\
+		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
+		--disable-static \
+		--enable-shared \
+	)
+endef
+endif
 
 .PHONY: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs-libiconv1:
-	$(call LIBICONV)
+	$(call LIBICONV_PULL)
+	$(call LIBICONV_BUILD)
 
 .PHONY: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs-libiconv2:
-	$(call LIBICONV)
+	$(call LIBICONV_PULL)
+	$(call LIBICONV_BUILD)
 
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
 	$(call CURL_FILE,$(LIB_GTXT_BIN_SRC))
 	$(call UNTAR,$(LIB_GTXT_BIN_DST),$(LIB_GTXT_BIN_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_BIN_DST),$(COMPOSER_ABODE))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(STRAPIT)-libs-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
 	$(call CURL_FILE,$(LIB_OSSL_BIN_SRC))
 	$(call UNTAR,$(LIB_OSSL_BIN_DST),$(LIB_OSSL_BIN_SRC))
-ifneq ($(BUILD_DIST),)
+ifneq ($(BUILD_MUSL),)
 	$(CP) "$(LIB_OSSL_BIN_DST)/Configure" "$(LIB_OSSL_BIN_DST)/configure"
 else
 	$(CP) "$(LIB_OSSL_BIN_DST)/config" "$(LIB_OSSL_BIN_DST)/configure"
@@ -2053,9 +2105,10 @@ ifneq ($(BUILD_MUSL),)
 		"$(LIB_OSSL_BIN_DST)/Configure" \
 		"$(LIB_OSSL_BIN_DST)/configure"
 endif
-ifneq ($(BUILD_DIST),)
+ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE),,\
 		linux-generic32 \
+		no-shared \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_BIN_DST),$(COMPOSER_ABODE))
@@ -2065,21 +2118,62 @@ endif
 $(STRAPIT)-libs-expat:
 	$(call CURL_FILE,$(LIB_EXPT_BIN_SRC))
 	$(call UNTAR,$(LIB_EXPT_BIN_DST),$(LIB_EXPT_BIN_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE))
+	$(call GNU_CFG_INSTALL,$(LIB_EXPT_BIN_DST)/conftools)
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs-freetype:
 	$(call CURL_FILE,$(LIB_FTYP_BIN_SRC))
 	$(call UNTAR,$(LIB_FTYP_BIN_DST),$(LIB_FTYP_BIN_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_BIN_DST),$(COMPOSER_ABODE))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-static \
+		--enable-shared \
+	)
+endif
+
+#WORK
+#		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
+#		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+#		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/expat:$(COMPOSER_ABODE)/include/freetype2" \
 
 .PHONY: $(STRAPIT)-libs-fontconfig
+# thanks for the 'freetype' fix below: https://www.ffmpeg.org/pipermail/ffmpeg-user/2012-September/009469.html
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_BIN_SRC))
 	$(call UNTAR,$(LIB_FCFG_BIN_DST),$(LIB_FCFG_BIN_SRC))
+ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
-		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lexpat -lfreetype" C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
+		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
+		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		,\
+		--disable-shared \
+		--enable-static \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
+		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
+		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		,\
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
@@ -2214,7 +2308,10 @@ endif
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
-	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),,\
+	echo WORK
+#		LDFLAGS="-L\"$(COMPOSER_ABODE)/lib\" -lintl -lgettext"
+	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
+		,\
 		--without-tcltk \
 	)
 
@@ -2383,6 +2480,8 @@ ifeq ($(BUILD_MSYS),)
 else
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
+#WORK
+	$(RM) "$(BUILD_STRAP)/mingw"*
 endif
 	cd "$(CBL_BIN_DST)" &&
 		$(BUILD_ENV_MINGW) PREFIX="$(call WINDOWS_PATH,$(BUILD_STRAP))" \
@@ -2435,6 +2534,8 @@ $(FETCHIT)-haskell-packages:
 #	found by: https://github.com/irungentoo/toxcore/issues/92
 #	then by: https://github.com/irungentoo/toxcore/pull/94
 $(FETCHIT)-haskell-prep:
+	echo WORK
+#	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
 ifneq ($(BUILD_MSYS),)
 	$(SED) -i \
 		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
@@ -2453,9 +2554,6 @@ endif
 		-e "s|as_fn_error[ ](.+GLU)|echo \1|g" \
 		-e "s|as_fn_error[ ](.+OpenGL)|echo \1|g" \
 		"$(HASKELL_TAR)/configure"
-ifneq ($(BUILD_MSYS),)
-	$(CP) "$(GNU_CFG_DST)/config."* "$(HASKELL_TAR)/scripts/"
-endif
 	$(SED) -i \
 		-e "s|^([ ]+GHC_PACKAGE_PATH[=].+)|#\1|g" \
 		"$(HASKELL_TAR)/scripts/build.sh"
