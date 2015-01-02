@@ -78,6 +78,8 @@ override COMPOSER_VERSION		?= v1.4
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
+override COMPOSER_NOCOLOR		?=
+
 ################################################################################
 
 override MAKEFILE			:= Makefile
@@ -135,20 +137,22 @@ override INSTALL			:= install
 override TESTOUT			:= test
 override EXAMPLE			:= template
 
-override _				:= "'$$'"
-override COMPOSER_ABSPATH		:= $(_)(abspath $(_)(dir $(_)(lastword $(_)(MAKEFILE_LIST))))
+override ~				:= "'$$'"
+override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
 override COMPOSER_ALL_REGEX		:= ([a-zA-Z0-9][a-zA-Z0-9_.-]+)[:]
-override COMPOSER_SUBDIRS		?=
-override COMPOSER_DEPENDS		?=
-override COMPOSER_TESTING		?=
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
-override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" "$(COMPOSER_SRC)")
+#>override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" "$(COMPOSER_SRC)")
+override COMPOSER_TARGETS		:= $(shell sed -r -n "s|^$(COMPOSER_ALL_REGEX).*$$|\1|gp" "$(COMPOSER_SRC)")
 else
 override COMPOSER_TARGETS		?= $(BASE)
 endif
 endif
+
+override COMPOSER_SUBDIRS		?=
+override COMPOSER_DEPENDS		?=
+override COMPOSER_TESTING		?=
 
 override TESTOUT_DIR			:= $(COMPOSER_DIR)/$(TESTOUT).dir
 
@@ -294,7 +298,9 @@ override BUILD_MSYS			:= 32
 endif
 endif
 
-override LANG				:= en_US.UTF8
+# thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
+#	found by: https://github.com/faylang/fay/issues/261
+override LANG				?= C.UTF-8
 override TERM				?= ansi
 override CHOST				:=
 override CFLAGS				:=
@@ -769,8 +775,6 @@ override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)
 endif
 endif
 
-# thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
-#	found by: https://github.com/faylang/fay/issues/261
 override BUILD_ENV			:= \
 	LANG="$(LANG)" \
 	TERM="$(TERM)" \
@@ -817,12 +821,50 @@ endif
 
 ########################################
 
-override HELPLVL1 := printf "\#%.0s" {1..70}; echo
-override HELPLVL2 := printf "\#%.0s" {1..40}; echo
+# http://en.wikipedia.org/wiki/ANSI_escape_code
+# http://ascii-table.com/ansi-escape-sequences.php
+#	default	= light gray
+#	header	= light green
+#	core	= cyan
+#	mark	= yellow
+#	note	= red
+#	extra	= magenta
+#	syntax	= dark blue
+ifeq ($(COMPOSER_NOCOLOR),)
+override _D := \e[0;37m
+override _H := \e[0;32m
+override _C := \e[0;36m
+override _M := \e[0;33m
+override _N := \e[0;31m
+override _E := \e[0;35m
+override _S := \e[0;34m
+else
+override _D :=
+override _H :=
+override _C :=
+override _M :=
+override _N :=
+override _E :=
+override _S :=
+endif
 
-override HELPOUT1 := printf "   %-20s %-25s %s\n"
-override HELPOUT2 := printf "\# %-20s %s\n"
-override HELPMARK := "\>\>"
+override NULL		:=
+override MARKER		:= >>
+override INDENTING	:= $(NULL) $(NULL) $(NULL)
+override COMMENTED	:= $(_S)\#$(_D) $(NULL)
+
+override HELPLINE	:= echo -en "$(_H)$(INDENTING)";	printf  "~%0.0s" {1..70}; echo -en "$(_D)\n"
+override HELPLVL1	:= echo -en "$(_S)";			printf "\#%0.0s" {1..70}; echo -en "$(_D)\n"
+override HELPLVL2	:= echo -en "$(_S)";			printf "\#%0.0s" {1..40}; echo -en "$(_D)\n"
+ifeq ($(COMPOSER_NOCOLOR),)
+override HELPOUT1	:= printf "$(INDENTING)%b\e[128D\e[22C%b\e[128D\e[52C%b$(_D)\n"
+override HELPOUT2	:= printf "$(COMMENTED)%b\e[128D\e[22C%b$(_D)\n"
+override HELPER		:= printf "%b$(_D)\n"
+else
+override HELPOUT1	:= printf "$(INDENTING)%-20s%-30s%s\n"
+override HELPOUT2	:= printf "$(COMMENTED)%-20s%s\n"
+override HELPER		:= printf "%s\n"
+endif
 
 override EXAMPLE_SECOND := LICENSE
 override EXAMPLE_TARGET := manual
@@ -852,211 +894,211 @@ $(HELPALL): \
 .PHONY: HELP_HEADER
 HELP_HEADER:
 	@$(HELPLVL1)
-	@$(HELPOUT2) "$(COMPOSER_FULLNAME) :: Primary Makefile"
+	@$(HELPOUT2) "$(_H)$(COMPOSER_FULLNAME)"
 	@$(HELPLVL1)
-	@echo ""
-	@echo "Usage:"
-	@$(HELPOUT1) 'RUNMAKE := $(RUNMAKE)'
-	@$(HELPOUT1) 'COMPOSE := $(COMPOSE)'
-	@$(HELPOUT1) "$(_)(RUNMAKE) [variables] <filename>.<extension>"
-	@$(HELPOUT1) "$(_)(COMPOSE) <variables>"
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Usage:"
+	@$(HELPOUT1) '$(_C)RUNMAKE$(_D) := $(_E)$(RUNMAKE)'
+	@$(HELPOUT1) '$(_C)COMPOSE$(_D) := $(_E)$(COMPOSE)'
+	@$(HELPOUT1) "$(_M)$(~)(RUNMAKE) [variables] <filename>.<extension>"
+	@$(HELPOUT1) "$(_M)$(~)(COMPOSE) <variables>"
+	@echo
 
 .PHONY: HELP_OPTIONS
 HELP_OPTIONS:
 	@$(HELPLVL2)
-	@echo ""
-	@echo "Variables:"
-	@$(HELPOUT1) "TYPE"	"Desired output format"		"[$(TYPE)]"
-	@$(HELPOUT1) "BASE"	"Base of output file(s)"	"[$(BASE)]"
-	@$(HELPOUT1) "LIST"	"List of input files(s)"	"[$(LIST)]"
-	@echo ""
-	@echo "Optional Variables:"
-	@$(HELPOUT1) "CSS"	"Location of CSS file"		"[$(CSS)] (overrides '$(COMPOSER_CSS)')"
-	@$(HELPOUT1) "TTL"	"Document title prefix"		"[$(TTL)]"
-	@$(HELPOUT1) "TOC"	"Table of contents depth"	"[$(TOC)]"
-	@$(HELPOUT1) "LVL"	"New slide header level"	"[$(LVL)]"
-	@$(HELPOUT1) "OPT"	"Custom Pandoc options"		"[$(OPT)]"
-	@echo ""
-	@echo "Pre-Defined Types:"
-	@$(HELPOUT1) "[Type]"		"[Extension]"	"[Description]"
-	@$(HELPOUT1) "$(TYPE_HTML)"	"$(TYPE_HTML)"	"$(HTML_DESC)"
-	@$(HELPOUT1) "$(TYPE_LPDF)"	"$(TYPE_LPDF)"	"$(LPDF_DESC)"
-	@$(HELPOUT1) "$(TYPE_PRES)"	"$(PRES_EXTN)"	"$(PRES_DESC)"
-	@$(HELPOUT1) "$(TYPE_SHOW)"	"$(SHOW_EXTN)"	"$(SHOW_DESC)"
-	@$(HELPOUT1) "$(TYPE_DOCX)"	"$(TYPE_DOCX)"	"$(DOCX_DESC)"
-	@$(HELPOUT1) "$(TYPE_EPUB)"	"$(TYPE_EPUB)"	"$(EPUB_DESC)"
-	@echo ""
-	@echo "Any other types specified will be passed directly through to Pandoc."
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Variables:"
+	@$(HELPOUT1) "$(_C)TYPE$(_D)"	"Desired output format"		"[$(_M)$(TYPE)$(_D)]"
+	@$(HELPOUT1) "$(_C)BASE$(_D)"	"Base of output file(s)"	"[$(_M)$(BASE)$(_D)]"
+	@$(HELPOUT1) "$(_C)LIST$(_D)"	"List of input files(s)"	"[$(_M)$(LIST)$(_D)]"
+	@echo
+	@$(HELPER) "$(_H)Optional Variables:"
+	@$(HELPOUT1) "$(_C)CSS$(_D)"	"Location of CSS file"		"[$(_M)$(CSS)$(_D)] (overrides '$(_M)$(COMPOSER_CSS)$(_D)')"
+	@$(HELPOUT1) "$(_C)TTL$(_D)"	"Document title prefix"		"[$(_M)$(TTL)$(_D)]"
+	@$(HELPOUT1) "$(_C)TOC$(_D)"	"Table of contents depth"	"[$(_M)$(TOC)$(_D)]"
+	@$(HELPOUT1) "$(_C)LVL$(_D)"	"New slide header level"	"[$(_M)$(LVL)$(_D)]"
+	@$(HELPOUT1) "$(_C)OPT$(_D)"	"Custom Pandoc options"		"[$(_M)$(OPT)$(_D)]"
+	@echo
+	@$(HELPER) "$(_H)Pre-Defined '$(_C)TYPE$(_H)' Values:"
+	@$(HELPOUT1) "$(_C)$(TYPE_HTML)$(_D)"	"*.$(_E)$(TYPE_HTML)$(_D)"	"$(HTML_DESC)"
+	@$(HELPOUT1) "$(_C)$(TYPE_LPDF)$(_D)"	"*.$(_E)$(TYPE_LPDF)$(_D)"	"$(LPDF_DESC)"
+	@$(HELPOUT1) "$(_C)$(TYPE_PRES)$(_D)"	"*.$(_E)$(PRES_EXTN)$(_D)"	"$(PRES_DESC)"
+	@$(HELPOUT1) "$(_C)$(TYPE_SHOW)$(_D)"	"*.$(_E)$(SHOW_EXTN)$(_D)"	"$(SHOW_DESC)"
+	@$(HELPOUT1) "$(_C)$(TYPE_DOCX)$(_D)"	"*.$(_E)$(TYPE_DOCX)$(_D)"	"$(DOCX_DESC)"
+	@$(HELPOUT1) "$(_C)$(TYPE_EPUB)$(_D)"	"*.$(_E)$(TYPE_EPUB)$(_D)"	"$(EPUB_DESC)"
+	@$(HELPOUT1) "$(_M)Any other types specified will be passed directly through to Pandoc."
+	@echo
 
 .PHONY: HELP_OPTIONS_SUB
 HELP_OPTIONS_SUB:
 	@$(HELPLVL2)
-	@echo ""
-	@echo "Following is the complete list of exposed/configurable variables:"
-	@echo ""
-	@echo "Options:"
-	@$(HELPOUT1) "COMPOSER_GITREPO"		"Source repository"		"[$(COMPOSER_GITREPO)]"
-	@$(HELPOUT1) "COMPOSER_VERSION"		"Version for cloning"		"[$(COMPOSER_VERSION)] (valid: any Git tag or commit)"
-	@echo ""
-	@echo "File Options:"
-	@$(HELPOUT1) "COMPOSER_STAMP"		"Timestamp file"		"[$(COMPOSER_STAMP)]"
-	@$(HELPOUT1) "COMPOSER_CSS"		"Default CSS file"		"[$(COMPOSER_CSS)]"
-	@$(HELPOUT1) "COMPOSER_EXT"		"Markdown file extension"	"[$(COMPOSER_EXT)]"
-	@$(HELPOUT1) "COMPOSER_FILES"		"List for '$(REPLICA)' target"	"[$(COMPOSER_FILES)]"
-	@echo ""
-	@echo "Recursion Options:"
-	@$(HELPOUT1) "COMPOSER_TARGETS"		"Default targets"		"[$(COMPOSER_TARGETS)]"
-	@$(HELPOUT1) "COMPOSER_SUBDIRS"		"Sub-directories list"		"[$(COMPOSER_SUBDIRS)]"
-	@$(HELPOUT1) "COMPOSER_DEPENDS"		"Sub-directory dependency"	"[$(COMPOSER_DEPENDS)] (valid: empty or 1)"
-	@$(HELPOUT1) "COMPOSER_TESTING"		"Modifies '$(TESTOUT)' target"	"[$(COMPOSER_TESTING)] (valid: empty, 0 or 1)"
-	@echo ""
-	@echo "Location Options:"
-	@$(HELPOUT1) "COMPOSER_ABODE"		"Install/binary directory"	"[$(COMPOSER_ABODE)]"
-	@$(HELPOUT1) "COMPOSER_STORE"		"Source files directory"	"[$(COMPOSER_STORE)]"
-	@$(HELPOUT1) "COMPOSER_BUILD"		"Build directory"		"[$(COMPOSER_BUILD)]"
-	@$(HELPOUT1) "COMPOSER_PROGS"		"Built binaries directory"	"[$(COMPOSER_PROGS)]"
-	@$(HELPOUT1) "COMPOSER_PROGS_USE"	"Use repository binaries"	"[$(COMPOSER_PROGS_USE)] (valid: empty or 1)"
-	@echo ""
-	@echo "Build Options:"
-	@$(HELPOUT1) "BUILD_DIST"		"Build generic binaries"	"[$(BUILD_DIST)] (valid: empty or 1)"
-	@$(HELPOUT1) "BUILD_MSYS"		"Force Windows detection"	"[$(BUILD_MSYS)] (valid: empty or 1)"
-	@$(HELPOUT1) "BUILD_GHC_78"		"GHC 7.8 instead of 7.6"	"[$(BUILD_GHC_78)] (valid: empty or 1)"
-	@$(HELPOUT1) "BUILD_PLAT"		"Overrides 'uname -o'"		"[$(BUILD_PLAT)]"
-	@$(HELPOUT1) "BUILD_ARCH"		"Overrides 'uname -m'"		"[$(BUILD_ARCH)]"
-	@echo ""
-	@echo "Environment Options:"
-	@$(HELPOUT1) "TERM"			"Terminfo terminal type"	"[$(TERM)]"
-	@echo ""
-	@echo "All of these can be set on the command line or in the environment."
-	@echo ""
-	@echo "To set them permanently, add them to the settings file (you may have to create it):"
-	@$(HELPOUT1) "$(COMPOSER_INCLUDE)"
-	@echo ""
-	@echo "All of these change the fundamental operation of $(COMPOSER_BASENAME), and should be used with care."
-	@echo ""
+	@echo
+	@$(HELPER) "Following is the complete list of exposed/configurable variables:"
+	@echo
+	@$(HELPER) "$(_H)Options:"
+	@$(HELPOUT1) "$(_C)COMPOSER_GITREPO$(_D)"	"Source repository"		"[$(_M)$(COMPOSER_GITREPO)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_VERSION$(_D)"	"Version for cloning"		"[$(_M)$(COMPOSER_VERSION)$(_D)] $(_N)(valid: any Git tag or commit)"
+	@$(HELPOUT1) "$(_C)COMPOSER_NOCOLOR$(_D)"	"Disable colors in output"	"[$(_M)$(COMPOSER_NOCOLOR)$(_D)] $(_N)(valid: empty or 1)"
+	@echo
+	@$(HELPER) "$(_H)File Options:"
+	@$(HELPOUT1) "$(_C)COMPOSER_STAMP$(_D)"		"Timestamp file"		"[$(_M)$(COMPOSER_STAMP)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_CSS$(_D)"		"Default CSS file"		"[$(_M)$(COMPOSER_CSS)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_EXT$(_D)"		"Markdown file extension"	"[$(_M)$(COMPOSER_EXT)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_FILES$(_D)"		"List for '$(REPLICA)' target"	"[$(_M)$(COMPOSER_FILES)$(_D)]"
+	@echo
+	@$(HELPER) "$(_H)Recursion Options:"
+	@$(HELPOUT1) "$(_C)COMPOSER_TARGETS$(_D)"	"Default targets"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_SUBDIRS$(_D)"	"Sub-directories list"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_DEPENDS$(_D)"	"Sub-directory dependency"	"[$(_M)$(COMPOSER_DEPENDS)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)COMPOSER_TESTING$(_D)"	"Modifies '$(TESTOUT)' target"	"[$(_M)$(COMPOSER_TESTING)$(_D)] $(_N)(valid: empty, 0 or 1)"
+	@echo
+	@$(HELPER) "$(_H)Location Options:"
+	@$(HELPOUT1) "$(_C)COMPOSER_ABODE$(_D)"		"Install/binary directory"	"[$(_M)$(COMPOSER_ABODE)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_STORE$(_D)"		"Source files directory"	"[$(_M)$(COMPOSER_STORE)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_BUILD$(_D)"		"Build directory"		"[$(_M)$(COMPOSER_BUILD)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_PROGS$(_D)"		"Built binaries directory"	"[$(_M)$(COMPOSER_PROGS)$(_D)]"
+	@$(HELPOUT1) "$(_C)COMPOSER_PROGS_USE$(_D)"	"Prefer repository binaries"	"[$(_M)$(COMPOSER_PROGS_USE)$(_D)] $(_N)(valid: empty or 1)"
+	@echo
+	@$(HELPER) "$(_H)Build Options:"
+	@$(HELPOUT1) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)BUILD_GHC_78$(_D)"		"GHC 7.8 instead of 7.6"	"[$(_M)$(BUILD_GHC_78)$(_D)] $(_N)(valid: empty or 1)"
+	@$(HELPOUT1) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
+	@$(HELPOUT1) "$(_C)BUILD_ARCH$(_D)"		"Overrides 'uname -m'"		"[$(_M)$(BUILD_ARCH)$(_D)]"
+	@echo
+	@$(HELPER) "$(_H)Environment Options:"
+	@$(HELPOUT1) "$(_C)LANG$(_D)"			"Locale default language"	"[$(_M)$(LANG)$(_D)] $(_N)(NOTE: use UTF-8)"
+	@$(HELPOUT1) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
+	@echo
+	@$(HELPER) "All of these can be set on the command line or in the environment."
+	@echo
+	@$(HELPER) "To set them permanently, add them to the settings file (you may have to create it):"
+	@$(HELPOUT1) "$(_M)$(COMPOSER_INCLUDE)"
+	@echo
+	@$(HELPER) "All of these change the fundamental operation of $(COMPOSER_BASENAME), and should be used with care."
+	@echo
 
 .PHONY: HELP_TARGETS
 HELP_TARGETS:
 	@$(HELPLVL2)
-	@echo ""
-	@echo "Primary Targets:"
-	@$(HELPOUT1) "$(HELPOUT)"		"Basic help output"
-	@$(HELPOUT1) "$(HELPALL)"		"Complete help output"
-	@$(HELPOUT1) "$(COMPOSER_TARGET)"	"Main target used to build/format documents"
-	@$(HELPOUT1) "$(COMPOSER_PANDOC)"	"Wrapper target which calls Pandoc directly (used internally)"
-	@echo ""
-	@echo "Installation Targets:"
-	@$(HELPOUT1) "$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
-	@$(HELPOUT1) "$(REPLICA)"		"Clone key components into current directory (for inclusion in content repositories)"
-	@$(HELPOUT1) "$(INSTALL)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
-	@$(HELPOUT1) "$(TESTOUT)"		"Build example/test directory using all features and test/validate success"
-	@$(HELPOUT1) "$(EXAMPLE)"		"Print out example/template '$(MAKEFILE)' (helpful shortcut for creating recursive files)"
-	@echo ""
-	@echo "Compilation Targets:"
-	@$(HELPOUT1) "$(STRAPIT)"		"Download and configure binary GHC bootstrap environment"
-	@$(HELPOUT1) "$(FETCHIT)"		"Download/update GNU Make and Haskell/Pandoc source repositories"
-	@$(HELPOUT1) "$(BUILDIT)"		"Build/compile local GNU Make and Haskell/Pandoc binaries from source"
-	@$(HELPOUT1) "$(CHECKIT)"		"Diagnostic version information (for verification and/or troubleshooting)"
-	@$(HELPOUT1) "$(SHELLIT)"		"$(COMPOSER_BASENAME) sub-shell environment, using native tools"
-	@$(HELPOUT1) "$(SHELLIT)-msys"		"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) environment"
-	@echo ""
-	@echo "Helper Targets:"
-	@$(HELPOUT1) "all"			"Create all of the default output formats or configured targets"
-	@$(HELPOUT1) "clean"			"Remove all of the default output files or configured targets"
-	@$(HELPOUT1) "print"			"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Primary Targets:"
+	@$(HELPOUT1) "$(_C)$(HELPOUT)$(_D)"		"Basic help output"
+	@$(HELPOUT1) "$(_C)$(HELPALL)$(_D)"		"Complete help output"
+	@$(HELPOUT1) "$(_C)$(COMPOSER_TARGET)$(_D)"	"Main target used to build/format documents"
+	@$(HELPOUT1) "$(_C)$(COMPOSER_PANDOC)$(_D)"	"Wrapper target which calls Pandoc directly (used internally)"
+	@echo
+	@$(HELPER) "$(_H)Installation Targets:"
+	@$(HELPOUT1) "$(_C)$(UPGRADE)$(_D)"		"Download/update all 3rd party components (need to do this at least once)"
+	@$(HELPOUT1) "$(_C)$(REPLICA)$(_D)"		"Clone key components into current directory (for inclusion in content repositories)"
+	@$(HELPOUT1) "$(_C)$(INSTALL)$(_D)"		"Recursively create '$(MAKEFILE)' files (non-destructive build system initialization)"
+	@$(HELPOUT1) "$(_C)$(TESTOUT)$(_D)"		"Build example/test directory using all features and test/validate success"
+	@$(HELPOUT1) "$(_C)$(EXAMPLE)$(_D)"		"Print out example/template '$(MAKEFILE)' (helpful shortcut for creating recursive files)"
+	@echo
+	@$(HELPER) "$(_H)Compilation Targets:"
+	@$(HELPOUT1) "$(_C)$(STRAPIT)$(_D)"		"Download and configure binary GHC bootstrap environment"
+	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D)"		"Download/update GNU Make and Haskell/Pandoc source repositories"
+	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D)"		"Build/compile local GNU Make and Haskell/Pandoc binaries from source"
+	@$(HELPOUT1) "$(_C)$(CHECKIT)$(_D)"		"Diagnostic version information (for verification and/or troubleshooting)"
+	@$(HELPOUT1) "$(_C)$(SHELLIT)$(_D)"		"$(COMPOSER_BASENAME) sub-shell environment, using native tools"
+	@$(HELPOUT1) "$(_C)$(SHELLIT)-msys$(_D)"	"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) environment"
+	@echo
+	@$(HELPER) "$(_H)Helper Targets:"
+	@$(HELPOUT1) "$(_C)all$(_D)"			"Create all of the default output formats or configured targets"
+	@$(HELPOUT1) "$(_C)clean$(_D)"			"Remove all of the default output files or configured targets"
+	@$(HELPOUT1) "$(_C)print$(_D)"			"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
+	@echo
+	@$(HELPER) "$(_H)Wildcard Targets:"
+	@$(HELPOUT1) "$(_C)$(REPLICA)-$(_N)%$(_D):"	"$(_E)$(REPLICA) COMPOSER_VERSION=$(_N)*$(_D)"	""
+	@$(HELPOUT1) "$(_C)do-$(_N)%$(_D):"		"$(_E)fetch-$(_N)*$(_E) build-$(_N)*$(_D)"	""
+	@echo
 
 .PHONY: HELP_TARGETS_SUB
 HELP_TARGETS_SUB:
 	@$(HELPLVL2)
-	@echo ""
-	@echo "These are all the rest of the sub-targets used by the main targets above:"
-	@echo ""
-	@echo "Static Sub-Targets:"
-	@$(HELPOUT1) "$(INSTALL):"		"$(INSTALL)-dir"		"Per-directory engine which does all the work"
-	@$(HELPOUT1) "$(COMPOSER_PANDOC):"	"settings"			"Prints marker and variable values, for readability"
-	@$(HELPOUT1) "all:"			"whoami"			"Prints marker and variable values, for readability"
-	@$(HELPOUT1) ""				"subdirs"			"Aggregates/runs the '$(_)(COMPOSER_SUBDIRS)' targets"
-	@$(HELPOUT1) "$(STRAPIT):"		"$(STRAPIT)-check"		"Tries to proactively prevent common errors"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys"		"Installs MSYS2 environment with MinGW-w64 (for Windows)"
-	@$(HELPOUT1) ""				"$(STRAPIT)-git"		"Build/compile of Git from source archive"
-	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-bin"		"Pre-built binary GHC installation"
-	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-lib"		"GHC libraries necessary for compilation"
-	@$(HELPOUT1) "$(STRAPIT)-check:"	"$(STRAPIT)-exit"		"Exits with supporting help text"
-	@$(HELPOUT1) "$(STRAPIT)-msys:"		"$(STRAPIT)-msys-bin"		"Installs base MSYS2/MinGW-w64 system"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-init"		"Initializes base MSYS2/MinGW-w64 system"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-fix"		"Proactively fixes common MSYS2/MinGW-w64 issues"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-pkg"		"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(HELPOUT1) ""				"$(STRAPIT)-msys-dll"		"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
-	@$(HELPOUT1) "$(STRAPIT)-git:"		"$(STRAPIT)-git-pull"		"Download of Git source archive"
-	@$(HELPOUT1) ""				"$(STRAPIT)-git-prep"		"Preparation of Git source archive"
-	@$(HELPOUT1) ""				"$(STRAPIT)-git-build"		"Build/compile of Git from source archive"
-	@$(HELPOUT1) "$(FETCHIT):"		"$(FETCHIT)-cabal"		"Updates Cabal database"
-	@$(HELPOUT1) ""				"$(FETCHIT)-make"		"Download/preparation of GNU Make source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-git"		"Download/preparation of Git source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-tex"		"Download/preparation of TeX Live source archives"
-	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"		"Download/preparation of GHC source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"		"Download/preparation of Haskell Platform source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"		"Download/preparation of Pandoc source repositories"
-	@$(HELPOUT1) "$(FETCHIT)-make:"		"$(FETCHIT)-make-pull"		"Download of GNU Make source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-make-prep"		"Preparation of GNU Make source repository"
-	@$(HELPOUT1) "$(FETCHIT)-git:"		"$(FETCHIT)-git-pull"		"Download of Git source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"		"Preparation of Git source repository"
-	@$(HELPOUT1) "$(FETCHIT)-tex:"		"$(FETCHIT)-tex-pull"		"Download of TeX Live source archives"
-	@$(HELPOUT1) ""				"$(FETCHIT)-tex-prep"		"Preparation of TeX Live source archives"
-	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"		"Download of GHC source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-ghc-prep"		"Preparation of GHC source repository"
-	@$(HELPOUT1) "$(FETCHIT)-haskell:"	"$(FETCHIT)-haskell-pull"	"Download of Haskell Platform source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-packages"	"Download/preparation of Haskell Platform packages"
-	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-prep"	"Preparation of Haskell Platform source repository"
-	@$(HELPOUT1) "$(FETCHIT)-pandoc:"	"$(FETCHIT)-pandoc-type"	"Download of Pandoc-Types source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"	"Download of TeXMath source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"	"Download of Highlighting-Kate source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-cite"	"Download of Pandoc-CiteProc source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-pull"	"Download of Pandoc source repository"
-	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-prep"	"Preparation of Pandoc source repositories"
-	@$(HELPOUT1) "$(BUILDIT):"		"$(BUILDIT)-clean"		"Archives/restores source files and removes temporary build files"
-	@$(HELPOUT1) ""				"$(BUILDIT)-bindir"		"Copies compiled binaries to repository binaries directory"
-	@$(HELPOUT1) ""				"$(BUILDIT)-make"		"Build/compile of GNU Make from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-git"		"Build/compile of Git from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-tex"		"Build/compile of TeX Live from source archives"
-	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"		"Build/compile of GHC from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"		"Build/compile of Haskell Platform from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc"		"Build/compile of stand-alone Pandoc(-CiteProc) from source"
-	@$(HELPOUT1) "$(BUILDIT)-tex:"		"$(BUILDIT)-tex-fmt"		"Build/install TeX Live format files"
-	@$(HELPOUT1) "$(BUILDIT)-pandoc:"	"$(BUILDIT)-pandoc-deps"	"Build/compile of Pandoc dependencies from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-type"	"Build/compile of Pandoc-Types from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-math"	"Build/compile of TeXMath from source"
-	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-high"	"Build/compile of Highlighting-Kate from source"
-	@$(HELPOUT1) "$(SHELLIT)[-msys]:"	"$(SHELLIT)-bashrc"		"Initializes Bash configuration file"
-	@$(HELPOUT1) ""				"$(SHELLIT)-vimrc"		"Initializes Vim configuration file"
-	@echo ""
-	@echo "Dynamic Sub-Targets:"
-	@$(HELPOUT1) "all:"			"$(_)(COMPOSER_TARGETS)"	"[$(COMPOSER_TARGETS)]"
-	@$(HELPOUT1) "clean:"			"$(_)(COMPOSER_TARGETS)-clean"	"[$(addsuffix -clean,$(COMPOSER_TARGETS))]"
-	@$(HELPOUT1) "subdirs:"			"$(_)(COMPOSER_SUBDIRS)"	"[$(COMPOSER_SUBDIRS)]"
-	@echo ""
-	@echo "Wildcard Sub-Targets:"
-	@$(HELPOUT1) "$(REPLICA)-%:"		"$(REPLICA) COMPOSER_VERSION=*"	""
-	@$(HELPOUT1) "do-%:"			"fetch-* build-*"		""
-	@echo ""
-	@echo "These do not need to be used directly during normal use, and are only documented for completeness."
-	@echo ""
+	@echo
+	@$(HELPER) "These are all the rest of the sub-targets used by the main targets above:"
+	@echo
+	@$(HELPER) "$(_H)Static Sub-Targets:"
+	@$(HELPOUT1) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
+	@$(HELPOUT1) "$(_C)$(COMPOSER_PANDOC)$(_D):"	"$(_E)settings$(_D)"				"Prints marker and variable values, for readability"
+	@$(HELPOUT1) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
+	@$(HELPOUT1) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
+	@$(HELPOUT1) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-bin$(_D)"			"Pre-built binary GHC installation"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-lib$(_D)"			"GHC libraries necessary for compilation"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-check$(_D):"	"$(_E)$(STRAPIT)-exit$(_D)"			"Exits with supporting help text"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-git$(_D):"	"$(_E)$(STRAPIT)-git-pull$(_D)"			"Download of Git source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-prep$(_D)"			"Preparation of Git source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git-build$(_D)"		"Build/compile of Git from source archive"
+	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git$(_D)"			"Download/preparation of Git source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex$(_D)"			"Download/preparation of TeX Live source archives"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-make$(_D):"	"$(_E)$(FETCHIT)-make-pull$(_D)"		"Download of GNU Make source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make-prep$(_D)"		"Preparation of GNU Make source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-git$(_D):"	"$(_E)$(FETCHIT)-git-pull$(_D)"			"Download of Git source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git-prep$(_D)"			"Preparation of Git source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-tex$(_D):"	"$(_E)$(FETCHIT)-tex-pull$(_D)"			"Download of TeX Live source archives"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex-prep$(_D)"			"Preparation of TeX Live source archives"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc-prep$(_D)"			"Preparation of GHC source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-haskell$(_D):"	"$(_E)$(FETCHIT)-haskell-pull$(_D)"		"Download of Haskell Platform source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell-packages$(_D)"		"Download/preparation of Haskell Platform packages"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell-prep$(_D)"		"Preparation of Haskell Platform source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-type$(_D)"		"Download of Pandoc-Types source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-math$(_D)"		"Download of TeXMath source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-high$(_D)"		"Download of Highlighting-Kate source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-cite$(_D)"		"Download of Pandoc-CiteProc source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
+	@$(HELPOUT1) "$(_E)$(BUILDIT)-tex$(_D):"	"$(_E)$(BUILDIT)-tex-fmt$(_D)"			"Build/install TeX Live format files"
+	@$(HELPOUT1) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-type$(_D)"		"Build/compile of Pandoc-Types from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-math$(_D)"		"Build/compile of TeXMath from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-pandoc-high$(_D)"		"Build/compile of Highlighting-Kate from source"
+	@$(HELPOUT1) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes Bash configuration file"
+	@$(HELPOUT1) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
+	@echo
+	@$(HELPER) "$(_H)Dynamic Sub-Targets:"
+	@$(HELPOUT1) "$(_C)all$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)$(_D)"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
+	@$(HELPOUT1) "$(_C)clean$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)-clean$(_D)"	"[$(_M)$(addsuffix -clean,$(COMPOSER_TARGETS))$(_D)]"
+	@$(HELPOUT1) "$(_C)subdirs$(_D):"		"$(_E)$(~)(COMPOSER_SUBDIRS)$(_D)"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
+	@echo
+	@$(HELPER) "These do not need to be used directly during normal use, and are only documented for completeness."
+	@echo
 
 .PHONY: HELP_COMMANDS
 HELP_COMMANDS:
 	@$(HELPLVL1)
-	@echo ""
-	@echo "Command Examples:"
-	@echo ""
-	@$(HELPOUT2) "Have the system do all the work:"
-	@echo "$(_)(RUNMAKE) $(BASE).$(EXTENSION)"
-	@echo ""
-	@$(HELPOUT2) "Be clear about what is wanted (or, for multiple or differently named input files):"
-	@echo "$(_)(COMPOSE) LIST=\"$(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Command Examples:"
+	@echo
+	@$(HELPOUT2) "$(_E)Have the system do all the work:"
+	@$(HELPER) "$(_M)$(~)(RUNMAKE) $(BASE).$(EXTENSION)"
+	@echo
+	@$(HELPOUT2) "$(_E)Be clear about what is wanted (or, for multiple or differently named input files):"
+	@$(HELPER) "$(_M)$(~)(COMPOSE) LIST=\"$(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
+	@echo
 
 .PHONY: EXAMPLE_MAKEFILES
 EXAMPLE_MAKEFILES: \
@@ -1068,72 +1110,72 @@ EXAMPLE_MAKEFILES: \
 .PHONY: EXAMPLE_MAKEFILES_HEADER
 EXAMPLE_MAKEFILES_HEADER:
 	@$(HELPLVL2)
-	@echo ""
-	@echo "Calling from children '$(MAKEFILE)' files:"
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Calling from children '$(MAKEFILE)' files:"
+	@echo
 
 .PHONY: EXAMPLE_MAKEFILE_1
 EXAMPLE_MAKEFILE_1:
-	@$(HELPOUT2) "Simple, with filename targets and \"automagic\" detection of them:"
-	@$(HELPOUT2) "include $(COMPOSER)"
-	@echo ".PHONY: $(BASE) $(EXAMPLE_TARGET)"
-	@echo "$(BASE): # so \"clean\" will catch the below files"
-	@echo "$(EXAMPLE_TARGET): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
-	@echo "$(EXAMPLE_SECOND).$(EXTENSION):"
-	@echo ""
+	@$(HELPOUT2) "$(_E)Simple, with filename targets and \"automagic\" detection of them:"
+	@$(HELPOUT2) "$(_S)include $(COMPOSER)"
+	@$(HELPER) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_TARGET)"
+	@$(HELPER) "$(_C)$(BASE)$(_D): $(_N)# so \"clean\" will catch the below files"
+	@$(HELPER) "$(_C)$(EXAMPLE_TARGET)$(_D): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
+	@$(HELPER) "$(_C)$(EXAMPLE_SECOND).$(EXTENSION)$(_D):"
+	@echo
 
 .PHONY: EXAMPLE_MAKEFILE_2
 EXAMPLE_MAKEFILE_2:
-	@$(HELPOUT2) "Advanced, with manual enumeration of user-defined targets and per-target variables:"
-	@echo "override COMPOSER_TARGETS ?= $(BASE) $(EXAMPLE_TARGET) $(EXAMPLE_SECOND).$(EXTENSION)"
-	@$(HELPOUT2) "include $(COMPOSER)"
-	@echo ".PHONY: $(BASE) $(EXAMPLE_TARGET)"
-	@echo "$(BASE): export TOC := 1"
-	@echo "$(BASE): $(BASE).$(EXTENSION)"
-	@echo "$(EXAMPLE_TARGET): $(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)"
-	@echo "	$(_)(COMPOSE) LIST=\"$(_)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
-	@echo "	$(_)(COMPOSE) LIST=\"$(_)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_LPDF)\""
-	@echo "$(EXAMPLE_TARGET)-clean:"
-	@echo "	$(_)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
-	@echo ""
+	@$(HELPOUT2) "$(_E)Advanced, with manual enumeration of user-defined targets and per-target variables:"
+	@$(HELPER) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE) $(EXAMPLE_TARGET) $(EXAMPLE_SECOND).$(EXTENSION)"
+	@$(HELPOUT2) "$(_S)include $(COMPOSER)"
+	@$(HELPER) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_TARGET)"
+	@$(HELPER) "$(_C)$(BASE)$(_D): export TOC := 1"
+	@$(HELPER) "$(_C)$(BASE)$(_D): $(BASE).$(EXTENSION)"
+	@$(HELPER) "$(_C)$(EXAMPLE_TARGET)$(_D): $(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)"
+	@$(HELPER) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
+	@$(HELPER) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_LPDF)\""
+	@$(HELPER) "$(_C)$(EXAMPLE_TARGET)-clean$(_D):"
+	@$(HELPER) "	$(~)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
+	@echo
 
 .PHONY: EXAMPLE_MAKEFILES_FOOTER
 EXAMPLE_MAKEFILES_FOOTER:
-	@$(HELPOUT2) "Then, from the command line:"
-	@echo "make clean && make all"
-	@echo ""
+	@$(HELPOUT2) "$(_E)Then, from the command line:"
+	@$(HELPER) "$(_M)make clean && make all"
+	@echo
 
 .PHONY: HELP_SYSTEM
 HELP_SYSTEM: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
 HELP_SYSTEM:
 	@$(HELPLVL1)
-	@echo ""
-	@echo "Completely recursive build system:"
-	@echo ""
-	@$(HELPOUT2) "The top-level '$(MAKEFILE)' is the only one which needs a direct reference:"
-	@$(HELPOUT2) "(NOTE: This must be an absolute path.)"
-	@echo "include $(COMPOSER)"
-	@echo ""
-	@$(HELPOUT2) "All sub-directories then each start with:"
-	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
-	@echo "override COMPOSER_TEACHER := $(_)(abspath $(_)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
-	@echo "override COMPOSER_SUBDIRS ?="
-	@echo ".DEFAULT_GOAL := all"
-	@echo ""
-	@$(HELPOUT2) "And end with:"
-	@echo "include $(_)(COMPOSER_TEACHER)"
-	@echo ""
-	@$(HELPOUT2) "Back in the top-level '$(MAKEFILE)', and in all sub-'$(MAKEFILE)' instances which recurse further down:"
-	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
-	@echo "include [...]"
-	@echo ""
-	@$(HELPOUT2) "Create a new '$(MAKEFILE)' using a helpful template:"
-	@echo "$(_)(RUNMAKE) --quiet COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
-	@echo ""
-	@$(HELPOUT2) "Or, recursively initialize the current directory tree:"
-	@$(HELPOUT2) "(NOTE: This is a non-destructive operation.)"
-	@echo "$(_)(RUNMAKE) $(INSTALL)"
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Completely recursive build system:"
+	@echo
+	@$(HELPOUT2) "$(_E)The top-level '$(MAKEFILE)' is the only one which needs a direct reference:"
+	@$(HELPOUT2) "$(_N)(NOTE: This must be an absolute path.)"
+	@$(HELPER) "include $(COMPOSER)"
+	@echo
+	@$(HELPOUT2) "$(_E)All sub-directories then each start with:"
+	@$(HELPER) "override $(_C)COMPOSER_ABSPATH$(_D) := $(_C)$(COMPOSER_ABSPATH)"
+	@$(HELPER) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(~)(abspath $(~)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@$(HELPER) "override $(_C)COMPOSER_SUBDIRS$(_D) ?="
+	@$(HELPER) "$(_C).DEFAULT_GOAL$(_D) := $(_C)all"
+	@echo
+	@$(HELPOUT2) "$(_E)And end with:"
+	@$(HELPER) "include $(_C)$(~)(COMPOSER_TEACHER)"
+	@echo
+	@$(HELPOUT2) "$(_E)Back in the top-level '$(MAKEFILE)', and in all sub-'$(MAKEFILE)' instances which recurse further down:"
+	@$(HELPER) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
+	@$(HELPER) "include [...]"
+	@echo
+	@$(HELPOUT2) "$(_E)Create a new '$(MAKEFILE)' using a helpful template:"
+	@$(HELPER) "$(_M)$(~)(RUNMAKE) --quiet COMPOSER_NOCOLOR=\"1\" COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
+	@echo
+	@$(HELPOUT2) "$(_E)Or, recursively initialize the current directory tree:"
+	@$(HELPOUT2) "$(_N)(NOTE: This is a non-destructive operation.)"
+	@$(HELPER) "$(_M)$(~)(RUNMAKE) $(INSTALL)"
+	@echo
 
 .PHONY: EXAMPLE_MAKEFILE
 EXAMPLE_MAKEFILE: \
@@ -1143,128 +1185,106 @@ EXAMPLE_MAKEFILE: \
 .PHONY: EXAMPLE_MAKEFILE_HEADER
 EXAMPLE_MAKEFILE_HEADER:
 	@$(HELPLVL2)
-	@echo ""
-	@echo "Finally, a completely recursive '$(MAKEFILE)' example:"
-	@echo ""
+	@echo
+	@$(HELPER) "$(_H)Finally, a completely recursive '$(MAKEFILE)' example:"
+	@echo
 
 .PHONY: EXAMPLE_MAKEFILE_FULL
 EXAMPLE_MAKEFILE_FULL: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
 EXAMPLE_MAKEFILE_FULL:
-	@$(HELPOUT2) "$(HELPMARK) HEADERS"
-	@echo ""
-	@$(HELPOUT2) "These two statements must be at the top of every file:"
+	@$(HELPOUT2) "$(_H)$(MARKER) HEADERS"
+	@$(HELPOUT2) "$(_E)These two statements must be at the top of every file:"
+	@$(HELPOUT2) "$(_N)(NOTE: The 'COMPOSER_TEACHER' variable can be modified for custom chaining, but with care.)"
+	@$(HELPER) "override $(_C)COMPOSER_ABSPATH$(_D) := $(_C)$(COMPOSER_ABSPATH)"
+	@$(HELPER) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(~)(abspath $(~)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) DEFINITIONS"
+	@$(HELPOUT2) "$(_E)These statements are also required:"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Use '?=' declarations and define *before* the upstream 'include' statement"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* They pass their values *up* the '$(MAKEFILE)' chain"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Should always be defined, even if empty, to prevent downward propagation of values"
+	@$(HELPOUT2) "$(_N)(NOTE: List of 'all' targets is '$(COMPOSER_ALL_REGEX)' if '$(~)(COMPOSER_TARGETS)' is empty.)"
+	@$(HELPER) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE).$(EXTENSION) $(EXAMPLE_SECOND).$(EXTENSION)"
+	@$(HELPER) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
+	@$(HELPER) "override $(_C)COMPOSER_DEPENDS$(_D) ?= $(_C)$(COMPOSER_DEPENDS)"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) VARIABLES"
+	@$(HELPOUT2) "$(_E)The option variables are not required, but are available for locally-scoped configuration:"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* For proper inheritance, use '?=' declarations and define *before* the upstream 'include' statement"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* They pass their values *down* the '$(MAKEFILE)' chain"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Do not need to be defined when empty, unless necessary to override upstream values"
+	@$(HELPOUT2) "$(_E)To disable inheritance and/or insulate from environment variables:"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Replace 'override VAR ?=' with 'override VAR :='"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Define *after* the upstream 'include' statement"
+	@$(HELPOUT2) "$(_N)(NOTE: Any settings here will apply to all children, unless 'override' is used downstream.)"
 	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: The 'COMPOSER_TEACHER' variable can be modified for custom chaining, but with care.)"
-	@echo ""
-	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
-	@echo "override COMPOSER_TEACHER := $(_)(abspath $(_)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) DEFINITIONS"
-	@echo ""
-	@$(HELPOUT2) "These statements are also required:"
-	@$(HELPOUT2) " * Use '?=' declarations and define *before* the upstream 'include' statement"
-	@$(HELPOUT2) " * They pass their values *up* the '$(MAKEFILE)' chain"
-	@$(HELPOUT2) " * Should always be defined, even if empty, to prevent downward propagation of values"
+	@$(HELPOUT2) "$(_E)Define the CSS template to use in this entire directory tree:"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Absolute path names should be used, so that children will be able to find it"
+	@$(HELPOUT2) "$(_E)$(INDENTING)$(INDENTING)* The 'COMPOSER_ABSPATH' variable can be used to simplify this"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
+	@$(HELPER) "$(~)(eval override $(_C)CSS$(_D) ?= $(_C)$(~)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
 	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: List of 'all' targets is '$(COMPOSER_ALL_REGEX)' if 'COMPOSER_TARGETS' is empty.)"
-	@echo ""
-	@echo "override COMPOSER_TARGETS ?= $(BASE).$(EXTENSION) $(EXAMPLE_SECOND).$(EXTENSION)"
-	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
-	@echo "override COMPOSER_DEPENDS ?= $(COMPOSER_DEPENDS)"
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) VARIABLES"
-	@echo ""
-	@$(HELPOUT2) "The option variables are not required, but are available for locally-scoped configuration:"
-	@$(HELPOUT2) " * For proper inheritance, use '?=' declarations and define *before* the upstream 'include' statement"
-	@$(HELPOUT2) " * They pass their values *down* the '$(MAKEFILE)' chain"
-	@$(HELPOUT2) " * Do not need to be defined when empty, unless necessary to override upstream values"
+	@$(HELPOUT2) "$(_E)All the other optional variables can also be made global in this directory scope:"
+	@$(HELPER) "override $(_C)TTL$(_D) ?="
+	@$(HELPER) "override $(_C)TOC$(_D) ?= $(_C)2"
+	@$(HELPER) "override $(_C)LVL$(_D) ?= $(_C)$(LVL)"
+	@$(HELPER) "override $(_C)OPT$(_D) ?="
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) INCLUDE"
+	@$(HELPOUT2) "$(_E)Necessary include statement:"
+	@$(HELPOUT2) "$(_N)(NOTE: This must be after all references to 'COMPOSER_ABSPATH' but before '.DEFAULT_GOAL'.)"
+	@$(HELPER) "include $(_C)$(~)(COMPOSER_TEACHER)"
 	@$(HELPOUT2) ""
-	@$(HELPOUT2) "To disable inheritance and/or insulate from environment variables:"
-	@$(HELPOUT2) " * Replace 'override VAR ?=' with 'override VAR :='"
-	@$(HELPOUT2) " * Define *after* the upstream 'include' statement"
-	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: Any settings here will apply to all children, unless 'override' is used downstream.)"
-	@echo ""
-	@$(HELPOUT2) "Define the CSS template to use in this entire directory tree:"
-	@$(HELPOUT2) " * Absolute path names should be used, so that children will be able to find it"
-	@$(HELPOUT2) " * The '$(_)(COMPOSER_ABSPATH)' variable can be used to simplify this"
-	@$(HELPOUT2) " * If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
-	@$(HELPOUT2) " * If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
-	@echo ""
-	@echo "$(_)(eval override CSS ?= $(_)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
-	@echo ""
-	@$(HELPOUT2) "All the other optional variables can also be made global in this directory scope:"
-	@echo ""
-	@echo "override TTL ?="
-	@echo "override TOC ?= 2"
-	@echo "override LVL ?= $(LVL)"
-	@echo "override OPT ?="
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) INCLUDE"
-	@echo ""
-	@$(HELPOUT2) "Necessary include statement:"
-	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: This must be after all references to '$(_)(COMPOSER_ABSPATH)' but before '.DEFAULT_GOAL'.)"
-	@echo ""
-	@echo "include $(_)(COMPOSER_TEACHER)"
-	@echo ""
-	@$(HELPOUT2) "For recursion to work, a default target needs to be defined:"
-	@$(HELPOUT2) " * Needs to be 'all' for directories which must recurse into sub-directories"
-	@$(HELPOUT2) " * The 'subdirs' target can be used manually, if desired, so this can be changed to another value"
-	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: Recursion will cease if not 'all', unless 'subdirs' target is called.)"
-	@echo ""
-	@echo ".DEFAULT_GOAL := all"
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) RECURSION"
-	@echo ""
-	@$(HELPOUT2) "Dependencies can be specified, if needed:"
-	@$(HELPOUT2) ""
-	@$(HELPOUT2) "(NOTE: This defines the sub-directories which must be built before '$(firstword $(COMPOSER_SUBDIRS))'.)"
-	@echo ""
-	@echo "$(firstword $(COMPOSER_SUBDIRS)): $(wordlist 2,$(words $(COMPOSER_SUBDIRS)),$(COMPOSER_SUBDIRS))"
-	@echo ""
-	@$(HELPOUT2) "For parent/child directory dependencies, set '$(_)(COMPOSER_DEPENDS)' to a non-empty value."
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) MAKEFILE"
-	@echo ""
-	@$(HELPOUT2) "This is where the rest of the file should be defined."
-	@$(HELPOUT2) ""
-	@$(HELPOUT2) "In this example, '$(_)(COMPOSER_TARGETS)' is used completely in lieu of any explicit targets."
-	@echo ""
+	@$(HELPOUT2) "$(_E)For recursion to work, a default target needs to be defined:"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* Needs to be 'all' for directories which must recurse into sub-directories"
+	@$(HELPOUT2) "$(_E)$(INDENTING)* The 'subdirs' target can be used manually, if desired, so this can be changed to another value"
+	@$(HELPOUT2) "$(_N)(NOTE: Recursion will cease if not 'all', unless 'subdirs' target is called.)"
+	@$(HELPER) "$(_C).DEFAULT_GOAL$(_D) := $(_C)all"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) RECURSION"
+	@$(HELPOUT2) "$(_E)Dependencies can be specified, if needed:"
+	@$(HELPOUT2) "$(_N)(NOTE: This defines the sub-directories which must be built before '$(firstword $(COMPOSER_SUBDIRS))'.)"
+	@$(HELPOUT2) "$(_N)(NOTE: For parent/child directory dependencies, set 'COMPOSER_DEPENDS' to a non-empty value.)"
+	@$(HELPER) "$(_C)$(firstword $(COMPOSER_SUBDIRS))$(_D): $(_C)$(wordlist 2,$(words $(COMPOSER_SUBDIRS)),$(COMPOSER_SUBDIRS))"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) MAKEFILE"
+	@$(HELPOUT2) "$(_E)This is where the rest of the file should be defined."
+	@$(HELPOUT2) "$(_N)(NOTE: In this example, 'COMPOSER_TARGETS' is used completely in lieu of any explicit targets.)"
+	@echo
 
 .PHONY: HELP_FOOTER
 HELP_FOOTER:
 	@$(HELPLVL1)
-	@$(HELPOUT2) "Happy Hacking!"
+	@$(HELPOUT2) "$(_H)Happy Hacking!"
 	@$(HELPLVL1)
 
 ########################################
 
 .PHONY: $(EXAMPLE)
 $(EXAMPLE):
-	@$(HELPOUT2) "$(HELPMARK) HEADERS"
-	@echo "override COMPOSER_ABSPATH := $(COMPOSER_ABSPATH)"
-	@echo "override COMPOSER_TEACHER := $(_)(abspath $(_)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) DEFINITIONS"
-	@echo "override COMPOSER_TARGETS ?= $(COMPOSER_TARGETS)"
-	@echo "override COMPOSER_SUBDIRS ?= $(COMPOSER_SUBDIRS)"
-	@echo "override COMPOSER_DEPENDS ?= $(COMPOSER_DEPENDS)"
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) VARIABLES"
-	@$(HELPOUT2) "$(_)(eval override CSS ?= $(_)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
-	@$(HELPOUT2) "override TTL ?="
-	@$(HELPOUT2) "override TOC ?="
-	@$(HELPOUT2) "override LVL ?="
-	@$(HELPOUT2) "override OPT ?="
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) INCLUDE"
-	@echo "include $(_)(COMPOSER_TEACHER)"
-	@echo ".DEFAULT_GOAL := all"
-	@echo ""
-	@$(HELPOUT2) "$(HELPMARK) MAKEFILE"
-	@$(HELPOUT2) "(Contents of file go here.)"
+	@$(HELPOUT2) "$(_H)$(MARKER) HEADERS"
+	@$(HELPER) "override $(_C)COMPOSER_ABSPATH$(_D) := $(_C)$(COMPOSER_ABSPATH)"
+	@$(HELPER) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(~)(abspath $(~)(COMPOSER_ABSPATH)/../$(MAKEFILE))"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) DEFINITIONS"
+	@$(HELPER) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(COMPOSER_TARGETS)"
+	@$(HELPER) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
+	@$(HELPER) "override $(_C)COMPOSER_DEPENDS$(_D) ?= $(_C)$(COMPOSER_DEPENDS)"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) VARIABLES"
+	@$(HELPOUT2) "$(_E)$(~)(eval override CSS ?= $(~)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
+	@$(HELPOUT2) "$(_E)override TTL ?="
+	@$(HELPOUT2) "$(_E)override TOC ?="
+	@$(HELPOUT2) "$(_E)override LVL ?="
+	@$(HELPOUT2) "$(_E)override OPT ?="
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) INCLUDE"
+	@$(HELPER) "include $(_C)$(~)(COMPOSER_TEACHER)"
+	@$(HELPER) "$(_C).DEFAULT_GOAL$(_D) := $(_C)all"
+	@echo
+	@$(HELPOUT2) "$(_H)$(MARKER) MAKEFILE"
+	@$(HELPOUT2) "$(_N)(Contents of file go here.)"
 
 override TEST_DIRECTORIES := \
 	$(TESTOUT_DIR) \
@@ -1292,22 +1312,22 @@ $(TESTOUT):
 	$(CP) "$(MDVIEWER_CSS)" "$(TEST_DIR_CSSDST)/$(COMPOSER_CSS)"
 	$(RUNMAKE) --directory "$(TESTOUT_DIR)" $(INSTALL)
 ifneq ($(COMPOSER_TESTING),0)
-	$(RUNMAKE) --quiet COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
-	$(RUNMAKE) --quiet COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_DEPEND_SUB)" COMPOSER_DEPENDS="1" $(EXAMPLE) >"$(TEST_DIR_DEPEND)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_1 >"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" EXAMPLE_MAKEFILE_2 >"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_1)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_TARGETS="" COMPOSER_SUBDIRS="" $(EXAMPLE) >>"$(TEST_DIR_MAKE_2)/$(MAKEFILE)"
+	$(RUNMAKE) --quiet COMPOSER_NOCOLOR="1" COMPOSER_SUBDIRS="$(TEST_FULLMK_SUB)" EXAMPLE_MAKEFILE_FULL >"$(TEST_DIR_MAKE_F)/$(MAKEFILE)"
 endif
 	$(MKDIR) "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)"
 	$(RUNMAKE) --directory "$(TESTOUT_DIR)/$(COMPOSER_BASENAME)" $(REPLICA)
-	$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1$$\(COMPOSER_ABSPATH\)/$(COMPOSER_BASENAME)/$(MAKEFILE)|g" "$(TESTOUT_DIR)/$(MAKEFILE)"
+#>	$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1$$\(COMPOSER_ABSPATH\)/$(COMPOSER_BASENAME)/$(MAKEFILE)|g" "$(TESTOUT_DIR)/$(MAKEFILE)"
 	$(MAKE) --directory "$(TESTOUT_DIR)"
 ifneq ($(COMPOSER_TESTING),)
 	$(foreach FILE,$(TEST_DIRECTORIES),\
-		echo "" && \
+		echo && \
 		echo "[$(FILE)/$(MAKEFILE)]" && \
-		echo "" && \
+		echo && \
 		cat "$(FILE)/$(MAKEFILE)"
 	)
 endif
@@ -1323,6 +1343,7 @@ $(INSTALL)-dir:
 	else
 		@echo "[CREATING] $(CURDIR)/$(MAKEFILE)"
 		$(RUNMAKE) --quiet \
+			COMPOSER_NOCOLOR="1" \
 			COMPOSER_TARGETS="$(sort $(subst .$(COMPOSER_EXT),.$(TYPE_HTML),$(wildcard *.$(COMPOSER_EXT))))" \
 			COMPOSER_SUBDIRS="$(sort $(subst /,,$(wildcard */)))" \
 			COMPOSER_DEPENDS="$(COMPOSER_DEPENDS)" \
@@ -1449,7 +1470,7 @@ ifneq ($(BUILD_MSYS),)
 		set BINDIR=/usr/bin
 		set PATH=%WD%%BINDIR%;%PATH%
 		set OPTIONS=
-		set OPTIONS=%OPTIONS% --title "// $(COMPOSER_BASENAME) MSYS2"
+		set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_BASENAME) MSYS2"
 		set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
 		start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 		:: end of file
@@ -1468,25 +1489,25 @@ endif
 
 .PHONY: $(CHECKIT)
 $(CHECKIT):
-	@$(HELPOUT1) "Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
-	@$(HELPOUT1) "----------"		"--------------------"		"--------------------"
+	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
+	@$(HELPLINE)
 ifneq ($(BUILD_MSYS),)
-	@$(HELPOUT1) "MSYS2"			"$(MSYS_VERSION)"	"$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)MSYS2"		"$(_M)$(MSYS_VERSION)"		"$(_D)$(shell $(BUILD_ENV) $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ]v[^ ]+).*$$|\1|gp")"
 endif
-	@$(HELPOUT1) "GNU Make"			"$(MAKE_VERSION)"	"$(shell $(BUILD_ENV) make --version			2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "Git SCM"			"$(GIT_VERSION)"	"$(shell $(BUILD_ENV) git --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "Pandoc"			"$(PANDOC_CMT)"		"$(shell $(BUILD_ENV) pandoc --version			2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
-	@$(HELPOUT1) "- Types"			"$(PANDOC_TYPE_CMT)"	"$(shell $(BUILD_ENV) cabal info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- TeXMath"		"$(PANDOC_MATH_CMT)"	"$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- Highlighting-Kate"	"$(PANDOC_HIGH_CMT)"	"$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- CiteProc"		"$(PANDOC_CITE_CMT)"	"$(shell $(BUILD_ENV) pandoc-citeproc --version		2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "TeX Live"			"$(TEX_VERSION)"	"$(shell $(BUILD_ENV) tex --version			2>/dev/null | $(SED) -n "s|^.*TeX[ ]Live[ ]([0-9]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- PDFLaTeX"		"$(TEX_PDF_VERSION)"	"$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
-	@$(HELPOUT1) "Haskell"			"$(HASKELL_CMT)"	"$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "- GHC"			"$(GHC_VERSION)"	"$(shell $(BUILD_ENV) ghc --version			2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- Cabal"			"$(CABAL_VERSION)"	"$(shell $(BUILD_ENV) cabal --version			2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "- Library"		"$(CABAL_VERSION_LIB)"	"$(shell $(BUILD_ENV) cabal info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(HELPOUT1) "$(HELPMARK)"		"GHC Library:"		"$(GHC_VERSION_LIB)"
+	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_VERSION)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_CMT)"		"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
+	@$(HELPOUT1) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)TeXMath"		"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Highlighting-Kate"	"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)CiteProc"		"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(BUILD_ENV) pandoc-citeproc --version	2>/dev/null | $(SED) -n "s|^pandoc-citeproc[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)TeX Live"		"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(BUILD_ENV) tex --version		2>/dev/null | $(SED) -n "s|^.*TeX[ ]Live[ ]([0-9]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)PDFLaTeX"		"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(BUILD_ENV) pdflatex --version		2>/dev/null | $(SED) -n "s|^.*pdfTeX[ ][^-]+[-][^-]+[-]([^ ]+)[ ].*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)Haskell"		"$(_M)$(HASKELL_CMT)"		"$(_D)$(shell $(BUILD_ENV) cabal info haskell-platform	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)GHC"		"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(BUILD_ENV) ghc --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Cabal"		"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) cabal --version		2>/dev/null | $(SED) -n "s|^.*cabal-install[ ]version[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "- $(_C)Library"		"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(BUILD_ENV) cabal info Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(HELPOUT1) "$(MARKER)"		"$(_C)GHC Library:"		"$(_M)$(GHC_VERSION_LIB)"
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -1531,11 +1552,11 @@ $(SHELLIT)-bashrc:
 		#
 		export PROMPT_DIRTRIM="1"
 		export PS1=
-		export PS1="$${PS1}\[\e]0;// $(COMPOSER_BASENAME) \w\a\]\n"	# hardline escape, new line (for spacing)
-		export PS1="$${PS1}// $(COMPOSER_BASENAME) \D{%FT%T%z}\n"	# title, date (iso format)
-		export PS1="$${PS1}[\#/\!] (\u@\h \w)\\$$ "	# history counters, username@hostname, directory, prompt
+		export PS1="$${PS1}\[\e]0;$(MARKER) $(COMPOSER_BASENAME) \w\a\]\n"				# title escape, new line (for spacing)
+		export PS1="$${PS1}$(_H)$(MARKER) $(COMPOSER_BASENAME) $(_C)\D{%FT%T%z}\n"		# title, date (iso format)
+		export PS1="$${PS1}[\#/\!] ($(_M)\u@\h \w$(_C))\\$$$(_D) "	# history counters, username@hostname, directory, prompt
 		#
-		export PAGER="less -RX"
+		export PAGER="less -rX"
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
 		unset VISUAL
 		#
@@ -1543,7 +1564,7 @@ $(SHELLIT)-bashrc:
 		alias vi="$${EDITOR}"
 		#
 		export LC_COLLATE="C"
-		alias ll="$(LS)"
+		alias ll='$(LS)'
 		#
 		alias composer='$(RUNMAKE)'
 		alias compose='$(COMPOSE)'
@@ -1604,7 +1625,7 @@ $(SHELLIT)-vimrc:
 		" clean up folding
 		map z. <ESC>:set foldlevel=0<CR>zv
 		"
-		source "$(COMPOSER_ABODE)/.vimrc.custom"
+		source $(COMPOSER_ABODE)/.vimrc.custom
 		" end of file
 	_EOF_
 	@if [ ! -f "$(COMPOSER_ABODE)/.vimrc.custom" ]; then
@@ -1645,15 +1666,10 @@ endif
 .PHONY: $(STRAPIT)-exit
 $(STRAPIT)-exit:
 	@$(HELPOUT2)
-	@$(HELPOUT2) "NOTES:"
-	@$(HELPOUT2)
+	@$(HELPOUT2) "$(_H)$(MARKER) NOTES:"
 	@$(HELPOUT2) "This message was produced by $(COMPOSER_BASENAME)."
-	@$(HELPOUT2)
-	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check"
-	@$(HELPOUT2) "from the '$(_)(STRAPIT)-check' target in:"
-	@$(HELPOUT2)
-	@$(HELPOUT2) "$(COMPOSER)"
-	@$(HELPOUT2)
+	@$(HELPOUT2) "If you know the above to be incorrect, you can remove this check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
+	@$(HELPOUT2) "$(INDENTING)$(_M)$(COMPOSER)"
 	@$(HELPLVL1)
 	@exit 1
 
@@ -1662,43 +1678,28 @@ $(STRAPIT)-check:
 ifeq ($(BUILD_MSYS),)
 	@if [ ! -f "$(shell ls /{,usr/}lib*/$(CHECK_LIB_DST) 2>/dev/null | tail -n1)" ]; then
 		@$(HELPLVL1)
+		@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
+		@$(HELPOUT2) "$(_N)Could not find '$(_C)$(CHECK_LIB_DST)$(_N)' library file."
 		@$(HELPOUT2)
-		@$(HELPOUT2) "ERROR:"
-		@$(HELPOUT2)
-		@$(HELPOUT2) "Could not find '$(CHECK_LIB_DST)' library file."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "DETAILS:"
-		@$(HELPOUT2)
-		@$(HELPOUT2) "The pre-built GHC requires this specific file in order to run,"
-		@$(HELPOUT2) "but not necessarily this version of $(CHECK_LIB_NAME)."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "You can likely 'ln -s' one of the files below"
-		@$(HELPOUT2) "to something like '/usr/lib/$(CHECK_LIB_DST)' to work around this."
+		@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
+		@$(HELPOUT2) "The pre-built GHC requires this specific file in order to run, but not necessarily this version of $(CHECK_LIB_NAME)."
+		@$(HELPOUT2) "You can likely '$(_M)ln -s$(_D)' one of the files below to something like '$(_M)/usr/lib/$(CHECK_LIB_DST)$(_D)' to work around this."
 		@echo
 		@$(LS) /{,usr/}lib*/$(CHECK_LIB_SRC)* 2>/dev/null || true
 		@echo
-		@$(HELPOUT2) "If no files are listed above, you may need to"
-		@$(HELPOUT2) "install some version of the $(CHECK_LIB_NAME) library to continue."
+		@$(HELPOUT2) "If no files are listed above, you may need to install some version of the $(CHECK_LIB_NAME) library to continue."
 		$(RUNMAKE) --quiet $(STRAPIT)-exit
 	fi
 else
 	@if [ ! -n "$(MSYSTEM)" ]; then
 		@$(HELPLVL1)
+		@$(HELPOUT2) "$(_H)$(MARKER) ERROR:"
+		@$(HELPOUT2) "$(_N)Must use MSYS2 on Windows systems."
 		@$(HELPOUT2)
-		@$(HELPOUT2) "ERROR:"
-		@$(HELPOUT2)
-		@$(HELPOUT2) "Must use MSYS2 on Windows systems."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "DETAILS:"
-		@$(HELPOUT2)
-		@$(HELPOUT2) "This appears to be a Windows system,"
-		@$(HELPOUT2) "but the '$(_)MSYSTEM' variable is not set."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "You should run the '$(STRAPIT)-msys' target"
-		@$(HELPOUT2) "to install the MSYS2 environment."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "Then you can run the '$(SHELLIT)-msys' target"
-		@$(HELPOUT2) "to run the MSYS2 environment and try '$(STRAPIT)' again."
+		@$(HELPOUT2) "$(_H)$(MARKER) DETAILS:"
+		@$(HELPOUT2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
+		@$(HELPOUT2) "You should run the '$(_M)$(STRAPIT)-msys$(_D)' target to install the MSYS2 environment."
+		@$(HELPOUT2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
 		$(RUNMAKE) --quiet $(STRAPIT)-exit
 	fi
 endif
@@ -1723,26 +1724,19 @@ $(STRAPIT)-msys-init:
 	    [ ! -f "$(MSYS_BIN_DST)/etc/passwd" ]; then
 		@$(HELPLVL1)
 		@$(HELPOUT2) "We need to initialize the MSYS2 environment."
-		@$(HELPOUT2)
 		@$(HELPOUT2) "To do this, we will pause here to open an initial shell window."
+		@$(HELPOUT2) "Once the shell window gets to a command prompt, simply type '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D) to return."
 		@$(HELPOUT2)
-		@$(HELPOUT2) "Once the shell window gets to a command prompt,"
-		@$(HELPOUT2) "simply type 'exit' and hit ENTER to return."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "Hit ENTER to proceed."
+		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
 		@$(HELPLVL1)
 		@read ENTER
 		$(RUNMAKE) $(SHELLIT)-msys
 		@$(HELPLVL1)
 		@$(HELPOUT2) "The shell window has been launched."
+		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
+		@$(HELPOUT2) "If everything was successful $(_E)(no errors above)$(_D), the build process can continue without interaction."
 		@$(HELPOUT2)
-		@$(HELPOUT2) "It should have processed to a command prompt,"
-		@$(HELPOUT2) "after which you typed 'exit' and hit ENTER."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "If everything was successful (no errors above),"
-		@$(HELPOUT2) "the build process can continue without interaction."
-		@$(HELPOUT2)
-		@$(HELPOUT2) "Hit ENTER to proceed, or CTRL-C to quit."
+		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
 		@$(HELPLVL1)
 		@read ENTER
 	fi
@@ -2097,26 +2091,26 @@ $(FETCHIT)-pandoc-prep:
 		"$(PANDOC_DST)/pandoc.cabal"
 
 #>			--enable-tests
-#>		echo && echo "$(HELPMARK) Test [$(1)]" &&
+#>		$(HELPER) "\n$(_C)$(MARKER) Test [$(_M)$(1)$(_C)]" &&
 #>		$(BUILD_ENV_MINGW) $(CABAL) test &&
 override define PANDOC_BUILD =
 	cd "$(1)" &&
-		echo && echo "$(HELPMARK) Configure [$(1)]" &&
+		$(HELPER) "\n$(_C)$(MARKER) Configure [$(_M)$(1)$(_C)]" &&
 		$(BUILD_ENV_MINGW) $(CABAL) configure \
 			--prefix="$(COMPOSER_ABODE)" \
 			--flags="embed_data_files http-conduit" \
 			--disable-executable-dynamic \
 			--disable-shared \
 			&&
-		echo && echo "$(HELPMARK) Build [$(1)]" &&
+		$(HELPER) "\n$(_C)$(MARKER) Build [$(_M)$(1)$(_C)]" &&
 		$(BUILD_ENV_MINGW) $(CABAL) build &&
-		echo && echo "$(HELPMARK) Install [$(1)]" &&
+		$(HELPER) "\n$(_C)$(MARKER) Install [$(_M)$(1)$(_C)]" &&
 		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
 endef
 
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
-	echo && echo "$(HELPMARK) Dependencies"
+	$(HELPER) "\n$(_C)$(MARKER) Dependencies"
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(subst |,-,$(PANDOC_DEPENDENCIES_LIST))
 #>		--enable-tests
@@ -2196,35 +2190,38 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 .PHONY: whoami
 whoami:
 	@$(HELPLVL1)
-	@$(HELPOUT2) "CURDIR:"			"[$(CURDIR)]"
-	@$(HELPOUT2) "COMPOSER_TARGETS:"	"[$(COMPOSER_TARGETS)]"
-	@$(HELPOUT2) "COMPOSER_SUBDIRS:"	"[$(COMPOSER_SUBDIRS)]"
-	@$(HELPOUT2) "COMPOSER_DEPENDS:"	"[$(COMPOSER_DEPENDS)]"
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_E)COMPOSER_TARGETS$(_D)"	"[$(_N)$(COMPOSER_TARGETS)$(_D)]"
+	@$(HELPOUT2) "$(_E)COMPOSER_SUBDIRS$(_D)"	"[$(_N)$(COMPOSER_SUBDIRS)$(_D)]"
+	@$(HELPOUT2) "$(_E)COMPOSER_DEPENDS$(_D)"	"[$(_N)$(COMPOSER_DEPENDS)$(_D)]"
+	@$(HELPOUT2) "$(_C)CURDIR$(_D)"			"[$(_M)$(CURDIR)$(_D)]"
 	@$(HELPLVL2)
-	@$(HELPOUT2) "TYPE:"	"[$(TYPE)]"
-	@$(HELPOUT2) "BASE:"	"[$(BASE)]"
-	@$(HELPOUT2) "LIST:"	"[$(LIST)]"
-	@$(HELPOUT2) "_CSS:"	"[$(_CSS)]"
-	@$(HELPOUT2) "CSS:"	"[$(CSS)]"
-	@$(HELPOUT2) "TTL:"	"[$(TTL)]"
-	@$(HELPOUT2) "TOC:"	"[$(TOC)]"
-	@$(HELPOUT2) "LVL:"	"[$(LVL)]"
-	@$(HELPOUT2) "OPT:"	"[$(OPT)]"
+	@$(HELPOUT2) "$(_C)TYPE$(_D)"	"[$(_M)$(TYPE)$(_D)]"
+	@$(HELPOUT2) "$(_C)BASE$(_D)"	"[$(_M)$(BASE)$(_D)]"
+	@$(HELPOUT2) "$(_C)LIST$(_D)"	"[$(_M)$(LIST)$(_D)]"
+	@$(HELPOUT2) "$(_C)_CSS$(_D)"	"[$(_M)$(_CSS)$(_D)]"
+	@$(HELPOUT2) "$(_C)CSS$(_D)"	"[$(_M)$(CSS)$(_D)]"
+	@$(HELPOUT2) "$(_C)TTL$(_D)"	"[$(_M)$(TTL)$(_D)]"
+	@$(HELPOUT2) "$(_C)TOC$(_D)"	"[$(_M)$(TOC)$(_D)]"
+	@$(HELPOUT2) "$(_C)LVL$(_D)"	"[$(_M)$(LVL)$(_D)]"
+	@$(HELPOUT2) "$(_C)OPT$(_D)"	"[$(_M)$(OPT)$(_D)]"
 	@$(HELPLVL1)
 
 .PHONY: settings
 settings:
 	@$(HELPLVL2)
-	@$(HELPOUT2) "CURDIR: [$(CURDIR)]"
-	@$(HELPOUT2) "TYPE:   [$(TYPE)]"
-	@$(HELPOUT2) "BASE:   [$(BASE)]"
-	@$(HELPOUT2) "LIST:   [$(LIST)]"
-	@$(HELPOUT2) "_CSS:   [$(_CSS)]"
-	@$(HELPOUT2) "CSS:    [$(CSS)]"
-	@$(HELPOUT2) "TTL:    [$(TTL)]"
-	@$(HELPOUT2) "TOC:    [$(TOC)]"
-	@$(HELPOUT2) "LVL:    [$(LVL)]"
-	@$(HELPOUT2) "OPT:    [$(OPT)]"
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_C)CURDIR$(_D)	[$(_M)$(CURDIR)$(_D)]"
+	@$(HELPLVL2)
+	@$(HELPOUT2) "$(_C)TYPE$(_D)		[$(_M)$(TYPE)$(_D)]"
+	@$(HELPOUT2) "$(_C)BASE$(_D)		[$(_M)$(BASE)$(_D)]"
+	@$(HELPOUT2) "$(_C)LIST$(_D)		[$(_M)$(LIST)$(_D)]"
+	@$(HELPOUT2) "$(_C)_CSS$(_D)		[$(_M)$(_CSS)$(_D)]"
+	@$(HELPOUT2) "$(_C)CSS$(_D)		[$(_M)$(CSS)$(_D)]"
+	@$(HELPOUT2) "$(_C)TTL$(_D)		[$(_M)$(TTL)$(_D)]"
+	@$(HELPOUT2) "$(_C)TOC$(_D)		[$(_M)$(TOC)$(_D)]"
+	@$(HELPOUT2) "$(_C)LVL$(_D)		[$(_M)$(LVL)$(_D)]"
+	@$(HELPOUT2) "$(_C)OPT$(_D)		[$(_M)$(OPT)$(_D)]"
 	@$(HELPLVL2)
 
 .PHONY: setup
