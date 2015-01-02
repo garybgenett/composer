@@ -489,6 +489,16 @@ override SED_TAR_DST			:= $(BUILD_STRAP)/sed-$(SED_VERSION)
 override BZIP_VERSION			:= 1.0.6
 override BZIP_TAR_SRC			:= http://www.bzip.org/$(BZIP_VERSION)/bzip2-$(BZIP_VERSION).tar.gz
 override BZIP_TAR_DST			:= $(BUILD_STRAP)/bzip2-$(BZIP_VERSION)
+# https://www.gnu.org/software/gzip (license: GPL)
+# https://www.gnu.org/software/gzip
+override GZIP_VERSION			:= 1.6
+override GZIP_TAR_SRC			:= https://ftp.gnu.org/gnu/gzip/gzip-$(GZIP_VERSION).tar.gz
+override GZIP_TAR_DST			:= $(BUILD_STRAP)/gzip-$(GZIP_VERSION)
+# http://www.tukaani.org/xz (license: custom = GPL, public-domain)
+# http://www.tukaani.org/xz
+override XZ_VERSION			:= 5.2.0
+override XZ_TAR_SRC			:= http://www.tukaani.org/xz/xz-$(XZ_VERSION).tar.gz
+override XZ_TAR_DST			:= $(BUILD_STRAP)/xz-$(XZ_VERSION)
 # https://www.gnu.org/software/tar (license: GPL)
 # https://www.gnu.org/software/tar
 override TAR_VERSION			:= 1.28
@@ -681,6 +691,9 @@ override BUILD_BINARY_LIST		:= \
 	find \
 	patch \
 	sed \
+	bzip2 \
+	gzip \
+	xz \
 	tar \
 	perl \
 	\
@@ -876,6 +889,9 @@ override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
 override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
+override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
+override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
+override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
@@ -1492,6 +1508,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-patch$(_D)"		"Build/compile of GNU Patch from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-sed$(_D)"			"Build/compile of GNU Sed from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-gzip$(_D)"		"Build/compile of Gzip from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-xz$(_D)"			"Build/compile of XZ Utils from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
@@ -2064,6 +2082,9 @@ endif
 	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)Bzip2"			"$(_E)$(BZIP_VERSION)"		"$(_N)$(shell $(BZIP) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)Gzip"			"$(_E)$(GZIP_VERSION)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)XZ Utils"			"$(_E)$(XZ_VERSION)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)Perl"			"$(_E)$(PERL_VERSION)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
@@ -2091,6 +2112,9 @@ endif
 	@$(HELPOUT1) "- $(_E)GNU Find"			"$(_N)$(subst \",,$(word 1,$(FIND)))"
 	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_N)$(subst \",,$(word 1,$(PATCH)))"
 	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_N)$(subst \",,$(word 1,$(SED)))"
+	@$(HELPOUT1) "- $(_E)Bzip2"			"$(_N)$(subst \",,$(word 1,$(BZIP)))"
+	@$(HELPOUT1) "- $(_E)Gzip"			"$(_N)$(subst \",,$(word 1,$(GZIP)))"
+	@$(HELPOUT1) "- $(_E)XZ Utils"			"$(_N)$(subst \",,$(word 1,$(XZ)))"
 	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_N)$(subst \",,$(word 1,$(TAR)))"
 	@$(HELPOUT1) "- $(_E)Perl"			"$(_N)$(subst \",,$(word 1,$(PERL)))"
 	@$(HELPOUT1) "$(_C)GNU Bash"			"$(_D)$(subst \",,$(word 1,$(BASH))) $(_S)($(subst \",,$(word 1,$(SH))))"
@@ -2118,6 +2142,9 @@ endif
 		$(word 1,$(FIND)) \
 		$(word 1,$(PATCH)) \
 		$(word 1,$(SED)) \
+		$(word 1,$(BZIP)) \
+		$(word 1,$(GZIP)) \
+		$(word 1,$(XZ)) \
 		$(word 1,$(TAR)) \
 		$(word 1,$(PERL)) \
 		$(word 1,$(BASH)) $(word 1,$(SH)) \
@@ -2641,11 +2668,9 @@ $(STRAPIT)-util:
 	$(RUNMAKE) $(STRAPIT)-util-findutils
 	$(RUNMAKE) $(STRAPIT)-util-patch
 	$(RUNMAKE) $(STRAPIT)-util-sed
-#WORKING
 	$(RUNMAKE) $(STRAPIT)-util-bzip
-#		--with-gzip=PROG        use PROG as gzip compressor program
-#		--with-xz=PROG          use PROG as xz compressor program
-#WORKING
+	$(RUNMAKE) $(STRAPIT)-util-gzip
+	$(RUNMAKE) $(STRAPIT)-util-xz
 	$(RUNMAKE) $(STRAPIT)-util-tar
 	$(RUNMAKE) $(STRAPIT)-util-perl
 	$(RUNMAKE) $(STRAPIT)-util-perl-modules
@@ -2696,6 +2721,18 @@ $(STRAPIT)-util-bzip:
 	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE),\
 		PREFIX="$(COMPOSER_ABODE)" \
 	)
+
+.PHONY: $(STRAPIT)-util-gzip
+$(STRAPIT)-util-gzip:
+	$(call CURL_FILE,$(GZIP_TAR_SRC))
+	$(call DO_UNTAR,$(GZIP_TAR_DST),$(GZIP_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(GZIP_TAR_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-util-xz
+$(STRAPIT)-util-xz:
+	$(call CURL_FILE,$(XZ_TAR_SRC))
+	$(call DO_UNTAR,$(XZ_TAR_DST),$(XZ_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(XZ_TAR_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-util-tar
 $(STRAPIT)-util-tar:
