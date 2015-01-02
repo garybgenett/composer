@@ -3114,7 +3114,9 @@ $(BUILDIT)-tex-fmt:
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-prep
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-build
-$(STRAPIT)-ghc: $(STRAPIT)-ghc-depends
+$(STRAPIT)-ghc:
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-ghc-depends
 
 .PHONY: $(FETCHIT)-ghc
 $(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
