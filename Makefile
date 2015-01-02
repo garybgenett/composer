@@ -662,8 +662,10 @@ override PANDOC_TYPE_CMT		:= 1.12.4
 override PANDOC_MATH_CMT		:= 0.8.0.1
 override PANDOC_HIGH_CMT		:= 0.5.11.1
 override PANDOC_CITE_CMT		:= 0.5
-override PANDOC_CMT			:= 1.13.2
-override PANDOC_VERSION			:= $(PANDOC_CMT)
+override PANDOC_CMT			:= master
+#override PANDOC_CMT			:= 1.13.2
+override PANDOC_VERSION			:= 1.13.3
+#override PANDOC_VERSION			:= $(PANDOC_CMT)
 
 override BUILD_PATH_MINGW		:=
 ifeq ($(COMPOSER_PROGS_USE),0)
@@ -859,6 +861,7 @@ override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
+override PACMAN_ENV			:= "$(MSYS_BIN_DST)/usr/bin/env" - PATH="$(MSYS_BIN_DST)/usr/bin"
 override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
 override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
@@ -1459,7 +1462,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
@@ -2424,7 +2426,6 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys: $(STRAPIT)-msys-dll
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2454,35 +2455,24 @@ $(STRAPIT)-msys-init:
 .PHONY: $(STRAPIT)-msys-fix
 # thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
 $(STRAPIT)-msys-fix:
-	$(BUILD_ENV) $(PACMAN) --refresh
-	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
+	$(PACMAN_ENV) $(PACMAN) --refresh
+	$(PACMAN_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
 	cd "$(MSYS_BIN_DST)" && \
 		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f && \
 		./autorebase.bat
-	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
-	$(BUILD_ENV) $(PACMAN_KEY) --init		|| $(TRUE)
-	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| $(TRUE)
-	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| $(TRUE)
+	$(PACMAN_ENV) $(PACMAN_DB_UPGRADE)
+	$(PACMAN_ENV) $(PACMAN_KEY) --init		|| $(TRUE)
+	$(PACMAN_ENV) $(PACMAN_KEY) --populate msys2	|| $(TRUE)
+	$(PACMAN_ENV) $(PACMAN_KEY) --refresh-keys	|| $(TRUE)
 
 .PHONY: $(STRAPIT)-msys-pkg
 $(STRAPIT)-msys-pkg:
-	$(BUILD_ENV) $(PACMAN) \
+	$(PACMAN_ENV) $(PACMAN) \
 		--force \
 		--needed \
 		--sysupgrade \
 		$(PACMAN_PACKAGES_LIST)
-	$(BUILD_ENV) $(PACMAN) --clean
-
-.PHONY: $(STRAPIT)-msys-dll
-$(STRAPIT)-msys-dll:
-	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-#WORK
-#	$(foreach FILE,$(MSYS_BINARY_LIST),\
-#		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
-#	)
-#WORK
-#	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
-#WORK
+	$(PACMAN_ENV) $(PACMAN) --clean
 
 #WORK : causes build errors
 #make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
@@ -3009,13 +2999,17 @@ $(FETCHIT)-curl-prep:
 		$(BUILD_ENV) $(SH) ./configure
 	$(call CURL_PREP,$(CURL_DST))
 
+#WORKING : would be nice to double-check:
+#	* this works from bootstrap
+#	* perl-lwp works if curl fails
+#	* curl works on re-entry
 override define CURL_BUILD =
 	cd "$(1)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(MKDIR) "$(COMPOSER_STORE)" && \
 		$(MKDIR) "$(COMPOSER_ABODE)" && \
-		$(CP) "$(1)/certdata.txt" "$(COMPOSER_STORE)/" && \
-		$(CP) "$(1)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
+		$(MV) "$(1)/certdata.txt" "$(COMPOSER_STORE)/" && \
+		$(MV) "$(1)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--disable-ldap \
@@ -3363,6 +3357,7 @@ $(FETCHIT)-pandoc-pull:
 
 .PHONY: $(FETCHIT)-pandoc-prep
 $(FETCHIT)-pandoc-prep:
+#WORKING : need to do this for all ghc builds, namely cabal
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
 		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
