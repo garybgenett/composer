@@ -2134,32 +2134,29 @@ else
 	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_TAR_DST),$(COMPOSER_ABODE))
 endif
 
-override define LIBICONV_PULL =
+override define LIBICONV_FETCH =
 	$(call CURL_FILE,$(LIB_ICNV_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with gettext
 	$(RM) -r "$(LIB_ICNV_TAR_DST)"
 	$(call UNTAR,$(LIB_ICNV_TAR_DST),$(LIB_ICNV_TAR_SRC))
 endef
-override define LIBICONV_PREP =
-endef
 ifneq ($(BUILD_MUSL),)
-#WORK
-#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
-#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
-override define LIBICONV_PREP =
+override define LIBICONV_BUILD =
 	$(SED) -i \
 		-e "s|(cp[ ][.]libs)|#\1|g" \
 		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
 		"$(LIB_ICNV_TAR_DST)/preload/Makefile.in" \
 		"$(LIB_ICNV_TAR_DST)/preload/configure"
-endef
-override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE),,\
 		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
 		--disable-shared \
 		--enable-static \
 	)
 endef
+#WORK else ifneq ($(BUILD_MSYS),)
+#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
+#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
+#	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
 else
 override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
@@ -2168,8 +2165,7 @@ endif
 
 .PHONY: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs-libiconv1:
-	$(call LIBICONV_PULL)
-	$(call LIBICONV_PREP)
+	$(call LIBICONV_FETCH)
 	$(call LIBICONV_BUILD)
 
 .PHONY: $(STRAPIT)-libs-gettext
@@ -2187,8 +2183,7 @@ endif
 
 .PHONY: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs-libiconv2:
-	$(call LIBICONV_PULL)
-	$(call LIBICONV_PREP)
+	$(call LIBICONV_FETCH)
 	$(call LIBICONV_BUILD)
 
 .PHONY: $(STRAPIT)-libs-ncurses
