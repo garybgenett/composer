@@ -2154,13 +2154,11 @@ $(STRAPIT)-libs-expat:
 	$(call GNU_CFG_INSTALL,$(LIB_EXPT_BIN_DST)/conftools)
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
-		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
 		--disable-shared \
 		--enable-static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
-		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
 		--disable-static \
 		--enable-shared \
 	)
@@ -2187,21 +2185,22 @@ endif
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_BIN_SRC))
 	$(call UNTAR,$(LIB_FCFG_BIN_DST),$(LIB_FCFG_BIN_SRC))
-	echo WORK
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
-		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
-		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/expat:$(COMPOSER_ABODE)/include/freetype2" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
+		FREETYPE_CFLAGS="$(CFLAGS)" \
+		FREETYPE_LIBS="-lfreetype" \
+		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
 		,\
 		--disable-shared \
 		--enable-static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
-		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
-		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/expat:$(COMPOSER_ABODE)/include/freetype2" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
+		FREETYPE_CFLAGS="$(CFLAGS)" \
+		FREETYPE_LIBS="-lfreetype" \
+		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
 		,\
 		--disable-static \
 		--enable-shared \
