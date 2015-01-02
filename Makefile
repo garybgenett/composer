@@ -336,7 +336,7 @@ override COMPOSER_PROGS_USE		?=
 #	found by: https://github.com/faylang/fay/issues/261
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
-override CC				?=
+override CC				?= gcc
 override CHOST				:=
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
@@ -876,6 +876,7 @@ $(shell \
 	$(COREUTILS) --coreutils-prog=echo -en "#!$(COREUTILS_PATH) --coreutils-prog-shebang=ginstall" >"$(COMPOSER_ABODE)/bin/install"; \
 	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/install"; \
 	$(COREUTILS) --coreutils-prog=echo -en "#!$(call COMPOSER_FIND,$(PATH_LIST),sh)\ntype -P \"\$${@}\"\n# end of file" >"$(COMPOSER_ABODE)/bin/which"; \
+	$(COREUTILS) --coreutils-prog=chmod 755 "$(COMPOSER_ABODE)/bin/which"; \
 )
 endif
 
@@ -1480,6 +1481,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
+#WORKING : coreutils should move to $(STRAPIT)-libs-*
 #WORKING : name is just a tad too long...
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs-perl$(_D):"	"$(_E)$(STRAPIT)-libs-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
@@ -2954,6 +2956,9 @@ endif
 .PHONY: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-prep:
 	$(SED) -i \
+		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
+		"$(TEX_TAR_DST)/Build"
+	$(SED) -i \
 		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
 		"$(TEX_TAR_DST)/texk/web2c/configure"
 #ifeq ($(BUILD_PLAT),Msys)
@@ -2976,7 +2981,6 @@ $(BUILDIT)-tex:
 	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
 		$(SH) ./Build \
-		--with-fontconfig-includes="$(COMPOSER_ABODE)/include/fontconfig" \
 		--disable-multiplatform \
 		--without-ln-s \
 		--without-x \
@@ -2986,7 +2990,6 @@ $(BUILDIT)-tex:
 #>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
 #>		,\
 #>		--enable-build-in-source-tree \
-#>		--with-fontconfig-includes="$(COMPOSER_ABODE)/include/fontconfig" \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
 #>		--without-x \
@@ -2994,6 +2997,7 @@ $(BUILDIT)-tex:
 #>		--enable-static \
 #>	)
 	$(CP) "$(TEX_TEXMF_DST)/"*		"$(COMPOSER_ABODE)/"
+	$(RM)					"$(COMPOSER_ABODE)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/bin/pdftex"	"$(COMPOSER_ABODE)/bin/pdflatex"
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-tex-fmt
