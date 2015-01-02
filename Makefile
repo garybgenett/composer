@@ -418,11 +418,11 @@ override LIB_ICNV_TAR_DST		:= $(COMPOSER_BUILD)/libs/libiconv-$(LIB_ICNV_VERSION
 override LIB_GTXT_VERSION		:= 0.19.3
 override LIB_GTXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
 override LIB_GTXT_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
-# https://www.gnu.org/software/ncurses (license: WORK)
+# https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
 override LIB_NCRS_VERSION		:= 5.9
 override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
-override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_NCRS_VERSION)
+override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/ncurses-$(LIB_NCRS_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override LIB_OSSL_VERSION		:= 1.0.1j
@@ -2610,13 +2610,13 @@ $(FETCHIT)-ghc-pull:
 $(STRAPIT)-ghc-prep:
 ifneq ($(BUILD_MUSL),)
 	echo WORK
-#	$(SED) -i \
-#		-e "s|(execvpe[(])|my\1|g" \
-#		"$(GHC_TAR_DST)/libraries/process/cbits/runProcess.c" \
-#		"$(GHC_TAR_DST)/libraries/unix/cbits/execvpe.c" \
-#		"$(GHC_TAR_DST)/libraries/unix/include/execvpe.h"
 	cd "$(GHC_TAR_DST)" &&
 		$(BUILD_ENV_MINGW) ./boot
+	$(SED) -i \
+		-e "s|([^y])(execvpe[(])|\1my\2|g" \
+		"$(GHC_TAR_DST)/libraries/process/cbits/runProcess.c" \
+		"$(GHC_TAR_DST)/libraries/unix/cbits/execvpe.c" \
+		"$(GHC_TAR_DST)/libraries/unix/include/execvpe.h"
 else ifneq ($(BUILD_MSYS),)
 	@cat >"$(CBL_TAR_DST)/bootstrap.patch.sh" <<'_EOF_'
 		#!/usr/bin/env bash
@@ -2642,6 +2642,8 @@ endif
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(FETCHIT)-ghc-prep:
 	$(call GIT_SUBMODULE,$(GHC_DST))
+	cd "$(GHC_DST)" &&
+		$(BUILD_ENV_MINGW) ./boot
 ifneq ($(BUILD_MSYS),)
 	$(foreach FILE,\
 		$(GHC_DST)/driver/ghci/ghc.mk \
@@ -2671,8 +2673,6 @@ endif
 #>			-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VERSION_LIB)|g" \
 #>			"$(FILE)"
 #>	)
-	cd "$(GHC_DST)" &&
-		$(BUILD_ENV_MINGW) ./boot
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
