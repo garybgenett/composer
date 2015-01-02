@@ -1951,12 +1951,12 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
-#WORK : need to get "gettext" to link against static "libiconv"
-#$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
-#$(STRAPIT)-libs: $(STRAPIT)-libs-expat
-#$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
-#$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
+$(STRAPIT)-libs: $(STRAPIT)-libs-expat
+$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
+$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs:
+	echo WORK : fontconfig/freetype
 	exit 1
 
 .PHONY: $(STRAPIT)-libs-zlib
