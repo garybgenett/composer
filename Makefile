@@ -663,7 +663,7 @@ endef
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_EXEC			:= $(shell $(GIT) --exec-path)
 ifeq ($(wildcard $(GIT_EXEC)),)
-override GIT_EXEC			:= $(abspath $(dir $(GIT))../git-core)
+override GIT_EXEC			:= $(abspath $(dir $(GIT))../../git-core)
 endif
 override GIT_RUN			= cd "$(1)" && $(GIT) --exec-path="$(GIT_EXEC)" --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
@@ -698,15 +698,24 @@ override define GIT_SUBMODULE		=
 	done
 endef
 
-override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
-override TEXMFVAR			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-var))
-override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data))
-override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
+override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
+override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
+override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../../pandoc/data))
 
+ifeq ($(TEXMFDIST),)
+ifneq ($(TEXMFDIST_BUILD),)
+override TEXMFDIST			:= $(TEXMFDIST_BUILD)
+endif
+endif
+override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
+
+ifneq ($(PANDOC_DATA),)
+override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
 ifeq ($(BUILD_MSYS),)
-override PANDOC_DATA			:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
 else
-override PANDOC_DATA			:= $(COMPOSER_ABODE)/WORK
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/WORK
+endif
 endif
 
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
@@ -1313,7 +1322,7 @@ endif
 ifeq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-check
 else
-$(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
+#WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
 $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
@@ -1327,7 +1336,7 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
-$(BUILDIT): $(BUILDIT)-tex
+#WORK $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1366,12 +1375,12 @@ $(BUILDIT)-bindir:
 		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
 		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
 	)
-	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
-	$(CP) "$(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
-	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-dist/web2c"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"				"$(COMPOSER_PROGS)/texmf-dist/web2c/"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
-	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/usr/bin/pdflatex"
+	$(MKDIR)								"$(COMPOSER_PROGS)/texmf-dist/web2c"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"		"$(COMPOSER_PROGS)/texmf-dist/web2c/"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"			"$(COMPOSER_PROGS)/texmf-dist/"
+	$(MKDIR)								"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
+	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"				"$(COMPOSER_PROGS)/usr/bin/pdflatex"
 ifneq ($(BUILD_MSYS),)
 	@cat >"$(COMPOSER_PROGS)/msys2_shell.bat" <<'_EOF_'
 		@echo off
@@ -2029,11 +2038,10 @@ settings:
 
 .PHONY: setup
 setup:
-#WORK : how does this get updated with new versions, without conflicting with user built versions?
-ifneq ($(wildcard $(COMPOSER_PROGS)/pandoc/data),)
-ifeq ($(wildcard $(PANDOC_DATA)),)
-	$(MKDIR) "$(PANDOC_DATA)"
-	$(CP) "$(COMPOSER_PROGS)/pandoc/data/reference.docx" "$(PANDOC_DATA)/"
+ifeq ($(TYPE),$(TYPE_DOCX))
+ifneq ($(PANDOC_DATA),)
+	$(MKDIR) "$(PANDOC_DATA_BUILD)"
+	$(CP) "$(PANDOC_DATA)/reference.docx" "$(PANDOC_DATA_BUILD)/"
 endif
 endif
 
