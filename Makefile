@@ -607,15 +607,15 @@ override PACMAN_BASE_LIST		:= \
 #>	mingw-w64-x86_64-toolchain
 override PACMAN_PACKAGES_LIST		:= \
 	base-devel \
+	mingw-w64-i686-binutils-git \
+	mingw-w64-i686-gcc \
+	mingw-w64-x86_64-binutils-git \
+	mingw-w64-x86_64-gcc \
 	msys2-devel \
 	\
 	vim
 # second group is for '$(STRAPIT)-libs'
 # third group is for '$(STRAPIT)-curl'
-#	mingw-w64-i686-binutils-git \
-#	mingw-w64-i686-gcc \
-#	mingw-w64-x86_64-binutils-git \
-#	mingw-w64-x86_64-gcc \
 #	\
 #	zlib \
 #	zlib-devel \
@@ -927,13 +927,12 @@ override BUILD_ENV			:= $(BUILD_ENV) \
 endif
 override BUILD_ENV			:= "$(call COMPOSER_FIND,$(PATH_LIST),env)" - $(BUILD_ENV)
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
-#WORK
-#ifneq ($(BUILD_MSYS),)
-#override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
-#	CC="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
-#	MSYSTEM="MINGW$(BUILD_MSYS)" \
-#	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
-#endif
+ifneq ($(BUILD_MSYS),)
+override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
+	CC="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
+	MSYSTEM="MINGW$(BUILD_MSYS)" \
+	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
+endif
 
 ################################################################################
 
@@ -2014,7 +2013,6 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
 #WORK $(STRAPIT)-msys: $(STRAPIT)-msys-dll
-$(STRAPIT)-msys: $(STRAPIT)-check
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2080,7 +2078,7 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
-#WORK $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
@@ -2524,11 +2522,13 @@ $(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 
 .PHONY: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc-pull:
-	$(call CURL_FILE,$(GHC_BIN_SRC))
+ifneq ($(BUILD_MUSL),)
 	$(call CURL_FILE,$(GHC_TAR_SRC))
+	$(call UNTAR,$(GHC_TAR_DST),$(GHC_TAR_SRC))
+endif
+	$(call CURL_FILE,$(GHC_BIN_SRC))
 	$(call CURL_FILE,$(CBL_TAR_SRC))
 	$(call UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
-	$(call UNTAR,$(GHC_TAR_DST),$(GHC_TAR_SRC))
 	$(call UNTAR,$(CBL_TAR_DST),$(CBL_TAR_SRC))
 
 .PHONY: $(FETCHIT)-ghc-pull
@@ -2551,12 +2551,15 @@ $(FETCHIT)-ghc-pull:
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-prep:
+ifneq ($(BUILD_MUSL),)
+	echo WORK
+	$(SED) -i \
+		-e "s|execvpe[(].*[)]|execvpe(const char *, char *const [], char *const [])|g" \
+		"$(GHC_TAR_DST)/libraries/unix/cbits/execvpe.c" \
+		"$(GHC_TAR_DST)/libraries/unix/include/execvpe.h"
 	cd "$(GHC_TAR_DST)" &&
 		$(BUILD_ENV_MINGW) ./boot
-	$(SED) -i \
-		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
-		"$(CBL_TAR_DST)/bootstrap.sh"
-ifneq ($(BUILD_MSYS),)
+else ifneq ($(BUILD_MSYS),)
 	@cat >"$(CBL_TAR_DST)/bootstrap.patch.sh" <<'_EOF_'
 		#!/usr/bin/env bash
 		$(SED) -i \
@@ -2573,11 +2576,29 @@ ifneq ($(BUILD_MSYS),)
 		-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
 		"$(CBL_TAR_DST)/Distribution/Client/Install.hs"
 endif
+	$(SED) -i \
+		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
+		"$(CBL_TAR_DST)/bootstrap.sh"
 
 .PHONY: $(FETCHIT)-ghc-prep
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(FETCHIT)-ghc-prep:
 	$(call GIT_SUBMODULE,$(GHC_DST))
+ifneq ($(BUILD_MSYS),)
+	$(foreach FILE,\
+		$(GHC_DST)/driver/ghci/ghc.mk \
+		$(GHC_DST)/ghc/ghc.mk \
+		,\
+		$(SED) -i \
+			-e "s|(call[ ]removeFiles[,])(..GHCII_SCRIPT.)|\1\"\2\"|g" \
+			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
+			"$(FILE)"
+	)
+	$(SED) -i \
+		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
+		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
+		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
+endif
 #>	$(foreach FILE,\
 #>		$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal \
 #>		$(GHC_DST)/libraries/Cabal/Cabal/Makefile \
@@ -2594,52 +2615,20 @@ $(FETCHIT)-ghc-prep:
 #>	)
 	cd "$(GHC_DST)" &&
 		$(BUILD_ENV_MINGW) ./boot
-ifneq ($(BUILD_MSYS),)
-	$(foreach FILE,\
-		$(GHC_DST)/driver/ghci/ghc.mk \
-		$(GHC_DST)/ghc/ghc.mk \
-		,\
-		$(SED) -i \
-			-e "s|(call[ ]removeFiles[,])(..GHCII_SCRIPT.)|\1\"\2\"|g" \
-			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
-			"$(FILE)"
-	)
-	$(SED) -i \
-		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
-		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
-		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
-endif
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
-	echo WORK
-#ifneq ($(BUILD_MUSL),)
-#	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
-#	$(SED) -i \
-#		-e "s|(HC[_]OPTS[ ][=][ ][-]cpp[ ][-]package[ ]hpc)$$|\1 $(SRC_HC_OPTS)|g" \
-#		"$(GHC_BIN_DST)/utils/hp2ps/ghc.mk" \
-#		"$(GHC_BIN_DST)/utils/hpc/ghc.mk"
-#
-#		LD_LIBRARY_PATH="$(COMPOSER_ABODE)/lib" \
-#		SRC_HC_OPTS="-static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static" \
-#		utils/hp2ps_CC_OPTS="-static" \
-#		utils/hp2ps_dist-install_HC_OPTS="$(SRC_HC_OPTS)" \
-#		utils/hpc_CC_OPTS="-static" \
-#		utils/hpc_dist-install_HC_OPTS="$(SRC_HC_OPTS)" \
-#		,\
-#		--with-gmp-includes="$(COMPOSER_ABODE)/include" \
-#		--with-gmp-libraries="$(COMPOSER_ABODE)/lib" \
-#
-#	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP))
-ifneq ($(BUILD_MSYS),)
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP))
+	echo WORK; exit 1
+else ifneq ($(BUILD_MSYS),)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
 #WORK
-	$(RM) "$(BUILD_STRAP)/mingw"*
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP))
+	$(RM) -r "$(BUILD_STRAP)/mingw"*
 else
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_TAR_DST),$(BUILD_STRAP))
 endif
 	cd "$(CBL_TAR_DST)" &&
 		$(BUILD_ENV_MINGW) PREFIX="$(call WINDOWS_PATH,$(BUILD_STRAP))" \
