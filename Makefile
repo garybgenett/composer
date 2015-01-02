@@ -472,6 +472,12 @@ override LIB_FCFG_VERSION		:= 2.11.1
 override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
 override LIB_FCFG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(LIB_FCFG_VERSION)
 
+# https://www.gnu.org/software/coreutils (license: GPL, WORKING)
+# https://www.gnu.org/software/coreutils
+override COREUTILS_VERSION		:= 8.23
+override COREUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/coreutils/coreutils-$(COREUTILS_VERSION).tar.xz
+override COREUTILS_TAR_DST		:= $(COMPOSER_BUILD)/coreutils-$(COREUTILS_VERSION)
+
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
 override BASH_VERSION			:= 4.3.30
@@ -1439,6 +1445,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils$(_D)"		"Download/preparation of Coreutils source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
@@ -1450,6 +1457,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-coreutils$(_D):"	"$(_E)$(FETCHIT)-coreutils-pull$(_D)"		"Download of Coreutils source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils-prep$(_D)"		"Preparation of Coreutils source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-bash$(_D):"	"$(_E)$(FETCHIT)-bash-pull$(_D)"		"Download of Bash source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash-prep$(_D)"		"Preparation of Bash source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
@@ -1475,6 +1484,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of Coreutils from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of Bash from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
@@ -1867,13 +1877,13 @@ $(STRAPIT):
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-config
-$(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
+$(FETCHIT): $(FETCHIT)-coreutils $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
+$(BUILDIT): $(BUILDIT)-coreutils $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
@@ -2313,10 +2323,9 @@ $(STRAPIT)-msys-dll:
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(STRAPIT)-libs
-#WORKING
-#ifeq ($(BUILD_PLAT),Linux)
-#$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
-#endif
+ifeq ($(BUILD_PLAT),Linux)
+$(STRAPIT)-libs: $(STRAPIT)-libs-glibc
+endif
 $(STRAPIT)-libs: $(STRAPIT)-libs-perl
 $(STRAPIT)-libs: $(STRAPIT)-libs-bzip
 $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
@@ -2346,9 +2355,6 @@ $(STRAPIT)-libs-glibc:
 		CFLAGS="$(CFLAGS) -O2" \
 		,\
 		--host="$(CHOST)" \
-		--disable-nscd \
-		--disable-shared \
-		--enable-static-nss \
 	)
 
 override define PERL_MODULES_BUILD =
@@ -2553,6 +2559,34 @@ $(STRAPIT)-libs-fontconfig:
 		--disable-shared \
 		--enable-static \
 	)
+
+.PHONY: $(FETCHIT)-coreutils
+$(FETCHIT)-coreutils: $(FETCHIT)-coreutils-pull
+$(FETCHIT)-coreutils: $(FETCHIT)-coreutils-prep
+
+.PHONY: $(FETCHIT)-coreutils-pull
+$(FETCHIT)-coreutils-pull:
+	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
+	$(call UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+
+.PHONY: $(FETCHIT)-coreutils-prep
+$(FETCHIT)-coreutils-prep:
+
+.PHONY: $(BUILDIT)-coreutils
+$(BUILDIT)-coreutils:
+#WORKING
+	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),\
+		FORCE_UNSAFE_CONFIGURE="1" \
+		,\
+		--enable-single-binary="shebangs" \
+		--disable-acl \
+		--disable-xattr \
+	)
+#WORKING : still linking against libgmp.so?
+#WORKING : need to hack around shebang business
+#>	$(SED) -i \
+#>		-e "s|^[#][!].*(coreutils[ ])|\1|g" \
+#>		"$(COMPOSER_ABODE)/bin/"*
 
 .PHONY: $(FETCHIT)-bash
 $(FETCHIT)-bash: $(FETCHIT)-bash-pull
@@ -2821,7 +2855,7 @@ endif
 .PHONY: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-prep:
 	$(SED) -i \
-		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz -lpng\1|g" \
+		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
 		"$(TEX_TAR_DST)/texk/web2c/configure"
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(CP) \
