@@ -358,16 +358,28 @@ endif
 
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_GHC_78),)
-override GHC_BIN_PLAT			:= linux-deb7
+override GHC_BIN_PLAT			:= unknown-linux-deb7
 else
-override GHC_BIN_PLAT			:= linux
+override GHC_BIN_PLAT			:= unknown-linux
 endif
 else ifeq ($(BUILD_PLAT),FreeBSD)
-override GHC_BIN_PLAT			:= freebsd
+ifneq ($(BUILD_GHC_78),)
+override GHC_BIN_PLAT			:= portbld-freebsd
+else
+override GHC_BIN_PLAT			:= unknown-freebsd
+endif
 else ifeq ($(BUILD_PLAT),Darwin)
-override GHC_BIN_PLAT			:= darwin
+ifneq ($(BUILD_GHC_78),)
+ifeq ($(BUILD_ARCH),x86_64)
+override GHC_BIN_PLAT			:= apple-darwin
+else
+override GHC_BIN_PLAT			:= apple-ios
+endif
+else
+override GHC_BIN_PLAT			:= apple-darwin
+endif
 else ifeq ($(BUILD_PLAT),Msys)
-override GHC_BIN_PLAT			:= mingw32
+override GHC_BIN_PLAT			:= unknown-mingw32
 endif
 
 override MSYS_BIN_ARCH			:= $(BUILD_ARCH)
@@ -498,7 +510,7 @@ override UZIP_TAR_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VERSION))
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
 # http://www.curl.haxx.se/download.html
 # http://www.curl.haxx.se/dev/source.html
-override CURL_VERSION			:= 7.38.0
+override CURL_VERSION			:= 7.39.0
 override CURL_TAR_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VERSION).tar.gz
 override CURL_SRC			:= https://github.com/bagder/curl.git
 override CURL_TAR_DST			:= $(BUILD_STRAP)/curl-$(CURL_VERSION)
@@ -541,13 +553,13 @@ endif
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Windows
 # https://www.haskell.org/haskellwiki/Windows
 ifneq ($(BUILD_GHC_78),)
-override GHC_VERSION			:= 7.8.2
+override GHC_VERSION			:= 7.8.3
 override GHC_VERSION_LIB		:= 1.18.1.3
-override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-$(GHC_BIN_ARCH)-unknown-$(GHC_BIN_PLAT).tar.xz
+override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-$(GHC_BIN_ARCH)-$(GHC_BIN_PLAT).tar.xz
 else
 override GHC_VERSION			:= 7.6.3
 override GHC_VERSION_LIB		:= 1.16.0
-override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-$(GHC_BIN_ARCH)-unknown-$(GHC_BIN_PLAT).tar.bz2
+override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-$(GHC_BIN_ARCH)-$(GHC_BIN_PLAT).tar.bz2
 endif
 override CABAL_VERSION			:= 1.20.0.2
 override CABAL_VERSION_LIB		:= 1.20.0.1
@@ -568,7 +580,7 @@ override GHC_BRANCH			:= ghc-$(GHC_VERSION)
 # https://www.vex.net/~trebla/haskell/sicp.xhtml
 override HASKELL_SRC			:= https://github.com/haskell/haskell-platform.git
 override HASKELL_DST			:= $(COMPOSER_BUILD)/haskell
-override HASKELL_CMT			:= 2013.2.0.0
+override HASKELL_CMT			:= 2014.2.0.0
 override HASKELL_TAR			:= $(HASKELL_DST)/src/generic/haskell-platform-$(HASKELL_CMT)
 
 # https://github.com/jgm/pandoc/blob/master/COPYING (license: GPL)
@@ -734,9 +746,9 @@ override GHC_LIBRARIES_LIST		:= \
 
 ifneq ($(BUILD_GHC_78),)
 override GHC_BASE_LIBRARIES_LIST	:= \
-	Win32|2.3.0.2 \
+	Win32|WORKING \
 	array|0.5.0.0 \
-	base|4.7.0.0 \
+	base|4.7.0.1 \
 	binary|0.7.1.0 \
 	bytestring|0.10.4.0 \
 	containers|0.5.5.1 \
@@ -744,6 +756,7 @@ override GHC_BASE_LIBRARIES_LIST	:= \
 	directory|1.2.1.0 \
 	filepath|1.3.0.2 \
 	ghc-prim|0.3.1.0 \
+	haskeline|0.7.1.2 \
 	haskell2010|1.1.2.0 \
 	haskell98|2.0.0.3 \
 	hoopl|3.10.0.1 \
@@ -755,9 +768,11 @@ override GHC_BASE_LIBRARIES_LIST	:= \
 	process|1.2.0.0 \
 	rts|1.0 \
 	template-haskell|2.9.0.0 \
+	terminfo|0.4.0.0 \
 	time|1.4.2 \
 	transformers|0.3.0.0 \
-	unix|2.7.0.1
+	unix|2.7.0.1 \
+	xhtml|3000.2.1
 else
 override GHC_BASE_LIBRARIES_LIST	:= \
 	Win32|2.3.0.0 \
@@ -795,35 +810,42 @@ override HASKELL_UPGRADE_LIST		:= \
 	Cabal|$(CABAL_VERSION_LIB) \
 	$(GHC_BASE_LIBRARIES_LIST) \
 	$(GHC_LIBRARIES_LIST) \
-	\
-	HTTP|4000.2.9 \
-	async|2.0.1.5 \
-	parallel|3.2.0.4 \
-	primitive|0.5.1.0 \
-	\
-	cgi|3001.1.8.5 \
-	haskell-src|1.0.1.6 \
-	unordered-containers|0.2.3.3 \
-	vector|0.10.9.1 \
-	\
-	MonadCatchIO-mtl|0.3.1.0 \
-	MonadCatchIO-transformers|0.3.1.0 \
-	extensible-exceptions|0.1.1.4 \
-	monads-tf|0.1.0.2
+
+#WORKING
+#	\
+#	HTTP|4000.2.9 \
+#	async|2.0.1.5 \
+#	parallel|3.2.0.4 \
+#	primitive|0.5.1.0 \
+#	\
+#	cgi|3001.1.8.5 \
+#	haskell-src|1.0.1.6 \
+#	unordered-containers|0.2.3.3 \
+#	vector|0.10.9.1 \
+#	\
+#	MonadCatchIO-mtl|0.3.1.0 \
+#	MonadCatchIO-transformers|0.3.1.0 \
+#	extensible-exceptions|0.1.1.4 \
+#	monads-tf|0.1.0.2
 
 # thanks for the 'cgi' patch below: https://www.google.com/search?q=haskell+cgi+Module+Data.Typeable+mkTyCon+patch
 #	details are at: https://ghc.haskell.org/trac/ghc/wiki/GhcKinds/PolyTypeable
 override HASKELL_PATCH_LIST		:= \
-	/packages/cgi-3001.1.8.5|http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/dev-haskell/cgi/files/cgi-3001.1.8.5-ghc78.patch
+
+#WORKING
+#	/packages/cgi-3001.1.8.5|http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/dev-haskell/cgi/files/cgi-3001.1.8.5-ghc78.patch
 
 override PANDOC_DEPENDENCIES_LIST	:= \
-	hsb2hs|0.2 \
-	hxt|9.3.1.4 \
-	network-uri|2.6.0.1 \
-	network|2.6.0.1
+
+#WORKING
+#	hsb2hs|0.2 \
+#	hxt|9.3.1.4 \
+#	network-uri|2.6.0.1
 
 override PANDOC_UPGRADE_LIST		:= \
-	zip-archive|0.2.2.1
+
+#WORKING
+#	zip-archive|0.2.2.1
 
 ########################################
 
@@ -920,11 +942,14 @@ override define DO_TEXTFILE		=
 endef
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
-override export CURL_CA_BUNDLE		?= $(COMPOSER_ABODE)/ca-bundle.crt
+override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
 else ifneq ($(wildcard $(COMPOSER_PROGS)/ca-bundle.crt),)
-override export CURL_CA_BUNDLE		?= $(COMPOSER_PROGS)/ca-bundle.crt
+override CURL_CA_BUNDLE			?= $(COMPOSER_PROGS)/ca-bundle.crt
 else
-override export CURL_CA_BUNDLE		?=
+override CURL_CA_BUNDLE			?=
+endif
+ifneq ($(CURL_CA_BUNDLE),)
+export CURL_CA_BUNDLE
 endif
 
 override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
@@ -1838,9 +1863,10 @@ ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(STRAPIT)-msys
 endif
 $(STRAPIT): $(STRAPIT)-config
-$(STRAPIT): $(STRAPIT)-libs $(STRAPIT)-curl
+$(STRAPIT): $(STRAPIT)-libs
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-curl
 	$(RUNMAKE) $(STRAPIT)-git
 	$(RUNMAKE) $(STRAPIT)-ghc
 
@@ -2414,7 +2440,7 @@ override define LIBICONV_BUILD =
 	# start with fresh source directory, due to circular dependency with gettext
 	$(RM) -r "$(LIB_ICNV_TAR_DST)"
 	$(call UNTAR,$(LIB_ICNV_TAR_DST),$(LIB_ICNV_TAR_SRC))
-	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
 	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE),,\
@@ -2444,21 +2470,9 @@ $(STRAPIT)-libs-libiconv2:
 $(STRAPIT)-libs-ncurses:
 	$(call CURL_FILE,$(LIB_NCRS_TAR_SRC))
 	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
-	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
-#WORKING
-#ifeq ($(BUILD_PLAT),Msys)
-	# "$(BUILD_PLAT),Msys" initially fails to build when wide character support is enabled
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
-		--without-shared \
-	)
-#	$(RM) -r "$(COMPOSER_ABODE)/include/ncursesw"
-#	$(MV) "$(COMPOSER_ABODE)/include/ncurses" "$(COMPOSER_ABODE)/include/ncursesw"
-#endif
-	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),\
-		CFLAGS="-I$(COMPOSER_ABODE)/include/ncurses $(CFLAGS)" \
-		,\
-		--enable-widec \
 		--without-shared \
 	)
 
@@ -2513,7 +2527,7 @@ endif
 $(STRAPIT)-libs-expat:
 	$(call CURL_FILE,$(LIB_EXPT_TAR_SRC))
 	$(call UNTAR,$(LIB_EXPT_TAR_DST),$(LIB_EXPT_TAR_SRC))
-	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
@@ -2585,6 +2599,9 @@ $(FETCHIT)-less-pull:
 
 .PHONY: $(FETCHIT)-less-prep
 $(FETCHIT)-less-prep:
+	$(SED) -i \
+		-e "s|[-]lncursesw|-lncurses|g" \
+		"$(LESS_TAR_DST)/configure"
 
 .PHONY: $(BUILDIT)-less
 $(BUILDIT)-less:
@@ -2925,21 +2942,23 @@ endef
 $(FETCHIT)-ghc-prep:
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) ./boot
-ifeq ($(BUILD_PLAT),Msys)
-	$(foreach FILE,\
-		$(GHC_DST)/driver/ghci/ghc.mk \
-		$(GHC_DST)/ghc/ghc.mk \
-		,\
-		$(SED) -i \
-			-e "s|(call[ ]removeFiles[,])(..GHCII_SCRIPT.)|\1\"\2\"|g" \
-			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
-			"$(FILE)"; \
-	)
-	$(SED) -i \
-		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
-		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
-		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
-endif
+#WORKING
+#ifeq ($(BUILD_PLAT),Msys)
+#	$(foreach FILE,\
+#		$(GHC_DST)/driver/ghci/ghc.mk \
+#		$(GHC_DST)/ghc/ghc.mk \
+#		,\
+#		$(SED) -i \
+#			-e "s|(call[ ]removeFiles[,])(..GHCII_SCRIPT.)|\1\"\2\"|g" \
+#			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
+#			"$(FILE)"; \
+#	)
+#	$(SED) -i \
+#		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
+#		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
+#		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
+#endif
+#WORKING
 #>	$(foreach FILE,\
 #>		$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal \
 #>		$(GHC_DST)/libraries/Cabal/Cabal/Makefile \
@@ -2979,19 +2998,6 @@ endif
 	$(RUNMAKE) $(FETCHIT)-cabal
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
-
-#WORK
-# Warning: -rtsopts and -with-rtsopts have no effect with -shared.
-#     Call hs_init_ghc() from your main() function to set these options.
-# /usr/lib/gcc/i686-pc-linux-gnu/4.8.1/../../../../i686-pc-linux-gnu/bin/ld: cannot find -lHSghc-prim-0.3.0.0-ghc7.6.3
-# collect2: error: ld returned 1 exit status
-# libraries/integer-gmp/ghc.mk:4: recipe for target 'libraries/integer-gmp/dist-install/build/libHSinteger-gmp-0.5.0.0-ghc7.6.3.so' failed
-# make[1]: *** [libraries/integer-gmp/dist-install/build/libHSinteger-gmp-0.5.0.0-ghc7.6.3.so] Error 1
-# Makefile:64: recipe for target 'all' failed
-# make: *** [all] Error 2
-#WORK
-#			-optl-L$(GHC_DST)/libraries/integer-gmp/dist-install/build \
-#			-optl-L$(GHC_DST)/libraries/ghc-prim/dist-install/build \
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
@@ -3049,7 +3055,7 @@ $(FETCHIT)-haskell-packages:
 $(FETCHIT)-haskell-prep:
 ifeq ($(BUILD_PLAT),Msys)
 	echo WORK
-	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 #	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
 	$(SED) -i \
 		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
