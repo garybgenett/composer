@@ -975,10 +975,7 @@ override define DO_GIT_SUBMODULE_GHC	=
 		-e "s|[-]d([ ][^ ]+[.]git)|-f\1|g" \
 		"$(1)/sync-all"; \
 	cd "$(1)" && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all get && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard; \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all get; \
 	cd "$(1)" && $(FIND) ./ -mindepth 2 -type d -name ".git" 2>/dev/null | $(SED) -e "s|^[.][/]||g" -e "s|[/][.]git$$||g" | while read FILE; do \
 		$(MKDIR) "$(2)/modules/$${FILE}"; \
 		$(RM) -r "$(2)/modules/$${FILE}"; \
@@ -988,7 +985,11 @@ override define DO_GIT_SUBMODULE_GHC	=
 		$(MKDIR) "$(1)/$${FILE}"; \
 		$(ECHO) "gitdir: $(2)/modules/$${FILE}" >"$(1)/$${FILE}/.git"; \
 		cd "$(1)/$${FILE}" && $(GIT) --git-dir="$(2)/modules/$${FILE}" config --local --replace-all core.worktree "$(1)/$${FILE}"; \
-	done
+	done; \
+	cd "$(1)" && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
 
 override BUILD_TOOLS			:=
