@@ -2467,12 +2467,12 @@ $(STRAPIT)-msys-pkg:
 .PHONY: $(STRAPIT)-msys-dll
 $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-#WORKING : should only need the few msys-*.dll files
-	$(foreach FILE,$(MSYS_BINARY_LIST),\
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
-	)
 #WORKING
-#	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
+#	$(foreach FILE,$(MSYS_BINARY_LIST),\
+#		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
+#	)
+#WORKING
+	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 #WORKING
 
 #WORK : causes build errors
