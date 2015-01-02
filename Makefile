@@ -406,12 +406,12 @@ override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 
-# https://www.kernel.org (license: GPL, WORKING)
+# https://www.kernel.org/pub/linux/kernel/COPYING (license: GPL)
 # https://www.kernel.org
 override LIB_KAPI_VERSION		:= 3.18.1
 override LIB_KAPI_TAR_SRC		:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$(LIB_KAPI_VERSION).tar.gz
 override LIB_KAPI_TAR_DST		:= $(BUILD_STRAP)/linux-$(LIB_KAPI_VERSION)
-# https://www.gnu.org/software/libc (license: GPL, WORKING)
+# https://www.gnu.org/software/libc (license: GPL)
 # https://www.gnu.org/software/libc
 override LIB_LIBC_VERSION		:= 2.20
 override LIB_LIBC_TAR_SRC		:= https://ftp.gnu.org/gnu/glibc/glibc-$(LIB_LIBC_VERSION).tar.gz
@@ -472,7 +472,7 @@ override LIB_FCFG_VERSION		:= 2.11.1
 override LIB_FCFG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(LIB_FCFG_VERSION).tar.gz
 override LIB_FCFG_TAR_DST		:= $(BUILD_STRAP)/fontconfig-$(LIB_FCFG_VERSION)
 
-# https://www.gnu.org/software/coreutils (license: GPL, WORKING)
+# https://www.gnu.org/software/coreutils (license: GPL)
 # https://www.gnu.org/software/coreutils
 override COREUTILS_VERSION		:= 8.23
 override COREUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/coreutils/coreutils-$(COREUTILS_VERSION).tar.xz
@@ -856,7 +856,27 @@ override PANDOC_UPGRADE_LIST		:= \
 ########################################
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
+
+override COREUTILS			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
+override COREUTILS_PROGRAM_LIST		:=
+ifneq ($(wildcard $(COREUTILS)),)
+#>override COREUTILS_PROGRAM_LIST	:= $(shell $(COREUTILS) --help | $(SED) -n "s|^[ ][[]||gp")
+override COREUTILS_PROGRAM_LIST		:= $(shell $(COREUTILS) --help | sed -r -n "s|^[ ][[]||gp")
+#WORKING
+#$(shell $(MKDIR) "$(COMPOSER_ABODE)/bin")
+#$(foreach FILE,$(COREUTILS_PROGRAM_LIST),\
+#	$(shell echo '#!$(COREUTILS) --coreutils-prog-shebang=$(FILE)' >"$(COMPOSER_ABODE)/bin/$(FILE)") \
+#)
+#WORKING
+#$(foreach FILE,$(COREUTILS_PROGRAM_LIST),\
+#	$(eval override $(uppercase $(FILE)) := "$(COREUTILS)" --coreutils-prog="$(FILE)") \
+#)
+override COREUTILS			:= "$(COREUTILS)"
+endif
+
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
+override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
+override VIM				:= "$(call COMPOSER_FIND,$(PATH_LIST),vim)" -u "$(COMPOSER_ABODE)/.vimrc" -i NONE -p
 
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
@@ -2119,8 +2139,8 @@ export PS1="$${PS1}$([)\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a$(])\n"
 export PS1="$${PS1}$([)$(_H)$(])$(MARKER) $(COMPOSER_FULLNAME)$([)$(_D)$(]) $(DIVIDE) $([)$(_C)$(])\D{%FT%T%z}\n"	# title, date (iso format)
 export PS1="$${PS1}$([)$(_C)$(])[\#/\!] ($([)$(_M)$(])\u@\h \w$([)$(_C)$(]))\\$$ $([)$(_D)$(])"				# history counters, username@hostname, directory, prompt
 #
-export PAGER="less -rX"
-export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
+export PAGER="$(subst ",[B]",$(LESS))"
+export EDITOR="$(subst ",[B]",$(VIM))"
 unset VISUAL
 #
 alias ll="$(subst ",[B]",$(LS))"
@@ -2187,16 +2207,18 @@ endef
 
 override define AUTOTOOLS_BUILD =
 	cd "$(1)" && \
-		$(BUILD_ENV) $(3) ./configure --prefix="$(2)" $(4) && \
+		$(BUILD_ENV) $(3) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
 		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV) $(3) $(MAKE) install
 endef
 override define AUTOTOOLS_BUILD_MINGW =
 	cd "$(1)" && \
-		$(BUILD_ENV_MINGW) $(3) ./configure --prefix="$(2)" $(4) && \
+		$(BUILD_ENV_MINGW) $(3) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
 endef
+override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
+override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 
 override CHECK_FAILED		:=
 override CHECK_GHCLIB		:=
@@ -2378,8 +2400,6 @@ $(STRAPIT)-libs-glibc:
 	chmod 755 "$(LIB_LIBC_TAR_DST).build/configure"
 	$(call AUTOTOOLS_BUILD,$(LIB_LIBC_TAR_DST).build,$(COMPOSER_ABODE),\
 		CFLAGS="$(CFLAGS) -O2" \
-		,\
-		--host="$(CHOST)" \
 	)
 
 override define PERL_MODULES_BUILD =
@@ -2423,7 +2443,7 @@ endif
 			"$(LIB_PERL_TAR_DST)/MANIFEST" \
 			"$(LIB_PERL_TAR_DST)/configure"; \
 	fi
-	$(call AUTOTOOLS_BUILD,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_PERL_TAR_DST),$(COMPOSER_ABODE))
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
@@ -2442,18 +2462,26 @@ $(STRAPIT)-libs-bzip:
 $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(LIB_ZLIB_TAR_SRC))
 	$(call UNTAR,$(LIB_ZLIB_TAR_DST),$(LIB_ZLIB_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+ifeq ($(BUILD_BITS),64)
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+		--64 \
+		--archs="$(BUILD_ARCH)" \
 		--static \
 	)
+else
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+		--archs="$(BUILD_ARCH)" \
+		--static \
+	)
+endif
 
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
 	$(call CURL_FILE,$(LIB_LGMP_TAR_SRC))
 	$(call UNTAR,$(LIB_LGMP_TAR_DST),$(LIB_LGMP_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(LIB_LGMP_TAR_DST),$(COMPOSER_ABODE),\
-		ABI=$(BUILD_BITS) \
+		ABI="$(BUILD_BITS)" \
 		,\
-		--host="$(CHOST)" \
 		--disable-assembly \
 		--disable-shared \
 		--enable-static \
@@ -2523,25 +2551,25 @@ endif
 		"$(LIB_OSSL_TAR_DST)/crypto/ui/ui_openssl.c"
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
-	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
 		no-shared \
 		no-dso \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		no-shared \
 		no-dso \
 	)
 endif
 else ifeq ($(BUILD_PLAT),Msys)
-	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
 		no-shared \
 		no-dso \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		no-shared \
 		no-dso \
 	)
@@ -2597,7 +2625,6 @@ $(FETCHIT)-coreutils-pull:
 .PHONY: $(FETCHIT)-coreutils-prep
 $(FETCHIT)-coreutils-prep:
 
-#WORKING : coreutils - still linking against libgmp.so?
 #WORKING : coreutils - add to $CHECKIT, somehow...?
 
 .PHONY: $(BUILDIT)-coreutils
@@ -2783,11 +2810,13 @@ $(FETCHIT)-curl-prep:
 
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
+	#WORKING : remove curl binary if it exists?  how do we make this re-entrant?
+	@echo -en "\n\nCURL_CA_BUNDLE [$${CRUL_CA_BUNDLE}]\n\n"
 	cd "$(CURL_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) ca-bundle && \
 		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
-		--with-ca-bundle="./ca-bundle.crt" \
+		--with-ca-bundle="ca-bundle.crt" \
 		--without-libidn \
 		--disable-shared \
 		--enable-static \
@@ -2795,11 +2824,13 @@ $(STRAPIT)-curl-build:
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
+	#WORKING : remove curl binary if it exists?  how do we make this re-entrant?
+	@echo -en "\n\nCURL_CA_BUNDLE [$${CRUL_CA_BUNDLE}]\n\n"
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) ca-bundle && \
 		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
-		--with-ca-bundle="./ca-bundle.crt" \
+		--with-ca-bundle="ca-bundle.crt" \
 		--without-libidn \
 		--disable-shared \
 		--enable-static \
@@ -3041,7 +3072,7 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
 else
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,\
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,\
 		show \
 	)
 endif
@@ -3081,7 +3112,7 @@ $(FETCHIT)-haskell-pull:
 .PHONY: $(FETCHIT)-haskell-packages
 $(FETCHIT)-haskell-packages:
 	$(SED) -i \
-		-e "s|(GHC_VER[=]).+$$|\1$(GHC_VERSION)|g" \
+		-e "s|^(REQUIRED_GHC_VER[=]).+$$|\1$(GHC_VERSION)|g" \
 		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
 	$(SED) -i \
 		$(foreach FILE,$(HASKELL_UPGRADE_LIST),\
