@@ -2066,6 +2066,7 @@ start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 endef
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
+# for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 .PHONY: $(CHECKIT)
 $(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
@@ -2074,13 +2075,13 @@ $(CHECKIT):
 	@$(HELPLINE)
 ifeq ($(BUILD_PLAT),Msys)
 	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_D)$(MARKER)"		"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_E)\""			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_E)Bzip2"			"$(_E)$(BZIP_VERSION)"		"$(_N)$(shell $(BZIP) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)Bzip2"			"$(_E)$(BZIP_VERSION)"		"$(_N)$(shell $(BZIP) --help				2>&1        | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)Gzip"			"$(_E)$(GZIP_VERSION)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)XZ Utils"			"$(_E)$(XZ_VERSION)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
@@ -2721,9 +2722,10 @@ $(STRAPIT)-util-bzip:
 	$(call DO_UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
 	$(ECHO) >"$(BZIP_TAR_DST)/configure"
 	$(CHMOD) "$(BZIP_TAR_DST)/configure"
-	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE),\
-		PREFIX="$(COMPOSER_ABODE)" \
-	)
+	$(SED) -i \
+		-e "s|^(PREFIX[=]).+$$|\1$(COMPOSER_ABODE)|g" \
+		"$(BZIP_TAR_DST)/Makefile"
+	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-util-gzip
 $(STRAPIT)-util-gzip:
@@ -2735,7 +2737,10 @@ $(STRAPIT)-util-gzip:
 $(STRAPIT)-util-xz:
 	$(call CURL_FILE,$(XZ_TAR_SRC))
 	$(call DO_UNTAR,$(XZ_TAR_DST),$(XZ_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(XZ_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(XZ_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-util-tar
 $(STRAPIT)-util-tar:
