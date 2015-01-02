@@ -14,6 +14,7 @@
 ################################################################################
 
 #WORKING
+# _ trim down the "ifeq($BUILD_PLAT,Msys)" to only the things which are necessary
 # _ add "licenses" or "info" option, to display list of included programs and licenses
 # _ make sure all referenced programs are included (goal is composer should function as a chroot)
 # _ do an initial make in Composer.sh, to ensure dirname is available?
@@ -416,6 +417,7 @@ override GNU_CFG_CMT			:=
 override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
+#WORKING : mintty - installed before bash?  cygwin-console-helper?
 
 # https://www.kernel.org/pub/linux/kernel/COPYING (license: GPL)
 # https://www.kernel.org
@@ -723,6 +725,15 @@ override BUILD_BINARY_LIST		:= \
 	\
 	ghc ghc-pkg \
 	cabal
+
+#WORKING
+# thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/coreutils
+override COREUTILS_PATCH_LIST		:= \
+	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/002-fix-dummy-man-invocation.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/005-manifest.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/006-msys1-0x0d.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/coreutils/009-msysize.patch
+#WORKING
 
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 override PERL_PATCH_LIST		:= \
@@ -2472,7 +2483,7 @@ $(STRAPIT)-msys-dll:
 #		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
 #	)
 #WORKING
-	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
+#	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 #WORKING
 
 #WORK : causes build errors
@@ -2692,7 +2703,8 @@ $(STRAPIT)-libs-fontconfig:
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-util-coreutils
+#WORKING : does not work for msys
+#	$(RUNMAKE) $(STRAPIT)-util-coreutils
 	$(RUNMAKE) $(STRAPIT)-util-findutils
 	$(RUNMAKE) $(STRAPIT)-util-patch
 	$(RUNMAKE) $(STRAPIT)-util-sed
@@ -2707,6 +2719,12 @@ $(STRAPIT)-util:
 $(STRAPIT)-util-coreutils:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+#WORKING
+	# "$(BUILD_PLAT),Msys" requires some patches
+	$(foreach FILE,$(COREUTILS_PATCH_LIST),\
+		$(call DO_PATCH,$(COREUTILS_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+	)
+#WORKING
 	# "$(BUILD_PLAT),Msys" can't build "*.so" files, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
@@ -2792,7 +2810,7 @@ ifeq ($(BUILD_PLAT),Msys)
 			"$(PERL_TAR_DST)/Makefile.SH"; \
 		$(foreach FILE,$(PERL_PATCH_LIST),\
 			$(call DO_PATCH,$(PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-		)
+		) \
 	fi
 	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
 	$(SED) -i \
@@ -3195,6 +3213,13 @@ endef
 $(FETCHIT)-ghc-prep:
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
+ifeq ($(BUILD_PLAT),Msys)
+	# "$(BUILD_PLAT),Msys" seems to find "gmp.h" in a different spot
+	$(SED) -i \
+		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
+		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
+		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
+endif
 	# "$(BUILD_PLAT),Msys" fails if we don't have these calls quoted
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]GHCII[_]SCRIPT[)])|\1\"\2\"|g" \
@@ -3202,12 +3227,6 @@ $(FETCHIT)-ghc-prep:
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]DESTDIR[)][$$][(]bindir[)][/]ghc.exe)|\1\"\2\"|g" \
 		$(GHC_DST)/ghc/ghc.mk
-#WORKING
-#	$(SED) -i \
-#		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
-#		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
-#		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
-#WORKING
 #>	$(SED) -i \
 #>		-e "s|$(GHC_VERSION_LIB)|$(CABAL_VERSION_LIB)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal" \
@@ -3290,9 +3309,8 @@ $(FETCHIT)-haskell-packages:
 #	then by: https://github.com/irungentoo/toxcore/pull/94
 $(FETCHIT)-haskell-prep:
 ifeq ($(BUILD_PLAT),Msys)
-	$(ECHO) "WORKING\n"
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-#	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
+	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
 	$(SED) -i \
 		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
 		"$(HASKELL_TAR)/packages/core.packages"
