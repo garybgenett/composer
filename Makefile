@@ -477,16 +477,6 @@ override OPENSSL_TAR_DST		:= $(BUILD_STRAP)/openssl-$(OPENSSL_VERSION)
 override EXPAT_VERSION			:= 2.1.0
 override EXPAT_TAR_SRC			:= http://sourceforge.net/projects/expat/files/expat/$(EXPAT_VERSION)/expat-$(EXPAT_VERSION).tar.gz
 override EXPAT_TAR_DST			:= $(BUILD_STRAP)/expat-$(EXPAT_VERSION)
-# http://www.libpng.org/pub/png/libpng.html (license: custom = as-is)
-# http://www.libpng.org/pub/png/libpng.html
-override LIBPNG_VERSION			:= 1.6.15
-override LIBPNG_TAR_SRC			:= http://sourceforge.net/projects/libpng/files/libpng16/$(LIBPNG_VERSION)/libpng-$(LIBPNG_VERSION).tar.gz
-override LIBPNG_TAR_DST			:= $(BUILD_STRAP)/libpng-$(LIBPNG_VERSION)
-# https://github.com/behdad/harfbuzz/blob/master/COPYING (license: MIT)
-# http://www.freedesktop.org/wiki/Software/HarfBuzz
-override HARFBUZZ_VERSION		:= 0.9.37
-override HARFBUZZ_TAR_SRC		:= http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-$(HARFBUZZ_VERSION).tar.bz2
-override HARFBUZZ_TAR_DST		:= $(BUILD_STRAP)/harfbuzz-$(HARFBUZZ_VERSION)
 # http://www.freetype.org/license.html (license: custom = BSD, GPL)
 # http://www.freetype.org/download.html
 override FREETYPE_VERSION		:= 2.5.3
@@ -1485,10 +1475,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libpng$(_D)"		"Build/compile of LibPNG from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype1$(_D)"		"Build/compile of FreeType (before HarfBuzz) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-harfbuzz$(_D)"		"Build/compile of HarfBuzz from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype2$(_D)"		"Build/compile of FreeType (after HarfBuzz) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
@@ -2549,10 +2536,7 @@ $(STRAPIT)-libs:
 	$(RUNMAKE) $(STRAPIT)-libs-expat
 	# need the "bzip" headers/library for "freetype"
 	$(RUNMAKE) $(STRAPIT)-util-bzip
-	$(RUNMAKE) $(STRAPIT)-libs-libpng
-	$(RUNMAKE) $(STRAPIT)-libs-freetype1
-	$(RUNMAKE) $(STRAPIT)-libs-harfbuzz
-	$(RUNMAKE) $(STRAPIT)-libs-freetype2
+	$(RUNMAKE) $(STRAPIT)-libs-freetype
 	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
 
 .PHONY: $(STRAPIT)-libs-linux
@@ -2700,45 +2684,14 @@ $(STRAPIT)-libs-expat:
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-libs-libpng
-$(STRAPIT)-libs-libpng:
-	$(call CURL_FILE,$(LIBPNG_TAR_SRC))
-	$(call DO_UNTAR,$(LIBPNG_TAR_DST),$(LIBPNG_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIBPNG_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-shared \
-		--enable-static \
-	)
-
-override define FREETYPE_BUILD =
+.PHONY: $(STRAPIT)-libs-freetype
+$(STRAPIT)-libs-freetype:
 	$(call CURL_FILE,$(FREETYPE_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with "harfbuzz"
-	$(RM) -r "$(FREETYPE_TAR_DST)"
 	$(call DO_UNTAR,$(FREETYPE_TAR_DST),$(FREETYPE_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(FREETYPE_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
-endef
-
-.PHONY: $(STRAPIT)-libs-freetype1
-$(STRAPIT)-libs-freetype1:
-	$(call FREETYPE_BUILD)
-
-.PHONY: $(STRAPIT)-libs-harfbuzz
-$(STRAPIT)-libs-harfbuzz:
-	$(call CURL_FILE,$(HARFBUZZ_TAR_SRC))
-	$(call DO_UNTAR,$(HARFBUZZ_TAR_DST),$(HARFBUZZ_TAR_SRC))
-#WORKING
-	$(call AUTOTOOLS_BUILD,$(HARFBUZZ_TAR_DST),$(COMPOSER_ABODE),,\
-		--without-glib \
-		--without-icu \
-		--disable-shared \
-		--enable-static \
-	)
-
-.PHONY: $(STRAPIT)-libs-freetype2
-$(STRAPIT)-libs-freetype2:
-	$(call FREETYPE_BUILD)
 
 .PHONY: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-fontconfig:
@@ -2747,7 +2700,7 @@ $(STRAPIT)-libs-fontconfig:
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
 	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
-		FREETYPE_LIBS="-lfreetype -lharfbuzz -lpng -lbz2" \
+		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm" \
 		,\
 		--disable-docs \
 		--enable-iconv \
@@ -3161,6 +3114,7 @@ $(FETCHIT)-texlive-pull:
 	$(call DO_UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
 
 .PHONY: $(FETCHIT)-texlive-prep
+# thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
 $(FETCHIT)-texlive-prep:
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
 	$(CP) \
@@ -3178,9 +3132,8 @@ $(FETCHIT)-texlive-prep:
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
 		"$(TEX_TAR_DST)/Build"
 	# make sure we link in all the right libraries
-#WORKING
 	$(SED) -i \
-		-e "s|^(LIBS[=][\"])[$$]kpse_cv_fontconfig_libs([ ][$$]LIBS[\"])$$|\1-lfontconfig -lfreetype -lharfbuzz -lpng -lbz2 -lexpat -liconv -lz\2|g" \
+		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_TAR_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_TAR_DST)/texk/web2c/configure"
 
 .PHONY: $(BUILDIT)-texlive
@@ -3190,10 +3143,6 @@ $(BUILDIT)-texlive:
 		--disable-multiplatform \
 		--without-ln-s \
 		--without-x \
-		--disable-native-texlive-build \
-		--with-system-freetype2 \
-		--with-system-harfbuzz \
-		--with-system-libpng \
 		--disable-shared \
 		--enable-static
 #>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),,\
@@ -3201,10 +3150,6 @@ $(BUILDIT)-texlive:
 #>		--disable-multiplatform \
 #>		--without-ln-s \
 #>		--without-x \
-#>		--disable-native-texlive-build \
-#>		--with-system-freetype2 \
-#>		--with-system-harfbuzz \
-#>		--with-system-libpng \
 #>		--disable-shared \
 #>		--enable-static \
 #>	)
