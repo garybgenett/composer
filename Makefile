@@ -549,12 +549,12 @@ override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
 #	https://github.com/rstudio/rmarkdown/issues/238
 override PANDOC_TYPE_CMT		:= 1.12.4
 #override PANDOC_MATH_CMT		:= 0.6.6.3
-override PANDOC_MATH_CMT		:= 178df262f2cc2b146d70 #>178df262f2cc2b146d7043de29506aa7d17254f5 0.8
+override PANDOC_MATH_CMT		:= 178df262f2cc2b146d70#>178df262f2cc2b146d7043de29506aa7d17254f5 0.8
 override PANDOC_HIGH_CMT		:= 0.5.8.5
 #override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CITE_CMT		:= 0.5
 #override PANDOC_CMT			:= 1.12.4.2
-override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3 #>704cfc1e3c2b6bc97cc315c92671dc47e9c76977 1.13.2
+override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3#>704cfc1e3c2b6bc97cc315c92671dc47e9c76977 1.13.2
 #override PANDOC_VERSION			:= $(PANDOC_CMT)
 override PANDOC_VERSION			:= 1.13.2
 
@@ -1438,7 +1438,7 @@ EXAMPLE_MAKEFILE_FULL:
 	@$(HELPOUT2) "$(_E)$(INDENTING)$(INDENTING)* The 'COMPOSER_ABSPATH' variable can be used to simplify this"
 	@$(HELPOUT2) "$(_E)$(INDENTING)* If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
 	@$(HELPOUT2) "$(_E)$(INDENTING)* If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
-	@$(HELPER) "$(~)(eval override $(_C)CSS$(_D) ?= $(_C)$(~)(COMPOSER_ABSPATH)/$(COMPOSER_CSS))"
+	@$(HELPER) "$(~)(eval override $(_C)CSS$(_D) ?= $(_C)$(~)(COMPOSER_ABSPATH)/$(COMPOSER_CSS)$(_D))"
 	@$(HELPOUT2) ""
 	@$(HELPOUT2) "$(_E)All the other optional variables can also be made global in this directory scope:"
 	@$(HELPER) "override $(_C)TTL$(_D) ?="
@@ -1740,6 +1740,7 @@ ifneq ($(BUILD_MSYS),)
 endif
 
 .PHONY: $(CHECKIT)
+$(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
 	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -1755,7 +1756,7 @@ endif
 	@$(HELPOUT1) "$(_C)Info-ZIP (UnZip)"	"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(SED) -n "s|^UnZip[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)cURL"		"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_CMT)"		"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
+	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)TeXMath"		"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "- $(_C)Highlighting-Kate"	"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
