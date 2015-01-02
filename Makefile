@@ -86,7 +86,7 @@ override TYPE				?= html
 override BASE				?= README
 override LIST				?= $(BASE).$(COMPOSER_EXT)
 
-#> have to keep these around for a bit, after changing the names of them
+# have to keep these around for a bit, after changing the names of them
 override CSS				?= $(DCSS)
 override TTL				?= $(NAME)
 override OPT				?= $(OPTS)
@@ -456,22 +456,6 @@ override CABAL_INSTALL			= $(CABAL) install \
 #>	--force-reinstalls
 override CABAL_INSTALL_MINGW		= $(call CABAL_INSTALL,$(1)) \
 	$(BUILD_TOOLS)
-
-# second group is for added packages below
-override PACMAN_BASE_LIST		:= \
-	bash \
-	filesystem \
-	libarchive \
-	libcurl \
-	libgpgme \
-	libiconv \
-	libintl \
-	libreadline \
-	msys2-runtime \
-	ncurses \
-	pacman \
-	\
-	msys2-runtime-devel
 
 # second group is for composer
 # third group is for make build
@@ -1563,7 +1547,6 @@ $(STRAPIT)-check:
 	fi
 
 .PHONY: $(STRAPIT)-msys
-# WORK thanks for the 'ignoregroup' fix below: https://www.mail-archive.com/msys2-users@lists.sourceforge.net/msg00016.html
 $(STRAPIT)-msys:
 	$(call WGET_FILE,$(MSYS_BIN_SRC))
 	$(call UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
@@ -1592,24 +1575,10 @@ $(STRAPIT)-msys:
 	@$(HELPLVL1)
 	@read ENTER
 	$(BUILD_ENV) $(PACMAN) --refresh
-	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
-	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
-	$(BUILD_ENV) $(PACMAN) \
-		--needed \
-		--sysupgrade
 	$(BUILD_ENV) $(PACMAN) \
 		--needed \
 		--sysupgrade \
 		$(PACMAN_PACKAGES_LIST)
-#WORK http://sourceforge.net/p/msys2/tickets/85/#2e02
-#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --init
-#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --populate msys2
-#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --refresh-keys
-#WORK http://sourceforge.net/p/msys2/tickets/87/#5cc8
-#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm -Scc
-#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm -Syy
-#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm -Suu
-#WORK
 	$(BUILD_ENV) $(PACMAN) --clean
 
 .PHONY: $(STRAPIT)-dlls
