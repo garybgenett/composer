@@ -28,6 +28,7 @@
 #BUILD TEST
 
 #OTHER NOTES
+# add msys/mingw-w64 project to dependencies/credits list
 # now need zip/unzip in path
 #	add zip/unzip [ -x ... ] checks and message (read ENTER) if not
 # markdown-viewer xpi package
@@ -287,8 +288,12 @@ override BUILD_MSYS			:= 32
 endif
 endif
 
+override LANG				:= en_US.UTF8
+override TERM				?= ansi
 override CHOST				:=
 override CFLAGS				:=
+override LDFLAGS			:=
+
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_MSYS),)
 override BUILD_PLAT			:= Linux
@@ -299,7 +304,7 @@ else
 override BUILD_PLAT			:= Msys
 override BUILD_ARCH			:= i686
 override BUILD_MSYS			:= 32
-override CHOST				:= $(BUILD_ARCH)-pc-mingw$(BUILD_MSYS)
+override CHOST				:= $(BUILD_ARCH)-pc-msys$(BUILD_MSYS)
 endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
@@ -461,6 +466,7 @@ override CABAL_INSTALL			= $(CABAL) install \
 
 override PACMAN_BASE_LIST		:= \
 	msys2-runtime \
+	msys2-runtime-devel \
 	pacman
 
 # second group is for composer
@@ -752,11 +758,13 @@ endif
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
 #	found by: https://github.com/faylang/fay/issues/261
 override BUILD_ENV			:= \
-	LANG="en_US.UTF8" \
-	TERM="$${TERM}" \
+	LC_ALL="$(LANG)" \
+	LANG="$(LANG)" \
+	TERM="$(TERM)" \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
-	LDFLAGS= \
+	CXXFLAGS="$(CFLAGS)" \
+	LDFLAGS="$(LDFLAGS)" \
 	\
 	USER="$(USER)" \
 	HOME="$(COMPOSER_ABODE)" \
@@ -904,6 +912,9 @@ HELP_OPTIONS_SUB:
 	@$(HELPOUT1) "BUILD_GHC_78"		"GHC 7.8 instead of 7.6"	"[$(BUILD_GHC_78)] (valid: empty or 1)"
 	@$(HELPOUT1) "BUILD_PLAT"		"Overrides 'uname -o'"		"[$(BUILD_PLAT)]"
 	@$(HELPOUT1) "BUILD_ARCH"		"Overrides 'uname -m'"		"[$(BUILD_ARCH)]"
+	@echo ""
+	@echo "Environment Options:"
+	@$(HELPOUT1) "TERM"			"Terminfo terminal type"	"[$(TERM)]"
 	@echo ""
 	@echo "All of these can be set on the command line or in the environment."
 	@echo ""
@@ -1852,7 +1863,7 @@ $(STRAPIT)-ghc-bin:
 	$(call UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
 	$(call UNTAR,$(CBL_BIN_DST),$(CBL_BIN_SRC))
 ifeq ($(BUILD_MSYS),)
-	$(call AUTOTOOLS_BUILD,$(GHC_BIN_DST),$(BUILD_STRAP),,show)
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,show)
 else
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
@@ -1876,13 +1887,13 @@ endif
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
 		"$(CBL_BIN_DST)/bootstrap.sh"
 	cd "$(CBL_BIN_DST)" &&
-		$(BUILD_ENV) PREFIX="$(call WINDOWS_PATH,$(BUILD_STRAP))" \
+		$(BUILD_ENV_MINGW) PREFIX="$(call WINDOWS_PATH,$(BUILD_STRAP))" \
 			./bootstrap.sh --global
 
 .PHONY: $(STRAPIT)-ghc-lib
 $(STRAPIT)-ghc-lib:
 	$(RUNMAKE) $(FETCHIT)-cabal
-	$(BUILD_ENV) $(call CABAL_INSTALL,$(call WINDOWS_PATH,$(BUILD_STRAP))) \
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(call WINDOWS_PATH,$(BUILD_STRAP))) \
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
 
 .PHONY: $(FETCHIT)-ghc
@@ -1900,10 +1911,10 @@ $(FETCHIT)-ghc-pull:
 		-e "s|[-]d([ ][^ ]+[.]git)|-f\1|g" \
 		"$(GHC_DST)/sync-all"
 	cd "$(GHC_DST)" &&
-		$(BUILD_ENV) ./sync-all get &&
-		$(BUILD_ENV) ./sync-all fetch --all &&
-		$(BUILD_ENV) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) &&
-		$(BUILD_ENV) ./sync-all reset --hard
+		$(BUILD_ENV_MINGW) ./sync-all get &&
+		$(BUILD_ENV_MINGW) ./sync-all fetch --all &&
+		$(BUILD_ENV_MINGW) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) &&
+		$(BUILD_ENV_MINGW) ./sync-all reset --hard
 
 .PHONY: $(FETCHIT)-ghc-prep
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
@@ -1924,7 +1935,7 @@ $(FETCHIT)-ghc-prep:
 #>			"$(FILE)"
 #>	)
 	cd "$(GHC_DST)" &&
-		$(BUILD_ENV) ./boot
+		$(BUILD_ENV_MINGW) ./boot
 ifneq ($(BUILD_MSYS),)
 	$(foreach FILE,\
 		$(GHC_DST)/driver/ghci/ghc.mk \
@@ -1943,9 +1954,8 @@ endif
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
-	$(call AUTOTOOLS_BUILD,$(GHC_DST),$(COMPOSER_ABODE))
-	$(RM) "$(BUILD_STRAP)/bin/ghc"*
-	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
 
 .PHONY: $(FETCHIT)-haskell
@@ -1971,7 +1981,7 @@ $(FETCHIT)-haskell-packages:
 		-e "s|^(for[ ]pkg[ ]in[ ].[{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
 		"$(HASKELL_DST)/src/generic/prepare.sh"
 	cd "$(HASKELL_DST)/src/generic" &&
-		$(BUILD_ENV) ./prepare.sh
+		$(BUILD_ENV_MINGW) ./prepare.sh
 	$(foreach FILE,$(HASKELL_PATCH_LIST),\
 		$(call PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
 	)
@@ -2014,11 +2024,11 @@ endif
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
 ifeq ($(BUILD_MSYS),)
-	$(call AUTOTOOLS_BUILD,$(HASKELL_TAR),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),\
 		--disable-user-install \
 	)
 else
-	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(shell cat "$(HASKELL_TAR)/packages/platform.packages"),\
 			"$(HASKELL_TAR)/packages/$(FILE)" \
 		)
@@ -2063,29 +2073,29 @@ $(FETCHIT)-pandoc-prep:
 
 #>			--enable-tests
 #>		echo && echo "$(HELPMARK) Test [$(1)]" &&
-#>		$(BUILD_ENV) $(CABAL) test &&
+#>		$(BUILD_ENV_MINGW) $(CABAL) test &&
 override define PANDOC_BUILD =
 	cd "$(1)" &&
 		echo && echo "$(HELPMARK) Configure [$(1)]" &&
-		$(BUILD_ENV) $(CABAL) configure \
+		$(BUILD_ENV_MINGW) $(CABAL) configure \
 			--prefix="$(COMPOSER_ABODE)" \
 			--flags="embed_data_files http-conduit" \
 			--disable-executable-dynamic \
 			--disable-shared \
 			&&
 		echo && echo "$(HELPMARK) Build [$(1)]" &&
-		$(BUILD_ENV) $(CABAL) build &&
+		$(BUILD_ENV_MINGW) $(CABAL) build &&
 		echo && echo "$(HELPMARK) Install [$(1)]" &&
-		$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
+		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
 endef
 
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
 	echo && echo "$(HELPMARK) Dependencies"
-	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(subst |,-,$(PANDOC_DEPENDENCIES_LIST))
 #>		--enable-tests
-	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--only-dependencies \
 		$(PANDOC_TYPE_DST) \
 		$(PANDOC_MATH_DST) \
@@ -2094,7 +2104,7 @@ $(BUILDIT)-pandoc-deps:
 		$(PANDOC_DST)
 #>		--enable-tests
 	cd "$(PANDOC_HIGH_DST)" && \
-		$(BUILD_ENV) $(MAKE) prep
+		$(BUILD_ENV_MINGW) $(MAKE) prep
 
 .PHONY: $(BUILDIT)-pandoc-type
 $(BUILDIT)-pandoc-type:
