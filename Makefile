@@ -4,8 +4,11 @@
 ################################################################################
 
 #TODO
+# mingw for windows?
+#	re-verify all sed and other build hackery, for both linux and windows
 # enable https certificates for wget/git?
-# static linking using embedded libc for linux
+#	simply copy '/etc/ssl' to $COMPOSER_ABODE and $COMPOSER_PROGS?
+# double-check all "thanks" comments; some are things you should have known
 # fix linux 32-bit make 4.1 segfault
 #TODO
 
@@ -26,6 +29,11 @@
 #	hack setup.bat
 #	try "build" without networking available
 #	try building 64-bit version
+# full test pass
+#	linux 64-bit stage3 BUILD_DIST=
+#	linux 32-bit stage3 BUILD_DIST=1
+#	windows 64-bit BUILD_DIST=
+#	windows 32-bit BUILD_DIST=1
 #BUILD TEST
 
 #OTHER NOTES
@@ -358,6 +366,11 @@ else ifeq ($(BUILD_ARCH),i386)
 override MSYS_BIN_ARCH			:= i686
 endif
 
+# http://git.savannah.gnu.org/gitweb/?p=config.git
+override GNU_CFG_SRC			:= http://git.savannah.gnu.org/r/config.git
+override GNU_CFG_DST			:= $(COMPOSER_BUILD)/gnu-config
+override GNU_CFG_CMT			:=
+
 # http://www.musl-libc.org/intro.html (license: MIT)
 # http://www.musl-libc.org/how.html
 override MUSL_VERSION			:= 1.1.5
@@ -413,7 +426,7 @@ override LIB_FCFG_BIN_DST		:= $(COMPOSER_BUILD)/libs/fontconfig-$(LIB_FCFG_VERSI
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= 4.1
+override MAKE_CMT			:= 4.0
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -486,7 +499,9 @@ override CBL_BIN_DST			:= $(BUILD_STRAP)/cabal-install-$(CABAL_VERSION)
 
 # https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
-override GHC_SRC			:= https://git.haskell.org/ghc.git
+#TODO : windows git suddenly not taking self-signed certificate?
+#>override GHC_SRC			:= https://git.haskell.org/ghc.git
+override GHC_SRC			:= http://git.haskell.org/ghc.git
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 override GHC_CMT			:= ghc-$(GHC_VERSION)-release
 override GHC_BRANCH			:= ghc-$(GHC_VERSION)
@@ -515,11 +530,16 @@ override PANDOC_MATH_DST		:= $(COMPOSER_BUILD)/pandoc-texmath
 override PANDOC_HIGH_DST		:= $(COMPOSER_BUILD)/pandoc-highlighting
 override PANDOC_CITE_DST		:= $(COMPOSER_BUILD)/pandoc-citeproc
 override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
+#WORK : pandoc css windows
+#	https://github.com/rstudio/rmarkdown/issues/238
 override PANDOC_TYPE_CMT		:= 1.12.4
-override PANDOC_MATH_CMT		:= 0.6.6.3
+#override PANDOC_MATH_CMT		:= 0.6.6.3
+override PANDOC_MATH_CMT		:= \#> 0.8
 override PANDOC_HIGH_CMT		:= 0.5.8.5
-override PANDOC_CITE_CMT		:= 0.3.1
-override PANDOC_CMT			:= 1.12.4.2
+#override PANDOC_CITE_CMT		:= 0.3.1
+override PANDOC_CITE_CMT		:= 0.5
+#override PANDOC_CMT			:= 1.12.4.2
+override PANDOC_CMT			:= \#> 1.13.1
 
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
@@ -918,7 +938,7 @@ $(foreach FILE,\
 	$(eval $(FILE): .set_title-$(FILE))\
 )
 .set_title-%:
-	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) :: $(CURDIR)\a"
+	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
 endif
 
 ########################################
@@ -954,6 +974,7 @@ endif
 
 override NULL		:=
 override MARKER		:= >>
+override DIVIDE		:= ::
 override INDENTING	:= $(NULL) $(NULL) $(NULL)
 override COMMENTED	:= $(_S)\#$(_D) $(NULL)
 
@@ -1163,7 +1184,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
-	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
+	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl$(_D)"			"Download/preparation of cURL source repository"
@@ -1475,9 +1497,9 @@ $(INSTALL): install-dir
 .PHONY: $(INSTALL)-dir
 $(INSTALL)-dir:
 	if [ -f "$(CURDIR)/$(MAKEFILE)" ]; then
-		@$(HELPOUT1) "$(_H)$(MARKER) $(_N)Skipping$(_D) :: $(_E)$(CURDIR)/$(MAKEFILE)"
+		@$(HELPOUT1) "$(_H)$(MARKER) $(_N)Skipping$(_D) $(DIVIDE) $(_E)$(CURDIR)/$(MAKEFILE)"
 	else
-		@$(HELPOUT1) "$(_H)$(MARKER) $(_H)Creating$(_D) :: $(_M)$(CURDIR)/$(MAKEFILE)"
+		@$(HELPOUT1) "$(_H)$(MARKER) $(_H)Creating$(_D) $(DIVIDE) $(_M)$(CURDIR)/$(MAKEFILE)"
 		$(RUNMAKE) --silent \
 			COMPOSER_ESCAPES= \
 			COMPOSER_TARGETS="$(sort $(subst .$(COMPOSER_EXT),.$(TYPE_HTML),$(wildcard *.$(COMPOSER_EXT))))" \
@@ -1500,7 +1522,7 @@ $(REPLICA)-%:
 .PHONY: $(REPLICA)
 $(REPLICA):
 	@$(HELPLVL1)
-	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(HELPOUT2) "$(_E)COMPOSER_VERSION$(_D)"	"[$(_N)$(COMPOSER_VERSION)$(_D)]"
 	@$(HELPOUT2) "$(_E)COMPOSER_FILES$(_D)"		"[$(_N)$(COMPOSER_FILES)$(_D)]"
 	@$(HELPOUT2) "$(_C)CURDIR$(_D)"			"[$(_M)$(CURDIR)$(_D)]"
@@ -1531,7 +1553,7 @@ $(REPLICA):
 .PHONY: $(UPGRADE)
 $(UPGRADE):
 	@$(HELPLVL1)
-	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(HELPOUT2) "$(_C)CURDIR$(_D)"	"[$(_M)$(CURDIR)$(_D)]"
 	@$(HELPLVL1)
 	$(call GIT_REPO,$(MDVIEWER_DST),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
@@ -1561,11 +1583,10 @@ $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc
 
 .PHONY: $(FETCHIT)
+$(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-#WORK : is curl breaking pandoc css? (see "pandoc css windows" below)
-#$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-git
+$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
@@ -1579,6 +1600,10 @@ $(BUILDIT): $(CHECKIT)
 
 do-%: $(FETCHIT)-% $(BUILDIT)-%
 	@echo >/dev/null
+
+.PHONY: $(FETCHIT)-config
+$(FETCHIT)-config:
+	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
@@ -1629,7 +1654,7 @@ ifneq ($(BUILD_MSYS),)
 		set BINDIR=/usr/bin
 		set PATH=%WD%%BINDIR%;%PATH%
 		set OPTIONS=
-		set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) :: MSYS2 Shell"
+		set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
 		set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
 		start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 		:: end of file
@@ -1648,7 +1673,7 @@ endif
 
 .PHONY: $(CHECKIT)
 $(CHECKIT):
-	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(HELPOUT1) "$(_H)Project"		"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HELPLINE)
 ifneq ($(BUILD_MUSL),)
@@ -1660,7 +1685,7 @@ endif
 	@$(HELPOUT1) "$(_C)GNU Make"		"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(BUILD_ENV) make --version		2>/dev/null | $(SED) -n "s|^GNU[ ]Make[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Info-ZIP (Zip)"	"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) zip --version		2>/dev/null | $(SED) -n "s|^This[ ]is[ ]Zip[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Info-ZIP (UnZip)"	"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(BUILD_ENV) unzip --version		2>&1        | $(SED) -n "s|^UnZip[ ]([^ ]+).*$$|\1|gp")"
-	@$(HELPOUT1) "$(_C)cURL"		"$(_M)$(CURL_CMT)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([^ ]+).*$$|\1|gp")"
+	@$(HELPOUT1) "$(_C)cURL"		"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(BUILD_ENV) curl --version		2>/dev/null | $(SED) -n "s|^curl[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Git SCM"		"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(BUILD_ENV) git --version		2>/dev/null | $(SED) -n "s|^.*version[ ]([^ ]+).*$$|\1|gp")"
 	@$(HELPOUT1) "$(_C)Pandoc"		"$(_M)$(PANDOC_CMT)"		"$(_D)$(shell $(BUILD_ENV) pandoc --version		2>/dev/null | $(SED) -n "s|^pandoc([.]exe)?[ ]([^ ]+).*$$|\2|gp")"
 	@$(HELPOUT1) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(BUILD_ENV) cabal info pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
@@ -1724,9 +1749,9 @@ $(SHELLIT)-bashrc:
 		#
 		export PROMPT_DIRTRIM="1"
 		export PS1=
-		export PS1="$${PS1}\[\e]0;$(MARKER) $(COMPOSER_FULLNAME) :: \w\a\]\n"		# title escape, new line (for spacing)
-		export PS1="$${PS1}$(_H)$(MARKER) $(COMPOSER_FULLNAME) :: $(_C)\D{%FT%T%z}\n"	# title, date (iso format)
-		export PS1="$${PS1}$(_C)[\#/\!] ($(_M)\u@\h \w$(_C))\\$$$(_D) "			# history counters, username@hostname, directory, prompt
+		export PS1="$${PS1}\[\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a\]\n"			# title escape, new line (for spacing)
+		export PS1="$${PS1}$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_C)\D{%FT%T%z}\n"	# title, date (iso format)
+		export PS1="$${PS1}$(_C)[\#/\!] ($(_M)\u@\h \w$(_C))\\$$$(_D) "					# history counters, username@hostname, directory, prompt
 		#
 		export PAGER="less -rX"
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
@@ -1965,9 +1990,6 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
-$(STRAPIT)-libs:
-	echo WORK : fontconfig/freetype
-	exit 1
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
@@ -2055,9 +2077,8 @@ $(STRAPIT)-libs-freetype:
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_BIN_SRC))
 	$(call UNTAR,$(LIB_FCFG_BIN_DST),$(LIB_FCFG_BIN_SRC))
-	echo WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
-		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lexpat -lfreetype" C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 	)
 
 .PHONY: $(FETCHIT)-make
@@ -2228,9 +2249,13 @@ ifneq ($(BUILD_MUSL),)
 		"$(TEX_BIN_DST)/utils/pmx/pmx-"*"/libf2c/sysdep1.h"
 endif
 ifneq ($(BUILD_MSYS),)
-	$(SED) -i \
-		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
-		"$(TEX_BIN_DST)/texk/web2c/otps/otp-"*
+	$(CP) \
+		"$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
+		"$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
+#WORK this was needed for mingw?
+#	$(SED) -i \
+#		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
+#		"$(TEX_BIN_DST)/texk/web2c/otps/otp-"*
 #>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
 #WORK thanks for the 'header' fix below: https://build.opensuse.org/package/view_file?project=windows%3Amingw%3Awin32&package=mingw32-texlive&file=texlive-20110705-source-header.patch&rev=048df827a351be452769105398cad811
 #	$(SED) -i \
@@ -2241,11 +2266,11 @@ endif
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
 	cd "$(TEX_BIN_DST)" &&
-		$(BUILD_ENV_MINGW) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x
-#>	$(call AUTOTOOLS_BUILD_MINGW,$(TEX_BIN_DST),$(COMPOSER_ABODE),,\
+#>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
@@ -2428,6 +2453,9 @@ endif
 		-e "s|as_fn_error[ ](.+GLU)|echo \1|g" \
 		-e "s|as_fn_error[ ](.+OpenGL)|echo \1|g" \
 		"$(HASKELL_TAR)/configure"
+ifneq ($(BUILD_MSYS),)
+	$(CP) "$(GNU_CFG_DST)/config."* "$(HASKELL_TAR)/scripts/"
+endif
 	$(SED) -i \
 		-e "s|^([ ]+GHC_PACKAGE_PATH[=].+)|#\1|g" \
 		"$(HASKELL_TAR)/scripts/build.sh"
@@ -2492,26 +2520,26 @@ $(FETCHIT)-pandoc-prep:
 		"$(PANDOC_DST)/pandoc.cabal"
 
 #>			--enable-tests
-#>		$(HELPER) "\n$(_C)$(MARKER) Test [$(_M)$(1)$(_C)]" &&
+#>		$(HELPER) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)" &&
 #>		$(BUILD_ENV_MINGW) $(CABAL) test &&
 override define PANDOC_BUILD =
 	cd "$(1)" &&
-		$(HELPER) "\n$(_C)$(MARKER) Configure [$(_M)$(1)$(_C)]" &&
+		$(HELPER) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)" &&
 		$(BUILD_ENV_MINGW) $(CABAL) configure \
 			--prefix="$(COMPOSER_ABODE)" \
 			--flags="embed_data_files http-conduit" \
 			--disable-executable-dynamic \
 			--disable-shared \
 			&&
-		$(HELPER) "\n$(_C)$(MARKER) Build [$(_M)$(1)$(_C)]" &&
+		$(HELPER) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)" &&
 		$(BUILD_ENV_MINGW) $(CABAL) build &&
-		$(HELPER) "\n$(_C)$(MARKER) Install [$(_M)$(1)$(_C)]" &&
+		$(HELPER) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)" &&
 		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
 endef
 
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
-	$(HELPER) "\n$(_C)$(MARKER) Dependencies"
+	$(HELPER) "\n$(_H)$(MARKER) Dependencies"
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(subst |,-,$(PANDOC_DEPENDENCIES_LIST))
 #>		--enable-tests
@@ -2549,58 +2577,12 @@ $(BUILDIT)-pandoc:
 	@echo
 	$(BUILD_ENV) pandoc --version
 
-#WORK : pandoc css windows
-#WORK : https://github.com/rstudio/rmarkdown/issues/238
-######################################################################
-# >> Composer CMS v1.4 :: /c/.composer/Makefile
-# COMPOSER_TARGETS    [README]
-# COMPOSER_SUBDIRS    []
-# COMPOSER_DEPENDS    []
-# CURDIR              [/c/.composer]
-########################################
-# TYPE                [html]
-# BASE                [README]
-# LIST                [README.md]
-# _CSS                [/c/.composer/markdown-viewer/chrome/skin/markdown-viewer.css]
-# CSS                 []
-# TTL                 []
-# TOC                 []
-# LVL                 [2]
-# OPT                 []
-######################################################################
-#make --makefile "/c/.composer/Makefile" pandoc TYPE="html" BASE="README" LIST="README.md"
-#make[1]: Entering directory '/c/.composer'
-########################################
-# >> Composer CMS v1.4 :: /c/.composer/Makefile
-# CURDIR        [/c/.composer]
-########################################
-# TYPE          [html]
-# BASE          [README]
-# LIST          [README.md]
-# _CSS          [/c/.composer/markdown-viewer/chrome/skin/markdown-viewer.css]
-# CSS           []
-# TTL           []
-# TOC           []
-# LVL           [2]
-# OPT           []
-########################################
-#"/c/.composer/.home/msys32/usr/bin/env" - LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8" TERM="xterm-256color" CC="" CHOST="i686-pc-msys32" CFLAGS="-m32 -march=i686 -mtune=generic" CXXFLAGS="-m32 -march=i686 -mtune=generic" LDFLAGS="" USER="admin" HOME="/c/.composer/.home" PATH="/c/.composer/.home/bin:/c/.composer/.home/texlive/bin:/c/.composer/build/bootstrap/bin:/c/.composer/bin/Msys/usr/bin:/c/.composer/.home/msys32/usr/bin:/usr/local/bin:/usr/bin:/bin:/opt/bin:/c/.composer/.home/bin:/c/.composer/.home/texlive/bin:/c/.composer/build/bootstrap/bin:/c/.composer/bin/Msys/usr/bin:/usr/bin:/home:/home/commands:/home/scripts:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/usr/bin:/sbin:/usr/games/bin:/usr/lib/perl5/core_perl/bin:/c/WINDOWS:/c/WINDOWS/system32:/c/.composer/bin/Msys/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/c/.composer/bin/Msys/usr/bin" TEXMFDIST="" TEXMFVAR="" MSYSTEM="MSYS32" USERNAME="admin" HOMEPATH="/c/.composer/.home" ALLUSERSPROFILE="/c/.composer/.home" APPDATA="/c/.composer/.home" LOCALAPPDATA="/c/.composer/.home" TEMP="/c/.composer/.home" pandoc --standalone --self-contained --css "/c/.composer/markdown-viewer/chrome/skin/markdown-viewer.css" --title-prefix "" --output "README.html" --from "markdown" --to "html5"  --slide-level 2 --variable "revealjs-url:/c/.composer/revealjs" --variable "slidy-url:/c/.composer/slidy/Slidy2" --chapters --listings --normalize --smart  README.md
-#"/c/.composer/.home/msys32/usr/bin/date" --rfc-2822 > "/c/.composer/.composed"
-#pandoc.exe: Failed to retrieve C:/.composer/markdown-viewer/chrome/skin/markdown-viewer.css
-#InvalidUrlException "C:/.composer/markdown-viewer/chrome/skin/markdown-viewer.css" "Invalid scheme"
-#/c/.composer/Makefile:2695: recipe for target 'pandoc' failed
-#make[1]: *** [pandoc] Error 61
-#make[1]: Leaving directory '/c/.composer'
-#Makefile:2699: recipe for target 'README.html' failed
-#make: *** [README.html] Error 2
-#WORK
-
 ########################################
 
 .PHONY: targets
 targets:
-	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
-	@$(HELPOUT1) "$(_H)Targets$(_D) :: $(_M)$(COMPOSER_SRC)"
+	@$(HELPOUT1) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(HELPOUT1) "$(_H)Targets$(_D) $(DIVIDE) $(_M)$(COMPOSER_SRC)"
 	@$(HELPLINE)
 	@echo -en "$(_C)"
 	@$(RUNMAKE) --silent .all_targets | $(SED) \
@@ -2676,7 +2658,7 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 .PHONY: whoami
 whoami:
 	@$(HELPLVL1)
-	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(HELPOUT2) "$(_E)COMPOSER_TARGETS$(_D)"	"[$(_N)$(COMPOSER_TARGETS)$(_D)]"
 	@$(HELPOUT2) "$(_E)COMPOSER_SUBDIRS$(_D)"	"[$(_N)$(COMPOSER_SUBDIRS)$(_D)]"
 	@$(HELPOUT2) "$(_E)COMPOSER_DEPENDS$(_D)"	"[$(_N)$(COMPOSER_DEPENDS)$(_D)]"
@@ -2696,7 +2678,7 @@ whoami:
 .PHONY: settings
 settings:
 	@$(HELPLVL2)
-	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(HELPOUT2) "$(_C)CURDIR$(_D)	[$(_M)$(CURDIR)$(_D)]"
 	@$(HELPLVL2)
 	@$(HELPOUT2) "$(_C)TYPE$(_D)		[$(_M)$(TYPE)$(_D)]"
