@@ -3,6 +3,10 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 
+#READ
+#	http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
+#READ
+
 #TODO
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
@@ -2346,8 +2350,6 @@ $(STRAPIT)-git-pull:
 $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
 
-#WORK : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
-
 .PHONY: $(STRAPIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
@@ -2382,8 +2384,7 @@ endif
 $(STRAPIT)-git-build:
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
-		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
-		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
 		,\
 		--without-tcltk \
 		--disable-shared \
@@ -2391,8 +2392,7 @@ ifneq ($(BUILD_MUSL),)
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
-		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
-		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
 		,\
 		--without-tcltk \
 		--disable-static \
@@ -2404,8 +2404,7 @@ endif
 $(BUILDIT)-git:
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
-		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
-		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
 		,\
 		--without-tcltk \
 		--disable-shared \
@@ -2413,8 +2412,7 @@ ifneq ($(BUILD_MUSL),)
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
-		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
-		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
 		,\
 		--without-tcltk \
 		--disable-static \
@@ -2463,11 +2461,23 @@ endif
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
+ifneq ($(BUILD_MUSL),)
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
-			--without-x
+			--without-x \
+			--disable-shared \
+			--enable-static
+else
+	cd "$(TEX_BIN_DST)" &&
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+			--disable-multiplatform \
+			--without-ln-s \
+			--without-x \
+			--disable-static \
+			--enable-shared
+endif
 #>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
