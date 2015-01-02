@@ -1460,6 +1460,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
@@ -1481,9 +1482,13 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
-#WORKING : coreutils should move to $(STRAPIT)-libs-*
 #WORKING : name is just a tad too long...
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-libs-perl$(_D):"	"$(_E)$(STRAPIT)-libs-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
+	@$(HELPOUT1) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-patch$(_D)"		"Build/compile of GNU Patch from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-sed$(_D)"			"Build/compile of GNU Sed from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(HELPOUT1) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
@@ -1495,7 +1500,6 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
 	@$(HELPOUT1) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils$(_D)"		"Download/preparation of GNU Coreutils source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
@@ -1507,8 +1511,6 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
-	@$(HELPOUT1) "$(_E)$(FETCHIT)-coreutils$(_D):"	"$(_E)$(FETCHIT)-coreutils-pull$(_D)"		"Download of GNU Coreutils source archives"
-	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-coreutils-prep$(_D)"		"Preparation of GNU Coreutils source archives"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-bash$(_D):"	"$(_E)$(FETCHIT)-bash-pull$(_D)"		"Download of Bash source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-bash-prep$(_D)"		"Preparation of Bash source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
@@ -1534,7 +1536,6 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(HELPOUT1) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-clean$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
-	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of Bash from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
@@ -1917,6 +1918,7 @@ $(STRAPIT): $(STRAPIT)-msys
 endif
 $(STRAPIT): $(STRAPIT)-config
 $(STRAPIT): $(STRAPIT)-libs
+$(STRAPIT): $(STRAPIT)-util
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(STRAPIT)-curl
@@ -1927,13 +1929,13 @@ $(STRAPIT):
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
 $(FETCHIT): $(FETCHIT)-config
-$(FETCHIT): $(FETCHIT)-coreutils $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
+$(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-coreutils $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
+$(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
@@ -2655,45 +2657,61 @@ $(STRAPIT)-libs-fontconfig:
 		--enable-static \
 	)
 
-.PHONY: $(FETCHIT)-coreutils
-$(FETCHIT)-coreutils: $(FETCHIT)-coreutils-pull
-$(FETCHIT)-coreutils: $(FETCHIT)-coreutils-prep
-
-.PHONY: $(FETCHIT)-coreutils-pull
-$(FETCHIT)-coreutils-pull:
-	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
-	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
-	$(call CURL_FILE,$(PATCH_TAR_SRC))
-	$(call CURL_FILE,$(SED_TAR_SRC))
-	$(call CURL_FILE,$(TAR_TAR_SRC))
-	$(call UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
-	$(call UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
-	$(call UNTAR,$(PATCH_TAR_DST),$(PATCH_TAR_SRC))
-	$(call UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
-	$(call UNTAR,$(TAR_TAR_DST),$(TAR_TAR_SRC))
-
-.PHONY: $(FETCHIT)-coreutils-prep
-$(FETCHIT)-coreutils-prep:
-
-.PHONY: $(BUILDIT)-coreutils
-$(BUILDIT)-coreutils:
-	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
-		--enable-single-binary="shebangs" \
-		--disable-acl \
-		--disable-xattr \
-	)
-	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
-	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-xattr \
-	)
-	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-acl \
-	)
+.PHONY: $(STRAPIT)-util
+$(STRAPIT)-util:
+	# call recursively instead of using dependencies, so that environment variables update
+#WORKING : fails to build on "$(BUILD_PLAT),Msys"
+#	$(RUNMAKE) $(STRAPIT)-util-coreutils
+	$(RUNMAKE) $(STRAPIT)-util-findutils
+	$(RUNMAKE) $(STRAPIT)-util-patch
+	$(RUNMAKE) $(STRAPIT)-util-sed
 #WORKING
 #		--with-gzip=PROG        use PROG as gzip compressor program
 #		--with-bzip2=PROG       use PROG as bzip2 compressor program
 #		--with-xz=PROG          use PROG as xz compressor program
 #WORKING
+	$(RUNMAKE) $(STRAPIT)-util-tar
+
+.PHONY: $(STRAPIT)-util-coreutils
+$(STRAPIT)-util-coreutils:
+	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
+	$(call UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
+		--enable-single-binary="shebangs" \
+		--disable-acl \
+		--disable-xattr \
+	)
+
+.PHONY: $(STRAPIT)-util-findutils
+$(STRAPIT)-util-findutils:
+	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
+	$(call UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(FINDUTILS_TAR_DST)/build-aux)
+	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
+
+.PHONY: $(STRAPIT)-util-patch
+$(STRAPIT)-util-patch:
+	$(call CURL_FILE,$(PATCH_TAR_SRC))
+	$(call UNTAR,$(PATCH_TAR_DST),$(PATCH_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-xattr \
+	)
+
+.PHONY: $(STRAPIT)-util-sed
+$(STRAPIT)-util-sed:
+	$(call CURL_FILE,$(SED_TAR_SRC))
+	$(call UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(SED_TAR_DST)/build-aux)
+	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-acl \
+	)
+
+.PHONY: $(STRAPIT)-util-tar
+$(STRAPIT)-util-tar:
+	$(call CURL_FILE,$(TAR_TAR_SRC))
+	$(call UNTAR,$(TAR_TAR_DST),$(TAR_TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 		--without-posix-acls \
