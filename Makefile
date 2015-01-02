@@ -404,7 +404,7 @@ override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= 3.82
+override MAKE_VERSION			:= 4.1
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
@@ -425,22 +425,22 @@ override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifneq ($(COMPOSER_PROGS_USE),)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 endif
 override BUILD_PATH_MINGW		:= $(BUILD_PATH)
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/bin
+override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/usr/bin
 
 override BUILD_TOOLS			:=
 ifneq ($(BUILD_MSYS),)
 override BUILD_TOOLS			:= $(BUILD_TOOLS) \
-	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc.exe" \
-	--with-cpp="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/cpp.exe" \
-	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld.exe"
+	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/gcc" \
+	--with-cpp="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/cpp" \
+	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/ld"
 endif
 
 override WINDOWS_CMD			:= /c/Windows/System32/cmd /c
@@ -599,17 +599,19 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 		tex/latex/url
 
 #WORK
+# second group is for mintty
 override WINDOWS_BINARY_LIST		:= \
 		bash \
 		cat \
 		cp \
-		cygpath \
 		date \
+		echo \
 		env \
 		install \
 		ls \
 		mv \
 		patch \
+		printf \
 		rm \
 		sed \
 		sh \
@@ -617,7 +619,14 @@ override WINDOWS_BINARY_LIST		:= \
 		uname \
 		unzip \
 		wget \
-		zip
+		zip \
+		\
+		cygpath \
+		cygwin-console-helper \
+		less \
+		ls \
+		mintty \
+		vim
 
 ########################################
 
@@ -929,6 +938,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(FETCHIT)-ghc"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-haskell"			"Download/preparation of Haskell Platform source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc"			"Download/preparation of Pandoc source repository"
+	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"			"Download of GHC source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-ghc-prep"			"Preparation of GHC source repository"
 	@$(HELPOUT1) "$(FETCHIT)-pandoc:"	"$(FETCHIT)-pandoc-type"		"Download/preparation of Pandoc-Types source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"		"Download/preparation of TeXMath source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"		"Download/preparation of Highlighting-Kate source repository"
@@ -955,8 +966,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) "subdirs:"			""'$$'"(COMPOSER_SUBDIRS)"		"[$(COMPOSER_SUBDIRS)]"
 	@echo ""
 	@echo "Wildcard Sub-Targets:"
-	@$(HELPOUT1) "$(REPLICA)-*:"		"$(REPLICA) COMPOSER_VERSION=*"		""
-	@$(HELPOUT1) "do-*:"			"fetch-* build-*"			""
+	@$(HELPOUT1) "$(REPLICA)-%:"		"$(REPLICA) COMPOSER_VERSION=*"		""
+	@$(HELPOUT1) "do-%:"			"fetch-* build-*"			""
 	@echo ""
 	@echo "These do not need to be used directly during normal use, and are only documented for completeness."
 	@echo ""
@@ -1251,6 +1262,11 @@ $(INSTALL)-dir:
 override REPLICA_GIT := $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
 override GIT_REPLICA := $(GIT) --git-dir="$(REPLICA_GIT)"
 
+$(REPLICA)-%:
+	$(RUNMAKE) --directory "$(CURDIR)" \
+		COMPOSER_VERSION="$(*)" \
+		$(REPLICA)
+
 .PHONY: $(REPLICA)
 $(REPLICA):
 	if [ ! -d "$(REPLICA_GIT)" ]; then
@@ -1274,11 +1290,6 @@ $(REPLICA):
 	fi
 	$(TIMESTAMP) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
 
-$(REPLICA)-%:
-	$(RUNMAKE) --directory "$(CURDIR)" \
-		COMPOSER_VERSION="$(*)" \
-		$(REPLICA)
-
 .PHONY: $(UPGRADE)
 $(UPGRADE):
 	$(call GIT_REPO,$(MDVIEWER_DST),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
@@ -1293,9 +1304,12 @@ $(UPGRADE):
 
 ifneq ($(BUILD_MSYS),)
 #WORK
-ifeq ($(wildcard $(SHELL)),)
-override SHELL := $(call COMPOSER_FIND,$(PATH_LIST),sh)
-endif
+#ifeq ($(wildcard $(SHELL)),)
+#export MSYSTEM := $(MSYSTEM_MSYS)
+#WORK override SHELL := $(call COMPOSER_FIND,$(PATH_LIST),sh)
+#override SHELL := c:\.composer\.home\msys32\usr\bin\sh
+#endif
+#WORK
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
@@ -1305,7 +1319,7 @@ endif
 ifeq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-check
 else
-#WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
+$(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
 $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
@@ -1349,27 +1363,58 @@ endif
 
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
-	$(MKDIR) "$(COMPOSER_PROGS)/bin"
-	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
-	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
+	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
+#WORK	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/usr/bin/"
+	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git}* "$(COMPOSER_PROGS)/usr/bin/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
-	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
-		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
-		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
-	)
-	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
-	$(CP) "$(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
-	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-dist/web2c"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"				"$(COMPOSER_PROGS)/texmf-dist/web2c/"
-	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
-	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/bin/pdflatex"
+#WORK
+#	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
+#	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+#	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
+#		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
+#		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
+#	)
+#	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
+#	$(CP) "$(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
+#	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-dist/web2c"
+#	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"				"$(COMPOSER_PROGS)/texmf-dist/web2c/"
+#	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
+#	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/usr/bin/pdflatex"
+#WORK
 ifneq ($(BUILD_MSYS),)
+#WORK
+	@cat >"$(COMPOSER_PROGS)/shell.bat" <<'_EOF_'
+		@echo off
+		set WD=%~dp0
+		set BINDIR=/usr/bin
+		set MSYSCON=mintty.exe
+		::WORK set MSYSTEM=$(MSYSTEM_MSYS)
+		set PATH=%WD%%BINDIR%:%PATH%
+		set OPTIONS=
+		set OPTIONS=%OPTIONS% --title "// $(COMPOSER_BASENAME) MSYS2"
+		set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
+		start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
+		:: end of file
+	_EOF_
+	$(MKDIR) "$(COMPOSER_PROGS)/etc"
+	$(CP) "$(MSYS_BIN_DST)/etc/fstab" "$(COMPOSER_PROGS)/etc/"
+#WORK
+#	@cat >"$(COMPOSER_PROGS)/etc/profile" <<'_EOF_'
+#		#!/usr/bin/env bash
+#		#WORK : anything better than this hack?
+#		declare COMPOSER_DIR="$$(cygpath -au $$(cygpath -aw /)../../)"
+#		make -C "$${COMPOSER_DIR}" $(SHELLIT)-bashrc
+#		source "$${COMPOSER_DIR}/.home/.bashrc"
+#		# end of file
+#	_EOF_
+#WORK
+	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
+	$(CP) "$(MSYS_BIN_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
 	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/bin/"
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"
 	)
-	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/bin/"
+	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"
 	done
 endif
 
@@ -1627,9 +1672,6 @@ $(FETCHIT)-make:
 .PHONY: $(BUILDIT)-make
 # thanks for the 'texinfo' fix below: http://gnu-make.2324884.n4.nabble.com/Cannot-build-the-GNU-make-manual-with-development-version-of-Texinfo-td4530.html
 $(BUILDIT)-make:
-	$(SED) -i \
-		-e "s|([@]item)x|\1|g" \
-		"$(MAKE_DST)/doc/make.texi"
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-git
@@ -1663,10 +1705,12 @@ $(BUILDIT)-tex:
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
+			--without-ln-s \
 			--without-x
 #>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
+#>		--without-ln-s \
 #>		--without-x \
 #>	)
 	$(CP) "$(TEX_TEXMF_DST)/"* "$(COMPOSER_ABODE)/texlive/"
@@ -1690,7 +1734,7 @@ else
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
 	@cat >"$(CBL_BIN_DST)/bootstrap.patch.sh" <<'_EOF_'
-		#!/bin/bash
+		#!/usr/bin/env bash
 		$(SED) -i \
 			-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
 			-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
@@ -1719,7 +1763,10 @@ $(STRAPIT)-ghc-lib:
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
 
 .PHONY: $(FETCHIT)-ghc
-$(FETCHIT)-ghc:
+$(FETCHIT)-ghc: $(FETCHIT)-ghc-pull $(FETCHIT)-ghc-prep
+
+.PHONY: $(FETCHIT)-ghc-pull
+$(FETCHIT)-ghc-pull:
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
 	$(call GIT_SUBMODULE,$(GHC_DST))
 	$(SED) -i \
@@ -1733,6 +1780,9 @@ $(FETCHIT)-ghc:
 		$(BUILD_ENV_MINGW) ./sync-all fetch --all &&
 		$(BUILD_ENV_MINGW) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) &&
 		$(BUILD_ENV_MINGW) ./sync-all reset --hard
+
+.PHONY: $(FETCHIT)-ghc-prep
+$(FETCHIT)-ghc-prep:
 	$(call GIT_SUBMODULE,$(GHC_DST))
 #>	$(foreach FILE,\
 #>		$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal \
