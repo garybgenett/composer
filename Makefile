@@ -2440,17 +2440,13 @@ endif
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
-	echo WORK : build on windows, now that opengl is fixed?
-#ifeq ($(BUILD_MSYS),)
 	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),\
 		--disable-user-install \
 	)
-#else
 #>	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 #>		$(foreach FILE,$(shell cat "$(HASKELL_TAR)/packages/platform.packages"),\
 #>			"$(HASKELL_TAR)/packages/$(FILE)" \
 #>		)
-#endif
 
 .PHONY: $(FETCHIT)-pandoc
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-type
