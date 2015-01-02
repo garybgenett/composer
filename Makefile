@@ -1800,7 +1800,7 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
 		@$(HELPLVL1)
 #WORK		@read ENTER
-		$(RUNMAKE) $(SHELLIT)-msys
+#WORK		$(RUNMAKE) $(SHELLIT)-msys
 		@$(HELPLVL1)
 		@$(HELPOUT2) "The shell window has been launched."
 		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
@@ -1877,6 +1877,11 @@ endif
 		-e "s|(termio)([^s])|\1s\2|g" \
 		"$(MUSL_OSSL_BIN_DST)/configure" \
 		"$(MUSL_OSSL_BIN_DST)/crypto/ui/ui_openssl.c"
+	$(SED) -i \
+		-e "s|(cp[ ][.]libs)|#\1|g" \
+		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
+		"$(MUSL_ICNV_BIN_DST)/preload/Makefile.in" \
+		"$(MUSL_ICNV_BIN_DST)/preload/configure"*
 
 .PHONY: $(BUILDIT)-musl
 $(BUILDIT)-musl:
@@ -1885,13 +1890,8 @@ $(BUILDIT)-musl:
 	$(RUNMAKE) $(BUILDIT)-musl-zlib
 	$(RUNMAKE) $(BUILDIT)-musl-openssl
 	$(RUNMAKE) $(BUILDIT)-musl-curl
-#WORK
 	$(RUNMAKE) $(BUILDIT)-musl-libiconv
 	$(RUNMAKE) $(BUILDIT)-musl-expat
-#WORK
-#	$(RUNMAKE) do-make
-	$(RUNMAKE) do-git
-#	$(RUNMAKE) do-git
 
 .PHONY: $(BUILDIT)-musl-infozip
 $(BUILDIT)-musl-infozip:
