@@ -416,10 +416,8 @@ override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
 
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
-override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
-#WORK
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
-#WORK /x86_64-unknown-linux-gnu
+override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifneq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/bin
 endif
@@ -659,6 +657,16 @@ override define GIT_SUBMODULE		=
 	done
 endef
 
+override PANDOC_DATA			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data)
+ifneq ($(wildcard $(PANDOC_DATA)),)
+override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
+endif
+
+override TEXMFDIST			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist)
+ifeq ($(wildcard $(TEXMFDIST)),)
+override TEXMFDIST			:= $(COMPOSER_ABODE)/texlive/texmf-dist
+endif
+
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
 #	found by: https://github.com/faylang/fay/issues/261
 override BUILD_ENV_BASE			:= \
@@ -668,7 +676,8 @@ override BUILD_ENV_BASE			:= \
 	LDFLAGS= \
 	\
 	USER="$(USER)" \
-	HOME="$(COMPOSER_ABODE)"
+	HOME="$(COMPOSER_ABODE)" \
+	TEXMFDIST="$(TEXMFDIST)"
 ifneq ($(BUILD_MSYS),)
 # adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
 override BUILD_ENV_BASE			:= $(BUILD_ENV_BASE) \
@@ -702,11 +711,6 @@ override MINGW_PATH			= $(1)
 else
 override MINGW_PATH			= $(shell $(CYGPATH) --absolute --windows "$(1)")
 endif
-
-#>override PANDOC_DATA			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../pandoc/data)
-#>ifneq ($(wildcard $(PANDOC_DATA)),)
-#>override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
-#>endif
 
 ################################################################################
 
@@ -1310,7 +1314,7 @@ $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
 #WORK
-	$(CP) "$(COMPOSER_ABODE)/texlive/bin/"*"/pdftex" "$(COMPOSER_PROGS)/bin/pdflatex"
+	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex" "$(COMPOSER_PROGS)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
 ifneq ($(BUILD_MSYS),)
@@ -1523,6 +1527,7 @@ $(STRAPIT)-check:
 	fi
 
 .PHONY: $(STRAPIT)-msys
+# WORK thanks for the 'ignoregroup' fix below: https://www.mail-archive.com/msys2-users@lists.sourceforge.net/msg00016.html
 $(STRAPIT)-msys:
 	$(call WGET_FILE,$(MSYS_BIN_SRC))
 	$(call UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
@@ -1551,12 +1556,21 @@ $(STRAPIT)-msys:
 	@$(HELPLVL1)
 	@read ENTER
 	$(BUILD_ENV) $(PACMAN) --refresh
-	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
-	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
-	$(BUILD_ENV) $(PACMAN) \
-		--needed \
-		--sysupgrade \
-		$(PACMAN_PACKAGES_LIST)
+#WORK
+#	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
+#	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
+#	$(BUILD_ENV) $(PACMAN) \
+#		--needed \
+#		--sysupgrade
+#	$(BUILD_ENV) $(PACMAN) \
+#		--needed \
+#		--sysupgrade \
+#		$(PACMAN_PACKAGES_LIST)
+#WORK
+	$(BUILD_ENV) pacman -Scc
+	$(BUILD_ENV) pacman -Syy
+	$(BUILD_ENV) pacman -Suu
+#WORK
 	$(BUILD_ENV) $(PACMAN) --clean
 
 .PHONY: $(STRAPIT)-dlls
@@ -1604,6 +1618,7 @@ $(FETCHIT)-tex:
 	$(call WGET_FILE,$(TEX_BIN_SRC))
 	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
+	true
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
