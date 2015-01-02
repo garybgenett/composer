@@ -286,8 +286,13 @@ override BUILD_GHC_78			?=
 override BUILD_PLAT			?= $(shell uname -o)
 override BUILD_ARCH			?= $(shell uname -m)
 
+ifneq ($(BUILD_MUSL),)
+override BUILD_PLAT			:= Linux
+override BUILD_MSYS			:=
+endif
 ifneq ($(BUILD_MSYS),)
 override BUILD_PLAT			:= Msys
+override BUILD_MUSL			:=
 endif
 
 ifeq ($(BUILD_PLAT),GNU/Linux)
@@ -296,9 +301,6 @@ else ifeq ($(BUILD_PLAT),Cygwin)
 override BUILD_PLAT			:= Msys
 endif
 
-override COMPOSER_PROGS			?= $(COMPOSER_DIR)/bin/$(BUILD_PLAT)
-override COMPOSER_PROGS_USE		?=
-
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(BUILD_ARCH),x86_64)
 override BUILD_MSYS			:= 64
@@ -306,6 +308,9 @@ else
 override BUILD_MSYS			:= 32
 endif
 endif
+
+override COMPOSER_PROGS			?= $(COMPOSER_DIR)/bin/$(BUILD_PLAT)
+override COMPOSER_PROGS_USE		?=
 
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
 #	found by: https://github.com/faylang/fay/issues/261
@@ -934,22 +939,38 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 #	also to: http://stackoverflow.com/questions/3063507/list-goals-targets-in-gnu-make
 #	also to: http://backreference.org/2010/05/31/working-with-blocks-in-sed
 
+override .ALL_TARGETS := \
+	HELP[_] \
+	EXAMPLE[_] \
+	$(HELPOUT)[:-] \
+	$(HELPALL)[:-] \
+	$(COMPOSER_TARGET)[:-] \
+	$(COMPOSER_PANDOC)[:-] \
+	$(UPGRADE)[:-] \
+	$(REPLICA)[:-] \
+	$(INSTALL)[:-] \
+	$(TESTOUT)[:-] \
+	$(EXAMPLE)[:-] \
+	$(STRAPIT)[:-] \
+	$(FETCHIT)[:-] \
+	$(BUILDIT)[:-] \
+	$(CHECKIT)[:-] \
+	$(SHELLIT)[:-] \
+	targets[:] \
+	all[:] \
+	clean[:] \
+	whoami[:] \
+	settings[:] \
+	setup[:] \
+	subdirs[:] \
+	print[:]
+
 .PHONY: .all_targets
 .all_targets:
 	@$(RUNMAKE) --question --print-data-base --no-builtin-variables --no-builtin-rules : 2>/dev/null |
 		$(SED) -n -e "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" |
 		$(SED) -n -e "/^$(COMPOSER_ALL_REGEX)[:]/p" |
-		sort --unique |
-		$(SED) -e "s|[ ][.]set_title[-]$(COMPOSER_ALL_REGEX)||g"
-
-ifneq ($(COMPOSER_ESCAPES),)
-$(foreach FILE,\
-	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) "s|[:].*$$||g"),\
-	$(eval $(FILE): .set_title-$(FILE))\
-)
-.set_title-%:
-	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
-endif
+		sort --unique
 
 ########################################
 
@@ -978,6 +999,20 @@ override _M :=
 override _N :=
 override _E :=
 override _S :=
+endif
+
+ifneq ($(COMPOSER_ESCAPES),)
+$(foreach FILE,\
+	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) -n \
+		$(foreach FILE,$(.ALL_TARGETS),\
+			-e "/^$(FILE)/p" \
+		) \
+		| $(SED) "s|[:].*$$||g" \
+	),\
+	$(eval $(FILE): .set_title-$(FILE))\
+)
+.set_title-%:
+	@echo -en "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
 endif
 
 ########################################
@@ -2119,11 +2154,13 @@ $(STRAPIT)-libs-expat:
 	$(call GNU_CFG_INSTALL,$(LIB_EXPT_BIN_DST)/conftools)
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
+		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
 		--disable-shared \
 		--enable-static \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_BIN_DST),$(COMPOSER_ABODE),,\
+		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
 		--disable-static \
 		--enable-shared \
 	)
@@ -2145,21 +2182,17 @@ else
 	)
 endif
 
-#WORK
-#		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
-#		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
-#		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/expat:$(COMPOSER_ABODE)/include/freetype2" \
-
 .PHONY: $(STRAPIT)-libs-fontconfig
 # thanks for the 'freetype' fix below: https://www.ffmpeg.org/pipermail/ffmpeg-user/2012-September/009469.html
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_BIN_SRC))
 	$(call UNTAR,$(LIB_FCFG_BIN_DST),$(LIB_FCFG_BIN_SRC))
+	echo WORK
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
 		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
 		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/expat:$(COMPOSER_ABODE)/include/freetype2" \
 		,\
 		--disable-shared \
 		--enable-static \
@@ -2168,7 +2201,7 @@ else
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
 		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
 		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
-		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/expat:$(COMPOSER_ABODE)/include/freetype2" \
 		,\
 		--disable-static \
 		--enable-shared \
@@ -2192,9 +2225,19 @@ $(FETCHIT)-make-prep:
 
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
+ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
 		--without-guile \
+		--disable-shared \
+		--enable-static \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
+		--without-guile \
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(FETCHIT)-infozip
 $(FETCHIT)-infozip: $(FETCHIT)-infozip-pull
@@ -2252,21 +2295,36 @@ $(STRAPIT)-curl-prep:
 
 .PHONY: $(FETCHIT)-curl-prep
 $(FETCHIT)-curl-prep:
-ifneq ($(BUILD_MUSL),)
-	$(SED) -i \
-		-e "s|([-][-]mode[=]link[ ][$$][(]CCLD[)][ ])([^-])|\1-all-static \2|g" \
-		"$(CURL_DST)/"*"/Makefile.in"
-endif
 	cd "$(CURL_DST)" &&
 		$(BUILD_ENV) autoreconf --force --install
 
 .PHONY: $(STRAPIT)-curl-build
 $(STRAPIT)-curl-build:
-	$(call AUTOTOOLS_BUILD,$(CURL_BIN_DST),$(COMPOSER_ABODE))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(CURL_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(CURL_BIN_DST),$(COMPOSER_ABODE),,\
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
-	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(STRAPIT)-git
 $(STRAPIT)-git: $(STRAPIT)-git-pull
@@ -2286,10 +2344,22 @@ $(STRAPIT)-git-pull:
 $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
 
+#WORK
+
 .PHONY: $(STRAPIT)-git-prep
+# thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
+#	also to: http://www.makelinux.net/alp/021
 $(STRAPIT)-git-prep:
 	cd "$(GIT_BIN_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
+ifneq ($(BUILD_MUSL),)
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
+		"$(GIT_BIN_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
+		"$(GIT_BIN_DST)/Makefile"
+endif
 
 .PHONY: $(FETCHIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
@@ -2308,18 +2378,47 @@ endif
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
-	echo WORK
+ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
-		LDFLAGS="$(LDFLAGS) -L\"$(COMPOSER_ABODE)/lib\" -lintl -lgettext" \
+		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
 		,\
 		--without-tcltk \
+		--disable-shared \
+		--enable-static \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
+		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		,\
+		--without-tcltk \
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
-	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
+		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		,\
 		--without-tcltk \
+		--disable-shared \
+		--enable-static \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),\
+		CFLAGS="$(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		LDFLAGS="$(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\" -lintl" \
+		,\
+		--without-tcltk \
+		--disable-static \
+		--enable-shared \
+	)
+endif
 
 .PHONY: $(FETCHIT)-tex
 $(FETCHIT)-tex: $(FETCHIT)-tex-pull
@@ -2683,32 +2782,11 @@ targets:
 	@$(HELPOUT1) "$(_H)Targets$(_D) $(DIVIDE) $(_M)$(COMPOSER_SRC)"
 	@$(HELPLINE)
 	@echo -en "$(_C)"
-	@$(RUNMAKE) --silent .all_targets | $(SED) \
-		-e "/^HELP[_]/d" \
-		-e "/^EXAMPLE[_]/d" \
-		-e "/^$(HELPOUT)[:-]/d" \
-		-e "/^$(HELPALL)[:-]/d" \
-		-e "/^$(COMPOSER_TARGET)[:-]/d" \
-		-e "/^$(COMPOSER_PANDOC)[:-]/d" \
-		-e "/^$(UPGRADE)[:-]/d" \
-		-e "/^$(REPLICA)[:-]/d" \
-		-e "/^$(INSTALL)[:-]/d" \
-		-e "/^$(TESTOUT)[:-]/d" \
-		-e "/^$(EXAMPLE)[:-]/d" \
-		-e "/^$(STRAPIT)[:-]/d" \
-		-e "/^$(FETCHIT)[:-]/d" \
-		-e "/^$(BUILDIT)[:-]/d" \
-		-e "/^$(CHECKIT)[:-]/d" \
-		-e "/^$(SHELLIT)[:-]/d" \
-		-e "/^.*[.]$(COMPOSER_EXT)[:-]/d" \
-		-e "/^all:/d" \
-		-e "/^clean:/d" \
-		-e "/^whoami:/d" \
-		-e "/^settings:/d" \
-		-e "/^setup:/d" \
-		-e "/^subdirs:/d" \
-		-e "/^print:/d" \
-		-e "/^$(@):/d" \
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) \
+		$(foreach FILE,$(.ALL_TARGETS),\
+			-e "/^$(FILE)/d" \
+		) \
+		-e "/^[^:]*[.]$(COMPOSER_EXT)[:]/d" \
 		-e "/^$$/d"
 	@$(HELPLINE)
 	@$(HELPOUT1) "$(_H)$(MARKER) all";	echo -en "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]|\n|g" | sort --unique
