@@ -746,8 +746,8 @@ override BUILD_ENV_VARS_MINGW		:= $(BUILD_ENV_BASE) \
 	PATH="$(BUILD_PATH_MINGW)" \
 	MSYSTEM="$(MSYSTEM_MINGW)"
 endif
-override BUILD_ENV			:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV_VARS)
-override BUILD_ENV_MINGW		:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV_VARS_MINGW)
+override BUILD_ENV			:= $(call COMPOSER_FIND,$(subst :, ,$(PATH)),env) - $(BUILD_ENV_VARS)
+override BUILD_ENV_MINGW		:= $(call COMPOSER_FIND,$(subst :, ,$(PATH)),env) - $(BUILD_ENV_VARS_MINGW)
 
 ifeq ($(BUILD_MSYS),)
 override MINGW_PATH			= $(1)
@@ -1313,7 +1313,7 @@ endif
 ifeq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-check
 else
-#WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
+$(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
 $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
@@ -1327,7 +1327,7 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-git
-#WORK $(BUILDIT): $(BUILDIT)-tex
+$(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1358,25 +1358,22 @@ endif
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
-#WORK	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/usr/bin/"
-	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git}* "$(COMPOSER_PROGS)/usr/bin/"
+	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/usr/bin/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
-#WORK
-#	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
-#	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
-#	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
-#		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
-#		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
-#	)
-#	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
-#	$(CP) "$(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
-#	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-dist/web2c"
-#	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"				"$(COMPOSER_PROGS)/texmf-dist/web2c/"
-#	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
-#	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/usr/bin/pdflatex"
-#WORK
+	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
+		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
+		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
+	)
+	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
+	$(CP) "$(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
+	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-dist/web2c"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"				"$(COMPOSER_PROGS)/texmf-dist/web2c/"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
+	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/usr/bin/pdflatex"
 ifneq ($(BUILD_MSYS),)
-	@cat >"$(COMPOSER_PROGS)/shell.bat" <<'_EOF_'
+	@cat >"$(COMPOSER_PROGS)/msys2_shell.bat" <<'_EOF_'
 		@echo off
 		set WD=%~dp0
 		set BINDIR=/usr/bin
@@ -1431,20 +1428,19 @@ $(SHELLIT):
 .PHONY: $(SHELLIT)-msys
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT)-msys:
-	@if [ ! -d "$(MSYS_BIN_DST)/home/$(USERNAME)" ]; then
-		$(MKDIR) "$(MSYS_BIN_DST)/home"
-		$(CP) "$(MSYS_BIN_DST)/etc/skel" "$(MSYS_BIN_DST)/home/$(USERNAME)"
-	fi
+ifneq ($(COMPOSER_PROGS_USE),)
+	@cd "$(COMPOSER_PROGS)" &&
+else
 	@cd "$(MSYS_BIN_DST)" &&
-		icacls msys2_shell.bat /grant:r $(USERNAME):f &&
-		exec $(BUILD_ENV) $(WINDOWS_CMD) msys2_shell.bat || true
+endif
+		$(BUILD_ENV) $(WINDOWS_CMD) icacls msys2_shell.bat /grant:r $(USERNAME):f && exec \
+		$(BUILD_ENV) $(WINDOWS_CMD) msys2_shell.bat || true
 
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
 	@$(MKDIR) "$(COMPOSER_ABODE)"
 	@cat >"$(COMPOSER_ABODE)/.bashrc" <<'_EOF_'
 		# bashrc
-		#
 		umask 022
 		unalias -a
 		set -o vi
@@ -1461,7 +1457,7 @@ $(SHELLIT)-bashrc:
 		export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
 		#
 		export PROMPT_DIRTRIM="1"
-		export PS1="\n// $(COMPOSER_BASENAME) \D{%FT%T%z}\n[\#/\!] (\u@\h \w)\\$$ "
+		export PS1="\[\e]0;// $(COMPOSER_BASENAME) \w\a\]\n// $(COMPOSER_BASENAME) \D{%FT%T%z}\n[\#/\!] (\u@\h \w)\\$$ "
 		#
 		export PAGER="less -RX"
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
@@ -2031,6 +2027,7 @@ settings:
 
 .PHONY: setup
 setup:
+#WORK : how does this get updated with new versions, without conflicting with user built versions?
 ifneq ($(wildcard $(COMPOSER_PROGS)/pandoc/data),)
 ifeq ($(wildcard $(PANDOC_DATA)),)
 	$(MKDIR) "$(PANDOC_DATA)"
