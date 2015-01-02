@@ -941,6 +941,13 @@ override define DO_COREUTILS_INSTALL	=
 		"$(1)" --coreutils-prog=chmod 755 "$(2)/install"; \
 	fi
 endef
+override define DO_COREUTILS_UNINSTALL	=
+	"$(1)" --help | $(SED) -n "s|^[ ][[][ ]||gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+		if [ -f "$(2)/$${FILE}" ]; then \
+			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
+		fi; \
+	done
+endef
 
 override define DO_PATCH		=
 	$(call CURL_FILE,$(2)); \
@@ -2745,7 +2752,9 @@ $(STRAPIT)-util-coreutils:
 		--disable-xattr \
 	)
 #WORKING : does not work for msys
-ifneq ($(BUILD_PLAT),Msys)
+ifeq ($(BUILD_PLAT),Msys)
+	$(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils)
+else
 	$(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils)
 endif
 
