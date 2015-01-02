@@ -1223,13 +1223,9 @@ $(UPGRADE):
 ########################################
 
 ifneq ($(BUILD_MSYS),)
-ifneq ($(wildcard $(MSYS_SHELL)),)
-#WORK : why is "UPGRADE" required here for windoze?
-$(UPGRADE):	override SHELL := $(MSYS_SHELL)
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
-endif
 endif
 
 .PHONY: $(STRAPIT)
