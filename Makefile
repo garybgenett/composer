@@ -851,9 +851,11 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
+override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
+override DATE				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --iso
 override DIRCOLORS			:= "$(call COMPOSER_FIND,$(PATH_LIST),dircolors)"
 override ECHO				:= "$(call COMPOSER_FIND,$(PATH_LIST),echo)" -en
 override ENV				:= "$(call COMPOSER_FIND,$(PATH_LIST),env)"
@@ -1020,6 +1022,7 @@ override define DO_TEXTFILE		=
 	$(SED) -i \
 		-e "s|[[]B[]]|\\\\|g" \
 		-e "s|[[]N[]]|\\n|g" \
+		-e "s|[[]Q[]]|\'|g" \
 		"$(1)"
 endef
 
@@ -1443,7 +1446,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-#WORK	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies MSYS2/MinGW-w64 DLL files (for native Windows usage)"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
@@ -2412,7 +2415,7 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-#WORK $(STRAPIT)-msys: $(STRAPIT)-msys-dll
+$(STRAPIT)-msys: $(STRAPIT)-msys-dll
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2461,17 +2464,16 @@ $(STRAPIT)-msys-pkg:
 		$(PACMAN_PACKAGES_LIST)
 	$(BUILD_ENV) $(PACMAN) --clean
 
-#WORK
-#.PHONY: $(STRAPIT)-msys-dll
-#$(STRAPIT)-msys-dll:
-#	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-#WORK : should only need the two msys-*.dll files
-#	$(CP) \
-#		"$(MSYS_BIN_DST)/usr/bin/msys-2.0.dll" \
-#		"$(MSYS_BIN_DST)/usr/bin/msys-gcc_s-1.dll" \
-#		"$(COMPOSER_ABODE)/bin/"
+.PHONY: $(STRAPIT)-msys-dll
+$(STRAPIT)-msys-dll:
+	$(MKDIR) "$(COMPOSER_ABODE)/bin"
+#WORKING : should only need the few msys-*.dll files
+	$(foreach FILE,$(MSYS_BINARY_LIST),\
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
+	)
+#WORKING
 #	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
-#WORK
+#WORKING
 
 #WORK : causes build errors
 #make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
@@ -3401,6 +3403,460 @@ $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
 	@echo
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
+
+########################################
+
+#WORKING : this works great, but something more elegant needs to be done with it
+#WORKING : document!
+
+override .DIST_ICON		:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gUQBRoEzZLzOQAAAFFJREFUKM/NUcsVADAEC1Ma0Zi9qd/THjkRCWkB64LmtqpaLiIX9Q3PNjxzqqZFALBf1+5JljjVsyYIPjVcXd7fmAVPdnh0ZSd7ltA8uz/csjih8jivOCtEBAAAAABJRU5ErkJggg==
+override .DIST_SCREENSHOT	:= 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
+
+.PHONY: .dist
+.dist:
+	@$(ECHO) "$(.DIST_ICON)"	| $(BASE64) -d >"$(CURDIR)/icon.png"
+	@$(ECHO) "$(.DIST_SCREENSHOT)"	| $(BASE64) -d >"$(CURDIR)/screenshot.png"
+	@$(CP) "$(COMPOSER_SRC)"	"$(CURDIR)/$(MAKEFILE)" || $(TRUE)
+	@$(call DO_TEXTFILE,$(CURDIR)/.gitignore,.TEXTFILE_DIST_GITIGNORE)
+	@$(call DO_TEXTFILE,$(CURDIR)/Composer.bat,.TEXTFILE_DIST_COMPOSER_BAT)
+	@$(call DO_TEXTFILE,$(CURDIR)/Composer.sh,.TEXTFILE_DIST_COMPOSER_SH)
+	@$(call DO_TEXTFILE,$(CURDIR)/LICENSE.$(COMPOSER_EXT),.TEXTFILE_DIST_LICENSE)
+	@$(call DO_TEXTFILE,$(CURDIR)/README.$(COMPOSER_EXT),.TEXTFILE_DIST_README)
+	@$(call DO_TEXTFILE,$(CURDIR)/revealjs.css,.TEXTFILE_DIST_REVEALJS_CSS)
+	@$(CHMOD) \
+		"$(CURDIR)/$(MAKEFILE)" \
+		"$(CURDIR)/Composer.bat" \
+		"$(CURDIR)/Composer.sh"
+	@$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE)
+	@$(RUNMAKE) --directory "$(CURDIR)" all
+
+override define .TEXTFILE_DIST_GITIGNORE =
+# make compose
+/.composed
+/.composer.mk
+/composer.css
+
+# make update
+/.sources/
+
+# make build
+/.home/
+/build/
+
+# make test
+/test.dir/
+endef
+
+override define .TEXTFILE_DIST_COMPOSER_BAT =
+@echo off
+set _COMPOSER=%~dp0
+set _SYS=Msys
+set PATH=%_COMPOSER%/bin/%_SYS%/usr/bin;%PATH%
+start /b make --makefile %_COMPOSER%/Makefile COMPOSER_PROGS_USE="1" shell-msys
+:: end of file
+endef
+
+override define .TEXTFILE_DIST_COMPOSER_SH =
+#!/usr/bin/env sh
+_COMPOSER="`dirname "$${0}"`"
+_SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
+export PATH="$${_COMPOSER}/bin/$${_SYS}/usr/bin:$${PATH}"
+make --makefile "$${_COMPOSER}/Makefile" COMPOSER_PROGS_USE="1" shell
+# end of file
+endef
+
+override define .TEXTFILE_DIST_LICENSE =
+# Composer CMS License
+<!-- ############################################################### -->
+
+<!-- ########################### -->
+## License Source
+
+  * [http://opensource.org/licenses/BSD-3-Clause](http://opensource.org/licenses/BSD-3-Clause)
+
+<!-- ########################### -->
+## Copyright
+
+    Copyright (c) 2014, Gary B. Genett
+    All rights reserved.
+
+<!-- ########################### -->
+## License
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  1. Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the
+     distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+<!-- ############################################################### -->
+<!-- End Of File -->
+<!-- ############################################################### -->
+endef
+
+override define .TEXTFILE_DIST_README =
+% Composer CMS: User Guide & Example File
+% Gary B. Genett
+% $(COMPOSER_VERSION) ($(shell $(DATE)))
+
+## Composer CMS
+<!-- ############################################################### -->
+[Composer]: #composer-cms
+
+![Composer Icon](icon.png "Composer Icon")
+"Creating Made Simple."
+
+* Homepage: [https://github.com/garybgenett/composer](https://github.com/garybgenett/composer)
+* [License]
+
+[License]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
+[Readme]: https://github.com/garybgenett/composer/blob/master/README.md
+
+[Make]: http://www.gnu.org/software/make
+[Pandoc]: http://www.johnmacfarlane.net/pandoc
+[Markdown]: http://daringfireball.net/projects/markdown
+[LaTeX]: http://www.tug.org
+[GNU]: http://www.gnu.org
+[Coreutils]: http://www.gnu.org/software/coreutils
+
+[Wget]: https://www.gnu.org/software/wget
+[Git]: http://www.git-scm.com
+
+[Markdown Viewer]: https://github.com/Thiht/markdown-viewer
+[Reveal.js]: https://github.com/hakimel/reveal.js
+[W3C Slidy2]: http://www.w3.org/Talks/Tools/Slidy2
+
+<!-- ########################### -->
+## Contents
+[Contents]: #contents
+
+  * [Introduction]
+    * [Overview]
+    * [Quick Start]
+    * [Goals]
+  * [Details]
+    * [Compatibility]
+    * [Versioning]
+    * [Dependencies]
+    * [Caveats]
+
+<!-- ############################################################### -->
+# Introduction
+[Introduction]: #introduction
+
+<!-- ########################### -->
+## Overview
+[Overview]: #overview
+
+[Composer] is a simple but powerful CMS based on [Pandoc] and [Make].
+By default, input files are written in a variation of [Markdown].
+
+Traditionally, CMS stands for Content Management System.  In the case of
+[Composer], however, CMS really means a Content **Make** System.  For
+many types of content, maybe even most, simpler is better.  Content is
+very easy to manage when it lives its full life-cycle as plain text,
+since there are a veritable multitude of solutions available for
+tracking and managing text and source files.  What is really needed is
+a basic system with advanced capabilities for "making" these simple text
+files into richer, more capable document types.
+
+This is the goal of [Composer].
+
+![Composer Screenshot](screenshot.png "Composer Screenshot")
+
+<!-- ########################### -->
+## Quick Start
+[Quick Start]: #quick-start
+
+[Composer] is completely self-documenting.  To get the full usage and
+help output:
+
+  * `make help`
+
+To download/update some necessary 3rd party components:
+
+  * `make update`
+
+To build an example/test directory using all features:
+
+  * `make test`
+
+In the simplest case, [Composer] can be used to make the conversion of
+[Markdown] files to other formats a trivial task.  The real strength and
+goal of [Composer], however, is as a recursive build system for any type
+of output content (websites, manuals/documentation, etc.).
+
+The [Readme] and [License] also serve as example source files.
+
+<!-- ########################### -->
+## Goals
+[Goals]: #goals
+
+[Composer] is really nothing more than a [Make]-based wrapper to
+[Pandoc].  The author started out with the following requirements for an
+all-purpose documentation production system:
+
+  * Minimal dependencies, and entirely command-line driven.
+  * All source files in plain-text, and readable/usable as stand-alone
+    documents, which means no inline syntax/formatting that is
+    aesthetically displeasing or difficult to integrate/camouflage.
+  * Clear isolation of content from formatting, so writing and
+    editing/publishing tasks can be performed independently.
+  * Relatively basic command-line syntax for producing "ad hoc"
+    documents, regardless of the complexity of the source/output.
+  * Scalable and recursive, so whole directories of information can be
+    managed easily, with websites and large documents (books, manuals,
+    etc.) being primary in mind.
+  * Support for dependencies and inheritance, with global, per-tree,
+    per-directory and per-file overrides.
+  * Workflow agnostic, so it can be used by semi-technical team
+    members in a corporate environment.
+  * Professional output, suitable for business environments or
+    publication.
+
+While support for a multitude of output formats was desired, the
+following were absolute necessities:
+
+  * HTML
+  * PDF
+  * Presentation / Slideshow
+  * DocX (completely negotiable, but valuable)
+  * ePUB (somewhat negotiable, but highly desired)
+
+A thorough review and test of the large number of available input
+formats and formatting engines resulted in a very short list of projects
+which could support the above requirements.  [Pandoc] was selected for
+a number of reasons:
+
+  * [Markdown] is an increasingly universal/portable and popular
+    plain-text format.
+  * Required formats worked "out of the box", and intermediary formats
+    like [LaTeX] were almost completely abstracted.
+  * Did not require any expertise with output or intermediary formats to
+    accomplish advanced results/output.
+  * Supported a large number of input and output formats, and was
+    designed very intelligently to allow translation from any supported
+    input format to any supported output format.
+  * Internally, normalizes documents into a single data structure which
+    can be manipulated or modified.
+  * If necessary, all templates could be modified and the internal
+    conversion could be scripted at a very deep level.
+
+[Pandoc] provided the perfect engine, but running long strings of
+commands was not feasible for quick and simple command-line use, and the
+thought of writing new scripting/automation each time a large-scale
+project emerged was not terribly exciting.  Thus, [Make] was selected as
+a wrapping engine based on it[Q]s years of history as one of the most
+popular and highly used source file processing systems in use.
+
+The final result is [Composer], which leverages these two tools to
+accomplish the original goals with a minimum amount of user knowledge
+and expertise, and to provide a solid foundation for simplified
+management of larger content production efforts.
+
+<!-- ############################################################### -->
+# Details
+[Details]: #details
+
+<!-- ########################### -->
+## Compatibility
+[Compatibility]: #compatibility
+
+[Composer] is developed and tested on a Funtoo/Gentoo [GNU]/Linux
+system.  An effort has been made to do things in a portable way, but
+cross-platform development is not an area of expertise for the author.
+
+Output of `make --version` on development system:
+
+```
+GNU Make 3.82
+Built for x86_64-pc-linux-gnu
+```
+
+Output of `pandoc --version` on development system:
+
+```
+pandoc 1.12.3.3
+Compiled with texmath 0.6.6, highlighting-kate 0.5.6.1.
+```
+
+If you discover issues, please contact the author directly, with advance
+thanks.  It is highly desirable for [Composer] to be as "run anywhere"
+as possible.
+
+Running the commands in the [Quick Start] section will help you validate
+whether your system will work as expected.  In particular, the `make
+test` command validates the proper functioning of all the supported
+features and uses of [Composer].
+
+<!-- ########################### -->
+## Versioning
+[Versioning]: #versioning
+
+[Composer] is not really revisioned into "releases" outside of the
+source code repository.  Each commit is tested using `make test` first,
+so the latest source should always be ready for production.
+
+If you require greater assurance of stability, use a version of the
+source that is tagged with a version number.
+
+<!-- ########################### -->
+## Dependencies
+[Dependencies]: #dependencies
+
+[Composer] was designed to have a minimum of external dependencies:
+
+  * [Pandoc]
+    * Also need some version of [LaTeX] installed
+  * [Make]
+    * [GNU] version is highly recommended (other versions may not work)
+  * [Coreutils]
+    * [GNU] version is highly recommended (other versions may not work)
+
+In order to download/update the 3rd party components, such as style
+sheets and formatters, these are also needed:
+
+  * [Wget]
+    * General-purpose HTTP/FTP retrieval tool
+  * [Git]
+    * Distributed version control system
+
+Components from these 3rd party projects are used:
+
+  * [Markdown Viewer]
+    * Simple and elegant CSS for HTML files
+  * [Reveal.js]
+    * Beautifully slick HTML presentation framework
+  * [W3C Slidy2]
+    * Essentially the grandfather of HTML presentation systems
+
+Basically, any [GNU]-based system, such as [GNU]/Linux, Cygwin or
+FreeBSD (with the [GNU] tools installed), should work just fine.  The
+biggest external dependency is [Pandoc] itself and the [LaTeX] system it
+uses to produce some of the output formats (namely PDF).
+
+<!-- ########################### -->
+## Caveats
+[Caveats]: #caveats
+
+There are a couple important items to be aware of when using [Composer]:
+
+  * Portability
+    * Running it on non-Linux systems or with different versions of
+      [Make] (see [Compatibility]) may not produce expected results.
+    * Portability is a goal of the project, and it is written with
+      standards compliance in mind, but it may very well depend
+      specifically on the [GNU] version of [Make] despite this.
+    * An effort has been made to anticipate file names with spaces or
+      other special characters, but horribly named files may produce
+      equally horrible results (this is generally the case with any
+      file-based automation).
+    * The "automagic" target detection uses a simple regular
+      expression and is very basic.
+  * Recursion
+    * While it simplifies things quite a bit, it does not completely
+      hide away the complexities of using [Make] recursively.
+    * Recursion handling and the `$$(COMPOSER_ABSPATH)` variable may be
+      overly-clever and therefore not portable.
+    * By default, recursion into sub-directories occurs after the
+      current directory targets are run, which makes the output much
+      more readable but precludes dependencies between parent
+      directories and their children.
+        * This behavior can be toggled globally or per-directory using
+          the `$$(COMPOSER_DEPENDS)` variable as documented.
+    * There are some who have made good arguments that systems other
+      than [Make] should be used for recursion.  This author concedes
+      some of their points, but has chosen to ignore them and use the
+      most widely deployed and used [Make] system available.
+  * Variables
+    * This system gives precedence to environment variables at the top
+      level and in all the examples, which is key to making the
+      inheritance behavior work.
+        * If you wish to be insulated from this, you can make all the
+          option variable definitions in children [Make] files explicit
+          (use `override OPTS :=` instead of `override OPTS ?=`) and
+          place them below the upstream `include` statements.
+        * The side effect of this will be that each directory will need
+          to define it[Q]s own behavior (i.e. no inheritance).
+        * This solution is documented in `make help`, is tested and
+          supported, and does not require any modifications to the main
+          [Make] file.
+    * Similarly to the above, the `export` command should not be used in
+      any [Make] files read by [Composer], other than the provided
+      examples in `make help` which have been tested.
+  * Output
+    * The `make help` output could be much more kind to those not
+      working on huge terminal windows.
+
+Finally, it could be that [Composer] introduces more complexity than it
+does add value, which this author guesses is likely true for many.
+
+The author encourages the reader to review the [Goals] section and
+decide for themselves if [Composer] will be beneficial for their needs.
+
+<!-- ############################################################### -->
+<!-- End Of File -->
+<!-- ############################################################### -->
+endef
+
+override define .TEXTFILE_DIST_REVEALJS_CSS =
+@import url("revealjs/css/theme/default.css");
+
+body {
+	background-image:	url("screenshot.png");
+	background-repeat:	no-repeat;
+	background-position:	98% 2%;
+	background-size:	auto 20%;
+}
+
+.reveal h1 {
+	font-size:	200%;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6,
+.reveal p {
+	text-align:	left;
+	text-transform:	none;
+}
+
+.reveal ol,
+.reveal ul {
+	display:	block;
+}
+
+.reveal figure {
+	/* percent does not seem to work here */
+	/* optimized for 1024x768 fullscreen */
+	height:		18em;
+}
+endef
 
 ########################################
 
