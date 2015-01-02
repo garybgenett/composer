@@ -1954,11 +1954,7 @@ $(STRAPIT)-msys-bin:
 
 .PHONY: $(STRAPIT)-msys-init
 $(STRAPIT)-msys-init:
-	echo WORK
-	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ]; then
-#	@if [ ! -f "$(MSYS_BIN_DST)/etc/fstab"  ] ||
-#	    [ ! -f "$(MSYS_BIN_DST)/etc/group"  ] ||
-#	    [ ! -f "$(MSYS_BIN_DST)/etc/passwd" ]; then
+	@if [ ! -f "$(MSYS_BIN_DST)/.$(COMPOSER_BASENAME)"  ]; then
 		@$(HELPLVL1)
 		@$(HELPOUT2) "We need to initialize the MSYS2 environment."
 		@$(HELPOUT2) "To do this, we will pause here to open an initial shell window."
@@ -1968,6 +1964,7 @@ $(STRAPIT)-msys-init:
 		@$(HELPLVL1)
 		@read ENTER
 		$(RUNMAKE) $(SHELLIT)-msys
+		$(TIMESTAMP) "$(MSYS_BIN_DST)/.$(COMPOSER_BASENAME)"
 		@$(HELPLVL1)
 		@$(HELPOUT2) "The shell window has been launched."
 		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
@@ -1986,10 +1983,11 @@ $(STRAPIT)-msys-fix:
 	cd "$(MSYS_BIN_DST)" &&
 		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f &&
 		./autorebase.bat
-	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
-	$(BUILD_ENV) $(PACMAN_KEY) --init		|| true
-	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| true
-	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| true
+#WORK
+#	$(BUILD_ENV) $(PACMAN_DB_UPGRADE)
+#	$(BUILD_ENV) $(PACMAN_KEY) --init		|| true
+#	$(BUILD_ENV) $(PACMAN_KEY) --populate msys2	|| true
+#	$(BUILD_ENV) $(PACMAN_KEY) --refresh-keys	|| true
 
 .PHONY: $(STRAPIT)-msys-pkg
 $(STRAPIT)-msys-pkg:
@@ -2161,6 +2159,7 @@ ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
 		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
 		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		,\
 		--disable-shared \
 		--enable-static \
@@ -2169,6 +2168,7 @@ else
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_BIN_DST),$(COMPOSER_ABODE),\
 		EXPAT_CFLAGS="$(CFLAGS)" EXPAT_LIBS="-I\"$(COMPOSER_ABODE)/include/expat\" -L\"$(COMPOSER_ABODE)/lib\" -lexpat" \
 		FREETYPE_CFLAGS="$(CFLAGS)" FREETYPE_LIBS="-I\"$(COMPOSER_ABODE)/include/freetype2\" -L\"$(COMPOSER_ABODE)/lib\" -lfreetype" \
+		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		,\
 		--disable-static \
 		--enable-shared \
@@ -2309,8 +2309,8 @@ endif
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
 	echo WORK
-#		LDFLAGS="-L\"$(COMPOSER_ABODE)/lib\" -lintl -lgettext"
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE),\
+		LDFLAGS="$(LDFLAGS) -L\"$(COMPOSER_ABODE)/lib\" -lintl -lgettext" \
 		,\
 		--without-tcltk \
 	)
