@@ -86,7 +86,7 @@ override TYPE				?= html
 override BASE				?= README
 override LIST				?= $(BASE).$(COMPOSER_EXT)
 
-# have to keep these around for a bit, after changing the names of them.
+#> have to keep these around for a bit, after changing the names of them
 override CSS				?= $(DCSS)
 override TTL				?= $(NAME)
 override OPT				?= $(OPTS)
@@ -177,23 +177,23 @@ override EPUB_DESC			:= ePUB: Electronic Publication
 
 ########################################
 
+# https://github.com/Thiht/markdown-viewer/blob/master/LICENSE (license: BSD)
 # https://github.com/Thiht/markdown-viewer
-# https://github.com/Thiht/markdown-viewer/blob/master/LICENSE (BSD)
 override MDVIEWER_SRC			:= https://github.com/Thiht/markdown-viewer.git
 override MDVIEWER_DST			:= $(COMPOSER_DIR)/markdown-viewer
 override MDVIEWER_CSS			:= $(MDVIEWER_DST)/chrome/skin/markdown-viewer.css
 override MDVIEWER_CMT			:= 86c90e73522678111f92840c4d88645b314f517e
 
+# https://github.com/hakimel/reveal.js/blob/master/LICENSE (license: BSD)
 # https://github.com/hakimel/reveal.js
-# https://github.com/hakimel/reveal.js/blob/master/LICENSE (BSD)
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DST			:= $(COMPOSER_DIR)/revealjs
 #>override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/default.css
 override REVEALJS_CSS			:= $(COMPOSER_DIR)/revealjs.css
 override REVEALJS_CMT			:= 2.6.2
 
+# http://www.w3.org/Consortium/Legal/copyright-software (license: MIT)
 # http://www.w3.org/Talks/Tools/Slidy2/Overview.html#%286%29
-# http://www.w3.org/Consortium/Legal/copyright-software (MIT)
 override W3CSLIDY_SRC			:= http://www.w3.org/Talks/Tools/Slidy2/slidy.zip
 override W3CSLIDY_DST			:= $(COMPOSER_DIR)/slidy/Slidy2
 override W3CSLIDY_CSS			:= $(W3CSLIDY_DST)/styles/slidy.css
@@ -321,6 +321,7 @@ else ifeq ($(BUILD_ARCH),i386)
 override MSYS_BIN_ARCH			:= i686
 endif
 
+# http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
 # http://sourceforge.net/projects/msys2
 # http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
 # https://www.archlinux.org/groups
@@ -328,6 +329,7 @@ override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 
+# https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
@@ -365,6 +367,7 @@ override HASKELL_DST			:= $(COMPOSER_BUILD)/haskell
 override HASKELL_CMT			:= 2013.2.0.0
 override HASKELL_TAR			:= $(HASKELL_DST)/src/generic/haskell-platform-$(HASKELL_CMT)
 
+# https://github.com/jgm/pandoc/blob/master/COPYING (license: GPL)
 # http://johnmacfarlane.net/pandoc/code.html
 # http://johnmacfarlane.net/pandoc/installing.html
 # https://github.com/jgm/pandoc/blob/master/INSTALL
@@ -385,6 +388,7 @@ override PANDOC_HIGH_CMT		:= 0.5.8.5
 override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CMT			:= 1.12.4.2
 
+# https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
 # https://www.tug.org/texlive
 # https://www.tug.org/texlive/build.html
 # ftp://tug.org/historic/systems/texlive
@@ -397,6 +401,7 @@ override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/tex
 override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
 override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
 
+# https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
 override MAKE_VERSION			:= 3.82
@@ -406,6 +411,7 @@ override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
 override MAKE_CMT			:= $(MAKE_VERSION)
 
+# https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
 # https://msysgit.github.io
 override GIT_VERSION			:= 1.8.5.5
@@ -663,8 +669,12 @@ override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
 endif
 
 override TEXMFDIST			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist)
+override TEXMFVAR			:= $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-var)
 ifeq ($(wildcard $(TEXMFDIST)),)
 override TEXMFDIST			:= $(COMPOSER_ABODE)/texlive/texmf-dist
+endif
+ifeq ($(wildcard $(TEXMFVAR)),)
+override TEXMFVAR			:= $(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var
 endif
 
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
@@ -677,7 +687,8 @@ override BUILD_ENV_BASE			:= \
 	\
 	USER="$(USER)" \
 	HOME="$(COMPOSER_ABODE)" \
-	TEXMFDIST="$(TEXMFDIST)"
+	TEXMFDIST="$(TEXMFDIST)" \
+	TEXMFVAR="$(TEXMFVAR)"
 ifneq ($(BUILD_MSYS),)
 # adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
 override BUILD_ENV_BASE			:= $(BUILD_ENV_BASE) \
@@ -1313,16 +1324,55 @@ $(BUILDIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/bin"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/bin/"
-#WORK
-	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex" "$(COMPOSER_PROGS)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(foreach FILE,\
+		fonts/enc/dvips/lm \
+		fonts/map/pdftex/updmap \
+		fonts/tfm/jknappen/ec \
+		fonts/tfm/public/amsfonts/symbols \
+		fonts/tfm/public/lm \
+		fonts/type1/public/lm \
+		tex/generic/ifxetex \
+		tex/generic/oberdiek \
+		tex/latex/amsfonts \
+		tex/latex/amsmath \
+		tex/latex/base \
+		tex/latex/graphics \
+		tex/latex/hyperref \
+		tex/latex/latexconfig \
+		tex/latex/listings \
+		tex/latex/lm \
+		tex/latex/oberdiek \
+		tex/latex/pdftex-def \
+		tex/latex/url \
+		,\
+		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
+		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
+	)
+	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
+	$(CP) "$(COMPOSER_ABODE)/.texlive$(TEX_YEAR)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
+	$(MKDIR)										"$(COMPOSER_PROGS)/texmf-dist/web2c"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/web2c/texmf.cnf"				"$(COMPOSER_PROGS)/texmf-dist/web2c/"
+	$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/ls-R"					"$(COMPOSER_PROGS)/texmf-dist/"
+	$(CP) "$(COMPOSER_ABODE)/texlive/bin/pdftex"						"$(COMPOSER_PROGS)/bin/pdflatex"
 ifneq ($(BUILD_MSYS),)
 	$(CP) "$(MSYS_BIN_DST)/usr/bin/"{,un}zip.exe "$(COMPOSER_PROGS)/bin/"
 	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/bin/"*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/bin/"
 	done
 endif
+
+#WORK : location for this?
+.PHONY: setup
+setup:
+ifeq ($(BUILD_MSYS),)
+	PANDOC_DATA="$(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data"
+else
+	PANDOC_DATA="$(COMPOSER_ABODE)/WORK"
+endif
+	$(MKDIR) "$${PANDOC_DATA}"
+	$(CP) "$(COMPOSER_PROGS)/pandoc/data/reference.docx" "$${PANDOC_DATA}/"
 
 .PHONY: $(CHECKIT)
 $(CHECKIT):
@@ -1556,20 +1606,23 @@ $(STRAPIT)-msys:
 	@$(HELPLVL1)
 	@read ENTER
 	$(BUILD_ENV) $(PACMAN) --refresh
-#WORK
-#	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
-#	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
-#	$(BUILD_ENV) $(PACMAN) \
-#		--needed \
-#		--sysupgrade
-#	$(BUILD_ENV) $(PACMAN) \
-#		--needed \
-#		--sysupgrade \
-#		$(PACMAN_PACKAGES_LIST)
-#WORK
-	$(BUILD_ENV) pacman -Scc
-	$(BUILD_ENV) pacman -Syy
-	$(BUILD_ENV) pacman -Suu
+	$(BUILD_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
+	cd "$(MSYS_BIN_DST)" && $(BUILD_ENV) $(WINDOWS_CMD) autorebase.bat
+	$(BUILD_ENV) $(PACMAN) \
+		--needed \
+		--sysupgrade
+	$(BUILD_ENV) $(PACMAN) \
+		--needed \
+		--sysupgrade \
+		$(PACMAN_PACKAGES_LIST)
+#WORK http://sourceforge.net/p/msys2/tickets/85/#2e02
+#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --init
+#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --populate msys2
+#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --refresh-keys
+#WORK http://sourceforge.net/p/msys2/tickets/87/#5cc8
+#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm -Scc
+#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm -Syy
+#	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm -Suu
 #WORK
 	$(BUILD_ENV) $(PACMAN) --clean
 
@@ -1961,7 +2014,7 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(LIST) settings
+$(COMPOSER_PANDOC): $(LIST) settings setup
 	$(BUILD_ENV) $(PANDOC)
 	$(TIMESTAMP) "$(CURDIR)/$(COMPOSER_STAMP)"
 
