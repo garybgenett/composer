@@ -3072,7 +3072,6 @@ $(FETCHIT)-tex-prep:
 	$(SED) -i \
 		-e "s|allcm[:]allec||g" \
 		"$(TEX_TAR_DST)/texk/texlive/tl_scripts/Makefile.in"
-endif
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
 		"$(TEX_TAR_DST)/Build"
