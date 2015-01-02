@@ -1886,9 +1886,12 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(foreach FILE,$(WINDOWS_BINARY_LIST),\
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
-	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do \
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"; \
-	done
+	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | \
+		$(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | \
+		sort --unique | \
+		while read FILE; do \
+			$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"; \
+		done
 	$(call DO_TEXTFILE,$(COMPOSER_PROGS)/msys2_shell.bat,TEXTFILE_MSYS_SHELL)
 endif
 
@@ -1955,6 +1958,13 @@ endif
 	@$(HELPOUT1) "- $(_C)GHC"		"$(_D)$(shell $(BUILD_ENV) which ghc)"
 	@$(HELPOUT1) "- $(_C)Cabal"		"$(_D)$(shell $(BUILD_ENV) which cabal)"
 	@$(HELPOUT1) "- $(_C)Library"		"$(_E)(no binary to report)"
+	@$(HELPLINE)
+	@$(BUILD_ENV) which bash less vim make zip unzip curl git pandoc pandoc-citeproc tex pdflatex ghc cabal | \
+		while read FILE; do \
+			ldd $${FILE}; \
+		done | \
+		$(SED) "s|[(][^)]+[)]||g" | \
+		sort --unique
 	@$(HELPLINE)
 
 .PHONY: $(SHELLIT)
