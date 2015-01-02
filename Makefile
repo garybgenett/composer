@@ -3226,18 +3226,18 @@ $(STRAPIT)-ghc-depends:
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
-ifeq ($(BUILD_PLAT),Msys)
-	$(ECHO) "WORKING : move this to 'prep' if it works...\n"
+#ifeq ($(BUILD_PLAT),Msys)
+#	$(ECHO) "WORKING : move this to 'prep' if it works...\n"
 #	$(SED) -i \
 #		-e "s|(cygpath[ ])[-][-]mixed|\1--unix|g" \
 #		-e "s|(cygpath[ ])[-]m|\1--unix|g" \
 #		"$(GHC_DST)/aclocal.m4" \
 #		"$(GHC_DST)/configure"
+#	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+#	$(ECHO) "WORKING\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
+#else
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-	$(ECHO) "WORKING\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
-else
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-endif
+#endif
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
 
