@@ -1530,13 +1530,21 @@ $(REPLICA):
 
 .PHONY: $(UPGRADE)
 $(UPGRADE):
+	@$(HELPLVL1)
+	@$(HELPOUT2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) :: $(_N)$(COMPOSER)"
+	@$(HELPOUT2) "$(_C)CURDIR$(_D)"	"[$(_M)$(CURDIR)$(_D)]"
+	@$(HELPLVL1)
 	$(call GIT_REPO,$(MDVIEWER_DST),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+	echo -en "$(_C)"
 	cd "$(MDVIEWER_DST)" &&
 		chmod 755 ./build.sh &&
 		$(BUILD_ENV) ./build.sh
+	echo -en "$(_D)"
 	$(call GIT_REPO,$(REVEALJS_DST),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	$(call CURL_FILE,$(W3CSLIDY_SRC))
+	echo -en "$(_E)"
 	$(call UNZIP,$(W3CSLIDY_DST),$(W3CSLIDY_SRC))
+	echo -en "$(_D)"
 
 ########################################
 
