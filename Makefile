@@ -87,17 +87,17 @@ override TYPE				?= html
 override BASE				?= README
 override LIST				?= $(BASE).$(COMPOSER_EXT)
 
+# have to keep these around for a bit, after changing the names of them.
+override CSS				?= $(DCSS)
+override TTL				?= $(NAME)
+override OPT				?= $(OPTS)
+
 override CSS_FILE			:= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override CSS				?=
 override TTL				?=
 override TOC				?=
 override LVL				?= 2
 override OPT				?=
-
-# have to keep these around for a bit, after changing the names of them.
-override CSS				?= $(DCSS)
-override TTL				?= $(NAME)
-override OPT				?= $(OPTS)
 
 ################################################################################
 
@@ -1224,6 +1224,8 @@ $(UPGRADE):
 
 ifneq ($(BUILD_MSYS),)
 ifneq ($(wildcard $(MSYS_SHELL)),)
+#WORK : why is "UPGRADE" required here for windoze?
+$(UPGRADE):	override SHELL := $(MSYS_SHELL)
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
