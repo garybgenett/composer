@@ -2598,7 +2598,7 @@ $(STRAPIT)-curl-pull:
 $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
-#WORKING : archive certdata.txt in $COMPOSER_STORE
+#WORK : archive certdata.txt in $COMPOSER_STORE
 
 .PHONY: $(STRAPIT)-curl-prep
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
