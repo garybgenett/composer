@@ -2605,7 +2605,7 @@ $(FETCHIT)-curl-pull:
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(STRAPIT)-curl-prep:
 	$(SED) -i \
-		-e "s|(out[ ][=][ ].)curl|\1$(subst ",\",$(CURL))|g" \
+		-e "s|(out[ ][=][ ].).*curl.*([ ][-]w)|\1$(subst ",\",$(CURL))\2|g" \
 		"$(CURL_TAR_DST)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
@@ -2618,7 +2618,7 @@ $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) autoreconf --force --install
 	$(SED) -i \
-		-e "s|(out[ ][=][ ].)curl|\1$(subst ",\",$(CURL))|g" \
+		-e "s|(out[ ][=][ ].).*curl.*([ ][-]w)|\1$(subst ",\",$(CURL))\2|g" \
 		"$(CURL_DST)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
