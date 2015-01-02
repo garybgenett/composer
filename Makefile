@@ -334,7 +334,8 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= 3.82
+#WORK 4.1 segfault in linux 32-bit
+override MAKE_VERSION			:= 4.0
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
@@ -348,13 +349,12 @@ override GIT_VERSION			:= 1.9.4
 ifeq ($(BUILD_MSYS),)
 override GIT_BIN_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
 override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
-override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 else
 override GIT_VERSION			:= $(GIT_VERSION).msysgit.2
 override GIT_BIN_SRC			:= https://github.com/msysgit/git/archive/v$(GIT_VERSION).tar.gz
 override GIT_SRC			:= https://github.com/msysgit/git.git
-override GIT_BIN_DST			:= $(BUILD_STRAP)/v$(GIT_VERSION)
 endif
+override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
 
@@ -722,7 +722,7 @@ endef
 override define PATCH			=
 	cd "$(1)" && \
 		$(call WGET_FILE,$(2)) && \
-		$(call COMPOSER_FIND,$(PATH_LIST),patch) -p1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
+		$(call COMPOSER_FIND,$(PATH_LIST),patch) --strip=1 <"$(COMPOSER_STORE)/$(lastword $(subst /, ,$(2)))"
 endef
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
@@ -801,7 +801,7 @@ endif
 override HELPLVL1 := printf "\#%.0s" {1..70}; echo
 override HELPLVL2 := printf "\#%.0s" {1..40}; echo
 
-override HELPOUT1 := printf "   %-20s %-30s %s\n"
+override HELPOUT1 := printf "   %-20s %-25s %s\n"
 override HELPOUT2 := printf "\# %-20s %s\n"
 override HELPMARK := "\>\>"
 
@@ -964,6 +964,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(STRAPIT)-git"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-bin"			"Pre-built binary GHC installation"
 	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-lib"			"GHC libraries necessary for compilation"
+	@$(HELPOUT1) "$(STRAPIT)-git:"		"$(STRAPIT)-git-patch"			"Download/apply patches to Git source archive"
 	@$(HELPOUT1) "$(FETCHIT):"		"$(FETCHIT)-cabal"			"Updates Cabal database"
 	@$(HELPOUT1) ""				"$(FETCHIT)-make"			"Download/preparation of GNU Make source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-git"			"Download/preparation of Git source repository"
@@ -975,14 +976,14 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(FETCHIT)-make-prep"			"Preparation of GNU Make source repository"
 	@$(HELPOUT1) "$(FETCHIT)-git:"		"$(FETCHIT)-git-pull"			"Download of Git source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-git-prep"			"Preparation of Git source repository"
-	@$(HELPOUT1) "$(FETCHIT)-git-prep:"	"$(FETCHIT)-git-prep-patch"		"Download/apply patches to Git source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-git-patch"			"Download/apply patches to Git source repository"
 	@$(HELPOUT1) "$(FETCHIT)-tex:"		"$(FETCHIT)-tex-pull"			"Download of TeX Live source archives"
 	@$(HELPOUT1) ""				"$(FETCHIT)-tex-prep"			"Preparation of TeX Live source archives"
 	@$(HELPOUT1) "$(FETCHIT)-ghc:"		"$(FETCHIT)-ghc-pull"			"Download of GHC source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-ghc-prep"			"Preparation of GHC source repository"
 	@$(HELPOUT1) "$(FETCHIT)-haskell:"	"$(FETCHIT)-haskell-pull"		"Download of Haskell Platform source repository"
+	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-packages"		"Download/preparation of Haskell Platform packages"
 	@$(HELPOUT1) ""				"$(FETCHIT)-haskell-prep"		"Preparation of Haskell Platform source repository"
-	@$(HELPOUT1) "$(FETCHIT)-haskell-prep:"	"$(FETCHIT)-haskell-prep-packages"	"Download/preparation of Haskell Platform packages"
 	@$(HELPOUT1) "$(FETCHIT)-pandoc:"	"$(FETCHIT)-pandoc-type"		"Download/preparation of Pandoc-Types source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-math"		"Download/preparation of TeXMath source repository"
 	@$(HELPOUT1) ""				"$(FETCHIT)-pandoc-high"		"Download/preparation of Highlighting-Kate source repository"
@@ -1696,7 +1697,8 @@ $(STRAPIT)-dll:
 	$(CP) "$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(FETCHIT)-make
-$(FETCHIT)-make: $(FETCHIT)-make-pull $(FETCHIT)-make-prep
+$(FETCHIT)-make: $(FETCHIT)-make-pull
+$(FETCHIT)-make: $(FETCHIT)-make-prep
 
 .PHONY: $(FETCHIT)-make-pull
 $(FETCHIT)-make-pull:
@@ -1719,22 +1721,33 @@ $(STRAPIT)-git:
 	$(call UNTAR,$(GIT_BIN_DST),$(GIT_BIN_SRC))
 	cd "$(GIT_BIN_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
+	$(RUNMAKE) $(STRAPIT)-git-patch
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE))
 
+.PHONY: $(STRAPIT)-git-patch
+$(STRAPIT)-git-patch:
+ifneq ($(BUILD_MSYS),)
+	$(foreach FILE,$(GIT_MSYS_PATCH_LIST),\
+		$(call PATCH,$(GIT_BIN_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
+	)
+endif
+
 .PHONY: $(FETCHIT)-git
-$(FETCHIT)-git: $(FETCHIT)-git-pull $(FETCHIT)-git-prep
+$(FETCHIT)-git: $(FETCHIT)-git-pull
+$(FETCHIT)-git: $(FETCHIT)-git-prep
+$(FETCHIT)-git: $(FETCHIT)-git-patch
 
 .PHONY: $(FETCHIT)-git-pull
 $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
 
 .PHONY: $(FETCHIT)-git-prep
-$(FETCHIT)-git-prep: $(FETCHIT)-git-prep-patch
+$(FETCHIT)-git-prep:
 	cd "$(GIT_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
 
-.PHONY: $(FETCHIT)-git-prep-patch
-$(FETCHIT)-git-prep-patch:
+.PHONY: $(FETCHIT)-git-patch
+$(FETCHIT)-git-patch:
 ifneq ($(BUILD_MSYS),)
 	$(foreach FILE,$(GIT_MSYS_PATCH_LIST),\
 		$(call PATCH,$(GIT_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
@@ -1746,7 +1759,8 @@ $(BUILDIT)-git:
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(FETCHIT)-tex
-$(FETCHIT)-tex: $(FETCHIT)-tex-pull $(FETCHIT)-tex-prep
+$(FETCHIT)-tex: $(FETCHIT)-tex-pull
+$(FETCHIT)-tex: $(FETCHIT)-tex-prep
 
 .PHONY: $(FETCHIT)-tex-pull
 $(FETCHIT)-tex-pull:
@@ -1823,7 +1837,8 @@ $(STRAPIT)-ghc-lib:
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
 
 .PHONY: $(FETCHIT)-ghc
-$(FETCHIT)-ghc: $(FETCHIT)-ghc-pull $(FETCHIT)-ghc-prep
+$(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
+$(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 
 .PHONY: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc-pull:
@@ -1885,11 +1900,32 @@ $(BUILDIT)-ghc:
 		Cabal-$(CABAL_VERSION_LIB)
 
 .PHONY: $(FETCHIT)-haskell
-$(FETCHIT)-haskell: $(FETCHIT)-haskell-pull $(FETCHIT)-haskell-prep
+$(FETCHIT)-haskell: $(FETCHIT)-haskell-pull
+$(FETCHIT)-haskell: $(FETCHIT)-haskell-packages
+$(FETCHIT)-haskell: $(FETCHIT)-haskell-prep
 
 .PHONY: $(FETCHIT)-haskell-pull
 $(FETCHIT)-haskell-pull:
 	$(call GIT_REPO,$(HASKELL_DST),$(HASKELL_SRC),$(HASKELL_CMT))
+
+.PHONY: $(FETCHIT)-haskell-packages
+$(FETCHIT)-haskell-packages:
+	$(SED) -i \
+		-e "s|(GHC_VER[=])[.0-9]+$$|\1$(GHC_VERSION)|g" \
+		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
+	$(SED) -i \
+		$(foreach FILE,$(HASKELL_UPGRADE_LIST),\
+			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE)))[ ]+[=][=])([^,]+)|\1$(word 2,$(subst |, ,$(FILE)))|g" \
+		) \
+		"$(HASKELL_DST)/haskell-platform.cabal"
+	$(SED) -i \
+		-e "s|^(for[ ]pkg[ ]in[ ].[{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
+		"$(HASKELL_DST)/src/generic/prepare.sh"
+	cd "$(HASKELL_DST)/src/generic" &&
+		$(BUILD_ENV) ./prepare.sh
+	$(foreach FILE,$(HASKELL_PATCH_LIST),\
+		$(call PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
+	)
 
 .PHONY: $(FETCHIT)-haskell-prep
 # thanks for the 'GHC_PACKAGE_PATH' fix below: https://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
@@ -1898,7 +1934,7 @@ $(FETCHIT)-haskell-pull:
 # thanks for the 'wspiapi.h' fix below: https://github.com/nurupo/InsertProjectNameHere/commit/23f13cd95d5d9afaadd859a4d256986817e613b9
 #	found by: https://github.com/irungentoo/toxcore/issues/92
 #	then by: https://github.com/irungentoo/toxcore/pull/94
-$(FETCHIT)-haskell-prep: $(FETCHIT)-haskell-prep-packages
+$(FETCHIT)-haskell-prep:
 	$(SED) -i \
 		-e "s|^([ ]+GHC_PACKAGE_PATH[=].+)|#\1|g" \
 		"$(HASKELL_TAR)/scripts/build.sh"
@@ -1925,25 +1961,6 @@ ifneq ($(BUILD_MSYS),)
 		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
 		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
 endif
-
-.PHONY: $(FETCHIT)-haskell-prep-packages
-$(FETCHIT)-haskell-prep-packages:
-	$(SED) -i \
-		-e "s|(GHC_VER[=])[.0-9]+$$|\1$(GHC_VERSION)|g" \
-		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
-	$(SED) -i \
-		$(foreach FILE,$(HASKELL_UPGRADE_LIST),\
-			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE)))[ ]+[=][=])([^,]+)|\1$(word 2,$(subst |, ,$(FILE)))|g" \
-		) \
-		"$(HASKELL_DST)/haskell-platform.cabal"
-	$(SED) -i \
-		-e "s|^(for[ ]pkg[ ]in[ ].[{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
-		"$(HASKELL_DST)/src/generic/prepare.sh"
-	cd "$(HASKELL_DST)/src/generic" &&
-		$(BUILD_ENV) ./prepare.sh
-	$(foreach FILE,$(HASKELL_PATCH_LIST),\
-		$(call PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
-	)
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
