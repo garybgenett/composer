@@ -2822,6 +2822,10 @@ endif
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
+	$(SED) -i \
+		-e "s|[^#][$$][{]CURL[}]([ ][-]L)|$(subst ",\",$(CURL))\1|g" \
+		         -e "s|^.*curl.*([ ][-]L)|$(subst ",\",$(CURL))\1|g" \
+		"$(CBL_TAR_DST)/bootstrap.sh"
 
 override define TEXTFILE_CABAL_BOOTSTRAP =
 #!/usr/bin/env bash
