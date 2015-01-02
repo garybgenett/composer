@@ -554,7 +554,9 @@ override PANDOC_HIGH_CMT		:= 0.5.8.5
 #override PANDOC_CITE_CMT		:= 0.3.1
 override PANDOC_CITE_CMT		:= 0.5
 #override PANDOC_CMT			:= 1.12.4.2
-override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3 #>704cfc1e3c2b6bc97cc315c92671dc47e9c76977 1.13.1
+override PANDOC_CMT			:= 704cfc1e3c2b6bc97cc3 #>704cfc1e3c2b6bc97cc315c92671dc47e9c76977 1.13.2
+#override PANDOC_VERSION			:= $(PANDOC_CMT)
+override PANDOC_VERSION			:= 1.13.2
 
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/texlive/bin
@@ -884,9 +886,9 @@ ifneq ($(PANDOC_DATA),)
 override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
 #TODO : some better way to do this?
 ifeq ($(BUILD_MSYS),)
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/data
 else
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/data
 endif
 endif
 
@@ -1697,9 +1699,9 @@ $(BUILDIT)-bindir:
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 ifeq ($(BUILD_MSYS),)
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 else
-	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
 	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
 		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
