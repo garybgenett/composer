@@ -919,7 +919,6 @@ override BUILD_ENV			:= \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
-	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" \
 	\
 	USER="$(USER)" \
 	HOME="$(COMPOSER_ABODE)" \
@@ -2250,7 +2249,9 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(LIB_ZLIB_TAR_SRC))
 	$(call UNTAR,$(LIB_ZLIB_TAR_DST),$(LIB_ZLIB_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+		--static \
+	)
 
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
@@ -2261,7 +2262,8 @@ $(STRAPIT)-libs-gmp:
 		,\
 		--host="$(CHOST)" \
 		--disable-assembly \
-		--enable-shared \
+		--disable-shared \
+		--enable-static \
 	)
 
 override define LIBICONV_BUILD =
@@ -2272,7 +2274,10 @@ override define LIBICONV_BUILD =
 	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
 	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
 	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
-	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 endef
 
 .PHONY: $(STRAPIT)-libs-libiconv1
@@ -2283,7 +2288,10 @@ $(STRAPIT)-libs-libiconv1:
 $(STRAPIT)-libs-gettext:
 	$(call CURL_FILE,$(LIB_GTXT_TAR_SRC))
 	$(call UNTAR,$(LIB_GTXT_TAR_DST),$(LIB_GTXT_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs-libiconv2:
@@ -2296,14 +2304,18 @@ $(STRAPIT)-libs-ncurses:
 	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
 	$(call GNU_CFG_INSTALL,$(LIB_NCRS_TAR_DST))
 	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
-		--with-shared \
+		--disable-shared \
+		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-libs-readline
 $(STRAPIT)-libs-readline:
 	$(call CURL_FILE,$(LIB_RDLN_TAR_SRC))
 	$(call UNTAR,$(LIB_RDLN_TAR_DST),$(LIB_RDLN_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-libs-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
@@ -2330,21 +2342,25 @@ ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
-		shared \
+		no-shared \
+		no-dso \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
-		shared \
+		no-shared \
+		no-dso \
 	)
 endif
 else ifeq ($(BUILD_PLAT),Msys)
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
-		shared \
+		no-shared \
+		no-dso \
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_OSSL_TAR_DST),$(COMPOSER_ABODE),,\
-		shared \
+		no-shared \
+		no-dso \
 	)
 endif
 
@@ -2354,13 +2370,19 @@ $(STRAPIT)-libs-expat:
 	$(call UNTAR,$(LIB_EXPT_TAR_DST),$(LIB_EXPT_TAR_SRC))
 	# call "GNU_CFG_INSTALL" required by "$(BUILD_PLAT),Msys"
 	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
-	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs-freetype:
 	$(call CURL_FILE,$(LIB_FTYP_TAR_SRC))
 	$(call UNTAR,$(LIB_FTYP_TAR_DST),$(LIB_FTYP_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LIB_FTYP_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-libs-fontconfig
 # thanks for the 'freetype' fix below: https://www.ffmpeg.org/pipermail/ffmpeg-user/2012-September/009469.html
@@ -2391,6 +2413,9 @@ $(STRAPIT)-libs-fontconfig:
 		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
 		FREETYPE_LIBS="-lfreetype" \
+		,\
+		--disable-shared \
+		--enable-static \
 	)
 
 .PHONY: $(FETCHIT)-bash
@@ -2407,17 +2432,8 @@ $(FETCHIT)-bash-pull:
 $(FETCHIT)-bash-prep:
 
 .PHONY: $(BUILDIT)-bash
-# thanks for the 'malloc' fix below: https://www.marshut.net/kqrrik/bash-fix-linking-for-static-builds-with-uclibc-toolchains.html
-# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 $(BUILDIT)-bash:
-	echo WORK
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
-#		bash_cv_func_sigsetjmp="missing" \
-#	)
-#else
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE))
-#endif
 
 .PHONY: $(FETCHIT)-less
 $(FETCHIT)-less: $(FETCHIT)-less-pull
@@ -2529,12 +2545,16 @@ $(FETCHIT)-curl-prep:
 $(STRAPIT)-curl-build:
 	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
 		--without-libidn \
+		--disable-shared \
+		--enable-static \
 	)
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--without-libidn \
+		--disable-shared \
+		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-git
@@ -2558,38 +2578,32 @@ $(FETCHIT)-git-pull:
 .PHONY: $(STRAPIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
+# thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
 $(STRAPIT)-git-prep:
 	cd "$(GIT_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) configure
-#WORK
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(SED) -i \
-#		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
-#		"$(GIT_TAR_DST)/configure"
-#	$(SED) -i \
-#		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
-#		"$(GIT_TAR_DST)/Makefile"
-#endif
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lrt -lz -lssl -lcrypto\2|g" \
+		"$(GIT_TAR_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lrt -lz -lssl -lcrypto|g" \
+		"$(GIT_TAR_DST)/Makefile"
 
 .PHONY: $(FETCHIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
+# thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
 $(FETCHIT)-git-prep:
 	cd "$(GIT_DST)" && \
 		$(BUILD_ENV) $(MAKE) configure
-#WORK
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(SED) -i \
-#		-e "s|([-]lcurl)(.[^-])|\1 -lz -lssl -lcrypto\2|g" \
-#		"$(GIT_DST)/configure"
-#	$(SED) -i \
-#		-e "s|([-]lcurl)$$|\1 -lz -lssl -lcrypto|g" \
-#		"$(GIT_DST)/Makefile"
-#endif
+	$(SED) -i \
+		-e "s|([-]lcurl)(.[^-])|\1 -lrt -lz -lssl -lcrypto\2|g" \
+		"$(GIT_TAR_DST)/configure"
+	$(SED) -i \
+		-e "s|([-]lcurl)$$|\1 -lrt -lz -lssl -lcrypto|g" \
+		"$(GIT_TAR_DST)/Makefile"
 
 .PHONY: $(STRAPIT)-git-build
-#WORK		NEEDS_LIBINTL_BEFORE_LIBICONV="1" \
-#
 $(STRAPIT)-git-build:
 	$(call AUTOTOOLS_BUILD,$(GIT_TAR_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
@@ -2786,7 +2800,7 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
 else
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,\
-		show
+		show \
 	)
 endif
 	cd "$(CBL_TAR_DST)" && \
