@@ -3082,6 +3082,10 @@ $(FETCHIT)-tex-prep:
 	$(CP) \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
+	# "$(BUILD_PLAT),Msys" does not support symlinks
+	$(SED) -i \
+		-e "s|(as[_]ln[_]s[=].)ln[ ][-]s(.)|\1cp -pR\2|g" \
+		"$(TEX_TAR_DST)/configure"
 #WORKING
 #ifeq ($(BUILD_PLAT),Msys)
 #WORK this was needed for mingw?
@@ -3271,6 +3275,9 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(ECHO) "WORKING\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
 else
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+#WORKING
+	$(LS) "$(COMPOSER_ABODE)/bin/ghc"*
+	exit 1
 endif
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
