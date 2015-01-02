@@ -657,9 +657,6 @@ override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 ifneq ($(COMPOSER_PROGS_USE),1)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 endif
-ifeq ($(COMPOSER_PROGS_USE),0)
-override BUILD_PATH			:= $(PATH)
-endif
 
 override PACMAN_BASE_LIST		:= \
 	msys2-runtime \
@@ -848,6 +845,9 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
+ifeq ($(COMPOSER_PROGS_USE),0)
+override PATH_LIST			:= $(subst :, ,$(PATH))
+endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
