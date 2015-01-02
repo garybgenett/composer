@@ -732,6 +732,7 @@ override PERL_MODULES_LIST		:= \
 	Encode-Locale-1.03|https://cpan.metacpan.org/authors/id/G/GA/GAAS/Encode-Locale-1.03.tar.gz \
 	HTTP-Date-6.02|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Date-6.02.tar.gz \
 	HTTP-Message-6.06|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Message-6.06.tar.gz \
+	Net-HTTP-6.07|https://cpan.metacpan.org/authors/id/M/MS/MSCHILLI/Net-HTTP-6.07.tar.gz \
 	URI-1.65|https://cpan.metacpan.org/authors/id/E/ET/ETHER/URI-1.65.tar.gz \
 	libwww-perl-6.08|https://cpan.metacpan.org/authors/id/M/MS/MSCHILLI/libwww-perl-6.08.tar.gz
 
@@ -1304,12 +1305,12 @@ HELP_OPTIONS:
 	@$(TABLE_I3) "$(_C)OPT$(_D)"	"Custom Pandoc options"		"[$(_M)$(OPT)$(_D)]"
 	@echo
 	@$(ESCAPE) "$(_H)Pre-Defined '$(_C)TYPE$(_H)' Values:"
-	@$(TABLE_I3) "$(_C)$(TYPE_HTML)$(_D)"	"*.$(_E)$(TYPE_HTML)$(_D)"	"$(HTML_DESC)"
-	@$(TABLE_I3) "$(_C)$(TYPE_LPDF)$(_D)"	"*.$(_E)$(TYPE_LPDF)$(_D)"	"$(LPDF_DESC)"
-	@$(TABLE_I3) "$(_C)$(TYPE_PRES)$(_D)"	"*.$(_E)$(PRES_EXTN)$(_D)"	"$(PRES_DESC)"
-	@$(TABLE_I3) "$(_C)$(TYPE_SHOW)$(_D)"	"*.$(_E)$(SHOW_EXTN)$(_D)"	"$(SHOW_DESC)"
-	@$(TABLE_I3) "$(_C)$(TYPE_DOCX)$(_D)"	"*.$(_E)$(TYPE_DOCX)$(_D)"	"$(DOCX_DESC)"
-	@$(TABLE_I3) "$(_C)$(TYPE_EPUB)$(_D)"	"*.$(_E)$(TYPE_EPUB)$(_D)"	"$(EPUB_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_HTML)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_HTML)$(_D)"	"$(HTML_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_LPDF)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_LPDF)$(_D)"	"$(LPDF_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_PRES)$(_D)"	"$(_N)*$(_D).$(_E)$(PRES_EXTN)$(_D)"	"$(PRES_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_SHOW)$(_D)"	"$(_N)*$(_D).$(_E)$(SHOW_EXTN)$(_D)"	"$(SHOW_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_DOCX)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_DOCX)$(_D)"	"$(DOCX_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_EPUB)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_EPUB)$(_D)"	"$(EPUB_DESC)"
 	@$(TABLE_I3) "$(_M)Any other types specified will be passed directly through to Pandoc."
 	@echo
 
@@ -2971,9 +2972,11 @@ $(FETCHIT)-curl-pull:
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 override define CURL_PREP =
+	# don't unlink the "certdata.txt" file after downloading and processing it
 	$(SED) -i \
-		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
-		"$(1)/lib/mk-ca-bundle.pl"
+		-e "s|([ ][-]b[ ][-]l)[ ][-]u|\1|g" \
+		"$(1)/Makefile.in" \
+		"$(1)/Makefile"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(1)/configure"
@@ -2990,12 +2993,12 @@ $(FETCHIT)-curl-prep:
 		$(BUILD_ENV) $(SH) ./configure
 	$(call CURL_PREP,$(CURL_DST))
 
-#WORKING : archive certdata.txt in $COMPOSER_STORE
-
 override define CURL_BUILD =
 	cd "$(1)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
+		$(MKDIR) "$(COMPOSER_STORE)" && \
 		$(MKDIR) "$(COMPOSER_ABODE)" && \
+		$(CP) "$(1)/certdata.txt" "$(COMPOSER_STORE)/" && \
 		$(CP) "$(1)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
 	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
@@ -3097,15 +3100,19 @@ $(FETCHIT)-tex-prep:
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
 		"$(TEX_TAR_DST)/Build"
+#WORKING
 	# make sure we link in all the right libraries
-	$(SED) -i \
-		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
-		"$(TEX_TAR_DST)/texk/web2c/configure"
+#	$(SED) -i \
+#		-e "s|[-]lfontconfig(.)$$|-lfontconfig -lfreetype -lexpat -liconv -lz\1|g" \
+#		"$(TEX_TAR_DST)/m4/kpse-fontconfig-flags.m4" \
+#		"$(TEX_TAR_DST)/texk/web2c/configure"
 
 .PHONY: $(BUILDIT)-tex
 $(BUILDIT)-tex:
+#WORKING
 	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
+		FONTCONFIG_LIBS="-lfontconfig -lfreetype -lexpat -liconv -lz" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
@@ -3114,6 +3121,7 @@ $(BUILDIT)-tex:
 		--enable-static
 #>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),\
 #>		CFLAGS="-L$(TEX_TAR_DST)/Work/libs/freetype2 $(CFLAGS)" \
+#>		FONTCONFIG_LIBS="-lfontconfig -lfreetype -lexpat -liconv -lz" \
 #>		,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
