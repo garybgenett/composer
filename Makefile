@@ -682,8 +682,7 @@ override PACMAN_PACKAGES_LIST		:= \
 #TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override MSYS_BINARY_LIST		:= \
-	cygwin-console-helper \
-	mintty
+	mintty cygwin-console-helper
 
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override BUILD_BINARY_LIST		:= \
@@ -865,8 +864,8 @@ override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
 override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
 
-override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
+override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
@@ -2075,8 +2074,7 @@ $(CHECKIT):
 	@$(HELPLINE)
 ifeq ($(BUILD_PLAT),Msys)
 	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
-	@$(HELPOUT1) "- $(_E)Cygwin-Console-Helper"	"$(_E)$(MARKER)"		"$(_N)$(shell $(CYGWIN_CONSOLE_HELPER) --version	2>/dev/null | $(HEAD) -n1)"
-	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_E)$(MARKER)"		"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_D)$(MARKER)"		"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(HELPOUT1) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
@@ -2108,6 +2106,10 @@ endif
 	@$(HELPOUT1) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HELPOUT1) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HELPLINE)
+ifeq ($(BUILD_PLAT),Msys)
+	@$(HELPOUT1) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst \",,$(word 1,$(PACMAN)))"
+	@$(HELPOUT1) "- $(_E)MinTTY"			"$(_N)$(subst \",,$(word 1,$(MINTTY))) $(_S)($(subst \",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
+endif
 	@$(HELPOUT1) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst \",,$(word 1,$(COREUTILS)))"
 	@$(HELPOUT1) "- $(_E)GNU Find"			"$(_N)$(subst \",,$(word 1,$(FIND)))"
 	@$(HELPOUT1) "- $(_E)GNU Patch"			"$(_N)$(subst \",,$(word 1,$(PATCH)))"
@@ -2138,6 +2140,7 @@ endif
 	@$(HELPOUT1) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HELPLINE)
 	@$(LDD) \
+		$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
 		$(word 1,$(COREUTILS)) \
 		$(word 1,$(FIND)) \
 		$(word 1,$(PATCH)) \
