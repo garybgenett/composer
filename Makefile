@@ -3078,12 +3078,12 @@ $(FETCHIT)-tex-pull:
 
 .PHONY: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-prep:
-#WORKING
-#ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
 	$(CP) \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
+#WORKING
+#ifeq ($(BUILD_PLAT),Msys)
 #WORK this was needed for mingw?
 #	$(SED) -i \
 #		-e "s|([^Y])(INPUT)|\1MY\2|g" \
