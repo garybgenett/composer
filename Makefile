@@ -687,7 +687,8 @@ override MSYS_BINARY_LIST		:= \
 	\
 	msys-2.0.dll \
 	msys-gcc_s-1.dll \
-	msys-ssp-0.dll
+	msys-ssp-0.dll \
+	msys-stdc++-6.dll
 
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override BUILD_BINARY_LIST		:= \
@@ -964,17 +965,30 @@ override define GIT_SUBMODULE		=
 		$(call GIT_RUN,$(1),submodule update --init --force); \
 	fi
 endef
-override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(2),$(COMPOSER_STORE)/$(notdir $(1)).git)
+override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(COMPOSER_STORE)/$(notdir $(1)).git)
+#WORKING
 override define DO_GIT_SUBMODULE_GHC	=
+	$(ECHO) "gitdir: $(2)" >"$(1)/.git"; \
+	$(SED) -i \
+		-e "s|^([.][ ]+[-][ ]+ghc[.]git)|#\1|g" \
+		"$(1)/packages"; \
+	$(SED) -i \
+		-e "s|[-]d([ ][^ ]+[.]git)|-f\1|g" \
+		"$(1)/sync-all"; \
+	cd "$(1)" && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all get && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard; \
 	cd "$(1)" && $(FIND) ./ -mindepth 2 -type d -name ".git" 2>/dev/null | $(SED) -e "s|^[.][/]||g" -e "s|[/][.]git$$||g" | while read FILE; do \
-		$(MKDIR) "$(3)/modules/$${FILE}"; \
-		$(RM) -r "$(3)/modules/$${FILE}"; \
-		$(MV) "$(1)/$${FILE}/.git" "$(3)/modules/$${FILE}"; \
+		$(MKDIR) "$(2)/modules/$${FILE}"; \
+		$(RM) -r "$(2)/modules/$${FILE}"; \
+		$(MV) "$(1)/$${FILE}/.git" "$(2)/modules/$${FILE}"; \
 	done; \
-	cd "$(3)" && $(FIND) ./modules -type f -name "index" 2>/dev/null | $(SED) -e "s|^[.][/]modules[/]||g" -e "s|[/]index$$||g" | while read FILE; do \
+	cd "$(2)" && $(FIND) ./modules -type f -name "index" 2>/dev/null | $(SED) -e "s|^[.][/]modules[/]||g" -e "s|[/]index$$||g" | while read FILE; do \
 		$(MKDIR) "$(1)/$${FILE}"; \
-		$(ECHO) "gitdir: $(3)/modules/$${FILE}" >"$(1)/$${FILE}/.git"; \
-		cd "$(1)/$${FILE}" && $(GIT) --git-dir="$(3)/modules/$${FILE}" config --local --replace-all core.worktree "$(1)/$${FILE}"; \
+		$(ECHO) "gitdir: $(2)/modules/$${FILE}" >"$(1)/$${FILE}/.git"; \
+		cd "$(1)/$${FILE}" && $(GIT) --git-dir="$(2)/modules/$${FILE}" config --local --replace-all core.worktree "$(1)/$${FILE}"; \
 	done
 endef
 
@@ -3133,20 +3147,7 @@ $(STRAPIT)-ghc-pull:
 .PHONY: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc-pull:
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
-	# pre-process "sync-all" repositories, in case source already lives in "$(COMPOSER_STORE)"
-	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
-	$(SED) -i \
-		-e "s|^([.][ ]+[-][ ]+ghc[.]git)|#\1|g" \
-		"$(GHC_DST)/packages"
-	$(SED) -i \
-		-e "s|[-]d([ ][^ ]+[.]git)|-f\1|g" \
-		"$(GHC_DST)/sync-all"
-	cd "$(GHC_DST)" && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all get && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
-	# post-process "sync-all" repositories, to ensure source lives in "$(COMPOSER_STORE)"
+#WORKING
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 
 .PHONY: $(STRAPIT)-ghc-prep
@@ -3181,37 +3182,28 @@ endef
 $(FETCHIT)-ghc-prep:
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
+	# "$(BUILD_PLAT),Msys" fails if we don't have these calls quoted
+	$(SED) -i \
+		-e "s|(call[ ]removeFiles[,])([$$][(]GHCII[_]SCRIPT[)])|\1\"\2\"|g" \
+		$(GHC_DST)/driver/ghci/ghc.mk
+	$(SED) -i \
+		-e "s|(call[ ]removeFiles[,])([$$][(]DESTDIR[)][$$][(]bindir[)][/]ghc.exe)|\1\"\2\"|g" \
+		$(GHC_DST)/ghc/ghc.mk
 #WORKING
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(foreach FILE,\
-#		$(GHC_DST)/driver/ghci/ghc.mk \
-#		$(GHC_DST)/ghc/ghc.mk \
-#		,\
-#		$(SED) -i \
-#			-e "s|(call[ ]removeFiles[,])(..GHCII_SCRIPT.)|\1\"\2\"|g" \
-#			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
-#			"$(FILE)"; \
-#	)
 #	$(SED) -i \
 #		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
 #		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
 #		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
-#endif
 #WORKING
-#>	$(foreach FILE,\
-#>		$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal \
-#>		$(GHC_DST)/libraries/Cabal/Cabal/Makefile \
-#>		\
-#>		$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal \
-#>		$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal \
-#>		$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal \
-#>		,\
-#>		$(SED) -i \
-#>			-e "s|$(GHC_VERSION_LIB)|$(CABAL_VERSION_LIB)|g" \
-#>			\
-#>			-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VERSION_LIB)|g" \
-#>			"$(FILE)"; \
-#>	)
+#>	$(SED) -i \
+#>		-e "s|$(GHC_VERSION_LIB)|$(CABAL_VERSION_LIB)|g" \
+#>		"$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal" \
+#>		"$(GHC_DST)/libraries/Cabal/Cabal/Makefile"
+#>	$(SED) -i \
+#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VERSION_LIB)|g" \
+#>		"$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal" \
+#>		"$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal" \
+#>		"$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal"
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
