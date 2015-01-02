@@ -1,10 +1,14 @@
+#!/usr/bin/make --makefile
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
 
+#TODO READ
+# http://www.conifersystems.com/whitepapers/gnu-make
+#TODO READ
+
 #TODO
-# shell.sh/shell.bat scripts
-# enable https certificates for wget/git
+# enable https certificates for wget/git?
 # static linking using embedded libc for linux
 # fix linux 32-bit make 4.1 segfault
 # double-check "true" instances
@@ -25,6 +29,7 @@
 # test install in fresh cygwin
 #	hack setup.bat
 #	try "build" without networking available
+#	try building 64-bit version
 #BUILD TEST
 
 #OTHER NOTES
@@ -508,6 +513,7 @@ override PACMAN_PACKAGES_LIST		:= \
 #TODO
 # second group is for composer
 # third group is for mintty
+# fourth group is for command line
 override WINDOWS_BINARY_LIST		:= \
 	bash \
 	cat \
@@ -533,11 +539,14 @@ override WINDOWS_BINARY_LIST		:= \
 	wget \
 	zip \
 	\
-	cygpath \
 	cygwin-console-helper \
 	dirname \
-	less \
-	mintty
+	mintty \
+	\
+	cygpath \
+	diff \
+	dircolors \
+	less
 
 override TEXLIVE_DIRECTORY_LIST		:= \
 	fonts/enc/dvips/lm \
@@ -702,9 +711,9 @@ endef
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT))../../git-core))
-override GIT				:= "$(GIT)"
+override GIT				:= "$(GIT)" -c http.sslVerify=false
 ifneq ($(GIT_EXEC),)
-override GIT				:= $(GIT) -c http.sslVerify=false --exec-path="$(GIT_EXEC)"
+override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
@@ -763,7 +772,6 @@ endif
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
 #	found by: https://github.com/faylang/fay/issues/261
 override BUILD_ENV			:= \
-	LC_ALL="$(LANG)" \
 	LANG="$(LANG)" \
 	TERM="$(TERM)" \
 	CHOST="$(CHOST)" \
@@ -1522,7 +1530,10 @@ $(SHELLIT)-bashrc:
 		export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
 		#
 		export PROMPT_DIRTRIM="1"
-		export PS1="\[\e]0;// $(COMPOSER_BASENAME) \w\a\]\n// $(COMPOSER_BASENAME) \D{%FT%T%z}\n[\#/\!] (\u@\h \w)\\$$ "
+		export PS1=
+		export PS1="$${PS1}\[\e]0;// $(COMPOSER_BASENAME) \w\a\]\n"	# hardline escape, new line (for spacing)
+		export PS1="$${PS1}// $(COMPOSER_BASENAME) \D{%FT%T%z}\n"	# title, date (iso format)
+		export PS1="$${PS1}[\#/\!] (\u@\h \w)\\$$ "	# history counters, username@hostname, directory, prompt
 		#
 		export PAGER="less -RX"
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
@@ -1842,13 +1853,10 @@ endif
 #WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
 $(FETCHIT)-tex-prep:
 ifneq ($(BUILD_MSYS),)
-	echo WORK
 	$(SED) -i \
-		-e "s|([( ])INPUT([ )])|\1MYINPUT\2|g" \
-		"$(TEX_BIN_DST)/texk/web2c/otps/"otp-{lexer,parser}*
-	echo WORK
-#	$(CP) "$(TEX_WINDOWS_DST)/texk/web2c/otps/"* "$(TEX_BIN_DST)/texk/web2c/otps/"
-	echo WORK
+		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
+		"$(TEX_BIN_DST)/texk/web2c/otps/otp-"*
+#>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
 endif
 
 .PHONY: $(BUILDIT)-tex
