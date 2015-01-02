@@ -592,7 +592,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override TIMESTAMP			:= $(call COMPOSER_FIND,$(PATH_LIST),date) --rfc-2822 >
 
-override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --no-check-certificate --server-response --timestamping
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --server-response --timestamping
 override WGET_FILE			= $(WGET) --directory-prefix="$(COMPOSER_STORE)" "$(1)"
 
 override define UNZIP			=
@@ -899,6 +899,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"$(BUILDIT)-ghc"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-haskell"			"Build/compile of Haskell Platform from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc"			"Build/compile of stand-alone Pandoc(-CiteProc) from source"
+	@$(HELPOUT1) "$(BUILDIT)-tex:"		"$(BUILDIT)-tex-fmt"			"Build/install TeX Live format files"
 	@$(HELPOUT1) "$(BUILDIT)-pandoc:"	"$(BUILDIT)-pandoc-deps"		"Build/compile of Pandoc dependencies from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-type"		"Build/compile of Pandoc-Types from source"
 	@$(HELPOUT1) ""				"$(BUILDIT)-pandoc-math"		"Build/compile of TeXMath from source"
@@ -1258,9 +1259,9 @@ endif
 ifeq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-check
 else
-$(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
+#WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
 endif
-$(STRAPIT): $(STRAPIT)-git
+#WORK $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
 
 .PHONY: $(FETCHIT)
@@ -1641,6 +1642,10 @@ $(BUILDIT)-tex:
 #>		--without-x \
 #>	)
 	$(CP) "$(TEX_TEXMF_DST)/"* "$(COMPOSER_ABODE)/texlive/"
+	$(RUNMAKE) $(BUILDIT)-tex-fmt
+
+.PHONY: $(BUILDIT)-tex-fmt
+$(BUILDIT)-tex-fmt:
 	$(BUILD_ENV) fmtutil --all
 
 .PHONY: $(STRAPIT)-ghc-bin
