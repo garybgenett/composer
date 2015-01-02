@@ -2572,9 +2572,11 @@ $(FETCHIT)-coreutils-pull:
 .PHONY: $(FETCHIT)-coreutils-prep
 $(FETCHIT)-coreutils-prep:
 
+#WORKING : coreutils - still linking against libgmp.so?
+#WORKING : coreutils - add to $CHECKIT, somehow...?
+
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
-#WORKING
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),\
 		FORCE_UNSAFE_CONFIGURE="1" \
 		,\
@@ -2582,12 +2584,10 @@ $(BUILDIT)-coreutils:
 		--disable-acl \
 		--disable-xattr \
 	)
-#WORKING : still linking against libgmp.so?
-#WORKING : need to hack around shebang business
-#WORKING : add to $CHECKIT, somehow...?
-#>	$(SED) -i \
-#>		-e "s|^[#][!].*(coreutils[ ])|\1|g" \
-#>		"$(COMPOSER_ABODE)/bin/"*
+#WORKING : coreutils - need to hack around shebang business
+#	$(SED) -i \
+#		-e "s|^[#][!].*(coreutils[ ])|\1|g" \
+#		"$(COMPOSER_ABODE)/bin/"*
 
 .PHONY: $(FETCHIT)-bash
 $(FETCHIT)-bash: $(FETCHIT)-bash-pull
