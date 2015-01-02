@@ -2398,12 +2398,17 @@ $(STRAPIT)-libs-freetype:
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(LIB_FCFG_TAR_SRC))
 	$(call UNTAR,$(LIB_FCFG_TAR_DST),$(LIB_FCFG_TAR_SRC))
+	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
 	$(call AUTOTOOLS_BUILD,$(LIB_FCFG_TAR_DST),$(COMPOSER_ABODE),\
 		C_INCLUDE_PATH="$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_CFLAGS="$(CFLAGS)" \
 		FREETYPE_LIBS="-lfreetype" \
 		,\
 		--enable-iconv \
+		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
+		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
+		--with-expat-includes="$(COMPOSER_ABODE)/include" \
+		--with-expat-lib="$(COMPOSER_ABODE)/lib" \
 		--disable-shared \
 		--enable-static \
 	)
