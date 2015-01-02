@@ -474,7 +474,7 @@ override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= 4.1
+override MAKE_CMT			:= 4.0
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -904,15 +904,15 @@ override define DO_TEXTFILE		=
 endef
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
-override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
+override export CURL_CA_BUNDLE		?= $(COMPOSER_ABODE)/ca-bundle.crt
 else ifneq ($(wildcard $(COMPOSER_PROGS)/ca-bundle.crt),)
-override CURL_CA_BUNDLE			?= $(COMPOSER_PROGS)/ca-bundle.crt
+override export CURL_CA_BUNDLE		?= $(COMPOSER_PROGS)/ca-bundle.crt
 else
-override CURL_CA_BUNDLE			?=
+override export CURL_CA_BUNDLE		?=
 endif
 #WORKING
-override CURL				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(CURL)
-override GIT				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(GIT)
+#override CURL				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(CURL)
+#override GIT				:= CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" $(GIT)
 
 override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
 override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
@@ -1757,6 +1757,7 @@ $(INSTALL)-dir:
 		$(RUNMAKE) --silent --directory "$(CURDIR)/$(FILE)" $(INSTALL)-dir; \
 	)
 
+#WORK : move up by GIT_* variables?
 override REPLICA_GIT	:= $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
 override GIT_REPLICA	:= cd "$(CURDIR)" && $(GIT) --git-dir="$(REPLICA_GIT)"
 
@@ -2605,7 +2606,7 @@ $(FETCHIT)-curl-pull:
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(STRAPIT)-curl-prep:
 	$(SED) -i \
-		-e "s|(out[ ][=][ ].).*curl.*([ ][-]w)|\1$(subst ",\",$(CURL))\2|g" \
+		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
 		"$(CURL_TAR_DST)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
@@ -2616,9 +2617,10 @@ $(STRAPIT)-curl-prep:
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
-		$(BUILD_ENV) autoreconf --force --install
+		$(BUILD_ENV) autoreconf --force --install && \
+		$(BUILD_ENV) ./configure
 	$(SED) -i \
-		-e "s|(out[ ][=][ ].).*curl.*([ ][-]w)|\1$(subst ",\",$(CURL))\2|g" \
+		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
 		"$(CURL_DST)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
@@ -2821,10 +2823,6 @@ ifeq ($(BUILD_PLAT),Msys)
 endif
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
-		"$(CBL_TAR_DST)/bootstrap.sh"
-	$(SED) -i \
-		-e "s|[^#][$$][{]CURL[}]([ ][-]L)|$(subst ",\",$(CURL))\1|g" \
-		         -e "s|^.*curl.*([ ][-]L)|$(subst ",\",$(CURL))\1|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
 
 override define TEXTFILE_CABAL_BOOTSTRAP =
