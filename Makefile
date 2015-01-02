@@ -368,13 +368,11 @@ override TEX_VERSION			:= $(TEX_YEAR)0525
 override TEX_PDF_VERSION		:= 1.40.15
 override TEX_TEXMF_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
 override TEX_BIN_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
-ifneq ($(BUILD_MSYS),)
-#>override TEX_WINDOWS_BIN		:= ftp://tug.org/tex-archive/systems/win32/w32tex/w32tex-src.tar.xz
-override TEX_WINDOWS_BIN		:= ftp://tug.org/mirror/rsync.tex.ac.uk/CTAN/systems/win32/w32tex/w32tex-src.tar.xz
-endif
 override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
 override TEX_BIN_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
 ifneq ($(BUILD_MSYS),)
+#>override TEX_WINDOWS_SRC		:= ftp://tug.org/tex-archive                /systems/win32/w32tex/w32tex-src.tar.xz
+override TEX_WINDOWS_SRC		:= ftp://tug.org/mirror/rsync.tex.ac.uk/CTAN/systems/win32/w32tex/w32tex-src.tar.xz
 override TEX_WINDOWS_DST		:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source-w32tex/ktx
 endif
 
@@ -1831,24 +1829,25 @@ $(FETCHIT)-tex: $(FETCHIT)-tex-prep
 $(FETCHIT)-tex-pull:
 	$(call WGET_FILE,$(TEX_TEXMF_SRC))
 	$(call WGET_FILE,$(TEX_BIN_SRC))
-ifneq ($(BUILD_MSYS),)
-	$(call WGET_FILE,$(TEX_WINDOWS_SRC))
-endif
 	$(call UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call UNTAR,$(TEX_BIN_DST),$(TEX_BIN_SRC))
 ifneq ($(BUILD_MSYS),)
+	$(call WGET_FILE,$(TEX_WINDOWS_SRC))
 	$(call UNTAR,$(TEX_WINDOWS_DST),$(TEX_WINDOWS_SRC))
 endif
 
 .PHONY: $(FETCHIT)-tex-prep
+#WORK http://tex.aanhet.net/mingtex
+#WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
 $(FETCHIT)-tex-prep:
 ifneq ($(BUILD_MSYS),)
-	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
+	$(SED) -i \
+		-e "s|([( ])INPUT([ )])|\1MYINPUT\2|g" \
+		"$(TEX_BIN_DST)/texk/web2c/otps/"otp-{lexer,parser}*
+#>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_BIN_DST)/"
 endif
 
 .PHONY: $(BUILDIT)-tex
-#WORK http://tex.aanhet.net/mingtex
-#WORK http://comments.gmane.org/gmane.comp.tex.texlive.build/1976
 $(BUILDIT)-tex:
 	cd "$(TEX_BIN_DST)" &&
 		$(BUILD_ENV_MINGW) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
