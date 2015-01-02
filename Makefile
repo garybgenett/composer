@@ -350,7 +350,8 @@ endif
 ifneq ($(wildcard $(BUILD_MUSL)),)
 override CC				:= $(BUILD_MUSL)
 override CFLAGS				:= $(CFLAGS) -static
-override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
+#WORK override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
+override SRC_HC_OPTS			:= -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
@@ -472,6 +473,12 @@ override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
 override GIT_TAR_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
+
+# http://www.vim.org/about.php (license: custom = GPL)
+# http://www.vim.org
+override VIM_VERSION			:= 7.4
+override VIM_TAR_SRC			:= ftp://ftp.vim.org/pub/vim/unix/vim-$(VIM_VERSION).tar.bz2
+override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim-$(VIM_VERSION)
 
 # https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
 # https://www.tug.org/texlive
@@ -1251,6 +1258,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl$(_D)"			"Download/preparation of cURL source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git$(_D)"			"Download/preparation of Git source repository"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
@@ -1263,6 +1271,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-curl-prep$(_D)"		"Preparation of cURL source repository"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-git$(_D):"	"$(_E)$(FETCHIT)-git-pull$(_D)"			"Download of Git source repository"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-git-prep$(_D)"			"Preparation of Git source repository"
+	@$(HELPOUT1) "$(_E)$(FETCHIT)-vim$(_D):"	"$(_E)$(FETCHIT)-vim-pull$(_D)"			"Download of Vim source archive"
+	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-vim-prep$(_D)"			"Preparation of Vim source archive"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-tex$(_D):"	"$(_E)$(FETCHIT)-tex-pull$(_D)"			"Download of TeX Live source archives"
 	@$(HELPOUT1) ""					"$(_E)$(FETCHIT)-tex-prep$(_D)"			"Preparation of TeX Live source archives"
 	@$(HELPOUT1) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
@@ -1282,6 +1292,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source"
+	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-tex$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
 	@$(HELPOUT1) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
@@ -1648,12 +1659,12 @@ $(STRAPIT): $(STRAPIT)-ghc
 $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-cabal
 $(FETCHIT): $(BUILDIT)-clean
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
+$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-tex
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
+$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git $(BUILDIT)-vim
 #TODO $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
@@ -2439,6 +2450,23 @@ else
 	)
 endif
 
+.PHONY: $(FETCHIT)-vim
+$(FETCHIT)-vim: $(FETCHIT)-vim-pull
+$(FETCHIT)-vim: $(FETCHIT)-vim-prep
+
+.PHONY: $(FETCHIT)-vim-pull
+$(FETCHIT)-vim-pull:
+	$(call CURL_FILE,$(VIM_TAR_SRC))
+
+.PHONY: $(FETCHIT)-vim-prep
+$(FETCHIT)-vim-prep:
+
+#WORK
+
+.PHONY: $(BUILDIT)-vim
+$(BUILDIT)-vim:
+	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE))
+
 .PHONY: $(FETCHIT)-tex
 $(FETCHIT)-tex: $(FETCHIT)-tex-pull
 $(FETCHIT)-tex: $(FETCHIT)-tex-prep
@@ -2470,7 +2498,7 @@ $(FETCHIT)-tex-prep:
 #		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
 #WORK this was needed for mingw?
 #	$(SED) -i \
-#		-e "s|([^Y])INPUT(.?)|\1MYINPUT\2|g" \
+#		-e "s|([^Y])(INPUT)|\1MY\2|g" \
 #		"$(TEX_TAR_DST)/texk/web2c/otps/otp-"*
 #>	$(CP) "$(TEX_WINDOWS_DST)/"* "$(TEX_TAR_DST)/"
 #WORK thanks for the 'header' fix below: https://build.opensuse.org/package/view_file?project=windows%3Amingw%3Awin32&package=mingw32-texlive&file=texlive-20110705-source-header.patch&rev=048df827a351be452769105398cad811
@@ -2553,10 +2581,11 @@ $(FETCHIT)-ghc-pull:
 $(STRAPIT)-ghc-prep:
 ifneq ($(BUILD_MUSL),)
 	echo WORK
-	$(SED) -i \
-		-e "s|execvpe[(].*[)]|execvpe(const char *, char *const [], char *const [])|g" \
-		"$(GHC_TAR_DST)/libraries/unix/cbits/execvpe.c" \
-		"$(GHC_TAR_DST)/libraries/unix/include/execvpe.h"
+#	$(SED) -i \
+#		-e "s|(execvpe[(])|my\1|g" \
+#		"$(GHC_TAR_DST)/libraries/process/cbits/runProcess.c" \
+#		"$(GHC_TAR_DST)/libraries/unix/cbits/execvpe.c" \
+#		"$(GHC_TAR_DST)/libraries/unix/include/execvpe.h"
 	cd "$(GHC_TAR_DST)" &&
 		$(BUILD_ENV_MINGW) ./boot
 else ifneq ($(BUILD_MSYS),)
@@ -2625,8 +2654,6 @@ ifneq ($(BUILD_MUSL),)
 else ifneq ($(BUILD_MSYS),)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
-#WORK
-	$(RM) -r "$(BUILD_STRAP)/mingw"*
 else
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,show)
 endif
@@ -2640,6 +2667,10 @@ endif
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
 	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+#WORK
+ifneq ($(BUILD_MSYS),)
+	$(RM) -r "$(BUILD_STRAP)/mingw"*
+endif
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
 
