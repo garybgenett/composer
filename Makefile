@@ -882,7 +882,7 @@ override define DO_TEXTFILE		=
 	@$(MKDIR) "$(abspath $(dir $(1)))"
 	@echo '$(subst $(call NEWLINE),[N],$(call $(2)))' >"$(1)"
 	@$(SED) -i \
-		-e "s|[[]B[]]|\\\\|g" \
+		-e "s|[[]B[]]|\\\|g" \
 		-e "s|[[]N[]]|\n|g" \
 		-e "s|[[]Q[]]|'|g" \
 		"$(1)"
