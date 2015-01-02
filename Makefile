@@ -2,6 +2,11 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 
+#TODO
+# enable https certificates for wget/git?
+# static linking using embedded libc for linux
+#TODO
+
 #BUILD NOTES
 # perl is a dependency
 # add 'make check' to list; it's where you get current version information
@@ -277,24 +282,21 @@ override BUILD_MSYS			:= 64
 else
 override BUILD_MSYS			:= 32
 endif
-override MSYSTEM_MSYS			:= MSYS$(BUILD_MSYS)
-override MSYSTEM_MINGW			:= MINGW$(BUILD_MSYS)
 endif
 
 override CHOST				:=
-override CHOST_MINGW			:=
 override CFLAGS				:=
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_MSYS),)
 override BUILD_PLAT			:= Linux
 override BUILD_ARCH			:= i686
+override BUILD_MSYS			:=
 override CHOST				:= $(BUILD_ARCH)-pc-linux-gnu
-override CHOST_MINGW			:= $(CHOST)
 else
 override BUILD_PLAT			:= Msys
 override BUILD_ARCH			:= i686
-override CHOST				:= $(BUILD_ARCH)-pc-msys
-override CHOST_MINGW			:= $(BUILD_ARCH)-pc-mingw32
+override BUILD_MSYS			:= 32
+override CHOST				:= $(BUILD_ARCH)-pc-mingw$(BUILD_MSYS)
 endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
@@ -325,14 +327,14 @@ endif
 # http://sourceforge.net/projects/msys2
 # http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
 # https://www.archlinux.org/groups
-override MSYS_VERSION			:= 20141003
+override MSYS_VERSION			:= 20140704
 override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
 override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_MSYS)
 
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= 4.1
+override MAKE_VERSION			:= 3.82
 override MAKE_BIN_SRC			:= https://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_BIN_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
@@ -342,10 +344,17 @@ override MAKE_CMT			:= $(MAKE_VERSION)
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
 # https://msysgit.github.io
-override GIT_VERSION			:= 1.8.5.5
+override GIT_VERSION			:= 1.9.4
+ifeq ($(BUILD_MSYS),)
 override GIT_BIN_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
 override GIT_SRC			:= https://git.kernel.org/pub/scm/git/git.git
 override GIT_BIN_DST			:= $(BUILD_STRAP)/git-$(GIT_VERSION)
+else
+override GIT_VERSION			:= $(GIT_VERSION).msysgit.2
+override GIT_BIN_SRC			:= https://github.com/msysgit/git/archive/v$(GIT_VERSION).tar.gz
+override GIT_SRC			:= https://github.com/msysgit/git.git
+override GIT_BIN_DST			:= $(BUILD_STRAP)/v$(GIT_VERSION)
+endif
 override GIT_DST			:= $(COMPOSER_BUILD)/git
 override GIT_CMT			:= v$(GIT_VERSION)
 
@@ -353,7 +362,7 @@ override GIT_CMT			:= v$(GIT_VERSION)
 # https://www.tug.org/texlive
 # https://www.tug.org/texlive/build.html
 # ftp://tug.org/historic/systems/texlive
-# http://www.slackbuilds.org/repository/14.0/office/texlive
+# http://www.slackbuilds.org/repository/14.0/office/texlive/
 override TEX_YEAR			:= 2014
 override TEX_VERSION			:= $(TEX_YEAR)0525
 override TEX_PDF_VERSION		:= 1.40.15
@@ -427,13 +436,10 @@ override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifneq ($(COMPOSER_PROGS_USE),)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
 endif
-override BUILD_PATH_MINGW		:= $(BUILD_PATH)
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(MSYS_BIN_DST)/usr/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(PATH)
-override BUILD_PATH_MINGW		:= $(BUILD_PATH_MINGW):$(COMPOSER_PROGS)/usr/bin
 
 override BUILD_TOOLS			:=
 ifneq ($(BUILD_MSYS),)
@@ -447,24 +453,25 @@ override WINDOWS_ACL			:= /c/Windows/System32/icacls
 override MSYS_SHELL			:=  $(MSYS_BIN_DST)/usr/bin/sh
 override CYGPATH			:= "$(MSYS_BIN_DST)/usr/bin/cygpath"
 override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
+#WORK
+override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --sync
 override CABAL				:= cabal --verbose
 override CABAL_INSTALL			= $(CABAL) install \
+	$(BUILD_TOOLS) \
 	--prefix="$(1)" \
 	--global \
 	--avoid-reinstalls
-#>	--reinstall \
+#>	--reinstall
 #>	--force-reinstalls
-override CABAL_INSTALL_MINGW		= $(call CABAL_INSTALL,$(1)) \
-	$(BUILD_TOOLS)
 
 # second group is for composer
-# third group is for make build
-# fourth group is for git build
+# third group is for git build
+# fourth group is for texlive build
+#>	base-devel
+#>	msys2-devel
 override PACMAN_PACKAGES_LIST		:= \
-	base-devel \
 	mingw-w64-i686-toolchain \
 	mingw-w64-x86_64-toolchain \
-	msys2-devel \
 	\
 	git \
 	unzip \
@@ -472,18 +479,13 @@ override PACMAN_PACKAGES_LIST		:= \
 	wget \
 	zip \
 	\
-	gettext-devel \
-	texinfo \
-	\
-	libcurl-devel \
-	libiconv-devel \
-	zlib-devel \
+	mingw-w64-i686-fontconfig \
+	mingw-w64-x86_64-fontconfig
 
-#WORK : did fontconfig fix it?
-# fifth group is for texlive build
+#WORK : git
+#	mingw-w64-i686-curl \
+#	mingw-w64-x86_64-curl \
 #	\
-#	mingw-w64-i686-fontconfig \
-#	mingw-w64-x86_64-fontconfig
 
 #WORK
 # second group is for mintty
@@ -514,6 +516,26 @@ override WINDOWS_BINARY_LIST		:= \
 	ls \
 	mintty \
 	vim
+
+# thanks for the patches below: https://github.com/Alexpux/MINGW-packages/tree/master/mingw-w64-git
+override GIT_MSYS_PATCH_LIST		:= \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0000-Add-SEARCH_LIBS-to-GIT_CHECK_FUNC.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0001-Don-t-redefine-_ReadWriteBarrier-in-malloc.c.h.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0002-Undefine-FORCEINLINE-on-MinGW-w64-in-malloc.c.h.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0003-Fix-BASIC_LDFLAGS-and-COMPAT_CFLAGS-for-64bit-MinGW-.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0004-Also-look-in-winsock2.h-for-sockaddr_storage-and-loo.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0005-Don-t-redefine-some-things-MinGW-w64-provides.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0006-Include-ntdef.h-on-MinGW-w64-for-REPARSE_DATA_BUFFER.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0007-Include-winsock2.h-and-not-netdb.h-on-MinGW-w64.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0008-fix-mingw64-compat-wide-char.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0009-Change-inline-definition-of-fork-for-mingw64.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0010-Use-GIT_CHECK_FUNC-for-socket-and-basename.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0011-Use-GIT_CHECK_FUNC-for-regcomp-regex.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0012-Use-system-dirent.h-on-MinGW-w64.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0013-Make-pthread-wrapper-only-for-mingw.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0014-Do-not-compile-dirent-on-mingw64.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0015-Alter-fscache-for-mingw64.patch \
+	/|https://raw.githubusercontent.com/Alexpux/MINGW-packages/master/mingw-w64-git/0016-Use-time.h-versions-of-gmtime-localtime-_r.patch
 
 override TEXLIVE_DIRECTORY_LIST		:= \
 	fonts/enc/dvips/lm \
@@ -628,7 +650,7 @@ override HASKELL_UPGRADE_LIST		:= \
 # thanks for the 'cgi' patch below: https://www.google.com/search?q=haskell+cgi+Module+Data.Typeable+mkTyCon+patch
 #	details are at: https://ghc.haskell.org/trac/ghc/wiki/GhcKinds/PolyTypeable
 override HASKELL_PATCH_LIST		:= \
-	cgi-3001.1.8.5|http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/dev-haskell/cgi/files/cgi-3001.1.8.5-ghc78.patch
+	/packages/cgi-3001.1.8.5|http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/dev-haskell/cgi/files/cgi-3001.1.8.5-ghc78.patch
 
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
@@ -638,6 +660,42 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
+
+# thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
+#	found by: https://github.com/faylang/fay/issues/261
+override BUILD_ENV			:= \
+	LANG="en_US.UTF8" \
+	TERM="$${TERM}" \
+	CHOST="$(CHOST)" \
+	CFLAGS="$(CFLAGS)" \
+	LDFLAGS= \
+	\
+	USER="$(USER)" \
+	HOME="$(COMPOSER_ABODE)" \
+	PATH="$(BUILD_PATH)" \
+	TEXMFDIST="$(TEXMFDIST)" \
+	TEXMFVAR="$(TEXMFVAR)"
+ifneq ($(BUILD_MSYS),)
+# adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
+override BUILD_ENV			:= $(BUILD_ENV) \
+	CYGWIN= \
+	CYGWIN_ROOT= \
+	MSYSTEM="MINGW$(BUILD_MSYS)" \
+	USERNAME="$(USERNAME)" \
+	HOMEPATH="$(COMPOSER_ABODE)" \
+	\
+	ALLUSERSPROFILE="$(COMPOSER_ABODE)" \
+	APPDATA="$(COMPOSER_ABODE)" \
+	LOCALAPPDATA="$(COMPOSER_ABODE)" \
+	TEMP="$(COMPOSER_ABODE)"
+endif
+override BUILD_ENV			:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV)
+
+ifeq ($(BUILD_MSYS),)
+override WINDOWS_PATH			= $(1)
+else
+override WINDOWS_PATH			= $(shell $(CYGPATH) --absolute --windows "$(1)")
+endif
 
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
 override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
@@ -649,7 +707,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override TIMESTAMP			:= $(call COMPOSER_FIND,$(PATH_LIST),date) --rfc-2822 >
 
-override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --server-response --timestamping
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --restrict-file-names=windows --no-check-certificate --server-response --timestamping
 override WGET_FILE			= $(WGET) --directory-prefix="$(COMPOSER_STORE)" "$(1)"
 
 override define UNZIP			=
@@ -667,11 +725,12 @@ override define PATCH			=
 endef
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
-override GIT_EXEC			:= $(shell $(GIT) --exec-path)
-ifeq ($(wildcard $(GIT_EXEC)),)
-override GIT_EXEC			:= $(abspath $(dir $(GIT))../../git-core)
+override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT))../../git-core))
+override GIT				:= $(GIT) -c http.sslVerify=false
+ifneq ($(GIT_EXEC),)
+override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
-override GIT_RUN			= cd "$(1)" && $(GIT) --exec-path="$(GIT_EXEC)" --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
+override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(lastword $(subst /, ,$(1))).git" --work-tree="$(1)" $(2)
 override define GIT_REPO		=
 	$(MKDIR) "$(COMPOSER_STORE)"
 	$(MKDIR) "$(1)"
@@ -717,57 +776,12 @@ override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
 
 ifneq ($(PANDOC_DATA),)
 override PANDOC				:= $(PANDOC) --data-dir="$(PANDOC_DATA)"
+#WORK : some better way to do this?
 ifeq ($(BUILD_MSYS),)
 override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
 else
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/WORK
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/data
 endif
-endif
-
-# thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
-#	found by: https://github.com/faylang/fay/issues/261
-override BUILD_ENV_BASE			:= \
-	LANG="en_US.UTF8" \
-	TERM="$${TERM}" \
-	CFLAGS="$(CFLAGS)" \
-	LDFLAGS= \
-	\
-	USER="$(USER)" \
-	HOME="$(COMPOSER_ABODE)" \
-	TEXMFDIST="$(TEXMFDIST)" \
-	TEXMFVAR="$(TEXMFVAR)"
-ifneq ($(BUILD_MSYS),)
-# adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
-override BUILD_ENV_BASE			:= $(BUILD_ENV_BASE) \
-	CYGWIN= \
-	CYGWIN_ROOT= \
-	USERNAME="$(USERNAME)" \
-	HOMEPATH="$(COMPOSER_ABODE)" \
-	\
-	ALLUSERSPROFILE="$(COMPOSER_ABODE)" \
-	APPDATA="$(COMPOSER_ABODE)" \
-	LOCALAPPDATA="$(COMPOSER_ABODE)" \
-	TEMP="$(COMPOSER_ABODE)"
-endif
-override BUILD_ENV_VARS			:= $(BUILD_ENV_BASE) \
-	CHOST="$(CHOST)" \
-	PATH="$(BUILD_PATH)"
-override BUILD_ENV_VARS_MINGW		:= $(BUILD_ENV_VARS)
-ifneq ($(BUILD_MSYS),)
-override BUILD_ENV_VARS			:= $(BUILD_ENV_VARS) \
-	MSYSTEM="$(MSYSTEM_MSYS)"
-override BUILD_ENV_VARS_MINGW		:= $(BUILD_ENV_BASE) \
-	CHOST="$(CHOST_MINGW)" \
-	PATH="$(BUILD_PATH_MINGW)" \
-	MSYSTEM="$(MSYSTEM_MINGW)"
-endif
-override BUILD_ENV			:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV_VARS)
-override BUILD_ENV_MINGW		:= $(call COMPOSER_FIND,$(PATH_LIST),env) - $(BUILD_ENV_VARS_MINGW)
-
-ifeq ($(BUILD_MSYS),)
-override MINGW_PATH			= $(1)
-else
-override MINGW_PATH			= $(shell $(CYGPATH) --absolute --windows "$(1)")
 endif
 
 ################################################################################
@@ -917,7 +931,6 @@ HELP_TARGETS:
 	@echo ""
 	@echo "Compilation Targets:"
 	@$(HELPOUT1) "$(STRAPIT)"		"Download and configure binary GHC bootstrap environment"
-	@$(HELPOUT1) "$(STRAPIT)-fix"		"Fixes common MSYS2 issues (to be run within '$(SHELLIT)-msys' window)"
 	@$(HELPOUT1) "$(FETCHIT)"		"Download/update GNU Make and Haskell/Pandoc source repositories"
 	@$(HELPOUT1) "$(BUILDIT)"		"Build/compile local GNU Make and Haskell/Pandoc binaries from source"
 	@$(HELPOUT1) "$(CHECKIT)"		"Diagnostic version information (for verification and/or troubleshooting)"
@@ -943,7 +956,8 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""				"subdirs"				"Aggregates/runs the '"'$$'"(COMPOSER_SUBDIRS)' targets"
 	@$(HELPOUT1) "$(STRAPIT):"		"$(STRAPIT)-check"			"Tries to proactively prevent common errors"
 	@$(HELPOUT1) ""				"$(STRAPIT)-msys"			"Installs MSYS2 environment with MinGW-w64"
-	@$(HELPOUT1) ""				"$(STRAPIT)-dlls"			"Copies MSYS2 DLL files (for native Windows usage)"
+	@$(HELPOUT1) ""				"$(STRAPIT)-fix"			"Proactively fixes common MSYS2 issues"
+	@$(HELPOUT1) ""				"$(STRAPIT)-dll"			"Copies MSYS2 DLL files (for native Windows usage)"
 	@$(HELPOUT1) ""				"$(STRAPIT)-git"			"Build/compile of Git from source archive"
 	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-bin"			"Pre-built binary GHC installation"
 	@$(HELPOUT1) ""				"$(STRAPIT)-ghc-lib"			"GHC libraries necessary for compilation"
@@ -1320,6 +1334,7 @@ $(UPGRADE):
 
 ifneq ($(BUILD_MSYS),)
 $(UPGRADE):	override SHELL := $(MSYS_SHELL)
+$(STRAPIT)-fix:	override SHELL := $(MSYS_SHELL)
 $(STRAPIT)-git:	override SHELL := $(MSYS_SHELL)
 $(FETCHIT)-%:	override SHELL := $(MSYS_SHELL)
 $(BUILDIT)-%:	override SHELL := $(MSYS_SHELL)
@@ -1329,7 +1344,7 @@ endif
 ifeq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-check
 else
-#WORK $(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-dlls
+$(STRAPIT): $(STRAPIT)-msys $(STRAPIT)-fix $(STRAPIT)-dll
 endif
 $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
@@ -1354,7 +1369,7 @@ do-%: $(FETCHIT)-% $(BUILDIT)-%
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
-	$(BUILD_ENV_MINGW) $(CABAL) update
+	$(BUILD_ENV) $(CABAL) update
 
 .PHONY: $(BUILDIT)-clean
 $(BUILDIT)-clean:
@@ -1377,7 +1392,11 @@ $(BUILDIT)-bindir:
 	$(CP) "$(COMPOSER_ABODE)/bin/"{make,git,pandoc}* "$(COMPOSER_PROGS)/usr/bin/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
+ifeq ($(BUILD_MSYS),)
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+else
+	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_CMT)/"* "$(COMPOSER_PROGS)/pandoc/"
+endif
 	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
 		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)" && \
 		$(CP) "$(COMPOSER_ABODE)/texlive/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"
@@ -1393,8 +1412,8 @@ ifneq ($(BUILD_MSYS),)
 		@echo off
 		set WD=%~dp0
 		set BINDIR=/usr/bin
+		set MSYSTEM=MSYS
 		set MSYSCON=mintty.exe
-		set MSYSTEM=$(MSYSTEM_MSYS)
 		set PATH=%WD%%BINDIR%:%PATH%
 		set OPTIONS=
 		set OPTIONS=%OPTIONS% --title "// $(COMPOSER_BASENAME) MSYS2"
@@ -1410,7 +1429,7 @@ ifneq ($(BUILD_MSYS),)
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE).exe" "$(COMPOSER_PROGS)/usr/bin/"
 	)
 	$(BUILD_ENV) ldd "$(COMPOSER_PROGS)/"{,usr/}bin/*.exe "$(COMPOSER_PROGS)/git-core/"{,*/}* 2>/dev/null | $(SED) -n "s|^.*(msys[-][^ ]+[.]dll)[ ][=][>].+$$|\1|gp" | sort --unique | while read FILE; do
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"
+		$(CP) "$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/$${FILE}" "$(COMPOSER_PROGS)/usr/bin/"
 	done
 endif
 
@@ -1445,9 +1464,11 @@ $(SHELLIT):
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT)-msys:
 ifneq ($(COMPOSER_PROGS_USE),)
+ifneq ($(wildcard $(COMPOSER_PROGS)),)
 	@cd "$(COMPOSER_PROGS)" &&
 else
 	@cd "$(MSYS_BIN_DST)" &&
+endif
 endif
 		$(BUILD_ENV) $(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && exec \
 		$(BUILD_ENV) ./msys2_shell.bat || true
@@ -1455,6 +1476,9 @@ endif
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
 	@$(MKDIR) "$(COMPOSER_ABODE)"
+	@cat >"$(COMPOSER_ABODE)/.bash_profile" <<'_EOF_'
+		source "$(COMPOSER_ABODE)/.bashrc"
+	_EOF_
 	@cat >"$(COMPOSER_ABODE)/.bashrc" <<'_EOF_'
 		# bashrc
 		umask 022
@@ -1560,16 +1584,6 @@ override define AUTOTOOLS_BUILD =
 		$(BUILD_ENV) $(MAKE) $(4) &&
 		$(BUILD_ENV) $(MAKE) install
 endef
-override define AUTOTOOLS_BUILD_MINGW =
-	cd "$(1)" &&
-		$(BUILD_ENV_MINGW) ./configure \
-			--exec-prefix="$(2)" \
-			--prefix="$(2)" \
-			$(3) \
-			&&
-		$(BUILD_ENV_MINGW) $(MAKE) $(4) &&
-		$(BUILD_ENV_MINGW) $(MAKE) install
-endef
 
 ifneq ($(BUILD_GHC_78),)
 override CHECK_LIB_NAME := Curses
@@ -1663,10 +1677,10 @@ $(STRAPIT)-fix:
 	$(BUILD_ENV) "$(MSYS_BIN_DST)/usr/bin/pacman-key" --refresh-keys
 	$(BUILD_ENV) $(PACMAN) ca-certificates
 
-.PHONY: $(STRAPIT)-dlls
-$(STRAPIT)-dlls:
+.PHONY: $(STRAPIT)-dll
+$(STRAPIT)-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-	$(CP) "$(MSYS_BIN_DST)/usr/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
+	$(CP) "$(MSYS_BIN_DST)/mingw$(BUILD_MSYS)/bin/"*.dll "$(COMPOSER_ABODE)/bin/"
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make:
@@ -1688,9 +1702,34 @@ $(STRAPIT)-git:
 		$(BUILD_ENV) $(MAKE) configure
 	$(call AUTOTOOLS_BUILD,$(GIT_BIN_DST),$(COMPOSER_ABODE))
 
+#WORK : sort out git targets
+#WORK : standardize -pull -prep across the board; document variants, remove antiquated targets in documentation
+
 .PHONY: $(FETCHIT)-git
-$(FETCHIT)-git:
+#WORK
+# thanks for the 'socket.h' fix below: https://stackoverflow.com/questions/25736266/fatal-error-sys-socket-h-no-such-file-or-directory-x86-64-w64-mingw32-mode
+$(FETCHIT)-git: $(FETCHIT)-git-pull $(FETCHIT)-git-prep
+
+.PHONY: $(FETCHIT)-git-pull
+$(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
+
+.PHONY: $(FETCHIT)-git-prep
+$(FETCHIT)-git-prep: $(FETCHIT)-git-prep-patch $(FETCHIT)-git-prep-configure
+
+.PHONY: $(FETCHIT)-git-prep-patch
+$(FETCHIT)-git-prep-patch:
+ifneq ($(BUILD_MSYS),)
+#>	$(SED) -i \
+#>		-e "s|sys[/]socket[.]h|ws2tcpip.h|g" \
+#>		"$(GIT_DST)/aclocal.m4"
+	$(foreach FILE,$(GIT_MSYS_PATCH_LIST),\
+		$(call PATCH,$(GIT_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
+	)
+endif
+
+.PHONY: $(FETCHIT)-git-prep-configure
+$(FETCHIT)-git-prep-configure:
 	cd "$(GIT_DST)" &&
 		$(BUILD_ENV) $(MAKE) configure
 
@@ -1713,13 +1752,12 @@ $(BUILDIT)-tex:
 #	cd "$(TEX_BIN_DST)/libs/icu/icu-"*"/source/config" &&
 #		$(CP) ./mh-mingw64 ./mh-unknown
 #endif
-	echo WORK : better success with MINGW?
 	cd "$(TEX_BIN_DST)" &&
-		$(BUILD_ENV_MINGW) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
+		$(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)/texlive" ./Build \
 			--disable-multiplatform \
 			--without-ln-s \
 			--without-x
-#>	$(call AUTOTOOLS_BUILD_MINGW,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
+#>	$(call AUTOTOOLS_BUILD,$(TEX_BIN_DST),$(COMPOSER_ABODE),\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
@@ -1741,7 +1779,7 @@ $(STRAPIT)-ghc-bin:
 	$(call UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
 	$(call UNTAR,$(CBL_BIN_DST),$(CBL_BIN_SRC))
 ifeq ($(BUILD_MSYS),)
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,show)
+	$(call AUTOTOOLS_BUILD,$(GHC_BIN_DST),$(BUILD_STRAP),,show)
 else
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
@@ -1765,13 +1803,13 @@ endif
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
 		"$(CBL_BIN_DST)/bootstrap.sh"
 	cd "$(CBL_BIN_DST)" &&
-		$(BUILD_ENV_MINGW) PREFIX="$(call MINGW_PATH,$(BUILD_STRAP))" \
+		$(BUILD_ENV) PREFIX="$(call WINDOWS_PATH,$(BUILD_STRAP))" \
 			./bootstrap.sh --global
 
 .PHONY: $(STRAPIT)-ghc-lib
 $(STRAPIT)-ghc-lib:
 	$(RUNMAKE) $(FETCHIT)-cabal
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(call MINGW_PATH,$(BUILD_STRAP))) \
+	$(BUILD_ENV) $(call CABAL_INSTALL,$(call WINDOWS_PATH,$(BUILD_STRAP))) \
 		$(subst |,-,$(GHC_LIBRARIES_LIST))
 
 .PHONY: $(FETCHIT)-ghc
@@ -1788,10 +1826,10 @@ $(FETCHIT)-ghc-pull:
 		-e "s|[-]d([ ][^ ]+[.]git)|-f\1|g" \
 		"$(GHC_DST)/sync-all"
 	cd "$(GHC_DST)" &&
-		$(BUILD_ENV_MINGW) ./sync-all get &&
-		$(BUILD_ENV_MINGW) ./sync-all fetch --all &&
-		$(BUILD_ENV_MINGW) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) &&
-		$(BUILD_ENV_MINGW) ./sync-all reset --hard
+		$(BUILD_ENV) ./sync-all get &&
+		$(BUILD_ENV) ./sync-all fetch --all &&
+		$(BUILD_ENV) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) &&
+		$(BUILD_ENV) ./sync-all reset --hard
 
 .PHONY: $(FETCHIT)-ghc-prep
 $(FETCHIT)-ghc-prep:
@@ -1811,11 +1849,12 @@ $(FETCHIT)-ghc-prep:
 #>			"$(FILE)"
 #>	)
 	cd "$(GHC_DST)" &&
-		$(BUILD_ENV_MINGW) ./boot
+		$(BUILD_ENV) ./boot
 
 .PHONY: $(BUILDIT)-ghc
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(BUILDIT)-ghc:
+ifneq ($(BUILD_MSYS),)
 	$(foreach FILE,\
 		$(GHC_DST)/driver/ghci/ghc.mk \
 		$(GHC_DST)/ghc/ghc.mk \
@@ -1825,19 +1864,15 @@ $(BUILDIT)-ghc:
 			-e "s|(call[ ]removeFiles[,])(..DESTDIR...bindir.[/]ghc.exe)|\1\"\2\"|g" \
 			"$(FILE)"
 	)
-#WORK
-#ifneq ($(BUILD_MSYS),)
-#	$(SED) -i \
-#		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
-#		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
-#		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
-#endif
-#WORK
-	$(call AUTOTOOLS_BUILD_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-	echo WORK
-#	$(RM) "$(BUILD_STRAP)/bin/ghc"*
-#	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE)) \
-#		Cabal-$(CABAL_VERSION_LIB)
+	$(SED) -i \
+		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
+		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
+		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
+endif
+	$(call AUTOTOOLS_BUILD,$(GHC_DST),$(COMPOSER_ABODE))
+	$(RM) "$(BUILD_STRAP)/bin/ghc"*
+	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		Cabal-$(CABAL_VERSION_LIB)
 
 .PHONY: $(FETCHIT)-haskell
 $(FETCHIT)-haskell:
@@ -1854,7 +1889,7 @@ $(FETCHIT)-haskell:
 		-e "s|^(for[ ]pkg[ ]in[ ].[{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_UPGRADE_LIST))|g" \
 		"$(HASKELL_DST)/src/generic/prepare.sh"
 	cd "$(HASKELL_DST)/src/generic" &&
-		$(BUILD_ENV_MINGW) ./prepare.sh
+		$(BUILD_ENV) ./prepare.sh
 ifneq ($(BUILD_MSYS),)
 	$(SED) -i \
 		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
@@ -1869,7 +1904,7 @@ ifneq ($(BUILD_MSYS),)
 	)
 endif
 	$(foreach FILE,$(HASKELL_PATCH_LIST),\
-		$(call PATCH,$(HASKELL_TAR)/packages/$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
+		$(call PATCH,$(HASKELL_TAR)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE))))
 	)
 
 .PHONY: $(BUILDIT)-haskell
@@ -1887,7 +1922,7 @@ $(BUILDIT)-haskell:
 		-e "s|^([ ]+programFindLocation[ ][=][ ].x)([ ][-])|\1 _\2|g" \
 		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
 ifeq ($(BUILD_MSYS),)
-	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),--disable-user-install)
+	$(call AUTOTOOLS_BUILD,$(HASKELL_TAR),$(COMPOSER_ABODE),--disable-user-install)
 else
 	$(SED) -i \
 		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
@@ -1896,7 +1931,7 @@ else
 		-e "s|WSPIAPI[_]H|WS2TCPIP_H|g" \
 		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
 		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE)) \
+	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(shell cat "$(HASKELL_TAR)/packages/platform.packages"),\
 			"$(HASKELL_TAR)/packages/$(FILE)" \
 		)
@@ -1929,29 +1964,29 @@ $(FETCHIT)-pandoc:
 
 #>			--enable-tests
 #>		echo && echo "$(HELPMARK) Test [$(1)]" &&
-#>		$(BUILD_ENV_MINGW) $(CABAL) test &&
+#>		$(BUILD_ENV) $(CABAL) test &&
 override define PANDOC_BUILD =
 	cd "$(1)" &&
 		echo && echo "$(HELPMARK) Configure [$(1)]" &&
-		$(BUILD_ENV_MINGW) $(CABAL) configure \
+		$(BUILD_ENV) $(CABAL) configure \
 			--prefix="$(COMPOSER_ABODE)" \
 			--flags="embed_data_files http-conduit" \
 			--disable-executable-dynamic \
 			--disable-shared \
 			&&
 		echo && echo "$(HELPMARK) Build [$(1)]" &&
-		$(BUILD_ENV_MINGW) $(CABAL) build &&
+		$(BUILD_ENV) $(CABAL) build &&
 		echo && echo "$(HELPMARK) Install [$(1)]" &&
-		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE))
+		$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
 endef
 
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
 	echo && echo "$(HELPMARK) Dependencies"
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE)) \
+	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(subst |,-,$(PANDOC_DEPENDENCIES_LIST))
 #>		--enable-tests
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL_MINGW,$(COMPOSER_ABODE)) \
+	$(BUILD_ENV) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--only-dependencies \
 		$(PANDOC_TYPE_DST) \
 		$(PANDOC_MATH_DST) \
@@ -1960,7 +1995,7 @@ $(BUILDIT)-pandoc-deps:
 		$(PANDOC_DST)
 #>		--enable-tests
 	cd "$(PANDOC_HIGH_DST)" && \
-		$(BUILD_ENV_MINGW) $(MAKE) prep
+		$(BUILD_ENV) $(MAKE) prep
 
 .PHONY: $(BUILDIT)-pandoc-type
 $(BUILDIT)-pandoc-type:
