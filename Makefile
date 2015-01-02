@@ -357,8 +357,8 @@ override CC				:= $(BUILD_MUSL)
 override CFLAGS				:= $(CFLAGS) -static
 #WORK : search/replace LDFLAGS, if this works
 override LDFLAGS			:= $(LDFLAGS) -static
+#WORK : does this variable even work?
 override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
-#WORK
 endif
 endif
 
@@ -2278,7 +2278,6 @@ ifneq ($(BUILD_MUSL),)
 		--enable-static \
 	)
 else ifneq ($(BUILD_MSYS),)
-	echo WORK
 	$(call AUTOTOOLS_BUILD,$(LIB_RDLN_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
