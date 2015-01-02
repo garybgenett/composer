@@ -2968,58 +2968,52 @@ $(STRAPIT)-curl-pull:
 $(FETCHIT)-curl-pull:
 	$(call GIT_REPO,$(CURL_DST),$(CURL_SRC),$(CURL_CMT))
 
-.PHONY: $(STRAPIT)-curl-prep
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
-$(STRAPIT)-curl-prep:
+override define CURL_PREP =
 	$(SED) -i \
 		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
-		"$(CURL_TAR_DST)/lib/mk-ca-bundle.pl"
+		"$(1)/lib/mk-ca-bundle.pl"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
-		"$(CURL_TAR_DST)/configure"
+		"$(1)/configure"
+endef
+
+.PHONY: $(STRAPIT)-curl-prep
+$(STRAPIT)-curl-prep:
+	$(call CURL_PREP,$(CURL_TAR_DST))
 
 .PHONY: $(FETCHIT)-curl-prep
-# thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
-#	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(FETCHIT)-curl-prep:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure
-	$(SED) -i \
-		-e "s|(out[ ][=][ ].)(curl[ ][-]w)|\1CURL_CA_BUNDLE=\"\$${ENV{\"CURL_CA_BUNDLE\"}}\" \2|g" \
-		"$(CURL_DST)/lib/mk-ca-bundle.pl"
-	$(SED) -i \
-		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
-		"$(CURL_DST)/configure"
+	$(call CURL_PREP,$(CURL_DST))
 
 #WORKING : archive certdata.txt in $COMPOSER_STORE
 
-.PHONY: $(STRAPIT)-curl-build
-$(STRAPIT)-curl-build:
-	cd "$(CURL_TAR_DST)" && \
+override define CURL_BUILD =
+	cd "$(1)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(MKDIR) "$(COMPOSER_ABODE)" && \
-		$(CP) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
-	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
+		$(CP) "$(1)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
+	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
+		--disable-ldap \
 		--without-libidn \
+		--without-libssh2 \
 		--disable-shared \
 		--enable-static \
 	)
+endef
+
+.PHONY: $(STRAPIT)-curl-build
+$(STRAPIT)-curl-build:
+	$(call CURL_BUILD,$(CURL_TAR_DST))
 
 .PHONY: $(BUILDIT)-curl
 $(BUILDIT)-curl:
-	cd "$(CURL_DST)" && \
-		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
-		$(MKDIR) "$(COMPOSER_ABODE)" && \
-		$(CP) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
-	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
-		--with-ca-bundle="./ca-bundle.crt" \
-		--without-libidn \
-		--disable-shared \
-		--enable-static \
-	)
+	$(call CURL_BUILD,$(CURL_DST))
 
 .PHONY: $(STRAPIT)-git
 $(STRAPIT)-git: $(STRAPIT)-git-pull
@@ -3039,45 +3033,41 @@ $(STRAPIT)-git-pull:
 $(FETCHIT)-git-pull:
 	$(call GIT_REPO,$(GIT_DST),$(GIT_SRC),$(GIT_CMT))
 
-.PHONY: $(STRAPIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
 # thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
-$(STRAPIT)-git-prep:
-	cd "$(GIT_TAR_DST)" && \
+override define GIT_PREP =
+	cd "$(1)" && \
 		$(BUILD_ENV) $(MAKE) configure
 	$(SED) -i \
 		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
-		"$(GIT_TAR_DST)/configure"
+		"$(1)/configure"
 	$(SED) -i \
 		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
-		"$(GIT_TAR_DST)/Makefile"
+		"$(1)/Makefile"
+endef
+
+.PHONY: $(STRAPIT)-git-prep
+$(STRAPIT)-git-prep:
+	$(call GIT_PREP,$(GIT_TAR_DST))
 
 .PHONY: $(FETCHIT)-git-prep
-# thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
-#	also to: http://www.makelinux.net/alp/021
-# thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
 $(FETCHIT)-git-prep:
-	cd "$(GIT_DST)" && \
-		$(BUILD_ENV) $(MAKE) configure
-	$(SED) -i \
-		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
-		"$(GIT_DST)/configure"
-	$(SED) -i \
-		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
-		"$(GIT_DST)/Makefile"
+	$(call GIT_PREP,$(GIT_DST))
+
+override define GIT_BUILD =
+	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
+		--without-tcltk \
+	)
+endef
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
-	$(call AUTOTOOLS_BUILD,$(GIT_TAR_DST),$(COMPOSER_ABODE),,\
-		--without-tcltk \
-	)
+	$(call GIT_BUILD,$(GIT_TAR_DST))
 
 .PHONY: $(BUILDIT)-git
 $(BUILDIT)-git:
-	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
-		--without-tcltk \
-	)
+	$(call GIT_BUILD,$(GIT_DST))
 
 .PHONY: $(FETCHIT)-tex
 $(FETCHIT)-tex: $(FETCHIT)-tex-pull
