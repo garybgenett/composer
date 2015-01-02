@@ -3,15 +3,10 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 
-#TODO READ
-# http://www.conifersystems.com/whitepapers/gnu-make
-#TODO READ
-
 #TODO
 # enable https certificates for wget/git?
 # static linking using embedded libc for linux
 # fix linux 32-bit make 4.1 segfault
-# double-check "true" instances
 #TODO
 
 #BUILD NOTES
@@ -331,8 +326,8 @@ endif
 override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
 
-#WORK : need to ldd final binaries to see what libraries they compile in
-#WORK : double-check / remove 'libidn'
+#TODO : need to ldd final binaries to see what libraries they compile in
+#TODO : double-check / remove 'libidn'
 ifneq ($(BUILD_MUSL),)
 override BUILD_MUSL			:= $(COMPOSER_ABODE)/bin/musl-gcc
 endif
@@ -565,7 +560,7 @@ override PACMAN_BASE_LIST		:= \
 	msys2-runtime-devel \
 	pacman
 
-#WORK : need to trim this list, and use '$(STRAPIT)' targets instead
+#TODO : need to trim this list, and use '$(STRAPIT)' targets instead
 # second group is for '$(STRAPIT)-libs'
 # third group is for '$(STRAPIT)-curl'
 # fourth group is for composer
@@ -1548,7 +1543,7 @@ $(UPGRADE):
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
 ifneq ($(BUILD_MUSL),)
-#WORK : need to move '-libs' and '-curl' back down to '-git'
+#TODO : need to move '-libs' and '-curl' back down to '-git'
 $(STRAPIT): $(STRAPIT)-musl $(STRAPIT)-libs $(STRAPIT)-curl
 endif
 ifneq ($(BUILD_MSYS),)
@@ -1566,7 +1561,7 @@ $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
-#WORK $(BUILDIT): $(BUILDIT)-tex
+#TODO $(BUILDIT): $(BUILDIT)-tex
 $(BUILDIT): $(BUILDIT)-ghc $(BUILDIT)-haskell $(BUILDIT)-pandoc
 $(BUILDIT): $(BUILDIT)-clean
 $(BUILDIT): $(BUILDIT)-bindir
@@ -1910,8 +1905,8 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2)
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
 		@$(HELPLVL1)
-#WORK		@read ENTER
-#WORK		$(RUNMAKE) $(SHELLIT)-msys
+#TODO		@read ENTER
+#TODO		$(RUNMAKE) $(SHELLIT)-msys
 		@$(HELPLVL1)
 		@$(HELPOUT2) "The shell window has been launched."
 		@$(HELPOUT2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
@@ -1919,7 +1914,7 @@ $(STRAPIT)-msys-init:
 		@$(HELPOUT2)
 		@$(HELPOUT2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
 		@$(HELPLVL1)
-#WORK		@read ENTER
+#TODO		@read ENTER
 	fi
 
 .PHONY: $(STRAPIT)-msys-fix
@@ -1954,11 +1949,12 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv
-#WORK : need to get "gettext" to link against static "libiconv"
-$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
-$(STRAPIT)-libs: $(STRAPIT)-libs-expat
-$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
-$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
+#WORK : need to get "gettext" to link against static "libiconv", and vice versa
+	exit 1
+#$(STRAPIT)-libs: $(STRAPIT)-libs-openssl
+#$(STRAPIT)-libs: $(STRAPIT)-libs-expat
+#$(STRAPIT)-libs: $(STRAPIT)-libs-freetype
+#$(STRAPIT)-libs: $(STRAPIT)-libs-fontconfig
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
