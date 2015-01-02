@@ -1466,7 +1466,7 @@ $(STRAPIT): $(STRAPIT)-check
 ifneq ($(BUILD_MSYS),)
 $(STRAPIT): $(STRAPIT)-msys
 else
-$(BUILDIT): $(STRAPIT)-musl
+$(STRAPIT): $(STRAPIT)-musl
 endif
 $(STRAPIT): $(STRAPIT)-git
 $(STRAPIT): $(STRAPIT)-ghc-bin $(STRAPIT)-ghc-lib
