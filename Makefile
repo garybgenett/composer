@@ -9,11 +9,13 @@
 # vim/less
 #	add to check target
 #	add binaries and needed files to bindir
+#	remove from msys2 package list
 # mingw for windows?
 #	re-verify all sed and other build hackery, for both linux and windows
 # enable https certificates for wget/git?
 #	simply copy '/etc/ssl' to $COMPOSER_ABODE and $COMPOSER_PROGS?
 # double-check all "thanks" comments; some are things you should have known
+# double-check all licenses
 # fix linux 32-bit make 4.1 segfault
 #TODO
 
@@ -341,7 +343,7 @@ override BUILD_PLAT			:= Msys
 override BUILD_ARCH			:= i686
 override CHOST				:= $(BUILD_ARCH)-pc-msys$(BUILD_MSYS)
 endif
-override CFLAGS				:= -m32 -march=$(BUILD_ARCH) -mtune=generic
+override CFLAGS				:= $(CFLAGS) -m32 -march=$(BUILD_ARCH) -mtune=generic
 endif
 
 #TODO : http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html
@@ -349,12 +351,17 @@ endif
 #TODO : double-check / remove 'libidn'
 ifneq ($(BUILD_MUSL),)
 override BUILD_MUSL			:= $(COMPOSER_ABODE)/bin/musl-gcc
-endif
 ifneq ($(wildcard $(BUILD_MUSL)),)
 override CC				:= $(BUILD_MUSL)
 override CFLAGS				:= $(CFLAGS) -static
+#WORK override LDFLAGS			:= $(LDFLAGS) -static
 #WORK override SRC_HC_OPTS			:= -static -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
 override SRC_HC_OPTS			:= -pgmc \"$(BUILD_MUSL)\" -optc-static -pgml \"$(BUILD_MUSL)\" -optl-static
+endif
+else ifneq ($(BUILD_MSYS),)
+#WORK
+override CFLAGS				:= $(CFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\"
+override LDFLAGS			:= $(LDFLAGS) -I\"$(COMPOSER_ABODE)/include\" -L\"$(COMPOSER_ABODE)/lib\"
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
@@ -1018,21 +1025,25 @@ override .ALL_TARGETS := \
 #	extra	= magenta
 #	syntax	= dark blue
 ifneq ($(COMPOSER_ESCAPES),)
-override _D := \e[0;37m
-override _H := \e[0;32m
-override _C := \e[0;36m
-override _M := \e[0;33m
-override _N := \e[0;31m
-override _E := \e[0;35m
-override _S := \e[0;34m
+override [	:= \[
+override ]	:= \]
+override _D	:= \e[0;37m
+override _H	:= \e[0;32m
+override _C	:= \e[0;36m
+override _M	:= \e[0;33m
+override _N	:= \e[0;31m
+override _E	:= \e[0;35m
+override _S	:= \e[0;34m
 else
-override _D :=
-override _H :=
-override _C :=
-override _M :=
-override _N :=
-override _E :=
-override _S :=
+override [	:=
+override ]	:=
+override _D	:=
+override _H	:=
+override _C	:=
+override _M	:=
+override _N	:=
+override _E	:=
+override _S	:=
 endif
 
 ifneq ($(COMPOSER_ESCAPES),)
@@ -1869,9 +1880,9 @@ $(SHELLIT)-bashrc:
 		#
 		export PROMPT_DIRTRIM="1"
 		export PS1=
-		export PS1="$${PS1}\[\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a\]\n"			# title escape, new line (for spacing)
-		export PS1="$${PS1}$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_C)\D{%FT%T%z}\n"	# title, date (iso format)
-		export PS1="$${PS1}$(_C)[\#/\!] ($(_M)\u@\h \w$(_C))\\$$$(_D) "					# history counters, username@hostname, directory, prompt
+		export PS1="$${PS1}$([)\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a$(])\n"					# title escape, new line (for spacing)
+		export PS1="$${PS1}$([)$(_H)$(])$(MARKER) $(COMPOSER_FULLNAME)$([)$(_D)$(]) $(DIVIDE) $([)$(_C)$(])\D{%FT%T%z}\n"	# title, date (iso format)
+		export PS1="$${PS1}$([)$(_C)$(])[\#/\!] ($([)$(_M)$(])\u@\h \w$([)$(_C)$(]))\\$$ $([)$(_D)$(])"				# history counters, username@hostname, directory, prompt
 		#
 		export PAGER="less -rX"
 		export EDITOR="vim -u $(COMPOSER_ABODE)/.vimrc -i NONE -p"
@@ -2167,10 +2178,12 @@ override define LIBICONV_BUILD =
 		--enable-static \
 	)
 endef
-#WORK else ifneq ($(BUILD_MSYS),)
-#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
-#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
-#	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
+else ifneq ($(BUILD_MSYS),)
+override define LIBICONV_BUILD =
+	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
+	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
+	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
+endef
 else
 override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE))
@@ -2251,13 +2264,14 @@ endif
 $(STRAPIT)-libs-expat:
 	$(call CURL_FILE,$(LIB_EXPT_TAR_SRC))
 	$(call UNTAR,$(LIB_EXPT_TAR_DST),$(LIB_EXPT_TAR_SRC))
-#WORK
-#	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
+else ifneq ($(BUILD_MSYS),)
+	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
+	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE))
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE))
 endif
