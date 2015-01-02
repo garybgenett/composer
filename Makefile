@@ -418,6 +418,11 @@ override LIB_ICNV_TAR_DST		:= $(COMPOSER_BUILD)/libs/libiconv-$(LIB_ICNV_VERSION
 override LIB_GTXT_VERSION		:= 0.19.3
 override LIB_GTXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(LIB_GTXT_VERSION).tar.gz
 override LIB_GTXT_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_GTXT_VERSION)
+# https://www.gnu.org/software/ncurses (license: WORK)
+# https://www.gnu.org/software/ncurses
+override LIB_NCRS_VERSION		:= 5.9
+override LIB_NCRS_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(LIB_NCRS_VERSION).tar.gz
+override LIB_NCRS_TAR_DST		:= $(COMPOSER_BUILD)/libs/gettext-$(LIB_NCRS_VERSION)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
 override LIB_OSSL_VERSION		:= 1.0.1j
@@ -477,25 +482,25 @@ override GIT_CMT			:= v$(GIT_VERSION)
 # http://www.vim.org/about.php (license: custom = GPL)
 # http://www.vim.org
 override VIM_VERSION			:= 7.4
-override VIM_TAR_SRC			:= ftp://ftp.vim.org/pub/vim/unix/vim-$(VIM_VERSION).tar.bz2
-override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim-$(VIM_VERSION)
+override VIM_TAR_SRC			:= http://ftp.vim.org/pub/vim/unix/vim-$(VIM_VERSION).tar.bz2
+override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 
 # https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
 # https://www.tug.org/texlive
 # https://www.tug.org/texlive/build.html
-# ftp://tug.org/historic/systems/texlive
+# ftp://ftp.tug.org/historic/systems/texlive
 # http://www.slackbuilds.org/repository/14.0/office/texlive/
 override TEX_YEAR			:= 2014
 override TEX_VERSION			:= $(TEX_YEAR)0525
 override TEX_PDF_VERSION		:= 1.40.15
-override TEX_TEXMF_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
-override TEX_TAR_SRC			:= ftp://tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
+override TEX_TEXMF_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
+override TEX_TAR_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
 override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
 override TEX_TAR_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
 #TODO : need this?
 ifneq ($(BUILD_MSYS),)
-#>override TEX_WINDOWS_SRC		:= ftp://tug.org/tex-archive                /systems/win32/w32tex/w32tex-src.tar.xz
-override TEX_WINDOWS_SRC		:= ftp://tug.org/mirror/rsync.tex.ac.uk/CTAN/systems/win32/w32tex/w32tex-src.tar.xz
+#>override TEX_WINDOWS_SRC		:= ftp://ftp.tug.org/tex-archive                /systems/win32/w32tex/w32tex-src.tar.xz
+override TEX_WINDOWS_SRC		:= ftp://ftp.tug.org/mirror/rsync.tex.ac.uk/CTAN/systems/win32/w32tex/w32tex-src.tar.xz
 override TEX_WINDOWS_DST		:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source-w32tex/ktx
 endif
 
@@ -1239,6 +1244,7 @@ HELP_TARGETS_SUB:
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
+	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
 	@$(HELPOUT1) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
@@ -2086,6 +2092,7 @@ $(STRAPIT)-libs: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs: $(STRAPIT)-libs-libiconv2
+$(STRAPIT)-libs: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs: $(STRAPIT)-libs-freetype
@@ -2132,15 +2139,20 @@ override define LIBICONV_PULL =
 	# start with fresh source directory, due to circular dependency with gettext
 	$(RM) -r "$(LIB_ICNV_TAR_DST)"
 	$(call UNTAR,$(LIB_ICNV_TAR_DST),$(LIB_ICNV_TAR_SRC))
-	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
-	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
+endef
+override define LIBICONV_PREP =
+endef
+ifneq ($(BUILD_MUSL),)
+#WORK
+#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/build-aux)
+#	$(call GNU_CFG_INSTALL,$(LIB_ICNV_TAR_DST)/libcharset/build-aux)
+override define LIBICONV_PREP =
 	$(SED) -i \
 		-e "s|(cp[ ][.]libs)|#\1|g" \
 		-e "s|preloadable[_](libiconv[.])so|\1la|g" \
 		"$(LIB_ICNV_TAR_DST)/preload/Makefile.in" \
-		"$(LIB_ICNV_TAR_DST)/preload/configure"*
+		"$(LIB_ICNV_TAR_DST)/preload/configure"
 endef
-ifneq ($(BUILD_MUSL),)
 override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIB_ICNV_TAR_DST),$(COMPOSER_ABODE),,\
 		--with-libintl-prefix="$(COMPOSER_ABODE)/lib" \
@@ -2157,11 +2169,7 @@ endif
 .PHONY: $(STRAPIT)-libs-libiconv1
 $(STRAPIT)-libs-libiconv1:
 	$(call LIBICONV_PULL)
-	$(call LIBICONV_BUILD)
-
-.PHONY: $(STRAPIT)-libs-libiconv2
-$(STRAPIT)-libs-libiconv2:
-	$(call LIBICONV_PULL)
+	$(call LIBICONV_PREP)
 	$(call LIBICONV_BUILD)
 
 .PHONY: $(STRAPIT)-libs-gettext
@@ -2175,6 +2183,25 @@ ifneq ($(BUILD_MUSL),)
 	)
 else
 	$(call AUTOTOOLS_BUILD,$(LIB_GTXT_TAR_DST),$(COMPOSER_ABODE))
+endif
+
+.PHONY: $(STRAPIT)-libs-libiconv2
+$(STRAPIT)-libs-libiconv2:
+	$(call LIBICONV_PULL)
+	$(call LIBICONV_PREP)
+	$(call LIBICONV_BUILD)
+
+.PHONY: $(STRAPIT)-libs-ncurses
+$(STRAPIT)-libs-ncurses:
+	$(call CURL_FILE,$(LIB_NCRS_TAR_SRC))
+	$(call UNTAR,$(LIB_NCRS_TAR_DST),$(LIB_NCRS_TAR_SRC))
+ifneq ($(BUILD_MUSL),)
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+else
+	$(call AUTOTOOLS_BUILD,$(LIB_NCRS_TAR_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(STRAPIT)-libs-openssl
@@ -2212,7 +2239,8 @@ endif
 $(STRAPIT)-libs-expat:
 	$(call CURL_FILE,$(LIB_EXPT_TAR_SRC))
 	$(call UNTAR,$(LIB_EXPT_TAR_DST),$(LIB_EXPT_TAR_SRC))
-	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
+#WORK
+#	$(call GNU_CFG_INSTALL,$(LIB_EXPT_TAR_DST)/conftools)
 ifneq ($(BUILD_MUSL),)
 	$(call AUTOTOOLS_BUILD,$(LIB_EXPT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
@@ -2457,6 +2485,7 @@ $(FETCHIT)-vim: $(FETCHIT)-vim-prep
 .PHONY: $(FETCHIT)-vim-pull
 $(FETCHIT)-vim-pull:
 	$(call CURL_FILE,$(VIM_TAR_SRC))
+	$(call UNTAR,$(VIM_TAR_DST),$(VIM_TAR_SRC))
 
 .PHONY: $(FETCHIT)-vim-prep
 $(FETCHIT)-vim-prep:
