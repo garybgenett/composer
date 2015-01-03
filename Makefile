@@ -1808,7 +1808,7 @@ $(DEBUGIT):
 	@$(call DEBUGIT_TARGET,--debug --just-print $(COMPOSER_DEBUGIT))
 	@$(ECHO) "\n"
 	@$(foreach FILE,$(MAKEFILE_LIST),\
-		$(call WORKING_FILE_CONTENTS,$(FILE)); \
+		$(call DEBUGIT_CONTENTS,$(FILE)); \
 		$(ECHO) "\n"; \
 	)
 	@$(HEADER_1)
@@ -1821,9 +1821,7 @@ $(DEBUGIT):
 	@$(call DEBUGIT_LISTING,OTHER,STORE)
 	@$(call DEBUGIT_LISTING,OTHER,BUILD)
 	@$(call DEBUGIT_LISTING,OTHER,PROGS)
-	@$(call DEBUGIT_TARGET,HELP_FOOTER)
-
-#WORKING : need to finalize this
+	@$(RUNMAKE) --silent HELP_FOOTER
 
 override define DEBUGIT_TARGET =
 	$(ECHO) "\n"; \
@@ -1841,7 +1839,7 @@ override define DEBUGIT_LISTING =
 	fi
 endef
 
-override define WORKING_FILE_CONTENTS =
+override define DEBUGIT_CONTENTS =
 	$(HEADER_L); \
 	$(TABLE_I3) "$(_H)$(MARKER) $(_M)$(1)"; \
 	$(HEADER_L); \
@@ -1914,7 +1912,7 @@ endif
 ifneq ($(COMPOSER_TESTING),)
 	@$(foreach FILE,$(TEST_DIRECTORIES),\
 		$(ECHO) "\n"; \
-		$(call WORKING_FILE_CONTENTS,$(FILE)/$(MAKEFILE)); \
+		$(call DEBUGIT_CONTENTS,$(FILE)/$(MAKEFILE)); \
 	)
 endif
 
