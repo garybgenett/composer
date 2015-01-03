@@ -2049,7 +2049,15 @@ endef
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
+#WORKING : need to make this work for "msys"
+	$(RM) "$(COMPOSER_ABODE)/.cabal/config"
 	$(BUILD_ENV) $(CABAL) update
+#WORKING : need to do this for all ghc builds, namely cabal
+	# make sure GHC looks for libraries in the right place
+	$(SED) -i \
+		-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
+		-e "s|(ghc[-]options[:]).*$$|\1 -optc-I$(COMPOSER_ABODE)/include -optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib|g" \
+		"$(COMPOSER_ABODE)/.cabal/config"
 
 .PHONY: $(BUILDIT)-cleanup
 $(BUILDIT)-cleanup:
@@ -3383,13 +3391,13 @@ $(FETCHIT)-pandoc-pull:
 
 .PHONY: $(FETCHIT)-pandoc-prep
 $(FETCHIT)-pandoc-prep:
-#WORK : need to do this for all ghc builds, namely cabal
-	# make sure GHC looks for libraries in the right place
-	$(SED) -i \
-		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
-		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
-		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
-		"$(PANDOC_DST)/pandoc.cabal"
+#WORKING : need to do this for all ghc builds, namely cabal
+#	# make sure GHC looks for libraries in the right place
+#	$(SED) -i \
+#		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
+#		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
+#		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
+#		"$(PANDOC_DST)/pandoc.cabal"
 #WORKING : pandoc css windows
 #	# fix the pathname fix, since MSYS2 uses "mixed"-style pathnames: https://github.com/jgm/pandoc/commit/2956ef251c815c332679ff4666031a5b7a65aadc
 #	$(SED) -i \
@@ -3458,6 +3466,9 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS)"
+	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS))
 
 .PHONY: .release
 .release:
@@ -4061,8 +4072,6 @@ override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e 
 override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
 ifeq ($(BUILD_PLAT),Msys)
-#override ENV		:= $(subst $(ENV),$(shell $(ECHO) '$(ENV)'			| $(SED) $(MSYS_SED_FIXES)),$(ENV))
-#override DOC		:= $(subst $(PANDOC),$(shell $(ECHO) '$(PANDOC)'		| $(SED) $(MSYS_SED_FIXES)),$(PANDOC))
 override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell $(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
 override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell $(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
 override OPTIONS_DOC	:= $(subst $(_CSS),$(shell $(ECHO) '$(_CSS)'			| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
@@ -4071,6 +4080,8 @@ override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell $(ECHO) '$(W3CSLIDY_DST)
 endif
 
 #WORKING
+#override ENV		:= $(subst $(ENV),$(shell $(ECHO) '$(ENV)'			| $(SED) $(MSYS_SED_FIXES)),$(ENV))
+override DOC		:= $(subst $(PANDOC),$(shell $(ECHO) '$(PANDOC)'		| $(SED) $(MSYS_SED_FIXES)),$(PANDOC))
 #override OPTIONS_DOC	:= $(shell $(ECHO) '$(OPTIONS_DOC)'				| $(SED) $(MSYS_SED_FIXES))
 #override OPTIONS_ENV	:= $(shell $(ECHO) '$(subst $(ENV) - ,,$(BUILD_ENV))'		| $(SED) $(MSYS_SED_FIXES))
 #override OPTIONS_ENV	:= $(ENV) - $(OPTIONS_ENV)
@@ -4087,6 +4098,8 @@ $(COMPOSER_PANDOC): $(LIST) settings setup
 	@$(TABLE_I3) "$(_H)Pandoc Options:"	'$(_D)$(OPTIONS_DOC)'
 	@$(ECHO) "$(_N)"
 #WORKING
+	@$(ECHO) '\n$(DOC) $(OPTIONS_DOC)\n\n'
+#WORKING
 #	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
 	$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
 	@$(ECHO) "$(_D)"
@@ -4097,25 +4110,25 @@ $(BASE).$(EXTENSION): $(LIST)
 #	@$(MAKEDOC) --silent TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 
-%.$(TYPE_HTML):
-	@$(COMPOSE) --silent TYPE="$(TYPE_HTML)" BASE="$(*)"
+%.$(TYPE_HTML): %.$(COMPOSER_EXT)
+	@$(COMPOSE) --silent TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
 
-%.$(TYPE_LPDF):
-	@$(COMPOSE) --silent TYPE="$(TYPE_LPDF)" BASE="$(*)"
+%.$(TYPE_LPDF): %.$(COMPOSER_EXT)
+	@$(COMPOSE) --silent TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
 
-%.$(PRES_EXTN):
+%.$(PRES_EXTN): %.$(COMPOSER_EXT)
 #WORKING
-#	@$(COMPOSE) --silent TYPE="$(TYPE_PRES)" BASE="$(*)"
-	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)"
+#	@$(COMPOSE) --silent TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
+	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
 
-%.$(SHOW_EXTN):
-	@$(COMPOSE) --silent TYPE="$(TYPE_SHOW)" BASE="$(*)"
+%.$(SHOW_EXTN): %.$(COMPOSER_EXT)
+	@$(COMPOSE) --silent TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
 
-%.$(TYPE_DOCX):
-	@$(COMPOSE) --silent TYPE="$(TYPE_DOCX)" BASE="$(*)"
+%.$(TYPE_DOCX): %.$(COMPOSER_EXT)
+	@$(COMPOSE) --silent TYPE="$(TYPE_DOCX)" BASE="$(*)" LIST="$(^)"
 
-%.$(TYPE_EPUB):
-	@$(COMPOSE) --silent TYPE="$(TYPE_EPUB)" BASE="$(*)"
+%.$(TYPE_EPUB): %.$(COMPOSER_EXT)
+	@$(COMPOSE) --silent TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
 
 ################################################################################
 # End Of File
