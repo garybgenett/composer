@@ -1,12 +1,14 @@
+# Composer
+/.composer.mk
+
 # make compose
-.composed
-composer.css
+/.composed
+/composer.css
 
 # make test
-test_dir
+/test.dir/
 
-# make update
-markdown-viewer.css
-revealjs
-revealjs.git
-slidy
+# make update && make build
+/.home/
+/.sources/
+/build/
