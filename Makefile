@@ -3463,12 +3463,14 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
 .PHONY: .release-config
 .release-config:
+	@$(MKDIR) "$(abspath $(dir $(COMPOSER_OTHER)))/Linux"
+	@$(MKDIR) "$(abspath $(dir $(COMPOSER_OTHER)))/Msys"
 	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS)"
 	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS))
 	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS))
 
 .PHONY: .release
 .release:
