@@ -2273,7 +2273,7 @@ source "$(COMPOSER_ABODE)/.bashrc"
 endef
 
 override define HEREDOC_BASHRC =
-#!/usr/bin/env bash
+#!$(subst ",,$(ENV)) bash
 umask 022
 unalias -a
 set -o vi
@@ -3217,7 +3217,7 @@ override define HEREDOC_CABAL_BOOTSTRAP =
 	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
 	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
 	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
-	"$(CBL_TAR_DST)/network-"*"/include/HsNet.h"
+	"$(CBL_TAR_DST)/network-"*"/include/HsNet.h" || exit 1
 exit 0
 endef
 
@@ -3540,17 +3540,15 @@ override define .HEREDOC_DIST_COMPOSER_BAT =
 @echo off
 set _COMPOSER=%~dp0
 set _SYS=Msys
-set PATH=%_COMPOSER%/bin/%_SYS%/usr/bin;%PATH%
-start /b make --makefile %_COMPOSER%/Makefile BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell-msys
+"%_COMPOSER%/bin/%_SYS%/usr/bin/make" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell-msys
 :: end of file
 endef
 
 override define .HEREDOC_DIST_COMPOSER_SH =
-#!/usr/bin/env sh
+# bash
 _COMPOSER="`dirname "$${0}"`"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-export PATH="$${_COMPOSER}/bin/$${_SYS}/usr/bin:$${PATH}"
-make --makefile "$${_COMPOSER}/Makefile" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell
+"$${_COMPOSER}/bin/$${_SYS}/usr/bin/make" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell
 # end of file
 endef
 
@@ -3959,11 +3957,11 @@ ifneq ($(COMPOSER_TARGETS),$(BASE))
 all: \
 	$(COMPOSER_TARGETS)
 else
-
+#WORKING	$(BASE).$(PRES_EXTN) \
+#WORKING
 all: \
 	$(BASE).$(TYPE_HTML) \
 	$(BASE).$(TYPE_LPDF) \
-	$(BASE).$(PRES_EXTN) \
 	$(BASE).$(SHOW_EXTN) \
 	$(BASE).$(TYPE_DOCX) \
 	$(BASE).$(TYPE_EPUB)
@@ -4063,6 +4061,8 @@ override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e 
 override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
 ifeq ($(BUILD_PLAT),Msys)
+#override ENV		:= $(subst $(ENV),$(shell $(ECHO) '$(ENV)'			| $(SED) $(MSYS_SED_FIXES)),$(ENV))
+#override DOC		:= $(subst $(PANDOC),$(shell $(ECHO) '$(PANDOC)'		| $(SED) $(MSYS_SED_FIXES)),$(PANDOC))
 override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell $(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
 override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell $(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
 override OPTIONS_DOC	:= $(subst $(_CSS),$(shell $(ECHO) '$(_CSS)'			| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
@@ -4086,12 +4086,16 @@ $(COMPOSER_PANDOC): $(LIST) settings setup
 	@$(TABLE_I3) "$(_H)Environment:"	'$(_D)$(OPTIONS_ENV)'
 	@$(TABLE_I3) "$(_H)Pandoc Options:"	'$(_D)$(OPTIONS_DOC)'
 	@$(ECHO) "$(_N)"
-	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
+#WORKING
+#	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
+	$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
 	@$(ECHO) "$(_D)"
 	@$(TOUCH) "$(CURDIR)/$(COMPOSER_STAMP)"
 
 $(BASE).$(EXTENSION): $(LIST)
-	@$(MAKEDOC) --silent TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
+#WORKING
+#	@$(MAKEDOC) --silent TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
+	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 
 %.$(TYPE_HTML):
 	@$(COMPOSE) --silent TYPE="$(TYPE_HTML)" BASE="$(*)"
@@ -4100,7 +4104,9 @@ $(BASE).$(EXTENSION): $(LIST)
 	@$(COMPOSE) --silent TYPE="$(TYPE_LPDF)" BASE="$(*)"
 
 %.$(PRES_EXTN):
-	@$(COMPOSE) --silent TYPE="$(TYPE_PRES)" BASE="$(*)"
+#WORKING
+#	@$(COMPOSE) --silent TYPE="$(TYPE_PRES)" BASE="$(*)"
+	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)"
 
 %.$(SHOW_EXTN):
 	@$(COMPOSE) --silent TYPE="$(TYPE_SHOW)" BASE="$(*)"
