@@ -875,6 +875,7 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
+override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
@@ -915,7 +916,7 @@ override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
-override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
+#>override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
@@ -1043,8 +1044,6 @@ override CURL_CA_BUNDLE			?= $(COMPOSER_PROGS)/ca-bundle.crt
 else
 override CURL_CA_BUNDLE			?=
 endif
-#WORK : need to "export" all option variables...
-#WORK : or, is it just COMPOSER_PROGS_USE...?
 ifneq ($(CURL_CA_BUNDLE),)
 export CURL_CA_BUNDLE
 endif
@@ -1220,21 +1219,21 @@ override EXAMPLE_OUTPUT	:= Users_Guide
 override .ALL_TARGETS := \
 	HELP[_] \
 	EXAMPLE[_] \
-	$(COMPOSER_TARGET)[:-] \
-	$(COMPOSER_PANDOC)[:-] \
-	$(HELPOUT)[:-] \
-	$(HELPALL)[:-] \
-	$(DEBUGIT)[:-] \
-	$(TARGETS)[:-] \
-	$(EXAMPLE)[:-] \
-	$(TESTING)[:-] \
+	$(COMPOSER_TARGET)[:] \
+	$(COMPOSER_PANDOC)[:] \
+	$(HELPOUT)[:] \
+	$(HELPALL)[:] \
+	$(DEBUGIT)[:] \
+	$(TARGETS)[:] \
+	$(EXAMPLE)[:] \
+	$(TESTING)[:] \
 	$(INSTALL)[:-] \
-	$(REPLICA)[:-] \
-	$(UPGRADE)[:-] \
+	$(REPLICA)[:] \
+	$(UPGRADE)[:] \
 	$(STRAPIT)[:-] \
 	$(FETCHIT)[:-] \
 	$(BUILDIT)[:-] \
-	$(CHECKIT)[:-] \
+	$(CHECKIT)[:] \
 	$(SHELLIT)[:-] \
 	all[:] \
 	clean[:] \
@@ -1246,7 +1245,7 @@ override .ALL_TARGETS := \
 
 ifneq ($(COMPOSER_ESCAPES),)
 $(foreach FILE,\
-	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) -n \
+	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_PROGS_USE="$(COMPOSER_PROGS_USE)" .all_targets | $(SED) -n \
 		$(foreach FILE,$(.ALL_TARGETS),\
 			-e "/^$(FILE)/p" \
 		) \
@@ -3456,7 +3455,9 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
 .PHONY: .release-config
 .release-config:
-	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n" >"$(CURDIR)/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS)"
 
 .PHONY: .release
 .release:
