@@ -1176,8 +1176,8 @@ override INDENTING	:= $(NULL) $(NULL) $(NULL)
 override COMMENTED	:= $(_S)\#$(_D) $(NULL)
 
 override HEADER_L	:= $(ECHO) "$(_H)$(INDENTING)";	$(PRINTF)  "~%.0s" {1..70}; $(ECHO) "$(_D)\n"
-override HEADER_1	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..70}; $(ECHO) "$(_D)\n"
-override HEADER_2	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..40}; $(ECHO) "$(_D)\n"
+override HEADER_1	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..72}; $(ECHO) "$(_D)\n"
+override HEADER_2	:= $(ECHO) "$(_S)";		$(PRINTF) "\#%.0s" {1..36}; $(ECHO) "$(_D)\n"
 ifneq ($(COMPOSER_ESCAPES),)
 override TABLE_C2	:= $(PRINTF) "$(COMMENTED)%b\e[128D\e[22C%b$(_D)\n"
 override TABLE_I3	:= $(PRINTF) "$(INDENTING)%b\e[128D\e[22C%b\e[128D\e[52C%b$(_D)\n"
