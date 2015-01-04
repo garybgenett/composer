@@ -28,6 +28,7 @@
 #WORKING
 
 #TODO : new features
+# http://make.mad-scientist.net/constructed-include-files
 # http://www.html5rocks.com/en/tutorials/webcomponents/imports
 # http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
 #TODO
@@ -747,6 +748,29 @@ override BUILD_BINARY_LIST		:= \
 	\
 	ghc ghc-pkg \
 	cabal
+# these are not included in the final distribution
+override BUILD_BINARY_LIST		:= \
+	$(filter-out perl,\
+	$(filter-out ghc,\
+	$(filter-out ghc-pkg,\
+	$(filter-out cabal,\
+	$(BUILD_BINARY_LIST)))))
+
+override GLIBC_LIBRARY_LIST		:= \
+	ld-linux.so.2 \
+	libc.so.6 \
+	libcrypt.so.1 \
+	libdl.so.2 \
+	libgcc_s.so.1 \
+	libm.so.6 \
+	libnsl.so.1 \
+	libpthread.so.0 \
+	librt.so.1 \
+	libutil.so.1 \
+	linux-gate.so.1 \
+	\
+	ld-linux-x86-64.so.2 \
+	linux-vdso.so.1
 
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 override PERL_PATCH_LIST		:= \
@@ -2050,13 +2074,14 @@ endef
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
 #WORKING : need to make this work for "msys"
-	$(RM) "$(COMPOSER_ABODE)/.cabal/config"
+#	$(RM) "$(COMPOSER_ABODE)/.cabal/config"
 	$(BUILD_ENV) $(CABAL) update
 #WORKING : need to do this for all ghc builds, namely cabal
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
 		-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-		-e "s|(ghc[-]options[:]).*$$|\1 -optc-I$(COMPOSER_ABODE)/include -optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib|g" \
+		-e "s|(ld[-]options[:]).*$$|\1 -static -pthread $(LDFLAGS)|g" \
+		-e "s|(ghc[-]options[:]).*$$|\1 -static -pthread $(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
 		"$(COMPOSER_ABODE)/.cabal/config"
 
 .PHONY: $(BUILDIT)-cleanup
@@ -2113,12 +2138,6 @@ else ifeq ($(BUILD_PLAT),Msys)
 else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
-#WORK
-	$(RM) \
-		"$(COMPOSER_PROGS)/usr/bin/"perl \
-		"$(COMPOSER_PROGS)/usr/bin/"ghc \
-		"$(COMPOSER_PROGS)/usr/bin/"ghc-pkg \
-		"$(COMPOSER_PROGS)/usr/bin/"cabal
 
 override define HEREDOC_MSYS_SHELL =
 @echo off
@@ -2138,7 +2157,48 @@ endef
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
-$(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
+# thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
+$(CHECKIT): override PANDOC_VERSIONS		:= $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
+$(CHECKIT): override BUILD_BINARY_LIST_CHECK	:= \
+	$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
+	\
+	$(word 1,$(COREUTILS)) \
+	$(word 1,$(FIND)) \
+	$(word 1,$(PATCH)) \
+	$(word 1,$(SED)) \
+	$(word 1,$(BZIP)) \
+	$(word 1,$(GZIP)) \
+	$(word 1,$(XZ)) \
+	$(word 1,$(TAR)) \
+	$(word 1,$(PERL)) \
+	\
+	$(word 1,$(BASH)) $(word 1,$(SH)) \
+	$(word 1,$(LESS)) \
+	$(word 1,$(VIM)) \
+	\
+	$(word 1,$(MAKE)) \
+	$(word 1,$(ZIP)) \
+	$(word 1,$(UNZIP)) \
+	$(word 1,$(CURL)) \
+	$(word 1,$(GIT)) \
+	\
+	$(word 1,$(PANDOC)) \
+	$(word 1,$(PANDOC_CITEPROC)) \
+	\
+	$(word 1,$(TEX)) \
+	$(word 1,$(PDFLATEX)) \
+	\
+	$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
+	$(word 1,$(CABAL))
+$(CHECKIT): override BUILD_BINARY_LIST_LDD	:= $(shell $(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
+	| $(SED) \
+		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
+		-e "/^[:/]/d" \
+		-e "s|^([\t])[/][^/]+[/]|\1|g" \
+		-e "s|[ ][=][>][ ]|_NULL_|g" \
+		-e "s|[ ].0x[a-f0-9]+.$$||g" \
+	| $(SORT) \
+	)
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -2179,7 +2239,7 @@ endif
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst \",,$(word 1,$(PACMAN)))"
-	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst \",,$(word 1,$(MINTTY))) $(_S)($(subst \",,$(word 1,$(CYGWIN_CONSOLE_ESCAPE))))"
+	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst \",,$(word 1,$(MINTTY))) $(_S)($(subst \",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
 endif
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst \",,$(word 1,$(COREUTILS)))"
 	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst \",,$(word 1,$(FIND)))"
@@ -2210,34 +2270,23 @@ endif
 	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst \",,$(word 1,$(CABAL)))"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HEADER_L)
-	@$(LDD) \
-		$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_ESCAPE)) \
-		$(word 1,$(COREUTILS)) \
-		$(word 1,$(FIND)) \
-		$(word 1,$(PATCH)) \
-		$(word 1,$(SED)) \
-		$(word 1,$(BZIP)) \
-		$(word 1,$(GZIP)) \
-		$(word 1,$(XZ)) \
-		$(word 1,$(TAR)) \
-		$(word 1,$(PERL)) \
-		$(word 1,$(BASH)) $(word 1,$(SH)) \
-		$(word 1,$(LESS)) \
-		$(word 1,$(VIM)) \
-		$(word 1,$(MAKE)) \
-		$(word 1,$(ZIP)) \
-		$(word 1,$(UNZIP)) \
-		$(word 1,$(CURL)) \
-		$(word 1,$(GIT)) \
-		$(word 1,$(PANDOC)) \
-		$(word 1,$(PANDOC_CITEPROC)) \
-		$(word 1,$(TEX)) \
-		$(word 1,$(PDFLATEX)) \
-		$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
-		$(word 1,$(CABAL)) \
-		2>/dev/null \
-		| $(SED) -e "/^[:/]/d" -e "s|[(][^)]+[)]||g" \
-		| $(SORT)
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),\
+		if [ -n "$(filter $(word 1,$(subst _NULL_, ,$(FILE))),$(GLIBC_LIBRARY_LIST))" ]; then \
+			$(TABLE_I3) "- $(_E)$(word 1,$(subst _NULL_, ,$(FILE)))" "$(_N)$(word 2,$(subst _NULL_, ,$(FILE)))"; \
+		else \
+			$(TABLE_I3) "$(_C)$(word 1,$(subst _NULL_, ,$(FILE)))" "$(_D)$(word 2,$(subst _NULL_, ,$(FILE)))"; \
+		fi; \
+	)
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),\
+		if [ -z "$(filter $(word 1,$(subst _NULL_, ,$(FILE))),$(GLIBC_LIBRARY_LIST))" ]; then \
+			$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst _NULL_, ,$(FILE))):"; \
+			$(foreach FILE_NULL,$(BUILD_BINARY_LIST_CHECK),\
+				if [ -n "$(shell $(LDD) $(FILE_NULL) 2>/dev/null | $(SED) -n "/$(word 1,$(subst _NULL_, ,$(FILE)))/p")" ]; then \
+					$(TABLE_I3) "" "$(subst ",,$(FILE_NULL))"; \
+				fi; \
+			) \
+		fi; \
+	)
 	@$(HEADER_L)
 
 .PHONY: $(SHELLIT)
@@ -2746,9 +2795,11 @@ $(STRAPIT)-util-coreutils:
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
 		"$(COREUTILS_TAR_DST)/configure"
+#WORKING : libcap?
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
+		--disable-libcap \
 		--disable-xattr \
 	)
 #WORK : does not work for msys
@@ -3391,18 +3442,12 @@ $(FETCHIT)-pandoc-pull:
 
 .PHONY: $(FETCHIT)-pandoc-prep
 $(FETCHIT)-pandoc-prep:
-#WORKING : need to do this for all ghc builds, namely cabal
-#	# make sure GHC looks for libraries in the right place
-#	$(SED) -i \
-#		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
-#		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1-optc-L$(COMPOSER_ABODE)/lib -optl-L$(COMPOSER_ABODE)/lib \2|g" \
-#		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
-#		"$(PANDOC_DST)/pandoc.cabal"
-#WORKING : pandoc css windows
-#	# fix the pathname fix, since MSYS2 uses "mixed"-style pathnames: https://github.com/jgm/pandoc/commit/2956ef251c815c332679ff4666031a5b7a65aadc
-#	$(SED) -i \
-#		-e "s|(ensureEscaped[ ]x[@][(].+)\\\\\\\\|\1/|g" \
-#		"$(PANDOC_DST)/src/Text/Pandoc/Shared.hs"
+	# make sure GHC looks for libraries in the right place
+	$(SED) -i \
+		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
+		"$(PANDOC_DST)/pandoc.cabal"
 
 .PHONY: $(BUILDIT)-pandoc-deps
 $(BUILDIT)-pandoc-deps:
@@ -3970,11 +4015,10 @@ ifneq ($(COMPOSER_TARGETS),$(BASE))
 all: \
 	$(COMPOSER_TARGETS)
 else
-#WORKING	$(BASE).$(PRES_EXTN) \
-#WORKING
 all: \
 	$(BASE).$(TYPE_HTML) \
 	$(BASE).$(TYPE_LPDF) \
+	$(BASE).$(PRES_EXTN) \
 	$(BASE).$(SHOW_EXTN) \
 	$(BASE).$(TYPE_DOCX) \
 	$(BASE).$(TYPE_EPUB)
