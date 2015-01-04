@@ -2073,16 +2073,23 @@ endef
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
-#WORKING : need to make this work for "msys"
-#	$(RM) "$(COMPOSER_ABODE)/.cabal/config"
 	$(BUILD_ENV) $(CABAL) update
-#WORKING : need to do this for all ghc builds, namely cabal
+ifeq ($(BUILD_PLAT),Msys)
+#WORK : can we not use the $APPDATA directory?
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
 		-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-		-e "s|(ld[-]options[:]).*$$|\1 -static -pthread $(LDFLAGS)|g" \
-		-e "s|(ghc[-]options[:]).*$$|\1 -static -pthread $(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
+		-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
+		-e "s|(ghc[-]options[:]).*$$|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
+		"$(APPDATA)/cabal/.config"
+else
+	# make sure GHC looks for libraries in the right place
+	$(SED) -i \
+		-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
+		-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
+		-e "s|(ghc[-]options[:]).*$$|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
 		"$(COMPOSER_ABODE)/.cabal/config"
+endif
 
 .PHONY: $(BUILDIT)-cleanup
 $(BUILDIT)-cleanup:
@@ -3412,6 +3419,10 @@ endif
 	$(SED) -i \
 		-e "s|^([ ]+programFindLocation[ ][=][ ].x)([ ][-])|\1 _\2|g" \
 		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
+	# make sure GHC looks for libraries in the right place
+	$(SED) -i \
+		-e "s|(ghc[-]options[:][ ]+)([-]Wall)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		"$(HASKELL_TAR)/packages/cabal-install-$(CABAL_VERSION)/cabal-install.cabal"
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
