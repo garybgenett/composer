@@ -177,6 +177,7 @@ override HELPALL			:= help
 #	.release-test
 #	.release-debug
 #	.dist
+#	world
 #	all
 #	clean
 #	whoami
@@ -2018,6 +2019,14 @@ $(UPGRADE):
 	@$(ECHO) "$(_D)"
 
 ########################################
+
+#WORK : document!
+#WORK : better location?
+.PHONY: world
+world:
+	$(RUNMAKE) $(STRAPIT)
+	$(RUNMAKE) $(FETCHIT)
+	$(RUNMAKE) $(BUILDIT)
 
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
