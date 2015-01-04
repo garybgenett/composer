@@ -2024,6 +2024,7 @@ $(UPGRADE):
 #WORK : better location?
 .PHONY: world
 world:
+	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(STRAPIT)
 	$(RUNMAKE) $(FETCHIT)
 	$(RUNMAKE) $(BUILDIT)
