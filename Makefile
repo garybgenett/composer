@@ -2795,7 +2795,6 @@ $(STRAPIT)-util-coreutils:
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
 		"$(COREUTILS_TAR_DST)/configure"
-#WORKING : libcap?
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
