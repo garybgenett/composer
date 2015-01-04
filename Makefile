@@ -3540,6 +3540,7 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 .release:
 	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR)/Msys"	BUILD_DIST="1" BUILD_PLAT="Msys"	COMPOSER_PROGS_USE="0" .dist
 	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR)/Linux"	BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" .dist
+#WORK : should this go somewhere else?
 	@$(FIND) "$(CURDIR)" | $(SED) -n "/[.]git$$/p" | while read FILE; do \
 		$(RM) "$${FILE}"; \
 	done
@@ -3551,7 +3552,7 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 # this is only for testing conversion of the full Pandoc manual syntax into our primary document types
 .release-test:
 	@$(CP) "$(.RELEASE_MAN_SRC)" "$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
-#WORKING : fixed?
+#WORK : fixed?
 #	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
 #	@$(SED) -i \
 #		-e "1459d; 1461d; 1463d; 1465d; 1467d; 1470d;" \
