@@ -9,7 +9,7 @@ TEXTDOMAIN=git
 export TEXTDOMAIN
 if test -z "$GIT_TEXTDOMAINDIR"
 then
-	TEXTDOMAINDIR="/.composer.build/.home/share/locale"
+	TEXTDOMAINDIR="/Linux/.home/share/locale"
 else
 	TEXTDOMAINDIR="$GIT_TEXTDOMAINDIR"
 fi

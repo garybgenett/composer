@@ -37,8 +37,8 @@ conf="$GIT_DIR/gitweb/httpd.conf"
 # if installed, it doesn't need further configuration (module_path)
 test -z "$httpd" && httpd='lighttpd -f'
 
-# Default is /.composer.build/.home/share/gitweb
-test -z "$root" && root='/.composer.build/.home/share/gitweb'
+# Default is /Linux/.home/share/gitweb
+test -z "$root" && root='/Linux/.home/share/gitweb'
 
 # any untaken local port will do...
 test -z "$port" && port=1234

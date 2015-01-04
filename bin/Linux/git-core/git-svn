@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib (split(/:/, $ENV{GITPERLLIB} || "/.composer.build/.home/lib/perl5/site_perl/5.12.4"));
+use lib (split(/:/, $ENV{GITPERLLIB} || "/Linux/.home/lib/perl5/site_perl/5.12.4"));
 # Copyright (C) 2006, Eric Wong <normalperson@yhbt.net>
 # License: GPL v2 or later
 use 5.008;

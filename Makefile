@@ -1392,10 +1392,10 @@ HELP_OPTIONS_SUB:
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Location Options:"
 	@$(TABLE_I3) "$(_C)COMPOSER_OTHER$(_D)"		"Root of below directories"	"[$(_M)$(COMPOSER_OTHER)$(_D)]"
-	@$(TABLE_I3) "$(_C)COMPOSER_ABODE$(_D)"		"Install/binary directory"	"[$(_M)$(COMPOSER_ABODE)$(_D)]"
-	@$(TABLE_I3) "$(_C)COMPOSER_STORE$(_D)"		"Source files directory"	"[$(_M)$(COMPOSER_STORE)$(_D)]"
-	@$(TABLE_I3) "$(_C)COMPOSER_BUILD$(_D)"		"Build directory"		"[$(_M)$(COMPOSER_BUILD)$(_D)]"
-	@$(TABLE_I3) "$(_C)COMPOSER_PROGS$(_D)"		"Built binaries directory"	"[$(_M)$(COMPOSER_PROGS)$(_D)]"
+	@$(TABLE_I3) "$(_C)COMPOSER_ABODE$(_D)"		"Install/binary directory"	"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_ABODE))$(_D)]"
+	@$(TABLE_I3) "$(_C)COMPOSER_STORE$(_D)"		"Source files directory"	"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_STORE))$(_D)]"
+	@$(TABLE_I3) "$(_C)COMPOSER_BUILD$(_D)"		"Build directory"		"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_BUILD))$(_D)]"
+	@$(TABLE_I3) "$(_C)COMPOSER_PROGS$(_D)"		"Built binaries directory"	"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_PROGS))$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_PROGS_USE$(_D)"	"Prefer repository binaries"	"[$(_M)$(COMPOSER_PROGS_USE)$(_D)] $(_N)(valid: empty, 0 or 1)"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Build Options:"
@@ -3551,12 +3551,13 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 # this is only for testing conversion of the full Pandoc manual syntax into our primary document types
 .release-test:
 	@$(CP) "$(.RELEASE_MAN_SRC)" "$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
-	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
-	@$(SED) -i \
-		-e "1459d; 1461d; 1463d; 1465d; 1467d; 1470d;" \
-		-e "2770d; 2775d;" \
-		-e "s|(rights[:][ ])\xc2\xa9|\1\(c\)|g" \
-		"$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
+#WORKING : fixed?
+#	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
+#	@$(SED) -i \
+#		-e "1459d; 1461d; 1463d; 1465d; 1467d; 1470d;" \
+#		-e "2770d; 2775d;" \
+#		-e "s|(rights[:][ ])\xc2\xa9|\1\(c\)|g" \
+#		"$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
 	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" all \
 		BASE="$(.RELEASE_MAN_DST)"
 
