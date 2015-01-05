@@ -2297,23 +2297,23 @@ $(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
 		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
 		-e "/^[:/]/d" \
 		-e "s|^([\t])[/][^/]+[/]|\1|g" \
-		-e "s|[ ][=][>][ ]|_NULL_|g" \
+		-e "s|[ ][=][>][ ]|NULL|g" \
 		-e "s|[ ].0x[a-f0-9]+.$$||g" \
 	| $(SORT) \
 )
 override define CHECKIT_LIBRARY_LOCALE =
-	if [ -n "$(filter $(word 1,$(subst _NULL_, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
-		$(TABLE_I3) "- $(_E)$(word 1,$(subst _NULL_, ,$(1)))" "$(_N)$(word 2,$(subst _NULL_, ,$(1)))"; \
+	if [ -n "$(filter $(word 1,$(subst NULL, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "- $(_E)$(word 1,$(subst NULL, ,$(1)))" "$(_N)$(word 2,$(subst NULL, ,$(1)))"; \
 	else \
-		$(TABLE_I3) "$(_C)$(word 1,$(subst _NULL_, ,$(1)))" "$(_D)$(word 2,$(subst _NULL_, ,$(1)))"; \
+		$(TABLE_I3) "$(_C)$(word 1,$(subst NULL, ,$(1)))" "$(_D)$(word 2,$(subst NULL, ,$(1)))"; \
 	fi
 	$(NULL)
 endef
 override define CHECKIT_LIBRARY_LINKED =
-	if [ -z "$(filter $(word 1,$(subst _NULL_, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
-		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst _NULL_, ,$(1))):"; \
+	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1))):"; \
 		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
-			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(word 1,$(subst _NULL_, ,$(1)))/p")" ]; then \
+			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(word 1,$(subst NULL, ,$(1)))/p")" ]; then \
 				$(TABLE_I3) "" "$(subst ",,$(FILE))"; \
 			fi; \
 		) \
