@@ -3547,9 +3547,8 @@ override .RELEASE_ROOTFS_SRC	:= http://build.funtoo.org/funtoo-stable/x86-32bit/
 .release-chroot:
 	$(call CURL_FILE,$(.RELEASE_ROOTFS_SRC))
 	$(call DO_UNTAR,$(.RELEASE_DIR)/Linux,$(.RELEASE_ROOTFS_SRC))
-	@$(RUNMAKE) .release-config
+	@$(RUNMAKE) --silent .release-config
 	@$(HEADER_L)
-	@$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/Linux/"
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd /Linux ; export PATH ; make world"
 	@$(ECHO) "\n"
@@ -3559,6 +3558,8 @@ override .RELEASE_ROOTFS_SRC	:= http://build.funtoo.org/funtoo-stable/x86-32bit/
 .release-config:
 	@$(MKDIR) "$(.RELEASE_DIR)/Linux"
 	@$(MKDIR) "$(.RELEASE_DIR)/Msys"
+	@$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/Linux/"
+	@$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/Msys/"
 	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
