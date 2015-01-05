@@ -442,6 +442,11 @@ override GNU_CFG_FILE_SUB		:= config.sub
 override GNU_CFG_DST			:= $(COMPOSER_BUILD)/gnu-config
 override GNU_CFG_CMT			:=
 
+# http://www.funtoo.org
+# http://www.funtoo.org/I686
+override LINUX_ROOTFS_DATE		:= 2015-01-03
+override LINUX_ROOTFS_SRC		:= http://build.funtoo.org/funtoo-stable/x86-32bit/i686/$(LINUX_ROOTFS_DATE)/stage3-i686-funtoo-stable-$(LINUX_ROOTFS_DATE).tar.xz
+
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
 # http://sourceforge.net/projects/msys2
 # http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
@@ -458,9 +463,14 @@ override LINUX_TAR_SRC			:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$
 override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
 # https://www.gnu.org/software/libc (license: GPL)
 # https://www.gnu.org/software/libc
-override GLIBC_VERSION			:= 2.20
+override GLIBC_VERSION			:= 2.19
 override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
 override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
+# http://www.freedesktop.org/wiki/Software/pkg-config (license: GPL)
+# http://www.freedesktop.org/wiki/Software/pkg-config
+override PKGCONFIG_VERSION		:= 0.28
+override PKGCONFIG_TAR_SRC		:= http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG_VERSION).tar.gz
+override PKGCONFIG_TAR_DST		:= $(BUILD_STRAP)/pkg-config-$(PKGCONFIG_VERSION)
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
 override ZLIB_VERSION			:= 1.2.8
@@ -577,7 +587,7 @@ override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= 4.0
+override MAKE_CMT			:= 4.1
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -2313,7 +2323,7 @@ override define CHECKIT_LIBRARY_LINKED =
 	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
 		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1))):"; \
 		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
-			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(word 1,$(subst NULL, ,$(1)))/p")" ]; then \
+			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(subst +,[+],$(word 1,$(subst NULL, ,$(1))))/p")" ]; then \
 				$(TABLE_I3) "" "$(subst ",,$(FILE))"; \
 			fi; \
 		) \
@@ -2592,11 +2602,11 @@ $(STRAPIT)-msys-pkg:
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
 	# call recursively instead of using dependencies, so that environment variables update
-#WORK
-#ifeq ($(BUILD_PLAT),Linux)
-#	$(RUNMAKE) $(STRAPIT)-libs-linux
-#	$(RUNMAKE) $(STRAPIT)-libs-glibc
-#endif
+ifeq ($(BUILD_PLAT),Linux)
+	$(RUNMAKE) $(STRAPIT)-libs-linux
+	$(RUNMAKE) $(STRAPIT)-libs-glibc
+	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
+endif
 	$(RUNMAKE) $(STRAPIT)-libs-zlib
 	$(RUNMAKE) $(STRAPIT)-libs-gmp
 	$(RUNMAKE) $(STRAPIT)-libs-libiconv1
@@ -2627,6 +2637,17 @@ $(STRAPIT)-libs-glibc:
 	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
 	$(call AUTOTOOLS_BUILD,$(GLIBC_TAR_DST).build,$(COMPOSER_ABODE),\
 		CFLAGS="$(CFLAGS) -O2" \
+	)
+
+#WORKING
+#WORK : document!
+.PHONY: $(STRAPIT)-libs-pkgconfig
+$(STRAPIT)-libs-pkgconfig:
+	$(call CURL_FILE,$(PKGCONFIG_TAR_SRC))
+	$(call DO_UNTAR,$(PKGCONFIG_TAR_DST),$(PKGCONFIG_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-host-tool \
+		--with-internal-glib \
 	)
 
 .PHONY: $(STRAPIT)-libs-zlib
@@ -3013,9 +3034,11 @@ $(FETCHIT)-make-prep:
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
 
+#WORKING : does the dmalloc option change the linux 4.1 segfault?
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
+		--without-dmalloc \
 		--without-guile \
 	)
 
@@ -3521,15 +3544,10 @@ override .RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
 override .RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
-# http://www.funtoo.org
-# http://www.funtoo.org/I686
-override .RELEASE_ROOTFS_DATE	:= 2015-01-03
-override .RELEASE_ROOTFS_SRC	:= http://build.funtoo.org/funtoo-stable/x86-32bit/i686/$(.RELEASE_ROOTFS_DATE)/stage3-i686-funtoo-stable-$(.RELEASE_ROOTFS_DATE).tar.xz
-
 .PHONY: .release-chroot
 .release-chroot:
-	$(call CURL_FILE,$(.RELEASE_ROOTFS_SRC))
-	$(call DO_UNTAR,$(.RELEASE_DIR)/Linux,$(.RELEASE_ROOTFS_SRC))
+	$(call CURL_FILE,$(LINUX_ROOTFS_SRC))
+	$(call DO_UNTAR,$(.RELEASE_DIR)/Linux,$(LINUX_ROOTFS_SRC))
 	@$(RUNMAKE) --silent .release-config
 	@$(HEADER_L)
 	@$(ECHO) "\n"
@@ -4142,60 +4160,53 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 
 ########################################
 
-.PHONY: $(COMPOSER_TARGET)
-$(COMPOSER_TARGET): $(BASE).$(EXTENSION)
-
-#WORKING : pandoc css windows
-#	https://github.com/jgm/pandoc/issues/1558
-#	https://github.com/jgm/pandoc/commit/2956ef251c815c332679ff4666031a5b7a65aadc
-
 override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e "s|[/]|\\\\\\\\|g"
 override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
 ifeq ($(BUILD_PLAT),Msys)
-override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell $(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
-override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell $(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
-override OPTIONS_DOC	:= $(subst $(_CSS),$(shell $(ECHO) '$(_CSS)'			| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell $(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell $(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-#BUG : pandoc hangs on windows when doing a self-contained revealjs
+override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell		$(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
+override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell		$(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
+override OPTIONS_DOC	:= $(subst $(_CSS),$(shell		$(ECHO) '$(_CSS)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell	$(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+endif
+
+#BUG : pandoc hangs indefinitely on "$(BUILD_PLAT),Msys" when doing a self-contained revealjs
 #	https://stackoverflow.com/questions/21423952/self-contained-reveal-js-file-without-relative-reveal-js-folder-using-pandoc
-ifeq ($(OUTPUT),revealjs)
-#WORKING : need to issue some type of warning when this happens; maybe require ENTER to continue?
+# remove the "WARNING" below once this is fixed
+ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(TYPE),$(TYPE_PRES))
 override OPTIONS_DOC	:= $(filter-out --self-contained,$(OPTIONS_DOC))
 endif
 endif
 
-#WORKING
-#override ENV		:= $(subst $(ENV),$(shell $(ECHO) '$(ENV)'			| $(SED) $(MSYS_SED_FIXES)),$(ENV))
-override DOC		:= $(subst $(PANDOC),$(shell $(ECHO) '$(PANDOC)'		| $(SED) $(MSYS_SED_FIXES)),$(PANDOC))
-#override OPTIONS_DOC	:= $(shell $(ECHO) '$(OPTIONS_DOC)'				| $(SED) $(MSYS_SED_FIXES))
-#override OPTIONS_ENV	:= $(shell $(ECHO) '$(subst $(ENV) - ,,$(BUILD_ENV))'		| $(SED) $(MSYS_SED_FIXES))
-#override OPTIONS_ENV	:= $(ENV) - $(OPTIONS_ENV)
-#	$(ENV) - $(subst /,\,$(subst /c/,C:\,$(subst $(ENV) - ,,$(BUILD_ENV) $(PANDOC))))
-#override MSYS_CSS	:= $(shell $(ECHO) '$(_CSS)'		| $(SED) -e "s|[/]([a-z])[/]|\1:\\\\|g" -e "s|[/]|\\\\|g")
-#override MSYS_TEXMFDIST	:= $(shell $(ECHO) '$(TEXMFDIST)'	| $(SED) -e "s|[/]([a-z])[/]|\1:\\\\|g" -e "s|[/]|\\\\|g")
-#override MSYS_TEXMFVAR	:= $(shell $(ECHO) '$(TEXMFVAR)'	| $(SED) -e "s|[/]([a-z])[/]|\1:\\\\|g" -e "s|[/]|\\\\|g")
-#override PANDOC		:= $(subst $(_CSS),$(MSYS_CSS),$(subst $(TEXMFDIST),$(MSYS_TEXMFDIST),$(subst $(TEXMFVAR),$(MSYS_TEXMFVAR),$(PANDOC))))
-#$(shell $(call DO_HEREDOC,.HEREDOC_DIST_REVEALJS_CSS)				| $(SED) -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|file:///\1:\\\\|g" -e "s|[/]|\\\\|g" >"$(COMPOSER_DIR)/revealjs.css")
+.PHONY: $(COMPOSER_TARGET)
+$(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(LIST) settings setup
+ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(TYPE),$(TYPE_PRES))
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_N)WARNING:"
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_N)There is currently a bug in Pandoc which precludes building self-contained Reveal.js documents on Windows systems."
+	@$(TABLE_I3) "$(_N)Any Reveal.js documents produced will only be viewable on this system, with the current $(COMPOSER_BASENAME) directory in place."
+	@$(TABLE_I3) "$(_N)To build self-contained Reveal.js documents, you will need to use a non-Windows system until this bug is fixed upstream."
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_N)This is an unfortunate situation, and the $(COMPOSER_BASENAME) author apologizes for the inconvenience."
+	@$(ECHO) "\n"
+endif
+endif
 	@$(TABLE_I3) "$(_H)Environment:"	'$(_D)$(OPTIONS_ENV)'
 	@$(TABLE_I3) "$(_H)Pandoc Options:"	'$(_D)$(OPTIONS_DOC)'
 	@$(ECHO) "$(_N)"
-#WORKING
-	@$(ECHO) '\n$(DOC) $(OPTIONS_DOC)\n\n'
-#WORKING
-#	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
-	$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
+	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
 	@$(ECHO) "$(_D)"
 	@$(TOUCH) "$(CURDIR)/$(COMPOSER_STAMP)"
 
 $(BASE).$(EXTENSION): $(LIST)
-#WORKING
-#	@$(MAKEDOC) --silent TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
-	$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
+	@$(MAKEDOC) --silent TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 
 %.$(TYPE_HTML): %.$(COMPOSER_EXT)
 	@$(COMPOSE) --silent TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
@@ -4204,9 +4215,7 @@ $(BASE).$(EXTENSION): $(LIST)
 	@$(COMPOSE) --silent TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
 
 %.$(PRES_EXTN): %.$(COMPOSER_EXT)
-#WORKING
-#	@$(COMPOSE) --silent TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
-	$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
+	@$(COMPOSE) --silent TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
 
 %.$(SHOW_EXTN): %.$(COMPOSER_EXT)
 	@$(COMPOSE) --silent TYPE="$(TYPE_SHOW)" BASE="$(*)" LIST="$(^)"
