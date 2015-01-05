@@ -2183,48 +2183,7 @@ endef
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
-# thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
-$(CHECKIT): override PANDOC_VERSIONS		:= $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
-$(CHECKIT): override BUILD_BINARY_LIST_CHECK	:= \
-	$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
-	\
-	$(word 1,$(COREUTILS)) \
-	$(word 1,$(FIND)) \
-	$(word 1,$(PATCH)) \
-	$(word 1,$(SED)) \
-	$(word 1,$(BZIP)) \
-	$(word 1,$(GZIP)) \
-	$(word 1,$(XZ)) \
-	$(word 1,$(TAR)) \
-	$(word 1,$(PERL)) \
-	\
-	$(word 1,$(BASH)) $(word 1,$(SH)) \
-	$(word 1,$(LESS)) \
-	$(word 1,$(VIM)) \
-	\
-	$(word 1,$(MAKE)) \
-	$(word 1,$(ZIP)) \
-	$(word 1,$(UNZIP)) \
-	$(word 1,$(CURL)) \
-	$(word 1,$(GIT)) \
-	\
-	$(word 1,$(PANDOC)) \
-	$(word 1,$(PANDOC_CITEPROC)) \
-	\
-	$(word 1,$(TEX)) \
-	$(word 1,$(PDFLATEX)) \
-	\
-	$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
-	$(word 1,$(CABAL))
-$(CHECKIT): override BUILD_BINARY_LIST_LDD	:= $(shell $(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
-	| $(SED) \
-		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
-		-e "/^[:/]/d" \
-		-e "s|^([\t])[/][^/]+[/]|\1|g" \
-		-e "s|[ ][=][>][ ]|_NULL_|g" \
-		-e "s|[ ].0x[a-f0-9]+.$$||g" \
-	| $(SORT) \
-	)
+$(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -2296,27 +2255,71 @@ endif
 	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst \",,$(word 1,$(CABAL)))"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HEADER_L)
-	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),\
-		if [ -n "$(filter $(word 1,$(subst _NULL_, ,$(FILE))),$(GLIBC_LIBRARY_LIST))" ]; then \
-			$(TABLE_I3) "- $(_E)$(word 1,$(subst _NULL_, ,$(FILE)))" "$(_N)$(word 2,$(subst _NULL_, ,$(FILE)))"; \
-		else \
-			$(TABLE_I3) "$(_C)$(word 1,$(subst _NULL_, ,$(FILE)))" "$(_D)$(word 2,$(subst _NULL_, ,$(FILE)))"; \
-		fi; \
-	)
-#WORKING
-#make: execvp: /bin/sh: Argument list too long
-#make: *** [check] Error 127
-	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),\
-		if [ -z "$(filter $(word 1,$(subst _NULL_, ,$(FILE))),$(GLIBC_LIBRARY_LIST))" ]; then \
-			$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst _NULL_, ,$(FILE))):"; \
-			$(foreach FILE_NULL,$(BUILD_BINARY_LIST_CHECK),\
-				if [ -n "$(shell $(LDD) $(FILE_NULL) 2>/dev/null | $(SED) -n "/$(word 1,$(subst _NULL_, ,$(FILE)))/p")" ]; then \
-					$(TABLE_I3) "" "$(subst ",,$(FILE_NULL))"; \
-				fi; \
-			) \
-		fi; \
-	)
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCALE,$(FILE)))
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LINKED,$(FILE)))
 	@$(HEADER_L)
+
+# thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
+$(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
+	$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
+	\
+	$(word 1,$(COREUTILS)) \
+	$(word 1,$(FIND)) \
+	$(word 1,$(PATCH)) \
+	$(word 1,$(SED)) \
+	$(word 1,$(BZIP)) \
+	$(word 1,$(GZIP)) \
+	$(word 1,$(XZ)) \
+	$(word 1,$(TAR)) \
+	$(word 1,$(PERL)) \
+	\
+	$(word 1,$(BASH)) $(word 1,$(SH)) \
+	$(word 1,$(LESS)) \
+	$(word 1,$(VIM)) \
+	\
+	$(word 1,$(MAKE)) \
+	$(word 1,$(ZIP)) \
+	$(word 1,$(UNZIP)) \
+	$(word 1,$(CURL)) \
+	$(word 1,$(GIT)) \
+	\
+	$(word 1,$(PANDOC)) \
+	$(word 1,$(PANDOC_CITEPROC)) \
+	\
+	$(word 1,$(TEX)) \
+	$(word 1,$(PDFLATEX)) \
+	\
+	$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
+	$(word 1,$(CABAL))
+$(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
+	$(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
+	| $(SED) \
+		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
+		-e "/^[:/]/d" \
+		-e "s|^([\t])[/][^/]+[/]|\1|g" \
+		-e "s|[ ][=][>][ ]|_NULL_|g" \
+		-e "s|[ ].0x[a-f0-9]+.$$||g" \
+	| $(SORT) \
+)
+override define CHECKIT_LIBRARY_LOCALE =
+	if [ -n "$(filter $(word 1,$(subst _NULL_, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "- $(_E)$(word 1,$(subst _NULL_, ,$(1)))" "$(_N)$(word 2,$(subst _NULL_, ,$(1)))"; \
+	else \
+		$(TABLE_I3) "$(_C)$(word 1,$(subst _NULL_, ,$(1)))" "$(_D)$(word 2,$(subst _NULL_, ,$(1)))"; \
+	fi
+	$(NULL)
+endef
+override define CHECKIT_LIBRARY_LINKED =
+	if [ -z "$(filter $(word 1,$(subst _NULL_, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst _NULL_, ,$(1))):"; \
+		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
+			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(word 1,$(subst _NULL_, ,$(1)))/p")" ]; then \
+				$(TABLE_I3) "" "$(subst ",,$(FILE))"; \
+			fi; \
+		) \
+	fi
+	$(NULL)
+endef
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -2586,28 +2589,6 @@ $(STRAPIT)-msys-pkg:
 		$(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
 
-#WORK : causes build errors
-#make[2]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
-#make[3]: Entering directory `/.composer.build/build/bootstrap/libiconv-1.14'
-#make[3]: Nothing to be done for `am--refresh'.
-#make[3]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14'
-#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c allocator.c
-#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c areadlink.c
-#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c careadlinkat.c
-#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c malloca.c
-#cc -DHAVE_CONFIG_H -DEXEEXT=\"\" -I. -I.. -I../lib  -I../intl -DDEPENDS_ON_LIBICONV=1 -DDEPENDS_ON_LIBINTL=1   -L/.composer.build/.home/lib -I/.composer.build/.home/include -m32 -march=i686 -mtune=generic -c progname.c
-#In file included from progname.c:26:0:
-#./stdio.h:1010:1: error: ‘gets’ undeclared here (not in a function)
-# _GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");
-#  ^
-#  make[2]: *** [progname.o] Error 1
-#  make[2]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
-#  make[1]: *** [all] Error 2
-#  make[1]: Leaving directory `/.composer.build/build/bootstrap/libiconv-1.14/srclib'
-#  make: *** [all] Error 2
-#  make: *** [bootstrap-libs-libiconv1] Error 2
-#WORK
-
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
 	# call recursively instead of using dependencies, so that environment variables update
@@ -2680,6 +2661,8 @@ override define LIBICONV_BUILD =
 	# start with fresh source directory, due to circular dependency with "gettext"
 	$(RM) -r "$(LIBICONV_TAR_DST)"
 	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
+	# https://savannah.gnu.org/bugs/?43212
+	$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux)
 	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux)
