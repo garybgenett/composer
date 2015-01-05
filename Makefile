@@ -27,6 +27,14 @@
 # _ comments, comments, comments (& formatting :)
 #WORKING
 
+#WORKING
+# linking/libraries
+#	https://stackoverflow.com/questions/10539857/statically-link-gmp-to-an-haskell-application-using-ghc-llvm
+#	https://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
+#	https://stackoverflow.com/questions/8657908/deploying-yesod-to-heroku-cant-build-statically/8658468#8658468
+#	https://stackoverflow.com/questions/2558166/using-ghc-cabal-with-gmp-installed-in-user-space
+#WORKING
+
 #TODO : new features
 # http://make.mad-scientist.net/constructed-include-files
 # http://www.html5rocks.com/en/tutorials/webcomponents/imports
@@ -173,6 +181,7 @@ override HELPALL			:= help
 #	.make_database
 #	.all_targets
 #	.release-config
+#	.release-chroot
 #	.release
 #	.release-test
 #	.release-debug
@@ -900,7 +909,6 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
-override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
@@ -923,6 +931,7 @@ endif
 override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
+override CHROOT				:= "$(call COMPOSER_FIND,$(PATH_LIST),chroot)"
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override DATE				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --iso
 override DIRCOLORS			:= "$(call COMPOSER_FIND,$(PATH_LIST),dircolors)"
@@ -941,7 +950,7 @@ override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
-#>override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
+override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
@@ -2294,6 +2303,9 @@ endif
 			$(TABLE_I3) "$(_C)$(word 1,$(subst _NULL_, ,$(FILE)))" "$(_D)$(word 2,$(subst _NULL_, ,$(FILE)))"; \
 		fi; \
 	)
+#WORKING
+#make: execvp: /bin/sh: Argument list too long
+#make: *** [check] Error 127
 	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),\
 		if [ -z "$(filter $(word 1,$(subst _NULL_, ,$(FILE))),$(GLIBC_LIBRARY_LIST))" ]; then \
 			$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst _NULL_, ,$(FILE))):"; \
@@ -3526,16 +3538,33 @@ override .RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
 override .RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
+# http://www.funtoo.org
+# http://www.funtoo.org/I686
+override .RELEASE_ROOTFS_DATE	:= 2015-01-03
+override .RELEASE_ROOTFS_SRC	:= http://build.funtoo.org/funtoo-stable/x86-32bit/i686/$(.RELEASE_ROOTFS_DATE)/stage3-i686-funtoo-stable-$(.RELEASE_ROOTFS_DATE).tar.xz
+
+.PHONY: .release-chroot
+.release-chroot:
+	$(call CURL_FILE,$(.RELEASE_ROOTFS_SRC))
+	$(call DO_UNTAR,$(.RELEASE_DIR)/Linux,$(.RELEASE_ROOTFS_SRC))
+	@$(RUNMAKE) .release-config
+	@$(HEADER_L)
+	@$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/Linux/"
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_C)# cd /Linux ; export PATH ; make world"
+	@$(ECHO) "\n"
+	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/Linux,$(COMPOSER_ABODE))" $(CHROOT) "$(.RELEASE_DIR)" /bin/bash -o vi
+
 .PHONY: .release-config
 .release-config:
-	@$(MKDIR) "$(abspath $(dir $(COMPOSER_OTHER)))/Linux"
-	@$(MKDIR) "$(abspath $(dir $(COMPOSER_OTHER)))/Msys"
+	@$(MKDIR) "$(.RELEASE_DIR)/Linux"
+	@$(MKDIR) "$(.RELEASE_DIR)/Msys"
 	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
 	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Linux/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(abspath $(dir $(COMPOSER_OTHER)))/Msys/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
 
 .PHONY: .release
 .release:
@@ -4145,6 +4174,12 @@ override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell $(ECHO) '$(TEXMFVAR)'		| $(S
 override OPTIONS_DOC	:= $(subst $(_CSS),$(shell $(ECHO) '$(_CSS)'			| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
 override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell $(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
 override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell $(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+#BUG : pandoc hangs on windows when doing a self-contained revealjs
+#	https://stackoverflow.com/questions/21423952/self-contained-reveal-js-file-without-relative-reveal-js-folder-using-pandoc
+ifeq ($(OUTPUT),revealjs)
+#WORKING : need to issue some type of warning when this happens; maybe require ENTER to continue?
+override OPTIONS_DOC	:= $(filter-out --self-contained,$(OPTIONS_DOC))
+endif
 endif
 
 #WORKING
