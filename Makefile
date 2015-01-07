@@ -2805,9 +2805,18 @@ $(STRAPIT)-libs-libiconv2:
 $(STRAPIT)-libs-pkgconfig:
 	$(call CURL_FILE,$(PKGCONFIG_TAR_SRC))
 	$(call DO_UNTAR,$(PKGCONFIG_TAR_DST),$(PKGCONFIG_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST)/glib,$(COMPOSER_ABODE),,\
+		--with-libiconv="gnu" \
+	)
+	$(CP) "$(PKGCONFIG_TAR_DST)/glib/glib/glib.h"		"$(PKGCONFIG_TAR_DST)/glib/"
+	$(CP) "$(PKGCONFIG_TAR_DST)/glib/glib/glibconfig.h"	"$(PKGCONFIG_TAR_DST)/glib/"
+	$(CP) "$(PKGCONFIG_TAR_DST)/glib/glib/libglib-"*.la	"$(PKGCONFIG_TAR_DST)/glib/glib/libglib.la"
+	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST),$(COMPOSER_ABODE),\
+		GLIB_CFLAGS="$(CFLAGS) -I$(PKGCONFIG_TAR_DST)/glib -L$(PKGCONFIG_TAR_DST)/glib/glib" \
+		GLIB_LIBS="-lglib" \
+		,\
 		--disable-host-tool \
-		--with-internal-glib \
+		--without-internal-glib \
 	)
 
 .PHONY: $(STRAPIT)-libs-zlib
