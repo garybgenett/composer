@@ -3754,21 +3754,30 @@ $(BUILDIT)-pandoc:
 ########################################
 
 #WORK : this all works great, but something more elegant needs to be done with it
-#WORK : document!
+#WORK : document targets!
+#WORK : document variables!
 
 override .RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
 ifeq ($(COMPOSER_OTHER),$(COMPOSER_DIR))
 override .RELEASE_DIR		:= $(COMPOSER_DIR)/_$(RELEASE)
 endif
 override .RELEASE_DIR_NATIVE	:= $(.RELEASE_DIR)/Native
-override .RELEASE_CHROOT	?= Linux
 override .RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
-.PHONY: .$(RELEASE)-chroot
-.$(RELEASE)-chroot:
+override .RELEASE_CHROOT	?= Linux
+ifneq ($(BUILD_BITS),32)
+override .RELEASE_CHROOT	:= $(.RELEASE_CHROOT)$(BUILD_BITS)
+endif
+
+.PHONY: .$(RELEASE)-funtoo
+.$(RELEASE)-funtoo:
 	$(call CURL_FILE,$(FUNTOO_SRC))
 	$(call DO_UNTAR,$(.RELEASE_DIR)/$(.RELEASE_CHROOT),$(FUNTOO_SRC))
+
+.PHONY: .$(RELEASE)-chroot
+.$(RELEASE)-chroot:
+	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR_NATIVE)" .$(RELEASE)-funtoo
 	@$(RUNMAKE) --silent .$(RELEASE)-config
 	@$(HEADER_L)
 	@$(ECHO) "\n"
