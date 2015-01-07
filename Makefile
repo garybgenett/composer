@@ -79,6 +79,7 @@
 #	linux 32-bit stage3 BUILD_DIST=1
 #	windows 64-bit BUILD_DIST=
 #	windows 32-bit BUILD_DIST=1
+# test re-entry of builds
 # do a "diff -qr" of build chroot after completion
 #BUILD TEST
 
@@ -491,6 +492,20 @@ override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
 override GLIBC_VERSION			:= $(GLIBC_MIN_VERSION)
 override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
 override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
+# https://www.gnu.org/software/gettext (license: GPL, LGPL)
+# https://www.gnu.org/software/gettext
+# version ">= 0.19" conflicts with "pkg-config" version "== 0.28":
+#	make[2]: Entering directory `/Linux64/build/make/po'
+#	*** error: gettext infrastructure mismatch: using a Makefile.in.in from gettext version 0.18 but the autoconf macros are from gettext version 0.19
+#	make[2]: *** [check-macro-version] Error 1
+override GETTEXT_VERSION		:= 0.18.3.2
+override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
+override GETTEXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(GETTEXT_VERSION)
+# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
+# https://www.gnu.org/software/libiconv
+override LIBICONV_VERSION		:= 1.14
+override LIBICONV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VERSION).tar.gz
+override LIBICONV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIBICONV_VERSION)
 # http://www.freedesktop.org/wiki/Software/pkg-config (license: GPL)
 # http://www.freedesktop.org/wiki/Software/pkg-config
 override PKGCONFIG_VERSION		:= 0.28
@@ -506,20 +521,6 @@ override ZLIB_TAR_DST			:= $(BUILD_STRAP)/zlib-$(ZLIB_VERSION)
 override GMP_VERSION			:= 6.0.0a
 override GMP_TAR_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VERSION).tar.xz
 override GMP_TAR_DST			:= $(BUILD_STRAP)/gmp-$(subst a,,$(GMP_VERSION))
-# https://www.gnu.org/software/gettext (license: GPL, LGPL)
-# https://www.gnu.org/software/gettext
-# version ">= 0.19" conflicts with "pkg-config" version "== 0.28":
-#	make[2]: Entering directory `/Linux64/build/make/po'
-#	*** error: gettext infrastructure mismatch: using a Makefile.in.in from gettext version 0.18 but the autoconf macros are from gettext version 0.19
-#	make[2]: *** [check-macro-version] Error 1
-override GETTEXT_VERSION		:= 0.18.3.2
-override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
-override GETTEXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(GETTEXT_VERSION)
-# https://www.gnu.org/software/libiconv (license: GPL, LGPL)
-# https://www.gnu.org/software/libiconv
-override LIBICONV_VERSION		:= 1.14
-override LIBICONV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VERSION).tar.gz
-override LIBICONV_TAR_DST		:= $(BUILD_STRAP)/libiconv-$(LIBICONV_VERSION)
 # https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
 override NCURSES_VERSION		:= 5.9
@@ -1589,12 +1590,12 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of GNU C Library (glibc) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
@@ -2683,12 +2684,12 @@ ifeq ($(BUILD_PLAT),Linux)
 	$(RUNMAKE) $(STRAPIT)-libs-linux
 	$(RUNMAKE) $(STRAPIT)-libs-glibc
 endif
-	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
-	$(RUNMAKE) $(STRAPIT)-libs-zlib
-	$(RUNMAKE) $(STRAPIT)-libs-gmp
 	$(RUNMAKE) $(STRAPIT)-libs-libiconv1
 	$(RUNMAKE) $(STRAPIT)-libs-gettext
 	$(RUNMAKE) $(STRAPIT)-libs-libiconv2
+	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
+	$(RUNMAKE) $(STRAPIT)-libs-zlib
+	$(RUNMAKE) $(STRAPIT)-libs-gmp
 	$(RUNMAKE) $(STRAPIT)-libs-ncurses
 	$(RUNMAKE) $(STRAPIT)-libs-openssl
 	$(RUNMAKE) $(STRAPIT)-libs-expat
@@ -2727,47 +2728,6 @@ $(STRAPIT)-libs-glibc:
 		--build="$(CHOST)" \
 		--enable-kernel="$(LINUX_MIN_VERSION)" \
 		--with-headers="$(COMPOSER_ABODE)/include" \
-	)
-
-.PHONY: $(STRAPIT)-libs-pkgconfig
-$(STRAPIT)-libs-pkgconfig:
-	$(call CURL_FILE,$(PKGCONFIG_TAR_SRC))
-	$(call DO_UNTAR,$(PKGCONFIG_TAR_DST),$(PKGCONFIG_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-host-tool \
-		--with-internal-glib \
-	)
-
-.PHONY: $(STRAPIT)-libs-zlib
-$(STRAPIT)-libs-zlib:
-	$(call CURL_FILE,$(ZLIB_TAR_SRC))
-	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
-ifeq ($(BUILD_BITS),64)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
-		--64 \
-		--static \
-	)
-else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
-		--static \
-	)
-endif
-
-.PHONY: $(STRAPIT)-libs-gmp
-$(STRAPIT)-libs-gmp:
-	$(call CURL_FILE,$(GMP_TAR_SRC))
-	$(call DO_UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(GMP_TAR_DST))
-endif
-	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
-		ABI="$(BUILD_BITS)" \
-		,\
-		--disable-assembly \
-		--disable-shared \
-		--enable-static \
 	)
 
 override define LIBICONV_BUILD =
@@ -2809,6 +2769,47 @@ $(STRAPIT)-libs-gettext:
 .PHONY: $(STRAPIT)-libs-libiconv2
 $(STRAPIT)-libs-libiconv2:
 	$(call LIBICONV_BUILD)
+
+.PHONY: $(STRAPIT)-libs-pkgconfig
+$(STRAPIT)-libs-pkgconfig:
+	$(call CURL_FILE,$(PKGCONFIG_TAR_SRC))
+	$(call DO_UNTAR,$(PKGCONFIG_TAR_DST),$(PKGCONFIG_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-host-tool \
+		--with-internal-glib \
+	)
+
+.PHONY: $(STRAPIT)-libs-zlib
+$(STRAPIT)-libs-zlib:
+	$(call CURL_FILE,$(ZLIB_TAR_SRC))
+	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
+ifeq ($(BUILD_BITS),64)
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+		--64 \
+		--static \
+	)
+else
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+		--static \
+	)
+endif
+
+.PHONY: $(STRAPIT)-libs-gmp
+$(STRAPIT)-libs-gmp:
+	$(call CURL_FILE,$(GMP_TAR_SRC))
+	$(call DO_UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(GMP_TAR_DST))
+endif
+	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
+		ABI="$(BUILD_BITS)" \
+		,\
+		--disable-assembly \
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs-ncurses:
