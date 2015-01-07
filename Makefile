@@ -19,7 +19,6 @@
 # _ try to consolidate all "ifeq($BUILD_PLAT,...)" statements, so that all the builds are as similar as possible
 # _ add "licenses" or "info" option, to display list of included programs and licenses
 # _ make sure all referenced programs are included (goal is composer should function as a chroot)
-# _ do an initial make in Composer.sh, to ensure dirname is available?
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
@@ -3826,15 +3825,17 @@ override define .HEREDOC_DIST_COMPOSER_BAT =
 @echo off
 set _COMPOSER=%~dp0
 set _SYS=Msys
-"%_COMPOSER%/bin/%_SYS%/usr/bin/make" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell-msys
+set MSYS2_ARG_CONV_EXCL=--directory:--makefile
+start /b "%_COMPOSER%/bin/%_SYS%/usr/bin/make" --directory "%_COMPOSER%" --makefile "%_COMPOSER%/Makefile" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell-msys
 :: end of file
 endef
 
 override define .HEREDOC_DIST_COMPOSER_SH =
-# bash
-_COMPOSER="`dirname "$${0}"`"
+# sh
+_COMPOSER="${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-"$${_COMPOSER}/bin/$${_SYS}/usr/bin/make" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell
+MSYS2_ARG_CONV_EXCL="--directory:--makefile"
+exec "$${_COMPOSER}/bin/$${_SYS}/usr/bin/make" --directory "$${_COMPOSER}" --makefile "$${_COMPOSER}/Makefile" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell
 # end of file
 endef
 
