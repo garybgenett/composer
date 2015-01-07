@@ -13,4 +13,5 @@
 # make update && make build
 /.home/
 /.sources/
+/.tmp/
 /build/
