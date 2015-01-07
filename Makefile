@@ -306,23 +306,42 @@ override _TOC				:=
 ifneq ($(TOC),)
 override _TOC				:= \
 	--table-of-contents \
-	--toc-depth $(TOC)
+	--toc-depth="$(TOC)"
 endif
 
+#WORKING
+#	--default-image-extension="png"?
+#	--highlight-style="kate"?
+#	--number-sections --number-offset="[...]?
+#	--incremental?
+#	--section-divs?
+#
+#	--from "docx" --track-changes="all"
+#	--from "docx|epub" --extract-media="[...]"
+#	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
+#	--email-obfuscation="[...]"
+#	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
+#
+#	--epub-chapter-level
+#	--latex-engine
+#WORKING
 override PANDOC_OPTIONS			:= \
 	--standalone \
 	--self-contained \
 	\
-	--css "$(_CSS)" \
-	--title-prefix "$(TTL)" \
-	--output "$(BASE).$(EXTENSION)" \
-	--from "$(INPUT)" \
-	--to "$(OUTPUT)" \
+	--css="$(_CSS)" \
+	--title-prefix="$(TTL)" \
+	--output="$(BASE).$(EXTENSION)" \
+	--from="$(INPUT)" \
+	--to="$(OUTPUT)" \
 	\
 	$(_TOC) \
-	--slide-level $(LVL) \
-	--variable "revealjs-url=$(REVEALJS_DST)" \
-	--variable "slidy-url=$(W3CSLIDY_DST)" \
+	--slide-level="$(LVL)" \
+	--epub-chapter-level="$(LVL)" \
+	\
+	--latex-engine="pdflatex" \
+	--variable="revealjs-url=$(REVEALJS_DST)" \
+	--variable="slidy-url=$(W3CSLIDY_DST)" \
 	\
 	--chapters \
 	--listings \
@@ -806,7 +825,7 @@ override BUILD_BINARY_LIST		:= \
 	$(filter-out cabal,\
 	$(BUILD_BINARY_LIST)))))
 
-#WORK : double-check
+#WORKING : double-check
 override DYNAMIC_LIBRARY_LIST		:= \
 	ld-linux.so.2 \
 	libc.so.6 \
@@ -1451,7 +1470,7 @@ HELP_OPTIONS:
 	@$(TABLE_I3) "$(_C)CSS$(_D)"	"Location of CSS file"		"[$(_M)$(CSS)$(_D)] $(_N)(overrides '$(COMPOSER_CSS)')"
 	@$(TABLE_I3) "$(_C)TTL$(_D)"	"Document title prefix"		"[$(_M)$(TTL)$(_D)]"
 	@$(TABLE_I3) "$(_C)TOC$(_D)"	"Table of contents depth"	"[$(_M)$(TOC)$(_D)]"
-	@$(TABLE_I3) "$(_C)LVL$(_D)"	"New slide header level"	"[$(_M)$(LVL)$(_D)]"
+	@$(TABLE_I3) "$(_C)LVL$(_D)"	"Chapter/slide header level"	"[$(_M)$(LVL)$(_D)]"
 	@$(TABLE_I3) "$(_C)OPT$(_D)"	"Custom Pandoc options"		"[$(_M)$(OPT)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Pre-Defined '$(_C)TYPE$(_H)' Values:"
