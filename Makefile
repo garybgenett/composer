@@ -887,10 +887,6 @@ override DYNAMIC_LIBRARY_LIST		:= \
 	sechost.dll
 endif
 
-# thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
-override PERL_PATCH_LIST		:= \
-	/|https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/perl/perl-5.20.0-msys2.patch
-
 override PERL_MODULES_LIST		:= \
 	Encode-Locale-1.03|https://cpan.metacpan.org/authors/id/G/GA/GAAS/Encode-Locale-1.03.tar.gz \
 	HTTP-Date-6.02|https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Date-6.02.tar.gz \
@@ -2753,8 +2749,6 @@ $(STRAPIT)-libs-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -O 
 $(STRAPIT)-libs-glibc:
 	$(call CURL_FILE,$(GLIBC_TAR_SRC))
 	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
-	# glibc requires a separate, fresh build directory
-	$(RM) "$(GLIBC_TAR_DST).build"
 	$(MKDIR) "$(GLIBC_TAR_DST).build"
 	$(ECHO) "\"$(GLIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(GLIBC_TAR_DST).build/configure"
 	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
@@ -2768,6 +2762,8 @@ $(STRAPIT)-libs-glibc:
 		--with-headers="$(COMPOSER_ABODE)/include" \
 	)
 
+# thanks for the patch below: https://gist.github.com/paulczar/5493708
+#	https://savannah.gnu.org/bugs/?43212
 override define LIBICONV_BUILD =
 	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with "gettext"
@@ -2775,7 +2771,6 @@ override define LIBICONV_BUILD =
 	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Linux" requires some patching
-	#	https://savannah.gnu.org/bugs/?43212
 	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
 		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
 	fi
@@ -2872,10 +2867,14 @@ endif
 	)
 
 .PHONY: $(STRAPIT)-libs-openssl
+# thanks for the patch below: http://www.linuxfromscratch.org/blfs/view/svn/postlfs/openssl.html
+#	found by: https://www.linuxquestions.org/questions/linux-software-2/compile-problems-openssl-1-0-1c-946444
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
 	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
 	$(call DO_UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
+	# "openssl" requires some patching
+#WORKING	$(call DO_PATCH,$(OPENSSL_TAR_DST),http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1j-fix_parallel_build-1.patch)
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
 	$(CP) "$(OPENSSL_TAR_DST)/Configure" "$(OPENSSL_TAR_DST)/configure"
@@ -3079,6 +3078,7 @@ $(STRAPIT)-util-tar:
 	)
 
 .PHONY: $(STRAPIT)-util-perl
+# thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 $(STRAPIT)-util-perl:
 	$(call CURL_FILE,$(PERL_TAR_SRC))
 	$(call DO_UNTAR,$(PERL_TAR_DST),$(PERL_TAR_SRC))
@@ -3088,9 +3088,7 @@ ifeq ($(BUILD_PLAT),Msys)
 		$(SED) -i \
 			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
 			"$(PERL_TAR_DST)/Makefile.SH"; \
-		$(foreach FILE,$(PERL_PATCH_LIST),\
-			$(call DO_PATCH,$(PERL_TAR_DST)$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-		) \
+		$(call DO_PATCH,$(PERL_TAR_DST),https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/perl/perl-5.20.0-msys2.patch); \
 	fi
 	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
 	$(SED) -i \
