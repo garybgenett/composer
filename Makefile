@@ -21,7 +21,6 @@
 # _ make sure all referenced programs are included (goal is composer should function as a chroot)
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
-# _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
 # _ template inherit & archive target
 # _ double-check texlive directory list against list of modules in pandoc manual
 # _ double-check all $SED statements, for consistency
@@ -51,8 +50,6 @@
 #	re-verify all sed and other build hackery, for both linux and windows
 # double-check all "thanks" comments; some are things you should have known
 # double-check all licenses
-# fix linux 32-bit make 4.1 segfault
-# upx final binaries?
 #TODO
 
 #BUILD NOTES
