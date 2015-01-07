@@ -22,7 +22,6 @@
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ template inherit & archive target
-# _ double-check texlive directory list against list of modules in pandoc manual
 # _ double-check all $SED statements, for consistency
 # _ comments, comments, comments (& formatting :)
 #WORKING
@@ -871,6 +870,16 @@ override PERL_MODULES_LIST		:= \
 	URI-1.65|https://cpan.metacpan.org/authors/id/E/ET/ETHER/URI-1.65.tar.gz \
 	libwww-perl-6.08|https://cpan.metacpan.org/authors/id/M/MS/MSCHILLI/libwww-perl-6.08.tar.gz
 
+#WORKING : double-check texlive directory list against list of modules in pandoc manual
+#WORKING : Production of a PDF requires that a LaTeX engine be installed (see --latex-engine, below), and assumes that the following LaTeX packages are available: amssymb, amsmath, ifxetex, ifluatex, listings (if the --listings option is used), fancyvrb, longtable, booktabs, url, graphicx, hyperref, ulem, babel (if the lang variable is set), fontspec (if xelatex or lualatex is used as the LaTeX engine), xltxtra and xunicode (if xelatex is used).
+#	fancyvrb	tex/latex/fancyvrb \
+#	longtable	tex/latex/hyper \
+#	ulem		tex/generic/ulem \
+#	babel		tex/generic/babel \
+#	fontspec	tex/latex/fontspec \
+#	xltxtra		tex/latex/xltxtra \
+#	xunicode	tex/xelatex/xunicode \
+#
 override TEXLIVE_DIRECTORY_LIST		:= \
 	fonts/enc/dvips/lm \
 	fonts/map/pdftex/updmap \
