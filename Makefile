@@ -175,15 +175,12 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 override HELPOUT			:= usage
 override HELPALL			:= help
 
+override RELEASE			:= release
+
 #WORK : turn remaining targets into variables, as well...
 #	# grep PHONY Makefile
 #	.make_database
 #	.all_targets
-#	.release-config
-#	.release-chroot
-#	.release
-#	.release-test
-#	.release-debug
 #	.dist
 #	world
 #	all
@@ -332,6 +329,9 @@ endif
 #	--epub-chapter-level
 #	--latex-engine
 #WORKING
+#	implicit_header_references
+#	fenced_code_attributes
+#WORKING
 override PANDOC_OPTIONS			:= \
 	--standalone \
 	--self-contained \
@@ -404,7 +404,8 @@ override TERM				?= ansi
 override CC				?= gcc
 override CXX				?= g++
 override CHOST				:=
-#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc
+#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -nostdlib -lgcc
+#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
 # also remove -static-libgcc from -libs-glibc
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
@@ -1761,7 +1762,7 @@ EXAMPLE_MAKEFILE_2:
 	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)-clean$(_D):"
 	@$(ESCAPE) "	$(~)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@$(ECHO) "#WORK : document this version of 'clean'?\n"
-	@$(ECHO) "#WORK : make .release-test .release-debug\n"
+	@$(ECHO) "#WORK : make .$(RELEASE)-test .$(RELEASE)-debug\n"
 	@$(ESCAPE) "$(_C)clean$(_D): COMPOSER_TARGETS += $(notdir $(.RELEASE_MAN_DST))"
 	@$(ESCAPE) "$(_C)clean$(_D): TYPE := latex"
 	@$(ESCAPE) "$(_C)$(notdir $(.RELEASE_MAN_DST)):"
@@ -3756,28 +3757,32 @@ $(BUILDIT)-pandoc:
 #WORK : document!
 
 override .RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
+ifeq ($(COMPOSER_OTHER),$(COMPOSER_DIR))
+override .RELEASE_DIR		:= $(COMPOSER_DIR)/_$(RELEASE)
+endif
 override .RELEASE_DIR_NATIVE	:= $(.RELEASE_DIR)/Native
 override .RELEASE_CHROOT	?= Linux
 override .RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
-.PHONY: .release-chroot
-.release-chroot:
+.PHONY: .$(RELEASE)-chroot
+.$(RELEASE)-chroot:
 	$(call CURL_FILE,$(FUNTOO_SRC))
 	$(call DO_UNTAR,$(.RELEASE_DIR)/$(.RELEASE_CHROOT),$(FUNTOO_SRC))
-	@$(RUNMAKE) --silent .release-config
+	@$(RUNMAKE) --silent .$(RELEASE)-config
 	@$(HEADER_L)
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd /$(.RELEASE_CHROOT) ; export PATH ; make world"
 	@$(ECHO) "\n"
 	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/$(.RELEASE_CHROOT),$(COMPOSER_ABODE))" $(CHROOT) "$(.RELEASE_DIR)" /bin/bash -o vi
 
-.PHONY: .release-config
-.release-config:
+.PHONY: .$(RELEASE)-config
+.$(RELEASE)-config:
 	@$(foreach FILE,Linux Linux64 Msys Msys64 $(notdir $(.RELEASE_DIR_NATIVE)),\
 		$(MKDIR) "$(.RELEASE_DIR)/$(FILE)"; \
 		$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/$(FILE)/"; \
 	)
+	@$(TOUCH) "$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
 	@$(ECHO) "override COMPOSER_OTHER ?= $(.RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
@@ -3785,21 +3790,22 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 	@$(call DEBUGIT_CONTENTS,$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
 	@$(call DEBUGIT_CONTENTS,$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
 
-.PHONY: .release
-.release:
+.PHONY: .$(RELEASE)
+.$(RELEASE):
+	@$(RUNMAKE) --silent .$(RELEASE)-config
 	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR)/Msys"	BUILD_DIST="1" BUILD_PLAT="Msys"	COMPOSER_PROGS_USE="0" .dist
 	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR)/Linux"	BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" .dist
 #WORK : should this go somewhere else?
-	@$(FIND) "$(CURDIR)" | $(SED) -n "/[.]git$$/p" | while read FILE; do \
+	@$(FIND) "$(CURDIR)" | $(SED) -n "/[/][.]git$$/p" | while read FILE; do \
 		$(RM) "$${FILE}"; \
 	done
 	@$(RM) "$(.RELEASE_MAN_DST)."*
 	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" $(COMPOSER_TARGET) \
 		BASE="$(.RELEASE_MAN_DST)" LIST="$(.RELEASE_MAN_SRC)" TYPE="html" TOC="3"
 
-.PHONY: .release-test
+.PHONY: .$(RELEASE)-test
 # this is only for testing conversion of the full Pandoc manual syntax into our primary document types
-.release-test:
+.$(RELEASE)-test:
 	@$(CP) "$(.RELEASE_MAN_SRC)" "$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
 #WORK : fixed?
 #	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
@@ -3811,9 +3817,9 @@ override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" all \
 		BASE="$(.RELEASE_MAN_DST)"
 
-.PHONY: .release-debug
+.PHONY: .$(RELEASE)-debug
 # this is only for debugging "pdflatex" conversion of the Pandoc manual
-.release-debug:
+.$(RELEASE)-debug:
 	@$(RM) "$(.RELEASE_MAN_DST).latex"
 	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" $(COMPOSER_TARGET) \
 		BASE="$(.RELEASE_MAN_DST)" TYPE="latex"
@@ -3849,7 +3855,9 @@ override .DIST_SCREENSHOT	:= iVBORw0KGgoAAAANSUhEUgAAAeQAAADjCAIAAADbvvCiAAAABmJ
 
 override define .HEREDOC_DIST_GITIGNORE =
 # $(COMPOSER_BASENAME)
+/.$(COMPOSER_BASENAME).*
 /$(COMPOSER_SETTINGS)
+/_$(RELEASE)
 
 # make $(COMPOSER_TARGET)
 /$(COMPOSER_STAMP)
@@ -4357,6 +4365,7 @@ settings:
 .PHONY: setup
 setup:
 	@$(ECHO) "$(_S)"
+	@$(MKDIR) "$(COMPOSER_ABODE)"
 ifeq ($(TYPE),$(TYPE_DOCX))
 ifneq ($(PANDOC_DATA),)
 ifneq ($(PANDOC_DATA_BUILD),)
