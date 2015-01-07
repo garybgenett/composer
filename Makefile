@@ -2748,6 +2748,8 @@ $(STRAPIT)-libs-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -O 
 $(STRAPIT)-libs-glibc:
 	$(call CURL_FILE,$(GLIBC_TAR_SRC))
 	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
+	# glibc requires a separate, fresh build directory
+	$(RM) "$(GLIBC_TAR_DST).build"
 	$(MKDIR) "$(GLIBC_TAR_DST).build"
 	$(ECHO) "\"$(GLIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(GLIBC_TAR_DST).build/configure"
 	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
