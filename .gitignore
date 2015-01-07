@@ -1,5 +1,7 @@
 # Composer
+/.Composer.*
 /.composer.mk
+/_release
 
 # make compose
 /.composed
