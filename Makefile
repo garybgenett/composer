@@ -1372,6 +1372,7 @@ override .ALL_TARGETS := \
 	$(INSTALL)[:-] \
 	$(REPLICA)[:] \
 	$(UPGRADE)[:] \
+	world[:] \
 	$(STRAPIT)[:-] \
 	$(FETCHIT)[:-] \
 	$(BUILDIT)[:-] \
@@ -2138,7 +2139,6 @@ $(UPGRADE):
 ########################################
 
 #WORK : document!
-#WORK : better location?
 .PHONY: world
 world:
 	# call recursively instead of using dependencies, so that environment variables update
