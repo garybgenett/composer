@@ -363,6 +363,7 @@ override PANDOC_OPTIONS			:= \
 override COMPOSER_OTHER			?= $(COMPOSER_DIR)
 override COMPOSER_ABODE			?= $(COMPOSER_OTHER)/.home
 override COMPOSER_STORE			?= $(COMPOSER_OTHER)/.sources
+override COMPOSER_TRASH			?= $(COMPOSER_OTHER)/.tmp
 override COMPOSER_BUILD			?= $(COMPOSER_OTHER)/build
 
 override BUILD_BRANCH			:= composer_$(BUILDIT)
@@ -516,6 +517,7 @@ override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION)
 override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
+#WORK : re-verify this, on both 32 and 64
 # version ">= 0.19" conflicts with "pkg-config" version "== 0.28":
 #	make[2]: Entering directory `/Linux64/build/make/po'
 #	*** error: gettext infrastructure mismatch: using a Makefile.in.in from gettext version 0.18 but the autoconf macros are from gettext version 0.19
@@ -1226,6 +1228,10 @@ override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)
 endif
 endif
 
+ifeq ($(wildcard $(COMPOSER_TRASH)),)
+$(shell $(MKDIR) "$(COMPOSER_TRASH)")
+endif
+
 override BUILD_ENV			:= $(ENV) - \
 	LC_ALL="$(LANG)" \
 	LANG="$(LANG)" \
@@ -1243,15 +1249,16 @@ override BUILD_ENV			:= $(ENV) - \
 	CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" \
 	TEXMFDIST="$(TEXMFDIST)" \
 	TEXMFVAR="$(TEXMFVAR)" \
-	TMPDIR="$(COMPOSER_ABODE)"
+	TMPDIR="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
+# see "$(BUILD_PLAT),Msys" paths comment in "$(FETCHIT)-ghc-prep"
 override BUILD_ENV			:= $(BUILD_ENV) \
 	MSYSTEM="MSYS$(BUILD_BITS)" \
 	CC="$(MSYS_BIN_DST)/usr/bin/gcc" \
 	CXX="$(MSYS_BIN_DST)/usr/bin/g++" \
-	USERPROFILE="$(COMPOSER_ABODE)" \
-	TMP="$(COMPOSER_ABODE)"
+	HOMEPATH="$(COMPOSER_ABODE)" \
+	TMP="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	MSYSTEM="MINGW$(BUILD_BITS)" \
 	CC="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
@@ -1520,6 +1527,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)COMPOSER_OTHER$(_D)"		"Root of below directories"	"[$(_M)$(COMPOSER_OTHER)$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_ABODE$(_D)"		"Install/binary directory"	"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_ABODE))$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_STORE$(_D)"		"Source files directory"	"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_STORE))$(_D)]"
+	@$(TABLE_I3) "$(_C)COMPOSER_TRASH$(_D)"		"Temporary directory"		"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_TRASH))$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_BUILD$(_D)"		"Build directory"		"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_BUILD))$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_PROGS$(_D)"		"Built binaries directory"	"[$(_M)$(subst $(COMPOSER_OTHER),$(~)(COMPOSER_OTHER),$(COMPOSER_PROGS))$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_PROGS_USE$(_D)"	"Prefer repository binaries"	"[$(_M)$(COMPOSER_PROGS_USE)$(_D)] $(_N)(valid: empty, 0 or 1)"
@@ -2231,10 +2239,6 @@ $(BUILDIT)-cleanup:
 #WORKING
 	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
 	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
-#WORKING : other TMPDIR cruft?
-ifeq ($(BUILD_PLAT),Msys)
-	$(RM) "$(COMPOSER_ABODE)/"*.exe
-endif
 
 .PHONY: $(BUILDIT)-bindir
 $(BUILDIT)-bindir:
@@ -3510,11 +3514,12 @@ $(FETCHIT)-ghc-prep:
 	#		getAppUserDataDirectory		Win32.cSIDL_APPDATA					HOME
 	#		getUserDocumentsDirectory	Win32.cSIDL_PERSONAL					HOME
 	#		getTemporaryDirectory		Win32.getTemporaryDirectory (TMP, TEMP, USERPROFILE)	TMPDIR
+	# using 'USERPROFILE' causes 'cabal.exe: illegal operation'
 	$(SED) -i \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PROFILE[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_WINDOWS[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_APPDATA[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PERSONAL[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PROFILE[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_WINDOWS[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_APPDATA[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PERSONAL[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
 		-e "s|([^.])(.)([:]appName[)])|\1\2:\2.\2\3|g" \
 		"$(GHC_DST)/libraries/directory/System/Directory.hs"
 #WORK : platform_switches
@@ -3878,6 +3883,7 @@ override define .HEREDOC_DIST_GITIGNORE =
 # make $(UPGRADE) && make $(BUILDIT)
 /$(notdir $(COMPOSER_ABODE))/
 /$(notdir $(COMPOSER_STORE))/
+/$(notdir $(COMPOSER_TRASH))/
 /$(notdir $(COMPOSER_BUILD))/
 endef
 
@@ -4374,7 +4380,6 @@ settings:
 .PHONY: setup
 setup:
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) "$(COMPOSER_ABODE)"
 ifeq ($(TYPE),$(TYPE_DOCX))
 ifneq ($(PANDOC_DATA),)
 ifneq ($(PANDOC_DATA_BUILD),)
