@@ -306,7 +306,9 @@ override _TOC				:=
 ifneq ($(TOC),)
 override _TOC				:= \
 	--table-of-contents \
-	--toc-depth="$(TOC)"
+	--toc-depth="$(TOC)" \
+	--variable="lof=1" \
+	--variable="lot=1"
 endif
 
 #WORKING
@@ -322,8 +324,15 @@ endif
 #	--email-obfuscation="[...]"
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
 #
+#	--variable="fontsize=[...]"
+#	--variable="theme=[...]"
+#	--variable="transition=[...]"
+#	--variable="links-as-notes=[...]"
+#
 #	--epub-chapter-level
 #	--latex-engine
+#	--variable="lof=1"
+#	--variable="lot=1"
 #WORKING
 override PANDOC_OPTIONS			:= \
 	--standalone \
