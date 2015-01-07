@@ -16,6 +16,7 @@
 #WORKING
 # _ make sure all commands are using their variable counterparts
 # _ trim down the "ifeq($BUILD_PLAT,Msys)" to only the things which are necessary
+# _ try to consolidate all "ifeq($BUILD_PLAT,...)" statements, so that all the builds are as similar as possible
 # _ add "licenses" or "info" option, to display list of included programs and licenses
 # _ make sure all referenced programs are included (goal is composer should function as a chroot)
 # _ do an initial make in Composer.sh, to ensure dirname is available?
@@ -24,11 +25,13 @@
 # _ pull all external files into core makefile, so that entire repository sources from single text file (not necessary, but really cool!)
 # _ template inherit & archive target
 # _ double-check texlive directory list against list of modules in pandoc manual
+# _ double-check all $SED statements, for consistency
 # _ comments, comments, comments (& formatting :)
 #WORKING
 
 #WORKING
 # linking/libraries
+#	http://www.freegamedev.net/wiki/Portable_binaries
 #	https://stackoverflow.com/questions/10539857/statically-link-gmp-to-an-haskell-application-using-ghc-llvm
 #	https://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
 #	https://stackoverflow.com/questions/8657908/deploying-yesod-to-heroku-cant-build-statically/8658468#8658468
@@ -377,11 +380,12 @@ override COMPOSER_PROGS_USE		?=
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CC				?= gcc
+override CXX				?= g++
 override CHOST				:=
+#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc
+# also remove -static-libgcc from -libs-glibc
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
-#WORK : will need this to implement "chroot" composer
-#override LD_LIBRARY_PATH		:= $(COMPOSER_PROGS)/lib.so:$(LD_LIBRARY_PATH)
 
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_PLAT),Linux)
@@ -434,6 +438,40 @@ else ifeq ($(BUILD_ARCH),i386)
 override MSYS_BIN_ARCH			:= i686
 endif
 
+# http://www.funtoo.org
+# http://www.funtoo.org/I686
+override FUNTOO_DATE			:= 2015-01-03
+override FUNTOO_TYPE			:= funtoo-stable
+#>override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
+#>override FUNTOO_ARCH			:= x86-32bit
+override FUNTOO_ARCH			:= x86-64bit
+#>override FUNTOO_SARC			:= generic_$(BUILD_BITS)
+#>override FUNTOO_SARC			:= i686
+override FUNTOO_SARC			:= core2_64
+override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
+override FUNTOO_GLIBC_VERSION		:= 2.19
+override FUNTOO_MAKE_VERSION		:= 3.82
+
+# http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
+# http://sourceforge.net/projects/msys2
+# http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
+# https://www.archlinux.org/groups
+override MSYS_VERSION			:= 20141113
+override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
+override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
+#WORK : mintty - installed before bash?  cygwin-console-helper?
+
+# https://en.wikipedia.org/wiki/Linux_kernel#Maintenance
+# https://en.wikipedia.org/wiki/GNU_C_Library#Version_history
+# https://packages.debian.org/search?suite=stable&keywords=kernel-image-3
+# https://packages.debian.org/search?suite=stable&keywords=libc6
+# https://packages.debian.org/search?suite=stable&keywords=make
+override LINUX_MIN_VERSION		:= 3.2.0
+override GLIBC_MIN_VERSION		:= 2.13
+override GLIBC_CUR_VERSION		:= $(FUNTOO_GLIBC_VERSION)
+override MAKE_MIN_VERSION		:= $(FUNTOO_MAKE_VERSION)
+override MAKE_CUR_VERSION		:= 4.0
+
 # http://git.savannah.gnu.org/gitweb/?p=config.git
 override GNU_CFG_SRC			:= http://git.savannah.gnu.org/r/config.git
 override GNU_CFG_FILE_SRC		:= http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=
@@ -442,28 +480,15 @@ override GNU_CFG_FILE_SUB		:= config.sub
 override GNU_CFG_DST			:= $(COMPOSER_BUILD)/gnu-config
 override GNU_CFG_CMT			:=
 
-# http://www.funtoo.org
-# http://www.funtoo.org/I686
-override LINUX_ROOTFS_DATE		:= 2015-01-03
-override LINUX_ROOTFS_SRC		:= http://build.funtoo.org/funtoo-stable/x86-32bit/i686/$(LINUX_ROOTFS_DATE)/stage3-i686-funtoo-stable-$(LINUX_ROOTFS_DATE).tar.xz
-
-# http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
-# http://sourceforge.net/projects/msys2
-# http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
-# https://www.archlinux.org/groups
-override MSYS_VERSION			:= 20140704
-override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
-override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
-#WORK : mintty - installed before bash?  cygwin-console-helper?
-
 # https://www.kernel.org/pub/linux/kernel/COPYING (license: GPL)
 # https://www.kernel.org
-override LINUX_VERSION			:= 3.18.1
+override LINUX_VERSION			:= $(subst .0,,$(LINUX_MIN_VERSION))
 override LINUX_TAR_SRC			:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$(LINUX_VERSION).tar.gz
 override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
 # https://www.gnu.org/software/libc (license: GPL)
 # https://www.gnu.org/software/libc
-override GLIBC_VERSION			:= 2.19
+# https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+override GLIBC_VERSION			:= $(GLIBC_MIN_VERSION)
 override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
 override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
 # http://www.freedesktop.org/wiki/Software/pkg-config (license: GPL)
@@ -483,7 +508,11 @@ override GMP_TAR_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VERSION).tar
 override GMP_TAR_DST			:= $(BUILD_STRAP)/gmp-$(subst a,,$(GMP_VERSION))
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
-override GETTEXT_VERSION		:= 0.19.3
+# version ">= 0.19" conflicts with "pkg-config" version "== 0.28":
+#	make[2]: Entering directory `/Linux64/build/make/po'
+#	*** error: gettext infrastructure mismatch: using a Makefile.in.in from gettext version 0.18 but the autoconf macros are from gettext version 0.19
+#	make[2]: *** [check-macro-version] Error 1
+override GETTEXT_VERSION		:= 0.18.3.2
 override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
 override GETTEXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(GETTEXT_VERSION)
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
@@ -587,7 +616,7 @@ override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 # https://savannah.gnu.org/projects/make
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= 4.1
+override MAKE_CMT			:= $(MAKE_CUR_VERSION)
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -653,6 +682,9 @@ override CBL_TAR_SRC			:= https://www.haskell.org/cabal/release/cabal-install-$(
 override GHC_BIN_DST			:= $(BUILD_STRAP)/ghc-$(GHC_VERSION)
 override CBL_TAR_DST			:= $(BUILD_STRAP)/cabal-install-$(CABAL_VERSION)
 
+# https://hackage.haskell.org
+override HASKELL_PACKAGE_URL		= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
+
 # https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
 override GHC_SRC			:= https://git.haskell.org/ghc.git
@@ -696,7 +728,7 @@ ifeq ($(COMPOSER_PROGS_USE),0)
 override BUILD_PATH			:= $(PATH)
 else
 ifeq ($(COMPOSER_PROGS_USE),1)
-override BUILD_PATH			:= $(COMPOSER_ABODE)/.coreutils:$(COMPOSER_PROGS)/usr/bin
+override BUILD_PATH			:= $(COMPOSER_PROGS)/usr/bin:$(COMPOSER_ABODE)/.coreutils
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/bin
 else
 override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
@@ -708,7 +740,7 @@ override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
 endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 ifneq ($(COMPOSER_PROGS_USE),1)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/.coreutils:$(COMPOSER_PROGS)/usr/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin:$(COMPOSER_ABODE)/.coreutils
 endif
 endif
 
@@ -727,11 +759,13 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-gcc \
 	msys2-devel
 
-#TODO : is cygwin-console-helper really needed?  what about cygpath, just in case?
+#TODO : is cygwin-console-helper really needed?
 #TODO : probably not all these dlls are needed
+#TODO : double-check source/licensing of included dlls
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override MSYS_BINARY_LIST		:= \
 	mintty cygwin-console-helper \
+	cygpath \
 	\
 	msys-2.0.dll \
 	msys-gcc_s-1.dll \
@@ -776,12 +810,12 @@ override BUILD_BINARY_LIST		:= \
 	$(filter-out cabal,\
 	$(BUILD_BINARY_LIST)))))
 
-override GLIBC_LIBRARY_LIST		:= \
+#WORK : double-check
+override DYNAMIC_LIBRARY_LIST		:= \
 	ld-linux.so.2 \
 	libc.so.6 \
 	libcrypt.so.1 \
 	libdl.so.2 \
-	libgcc_s.so.1 \
 	libm.so.6 \
 	libnsl.so.1 \
 	libpthread.so.0 \
@@ -791,6 +825,42 @@ override GLIBC_LIBRARY_LIST		:= \
 	\
 	ld-linux-x86-64.so.2 \
 	linux-vdso.so.1
+ifeq ($(BUILD_PLAT),Msys)
+override DYNAMIC_LIBRARY_LIST		:= \
+	$(MSYS_BINARY_LIST) \
+	\
+	ADVAPI32.DLL \
+	ADVAPI32.dll \
+	COMCTL32.DLL \
+	COMDLG32.DLL \
+	CRYPT32.DLL \
+	CRYPTBASE.dll \
+	GDI32.dll \
+	IMM32.DLL \
+	IMM32.DLL \
+	KERNELBASE.dll \
+	LPK.dll \
+	MSASN1.dll \
+	MSCTF.dll \
+	NSI.dll \
+	RPCRT4.dll \
+	SHELL32.DLL \
+	SHELL32.dll \
+	SHLWAPI.dll \
+	SspiCli.dll \
+	USER32.dll \
+	USERENV.dll \
+	USP10.dll \
+	WINSPOOL.DRV \
+	WS2_32.dll \
+	WSOCK32.DLL \
+	kernel32.dll \
+	msvcrt.dll \
+	ntdll.dll \
+	ole32.dll \
+	profapi.dll \
+	sechost.dll
+endif
 
 # thanks for the patches below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 override PERL_PATCH_LIST		:= \
@@ -893,7 +963,15 @@ override HASKELL_VERSION_LIST		:= \
 	cabal-install|$(CABAL_VERSION) \
 	Cabal|$(CABAL_VERSION_LIB) \
 	$(GHC_BASE_LIBRARIES_LIST) \
-	$(GHC_LIBRARIES_LIST) \
+	$(GHC_LIBRARIES_LIST)
+
+override HASKELL_PACKAGES_LIST		:= \
+	$(filter-out GHC|$(GHC_VERSION),\
+	$(filter-out ghc|$(GHC_VERSION),\
+	$(filter-out ghc-prim|%,\
+	$(filter-out integer-gmp|%,\
+	$(filter-out rts|%,\
+	$(HASKELL_VERSION_LIST))))))
 
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
@@ -906,7 +984,7 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
-override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
+override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
@@ -917,6 +995,7 @@ override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --s
 
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
+override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --mixed
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override define COREUTILS_INSTALL	=
@@ -1114,11 +1193,12 @@ override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)
 endif
 endif
 
-override BUILD_ENV			:= \
+override BUILD_ENV			:= $(ENV) - \
 	LC_ALL="$(LANG)" \
 	LANG="$(LANG)" \
 	TERM="$(TERM)" \
 	CC="$(CC)" \
+	CXX="$(CXX)" \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
@@ -1129,27 +1209,20 @@ override BUILD_ENV			:= \
 	PATH="$(BUILD_PATH)" \
 	CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" \
 	TEXMFDIST="$(TEXMFDIST)" \
-	TEXMFVAR="$(TEXMFVAR)"
-ifeq ($(BUILD_PLAT),Msys)
-#TODO : is this still true?
-# adding 'USERPROFILE' to list causes 'Setup.exe: illegal operation'
-override BUILD_ENV			:= $(BUILD_ENV) \
-	CC="$(MSYS_BIN_DST)/usr/bin/gcc" \
-	MSYSTEM="MSYS$(BUILD_BITS)" \
-	USERNAME="$(USERNAME)" \
-	HOMEPATH="$(COMPOSER_ABODE)" \
-	\
-	ALLUSERSPROFILE="$(COMPOSER_ABODE)" \
-	APPDATA="$(COMPOSER_ABODE)" \
-	LOCALAPPDATA="$(COMPOSER_ABODE)" \
-	TEMP="$(COMPOSER_ABODE)"
-endif
-override BUILD_ENV			:= $(ENV) - $(BUILD_ENV)
+	TEXMFVAR="$(TEXMFVAR)" \
+	TMPDIR="$(COMPOSER_ABODE)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
+override BUILD_ENV			:= $(BUILD_ENV) \
+	MSYSTEM="MSYS$(BUILD_BITS)" \
+	CC="$(MSYS_BIN_DST)/usr/bin/gcc" \
+	CXX="$(MSYS_BIN_DST)/usr/bin/g++" \
+	USERPROFILE="$(COMPOSER_ABODE)" \
+	TMP="$(COMPOSER_ABODE)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
-	CC="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	MSYSTEM="MINGW$(BUILD_BITS)" \
+	CC="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
+	CXX="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/g++" \
 	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
 endif
 
@@ -1428,8 +1501,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)LANG$(_D)"			"Locale default language"	"[$(_M)$(LANG)$(_D)] $(_N)(NOTE: use UTF-8)"
 	@$(TABLE_I3) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
 	@$(TABLE_I3) "$(_C)CC$(_D)"			"C compiler"			"[$(_M)$(CC)$(_D)]"
-#WORK : will need this to implement "chroot" composer
-#	@$(TABLE_I3) "$(_C)LD_LIBRARY_PATH$(_D)"	"Linker library directories"	"[$(_M)$(LD_LIBRARY_PATH)$(_D)]"
+	@$(TABLE_I3) "$(_C)CXX$(_D)"			"C++ compiler"			"[$(_M)$(CXX)$(_D)]"
 	@$(TABLE_I3) "$(_C)PATH$(_D)"			"Run-time binary directories"	"[$(_M)$(BUILD_PATH)$(_D)]"
 	@$(TABLE_I3) "$(_C)CURL_CA_BUNDLE$(_D)"		"SSL certificate bundle"	"[$(_M)$(CURL_CA_BUNDLE)$(_D)]"
 	@$(ECHO) "\n"
@@ -1516,7 +1588,8 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of Glibc from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of GNU C Library (glibc) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
@@ -1546,7 +1619,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-depends$(_D)"		"Build/compile of GHC prerequisites"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-libs$(_D)"			"Build/compile of GHC prerequisites"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
@@ -1579,7 +1652,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc-prep$(_D)"			"Preparation of GHC source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-haskell$(_D):"	"$(_E)$(FETCHIT)-haskell-pull$(_D)"		"Download of Haskell Platform source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell-packages$(_D)"		"Download/preparation of Haskell Platform packages"
+	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell-pkg$(_D)"		"Download/preparation of Haskell Platform packages"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell-prep$(_D)"		"Preparation of Haskell Platform source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repositories"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
@@ -2096,41 +2169,36 @@ $(FETCHIT)-config:
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
 
 override define GNU_CFG_INSTALL =
-	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
 	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
 endef
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal:
 	$(BUILD_ENV) $(CABAL) update
-ifeq ($(BUILD_PLAT),Msys)
-#WORK : can we not use the $APPDATA directory?
 	# make sure GHC looks for libraries in the right place
-	$(SED) -i \
-		-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-		-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
-		-e "s|(ghc[-]options[:]).*$$|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
-		"$(APPDATA)/cabal/.config"
-else
-	# make sure GHC looks for libraries in the right place
-	$(SED) -i \
-		-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-		-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
-		-e "s|(ghc[-]options[:]).*$$|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
-		"$(COMPOSER_ABODE)/.cabal/config"
-endif
+	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
+		$(SED) -i \
+			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
+			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
+			-e "s|(ghc[-]options[:]).*$$|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
+			"$(COMPOSER_ABODE)/.cabal/config"; \
+	fi
 
 .PHONY: $(BUILDIT)-cleanup
 $(BUILDIT)-cleanup:
 	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
 	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
-ifeq ($(BUILD_PLAT),Msys)
-	$(MKDIR) "$(APPDATA)/cabal"
-	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
-	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/" || $(TRUE)
-endif
+#WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  should we add a $RM statement for them?
+#ifeq ($(BUILD_PLAT),Msys)
+#	$(MKDIR) "$(APPDATA)/cabal"
+#	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
+#	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/" || $(TRUE)
+#endif
+#WORKING
 	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
 	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
+#WORKING : other TMPDIR cruft?
 ifeq ($(BUILD_PLAT),Msys)
 	$(RM) "$(COMPOSER_ABODE)/"*.exe
 endif
@@ -2193,14 +2261,19 @@ endef
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
-$(CHECKIT): override PANDOC_VERSIONS := $(PANDOC_CMT) $(_D)($(_E)$(PANDOC_VERSION)$(_D))
+$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION) $(_D)($(_H)REQUIRED: >= $(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
+$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)REQUIRED: >= $(MAKE_MIN_VERSION)$(_D))
+$(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HEADER_L)
-ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(BUILD_PLAT),Linux)
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
+else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version			2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
@@ -2214,7 +2287,7 @@ endif
 	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_CMT)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
@@ -2232,9 +2305,12 @@ endif
 	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HEADER_L)
-ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(BUILD_PLAT),Linux)
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst \",,$(word 1,$(LDD)))"
+else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst \",,$(word 1,$(PACMAN)))"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst \",,$(word 1,$(MINTTY))) $(_S)($(subst \",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
+	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_N)$(subst \",,$(word 1,$(CYGPATH)))"
 endif
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst \",,$(word 1,$(COREUTILS)))"
 	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst \",,$(word 1,$(FIND)))"
@@ -2272,6 +2348,7 @@ endif
 # thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
 $(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
 	$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
+	$(word 1,$(CYGPATH)) \
 	\
 	$(word 1,$(COREUTILS)) \
 	$(word 1,$(FIND)) \
@@ -2312,15 +2389,15 @@ $(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
 	| $(SORT) \
 )
 override define CHECKIT_LIBRARY_LOCALE =
-	if [ -n "$(filter $(word 1,$(subst NULL, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
-		$(TABLE_I3) "- $(_E)$(word 1,$(subst NULL, ,$(1)))" "$(_N)$(word 2,$(subst NULL, ,$(1)))"; \
+	if [ -n "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "* $(_E)$(word 1,$(subst NULL, ,$(1)))" "$(_N)$(word 2,$(subst NULL, ,$(1)))"; \
 	else \
 		$(TABLE_I3) "$(_C)$(word 1,$(subst NULL, ,$(1)))" "$(_D)$(word 2,$(subst NULL, ,$(1)))"; \
 	fi
 	$(NULL)
 endef
 override define CHECKIT_LIBRARY_LINKED =
-	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(GLIBC_LIBRARY_LIST))" ]; then \
+	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
 		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1))):"; \
 		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
 			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(subst +,[+],$(word 1,$(subst NULL, ,$(1))))/p")" ]; then \
@@ -2605,8 +2682,8 @@ $(STRAPIT)-libs:
 ifeq ($(BUILD_PLAT),Linux)
 	$(RUNMAKE) $(STRAPIT)-libs-linux
 	$(RUNMAKE) $(STRAPIT)-libs-glibc
-	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
 endif
+	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
 	$(RUNMAKE) $(STRAPIT)-libs-zlib
 	$(RUNMAKE) $(STRAPIT)-libs-gmp
 	$(RUNMAKE) $(STRAPIT)-libs-libiconv1
@@ -2629,6 +2706,13 @@ $(STRAPIT)-libs-linux:
 		$(BUILD_ENV) $(MAKE) INSTALL_HDR_PATH="$(COMPOSER_ABODE)" headers_install
 
 .PHONY: $(STRAPIT)-libs-glibc
+# thanks for the '$CC / --build' fix below: https://stackoverflow.com/questions/8004241/how-to-compile-glibc-32bit-on-an-x86-64-machine
+# thanks for the '__i686' fix below: http://comments.gmane.org/gmane.comp.lib.glibc.user/758
+#	https://www.sourceware.org/bugzilla/show_bug.cgi?id=411
+#	https://www.sourceware.org/bugzilla/show_bug.cgi?id=4507
+# thanks for the 'syslog / _FORTIFY_SOURCE' fix below: https://www.linuxquestions.org/questions/linux-from-scratch-13/error-compiling-glibc-under-mint-12-a-936577-print
+#	https://www.sourceware.org/bugzilla/show_bug.cgi?id=10375
+$(STRAPIT)-libs-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -O -U__i686 -U_FORTIFY_SOURCE
 $(STRAPIT)-libs-glibc:
 	$(call CURL_FILE,$(GLIBC_TAR_SRC))
 	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
@@ -2636,11 +2720,15 @@ $(STRAPIT)-libs-glibc:
 	$(ECHO) "\"$(GLIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(GLIBC_TAR_DST).build/configure"
 	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
 	$(call AUTOTOOLS_BUILD,$(GLIBC_TAR_DST).build,$(COMPOSER_ABODE),\
-		CFLAGS="$(CFLAGS) -O2" \
+		CC="$(CC) $(CFLAGS)" \
+		CXX="$(CXX) $(CFLAGS)" \
+		CFLAGS="$(CFLAGS)" \
+		,\
+		--build="$(CHOST)" \
+		--enable-kernel="$(LINUX_MIN_VERSION)" \
+		--with-headers="$(COMPOSER_ABODE)/include" \
 	)
 
-#WORKING
-#WORK : document!
 .PHONY: $(STRAPIT)-libs-pkgconfig
 $(STRAPIT)-libs-pkgconfig:
 	$(call CURL_FILE,$(PKGCONFIG_TAR_SRC))
@@ -2669,6 +2757,11 @@ endif
 $(STRAPIT)-libs-gmp:
 	$(call CURL_FILE,$(GMP_TAR_SRC))
 	$(call DO_UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(GMP_TAR_DST))
+endif
 	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
 		ABI="$(BUILD_BITS)" \
 		,\
@@ -2682,11 +2775,18 @@ override define LIBICONV_BUILD =
 	# start with fresh source directory, due to circular dependency with "gettext"
 	$(RM) -r "$(LIBICONV_TAR_DST)"
 	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
-	# https://savannah.gnu.org/bugs/?43212
-	$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt)
+#WORK : platform_switches
+	# "$(BUILD_PLAT),Linux" requires some patching
+	#	https://savannah.gnu.org/bugs/?43212
+	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
+		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
+	fi
+#WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux)
-	$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux)
+	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
+		$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux); \
+		$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux); \
+	fi
 	$(call AUTOTOOLS_BUILD,$(LIBICONV_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2714,8 +2814,11 @@ $(STRAPIT)-libs-libiconv2:
 $(STRAPIT)-libs-ncurses:
 	$(call CURL_FILE,$(NCURSES_TAR_SRC))
 	$(call DO_UNTAR,$(NCURSES_TAR_DST),$(NCURSES_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(NCURSES_TAR_DST))
+endif
 	$(call AUTOTOOLS_BUILD,$(NCURSES_TAR_DST),$(COMPOSER_ABODE),,\
 		--without-shared \
 	)
@@ -2771,8 +2874,11 @@ endif
 $(STRAPIT)-libs-expat:
 	$(call CURL_FILE,$(EXPAT_TAR_SRC))
 	$(call DO_UNTAR,$(EXPAT_TAR_DST),$(EXPAT_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(EXPAT_TAR_DST)/conftools)
+endif
 	$(call AUTOTOOLS_BUILD,$(EXPAT_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2791,6 +2897,8 @@ $(STRAPIT)-libs-freetype:
 $(STRAPIT)-libs-fontconfig:
 	$(call CURL_FILE,$(FONTCONFIG_TAR_SRC))
 	$(call DO_UNTAR,$(FONTCONFIG_TAR_DST),$(FONTCONFIG_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
 	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
@@ -2805,6 +2913,19 @@ $(STRAPIT)-libs-fontconfig:
 		--disable-shared \
 		--enable-static \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
+		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
+		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm" \
+		,\
+		--disable-docs \
+		--enable-iconv \
+		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
+		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
+		--disable-shared \
+		--enable-static \
+	)
+endif
 
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
@@ -2824,10 +2945,12 @@ $(STRAPIT)-util:
 $(STRAPIT)-util-coreutils:
 	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build "*.so" files, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
 		"$(COREUTILS_TAR_DST)/configure"
+endif
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
@@ -2843,8 +2966,11 @@ endif
 $(STRAPIT)-util-findutils:
 	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
 	$(call DO_UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(FINDUTILS_TAR_DST)/build-aux)
+endif
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-util-patch
@@ -2859,8 +2985,11 @@ $(STRAPIT)-util-patch:
 $(STRAPIT)-util-sed:
 	$(call CURL_FILE,$(SED_TAR_SRC))
 	$(call DO_UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(SED_TAR_DST)/build-aux)
+endif
 	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 	)
@@ -2906,7 +3035,7 @@ $(STRAPIT)-util-perl:
 	$(call CURL_FILE,$(PERL_TAR_SRC))
 	$(call DO_UNTAR,$(PERL_TAR_DST),$(PERL_TAR_SRC))
 ifeq ($(BUILD_PLAT),Msys)
-	# "$(BUILD_PLAT),Msys" requires some patches
+	# "$(BUILD_PLAT),Msys" requires some patching
 	if [ ! -f "$(PERL_TAR_DST)/Configure.perl" ]; then \
 		$(SED) -i \
 			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
@@ -2970,6 +3099,8 @@ $(FETCHIT)-bash-prep:
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 # thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/development/chapter05/bash.html
 $(BUILDIT)-bash:
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
 	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
 		bash_cv_func_sigsetjmp="missing" \
@@ -2977,6 +3108,12 @@ $(BUILDIT)-bash:
 		--enable-static-link \
 		--without-bash-malloc \
 	)
+else
+	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),,\
+		--enable-static-link \
+		--without-bash-malloc \
+	)
+endif
 	$(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"
 
 .PHONY: $(FETCHIT)-less
@@ -3034,11 +3171,9 @@ $(FETCHIT)-make-prep:
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
 
-#WORKING : does the dmalloc option change the linux 4.1 segfault?
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
-		--without-dmalloc \
 		--without-guile \
 	)
 
@@ -3215,6 +3350,8 @@ $(FETCHIT)-texlive-pull:
 .PHONY: $(FETCHIT)-texlive-prep
 # thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
 $(FETCHIT)-texlive-prep:
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
 	$(CP) \
 		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
@@ -3226,6 +3363,7 @@ $(FETCHIT)-texlive-prep:
 		-e "s|kpsetool[:]kpsexpand||g" \
 		-e "s|kpsetool[:]kpsepath||g" \
 		"$(TEX_TAR_DST)/texk/texlive/tl_scripts/Makefile.in"
+endif
 	# dear texlive, please don't remove the destination directory before installing to it...
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
@@ -3268,7 +3406,7 @@ $(STRAPIT)-ghc: $(STRAPIT)-ghc-prep
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-ghc-depends
+	$(RUNMAKE) $(STRAPIT)-ghc-libs
 
 .PHONY: $(FETCHIT)-ghc
 $(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
@@ -3290,7 +3428,8 @@ $(FETCHIT)-ghc-pull:
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-prep:
-ifeq ($(BUILD_PLAT),Msys)
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CBL_TAR_DST)/bootstrap.patch.sh"
 	$(CHMOD) "$(CBL_TAR_DST)/bootstrap.patch.sh"
 	$(SED) -i \
@@ -3319,13 +3458,28 @@ endef
 $(FETCHIT)-ghc-prep:
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
-ifeq ($(BUILD_PLAT),Msys)
+	# expose "$(BUILD_PLAT),Msys" paths as environment variables
+	#	https://downloads.haskell.org/~ghc/latest/docs/html/libraries/Win32/System-Win32-Shell.html
+	#	$(GHC_DST)/libraries/directory/System/Directory.hs [getEnv]
+	#		findExecutable			Win32.searchPath Nothing binary ('.':exeExtension)	PATH
+	#		getHomeDirectory		Win32.cSIDL_PROFILE | Win32.cSIDL_WINDOWS		HOME
+	#		getAppUserDataDirectory		Win32.cSIDL_APPDATA					HOME
+	#		getUserDocumentsDirectory	Win32.cSIDL_PERSONAL					HOME
+	#		getTemporaryDirectory		Win32.getTemporaryDirectory (TMP, TEMP, USERPROFILE)	TMPDIR
+	$(SED) -i \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PROFILE[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_WINDOWS[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_APPDATA[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
+		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PERSONAL[ ]nullPtr[ ]0|getEnv \"USERPROFILE\"|g" \
+		-e "s|([^.])(.)([:]appName[)])|\1\2:\2.\2\3|g" \
+		"$(GHC_DST)/libraries/directory/System/Directory.hs"
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" seems to find "gmp.h" in a different spot
 	$(SED) -i \
 		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
 		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
 		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
-endif
 	# "$(BUILD_PLAT),Msys" fails if we don't have these calls quoted
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]GHCII[_]SCRIPT[)])|\1\"\2\"|g" \
@@ -3333,6 +3487,7 @@ endif
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]DESTDIR[)][$$][(]bindir[)][/]ghc.exe)|\1\"\2\"|g" \
 		$(GHC_DST)/ghc/ghc.mk
+endif
 #>	$(SED) -i \
 #>		-e "s|$(GHC_VERSION_LIB)|$(CABAL_VERSION_LIB)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal" \
@@ -3357,51 +3512,64 @@ endif
 		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
 			$(SH) ./bootstrap.sh --global
 
-.PHONY: $(STRAPIT)-ghc-depends
-$(STRAPIT)-ghc-depends:
-	$(RUNMAKE) $(FETCHIT)-cabal
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
-		$(subst |,-,$(GHC_LIBRARIES_LIST))
+.PHONY: $(STRAPIT)-ghc-libs
+$(STRAPIT)-ghc-libs:
+	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(GHC_BIN_DST)/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
+		cd "$(GHC_BIN_DST)/$(FILE)" && \
+			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)); \
+	)
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(ECHO) "WORK : move this to 'prep' if it works...\n"
-#	$(SED) -i \
-#		-e "s|(cygpath[ ])[-][-]mixed|\1--unix|g" \
-#		-e "s|(cygpath[ ])[-]m|\1--unix|g" \
-#		"$(GHC_DST)/aclocal.m4" \
-#		"$(GHC_DST)/configure"
-#	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
-#	$(ECHO) "WORK\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
-#else
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+#WORK
+#ifeq ($(BUILD_PLAT),Msys)
+#	$(ECHO) "WORK\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
 #endif
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
 
 .PHONY: $(FETCHIT)-haskell
 $(FETCHIT)-haskell: $(FETCHIT)-haskell-pull
-$(FETCHIT)-haskell: $(FETCHIT)-haskell-packages
+$(FETCHIT)-haskell: $(FETCHIT)-haskell-pkg
 $(FETCHIT)-haskell: $(FETCHIT)-haskell-prep
 
 .PHONY: $(FETCHIT)-haskell-pull
 $(FETCHIT)-haskell-pull:
 	$(call GIT_REPO,$(HASKELL_DST),$(HASKELL_SRC),$(HASKELL_CMT))
 
-.PHONY: $(FETCHIT)-haskell-packages
-$(FETCHIT)-haskell-packages:
+.PHONY: $(FETCHIT)-haskell-pkg
+$(FETCHIT)-haskell-pkg:
 	$(SED) -i \
 		-e "s|^(REQUIRED_GHC_VER[=]).+$$|\1$(GHC_VERSION)|g" \
 		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
 	$(SED) -i \
+		-e "/GLU/d" \
+		-e "/OpenGL/d" \
 		$(foreach FILE,$(HASKELL_VERSION_LIST),\
-			-e "s|([ ]+$(word 1,$(subst |, ,$(FILE)))[ ]+[=][=])([^,]+)|\1$(word 2,$(subst |, ,$(FILE)))|g" \
+			-e "s|^([ ]+$(word 1,$(subst |, ,$(FILE)))[ ]+[=][=])[^,]+|\1$(word 2,$(subst |, ,$(FILE)))|g" \
 		) \
 		"$(HASKELL_DST)/haskell-platform.cabal"
 	$(SED) -i \
-		-e "s|^(for[ ]pkg[ ]in[ ][$$][{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_VERSION_LIST))|g" \
+		-e "s|^(rm[ ][-]rf[ ])|#\1|g" \
+		-e "s|^(for[ ]pkg[ ]in[ ][$$][{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_PACKAGES_LIST))|g" \
+		-e "s|cabal[ ]unpack|echo|g" \
 		"$(HASKELL_DST)/src/generic/prepare.sh"
+	$(foreach FILE,\
+		$(shell \
+			$(SED) -n \
+				-e "/begin[ ]platform/,/end[ ]platform/p" \
+				"$(HASKELL_DST)/haskell-platform.cabal" \
+			| $(SED) -n \
+				-e "s|^[ ]+([^ ]+)[ ]+[=][=]([^,]+).*$$|\1-\2|gp" \
+		) \
+		$(subst |,-,$(HASKELL_PACKAGES_LIST)) \
+		,\
+		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(HASKELL_TAR)/packages/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
+	)
 	cd "$(HASKELL_DST)/src/generic" && \
 		$(BUILD_ENV_MINGW) $(SH) ./prepare.sh
 
@@ -3414,12 +3582,18 @@ $(FETCHIT)-haskell-packages:
 #	found by: https://github.com/irungentoo/toxcore/issues/92
 #	then by: https://github.com/irungentoo/toxcore/pull/94
 $(FETCHIT)-haskell-prep:
-ifeq ($(BUILD_PLAT),Msys)
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
+endif
+ifeq ($(BUILD_PLAT),Msys)
 	$(SED) -i \
 		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
 		"$(HASKELL_TAR)/packages/core.packages"
+endif
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	$(SED) -i \
 		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
 		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
@@ -3428,15 +3602,6 @@ ifeq ($(BUILD_PLAT),Msys)
 		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
 		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
 endif
-	$(foreach FILE,\
-		$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/haskell-platform.cabal \
-		$(HASKELL_TAR)/packages/platform.packages \
-		,\
-		$(SED) -i \
-			-e "/GLU/d" \
-			-e "/OpenGL/d" \
-			"$(FILE)"; \
-	)
 	$(SED) -i \
 		-e "s|as_fn_error[ ](.+GLU)|echo \1|g" \
 		-e "s|as_fn_error[ ](.+OpenGL)|echo \1|g" \
@@ -3454,12 +3619,19 @@ endif
 
 .PHONY: $(BUILDIT)-haskell
 $(BUILDIT)-haskell:
-#WORK : must be a better way to do this than the configure option
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" detects the version with a "^M" in it, which requires "unsupported-ghc" option to bypass
+#WORK : must be a better way to do this than the configure option
 	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),,\
 		--enable-unsupported-ghc-version \
 		--disable-user-install \
 	)
+else
+	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),,\
+		--disable-user-install \
+	)
+endif
 #>	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 #>		$(foreach FILE,$(shell $(CAT) "$(HASKELL_TAR)/packages/platform.packages"),\
 #>			"$(HASKELL_TAR)/packages/$(FILE)" \
@@ -3541,27 +3713,29 @@ $(BUILDIT)-pandoc:
 #WORK : document!
 
 override .RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
+override .RELEASE_DIR_NATIVE	:= $(.RELEASE_DIR)/Native
+override .RELEASE_CHROOT	?= Linux
 override .RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
 .PHONY: .release-chroot
 .release-chroot:
-	$(call CURL_FILE,$(LINUX_ROOTFS_SRC))
-	$(call DO_UNTAR,$(.RELEASE_DIR)/Linux,$(LINUX_ROOTFS_SRC))
+	$(call CURL_FILE,$(FUNTOO_SRC))
+	$(call DO_UNTAR,$(.RELEASE_DIR)/$(.RELEASE_CHROOT),$(FUNTOO_SRC))
 	@$(RUNMAKE) --silent .release-config
 	@$(HEADER_L)
 	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd /Linux ; export PATH ; make world"
+	@$(TABLE_I3) "$(_C)# cd /$(.RELEASE_CHROOT) ; export PATH ; make world"
 	@$(ECHO) "\n"
-	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/Linux,$(COMPOSER_ABODE))" $(CHROOT) "$(.RELEASE_DIR)" /bin/bash -o vi
+	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/$(.RELEASE_CHROOT),$(COMPOSER_ABODE))" $(CHROOT) "$(.RELEASE_DIR)" /bin/bash -o vi
 
 .PHONY: .release-config
 .release-config:
-	@$(MKDIR) "$(.RELEASE_DIR)/Linux"
-	@$(MKDIR) "$(.RELEASE_DIR)/Msys"
-	@$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/Linux/"
-	@$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/Msys/"
-	@$(ECHO) "override COMPOSER_OTHER ?= $(COMPOSER_OTHER)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
+	@$(foreach FILE,Linux Linux64 Msys Msys64 $(notdir $(.RELEASE_DIR_NATIVE)),\
+		$(MKDIR) "$(.RELEASE_DIR)/$(FILE)"; \
+		$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/$(FILE)/"; \
+	)
+	@$(ECHO) "override COMPOSER_OTHER ?= $(.RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
 	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
@@ -4171,10 +4345,11 @@ override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell	$(ECHO) '$(REVEALJS_DST)
 override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
 endif
 
-#BUG : pandoc hangs indefinitely on "$(BUILD_PLAT),Msys" when doing a self-contained revealjs
+#BUG : "pandoc" hangs indefinitely on "$(BUILD_PLAT),Msys" when doing a self-contained "revealjs"
 #	https://stackoverflow.com/questions/21423952/self-contained-reveal-js-file-without-relative-reveal-js-folder-using-pandoc
 # remove the "WARNING" below once this is fixed
-ifeq ($(BUILD_PLAT),Msys)
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 ifeq ($(TYPE),$(TYPE_PRES))
 override OPTIONS_DOC	:= $(filter-out --self-contained,$(OPTIONS_DOC))
 endif
@@ -4185,7 +4360,8 @@ $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(LIST) settings setup
-ifeq ($(BUILD_PLAT),Msys)
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 ifeq ($(TYPE),$(TYPE_PRES))
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_N)WARNING:"
