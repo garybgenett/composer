@@ -23,8 +23,6 @@
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ template inherit & archive target
 # _ double-check all $SED statements, for consistency
-# _ double-check "if*eq" stanzas for missing "else"
-# _ double-check "if*eq" stanzas for "$(if $(and $(or $(filter $(filter-out" possibilities
 # _ comments, comments, comments (& formatting :)
 #WORKING
 
@@ -246,12 +244,15 @@ override SHOW_EXTN			:= $(TYPE_SHOW).$(TYPE_HTML)
 
 ifeq ($(TYPE),$(TYPE_HTML))
 override OUTPUT				:= html5
-else ifeq ($(TYPE),$(TYPE_LPDF))
+endif
+ifeq ($(TYPE),$(TYPE_LPDF))
 override OUTPUT				:= latex
-else ifeq ($(TYPE),$(TYPE_PRES))
+endif
+ifeq ($(TYPE),$(TYPE_PRES))
 override OUTPUT				:= revealjs
 override EXTENSION			:= $(PRES_EXTN)
-else ifeq ($(TYPE),$(TYPE_SHOW))
+endif
+ifeq ($(TYPE),$(TYPE_SHOW))
 override OUTPUT				:= slidy
 override EXTENSION			:= $(SHOW_EXTN)
 endif
@@ -413,7 +414,7 @@ override CHOST				:=
 #WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -nostdlib -lgcc
 #WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
 # also remove -static-libgcc from -glibc target
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 
 ifneq ($(BUILD_DIST),)
@@ -2596,8 +2597,6 @@ alias less="$${PAGER}"
 alias more="$${PAGER}"
 alias vi="$${EDITOR}"
 #
-alias .cms=".composer"
-alias .c=".compose"
 alias .composer_root="cd [B]"$(COMPOSER_DIR)[B]""
 alias .composer_other="cd [B]"$(COMPOSER_OTHER)[B]""
 alias .composer="$(subst ",[B]",$(RUNMAKE))"
@@ -2792,29 +2791,23 @@ $(STRAPIT)-msys-pkg:
 .PHONY: $(STRAPIT)-msys-dll
 $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
-	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
+	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
 	)
 
 .PHONY: $(STRAPIT)-tools
 $(STRAPIT)-tools:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-tools-binutils-init
-	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
+#WORKING	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
 	$(RUNMAKE) $(STRAPIT)-tools-linux
 	$(RUNMAKE) $(STRAPIT)-tools-glibc
-	$(RUNMAKE) $(STRAPIT)-tools-binutils
 	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
-#WORKING : document!
-.PHONY: $(STRAPIT)-tools-binutils-init
-$(STRAPIT)-tools-binutils-init:
-	$(RUNMAKE) $(STRAPIT)-tools-binutils
-
-#WORKING : document!
-.PHONY: $(STRAPIT)-tools-gcc-init
-$(STRAPIT)-tools-gcc-init:
-	$(call STRAPIT_TOOLS_GCC)
+#WORKING : de-document!
+#.PHONY: $(STRAPIT)-tools-gcc-init
+#$(STRAPIT)-tools-gcc-init:
+#	$(RUNMAKE) $(STRAPIT)-tools-gcc
+#WORKING
 
 .PHONY: $(STRAPIT)-tools-linux
 $(STRAPIT)-tools-linux:
@@ -2846,48 +2839,28 @@ $(STRAPIT)-tools-glibc:
 		--build="$(CHOST)" \
 		--enable-kernel="$(LINUX_MIN_VERSION)" \
 		--with-headers="$(COMPOSER_ABODE)/include" \
-		--enable-shared \
-		--enable-static \
-	)
-
-#WORKING : document!
-#WORKING : make variables unique
-#WORKING : double-check build options
-.PHONY: $(STRAPIT)-tools-binutils
-$(STRAPIT)-tools-binutils:
-	$(call CURL_FILE,$(GCC_UTL_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with "glibc"
-	$(RM) -r "$(GCC_UTL_TAR_DST)"
-	$(call DO_UNTAR,$(GCC_UTL_TAR_DST),$(GCC_UTL_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(GCC_UTL_TAR_DST),$(COMPOSER_ABODE),\
-		CC="$(CC) $(CFLAGS)" \
-		CXX="$(CXX) $(CFLAGS)" \
-		CFLAGS="$(CFLAGS)" \
-		,\
-		--build="$(CHOST)" \
-		--enable-shared \
-		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-tools-gcc
 $(STRAPIT)-tools-gcc:
-	$(call STRAPIT_TOOLS_GCC)
-
-override define STRAPIT_TOOLS_GCC =
 	$(call CURL_FILE,$(GCC_TAR_SRC))
 	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
 	$(call CURL_FILE,$(GCC_MPF_TAR_SRC))
 	$(call CURL_FILE,$(GCC_MPC_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with "glibc"
-	$(RM) -r "$(GCC_TAR_DST)"
+	$(call CURL_FILE,$(GCC_UTL_TAR_SRC))
+#WORKING
+#	# start with fresh source directory, due to circular dependency with "glibc"
+#	$(RM) -r "$(GCC_TAR_DST)"
+#WORKING
 	$(call DO_UNTAR,$(GCC_TAR_DST),$(GCC_TAR_SRC))
 	$(call DO_UNTAR,$(GCC_GMP_TAR_DST),$(GCC_GMP_TAR_SRC))
 	$(call DO_UNTAR,$(GCC_MPF_TAR_DST),$(GCC_MPF_TAR_SRC))
 	$(call DO_UNTAR,$(GCC_MPC_TAR_DST),$(GCC_MPC_TAR_SRC))
+	$(call DO_UNTAR,$(GCC_UTL_TAR_DST),$(GCC_UTL_TAR_SRC))
 	$(MKDIR) "$(GCC_TAR_DST)/gmp"		&& $(CP) "$(GCC_GMP_TAR_DST)/"* "$(GCC_TAR_DST)/gmp/"
 	$(MKDIR) "$(GCC_TAR_DST)/mpfr"		&& $(CP) "$(GCC_MPF_TAR_DST)/"* "$(GCC_TAR_DST)/mpfr/"
 	$(MKDIR) "$(GCC_TAR_DST)/mpc"		&& $(CP) "$(GCC_MPC_TAR_DST)/"* "$(GCC_TAR_DST)/mpc/"
-#WORKING	$(MKDIR) "$(GCC_TAR_DST)/binutils"	&& $(CP) "$(GCC_UTL_TAR_DST)/"* "$(GCC_TAR_DST)/binutils/"
+	$(MKDIR) "$(GCC_TAR_DST)/binutils"	&& $(CP) "$(GCC_UTL_TAR_DST)/"* "$(GCC_TAR_DST)/binutils/"
 	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),\
 		CC="$(CC) $(CFLAGS)" \
 		CXX="$(CXX) $(CFLAGS)" \
@@ -2895,10 +2868,9 @@ override define STRAPIT_TOOLS_GCC =
 		,\
 		--build="$(CHOST)" \
 		--enable-languages="$(GCC_LANGUAGES)" \
-		--enable-shared \
+		--disable-shared \
 		--enable-static \
 	)
-endef
 
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
@@ -2919,7 +2891,7 @@ $(STRAPIT)-libs:
 
 .PHONY: $(STRAPIT)-libs-libiconv-init
 $(STRAPIT)-libs-libiconv-init:
-	$(call STRAPIT_LIBS_LIBICONV)
+	$(RUNMAKE) $(STRAPIT)-libs-libiconv
 
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
@@ -2931,12 +2903,9 @@ $(STRAPIT)-libs-gettext:
 	)
 
 .PHONY: $(STRAPIT)-libs-libiconv
-$(STRAPIT)-libs-libiconv:
-	$(call STRAPIT_LIBS_LIBICONV)
-
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
 #	https://savannah.gnu.org/bugs/?43212
-override define STRAPIT_LIBS_LIBICONV =
+$(STRAPIT)-libs-libiconv:
 	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with "gettext"
 	$(RM) -r "$(LIBICONV_TAR_DST)"
@@ -2956,7 +2925,6 @@ override define STRAPIT_LIBS_LIBICONV =
 		--disable-shared \
 		--enable-static \
 	)
-endef
 
 .PHONY: $(STRAPIT)-libs-pkgconfig
 $(STRAPIT)-libs-pkgconfig:
@@ -3022,16 +2990,15 @@ endif
 		--without-shared \
 	)
 
+.PHONY: $(STRAPIT)-libs-openssl
 # thanks for the patch below: http://www.linuxfromscratch.org/blfs/view/svn/postlfs/openssl.html
 #	found by: https://www.linuxquestions.org/questions/linux-software-2/compile-problems-openssl-1-0-1c-946444
-	# "openssl" requires some patching
-#WORKING	$(call DO_PATCH,$(OPENSSL_TAR_DST),http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1j-fix_parallel_build-1.patch)
-
-.PHONY: $(STRAPIT)-libs-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
 	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
 	$(call DO_UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
+	# "openssl" requires some patching
+#WORKING	$(call DO_PATCH,$(OPENSSL_TAR_DST),http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1j-fix_parallel_build-1.patch)
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_DIST),)
 	$(CP) "$(OPENSSL_TAR_DST)/Configure" "$(OPENSSL_TAR_DST)/configure"
@@ -4043,8 +4010,6 @@ override define .HEREDOC_DIST_GITIGNORE =
 /$(notdir $(COMPOSER_BUILD))/
 endef
 
-#WORKING : does this work with "$(RM) $(COMPOSER_ABODE)/.home/.coreutils"?
-#WORKING : may need these back: BUILD_PLAT="Msys" BUILD_ARCH="i686"
 override define .HEREDOC_DIST_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
