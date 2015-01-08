@@ -81,7 +81,7 @@
 #OTHER NOTES
 # dependencies/credits list
 #	add msys/mingw-w64 project
-#	add musl project (and libraries)
+#	add all libraries/utilities
 #	replace wget with curl project
 # now need zip/unzip in path
 #	add zip/unzip [ -x ... ] checks and message (read ENTER) if not
@@ -409,7 +409,7 @@ override CHOST				:=
 #WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -nostdlib -lgcc
 #WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
 # also remove -static-libgcc from -glibc target
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 
 ifneq ($(BUILD_DIST),)
@@ -2800,7 +2800,7 @@ $(STRAPIT)-tools-linux:
 #	https://www.sourceware.org/bugzilla/show_bug.cgi?id=4507
 # thanks for the 'syslog / _FORTIFY_SOURCE' fix below: https://www.linuxquestions.org/questions/linux-from-scratch-13/error-compiling-glibc-under-mint-12-a-936577-print
 #	https://www.sourceware.org/bugzilla/show_bug.cgi?id=10375
-$(STRAPIT)-tools-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -O -U__i686 -U_FORTIFY_SOURCE
+$(STRAPIT)-tools-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -U__i686 -U_FORTIFY_SOURCE
 $(STRAPIT)-tools-glibc:
 	$(call CURL_FILE,$(GLIBC_TAR_SRC))
 	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
@@ -2836,7 +2836,11 @@ $(STRAPIT)-tools-gcc:
 	$(MKDIR) "$(GCC_TAR_DST)/mpfr"		&& $(CP) "$(GCC_MPF_TAR_DST)/"* "$(GCC_TAR_DST)/mpfr/"
 	$(MKDIR) "$(GCC_TAR_DST)/mpc"		&& $(CP) "$(GCC_MPC_TAR_DST)/"* "$(GCC_TAR_DST)/mpc/"
 	$(MKDIR) "$(GCC_TAR_DST)/binutils"	&& $(CP) "$(GCC_UTL_TAR_DST)/"* "$(GCC_TAR_DST)/binutils/"
-	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),\
+		CC="$(CC) $(CFLAGS)" \
+		CXX="$(CXX) $(CFLAGS)" \
+		CFLAGS="$(CFLAGS)" \
+		,\
 		--build="$(CHOST)" \
 		--enable-languages="$(GCC_LANGUAGES)" \
 		--disable-shared \
