@@ -2782,9 +2782,11 @@ $(STRAPIT)-tools:
 	$(RUNMAKE) $(STRAPIT)-tools-glibc
 	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
-.PHONY: $(STRAPIT)-tools-gcc-init
-$(STRAPIT)-tools-gcc-init:
-	$(RUNMAKE) $(STRAPIT)-tools-gcc
+#WORKING : de-document!
+#.PHONY: $(STRAPIT)-tools-gcc-init
+#$(STRAPIT)-tools-gcc-init:
+#	$(RUNMAKE) $(STRAPIT)-tools-gcc
+#WORKING
 
 .PHONY: $(STRAPIT)-tools-linux
 $(STRAPIT)-tools-linux:
@@ -2820,14 +2822,15 @@ $(STRAPIT)-tools-glibc:
 
 .PHONY: $(STRAPIT)-tools-gcc
 $(STRAPIT)-tools-gcc:
-#WORKING
 	$(call CURL_FILE,$(GCC_TAR_SRC))
 	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
 	$(call CURL_FILE,$(GCC_MPF_TAR_SRC))
 	$(call CURL_FILE,$(GCC_MPC_TAR_SRC))
 	$(call CURL_FILE,$(GCC_UTL_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with "glibc"
-	$(RM) -r "$(GCC_TAR_DST)"
+#WORKING
+#	# start with fresh source directory, due to circular dependency with "glibc"
+#	$(RM) -r "$(GCC_TAR_DST)"
+#WORKING
 	$(call DO_UNTAR,$(GCC_TAR_DST),$(GCC_TAR_SRC))
 	$(call DO_UNTAR,$(GCC_GMP_TAR_DST),$(GCC_GMP_TAR_SRC))
 	$(call DO_UNTAR,$(GCC_MPF_TAR_DST),$(GCC_MPF_TAR_SRC))
