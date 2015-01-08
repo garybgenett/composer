@@ -875,8 +875,13 @@ override BUILD_BINARY_LIST		:= \
 	$(BUILD_BINARY_LIST)))))
 
 #WORKING : double-check
+#	linux-gate.so.1 \
+#WORKING
 override DYNAMIC_LIBRARY_LIST		:= \
+	ld-linux-x86-64.so.2 \
 	ld-linux.so.2 \
+	linux-vdso.so.1 \
+	\
 	libc.so.6 \
 	libcrypt.so.1 \
 	libdl.so.2 \
@@ -884,11 +889,7 @@ override DYNAMIC_LIBRARY_LIST		:= \
 	libnsl.so.1 \
 	libpthread.so.0 \
 	librt.so.1 \
-	libutil.so.1 \
-	linux-gate.so.1 \
-	\
-	ld-linux-x86-64.so.2 \
-	linux-vdso.so.1
+	libutil.so.1
 ifeq ($(BUILD_PLAT),Msys)
 override DYNAMIC_LIBRARY_LIST		:= \
 	$(MSYS_BINARY_LIST) \
