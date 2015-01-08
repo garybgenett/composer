@@ -477,8 +477,9 @@ ifneq ($(BUILD_DIST),)
 override FUNTOO_SARC			:= i686
 endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
-override FUNTOO_GCC_VERSION		:= 4.8.3
 override FUNTOO_GLIBC_VERSION		:= 2.19
+override FUNTOO_BINUTILS_VERSION	:= 2.24
+override FUNTOO_GCC_VERSION		:= 4.8.3
 override FUNTOO_MAKE_VERSION		:= 3.82
 
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
@@ -520,30 +521,32 @@ override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
 override GLIBC_VERSION			:= $(GLIBC_MIN_VERSION)
 override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
 override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
-#WORKING
+# https://www.gnu.org/software/binutils (license: GPL)
+# https://www.gnu.org/software/binutils
+override BINUTILS_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
+override BINUTILS_TAR_SRC		:= http://ftp.gnu.org/gnu/binutils/binutils-$(BINUTILS_VERSION).tar.gz
+override BINUTILS_TAR_DST		:= $(BUILD_STRAP)/binutils-$(BINUTILS_VERSION)
 # https://gcc.gnu.org (license: GPL)
 # https://gcc.gnu.org/releases.html
-#WORKING : need URLS and LIC for libraries also)
-#WORK $(GCC_TAR_DST)/contrib/download_prerequisites
-#WORK http://stackoverflow.com/questions/9253695/building-gcc-requires-gmp-4-2-mpfr-2-3-1-and-mpc-0-8-0
-#WORK http://source.kohlerville.com/2012/09/easy-gcc-compile-using-download_prerequisites-in-contrib
-#WORK http://www.openwall.com/lists/musl/2013/07/24/19
-#WORK http://www.openwall.com/lists/musl/2013/07/24/5
+#	$(GCC_TAR_DST)/contrib/download_prerequisites
+# http://www.mpfr.org (license: LGPL)
+# http://www.mpfr.org
+# https://gmplib.org (license: GPL, LGPL)
+# https://gmplib.org
+# http://www.multiprecision.org (license: LGPL)
+# http://www.multiprecision.org
 override GCC_VERSION			:= $(FUNTOO_GCC_VERSION)
-override GCC_GMP_VERSION		:= 4.3.2
 override GCC_MPF_VERSION		:= 2.4.2
+override GCC_GMP_VERSION		:= 4.3.2
 override GCC_MPC_VERSION		:= 0.8.1
-override GCC_UTL_VERSION		:= 2.24
 override GCC_TAR_SRC			:= ftp://gcc.gnu.org/pub/gcc/releases/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz
-override GCC_GMP_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-$(GCC_GMP_VERSION).tar.bz2
 override GCC_MPF_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpfr-$(GCC_MPF_VERSION).tar.bz2
+override GCC_GMP_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-$(GCC_GMP_VERSION).tar.bz2
 override GCC_MPC_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$(GCC_MPC_VERSION).tar.gz
-override GCC_UTL_TAR_SRC		:= http://ftp.gnu.org/gnu/binutils/binutils-$(GCC_UTL_VERSION).tar.gz
 override GCC_TAR_DST			:= $(BUILD_STRAP)/gcc-$(GCC_VERSION)
-override GCC_GMP_TAR_DST		:= $(BUILD_STRAP)/gmp-$(GCC_GMP_VERSION)
 override GCC_MPF_TAR_DST		:= $(BUILD_STRAP)/mpfr-$(GCC_MPF_VERSION)
+override GCC_GMP_TAR_DST		:= $(BUILD_STRAP)/gmp-$(GCC_GMP_VERSION)
 override GCC_MPC_TAR_DST		:= $(BUILD_STRAP)/mpc-$(GCC_MPC_VERSION)
-override GCC_UTL_TAR_DST		:= $(BUILD_STRAP)/binutils-$(GCC_UTL_VERSION)
 override GCC_LANGUAGES			:= c,c++
 
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
@@ -553,6 +556,7 @@ override GCC_LANGUAGES			:= c,c++
 #	make[2]: Entering directory `/Linux64/build/make/po'
 #	*** error: gettext infrastructure mismatch: using a Makefile.in.in from gettext version 0.18 but the autoconf macros are from gettext version 0.19
 #	make[2]: *** [check-macro-version] Error 1
+#WORK : override GETTEXT_VERSION		:= 0.19.3
 override GETTEXT_VERSION		:= 0.18.3.2
 override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
 override GETTEXT_TAR_DST		:= $(BUILD_STRAP)/gettext-$(GETTEXT_VERSION)
@@ -1689,9 +1693,11 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-tools$(_D):"	"$(_E)$(STRAPIT)-tools-gcc-init$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (before Glibc) from source archives"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-tools$(_D):"	"$(_E)$(STRAPIT)-tools-binutils-init$(_D)"	"Build/compile of GNU Binutils (before Glibc) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-gcc-init$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (before Glibc) from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-glibc$(_D)"		"Build/compile of GNU C Library [glibc] from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-binutils$(_D)"		"Build/compile of GNU Binutils (after Glibc) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-gcc$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (after Glibc) from source archives"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-libiconv-init$(_D)"	"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
@@ -2377,7 +2383,7 @@ $(CHECKIT):
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSION)"		"$(_N)$(shell $(GCC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(GXX) --version 2>/dev/null | $(HEAD) -n1)]"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(GCC_UTL_VERSION)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSION)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
@@ -2806,12 +2812,10 @@ $(STRAPIT)-tools:
 	$(RUNMAKE) $(STRAPIT)-tools-binutils
 	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
-#WORKING : document!
 .PHONY: $(STRAPIT)-tools-binutils-init
 $(STRAPIT)-tools-binutils-init:
-	$(RUNMAKE) $(STRAPIT)-tools-binutils
+	$(call STRAPIT_TOOLS_BINUTILS)
 
-#WORKING : document!
 .PHONY: $(STRAPIT)-tools-gcc-init
 $(STRAPIT)-tools-gcc-init:
 	$(call STRAPIT_TOOLS_GCC)
@@ -2850,16 +2854,17 @@ $(STRAPIT)-tools-glibc:
 		--enable-static \
 	)
 
-#WORKING : document!
-#WORKING : make variables unique
-#WORKING : double-check build options
 .PHONY: $(STRAPIT)-tools-binutils
 $(STRAPIT)-tools-binutils:
-	$(call CURL_FILE,$(GCC_UTL_TAR_SRC))
+	$(call STRAPIT_TOOLS_BINUTILS)
+
+#WORKING : double-check build options
+override define STRAPIT_TOOLS_BINUTILS =
+	$(call CURL_FILE,$(BINUTILS_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with "glibc"
-	$(RM) -r "$(GCC_UTL_TAR_DST)"
-	$(call DO_UNTAR,$(GCC_UTL_TAR_DST),$(GCC_UTL_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(GCC_UTL_TAR_DST),$(COMPOSER_ABODE),\
+	$(RM) -r "$(BINUTILS_TAR_DST)"
+	$(call DO_UNTAR,$(BINUTILS_TAR_DST),$(BINUTILS_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(BINUTILS_TAR_DST),$(COMPOSER_ABODE),\
 		CC="$(CC) $(CFLAGS)" \
 		CXX="$(CXX) $(CFLAGS)" \
 		CFLAGS="$(CFLAGS)" \
@@ -2868,11 +2873,13 @@ $(STRAPIT)-tools-binutils:
 		--enable-shared \
 		--enable-static \
 	)
+endef
 
 .PHONY: $(STRAPIT)-tools-gcc
 $(STRAPIT)-tools-gcc:
 	$(call STRAPIT_TOOLS_GCC)
 
+#WORKING : double-check build options
 override define STRAPIT_TOOLS_GCC =
 	$(call CURL_FILE,$(GCC_TAR_SRC))
 	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
@@ -2887,7 +2894,6 @@ override define STRAPIT_TOOLS_GCC =
 	$(MKDIR) "$(GCC_TAR_DST)/gmp"		&& $(CP) "$(GCC_GMP_TAR_DST)/"* "$(GCC_TAR_DST)/gmp/"
 	$(MKDIR) "$(GCC_TAR_DST)/mpfr"		&& $(CP) "$(GCC_MPF_TAR_DST)/"* "$(GCC_TAR_DST)/mpfr/"
 	$(MKDIR) "$(GCC_TAR_DST)/mpc"		&& $(CP) "$(GCC_MPC_TAR_DST)/"* "$(GCC_TAR_DST)/mpc/"
-#WORKING	$(MKDIR) "$(GCC_TAR_DST)/binutils"	&& $(CP) "$(GCC_UTL_TAR_DST)/"* "$(GCC_TAR_DST)/binutils/"
 	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),\
 		CC="$(CC) $(CFLAGS)" \
 		CXX="$(CXX) $(CFLAGS)" \
@@ -3728,6 +3734,12 @@ $(STRAPIT)-ghc-libs:
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
+#WORKING
+#ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+#	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+#	$(call GNU_CFG_INSTALL,$(GHC_DST))
+#endif
+#WORKING
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
