@@ -1715,7 +1715,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-libs$(_D)"			"Build/compile of GHC prerequisites"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database"
+	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
@@ -2248,6 +2248,7 @@ $(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-haskell
+	$(RUNMAKE) $(FETCHIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
 	$(RUNMAKE) $(BUILDIT)-cleanup
 	$(RUNMAKE) $(BUILDIT)-bindir
@@ -3551,6 +3552,7 @@ $(STRAPIT)-ghc: $(STRAPIT)-ghc-prep
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc:
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(FETCHIT)-cabal
 	$(RUNMAKE) $(STRAPIT)-ghc-libs
 
 .PHONY: $(FETCHIT)-ghc
@@ -3660,7 +3662,6 @@ endif
 
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
-	$(RUNMAKE) $(FETCHIT)-cabal
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
 		$(call DO_UNTAR,$(GHC_BIN_DST)/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
