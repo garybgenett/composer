@@ -2887,9 +2887,9 @@ $(STRAPIT)-libs-libiconv:
 	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Linux" requires some patching
-	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
-		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
-	fi
+#WORKING	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
+#WORKING		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
+#WORKING	fi
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
