@@ -2815,13 +2815,40 @@ $(STRAPIT)-tools:
 	$(RUNMAKE) $(STRAPIT)-tools-binutils
 	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
+#WORKING : double-check build options
+# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/binutils-pass1.html
 .PHONY: $(STRAPIT)-tools-binutils-init
 $(STRAPIT)-tools-binutils-init:
-	$(call STRAPIT_TOOLS_BINUTILS)
+	$(call STRAPIT_TOOLS_BINUTILS,\
+		--with-sysroot="$(COMPOSER_ABODE)" \
+		--with-lib-path="$(COMPOSER_ABODE)/lib" \
+		--disable-nls \
+		--disable-werror \
+	)
 
+#WORKING : double-check build options
+# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/gcc-pass1.html
 .PHONY: $(STRAPIT)-tools-gcc-init
 $(STRAPIT)-tools-gcc-init:
-	$(call STRAPIT_TOOLS_GCC)
+	$(call STRAPIT_TOOLS_GCC,\
+		--with-local-prefix="$(COMPOSER_ABODE)" \
+		--with-newlib \
+		--without-headers \
+		--disable-decimal-float \
+		--disable-libatomic \
+		--disable-libcilkrts \
+		--disable-libgomp \
+		--disable-libitm \
+		--disable-libquadmath \
+		--disable-libsanitizer \
+		--disable-libssp \
+		--disable-libstdc++-v3 \
+		--disable-libvtv \
+		--disable-multilib \
+		--disable-nls \
+		--disable-shared \
+		--disable-threads \
+	)
 
 .PHONY: $(STRAPIT)-tools-linux
 $(STRAPIT)-tools-linux:
@@ -2862,6 +2889,7 @@ $(STRAPIT)-tools-binutils:
 	$(call STRAPIT_TOOLS_BINUTILS)
 
 #WORKING : double-check build options
+# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/binutils-pass2.html
 override define STRAPIT_TOOLS_BINUTILS =
 	$(call CURL_FILE,$(BINUTILS_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with "glibc"
@@ -2875,6 +2903,7 @@ override define STRAPIT_TOOLS_BINUTILS =
 		--build="$(CHOST)" \
 		--enable-shared \
 		--enable-static \
+		$(1) \
 	)
 endef
 
@@ -2883,6 +2912,7 @@ $(STRAPIT)-tools-gcc:
 	$(call STRAPIT_TOOLS_GCC)
 
 #WORKING : double-check build options
+# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/gcc-pass2.html
 override define STRAPIT_TOOLS_GCC =
 	$(call CURL_FILE,$(GCC_TAR_SRC))
 	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
@@ -2906,6 +2936,7 @@ override define STRAPIT_TOOLS_GCC =
 		--enable-languages="$(GCC_LANGUAGES)" \
 		--enable-shared \
 		--enable-static \
+		$(1) \
 	)
 endef
 
