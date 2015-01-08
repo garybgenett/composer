@@ -377,6 +377,11 @@ override BUILD_GHC_78			?=
 override BUILD_PLAT			?= $(shell uname -o)
 override BUILD_ARCH			?= $(shell uname -m)
 
+override IS_CYGWIN			:=
+ifeq ($(BUILD_PLAT),Cygwin)
+override IS_CYGWIN			:= 1
+endif
+
 ifneq ($(BUILD_MSYS),)
 override BUILD_PLAT			:= Msys
 endif
@@ -776,9 +781,7 @@ override PANDOC_CMT			:= 1.13.2
 override PANDOC_VERSION			:= $(PANDOC_CMT)
 
 override BUILD_PATH_MINGW		:=
-ifeq ($(COMPOSER_PROGS_USE),0)
-override BUILD_PATH			:= $(PATH)
-else
+override BUILD_PATH_SHELL		:=
 ifeq ($(COMPOSER_PROGS_USE),1)
 override BUILD_PATH			:= $(COMPOSER_PROGS)/usr/bin:$(COMPOSER_ABODE)/.coreutils
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/bin
@@ -794,6 +797,12 @@ override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 ifneq ($(COMPOSER_PROGS_USE),1)
 override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin:$(COMPOSER_ABODE)/.coreutils
 endif
+override BUILD_PATH_SHELL		:= $(BUILD_PATH)
+ifeq ($(COMPOSER_PROGS_USE),0)
+override BUILD_PATH			:= $(PATH)
+endif
+ifneq ($(IS_CYGWIN),)
+override BUILD_PATH			:= $(PATH)
 endif
 
 override PACMAN_BASE_LIST		:= \
@@ -2510,7 +2519,7 @@ endef
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT):
-	@$(BUILD_ENV) $(BASH) || $(TRUE)
+	@$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" $(BASH) || $(TRUE)
 
 .PHONY: $(SHELLIT)-msys
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -2519,11 +2528,11 @@ $(SHELLIT)-msys:
 ifeq ($(COMPOSER_PROGS_USE),1)
 	@cd "$(COMPOSER_PROGS)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) ./msys2_shell.bat
+		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
 else
 	@cd "$(MSYS_BIN_DST)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) ./msys2_shell.bat
+		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
 endif
 
 .PHONY: $(SHELLIT)-bashrc
