@@ -404,10 +404,11 @@ override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CC				?= gcc
 override CXX				?= g++
+override LD				?= ld
 override CHOST				:=
 #WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -nostdlib -lgcc
 #WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
-# also remove -static-libgcc from -libs-glibc
+# also remove -static-libgcc from -glibc target
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 
@@ -473,6 +474,7 @@ override FUNTOO_ARCH			:= x86-64bit
 #>override FUNTOO_SARC			:= i686
 override FUNTOO_SARC			:= core2_64
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
+override FUNTOO_GCC_VERSION		:= 4.8.3
 override FUNTOO_GLIBC_VERSION		:= 2.19
 override FUNTOO_MAKE_VERSION		:= 3.82
 
@@ -515,6 +517,32 @@ override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
 override GLIBC_VERSION			:= $(GLIBC_MIN_VERSION)
 override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
 override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
+#WORKING
+# https://gcc.gnu.org (license: GPL)
+# https://gcc.gnu.org/releases.html
+#WORKING : need URLS and LIC for libraries also)
+#WORK $(GCC_TAR_DST)/contrib/download_prerequisites
+#WORK http://stackoverflow.com/questions/9253695/building-gcc-requires-gmp-4-2-mpfr-2-3-1-and-mpc-0-8-0
+#WORK http://source.kohlerville.com/2012/09/easy-gcc-compile-using-download_prerequisites-in-contrib
+#WORK http://www.openwall.com/lists/musl/2013/07/24/19
+#WORK http://www.openwall.com/lists/musl/2013/07/24/5
+override GCC_VERSION			:= $(FUNTOO_GCC_VERSION)
+override GCC_GMP_VERSION		:= 4.3.2
+override GCC_MPF_VERSION		:= 2.4.2
+override GCC_MPC_VERSION		:= 0.8.1
+override GCC_UTL_VERSION		:= 2.24
+override GCC_TAR_SRC			:= ftp://gcc.gnu.org/pub/gcc/releases/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz
+override GCC_GMP_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-$(GCC_GMP_VERSION).tar.bz2
+override GCC_MPF_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpfr-$(GCC_MPF_VERSION).tar.bz2
+override GCC_MPC_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$(GCC_MPC_VERSION).tar.gz
+override GCC_UTL_TAR_SRC		:= http://ftp.gnu.org/gnu/binutils/binutils-$(GCC_UTL_VERSION).tar.gz
+override GCC_TAR_DST			:= $(BUILD_STRAP)/gcc-$(GCC_VERSION)
+override GCC_GMP_TAR_DST		:= $(BUILD_STRAP)/gmp-$(GCC_GMP_VERSION)
+override GCC_MPF_TAR_DST		:= $(BUILD_STRAP)/mpfr-$(GCC_MPF_VERSION)
+override GCC_MPC_TAR_DST		:= $(BUILD_STRAP)/mpc-$(GCC_MPC_VERSION)
+override GCC_UTL_TAR_DST		:= $(BUILD_STRAP)/binutils-$(GCC_UTL_VERSION)
+override GCC_LANGUAGES			:= c,c++
+
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
 #WORK : re-verify this, on both 32 and 64
@@ -985,6 +1013,10 @@ override GHC_BASE_LIBRARIES_LIST	:= \
 endif
 
 override GHC_LIBRARIES_LIST		:= \
+	QuickCheck|2.7.6 \
+	primitive|0.5.4.0 \
+	tf-random|0.5 \
+	\
 	alex|3.1.3 \
 	happy|1.19.4
 
@@ -1017,6 +1049,9 @@ override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
+override GCC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
+override GXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
+override GLD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
 override PACMAN_ENV			:= "$(MSYS_BIN_DST)/usr/bin/env" - PATH="$(MSYS_BIN_DST)/usr/bin"
@@ -1177,9 +1212,28 @@ override define DO_GIT_SUBMODULE_GHC	=
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
 
-override BUILD_TOOLS			:=
+#WORKING
+ifeq ($(CC),gcc)
+ifneq ($(GCC),)
+override CC				:= $(GCC)
+endif
+endif
+ifeq ($(CXX),g++)
+ifneq ($(GCC),)
+override CXX				:= $(GXX)
+endif
+endif
+ifeq ($(LD),ld)
+ifneq ($(GLD),)
+override LD				:= $(GLD)
+endif
+endif
+
+override BUILD_TOOLS			:= \
+	--with-gcc="$(CC)" \
+	--with-ld="$(LD)"
 ifeq ($(BUILD_PLAT),Msys)
-override BUILD_TOOLS			:= $(BUILD_TOOLS) \
+override BUILD_TOOLS			:= \
 	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld"
 endif
@@ -1234,6 +1288,7 @@ override BUILD_ENV			:= $(ENV) - \
 	TERM="$(TERM)" \
 	CC="$(CC)" \
 	CXX="$(CXX)" \
+	LD="$(LD)" \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
@@ -1251,14 +1306,13 @@ ifeq ($(BUILD_PLAT),Msys)
 # see "$(BUILD_PLAT),Msys" paths comment in "$(FETCHIT)-ghc-prep"
 override BUILD_ENV			:= $(BUILD_ENV) \
 	MSYSTEM="MSYS$(BUILD_BITS)" \
-	CC="$(MSYS_BIN_DST)/usr/bin/gcc" \
-	CXX="$(MSYS_BIN_DST)/usr/bin/g++" \
 	HOMEPATH="$(COMPOSER_ABODE)" \
 	TMP="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	MSYSTEM="MINGW$(BUILD_BITS)" \
 	CC="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	CXX="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/g++" \
+	LD="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld" \
 	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
 endif
 
@@ -1540,6 +1594,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
 	@$(TABLE_I3) "$(_C)CC$(_D)"			"C compiler"			"[$(_M)$(CC)$(_D)]"
 	@$(TABLE_I3) "$(_C)CXX$(_D)"			"C++ compiler"			"[$(_M)$(CXX)$(_D)]"
+	@$(TABLE_I3) "$(_C)LD$(_D)"			"Library linker"		"[$(_M)$(LD)$(_D)]"
 	@$(TABLE_I3) "$(_C)PATH$(_D)"			"Run-time binary directories"	"[$(_M)$(BUILD_PATH)$(_D)]"
 	@$(TABLE_I3) "$(_C)CURL_CA_BUNDLE$(_D)"		"SSL certificate bundle"	"[$(_M)$(CURL_CA_BUNDLE)$(_D)]"
 	@$(ECHO) "\n"
@@ -1616,6 +1671,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools$(_D)"			"Build/compile compiler toolchain from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
@@ -1625,11 +1681,13 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-glibc$(_D)"		"Build/compile of GNU C Library (glibc) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv1$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-tools$(_D):"	"$(_E)$(STRAPIT)-tools-gcc-init$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (before Glibc) from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-glibc$(_D)"		"Build/compile of GNU C Library [glibc] from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-gcc$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (after Glibc) from source archives"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-libiconv-init$(_D)"	"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv2$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
@@ -2160,10 +2218,12 @@ world:
 
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
-ifeq ($(BUILD_PLAT),Msys)
+$(STRAPIT): $(STRAPIT)-config
+ifeq ($(BUILD_PLAT),Linux)
+$(STRAPIT): $(STRAPIT)-tools
+else ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(STRAPIT)-msys
 endif
-$(STRAPIT): $(STRAPIT)-config
 $(STRAPIT): $(STRAPIT)-libs
 $(STRAPIT): $(STRAPIT)-util
 $(STRAPIT):
@@ -2294,8 +2354,8 @@ endef
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
-$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION) $(_D)($(_H)REQUIRED: >= $(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
-$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)REQUIRED: >= $(MAKE_MIN_VERSION)$(_D))
+$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION) $(_D)($(_H)REQ >= $(GLIBC_MIN_VERSION) [$(LINUX_MIN_VERSION)]$(_D))
+$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)REQ >= $(MAKE_MIN_VERSION)$(_D))
 $(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
@@ -2303,6 +2363,8 @@ $(CHECKIT):
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSION)"		"$(_N)$(shell $(GCC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(GXX) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(GCC_UTL_VERSION)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
@@ -2340,6 +2402,8 @@ endif
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst \",,$(word 1,$(LDD)))"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst \",,$(word 1,$(GCC))) $(_S)($(subst \",,$(word 1,$(GXX))))"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst \",,$(word 1,$(LD)))"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst \",,$(word 1,$(PACMAN)))"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst \",,$(word 1,$(MINTTY))) $(_S)($(subst \",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
@@ -2709,44 +2773,35 @@ $(STRAPIT)-msys-pkg:
 		$(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
 
-.PHONY: $(STRAPIT)-libs
-$(STRAPIT)-libs:
+.PHONY: $(STRAPIT)-tools
+$(STRAPIT)-tools:
 	# call recursively instead of using dependencies, so that environment variables update
-ifeq ($(BUILD_PLAT),Linux)
-	$(RUNMAKE) $(STRAPIT)-libs-linux
-	$(RUNMAKE) $(STRAPIT)-libs-glibc
-endif
-	$(RUNMAKE) $(STRAPIT)-libs-libiconv1
-	$(RUNMAKE) $(STRAPIT)-libs-gettext
-	$(RUNMAKE) $(STRAPIT)-libs-libiconv2
-	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
-	$(RUNMAKE) $(STRAPIT)-libs-zlib
-	$(RUNMAKE) $(STRAPIT)-libs-gmp
-	$(RUNMAKE) $(STRAPIT)-libs-ncurses
-	$(RUNMAKE) $(STRAPIT)-libs-openssl
-	$(RUNMAKE) $(STRAPIT)-libs-expat
-	# need the "bzip" headers/library for "freetype"
-	$(RUNMAKE) $(STRAPIT)-util-bzip
-	$(RUNMAKE) $(STRAPIT)-libs-freetype
-	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
+	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
+	$(RUNMAKE) $(STRAPIT)-tools-linux
+	$(RUNMAKE) $(STRAPIT)-tools-glibc
+	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
-.PHONY: $(STRAPIT)-libs-linux
-$(STRAPIT)-libs-linux:
+.PHONY: $(STRAPIT)-tools-gcc-init
+$(STRAPIT)-tools-gcc-init:
+	$(RUNMAKE) $(STRAPIT)-tools-gcc
+
+.PHONY: $(STRAPIT)-tools-linux
+$(STRAPIT)-tools-linux:
 	$(call CURL_FILE,$(LINUX_TAR_SRC))
 	$(call DO_UNTAR,$(LINUX_TAR_DST),$(LINUX_TAR_SRC))
 	cd "$(LINUX_TAR_DST)" && \
 		$(BUILD_ENV) $(MAKE) mrproper && \
 		$(BUILD_ENV) $(MAKE) INSTALL_HDR_PATH="$(COMPOSER_ABODE)" headers_install
 
-.PHONY: $(STRAPIT)-libs-glibc
+.PHONY: $(STRAPIT)-tools-glibc
 # thanks for the '$CC / --build' fix below: https://stackoverflow.com/questions/8004241/how-to-compile-glibc-32bit-on-an-x86-64-machine
 # thanks for the '__i686' fix below: http://comments.gmane.org/gmane.comp.lib.glibc.user/758
 #	https://www.sourceware.org/bugzilla/show_bug.cgi?id=411
 #	https://www.sourceware.org/bugzilla/show_bug.cgi?id=4507
 # thanks for the 'syslog / _FORTIFY_SOURCE' fix below: https://www.linuxquestions.org/questions/linux-from-scratch-13/error-compiling-glibc-under-mint-12-a-936577-print
 #	https://www.sourceware.org/bugzilla/show_bug.cgi?id=10375
-$(STRAPIT)-libs-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -O -U__i686 -U_FORTIFY_SOURCE
-$(STRAPIT)-libs-glibc:
+$(STRAPIT)-tools-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -O -U__i686 -U_FORTIFY_SOURCE
+$(STRAPIT)-tools-glibc:
 	$(call CURL_FILE,$(GLIBC_TAR_SRC))
 	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
 	$(MKDIR) "$(GLIBC_TAR_DST).build"
@@ -2762,9 +2817,66 @@ $(STRAPIT)-libs-glibc:
 		--with-headers="$(COMPOSER_ABODE)/include" \
 	)
 
+.PHONY: $(STRAPIT)-tools-gcc
+$(STRAPIT)-tools-gcc:
+#WORKING
+	$(call CURL_FILE,$(GCC_TAR_SRC))
+	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
+	$(call CURL_FILE,$(GCC_MPF_TAR_SRC))
+	$(call CURL_FILE,$(GCC_MPC_TAR_SRC))
+	$(call CURL_FILE,$(GCC_UTL_TAR_SRC))
+	# start with fresh source directory, due to circular dependency with "glibc"
+	$(RM) -r "$(GCC_TAR_DST)"
+	$(call DO_UNTAR,$(GCC_TAR_DST),$(GCC_TAR_SRC))
+	$(call DO_UNTAR,$(GCC_GMP_TAR_DST),$(GCC_GMP_TAR_SRC))
+	$(call DO_UNTAR,$(GCC_MPF_TAR_DST),$(GCC_MPF_TAR_SRC))
+	$(call DO_UNTAR,$(GCC_MPC_TAR_DST),$(GCC_MPC_TAR_SRC))
+	$(call DO_UNTAR,$(GCC_UTL_TAR_DST),$(GCC_UTL_TAR_SRC))
+	$(MKDIR) "$(GCC_TAR_DST)/gmp"		&& $(CP) "$(GCC_GMP_TAR_DST)/"* "$(GCC_TAR_DST)/gmp/"
+	$(MKDIR) "$(GCC_TAR_DST)/mpfr"		&& $(CP) "$(GCC_MPF_TAR_DST)/"* "$(GCC_TAR_DST)/mpfr/"
+	$(MKDIR) "$(GCC_TAR_DST)/mpc"		&& $(CP) "$(GCC_MPC_TAR_DST)/"* "$(GCC_TAR_DST)/mpc/"
+	$(MKDIR) "$(GCC_TAR_DST)/binutils"	&& $(CP) "$(GCC_UTL_TAR_DST)/"* "$(GCC_TAR_DST)/binutils/"
+	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),,\
+		--build="$(CHOST)" \
+		--enable-languages="$(GCC_LANGUAGES)" \
+		--disable-shared \
+		--enable-static \
+	)
+
+.PHONY: $(STRAPIT)-libs
+$(STRAPIT)-libs:
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-libs-libiconv-init
+	$(RUNMAKE) $(STRAPIT)-libs-gettext
+	$(RUNMAKE) $(STRAPIT)-libs-libiconv
+	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
+	$(RUNMAKE) $(STRAPIT)-libs-zlib
+	$(RUNMAKE) $(STRAPIT)-libs-gmp
+	$(RUNMAKE) $(STRAPIT)-libs-ncurses
+	$(RUNMAKE) $(STRAPIT)-libs-openssl
+	$(RUNMAKE) $(STRAPIT)-libs-expat
+	# need the "bzip" headers/library for "freetype"
+	$(RUNMAKE) $(STRAPIT)-util-bzip
+	$(RUNMAKE) $(STRAPIT)-libs-freetype
+	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
+
+.PHONY: $(STRAPIT)-libs-libiconv-init
+$(STRAPIT)-libs-libiconv-init:
+	$(RUNMAKE) $(STRAPIT)-libs-libiconv
+
+.PHONY: $(STRAPIT)-libs-gettext
+$(STRAPIT)-libs-gettext:
+	$(call CURL_FILE,$(GETTEXT_TAR_SRC))
+	$(call DO_UNTAR,$(GETTEXT_TAR_DST),$(GETTEXT_TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(GETTEXT_TAR_DST),$(COMPOSER_ABODE),,\
+		--disable-shared \
+		--enable-static \
+	)
+
+.PHONY: $(STRAPIT)-libs-libiconv
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
 #	https://savannah.gnu.org/bugs/?43212
-override define LIBICONV_BUILD =
+$(STRAPIT)-libs-libiconv:
 	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
 	# start with fresh source directory, due to circular dependency with "gettext"
 	$(RM) -r "$(LIBICONV_TAR_DST)"
@@ -2784,24 +2896,6 @@ override define LIBICONV_BUILD =
 		--disable-shared \
 		--enable-static \
 	)
-endef
-
-.PHONY: $(STRAPIT)-libs-libiconv1
-$(STRAPIT)-libs-libiconv1:
-	$(call LIBICONV_BUILD)
-
-.PHONY: $(STRAPIT)-libs-gettext
-$(STRAPIT)-libs-gettext:
-	$(call CURL_FILE,$(GETTEXT_TAR_SRC))
-	$(call DO_UNTAR,$(GETTEXT_TAR_DST),$(GETTEXT_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(GETTEXT_TAR_DST),$(COMPOSER_ABODE),,\
-		--disable-shared \
-		--enable-static \
-	)
-
-.PHONY: $(STRAPIT)-libs-libiconv2
-$(STRAPIT)-libs-libiconv2:
-	$(call LIBICONV_BUILD)
 
 .PHONY: $(STRAPIT)-libs-pkgconfig
 $(STRAPIT)-libs-pkgconfig:
@@ -2863,6 +2957,7 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	$(call GNU_CFG_INSTALL,$(NCURSES_TAR_DST))
 endif
 	$(call AUTOTOOLS_BUILD,$(NCURSES_TAR_DST),$(COMPOSER_ABODE),,\
+		--without-gpm \
 		--without-shared \
 	)
 
@@ -3561,11 +3656,12 @@ endif
 
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
+	$(RUNMAKE) $(FETCHIT)-cabal
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
 		$(call DO_UNTAR,$(GHC_BIN_DST)/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
 		cd "$(GHC_BIN_DST)/$(FILE)" && \
-			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)); \
+			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
 	)
 
 .PHONY: $(BUILDIT)-ghc
