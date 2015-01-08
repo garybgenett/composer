@@ -1127,7 +1127,7 @@ override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
 override SH				:= "$(SHELL)"
 override LESS				:= "$(call COMPOSER_FIND,$(PATH_LIST),less)" -rX
-override VIM				:= "$(call COMPOSER_FIND,$(PATH_LIST),vim)" -u "$(COMPOSER_ABODE)/.vimrc" -i NONE -p
+override VIM				:= "$(call COMPOSER_FIND,$(PATH_LIST),vim)" -u "$${HOME}/.vimrc" -i NONE -p
 
 override MAKE				:= "$(call COMPOSER_FIND,$(PATH_LIST),make)"
 override ZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),zip)"
@@ -2418,46 +2418,47 @@ endif
 	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst \",,$(word 1,$(LDD)))"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst \",,$(word 1,$(GCC))) $(_S)($(subst \",,$(word 1,$(GXX))))"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst \",,$(word 1,$(LD)))"
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(GCC))) $(_S)($(subst ",,$(word 1,$(GXX))))"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD)))"
 else ifeq ($(BUILD_PLAT),Msys)
-	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst \",,$(word 1,$(PACMAN)))"
-	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst \",,$(word 1,$(MINTTY))) $(_S)($(subst \",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
-	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_N)$(subst \",,$(word 1,$(CYGPATH)))"
+	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst ",,$(word 1,$(PACMAN)))"
+	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst ",,$(word 1,$(MINTTY))) $(_S)($(subst ",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
+	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_N)$(subst ",,$(word 1,$(CYGPATH)))"
 endif
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst \",,$(word 1,$(COREUTILS)))"
-	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst \",,$(word 1,$(FIND)))"
-	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_N)$(subst \",,$(word 1,$(PATCH)))"
-	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_N)$(subst \",,$(word 1,$(SED)))"
-	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_N)$(subst \",,$(word 1,$(BZIP)))"
-	@$(TABLE_I3) "- $(_E)Gzip"			"$(_N)$(subst \",,$(word 1,$(GZIP)))"
-	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_N)$(subst \",,$(word 1,$(XZ)))"
-	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_N)$(subst \",,$(word 1,$(TAR)))"
-	@$(TABLE_I3) "- $(_E)Perl"			"$(_N)$(subst \",,$(word 1,$(PERL)))"
-	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_D)$(subst \",,$(word 1,$(BASH))) $(_S)($(subst \",,$(word 1,$(SH))))"
-	@$(TABLE_I3) "- $(_C)Less"			"$(_D)$(subst \",,$(word 1,$(LESS)))"
-	@$(TABLE_I3) "- $(_C)Vim"			"$(_D)$(subst \",,$(word 1,$(VIM)))"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_D)$(subst \",,$(word 1,$(MAKE)))"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_D)$(subst \",,$(word 1,$(ZIP)))"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_D)$(subst \",,$(word 1,$(UNZIP)))"
-	@$(TABLE_I3) "- $(_C)cURL"			"$(_D)$(subst \",,$(word 1,$(CURL)))"
-	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_D)$(subst \",,$(word 1,$(GIT)))"
-	@$(TABLE_I3) "$(_C)Pandoc"			"$(_D)$(subst \",,$(word 1,$(PANDOC)))"
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst ",,$(word 1,$(COREUTILS)))"
+	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst ",,$(word 1,$(FIND)))"
+	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_N)$(subst ",,$(word 1,$(PATCH)))"
+	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_N)$(subst ",,$(word 1,$(SED)))"
+	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_N)$(subst ",,$(word 1,$(BZIP)))"
+	@$(TABLE_I3) "- $(_E)Gzip"			"$(_N)$(subst ",,$(word 1,$(GZIP)))"
+	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_N)$(subst ",,$(word 1,$(XZ)))"
+	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_N)$(subst ",,$(word 1,$(TAR)))"
+	@$(TABLE_I3) "- $(_E)Perl"			"$(_N)$(subst ",,$(word 1,$(PERL)))"
+	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_D)$(subst ",,$(word 1,$(BASH))) $(_S)($(subst ",,$(word 1,$(SH))))"
+	@$(TABLE_I3) "- $(_C)Less"			"$(_D)$(subst ",,$(word 1,$(LESS)))"
+	@$(TABLE_I3) "- $(_C)Vim"			"$(_D)$(subst ",,$(word 1,$(VIM)))"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_D)$(subst ",,$(word 1,$(MAKE)))"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_D)$(subst ",,$(word 1,$(ZIP)))"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_D)$(subst ",,$(word 1,$(UNZIP)))"
+	@$(TABLE_I3) "- $(_C)cURL"			"$(_D)$(subst ",,$(word 1,$(CURL)))"
+	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_D)$(subst ",,$(word 1,$(GIT)))"
+	@$(TABLE_I3) "$(_C)Pandoc"			"$(_D)$(subst ",,$(word 1,$(PANDOC)))"
 	@$(TABLE_I3) "- $(_C)Types"			"$(_E)(no binary to report)"
 	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_E)(no binary to report)"
 	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_E)(no binary to report)"
-	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_D)$(subst \",,$(word 1,$(PANDOC_CITEPROC)))"
-	@$(TABLE_I3) "$(_C)TeX Live"			"$(_D)$(subst \",,$(word 1,$(TEX)))"
-	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_D)$(subst \",,$(word 1,$(PDFLATEX)))"
+	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_D)$(subst ",,$(word 1,$(PANDOC_CITEPROC)))"
+	@$(TABLE_I3) "$(_C)TeX Live"			"$(_D)$(subst ",,$(word 1,$(TEX)))"
+	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_D)$(subst ",,$(word 1,$(PDFLATEX)))"
 	@$(TABLE_I3) "$(_C)Haskell"			"$(_E)(no binary to report)"
-	@$(TABLE_I3) "- $(_C)GHC"			"$(_D)$(subst \",,$(word 1,$(GHC))) $(_S)($(subst \",,$(word 1,$(GHC_PKG))))"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst \",,$(word 1,$(CABAL)))"
+	@$(TABLE_I3) "- $(_C)GHC"			"$(_D)$(subst ",,$(word 1,$(GHC))) $(_S)($(subst ",,$(word 1,$(GHC_PKG))))"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL)))"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HEADER_L)
 	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCALE,$(FILE)))
 	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LINKED,$(FILE)))
 	@$(HEADER_L)
+#> syntax highlighting fix: )")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")"
 
 # thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
 $(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
@@ -2521,6 +2522,7 @@ override define CHECKIT_LIBRARY_LINKED =
 	fi
 	$(NULL)
 endef
+#> syntax highlighting fix: ")
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
@@ -2562,21 +2564,23 @@ override define HEREDOC_BASH_PROFILE =
 source "$(COMPOSER_ABODE)/.bashrc"
 endef
 
+override HEREDOC_BASHRC_CMD = $(notdir $(subst ",,$(word 1,$(1)))) $(subst ",[B]",$(filter-out $(word 1,$(1)),$(1)))
+#> syntax highlighting fix: "))
 override define HEREDOC_BASHRC =
-#!$(subst ",,$(ENV)) bash
+# bashrc
 umask 022
 unalias -a
 set -o vi
-eval $$($(DIRCOLORS) 2>/dev/null)
+eval $$($(call HEREDOC_BASHRC_CMD,$(DIRCOLORS)) 2>/dev/null)
 #
 export LANG="$(LANG)"
 export LC_ALL="$${LANG}"
 export LC_COLLATE="C"
 export LC_ALL=
 #
-if [ -f "$(COMPOSER_ABODE)/.bash_history" ]; then $(RM) "$(COMPOSER_ABODE)/.bash_history"; fi
-$(MKDIR) "$(COMPOSER_ABODE)/.bash_history"
-export HISTFILE="$(COMPOSER_ABODE)/.bash_history/$$(date +%Y-%m)"
+if [ -f "$${HOME}/.bash_history" ]; then $(call HEREDOC_BASHRC_CMD,$(RM)) "$${HOME}/.bash_history"; fi
+$(call HEREDOC_BASHRC_CMD,$(MKDIR)) "$${HOME}/.bash_history"
+export HISTFILE="$${HOME}/.bash_history/$$(date +%Y-%m)"
 export HISTSIZE="$$(( (2**31)-1 ))"
 export HISTFILESIZE="$${HISTSIZE}"
 export HISTTIMEFORMAT="%Y-%m-%dT%H:%M:%S "
@@ -2591,11 +2595,11 @@ export PS1="$${PS1}$([)\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a$(])\n"
 export PS1="$${PS1}$([)$(_H)$(])$(MARKER) $(COMPOSER_FULLNAME)$([)$(_D)$(]) $(DIVIDE) $([)$(_C)$(])\D{%FT%T%z}\n"	# title, date (iso format)
 export PS1="$${PS1}$([)$(_C)$(])[\#/\!] ($([)$(_M)$(])\u@\h \w$([)$(_C)$(]))\\$$ $([)$(_D)$(])"				# history counters, username@hostname, directory, prompt
 #
-export PAGER="$(subst ",[B]",$(LESS))"
-export EDITOR="$(subst ",[B]",$(VIM))"
+export PAGER="$(call HEREDOC_BASHRC_CMD,$(LESS))"
+export EDITOR="$(call HEREDOC_BASHRC_CMD,$(VIM))"
 unset VISUAL
 #
-alias ll="$(subst ",[B]",$(LS))"
+alias ll="$(call HEREDOC_BASHRC_CMD,$(LS))"
 alias less="$${PAGER}"
 alias more="$${PAGER}"
 alias vi="$${EDITOR}"
@@ -2608,7 +2612,7 @@ alias .composer="$(subst ",[B]",$(RUNMAKE))"
 alias .compose="$(subst ",[B]",$(COMPOSE))"
 #
 cd "$(COMPOSER_DIR)"
-source "$(COMPOSER_ABODE)/.bashrc.custom"
+source "$${HOME}/.bashrc.custom"
 # end of file
 endef
 
@@ -2656,9 +2660,10 @@ set foldmethod		=indent
 " clean up folding
 map z. <ESC>:set foldlevel=0<CR>zv
 "
-source $(COMPOSER_ABODE)/.vimrc.custom
+source $${HOME}/.vimrc.custom
 " end of file
 endef
+#> syntax highlighting fix: "
 
 override define AUTOTOOLS_BUILD =
 	cd "$(1)" && \
