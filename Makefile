@@ -2780,7 +2780,7 @@ $(STRAPIT)-tools:
 #WORKING	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
 	$(RUNMAKE) $(STRAPIT)-tools-linux
 	$(RUNMAKE) $(STRAPIT)-tools-glibc
-#WORKING	$(RUNMAKE) $(STRAPIT)-tools-gcc
+	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
 .PHONY: $(STRAPIT)-tools-gcc-init
 $(STRAPIT)-tools-gcc-init:
