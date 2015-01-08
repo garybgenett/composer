@@ -1679,6 +1679,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-tools$(_D):"	"$(_E)$(STRAPIT)-tools-gcc-init$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (before Glibc) from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-glibc$(_D)"		"Build/compile of GNU C Library [glibc] from source archive"
@@ -2726,6 +2727,7 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys: $(STRAPIT)-msys-init
 $(STRAPIT)-msys: $(STRAPIT)-msys-fix
 $(STRAPIT)-msys: $(STRAPIT)-msys-pkg
+$(STRAPIT)-msys: $(STRAPIT)-msys-dll
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
@@ -2773,6 +2775,13 @@ $(STRAPIT)-msys-pkg:
 		--sysupgrade \
 		$(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
+
+.PHONY: $(STRAPIT)-msys-dll
+$(STRAPIT)-msys-dll:
+	$(MKDIR) "$(COMPOSER_ABODE)/bin"
+	$(foreach FILE,$(MSYS_BINARY_LIST),\
+		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
+	)
 
 .PHONY: $(STRAPIT)-tools
 $(STRAPIT)-tools:
