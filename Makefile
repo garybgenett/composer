@@ -467,12 +467,11 @@ endif
 # http://www.funtoo.org/I686
 override FUNTOO_DATE			:= 2015-01-03
 override FUNTOO_TYPE			:= funtoo-stable
-#>override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
-#>override FUNTOO_ARCH			:= x86-32bit
-override FUNTOO_ARCH			:= x86-64bit
-#>override FUNTOO_SARC			:= generic_$(BUILD_BITS)
-#>override FUNTOO_SARC			:= i686
-override FUNTOO_SARC			:= core2_64
+override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
+override FUNTOO_SARC			:= generic_$(BUILD_BITS)
+ifneq ($(BUILD_DIST),)
+override FUNTOO_SARC			:= i686
+endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
 override FUNTOO_GCC_VERSION		:= 4.8.3
 override FUNTOO_GLIBC_VERSION		:= 2.19
@@ -1013,9 +1012,9 @@ override GHC_BASE_LIBRARIES_LIST	:= \
 endif
 
 override GHC_LIBRARIES_LIST		:= \
-	QuickCheck|2.7.6 \
 	primitive|0.5.4.0 \
 	tf-random|0.5 \
+	QuickCheck|2.7.6 \
 	\
 	alex|3.1.3 \
 	happy|1.19.4
@@ -1212,7 +1211,6 @@ override define DO_GIT_SUBMODULE_GHC	=
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
 
-#WORKING
 ifeq ($(CC),gcc)
 ifneq ($(GCC),)
 override CC				:= $(GCC)
@@ -2220,7 +2218,9 @@ world:
 $(STRAPIT): $(STRAPIT)-check
 $(STRAPIT): $(STRAPIT)-config
 ifeq ($(BUILD_PLAT),Linux)
+ifneq ($(BUILD_DIST),)
 $(STRAPIT): $(STRAPIT)-tools
+endif
 else ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(STRAPIT)-msys
 endif
@@ -2776,10 +2776,10 @@ $(STRAPIT)-msys-pkg:
 .PHONY: $(STRAPIT)-tools
 $(STRAPIT)-tools:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
+#WORKING	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
 	$(RUNMAKE) $(STRAPIT)-tools-linux
 	$(RUNMAKE) $(STRAPIT)-tools-glibc
-	$(RUNMAKE) $(STRAPIT)-tools-gcc
+#WORKING	$(RUNMAKE) $(STRAPIT)-tools-gcc
 
 .PHONY: $(STRAPIT)-tools-gcc-init
 $(STRAPIT)-tools-gcc-init:
