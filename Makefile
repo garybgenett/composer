@@ -1193,9 +1193,7 @@ override define DO_GIT_REPO		=
 	$(call GIT_RUN,$(1),reset --hard)
 endef
 override define GIT_SUBMODULE		=
-	if [ -f "$(1)/.gitmodules" ]; then \
-		$(call GIT_RUN,$(1),submodule update --init --force); \
-	fi
+	$(call GIT_RUN,$(1),submodule update --init --force)
 endef
 override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_SUBMODULE_GHC	=
