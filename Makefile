@@ -1072,6 +1072,7 @@ override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-con
 override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --mixed
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
+override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
@@ -1113,7 +1114,7 @@ override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
-override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
+#>override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
@@ -2323,6 +2324,8 @@ ifeq ($(BUILD_PLAT),Msys)
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
+	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
+	$(TOUCH) "$(COMPOSER_PROGS)/tmp/.null"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
@@ -4009,19 +4012,19 @@ endef
 
 override define .HEREDOC_DIST_COMPOSER_BAT =
 @echo off
-set _COMPOSER=%~dp0
+set _CMS=%~dp0
 set _SYS=Msys
-set MSYS2_ARG_CONV_EXCL=--directory:--makefile
-start /b "%_COMPOSER%/bin/%_SYS%/usr/bin/make" --directory "%_COMPOSER%" --makefile "%_COMPOSER%/Makefile" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell-msys
+set PATH=%_CMS%/bin/%_SYS%/usr/bin;%_CMS%/.home/.coreutils;%PATH%
+start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="1" shell-msys
 :: end of file
 endef
 
 override define .HEREDOC_DIST_COMPOSER_SH =
 # sh
-_COMPOSER="${PWD}"
+_CMS="$${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-MSYS2_ARG_CONV_EXCL="--directory:--makefile"
-exec "$${_COMPOSER}/bin/$${_SYS}/usr/bin/make" --directory "$${_COMPOSER}" --makefile "$${_COMPOSER}/Makefile" BUILD_PLAT="$(BUILD_PLAT)" BUILD_ARCH="$(BUILD_ARCH)" COMPOSER_PROGS_USE="1" shell
+PATH="$${_CMS}/bin/$${_SYS}/usr/bin:$${_CMS}/.home/.coreutils:$${PATH}"
+exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="1" shell
 # end of file
 endef
 
