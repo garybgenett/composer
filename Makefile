@@ -408,10 +408,7 @@ override CC				?= gcc
 override CXX				?= g++
 override LD				?= ld
 override CHOST				:=
-#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -nostdlib -lgcc
-#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
-# also remove -static-libgcc from -glibc target
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc -static-libstdc++
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 
 ifneq ($(BUILD_DIST),)
@@ -480,16 +477,18 @@ override DEBIAN_BINUTILS_VERSION	:= 2.22
 override DEBIAN_MAKE_VERSION		:= 3.81
 
 # http://www.funtoo.org
+# http://www.funtoo.org/Generic_64
+# http://www.funtoo.org/Generic_32
+# http://www.funtoo.org/Core2_64
 # http://www.funtoo.org/I686
-#WORKING : core2_64, generic_*
 override FUNTOO_DATE			:= 2015-01-09
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
 override FUNTOO_SARC			:= generic_$(BUILD_BITS)
-#WORKING ifneq ($(BUILD_DIST),)
-#WORKING override FUNTOO_SARC			:= core2_64
-#WORKING override FUNTOO_SARC			:= i686
-#WORKING endif
+#>override FUNTOO_SARC			:= i686
+#>ifneq ($(BUILD_BITS),64)
+#>override FUNTOO_SARC			:= core2_64
+#>endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
 override FUNTOO_LINUX_VERSION		:= 3.17.0
 override FUNTOO_GLIBC_VERSION		:= 2.19
@@ -508,7 +507,6 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 
 # https://en.wikipedia.org/wiki/Linux_kernel#Maintenance
 # https://en.wikipedia.org/wiki/GNU_C_Library#Version_history
-#WORKING : binutils, gcc, make
 override LINUX_MIN_VERSION		:= $(DEBIAN_LINUX_VERSION)
 override LINUX_CUR_VERSION		:= $(FUNTOO_LINUX_VERSION)
 override GLIBC_MIN_VERSION		:= $(DEBIAN_GLIBC_VERSION)
@@ -529,45 +527,6 @@ override GNU_CFG_FILE_GUS		:= config.guess
 override GNU_CFG_FILE_SUB		:= config.sub
 override GNU_CFG_DST			:= $(COMPOSER_BUILD)/gnu-config
 override GNU_CFG_CMT			:=
-
-# https://www.kernel.org/pub/linux/kernel/COPYING (license: GPL)
-# https://www.kernel.org
-override LINUX_VERSION			:= $(subst .0,,$(LINUX_MIN_VERSION))
-override LINUX_TAR_SRC			:= https://www.kernel.org/pub/linux/kernel/v3.x/linux-$(LINUX_VERSION).tar.gz
-override LINUX_TAR_DST			:= $(BUILD_STRAP)/linux-$(LINUX_VERSION)
-# https://www.gnu.org/software/libc (license: GPL)
-# https://www.gnu.org/software/libc
-# https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
-override GLIBC_VERSION			:= $(GLIBC_MIN_VERSION)
-override GLIBC_TAR_SRC			:= https://ftp.gnu.org/gnu/glibc/glibc-$(GLIBC_VERSION).tar.gz
-override GLIBC_TAR_DST			:= $(BUILD_STRAP)/glibc-$(GLIBC_VERSION)
-# https://www.gnu.org/software/binutils (license: GPL)
-# https://www.gnu.org/software/binutils
-override BINUTILS_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
-override BINUTILS_TAR_SRC		:= http://ftp.gnu.org/gnu/binutils/binutils-$(BINUTILS_VERSION).tar.gz
-override BINUTILS_TAR_DST		:= $(BUILD_STRAP)/binutils-$(BINUTILS_VERSION)
-# https://gcc.gnu.org (license: GPL)
-# https://gcc.gnu.org/releases.html
-#	$(GCC_TAR_DST)/contrib/download_prerequisites
-# http://www.mpfr.org (license: LGPL)
-# http://www.mpfr.org
-# https://gmplib.org (license: GPL, LGPL)
-# https://gmplib.org
-# http://www.multiprecision.org (license: LGPL)
-# http://www.multiprecision.org
-override GCC_VERSION			:= $(FUNTOO_GCC_VERSION)
-override GCC_MPF_VERSION		:= 2.4.2
-override GCC_GMP_VERSION		:= 4.3.2
-override GCC_MPC_VERSION		:= 0.8.1
-override GCC_TAR_SRC			:= ftp://gcc.gnu.org/pub/gcc/releases/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz
-override GCC_MPF_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpfr-$(GCC_MPF_VERSION).tar.bz2
-override GCC_GMP_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-$(GCC_GMP_VERSION).tar.bz2
-override GCC_MPC_TAR_SRC		:= ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$(GCC_MPC_VERSION).tar.gz
-override GCC_TAR_DST			:= $(BUILD_STRAP)/gcc-$(GCC_VERSION)
-override GCC_MPF_TAR_DST		:= $(BUILD_STRAP)/mpfr-$(GCC_MPF_VERSION)
-override GCC_GMP_TAR_DST		:= $(BUILD_STRAP)/gmp-$(GCC_GMP_VERSION)
-override GCC_MPC_TAR_DST		:= $(BUILD_STRAP)/mpc-$(GCC_MPC_VERSION)
-override GCC_LANGUAGES			:= c,c++
 
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
@@ -831,9 +790,10 @@ ifneq ($(IS_CYGWIN),)
 override BUILD_PATH			:= $(PATH)
 endif
 
-#WORKING
+#WORKING : gcc-multilib?
 override DEBIAN_PACKAGES_LIST		:= \
 	build-essential \
+	gcc-multilib \
 	\
 	curl
 
@@ -1727,7 +1687,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools$(_D)"			"Build/compile compiler toolchain from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make$(_D)"			"Build/compile of GNU Make from source archive"
@@ -1739,12 +1698,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-tools$(_D):"	"$(_E)$(STRAPIT)-tools-binutils-init$(_D)"	"Build/compile of GNU Binutils (before Glibc) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-gcc-init$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (before Glibc) from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-linux$(_D)"		"Build/compile of Linux kernel headers from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-glibc$(_D)"		"Build/compile of GNU C Library [glibc] from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-binutils$(_D)"		"Build/compile of GNU Binutils (after Glibc) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools-gcc$(_D)"		"Build/compile of GNU Compiler Collection [gcc] (after Glibc) from source archives"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-libiconv-init$(_D)"	"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
@@ -2285,11 +2238,6 @@ $(ALLOFIT):
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
 $(STRAPIT): $(STRAPIT)-config
-#WORKING ifeq ($(BUILD_PLAT),Linux)
-#WORKING ifneq ($(BUILD_DIST),)
-#WORKING $(STRAPIT): $(STRAPIT)-tools
-#WORKING endif
-#WORKING else ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(STRAPIT)-msys
 endif
@@ -2862,141 +2810,6 @@ $(STRAPIT)-msys-dll:
 	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
 	)
-
-.PHONY: $(STRAPIT)-tools
-$(STRAPIT)-tools:
-	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-tools-binutils-init
-	$(RUNMAKE) $(STRAPIT)-tools-gcc-init
-	$(RUNMAKE) $(STRAPIT)-tools-linux
-	$(RUNMAKE) $(STRAPIT)-tools-glibc
-	$(RUNMAKE) $(STRAPIT)-tools-binutils
-	$(RUNMAKE) $(STRAPIT)-tools-gcc
-
-#WORKING : double-check build options
-# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/binutils-pass1.html
-.PHONY: $(STRAPIT)-tools-binutils-init
-$(STRAPIT)-tools-binutils-init:
-	$(call STRAPIT_TOOLS_BINUTILS,\
-		--with-sysroot="$(COMPOSER_ABODE)" \
-		--with-lib-path="$(COMPOSER_ABODE)/lib" \
-		--disable-nls \
-		--disable-werror \
-	)
-
-#WORKING : double-check build options
-# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/gcc-pass1.html
-.PHONY: $(STRAPIT)-tools-gcc-init
-$(STRAPIT)-tools-gcc-init:
-	$(call STRAPIT_TOOLS_GCC,\
-		--with-local-prefix="$(COMPOSER_ABODE)" \
-		--with-newlib \
-		--without-headers \
-		--disable-decimal-float \
-		--disable-libatomic \
-		--disable-libcilkrts \
-		--disable-libgomp \
-		--disable-libitm \
-		--disable-libquadmath \
-		--disable-libsanitizer \
-		--disable-libssp \
-		--disable-libstdc++ \
-		--disable-libvtv \
-		--disable-multilib \
-		--disable-nls \
-		--disable-shared \
-		--disable-threads \
-	)
-
-.PHONY: $(STRAPIT)-tools-linux
-$(STRAPIT)-tools-linux:
-	$(call CURL_FILE,$(LINUX_TAR_SRC))
-	$(call DO_UNTAR,$(LINUX_TAR_DST),$(LINUX_TAR_SRC))
-	cd "$(LINUX_TAR_DST)" && \
-		$(BUILD_ENV) $(MAKE) mrproper && \
-		$(BUILD_ENV) $(MAKE) INSTALL_HDR_PATH="$(COMPOSER_ABODE)" headers_install
-
-.PHONY: $(STRAPIT)-tools-glibc
-# thanks for the '$CC / --build' fix below: https://stackoverflow.com/questions/8004241/how-to-compile-glibc-32bit-on-an-x86-64-machine
-# thanks for the '__i686' fix below: http://comments.gmane.org/gmane.comp.lib.glibc.user/758
-#	https://www.sourceware.org/bugzilla/show_bug.cgi?id=411
-#	https://www.sourceware.org/bugzilla/show_bug.cgi?id=4507
-# thanks for the 'syslog / _FORTIFY_SOURCE' fix below: https://www.linuxquestions.org/questions/linux-from-scratch-13/error-compiling-glibc-under-mint-12-a-936577-print
-#	https://www.sourceware.org/bugzilla/show_bug.cgi?id=10375
-$(STRAPIT)-tools-glibc: override CFLAGS := $(subst -static-libgcc,,$(CFLAGS)) -U__i686 -U_FORTIFY_SOURCE
-$(STRAPIT)-tools-glibc:
-	$(call CURL_FILE,$(GLIBC_TAR_SRC))
-	$(call DO_UNTAR,$(GLIBC_TAR_DST),$(GLIBC_TAR_SRC))
-	$(MKDIR) "$(GLIBC_TAR_DST).build"
-	$(ECHO) "\"$(GLIBC_TAR_DST)/configure\" \"\$${@}\"" >"$(GLIBC_TAR_DST).build/configure"
-	$(CHMOD) "$(GLIBC_TAR_DST).build/configure"
-	$(call AUTOTOOLS_BUILD,$(GLIBC_TAR_DST).build,$(COMPOSER_ABODE),\
-		CC="$(CC) $(CFLAGS)" \
-		CXX="$(CXX) $(CFLAGS)" \
-		CFLAGS="$(CFLAGS)" \
-		,\
-		--build="$(CHOST)" \
-		--enable-kernel="$(LINUX_MIN_VERSION)" \
-		--with-headers="$(COMPOSER_ABODE)/include" \
-		--enable-shared \
-		--enable-static \
-	)
-
-.PHONY: $(STRAPIT)-tools-binutils
-$(STRAPIT)-tools-binutils:
-	$(call STRAPIT_TOOLS_BINUTILS)
-
-#WORKING : double-check build options
-# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/binutils-pass2.html
-override define STRAPIT_TOOLS_BINUTILS =
-	$(call CURL_FILE,$(BINUTILS_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with "glibc"
-	$(RM) -r "$(BINUTILS_TAR_DST)"
-	$(call DO_UNTAR,$(BINUTILS_TAR_DST),$(BINUTILS_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(BINUTILS_TAR_DST),$(COMPOSER_ABODE),\
-		CC="$(CC) $(CFLAGS)" \
-		CXX="$(CXX) $(CFLAGS)" \
-		CFLAGS="$(CFLAGS)" \
-		,\
-		--build="$(CHOST)" \
-		--enable-shared \
-		--enable-static \
-		$(1) \
-	)
-endef
-
-.PHONY: $(STRAPIT)-tools-gcc
-$(STRAPIT)-tools-gcc:
-	$(call STRAPIT_TOOLS_GCC)
-
-#WORKING : double-check build options
-# http://www.linuxfromscratch.org/lfs/view/stable/chapter05/gcc-pass2.html
-override define STRAPIT_TOOLS_GCC =
-	$(call CURL_FILE,$(GCC_TAR_SRC))
-	$(call CURL_FILE,$(GCC_GMP_TAR_SRC))
-	$(call CURL_FILE,$(GCC_MPF_TAR_SRC))
-	$(call CURL_FILE,$(GCC_MPC_TAR_SRC))
-	# start with fresh source directory, due to circular dependency with "glibc"
-	$(RM) -r "$(GCC_TAR_DST)"
-	$(call DO_UNTAR,$(GCC_TAR_DST),$(GCC_TAR_SRC))
-	$(call DO_UNTAR,$(GCC_GMP_TAR_DST),$(GCC_GMP_TAR_SRC))
-	$(call DO_UNTAR,$(GCC_MPF_TAR_DST),$(GCC_MPF_TAR_SRC))
-	$(call DO_UNTAR,$(GCC_MPC_TAR_DST),$(GCC_MPC_TAR_SRC))
-	$(MKDIR) "$(GCC_TAR_DST)/gmp"		&& $(CP) "$(GCC_GMP_TAR_DST)/"* "$(GCC_TAR_DST)/gmp/"
-	$(MKDIR) "$(GCC_TAR_DST)/mpfr"		&& $(CP) "$(GCC_MPF_TAR_DST)/"* "$(GCC_TAR_DST)/mpfr/"
-	$(MKDIR) "$(GCC_TAR_DST)/mpc"		&& $(CP) "$(GCC_MPC_TAR_DST)/"* "$(GCC_TAR_DST)/mpc/"
-	$(call AUTOTOOLS_BUILD,$(GCC_TAR_DST),$(COMPOSER_ABODE),\
-		CC="$(CC) $(CFLAGS)" \
-		CXX="$(CXX) $(CFLAGS)" \
-		CFLAGS="$(CFLAGS)" \
-		,\
-		--build="$(CHOST)" \
-		--enable-languages="$(GCC_LANGUAGES)" \
-		--enable-shared \
-		--enable-static \
-		$(1) \
-	)
-endef
 
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
