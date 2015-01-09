@@ -792,6 +792,7 @@ endif
 
 #WORKING : gcc-multilib?
 override DEBIAN_PACKAGES_LIST		:= \
+	automake \
 	build-essential \
 	gcc-multilib \
 	\
@@ -2854,7 +2855,7 @@ override define STRAPIT_LIBS_LIBICONV =
 	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Linux" requires some patching
-	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Linux64" ]; then \
+	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
 		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
 	fi
 #WORK : platform_switches
@@ -3927,7 +3928,7 @@ $(RELEASE)-dist: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
 #WORKING : need to add a $(CP) of /var/cache/apt/archives similar to .cabal in $(BUILDIT)-cleanup
-	if [ ! -d "$(RELEASE_DIR)/$(RELEASE_TARGET)/boot" ]; then \
+	if [ ! -d "$(RELEASE_DIR)/$(RELEASE_TARGET)/WORKING" ]; then \
 		cd "$(RELEASE_DIR)/.debootstrap" && \
 			$(MAKE) devices.tar.gz && \
 			DEBOOTSTRAP_DIR="$(RELEASE_DIR)/.debootstrap" $(SH) ./debootstrap \
@@ -3946,7 +3947,7 @@ $(RELEASE)-dist:
 				make install"; \
 		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 	fi
-	@$(ECHO) "\n"
+	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list libc-bin		2>/dev/null | $(TAIL) -n1
@@ -3955,7 +3956,7 @@ $(RELEASE)-dist:
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list binutils		2>/dev/null | $(TAIL) -n1
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list make		2>/dev/null | $(TAIL) -n1
 	@$(ECHO) "$(_D)"
-	@$(ECHO) "\n"
+	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-test
@@ -3963,7 +3964,7 @@ $(RELEASE)-test: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-test:
 	$(call CURL_FILE,$(FUNTOO_SRC))
 	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
-	@$(ECHO) "\n"
+	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/ls /var/db/pkg/sys-kernel		2>/dev/null | $(HEAD) -n1
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/ldd --version			2>/dev/null | $(HEAD) -n1
@@ -3972,13 +3973,19 @@ $(RELEASE)-test:
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/ld --version			2>/dev/null | $(HEAD) -n1
 	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/make --version			2>/dev/null | $(HEAD) -n1
 	@$(ECHO) "$(_D)"
-	@$(ECHO) "\n"
+	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-chroot
 $(RELEASE)-chroot:
 	@$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)"
 	@$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(RELEASE_TARGET)/"
+	@if [ ! -f "$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS)" ]; then \
+		$(ECHO) "override BUILD_PLAT := $(BUILD_PLAT)\n"  >"$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS)"; \
+		$(ECHO) "override BUILD_ARCH := $(BUILD_ARCH)\n" >>"$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS)"; \
+	fi
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS))
+	@$(HEADER_L)
 #WORKING : would be nice to have $COMPOSER_TARGET in the title escape, somehow...
 #WORKING : need to add a $(CP) of .sources, similar to .cabal in $(BUILDIT)-cleanup
 	@$(ECHO) "\n"
