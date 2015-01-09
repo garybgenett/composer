@@ -4035,6 +4035,23 @@ $(RELEASE):
 		$(RELEASE_DIR_NATIVE)
 	@$(HEADER_L)
 
+.PHONY: $(RELEASE)-config
+$(RELEASE)-config:
+#WORKING
+#	@$(foreach FILE,Linux Msys $(notdir $(RELEASE_DIR_NATIVE)),\
+#		$(MKDIR) "$(RELEASE_DIR)/$(FILE)"; \
+#		$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(FILE)/"; \
+#	)
+#WORKING
+	@$(DATESTAMP) >"$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
+	@$(ECHO) "override COMPOSER_OTHER ?= $(RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
+	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
+	@$(HEADER_L)
+
 .PHONY: $(RELEASE)-dist
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
@@ -4056,21 +4073,6 @@ $(RELEASE)-chroot:
 	@$(TABLE_I3) "$(_C)# cd /$(RELEASE_TARGET) ; export PATH ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
 	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/$(RELEASE_TARGET),$(COMPOSER_ABODE))" $(CHROOT) "$(RELEASE_DIR)" /bin/bash -o vi
-
-.PHONY: $(RELEASE)-config
-$(RELEASE)-config:
-	@$(foreach FILE,Linux Msys $(notdir $(RELEASE_DIR_NATIVE)),\
-		$(MKDIR) "$(RELEASE_DIR)/$(FILE)"; \
-		$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(FILE)/"; \
-	)
-	@$(DATESTAMP) >"$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
-	@$(ECHO) "override COMPOSER_OTHER ?= $(RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
-	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
-	@$(HEADER_L)
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
