@@ -2961,18 +2961,11 @@ endif
 		"$(OPENSSL_TAR_DST)/configure" \
 		"$(OPENSSL_TAR_DST)/crypto/ui/ui_openssl.c"
 ifeq ($(BUILD_PLAT),Linux)
-ifneq ($(BUILD_DIST),)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
 		no-shared \
 		no-dso \
 	)
-else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
-		no-shared \
-		no-dso \
-	)
-endif
 else ifeq ($(BUILD_PLAT),Msys)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
 		linux-generic$(BUILD_BITS) \
