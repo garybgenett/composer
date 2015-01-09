@@ -23,6 +23,7 @@
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
 # _ template inherit & archive target
 # _ double-check all $SED statements, for consistency
+# _ double-check "if*eq" stanzas for consistent definition of default value
 # _ double-check "if*eq" stanzas for missing "else"
 # _ double-check "if*eq" stanzas for "$(if $(and $(or $(filter $(filter-out" possibilities
 # _ comments, comments, comments (& formatting :)
@@ -71,11 +72,6 @@
 #	hack setup.bat
 #	try "build" without networking available
 #	try building 64-bit version
-# full test pass
-#	linux 64-bit stage3 BUILD_DIST=
-#	linux 32-bit stage3 BUILD_DIST=1
-#	windows 64-bit BUILD_DIST=
-#	windows 32-bit BUILD_DIST=1
 # test re-entry of builds
 # do a "diff -qr" of build chroot after completion
 #BUILD TEST
@@ -174,24 +170,14 @@ override RUNMAKE			:= $(MAKE) --makefile "$(COMPOSER_SRC)"
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
+#WORK : turn remaining targets into variables, as well...
+# grep PHONY Makefile
+
+override ___WORK			:= .make_database
+override ___WORK			:= .all_targets
+
 override HELPOUT			:= usage
 override HELPALL			:= help
-
-override RELEASE			:= release
-
-#WORK : turn remaining targets into variables, as well...
-#	# grep PHONY Makefile
-#	.make_database
-#	.all_targets
-#	.dist
-#	world
-#	all
-#	clean
-#	whoami
-#	settings
-#	setup
-#	subdirs
-#	print
 
 override DEBUGIT			:= debug
 override TARGETS			:= targets
@@ -202,11 +188,24 @@ override INSTALL			:= install
 override REPLICA			:= clone
 override UPGRADE			:= update
 
+override ALLOFIT			:= world
 override STRAPIT			:= bootstrap
 override FETCHIT			:= fetch
 override BUILDIT			:= build
 override CHECKIT			:= check
 override SHELLIT			:= shell
+
+override CONVICT			:= _commit
+override RELEASE			:= _release
+override DISTRIB			:= _dist
+
+override ___WORK			:= all
+override ___WORK			:= clean
+override ___WORK			:= whoami
+override ___WORK			:= settings
+override ___WORK			:= setup
+override ___WORK			:= subdirs
+override ___WORK			:= print
 
 override ~				:= "'$$'"
 override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
@@ -393,10 +392,9 @@ ifeq ($(BUILD_PLAT),Msys)
 override BUILD_MSYS			:= 1
 endif
 
+override BUILD_BITS			:= 32
 ifeq ($(BUILD_ARCH),x86_64)
 override BUILD_BITS			:= 64
-else
-override BUILD_BITS			:= 32
 endif
 
 override COMPOSER_PROGS			?= $(COMPOSER_OTHER)/bin/$(BUILD_PLAT)
@@ -467,15 +465,21 @@ else ifeq ($(BUILD_ARCH),i386)
 override MSYS_BIN_ARCH			:= i686
 endif
 
+#WORKING
+# https://tracker.debian.org/debootstrap
+override DEBIAN_SRC			:= git://anonscm.debian.org/d-i/debootstrap.git
+override DEBIAN_CMT			:= 1.0.66
+
 # http://www.funtoo.org
 # http://www.funtoo.org/I686
 override FUNTOO_DATE			:= 2015-01-03
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
 override FUNTOO_SARC			:= generic_$(BUILD_BITS)
-ifneq ($(BUILD_DIST),)
-override FUNTOO_SARC			:= i686
-endif
+#WORKING ifneq ($(BUILD_DIST),)
+#WORKING override FUNTOO_SARC			:= core2_64
+#WORKING override FUNTOO_SARC			:= i686
+#WORKING endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
 override FUNTOO_GLIBC_VERSION		:= 2.19
 override FUNTOO_BINUTILS_VERSION	:= 2.24
@@ -1092,9 +1096,21 @@ override define COREUTILS_UNINSTALL	=
 			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
 		fi; \
 	done
+	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
 endef
+ifneq ($(BUILD_PLAT),Msys)
+ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
+ifeq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
+#WORKING : test this
+$(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
+endif
+endif
+endif
 ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
+ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
+#WORKING : test this
 $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils))
+endif
 endif
 override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
@@ -1102,6 +1118,7 @@ override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CHROOT				:= "$(call COMPOSER_FIND,$(PATH_LIST),chroot)"
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override DATE				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --iso
+override DATESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822
 override DIRCOLORS			:= "$(call COMPOSER_FIND,$(PATH_LIST),dircolors)"
 override ECHO				:= "$(call COMPOSER_FIND,$(PATH_LIST),echo)" -en
 override ENV				:= "$(call COMPOSER_FIND,$(PATH_LIST),env)"
@@ -1113,7 +1130,6 @@ override PRINTF				:= "$(call COMPOSER_FIND,$(PATH_LIST),printf)"
 override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
 override SORT				:= "$(call COMPOSER_FIND,$(PATH_LIST),sort)" -u
 override TAIL				:= "$(call COMPOSER_FIND,$(PATH_LIST),tail)"
-override TOUCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822 >
 override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
 
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
@@ -1174,6 +1190,7 @@ override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
 override REPLICA_GIT_DIR		:= $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
 override REPLICA_GIT			:= cd "$(CURDIR)" && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
+override COMPOSER_GIT_RUN		= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_GITREPO)" --work-tree="$(1)" $(2)
 override GIT_RUN			= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_STORE)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
 override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_REPO		=
@@ -1447,7 +1464,7 @@ override .ALL_TARGETS := \
 	$(INSTALL)[:-] \
 	$(REPLICA)[:] \
 	$(UPGRADE)[:] \
-	world[:] \
+	$(ALLOFIT)[:] \
 	$(STRAPIT)[:-] \
 	$(FETCHIT)[:-] \
 	$(BUILDIT)[:-] \
@@ -1837,11 +1854,11 @@ EXAMPLE_MAKEFILE_2:
 	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)-clean$(_D):"
 	@$(ESCAPE) "	$(~)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@$(ECHO) "#WORK : document this version of 'clean'?\n"
-	@$(ECHO) "#WORK : make .$(RELEASE)-test .$(RELEASE)-debug\n"
-	@$(ESCAPE) "$(_C)clean$(_D): COMPOSER_TARGETS += $(notdir $(.RELEASE_MAN_DST))"
+	@$(ECHO) "#WORK : make $(RELEASE)-test $(RELEASE)-debug\n"
+	@$(ESCAPE) "$(_C)clean$(_D): COMPOSER_TARGETS += $(notdir $(RELEASE_MAN_DST))"
 	@$(ESCAPE) "$(_C)clean$(_D): TYPE := latex"
-	@$(ESCAPE) "$(_C)$(notdir $(.RELEASE_MAN_DST)):"
-	@$(ESCAPE) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(.RELEASE_MAN_DST)).\"* ./"
+	@$(ESCAPE) "$(_C)$(notdir $(RELEASE_MAN_DST)):"
+	@$(ESCAPE) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(RELEASE_MAN_DST)).\"* ./"
 	@$(ECHO) "#WORK\n"
 	@$(ECHO) "\n"
 
@@ -2197,7 +2214,7 @@ $(REPLICA):
 	    [ "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" != "$(CURDIR)/$(COMPOSER_SETTINGS)" ]; then \
 		$(CP) "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" "$(CURDIR)/$(COMPOSER_SETTINGS)"; \
 	fi
-	@$(TOUCH) "$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
+	@$(DATESTAMP) >"$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)"
 	@$(ECHO) "$(_D)"
 
 .PHONY: $(UPGRADE)
@@ -2222,8 +2239,8 @@ $(UPGRADE):
 ########################################
 
 #WORK : document!
-.PHONY: world
-world:
+.PHONY: $(ALLOFIT)
+$(ALLOFIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(STRAPIT)
 	$(RUNMAKE) $(FETCHIT)
@@ -2329,7 +2346,7 @@ ifeq ($(BUILD_PLAT),Msys)
 	)
 	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
 	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
-	$(TOUCH) "$(COMPOSER_PROGS)/tmp/.null"
+	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
@@ -2843,7 +2860,7 @@ $(STRAPIT)-tools-gcc-init:
 		--disable-libquadmath \
 		--disable-libsanitizer \
 		--disable-libssp \
-		--disable-libstdc++-v3 \
+		--disable-libstdc++ \
 		--disable-libvtv \
 		--disable-multilib \
 		--disable-nls \
@@ -3961,108 +3978,155 @@ $(BUILDIT)-pandoc:
 
 ########################################
 
-#WORK : this all works great, but something more elegant needs to be done with it
-#WORK : document targets!
-#WORK : document variables!
+#WORK
+# this all works great, but something more elegant needs to be done with it
+# exactly how long can the HEREDOCs get before the shell can't handle it?
+#	should the README be broken up into sections throughout the Makefile anyway?
+# document targets!
+# document variables!
+#WORK
 
-override .RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
+override RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
+override RELEASE_TARGET		?= $(notdir $(COMPOSER_OTHER))
+
 ifeq ($(COMPOSER_OTHER),$(COMPOSER_DIR))
-override .RELEASE_DIR		:= $(COMPOSER_DIR)/_$(RELEASE)
+override RELEASE_DIR		:= $(COMPOSER_DIR)/$(RELEASE)
 endif
-override .RELEASE_DIR_NATIVE	:= $(.RELEASE_DIR)/Native
-override .RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
-override .RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
+override RELEASE_DIR_NATIVE	:= $(RELEASE_DIR)/.Native
+override RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
+override RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
-override .RELEASE_CHROOT	?= Linux
-ifneq ($(BUILD_BITS),32)
-override .RELEASE_CHROOT	:= $(.RELEASE_CHROOT)$(BUILD_BITS)
-endif
+.PHONY: $(CONVICT)
+$(CONVICT):
+	@$(call COMPOSER_GIT_RUN,$(CURDIR),add --verbose --all ./)
+	@$(call COMPOSER_GIT_RUN,$(CURDIR),commit --verbose --all --edit --message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))]")
 
-.PHONY: .$(RELEASE)-funtoo
-.$(RELEASE)-funtoo:
-	$(call CURL_FILE,$(FUNTOO_SRC))
-	$(call DO_UNTAR,$(.RELEASE_DIR)/$(.RELEASE_CHROOT),$(FUNTOO_SRC))
-
-.PHONY: .$(RELEASE)-chroot
-.$(RELEASE)-chroot:
-	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR_NATIVE)" .$(RELEASE)-funtoo
-	@$(RUNMAKE) --silent .$(RELEASE)-config
+.PHONY: $(RELEASE)
+$(RELEASE):
+	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(TABLE_I3) "$(_H)Build"			"Target"		"Options"
 	@$(HEADER_L)
-	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd /$(.RELEASE_CHROOT) ; export PATH ; make world"
-	@$(ECHO) "\n"
-	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/$(.RELEASE_CHROOT),$(COMPOSER_ABODE))" $(CHROOT) "$(.RELEASE_DIR)" /bin/bash -o vi
+	@$(TABLE_I3) "$(MARKER) $(_E)Development"	""			""
+	@$(TABLE_I3) "- $(_E)Linux$(_N)"		"$(RELEASE)-config"	"$(_M)RELEASE_DIR=\"$(RELEASE_DIR)\""
+	@$(TABLE_I3) "- $(_E)x86_64$(_N)"		"$(ALLOFIT)"		"$(_N)COMPOSER_OTHER=\"$(RELEASE_DIR_NATIVE)\""
+	@$(TABLE_I3) "$(_C)Distribution"		""			""
+	@$(TABLE_I3) "- $(_C)Linux$(_D)"		"$(RELEASE)-dist"	"BUILD_DIST=\"1\" RELEASE_TARGET=\"Linux\""
+	@$(TABLE_I3) "- $(_C)Msys$(_D)"			"$(ALLOFIT)"		"BUILD_DIST=\"1\""
+	@$(TABLE_I3) "$(_C)Testing"			""			""
+	@$(TABLE_I3) "- $(_C)Linux$(_D)"		"$(RELEASE)-test"	"BUILD_ARCH=\"x86_64\" RELEASE_TARGET=\"_linux_64\""
+	@$(TABLE_I3) "- $(_C)Linux$(_D)"		"$(RELEASE)-test"	"BUILD_ARCH=\"i686\"   RELEASE_TARGET=\"_linux_32\""
+#WORK
+	@$(TABLE_I3) "- $(_C)Msys$(_D)"			"$(ALLOFIT)"		"BUILD_ARCH=\"x86_64\""
+	@$(TABLE_I3) "- $(_C)Msys$(_D)"			"$(ALLOFIT)"		"BUILD_ARCH=\"i686\""
+#WORK
+	@$(TABLE_I3) "$(MARKER) $(_E)Release"		""			""
+	@$(TABLE_I3) "- $(_E)Msys$(_N)"			"$(~)(CP)"		"$(RELEASE_DIR)/Msys"
+#WORK
+	@$(TABLE_I3) "- $(_E)Msys (x86_64)$(_N)"	"$(~)(CP)"		"$(RELEASE_DIR)/_msys_64"
+	@$(TABLE_I3) "- $(_E)Msys (i686)$(_N)"		"$(~)(CP)"		"$(RELEASE_DIR)/_msys_32"
+#WORK
+	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-prep"	""
+	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-debug"	"$(_S)(repeat until successful)"
+	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-prep"	"$(_S)(final sanity checks)"
+	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(CONVICT)"		"$(_M)COMPOSER_GITREPO=\"$(COMPOSER_GITREPO)\""
+	@$(HEADER_L)
+	@$(LS) \
+		$(RELEASE_DIR) \
+		$(RELEASE_DIR_NATIVE)
+	@$(HEADER_L)
 
-.PHONY: .$(RELEASE)-config
-.$(RELEASE)-config:
-	@$(foreach FILE,Linux Linux64 Msys Msys64 $(notdir $(.RELEASE_DIR_NATIVE)),\
-		$(MKDIR) "$(.RELEASE_DIR)/$(FILE)"; \
-		$(CP) "$(COMPOSER)" "$(.RELEASE_DIR)/$(FILE)/"; \
+.PHONY: $(RELEASE)-dist
+$(RELEASE)-dist:
+	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
+#WORKING
+	exit 1
+
+.PHONY: $(RELEASE)-test
+$(RELEASE)-test:
+	$(call CURL_FILE,$(FUNTOO_SRC))
+	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET),$(FUNTOO_SRC))
+
+.PHONY: $(RELEASE)-chroot
+$(RELEASE)-chroot:
+#WORKING	@$(RUNMAKE) COMPOSER_OTHER="$(RELEASE_DIR_NATIVE)" $(RELEASE)-$(RELEASE_DISTRO)
+# chroot now gets called by distro targets
+#WORKING	@$(RUNMAKE) --silent $(RELEASE)-config
+# replace with simple $(CP)
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_C)# cd /$(RELEASE_TARGET) ; export PATH ; make $(ALLOFIT)"
+	@$(ECHO) "\n"
+	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/$(RELEASE_TARGET),$(COMPOSER_ABODE))" $(CHROOT) "$(RELEASE_DIR)" /bin/bash -o vi
+
+.PHONY: $(RELEASE)-config
+$(RELEASE)-config:
+	@$(foreach FILE,Linux Msys $(notdir $(RELEASE_DIR_NATIVE)),\
+		$(MKDIR) "$(RELEASE_DIR)/$(FILE)"; \
+		$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(FILE)/"; \
 	)
-	@$(TOUCH) "$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
-	@$(ECHO) "override COMPOSER_OTHER ?= $(.RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
-	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
+	@$(DATESTAMP) >"$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
+	@$(ECHO) "override COMPOSER_OTHER ?= $(RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
+	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
 	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(.RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
-	@$(call DEBUGIT_CONTENTS,$(.RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
+	@$(HEADER_L)
 
-.PHONY: .$(RELEASE)
-.$(RELEASE):
-	@$(RUNMAKE) --silent .$(RELEASE)-config
-	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR)/Msys"	BUILD_DIST="1" BUILD_PLAT="Msys"	COMPOSER_PROGS_USE="0" .dist
-	@$(RUNMAKE) COMPOSER_OTHER="$(.RELEASE_DIR)/Linux"	BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" .dist
+.PHONY: $(RELEASE)-prep
+$(RELEASE)-prep:
+	@$(RUNMAKE) --silent $(RELEASE)-config
+	@$(RUNMAKE) COMPOSER_PROGS_USE="0" BUILD_DIST="1" BUILD_PLAT="Msys"	COMPOSER_OTHER="$(RELEASE_DIR)/Msys"	$(DISTRIB)
+	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(RELEASE_DIR)/Linux"	$(DISTRIB)
 #WORK : should this go somewhere else?
 	@$(FIND) "$(CURDIR)" | $(SED) -n "/[/][.]git$$/p" | while read FILE; do \
 		$(RM) "$${FILE}"; \
 	done
-	@$(RM) "$(.RELEASE_MAN_DST)."*
-	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" $(COMPOSER_TARGET) \
-		BASE="$(.RELEASE_MAN_DST)" LIST="$(.RELEASE_MAN_SRC)" TYPE="html" TOC="3"
+	@$(RM) "$(RELEASE_MAN_DST)."*
+	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(CURDIR)"		$(COMPOSER_TARGET) \
+		BASE="$(RELEASE_MAN_DST)" LIST="$(RELEASE_MAN_SRC)" TYPE="html" TOC="3"
 
-.PHONY: .$(RELEASE)-test
-# this is only for testing conversion of the full Pandoc manual syntax into our primary document types
-.$(RELEASE)-test:
-	@$(CP) "$(.RELEASE_MAN_SRC)" "$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
+.PHONY: $(RELEASE)-debug
+$(RELEASE)-debug:
+	@$(RM) "$(RELEASE_MAN_DST)."*
+	@$(CP) "$(RELEASE_MAN_SRC)" "$(RELEASE_MAN_DST).$(COMPOSER_EXT)"
+	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
 #WORK : fixed?
-#	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
-#	@$(SED) -i \
-#		-e "1459d; 1461d; 1463d; 1465d; 1467d; 1470d;" \
-#		-e "2770d; 2775d;" \
-#		-e "s|(rights[:][ ])\xc2\xa9|\1\(c\)|g" \
-#		"$(.RELEASE_MAN_DST).$(COMPOSER_EXT)"
-	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" all \
-		BASE="$(.RELEASE_MAN_DST)"
+	@$(SED) -i \
+		-e "1459d; 1461d; 1463d; 1465d; 1467d; 1470d;" \
+		-e "2770d; 2775d;" \
+		-e "s|(rights[:][ ])\xc2\xa9|\1\(c\)|g" \
+		"$(RELEASE_MAN_DST).$(COMPOSER_EXT)"
+	# debug "pdflatex" conversion of the Pandoc manual
+	@$(RM) "$(RELEASE_MAN_DST).latex"
+	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(CURDIR)"		$(COMPOSER_TARGET) \
+		BASE="$(RELEASE_MAN_DST)" TYPE="latex"
+	@$(BUILD_ENV) $(PDFLATEX) "$(RELEASE_MAN_DST).latex"
+	# test conversion of the full Pandoc manual syntax into our primary document types
+	@$(RM) "$(RELEASE_MAN_DST).pdf"
+	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(CURDIR)"		all \
+		BASE="$(RELEASE_MAN_DST)"
 
-.PHONY: .$(RELEASE)-debug
-# this is only for debugging "pdflatex" conversion of the Pandoc manual
-.$(RELEASE)-debug:
-	@$(RM) "$(.RELEASE_MAN_DST).latex"
-	@$(RUNMAKE) COMPOSER_OTHER="$(CURDIR)"			BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_PROGS_USE="1" $(COMPOSER_TARGET) \
-		BASE="$(.RELEASE_MAN_DST)" TYPE="latex"
-	@$(BUILD_ENV) $(PDFLATEX) "$(.RELEASE_MAN_DST).latex"
+override DIST_ICON		:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gUQBRoEzZLzOQAAAFFJREFUKM/NUcsVADAEC1Ma0Zi9qd/THjkRCWkB64LmtqpaLiIX9Q3PNjxzqqZFALBf1+5JljjVsyYIPjVcXd7fmAVPdnh0ZSd7ltA8uz/csjih8jivOCtEBAAAAABJRU5ErkJggg==
+override DIST_SCREENSHOT	:= iVBORw0KGgoAAAANSUhEUgAAAeQAAADjCAIAAADbvvCiAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH3gUQBTsYVQy6lQAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAVJ0lEQVR42u2d3basqA5G6Rr1RrVett9pnXc6F7Xb4eYnhBAQdM6L3dUuxYAQY5SPfz4hhBD+FwAAYEW+XvpFQwAArM/bvcTf39/vj5+fn559YBq/v79cCIANAuxPoxc27KbfKBR7Zn33t52/3r0W27U5QJOXfm00in5OuJ9r3FB3KXm0JyKyBlic4c5a/4h9bWQ0zltt6gfJjQAsxfvsKH9+fs5DtJRZ1uzT6qq+5TQ5iO/Oh+XnQs7njSxMj8oeUton6HLx0ZbWklObDfWKLpOv51XafO5R58bR1115BXk4gKdkQ87uoORx0r9mf5tz1nJknSaso9/VMg/7sztHv6N9SnvK57KVrGlVTb00NtuecjQ2l/5trbv+CgLc20u/m0ZsGqA5jpZqZJTuoAmmUguPo4TDJ2RF0six0wxNvdwTIL4NdQ6ZhfbxqinAfmkQecSen0Ojkbz+aMHCvcLPNIeDRwYImheM0VA/Yh93j+DrU0rJnJ6Ib/RXgxqb9QYcNjc5u9L+muSPpnDZpCgs2PquAzAwso5C5vM7otQLfB9Uq6/dovSivJvsWbJvqITn6Mj4asny2atZC8G/CCWnFmZtttXLKyaNaqG0OTUg/d9qOcqaAtwf/aSY1uipdZ+V46ael3X3sHm1JyeAp3npfxByavU1G8V3S9nMh9sAZmcdcNYAAFs4a1T3AAA2AGcNALCVs3afZsYWtly4BYDIGgAAZvPnBeO/tZkvbGHLRlsY2HAnPsd/PjxEs4U0CMDCzvpDZM0WImsAImu2sIXIGsAnsuYFIwDABjCDEQBggzQIkTUAwAbgrAEAcNYAAODBe2vr7yFLj7g+ADg768itROs0Rl+8HvtEW7LlpPsoEZae2cX3pY0AABAjfGdd8tSh5dPX7A/lb/3No+lPi8fXAACplzbmrOcErWb/xaIkAHAz3mlcvIinG2dMmiPOpmWOdYGDLpmjLDla+hYAoCHADo1pkFL64vdEupuQ+rAtoZvdobpWb2pzdkv6r+ao6pZsa5AGAQBVGqTkmMwZEtt7wugoQ+zZFIn7xrbfkDmKmtOb0PEnImsA0PNKfWW/E0mF0MYdtRQ/Pz/pJzEH9DYA6HXWhgB2gr9uLaEUVpfKaf3y5IvwsaBQd7IcANDDW5++OPugY+fqhI5zaiV67SanLLxeMEbl6Gsh52Q05WjaBwBAxfGCcUE0LxjT15KdEfSgEvprAQCP9tIrO+uNbhsAAEOdNXrWAACrO+uAkNP8kgEADDQ46+xCpU1CTiN837lA89vIdEoh4koAsFyArZzBmLrsy9cw1UwCVBrQcywAwGgv3bX4wBFKG0Ja/CAAgB7/6eZ6Tz3oRKn+RrRlWjUBAJwD7GBKg6RbUkkms0iTITzPyiRlzyuobxP+A8CCXtpfIjU9NlvaoK8s+HgDAG7JECEnAAAY4qznMz/DQE4DAPalQcjJxUuev1+esyRNdmWW6LxLLZEDAJBy2XRzF8/IDEYAuD2fa501AADonfWLhgAAWB+EnHY9OwDgrCu+KYjySZELmyzkFG0vnT2SoEqPEgSqwt8vY/nIBABm0DSDsTQ/MDtd8FohJ+HswvRFgxwVzhoAJnjprpx1dmFDZRB9lY+TbZ55pwEA0HNDIScXIrVuAIBreUe+qeqh0gkmqY+LIut0yzhXqDm7V8kAALOdtV7IKXoFJ2Q/zgmHUjkTIuL0RMqIPjoQHw0AF9Ir5PTzH6tlMPayGQBA5azdsxCOe47w1wAAe9Eg5HROldhy1uEKIafS5+FN9dKUAwAwDoScdj07ADwEhJwAALZx1gg5AQBsAEJO2AwA93LW2SxzdRLKjYWcWn008k8AYEcv5FT6U1YRSfg9IkotnXGCkFO/qQAAVS89MGeNkBMAgBcIORXvNK0fF/7+/mYD82M7AICZZiEnjY+rRtZ3FXKKmrGUGQcAMDprvZCTxl9HCQd5t9ERMUJOAHADeoWcls1gyDsg5AQAWzpr9yyE454j/PX8+gIA9NAg5BQUkkzKnPU9hJyytYh+480BwAWEnGbXghmMANAEQk4AANs4a4ScAAA2ACEneAr0Ftg+wP60dPdoPp5my4Th1/Sn9b2J+7G856QpYHsvbRNy0ggeTZu2jrNexFlv0eY4a9jUWRtz1umDpLxl8giZ81EgNlf7AAB44T/dvBTLrOOMlBrc55nr2Y+1NTokacnHx9el1kjP3lSOLEiSLed8oNLCVFQgPaR6Llv72Foe4C7ZEKuetTJnPUfPujUhICdzSkqEnVsi7WzZqpK3TcuR01A9Fv7+TWhXMO9vH9sVzJZDGgQ29dK9kXUaK2WFnKZFNzbjvZIAR0goxLZpm2hs9ipH02heClalW6mcH2vqM9G82aPls9cC4A5pEC+J1IeTPu+7NKZSanXa5VP2Fr23Hdfy9Ge4DS+z+whiSrQpNTE6rHax6sgDyLnmUJAEEWzQe5OqwWuqkWhMsn3NEvXDo/rytQDYOLIOCiGnVKRJsyVc/YKxKjVVEp+SswHm1jCkaM4P9Up//X38T9f5zVpoCMnTQ5TtfD7QJvs1uuUBFqVpUszQ2MpWrGYCjvtyt7BgbO7VWwAW9dJznDXOAgCgx1mjugcAsLqzDvcTciJTCQC3pMFZe83i8yX7GpCsBQDcMMBWzmA8/7VnFt+IyFq5HQBgUy/ttvjA4tJOAABb80qj4GnSpvhrAIA2Z32eEdOTWf5ORjh/zZpucTkRAMCj8JdIXU3aCQCAyBoAACY6637WlHYCALgHDTMYHb+z9vryWpDZ4/kAAO7Bp9VZ++LiT5nBCAA4awAAWMVZv2gIAID1QcgJAGCTAFupZ21e0zpaG3uEs1ZuBwDY1Eu/Ut/a5ByPhZqEo35O0O4AAAa6ctbZZfGUuh8EvwAAzc5aKeTUtGBr1VPjrwEA2pz10OnmCDkBAHTSLOQUBdfZ6Di7eou8DwAADIyseXMIADDPWTfh4ppJWAMA6HlHLnhEjJxmq12EswEAngNCTgAAS4OQEwDANs4aIScAgA1AyAkA4HbOOnKFpTeHpY0jHGj2m24+NQGAu3Go7lWngGcV9YS/yr99I2vldgCATb301Jz1OQrGnwIA6GkTcvKNiPHXAABtzto83fwQaSod9dUSQcgJAKCHZiGn1Bfr9zmXjKcGAJgXWQMAwDxnPQ4+2AAA6KdByOmsZN2UJylNXUHICQBACUJOAABLg5ATAMA2zhohJwCADcBZAwDgrAEAwNdZl7SZ2MKWHbcAEFkDAMBs/nwN8m+iQ/3LFrZsu4WBDXfic/znw0M0W0iDACzsrD9E1mwhsgYgsmYLW4isAXwia14wAgBsANPNAQA2SIMQWQMAbADOGgAAZw0AADhrAACcdRs7fjUl2Bwtx76m8amF65s9p//s2wh8fUj73DOyHnfl1p9YkVr4XXwnnSQyrZ1vMJCurUK211VNyu5wS6dma5/b9DHSIOEhffrG5+VqPvlaPKem79TZl9Yz/AZu343pPul9w31dxNSe4193mzVnF0r2renMktN6ado5u4OmfbzComz7VPtG1Of7e5S744hO1DQKzNeipxaac5X62Hdjkz3y0I4u9Aj/I9usHE1avhMZ05m7qZXnhFHPnOBSKuqgtCUtR046K20uPaHIv1tL7qmp0qpzIeaS03pp2rlkz1V9I1sLzdmjnWded3OfrKZBJl8Lzbmy+5Q0A/TtIzfOiFEp29w6mkr2fL30uym30nlrKh2ebs9uOW5Hmvi3yWZbfJfNGrceoqyppuRowXi54sJfvVrM0D62Fsv+1eXsco/6/tD0zNZayFe5OgoM19SxFhrDhMvUn9uNBsK4UWnoLT0X662p8CIp/POThaPNjjX1egpOa7pUYs7cYhfWYqjN1Z45cxQsWPLM65XaP25UTvaZrzT2jkxxPGtPUedkUPVRyCuGWr+mky10aeeht/+mbydKfV7/uF29XoNq19k3vodnH9In1GJcV5HvNONGpe1Erfa8S/efc9hfKlQWF44eEjtvcdlyouR9p83nPx0pJ30txtU0W3JkoWPJ8jOyssVaz94Z8uivjrxzqaYTrnu2DTX9sPRCT+4b6dvIQa9J9SVHSTxNHyttOQoZ6n80NldHUwPpC0aAJ/DkPq957QbrUH/BCAC3ZFwcDeNAzxoAYPXIOjCDEQBgC9qcdZOQSutrXJfcmaacdCbCUpQ+8jcYPHNlwplNOq4frtwHVrhei691OXnsTO6Hbc56nJCK77eQcpP9/MdVfc5lbshqCB+fTjsXrHm97jp2JgtLvRg564wTKjsiqtquta+1efHm2jdq6Uc13VwvpBKsMknVs0efUpolWryaUmOPIGojSPMEk7CUUNkmQR9lOytbvlXwKD171mbhobWnjwWFWI9G8iyYBLNKrbHU9Yp61HPGjpc/zNZd0z4hnL6z1ggnhXahmZKMiyxh0yMR1T99yCwsla2p3sIm2SbDY9cIKa6qJUIL9EgyaebvVROOyrqXJHs6t1Trtdr10vexW46daf4w3eev76zNwiUGt6gsTdOOXlIv1ejbbPM4wZpO8akmEQOXWe9pj1K2qlIgJZVJmP+8JYwdTd8QdC1WuF62lrzH2HH0h+a+966W0p9Bc1FPPz8Rd8obueQEU3smy0gNeiWraedOm3fMI9tadYQU1w2u16Zjx7c1DDeMlyats5R4UGfJEzzFZBmpmVenR8hphBSO8PjZ9Kbe8JmprL4m1FSwwZZwX+F63X7seLXGIaFlECKWZjAaXpuE8gIcoTHlX1r7o/P1gi0no3T90fsoWc4tq6QTdQXfdT2U9ujbOfvmLQpAzGt/GNpQDn/MrwHPbTKi5NLV2eJ6PWTsOPpDze05qtfXS/9JXQMMCpGWCsr6jbmr7NH86/XwcdHU1F8vjTYIjO2XN0tP3zjhfsvrtbK/1jf1p5oGAQCAy0HICQBgG15yuP5YuRyvuq8mfCPY8zTBI/2UmYc/sF8ooTPz1C6n08xUGuKsn5y9mizRAk/2hs+sZvWzwpn+59B3W3kNnZdXuz9BLufGdy8Ej9aJCZ4cDy1l1WoWvs/9/plyOWGkRIuL8E2wfuNZ6out9qwveBSdvakceSKc8strjSRT9LsqS2QWPPLqP16yTaEgEZWue9s5TrOTPKpiWJrxrhFgyraYlwcI4W8hp7TCD5HLqf7W7DlT+Mbr7He6gqXkYKkcjfSPzUKbLJpv+9iu4Ijea06DaNrHIAQml1O10D03omnDeMHcx8rljJNosbWJpv2zoki2WtxD8EhzB7KVo2m0kvrSiByjTfBoUP8xyza5tI9ZCCwtR9MTlLuN8wB7r27uJZdzuUSLY933yuQOEjxSSvwMGn7CiVrlHsfdL3fsP9PWk1qTrheM95DLuUSixSUDeLbZVovbCx5VDb5wdbfO+73t00Pf/jO/XtV9qr2upz9f21veGr+QvgfQv4Q8V6+0RfMsqSmnVLJ+uAo1Feo1+o49ru73uIJZS85vHZVhb7pzyUJDSJ4eomzn84HK9jFcQcf+I+e7SuOruo/SQmU2o7UNIzOuic1bhZyQy1E+c2ydX0LwaHee2f53rXX8gtEx3fPMr0eHxibz64K/4wrCUiDkBACwemQdEHICANiCVZx19Eo6+129Zk104Wt8eW311BhbLcZ9SD9I18bFwqGiSJfLCQUPbf6035a6q+2Tm0tGSk+vgFbera1vyIXZjipN3U5Lzr6orU4JHVGLcV/2aOoFI/rhuL7h/tXwIiMFbh5Z94wQ2UWuJlLqNTIBGCkPddaax6KQzLU3HCX4oBGeyPxdZEnzIfrrJfXKtmr2cbjVwpLMgtwa8rN2Tx8L3nJCsoXKK+jSNwbVdOZI0fQWcE6DaDSlstfSdpR+dIXuNYk1JVfTDqW62+ZHlLxb6WG5pFsW6YplH4cNFmbnYpSyMaWeI8+lkqc1tiZ8NG2YnZNiEwnx6hteqa1rR0pUU+VEf7A76zWf92W5HH1vMOjsTItuNDIu8m1ygqkXiiJ5teFqmShHC68dKXBBGmRZfy3vcIlU3qM44seqHCCRFCMFrnTWss5sSTbFa5W/aS7g3qtNzmmiXfz1tUJFg2xYcKTAkDSIIOwS/SnKnJbEeuSj+nuJoBWnX28i/L3QSVW+Mi05e4u65Os6pbiS4SF9QVGkziZyly4y9I2h4gSTR0q2t4A/rUJOd73H0sMAGCkre2mmm3dFoACMFJgDQk4AAKtH1oHIGgBgCzLO2mvWaes66DMxzLCqzsdTblm2TbyuMgCMCrA/Lc665+OkRXyWQUGtNDG6dcv9/B3OGmCOl36lY68690E5htd/EbGIhXztBABV6gvmhkRzIJph3PS1ZrbkkvZFv0tttbBHK7Jn0rNNQyd7daJWjcQwU9s0yhLCFgC4IA0iSJWXfgsKavJvOSOhSSCk4uilLVFqokd2XZOPNifrR6Rl0n/7kzl3WhoYYBcv/e5MXJRkzvu9kmaynCaSjSZbyjGsrFGpVJhLp65pGtacOPJN5pwfRIijAfZIgwxCKaK4WspbeROa7KlHkOp2Mg8C4HJevs6iVRdYs/GSD0UW9NQuK0aWhLfS0rKvPQmxAVaMrEuvlQxK9qUH7ZLY01CZG8FCvahN9qiS8I1QeJOnFmSAlEJOJeEtoRx5CwBMokfICSbnYS4vAQCu8tJMN98GEscATwYhJwCA1SPrMOJrkKb8L9HifLaYXAoAGZ/9UQ9y8279q3ytnG/dLhfstegabQ4wzUu/njmuVliF78IWI7IG2I7hzlr/0D3Tp4/zVpv6QXIjAIvzPjvKaCp2KbOs2afVedmWmtWIGaUTwTVyVK1fXkfN2FSyQdYqLVme8u4V6c8XjSpJcXFrgYdmQ0pyP5EnDQqRJnPOWo6s5dl0ss3y/lmxp6pVXiVr2rAkNdVqs+2Z5nLRKIP+OMD9vPS7aQxnZ1RfmEDwmg89ISviLofiJdzROh/Vt3E0olFIlAAEwVmXch3R2L52/FTzM4fB6+RkR5uxV/iJaBSAklfr4C/pQlw7Gbopo6KM+AzrNLo/FugNOGxuTfqXFEv6rxGiUQCjIusoZE7llqL4WiOBFCUc5d1kX1OVUhIkos7Fas5VzVoI/kXWy9YIMNlkrbxi0qVEowDgD+5CTpqYtLoIy7XsuBKKr82IRgGs5qXRBgnVJ3RsthlDaAzg5awDzhoAYAtnjUQqAMAG4KwBAHDWAACAswYAeAj/B20celP5v/1/AAAAAElFTkSuQmCC
 
-override .DIST_ICON		:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gUQBRoEzZLzOQAAAFFJREFUKM/NUcsVADAEC1Ma0Zi9qd/THjkRCWkB64LmtqpaLiIX9Q3PNjxzqqZFALBf1+5JljjVsyYIPjVcXd7fmAVPdnh0ZSd7ltA8uz/csjih8jivOCtEBAAAAABJRU5ErkJggg==
-override .DIST_SCREENSHOT	:= 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
-
-.PHONY: .dist
-.dist:
-	@if [ "$(COMPOSER)" !=				"$(CURDIR)/$(MAKEFILE)" ]; then \
-		$(CP) "$(COMPOSER)"			"$(CURDIR)/$(MAKEFILE)"; \
+.PHONY: $(DISTRIB)
+$(DISTRIB):
+	@if [ "$(COMPOSER)" !=					"$(CURDIR)/$(MAKEFILE)" ]; then \
+		$(CP) "$(COMPOSER)"				"$(CURDIR)/$(MAKEFILE)"; \
 	fi
 	@if [ -d "$(COMPOSER_PROGS)" ] && \
-	    [ "$(COMPOSER_PROGS)" !=			"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))" ]; then \
-		$(MKDIR)				"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))"; \
-		$(CP) "$(COMPOSER_PROGS)/"*		"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/"; \
+	    [ "$(COMPOSER_PROGS)" !=				"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))" ]; then \
+		$(MKDIR)					"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))"; \
+		$(CP) "$(COMPOSER_PROGS)/"*			"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/"; \
 	fi
-	@$(ECHO) "$(.DIST_ICON)"	| $(BASE64) -d	>"$(CURDIR)/icon.png"
-	@$(ECHO) "$(.DIST_SCREENSHOT)"	| $(BASE64) -d	>"$(CURDIR)/screenshot.png"
-	@$(call DO_HEREDOC,.HEREDOC_DIST_GITIGNORE)	>"$(CURDIR)/.gitignore"
-	@$(call DO_HEREDOC,.HEREDOC_DIST_COMPOSER_BAT)	>"$(CURDIR)/Composer.bat"
-	@$(call DO_HEREDOC,.HEREDOC_DIST_COMPOSER_SH)	>"$(CURDIR)/Composer.sh"
-	@$(call DO_HEREDOC,.HEREDOC_DIST_LICENSE)	>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"
-	@$(call DO_HEREDOC,.HEREDOC_DIST_README)	>"$(CURDIR)/README.$(COMPOSER_EXT)"
-	@$(call DO_HEREDOC,.HEREDOC_DIST_REVEALJS_CSS)	>"$(CURDIR)/revealjs.css"
+	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>"$(CURDIR)/icon.png"
+	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>"$(CURDIR)/screenshot.png"
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)		>"$(CURDIR)/.gitignore"
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_COMPOSER_BAT)	>"$(CURDIR)/Composer.bat"
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_COMPOSER_SH)		>"$(CURDIR)/Composer.sh"
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)		>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)		>"$(CURDIR)/README.$(COMPOSER_EXT)"
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)	>"$(CURDIR)/revealjs.css"
 	@$(CHMOD) \
 		"$(CURDIR)/$(MAKEFILE)" \
 		"$(CURDIR)/Composer.bat" \
@@ -4070,11 +4134,11 @@ override .DIST_SCREENSHOT	:= iVBORw0KGgoAAAANSUhEUgAAAeQAAADjCAIAAADbvvCiAAAABmJ
 	@$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE)
 	@$(RUNMAKE) --directory "$(CURDIR)" all
 
-override define .HEREDOC_DIST_GITIGNORE =
+override define HEREDOC_DISTRIB_GITIGNORE =
 # $(COMPOSER_BASENAME)
 /.$(COMPOSER_BASENAME).*
 /$(COMPOSER_SETTINGS)
-/_$(RELEASE)
+/$(RELEASE)
 
 # make $(COMPOSER_TARGET)
 /$(COMPOSER_STAMP)
@@ -4092,7 +4156,7 @@ endef
 
 #WORKING : does this work with "$(RM) $(COMPOSER_ABODE)/.home/.coreutils"?
 #WORKING : may need these back: BUILD_PLAT="Msys" BUILD_ARCH="i686"
-override define .HEREDOC_DIST_COMPOSER_BAT =
+override define HEREDOC_DISTRIB_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
 set _SYS=Msys
@@ -4101,7 +4165,7 @@ start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="1" shell-ms
 :: end of file
 endef
 
-override define .HEREDOC_DIST_COMPOSER_SH =
+override define HEREDOC_DISTRIB_COMPOSER_SH =
 # sh
 _CMS="$${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
@@ -4110,7 +4174,7 @@ exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="1" shell
 # end of file
 endef
 
-override define .HEREDOC_DIST_LICENSE =
+override define HEREDOC_DISTRIB_LICENSE =
 # Composer CMS License
 <!-- ############################################################### -->
 
@@ -4161,7 +4225,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- ############################################################### -->
 endef
 
-override define .HEREDOC_DIST_README =
+override define HEREDOC_DISTRIB_README =
 % Composer CMS: User Guide & Example File
 % Gary B. Genett
 % $(COMPOSER_VERSION) ($(shell $(DATE)))
@@ -4466,7 +4530,7 @@ decide for themselves if [Composer] will be beneficial for their needs.
 <!-- ############################################################### -->
 endef
 
-override define .HEREDOC_DIST_REVEALJS_CSS =
+override define HEREDOC_DISTRIB_REVEALJS_CSS =
 @import url("./revealjs/css/theme/default.css");
 
 body {
@@ -4652,7 +4716,7 @@ endif
 	@$(ECHO) "$(_N)"
 	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
 	@$(ECHO) "$(_D)"
-	@$(TOUCH) "$(CURDIR)/$(COMPOSER_STAMP)"
+	@$(DATESTAMP) >"$(CURDIR)/$(COMPOSER_STAMP)"
 
 $(BASE).$(EXTENSION): $(LIST)
 	@$(MAKEDOC) --silent TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
