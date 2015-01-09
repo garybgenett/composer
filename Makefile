@@ -4142,14 +4142,14 @@ override define HEREDOC_DISTRIB_GITIGNORE =
 /$(COMPOSER_SETTINGS)
 /$(RELEASE)
 
-# make $(COMPOSER_TARGET)
+# $(COMPOSER_TARGET)
 /$(COMPOSER_STAMP)
 /$(COMPOSER_CSS)
 
-# make $(TESTING)
+# $(TESTING)
 /$(notdir $(TESTING_DIR))/
 
-# make $(UPGRADE) && make $(BUILDIT)
+# $(UPGRADE) && $(BUILDIT)
 /$(notdir $(COMPOSER_ABODE))/
 /$(notdir $(COMPOSER_STORE))/
 /$(notdir $(COMPOSER_TRASH))/
