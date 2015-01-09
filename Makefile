@@ -2945,11 +2945,7 @@ $(STRAPIT)-libs-openssl:
 	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
 	$(call DO_UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
 ifeq ($(BUILD_PLAT),Linux)
-ifneq ($(BUILD_DIST),)
 	$(CP) "$(OPENSSL_TAR_DST)/Configure" "$(OPENSSL_TAR_DST)/configure"
-else
-	$(CP) "$(OPENSSL_TAR_DST)/config" "$(OPENSSL_TAR_DST)/configure"
-endif
 else ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
 else
