@@ -465,13 +465,22 @@ else ifeq ($(BUILD_ARCH),i386)
 override MSYS_BIN_ARCH			:= i686
 endif
 
-#WORKING
+#WORKING : debian.org
 # https://tracker.debian.org/debootstrap
+# https://packages.debian.org/search?suite=stable&keywords=kernel-image-3
+# https://packages.debian.org/search?suite=stable&keywords=libc6
+# https://packages.debian.org/search?suite=stable&keywords=make
 override DEBIAN_SRC			:= git://anonscm.debian.org/d-i/debootstrap.git
 override DEBIAN_CMT			:= 1.0.66
+override DEBIAN_LINUX_VERSION		:= WORKING
+override DEBIAN_GLIBC_VERSION		:= WORKING
+override DEBIAN_BINUTILS_VERSION	:= WORKING
+override DEBIAN_GCC_VERSION		:= WORKING
+override DEBIAN_MAKE_VERSION		:= WORKING
 
 # http://www.funtoo.org
 # http://www.funtoo.org/I686
+#WORKING : core2_64, generic_*
 override FUNTOO_DATE			:= 2015-01-03
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
@@ -481,6 +490,7 @@ override FUNTOO_SARC			:= generic_$(BUILD_BITS)
 #WORKING override FUNTOO_SARC			:= i686
 #WORKING endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
+override FUNTOO_LINUX_VERSION		:= WORKING
 override FUNTOO_GLIBC_VERSION		:= 2.19
 override FUNTOO_BINUTILS_VERSION	:= 2.24
 override FUNTOO_GCC_VERSION		:= 4.8.3
@@ -497,13 +507,19 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 
 # https://en.wikipedia.org/wiki/Linux_kernel#Maintenance
 # https://en.wikipedia.org/wiki/GNU_C_Library#Version_history
-# https://packages.debian.org/search?suite=stable&keywords=kernel-image-3
-# https://packages.debian.org/search?suite=stable&keywords=libc6
-# https://packages.debian.org/search?suite=stable&keywords=make
+#WORKING : binutils, gcc, make
+#WORKING override LINUX_MIN_VERSION		:= $(DEBIAN_LINUX_VERSION)
 override LINUX_MIN_VERSION		:= 3.2.0
+override LINUX_CUR_VERSION		:= $(FUNTOO_LINUX_VERSION)
+#WORKING override GLIBC_MIN_VERSION		:= $(DEBIAN_GLIBC_VERSION)
 override GLIBC_MIN_VERSION		:= 2.13
 override GLIBC_CUR_VERSION		:= $(FUNTOO_GLIBC_VERSION)
-override MAKE_MIN_VERSION		:= $(FUNTOO_MAKE_VERSION)
+override BINUTILS_MIN_VERSION		:= $(DEBIAN_BINUTILS_VERSION)
+override BINUTILS_CUR_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
+override GCC_MIN_VERSION		:= $(DEBIAN_GCC_VERSION)
+override GCC_CUR_VERSION		:= $(FUNTOO_GCC_VERSION)
+override MAKE_MIN_VERSION		:= $(DEBIAN_MAKE_VERSION)
+#>override MAKE_CUR_VERSION		:= $(FUNTOO_MAKE_VERSION)
 override MAKE_CUR_VERSION		:= 4.0
 
 # http://git.savannah.gnu.org/gitweb/?p=config.git
@@ -1854,7 +1870,7 @@ EXAMPLE_MAKEFILE_2:
 	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)-clean$(_D):"
 	@$(ESCAPE) "	$(~)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@$(ECHO) "#WORK : document this version of 'clean'?\n"
-	@$(ECHO) "#WORK : make $(RELEASE)-test $(RELEASE)-debug\n"
+	@$(ECHO) "#WORK : make $(RELEASE)-debug\n"
 	@$(ESCAPE) "$(_C)clean$(_D): COMPOSER_TARGETS += $(notdir $(RELEASE_MAN_DST))"
 	@$(ESCAPE) "$(_C)clean$(_D): TYPE := latex"
 	@$(ESCAPE) "$(_C)$(notdir $(RELEASE_MAN_DST)):"
@@ -2238,6 +2254,9 @@ $(UPGRADE):
 
 ########################################
 
+do-%: $(FETCHIT)-% $(BUILDIT)-%
+	@$(ECHO) >/dev/null
+
 #WORK : document!
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
@@ -2249,11 +2268,12 @@ $(ALLOFIT):
 .PHONY: $(STRAPIT)
 $(STRAPIT): $(STRAPIT)-check
 $(STRAPIT): $(STRAPIT)-config
-ifeq ($(BUILD_PLAT),Linux)
-ifneq ($(BUILD_DIST),)
-$(STRAPIT): $(STRAPIT)-tools
-endif
-else ifeq ($(BUILD_PLAT),Msys)
+#WORKING ifeq ($(BUILD_PLAT),Linux)
+#WORKING ifneq ($(BUILD_DIST),)
+#WORKING $(STRAPIT): $(STRAPIT)-tools
+#WORKING endif
+#WORKING else ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(STRAPIT)-msys
 endif
 $(STRAPIT): $(STRAPIT)-libs
@@ -2285,9 +2305,6 @@ $(BUILDIT): $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-cleanup
 	$(RUNMAKE) $(BUILDIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
-
-do-%: $(FETCHIT)-% $(BUILDIT)-%
-	@$(ECHO) >/dev/null
 
 .PHONY: $(STRAPIT)-config
 $(STRAPIT)-config:
@@ -2389,8 +2406,10 @@ endef
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
-$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION) $(_D)($(_H)REQ >= $(GLIBC_MIN_VERSION) [$(LINUX_MIN_VERSION)]$(_D))
-$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)REQ >= $(MAKE_MIN_VERSION)$(_D))
+$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
+$(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
+$(CHECKIT): override GCC_VERSIONS	:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
+$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
 $(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
@@ -2398,8 +2417,8 @@ $(CHECKIT):
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSION)"		"$(_N)$(shell $(GCC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(GXX) --version 2>/dev/null | $(HEAD) -n1)]"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSION)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(GCC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(GXX) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
@@ -2531,7 +2550,7 @@ override define CHECKIT_LIBRARY_LOCALE =
 endef
 override define CHECKIT_LIBRARY_LINKED =
 	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
-		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1))):"; \
+		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1)))$(_D):"; \
 		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
 			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(subst +,[+],$(word 1,$(subst NULL, ,$(1))))/p")" ]; then \
 				$(TABLE_I3) "" "$(subst ",,$(FILE))"; \
@@ -4027,6 +4046,8 @@ $(RELEASE):
 #WORK
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-prep"	""
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-debug"	"$(_S)(repeat until successful)"
+	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(TESTING)"		"COMPOSER_TESTING=\"0\" $(_S)(repeat until successful)"
+	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(TESTING)"		"COMPOSER_TESTING=\"1\" $(_S)(repeat until successful)"
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-prep"	"$(_S)(final sanity checks)"
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(CONVICT)"		"$(_M)COMPOSER_GITREPO=\"$(COMPOSER_GITREPO)\""
 	@$(HEADER_L)
@@ -4037,13 +4058,9 @@ $(RELEASE):
 
 .PHONY: $(RELEASE)-config
 $(RELEASE)-config:
-#WORKING
-#	@$(foreach FILE,Linux Msys $(notdir $(RELEASE_DIR_NATIVE)),\
-#		$(MKDIR) "$(RELEASE_DIR)/$(FILE)"; \
-#		$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(FILE)/"; \
-#	)
-#WORKING
 	@$(DATESTAMP) >"$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
+	@$(MKDIR) "$(RELEASE_DIR)/Linux"
+	@$(MKDIR) "$(RELEASE_DIR)/Msys"
 	@$(ECHO) "override COMPOSER_OTHER ?= $(RELEASE_DIR_NATIVE)\n"	>"$(CURDIR)/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS)"
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
@@ -4056,19 +4073,19 @@ $(RELEASE)-config:
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
 #WORKING
-	exit 1
+#WORKING
+	@$(RUNMAKE) --silent $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-test
 $(RELEASE)-test:
 	$(call CURL_FILE,$(FUNTOO_SRC))
-	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET),$(FUNTOO_SRC))
+	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
+	@$(RUNMAKE) --silent $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-chroot
 $(RELEASE)-chroot:
-#WORKING	@$(RUNMAKE) COMPOSER_OTHER="$(RELEASE_DIR_NATIVE)" $(RELEASE)-$(RELEASE_DISTRO)
-# chroot now gets called by distro targets
-#WORKING	@$(RUNMAKE) --silent $(RELEASE)-config
-# replace with simple $(CP)
+	@$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)"
+	@$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(RELEASE_TARGET)/"
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd /$(RELEASE_TARGET) ; export PATH ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
@@ -4076,10 +4093,10 @@ $(RELEASE)-chroot:
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
-	@$(RUNMAKE) --silent $(RELEASE)-config
 	@$(RUNMAKE) COMPOSER_PROGS_USE="0" BUILD_DIST="1" BUILD_PLAT="Msys"	COMPOSER_OTHER="$(RELEASE_DIR)/Msys"	$(DISTRIB)
 	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(RELEASE_DIR)/Linux"	$(DISTRIB)
 #WORK : should this go somewhere else?
+#WORK : test git commands after "make update"
 	@$(FIND) "$(CURDIR)" | $(SED) -n "/[/][.]git$$/p" | while read FILE; do \
 		$(RM) "$${FILE}"; \
 	done
