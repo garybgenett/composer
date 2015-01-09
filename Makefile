@@ -465,23 +465,24 @@ else ifeq ($(BUILD_ARCH),i386)
 override MSYS_BIN_ARCH			:= i686
 endif
 
-#WORKING : debian.org
+# https://www.debian.org
 # https://tracker.debian.org/debootstrap
-# https://packages.debian.org/search?suite=stable&keywords=kernel-image-3
-# https://packages.debian.org/search?suite=stable&keywords=libc6
+# https://packages.debian.org/search?suite=stable&keywords=build-essential
 # https://packages.debian.org/search?suite=stable&keywords=make
 override DEBIAN_SRC			:= git://anonscm.debian.org/d-i/debootstrap.git
 override DEBIAN_CMT			:= 1.0.66
-override DEBIAN_LINUX_VERSION		:= WORKING
-override DEBIAN_GLIBC_VERSION		:= WORKING
-override DEBIAN_BINUTILS_VERSION	:= WORKING
-override DEBIAN_GCC_VERSION		:= WORKING
-override DEBIAN_MAKE_VERSION		:= WORKING
+override DEBIAN_ARCH			:= i386
+override DEBIAN_SUITE			:= stable
+override DEBIAN_LINUX_VERSION		:= 3.2.63
+override DEBIAN_GLIBC_VERSION		:= 2.13
+override DEBIAN_GCC_VERSION		:= 4.7.2
+override DEBIAN_BINUTILS_VERSION	:= 2.22
+override DEBIAN_MAKE_VERSION		:= 3.81
 
 # http://www.funtoo.org
 # http://www.funtoo.org/I686
 #WORKING : core2_64, generic_*
-override FUNTOO_DATE			:= 2015-01-03
+override FUNTOO_DATE			:= 2015-01-09
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
 override FUNTOO_SARC			:= generic_$(BUILD_BITS)
@@ -490,10 +491,10 @@ override FUNTOO_SARC			:= generic_$(BUILD_BITS)
 #WORKING override FUNTOO_SARC			:= i686
 #WORKING endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
-override FUNTOO_LINUX_VERSION		:= WORKING
+override FUNTOO_LINUX_VERSION		:= 3.17.0
 override FUNTOO_GLIBC_VERSION		:= 2.19
-override FUNTOO_BINUTILS_VERSION	:= 2.24
 override FUNTOO_GCC_VERSION		:= 4.8.3
+override FUNTOO_BINUTILS_VERSION	:= 2.24
 override FUNTOO_MAKE_VERSION		:= 3.82
 
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
@@ -508,17 +509,16 @@ override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 # https://en.wikipedia.org/wiki/Linux_kernel#Maintenance
 # https://en.wikipedia.org/wiki/GNU_C_Library#Version_history
 #WORKING : binutils, gcc, make
-#WORKING override LINUX_MIN_VERSION		:= $(DEBIAN_LINUX_VERSION)
-override LINUX_MIN_VERSION		:= 3.2.0
+override LINUX_MIN_VERSION		:= $(DEBIAN_LINUX_VERSION)
 override LINUX_CUR_VERSION		:= $(FUNTOO_LINUX_VERSION)
-#WORKING override GLIBC_MIN_VERSION		:= $(DEBIAN_GLIBC_VERSION)
-override GLIBC_MIN_VERSION		:= 2.13
+override GLIBC_MIN_VERSION		:= $(DEBIAN_GLIBC_VERSION)
 override GLIBC_CUR_VERSION		:= $(FUNTOO_GLIBC_VERSION)
-override BINUTILS_MIN_VERSION		:= $(DEBIAN_BINUTILS_VERSION)
-override BINUTILS_CUR_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
 override GCC_MIN_VERSION		:= $(DEBIAN_GCC_VERSION)
 override GCC_CUR_VERSION		:= $(FUNTOO_GCC_VERSION)
-override MAKE_MIN_VERSION		:= $(DEBIAN_MAKE_VERSION)
+override BINUTILS_MIN_VERSION		:= $(DEBIAN_BINUTILS_VERSION)
+override BINUTILS_CUR_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
+#>override MAKE_MIN_VERSION		:= $(DEBIAN_MAKE_VERSION)
+override MAKE_MIN_VERSION		:= 3.82
 #>override MAKE_CUR_VERSION		:= $(FUNTOO_MAKE_VERSION)
 override MAKE_CUR_VERSION		:= 4.0
 
@@ -694,7 +694,10 @@ override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
 # https://www.gnu.org/software/make/manual/make.html
 # https://www.gnu.org/software/make
 # https://savannah.gnu.org/projects/make
+override MAKE_VERSION			:= $(MAKE_MIN_VERSION)
+override MAKE_TAR_SRC			:= http://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
+override MAKE_TAR_DST			:= $(BUILD_STRAP)/make-$(MAKE_VERSION)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
 override MAKE_CMT			:= $(MAKE_CUR_VERSION)
 
@@ -828,6 +831,12 @@ ifneq ($(IS_CYGWIN),)
 override BUILD_PATH			:= $(PATH)
 endif
 
+#WORKING
+override DEBIAN_PACKAGES_LIST		:= \
+	build-essential \
+	\
+	curl
+
 override PACMAN_BASE_LIST		:= \
 	msys2-runtime \
 	msys2-runtime-devel \
@@ -841,7 +850,9 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-i686-gcc \
 	mingw-w64-x86_64-binutils-git \
 	mingw-w64-x86_64-gcc \
-	msys2-devel
+	msys2-devel \
+	\
+	curl
 
 #TODO : is cygwin-console-helper really needed?
 #TODO : probably not all these dlls are needed
@@ -1132,6 +1143,7 @@ override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CHROOT				:= "$(call COMPOSER_FIND,$(PATH_LIST),chroot)"
+#WORKING : add --update option?
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override DATE				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --iso
 override DATESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822
@@ -1141,6 +1153,7 @@ override ENV				:= "$(call COMPOSER_FIND,$(PATH_LIST),env)"
 override HEAD				:= "$(call COMPOSER_FIND,$(PATH_LIST),head)"
 override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
 override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
+#WORKING : add --update option?
 override MV				:= "$(call COMPOSER_FIND,$(PATH_LIST),mv)" -fv
 override PRINTF				:= "$(call COMPOSER_FIND,$(PATH_LIST),printf)"
 override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
@@ -1717,6 +1730,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tools$(_D)"			"Build/compile compiler toolchain from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make$(_D)"			"Build/compile of GNU Make from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
@@ -1752,6 +1766,9 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-make$(_D):"	"$(_E)$(STRAPIT)-make-pull$(_D)"		"Download of GNU Make source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make-prep$(_D)"		"Preparation of GNU Make source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make-build$(_D)"		"Build/compile of GNU Make from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
@@ -2280,6 +2297,7 @@ $(STRAPIT): $(STRAPIT)-libs
 $(STRAPIT): $(STRAPIT)-util
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-make
 	$(RUNMAKE) $(STRAPIT)-curl
 	$(RUNMAKE) $(STRAPIT)-git
 	$(RUNMAKE) $(STRAPIT)-ghc
@@ -2407,8 +2425,8 @@ endef
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 .PHONY: $(CHECKIT)
 $(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
-$(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
 $(CHECKIT): override GCC_VERSIONS	:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
+$(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
 $(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
 $(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VERSION)$(_D))
 $(CHECKIT):
@@ -2744,6 +2762,9 @@ override CHECK_MSYS		:= 1
 endif
 endif
 
+#WORKING : add a check for /bin/sh --version not being bash, with a "read ENTER" note instead of an error
+#WORKING : to support this, make $SHELL a ?= variable, and document!
+
 .PHONY: $(STRAPIT)-check
 $(STRAPIT)-check:
 ifneq ($(CHECK_GHCLIB),)
@@ -2755,7 +2776,7 @@ ifneq ($(CHECK_GHCLIB),)
 	@$(TABLE_C2) "The pre-built GHC requires this specific file in order to run, but not necessarily this version of $(CHECK_GHCLIB_NAME)."
 	@$(TABLE_C2) "You can likely '$(_M)ln -s$(_D)' one of the files below to something like '$(_M)/usr/lib/$(CHECK_GHCLIB_DST)$(_D)' to work around this."
 	@$(ECHO) "\n"
-	@$(LS) /{,usr/}lib*/$(CHECK_GHCLIB_SRC)* 2>/dev/null || $(TRUE)
+	@$(LS) /{,usr/}lib*/{,*-linux-gnu/}$(CHECK_GHCLIB_SRC)* 2>/dev/null || $(TRUE)
 	@$(ECHO) "\n"
 	@$(TABLE_C2) "If no files are listed above, you may need to install some version of the $(CHECK_GHCLIB_NAME) library to continue."
 	@$(HEADER_1)
@@ -3436,13 +3457,26 @@ $(BUILDIT)-vim:
 		--without-x \
 	)
 
+.PHONY: $(STRAPIT)-make
+$(STRAPIT)-make: $(STRAPIT)-make-pull
+$(STRAPIT)-make: $(STRAPIT)-make-prep
+$(STRAPIT)-make: $(STRAPIT)-make-build
+
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
 $(FETCHIT)-make: $(FETCHIT)-make-prep
 
+.PHONY: $(STRAPIT)-make-pull
+$(STRAPIT)-make-pull:
+	$(call CURL_FILE,$(MAKE_TAR_SRC))
+	$(call DO_UNTAR,$(MAKE_TAR_DST),$(MAKE_TAR_SRC))
+
 .PHONY: $(FETCHIT)-make-pull
 $(FETCHIT)-make-pull:
 	$(call GIT_REPO,$(MAKE_DST),$(MAKE_SRC),$(MAKE_CMT))
+
+.PHONY: $(STRAPIT)-make-prep
+$(STRAPIT)-make-prep:
 
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
@@ -3450,6 +3484,12 @@ $(FETCHIT)-make-prep:
 		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
+
+.PHONY: $(STRAPIT)-make-build
+$(STRAPIT)-make-build:
+	$(call AUTOTOOLS_BUILD,$(MAKE_TAR_DST),$(COMPOSER_ABODE),,\
+		--without-guile \
+	)
 
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
@@ -4070,26 +4110,68 @@ $(RELEASE)-config:
 	@$(HEADER_L)
 
 .PHONY: $(RELEASE)-dist
+$(RELEASE)-dist: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
-#WORKING
-#WORKING
-	@$(RUNMAKE) --silent $(RELEASE)-chroot
+#WORKING : need to add a $(CP) of /var/cache/apt/archives similar to .cabal in $(BUILDIT)-cleanup
+	if [ ! -d "$(RELEASE_DIR)/$(RELEASE_TARGET)/boot" ]; then \
+		cd "$(RELEASE_DIR)/.debootstrap" && \
+			$(MAKE) devices.tar.gz && \
+			DEBOOTSTRAP_DIR="$(RELEASE_DIR)/.debootstrap" $(SH) ./debootstrap \
+				--verbose \
+				--arch="$(DEBIAN_ARCH)" \
+				--include="$(DEBIAN_PACKAGES_LIST)" \
+				"$(DEBIAN_SUITE)" \
+				"$(RELEASE_DIR)/$(RELEASE_TARGET)"; \
+		$(call CURL_FILE,$(MAKE_TAR_SRC)); \
+		$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(notdir $(MAKE_TAR_DST)),$(MAKE_TAR_SRC)); \
+		$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/sh -c \
+			"cd \"/$(notdir $(MAKE_TAR_DST))\" && \
+				export PATH && \
+				./configure --prefix=\"/usr\" && \
+				make && \
+				make install"; \
+		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
+	fi
+	@$(ECHO) "\n"
+	@$(ECHO) "$(_E)"
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list libc-bin		2>/dev/null | $(TAIL) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list gcc			2>/dev/null | $(TAIL) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list g++			2>/dev/null | $(TAIL) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list binutils		2>/dev/null | $(TAIL) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list make		2>/dev/null | $(TAIL) -n1
+	@$(ECHO) "$(_D)"
+	@$(ECHO) "\n"
+	@$(RUNMAKE) $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-test
+$(RELEASE)-test: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-test:
 	$(call CURL_FILE,$(FUNTOO_SRC))
 	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
-	@$(RUNMAKE) --silent $(RELEASE)-chroot
+	@$(ECHO) "\n"
+	@$(ECHO) "$(_E)"
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/ls /var/db/pkg/sys-kernel		2>/dev/null | $(HEAD) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/ldd --version			2>/dev/null | $(HEAD) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/gcc --version			2>/dev/null | $(HEAD) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/g++ --version			2>/dev/null | $(HEAD) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/ld --version			2>/dev/null | $(HEAD) -n1
+	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/make --version			2>/dev/null | $(HEAD) -n1
+	@$(ECHO) "$(_D)"
+	@$(ECHO) "\n"
+	@$(RUNMAKE) $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-chroot
 $(RELEASE)-chroot:
 	@$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)"
 	@$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(RELEASE_TARGET)/"
+#WORKING : would be nice to have $COMPOSER_TARGET in the title escape, somehow...
+#WORKING : need to add a $(CP) of .sources, similar to .cabal in $(BUILDIT)-cleanup
 	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd /$(RELEASE_TARGET) ; export PATH ; make $(ALLOFIT)"
+	@$(TABLE_I3) "$(_C)# cd / ; export PATH ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
-	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),/$(RELEASE_TARGET),$(COMPOSER_ABODE))" $(CHROOT) "$(RELEASE_DIR)" /bin/bash -o vi
+	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),,$(COMPOSER_ABODE))" $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/bash -o vi
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
