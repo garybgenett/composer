@@ -1199,10 +1199,10 @@ override define DO_GIT_REPO		=
 	if [ -n "$(3)" ] && [ -n "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(4) $(3)); fi; \
 	if [ -n "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(BUILD_BRANCH) $(3)); fi; \
 	if [ -z "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force master); fi; \
-	$(call GIT_RUN,$(1),reset --hard); \
-	if [ -f "$(1)/.gitmodules" ]; then \
-		$(call GIT_RUN,$(1),submodule update --init --force); \
-	fi
+	$(call GIT_RUN,$(1),reset --hard)
+endef
+override define GIT_SUBMODULE		=
+	$(call GIT_RUN,$(1),submodule update --init --force)
 endef
 override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_SUBMODULE_GHC	=
@@ -3780,6 +3780,7 @@ $(FETCHIT)-pandoc-pull:
 	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
 	$(call GIT_REPO,$(PANDOC_CITE_DST),$(PANDOC_CITE_SRC),$(PANDOC_CITE_CMT))
 	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
+	$(call GIT_SUBMODULE,$(PANDOC_DST))
 
 .PHONY: $(FETCHIT)-pandoc-prep
 $(FETCHIT)-pandoc-prep:
