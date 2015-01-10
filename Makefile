@@ -791,12 +791,10 @@ override BUILD_PATH			:= $(PATH)
 endif
 
 #WORKING : gcc-multilib?
-#WORKING : libgmp-dev?
 override DEBIAN_PACKAGES_LIST		:= \
 	automake \
 	build-essential \
 	gcc-multilib \
-	libgmp-dev \
 	\
 	curl
 
@@ -3634,9 +3632,13 @@ else
 		show \
 	)
 endif
+#WORKING : extra-*-dirs
 	cd "$(CBL_TAR_DST)" && \
 		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
-			$(SH) ./bootstrap.sh --global
+			$(SH) ./bootstrap.sh \
+				--global \
+				--extra-include-dirs="$(COMPOSER_ABODE)/include" \
+				--extra-lib-dirs="$(COMPOSER_ABODE)/lib"
 
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
