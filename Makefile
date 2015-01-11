@@ -1049,6 +1049,9 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
+ifeq ($(BUILD_PLAT),Msys)
+override SHELL				:= $(MSYS_BIN_DST)/usr/bin/sh
+endif
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
@@ -1085,17 +1088,19 @@ override define COREUTILS_UNINSTALL	=
 	done
 	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
 endef
-ifneq ($(BUILD_PLAT),Msys)
+#WORKING : test all this
 ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
+ifeq ($(BUILD_PLAT),Msys)
+ifneq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
+$(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
+endif
+else
 ifeq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-#WORKING : test this
 $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
 endif
 endif
-endif
-ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
+else ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
 ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-#WORKING : test this
 $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils))
 endif
 endif
@@ -1253,9 +1258,12 @@ override BUILD_TOOLS			:= \
 	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld"
 endif
+#WORKING : extra-*-dirs
 override CABAL_INSTALL			= $(CABAL) install \
 	$(BUILD_TOOLS) \
 	--prefix="$(1)" \
+	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
+	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
 	--global \
 	--reinstall \
 	--force-reinstalls
@@ -2938,6 +2946,8 @@ endif
 	# "openssl" requires some patching
 #WORKING	$(call DO_PATCH,$(OPENSSL_TAR_DST),http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1j-fix_parallel_build-1.patch)
 
+#WORKING : vdiff -g 5a47abb5f65257558f028f7e6b0d4d3c63871a31 Makefile
+
 .PHONY: $(STRAPIT)-libs-openssl
 # thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
@@ -3061,10 +3071,6 @@ endif
 		--disable-libcap \
 		--disable-xattr \
 	)
-#WORK : does not work for msys
-ifeq ($(BUILD_PLAT),Msys)
-	$(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)
-endif
 
 .PHONY: $(STRAPIT)-util-findutils
 $(STRAPIT)-util-findutils:
@@ -3632,13 +3638,10 @@ else
 		show \
 	)
 endif
-#WORKING : extra-*-dirs
 	cd "$(CBL_TAR_DST)" && \
 		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
 			$(SH) ./bootstrap.sh \
-				--global \
-				--extra-include-dirs="$(COMPOSER_ABODE)/include" \
-				--extra-lib-dirs="$(COMPOSER_ABODE)/lib"
+				--global
 
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
