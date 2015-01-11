@@ -1050,7 +1050,9 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(IS_CYGWIN),)
 override SHELL				:= $(MSYS_BIN_DST)/usr/bin/sh
+endif
 endif
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
@@ -1091,7 +1093,10 @@ endef
 #WORKING : test all this
 ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
 ifeq ($(BUILD_PLAT),Msys)
-ifneq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
+ifneq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
+$(shell $(RM) "$(COMPOSER_ABODE)/bin/sh")
+endif
+ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
 $(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
 endif
 else
@@ -2326,6 +2331,8 @@ $(BUILDIT)-bindir:
 ifeq ($(BUILD_PLAT),Msys)
 	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
 	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
+	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
+	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
 	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
 #WORK : probably need this for linux, too
@@ -2336,8 +2343,7 @@ ifeq ($(BUILD_PLAT),Msys)
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
-	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
-	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
+	$(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
