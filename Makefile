@@ -26,6 +26,7 @@
 # _ double-check "if*eq" stanzas for consistent definition of default value
 # _ double-check "if*eq" stanzas for missing "else"
 # _ double-check "if*eq" stanzas for "$(if $(and $(or $(filter $(filter-out" possibilities
+# _ can "if*eq" stanzas be properly nested, with tabs, so that they are more readable?
 # _ comments, comments, comments (& formatting :)
 #WORKING
 
@@ -1023,6 +1024,18 @@ override GHC_LIBRARIES_LIST		:= \
 	alex|3.1.3 \
 	happy|1.19.4
 
+#WORKING : need to HASKELL_PACKAGE_URL these in cabal-install in $STRAPIT-ghc-build
+override CABAL_LIBRARIES_LIST		:= \
+	Cabal|1.20.0.1 \
+	HTTP|4000.2.12 \
+	mtl|2.1.3.1 \
+	network|2.4.2.3 \
+	parsec|3.1.5 \
+	text|1.1.0.1 \
+	transformers|0.3.0.0 \
+	zlib|0.5.4.1 \
+	WORKING:there_is_more
+
 override HASKELL_VERSION_LIST		:= \
 	GHC|$(GHC_VERSION) \
 	ghc|$(GHC_VERSION) \
@@ -1048,6 +1061,12 @@ override PANDOC_DEPENDENCIES_LIST	:= \
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
+
+ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
+ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
+$(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh")
+endif
+endif
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(IS_CYGWIN),)
@@ -1093,9 +1112,6 @@ endef
 #WORKING : test all this
 ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
 ifeq ($(BUILD_PLAT),Msys)
-ifneq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
-$(shell $(RM) "$(COMPOSER_ABODE)/bin/sh")
-endif
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
 $(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
 endif
@@ -1152,10 +1168,12 @@ override CURL				:= "$(call COMPOSER_FIND,$(PATH_LIST),curl)" --verbose --locati
 override GIT_PATH			:=  $(call COMPOSER_FIND,$(PATH_LIST),git)
 override GIT				:= "$(GIT_PATH)"
 
-override PANDOC				:= "$(call COMPOSER_FIND,$(PATH_LIST),pandoc)"
+override PANDOC_PATH			:=  $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
+override PANDOC				:= "$(PANDOC_PATH)"
 override PANDOC_CITEPROC		:= "$(call COMPOSER_FIND,$(PATH_LIST),pandoc-citeproc)"
 override TEX				:= "$(call COMPOSER_FIND,$(PATH_LIST),tex)"
-override PDFLATEX			:= "$(call COMPOSER_FIND,$(PATH_LIST),pdflatex)"
+override PDFLATEX_PATH			:=  $(call COMPOSER_FIND,$(PATH_LIST),pdflatex)
+override PDFLATEX			:= "$(PDFLATEX_PATH)"
 override GHC				:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc)"
 override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
 override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
@@ -1263,7 +1281,6 @@ override BUILD_TOOLS			:= \
 	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld"
 endif
-#WORKING : extra-*-dirs
 override CABAL_INSTALL			= $(CABAL) install \
 	$(BUILD_TOOLS) \
 	--prefix="$(1)" \
@@ -1285,9 +1302,9 @@ ifneq ($(CURL_CA_BUNDLE),)
 export CURL_CA_BUNDLE
 endif
 
-override TEXMFDIST			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../../texmf-dist))
-override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pdflatex))../texmf-dist))
-override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(call COMPOSER_FIND,$(PATH_LIST),pandoc))../../pandoc/data))
+override TEXMFDIST			:= $(wildcard $(abspath $(dir $(PDFLATEX_PATH))../../texmf-dist))
+override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(PDFLATEX_PATH))../texmf-dist))
+override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(PANDOC_PATH))../../pandoc/data))
 override PANDOC_DATA_BUILD		:=
 
 ifeq ($(TEXMFDIST),)
@@ -2343,7 +2360,6 @@ ifeq ($(BUILD_PLAT),Msys)
 		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
-	$(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
@@ -3224,7 +3240,6 @@ else
 		--without-bash-malloc \
 	)
 endif
-	$(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"
 
 .PHONY: $(FETCHIT)-less
 $(FETCHIT)-less: $(FETCHIT)-less-pull
@@ -3571,6 +3586,7 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 endif
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
+		-e "s|([{]GHC[}][ ][-][-]make[ ])([^-])|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
 
 override define HEREDOC_CABAL_BOOTSTRAP =
@@ -3639,9 +3655,14 @@ else
 		show \
 	)
 endif
-	cd "$(CBL_TAR_DST)" && \
-		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
-			$(SH) ./bootstrap.sh --global
+#WORKING
+	cd "$(CBL_TAR_DST)" && $(BUILD_ENV_MINGW) \
+		PREFIX="$(BUILD_STRAP)" \
+		EXTRA_CONFIGURE_OPTS=" \
+			--extra-include-dirs=\"$(COMPOSER_ABODE)/include\" \
+			--extra-lib-dirs=\"$(COMPOSER_ABODE)/lib\" \
+		" \
+		$(SH) ./bootstrap.sh --global
 
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
@@ -3654,17 +3675,12 @@ $(STRAPIT)-ghc-libs:
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
-#WORKING
-#ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-#	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-#	$(call GNU_CFG_INSTALL,$(GHC_DST))
-#endif
-#WORKING
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(ECHO) "WORK\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
 #endif
+#WORK
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
 
@@ -3863,6 +3879,12 @@ override RELEASE_DIR_NATIVE	:= $(RELEASE_DIR)/.Native
 override RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
+override RELEASE_CHROOT		:= $(ENV) - \
+	HOME="$(subst $(COMPOSER_OTHER),,$(COMPOSER_ABODE))" \
+	PATH="$(PATH)" \
+	$(CHROOT) \
+	"$(RELEASE_DIR)/$(RELEASE_TARGET)"
+
 .PHONY: $(CONVICT)
 $(CONVICT):
 	@$(call COMPOSER_GIT_RUN,$(CURDIR),add --verbose --all ./)
@@ -3922,7 +3944,7 @@ $(RELEASE)-dist: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
 #WORKING : need to add a $(CP) of /var/cache/apt/archives similar to .cabal in $(BUILDIT)-cleanup
-	if [ ! -d "$(RELEASE_DIR)/$(RELEASE_TARGET)/WORKING" ]; then \
+	if [ ! -d "$(RELEASE_DIR)/$(RELEASE_TARGET)/boot" ]; then \
 		cd "$(RELEASE_DIR)/.debootstrap" && \
 			$(MAKE) devices.tar.gz && \
 			DEBOOTSTRAP_DIR="$(RELEASE_DIR)/.debootstrap" $(SH) ./debootstrap \
@@ -3933,22 +3955,22 @@ $(RELEASE)-dist:
 				"$(RELEASE_DIR)/$(RELEASE_TARGET)"; \
 		$(call CURL_FILE,$(MAKE_TAR_SRC)); \
 		$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(notdir $(MAKE_TAR_DST)),$(MAKE_TAR_SRC)); \
-		$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/sh -c \
+		$(COMPOSER_CHROOT) /bin/sh -c \
 			"cd \"/$(notdir $(MAKE_TAR_DST))\" && \
-				export PATH && \
 				./configure --prefix=\"/usr\" && \
 				make && \
 				make install"; \
+		$(RM) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 	fi
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list libc-bin		2>/dev/null | $(TAIL) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list gcc			2>/dev/null | $(TAIL) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list g++			2>/dev/null | $(TAIL) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list binutils		2>/dev/null | $(TAIL) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/dpkg --list make		2>/dev/null | $(TAIL) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list libc-bin	2>/dev/null | $(TAIL) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list gcc		2>/dev/null | $(TAIL) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list g++		2>/dev/null | $(TAIL) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list binutils	2>/dev/null | $(TAIL) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list make		2>/dev/null | $(TAIL) -n1
 	@$(ECHO) "$(_D)"
 	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
@@ -3960,12 +3982,12 @@ $(RELEASE)-test:
 	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/ls /var/db/pkg/sys-kernel		2>/dev/null | $(HEAD) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/ldd --version			2>/dev/null | $(HEAD) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/gcc --version			2>/dev/null | $(HEAD) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/g++ --version			2>/dev/null | $(HEAD) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/ld --version			2>/dev/null | $(HEAD) -n1
-	@$(ENV) - $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /usr/bin/make --version			2>/dev/null | $(HEAD) -n1
+	@$(COMPOSER_CHROOT) /bin/ls /var/db/pkg/sys-kernel	2>/dev/null | $(HEAD) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/ldd --version		2>/dev/null | $(HEAD) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/gcc --version		2>/dev/null | $(HEAD) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/g++ --version		2>/dev/null | $(HEAD) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/ld --version		2>/dev/null | $(HEAD) -n1
+	@$(COMPOSER_CHROOT) /usr/bin/make --version		2>/dev/null | $(HEAD) -n1
 	@$(ECHO) "$(_D)"
 	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
@@ -3985,7 +4007,7 @@ $(RELEASE)-chroot:
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd / ; export PATH ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
-	$(ENV) - HOME="$(subst $(COMPOSER_OTHER),,$(COMPOSER_ABODE))" $(CHROOT) "$(RELEASE_DIR)/$(RELEASE_TARGET)" /bin/bash -o vi
+	$(COMPOSER_CHROOT) /bin/bash -o vi
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
