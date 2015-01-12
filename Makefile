@@ -3955,7 +3955,7 @@ $(RELEASE)-dist:
 				"$(RELEASE_DIR)/$(RELEASE_TARGET)"; \
 		$(call CURL_FILE,$(MAKE_TAR_SRC)); \
 		$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(notdir $(MAKE_TAR_DST)),$(MAKE_TAR_SRC)); \
-		$(COMPOSER_CHROOT) /bin/sh -c \
+		$(RELEASE_CHROOT) /bin/sh -c \
 			"cd \"/$(notdir $(MAKE_TAR_DST))\" && \
 				./configure --prefix=\"/usr\" && \
 				make && \
@@ -3965,12 +3965,12 @@ $(RELEASE)-dist:
 	fi
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
-	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list libc-bin	2>/dev/null | $(TAIL) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list gcc		2>/dev/null | $(TAIL) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list g++		2>/dev/null | $(TAIL) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list binutils	2>/dev/null | $(TAIL) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/dpkg --list make		2>/dev/null | $(TAIL) -n1
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list libc-bin	2>/dev/null | $(TAIL) -n1
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list gcc		2>/dev/null | $(TAIL) -n1
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list g++		2>/dev/null | $(TAIL) -n1
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list binutils	2>/dev/null | $(TAIL) -n1
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list make		2>/dev/null | $(TAIL) -n1
 	@$(ECHO) "$(_D)"
 	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
@@ -3982,12 +3982,12 @@ $(RELEASE)-test:
 	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
-	@$(COMPOSER_CHROOT) /bin/ls /var/db/pkg/sys-kernel	2>/dev/null | $(HEAD) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/ldd --version		2>/dev/null | $(HEAD) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/gcc --version		2>/dev/null | $(HEAD) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/g++ --version		2>/dev/null | $(HEAD) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/ld --version		2>/dev/null | $(HEAD) -n1
-	@$(COMPOSER_CHROOT) /usr/bin/make --version		2>/dev/null | $(HEAD) -n1
+	@$(RELEASE_CHROOT) /bin/ls /var/db/pkg/sys-kernel	2>/dev/null | $(HEAD) -n1
+	@$(RELEASE_CHROOT) /usr/bin/ldd --version		2>/dev/null | $(HEAD) -n1
+	@$(RELEASE_CHROOT) /usr/bin/gcc --version		2>/dev/null | $(HEAD) -n1
+	@$(RELEASE_CHROOT) /usr/bin/g++ --version		2>/dev/null | $(HEAD) -n1
+	@$(RELEASE_CHROOT) /usr/bin/ld --version		2>/dev/null | $(HEAD) -n1
+	@$(RELEASE_CHROOT) /usr/bin/make --version		2>/dev/null | $(HEAD) -n1
 	@$(ECHO) "$(_D)"
 	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
@@ -4005,9 +4005,9 @@ $(RELEASE)-chroot:
 #WORKING : would be nice to have $COMPOSER_TARGET in the title escape, somehow...
 #WORKING : need to add a $(CP) of .sources, similar to .cabal in $(BUILDIT)-cleanup
 	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd / ; export PATH ; make $(ALLOFIT)"
+	@$(TABLE_I3) "$(_C)# cd / ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
-	$(COMPOSER_CHROOT) /bin/bash -o vi
+	$(RELEASE_CHROOT) /bin/bash -o vi
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
