@@ -795,6 +795,7 @@ override DEBIAN_PACKAGES_LIST		:= \
 	automake \
 	build-essential \
 	gcc-multilib \
+	libtool \
 	locales-all \
 	\
 	curl
