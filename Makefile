@@ -791,11 +791,11 @@ ifneq ($(IS_CYGWIN),)
 override BUILD_PATH			:= $(PATH)
 endif
 
-#WORKING : gcc-multilib?
 override DEBIAN_PACKAGES_LIST		:= \
 	automake \
 	build-essential \
 	gcc-multilib \
+	locales-all \
 	\
 	curl
 
@@ -867,7 +867,6 @@ override BUILD_BINARY_LIST		:= \
 	$(filter-out cabal,\
 	$(BUILD_BINARY_LIST)))))
 
-#WORKING : double-check
 override DYNAMIC_LIBRARY_LIST		:= \
 	ld-linux-x86-64.so.2 \
 	ld-linux.so.2 \
@@ -1026,15 +1025,16 @@ override GHC_LIBRARIES_LIST		:= \
 
 #WORKING : need to HASKELL_PACKAGE_URL these in cabal-install in $STRAPIT-ghc-build
 override CABAL_LIBRARIES_LIST		:= \
-	Cabal|1.20.0.1 \
+	Cabal|$(CABAL_VERSION_LIB) \
 	HTTP|4000.2.12 \
 	mtl|2.1.3.1 \
 	network|2.4.2.3 \
 	parsec|3.1.5 \
+	random|1.0.1.1 \
+	stm|2.4.3 \
 	text|1.1.0.1 \
 	transformers|0.3.0.0 \
-	zlib|0.5.4.1 \
-	WORKING:there_is_more
+	zlib|0.5.4.1
 
 override HASKELL_VERSION_LIST		:= \
 	GHC|$(GHC_VERSION) \
@@ -3563,6 +3563,14 @@ $(STRAPIT)-ghc-pull:
 	$(call CURL_FILE,$(CBL_TAR_SRC))
 	$(call DO_UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
 	$(call DO_UNTAR,$(CBL_TAR_DST),$(CBL_TAR_SRC))
+	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(GHC_BIN_DST)/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
+	)
+	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
+		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(CBL_TAR_DST)/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
+	)
 
 .PHONY: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc-pull:
@@ -3586,6 +3594,8 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 endif
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
+		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
+		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|([{]GHC[}][ ][-][-]make[ ])([^-])|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
 
@@ -3666,8 +3676,6 @@ endif
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		$(call CURL_FILE,$(call HASKELL_PACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(GHC_BIN_DST)/$(FILE),$(call HASKELL_PACKAGE_URL,$(FILE))); \
 		cd "$(GHC_BIN_DST)/$(FILE)" && \
 			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
 	)
