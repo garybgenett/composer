@@ -369,7 +369,8 @@ override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
 override BUILD_DIST			?=
 override BUILD_MSYS			?=
-override BUILD_GHC_78			?=
+#WORKING : remove all 7.6.3 stuff
+override BUILD_GHC_78			:= 1
 
 #>override BUILD_PLAT			:= Linux
 #>override BUILD_ARCH			:= x86_64
@@ -405,9 +406,6 @@ override COMPOSER_PROGS_USE		?=
 #	found by: https://github.com/faylang/fay/issues/261
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
-override CC				?= gcc
-override CXX				?= g++
-override LD				?= ld
 override CHOST				:=
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc -static-libstdc++
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
@@ -797,6 +795,7 @@ override DEBIAN_PACKAGES_LIST		:= \
 	gcc-multilib \
 	libtool \
 	locales-all \
+	texinfo \
 	\
 	curl
 
@@ -1067,7 +1066,7 @@ ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
 $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh")
 endif
 endif
-override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
+override SHELL				?= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(IS_CYGWIN),)
 override SHELL				:= $(MSYS_BIN_DST)/usr/bin/sh
@@ -1076,8 +1075,8 @@ endif
 
 override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
-override GCC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
-override GXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
+override CC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
+override CXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
 override LD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
@@ -1253,22 +1252,6 @@ override define DO_GIT_SUBMODULE_GHC	=
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
-
-ifeq ($(CC),gcc)
-ifneq ($(GCC),)
-override CC				:= $(GCC)
-endif
-endif
-ifeq ($(CXX),g++)
-ifneq ($(GCC),)
-override CXX				:= $(GXX)
-endif
-endif
-ifeq ($(LD),ld)
-ifneq ($(LD),)
-override LD				:= $(LD)
-endif
-endif
 
 override BUILD_TOOLS			:= \
 	--with-gcc="$(CC)" \
@@ -1635,10 +1618,8 @@ HELP_OPTIONS_SUB:
 	@$(ESCAPE) "$(_H)Environment Options:"
 	@$(TABLE_I3) "$(_C)LANG$(_D)"			"Locale default language"	"[$(_M)$(LANG)$(_D)] $(_N)(NOTE: use UTF-8)"
 	@$(TABLE_I3) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
-	@$(TABLE_I3) "$(_C)CC$(_D)"			"C compiler"			"[$(_M)$(CC)$(_D)]"
-	@$(TABLE_I3) "$(_C)CXX$(_D)"			"C++ compiler"			"[$(_M)$(CXX)$(_D)]"
-	@$(TABLE_I3) "$(_C)LD$(_D)"			"Library linker"		"[$(_M)$(LD)$(_D)]"
-	@$(TABLE_I3) "$(_C)PATH$(_D)"			"Run-time binary directories"	"[$(_M)$(BUILD_PATH)$(_D)]"
+	@$(TABLE_I3) "$(_C)SHELL$(_D)"			"Shell script interpreter"	"[$(_M)$(SHELL)$(_D)]"
+	@$(TABLE_I3) "$(_C)PATH$(_D)"			"Binary directories list"	"[$(_M)$(BUILD_PATH)$(_D)]"
 	@$(TABLE_I3) "$(_C)CURL_CA_BUNDLE$(_D)"		"SSL certificate bundle"	"[$(_M)$(CURL_CA_BUNDLE)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "All of these can be set on the command line or in the environment."
@@ -2284,7 +2265,9 @@ $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip $(FETCHIT)-curl $(FETCHIT)-git
 $(FETCHIT): $(FETCHIT)-texlive
-$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
+#WORKING : remove all haskell stuff
+#$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
+$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
@@ -2292,7 +2275,8 @@ $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip $(BUILDIT)-curl $(BUILDIT)-git
 $(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
-	$(RUNMAKE) $(BUILDIT)-haskell
+#WORKING : remove all haskell stuff
+#	$(RUNMAKE) $(BUILDIT)-haskell
 	$(RUNMAKE) $(FETCHIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
 	$(RUNMAKE) $(BUILDIT)-cleanup
@@ -2410,7 +2394,7 @@ $(CHECKIT):
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(GCC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(GXX) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
 	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
@@ -2449,7 +2433,7 @@ endif
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(GCC))) $(_S)($(subst ",,$(word 1,$(GXX))))"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(CC))) $(_S)($(subst ",,$(word 1,$(CXX))))"
 	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD)))"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst ",,$(word 1,$(PACMAN)))"
@@ -2736,9 +2720,10 @@ override CHECK_FAILED		:= 1
 override CHECK_MSYS		:= 1
 endif
 endif
-
-#WORKING : add a check for /bin/sh --version not being bash, with a "read ENTER" note instead of an error
-#WORKING : to support this, make $SHELL a ?= variable, and document!
+ifeq ($(shell $(SHELL) --version | $(SED) -n "/GNU[ ]bash/p"),)
+override CHECK_FAILED		:= 1
+override CHECK_SHELL		:= 1
+endif
 
 .PHONY: $(STRAPIT)-check
 $(STRAPIT)-check:
@@ -2765,6 +2750,21 @@ ifneq ($(CHECK_MSYS),)
 	@$(TABLE_C2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
 	@$(TABLE_C2) "You should run the '$(_M)$(STRAPIT)-msys$(_D)' target to install the MSYS2 environment."
 	@$(TABLE_C2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
+	@$(HEADER_1)
+endif
+ifneq ($(CHECK_SHELL),)
+	@$(HEADER_1)
+	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
+	@$(TABLE_C2) "$(_N)Shell script interpreter does not appear to be GNU Bash."
+	@$(TABLE_C2)
+	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
+	@$(TABLE_C2) "The current value of the '$(_C)SHELL$(_D)' variable is: $(_M)$(SHELL)"
+	@$(TABLE_C2) "It is reporting this version information:"
+	@$(ECHO) "\n"
+	@$(SHELL) --version
+	@$(ECHO) "\n"
+	@$(TABLE_C2) "It may be that this interpreter will work just fine, but it is not recommended."
+	@$(TABLE_C2) "Please set '$(_C)SHELL$(_D)' to the path of a GNU Bash shell."
 	@$(HEADER_1)
 endif
 ifneq ($(CHECK_FAILED),)
