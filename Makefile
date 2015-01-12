@@ -3655,12 +3655,11 @@ else
 		show \
 	)
 endif
-#WORKING
 	cd "$(CBL_TAR_DST)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(BUILD_STRAP)" \
 		EXTRA_CONFIGURE_OPTS=" \
-			--extra-include-dirs=\"$(COMPOSER_ABODE)/include\" \
-			--extra-lib-dirs=\"$(COMPOSER_ABODE)/lib\" \
+			--extra-include-dirs=$(COMPOSER_ABODE)/include \
+			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
 		" \
 		$(SH) ./bootstrap.sh --global
 
