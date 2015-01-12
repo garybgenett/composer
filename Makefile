@@ -2918,15 +2918,13 @@ $(STRAPIT)-libs-pkgconfig:
 $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(ZLIB_TAR_SRC))
 	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
+	# GHC 7.8+ compiler requires dynamic GMP library, so reversing "--static"
 ifeq ($(BUILD_BITS),64)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
 		--64 \
-		--static \
 	)
 else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
-		--static \
-	)
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE))
 endif
 
 .PHONY: $(STRAPIT)-libs-gmp
@@ -2938,11 +2936,12 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(GMP_TAR_DST))
 endif
+	# GHC 7.8+ compiler requires dynamic GMP library, so reversing "--disable-shared"
 	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
 		ABI="$(BUILD_BITS)" \
 		,\
 		--disable-assembly \
-		--disable-shared \
+		--enable-shared \
 		--enable-static \
 	)
 
@@ -3523,6 +3522,7 @@ $(BUILDIT)-texlive:
 		--without-x \
 		--disable-shared \
 		--enable-static
+#WORK : NOTARGET?
 #>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
@@ -3637,10 +3637,10 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" fails if we don't have these calls quoted
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]GHCII[_]SCRIPT[)])|\1\"\2\"|g" \
-		$(GHC_DST)/driver/ghci/ghc.mk
+		"$(GHC_DST)/driver/ghci/ghc.mk"
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]DESTDIR[)][$$][(]bindir[)][/]ghc.exe)|\1\"\2\"|g" \
-		$(GHC_DST)/ghc/ghc.mk
+		"$(GHC_DST)/ghc/ghc.mk"
 endif
 #>	$(SED) -i \
 #>		-e "s|$(GHC_VERSION_LIB)|$(CABAL_VERSION_LIB)|g" \
@@ -3651,6 +3651,14 @@ endif
 #>		"$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal" \
 #>		"$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal" \
 #>		"$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal"
+#WORKING
+	$(SED) -i \
+		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		"$(GHC_DST)/configure"
+	$(SED) -i \
+		-e "s|^(GhcHcOpts[=])([-]Rghc[-]timing)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		-e "s|^(SRC_HC_OPTS[ ][+][=][ ])([-]H)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		"$(GHC_DST)/mk/config.mk.in"
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
@@ -3658,6 +3666,7 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
 else
+#WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,\
 		show \
 	)
@@ -3679,6 +3688,7 @@ $(STRAPIT)-ghc-libs:
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
+#WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
