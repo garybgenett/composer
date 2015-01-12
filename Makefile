@@ -1077,7 +1077,7 @@ override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 override GCC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
 override GXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
-override GLD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
+override LD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
 override PACMAN_ENV			:= "$(MSYS_BIN_DST)/usr/bin/env" - PATH="$(MSYS_BIN_DST)/usr/bin"
@@ -1092,23 +1092,22 @@ override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override define COREUTILS_INSTALL	=
-	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
+	"$(1)" --coreutils-prog=ginstall -d "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+		"$(1)" --coreutils-prog=echo "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
 		"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
 	done; \
-	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+	"$(1)" --coreutils-prog=echo "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
 	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
 endef
 override define COREUTILS_UNINSTALL	=
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
 		if [ -f "$(2)/$${FILE}" ]; then \
-			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
+			"$(1)" --coreutils-prog=rm -f "$(2)/$${FILE}"; \
 		fi; \
-	done
-	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
+	done; \
+	"$(1)" --coreutils-prog=rm -f "$(2)/install"
 endef
-#WORKING : test all this
 ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
 ifeq ($(BUILD_PLAT),Msys)
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
@@ -1265,8 +1264,8 @@ override CXX				:= $(GXX)
 endif
 endif
 ifeq ($(LD),ld)
-ifneq ($(GLD),)
-override LD				:= $(GLD)
+ifneq ($(LD),)
+override LD				:= $(LD)
 endif
 endif
 
@@ -3947,7 +3946,6 @@ $(RELEASE)-config:
 $(RELEASE)-dist: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
-#WORKING : need to add a $(CP) of /var/cache/apt/archives similar to .cabal in $(BUILDIT)-cleanup
 	$(MKDIR) "$(COMPOSER_STORE)/.debootstrap.apt"
 	$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"
 	$(CP) "$(COMPOSER_STORE)/.debootstrap.apt/"* "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/" || $(TRUE)
