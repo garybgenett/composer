@@ -2947,15 +2947,23 @@ endif
 		--without-shared \
 	)
 
-# thanks for the patch below: http://www.linuxfromscratch.org/blfs/view/svn/postlfs/openssl.html
-#	found by: https://www.linuxquestions.org/questions/linux-software-2/compile-problems-openssl-1-0-1c-946444
-	# "openssl" requires some patching
-#WORKING	$(call DO_PATCH,$(OPENSSL_TAR_DST),http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1j-fix_parallel_build-1.patch)
-
-#WORKING : vdiff -g 5a47abb5f65257558f028f7e6b0d4d3c63871a31 Makefile
+# thanks for the 'x86_64' fix below: http://openssl.6102.n7.nabble.com/compile-openssl-1-0-1e-failed-on-Ubuntu-12-10-x64-td44699.html
+override STRAPIT_LIBS_OPENSSL :=
+ifeq ($(BUILD_BITS),64)
+ifeq ($(BUILD_PLAT),Linux)
+override STRAPIT_LIBS_OPENSSL := linux-x86_$(BUILD_BITS)
+else ifeq ($(BUILD_PLAT),Msys)
+override STRAPIT_LIBS_OPENSSL := linux-x86_$(BUILD_BITS)
+endif
+else
+ifeq ($(BUILD_PLAT),Linux)
+override STRAPIT_LIBS_OPENSSL := linux-generic$(BUILD_BITS)
+else ifeq ($(BUILD_PLAT),Msys)
+override STRAPIT_LIBS_OPENSSL := linux-generic$(BUILD_BITS)
+endif
+endif
 
 .PHONY: $(STRAPIT)-libs-openssl
-# thanks for the 'static' fix below: http://www.openwall.com/lists/musl/2014/11/06/17
 $(STRAPIT)-libs-openssl:
 	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
 	$(call DO_UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
@@ -2971,24 +2979,11 @@ endif
 		-e "s|(termio)([^s])|\1s\2|g" \
 		"$(OPENSSL_TAR_DST)/configure" \
 		"$(OPENSSL_TAR_DST)/crypto/ui/ui_openssl.c"
-ifeq ($(BUILD_PLAT),Linux)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
-		linux-generic$(BUILD_BITS) \
+		$(STRAPIT_LIBS_OPENSSL) \
 		no-shared \
 		no-dso \
 	)
-else ifeq ($(BUILD_PLAT),Msys)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
-		linux-generic$(BUILD_BITS) \
-		no-shared \
-		no-dso \
-	)
-else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
-		no-shared \
-		no-dso \
-	)
-endif
 
 .PHONY: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs-expat:
@@ -3212,7 +3207,7 @@ $(FETCHIT)-bash-prep:
 
 .PHONY: $(BUILDIT)-bash
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
-# thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/development/chapter05/bash.html
+# thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
 $(BUILDIT)-bash:
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
@@ -3646,8 +3641,7 @@ else
 endif
 	cd "$(CBL_TAR_DST)" && \
 		$(BUILD_ENV_MINGW) PREFIX="$(BUILD_STRAP)" \
-			$(SH) ./bootstrap.sh \
-				--global
+			$(SH) ./bootstrap.sh --global
 
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
