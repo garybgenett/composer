@@ -1023,7 +1023,6 @@ override GHC_LIBRARIES_LIST		:= \
 	alex|3.1.3 \
 	happy|1.19.4
 
-#WORKING : need to HASKELL_PACKAGE_URL these in cabal-install in $STRAPIT-ghc-build
 override CABAL_LIBRARIES_LIST		:= \
 	Cabal|$(CABAL_VERSION_LIB) \
 	HTTP|4000.2.12 \
@@ -1129,7 +1128,6 @@ override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
 override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
 override CHROOT				:= "$(call COMPOSER_FIND,$(PATH_LIST),chroot)"
-#WORKING : add --update option?
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override DATE				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --iso
 override DATESTAMP			:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --rfc-2822
@@ -1139,7 +1137,6 @@ override ENV				:= "$(call COMPOSER_FIND,$(PATH_LIST),env)"
 override HEAD				:= "$(call COMPOSER_FIND,$(PATH_LIST),head)"
 override LS				:= "$(call COMPOSER_FIND,$(PATH_LIST),ls)" --color=auto --time-style=long-iso -asF -l
 override MKDIR				:= "$(call COMPOSER_FIND,$(PATH_LIST),install)" -dv
-#WORKING : add --update option?
 override MV				:= "$(call COMPOSER_FIND,$(PATH_LIST),mv)" -fv
 override PRINTF				:= "$(call COMPOSER_FIND,$(PATH_LIST),printf)"
 override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
@@ -3951,6 +3948,9 @@ $(RELEASE)-dist: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
 #WORKING : need to add a $(CP) of /var/cache/apt/archives similar to .cabal in $(BUILDIT)-cleanup
+	$(MKDIR) "$(COMPOSER_STORE)/.debootstrap.apt"
+	$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"
+	$(CP) "$(COMPOSER_STORE)/.debootstrap.apt/"* "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/" || $(TRUE)
 	if [ ! -d "$(RELEASE_DIR)/$(RELEASE_TARGET)/boot" ]; then \
 		cd "$(RELEASE_DIR)/.debootstrap" && \
 			$(MAKE) devices.tar.gz && \
@@ -3970,6 +3970,7 @@ $(RELEASE)-dist:
 		$(RM) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 	fi
+	$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"* "$(COMPOSER_STORE)/.debootstrap.apt/" || $(TRUE)
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
 	@$(RELEASE_CHROOT) /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
@@ -4002,6 +4003,7 @@ $(RELEASE)-test:
 .PHONY: $(RELEASE)-chroot
 $(RELEASE)-chroot:
 	@$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)"
+	@$(DATESTAMP) >"$(RELEASE_DIR)/$(RELEASE_TARGET)/.$(COMPOSER_BASENAME).$(RELEASE).$(RELEASE_TARGET)"
 	@$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(RELEASE_TARGET)/"
 	@if [ ! -f "$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS)" ]; then \
 		$(ECHO) "override BUILD_PLAT := $(BUILD_PLAT)\n"  >"$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS)"; \
@@ -4009,8 +4011,6 @@ $(RELEASE)-chroot:
 	fi
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS))
 	@$(HEADER_L)
-#WORKING : would be nice to have $COMPOSER_TARGET in the title escape, somehow...
-#WORKING : need to add a $(CP) of .sources, similar to .cabal in $(BUILDIT)-cleanup
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd / ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
