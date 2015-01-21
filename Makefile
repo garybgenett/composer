@@ -966,6 +966,7 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/tools \
 	tex/latex/url
 
+#WORKING : remove all haskell stuff
 ifneq ($(BUILD_GHC_78),)
 override GHC_BASE_LIBRARIES_LIST	:= \
 	Win32|WORK \
@@ -1042,6 +1043,7 @@ override CABAL_LIBRARIES_LIST		:= \
 	transformers|0.3.0.0 \
 	zlib|0.5.4.1
 
+#WORKING : remove all haskell stuff
 override HASKELL_VERSION_LIST		:= \
 	GHC|$(GHC_VERSION) \
 	ghc|$(GHC_VERSION) \
@@ -1050,6 +1052,7 @@ override HASKELL_VERSION_LIST		:= \
 	$(GHC_BASE_LIBRARIES_LIST) \
 	$(GHC_LIBRARIES_LIST)
 
+#WORKING : remove all haskell stuff
 override HASKELL_PACKAGES_LIST		:= \
 	$(filter-out GHC|$(GHC_VERSION),\
 	$(filter-out ghc|$(GHC_VERSION),\
