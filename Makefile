@@ -112,6 +112,11 @@ override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 
+# prevent "chicken and egg" errors with all "$(shell)" calls between here and the "$(PATH_LIST)" section
+override CP				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),cp)" -afv
+override SED				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),sed)" -r
+override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
+
 ########################################
 
 override COMPOSER_VERSION_CURRENT	:= v1.4
@@ -214,8 +219,7 @@ override COMPOSER_ALL_REGEX		:= [a-zA-Z0-9][a-zA-Z0-9_.-]+
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
-#>override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_ALL_REGEX))[:].*$$|\1|gp" "$(COMPOSER_SRC)")
-override COMPOSER_TARGETS		:= $(shell sed -r -n "s|^($(COMPOSER_ALL_REGEX))[:].*$$|\1|gp" "$(COMPOSER_SRC)")
+override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_ALL_REGEX))[:].*$$|\1|gp" "$(COMPOSER_SRC)")
 else
 override COMPOSER_TARGETS		?= $(BASE)
 endif
@@ -374,8 +378,8 @@ override BUILD_GHC_78			:= 1
 
 #>override BUILD_PLAT			:= Linux
 #>override BUILD_ARCH			:= x86_64
-override BUILD_PLAT			?= $(shell uname -o)
-override BUILD_ARCH			?= $(shell uname -m)
+override BUILD_PLAT			?= $(shell $(UNAME) -o)
+override BUILD_ARCH			?= $(shell $(UNAME) -m)
 
 override IS_CYGWIN			:=
 ifeq ($(BUILD_PLAT),Cygwin)
@@ -407,8 +411,10 @@ override COMPOSER_PROGS_USE		?=
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CHOST				:=
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc -static-libstdc++
+#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc -static-libstdc++
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
+override GHCFLAGS			:= $(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))
 
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_PLAT),Linux)
@@ -424,7 +430,8 @@ override BUILD_ARCH			:= i686
 override BUILD_BITS			:= 32
 override CHOST				:= $(BUILD_ARCH)-pc-msys$(BUILD_BITS)
 endif
-override CFLAGS				:= $(CFLAGS) -m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic
+override CFLAGS				:=                  $(CFLAGS) -m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic
+override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic, -optc$(FILE))
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
@@ -1066,10 +1073,13 @@ ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
 $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh")
 endif
 endif
-override SHELL				?= $(call COMPOSER_FIND,$(PATH_LIST),sh)
+
+ifeq ($(SHELL),/bin/sh)
+override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(IS_CYGWIN),)
 override SHELL				:= $(MSYS_BIN_DST)/usr/bin/sh
+endif
 endif
 endif
 
@@ -1078,6 +1088,7 @@ override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 override CC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
 override CXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
 override LD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
+override CPP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cpp)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
 override PACMAN_ENV			:= "$(MSYS_BIN_DST)/usr/bin/env" - PATH="$(MSYS_BIN_DST)/usr/bin"
@@ -1090,7 +1101,6 @@ override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-con
 override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --mixed
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
-override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -d "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
@@ -1142,10 +1152,11 @@ override RM				:= "$(call COMPOSER_FIND,$(PATH_LIST),rm)" -fv
 override SORT				:= "$(call COMPOSER_FIND,$(PATH_LIST),sort)" -u
 override TAIL				:= "$(call COMPOSER_FIND,$(PATH_LIST),tail)"
 override TRUE				:= "$(call COMPOSER_FIND,$(PATH_LIST),true)"
+override UNAME				:= "$(call COMPOSER_FIND,$(PATH_LIST),uname)"
 
 override FIND				:= "$(call COMPOSER_FIND,$(PATH_LIST),find)"
 override PATCH				:= "$(call COMPOSER_FIND,$(PATH_LIST),patch)" -p1
-#>override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
+override SED				:= "$(call COMPOSER_FIND,$(PATH_LIST),sed)" -r
 override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
@@ -1315,10 +1326,12 @@ override BUILD_ENV			:= $(ENV) - \
 	CC="$(CC)" \
 	CXX="$(CXX)" \
 	LD="$(LD)" \
+	CPP="$(CPP)" \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
+	CPPFLAGS="$(LDFLAGS)" \
 	\
 	USER="$(USER)" \
 	HOME="$(COMPOSER_ABODE)" \
@@ -1339,6 +1352,7 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	CC="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	CXX="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/g++" \
 	LD="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld" \
+	CPP="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/cpp" \
 	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
 endif
 
@@ -2041,7 +2055,7 @@ $(DEBUGIT):
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H) Targets Debug"
 	@$(HEADER_1)
-	@$(call DEBUGIT_TARGET,--debug --just-print $(COMPOSER_DEBUGIT))
+	@$(call DEBUGIT_TARGET,--debug="a" --just-print $(COMPOSER_DEBUGIT))
 	@$(ECHO) "\n"
 	@$(foreach FILE,$(MAKEFILE_LIST),\
 		$(call DEBUGIT_CONTENTS,$(FILE)); \
@@ -2305,7 +2319,7 @@ $(FETCHIT)-cabal:
 		$(SED) -i \
 			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
 			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
-			-e "s|(ghc[-]options[:]).*$$|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))|g" \
+			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
 			"$(COMPOSER_ABODE)/.cabal/config"; \
 	fi
 
@@ -2395,7 +2409,7 @@ $(CHECKIT):
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
@@ -2434,7 +2448,7 @@ endif
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
 	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(CC))) $(_S)($(subst ",,$(word 1,$(CXX))))"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD)))"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD))) $(_S)($(subst ",,$(word 1,$(CPP))))"
 else ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst ",,$(word 1,$(PACMAN)))"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst ",,$(word 1,$(MINTTY))) $(_S)($(subst ",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
@@ -2918,7 +2932,7 @@ $(STRAPIT)-libs-pkgconfig:
 $(STRAPIT)-libs-zlib:
 	$(call CURL_FILE,$(ZLIB_TAR_SRC))
 	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
-	# GHC 7.8+ compiler requires dynamic GMP library, so reversing "--static"
+	# GHC 7.8+ compiler requires dynamic Zlib library, so reversing "--static"
 ifeq ($(BUILD_BITS),64)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
 		--64 \
@@ -3297,6 +3311,9 @@ $(FETCHIT)-make-pull:
 
 .PHONY: $(STRAPIT)-make-prep
 $(STRAPIT)-make-prep:
+#WORK : platform_switches
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(MAKE_TAR_DST)/config)
 
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
@@ -3593,7 +3610,7 @@ endif
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
 		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
-		-e "s|([{]GHC[}][ ][-][-]make[ ])([^-])|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		-e "s|([{]GHC[}][ ][-][-]make[ ])([^-])|\1$(GHCFLAGS) \2|g" \
 		"$(CBL_TAR_DST)/bootstrap.sh"
 
 override define HEREDOC_CABAL_BOOTSTRAP =
@@ -3651,14 +3668,6 @@ endif
 #>		"$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal" \
 #>		"$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal" \
 #>		"$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal"
-#WORKING
-	$(SED) -i \
-		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
-		"$(GHC_DST)/configure"
-	$(SED) -i \
-		-e "s|^(GhcHcOpts[=])([-]Rghc[-]timing)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
-		-e "s|^(SRC_HC_OPTS[ ][+][=][ ])([-]H)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
-		"$(GHC_DST)/mk/config.mk.in"
 
 .PHONY: $(STRAPIT)-ghc-build
 $(STRAPIT)-ghc-build:
@@ -3688,6 +3697,7 @@ $(STRAPIT)-ghc-libs:
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
+	$(call DO_HEREDOC,HEREDOC_GHC_BUILD_MK) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 #WORK
@@ -3697,6 +3707,13 @@ $(BUILDIT)-ghc:
 #WORK
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		Cabal-$(CABAL_VERSION_LIB)
+
+override define HEREDOC_GHC_BUILD_MK =
+SRC_HC_OPTS	= $(GHCFLAGS)	-optc-I$(COMPOSER_ABODE)/include/ncurses -optl-I$(COMPOSER_ABODE)/include/ncurses
+SRC_CC_OPTS	= $(CFLAGS)	-I$(COMPOSER_ABODE)/include/ncurses
+SRC_LD_OPTS	= $(LDFLAGS)	-I$(COMPOSER_ABODE)/include/ncurses
+SRC_CPP_OPTS	= $(LDFLAGS)	-I$(COMPOSER_ABODE)/include/ncurses
+endef
 
 .PHONY: $(FETCHIT)-haskell
 $(FETCHIT)-haskell: $(FETCHIT)-haskell-pull
@@ -3781,7 +3798,7 @@ endif
 		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
-		-e "s|(ghc[-]options[:][ ]+)([-]Wall)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		-e "s|(ghc[-]options[:][ ]+)([-]Wall)|\1$(GHCFLAGS) \2|g" \
 		"$(HASKELL_TAR)/packages/cabal-install-$(CABAL_VERSION)/cabal-install.cabal"
 
 .PHONY: $(BUILDIT)-haskell
@@ -3820,8 +3837,8 @@ $(FETCHIT)-pandoc-pull:
 $(FETCHIT)-pandoc-prep:
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
-		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
-		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE)) \2|g" \
+		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(GHCFLAGS) \2|g" \
+		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
 		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
 		"$(PANDOC_DST)/pandoc.cabal"
 
