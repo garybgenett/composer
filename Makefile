@@ -1745,7 +1745,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-prep$(_D)"		"Preparation of Cabal source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-build$(_D)"		"Build/compile of Cabal from source archive"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database/configuration"
+	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
@@ -2261,14 +2261,14 @@ $(STRAPIT):
 	$(RUNMAKE) $(STRAPIT)-cabal
 
 .PHONY: $(FETCHIT)
-$(FETCHIT): $(FETCHIT)-cabal
-#WORKING : $(FETCHIT)-cabal should maybe call $(BUILDIT)-cleanup directly?
+$(FETCHIT): $(FETCHIT)-cabal-db
+#WORKING : $(FETCHIT)-cabal-db should maybe call $(BUILDIT)-cleanup directly?
 $(FETCHIT): $(BUILDIT)-cleanup
 $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip
 $(FETCHIT): $(FETCHIT)-texlive
-$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-pandoc
+$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-cabal $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
 $(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
@@ -2276,8 +2276,9 @@ $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip
 $(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
+	$(RUNMAKE) $(BUILDIT)-cabal
 #WORKING : need to sort out where this all needs to be
-	$(RUNMAKE) $(FETCHIT)-cabal
+	$(RUNMAKE) $(FETCHIT)-cabal-db
 	$(RUNMAKE) $(BUILDIT)-pandoc
 	$(RUNMAKE) $(BUILDIT)-cleanup
 	$(RUNMAKE) $(BUILDIT)-bindir
@@ -2297,8 +2298,9 @@ override define GNU_CFG_INSTALL =
 	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
 endef
 
-.PHONY: $(FETCHIT)-cabal
-$(FETCHIT)-cabal:
+#WORKING : needs a better name and location
+.PHONY: $(FETCHIT)-cabal-db
+$(FETCHIT)-cabal-db:
 	$(BUILD_ENV) $(CABAL) update
 	# make sure GHC looks for libraries in the right place
 	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
@@ -3736,7 +3738,7 @@ $(STRAPIT)-cabal-build:
 #WORKING : needs a better name and location
 	# call recursively instead of using dependencies, so that environment variables update
 #WORKING : should not be needed in order to install the pre-downloaded libs
-#	$(RUNMAKE) $(FETCHIT)-cabal
+#	$(RUNMAKE) $(FETCHIT)-cabal-db
 	$(RUNMAKE) $(STRAPIT)-cabal-ghcreqs
 
 #WORKING : document!
