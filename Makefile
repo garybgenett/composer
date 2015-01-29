@@ -453,30 +453,30 @@ endif
 
 ifeq ($(BUILD_PLAT),Linux)
 #WORKING : GHC 7.8
-#override GHC_BIN_PLAT			:= unknown-linux-deb7
-override GHC_BIN_PLAT			:= unknown-linux
+#override GHC_PLAT			:= unknown-linux-deb7
+override GHC_PLAT			:= unknown-linux
 else ifeq ($(BUILD_PLAT),FreeBSD)
 #WORKING : GHC 7.8
-#override GHC_BIN_PLAT			:= portbld-freebsd
-override GHC_BIN_PLAT			:= unknown-freebsd
+#override GHC_PLAT			:= portbld-freebsd
+override GHC_PLAT			:= unknown-freebsd
 else ifeq ($(BUILD_PLAT),Darwin)
 #WORKING : GHC 7.8
 #ifeq ($(BUILD_ARCH),x86_64)
-#override GHC_BIN_PLAT			:= apple-darwin
+#override GHC_PLAT			:= apple-darwin
 #else
-#override GHC_BIN_PLAT			:= apple-ios
+#override GHC_PLAT			:= apple-ios
 #endif
-override GHC_BIN_PLAT			:= apple-darwin
+override GHC_PLAT			:= apple-darwin
 else ifeq ($(BUILD_PLAT),Msys)
-override GHC_BIN_PLAT			:= unknown-mingw32
+override GHC_PLAT			:= unknown-mingw32
 endif
 
-override MSYS_BIN_ARCH			:= $(BUILD_ARCH)
-override GHC_BIN_ARCH			:= $(BUILD_ARCH)
+override MSYS_ARCH			:= $(BUILD_ARCH)
+override GHC_ARCH			:= $(BUILD_ARCH)
 ifeq ($(BUILD_ARCH),i686)
-override GHC_BIN_ARCH			:= i386
+override GHC_ARCH			:= i386
 else ifeq ($(BUILD_ARCH),i386)
-override MSYS_BIN_ARCH			:= i686
+override MSYS_ARCH			:= i686
 endif
 
 # https://www.debian.org
@@ -513,16 +513,6 @@ override FUNTOO_GCC_VERSION		:= 4.8.3
 override FUNTOO_BINUTILS_VERSION	:= 2.24
 override FUNTOO_MAKE_VERSION		:= 3.82
 
-# http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
-# http://sourceforge.net/projects/msys2
-# http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
-# https://www.archlinux.org/groups
-override MSYS_VERSION			:= 20141113
-override MSYS_BIN_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_BIN_ARCH)/msys2-base-$(MSYS_BIN_ARCH)-$(MSYS_VERSION).tar.xz
-override MSYS_BIN_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
-#WORK : mintty - installed before bash?  cygwin-console-helper?
-#WORK : cygpath - installed before bash?
-
 # https://en.wikipedia.org/wiki/Linux_kernel#Maintenance
 # https://en.wikipedia.org/wiki/GNU_C_Library#Version_history
 override LINUX_MIN_VERSION		:= $(DEBIAN_LINUX_VERSION)
@@ -537,6 +527,16 @@ override BINUTILS_CUR_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
 override MAKE_MIN_VERSION		:= 3.82
 #>override MAKE_CUR_VERSION		:= $(FUNTOO_MAKE_VERSION)
 override MAKE_CUR_VERSION		:= 4.0
+
+# http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
+# http://sourceforge.net/projects/msys2
+# http://sourceforge.net/p/msys2/wiki/MSYS2%20installation
+# https://www.archlinux.org/groups
+override MSYS_VER			:= 20141113
+override MSYS_SRC			:= http://sourceforge.net/projects/msys2/files/Base/$(MSYS_ARCH)/msys2-base-$(MSYS_ARCH)-$(MSYS_VER).tar.xz
+override MSYS_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
+#WORK : mintty - installed before bash?  cygwin-console-helper?
+#WORK : cygpath - installed before bash?
 
 # http://git.savannah.gnu.org/gitweb/?p=config.git
 override GNU_CFG_SRC			:= http://git.savannah.gnu.org/r/config.git
@@ -553,152 +553,150 @@ override GNU_CFG_CMT			:=
 #	make[2]: Entering directory `/Linux64/build/make/po'
 #	*** error: gettext infrastructure mismatch: using a Makefile.in.in from gettext version 0.18 but the autoconf macros are from gettext version 0.19
 #	make[2]: *** [check-macro-version] Error 1
-#WORK : override GETTEXT_VERSION		:= 0.19.3
-override GETTEXT_VERSION		:= 0.18.3.2
-override GETTEXT_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
-override GETTEXT_TAR_DST		:= $(COMPOSER_BUILD)/gettext-$(GETTEXT_VERSION)
+#WORK : override GETTEXT_VER			:= 0.19.3
+override GETTEXT_VER			:= 0.18.3.2
+override GETTEXT_SRC			:= https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VER).tar.gz
+override GETTEXT_DST			:= $(COMPOSER_BUILD)/gettext-$(GETTEXT_VER)
 # https://www.gnu.org/software/libiconv (license: GPL, LGPL)
 # https://www.gnu.org/software/libiconv
-override LIBICONV_VERSION		:= 1.14
-override LIBICONV_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VERSION).tar.gz
-override LIBICONV_TAR_DST		:= $(COMPOSER_BUILD)/libiconv-$(LIBICONV_VERSION)
+override LIBICONV_VER			:= 1.14
+override LIBICONV_SRC			:= https://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(LIBICONV_VER).tar.gz
+override LIBICONV_DST			:= $(COMPOSER_BUILD)/libiconv-$(LIBICONV_VER)
 # http://www.freedesktop.org/wiki/Software/pkg-config (license: GPL)
 # http://www.freedesktop.org/wiki/Software/pkg-config
-override PKGCONFIG_VERSION		:= 0.28
-override PKGCONFIG_TAR_SRC		:= http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG_VERSION).tar.gz
-override PKGCONFIG_TAR_DST		:= $(COMPOSER_BUILD)/pkg-config-$(PKGCONFIG_VERSION)
+override PKGCONFIG_VER			:= 0.28
+override PKGCONFIG_SRC			:= http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG_VER).tar.gz
+override PKGCONFIG_DST			:= $(COMPOSER_BUILD)/pkg-config-$(PKGCONFIG_VER)
 # http://www.zlib.net/zlib_license.html (license: custom = as-is)
 # http://www.zlib.net
-override ZLIB_VERSION			:= 1.2.8
-override ZLIB_TAR_SRC			:= http://www.zlib.net/zlib-$(ZLIB_VERSION).tar.xz
-override ZLIB_TAR_DST			:= $(COMPOSER_BUILD)/zlib-$(ZLIB_VERSION)
+override ZLIB_VER			:= 1.2.8
+override ZLIB_SRC			:= http://www.zlib.net/zlib-$(ZLIB_VER).tar.xz
+override ZLIB_DST			:= $(COMPOSER_BUILD)/zlib-$(ZLIB_VER)
 # https://gmplib.org (license: GPL, LGPL)
 # https://gmplib.org
-override GMP_VERSION			:= 6.0.0a
-override GMP_TAR_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VERSION).tar.xz
-override GMP_TAR_DST			:= $(COMPOSER_BUILD)/gmp-$(subst a,,$(GMP_VERSION))
+override GMP_VER			:= 6.0.0a
+override GMP_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VER).tar.xz
+override GMP_DST			:= $(COMPOSER_BUILD)/gmp-$(subst a,,$(GMP_VER))
 # https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
-override NCURSES_VERSION		:= 5.9
-override NCURSES_TAR_SRC		:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(NCURSES_VERSION).tar.gz
-override NCURSES_TAR_DST		:= $(COMPOSER_BUILD)/ncurses-$(NCURSES_VERSION)
+override NCURSES_VER			:= 5.9
+override NCURSES_SRC			:= https://ftp.gnu.org/pub/gnu/ncurses/ncurses-$(NCURSES_VER).tar.gz
+override NCURSES_DST			:= $(COMPOSER_BUILD)/ncurses-$(NCURSES_VER)
 # https://www.openssl.org/source/license.html (license: BSD)
 # https://www.openssl.org
-override OPENSSL_VERSION		:= 1.0.1j
-override OPENSSL_TAR_SRC		:= https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
-override OPENSSL_TAR_DST		:= $(COMPOSER_BUILD)/openssl-$(OPENSSL_VERSION)
+override OPENSSL_VER			:= 1.0.1j
+override OPENSSL_SRC			:= https://www.openssl.org/source/openssl-$(OPENSSL_VER).tar.gz
+override OPENSSL_DST			:= $(COMPOSER_BUILD)/openssl-$(OPENSSL_VER)
 # http://sourceforge.net/projects/expat (license: MIT)
 # http://expat.sourceforge.net
-override EXPAT_VERSION			:= 2.1.0
-override EXPAT_TAR_SRC			:= http://sourceforge.net/projects/expat/files/expat/$(EXPAT_VERSION)/expat-$(EXPAT_VERSION).tar.gz
-override EXPAT_TAR_DST			:= $(COMPOSER_BUILD)/expat-$(EXPAT_VERSION)
+override EXPAT_VER			:= 2.1.0
+override EXPAT_SRC			:= http://sourceforge.net/projects/expat/files/expat/$(EXPAT_VER)/expat-$(EXPAT_VER).tar.gz
+override EXPAT_DST			:= $(COMPOSER_BUILD)/expat-$(EXPAT_VER)
 # http://www.freetype.org/license.html (license: custom = BSD, GPL)
 # http://www.freetype.org/download.html
-override FREETYPE_VERSION		:= 2.5.3
-override FREETYPE_TAR_SRC		:= http://download.savannah.gnu.org/releases/freetype/freetype-$(FREETYPE_VERSION).tar.gz
-override FREETYPE_TAR_DST		:= $(COMPOSER_BUILD)/freetype-$(FREETYPE_VERSION)
+override FREETYPE_VER			:= 2.5.3
+override FREETYPE_SRC			:= http://download.savannah.gnu.org/releases/freetype/freetype-$(FREETYPE_VER).tar.gz
+override FREETYPE_DST			:= $(COMPOSER_BUILD)/freetype-$(FREETYPE_VER)
 # http://www.freedesktop.org/software/fontconfig/fontconfig-devel/ln12.html (license: custom = as-is)
 # http://www.freedesktop.org/wiki/Software/fontconfig
-override FONTCONFIG_VERSION		:= 2.11.1
-override FONTCONFIG_TAR_SRC		:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FONTCONFIG_VERSION).tar.gz
-override FONTCONFIG_TAR_DST		:= $(COMPOSER_BUILD)/fontconfig-$(FONTCONFIG_VERSION)
+override FONTCONFIG_VER			:= 2.11.1
+override FONTCONFIG_SRC			:= http://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FONTCONFIG_VER).tar.gz
+override FONTCONFIG_DST			:= $(COMPOSER_BUILD)/fontconfig-$(FONTCONFIG_VER)
 
 # https://www.gnu.org/software/coreutils (license: GPL)
 # https://www.gnu.org/software/coreutils
-override COREUTILS_VERSION		:= 8.23
-override COREUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/coreutils/coreutils-$(COREUTILS_VERSION).tar.xz
-override COREUTILS_TAR_DST		:= $(COMPOSER_BUILD)/coreutils-$(COREUTILS_VERSION)
+override COREUTILS_VER			:= 8.23
+override COREUTILS_SRC			:= https://ftp.gnu.org/gnu/coreutils/coreutils-$(COREUTILS_VER).tar.xz
+override COREUTILS_DST			:= $(COMPOSER_BUILD)/coreutils-$(COREUTILS_VER)
 # https://www.gnu.org/software/findutils (license: GPL)
 # https://www.gnu.org/software/findutils
-override FINDUTILS_VERSION		:= 4.4.2
-override FINDUTILS_TAR_SRC		:= https://ftp.gnu.org/gnu/findutils/findutils-$(FINDUTILS_VERSION).tar.gz
-override FINDUTILS_TAR_DST		:= $(COMPOSER_BUILD)/findutils-$(FINDUTILS_VERSION)
+override FINDUTILS_VER			:= 4.4.2
+override FINDUTILS_SRC			:= https://ftp.gnu.org/gnu/findutils/findutils-$(FINDUTILS_VER).tar.gz
+override FINDUTILS_DST			:= $(COMPOSER_BUILD)/findutils-$(FINDUTILS_VER)
 # https://savannah.gnu.org/projects/patch (license: GPL)
 # https://savannah.gnu.org/projects/patch
-override PATCH_VERSION			:= 2.7
-override PATCH_TAR_SRC			:= https://ftp.gnu.org/gnu/patch/patch-$(PATCH_VERSION).tar.xz
-override PATCH_TAR_DST			:= $(COMPOSER_BUILD)/patch-$(PATCH_VERSION)
+override PATCH_VER			:= 2.7
+override PATCH_SRC			:= https://ftp.gnu.org/gnu/patch/patch-$(PATCH_VER).tar.xz
+override PATCH_DST			:= $(COMPOSER_BUILD)/patch-$(PATCH_VER)
 # https://savannah.gnu.org/projects/sed (license: GPL)
 # https://savannah.gnu.org/projects/sed
-override SED_VERSION			:= 4.2
-override SED_TAR_SRC			:= https://ftp.gnu.org/gnu/sed/sed-$(SED_VERSION).tar.gz
-override SED_TAR_DST			:= $(COMPOSER_BUILD)/sed-$(SED_VERSION)
+override SED_VER			:= 4.2
+override SED_SRC			:= https://ftp.gnu.org/gnu/sed/sed-$(SED_VER).tar.gz
+override SED_DST			:= $(COMPOSER_BUILD)/sed-$(SED_VER)
 # http://www.bzip.org (license: custom = BSD)
 # http://www.bzip.org
-override BZIP_VERSION			:= 1.0.6
-override BZIP_TAR_SRC			:= http://www.bzip.org/$(BZIP_VERSION)/bzip2-$(BZIP_VERSION).tar.gz
-override BZIP_TAR_DST			:= $(COMPOSER_BUILD)/bzip2-$(BZIP_VERSION)
+override BZIP_VER			:= 1.0.6
+override BZIP_SRC			:= http://www.bzip.org/$(BZIP_VER)/bzip2-$(BZIP_VER).tar.gz
+override BZIP_DST			:= $(COMPOSER_BUILD)/bzip2-$(BZIP_VER)
 # https://www.gnu.org/software/gzip (license: GPL)
 # https://www.gnu.org/software/gzip
-override GZIP_VERSION			:= 1.6
-override GZIP_TAR_SRC			:= https://ftp.gnu.org/gnu/gzip/gzip-$(GZIP_VERSION).tar.gz
-override GZIP_TAR_DST			:= $(COMPOSER_BUILD)/gzip-$(GZIP_VERSION)
+override GZIP_VER			:= 1.6
+override GZIP_SRC			:= https://ftp.gnu.org/gnu/gzip/gzip-$(GZIP_VER).tar.gz
+override GZIP_DST			:= $(COMPOSER_BUILD)/gzip-$(GZIP_VER)
 # http://www.tukaani.org/xz (license: custom = GPL, public-domain)
 # http://www.tukaani.org/xz
-override XZ_VERSION			:= 5.2.0
-override XZ_TAR_SRC			:= http://www.tukaani.org/xz/xz-$(XZ_VERSION).tar.gz
-override XZ_TAR_DST			:= $(COMPOSER_BUILD)/xz-$(XZ_VERSION)
+override XZ_VER				:= 5.2.0
+override XZ_SRC				:= http://www.tukaani.org/xz/xz-$(XZ_VER).tar.gz
+override XZ_DST				:= $(COMPOSER_BUILD)/xz-$(XZ_VER)
 # https://www.gnu.org/software/tar (license: GPL)
 # https://www.gnu.org/software/tar
-override TAR_VERSION			:= 1.28
-override TAR_TAR_SRC			:= https://ftp.gnu.org/gnu/tar/tar-$(TAR_VERSION).tar.xz
-override TAR_TAR_DST			:= $(COMPOSER_BUILD)/tar-$(TAR_VERSION)
+override TAR_VER			:= 1.28
+override TAR_SRC			:= https://ftp.gnu.org/gnu/tar/tar-$(TAR_VER).tar.xz
+override TAR_DST			:= $(COMPOSER_BUILD)/tar-$(TAR_VER)
 # http://dev.perl.org/licenses (license: custom = GPL, Artistic)
 # https://www.perl.org/get.html
-override PERL_VERSION			:= 5.20.1
-override PERL_TAR_SRC			:= http://www.cpan.org/src/5.0/perl-$(PERL_VERSION).tar.gz
-override PERL_TAR_DST			:= $(COMPOSER_BUILD)/perl-$(PERL_VERSION)
+override PERL_VER			:= 5.20.1
+override PERL_SRC			:= http://www.cpan.org/src/5.0/perl-$(PERL_VER).tar.gz
+override PERL_DST			:= $(COMPOSER_BUILD)/perl-$(PERL_VER)
 
 # https://www.gnu.org/software/bash (license: GPL)
 # https://www.gnu.org/software/bash
-override BASH_VERSION			:= 4.3.30
-override BASH_TAR_SRC			:= https://ftp.gnu.org/pub/gnu/bash/bash-$(BASH_VERSION).tar.gz
-override BASH_TAR_DST			:= $(COMPOSER_BUILD)/bash-$(BASH_VERSION)
-
+override BASH_VER			:= 4.3.30
+override BASH_SRC			:= https://ftp.gnu.org/pub/gnu/bash/bash-$(BASH_VER).tar.gz
+override BASH_DST			:= $(COMPOSER_BUILD)/bash-$(BASH_VER)
 # http://www.greenwoodsoftware.com/less (license: GPL)
 # http://www.greenwoodsoftware.com/less
-override LESS_VERSION			:= 458
-override LESS_TAR_SRC			:= http://www.greenwoodsoftware.com/less/less-$(LESS_VERSION).tar.gz
-override LESS_TAR_DST			:= $(COMPOSER_BUILD)/less-$(LESS_VERSION)
-
+override LESS_VER			:= 458
+override LESS_SRC			:= http://www.greenwoodsoftware.com/less/less-$(LESS_VER).tar.gz
+override LESS_DST			:= $(COMPOSER_BUILD)/less-$(LESS_VER)
 # http://www.vim.org/about.php (license: custom = GPL)
 # http://www.vim.org
-override VIM_VERSION			:= 7.4
-override VIM_TAR_SRC			:= http://ftp.vim.org/pub/vim/unix/vim-$(VIM_VERSION).tar.bz2
-override VIM_TAR_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VERSION))
+override VIM_VER			:= 7.4
+override VIM_SRC			:= http://ftp.vim.org/pub/vim/unix/vim-$(VIM_VER).tar.bz2
+override VIM_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VER))
 
 # https://www.gnu.org/software/make/manual/make.html#GNU-Free-Documentation-License (license: GPL)
 # https://www.gnu.org/software/make/manual/make.html
 # https://www.gnu.org/software/make
 # https://savannah.gnu.org/projects/make
-override MAKE_VERSION			:= $(MAKE_MIN_VERSION)
-override MAKE_TAR_SRC			:= http://ftp.gnu.org/gnu/make/make-$(MAKE_VERSION).tar.gz
+override MAKE_VER			:= $(MAKE_MIN_VER)
+override MAKE_SRC_INIT			:= http://ftp.gnu.org/gnu/make/make-$(MAKE_VER).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
-override MAKE_TAR_DST			:= $(COMPOSER_BUILD)/make-$(MAKE_VERSION)
+override MAKE_DST_INIT			:= $(COMPOSER_BUILD)/make-$(MAKE_VER)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= $(MAKE_CUR_VERSION)
+override MAKE_CMT			:= $(MAKE_CUR_VER)
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
-override IZIP_VERSION			:= 3.0
-override UZIP_VERSION			:= 6.0
-override IZIP_TAR_SRC			:= http://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/$(IZIP_VERSION)/zip$(subst .,,$(IZIP_VERSION)).tar.gz
-override UZIP_TAR_SRC			:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(UZIP_VERSION)/unzip$(subst .,,$(UZIP_VERSION)).tar.gz
-override IZIP_TAR_DST			:= $(COMPOSER_BUILD)/zip$(subst .,,$(IZIP_VERSION))
-override UZIP_TAR_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VERSION))
+override IZIP_VER			:= 3.0
+override UZIP_VER			:= 6.0
+override IZIP_SRC			:= http://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/$(IZIP_VER)/zip$(subst .,,$(IZIP_VER)).tar.gz
+override UZIP_SRC			:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(UZIP_VER)/unzip$(subst .,,$(UZIP_VER)).tar.gz
+override IZIP_DST			:= $(COMPOSER_BUILD)/zip$(subst .,,$(IZIP_VER))
+override UZIP_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VER))
 
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
 # http://www.curl.haxx.se/download.html
 # http://www.curl.haxx.se/dev/source.html
-override CURL_VERSION			:= 7.39.0
-override CURL_TAR_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VERSION).tar.gz
-override CURL_TAR_DST			:= $(COMPOSER_BUILD)/curl-$(CURL_VERSION)
+override CURL_VER			:= 7.39.0
+override CURL_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VER).tar.gz
+override CURL_DST			:= $(COMPOSER_BUILD)/curl-$(CURL_VER)
 
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
-override GIT_VERSION			:= 2.2.0
-override GIT_TAR_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VERSION).tar.xz
-override GIT_TAR_DST			:= $(COMPOSER_BUILD)/git-$(GIT_VERSION)
+override GIT_VER			:= 2.2.0
+override GIT_SRC			:= https://www.kernel.org/pub/software/scm/git/git-$(GIT_VER).tar.xz
+override GIT_DST			:= $(COMPOSER_BUILD)/git-$(GIT_VER)
 
 # https://www.tug.org/texlive/LICENSE.TL (license: custom = libre)
 # https://www.tug.org/texlive
@@ -706,12 +704,12 @@ override GIT_TAR_DST			:= $(COMPOSER_BUILD)/git-$(GIT_VERSION)
 # ftp://ftp.tug.org/historic/systems/texlive
 # http://www.slackbuilds.org/repository/14.0/office/texlive/
 override TEX_YEAR			:= 2014
-override TEX_VERSION			:= $(TEX_YEAR)0525
-override TEX_PDF_VERSION		:= 1.40.15
-override TEX_TEXMF_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-texmf.tar.xz
-override TEX_TAR_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VERSION)-source.tar.xz
-override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-texmf
-override TEX_TAR_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
+override TEX_VER			:= $(TEX_YEAR)0525
+override TEX_VER_PDF			:= 1.40.15
+override TEX_TEXMF_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VER)-texmf.tar.xz
+override TEX_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/texlive-$(TEX_VER)-source.tar.xz
+override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-texmf
+override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 
 #WORKING : url scrub
 # https://www.haskell.org/ghc/license (license: BSD)
@@ -723,34 +721,34 @@ override TEX_TAR_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VERSION)-source
 # https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
 #WORKING : GHC 7.8
-#override GHC_VERSION			:= 7.8.3
-#override GHC_VERSION_LIB		:= 1.18.1.3
-#override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-$(GHC_BIN_ARCH)-$(GHC_BIN_PLAT).tar.xz
-override GHC_VERSION			:= 7.6.3
-override GHC_VERSION_LIB		:= 1.16.0
-override GHC_BIN_SRC			:= https://www.haskell.org/ghc/dist/$(GHC_VERSION)/ghc-$(GHC_VERSION)-$(GHC_BIN_ARCH)-$(GHC_BIN_PLAT).tar.bz2
+#override GHC_VER			:= 7.8.3
+#override GHC_VER_LIB			:= 1.18.1.3
+#override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
+override GHC_VER			:= 7.6.3
+override GHC_VER_LIB			:= 1.16.0
+override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.bz2
 override GHC_SRC			:= https://git.haskell.org/ghc.git
-override GHC_BIN_DST			:= $(COMPOSER_BUILD)/ghc-$(GHC_VERSION)
+override GHC_DST_INIT			:= $(COMPOSER_BUILD)/ghc-$(GHC_VER)
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
-override GHC_CMT			:= ghc-$(GHC_VERSION)-release
+override GHC_CMT			:= ghc-$(GHC_VER)-release
 #WORKING : GHC 7.8
-#override GHC_VERSION			:= 7.11
-#override GHC_CMT			:= ghc-$(GHC_VERSION)-release
+#override GHC_VER			:= 7.11
+#override GHC_CMT			:= ghc-$(GHC_VER)-release
 #override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
 #WORKING : is GHC_BRANCH still needed?
-override GHC_BRANCH			:= ghc-$(GHC_VERSION)
+override GHC_BRANCH			:= ghc-$(GHC_VER)
 
 #WORKING : url scrub
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 #WORKING https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
-override CABAL_VERSION			:= 1.20.0.2
-override CABAL_VERSION_LIB		:= 1.20.0.1
-override CABAL_TAR_SRC			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VERSION)/cabal-install-$(CABAL_VERSION).tar.gz
+override CABAL_VER			:= 1.20.0.2
+override CABAL_VER_LIB			:= 1.20.0.1
+override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER)/cabal-install-$(CABAL_VER).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
-override CABAL_TAR_DST			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VERSION)
+override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER)
 override CABAL_DST			:= $(COMPOSER_BUILD)/cabal
-#WORKING override CABAL_CMT			:= Cabal-$(CABAL_VERSION)-release
+#WORKING override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_CMT			:= Cabal-1.22.0.0-release
 
 # https://hackage.haskell.org
@@ -776,7 +774,7 @@ override PANDOC_MATH_CMT		:= 0.8.0.1
 override PANDOC_HIGH_CMT		:= 0.5.11.1
 override PANDOC_CITE_CMT		:= 0.5
 override PANDOC_CMT			:= 1.13.2
-override PANDOC_VERSION			:= $(PANDOC_CMT)
+override PANDOC_VER			:= $(PANDOC_CMT)
 
 override BUILD_PATH_MINGW		:=
 override BUILD_PATH_SHELL		:=
@@ -788,8 +786,8 @@ override BUILD_PATH			:= $(COMPOSER_ABODE)/bin
 endif
 override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/bin
 ifeq ($(BUILD_PLAT),Msys)
-override BUILD_PATH_MINGW		:=               $(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin
-override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_BIN_DST)/usr/bin
+override BUILD_PATH_MINGW		:=               $(MSYS_DST)/mingw$(BUILD_BITS)/bin
+override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_DST)/usr/bin
 endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 ifneq ($(COMPOSER_PROGS_USE),1)
@@ -989,7 +987,7 @@ override GHC_LIBRARIES_LIST		:= \
 #	haddock|2.15.0.2
 
 override CABAL_LIBRARIES_LIST		:= \
-	Cabal|$(CABAL_VERSION_LIB) \
+	Cabal|$(CABAL_VER_LIB) \
 	HTTP|4000.2.12 \
 	mtl|2.1.3.1 \
 	network|2.4.2.3 \
@@ -1022,7 +1020,7 @@ ifeq ($(SHELL),/bin/sh)
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(IS_CYGWIN),)
-override SHELL				:= $(MSYS_BIN_DST)/usr/bin/sh
+override SHELL				:= $(MSYS_DST)/usr/bin/sh
 endif
 endif
 endif
@@ -1036,10 +1034,10 @@ override LD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
 override CPP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cpp)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
-override PACMAN_ENV			:= "$(MSYS_BIN_DST)/usr/bin/env" - PATH="$(MSYS_BIN_DST)/usr/bin"
-override PACMAN_DB_UPGRADE		:= "$(MSYS_BIN_DST)/usr/bin/pacman-db-upgrade"
-override PACMAN_KEY			:= "$(MSYS_BIN_DST)/usr/bin/pacman-key"
-override PACMAN				:= "$(MSYS_BIN_DST)/usr/bin/pacman" --verbose --noconfirm --sync
+override PACMAN_ENV			:= "$(MSYS_DST)/usr/bin/env" - PATH="$(MSYS_DST)/usr/bin"
+override PACMAN_DB_UPGRADE		:= "$(MSYS_DST)/usr/bin/pacman-db-upgrade"
+override PACMAN_KEY			:= "$(MSYS_DST)/usr/bin/pacman-key"
+override PACMAN				:= "$(MSYS_DST)/usr/bin/pacman" --verbose --noconfirm --sync
 
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
@@ -1257,8 +1255,8 @@ override BUILD_TOOLS			:= \
 	--with-ld="$(LD)"
 ifeq ($(BUILD_PLAT),Msys)
 override BUILD_TOOLS			:= \
-	--with-gcc="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
-	--with-ld="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld"
+	--with-gcc="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/gcc" \
+	--with-ld="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/ld"
 endif
 override CABAL_INSTALL			= $(CABAL) install \
 	$(BUILD_TOOLS) \
@@ -1297,9 +1295,9 @@ ifneq ($(PANDOC_DATA),)
 override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DATA)" $(PANDOC_OPTIONS)
 #TODO : some better way to do this?
 ifeq ($(BUILD_PLAT),Linux)
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/data
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
 else ifeq ($(BUILD_PLAT),Msys)
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/data
+override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
 endif
 endif
 
@@ -1338,10 +1336,10 @@ override BUILD_ENV			:= $(BUILD_ENV) \
 	TMP="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	MSYSTEM="MINGW$(BUILD_BITS)" \
-	CC="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/gcc" \
-	CXX="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/g++" \
-	LD="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/ld" \
-	CPP="$(MSYS_BIN_DST)/mingw$(BUILD_BITS)/bin/cpp" \
+	CC="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/gcc" \
+	CXX="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/g++" \
+	LD="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/ld" \
+	CPP="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/cpp" \
 	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
 endif
 
@@ -2329,13 +2327,13 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
 	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
 	$(MKDIR) "$(COMPOSER_PROGS)/etc"
-	$(CP) "$(MSYS_BIN_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
+	$(CP) "$(MSYS_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
 #WORK : probably need this for linux, too
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
-	$(CP) "$(MSYS_BIN_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
+	$(CP) "$(MSYS_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
 #WORK
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
+		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
 	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
 endif
@@ -2355,11 +2353,11 @@ endif
 	$(CP) "$(COMPOSER_ABODE)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
 ifeq ($(BUILD_PLAT),Linux)
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
 else ifeq ($(BUILD_PLAT),Msys)
-	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
 else
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VERSION)/pandoc-$(PANDOC_VERSION)/"* "$(COMPOSER_PROGS)/pandoc/"
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
 
 override define HEREDOC_MSYS_SHELL =
@@ -2384,7 +2382,7 @@ $(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)
 $(CHECKIT): override GCC_VERSIONS	:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
 $(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
 $(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
-$(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VERSION)$(_D))
+$(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VER)$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -2394,38 +2392,38 @@ ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
 	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
 else ifeq ($(BUILD_PLAT),Msys)
-	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VERSION)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
+	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VER)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version			2>/dev/null | $(HEAD) -n1)"
 endif
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VERSION)"	"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VERSION)"	"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VERSION)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VERSION)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VERSION)"		"$(_N)$(shell BZIP= $(BZIP) --help			2>&1        | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VERSION)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VERSION)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VERSION)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VERSION)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VERSION)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VERSION)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VERSION)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VERSION)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VERSION)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VERSION)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VERSION)"		"$(_D)$(shell $(GIT) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"		"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VER)"		"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VER)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VER)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VER)"		"$(_N)$(shell BZIP= $(BZIP) --help			2>&1        | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VER)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VER)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VER)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VER)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VER)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VER)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VER)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VER)"		"$(_D)$(shell $(GIT) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL) info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL) info texmath			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL) info highlighting-kate		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
+	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VER)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_VER_PDF)"		"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VER)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VER)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VER_LIB)"		"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VER_LIB)"
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
@@ -2547,7 +2545,7 @@ ifeq ($(COMPOSER_PROGS_USE),1)
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
 		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
 else
-	@cd "$(MSYS_BIN_DST)" && \
+	@cd "$(MSYS_DST)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
 		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
 endif
@@ -2783,8 +2781,8 @@ $(STRAPIT)-msys: $(STRAPIT)-msys-dll
 
 .PHONY: $(STRAPIT)-msys-bin
 $(STRAPIT)-msys-bin:
-	$(call CURL_FILE,$(MSYS_BIN_SRC))
-	$(call DO_UNTAR,$(MSYS_BIN_DST),$(MSYS_BIN_SRC))
+	$(call CURL_FILE,$(MSYS_SRC))
+	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
 
 .PHONY: $(STRAPIT)-msys-init
 $(STRAPIT)-msys-init:
@@ -2811,7 +2809,7 @@ $(STRAPIT)-msys-init:
 $(STRAPIT)-msys-fix:
 	$(PACMAN_ENV) $(PACMAN) --refresh
 	$(PACMAN_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
-	cd "$(MSYS_BIN_DST)" && \
+	cd "$(MSYS_DST)" && \
 		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f && \
 		./autorebase.bat
 	$(PACMAN_ENV) $(PACMAN_DB_UPGRADE)
@@ -2832,7 +2830,7 @@ $(STRAPIT)-msys-pkg:
 $(STRAPIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
-		$(CP) "$(MSYS_BIN_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
+		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
 	)
 
 .PHONY: $(STRAPIT)-libs
@@ -2858,9 +2856,9 @@ $(STRAPIT)-libs-libiconv-init:
 
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
-	$(call CURL_FILE,$(GETTEXT_TAR_SRC))
-	$(call DO_UNTAR,$(GETTEXT_TAR_DST),$(GETTEXT_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(GETTEXT_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(GETTEXT_SRC))
+	$(call DO_UNTAR,$(GETTEXT_DST),$(GETTEXT_SRC))
+	$(call AUTOTOOLS_BUILD,$(GETTEXT_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
@@ -2870,20 +2868,20 @@ $(STRAPIT)-libs-libiconv:
 	$(call STRAPIT_LIBS_LIBICONV)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Iconv library
-	$(RM) -r "$(LIBICONV_TAR_DST)"
-	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
+	$(RM) -r "$(LIBICONV_DST)"
+	$(call DO_UNTAR,$(LIBICONV_DST),$(LIBICONV_SRC))
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Linux" requires some patching
 	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
-		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
+		$(call DO_PATCH,$(LIBICONV_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
 	fi
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux); \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux); \
+		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
+		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
 	fi
-	$(call AUTOTOOLS_BUILD,$(LIBICONV_TAR_DST),$(BUILD_STRAP),,\
+	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(BUILD_STRAP),,\
 		--enable-shared \
 		--disable-static \
 	)
@@ -2891,22 +2889,22 @@ $(STRAPIT)-libs-libiconv:
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
 #	https://savannah.gnu.org/bugs/?43212
 override define STRAPIT_LIBS_LIBICONV =
-	$(call CURL_FILE,$(LIBICONV_TAR_SRC))
+	$(call CURL_FILE,$(LIBICONV_SRC))
 	# start with fresh source directory, due to circular dependency with "gettext"
-	$(RM) -r "$(LIBICONV_TAR_DST)"
-	$(call DO_UNTAR,$(LIBICONV_TAR_DST),$(LIBICONV_TAR_SRC))
+	$(RM) -r "$(LIBICONV_DST)"
+	$(call DO_UNTAR,$(LIBICONV_DST),$(LIBICONV_SRC))
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Linux" requires some patching
 	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
-		$(call DO_PATCH,$(LIBICONV_TAR_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
+		$(call DO_PATCH,$(LIBICONV_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
 	fi
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/build-aux); \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_TAR_DST)/libcharset/build-aux); \
+		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
+		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
 	fi
-	$(call AUTOTOOLS_BUILD,$(LIBICONV_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
@@ -2914,18 +2912,18 @@ endef
 
 .PHONY: $(STRAPIT)-libs-pkgconfig
 $(STRAPIT)-libs-pkgconfig:
-	$(call CURL_FILE,$(PKGCONFIG_TAR_SRC))
-	$(call DO_UNTAR,$(PKGCONFIG_TAR_DST),$(PKGCONFIG_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST)/glib,$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(PKGCONFIG_SRC))
+	$(call DO_UNTAR,$(PKGCONFIG_DST),$(PKGCONFIG_SRC))
+	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_DST)/glib,$(COMPOSER_ABODE),,\
 		--with-libiconv="gnu" \
 	)
-#WORK : could this be better?  why not just -I$(PKGCONFIG_TAR_DST)/glib/glib?
+#WORK : could this be better?  why not just -I$(PKGCONFIG_DST)/glib/glib?
 #WORK : does the internal glib really not work, for that matter?
-	$(CP) "$(PKGCONFIG_TAR_DST)/glib/glib/glib.h"		"$(PKGCONFIG_TAR_DST)/glib/"
-	$(CP) "$(PKGCONFIG_TAR_DST)/glib/glib/glibconfig.h"	"$(PKGCONFIG_TAR_DST)/glib/"
-	$(CP) "$(PKGCONFIG_TAR_DST)/glib/glib/libglib-"*.la	"$(PKGCONFIG_TAR_DST)/glib/glib/libglib.la"
-	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_TAR_DST),$(COMPOSER_ABODE),\
-		GLIB_CFLAGS="$(CFLAGS) -I$(PKGCONFIG_TAR_DST)/glib -L$(PKGCONFIG_TAR_DST)/glib/glib" \
+	$(CP) "$(PKGCONFIG_DST)/glib/glib/glib.h"		"$(PKGCONFIG_DST)/glib/"
+	$(CP) "$(PKGCONFIG_DST)/glib/glib/glibconfig.h"	"$(PKGCONFIG_DST)/glib/"
+	$(CP) "$(PKGCONFIG_DST)/glib/glib/libglib-"*.la	"$(PKGCONFIG_DST)/glib/glib/libglib.la"
+	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_DST),$(COMPOSER_ABODE),\
+		GLIB_CFLAGS="$(CFLAGS) -I$(PKGCONFIG_DST)/glib -L$(PKGCONFIG_DST)/glib/glib" \
 		GLIB_LIBS="-lglib" \
 		,\
 		--disable-host-tool \
@@ -2934,40 +2932,40 @@ $(STRAPIT)-libs-pkgconfig:
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
-	$(call CURL_FILE,$(ZLIB_TAR_SRC))
-	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
+	$(call CURL_FILE,$(ZLIB_SRC))
+	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
 ifeq ($(BUILD_BITS),64)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(COMPOSER_ABODE),,\
 		--64 \
 		--static \
 	)
 else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(COMPOSER_ABODE),,\
 		--static \
 	)
 endif
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Zlib library
-	$(RM) -r "$(ZLIB_TAR_DST)"
-	$(call DO_UNTAR,$(ZLIB_TAR_DST),$(ZLIB_TAR_SRC))
+	$(RM) -r "$(ZLIB_DST)"
+	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
 ifeq ($(BUILD_BITS),64)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(BUILD_STRAP),,\
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(BUILD_STRAP),,\
 		--64 \
 	)
 else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_TAR_DST),$(BUILD_STRAP))
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(BUILD_STRAP))
 endif
 
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
-	$(call CURL_FILE,$(GMP_TAR_SRC))
-	$(call DO_UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
+	$(call CURL_FILE,$(GMP_SRC))
+	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(GMP_TAR_DST))
+	$(call GNU_CFG_INSTALL,$(GMP_DST))
 endif
-	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(COMPOSER_ABODE),\
 		ABI="$(BUILD_BITS)" \
 		,\
 		--disable-assembly \
@@ -2976,13 +2974,13 @@ endif
 	)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic GMP library
-	$(RM) -r "$(GMP_TAR_DST)"
-	$(call DO_UNTAR,$(GMP_TAR_DST),$(GMP_TAR_SRC))
+	$(RM) -r "$(GMP_DST)"
+	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(GMP_TAR_DST))
+	$(call GNU_CFG_INSTALL,$(GMP_DST))
 endif
-	$(call AUTOTOOLS_BUILD,$(GMP_TAR_DST),$(BUILD_STRAP),\
+	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(BUILD_STRAP),\
 		ABI="$(BUILD_BITS)" \
 		,\
 		--disable-assembly \
@@ -2992,14 +2990,14 @@ endif
 
 .PHONY: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs-ncurses:
-	$(call CURL_FILE,$(NCURSES_TAR_SRC))
-	$(call DO_UNTAR,$(NCURSES_TAR_DST),$(NCURSES_TAR_SRC))
+	$(call CURL_FILE,$(NCURSES_SRC))
+	$(call DO_UNTAR,$(NCURSES_DST),$(NCURSES_SRC))
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(NCURSES_TAR_DST))
+	$(call GNU_CFG_INSTALL,$(NCURSES_DST))
 endif
-	$(call AUTOTOOLS_BUILD,$(NCURSES_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(NCURSES_DST),$(COMPOSER_ABODE),,\
 		--without-gpm \
 		--without-shared \
 	)
@@ -3024,21 +3022,21 @@ endif
 
 .PHONY: $(STRAPIT)-libs-openssl
 $(STRAPIT)-libs-openssl:
-	$(call CURL_FILE,$(OPENSSL_TAR_SRC))
-	$(call DO_UNTAR,$(OPENSSL_TAR_DST),$(OPENSSL_TAR_SRC))
+	$(call CURL_FILE,$(OPENSSL_SRC))
+	$(call DO_UNTAR,$(OPENSSL_DST),$(OPENSSL_SRC))
 ifeq ($(BUILD_PLAT),Linux)
-	$(CP) "$(OPENSSL_TAR_DST)/Configure" "$(OPENSSL_TAR_DST)/configure"
+	$(CP) "$(OPENSSL_DST)/Configure" "$(OPENSSL_DST)/configure"
 else ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
 else
-	$(CP) "$(OPENSSL_TAR_DST)/config" "$(OPENSSL_TAR_DST)/configure"
+	$(CP) "$(OPENSSL_DST)/config" "$(OPENSSL_DST)/configure"
 endif
 	$(SED) -i \
 		-e "s|(TERMIO)([^S])|\1S\2|g" \
 		-e "s|(termio)([^s])|\1s\2|g" \
-		"$(OPENSSL_TAR_DST)/configure" \
-		"$(OPENSSL_TAR_DST)/crypto/ui/ui_openssl.c"
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_TAR_DST),$(COMPOSER_ABODE),,\
+		"$(OPENSSL_DST)/configure" \
+		"$(OPENSSL_DST)/crypto/ui/ui_openssl.c"
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_DST),$(COMPOSER_ABODE),,\
 		$(STRAPIT_LIBS_OPENSSL) \
 		no-shared \
 		no-dso \
@@ -3046,35 +3044,35 @@ endif
 
 .PHONY: $(STRAPIT)-libs-expat
 $(STRAPIT)-libs-expat:
-	$(call CURL_FILE,$(EXPAT_TAR_SRC))
-	$(call DO_UNTAR,$(EXPAT_TAR_DST),$(EXPAT_TAR_SRC))
+	$(call CURL_FILE,$(EXPAT_SRC))
+	$(call DO_UNTAR,$(EXPAT_DST),$(EXPAT_SRC))
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(EXPAT_TAR_DST)/conftools)
+	$(call GNU_CFG_INSTALL,$(EXPAT_DST)/conftools)
 endif
-	$(call AUTOTOOLS_BUILD,$(EXPAT_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(EXPAT_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-libs-freetype
 $(STRAPIT)-libs-freetype:
-	$(call CURL_FILE,$(FREETYPE_TAR_SRC))
-	$(call DO_UNTAR,$(FREETYPE_TAR_DST),$(FREETYPE_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(FREETYPE_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(FREETYPE_SRC))
+	$(call DO_UNTAR,$(FREETYPE_DST),$(FREETYPE_SRC))
+	$(call AUTOTOOLS_BUILD,$(FREETYPE_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-libs-fontconfig
 $(STRAPIT)-libs-fontconfig:
-	$(call CURL_FILE,$(FONTCONFIG_TAR_SRC))
-	$(call DO_UNTAR,$(FONTCONFIG_TAR_DST),$(FONTCONFIG_TAR_SRC))
+	$(call CURL_FILE,$(FONTCONFIG_SRC))
+	$(call DO_UNTAR,$(FONTCONFIG_DST),$(FONTCONFIG_SRC))
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
-	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm" \
 		,\
@@ -3088,7 +3086,7 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 		--enable-static \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_TAR_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm" \
 		,\
@@ -3117,15 +3115,15 @@ $(STRAPIT)-util:
 
 .PHONY: $(STRAPIT)-util-coreutils
 $(STRAPIT)-util-coreutils:
-	$(call CURL_FILE,$(COREUTILS_TAR_SRC))
-	$(call DO_UNTAR,$(COREUTILS_TAR_DST),$(COREUTILS_TAR_SRC))
+	$(call CURL_FILE,$(COREUTILS_SRC))
+	$(call DO_UNTAR,$(COREUTILS_DST),$(COREUTILS_SRC))
 ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build "*.so" files, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
-		"$(COREUTILS_TAR_DST)/configure"
+		"$(COREUTILS_DST)/configure"
 endif
-	$(call AUTOTOOLS_BUILD,$(COREUTILS_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(COREUTILS_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
 		--disable-libcap \
@@ -3134,67 +3132,67 @@ endif
 
 .PHONY: $(STRAPIT)-util-findutils
 $(STRAPIT)-util-findutils:
-	$(call CURL_FILE,$(FINDUTILS_TAR_SRC))
-	$(call DO_UNTAR,$(FINDUTILS_TAR_DST),$(FINDUTILS_TAR_SRC))
+	$(call CURL_FILE,$(FINDUTILS_SRC))
+	$(call DO_UNTAR,$(FINDUTILS_DST),$(FINDUTILS_SRC))
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(FINDUTILS_TAR_DST)/build-aux)
+	$(call GNU_CFG_INSTALL,$(FINDUTILS_DST)/build-aux)
 endif
-	$(call AUTOTOOLS_BUILD,$(FINDUTILS_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(FINDUTILS_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-util-patch
 $(STRAPIT)-util-patch:
-	$(call CURL_FILE,$(PATCH_TAR_SRC))
-	$(call DO_UNTAR,$(PATCH_TAR_DST),$(PATCH_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(PATCH_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(PATCH_SRC))
+	$(call DO_UNTAR,$(PATCH_DST),$(PATCH_SRC))
+	$(call AUTOTOOLS_BUILD,$(PATCH_DST),$(COMPOSER_ABODE),,\
 		--disable-xattr \
 	)
 
 .PHONY: $(STRAPIT)-util-sed
 $(STRAPIT)-util-sed:
-	$(call CURL_FILE,$(SED_TAR_SRC))
-	$(call DO_UNTAR,$(SED_TAR_DST),$(SED_TAR_SRC))
+	$(call CURL_FILE,$(SED_SRC))
+	$(call DO_UNTAR,$(SED_DST),$(SED_SRC))
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(SED_TAR_DST)/build-aux)
+	$(call GNU_CFG_INSTALL,$(SED_DST)/build-aux)
 endif
-	$(call AUTOTOOLS_BUILD,$(SED_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(SED_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 	)
 
 .PHONY: $(STRAPIT)-util-bzip
 $(STRAPIT)-util-bzip:
-	$(call CURL_FILE,$(BZIP_TAR_SRC))
-	$(call DO_UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
-	$(ECHO) >"$(BZIP_TAR_DST)/configure"
-	$(CHMOD) "$(BZIP_TAR_DST)/configure"
+	$(call CURL_FILE,$(BZIP_SRC))
+	$(call DO_UNTAR,$(BZIP_DST),$(BZIP_SRC))
+	$(ECHO) >"$(BZIP_DST)/configure"
+	$(CHMOD) "$(BZIP_DST)/configure"
 	$(SED) -i \
 		-e "s|^(PREFIX[=]).+$$|\1$(COMPOSER_ABODE)|g" \
-		"$(BZIP_TAR_DST)/Makefile"
-	$(call AUTOTOOLS_BUILD,$(BZIP_TAR_DST),$(COMPOSER_ABODE))
+		"$(BZIP_DST)/Makefile"
+	$(call AUTOTOOLS_BUILD,$(BZIP_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-util-gzip
 $(STRAPIT)-util-gzip:
-	$(call CURL_FILE,$(GZIP_TAR_SRC))
-	$(call DO_UNTAR,$(GZIP_TAR_DST),$(GZIP_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(GZIP_TAR_DST),$(COMPOSER_ABODE))
+	$(call CURL_FILE,$(GZIP_SRC))
+	$(call DO_UNTAR,$(GZIP_DST),$(GZIP_SRC))
+	$(call AUTOTOOLS_BUILD,$(GZIP_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(STRAPIT)-util-xz
 $(STRAPIT)-util-xz:
-	$(call CURL_FILE,$(XZ_TAR_SRC))
-	$(call DO_UNTAR,$(XZ_TAR_DST),$(XZ_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(XZ_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(XZ_SRC))
+	$(call DO_UNTAR,$(XZ_DST),$(XZ_SRC))
+	$(call AUTOTOOLS_BUILD,$(XZ_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
 
 .PHONY: $(STRAPIT)-util-tar
 $(STRAPIT)-util-tar:
-	$(call CURL_FILE,$(TAR_TAR_SRC))
-	$(call DO_UNTAR,$(TAR_TAR_DST),$(TAR_TAR_SRC))
-	$(call AUTOTOOLS_BUILD,$(TAR_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call CURL_FILE,$(TAR_SRC))
+	$(call DO_UNTAR,$(TAR_DST),$(TAR_SRC))
+	$(call AUTOTOOLS_BUILD,$(TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 		--without-posix-acls \
 		--without-xattrs \
@@ -3203,40 +3201,40 @@ $(STRAPIT)-util-tar:
 .PHONY: $(STRAPIT)-util-perl
 # thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 $(STRAPIT)-util-perl:
-	$(call CURL_FILE,$(PERL_TAR_SRC))
-	$(call DO_UNTAR,$(PERL_TAR_DST),$(PERL_TAR_SRC))
+	$(call CURL_FILE,$(PERL_SRC))
+	$(call DO_UNTAR,$(PERL_DST),$(PERL_SRC))
 ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" requires some patching
-	if [ ! -f "$(PERL_TAR_DST)/Configure.perl" ]; then \
+	if [ ! -f "$(PERL_DST)/Configure.perl" ]; then \
 		$(SED) -i \
 			-e "s|[ ][-]Wl[,][-][-]image[-]base[,]0x52000000||g" \
-			"$(PERL_TAR_DST)/Makefile.SH"; \
-		$(call DO_PATCH,$(PERL_TAR_DST),https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/perl/perl-5.20.0-msys2.patch); \
+			"$(PERL_DST)/Makefile.SH"; \
+		$(call DO_PATCH,$(PERL_DST),https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/perl/perl-5.20.0-msys2.patch); \
 	fi
 	# "$(BUILD_PLAT),Msys" does not have "/proc" filesystem or symlinks
 	$(SED) -i \
 		-e "s|^(case[ ][\"])[$$]d_readlink|\1NULL|g" \
-		"$(PERL_TAR_DST)/Configure"
+		"$(PERL_DST)/Configure"
 	$(SED) -i \
 		-e "s|[$$]issymlink|test -f|g" \
-		"$(PERL_TAR_DST)/Makefile.SH"
+		"$(PERL_DST)/Makefile.SH"
 endif
 	# "$(BUILD_PLAT),Msys" is case-insensitive, so 'Configure' is already 'configure'
-	if [ ! -f "$(PERL_TAR_DST)/Configure.perl" ]; then \
-		$(MV) "$(PERL_TAR_DST)/Configure" "$(PERL_TAR_DST)/Configure.perl"; \
-		$(CP) "$(PERL_TAR_DST)/configure.gnu" "$(PERL_TAR_DST)/configure"; \
+	if [ ! -f "$(PERL_DST)/Configure.perl" ]; then \
+		$(MV) "$(PERL_DST)/Configure" "$(PERL_DST)/Configure.perl"; \
+		$(CP) "$(PERL_DST)/configure.gnu" "$(PERL_DST)/configure"; \
 		$(SED) -i \
 			-e "s|(Configure)([^.])|\1.perl\2|g" \
-			"$(PERL_TAR_DST)/Configure.perl" \
-			"$(PERL_TAR_DST)/MANIFEST" \
-			"$(PERL_TAR_DST)/configure"; \
+			"$(PERL_DST)/Configure.perl" \
+			"$(PERL_DST)/MANIFEST" \
+			"$(PERL_DST)/configure"; \
 	fi
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_DST),$(COMPOSER_ABODE))
 
 override define PERL_MODULES_BUILD =
 	$(call CURL_FILE,$(2)); \
-	$(call DO_UNTAR,$(PERL_TAR_DST)/$(1),$(2)); \
-	cd "$(PERL_TAR_DST)/$(1)" && \
+	$(call DO_UNTAR,$(PERL_DST)/$(1),$(2)); \
+	cd "$(PERL_DST)/$(1)" && \
 		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
 		$(BUILD_ENV) $(MAKE) && \
 		$(BUILD_ENV) $(MAKE) install
@@ -3254,15 +3252,15 @@ $(FETCHIT)-bash: $(FETCHIT)-bash-prep
 
 .PHONY: $(FETCHIT)-bash-pull
 $(FETCHIT)-bash-pull:
-	$(call CURL_FILE,$(BASH_TAR_SRC))
+	$(call CURL_FILE,$(BASH_SRC))
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
-	$(call DO_UNTAR,$(BASH_TAR_DST),$(BASH_TAR_SRC),$(notdir $(BASH_TAR_DST))/ChangeLog)
+	$(call DO_UNTAR,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
 
 .PHONY: $(FETCHIT)-bash-prep
 $(FETCHIT)-bash-prep:
 	$(SED) -i \
 		-e "s|[-]lcurses|-lncurses|g" \
-		"$(BASH_TAR_DST)/configure"
+		"$(BASH_DST)/configure"
 
 .PHONY: $(BUILDIT)-bash
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
@@ -3271,14 +3269,14 @@ $(BUILDIT)-bash:
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
-	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(BASH_DST),$(COMPOSER_ABODE),\
 		bash_cv_func_sigsetjmp="missing" \
 		,\
 		--enable-static-link \
 		--without-bash-malloc \
 	)
 else
-	$(call AUTOTOOLS_BUILD,$(BASH_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(BASH_DST),$(COMPOSER_ABODE),,\
 		--enable-static-link \
 		--without-bash-malloc \
 	)
@@ -3290,18 +3288,18 @@ $(FETCHIT)-less: $(FETCHIT)-less-prep
 
 .PHONY: $(FETCHIT)-less-pull
 $(FETCHIT)-less-pull:
-	$(call CURL_FILE,$(LESS_TAR_SRC))
-	$(call DO_UNTAR,$(LESS_TAR_DST),$(LESS_TAR_SRC))
+	$(call CURL_FILE,$(LESS_SRC))
+	$(call DO_UNTAR,$(LESS_DST),$(LESS_SRC))
 
 .PHONY: $(FETCHIT)-less-prep
 $(FETCHIT)-less-prep:
 	$(SED) -i \
 		-e "s|[-]lncursesw|-lncurses|g" \
-		"$(LESS_TAR_DST)/configure"
+		"$(LESS_DST)/configure"
 
 .PHONY: $(BUILDIT)-less
 $(BUILDIT)-less:
-	$(call AUTOTOOLS_BUILD,$(LESS_TAR_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD,$(LESS_DST),$(COMPOSER_ABODE))
 
 .PHONY: $(FETCHIT)-vim
 $(FETCHIT)-vim: $(FETCHIT)-vim-pull
@@ -3309,8 +3307,8 @@ $(FETCHIT)-vim: $(FETCHIT)-vim-prep
 
 .PHONY: $(FETCHIT)-vim-pull
 $(FETCHIT)-vim-pull:
-	$(call CURL_FILE,$(VIM_TAR_SRC))
-	$(call DO_UNTAR,$(VIM_TAR_DST),$(VIM_TAR_SRC))
+	$(call CURL_FILE,$(VIM_SRC))
+	$(call DO_UNTAR,$(VIM_DST),$(VIM_SRC))
 
 .PHONY: $(FETCHIT)-vim-prep
 $(FETCHIT)-vim-prep:
@@ -3318,7 +3316,7 @@ $(FETCHIT)-vim-prep:
 .PHONY: $(BUILDIT)-vim
 # thanks for the 'EXTRA_DEFS' fix below: http://vim.1045645.n5.nabble.com/Conflicting-definitions-for-tgoto-etc-when-cross-building-td1210909.html
 $(BUILDIT)-vim:
-	$(call AUTOTOOLS_BUILD,$(VIM_TAR_DST),$(COMPOSER_ABODE),\
+	$(call AUTOTOOLS_BUILD,$(VIM_DST),$(COMPOSER_ABODE),\
 		EXTRA_DEFS="$(CFLAGS)" \
 		,\
 		--disable-acl \
@@ -3338,8 +3336,8 @@ $(FETCHIT)-make: $(FETCHIT)-make-prep
 
 .PHONY: $(STRAPIT)-make-pull
 $(STRAPIT)-make-pull:
-	$(call CURL_FILE,$(MAKE_TAR_SRC))
-	$(call DO_UNTAR,$(MAKE_TAR_DST),$(MAKE_TAR_SRC))
+	$(call CURL_FILE,$(MAKE_SRC_INIT))
+	$(call DO_UNTAR,$(MAKE_DST_INIT),$(MAKE_SRC_INIT))
 
 .PHONY: $(FETCHIT)-make-pull
 $(FETCHIT)-make-pull:
@@ -3349,7 +3347,7 @@ $(FETCHIT)-make-pull:
 $(STRAPIT)-make-prep:
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(MAKE_TAR_DST)/config)
+	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
 
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
@@ -3360,7 +3358,7 @@ $(FETCHIT)-make-prep:
 
 .PHONY: $(STRAPIT)-make-build
 $(STRAPIT)-make-build:
-	$(call AUTOTOOLS_BUILD,$(MAKE_TAR_DST),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(MAKE_DST_INIT),$(COMPOSER_ABODE),,\
 		--without-guile \
 	)
 
@@ -3376,31 +3374,31 @@ $(FETCHIT)-infozip: $(FETCHIT)-infozip-prep
 
 .PHONY: $(FETCHIT)-infozip-pull
 $(FETCHIT)-infozip-pull:
-	$(call CURL_FILE,$(IZIP_TAR_SRC))
-	$(call CURL_FILE,$(UZIP_TAR_SRC))
-	$(call CURL_FILE,$(BZIP_TAR_SRC))
-	$(call DO_UNTAR,$(IZIP_TAR_DST),$(IZIP_TAR_SRC))
-	$(call DO_UNTAR,$(UZIP_TAR_DST),$(UZIP_TAR_SRC))
-	$(call DO_UNTAR,$(BZIP_TAR_DST),$(BZIP_TAR_SRC))
+	$(call CURL_FILE,$(IZIP_SRC))
+	$(call CURL_FILE,$(UZIP_SRC))
+	$(call CURL_FILE,$(BZIP_SRC))
+	$(call DO_UNTAR,$(IZIP_DST),$(IZIP_SRC))
+	$(call DO_UNTAR,$(UZIP_DST),$(UZIP_SRC))
+	$(call DO_UNTAR,$(BZIP_DST),$(BZIP_SRC))
 	$(MKDIR) \
-		"$(IZIP_TAR_DST)/bzip2" \
-		"$(UZIP_TAR_DST)/bzip2"
-	$(CP) "$(BZIP_TAR_DST)/"* "$(IZIP_TAR_DST)/bzip2/"
-	$(CP) "$(BZIP_TAR_DST)/"* "$(UZIP_TAR_DST)/bzip2/"
+		"$(IZIP_DST)/bzip2" \
+		"$(UZIP_DST)/bzip2"
+	$(CP) "$(BZIP_DST)/"* "$(IZIP_DST)/bzip2/"
+	$(CP) "$(BZIP_DST)/"* "$(UZIP_DST)/bzip2/"
 
 .PHONY: $(FETCHIT)-infozip-prep
 $(FETCHIT)-infozip-prep:
 	$(SED) -i \
 		-e "s|^(prefix[ ][=][ ]).+$$|\1$(COMPOSER_ABODE)|g" \
-		"$(IZIP_TAR_DST)/unix/Makefile" \
-		"$(UZIP_TAR_DST)/unix/Makefile"
+		"$(IZIP_DST)/unix/Makefile" \
+		"$(UZIP_DST)/unix/Makefile"
 
 .PHONY: $(BUILDIT)-infozip
 $(BUILDIT)-infozip:
-	cd "$(IZIP_TAR_DST)" && \
+	cd "$(IZIP_DST)" && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
-	cd "$(UZIP_TAR_DST)" && \
+	cd "$(UZIP_DST)" && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
 
@@ -3413,8 +3411,8 @@ $(STRAPIT)-curl: $(STRAPIT)-curl-build
 
 .PHONY: $(STRAPIT)-curl-pull
 $(STRAPIT)-curl-pull:
-	$(call CURL_FILE,$(CURL_TAR_SRC))
-	$(call DO_UNTAR,$(CURL_TAR_DST),$(CURL_TAR_SRC))
+	$(call CURL_FILE,$(CURL_SRC))
+	$(call DO_UNTAR,$(CURL_DST),$(CURL_SRC))
 
 .PHONY: $(STRAPIT)-curl-prep
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
@@ -3423,11 +3421,11 @@ $(STRAPIT)-curl-prep:
 	# don't unlink the "certdata.txt" file after downloading and processing it
 	$(SED) -i \
 		-e "s|([ ][-]b[ ][-]l)[ ][-]u|\1|g" \
-		"$(CURL_TAR_DST)/Makefile.in" \
-		"$(CURL_TAR_DST)/Makefile"
+		"$(CURL_DST)/Makefile.in" \
+		"$(CURL_DST)/Makefile"
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
-		"$(CURL_TAR_DST)/configure"
+		"$(CURL_DST)/configure"
 
 .PHONY: $(STRAPIT)-curl-build
 #WORK : would be nice to double-check:
@@ -3435,13 +3433,13 @@ $(STRAPIT)-curl-prep:
 #	* perl-lwp works if curl fails
 #	* curl works on re-entry
 $(STRAPIT)-curl-build:
-	cd "$(CURL_TAR_DST)" && \
+	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(MKDIR) "$(COMPOSER_STORE)" && \
 		$(MKDIR) "$(COMPOSER_ABODE)" && \
-		$(MV) "$(CURL_TAR_DST)/certdata.txt" "$(COMPOSER_STORE)/" && \
-		$(MV) "$(CURL_TAR_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
-	$(call AUTOTOOLS_BUILD,$(CURL_TAR_DST),$(COMPOSER_ABODE),,\
+		$(MV) "$(CURL_DST)/certdata.txt" "$(COMPOSER_STORE)/" && \
+		$(MV) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
+	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--disable-ldap \
 		--without-libidn \
@@ -3459,8 +3457,8 @@ $(STRAPIT)-git: $(STRAPIT)-git-build
 
 .PHONY: $(STRAPIT)-git-pull
 $(STRAPIT)-git-pull:
-	$(call CURL_FILE,$(GIT_TAR_SRC))
-	$(call DO_UNTAR,$(GIT_TAR_DST),$(GIT_TAR_SRC))
+	$(call CURL_FILE,$(GIT_SRC))
+	$(call DO_UNTAR,$(GIT_DST),$(GIT_SRC))
 
 .PHONY: $(STRAPIT)-git-prep
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
@@ -3468,15 +3466,15 @@ $(STRAPIT)-git-pull:
 # thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
 $(STRAPIT)-git-prep:
 #WORK
-#	cd "$(GIT_TAR_DST)" && \
+#	cd "$(GIT_DST)" && \
 #		$(BUILD_ENV) $(MAKE) configure
 #WORK
 	$(SED) -i \
 		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
-		"$(GIT_TAR_DST)/configure"
+		"$(GIT_DST)/configure"
 	$(SED) -i \
 		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
-		"$(GIT_TAR_DST)/Makefile"
+		"$(GIT_DST)/Makefile"
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
@@ -3491,9 +3489,9 @@ $(FETCHIT)-texlive: $(FETCHIT)-texlive-prep
 .PHONY: $(FETCHIT)-texlive-pull
 $(FETCHIT)-texlive-pull:
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
-	$(call CURL_FILE,$(TEX_TAR_SRC))
+	$(call CURL_FILE,$(TEX_SRC))
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
-	$(call DO_UNTAR,$(TEX_TAR_DST),$(TEX_TAR_SRC))
+	$(call DO_UNTAR,$(TEX_DST),$(TEX_SRC))
 
 .PHONY: $(FETCHIT)-texlive-prep
 # thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
@@ -3502,28 +3500,28 @@ $(FETCHIT)-texlive-prep:
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
 	$(CP) \
-		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
-		"$(TEX_TAR_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
+		"$(TEX_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
+		"$(TEX_DST)/libs/icu/icu-"*"/source/config/mh-unknown"
 	# "$(BUILD_PLAT),Msys" doesn't seem to build these files
 	$(SED) -i \
 		-e "s|allcm[:]allec||g" \
 		-e "s|fmtutil[:]mktexfmt||g" \
 		-e "s|kpsetool[:]kpsexpand||g" \
 		-e "s|kpsetool[:]kpsepath||g" \
-		"$(TEX_TAR_DST)/texk/texlive/tl_scripts/Makefile.in"
+		"$(TEX_DST)/texk/texlive/tl_scripts/Makefile.in"
 endif
 	# dear texlive, please don't remove the destination directory before installing to it...
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
-		"$(TEX_TAR_DST)/Build"
+		"$(TEX_DST)/Build"
 	# make sure we link in all the right libraries
 	$(SED) -i \
-		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_TAR_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
-		"$(TEX_TAR_DST)/texk/web2c/configure"
+		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
+		"$(TEX_DST)/texk/web2c/configure"
 
 .PHONY: $(BUILDIT)-texlive
 $(BUILDIT)-texlive:
-	cd "$(TEX_TAR_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
+	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
@@ -3531,7 +3529,7 @@ $(BUILDIT)-texlive:
 		--disable-shared \
 		--enable-static
 #WORK : NOTARGET?
-#>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_TAR_DST),$(COMPOSER_ABODE),,\
+#>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
 #>		--without-ln-s \
@@ -3564,17 +3562,17 @@ $(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 
 .PHONY: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc-pull:
-	$(call CURL_FILE,$(GHC_BIN_SRC))
-	$(call CURL_FILE,$(CABAL_TAR_SRC))
-	$(call DO_UNTAR,$(GHC_BIN_DST),$(GHC_BIN_SRC))
-	$(call DO_UNTAR,$(CABAL_TAR_DST),$(CABAL_TAR_SRC))
+	$(call CURL_FILE,$(GHC_SRC_INIT))
+	$(call CURL_FILE,$(CABAL_SRC_INIT))
+	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
+	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(GHC_BIN_DST)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(GHC_DST_INIT)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
 	)
 	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
 		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(CABAL_TAR_DST)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(CABAL_DST_INIT)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
 	)
 
 .PHONY: $(FETCHIT)-ghc-pull
@@ -3584,7 +3582,7 @@ $(FETCHIT)-ghc-pull:
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 #WORKING : GHC 7.8
 #	$(SED) -i \
-#		-e "s|7[.]11|$(GHC_VERSION)|g" \
+#		-e "s|7[.]11|$(GHC_VER)|g" \
 #		-e "s|(RELEASE[=])NO|\1YES|g" \
 #		"$(GHC_DST)/configure"*
 
@@ -3594,29 +3592,29 @@ $(FETCHIT)-ghc-pull:
 $(STRAPIT)-ghc-prep:
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CABAL_TAR_DST)/bootstrap.patch.sh"
-	$(CHMOD) "$(CABAL_TAR_DST)/bootstrap.patch.sh"
+	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CABAL_DST_INIT)/bootstrap.patch.sh"
+	$(CHMOD) "$(CABAL_DST_INIT)/bootstrap.patch.sh"
 	$(SED) -i \
-		-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(CABAL_TAR_DST)/bootstrap.patch.sh\"|g" \
-		"$(CABAL_TAR_DST)/bootstrap.sh"
+		-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(CABAL_DST_INIT)/bootstrap.patch.sh\"|g" \
+		"$(CABAL_DST_INIT)/bootstrap.sh"
 	$(SED) -i \
 		-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
-		"$(CABAL_TAR_DST)/Distribution/Client/Install.hs"
+		"$(CABAL_DST_INIT)/Distribution/Client/Install.hs"
 endif
 	$(SED) -i \
-		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VERSION_LIB)|g" \
+		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VER_LIB)|g" \
 		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|([{]GHC[}][ ][-][-]make[ ])(Setup)|\1$(GHCFLAGS) \2|g" \
-		"$(CABAL_TAR_DST)/bootstrap.sh"
+		"$(CABAL_DST_INIT)/bootstrap.sh"
 
 override define HEREDOC_CABAL_BOOTSTRAP =
 #!$(SHELL)
-[ -f "$(CABAL_TAR_DST)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
+[ -f "$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
 	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
 	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
 	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
-	"$(CABAL_TAR_DST)/network-"*"/include/HsNet.h" || exit 1
+	"$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" || exit 1
 exit 0
 endef
 
@@ -3657,11 +3655,11 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 		"$(GHC_DST)/ghc/ghc.mk"
 endif
 #>	$(SED) -i \
-#>		-e "s|$(GHC_VERSION_LIB)|$(CABAL_VERSION_LIB)|g" \
+#>		-e "s|$(GHC_VER_LIB)|$(CABAL_VER_LIB)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Makefile"
 #>	$(SED) -i \
-#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VERSION_LIB)|g" \
+#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VER_LIB)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal" \
 #>		"$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal" \
 #>		"$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal"
@@ -3673,14 +3671,14 @@ endif
 $(STRAPIT)-ghc-build:
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
-	$(CP) "$(GHC_BIN_DST)/"* "$(BUILD_STRAP)/"
+	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
 else
 #WORK : NOTARGET?
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_BIN_DST),$(BUILD_STRAP),,,\
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
 		show \
 	)
 endif
-	cd "$(CABAL_TAR_DST)" && $(BUILD_ENV_MINGW) \
+	cd "$(CABAL_DST_INIT)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(BUILD_STRAP)" \
 		EXTRA_CONFIGURE_OPTS=" \
 			--extra-include-dirs=$(COMPOSER_ABODE)/include \
@@ -3691,7 +3689,7 @@ endif
 .PHONY: $(STRAPIT)-ghc-libs
 $(STRAPIT)-ghc-libs:
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		cd "$(GHC_BIN_DST)/$(FILE)" && \
+		cd "$(GHC_DST_INIT)/$(FILE)" && \
 			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
 	)
 
@@ -3709,7 +3707,7 @@ $(BUILDIT)-ghc:
 #endif
 #WORK
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-		Cabal-$(CABAL_VERSION_LIB)
+		Cabal-$(CABAL_VER_LIB)
 
 override define HEREDOC_GHC_BUILD_MK =
 SRC_HC_OPTS	= -optc-L$(BUILD_STRAP)/lib -optl-L$(BUILD_STRAP)/lib $(GHCFLAGS)
@@ -3885,10 +3883,10 @@ $(RELEASE)-dist:
 				--include="$(DEBIAN_PACKAGES_LIST)" \
 				"$(DEBIAN_SUITE)" \
 				"$(RELEASE_DIR)/$(RELEASE_TARGET)"; \
-		$(call CURL_FILE,$(MAKE_TAR_SRC)); \
-		$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(notdir $(MAKE_TAR_DST)),$(MAKE_TAR_SRC)); \
+		$(call CURL_FILE,$(MAKE_SRC_INIT)); \
+		$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(notdir $(MAKE_DST_INIT)),$(MAKE_SRC_INIT)); \
 		$(RELEASE_CHROOT) /bin/sh -c \
-			"cd \"/$(notdir $(MAKE_TAR_DST))\" && \
+			"cd \"/$(notdir $(MAKE_DST_INIT))\" && \
 				./configure --prefix=\"/usr\" && \
 				make && \
 				make install"; \
@@ -3897,6 +3895,8 @@ $(RELEASE)-dist:
 	fi
 	$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"* "$(COMPOSER_STORE)/.debootstrap.apt/" || $(TRUE)
 		echo "WORKING : need to fix dynamic libgcc for pandoc in dist build"; \
+		$(MKDIR) "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib"; \
+		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(RELEASE_DIR)/$(RELEASE_TARGET)/lib/i386-linux-gnu/"; \
 		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib/"; \
 		echo "WORKING"
 	@$(HEADER_1)
