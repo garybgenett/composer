@@ -756,15 +756,6 @@ override CABAL_CMT			:= Cabal-1.22.0.0-release
 # https://hackage.haskell.org
 override HACKAGE_URL			= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
 
-# https://github.com/haskell/haskell-platform
-# https://www.vex.net/~trebla/haskell/haskell-platform.xhtml
-# https://www.haskell.org/ghc/docs/latest/html/users_guide/packages.html
-# https://www.vex.net/~trebla/haskell/sicp.xhtml
-override HASKELL_SRC			:= https://github.com/haskell/haskell-platform.git
-override HASKELL_DST			:= $(COMPOSER_BUILD)/haskell
-override HASKELL_CMT			:= 2013.2.0.0
-override HASKELL_TAR			:= $(HASKELL_DST)/src/generic/haskell-platform-$(HASKELL_CMT)
-
 # https://github.com/jgm/pandoc/blob/master/COPYING (license: GPL)
 # http://johnmacfarlane.net/pandoc/code.html
 # http://johnmacfarlane.net/pandoc/installing.html
@@ -982,61 +973,6 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/tools \
 	tex/latex/url
 
-#WORKING : remove all haskell stuff
-#WORKING : GHC 7.8
-#override GHC_BASE_LIBRARIES_LIST	:= \
-#	Win32|WORK \
-#	array|0.5.0.0 \
-#	base|4.7.0.1 \
-#	binary|0.7.1.0 \
-#	bytestring|0.10.4.0 \
-#	containers|0.5.5.1 \
-#	deepseq|1.3.0.2 \
-#	directory|1.2.1.0 \
-#	filepath|1.3.0.2 \
-#	ghc-prim|0.3.1.0 \
-#	haskeline|0.7.1.2 \
-#	haskell2010|1.1.2.0 \
-#	haskell98|2.0.0.3 \
-#	hoopl|3.10.0.1 \
-#	hpc|0.6.0.1 \
-#	integer-gmp|0.5.1.0 \
-#	old-locale|1.0.0.6 \
-#	old-time|1.1.0.2 \
-#	pretty|1.1.1.1 \
-#	process|1.2.0.0 \
-#	rts|1.0 \
-#	template-haskell|2.9.0.0 \
-#	terminfo|0.4.0.0 \
-#	time|1.4.2 \
-#	transformers|0.3.0.0 \
-#	unix|2.7.0.1 \
-#	xhtml|3000.2.1
-override GHC_BASE_LIBRARIES_LIST	:= \
-	Win32|2.3.0.0 \
-	array|0.4.0.1 \
-	base|4.6.0.1 \
-	binary|0.5.1.1 \
-	bytestring|0.10.0.2 \
-	containers|0.5.0.0 \
-	deepseq|1.3.0.1 \
-	directory|1.2.0.1 \
-	filepath|1.3.0.1 \
-	ghc-prim|0.3.0.0 \
-	haskell2010|1.1.1.0 \
-	haskell98|2.0.0.2 \
-	hoopl|3.9.0.0 \
-	hpc|0.6.0.0 \
-	integer-gmp|0.5.0.0 \
-	old-locale|1.0.0.5 \
-	old-time|1.1.0.1 \
-	pretty|1.1.1.0 \
-	process|1.1.0.2 \
-	rts|1.0 \
-	template-haskell|2.8.0.0 \
-	time|1.4.0.1 \
-	unix|2.6.0.1
-
 override GHC_LIBRARIES_LIST		:= \
 	primitive|0.5.4.0 \
 	tf-random|0.5 \
@@ -1063,24 +999,6 @@ override CABAL_LIBRARIES_LIST		:= \
 	text|1.1.0.1 \
 	transformers|0.3.0.0 \
 	zlib|0.5.4.1
-
-#WORKING : remove all haskell stuff
-override HASKELL_VERSION_LIST		:= \
-	GHC|$(GHC_VERSION) \
-	ghc|$(GHC_VERSION) \
-	cabal-install|$(CABAL_VERSION) \
-	Cabal|$(CABAL_VERSION_LIB) \
-	$(GHC_BASE_LIBRARIES_LIST) \
-	$(GHC_LIBRARIES_LIST)
-
-#WORKING : remove all haskell stuff
-override HASKELL_PACKAGES_LIST		:= \
-	$(filter-out GHC|$(GHC_VERSION),\
-	$(filter-out ghc|$(GHC_VERSION),\
-	$(filter-out ghc-prim|%,\
-	$(filter-out integer-gmp|%,\
-	$(filter-out rts|%,\
-	$(HASKELL_VERSION_LIST))))))
 
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
@@ -1833,7 +1751,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell$(_D)"			"Download/preparation of Haskell Platform source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-bash$(_D):"	"$(_E)$(FETCHIT)-bash-pull$(_D)"		"Download of Bash source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash-prep$(_D)"		"Preparation of Bash source archive"
@@ -1849,9 +1766,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive-prep$(_D)"		"Preparation of TeX Live source archives"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc-prep$(_D)"			"Preparation of GHC source repository"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-haskell$(_D):"	"$(_E)$(FETCHIT)-haskell-pull$(_D)"		"Download of Haskell Platform source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell-pkg$(_D)"		"Download/preparation of Haskell Platform packages"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-haskell-prep$(_D)"		"Preparation of Haskell Platform source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repositories"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-cleanup$(_D)"			"Archives/restores source files and removes temporary build files"
@@ -1863,7 +1777,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-haskell$(_D)"			"Build/compile of Haskell Platform from source"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
@@ -2346,13 +2259,12 @@ $(STRAPIT):
 
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
+#WORKING : $(FETCHIT)-cabal should maybe call $(BUILDIT)-cleanup directly?
 $(FETCHIT): $(BUILDIT)-cleanup
 $(FETCHIT): $(FETCHIT)-config
 $(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip
 $(FETCHIT): $(FETCHIT)-texlive
-#WORKING : remove all haskell stuff
-#$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-haskell $(FETCHIT)-pandoc
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
@@ -2361,8 +2273,7 @@ $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip
 $(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
-#WORKING : remove all haskell stuff
-#	$(RUNMAKE) $(BUILDIT)-haskell
+#WORKING : need to sort out where this all needs to be
 	$(RUNMAKE) $(FETCHIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
 	$(RUNMAKE) $(BUILDIT)-cleanup
@@ -2511,8 +2422,7 @@ endif
 	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VERSION)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_PDF_VERSION)"	"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)Haskell"			"$(_M)$(HASKELL_CMT)"		"$(_D)$(shell $(CABAL) info haskell-platform		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)GHC"			"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VERSION)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSION)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VERSION_LIB)"	"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VERSION_LIB)"
@@ -2550,8 +2460,7 @@ endif
 	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_D)$(subst ",,$(word 1,$(PANDOC_CITEPROC)))"
 	@$(TABLE_I3) "$(_C)TeX Live"			"$(_D)$(subst ",,$(word 1,$(TEX)))"
 	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_D)$(subst ",,$(word 1,$(PDFLATEX)))"
-	@$(TABLE_I3) "$(_C)Haskell"			"$(_E)(no binary to report)"
-	@$(TABLE_I3) "- $(_C)GHC"			"$(_D)$(subst ",,$(word 1,$(GHC))) $(_S)($(subst ",,$(word 1,$(GHC_PKG))))"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_D)$(subst ",,$(word 1,$(GHC))) $(_S)($(subst ",,$(word 1,$(GHC_PKG))))"
 	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL)))"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HEADER_L)
@@ -3808,112 +3717,6 @@ SRC_CC_OPTS	= -L$(BUILD_STRAP)/lib $(CFLAGS)
 SRC_LD_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 SRC_CPP_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 endef
-
-.PHONY: $(FETCHIT)-haskell
-$(FETCHIT)-haskell: $(FETCHIT)-haskell-pull
-$(FETCHIT)-haskell: $(FETCHIT)-haskell-pkg
-$(FETCHIT)-haskell: $(FETCHIT)-haskell-prep
-
-.PHONY: $(FETCHIT)-haskell-pull
-$(FETCHIT)-haskell-pull:
-	$(call GIT_REPO,$(HASKELL_DST),$(HASKELL_SRC),$(HASKELL_CMT))
-
-.PHONY: $(FETCHIT)-haskell-pkg
-$(FETCHIT)-haskell-pkg:
-	$(SED) -i \
-		-e "s|^(REQUIRED_GHC_VER[=]).+$$|\1$(GHC_VERSION)|g" \
-		"$(HASKELL_DST)/src/generic/tarball/configure.ac"
-	$(SED) -i \
-		-e "/GLU/d" \
-		-e "/OpenGL/d" \
-		$(foreach FILE,$(HASKELL_VERSION_LIST),\
-			-e "s|^([ ]+$(word 1,$(subst |, ,$(FILE)))[ ]+[=][=])[^,]+|\1$(word 2,$(subst |, ,$(FILE)))|g" \
-		) \
-		"$(HASKELL_DST)/haskell-platform.cabal"
-	$(SED) -i \
-		-e "s|^(rm[ ][-]rf[ ])|#\1|g" \
-		-e "s|^(for[ ]pkg[ ]in[ ][$$][{]SRC_PKGS[}])$$|\1 $(subst |,-,$(HASKELL_PACKAGES_LIST))|g" \
-		-e "s|cabal[ ]unpack|echo|g" \
-		"$(HASKELL_DST)/src/generic/prepare.sh"
-	$(foreach FILE,\
-		$(shell \
-			$(SED) -n \
-				-e "/begin[ ]platform/,/end[ ]platform/p" \
-				"$(HASKELL_DST)/haskell-platform.cabal" \
-			| $(SED) -n \
-				-e "s|^[ ]+([^ ]+)[ ]+[=][=]([^,]+).*$$|\1-\2|gp" \
-		) \
-		$(subst |,-,$(HASKELL_PACKAGES_LIST)) \
-		,\
-		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(HASKELL_TAR)/packages/$(FILE),$(call HACKAGE_URL,$(FILE))); \
-	)
-	cd "$(HASKELL_DST)/src/generic" && \
-		$(BUILD_ENV_MINGW) $(SH) ./prepare.sh
-
-.PHONY: $(FETCHIT)-haskell-prep
-# thanks for the 'OpenGL' fix below: https://stackoverflow.com/questions/18116201/how-can-i-disable-opengl-in-the-haskell-platform
-# thanks for the 'GHC_PACKAGE_PATH' fix below: https://www.reddit.com/r/haskell/comments/1f8730/basic_guide_on_how_to_install_ghcplatform_manually
-# thanks for the 'programFindLocation' fix below: https://github.com/albertov/hdbc-postgresql/commit/d4cef4dd288432141dab6365699317f2bb26c489
-#	found by: https://github.com/haskell/cabal/issues/1467
-# thanks for the 'wspiapi.h' fix below: https://github.com/nurupo/InsertProjectNameHere/commit/23f13cd95d5d9afaadd859a4d256986817e613b9
-#	found by: https://github.com/irungentoo/toxcore/issues/92
-#	then by: https://github.com/irungentoo/toxcore/pull/94
-$(FETCHIT)-haskell-prep:
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(HASKELL_TAR)/scripts)
-endif
-ifeq ($(BUILD_PLAT),Msys)
-	$(SED) -i \
-		-e "s|^unix[-].+$$|$(subst |,-,$(filter Win32|%,$(GHC_BASE_LIBRARIES_LIST)))|g" \
-		"$(HASKELL_TAR)/packages/core.packages"
-endif
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	$(SED) -i \
-		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-		-e "s|WSPIAPI[_]H|WS2TCPIP_H|g" \
-		-e "s|wspiapi[.]h|ws2tcpip.h|g" \
-		"$(HASKELL_TAR)/packages/network-"*"/include/HsNet.h"
-endif
-	$(SED) -i \
-		-e "s|as_fn_error[ ](.+GLU)|echo \1|g" \
-		-e "s|as_fn_error[ ](.+OpenGL)|echo \1|g" \
-		"$(HASKELL_TAR)/configure"
-	$(SED) -i \
-		-e "s|^([ ]+GHC_PACKAGE_PATH[=].+)|#\1|g" \
-		"$(HASKELL_TAR)/scripts/build.sh"
-	$(SED) -i \
-		-e "s|^([ ]+programFindLocation[ ][=][ ].x)([ ][-])|\1 _\2|g" \
-		"$(HASKELL_TAR)/packages/haskell-platform-$(HASKELL_CMT)/Setup.hs"
-	# make sure GHC looks for libraries in the right place
-	$(SED) -i \
-		-e "s|(ghc[-]options[:][ ]+)([-]Wall)|\1$(GHCFLAGS) \2|g" \
-		"$(HASKELL_TAR)/packages/cabal-install-$(CABAL_VERSION)/cabal-install.cabal"
-
-.PHONY: $(BUILDIT)-haskell
-$(BUILDIT)-haskell:
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	# "$(BUILD_PLAT),Msys" detects the version with a "^M" in it, which requires "unsupported-ghc" option to bypass
-#WORK : must be a better way to do this than the configure option
-	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),,\
-		--enable-unsupported-ghc-version \
-		--disable-user-install \
-	)
-else
-	$(call AUTOTOOLS_BUILD_MINGW,$(HASKELL_TAR),$(COMPOSER_ABODE),,\
-		--disable-user-install \
-	)
-endif
-#>	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-#>		$(foreach FILE,$(shell $(CAT) "$(HASKELL_TAR)/packages/platform.packages"),\
-#>			"$(HASKELL_TAR)/packages/$(FILE)" \
-#>		)
 
 .PHONY: $(FETCHIT)-pandoc
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-pull
