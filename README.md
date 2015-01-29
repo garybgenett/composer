@@ -1,6 +1,6 @@
 % Composer CMS: User Guide & Example File
 % Gary B. Genett
-% v1.4 (2015-01-08)
+% v1.4 (2015-01-29)
 
 ## Composer CMS
 <!-- ############################################################### -->
