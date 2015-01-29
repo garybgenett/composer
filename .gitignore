@@ -3,14 +3,14 @@
 /.composer.mk
 /_release
 
-# make compose
+# compose
 /.composed
 /composer.css
 
-# make test
+# test
 /test.dir/
 
-# make update && make build
+# update && build
 /.home/
 /.sources/
 /.tmp/
