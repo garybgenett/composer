@@ -669,12 +669,12 @@ override VIM_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VER))
 # https://www.gnu.org/software/make/manual/make.html
 # https://www.gnu.org/software/make
 # https://savannah.gnu.org/projects/make
-override MAKE_VER			:= $(MAKE_MIN_VER)
+override MAKE_VER			:= $(MAKE_MIN_VERSION)
 override MAKE_SRC_INIT			:= http://ftp.gnu.org/gnu/make/make-$(MAKE_VER).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST_INIT			:= $(COMPOSER_BUILD)/make-$(MAKE_VER)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= $(MAKE_CUR_VER)
+override MAKE_CMT			:= $(MAKE_CUR_VERSION)
 
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
@@ -736,7 +736,7 @@ override GHC_CMT			:= ghc-$(GHC_VER)-release
 #override GHC_CMT			:= ghc-$(GHC_VER)-release
 #override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
 #WORKING : is GHC_BRANCH still needed?
-override GHC_BRANCH			:= ghc-$(GHC_VER)
+#override GHC_BRANCH			:= ghc-$(GHC_VER)
 
 #WORKING : url scrub
 # https://www.haskell.org/cabal/download.html
@@ -971,6 +971,18 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/tools \
 	tex/latex/url
 
+override CABAL_LIBRARIES_LIST		:= \
+	Cabal|$(CABAL_VER_LIB) \
+	HTTP|4000.2.12 \
+	mtl|2.1.3.1 \
+	network|2.4.2.3 \
+	parsec|3.1.5 \
+	random|1.0.1.1 \
+	stm|2.4.3 \
+	text|1.1.0.1 \
+	transformers|0.3.0.0 \
+	zlib|0.5.4.1
+
 override GHC_LIBRARIES_LIST		:= \
 	primitive|0.5.4.0 \
 	tf-random|0.5 \
@@ -985,18 +997,6 @@ override GHC_LIBRARIES_LIST		:= \
 #	haddock-library|1.1.1 \
 #	haddock-api|2.15.0.2 \
 #	haddock|2.15.0.2
-
-override CABAL_LIBRARIES_LIST		:= \
-	Cabal|$(CABAL_VER_LIB) \
-	HTTP|4000.2.12 \
-	mtl|2.1.3.1 \
-	network|2.4.2.3 \
-	parsec|3.1.5 \
-	random|1.0.1.1 \
-	stm|2.4.3 \
-	text|1.1.0.1 \
-	transformers|0.3.0.0 \
-	zlib|0.5.4.1
 
 override PANDOC_DEPENDENCIES_LIST	:= \
 	hsb2hs|0.2 \
@@ -1203,7 +1203,8 @@ override define DO_GIT_SUBMODULE_GHC	=
 	done; \
 	cd "$(1)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
+		echo "WORKING : is GHC_BRANCH still needed?" && \
+		echo "WORKING : $(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
 #WORKING : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
@@ -1701,6 +1702,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal$(_D)"			"Build/complie of Cabal from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
@@ -1739,7 +1741,9 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-libs$(_D)"			"Build/compile of GHC prerequisites"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-cabal$(_D):"	"$(_E)$(STRAPIT)-cabal-pull$(_D)"		"Download of Cabal source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-prep$(_D)"		"Preparation of Cabal source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-build$(_D)"		"Build/compile of Cabal from source archive"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
@@ -2254,6 +2258,7 @@ $(STRAPIT):
 	$(RUNMAKE) $(STRAPIT)-curl
 	$(RUNMAKE) $(STRAPIT)-git
 	$(RUNMAKE) $(STRAPIT)-ghc
+	$(RUNMAKE) $(STRAPIT)-cabal
 
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-cabal
@@ -2408,7 +2413,7 @@ endif
 	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VER)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VER)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VER)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VER)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
@@ -3551,10 +3556,6 @@ $(BUILDIT)-texlive-fmtutil:
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-prep
 $(STRAPIT)-ghc: $(STRAPIT)-ghc-build
-$(STRAPIT)-ghc:
-	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(FETCHIT)-cabal
-	$(RUNMAKE) $(STRAPIT)-ghc-libs
 
 .PHONY: $(FETCHIT)-ghc
 $(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
@@ -3563,21 +3564,13 @@ $(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 .PHONY: $(STRAPIT)-ghc-pull
 $(STRAPIT)-ghc-pull:
 	$(call CURL_FILE,$(GHC_SRC_INIT))
-	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
-	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(GHC_DST_INIT)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
-	)
-	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
-		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(CABAL_DST_INIT)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
-	)
 
 .PHONY: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc-pull:
-	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
+#WORKING : is GHC_BRANCH still needed?
+#	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
+	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
 #WORKING
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 #WORKING : GHC 7.8
@@ -3587,36 +3580,7 @@ $(FETCHIT)-ghc-pull:
 #		"$(GHC_DST)/configure"*
 
 .PHONY: $(STRAPIT)-ghc-prep
-# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
-# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 $(STRAPIT)-ghc-prep:
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CABAL_DST_INIT)/bootstrap.patch.sh"
-	$(CHMOD) "$(CABAL_DST_INIT)/bootstrap.patch.sh"
-	$(SED) -i \
-		-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(CABAL_DST_INIT)/bootstrap.patch.sh\"|g" \
-		"$(CABAL_DST_INIT)/bootstrap.sh"
-	$(SED) -i \
-		-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
-		"$(CABAL_DST_INIT)/Distribution/Client/Install.hs"
-endif
-	$(SED) -i \
-		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VER_LIB)|g" \
-		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
-		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
-		-e "s|([{]GHC[}][ ][-][-]make[ ])(Setup)|\1$(GHCFLAGS) \2|g" \
-		"$(CABAL_DST_INIT)/bootstrap.sh"
-
-override define HEREDOC_CABAL_BOOTSTRAP =
-#!$(SHELL)
-[ -f "$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
-	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
-	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
-	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
-	"$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" || exit 1
-exit 0
-endef
 
 .PHONY: $(FETCHIT)-ghc-prep
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
@@ -3678,20 +3642,6 @@ else
 		show \
 	)
 endif
-	cd "$(CABAL_DST_INIT)" && $(BUILD_ENV_MINGW) \
-		PREFIX="$(BUILD_STRAP)" \
-		EXTRA_CONFIGURE_OPTS=" \
-			--extra-include-dirs=$(COMPOSER_ABODE)/include \
-			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
-		" \
-		$(SH) ./bootstrap.sh --global
-
-.PHONY: $(STRAPIT)-ghc-libs
-$(STRAPIT)-ghc-libs:
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		cd "$(GHC_DST_INIT)/$(FILE)" && \
-			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
-	)
 
 .PHONY: $(BUILDIT)-ghc
 $(BUILDIT)-ghc:
@@ -3706,8 +3656,6 @@ $(BUILDIT)-ghc:
 #	$(ECHO) "WORK\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
 #endif
 #WORK
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-		Cabal-$(CABAL_VER_LIB)
 
 override define HEREDOC_GHC_BUILD_MK =
 SRC_HC_OPTS	= -optc-L$(BUILD_STRAP)/lib -optl-L$(BUILD_STRAP)/lib $(GHCFLAGS)
@@ -3715,6 +3663,97 @@ SRC_CC_OPTS	= -L$(BUILD_STRAP)/lib $(CFLAGS)
 SRC_LD_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 SRC_CPP_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 endef
+
+.PHONY: $(STRAPIT)-cabal
+$(STRAPIT)-cabal: $(STRAPIT)-cabal-pull
+$(STRAPIT)-cabal: $(STRAPIT)-cabal-prep
+$(STRAPIT)-cabal: $(STRAPIT)-cabal-build
+
+.PHONY: $(FETCHIT)-cabal
+$(FETCHIT)-cabal: $(FETCHIT)-cabal-pull
+$(FETCHIT)-cabal: $(FETCHIT)-cabal-prep
+
+.PHONY: $(STRAPIT)-cabal-pull
+$(STRAPIT)-cabal-pull:
+	$(call CURL_FILE,$(CABAL_SRC_INIT))
+	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
+	$(foreach FILE,\
+		$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
+		$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+		\,
+		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(CABAL_DST_INIT)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
+	)
+
+.PHONY: $(FETCHIT)-cabal-pull
+$(FETCHIT)-cabal-pull:
+	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
+
+.PHONY: $(STRAPIT)-cabal-prep
+# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
+# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
+$(STRAPIT)-cabal-prep:
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CABAL_DST_INIT)/bootstrap.patch.sh"
+	$(CHMOD) "$(CABAL_DST_INIT)/bootstrap.patch.sh"
+	$(SED) -i \
+		-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(CABAL_DST_INIT)/bootstrap.patch.sh\"|g" \
+		"$(CABAL_DST_INIT)/bootstrap.sh"
+	$(SED) -i \
+		-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
+		"$(CABAL_DST_INIT)/Distribution/Client/Install.hs"
+endif
+	$(SED) -i \
+		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VER_LIB)|g" \
+		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
+		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
+		-e "s|([{]GHC[}][ ][-][-]make[ ])(Setup)|\1$(GHCFLAGS) \2|g" \
+		"$(CABAL_DST_INIT)/bootstrap.sh"
+
+override define HEREDOC_CABAL_BOOTSTRAP =
+#!$(SHELL)
+[ -f "$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
+	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
+	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
+	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
+	"$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" || exit 1
+exit 0
+endef
+
+.PHONY: $(FETCHIT)-cabal-prep
+$(FETCHIT)-cabal-prep:
+
+.PHONY: $(STRAPIT)-cabal-build
+$(STRAPIT)-cabal-build:
+	cd "$(CABAL_DST_INIT)" && $(BUILD_ENV_MINGW) \
+		PREFIX="$(BUILD_STRAP)" \
+		EXTRA_CONFIGURE_OPTS=" \
+			--extra-include-dirs=$(COMPOSER_ABODE)/include \
+			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
+		" \
+		$(SH) ./bootstrap.sh --global
+#WORKING : needs a better name and location
+	# call recursively instead of using dependencies, so that environment variables update
+#WORKING : should not be needed in order to install the pre-downloaded libs
+#	$(RUNMAKE) $(FETCHIT)-cabal
+	$(RUNMAKE) $(STRAPIT)-cabal-ghcreqs
+
+#WORKING : document!
+.PHONY: $(STRAPIT)-cabal-ghcreqs
+$(STRAPIT)-cabal-ghcreqs:
+	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+		cd "$(CABAL_DST_INIT)/$(FILE)" && \
+			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
+	)
+
+.PHONY: $(BUILDIT)-cabal
+$(BUILDIT)-cabal:
+#WORKING : need a process for building cabal from source
+#WORKING : process should include cabal library
+#	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+#		Cabal-$(CABAL_VER_LIB)
+#WORKING
 
 .PHONY: $(FETCHIT)-pandoc
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-pull
