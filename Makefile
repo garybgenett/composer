@@ -3994,10 +3994,12 @@ $(BUILDIT)-pandoc:
 # document variables!
 #WORK
 
+# tricky hack which assumes "$(COMPOSER_OTHER)" is a subdirectory of "$(RELEASE_DIR)"
 override RELEASE_DIR		?= $(abspath $(dir $(COMPOSER_OTHER)))
 override RELEASE_TARGET		?= $(notdir $(COMPOSER_OTHER))
 
-ifeq ($(COMPOSER_OTHER),$(COMPOSER_DIR))
+# if this is true, neither "$(RELEASE_DIR)" nor "$(COMPOSER_OTHER)" has been changed; use a default
+ifeq ($(RELEASE_DIR),$(abspath $(dir $(COMPOSER_DIR))))
 override RELEASE_DIR		:= $(COMPOSER_DIR)/$(RELEASE)
 endif
 override RELEASE_DIR_NATIVE	:= $(RELEASE_DIR)/.Native
@@ -4065,7 +4067,6 @@ $(RELEASE)-config:
 	@$(HEADER_L)
 
 .PHONY: $(RELEASE)-dist
-#WORKING $(RELEASE)-dist: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-dist: override COMPOSER_STORE := $(subst $(COMPOSER_OTHER),$(RELEASE_DIR),$(COMPOSER_STORE))
 $(RELEASE)-dist:
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
@@ -4108,7 +4109,6 @@ $(RELEASE)-dist:
 	@$(RUNMAKE) $(RELEASE)-chroot
 
 .PHONY: $(RELEASE)-test
-#WORKING $(RELEASE)-test: override COMPOSER_STORE="$(RELEASE_DIR)/.sources"
 $(RELEASE)-test: override COMPOSER_STORE := $(subst $(COMPOSER_OTHER),$(RELEASE_DIR),$(COMPOSER_STORE))
 $(RELEASE)-test:
 	$(call CURL_FILE,$(FUNTOO_SRC))
