@@ -14,6 +14,7 @@
 ################################################################################
 
 #WORKING : TODO
+# CABAL_BUILD_GHC_LIBRARIES
 # HELP_OPTIONS_SUB: var empty = undef
 # texlive = STRAPIT, and before ghc/cabal everywhere
 # BUILDIT-libs-so = before BUILD-ghc/cabal
@@ -1032,6 +1033,8 @@ override GHC_LIBRARIES_LIST		:= \
 	alex|3.1.3 \
 	happy|1.19.4 \
 	\
+	ghc-paths|0.1.0.9 \
+	xhtml|3000.2.1 \
 	haddock|2.13.2.1
 
 #WORKING : GHC 7.8
@@ -1733,15 +1736,14 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
-#WORKING
 	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D):"		"$(_E)$(ALLOFIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(ALLOFIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-libs$(_D)"		"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-util$(_D)"		"Build/compile of necessary utilities from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-tool$(_D)"		"Build/compile of helpful utilities from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core utilities from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-tool$(_D)"		"Build/compile of helpful tools from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core tools from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init$(_D)"			"Build/complie of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-inst$(_D)"		"Installs base MSYS2/MinGW-w64 system"
@@ -2280,33 +2282,15 @@ $(BUILDIT):
 	$(RUNMAKE) $(BUILDIT)-pandoc
 
 override CHECK_FAILED		:=
-#WORKING : with proper use of bootstrap libraries, is this still necessary?  maybe LD_LIBRARY_PATH?
-#override CHECK_GHCLIB		:=
 override CHECK_MSYS		:=
 override CHECK_SHELL		:=
-
-#WORKING : with proper use of bootstrap libraries, is this still necessary?  maybe LD_LIBRARY_PATH?
-#WORKING : GHC 7.8
-#override CHECK_GHCLIB_NAME	:= Curses
-#override CHECK_GHCLIB_SRC	:= lib{,n}curses.so
-#override CHECK_GHCLIB_DST	:= libtinfo.so.5
-override CHECK_GHCLIB_NAME	:= GMP
-override CHECK_GHCLIB_SRC	:= libgmp.so
-override CHECK_GHCLIB_DST	:= libgmp.so.3
-
-#WORKING : with proper use of bootstrap libraries, is this still necessary?  maybe LD_LIBRARY_PATH?
-#ifeq ($(BUILD_PLAT),Linux)
-#ifeq ($(shell $(LS) /{,usr/}lib*/$(CHECK_GHCLIB_DST) 2>/dev/null),)
-#override CHECK_FAILED		:= 1
-#override CHECK_GHCLIB		:= 1
-#endif
-#endif
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(MSYSTEM),)
 override CHECK_FAILED		:= 1
 override CHECK_MSYS		:= 1
 endif
 endif
+#WORKING : double-check that this one is still true?  best way to test is comment out the "dash" replacement for "$RELEASE-dist"
 ifeq ($(shell $(SHELL) --version | $(SED) -n "/GNU[ ]bash/p"),)
 override CHECK_FAILED		:= 1
 override CHECK_SHELL		:= 1
@@ -2314,20 +2298,6 @@ endif
 
 .PHONY: $(ALLOFIT)-check
 $(ALLOFIT)-check:
-ifneq ($(CHECK_GHCLIB),)
-	@$(HEADER_1)
-	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
-	@$(TABLE_C2) "$(_N)Could not find '$(_C)$(CHECK_GHCLIB_DST)$(_N)' library file."
-	@$(TABLE_C2)
-	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
-	@$(TABLE_C2) "The pre-built GHC requires this specific file in order to run, but not necessarily this version of $(CHECK_GHCLIB_NAME)."
-	@$(TABLE_C2) "You can likely '$(_M)ln -s$(_D)' one of the files below to something like '$(_M)/usr/lib/$(CHECK_GHCLIB_DST)$(_D)' to work around this."
-	@$(ECHO) "\n"
-	@$(LS) /{,usr/}lib*/{,*-linux-gnu/}$(CHECK_GHCLIB_SRC)* 2>/dev/null || $(TRUE)
-	@$(ECHO) "\n"
-	@$(TABLE_C2) "If no files are listed above, you may need to install some version of the $(CHECK_GHCLIB_NAME) library to continue."
-	@$(HEADER_1)
-endif
 ifneq ($(CHECK_MSYS),)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
@@ -2336,7 +2306,7 @@ ifneq ($(CHECK_MSYS),)
 	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
 	@$(TABLE_C2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
 	@$(TABLE_C2) "You should run the '$(_M)$(BUILDIT)-msys$(_D)' target to install the MSYS2 environment."
-	@$(TABLE_C2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
+	@$(TABLE_C2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target for the MSYS2 environment and try '$(_C)$(ALLOFIT)$(_D)' again."
 	@$(HEADER_1)
 endif
 ifneq ($(CHECK_SHELL),)
@@ -3157,7 +3127,7 @@ $(BUILDIT)-ghc:
 #WORKING : is GHC_BRANCH still needed?
 #	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
-#WORKING
+#WORKING : GHC 7.8
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 #WORKING : GHC 7.8
 #	$(SED) -i \
@@ -3236,8 +3206,6 @@ $(BUILDIT)-cabal-init:
 	$(call CABAL_PULL,$(CABAL_DST_INIT))
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 	# call recursively instead of using dependencies, so that environment variables update
-#WORKING : should not be needed in order to install the pre-downloaded libs
-#	$(RUNMAKE) $(BUILDIT)-cabal-db
 #WORKING : needs a better name and location
 	$(RUNMAKE) $(BUILDIT)-cabal-init-ghcreqs
 
