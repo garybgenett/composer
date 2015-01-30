@@ -769,8 +769,6 @@ override GHC_CMT			:= ghc-$(GHC_VER)-release
 #override GHC_VER			:= 7.11
 #override GHC_CMT			:= ghc-$(GHC_VER)-release
 #override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
-#WORKING : is GHC_BRANCH still needed?
-#override GHC_BRANCH			:= ghc-$(GHC_VER)
 
 #WORKING : url scrub
 # https://www.haskell.org/cabal/download.html
@@ -1246,8 +1244,7 @@ override define DO_GIT_SUBMODULE_GHC	=
 	done; \
 	cd "$(1)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
-		echo "WORKING : is GHC_BRANCH still needed?" && \
-		echo "WORKING : $(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT)" && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(BUILD_BRANCH) $(GHC_CMT) && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
 #WORKING : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
@@ -3124,8 +3121,6 @@ endif
 .PHONY: $(BUILDIT)-ghc
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(BUILDIT)-ghc:
-#WORKING : is GHC_BRANCH still needed?
-#	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
 #WORKING : GHC 7.8
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
