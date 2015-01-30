@@ -742,14 +742,16 @@ override GHC_CMT			:= ghc-$(GHC_VER)-release
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 #WORKING https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
-override CABAL_VER			:= 1.20.0.2
-override CABAL_VER_LIB			:= 1.20.0.1
+#WORKING : cabal from git
+#override CABAL_VER			:= 1.20.0.2
+#override CABAL_VER_LIB			:= 1.20.0.1
+override CABAL_VER			:= 1.22.0.0
+override CABAL_VER_LIB			:= $(CABAL_VER)
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER)/cabal-install-$(CABAL_VER).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
 override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER)
 override CABAL_DST			:= $(COMPOSER_BUILD)/cabal
-#WORKING override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
-override CABAL_CMT			:= Cabal-1.22.0.0-release
+override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 
 # https://hackage.haskell.org
 override HACKAGE_URL			= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
@@ -3485,7 +3487,7 @@ $(STRAPIT)-git-prep:
 
 .PHONY: $(STRAPIT)-git-build
 $(STRAPIT)-git-build:
-	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
 
@@ -3679,62 +3681,66 @@ $(FETCHIT)-cabal: $(FETCHIT)-cabal-prep
 $(STRAPIT)-cabal-pull:
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
+	$(call CABAL_PULL,$(CABAL_DST_INIT))
+
+.PHONY: $(FETCHIT)-cabal-pull
+$(FETCHIT)-cabal-pull:
+	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
+	$(call CABAL_PULL,$(CABAL_DST))
+
+override define CABAL_PULL =
 	$(foreach FILE,\
 		$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
 		$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 		\,
 		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(CABAL_DST_INIT)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
+		$(call DO_UNTAR,$(1)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
 	)
-
-.PHONY: $(FETCHIT)-cabal-pull
-$(FETCHIT)-cabal-pull:
-	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
+endef
 
 .PHONY: $(STRAPIT)-cabal-prep
+$(STRAPIT)-cabal-prep:
+	$(call CABAL_PREP,$(CABAL_DST_INIT))
+
+.PHONY: $(FETCHIT)-cabal-prep
+$(FETCHIT)-cabal-prep:
+	$(call CABAL_PREP,$(CABAL_DST))
+
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
-$(STRAPIT)-cabal-prep:
+override define CABAL_PREP =
 #WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	$(call DO_HEREDOC,HEREDOC_CABAL_BOOTSTRAP) >"$(CABAL_DST_INIT)/bootstrap.patch.sh"
-	$(CHMOD) "$(CABAL_DST_INIT)/bootstrap.patch.sh"
-	$(SED) -i \
-		-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(CABAL_DST_INIT)/bootstrap.patch.sh\"|g" \
-		"$(CABAL_DST_INIT)/bootstrap.sh"
-	$(SED) -i \
-		-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
-		"$(CABAL_DST_INIT)/Distribution/Client/Install.hs"
-endif
+	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
+		$(call DO_HEREDOC,$(call HEREDOC_CABAL_BOOTSTRAP,$(1))) >"$(1)/bootstrap.patch.sh"; \
+		$(CHMOD) "$(1)/bootstrap.patch.sh"; \
+		$(SED) -i \
+			-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(1)/bootstrap.patch.sh\"|g" \
+			"$(1)/bootstrap.sh"; \
+		$(SED) -i \
+			-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
+			"$(1)/Distribution/Client/Install.hs"; \
+	fi
 	$(SED) -i \
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VER_LIB)|g" \
 		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|([{]GHC[}][ ][-][-]make[ ])(Setup)|\1$(GHCFLAGS) \2|g" \
-		"$(CABAL_DST_INIT)/bootstrap.sh"
+		"$(1)/bootstrap.sh"
+endef
 
 override define HEREDOC_CABAL_BOOTSTRAP =
 #!$(SHELL)
-[ -f "$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
+[ -f "$(1)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
 	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
 	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
 	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
-	"$(CABAL_DST_INIT)/network-"*"/include/HsNet.h" || exit 1
+	"$(1)/network-"*"/include/HsNet.h" || exit 1
 exit 0
 endef
 
-.PHONY: $(FETCHIT)-cabal-prep
-$(FETCHIT)-cabal-prep:
-
 .PHONY: $(STRAPIT)-cabal-build
 $(STRAPIT)-cabal-build:
-	cd "$(CABAL_DST_INIT)" && $(BUILD_ENV_MINGW) \
-		PREFIX="$(BUILD_STRAP)" \
-		EXTRA_CONFIGURE_OPTS=" \
-			--extra-include-dirs=$(COMPOSER_ABODE)/include \
-			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
-		" \
-		$(SH) ./bootstrap.sh --global
+	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 #WORKING : needs a better name and location
 	# call recursively instead of using dependencies, so that environment variables update
 #WORKING : should not be needed in order to install the pre-downloaded libs
@@ -3752,10 +3758,21 @@ $(STRAPIT)-cabal-ghcreqs:
 .PHONY: $(BUILDIT)-cabal
 $(BUILDIT)-cabal:
 #WORKING : need a process for building cabal from source
+	$(call CABAL_BUILD,$(CABAL_DST),$(COMPOSER_ABODE))
 #WORKING : process should include cabal library
 #	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 #		Cabal-$(CABAL_VER_LIB)
 #WORKING
+
+override define CABAL_BUILD =
+	cd "$(1)" && $(BUILD_ENV_MINGW) \
+		PREFIX="$(2)" \
+		EXTRA_CONFIGURE_OPTS=" \
+			--extra-include-dirs=$(COMPOSER_ABODE)/include \
+			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
+		" \
+		$(SH) ./bootstrap.sh --global
+endef
 
 .PHONY: $(FETCHIT)-pandoc
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-pull
