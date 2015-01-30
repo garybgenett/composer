@@ -1329,8 +1329,7 @@ override BUILD_ENV			:= $(ENV) - \
 	TMPDIR="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
-#WORKING : this location has probably changed
-# see "$(BUILD_PLAT),Msys" paths comment in "$(FETCHIT)-ghc-prep"
+# see "$(BUILD_PLAT),Msys" paths comment in "$(BUILDIT)-ghc"
 override BUILD_ENV			:= $(BUILD_ENV) \
 	MSYSTEM="MSYS$(BUILD_BITS)" \
 	HOMEPATH="$(COMPOSER_ABODE)" \
@@ -1742,7 +1741,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init-prep$(_D)"		"Preparation of Cabal source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init-build$(_D)"		"Build/compile of Cabal from source archive"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(BUILDIT)-gnu$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
@@ -1759,6 +1757,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source repository"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal$(_D)"			"Build/compile of Cabal from source repository"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source repository"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-meta-bindir$(_D)"		"Copies compiled binaries to repository binaries directory"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
@@ -2231,441 +2230,33 @@ $(STRAPIT): $(BUILDIT)-gnu-init
 ifeq ($(BUILD_PLAT),Msys)
 $(STRAPIT): $(BUILDIT)-msys
 endif
-$(STRAPIT): $(BUILDIT)-group-libs
-$(STRAPIT): $(BUILDIT)-group-util
-$(STRAPIT): $(BUILDIT)-group-tool
-$(STRAPIT): $(BUILDIT)-group-core
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(BUILDIT)-group-libs
+	$(RUNMAKE) $(BUILDIT)-group-util
+	$(RUNMAKE) $(BUILDIT)-group-tool
+	$(RUNMAKE) $(BUILDIT)-group-core
 	$(RUNMAKE) $(BUILDIT)-ghc-init
 	$(RUNMAKE) $(BUILDIT)-cabal-init
 
 .PHONY: $(FETCHIT)
-$(FETCHIT): $(BUILDIT)-cabal-db
-$(FETCHIT): $(BUILDIT)-gnu
-$(FETCHIT): $(FETCHIT)-make
-$(FETCHIT): $(FETCHIT)-texlive
-$(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-cabal $(FETCHIT)-pandoc
+$(FETCHIT):
+#WORKING : need to reverse-engineer this now, somehow; best bet is something like COMPOSER_FETCHONLY and if($(COMPOSER_FETCHONLY),exit 0)
 
 .PHONY: $(BUILDIT)
+$(FETCHIT): $(BUILDIT)-gnu
 $(BUILDIT): $(BUILDIT)-make
 $(BUILDIT): $(BUILDIT)-texlive
+$(BUILDIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
-#WORKING : need to sort out where this all needs to be
+#WORKING : need to sort out where exactly "$(BUILDIT)-cabal-db" all needs to be
 	$(RUNMAKE) $(BUILDIT)-cabal-db
 	$(RUNMAKE) $(BUILDIT)-pandoc
 	$(RUNMAKE) $(BUILDIT)-cabal-db
 	$(RUNMAKE) $(BUILDIT)-meta-bindir
 	$(RUNMAKE) $(CHECKIT)
-
-.PHONY: $(BUILDIT)-gnu-init
-$(BUILDIT)-gnu-init:
-	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
-	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
-
-.PHONY: $(BUILDIT)-gnu
-$(BUILDIT)-gnu:
-	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
-
-override define GNU_CFG_INSTALL =
-	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
-	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
-endef
-
-#WORKING : needs a better name and location
-.PHONY: $(BUILDIT)-cabal-db
-$(BUILDIT)-cabal-db:
-	$(BUILD_ENV) $(CABAL) update
-	# make sure GHC looks for libraries in the right place
-	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
-		$(SED) -i \
-			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
-			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
-			"$(COMPOSER_ABODE)/.cabal/config"; \
-	fi
-	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
-	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
-#WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  should we add a $RM statement for them?
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(MKDIR) "$(APPDATA)/cabal"
-#	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
-#	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/" || $(TRUE)
-#endif
-#WORKING
-	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
-	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
-
-.PHONY: $(BUILDIT)-meta-bindir
-$(BUILDIT)-meta-bindir:
-	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
-ifeq ($(BUILD_PLAT),Msys)
-	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
-	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
-	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
-	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
-	$(MKDIR) "$(COMPOSER_PROGS)/etc"
-	$(CP) "$(MSYS_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
-#WORK : probably need this for linux, too
-	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
-	$(CP) "$(MSYS_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
-#WORK
-	$(foreach FILE,$(MSYS_BINARY_LIST),\
-		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
-	)
-	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
-endif
-	$(foreach FILE,$(BUILD_BINARY_LIST),\
-		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
-	)
-	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
-	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
-	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
-		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)"; \
-		$(CP) "$(COMPOSER_ABODE)/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"; \
-	)
-	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-dist/web2c"
-	$(CP) "$(COMPOSER_ABODE)/texmf-dist/web2c/texmf.cnf"		"$(COMPOSER_PROGS)/texmf-dist/web2c/"
-	$(CP) "$(COMPOSER_ABODE)/texmf-dist/ls-R"			"$(COMPOSER_PROGS)/texmf-dist/"
-	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
-	$(CP) "$(COMPOSER_ABODE)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
-	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
-ifeq ($(BUILD_PLAT),Linux)
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
-else ifeq ($(BUILD_PLAT),Msys)
-	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
-else
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
-endif
-
-override define HEREDOC_MSYS_SHELL =
-@echo off
-if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
-if not defined MSYSCON set MSYSCON=mintty.exe
-set WD=%~dp0
-set BINDIR=/usr/bin
-set PATH=%WD%%BINDIR%;%PATH%
-set OPTIONS=
-set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
-set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
-start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
-:: end of file
-endef
-
-# this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
-# for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
-# "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
-.PHONY: $(CHECKIT)
-$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
-$(CHECKIT): override GCC_VERSIONS	:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
-$(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
-$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
-$(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VER)$(_D))
-$(CHECKIT):
-	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
-	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
-	@$(HEADER_L)
-ifeq ($(BUILD_PLAT),Linux)
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
-else ifeq ($(BUILD_PLAT),Msys)
-	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VER)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version			2>/dev/null | $(HEAD) -n1)"
-endif
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"		"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VER)"		"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VER)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VER)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VER)"		"$(_N)$(shell BZIP= $(BZIP) --help			2>&1        | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VER)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VER)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VER)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VER)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VER)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VER)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VER)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VER)"		"$(_D)$(shell $(GIT) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL) info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL) info texmath			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL) info highlighting-kate		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VER)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_VER_PDF)"		"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VER)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VER)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VER_LIB)"		"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VER_LIB)"
-	@$(HEADER_L)
-ifeq ($(BUILD_PLAT),Linux)
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(CC))) $(_S)($(subst ",,$(word 1,$(CXX))))"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD))) $(_S)($(subst ",,$(word 1,$(CPP))))"
-else ifeq ($(BUILD_PLAT),Msys)
-	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst ",,$(word 1,$(PACMAN)))"
-	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst ",,$(word 1,$(MINTTY))) $(_S)($(subst ",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
-	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_N)$(subst ",,$(word 1,$(CYGPATH)))"
-endif
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst ",,$(word 1,$(COREUTILS)))"
-	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst ",,$(word 1,$(FIND)))"
-	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_N)$(subst ",,$(word 1,$(PATCH)))"
-	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_N)$(subst ",,$(word 1,$(SED)))"
-	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_N)$(subst ",,$(word 1,$(BZIP)))"
-	@$(TABLE_I3) "- $(_E)Gzip"			"$(_N)$(subst ",,$(word 1,$(GZIP)))"
-	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_N)$(subst ",,$(word 1,$(XZ)))"
-	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_N)$(subst ",,$(word 1,$(TAR)))"
-	@$(TABLE_I3) "- $(_E)Perl"			"$(_N)$(subst ",,$(word 1,$(PERL)))"
-	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_D)$(subst ",,$(word 1,$(BASH))) $(_S)($(subst ",,$(word 1,$(SH))))"
-	@$(TABLE_I3) "- $(_C)Less"			"$(_D)$(subst ",,$(word 1,$(LESS)))"
-	@$(TABLE_I3) "- $(_C)Vim"			"$(_D)$(subst ",,$(word 1,$(VIM)))"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_D)$(subst ",,$(word 1,$(MAKE)))"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_D)$(subst ",,$(word 1,$(ZIP)))"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_D)$(subst ",,$(word 1,$(UNZIP)))"
-	@$(TABLE_I3) "- $(_C)cURL"			"$(_D)$(subst ",,$(word 1,$(CURL)))"
-	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_D)$(subst ",,$(word 1,$(GIT)))"
-	@$(TABLE_I3) "$(_C)Pandoc"			"$(_D)$(subst ",,$(word 1,$(PANDOC)))"
-	@$(TABLE_I3) "- $(_C)Types"			"$(_E)(no binary to report)"
-	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_E)(no binary to report)"
-	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_E)(no binary to report)"
-	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_D)$(subst ",,$(word 1,$(PANDOC_CITEPROC)))"
-	@$(TABLE_I3) "$(_C)TeX Live"			"$(_D)$(subst ",,$(word 1,$(TEX)))"
-	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_D)$(subst ",,$(word 1,$(PDFLATEX)))"
-	@$(TABLE_I3) "$(_C)GHC"				"$(_D)$(subst ",,$(word 1,$(GHC))) $(_S)($(subst ",,$(word 1,$(GHC_PKG))))"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL)))"
-	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
-	@$(HEADER_L)
-	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCATE,$(FILE)))
-	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LINKED,$(FILE)))
-	@$(HEADER_L)
-#> syntax highlighting fix: )")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")"
-
-# thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
-$(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
-	$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
-	$(word 1,$(CYGPATH)) \
-	\
-	$(word 1,$(COREUTILS)) \
-	$(word 1,$(FIND)) \
-	$(word 1,$(PATCH)) \
-	$(word 1,$(SED)) \
-	$(word 1,$(BZIP)) \
-	$(word 1,$(GZIP)) \
-	$(word 1,$(XZ)) \
-	$(word 1,$(TAR)) \
-	$(word 1,$(PERL)) \
-	\
-	$(word 1,$(BASH)) $(word 1,$(SH)) \
-	$(word 1,$(LESS)) \
-	$(word 1,$(VIM)) \
-	\
-	$(word 1,$(MAKE)) \
-	$(word 1,$(ZIP)) \
-	$(word 1,$(UNZIP)) \
-	$(word 1,$(CURL)) \
-	$(word 1,$(GIT)) \
-	\
-	$(word 1,$(PANDOC)) \
-	$(word 1,$(PANDOC_CITEPROC)) \
-	\
-	$(word 1,$(TEX)) \
-	$(word 1,$(PDFLATEX)) \
-	\
-	$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
-	$(word 1,$(CABAL))
-$(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
-	$(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
-	| $(SED) \
-		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
-		-e "/^[:/]/d" \
-		-e "s|^([\t])[/][^/]+[/]|\1|g" \
-		-e "s|[ ][=][>][ ]|NULL|g" \
-		-e "s|[ ].0x[a-f0-9]+.$$||g" \
-	| $(SORT) \
-)
-override define CHECKIT_LIBRARY_LOCATE =
-	if [ -n "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
-		$(TABLE_I3) "* $(_E)$(word 1,$(subst NULL, ,$(1)))" "$(_N)$(word 2,$(subst NULL, ,$(1)))"; \
-	else \
-		$(TABLE_I3) "$(_C)$(word 1,$(subst NULL, ,$(1)))" "$(_D)$(word 2,$(subst NULL, ,$(1)))"; \
-	fi
-	$(NULL)
-endef
-override define CHECKIT_LIBRARY_LINKED =
-	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
-		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1)))$(_D):"; \
-		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
-			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(subst +,[+],$(word 1,$(subst NULL, ,$(1))))/p")" ]; then \
-				$(TABLE_I3) "" "$(subst ",,$(FILE))"; \
-			fi; \
-		) \
-	fi
-	$(NULL)
-endef
-#> syntax highlighting fix: ")
-
-.PHONY: $(SHELLIT)
-$(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
-$(SHELLIT):
-	@$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" $(BASH) || $(TRUE)
-
-.PHONY: $(SHELLIT)-msys
-$(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
-$(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
-$(SHELLIT)-msys:
-ifeq ($(COMPOSER_PROGS_USE),1)
-	@cd "$(COMPOSER_PROGS)" && \
-		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
-else
-	@cd "$(MSYS_DST)" && \
-		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
-endif
-
-.PHONY: $(SHELLIT)-bashrc
-$(SHELLIT)-bashrc:
-	@$(MKDIR) "$(COMPOSER_ABODE)"
-	@$(call DO_HEREDOC,HEREDOC_BASH_PROFILE)	>"$(COMPOSER_ABODE)/.bash_profile"
-	@$(call DO_HEREDOC,HEREDOC_BASHRC)		>"$(COMPOSER_ABODE)/.bashrc"
-	@if [ ! -f "$(COMPOSER_ABODE)/.bashrc.custom" ]; then \
-		$(ECHO) >"$(COMPOSER_ABODE)/.bashrc.custom"; \
-	fi
-
-.PHONY: $(SHELLIT)-vimrc
-$(SHELLIT)-vimrc:
-	@$(MKDIR) "$(COMPOSER_ABODE)"
-	@$(call DO_HEREDOC,HEREDOC_VIMRC)		>"$(COMPOSER_ABODE)/.vimrc"
-	@if [ ! -f "$(COMPOSER_ABODE)/.vimrc.custom" ]; then \
-		$(ECHO) >"$(COMPOSER_ABODE)/.vimrc.custom"; \
-	fi
-
-override define HEREDOC_BASH_PROFILE =
-source "$(COMPOSER_ABODE)/.bashrc"
-endef
-
-override HEREDOC_BASHRC_CMD = $(notdir $(subst ",,$(word 1,$(1)))) $(subst ",[B]",$(filter-out $(word 1,$(1)),$(1)))
-#> syntax highlighting fix: "))
-override define HEREDOC_BASHRC =
-# bashrc
-umask 022
-unalias -a
-set -o vi
-eval $$($(call HEREDOC_BASHRC_CMD,$(DIRCOLORS)) 2>/dev/null)
-#
-export LANG="$(LANG)"
-export LC_ALL="$${LANG}"
-export LC_COLLATE="C"
-export LC_ALL=
-#
-if [ -f "$${HOME}/.bash_history" ]; then $(call HEREDOC_BASHRC_CMD,$(RM)) "$${HOME}/.bash_history"; fi
-$(call HEREDOC_BASHRC_CMD,$(MKDIR)) "$${HOME}/.bash_history"
-export HISTFILE="$${HOME}/.bash_history/$$(date +%Y-%m)"
-export HISTSIZE="$$(( (2**31)-1 ))"
-export HISTFILESIZE="$${HISTSIZE}"
-export HISTTIMEFORMAT="%Y-%m-%dT%H:%M:%S "
-export HISTCONTROL=
-export HISTIGNORE=
-#
-export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_OTHER):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
-#
-export PROMPT_DIRTRIM="1"
-export PS1=
-export PS1="$${PS1}$([)\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a$(])\n"					# title escape, new line (for spacing)
-export PS1="$${PS1}$([)$(_H)$(])$(MARKER) $(COMPOSER_FULLNAME)$([)$(_D)$(]) $(DIVIDE) $([)$(_C)$(])\D{%FT%T%z}\n"	# title, date (iso format)
-export PS1="$${PS1}$([)$(_C)$(])[\#/\!] ($([)$(_M)$(])\u@\h \w$([)$(_C)$(]))\\$$ $([)$(_D)$(])"				# history counters, username@hostname, directory, prompt
-#
-export PAGER="$(call HEREDOC_BASHRC_CMD,$(LESS))"
-export EDITOR="$(call HEREDOC_BASHRC_CMD,$(VIM))"
-unset VISUAL
-#
-alias ll="$(call HEREDOC_BASHRC_CMD,$(LS))"
-alias less="$${PAGER}"
-alias more="$${PAGER}"
-alias vi="$${EDITOR}"
-#
-alias .cms=".composer"
-alias .c=".compose"
-alias .composer_root="cd [B]"$(COMPOSER_DIR)[B]""
-alias .composer_other="cd [B]"$(COMPOSER_OTHER)[B]""
-alias .composer="$(subst ",[B]",$(RUNMAKE))"
-alias .compose="$(subst ",[B]",$(COMPOSE))"
-#
-cd "$(COMPOSER_DIR)"
-source "$${HOME}/.bashrc.custom"
-# end of file
-endef
-
-override define HEREDOC_VIMRC =
-" vimrc
-"TODO
-set nocompatible
-set autoread
-set secure
-set ttyfast
-"
-set viminfo		=
-set swapfile
-set directory		=.
-"
-filetype on
-syntax on
-"
-set noautowrite
-set noautowriteall
-set hidden
-set hlsearch
-set ignorecase
-set incsearch
-set modeline
-set noruler
-set showcmd
-set noshowmode
-set smartcase
-set nospell
-set novisualbell
-"
-set autoindent
-set noexpandtab
-set smartindent
-set shiftwidth		=8
-set tabstop		=8
-"
-set foldenable
-set foldcolumn		=1
-set foldlevelstart	=99
-set foldminlines	=0
-set foldmethod		=indent
-"
-" clean up folding
-map z. <ESC>:set foldlevel=0<CR>zv
-"
-source $${HOME}/.vimrc.custom
-" end of file
-endef
-#> syntax highlighting fix: "
-
-override define AUTOTOOLS_BUILD =
-	cd "$(1)" && \
-		$(BUILD_ENV) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
-		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
-		$(BUILD_ENV) $(3) $(MAKE) install
-endef
-override define AUTOTOOLS_BUILD_MINGW =
-	cd "$(1)" && \
-		$(BUILD_ENV_MINGW) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
-		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
-		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
-endef
-override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
-override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 
 override CHECK_FAILED		:=
 #WORKING : with proper use of bootstrap libraries, is this still necessary?  maybe LD_LIBRARY_PATH?
@@ -2751,6 +2342,91 @@ ifneq ($(CHECK_FAILED),)
 	@$(HEADER_1)
 	@exit 1
 endif
+
+.PHONY: $(BUILDIT)-meta-bindir
+$(BUILDIT)-meta-bindir:
+	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
+ifeq ($(BUILD_PLAT),Msys)
+	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
+	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
+	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
+	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
+	$(MKDIR) "$(COMPOSER_PROGS)/etc"
+	$(CP) "$(MSYS_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
+#WORK : probably need this for linux, too
+	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
+	$(CP) "$(MSYS_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
+#WORK
+	$(foreach FILE,$(MSYS_BINARY_LIST),\
+		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
+	)
+	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
+endif
+	$(foreach FILE,$(BUILD_BINARY_LIST),\
+		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
+	)
+	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
+	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
+	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
+		$(MKDIR) "$(COMPOSER_PROGS)/texmf-dist/$(FILE)"; \
+		$(CP) "$(COMPOSER_ABODE)/texmf-dist/$(FILE)/"* "$(COMPOSER_PROGS)/texmf-dist/$(FILE)/"; \
+	)
+	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-dist/web2c"
+	$(CP) "$(COMPOSER_ABODE)/texmf-dist/web2c/texmf.cnf"		"$(COMPOSER_PROGS)/texmf-dist/web2c/"
+	$(CP) "$(COMPOSER_ABODE)/texmf-dist/ls-R"			"$(COMPOSER_PROGS)/texmf-dist/"
+	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
+	$(CP) "$(COMPOSER_ABODE)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
+	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
+ifeq ($(BUILD_PLAT),Linux)
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
+else ifeq ($(BUILD_PLAT),Msys)
+	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
+else
+	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
+endif
+
+override define HEREDOC_MSYS_SHELL =
+@echo off
+if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
+if not defined MSYSCON set MSYSCON=mintty.exe
+set WD=%~dp0
+set BINDIR=/usr/bin
+set PATH=%WD%%BINDIR%;%PATH%
+set OPTIONS=
+set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
+set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
+start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
+:: end of file
+endef
+
+.PHONY: $(BUILDIT)-gnu-init
+$(BUILDIT)-gnu-init:
+	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
+	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
+
+.PHONY: $(BUILDIT)-gnu
+$(BUILDIT)-gnu:
+	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
+
+override define GNU_CFG_INSTALL =
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
+endef
+
+override define AUTOTOOLS_BUILD =
+	cd "$(1)" && \
+		$(BUILD_ENV) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
+		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
+		$(BUILD_ENV) $(3) $(MAKE) install
+endef
+override define AUTOTOOLS_BUILD_MINGW =
+	cd "$(1)" && \
+		$(BUILD_ENV_MINGW) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
+		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
+		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
+endef
+override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
+override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 
 .PHONY: $(BUILDIT)-msys
 $(BUILDIT)-msys: $(BUILDIT)-msys-bin
@@ -3676,6 +3352,29 @@ override define CABAL_BUILD =
 		$(SH) ./bootstrap.sh --global
 endef
 
+.PHONY: $(BUILDIT)-cabal-db
+$(BUILDIT)-cabal-db:
+	$(BUILD_ENV) $(CABAL) update
+	# make sure GHC looks for libraries in the right place
+	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
+		$(SED) -i \
+			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
+			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
+			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
+			"$(COMPOSER_ABODE)/.cabal/config"; \
+	fi
+	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
+	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
+#WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  should we add a $RM statement for them?
+#ifeq ($(BUILD_PLAT),Msys)
+#	$(MKDIR) "$(APPDATA)/cabal"
+#	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
+#	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/" || $(TRUE)
+#endif
+#WORKING
+	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
+	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
+
 .PHONY: $(FETCHIT)-pandoc
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-pull
 $(FETCHIT)-pandoc: $(FETCHIT)-pandoc-prep
@@ -3744,6 +3443,304 @@ $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
 	@$(ECHO) "\n"
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
+
+# this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
+# for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
+# "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
+.PHONY: $(CHECKIT)
+$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
+$(CHECKIT): override GCC_VERSIONS	:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
+$(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
+$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
+$(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VER)$(_D))
+$(CHECKIT):
+	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
+	@$(HEADER_L)
+ifeq ($(BUILD_PLAT),Linux)
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
+else ifeq ($(BUILD_PLAT),Msys)
+	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VER)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version			2>/dev/null | $(HEAD) -n1)"
+endif
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"		"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VER)"		"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VER)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VER)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VER)"		"$(_N)$(shell BZIP= $(BZIP) --help			2>&1        | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VER)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VER)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VER)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VER)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VER)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VER)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VER)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VER)"		"$(_D)$(shell $(GIT) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL) info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL) info texmath			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL) info highlighting-kate		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VER)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_VER_PDF)"		"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VER)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VER)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VER_LIB)"		"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VER_LIB)"
+	@$(HEADER_L)
+ifeq ($(BUILD_PLAT),Linux)
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(CC))) $(_S)($(subst ",,$(word 1,$(CXX))))"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD))) $(_S)($(subst ",,$(word 1,$(CPP))))"
+else ifeq ($(BUILD_PLAT),Msys)
+	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst ",,$(word 1,$(PACMAN)))"
+	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst ",,$(word 1,$(MINTTY))) $(_S)($(subst ",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
+	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_N)$(subst ",,$(word 1,$(CYGPATH)))"
+endif
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst ",,$(word 1,$(COREUTILS)))"
+	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst ",,$(word 1,$(FIND)))"
+	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_N)$(subst ",,$(word 1,$(PATCH)))"
+	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_N)$(subst ",,$(word 1,$(SED)))"
+	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_N)$(subst ",,$(word 1,$(BZIP)))"
+	@$(TABLE_I3) "- $(_E)Gzip"			"$(_N)$(subst ",,$(word 1,$(GZIP)))"
+	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_N)$(subst ",,$(word 1,$(XZ)))"
+	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_N)$(subst ",,$(word 1,$(TAR)))"
+	@$(TABLE_I3) "- $(_E)Perl"			"$(_N)$(subst ",,$(word 1,$(PERL)))"
+	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_D)$(subst ",,$(word 1,$(BASH))) $(_S)($(subst ",,$(word 1,$(SH))))"
+	@$(TABLE_I3) "- $(_C)Less"			"$(_D)$(subst ",,$(word 1,$(LESS)))"
+	@$(TABLE_I3) "- $(_C)Vim"			"$(_D)$(subst ",,$(word 1,$(VIM)))"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_D)$(subst ",,$(word 1,$(MAKE)))"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_D)$(subst ",,$(word 1,$(ZIP)))"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_D)$(subst ",,$(word 1,$(UNZIP)))"
+	@$(TABLE_I3) "- $(_C)cURL"			"$(_D)$(subst ",,$(word 1,$(CURL)))"
+	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_D)$(subst ",,$(word 1,$(GIT)))"
+	@$(TABLE_I3) "$(_C)Pandoc"			"$(_D)$(subst ",,$(word 1,$(PANDOC)))"
+	@$(TABLE_I3) "- $(_C)Types"			"$(_E)(no binary to report)"
+	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_E)(no binary to report)"
+	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_E)(no binary to report)"
+	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_D)$(subst ",,$(word 1,$(PANDOC_CITEPROC)))"
+	@$(TABLE_I3) "$(_C)TeX Live"			"$(_D)$(subst ",,$(word 1,$(TEX)))"
+	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_D)$(subst ",,$(word 1,$(PDFLATEX)))"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_D)$(subst ",,$(word 1,$(GHC))) $(_S)($(subst ",,$(word 1,$(GHC_PKG))))"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL)))"
+	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
+	@$(HEADER_L)
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCATE,$(FILE)))
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LINKED,$(FILE)))
+	@$(HEADER_L)
+#> syntax highlighting fix: )")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")"
+
+# thanks for the 'filter' fix below: https://stackoverflow.com/questions/27326499/gnu-make-check-if-element-exists-in-list-array
+$(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
+	$(word 1,$(MINTTY)) $(word 1,$(CYGWIN_CONSOLE_HELPER)) \
+	$(word 1,$(CYGPATH)) \
+	\
+	$(word 1,$(COREUTILS)) \
+	$(word 1,$(FIND)) \
+	$(word 1,$(PATCH)) \
+	$(word 1,$(SED)) \
+	$(word 1,$(BZIP)) \
+	$(word 1,$(GZIP)) \
+	$(word 1,$(XZ)) \
+	$(word 1,$(TAR)) \
+	$(word 1,$(PERL)) \
+	\
+	$(word 1,$(BASH)) $(word 1,$(SH)) \
+	$(word 1,$(LESS)) \
+	$(word 1,$(VIM)) \
+	\
+	$(word 1,$(MAKE)) \
+	$(word 1,$(ZIP)) \
+	$(word 1,$(UNZIP)) \
+	$(word 1,$(CURL)) \
+	$(word 1,$(GIT)) \
+	\
+	$(word 1,$(PANDOC)) \
+	$(word 1,$(PANDOC_CITEPROC)) \
+	\
+	$(word 1,$(TEX)) \
+	$(word 1,$(PDFLATEX)) \
+	\
+	$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
+	$(word 1,$(CABAL))
+$(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
+	$(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
+	| $(SED) \
+		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
+		-e "/^[:/]/d" \
+		-e "s|^([\t])[/][^/]+[/]|\1|g" \
+		-e "s|[ ][=][>][ ]|NULL|g" \
+		-e "s|[ ].0x[a-f0-9]+.$$||g" \
+	| $(SORT) \
+)
+override define CHECKIT_LIBRARY_LOCATE =
+	if [ -n "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "* $(_E)$(word 1,$(subst NULL, ,$(1)))" "$(_N)$(word 2,$(subst NULL, ,$(1)))"; \
+	else \
+		$(TABLE_I3) "$(_C)$(word 1,$(subst NULL, ,$(1)))" "$(_D)$(word 2,$(subst NULL, ,$(1)))"; \
+	fi
+	$(NULL)
+endef
+override define CHECKIT_LIBRARY_LINKED =
+	if [ -z "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
+		$(TABLE_I3) "$(MARKER) $(_M)$(word 1,$(subst NULL, ,$(1)))$(_D):"; \
+		$(foreach FILE,$(BUILD_BINARY_LIST_CHECK),\
+			if [ -n "$(shell $(LDD) $(FILE) 2>/dev/null | $(SED) -n "/$(subst +,[+],$(word 1,$(subst NULL, ,$(1))))/p")" ]; then \
+				$(TABLE_I3) "" "$(subst ",,$(FILE))"; \
+			fi; \
+		) \
+	fi
+	$(NULL)
+endef
+#> syntax highlighting fix: ")
+
+.PHONY: $(SHELLIT)
+$(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
+$(SHELLIT):
+	@$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" $(BASH) || $(TRUE)
+
+.PHONY: $(SHELLIT)-msys
+$(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
+$(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
+$(SHELLIT)-msys:
+ifeq ($(COMPOSER_PROGS_USE),1)
+	@cd "$(COMPOSER_PROGS)" && \
+		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
+		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
+else
+	@cd "$(MSYS_DST)" && \
+		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
+		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
+endif
+
+.PHONY: $(SHELLIT)-bashrc
+$(SHELLIT)-bashrc:
+	@$(MKDIR) "$(COMPOSER_ABODE)"
+	@$(call DO_HEREDOC,HEREDOC_BASH_PROFILE)	>"$(COMPOSER_ABODE)/.bash_profile"
+	@$(call DO_HEREDOC,HEREDOC_BASHRC)		>"$(COMPOSER_ABODE)/.bashrc"
+	@if [ ! -f "$(COMPOSER_ABODE)/.bashrc.custom" ]; then \
+		$(ECHO) >"$(COMPOSER_ABODE)/.bashrc.custom"; \
+	fi
+
+.PHONY: $(SHELLIT)-vimrc
+$(SHELLIT)-vimrc:
+	@$(MKDIR) "$(COMPOSER_ABODE)"
+	@$(call DO_HEREDOC,HEREDOC_VIMRC)		>"$(COMPOSER_ABODE)/.vimrc"
+	@if [ ! -f "$(COMPOSER_ABODE)/.vimrc.custom" ]; then \
+		$(ECHO) >"$(COMPOSER_ABODE)/.vimrc.custom"; \
+	fi
+
+override define HEREDOC_BASH_PROFILE =
+source "$(COMPOSER_ABODE)/.bashrc"
+endef
+
+override HEREDOC_BASHRC_CMD = $(notdir $(subst ",,$(word 1,$(1)))) $(subst ",[B]",$(filter-out $(word 1,$(1)),$(1)))
+#> syntax highlighting fix: "))
+override define HEREDOC_BASHRC =
+# bashrc
+umask 022
+unalias -a
+set -o vi
+eval $$($(call HEREDOC_BASHRC_CMD,$(DIRCOLORS)) 2>/dev/null)
+#
+export LANG="$(LANG)"
+export LC_ALL="$${LANG}"
+export LC_COLLATE="C"
+export LC_ALL=
+#
+if [ -f "$${HOME}/.bash_history" ]; then $(call HEREDOC_BASHRC_CMD,$(RM)) "$${HOME}/.bash_history"; fi
+$(call HEREDOC_BASHRC_CMD,$(MKDIR)) "$${HOME}/.bash_history"
+export HISTFILE="$${HOME}/.bash_history/$$(date +%Y-%m)"
+export HISTSIZE="$$(( (2**31)-1 ))"
+export HISTFILESIZE="$${HISTSIZE}"
+export HISTTIMEFORMAT="%Y-%m-%dT%H:%M:%S "
+export HISTCONTROL=
+export HISTIGNORE=
+#
+export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_OTHER):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
+#
+export PROMPT_DIRTRIM="1"
+export PS1=
+export PS1="$${PS1}$([)\e]0;$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) \w\a$(])\n"					# title escape, new line (for spacing)
+export PS1="$${PS1}$([)$(_H)$(])$(MARKER) $(COMPOSER_FULLNAME)$([)$(_D)$(]) $(DIVIDE) $([)$(_C)$(])\D{%FT%T%z}\n"	# title, date (iso format)
+export PS1="$${PS1}$([)$(_C)$(])[\#/\!] ($([)$(_M)$(])\u@\h \w$([)$(_C)$(]))\\$$ $([)$(_D)$(])"				# history counters, username@hostname, directory, prompt
+#
+export PAGER="$(call HEREDOC_BASHRC_CMD,$(LESS))"
+export EDITOR="$(call HEREDOC_BASHRC_CMD,$(VIM))"
+unset VISUAL
+#
+alias ll="$(call HEREDOC_BASHRC_CMD,$(LS))"
+alias less="$${PAGER}"
+alias more="$${PAGER}"
+alias vi="$${EDITOR}"
+#
+alias .cms=".composer"
+alias .c=".compose"
+alias .composer_root="cd [B]"$(COMPOSER_DIR)[B]""
+alias .composer_other="cd [B]"$(COMPOSER_OTHER)[B]""
+alias .composer="$(subst ",[B]",$(RUNMAKE))"
+alias .compose="$(subst ",[B]",$(COMPOSE))"
+#
+cd "$(COMPOSER_DIR)"
+source "$${HOME}/.bashrc.custom"
+# end of file
+endef
+
+override define HEREDOC_VIMRC =
+" vimrc
+"TODO
+set nocompatible
+set autoread
+set secure
+set ttyfast
+"
+set viminfo		=
+set swapfile
+set directory		=.
+"
+filetype on
+syntax on
+"
+set noautowrite
+set noautowriteall
+set hidden
+set hlsearch
+set ignorecase
+set incsearch
+set modeline
+set noruler
+set showcmd
+set noshowmode
+set smartcase
+set nospell
+set novisualbell
+"
+set autoindent
+set noexpandtab
+set smartindent
+set shiftwidth		=8
+set tabstop		=8
+"
+set foldenable
+set foldcolumn		=1
+set foldlevelstart	=99
+set foldminlines	=0
+set foldmethod		=indent
+"
+" clean up folding
+map z. <ESC>:set foldlevel=0<CR>zv
+"
+source $${HOME}/.vimrc.custom
+" end of file
+endef
+#> syntax highlighting fix: "
 
 ########################################
 
