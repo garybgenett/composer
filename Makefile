@@ -13,41 +13,6 @@
 #
 ################################################################################
 
-#WORKING : TODO
-# texlive = STRAPIT, and before ghc/cabal everywhere
-# BUILDIT-libs-so = before BUILD-ghc/cabal
-# define target dependencies; parallel make?
-# BUILD_FETCH =~ BUILD_DIST
-#	$(RUNMAKE) $(STRAPIT)-$(FETCHIT)
-#	$(RUNMAKE) $(BUILDIT)-$(FETCHIT)
-#	--
-#	#WORKING : document!
-#	$(FETCHIT)-% = $REPLICA-%
-#	$(RUNMAKE) $(*) BUILD_FETCH=0
-#	--
-#	#WORKING : document!
-#	%-no$(FETCHIT) = $REPLICA-%
-#	$(RUNMAKE) $(*) BUILD_FETCH=
-#	--
-#	#WORKING : document!
-#	%-$(FETCHIT) = $REPLICA-%
-#	$(RUNMAKE) $(FETCHIT)-$(*)
-#	$(RUNMAKE) $(*)-no$(FETCHIT)
-#	--
-#	$(FETCHIT): $(FETCHIT)-$(STRAPIT) ???
-#	$(FETCHIT): $(FETCHIT)-$(BUILDIT)
-#	$(FETCHIT):
-#	$(LS) $(COMPOSER_STORE)
-#	$(LS) $(COMPOSER_BUILD)
-#	--
-#	ifneq ($(BUILD_FETCH),)
-#		[fetch]
-#	endif
-#	ifneq ($(BUILD_FETCH),0)
-#		[build]
-#	endif
-#WORKING : TODO
-
 #WORKING
 # _ make sure all commands are using their variable counterparts
 # _ trim down the "ifeq($BUILD_PLAT,Msys)" to only the things which are necessary
@@ -63,6 +28,8 @@
 # _ double-check "if*eq" stanzas for "$(if $(and $(or $(filter $(filter-out" possibilities
 # _ can "if*eq" stanzas be properly nested, with tabs, so that they are more readable?
 # _ comments, comments, comments (& formatting :)
+# _ define build target dependencies; enabling parallel make?
+# _ test native fetch/build without bootstrap, just for fun
 #WORKING
 
 #WORKING
@@ -2227,12 +2194,42 @@ $(UPGRADE):
 
 #WORKING : re-tool / re-org / re-struct
 # bootstrap = libs, tools, progs, etc. (all from tarfiles)
-# fetch/build = libs-so, make, texlive, ghc/cabal, pandoc
+# fetch/build = make, texlive, ghc/cabal, pandoc
 #	ghc/cabal = bin ghc, bin cabal, libs, git ghc, git cabal
 #	pandoc = pandoc-deps, pandoc-[^citeproc]+, pandoc & pandoc-citeproc
 # switch to FETCHIT-* / BUILDIT-* for all packages
 #	bootstrap can then be STRAPIT-FETCHIT / STRAPIT-BUILDIT
-#WORKING : test native fetch/build without bootstrap, just for fun
+#WORKING : TODO
+# BUILD_FETCH =~ BUILD_DIST
+#	$(RUNMAKE) $(STRAPIT)-$(FETCHIT)
+#	$(RUNMAKE) $(BUILDIT)-$(FETCHIT)
+#	--
+#	#WORKING : document!
+#	$(FETCHIT)-% = $REPLICA-%
+#	$(RUNMAKE) $(*) BUILD_FETCH=0
+#	--
+#	#WORKING : document!
+#	%-no$(FETCHIT) = $REPLICA-%
+#	$(RUNMAKE) $(*) BUILD_FETCH=
+#	--
+#	#WORKING : document!
+#	%-$(FETCHIT) = $REPLICA-%
+#	$(RUNMAKE) $(FETCHIT)-$(*)
+#	$(RUNMAKE) $(*)-no$(FETCHIT)
+#	--
+#	$(FETCHIT): $(FETCHIT)-$(STRAPIT) ???
+#	$(FETCHIT): $(FETCHIT)-$(BUILDIT)
+#	$(FETCHIT):
+#	$(LS) $(COMPOSER_STORE)
+#	$(LS) $(COMPOSER_BUILD)
+#	--
+#	ifneq ($(BUILD_FETCH),)
+#		[fetch]
+#	endif
+#	ifneq ($(BUILD_FETCH),0)
+#		[build]
+#	endif
+#WORKING : TODO
 
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
@@ -2514,7 +2511,6 @@ $(BUILDIT)-libiconv:
 		--disable-shared \
 		--enable-static \
 	)
-#WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Iconv library
 	$(call LIBICONV_BUILD,$(BUILD_STRAP),\
 		--disable-static \
@@ -2570,7 +2566,6 @@ $(BUILDIT)-zlib:
 	$(call ZLIB_BUILD,$(COMPOSER_ABODE),\
 		--static \
 	)
-#WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Zlib library
 	$(call ZLIB_BUILD,$(BUILD_STRAP))
 
@@ -2596,7 +2591,6 @@ $(BUILDIT)-gmp:
 		--disable-shared \
 		--enable-static \
 	)
-#WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic GMP library
 	$(call GMP_BUILD,$(BUILD_STRAP),\
 		--disable-static \
