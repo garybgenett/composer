@@ -19,10 +19,8 @@
 # BUILDIT-libs-so = before BUILD-ghc/cabal
 # define target dependencies; parallel make?
 # BUILD_FETCH =~ BUILD_DIST
-#	$(RUNMAKE) $(STRAPIT) BUILD_FETCH=0
-#	$(RUNMAKE) $(STRAPIT) BUILD_FETCH=
-#	$(RUNMAKE) $(BUILDIT) BUILD_FETCH=0
-#	$(RUNMAKE) $(BUILDIT) BUILD_FETCH=
+#	$(RUNMAKE) $(STRAPIT)-$(FETCHIT)
+#	$(RUNMAKE) $(BUILDIT)-$(FETCHIT)
 #	--
 #	#WORKING : document!
 #	$(FETCHIT)-% = $REPLICA-%
@@ -32,7 +30,12 @@
 #	%-no$(FETCHIT) = $REPLICA-%
 #	$(RUNMAKE) $(*) BUILD_FETCH=
 #	--
-#	$(FETCHIT): $(FETCHIT)-$(STRAPIT)
+#	#WORKING : document!
+#	%-$(FETCHIT) = $REPLICA-%
+#	$(RUNMAKE) $(FETCHIT)-$(*)
+#	$(RUNMAKE) $(*)-no$(FETCHIT)
+#	--
+#	$(FETCHIT): $(FETCHIT)-$(STRAPIT) ???
 #	$(FETCHIT): $(FETCHIT)-$(BUILDIT)
 #	$(FETCHIT):
 #	$(LS) $(COMPOSER_STORE)
@@ -1005,15 +1008,21 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 
 override CABAL_LIBRARIES_LIST		:= \
 	Cabal|$(CABAL_VER_LIB) \
-	HTTP|4000.2.12 \
-	mtl|2.1.3.1 \
-	network|2.4.2.3 \
-	parsec|3.1.5 \
-	random|1.0.1.1 \
-	stm|2.4.3 \
-	text|1.1.0.1 \
-	transformers|0.3.0.0 \
-	zlib|0.5.4.1
+	HTTP|4000.2.19 \
+	binary|0.7.2.3 \
+	deepseq|1.4.0.0 \
+	mtl|2.2.1 \
+	network-uri|2.6.0.1 \
+	network|2.6.0.2 \
+	old-locale|1.0.0.7 \
+	old-time|1.1.0.3 \
+	parsec|3.1.7 \
+	random|1.1 \
+	stm|2.4.4 \
+	text|1.2.0.3 \
+	time|1.5 \
+	transformers|0.4.2.0 \
+	zlib|0.5.4.2
 
 override GHC_LIBRARIES_LIST		:= \
 	primitive|0.5.4.0 \
@@ -2628,6 +2637,8 @@ $(BUILDIT)-gmp:
 		--disable-static \
 		--enable-shared \
 	)
+#WORKING : build-ghc
+	$(CP) "$(BUILD_STRAP)/lib/libgmp.so" "$(BUILD_STRAP)/lib/libgmp.so.3"
 
 override define GMP_BUILD =
 	$(call CURL_FILE,$(GMP_SRC))
@@ -3223,7 +3234,6 @@ $(BUILDIT)-cabal-init:
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PULL,$(CABAL_DST_INIT))
-	$(call CABAL_PREP,$(CABAL_DST_INIT))
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 	# call recursively instead of using dependencies, so that environment variables update
 #WORKING : should not be needed in order to install the pre-downloaded libs
@@ -3235,26 +3245,22 @@ $(BUILDIT)-cabal-init:
 $(BUILDIT)-cabal:
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL,$(CABAL_DST))
-	$(call CABAL_PREP,$(CABAL_DST))
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 #WORKING : process should include cabal library
 #	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 #		Cabal-$(CABAL_VER_LIB)
 #WORKING
 
+# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
+# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 override define CABAL_PULL =
 	$(foreach FILE,\
-		$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
-		$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		\,
+		$(subst |,-,$(CABAL_LIBRARIES_LIST)) \
+		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
+		,\
 		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
 		$(call DO_UNTAR,$(1)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
 	)
-endef
-
-# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
-# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
-override define CABAL_PREP =
 #WORK : platform_switches
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
 		$(call DO_HEREDOC,$(call HEREDOC_CABAL_BOOTSTRAP,$(1))) >"$(1)/bootstrap.patch.sh"; \
