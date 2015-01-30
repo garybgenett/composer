@@ -21,6 +21,7 @@
 # _ make sure all referenced programs are included (goal is composer should function as a chroot)
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
 # _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
+#	- need a special provision for "patch"; maybe don't do it, or replace it with sed hackery?
 # _ template inherit & archive target
 # _ double-check all $SED statements, for consistency
 # _ double-check "if*eq" stanzas for consistent definition of default value
@@ -2874,25 +2875,15 @@ $(STRAPIT)-libs-gettext:
 
 .PHONY: $(STRAPIT)-libs-libiconv
 $(STRAPIT)-libs-libiconv:
-	$(call STRAPIT_LIBS_LIBICONV)
+	$(call STRAPIT_LIBS_LIBICONV,$(COMPOSER_ABODE),\
+		--disable-shared \
+		--enable-static \
+	)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Iconv library
-	$(RM) -r "$(LIBICONV_DST)"
-	$(call DO_UNTAR,$(LIBICONV_DST),$(LIBICONV_SRC))
-#WORK : platform_switches
-	# "$(BUILD_PLAT),Linux" requires some patching
-	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
-		$(call DO_PATCH,$(LIBICONV_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
-	fi
-#WORK : platform_switches
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
-	fi
-	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(BUILD_STRAP),,\
-		--enable-shared \
+	$(call STRAPIT_LIBS_LIBICONV,$(BUILD_STRAP),\
 		--disable-static \
+		--enable-shared \
 	)
 
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
@@ -2900,6 +2891,7 @@ $(STRAPIT)-libs-libiconv:
 override define STRAPIT_LIBS_LIBICONV =
 	$(call CURL_FILE,$(LIBICONV_SRC))
 	# start with fresh source directory, due to circular dependency with "gettext"
+	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(LIBICONV_DST)"
 	$(call DO_UNTAR,$(LIBICONV_DST),$(LIBICONV_SRC))
 #WORK : platform_switches
@@ -2913,9 +2905,8 @@ override define STRAPIT_LIBS_LIBICONV =
 		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
 		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
 	fi
-	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(COMPOSER_ABODE),,\
-		--disable-shared \
-		--enable-static \
+	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(1),,\
+		$(2) \
 	)
 endef
 
@@ -2941,61 +2932,60 @@ $(STRAPIT)-libs-pkgconfig:
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
-	$(call CURL_FILE,$(ZLIB_SRC))
-	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
-ifeq ($(BUILD_BITS),64)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(COMPOSER_ABODE),,\
-		--64 \
+	$(call STRAPIT_LIBS_ZLIB,$(COMPOSER_ABODE),\
 		--static \
 	)
-else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(COMPOSER_ABODE),,\
-		--static \
-	)
-endif
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Zlib library
+	$(call STRAPIT_LIBS_ZLIB,$(BUILD_STRAP))
+
+override define STRAPIT_LIBS_ZLIB =
+	$(call CURL_FILE,$(ZLIB_SRC))
+	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(ZLIB_DST)"
 	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
-ifeq ($(BUILD_BITS),64)
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(BUILD_STRAP),,\
-		--64 \
-	)
-else
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(BUILD_STRAP))
-endif
+	if [ "$(BUILD_BITS)" == "64" ]; then \
+		$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
+			--64 \
+			$(2) \
+		); \
+	else; \
+		$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
+			$(2) \
+		); \
+	fi
+endef
 
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
-	$(call CURL_FILE,$(GMP_SRC))
-	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(GMP_DST))
-endif
-	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(COMPOSER_ABODE),\
-		ABI="$(BUILD_BITS)" \
-		,\
-		--disable-assembly \
+	$(call STRAPIT_LIBS_GMP,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
 	)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic GMP library
+	$(call STRAPIT_LIBS_GMP,$(BUILD_STRAP),\
+		--disable-static \
+		--enable-shared \
+	)
+
+override define STRAPIT_LIBS_GMP =
+	$(call CURL_FILE,$(GMP_SRC))
+	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(GMP_DST)"
 	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys64)
+#WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(GMP_DST))
-endif
-	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(BUILD_STRAP),\
+	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys64" ]; then \
+		$(call GNU_CFG_INSTALL,$(GMP_DST)); \
+	fi
+	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(1),\
 		ABI="$(BUILD_BITS)" \
 		,\
 		--disable-assembly \
-		--enable-shared \
-		--disable-static \
+		$(2) \
 	)
+endef
 
 .PHONY: $(STRAPIT)-libs-ncurses
 $(STRAPIT)-libs-ncurses:
