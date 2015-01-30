@@ -1693,21 +1693,21 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
-	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(STRAPIT)-check$(_D)"			"Tries to proactively prevent common errors"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool$(_D)"			"Build/compile of helpful utilities from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-core$(_D)"			"Build/compile of core utilities from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal$(_D)"			"Build/complie of Cabal from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(BUILDIT)-libiconv-init$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
+	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-meta-check$(_D)"		"Tries to proactively prevent common errors"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-libs$(_D)"		"Build/compile of necessary libraries from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-util$(_D)"		"Build/compile of necessary utilities from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-tool$(_D)"		"Build/compile of helpful utilities from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core utilities from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init$(_D)"			"Build/complie of GHC from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-libs$(_D):"	"$(_E)$(BUILDIT)-libiconv-init$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gettext$(_D)"			"Build/compile of Gettext from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-libiconv$(_D)"			"Build/compile of Libiconv (after Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
@@ -1718,7 +1718,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-expat$(_D)"			"Build/compile of Expat from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-freetype$(_D)"			"Build/compile of FreeType from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-util$(_D):"	"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-patch$(_D)"			"Build/compile of GNU Patch from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-sed$(_D)"			"Build/compile of GNU Sed from source archive"
@@ -1728,21 +1728,21 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-perl$(_D)"			"Build/compile of Perl from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-perl-modules$(_D)"		"Build/compile of Perl modules from source archives"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-tool$(_D):"	"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of GNU Bash from source archive"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-tool$(_D):"	"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of GNU Bash from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-core$(_D):"	"$(_E)$(STRAPIT)-make$(_D)"			"Build/compile of GNU Make from source archive"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-core$(_D):"	"$(_E)$(BUILDIT)-make-init$(_D)"		"Build/compile of GNU Make from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-cabal$(_D):"	"$(_E)$(STRAPIT)-cabal-pull$(_D)"		"Download of Cabal source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-prep$(_D)"		"Preparation of Cabal source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-build$(_D)"		"Build/compile of Cabal from source archive"
-	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-ghc-init$(_D):"	"$(_E)$(BUILDIT)-ghc-init-pull$(_D)"		"Download of GHC source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init-prep$(_D)"		"Preparation of GHC source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init-build$(_D)"		"Build/compile of GHC from source archive"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-cabal-init$(_D):"	"$(_E)$(BUILDIT)-cabal-init-pull$(_D)"		"Download of Cabal source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init-prep$(_D)"		"Preparation of Cabal source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init-build$(_D)"		"Build/compile of Cabal from source archive"
+	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(BUILDIT)-gnu$(_D)"			"Fetches current Gnu.org configuration files/scripts"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
@@ -1755,14 +1755,14 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc-prep$(_D)"			"Preparation of GHC source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repositories"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
-	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-cleanup$(_D)"			"Archives/restores source files and removes temporary build files"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source"
+	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source repository"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source repository"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal$(_D)"			"Build/compile of Cabal from source repository"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source repository"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-meta-bindir$(_D)"		"Copies compiled binaries to repository binaries directory"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from Cabal"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes GNU Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
 	@$(ECHO) "\n"
@@ -2226,25 +2226,23 @@ $(ALLOFIT):
 	$(RUNMAKE) $(BUILDIT)
 
 .PHONY: $(STRAPIT)
-$(STRAPIT): $(STRAPIT)-check
-$(STRAPIT): $(STRAPIT)-config
+$(STRAPIT): $(BUILDIT)-meta-check
+$(STRAPIT): $(BUILDIT)-gnu-init
 ifeq ($(BUILD_PLAT),Msys)
-$(STRAPIT): $(STRAPIT)-msys
+$(STRAPIT): $(BUILDIT)-msys
 endif
-$(STRAPIT): $(STRAPIT)-libs
-$(STRAPIT): $(STRAPIT)-util
-$(STRAPIT): $(STRAPIT)-tool
-$(STRAPIT): $(STRAPIT)-core
+$(STRAPIT): $(BUILDIT)-group-libs
+$(STRAPIT): $(BUILDIT)-group-util
+$(STRAPIT): $(BUILDIT)-group-tool
+$(STRAPIT): $(BUILDIT)-group-core
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-ghc
-	$(RUNMAKE) $(STRAPIT)-cabal
+	$(RUNMAKE) $(BUILDIT)-ghc-init
+	$(RUNMAKE) $(BUILDIT)-cabal-init
 
 .PHONY: $(FETCHIT)
-$(FETCHIT): $(FETCHIT)-cabal-db
-#WORKING : $(FETCHIT)-cabal-db should maybe call $(BUILDIT)-cleanup directly?
-$(FETCHIT): $(BUILDIT)-cleanup
-$(FETCHIT): $(FETCHIT)-config
+$(FETCHIT): $(BUILDIT)-cabal-db
+$(FETCHIT): $(BUILDIT)-gnu
 $(FETCHIT): $(FETCHIT)-make
 $(FETCHIT): $(FETCHIT)-texlive
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-cabal $(FETCHIT)-pandoc
@@ -2256,19 +2254,19 @@ $(BUILDIT): $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
 #WORKING : need to sort out where this all needs to be
-	$(RUNMAKE) $(FETCHIT)-cabal-db
+	$(RUNMAKE) $(BUILDIT)-cabal-db
 	$(RUNMAKE) $(BUILDIT)-pandoc
-	$(RUNMAKE) $(BUILDIT)-cleanup
-	$(RUNMAKE) $(BUILDIT)-bindir
+	$(RUNMAKE) $(BUILDIT)-cabal-db
+	$(RUNMAKE) $(BUILDIT)-meta-bindir
 	$(RUNMAKE) $(CHECKIT)
 
-.PHONY: $(STRAPIT)-config
-$(STRAPIT)-config:
+.PHONY: $(BUILDIT)-gnu-init
+$(BUILDIT)-gnu-init:
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
 
-.PHONY: $(FETCHIT)-config
-$(FETCHIT)-config:
+.PHONY: $(BUILDIT)-gnu
+$(BUILDIT)-gnu:
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
 
 override define GNU_CFG_INSTALL =
@@ -2277,8 +2275,8 @@ override define GNU_CFG_INSTALL =
 endef
 
 #WORKING : needs a better name and location
-.PHONY: $(FETCHIT)-cabal-db
-$(FETCHIT)-cabal-db:
+.PHONY: $(BUILDIT)-cabal-db
+$(BUILDIT)-cabal-db:
 	$(BUILD_ENV) $(CABAL) update
 	# make sure GHC looks for libraries in the right place
 	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
@@ -2288,9 +2286,6 @@ $(FETCHIT)-cabal-db:
 			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
 			"$(COMPOSER_ABODE)/.cabal/config"; \
 	fi
-
-.PHONY: $(BUILDIT)-cleanup
-$(BUILDIT)-cleanup:
 	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
 	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
 #WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  should we add a $RM statement for them?
@@ -2303,8 +2298,8 @@ $(BUILDIT)-cleanup:
 	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
 	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
 
-.PHONY: $(BUILDIT)-bindir
-$(BUILDIT)-bindir:
+.PHONY: $(BUILDIT)-meta-bindir
+$(BUILDIT)-meta-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
 ifeq ($(BUILD_PLAT),Msys)
 	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
@@ -2705,8 +2700,8 @@ override CHECK_FAILED		:= 1
 override CHECK_SHELL		:= 1
 endif
 
-.PHONY: $(STRAPIT)-check
-$(STRAPIT)-check:
+.PHONY: $(BUILDIT)-meta-check
+$(BUILDIT)-meta-check:
 ifneq ($(CHECK_GHCLIB),)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
@@ -2728,7 +2723,7 @@ ifneq ($(CHECK_MSYS),)
 	@$(TABLE_C2)
 	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
 	@$(TABLE_C2) "This appears to be a Windows system, but the '$(_C)MSYSTEM$(_D)' variable is not set."
-	@$(TABLE_C2) "You should run the '$(_M)$(STRAPIT)-msys$(_D)' target to install the MSYS2 environment."
+	@$(TABLE_C2) "You should run the '$(_M)$(BUILDIT)-msys$(_D)' target to install the MSYS2 environment."
 	@$(TABLE_C2) "Then you can run the '$(_M)$(SHELLIT)-msys$(_D)' target to run the MSYS2 environment and try '$(_C)$(STRAPIT)$(_D)' again."
 	@$(HEADER_1)
 endif
@@ -2751,26 +2746,26 @@ ifneq ($(CHECK_FAILED),)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) NOTES:"
 	@$(TABLE_C2) "This message was produced by $(_H)$(COMPOSER_FULLNAME)$(_D)."
-	@$(TABLE_C2) "If you know the above to be incorrect, you can remove the check from the '$(_C)$(~)(STRAPIT)-check$(_D)' target in:"
+	@$(TABLE_C2) "If you know the above to be incorrect, you can remove the check from the '$(_C)$(~)(BUILDIT)-meta-check$(_D)' target in:"
 	@$(TABLE_C2) "$(INDENTING)$(_M)$(COMPOSER)"
 	@$(HEADER_1)
 	@exit 1
 endif
 
-.PHONY: $(STRAPIT)-msys
-$(STRAPIT)-msys: $(STRAPIT)-msys-bin
-$(STRAPIT)-msys: $(STRAPIT)-msys-init
-$(STRAPIT)-msys: $(STRAPIT)-msys-fix
-$(STRAPIT)-msys: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys: $(STRAPIT)-msys-dll
+.PHONY: $(BUILDIT)-msys
+$(BUILDIT)-msys: $(BUILDIT)-msys-bin
+$(BUILDIT)-msys: $(BUILDIT)-msys-init
+$(BUILDIT)-msys: $(BUILDIT)-msys-fix
+$(BUILDIT)-msys: $(BUILDIT)-msys-pkg
+$(BUILDIT)-msys: $(BUILDIT)-msys-dll
 
-.PHONY: $(STRAPIT)-msys-bin
-$(STRAPIT)-msys-bin:
+.PHONY: $(BUILDIT)-msys-bin
+$(BUILDIT)-msys-bin:
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
 
-.PHONY: $(STRAPIT)-msys-init
-$(STRAPIT)-msys-init:
+.PHONY: $(BUILDIT)-msys-init
+$(BUILDIT)-msys-init:
 	@$(HEADER_1)
 	@$(TABLE_C2) "We need to initialize the MSYS2 environment."
 	@$(TABLE_C2) "To do this, we will pause here to open an initial shell window."
@@ -2789,9 +2784,9 @@ $(STRAPIT)-msys-init:
 	@$(HEADER_1)
 	@read -s -n1 ENTER
 
-.PHONY: $(STRAPIT)-msys-fix
+.PHONY: $(BUILDIT)-msys-fix
 # thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
-$(STRAPIT)-msys-fix:
+$(BUILDIT)-msys-fix:
 	$(PACMAN_ENV) $(PACMAN) --refresh
 	$(PACMAN_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
 	cd "$(MSYS_DST)" && \
@@ -2802,8 +2797,8 @@ $(STRAPIT)-msys-fix:
 	$(PACMAN_ENV) $(PACMAN_KEY) --populate msys2	|| $(TRUE)
 	$(PACMAN_ENV) $(PACMAN_KEY) --refresh-keys	|| $(TRUE)
 
-.PHONY: $(STRAPIT)-msys-pkg
-$(STRAPIT)-msys-pkg:
+.PHONY: $(BUILDIT)-msys-pkg
+$(BUILDIT)-msys-pkg:
 	$(PACMAN_ENV) $(PACMAN) \
 		--force \
 		--needed \
@@ -2811,15 +2806,15 @@ $(STRAPIT)-msys-pkg:
 		$(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
 
-.PHONY: $(STRAPIT)-msys-dll
-$(STRAPIT)-msys-dll:
+.PHONY: $(BUILDIT)-msys-dll
+$(BUILDIT)-msys-dll:
 	$(MKDIR) "$(COMPOSER_ABODE)/bin"
 	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
 		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
 	)
 
-.PHONY: $(STRAPIT)-libs
-$(STRAPIT)-libs:
+.PHONY: $(BUILDIT)-group-libs
+$(BUILDIT)-group-libs:
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-libiconv-init
 	$(RUNMAKE) $(BUILDIT)-gettext
@@ -3075,8 +3070,8 @@ else
 	)
 endif
 
-.PHONY: $(STRAPIT)-util
-$(STRAPIT)-util:
+.PHONY: $(BUILDIT)-group-util
+$(BUILDIT)-group-util:
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-coreutils
 	$(RUNMAKE) $(BUILDIT)-findutils
@@ -3222,8 +3217,8 @@ $(BUILDIT)-perl-modules:
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
 
-.PHONY: $(STRAPIT)-tool
-$(STRAPIT)-tool:
+.PHONY: $(BUILDIT)-group-tool
+$(BUILDIT)-group-tool:
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-bash
 	$(RUNMAKE) $(BUILDIT)-less
@@ -3278,16 +3273,16 @@ $(BUILDIT)-vim:
 		--without-x \
 	)
 
-.PHONY: $(STRAPIT)-core
-$(STRAPIT)-core:
+.PHONY: $(BUILDIT)-group-core
+$(BUILDIT)-group-core:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-make
+	$(RUNMAKE) $(BUILDIT)-make-init
 	$(RUNMAKE) $(BUILDIT)-infozip
 	$(RUNMAKE) $(BUILDIT)-curl
 	$(RUNMAKE) $(BUILDIT)-git
 
-.PHONY: $(STRAPIT)-make
-$(STRAPIT)-make:
+.PHONY: $(BUILDIT)-make-init
+$(BUILDIT)-make-init:
 	$(call CURL_FILE,$(MAKE_SRC_INIT))
 	$(call DO_UNTAR,$(MAKE_DST_INIT),$(MAKE_SRC_INIT))
 #WORK : platform_switches
@@ -3463,17 +3458,17 @@ $(BUILDIT)-texlive:
 $(BUILDIT)-texlive-fmtutil:
 	$(BUILD_ENV) fmtutil --all
 
-.PHONY: $(STRAPIT)-ghc
-$(STRAPIT)-ghc: $(STRAPIT)-ghc-pull
-$(STRAPIT)-ghc: $(STRAPIT)-ghc-prep
-$(STRAPIT)-ghc: $(STRAPIT)-ghc-build
+.PHONY: $(BUILDIT)-ghc-init
+$(BUILDIT)-ghc-init: $(BUILDIT)-ghc-init-pull
+$(BUILDIT)-ghc-init: $(BUILDIT)-ghc-init-prep
+$(BUILDIT)-ghc-init: $(BUILDIT)-ghc-init-build
 
 .PHONY: $(FETCHIT)-ghc
 $(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
 $(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
 
-.PHONY: $(STRAPIT)-ghc-pull
-$(STRAPIT)-ghc-pull:
+.PHONY: $(BUILDIT)-ghc-init-pull
+$(BUILDIT)-ghc-init-pull:
 	$(call CURL_FILE,$(GHC_SRC_INIT))
 	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
 
@@ -3490,8 +3485,8 @@ $(FETCHIT)-ghc-pull:
 #		-e "s|(RELEASE[=])NO|\1YES|g" \
 #		"$(GHC_DST)/configure"*
 
-.PHONY: $(STRAPIT)-ghc-prep
-$(STRAPIT)-ghc-prep:
+.PHONY: $(BUILDIT)-ghc-init-prep
+$(BUILDIT)-ghc-init-prep:
 
 .PHONY: $(FETCHIT)-ghc-prep
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
@@ -3542,8 +3537,8 @@ endif
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
 
-.PHONY: $(STRAPIT)-ghc-build
-$(STRAPIT)-ghc-build:
+.PHONY: $(BUILDIT)-ghc-init-build
+$(BUILDIT)-ghc-init-build:
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
@@ -3575,17 +3570,17 @@ SRC_LD_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 SRC_CPP_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 endef
 
-.PHONY: $(STRAPIT)-cabal
-$(STRAPIT)-cabal: $(STRAPIT)-cabal-pull
-$(STRAPIT)-cabal: $(STRAPIT)-cabal-prep
-$(STRAPIT)-cabal: $(STRAPIT)-cabal-build
+.PHONY: $(BUILDIT)-cabal-init
+$(BUILDIT)-cabal-init: $(BUILDIT)-cabal-init-pull
+$(BUILDIT)-cabal-init: $(BUILDIT)-cabal-init-prep
+$(BUILDIT)-cabal-init: $(BUILDIT)-cabal-init-build
 
 .PHONY: $(FETCHIT)-cabal
 $(FETCHIT)-cabal: $(FETCHIT)-cabal-pull
 $(FETCHIT)-cabal: $(FETCHIT)-cabal-prep
 
-.PHONY: $(STRAPIT)-cabal-pull
-$(STRAPIT)-cabal-pull:
+.PHONY: $(BUILDIT)-cabal-init-pull
+$(BUILDIT)-cabal-init-pull:
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PULL,$(CABAL_DST_INIT))
@@ -3605,8 +3600,8 @@ override define CABAL_PULL =
 	)
 endef
 
-.PHONY: $(STRAPIT)-cabal-prep
-$(STRAPIT)-cabal-prep:
+.PHONY: $(BUILDIT)-cabal-init-prep
+$(BUILDIT)-cabal-init-prep:
 	$(call CABAL_PREP,$(CABAL_DST_INIT))
 
 .PHONY: $(FETCHIT)-cabal-prep
@@ -3645,18 +3640,18 @@ override define HEREDOC_CABAL_BOOTSTRAP =
 exit 0
 endef
 
-.PHONY: $(STRAPIT)-cabal-build
-$(STRAPIT)-cabal-build:
+.PHONY: $(BUILDIT)-cabal-init-build
+$(BUILDIT)-cabal-init-build:
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 #WORKING : needs a better name and location
 	# call recursively instead of using dependencies, so that environment variables update
 #WORKING : should not be needed in order to install the pre-downloaded libs
-#	$(RUNMAKE) $(FETCHIT)-cabal-db
-	$(RUNMAKE) $(STRAPIT)-cabal-ghcreqs
+#	$(RUNMAKE) $(BUILDIT)-cabal-db
+	$(RUNMAKE) $(BUILDIT)-cabal-init-ghcreqs
 
 #WORKING : document!
-.PHONY: $(STRAPIT)-cabal-ghcreqs
-$(STRAPIT)-cabal-ghcreqs:
+.PHONY: $(BUILDIT)-cabal-init-ghcreqs
+$(BUILDIT)-cabal-init-ghcreqs:
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 		cd "$(CABAL_DST_INIT)/$(FILE)" && \
 			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
