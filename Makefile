@@ -195,8 +195,8 @@ override REPLICA			:= clone
 override UPGRADE			:= update
 
 override ALLOFIT			:= world
-override STRAPIT			:= bootstrap
 override FETCHIT			:= fetch
+override STRAPIT			:= bootstrap
 override BUILDIT			:= build
 override CHECKIT			:= check
 override SHELLIT			:= shell
@@ -997,10 +997,9 @@ override GHC_LIBRARIES_LIST		:= \
 #	haddock-api|2.15.0.2 \
 #	haddock|2.15.0.2
 
-override PANDOC_DEPENDENCIES_LIST	:= \
-	hsb2hs|0.2 \
-
 #WORKING
+#override PANDOC_DEPENDENCIES_LIST	:= \
+#	hsb2hs|0.2 \
 #	hxt|9.3.1.4
 
 ########################################
@@ -1465,8 +1464,8 @@ override .ALL_TARGETS := \
 	$(REPLICA)[:] \
 	$(UPGRADE)[:] \
 	$(ALLOFIT)[:] \
-	$(STRAPIT)[:-] \
 	$(FETCHIT)[:-] \
+	$(STRAPIT)[:-] \
 	$(BUILDIT)[:-] \
 	$(CHECKIT)[:] \
 	$(SHELLIT)[:-] \
@@ -1656,16 +1655,16 @@ HELP_TARGETS:
 	@$(TABLE_I3) "$(_C)$(UPGRADE)$(_D)"		"Download/update all 3rd party components (need to do this at least once)"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Compilation Targets:"
-	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D)"		"Download and build/compile essential libraries and tools"
+	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D)"		"Complete build with additional wrapping: $(FETCHIT), $(STRAPIT), $(BUILDIT) & $(CHECKIT)"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D)"		"Download/update and prepare all source repositories and archives"
-	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D)"		"Build/compile specific versions of all tools necessary for $(COMPOSER_BASENAME) operation"
+	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D)"		"Build/compile specific versions of essential libraries and tools"
+	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D)"		"Build/compile specific versions of core tools necessary for $(COMPOSER_BASENAME) operation"
 	@$(TABLE_I3) "$(_C)$(CHECKIT)$(_D)"		"Diagnostic version information (for verification and/or troubleshooting)"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)$(_D)"		"Launches into $(COMPOSER_BASENAME) sub-shell environment"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)-msys$(_D)"	"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) sub-shell environment"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Wildcard Targets:"
 	@$(TABLE_I3) "$(_C)$(REPLICA)-$(_N)%$(_D):"	"$(_E)$(REPLICA) COMPOSER_VERSION=$(_N)*$(_D)"	""
-	@$(TABLE_I3) "$(_C)do-$(_N)%$(_D):"		"$(_E)fetch-$(_N)*$(_E) build-$(_N)*$(_D)"	""
 	@$(ECHO) "\n"
 
 .PHONY: HELP_TARGETS_SUB
@@ -1692,8 +1691,10 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
-	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-meta-check$(_D)"		"Tries to proactively prevent common errors"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
+#WORKING
+	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D):"		"$(_E)$(ALLOFIT)-check$(_D)"			"Tries to proactively prevent common errors"
+	@$(TABLE_I3) ""					"$(_E)$(ALLOFIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
+	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-libs$(_D)"		"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-util$(_D)"		"Build/compile of necessary utilities from source archives"
@@ -1701,7 +1702,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init$(_D)"			"Build/complie of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-inst$(_D)"		"Installs base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
@@ -1726,7 +1727,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-xz$(_D)"			"Build/compile of XZ Utils from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-perl$(_D)"			"Build/compile of Perl from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-perl-modules$(_D)"		"Build/compile of Perl modules from source archives"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-perl$(_D):"	"$(_E)$(BUILDIT)-perl-modules$(_D)"		"Build/compile of Perl modules from source archives"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-tool$(_D):"	"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of GNU Bash from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
@@ -1734,34 +1735,15 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source archive"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-ghc-init$(_D):"	"$(_E)$(BUILDIT)-ghc-init-pull$(_D)"		"Download of GHC source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init-prep$(_D)"		"Preparation of GHC source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init-build$(_D)"		"Build/compile of GHC from source archive"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-cabal-init$(_D):"	"$(_E)$(BUILDIT)-cabal-init-pull$(_D)"		"Download of Cabal source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init-prep$(_D)"		"Preparation of Cabal source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init-build$(_D)"		"Build/compile of Cabal from source archive"
-	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(BUILDIT)-gnu$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-make$(_D):"	"$(_E)$(FETCHIT)-make-pull$(_D)"		"Download of GNU Make source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make-prep$(_D)"		"Preparation of GNU Make source repository"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-texlive$(_D):"	"$(_E)$(FETCHIT)-texlive-pull$(_D)"		"Download of TeX Live source archives"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive-prep$(_D)"		"Preparation of TeX Live source archives"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc-prep$(_D)"			"Preparation of GHC source repository"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-pandoc$(_D):"	"$(_E)$(FETCHIT)-pandoc-pull$(_D)"		"Download of Pandoc source repositories"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
-	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source repository"
+	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-gnu$(_D)"			"Fetches current Gnu.org configuration files/scripts"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source repository"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source repository"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal$(_D)"			"Build/compile of Cabal from source repository"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source repository"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-meta-bindir$(_D)"		"Copies compiled binaries to repository binaries directory"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from Cabal"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc-init$(_D)"		"Build/compile of Pandoc dependencies from Cabal"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes GNU Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
 	@$(ECHO) "\n"
@@ -2204,9 +2186,6 @@ $(UPGRADE):
 
 ########################################
 
-do-%: $(FETCHIT)-% $(BUILDIT)-%
-	@$(ECHO) >/dev/null
-
 #WORKING : re-tool / re-org / re-struct
 # bootstrap = libs, tools, progs, etc. (all from tarfiles)
 # fetch/build = libs-so, make, texlive, ghc/cabal, pandoc
@@ -2216,22 +2195,31 @@ do-%: $(FETCHIT)-% $(BUILDIT)-%
 #	bootstrap can then be STRAPIT-FETCHIT / STRAPIT-BUILDIT
 #WORKING : test native fetch/build without bootstrap, just for fun
 
-#WORK : document!
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(ALLOFIT)-check
+#WORKING : update $FETCHIT calls
+	$(RUNMAKE) $(FETCHIT)
 	$(RUNMAKE) $(STRAPIT)
+#WORKING : update $FETCHIT calls
 	$(RUNMAKE) $(FETCHIT)
 	$(RUNMAKE) $(BUILDIT)
+	$(RUNMAKE) $(ALLOFIT)-bindir
+	$(RUNMAKE) $(CHECKIT)
+
+.PHONY: $(FETCHIT)
+$(FETCHIT):
+#WORKING : need to reverse-engineer this now, somehow; best bet is something like COMPOSER_FETCHONLY and if($(COMPOSER_FETCHONLY),exit 0)
+#WORKING : needs to default to $BUILDIT, but be able to be set for $STRAPIT; trigger based on whether $(CURL)/$(GIT) is available with error/warning, respectively?
 
 .PHONY: $(STRAPIT)
-$(STRAPIT): $(BUILDIT)-meta-check
-$(STRAPIT): $(BUILDIT)-gnu-init
-ifeq ($(BUILD_PLAT),Msys)
-$(STRAPIT): $(BUILDIT)-msys
-endif
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(BUILDIT)-gnu-init
+ifeq ($(BUILD_PLAT),Msys)
+	$(RUNMAKE) $(BUILDIT)-msys
+endif
 	$(RUNMAKE) $(BUILDIT)-group-libs
 	$(RUNMAKE) $(BUILDIT)-group-util
 	$(RUNMAKE) $(BUILDIT)-group-tool
@@ -2239,24 +2227,15 @@ $(STRAPIT):
 	$(RUNMAKE) $(BUILDIT)-ghc-init
 	$(RUNMAKE) $(BUILDIT)-cabal-init
 
-.PHONY: $(FETCHIT)
-$(FETCHIT):
-#WORKING : need to reverse-engineer this now, somehow; best bet is something like COMPOSER_FETCHONLY and if($(COMPOSER_FETCHONLY),exit 0)
-
 .PHONY: $(BUILDIT)
-$(FETCHIT): $(BUILDIT)-gnu
-$(BUILDIT): $(BUILDIT)-make
-$(BUILDIT): $(BUILDIT)-texlive
 $(BUILDIT):
 	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(BUILDIT)-gnu
+	$(RUNMAKE) $(BUILDIT)-make
+	$(RUNMAKE) $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
-#WORKING : need to sort out where exactly "$(BUILDIT)-cabal-db" all needs to be
-	$(RUNMAKE) $(BUILDIT)-cabal-db
 	$(RUNMAKE) $(BUILDIT)-pandoc
-	$(RUNMAKE) $(BUILDIT)-cabal-db
-	$(RUNMAKE) $(BUILDIT)-meta-bindir
-	$(RUNMAKE) $(CHECKIT)
 
 override CHECK_FAILED		:=
 #WORKING : with proper use of bootstrap libraries, is this still necessary?  maybe LD_LIBRARY_PATH?
@@ -2291,8 +2270,8 @@ override CHECK_FAILED		:= 1
 override CHECK_SHELL		:= 1
 endif
 
-.PHONY: $(BUILDIT)-meta-check
-$(BUILDIT)-meta-check:
+.PHONY: $(ALLOFIT)-check
+$(ALLOFIT)-check:
 ifneq ($(CHECK_GHCLIB),)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
@@ -2337,14 +2316,14 @@ ifneq ($(CHECK_FAILED),)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) NOTES:"
 	@$(TABLE_C2) "This message was produced by $(_H)$(COMPOSER_FULLNAME)$(_D)."
-	@$(TABLE_C2) "If you know the above to be incorrect, you can remove the check from the '$(_C)$(~)(BUILDIT)-meta-check$(_D)' target in:"
+	@$(TABLE_C2) "If you know the above to be incorrect, you can remove the check from the '$(_C)$(~)(ALLOFIT)-check$(_D)' target in:"
 	@$(TABLE_C2) "$(INDENTING)$(_M)$(COMPOSER)"
 	@$(HEADER_1)
 	@exit 1
 endif
 
-.PHONY: $(BUILDIT)-meta-bindir
-$(BUILDIT)-meta-bindir:
+.PHONY: $(ALLOFIT)-bindir
+$(ALLOFIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
 ifeq ($(BUILD_PLAT),Msys)
 	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
@@ -2429,14 +2408,14 @@ override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="
 override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 
 .PHONY: $(BUILDIT)-msys
-$(BUILDIT)-msys: $(BUILDIT)-msys-bin
+$(BUILDIT)-msys: $(BUILDIT)-msys-inst
 $(BUILDIT)-msys: $(BUILDIT)-msys-init
 $(BUILDIT)-msys: $(BUILDIT)-msys-fix
 $(BUILDIT)-msys: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys: $(BUILDIT)-msys-dll
 
-.PHONY: $(BUILDIT)-msys-bin
-$(BUILDIT)-msys-bin:
+.PHONY: $(BUILDIT)-msys-inst
+$(BUILDIT)-msys-inst:
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
 
@@ -2758,7 +2737,6 @@ $(BUILDIT)-group-util:
 	$(RUNMAKE) $(BUILDIT)-xz
 	$(RUNMAKE) $(BUILDIT)-tar
 	$(RUNMAKE) $(BUILDIT)-perl
-	$(RUNMAKE) $(BUILDIT)-perl-modules
 
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
@@ -2877,6 +2855,13 @@ endif
 			"$(PERL_DST)/configure"; \
 	fi
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_DST),$(COMPOSER_ABODE))
+	$(RUNMAKE) $(BUILDIT)-perl-modules
+
+.PHONY: $(BUILDIT)-perl-modules
+$(BUILDIT)-perl-modules:
+	$(foreach FILE,$(PERL_MODULES_LIST),\
+		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+	)
 
 override define PERL_MODULES_BUILD =
 	$(call CURL_FILE,$(2)); \
@@ -2886,12 +2871,6 @@ override define PERL_MODULES_BUILD =
 		$(BUILD_ENV) $(MAKE) && \
 		$(BUILD_ENV) $(MAKE) install
 endef
-
-.PHONY: $(BUILDIT)-perl-modules
-$(BUILDIT)-perl-modules:
-	$(foreach FILE,$(PERL_MODULES_LIST),\
-		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
-	)
 
 .PHONY: $(BUILDIT)-group-tool
 $(BUILDIT)-group-tool:
@@ -2966,23 +2945,13 @@ $(BUILDIT)-make-init:
 	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
 	$(call MAKE_BUILD,$(MAKE_DST_INIT))
 
-.PHONY: $(FETCHIT)-make
-$(FETCHIT)-make: $(FETCHIT)-make-pull
-$(FETCHIT)-make: $(FETCHIT)-make-prep
-
-.PHONY: $(FETCHIT)-make-pull
-$(FETCHIT)-make-pull:
+.PHONY: $(BUILDIT)-make
+$(BUILDIT)-make:
 	$(call GIT_REPO,$(MAKE_DST),$(MAKE_SRC),$(MAKE_CMT))
-
-.PHONY: $(FETCHIT)-make-prep
-$(FETCHIT)-make-prep:
 	cd "$(MAKE_DST)" && \
 		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
-
-.PHONY: $(BUILDIT)-make
-$(BUILDIT)-make:
 	$(call MAKE_BUILD,$(MAKE_DST))
 
 override define MAKE_BUILD =
@@ -2992,7 +2961,7 @@ override define MAKE_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-infozip
-$(FETCHIT)-infozip:
+$(BUILDIT)-infozip:
 	$(call CURL_FILE,$(IZIP_SRC))
 	$(call CURL_FILE,$(UZIP_SRC))
 	$(call CURL_FILE,$(BZIP_SRC))
@@ -3069,20 +3038,13 @@ $(BUILDIT)-git:
 		--without-tcltk \
 	)
 
-.PHONY: $(FETCHIT)-texlive
-$(FETCHIT)-texlive: $(FETCHIT)-texlive-pull
-$(FETCHIT)-texlive: $(FETCHIT)-texlive-prep
-
-.PHONY: $(FETCHIT)-texlive-pull
-$(FETCHIT)-texlive-pull:
+.PHONY: $(BUILDIT)-texlive
+# thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
+$(BUILDIT)-texlive:
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
 	$(call CURL_FILE,$(TEX_SRC))
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call DO_UNTAR,$(TEX_DST),$(TEX_SRC))
-
-.PHONY: $(FETCHIT)-texlive-prep
-# thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
-$(FETCHIT)-texlive-prep:
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
@@ -3105,9 +3067,6 @@ endif
 	$(SED) -i \
 		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_DST)/texk/web2c/configure"
-
-.PHONY: $(BUILDIT)-texlive
-$(BUILDIT)-texlive:
 	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		$(SH) ./Build \
 		--disable-multiplatform \
@@ -3135,21 +3094,22 @@ $(BUILDIT)-texlive-fmtutil:
 	$(BUILD_ENV) fmtutil --all
 
 .PHONY: $(BUILDIT)-ghc-init
-$(BUILDIT)-ghc-init: $(BUILDIT)-ghc-init-pull
-$(BUILDIT)-ghc-init: $(BUILDIT)-ghc-init-prep
-$(BUILDIT)-ghc-init: $(BUILDIT)-ghc-init-build
-
-.PHONY: $(FETCHIT)-ghc
-$(FETCHIT)-ghc: $(FETCHIT)-ghc-pull
-$(FETCHIT)-ghc: $(FETCHIT)-ghc-prep
-
-.PHONY: $(BUILDIT)-ghc-init-pull
-$(BUILDIT)-ghc-init-pull:
+$(BUILDIT)-ghc-init:
 	$(call CURL_FILE,$(GHC_SRC_INIT))
 	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
+ifeq ($(BUILD_PLAT),Msys)
+	$(MKDIR) "$(BUILD_STRAP)"
+	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
+else
+#WORK : NOTARGET?
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
+		show \
+	)
+endif
 
-.PHONY: $(FETCHIT)-ghc-pull
-$(FETCHIT)-ghc-pull:
+.PHONY: $(BUILDIT)-ghc
+# thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
+$(BUILDIT)-ghc:
 #WORKING : is GHC_BRANCH still needed?
 #	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
@@ -3160,13 +3120,7 @@ $(FETCHIT)-ghc-pull:
 #		-e "s|7[.]11|$(GHC_VER)|g" \
 #		-e "s|(RELEASE[=])NO|\1YES|g" \
 #		"$(GHC_DST)/configure"*
-
-.PHONY: $(BUILDIT)-ghc-init-prep
-$(BUILDIT)-ghc-init-prep:
-
-.PHONY: $(FETCHIT)-ghc-prep
-# thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
-$(FETCHIT)-ghc-prep:
+#WORKING : GHC 7.8
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
 	# expose "$(BUILD_PLAT),Msys" paths as environment variables
@@ -3212,21 +3166,6 @@ endif
 	$(SED) -i \
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
-
-.PHONY: $(BUILDIT)-ghc-init-build
-$(BUILDIT)-ghc-init-build:
-ifeq ($(BUILD_PLAT),Msys)
-	$(MKDIR) "$(BUILD_STRAP)"
-	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
-else
-#WORK : NOTARGET?
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
-		show \
-	)
-endif
-
-.PHONY: $(BUILDIT)-ghc
-$(BUILDIT)-ghc:
 	$(call DO_HEREDOC,HEREDOC_GHC_BUILD_MK) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,\
@@ -3247,24 +3186,28 @@ SRC_CPP_OPTS	= -L$(BUILD_STRAP)/lib $(LDFLAGS)
 endef
 
 .PHONY: $(BUILDIT)-cabal-init
-$(BUILDIT)-cabal-init: $(BUILDIT)-cabal-init-pull
-$(BUILDIT)-cabal-init: $(BUILDIT)-cabal-init-prep
-$(BUILDIT)-cabal-init: $(BUILDIT)-cabal-init-build
-
-.PHONY: $(FETCHIT)-cabal
-$(FETCHIT)-cabal: $(FETCHIT)-cabal-pull
-$(FETCHIT)-cabal: $(FETCHIT)-cabal-prep
-
-.PHONY: $(BUILDIT)-cabal-init-pull
-$(BUILDIT)-cabal-init-pull:
+$(BUILDIT)-cabal-init:
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PULL,$(CABAL_DST_INIT))
+	$(call CABAL_PREP,$(CABAL_DST_INIT))
+	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+	# call recursively instead of using dependencies, so that environment variables update
+#WORKING : should not be needed in order to install the pre-downloaded libs
+#	$(RUNMAKE) $(BUILDIT)-cabal-db
+#WORKING : needs a better name and location
+	$(RUNMAKE) $(BUILDIT)-cabal-init-ghcreqs
 
-.PHONY: $(FETCHIT)-cabal-pull
-$(FETCHIT)-cabal-pull:
+.PHONY: $(BUILDIT)-cabal
+$(BUILDIT)-cabal:
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL,$(CABAL_DST))
+	$(call CABAL_PREP,$(CABAL_DST))
+	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+#WORKING : process should include cabal library
+#	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+#		Cabal-$(CABAL_VER_LIB)
+#WORKING
 
 override define CABAL_PULL =
 	$(foreach FILE,\
@@ -3275,14 +3218,6 @@ override define CABAL_PULL =
 		$(call DO_UNTAR,$(1)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
 	)
 endef
-
-.PHONY: $(BUILDIT)-cabal-init-prep
-$(BUILDIT)-cabal-init-prep:
-	$(call CABAL_PREP,$(CABAL_DST_INIT))
-
-.PHONY: $(FETCHIT)-cabal-prep
-$(FETCHIT)-cabal-prep:
-	$(call CABAL_PREP,$(CABAL_DST))
 
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
@@ -3316,32 +3251,6 @@ override define HEREDOC_CABAL_BOOTSTRAP =
 exit 0
 endef
 
-.PHONY: $(BUILDIT)-cabal-init-build
-$(BUILDIT)-cabal-init-build:
-	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
-#WORKING : needs a better name and location
-	# call recursively instead of using dependencies, so that environment variables update
-#WORKING : should not be needed in order to install the pre-downloaded libs
-#	$(RUNMAKE) $(BUILDIT)-cabal-db
-	$(RUNMAKE) $(BUILDIT)-cabal-init-ghcreqs
-
-#WORKING : document!
-.PHONY: $(BUILDIT)-cabal-init-ghcreqs
-$(BUILDIT)-cabal-init-ghcreqs:
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		cd "$(CABAL_DST_INIT)/$(FILE)" && \
-			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)); \
-	)
-
-.PHONY: $(BUILDIT)-cabal
-$(BUILDIT)-cabal:
-#WORKING : need a process for building cabal from source
-	$(call CABAL_BUILD,$(CABAL_DST),$(COMPOSER_ABODE))
-#WORKING : process should include cabal library
-#	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-#		Cabal-$(CABAL_VER_LIB)
-#WORKING
-
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
@@ -3351,6 +3260,15 @@ override define CABAL_BUILD =
 		" \
 		$(SH) ./bootstrap.sh --global
 endef
+
+#WORKING : document!
+#WORKING : needs a better name and location
+.PHONY: $(BUILDIT)-cabal-init-ghcreqs
+$(BUILDIT)-cabal-init-ghcreqs:
+	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
+			"$(CABAL_DST_INIT)/$(FILE)"; \
+	)
 
 .PHONY: $(BUILDIT)-cabal-db
 $(BUILDIT)-cabal-db:
@@ -3375,66 +3293,63 @@ $(BUILDIT)-cabal-db:
 	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
 	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
 
-.PHONY: $(FETCHIT)-pandoc
-$(FETCHIT)-pandoc: $(FETCHIT)-pandoc-pull
-$(FETCHIT)-pandoc: $(FETCHIT)-pandoc-prep
-
-.PHONY: $(FETCHIT)-pandoc-pull
-$(FETCHIT)-pandoc-pull:
+.PHONY: $(BUILDIT)-pandoc-init
+$(BUILDIT)-pandoc-init:
 	$(call GIT_REPO,$(PANDOC_TYPE_DST),$(PANDOC_TYPE_SRC),$(PANDOC_TYPE_CMT))
 	$(call GIT_REPO,$(PANDOC_MATH_DST),$(PANDOC_MATH_SRC),$(PANDOC_MATH_CMT))
 	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
 	$(call GIT_REPO,$(PANDOC_CITE_DST),$(PANDOC_CITE_SRC),$(PANDOC_CITE_CMT))
 	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
-
-.PHONY: $(FETCHIT)-pandoc-prep
-$(FETCHIT)-pandoc-prep:
 	# make sure GHC looks for libraries in the right place
 	$(SED) -i \
 		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(GHCFLAGS) \2|g" \
 		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
 		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
 		"$(PANDOC_DST)/pandoc.cabal"
-
-.PHONY: $(BUILDIT)-pandoc-deps
-$(BUILDIT)-pandoc-deps:
+	# fetch and build Pandoc dependencies
 	$(ESCAPE) "\n$(_H)$(MARKER) Dependencies"
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-		--enable-tests \
-		$(subst |,-,$(PANDOC_DEPENDENCIES_LIST))
+#WORKING
+#	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+#		--enable-tests \
+#		$(subst |,-,$(PANDOC_DEPENDENCIES_LIST))
+#WORKING
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--only-dependencies \
 		--enable-tests \
-		$(PANDOC_TYPE_DST) \
-		$(PANDOC_MATH_DST) \
-		$(PANDOC_HIGH_DST) \
-		$(PANDOC_CITE_DST) \
-		$(PANDOC_DST)
-	cd "$(PANDOC_HIGH_DST)" && \
-		$(BUILD_ENV_MINGW) $(MAKE) prep
+		"$(PANDOC_TYPE_DST)" \
+		"$(PANDOC_MATH_DST)" \
+		"$(PANDOC_HIGH_DST)" \
+		"$(PANDOC_CITE_DST)" \
+		"$(PANDOC_DST)"
+#WORKING
+#	cd "$(PANDOC_HIGH_DST)" && \
+#		$(BUILD_ENV_MINGW) $(MAKE) prep
+#WORKING
 
 #WORK			--flags="make-pandoc-man-pages embed_data_files network-uri https" \
 
 override define PANDOC_BUILD =
-	cd "$(1)" && \
-		$(ESCAPE) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(CABAL) configure \
-			--prefix="$(COMPOSER_ABODE)" \
-			--flags="make-pandoc-man-pages embed_data_files" \
-			--enable-tests
-	cd "$(1)" && \
-		$(ESCAPE) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(CABAL) build;
-	cd "$(1)" && \
-		$(ESCAPE) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(CABAL) test || $(TRUE);
-	cd "$(1)" && \
-		$(ESCAPE) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)" && \
-		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
+	$(ESCAPE) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)"
+	$(BUILD_ENV_MINGW) $(CABAL) configure \
+		--prefix="$(COMPOSER_ABODE)" \
+		--flags="make-pandoc-man-pages embed_data_files" \
+		--enable-tests \
+		"$(1)"
+	$(ESCAPE) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)"
+	$(BUILD_ENV_MINGW) $(CABAL) build \
+		"$(1)";
+	$(ESCAPE) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)"
+	$(BUILD_ENV_MINGW) $(CABAL) test \
+		"$(1)" || $(TRUE);
+	$(ESCAPE) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)"
+	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		"$(1)"
 endef
 
 .PHONY: $(BUILDIT)-pandoc
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-deps
+$(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
+$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-init
+$(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
 $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_TYPE_DST))
 	$(call PANDOC_BUILD,$(PANDOC_MATH_DST))
