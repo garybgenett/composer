@@ -1329,6 +1329,7 @@ override BUILD_ENV			:= $(ENV) - \
 	TMPDIR="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
+#WORKING : this location has probably changed
 # see "$(BUILD_PLAT),Msys" paths comment in "$(FETCHIT)-ghc-prep"
 override BUILD_ENV			:= $(BUILD_ENV) \
 	MSYSTEM="MSYS$(BUILD_BITS)" \
@@ -1698,9 +1699,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool$(_D)"			"Build/compile of helpful utilities from source archives"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make$(_D)"			"Build/compile of GNU Make from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-core$(_D)"			"Build/compile of core utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc$(_D)"			"Build/complie of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal$(_D)"			"Build/complie of Cabal from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-msys$(_D):"	"$(_E)$(STRAPIT)-msys-bin$(_D)"			"Installs base MSYS2/MinGW-w64 system"
@@ -1708,39 +1707,34 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(STRAPIT)-libs-libiconv-init$(_D)"	"Build/compile of Libiconv (before Gettext) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gettext$(_D)"		"Build/compile of Gettext from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-libiconv$(_D)"		"Build/compile of Libiconv (after Gettext) from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-zlib$(_D)"		"Build/compile of Zlib from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-gmp$(_D)"			"Build/compile of GMP from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-ncurses$(_D)"		"Build/compile of Ncurses from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-openssl$(_D)"		"Build/compile of OpenSSL from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-expat$(_D)"		"Build/compile of Expat from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-freetype$(_D)"		"Build/compile of FreeType from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(STRAPIT)-util-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-patch$(_D)"		"Build/compile of GNU Patch from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-sed$(_D)"			"Build/compile of GNU Sed from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-bzip$(_D)"		"Build/compile of Bzip2 from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-gzip$(_D)"		"Build/compile of Gzip from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-xz$(_D)"			"Build/compile of XZ Utils from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-tool$(_D):"	"$(_E)$(STRAPIT)-tool-bash$(_D)"		"Build/compile of GNU Bash from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool-less$(_D)"		"Build/compile of Less from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool-vim$(_D)"			"Build/compile of Vim from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-make$(_D):"	"$(_E)$(STRAPIT)-make-pull$(_D)"		"Download of GNU Make source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make-prep$(_D)"		"Preparation of GNU Make source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make-build$(_D)"		"Build/compile of GNU Make from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-curl$(_D):"	"$(_E)$(STRAPIT)-curl-pull$(_D)"		"Download of cURL source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl-prep$(_D)"		"Preparation of cURL source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl-build$(_D)"		"Build/compile of cURL from source archive"
-	@$(TABLE_I3) "$(_E)$(STRAPIT)-git$(_D):"	"$(_E)$(STRAPIT)-git-pull$(_D)"			"Download of Git source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-git-prep$(_D)"			"Preparation of Git source archive"
-	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-git-build$(_D)"		"Build/compile of Git from source archive"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-libs$(_D):"	"$(_E)$(BUILDIT)-libiconv-init$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gettext$(_D)"			"Build/compile of Gettext from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-libiconv$(_D)"			"Build/compile of Libiconv (after Gettext) from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pkgconfig$(_D)"		"Build/compile of Pkg-config from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-zlib$(_D)"			"Build/compile of Zlib from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gmp$(_D)"			"Build/compile of GMP from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ncurses$(_D)"			"Build/compile of Ncurses from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-openssl$(_D)"			"Build/compile of OpenSSL from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-expat$(_D)"			"Build/compile of Expat from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-freetype$(_D)"			"Build/compile of FreeType from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-fontconfig$(_D)"		"Build/compile of Fontconfig from source archive"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-util$(_D):"	"$(_E)$(BUILDIT)-coreutils$(_D)"		"Build/compile of GNU Coreutils from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-findutils$(_D)"		"Build/compile of GNU Findutils from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-patch$(_D)"			"Build/compile of GNU Patch from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-sed$(_D)"			"Build/compile of GNU Sed from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-bzip$(_D)"			"Build/compile of Bzip2 from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gzip$(_D)"			"Build/compile of Gzip from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-xz$(_D)"			"Build/compile of XZ Utils from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-tar$(_D)"			"Build/compile of GNU Tar from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-perl$(_D)"			"Build/compile of Perl from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-perl-modules$(_D)"		"Build/compile of Perl modules from source archives"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-tool$(_D):"	"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of GNU Bash from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-core$(_D):"	"$(_E)$(STRAPIT)-make$(_D)"			"Build/compile of GNU Make from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-curl$(_D)"			"Build/compile of cURL from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-git$(_D)"			"Build/compile of Git from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-ghc$(_D):"	"$(_E)$(STRAPIT)-ghc-pull$(_D)"			"Download of GHC source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-prep$(_D)"			"Preparation of GHC source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-ghc-build$(_D)"		"Build/compile of GHC from source archive"
@@ -1750,14 +1744,11 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-make$(_D):"	"$(_E)$(FETCHIT)-make-pull$(_D)"		"Download of GNU Make source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make-prep$(_D)"		"Preparation of GNU Make source repository"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-infozip$(_D):"	"$(_E)$(FETCHIT)-infozip-pull$(_D)"		"Download of Info-ZIP source archive"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-infozip-prep$(_D)"		"Preparation of Info-ZIP source archive"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-texlive$(_D):"	"$(_E)$(FETCHIT)-texlive-pull$(_D)"		"Download of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive-prep$(_D)"		"Preparation of TeX Live source archives"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-ghc$(_D):"	"$(_E)$(FETCHIT)-ghc-pull$(_D)"			"Download of GHC source repository"
@@ -1767,7 +1758,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-cleanup$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc$(_D)"			"Build/compile of GHC from source"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
@@ -2244,11 +2234,9 @@ endif
 $(STRAPIT): $(STRAPIT)-libs
 $(STRAPIT): $(STRAPIT)-util
 $(STRAPIT): $(STRAPIT)-tool
+$(STRAPIT): $(STRAPIT)-core
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-make
-	$(RUNMAKE) $(STRAPIT)-curl
-	$(RUNMAKE) $(STRAPIT)-git
 	$(RUNMAKE) $(STRAPIT)-ghc
 	$(RUNMAKE) $(STRAPIT)-cabal
 
@@ -2257,12 +2245,12 @@ $(FETCHIT): $(FETCHIT)-cabal-db
 #WORKING : $(FETCHIT)-cabal-db should maybe call $(BUILDIT)-cleanup directly?
 $(FETCHIT): $(BUILDIT)-cleanup
 $(FETCHIT): $(FETCHIT)-config
-$(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip
+$(FETCHIT): $(FETCHIT)-make
 $(FETCHIT): $(FETCHIT)-texlive
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-cabal $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip
+$(BUILDIT): $(BUILDIT)-make
 $(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-ghc
@@ -2833,29 +2821,29 @@ $(STRAPIT)-msys-dll:
 .PHONY: $(STRAPIT)-libs
 $(STRAPIT)-libs:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-libs-libiconv-init
-	$(RUNMAKE) $(STRAPIT)-libs-gettext
-	$(RUNMAKE) $(STRAPIT)-libs-libiconv
-	$(RUNMAKE) $(STRAPIT)-libs-pkgconfig
-	$(RUNMAKE) $(STRAPIT)-libs-zlib
-	$(RUNMAKE) $(STRAPIT)-libs-gmp
-	$(RUNMAKE) $(STRAPIT)-libs-ncurses
-	$(RUNMAKE) $(STRAPIT)-libs-openssl
-	$(RUNMAKE) $(STRAPIT)-libs-expat
+	$(RUNMAKE) $(BUILDIT)-libiconv-init
+	$(RUNMAKE) $(BUILDIT)-gettext
+	$(RUNMAKE) $(BUILDIT)-libiconv
+	$(RUNMAKE) $(BUILDIT)-pkgconfig
+	$(RUNMAKE) $(BUILDIT)-zlib
+	$(RUNMAKE) $(BUILDIT)-gmp
+	$(RUNMAKE) $(BUILDIT)-ncurses
+	$(RUNMAKE) $(BUILDIT)-openssl
+	$(RUNMAKE) $(BUILDIT)-expat
 	# need the "bzip" headers/library for "freetype"
-	$(RUNMAKE) $(STRAPIT)-util-bzip
-	$(RUNMAKE) $(STRAPIT)-libs-freetype
-	$(RUNMAKE) $(STRAPIT)-libs-fontconfig
+	$(RUNMAKE) $(BUILDIT)-bzip
+	$(RUNMAKE) $(BUILDIT)-freetype
+	$(RUNMAKE) $(BUILDIT)-fontconfig
 
-.PHONY: $(STRAPIT)-libs-libiconv-init
-$(STRAPIT)-libs-libiconv-init:
+.PHONY: $(BUILDIT)-libiconv-init
+$(BUILDIT)-libiconv-init:
 	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-libs-gettext
-$(STRAPIT)-libs-gettext:
+.PHONY: $(BUILDIT)-gettext
+$(BUILDIT)-gettext:
 	$(call CURL_FILE,$(GETTEXT_SRC))
 	$(call DO_UNTAR,$(GETTEXT_DST),$(GETTEXT_SRC))
 	$(call AUTOTOOLS_BUILD,$(GETTEXT_DST),$(COMPOSER_ABODE),,\
@@ -2863,8 +2851,8 @@ $(STRAPIT)-libs-gettext:
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-libs-libiconv
-$(STRAPIT)-libs-libiconv:
+.PHONY: $(BUILDIT)-libiconv
+$(BUILDIT)-libiconv:
 	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
@@ -2900,8 +2888,8 @@ override define LIBICONV_BUILD =
 	)
 endef
 
-.PHONY: $(STRAPIT)-libs-pkgconfig
-$(STRAPIT)-libs-pkgconfig:
+.PHONY: $(BUILDIT)-pkgconfig
+$(BUILDIT)-pkgconfig:
 	$(call CURL_FILE,$(PKGCONFIG_SRC))
 	$(call DO_UNTAR,$(PKGCONFIG_DST),$(PKGCONFIG_SRC))
 	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_DST)/glib,$(COMPOSER_ABODE),,\
@@ -2920,8 +2908,8 @@ $(STRAPIT)-libs-pkgconfig:
 		--without-internal-glib \
 	)
 
-.PHONY: $(STRAPIT)-libs-zlib
-$(STRAPIT)-libs-zlib:
+.PHONY: $(BUILDIT)-zlib
+$(BUILDIT)-zlib:
 	$(call ZLIB_BUILD,$(COMPOSER_ABODE),\
 		--static \
 	)
@@ -2945,8 +2933,8 @@ override define ZLIB_BUILD =
 	)
 endef
 
-.PHONY: $(STRAPIT)-libs-gmp
-$(STRAPIT)-libs-gmp:
+.PHONY: $(BUILDIT)-gmp
+$(BUILDIT)-gmp:
 	$(call GMP_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
@@ -2976,8 +2964,8 @@ override define GMP_BUILD =
 	)
 endef
 
-.PHONY: $(STRAPIT)-libs-ncurses
-$(STRAPIT)-libs-ncurses:
+.PHONY: $(BUILDIT)-ncurses
+$(BUILDIT)-ncurses:
 	$(call CURL_FILE,$(NCURSES_SRC))
 	$(call DO_UNTAR,$(NCURSES_DST),$(NCURSES_SRC))
 #WORK : platform_switches
@@ -3008,8 +2996,8 @@ override OPENSSL_BUILD_TYPE := linux-generic$(BUILD_BITS)
 endif
 endif
 
-.PHONY: $(STRAPIT)-libs-openssl
-$(STRAPIT)-libs-openssl:
+.PHONY: $(BUILDIT)-openssl
+$(BUILDIT)-openssl:
 	$(call CURL_FILE,$(OPENSSL_SRC))
 	$(call DO_UNTAR,$(OPENSSL_DST),$(OPENSSL_SRC))
 ifeq ($(BUILD_PLAT),Linux)
@@ -3030,8 +3018,8 @@ endif
 		no-dso \
 	)
 
-.PHONY: $(STRAPIT)-libs-expat
-$(STRAPIT)-libs-expat:
+.PHONY: $(BUILDIT)-expat
+$(BUILDIT)-expat:
 	$(call CURL_FILE,$(EXPAT_SRC))
 	$(call DO_UNTAR,$(EXPAT_DST),$(EXPAT_SRC))
 #WORK : platform_switches
@@ -3044,8 +3032,8 @@ endif
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-libs-freetype
-$(STRAPIT)-libs-freetype:
+.PHONY: $(BUILDIT)-freetype
+$(BUILDIT)-freetype:
 	$(call CURL_FILE,$(FREETYPE_SRC))
 	$(call DO_UNTAR,$(FREETYPE_DST),$(FREETYPE_SRC))
 	$(call AUTOTOOLS_BUILD,$(FREETYPE_DST),$(COMPOSER_ABODE),,\
@@ -3053,8 +3041,8 @@ $(STRAPIT)-libs-freetype:
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-libs-fontconfig
-$(STRAPIT)-libs-fontconfig:
+.PHONY: $(BUILDIT)-fontconfig
+$(BUILDIT)-fontconfig:
 	$(call CURL_FILE,$(FONTCONFIG_SRC))
 	$(call DO_UNTAR,$(FONTCONFIG_DST),$(FONTCONFIG_SRC))
 #WORK : platform_switches
@@ -3090,19 +3078,19 @@ endif
 .PHONY: $(STRAPIT)-util
 $(STRAPIT)-util:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-util-coreutils
-	$(RUNMAKE) $(STRAPIT)-util-findutils
-	$(RUNMAKE) $(STRAPIT)-util-patch
-	$(RUNMAKE) $(STRAPIT)-util-sed
-	$(RUNMAKE) $(STRAPIT)-util-bzip
-	$(RUNMAKE) $(STRAPIT)-util-gzip
-	$(RUNMAKE) $(STRAPIT)-util-xz
-	$(RUNMAKE) $(STRAPIT)-util-tar
-	$(RUNMAKE) $(STRAPIT)-util-perl
-	$(RUNMAKE) $(STRAPIT)-util-perl-modules
+	$(RUNMAKE) $(BUILDIT)-coreutils
+	$(RUNMAKE) $(BUILDIT)-findutils
+	$(RUNMAKE) $(BUILDIT)-patch
+	$(RUNMAKE) $(BUILDIT)-sed
+	$(RUNMAKE) $(BUILDIT)-bzip
+	$(RUNMAKE) $(BUILDIT)-gzip
+	$(RUNMAKE) $(BUILDIT)-xz
+	$(RUNMAKE) $(BUILDIT)-tar
+	$(RUNMAKE) $(BUILDIT)-perl
+	$(RUNMAKE) $(BUILDIT)-perl-modules
 
-.PHONY: $(STRAPIT)-util-coreutils
-$(STRAPIT)-util-coreutils:
+.PHONY: $(BUILDIT)-coreutils
+$(BUILDIT)-coreutils:
 	$(call CURL_FILE,$(COREUTILS_SRC))
 	$(call DO_UNTAR,$(COREUTILS_DST),$(COREUTILS_SRC))
 ifeq ($(BUILD_PLAT),Msys)
@@ -3118,8 +3106,8 @@ endif
 		--disable-xattr \
 	)
 
-.PHONY: $(STRAPIT)-util-findutils
-$(STRAPIT)-util-findutils:
+.PHONY: $(BUILDIT)-findutils
+$(BUILDIT)-findutils:
 	$(call CURL_FILE,$(FINDUTILS_SRC))
 	$(call DO_UNTAR,$(FINDUTILS_DST),$(FINDUTILS_SRC))
 #WORK : platform_switches
@@ -3129,16 +3117,16 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 endif
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_DST),$(COMPOSER_ABODE))
 
-.PHONY: $(STRAPIT)-util-patch
-$(STRAPIT)-util-patch:
+.PHONY: $(BUILDIT)-patch
+$(BUILDIT)-patch:
 	$(call CURL_FILE,$(PATCH_SRC))
 	$(call DO_UNTAR,$(PATCH_DST),$(PATCH_SRC))
 	$(call AUTOTOOLS_BUILD,$(PATCH_DST),$(COMPOSER_ABODE),,\
 		--disable-xattr \
 	)
 
-.PHONY: $(STRAPIT)-util-sed
-$(STRAPIT)-util-sed:
+.PHONY: $(BUILDIT)-sed
+$(BUILDIT)-sed:
 	$(call CURL_FILE,$(SED_SRC))
 	$(call DO_UNTAR,$(SED_DST),$(SED_SRC))
 #WORK : platform_switches
@@ -3150,8 +3138,8 @@ endif
 		--disable-acl \
 	)
 
-.PHONY: $(STRAPIT)-util-bzip
-$(STRAPIT)-util-bzip:
+.PHONY: $(BUILDIT)-bzip
+$(BUILDIT)-bzip:
 	$(call CURL_FILE,$(BZIP_SRC))
 	$(call DO_UNTAR,$(BZIP_DST),$(BZIP_SRC))
 	$(ECHO) >"$(BZIP_DST)/configure"
@@ -3161,14 +3149,14 @@ $(STRAPIT)-util-bzip:
 		"$(BZIP_DST)/Makefile"
 	$(call AUTOTOOLS_BUILD,$(BZIP_DST),$(COMPOSER_ABODE))
 
-.PHONY: $(STRAPIT)-util-gzip
-$(STRAPIT)-util-gzip:
+.PHONY: $(BUILDIT)-gzip
+$(BUILDIT)-gzip:
 	$(call CURL_FILE,$(GZIP_SRC))
 	$(call DO_UNTAR,$(GZIP_DST),$(GZIP_SRC))
 	$(call AUTOTOOLS_BUILD,$(GZIP_DST),$(COMPOSER_ABODE))
 
-.PHONY: $(STRAPIT)-util-xz
-$(STRAPIT)-util-xz:
+.PHONY: $(BUILDIT)-xz
+$(BUILDIT)-xz:
 	$(call CURL_FILE,$(XZ_SRC))
 	$(call DO_UNTAR,$(XZ_DST),$(XZ_SRC))
 	$(call AUTOTOOLS_BUILD,$(XZ_DST),$(COMPOSER_ABODE),,\
@@ -3176,8 +3164,8 @@ $(STRAPIT)-util-xz:
 		--enable-static \
 	)
 
-.PHONY: $(STRAPIT)-util-tar
-$(STRAPIT)-util-tar:
+.PHONY: $(BUILDIT)-tar
+$(BUILDIT)-tar:
 	$(call CURL_FILE,$(TAR_SRC))
 	$(call DO_UNTAR,$(TAR_DST),$(TAR_SRC))
 	$(call AUTOTOOLS_BUILD,$(TAR_DST),$(COMPOSER_ABODE),,\
@@ -3186,9 +3174,9 @@ $(STRAPIT)-util-tar:
 		--without-xattrs \
 	)
 
-.PHONY: $(STRAPIT)-util-perl
+.PHONY: $(BUILDIT)-perl
 # thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
-$(STRAPIT)-util-perl:
+$(BUILDIT)-perl:
 	$(call CURL_FILE,$(PERL_SRC))
 	$(call DO_UNTAR,$(PERL_DST),$(PERL_SRC))
 ifeq ($(BUILD_PLAT),Msys)
@@ -3228,8 +3216,8 @@ override define PERL_MODULES_BUILD =
 		$(BUILD_ENV) $(MAKE) install
 endef
 
-.PHONY: $(STRAPIT)-util-perl-modules
-$(STRAPIT)-util-perl-modules:
+.PHONY: $(BUILDIT)-perl-modules
+$(BUILDIT)-perl-modules:
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
@@ -3237,14 +3225,14 @@ $(STRAPIT)-util-perl-modules:
 .PHONY: $(STRAPIT)-tool
 $(STRAPIT)-tool:
 	# call recursively instead of using dependencies, so that environment variables update
-	$(RUNMAKE) $(STRAPIT)-tool-bash
-	$(RUNMAKE) $(STRAPIT)-tool-less
-	$(RUNMAKE) $(STRAPIT)-tool-vim
+	$(RUNMAKE) $(BUILDIT)-bash
+	$(RUNMAKE) $(BUILDIT)-less
+	$(RUNMAKE) $(BUILDIT)-vim
 
-.PHONY: $(STRAPIT)-tool-bash
+.PHONY: $(BUILDIT)-bash
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 # thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
-$(STRAPIT)-tool-bash:
+$(BUILDIT)-bash:
 	$(call CURL_FILE,$(BASH_SRC))
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
 	$(call DO_UNTAR,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
@@ -3267,8 +3255,8 @@ else
 	)
 endif
 
-.PHONY: $(STRAPIT)-tool-less
-$(STRAPIT)-tool-less:
+.PHONY: $(BUILDIT)-less
+$(BUILDIT)-less:
 	$(call CURL_FILE,$(LESS_SRC))
 	$(call DO_UNTAR,$(LESS_DST),$(LESS_SRC))
 	$(SED) -i \
@@ -3276,9 +3264,9 @@ $(STRAPIT)-tool-less:
 		"$(LESS_DST)/configure"
 	$(call AUTOTOOLS_BUILD,$(LESS_DST),$(COMPOSER_ABODE))
 
-.PHONY: $(STRAPIT)-tool-vim
+.PHONY: $(BUILDIT)-vim
 # thanks for the 'EXTRA_DEFS' fix below: http://vim.1045645.n5.nabble.com/Conflicting-definitions-for-tgoto-etc-when-cross-building-td1210909.html
-$(STRAPIT)-tool-vim:
+$(BUILDIT)-vim:
 	$(call CURL_FILE,$(VIM_SRC))
 	$(call DO_UNTAR,$(VIM_DST),$(VIM_SRC))
 	$(call AUTOTOOLS_BUILD,$(VIM_DST),$(COMPOSER_ABODE),\
@@ -3290,29 +3278,30 @@ $(STRAPIT)-tool-vim:
 		--without-x \
 	)
 
+.PHONY: $(STRAPIT)-core
+$(STRAPIT)-core:
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-make
+	$(RUNMAKE) $(BUILDIT)-infozip
+	$(RUNMAKE) $(BUILDIT)-curl
+	$(RUNMAKE) $(BUILDIT)-git
+
 .PHONY: $(STRAPIT)-make
-$(STRAPIT)-make: $(STRAPIT)-make-pull
-$(STRAPIT)-make: $(STRAPIT)-make-prep
-$(STRAPIT)-make: $(STRAPIT)-make-build
+$(STRAPIT)-make:
+	$(call CURL_FILE,$(MAKE_SRC_INIT))
+	$(call DO_UNTAR,$(MAKE_DST_INIT),$(MAKE_SRC_INIT))
+#WORK : platform_switches
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
+	$(call MAKE_BUILD,$(MAKE_DST_INIT))
 
 .PHONY: $(FETCHIT)-make
 $(FETCHIT)-make: $(FETCHIT)-make-pull
 $(FETCHIT)-make: $(FETCHIT)-make-prep
 
-.PHONY: $(STRAPIT)-make-pull
-$(STRAPIT)-make-pull:
-	$(call CURL_FILE,$(MAKE_SRC_INIT))
-	$(call DO_UNTAR,$(MAKE_DST_INIT),$(MAKE_SRC_INIT))
-
 .PHONY: $(FETCHIT)-make-pull
 $(FETCHIT)-make-pull:
 	$(call GIT_REPO,$(MAKE_DST),$(MAKE_SRC),$(MAKE_CMT))
-
-.PHONY: $(STRAPIT)-make-prep
-$(STRAPIT)-make-prep:
-#WORK : platform_switches
-	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
 
 .PHONY: $(FETCHIT)-make-prep
 $(FETCHIT)-make-prep:
@@ -3321,24 +3310,18 @@ $(FETCHIT)-make-prep:
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
 
-.PHONY: $(STRAPIT)-make-build
-$(STRAPIT)-make-build:
+.PHONY: $(BUILDIT)-make
+$(BUILDIT)-make:
+	$(call MAKE_BUILD,$(MAKE_DST))
+
+override define MAKE_BUILD =
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST_INIT),$(COMPOSER_ABODE),,\
 		--without-guile \
 	)
+endef
 
-.PHONY: $(BUILDIT)-make
-$(BUILDIT)-make:
-	$(call AUTOTOOLS_BUILD,$(MAKE_DST),$(COMPOSER_ABODE),,\
-		--without-guile \
-	)
-
-.PHONY: $(FETCHIT)-infozip
-$(FETCHIT)-infozip: $(FETCHIT)-infozip-pull
-$(FETCHIT)-infozip: $(FETCHIT)-infozip-prep
-
-.PHONY: $(FETCHIT)-infozip-pull
-$(FETCHIT)-infozip-pull:
+.PHONY: $(BUILDIT)-infozip
+$(FETCHIT)-infozip:
 	$(call CURL_FILE,$(IZIP_SRC))
 	$(call CURL_FILE,$(UZIP_SRC))
 	$(call CURL_FILE,$(BZIP_SRC))
@@ -3350,16 +3333,10 @@ $(FETCHIT)-infozip-pull:
 		"$(UZIP_DST)/bzip2"
 	$(CP) "$(BZIP_DST)/"* "$(IZIP_DST)/bzip2/"
 	$(CP) "$(BZIP_DST)/"* "$(UZIP_DST)/bzip2/"
-
-.PHONY: $(FETCHIT)-infozip-prep
-$(FETCHIT)-infozip-prep:
 	$(SED) -i \
 		-e "s|^(prefix[ ][=][ ]).+$$|\1$(COMPOSER_ABODE)|g" \
 		"$(IZIP_DST)/unix/Makefile" \
 		"$(UZIP_DST)/unix/Makefile"
-
-.PHONY: $(BUILDIT)-infozip
-$(BUILDIT)-infozip:
 	cd "$(IZIP_DST)" && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
@@ -3367,22 +3344,12 @@ $(BUILDIT)-infozip:
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
 
-#WORKING : curl is no longer in the right spot
-
-.PHONY: $(STRAPIT)-curl
-$(STRAPIT)-curl: $(STRAPIT)-curl-pull
-$(STRAPIT)-curl: $(STRAPIT)-curl-prep
-$(STRAPIT)-curl: $(STRAPIT)-curl-build
-
-.PHONY: $(STRAPIT)-curl-pull
-$(STRAPIT)-curl-pull:
-	$(call CURL_FILE,$(CURL_SRC))
-	$(call DO_UNTAR,$(CURL_DST),$(CURL_SRC))
-
-.PHONY: $(STRAPIT)-curl-prep
+.PHONY: $(BUILDIT)-curl
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
-$(STRAPIT)-curl-prep:
+$(BUILDIT)-curl:
+	$(call CURL_FILE,$(CURL_SRC))
+	$(call DO_UNTAR,$(CURL_DST),$(CURL_SRC))
 	# don't unlink the "certdata.txt" file after downloading and processing it
 	$(SED) -i \
 		-e "s|([ ][-]b[ ][-]l)[ ][-]u|\1|g" \
@@ -3391,13 +3358,10 @@ $(STRAPIT)-curl-prep:
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(CURL_DST)/configure"
-
-.PHONY: $(STRAPIT)-curl-build
 #WORK : would be nice to double-check:
 #	* this works from bootstrap
 #	* perl-lwp works if curl fails
 #	* curl works on re-entry
-$(STRAPIT)-curl-build:
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(MKDIR) "$(COMPOSER_STORE)" && \
@@ -3413,23 +3377,13 @@ $(STRAPIT)-curl-build:
 		--enable-static \
 	)
 
-#WORKING : git is no longer in the right spot
-
-.PHONY: $(STRAPIT)-git
-$(STRAPIT)-git: $(STRAPIT)-git-pull
-$(STRAPIT)-git: $(STRAPIT)-git-prep
-$(STRAPIT)-git: $(STRAPIT)-git-build
-
-.PHONY: $(STRAPIT)-git-pull
-$(STRAPIT)-git-pull:
-	$(call CURL_FILE,$(GIT_SRC))
-	$(call DO_UNTAR,$(GIT_DST),$(GIT_SRC))
-
-.PHONY: $(STRAPIT)-git-prep
+.PHONY: $(BUILDIT)-git
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
 # thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
-$(STRAPIT)-git-prep:
+$(BUILDIT)-git:
+	$(call CURL_FILE,$(GIT_SRC))
+	$(call DO_UNTAR,$(GIT_DST),$(GIT_SRC))
 #WORK
 #	cd "$(GIT_DST)" && \
 #		$(BUILD_ENV) $(MAKE) configure
@@ -3440,9 +3394,6 @@ $(STRAPIT)-git-prep:
 	$(SED) -i \
 		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
 		"$(GIT_DST)/Makefile"
-
-.PHONY: $(STRAPIT)-git-build
-$(STRAPIT)-git-build:
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
