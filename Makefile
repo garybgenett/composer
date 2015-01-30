@@ -14,8 +14,6 @@
 ################################################################################
 
 #WORKING : TODO
-# CABAL_BUILD_GHC_LIBRARIES
-# HELP_OPTIONS_SUB: var empty = undef
 # texlive = STRAPIT, and before ghc/cabal everywhere
 # BUILDIT-libs-so = before BUILD-ghc/cabal
 # define target dependencies; parallel make?
@@ -3200,19 +3198,15 @@ $(BUILDIT)-cabal-init:
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PULL,$(CABAL_DST_INIT))
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
-	# call recursively instead of using dependencies, so that environment variables update
-#WORKING : needs a better name and location
-	$(RUNMAKE) $(BUILDIT)-cabal-init-ghcreqs
 
 .PHONY: $(BUILDIT)-cabal
 $(BUILDIT)-cabal:
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL,$(CABAL_DST))
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
-#WORKING : process should include cabal library
+#WORKING : process should include cabal library?
 #	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-#		Cabal-$(CABAL_VER_LIB)
-#WORKING
+#		$(CABAL_DST)/Cabal
 
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
@@ -3261,16 +3255,11 @@ override define CABAL_BUILD =
 			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
 		" \
 		$(SH) ./bootstrap.sh --global
-endef
-
-#WORKING : document!
-#WORKING : put into CABAL_BUILD_GHC_LIBRARIES, and add to both
-.PHONY: $(BUILDIT)-cabal-init-ghcreqs
-$(BUILDIT)-cabal-init-ghcreqs:
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(BUILD_STRAP)) \
-			"$(CABAL_DST_INIT)/$(FILE)"; \
+		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(2)) \
+			"$(1)/$(FILE)"; \
 	)
+endef
 
 .PHONY: $(BUILDIT)-cabal-db
 $(BUILDIT)-cabal-db:
