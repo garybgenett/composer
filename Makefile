@@ -13,6 +13,39 @@
 #
 ################################################################################
 
+#WORKING : TODO
+# HELP_OPTIONS_SUB: var empty = undef
+# texlive = STRAPIT, and before ghc/cabal everywhere
+# BUILDIT-libs-so = before BUILD-ghc/cabal
+# define target dependencies; parallel make?
+# BUILD_FETCH =~ BUILD_DIST
+#	$(RUNMAKE) $(STRAPIT) BUILD_FETCH=0
+#	$(RUNMAKE) $(STRAPIT) BUILD_FETCH=
+#	$(RUNMAKE) $(BUILDIT) BUILD_FETCH=0
+#	$(RUNMAKE) $(BUILDIT) BUILD_FETCH=
+#	--
+#	#WORKING : document!
+#	$(FETCHIT)-% = $REPLICA-%
+#	$(RUNMAKE) $(*) BUILD_FETCH=0
+#	--
+#	#WORKING : document!
+#	%-no$(FETCHIT) = $REPLICA-%
+#	$(RUNMAKE) $(*) BUILD_FETCH=
+#	--
+#	$(FETCHIT): $(FETCHIT)-$(STRAPIT)
+#	$(FETCHIT): $(FETCHIT)-$(BUILDIT)
+#	$(FETCHIT):
+#	$(LS) $(COMPOSER_STORE)
+#	$(LS) $(COMPOSER_BUILD)
+#	--
+#	ifneq ($(BUILD_FETCH),)
+#		[fetch]
+#	endif
+#	ifneq ($(BUILD_FETCH),0)
+#		[build]
+#	endif
+#WORKING : TODO
+
 #WORKING
 # _ make sure all commands are using their variable counterparts
 # _ trim down the "ifeq($BUILD_PLAT,Msys)" to only the things which are necessary
@@ -3262,7 +3295,7 @@ override define CABAL_BUILD =
 endef
 
 #WORKING : document!
-#WORKING : needs a better name and location
+#WORKING : put into CABAL_BUILD_GHC_LIBRARIES, and add to both
 .PHONY: $(BUILDIT)-cabal-init-ghcreqs
 $(BUILDIT)-cabal-init-ghcreqs:
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
