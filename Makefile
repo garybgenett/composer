@@ -20,8 +20,7 @@
 # _ add "licenses" or "info" option, to display list of included programs and licenses
 # _ make sure all referenced programs are included (goal is composer should function as a chroot)
 # _ update COMPOSER_ALL_REGEX :: will impact ALL_TARGETS variable
-# _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.")
-#	- need a special provision for "patch"; maybe don't do it, or replace it with sed hackery?
+# _ make all network operations non-blocking (i.e. use "|| true" on "curl, git, cabal update, etc.") {make sure to keep "patch" commands right after "untar"}
 # _ template inherit & archive target
 # _ double-check all $SED statements, for consistency
 # _ double-check "if*eq" stanzas for consistent definition of default value
@@ -503,9 +502,9 @@ override FUNTOO_DATE			:= 2015-01-09
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
 override FUNTOO_SARC			:= generic_$(BUILD_BITS)
-#>override FUNTOO_SARC			:= i686
-#>ifneq ($(BUILD_BITS),64)
 #>override FUNTOO_SARC			:= core2_64
+#>ifneq ($(BUILD_BITS),64)
+#>override FUNTOO_SARC			:= i686
 #>endif
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
 override FUNTOO_LINUX_VERSION		:= 3.17.0
@@ -676,7 +675,6 @@ override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST_INIT			:= $(COMPOSER_BUILD)/make-$(MAKE_VER)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
 override MAKE_CMT			:= $(MAKE_CUR_VERSION)
-
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
 override IZIP_VER			:= 3.0
@@ -685,14 +683,12 @@ override IZIP_SRC			:= http://sourceforge.net/projects/infozip/files/Zip%203.x%2
 override UZIP_SRC			:= http://sourceforge.net/projects/infozip/files/UnZip%206.x%20%28latest%29/UnZip%20$(UZIP_VER)/unzip$(subst .,,$(UZIP_VER)).tar.gz
 override IZIP_DST			:= $(COMPOSER_BUILD)/zip$(subst .,,$(IZIP_VER))
 override UZIP_DST			:= $(COMPOSER_BUILD)/unzip$(subst .,,$(UZIP_VER))
-
 # http://www.curl.haxx.se/docs/copyright.html (license: MIT)
 # http://www.curl.haxx.se/download.html
 # http://www.curl.haxx.se/dev/source.html
 override CURL_VER			:= 7.39.0
 override CURL_SRC			:= http://www.curl.haxx.se/download/curl-$(CURL_VER).tar.gz
 override CURL_DST			:= $(COMPOSER_BUILD)/curl-$(CURL_VER)
-
 # https://github.com/git/git/blob/master/COPYING (license: GPL, LGPL)
 # http://git-scm.com
 override GIT_VER			:= 2.2.0
@@ -1701,6 +1697,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-libs$(_D)"			"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util$(_D)"			"Build/compile of necessary utilities from source archives"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool$(_D)"			"Build/compile of helpful utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make$(_D)"			"Build/compile of GNU Make from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-curl$(_D)"			"Build/compile of cURL from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-git$(_D)"			"Build/compile of Git from source archive"
@@ -1732,6 +1729,9 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-tar$(_D)"			"Build/compile of GNU Tar from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-perl$(_D)"		"Build/compile of Perl from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-util-perl-modules$(_D)"	"Build/compile of Perl modules from source archives"
+	@$(TABLE_I3) "$(_E)$(STRAPIT)-tool$(_D):"	"$(_E)$(STRAPIT)-tool-bash$(_D)"		"Build/compile of GNU Bash from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool-less$(_D)"		"Build/compile of Less from source archive"
+	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-tool-vim$(_D)"			"Build/compile of Vim from source archive"
 	@$(TABLE_I3) "$(_E)$(STRAPIT)-make$(_D):"	"$(_E)$(STRAPIT)-make-pull$(_D)"		"Download of GNU Make source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make-prep$(_D)"		"Preparation of GNU Make source archive"
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-make-build$(_D)"		"Build/compile of GNU Make from source archive"
@@ -1749,20 +1749,11 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(STRAPIT)-cabal-build$(_D)"		"Build/compile of Cabal from source archive"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D):"		"$(_E)$(FETCHIT)-config$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash$(_D)"			"Download/preparation of Bash source archive"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-less$(_D)"			"Download/preparation of Less source archive"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-vim$(_D)"			"Download/preparation of Vim source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make$(_D)"			"Download/preparation of GNU Make source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-infozip$(_D)"			"Download/preparation of Info-ZIP source archive"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-texlive$(_D)"			"Download/preparation of TeX Live source archives"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-ghc$(_D)"			"Download/preparation of GHC source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc$(_D)"			"Download/preparation of Pandoc source repositories"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-bash$(_D):"	"$(_E)$(FETCHIT)-bash-pull$(_D)"		"Download of Bash source archive"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-bash-prep$(_D)"		"Preparation of Bash source archive"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-less$(_D):"	"$(_E)$(FETCHIT)-less-pull$(_D)"		"Download of Less source archive"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-less-prep$(_D)"		"Preparation of Less source archive"
-	@$(TABLE_I3) "$(_E)$(FETCHIT)-vim$(_D):"	"$(_E)$(FETCHIT)-vim-pull$(_D)"			"Download of Vim source archive"
-	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-vim-prep$(_D)"			"Preparation of Vim source archive"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-make$(_D):"	"$(_E)$(FETCHIT)-make-pull$(_D)"		"Download of GNU Make source repository"
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-make-prep$(_D)"		"Preparation of GNU Make source repository"
 	@$(TABLE_I3) "$(_E)$(FETCHIT)-infozip$(_D):"	"$(_E)$(FETCHIT)-infozip-pull$(_D)"		"Download of Info-ZIP source archive"
@@ -1775,9 +1766,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(FETCHIT)-pandoc-prep$(_D)"		"Preparation of Pandoc source repositories"
 	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D):"		"$(_E)$(BUILDIT)-cleanup$(_D)"			"Archives/restores source files and removes temporary build files"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-bash$(_D)"			"Build/compile of Bash from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-less$(_D)"			"Build/compile of Less from source archive"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-vim$(_D)"			"Build/compile of Vim from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-make$(_D)"			"Build/compile of GNU Make from source"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-infozip$(_D)"			"Build/compile of Info-ZIP from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-texlive$(_D)"			"Build/compile of TeX Live from source archives"
@@ -1785,7 +1773,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-pandoc-deps$(_D)"		"Build/compile of Pandoc dependencies from source"
-	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes Bash configuration file"
+	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes GNU Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "These do not need to be used directly during normal use, and are only documented for completeness."
@@ -2255,6 +2243,7 @@ $(STRAPIT): $(STRAPIT)-msys
 endif
 $(STRAPIT): $(STRAPIT)-libs
 $(STRAPIT): $(STRAPIT)-util
+$(STRAPIT): $(STRAPIT)-tool
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(STRAPIT)-make
@@ -2268,13 +2257,11 @@ $(FETCHIT): $(FETCHIT)-cabal-db
 #WORKING : $(FETCHIT)-cabal-db should maybe call $(BUILDIT)-cleanup directly?
 $(FETCHIT): $(BUILDIT)-cleanup
 $(FETCHIT): $(FETCHIT)-config
-$(FETCHIT): $(FETCHIT)-bash $(FETCHIT)-less $(FETCHIT)-vim
 $(FETCHIT): $(FETCHIT)-make $(FETCHIT)-infozip
 $(FETCHIT): $(FETCHIT)-texlive
 $(FETCHIT): $(FETCHIT)-ghc $(FETCHIT)-cabal $(FETCHIT)-pandoc
 
 .PHONY: $(BUILDIT)
-$(BUILDIT): $(BUILDIT)-bash $(BUILDIT)-less $(BUILDIT)-vim
 $(BUILDIT): $(BUILDIT)-make $(BUILDIT)-infozip
 $(BUILDIT): $(BUILDIT)-texlive
 	# call recursively instead of using dependencies, so that environment variables update
@@ -3247,26 +3234,23 @@ $(STRAPIT)-util-perl-modules:
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
 
-.PHONY: $(FETCHIT)-bash
-$(FETCHIT)-bash: $(FETCHIT)-bash-pull
-$(FETCHIT)-bash: $(FETCHIT)-bash-prep
+.PHONY: $(STRAPIT)-tool
+$(STRAPIT)-tool:
+	# call recursively instead of using dependencies, so that environment variables update
+	$(RUNMAKE) $(STRAPIT)-tool-bash
+	$(RUNMAKE) $(STRAPIT)-tool-less
+	$(RUNMAKE) $(STRAPIT)-tool-vim
 
-.PHONY: $(FETCHIT)-bash-pull
-$(FETCHIT)-bash-pull:
+.PHONY: $(STRAPIT)-tool-bash
+# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
+# thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
+$(STRAPIT)-tool-bash:
 	$(call CURL_FILE,$(BASH_SRC))
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
 	$(call DO_UNTAR,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
-
-.PHONY: $(FETCHIT)-bash-prep
-$(FETCHIT)-bash-prep:
 	$(SED) -i \
 		-e "s|[-]lcurses|-lncurses|g" \
 		"$(BASH_DST)/configure"
-
-.PHONY: $(BUILDIT)-bash
-# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
-# thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
-$(BUILDIT)-bash:
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
@@ -3283,40 +3267,20 @@ else
 	)
 endif
 
-.PHONY: $(FETCHIT)-less
-$(FETCHIT)-less: $(FETCHIT)-less-pull
-$(FETCHIT)-less: $(FETCHIT)-less-prep
-
-.PHONY: $(FETCHIT)-less-pull
-$(FETCHIT)-less-pull:
+.PHONY: $(STRAPIT)-tool-less
+$(STRAPIT)-tool-less:
 	$(call CURL_FILE,$(LESS_SRC))
 	$(call DO_UNTAR,$(LESS_DST),$(LESS_SRC))
-
-.PHONY: $(FETCHIT)-less-prep
-$(FETCHIT)-less-prep:
 	$(SED) -i \
 		-e "s|[-]lncursesw|-lncurses|g" \
 		"$(LESS_DST)/configure"
-
-.PHONY: $(BUILDIT)-less
-$(BUILDIT)-less:
 	$(call AUTOTOOLS_BUILD,$(LESS_DST),$(COMPOSER_ABODE))
 
-.PHONY: $(FETCHIT)-vim
-$(FETCHIT)-vim: $(FETCHIT)-vim-pull
-$(FETCHIT)-vim: $(FETCHIT)-vim-prep
-
-.PHONY: $(FETCHIT)-vim-pull
-$(FETCHIT)-vim-pull:
+.PHONY: $(STRAPIT)-tool-vim
+# thanks for the 'EXTRA_DEFS' fix below: http://vim.1045645.n5.nabble.com/Conflicting-definitions-for-tgoto-etc-when-cross-building-td1210909.html
+$(STRAPIT)-tool-vim:
 	$(call CURL_FILE,$(VIM_SRC))
 	$(call DO_UNTAR,$(VIM_DST),$(VIM_SRC))
-
-.PHONY: $(FETCHIT)-vim-prep
-$(FETCHIT)-vim-prep:
-
-.PHONY: $(BUILDIT)-vim
-# thanks for the 'EXTRA_DEFS' fix below: http://vim.1045645.n5.nabble.com/Conflicting-definitions-for-tgoto-etc-when-cross-building-td1210909.html
-$(BUILDIT)-vim:
 	$(call AUTOTOOLS_BUILD,$(VIM_DST),$(COMPOSER_ABODE),\
 		EXTRA_DEFS="$(CFLAGS)" \
 		,\
