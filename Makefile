@@ -2472,7 +2472,7 @@ endif
 	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL)))"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HEADER_L)
-	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCALE,$(FILE)))
+	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCATE,$(FILE)))
 	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LINKED,$(FILE)))
 	@$(HEADER_L)
 #> syntax highlighting fix: )")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")")"
@@ -2520,7 +2520,7 @@ $(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
 		-e "s|[ ].0x[a-f0-9]+.$$||g" \
 	| $(SORT) \
 )
-override define CHECKIT_LIBRARY_LOCALE =
+override define CHECKIT_LIBRARY_LOCATE =
 	if [ -n "$(filter $(word 1,$(subst NULL, ,$(1))),$(DYNAMIC_LIBRARY_LIST))" ]; then \
 		$(TABLE_I3) "* $(_E)$(word 1,$(subst NULL, ,$(1)))" "$(_N)$(word 2,$(subst NULL, ,$(1)))"; \
 	else \
@@ -2862,7 +2862,10 @@ $(STRAPIT)-libs:
 
 .PHONY: $(STRAPIT)-libs-libiconv-init
 $(STRAPIT)-libs-libiconv-init:
-	$(call STRAPIT_LIBS_LIBICONV)
+	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
+		--disable-shared \
+		--enable-static \
+	)
 
 .PHONY: $(STRAPIT)-libs-gettext
 $(STRAPIT)-libs-gettext:
@@ -2875,20 +2878,20 @@ $(STRAPIT)-libs-gettext:
 
 .PHONY: $(STRAPIT)-libs-libiconv
 $(STRAPIT)-libs-libiconv:
-	$(call STRAPIT_LIBS_LIBICONV,$(COMPOSER_ABODE),\
+	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
 	)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Iconv library
-	$(call STRAPIT_LIBS_LIBICONV,$(BUILD_STRAP),\
+	$(call LIBICONV_BUILD,$(BUILD_STRAP),\
 		--disable-static \
 		--enable-shared \
 	)
 
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
 #	https://savannah.gnu.org/bugs/?43212
-override define STRAPIT_LIBS_LIBICONV =
+override define LIBICONV_BUILD =
 	$(call CURL_FILE,$(LIBICONV_SRC))
 	# start with fresh source directory, due to circular dependency with "gettext"
 	# start with fresh source directory, due to dual static/dynamic builds
@@ -2932,44 +2935,43 @@ $(STRAPIT)-libs-pkgconfig:
 
 .PHONY: $(STRAPIT)-libs-zlib
 $(STRAPIT)-libs-zlib:
-	$(call STRAPIT_LIBS_ZLIB,$(COMPOSER_ABODE),\
+	$(call ZLIB_BUILD,$(COMPOSER_ABODE),\
 		--static \
 	)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic Zlib library
-	$(call STRAPIT_LIBS_ZLIB,$(BUILD_STRAP))
+	$(call ZLIB_BUILD,$(BUILD_STRAP))
 
-override define STRAPIT_LIBS_ZLIB =
+override ZLIB_BUILD_BITS :=
+ifeq ($(BUILD_BITS),64)
+override ZLIB_BUILD_BITS := --64
+endif
+
+override define ZLIB_BUILD =
 	$(call CURL_FILE,$(ZLIB_SRC))
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(ZLIB_DST)"
 	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
-	if [ "$(BUILD_BITS)" == "64" ]; then \
-		$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
-			--64 \
-			$(2) \
-		); \
-	else; \
-		$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
-			$(2) \
-		); \
-	fi
+	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
+		$(ZLIB_BUILD_BITS) \
+		$(2) \
+	)
 endef
 
 .PHONY: $(STRAPIT)-libs-gmp
 $(STRAPIT)-libs-gmp:
-	$(call STRAPIT_LIBS_GMP,$(COMPOSER_ABODE),\
+	$(call GMP_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
 	)
 #WORKING : make separate *-so target for this
 	# GHC compiler requires dynamic GMP library
-	$(call STRAPIT_LIBS_GMP,$(BUILD_STRAP),\
+	$(call GMP_BUILD,$(BUILD_STRAP),\
 		--disable-static \
 		--enable-shared \
 	)
 
-override define STRAPIT_LIBS_GMP =
+override define GMP_BUILD =
 	$(call CURL_FILE,$(GMP_SRC))
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(GMP_DST)"
@@ -3004,18 +3006,18 @@ endif
 	$(CP) "$(COMPOSER_ABODE)/include/ncurses/"* "$(COMPOSER_ABODE)/include/"
 
 # thanks for the 'x86_64' fix below: http://openssl.6102.n7.nabble.com/compile-openssl-1-0-1e-failed-on-Ubuntu-12-10-x64-td44699.html
-override STRAPIT_LIBS_OPENSSL :=
+override OPENSSL_BUILD_TYPE :=
 ifeq ($(BUILD_BITS),64)
 ifeq ($(BUILD_PLAT),Linux)
-override STRAPIT_LIBS_OPENSSL := linux-x86_$(BUILD_BITS)
+override OPENSSL_BUILD_TYPE := linux-x86_$(BUILD_BITS)
 else ifeq ($(BUILD_PLAT),Msys)
-override STRAPIT_LIBS_OPENSSL := linux-x86_$(BUILD_BITS)
+override OPENSSL_BUILD_TYPE := linux-x86_$(BUILD_BITS)
 endif
 else
 ifeq ($(BUILD_PLAT),Linux)
-override STRAPIT_LIBS_OPENSSL := linux-generic$(BUILD_BITS)
+override OPENSSL_BUILD_TYPE := linux-generic$(BUILD_BITS)
 else ifeq ($(BUILD_PLAT),Msys)
-override STRAPIT_LIBS_OPENSSL := linux-generic$(BUILD_BITS)
+override OPENSSL_BUILD_TYPE := linux-generic$(BUILD_BITS)
 endif
 endif
 
@@ -3036,7 +3038,7 @@ endif
 		"$(OPENSSL_DST)/configure" \
 		"$(OPENSSL_DST)/crypto/ui/ui_openssl.c"
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_DST),$(COMPOSER_ABODE),,\
-		$(STRAPIT_LIBS_OPENSSL) \
+		$(OPENSSL_BUILD_TYPE) \
 		no-shared \
 		no-dso \
 	)
