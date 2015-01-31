@@ -2552,6 +2552,7 @@ override define LIBICONV_PREP =
 	$(RM) -r "$(LIBICONV_DST)"
 	$(call DO_UNTAR,$(LIBICONV_DST),$(LIBICONV_SRC))
 #WORK : platform_switches
+#WORK : DO_PATCH is network access inside of $(BUILD_FETCH),0
 	# "$(BUILD_PLAT),Linux" requires some patching
 	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
 		$(call DO_PATCH,$(LIBICONV_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
@@ -3151,18 +3152,19 @@ ifneq ($(BUILD_FETCH),)
 	$(SED) -i \
 		-e "s|^([#]define[ ]CURL_CA_BUNDLE[ ]).*$$|\1getenv(\"CURL_CA_BUNDLE\")|g" \
 		"$(CURL_DST)/configure"
+endif
+ifneq ($(BUILD_FETCH),0)
 #WORK : would be nice to double-check:
 #	* this works from bootstrap
 #	* perl-lwp works if curl fails
 #	* curl works on re-entry
+#WORK : ca-bundle is network access inside of $(BUILD_FETCH),0
 	cd "$(CURL_DST)" && \
 		$(BUILD_ENV) $(MAKE) CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" ca-bundle && \
 		$(MKDIR) "$(COMPOSER_STORE)" && \
 		$(MKDIR) "$(COMPOSER_ABODE)" && \
 		$(MV) "$(CURL_DST)/certdata.txt" "$(COMPOSER_STORE)/" && \
 		$(MV) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
-endif
-ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--disable-ldap \
