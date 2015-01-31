@@ -14,6 +14,7 @@
 ################################################################################
 
 #WORKING
+# _ selectively add "-u / --update" option to "$(CP) / $(MV)"
 # _ make sure all commands are using their variable counterparts
 # _ trim down the "ifeq($BUILD_PLAT,Msys)" to only the things which are necessary
 # _ try to consolidate all "ifeq($BUILD_PLAT,...)" statements, so that all the builds are as similar as possible
@@ -390,6 +391,7 @@ override COMPOSER_BUILD			?= $(COMPOSER_OTHER)/build
 
 override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_STRAP			:= $(COMPOSER_ABODE)/$(STRAPIT)
+override BUILD_FETCH			?= 1
 override BUILD_DIST			?=
 override BUILD_MSYS			?=
 
@@ -988,16 +990,16 @@ override CABAL_LIBRARIES_LIST		:= \
 	transformers|0.4.2.0 \
 	zlib|0.5.4.2
 
+#WORKING : double-check this
 override GHC_LIBRARIES_LIST		:= \
 	primitive|0.5.4.0 \
 	tf-random|0.5 \
 	QuickCheck|2.7.6 \
+	ghc-paths|0.1.0.9 \
+	xhtml|3000.2.1 \
 	\
 	alex|3.1.3 \
 	happy|1.19.4 \
-	\
-	ghc-paths|0.1.0.9 \
-	xhtml|3000.2.1 \
 	haddock|2.13.2.1
 
 #WORKING : GHC 7.8
@@ -1616,6 +1618,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)COMPOSER_PROGS_USE$(_D)"	"Prefer repository binaries"	"[$(_M)$(COMPOSER_PROGS_USE)$(_D)] $(_N)(valid: empty, 0 or 1)"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Build Options:"
+	@$(TABLE_I3) "$(_C)BUILD_FETCH$(_D)"		"Controls network usage"	"[$(_M)$(BUILD_FETCH)$(_D)] $(_N)(valid: empty, 0 or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
@@ -2192,62 +2195,60 @@ $(UPGRADE):
 
 ########################################
 
-#WORKING : re-tool / re-org / re-struct
-# bootstrap = libs, tools, progs, etc. (all from tarfiles)
-# fetch/build = make, texlive, ghc/cabal, pandoc
-#	ghc/cabal = bin ghc, bin cabal, libs, git ghc, git cabal
-#	pandoc = pandoc-deps, pandoc-[^citeproc]+, pandoc & pandoc-citeproc
-# switch to FETCHIT-* / BUILDIT-* for all packages
-#	bootstrap can then be STRAPIT-FETCHIT / STRAPIT-BUILDIT
-#WORKING : TODO
-# BUILD_FETCH =~ BUILD_DIST
-#	$(RUNMAKE) $(STRAPIT)-$(FETCHIT)
-#	$(RUNMAKE) $(BUILDIT)-$(FETCHIT)
-#	--
-#	#WORKING : document!
-#	$(FETCHIT)-% = $REPLICA-%
-#	$(RUNMAKE) $(*) BUILD_FETCH=0
-#	--
-#	#WORKING : document!
-#	%-no$(FETCHIT) = $REPLICA-%
-#	$(RUNMAKE) $(*) BUILD_FETCH=
-#	--
-#	#WORKING : document!
-#	%-$(FETCHIT) = $REPLICA-%
-#	$(RUNMAKE) $(FETCHIT)-$(*)
-#	$(RUNMAKE) $(*)-no$(FETCHIT)
-#	--
-#	$(FETCHIT): $(FETCHIT)-$(STRAPIT) ???
-#	$(FETCHIT): $(FETCHIT)-$(BUILDIT)
-#	$(FETCHIT):
-#	$(LS) $(COMPOSER_STORE)
-#	$(LS) $(COMPOSER_BUILD)
-#	--
-#	ifneq ($(BUILD_FETCH),)
-#		[fetch]
-#	endif
-#	ifneq ($(BUILD_FETCH),0)
-#		[build]
-#	endif
-#WORKING : TODO
-
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(ALLOFIT)-check
-#WORKING : update $FETCHIT calls
-	$(RUNMAKE) $(FETCHIT)
-	$(RUNMAKE) $(STRAPIT)
-#WORKING : update $FETCHIT calls
-	$(RUNMAKE) $(FETCHIT)
-	$(RUNMAKE) $(BUILDIT)
+#WORKING : trigger based on whether $(CURL)/$(GIT) is available with error/warning, respectively?
+#	$(RUNMAKE) $(FETCHIT)
+#	$(RUNMAKE) $(STRAPIT) BUILD_FETCH=
+#	$(RUNMAKE) $(BUILDIT) BUILD_FETCH=
+#	$(RUNMAKE) $(BUILDIT)-pandoc
+#WORKING
+	$(RUNMAKE) $(FETCHIT)first-$(STRAPIT)
+	$(RUNMAKE) $(FETCHIT)first-$(BUILDIT)
+	$(RUNMAKE) $(BUILDIT)-pandoc
+#WORKING
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
 
+#WORKING : document!
+$(FETCHIT)first-%:
+	$(RUNMAKE) $(FETCHIT)-$(*)
+	$(RUNMAKE) no$(FETCHIT)-$(*)
+
+#WORKING : document!
+$(FETCHIT)-%:
+	$(RUNMAKE) $(BUILDIT)-$(*) BUILD_FETCH="0"
+
+#WORKING : document!
+no$(FETCHIT)-%:
+	$(RUNMAKE) $(BUILDIT)-$(*) BUILD_FETCH=
+
+override define FETCHIT_TARGET =
+.PHONY: $(FETCHIT)-$(1)
+$(FETCHIT)-$(1):
+	$(RUNMAKE) $(1) BUILD_FETCH="0"
+
+.PHONY: no$(FETCHIT)-$(1)
+no$(FETCHIT)-$(1):
+	$(RUNMAKE) $(1) BUILD_FETCH=
+endef
+$(foreach FILE,\
+	$(STRAPIT) \
+	$(BUILDIT) \
+	,\
+	$(eval $(call FETCHIT_TARGET,$(FILE))) \
+)
+
+#WORKING : document! $(FETCHIT)-$(STRAPIT) $(FETCHIT)-$(BUILDIT)
 .PHONY: $(FETCHIT)
+$(FETCHIT): $(FETCHIT)-$(STRAPIT)
+$(FETCHIT): $(FETCHIT)-$(BUILDIT)
 $(FETCHIT):
-#WORKING : need to reverse-engineer this now, somehow; best bet is something like COMPOSER_FETCHONLY and if($(COMPOSER_FETCHONLY),exit 0)
-#WORKING : needs to default to $BUILDIT, but be able to be set for $STRAPIT; trigger based on whether $(CURL)/$(GIT) is available with error/warning, respectively?
+	@$(LS) \
+		"$(COMPOSER_STORE)" \
+		"$(COMPOSER_BUILD)"
 
 .PHONY: $(STRAPIT)
 $(STRAPIT):
@@ -2384,12 +2385,16 @@ endef
 
 .PHONY: $(BUILDIT)-gnu-init
 $(BUILDIT)-gnu-init:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
+endif
 
 .PHONY: $(BUILDIT)-gnu
 $(BUILDIT)-gnu:
+ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
+endif
 
 override define GNU_CFG_INSTALL =
 	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
@@ -2412,11 +2417,13 @@ override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="
 override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 
 .PHONY: $(BUILDIT)-msys
+ifneq ($(BUILD_FETCH),)
 $(BUILDIT)-msys: $(BUILDIT)-msys-inst
 $(BUILDIT)-msys: $(BUILDIT)-msys-init
 $(BUILDIT)-msys: $(BUILDIT)-msys-fix
 $(BUILDIT)-msys: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys: $(BUILDIT)-msys-dll
+endif
 
 .PHONY: $(BUILDIT)-msys-inst
 $(BUILDIT)-msys-inst:
@@ -2491,22 +2498,37 @@ $(BUILDIT)-group-libs:
 
 .PHONY: $(BUILDIT)-libiconv-init
 $(BUILDIT)-libiconv-init:
+ifneq ($(BUILD_FETCH),)
+	$(call LIBICONV_PULL)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call LIBICONV_PREP)
 	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
 	)
+endif
 
 .PHONY: $(BUILDIT)-gettext
 $(BUILDIT)-gettext:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GETTEXT_SRC))
 	$(call DO_UNTAR,$(GETTEXT_DST),$(GETTEXT_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(GETTEXT_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
+endif
 
 .PHONY: $(BUILDIT)-libiconv
 $(BUILDIT)-libiconv:
+ifneq ($(BUILD_FETCH),)
+	$(call LIBICONV_PULL)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call LIBICONV_PREP)
 	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
@@ -2516,11 +2538,15 @@ $(BUILDIT)-libiconv:
 		--disable-static \
 		--enable-shared \
 	)
+endif
+
+override define LIBICONV_PULL =
+	$(call CURL_FILE,$(LIBICONV_SRC))
+endef
 
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
 #	https://savannah.gnu.org/bugs/?43212
-override define LIBICONV_BUILD =
-	$(call CURL_FILE,$(LIBICONV_SRC))
+override define LIBICONV_PREP =
 	# start with fresh source directory, due to circular dependency with "gettext"
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(LIBICONV_DST)"
@@ -2536,6 +2562,9 @@ override define LIBICONV_BUILD =
 		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
 		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
 	fi
+endef
+
+override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(1),,\
 		$(2) \
 	)
@@ -2543,8 +2572,11 @@ endef
 
 .PHONY: $(BUILDIT)-pkgconfig
 $(BUILDIT)-pkgconfig:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(PKGCONFIG_SRC))
 	$(call DO_UNTAR,$(PKGCONFIG_DST),$(PKGCONFIG_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_DST)/glib,$(COMPOSER_ABODE),,\
 		--with-libiconv="gnu" \
 	)
@@ -2560,25 +2592,39 @@ $(BUILDIT)-pkgconfig:
 		--disable-host-tool \
 		--without-internal-glib \
 	)
+endif
 
 .PHONY: $(BUILDIT)-zlib
 $(BUILDIT)-zlib:
+ifneq ($(BUILD_FETCH),)
+	$(call ZLIB_PULL)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call ZLIB_PREP)
 	$(call ZLIB_BUILD,$(COMPOSER_ABODE),\
 		--static \
 	)
 	# GHC compiler requires dynamic Zlib library
+	$(call ZLIB_PREP)
 	$(call ZLIB_BUILD,$(BUILD_STRAP))
+endif
 
 override ZLIB_BUILD_BITS :=
 ifeq ($(BUILD_BITS),64)
 override ZLIB_BUILD_BITS := --64
 endif
 
-override define ZLIB_BUILD =
+override define ZLIB_PULL =
 	$(call CURL_FILE,$(ZLIB_SRC))
+endef
+
+override define ZLIB_PREP =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(ZLIB_DST)"
 	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
+endef
+
+override define ZLIB_BUILD =
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
 		$(ZLIB_BUILD_BITS) \
 		$(2) \
@@ -2587,20 +2633,30 @@ endef
 
 .PHONY: $(BUILDIT)-gmp
 $(BUILDIT)-gmp:
+ifneq ($(BUILD_FETCH),)
+	$(call GMP_PULL)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call GMP_PREP)
 	$(call GMP_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
 	)
 	# GHC compiler requires dynamic GMP library
+	$(call GMP_PREP)
 	$(call GMP_BUILD,$(BUILD_STRAP),\
 		--disable-static \
 		--enable-shared \
 	)
 #WORKING : build-ghc
 	$(CP) "$(BUILD_STRAP)/lib/libgmp.so" "$(BUILD_STRAP)/lib/libgmp.so.3"
+endif
 
-override define GMP_BUILD =
+override define GMP_PULL =
 	$(call CURL_FILE,$(GMP_SRC))
+endef
+
+override define GMP_PREP =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(GMP_DST)"
 	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
@@ -2609,6 +2665,9 @@ override define GMP_BUILD =
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys64" ]; then \
 		$(call GNU_CFG_INSTALL,$(GMP_DST)); \
 	fi
+endef
+
+override define GMP_BUILD =
 	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(1),\
 		ABI="$(BUILD_BITS)" \
 		,\
@@ -2619,6 +2678,7 @@ endef
 
 .PHONY: $(BUILDIT)-ncurses
 $(BUILDIT)-ncurses:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(NCURSES_SRC))
 	$(call DO_UNTAR,$(NCURSES_DST),$(NCURSES_SRC))
 #WORK : platform_switches
@@ -2626,12 +2686,15 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(NCURSES_DST))
 endif
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(NCURSES_DST),$(COMPOSER_ABODE),,\
 		--without-gpm \
 		--without-shared \
 	)
 #WORKING : build-ghc libraries/terminfo/configure -> ncurses/ncurses.h instead of just ncurses.h
 	$(CP) "$(COMPOSER_ABODE)/include/ncurses/"* "$(COMPOSER_ABODE)/include/"
+endif
 
 # thanks for the 'x86_64' fix below: http://openssl.6102.n7.nabble.com/compile-openssl-1-0-1e-failed-on-Ubuntu-12-10-x64-td44699.html
 override OPENSSL_BUILD_TYPE :=
@@ -2651,6 +2714,7 @@ endif
 
 .PHONY: $(BUILDIT)-openssl
 $(BUILDIT)-openssl:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(OPENSSL_SRC))
 	$(call DO_UNTAR,$(OPENSSL_DST),$(OPENSSL_SRC))
 ifeq ($(BUILD_PLAT),Linux)
@@ -2665,14 +2729,18 @@ endif
 		-e "s|(termio)([^s])|\1s\2|g" \
 		"$(OPENSSL_DST)/configure" \
 		"$(OPENSSL_DST)/crypto/ui/ui_openssl.c"
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_DST),$(COMPOSER_ABODE),,\
 		$(OPENSSL_BUILD_TYPE) \
 		no-shared \
 		no-dso \
 	)
+endif
 
 .PHONY: $(BUILDIT)-expat
 $(BUILDIT)-expat:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(EXPAT_SRC))
 	$(call DO_UNTAR,$(EXPAT_DST),$(EXPAT_SRC))
 #WORK : platform_switches
@@ -2680,24 +2748,34 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(EXPAT_DST)/conftools)
 endif
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(EXPAT_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
+endif
 
 .PHONY: $(BUILDIT)-freetype
 $(BUILDIT)-freetype:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FREETYPE_SRC))
 	$(call DO_UNTAR,$(FREETYPE_DST),$(FREETYPE_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(FREETYPE_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
+endif
 
 .PHONY: $(BUILDIT)-fontconfig
 $(BUILDIT)-fontconfig:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FONTCONFIG_SRC))
 	$(call DO_UNTAR,$(FONTCONFIG_DST),$(FONTCONFIG_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 #WORK : platform_switches
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
@@ -2727,6 +2805,7 @@ else
 		--enable-static \
 	)
 endif
+endif
 
 .PHONY: $(BUILDIT)-group-util
 $(BUILDIT)-group-util:
@@ -2743,6 +2822,7 @@ $(BUILDIT)-group-util:
 
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(COREUTILS_SRC))
 	$(call DO_UNTAR,$(COREUTILS_DST),$(COREUTILS_SRC))
 ifeq ($(BUILD_PLAT),Msys)
@@ -2751,15 +2831,19 @@ ifeq ($(BUILD_PLAT),Msys)
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
 		"$(COREUTILS_DST)/configure"
 endif
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
 		--disable-libcap \
 		--disable-xattr \
 	)
+endif
 
 .PHONY: $(BUILDIT)-findutils
 $(BUILDIT)-findutils:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FINDUTILS_SRC))
 	$(call DO_UNTAR,$(FINDUTILS_DST),$(FINDUTILS_SRC))
 #WORK : platform_switches
@@ -2767,18 +2851,26 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(FINDUTILS_DST)/build-aux)
 endif
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_DST),$(COMPOSER_ABODE))
+endif
 
 .PHONY: $(BUILDIT)-patch
 $(BUILDIT)-patch:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(PATCH_SRC))
 	$(call DO_UNTAR,$(PATCH_DST),$(PATCH_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(PATCH_DST),$(COMPOSER_ABODE),,\
 		--disable-xattr \
 	)
+endif
 
 .PHONY: $(BUILDIT)-sed
 $(BUILDIT)-sed:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(SED_SRC))
 	$(call DO_UNTAR,$(SED_DST),$(SED_SRC))
 #WORK : platform_switches
@@ -2786,12 +2878,16 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(SED_DST)/build-aux)
 endif
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(SED_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 	)
+endif
 
 .PHONY: $(BUILDIT)-bzip
 $(BUILDIT)-bzip:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(BZIP_SRC))
 	$(call DO_UNTAR,$(BZIP_DST),$(BZIP_SRC))
 	$(ECHO) >"$(BZIP_DST)/configure"
@@ -2799,36 +2895,52 @@ $(BUILDIT)-bzip:
 	$(SED) -i \
 		-e "s|^(PREFIX[=]).+$$|\1$(COMPOSER_ABODE)|g" \
 		"$(BZIP_DST)/Makefile"
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(BZIP_DST),$(COMPOSER_ABODE))
+endif
 
 .PHONY: $(BUILDIT)-gzip
 $(BUILDIT)-gzip:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GZIP_SRC))
 	$(call DO_UNTAR,$(GZIP_DST),$(GZIP_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(GZIP_DST),$(COMPOSER_ABODE))
+endif
 
 .PHONY: $(BUILDIT)-xz
 $(BUILDIT)-xz:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(XZ_SRC))
 	$(call DO_UNTAR,$(XZ_DST),$(XZ_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(XZ_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
 	)
+endif
 
 .PHONY: $(BUILDIT)-tar
 $(BUILDIT)-tar:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(TAR_SRC))
 	$(call DO_UNTAR,$(TAR_DST),$(TAR_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(TAR_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 		--without-posix-acls \
 		--without-xattrs \
 	)
+endif
 
 .PHONY: $(BUILDIT)-perl
 # thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
 $(BUILDIT)-perl:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(PERL_SRC))
 	$(call DO_UNTAR,$(PERL_DST),$(PERL_SRC))
 ifeq ($(BUILD_PLAT),Msys)
@@ -2857,18 +2969,31 @@ endif
 			"$(PERL_DST)/MANIFEST" \
 			"$(PERL_DST)/configure"; \
 	fi
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_DST),$(COMPOSER_ABODE))
+endif
 	$(RUNMAKE) $(BUILDIT)-perl-modules
 
 .PHONY: $(BUILDIT)-perl-modules
 $(BUILDIT)-perl-modules:
+ifneq ($(BUILD_FETCH),)
+	$(foreach FILE,$(PERL_MODULES_LIST),\
+		$(call PERL_MODULES_PULL,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
+	)
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
+endif
+
+override define PERL_MODULES_PULL =
+	$(call CURL_FILE,$(2)); \
+	$(call DO_UNTAR,$(PERL_DST)/$(1),$(2))
+endef
 
 override define PERL_MODULES_BUILD =
-	$(call CURL_FILE,$(2)); \
-	$(call DO_UNTAR,$(PERL_DST)/$(1),$(2)); \
 	cd "$(PERL_DST)/$(1)" && \
 		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
 		$(BUILD_ENV) $(MAKE) && \
@@ -2886,6 +3011,7 @@ $(BUILDIT)-group-tool:
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 # thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
 $(BUILDIT)-bash:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(BASH_SRC))
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
 	$(call DO_UNTAR,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
@@ -2893,6 +3019,8 @@ $(BUILDIT)-bash:
 		-e "s|[-]lcurses|-lncurses|g" \
 		"$(BASH_DST)/configure"
 #WORK : platform_switches
+endif
+ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
 	$(call AUTOTOOLS_BUILD,$(BASH_DST),$(COMPOSER_ABODE),\
@@ -2907,21 +3035,29 @@ else
 		--without-bash-malloc \
 	)
 endif
+endif
 
 .PHONY: $(BUILDIT)-less
 $(BUILDIT)-less:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(LESS_SRC))
 	$(call DO_UNTAR,$(LESS_DST),$(LESS_SRC))
 	$(SED) -i \
 		-e "s|[-]lncursesw|-lncurses|g" \
 		"$(LESS_DST)/configure"
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(LESS_DST),$(COMPOSER_ABODE))
+endif
 
 .PHONY: $(BUILDIT)-vim
 # thanks for the 'EXTRA_DEFS' fix below: http://vim.1045645.n5.nabble.com/Conflicting-definitions-for-tgoto-etc-when-cross-building-td1210909.html
 $(BUILDIT)-vim:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(VIM_SRC))
 	$(call DO_UNTAR,$(VIM_DST),$(VIM_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(VIM_DST),$(COMPOSER_ABODE),\
 		EXTRA_DEFS="$(CFLAGS)" \
 		,\
@@ -2930,6 +3066,7 @@ $(BUILDIT)-vim:
 		--disable-gui \
 		--without-x \
 	)
+endif
 
 .PHONY: $(BUILDIT)-group-core
 $(BUILDIT)-group-core:
@@ -2941,21 +3078,29 @@ $(BUILDIT)-group-core:
 
 .PHONY: $(BUILDIT)-make-init
 $(BUILDIT)-make-init:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(MAKE_SRC_INIT))
 	$(call DO_UNTAR,$(MAKE_DST_INIT),$(MAKE_SRC_INIT))
 #WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call MAKE_BUILD,$(MAKE_DST_INIT))
+endif
 
 .PHONY: $(BUILDIT)-make
 $(BUILDIT)-make:
+ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(MAKE_DST),$(MAKE_SRC),$(MAKE_CMT))
 	cd "$(MAKE_DST)" && \
 		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call MAKE_BUILD,$(MAKE_DST))
+endif
 
 override define MAKE_BUILD =
 	$(call AUTOTOOLS_BUILD,$(MAKE_DST_INIT),$(COMPOSER_ABODE),,\
@@ -2965,6 +3110,7 @@ endef
 
 .PHONY: $(BUILDIT)-infozip
 $(BUILDIT)-infozip:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(IZIP_SRC))
 	$(call CURL_FILE,$(UZIP_SRC))
 	$(call CURL_FILE,$(BZIP_SRC))
@@ -2980,17 +3126,21 @@ $(BUILDIT)-infozip:
 		-e "s|^(prefix[ ][=][ ]).+$$|\1$(COMPOSER_ABODE)|g" \
 		"$(IZIP_DST)/unix/Makefile" \
 		"$(UZIP_DST)/unix/Makefile"
+endif
+ifneq ($(BUILD_FETCH),0)
 	cd "$(IZIP_DST)" && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
 	cd "$(UZIP_DST)" && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
+endif
 
 .PHONY: $(BUILDIT)-curl
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
 $(BUILDIT)-curl:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(CURL_SRC))
 	$(call DO_UNTAR,$(CURL_DST),$(CURL_SRC))
 	# don't unlink the "certdata.txt" file after downloading and processing it
@@ -3011,6 +3161,8 @@ $(BUILDIT)-curl:
 		$(MKDIR) "$(COMPOSER_ABODE)" && \
 		$(MV) "$(CURL_DST)/certdata.txt" "$(COMPOSER_STORE)/" && \
 		$(MV) "$(CURL_DST)/lib/ca-bundle.crt" "$(COMPOSER_ABODE)/"
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(CURL_DST),$(COMPOSER_ABODE),,\
 		--with-ca-bundle="./ca-bundle.crt" \
 		--disable-ldap \
@@ -3019,12 +3171,14 @@ $(BUILDIT)-curl:
 		--disable-shared \
 		--enable-static \
 	)
+endif
 
 .PHONY: $(BUILDIT)-git
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
 # thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
 $(BUILDIT)-git:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GIT_SRC))
 	$(call DO_UNTAR,$(GIT_DST),$(GIT_SRC))
 #WORK
@@ -3037,13 +3191,17 @@ $(BUILDIT)-git:
 	$(SED) -i \
 		-e "s|([-]lcurl)$$|\1 -lssl -lcrypto -lz -lrt|g" \
 		"$(GIT_DST)/Makefile"
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
+endif
 
 .PHONY: $(BUILDIT)-texlive
 # thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
 $(BUILDIT)-texlive:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
 	$(call CURL_FILE,$(TEX_SRC))
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
@@ -3070,6 +3228,8 @@ endif
 	$(SED) -i \
 		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_DST)/texk/web2c/configure"
+endif
+ifneq ($(BUILD_FETCH),0)
 	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
 		$(SH) ./Build \
 		--disable-multiplatform \
@@ -3091,6 +3251,7 @@ endif
 	$(CP) "$(COMPOSER_ABODE)/bin/pdftex"	"$(COMPOSER_ABODE)/bin/pdflatex"
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-texlive-fmtutil
+endif
 
 .PHONY: $(BUILDIT)-texlive-fmtutil
 $(BUILDIT)-texlive-fmtutil:
@@ -3098,8 +3259,11 @@ $(BUILDIT)-texlive-fmtutil:
 
 .PHONY: $(BUILDIT)-ghc-init
 $(BUILDIT)-ghc-init:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GHC_SRC_INIT))
 	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
+endif
+ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
@@ -3109,10 +3273,12 @@ else
 		show \
 	)
 endif
+endif
 
 .PHONY: $(BUILDIT)-ghc
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(BUILDIT)-ghc:
+ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
 #WORKING : GHC 7.8
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
@@ -3168,6 +3334,8 @@ endif
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,HEREDOC_GHC_BUILD_MK) >"$(GHC_DST)/mk/build.mk"
+endif
+ifneq ($(BUILD_FETCH),0)
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,\
 		--with-gmp-includes="$(BUILD_STRAP)/include" \
@@ -3178,6 +3346,7 @@ endif
 #	$(ECHO) "WORK\n"; $(RM) -r "$(BUILD_STRAP)/mingw"*
 #endif
 #WORK
+endif
 
 override define HEREDOC_GHC_BUILD_MK =
 SRC_HC_OPTS	= -optc-L$(BUILD_STRAP)/lib -optl-L$(BUILD_STRAP)/lib $(GHCFLAGS)
@@ -3188,22 +3357,30 @@ endef
 
 .PHONY: $(BUILDIT)-cabal-init
 $(BUILDIT)-cabal-init:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PULL,$(CABAL_DST_INIT))
+	$(call CABAL_PREP,$(CABAL_DST_INIT))
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+endif
 
 .PHONY: $(BUILDIT)-cabal
 $(BUILDIT)-cabal:
+ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL,$(CABAL_DST))
+	$(call CABAL_PREP,$(CABAL_DST)/cabal-install)
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 #WORKING : process should include cabal library?
 #	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 #		$(CABAL_DST)/Cabal
+endif
 
-# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
-# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 override define CABAL_PULL =
 	$(foreach FILE,\
 		$(subst |,-,$(CABAL_LIBRARIES_LIST)) \
@@ -3212,6 +3389,11 @@ override define CABAL_PULL =
 		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
 		$(call DO_UNTAR,$(1)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
 	)
+endef
+
+# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
+# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
+override define CABAL_PREP =
 #WORK : platform_switches
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
 		$(call DO_HEREDOC,$(call HEREDOC_CABAL_BOOTSTRAP,$(1))) >"$(1)/bootstrap.patch.sh"; \
@@ -3322,16 +3504,28 @@ override define PANDOC_BUILD =
 		"$(1)"
 	$(ESCAPE) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)"
 	$(BUILD_ENV_MINGW) $(CABAL) build \
-		"$(1)";
+		"$(1)"
 	$(ESCAPE) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)"
 	$(BUILD_ENV_MINGW) $(CABAL) test \
-		"$(1)" || $(TRUE);
+		"$(1)" || $(TRUE)
 	$(ESCAPE) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)"
 	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		"$(1)"
 endef
 
 .PHONY: $(BUILDIT)-pandoc
+ifneq ($(BUILD_FETCH),1)
+$(BUILDIT)-pandoc:
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_N)WARNING:"
+	@$(ECHO) "\n"
+	@$(TABLE_I3) "$(_N)In order to build Pandoc, the '$(_C)BUILD_FETCH$(_N)' variable must be set to '$(_C)1$(_N)'."
+	@$(TABLE_I3) "$(_N)Building of Pandoc dependencies is dynamically handled using Cabal, which requires network access."
+	@$(TABLE_I3) "$(_N)Due to how intimately tied these dependencies are to the build of Pandoc itself, there is no convenient way to separate the two."
+	@$(TABLE_I3) "$(_N)As such, for the purposes of $(COMPOSER_BASENAME), building of Pandoc also requires network access."
+	@$(ECHO) "\n"
+	
+else
 $(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
 $(BUILDIT)-pandoc: $(BUILDIT)-pandoc-init
 $(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
@@ -3343,6 +3537,7 @@ $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
 	@$(ECHO) "\n"
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
+endif
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
@@ -3707,8 +3902,8 @@ $(RELEASE):
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(CONVICT)"		"$(_M)COMPOSER_GITREPO=\"$(COMPOSER_GITREPO)\""
 	@$(HEADER_L)
 	@$(LS) \
-		$(RELEASE_DIR) \
-		$(RELEASE_DIR_NATIVE)
+		"$(RELEASE_DIR)" \
+		"$(RELEASE_DIR_NATIVE)"
 	@$(HEADER_L)
 
 .PHONY: $(RELEASE)-config
