@@ -3368,6 +3368,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+	$(call CABAL_BUILD_GHC_LIBRARIES,$(CABAL_DST_INIT),$(BUILD_STRAP))
 endif
 
 .PHONY: $(BUILDIT)-cabal
@@ -3379,6 +3380,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+	$(call CABAL_BUILD_GHC_LIBRARIES,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 #WORKING : process should include cabal library?
 #	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 #		$(CABAL_DST)/Cabal
@@ -3434,6 +3436,9 @@ override define CABAL_BUILD =
 			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
 		" \
 		$(SH) ./bootstrap.sh --global
+endef
+
+override define CABAL_BUILD_GHC_LIBRARIES =
 	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 		$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(2)) \
 			"$(1)/$(FILE)"; \
