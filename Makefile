@@ -1711,8 +1711,8 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core tools from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init$(_D)"			"Build/complie of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-inst$(_D)"		"Installs base MSYS2/MinGW-w64 system"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-init$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-pull$(_D)"		"Installs base MSYS2/MinGW-w64 system"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-prep$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
@@ -1752,7 +1752,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source repository"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc-init$(_D)"		"Build/compile of Pandoc dependencies from Cabal"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc-prep$(_D)"		"Build/compile of Pandoc dependencies from Cabal"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes GNU Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
 	@$(ECHO) "\n"
@@ -2418,20 +2418,20 @@ override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --ta
 
 .PHONY: $(BUILDIT)-msys
 ifneq ($(BUILD_FETCH),)
-$(BUILDIT)-msys: $(BUILDIT)-msys-inst
-$(BUILDIT)-msys: $(BUILDIT)-msys-init
+$(BUILDIT)-msys: $(BUILDIT)-msys-pull
+$(BUILDIT)-msys: $(BUILDIT)-msys-prep
 $(BUILDIT)-msys: $(BUILDIT)-msys-fix
 $(BUILDIT)-msys: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys: $(BUILDIT)-msys-dll
 endif
 
-.PHONY: $(BUILDIT)-msys-inst
-$(BUILDIT)-msys-inst:
+.PHONY: $(BUILDIT)-msys-pull
+$(BUILDIT)-msys-pull:
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
 
-.PHONY: $(BUILDIT)-msys-init
-$(BUILDIT)-msys-init:
+.PHONY: $(BUILDIT)-msys-prep
+$(BUILDIT)-msys-prep:
 	@$(HEADER_1)
 	@$(TABLE_C2) "We need to initialize the MSYS2 environment."
 	@$(TABLE_C2) "To do this, we will pause here to open an initial shell window."
@@ -3098,6 +3098,7 @@ ifneq ($(BUILD_FETCH),)
 		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update
+#WORKING : should archive the results of "$(MAKE) update" above, similar to "CURL_CA_BUNDLE"
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call MAKE_BUILD,$(MAKE_DST))
@@ -3462,8 +3463,9 @@ $(BUILDIT)-cabal-db:
 	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
 	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
 
-.PHONY: $(BUILDIT)-pandoc-init
-$(BUILDIT)-pandoc-init:
+#WORKING : document!
+.PHONY: $(BUILDIT)-pandoc-pull
+$(BUILDIT)-pandoc-pull:
 	$(call GIT_REPO,$(PANDOC_TYPE_DST),$(PANDOC_TYPE_SRC),$(PANDOC_TYPE_CMT))
 	$(call GIT_REPO,$(PANDOC_MATH_DST),$(PANDOC_MATH_SRC),$(PANDOC_MATH_CMT))
 	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
@@ -3475,6 +3477,9 @@ $(BUILDIT)-pandoc-init:
 		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
 		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
 		"$(PANDOC_DST)/pandoc.cabal"
+
+.PHONY: $(BUILDIT)-pandoc-prep
+$(BUILDIT)-pandoc-prep:
 	# fetch and build Pandoc dependencies
 	$(ESCAPE) "\n$(_H)$(MARKER) Dependencies"
 #WORKING
@@ -3516,6 +3521,9 @@ override define PANDOC_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-pandoc
+ifneq ($(BUILD_FETCH),)
+$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-pull
+endif
 ifneq ($(BUILD_FETCH),1)
 $(BUILDIT)-pandoc:
 	@$(ECHO) "\n"
@@ -3529,7 +3537,7 @@ $(BUILDIT)-pandoc:
 	
 else
 $(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-init
+$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-prep
 $(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
 $(BUILDIT)-pandoc:
 	$(call PANDOC_BUILD,$(PANDOC_TYPE_DST))
