@@ -421,7 +421,7 @@ override BUILD_FETCH			?= 1
 override BUILD_DIST			?=
 override BUILD_MSYS			?=
 #WORKING : BUILD_GHC78
-override BUILD_GHC78			:=
+override BUILD_GHC78			:= 1
 
 #>override BUILD_PLAT			:= Linux
 #>override BUILD_ARCH			:= x86_64
@@ -745,7 +745,7 @@ override TEX_SRC			:= ftp://ftp.tug.org/historic/systems/texlive/$(TEX_YEAR)/tex
 override TEX_TEXMF_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-texmf
 override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 
-#WORKING : url scrub
+#WORK : url scrub
 # https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
 # https://ghc.haskell.org/trac/ghc/wiki/Building
@@ -770,14 +770,14 @@ override GHC_SRC			:= https://git.haskell.org/ghc.git
 override GHC_DST_INIT			:= $(COMPOSER_BUILD)/ghc-$(GHC_VER)
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 ifneq ($(BUILD_GHC78),)
-#WORKING : https://github.com/ghc/ghc/commit/e6756640bb410258837d186e8c2e339d6746dc11
-#WORKING : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
+#WORK : https://github.com/ghc/ghc/commit/e6756640bb410258837d186e8c2e339d6746dc11
+#WORK : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
 #	https://github.com/ghc/ghc/commit/db19c665ec5055c2193b2174519866045aeff09a
 override GHC_VER			:= 7.11
 override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
 endif
 
-#WORKING : url scrub
+#WORK : url scrub
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 override CABAL_VER			:= 1.22.0.0
@@ -788,7 +788,7 @@ override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
 override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER)
 override CABAL_DST			:= $(COMPOSER_BUILD)/cabal
 ifneq ($(BUILD_GHC78),)
-#WORKING https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
+#WORK https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
 override CABAL_VER			:= 1.23.0.0
 override CABAL_VER_LIB			:= $(CABAL_VER)
 override CABAL_CMT			:= 5c3a514bc2662aa47caa870b9f02bd6d897e146b
@@ -1202,7 +1202,7 @@ override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
 ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
-#WORKING $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh")
+$(info $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"))
 endif
 endif
 
@@ -1236,35 +1236,35 @@ override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override define COREUTILS_INSTALL	=
-	"$(1)" --coreutils-prog=ginstall -d "$(2)"; \
+	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		"$(1)" --coreutils-prog=echo "#!$(1) --coreutils-prog-shebang=$${FILE}" >"$(2)/$${FILE}"; \
+		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}\n" >"$(2)/$${FILE}"; \
 		"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
 	done; \
-	"$(1)" --coreutils-prog=echo "#!$(1) --coreutils-prog-shebang=ginstall" >"$(2)/install"; \
+	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall\n" >"$(2)/install"; \
 	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
 endef
 override define COREUTILS_UNINSTALL	=
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
 		if [ -f "$(2)/$${FILE}" ]; then \
-			"$(1)" --coreutils-prog=rm -f "$(2)/$${FILE}"; \
+			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
 		fi; \
 	done; \
-	"$(1)" --coreutils-prog=rm -f "$(2)/install"
+	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
 endef
 ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
 ifeq ($(BUILD_PLAT),Msys)
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
-$(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
+$(info $(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
 endif
 else
 ifeq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-$(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin))
+$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
 endif
 endif
 else ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
 ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-$(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils))
+$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils)))
 endif
 endif
 override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
@@ -1463,7 +1463,7 @@ endif
 endif
 
 ifeq ($(wildcard $(COMPOSER_TRASH)),)
-$(shell $(MKDIR) "$(COMPOSER_TRASH)")
+$(info $(shell $(MKDIR) "$(COMPOSER_TRASH)"))
 endif
 
 override BUILD_ENV			:= $(ENV) - \
@@ -1877,7 +1877,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
 	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D):"		"$(_E)$(ALLOFIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(ALLOFIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
-#WORKING : ALLOFIT could maybe stand to be documented more completely...
+#WORK : ALLOFIT could maybe stand to be documented more completely...
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-libs$(_D)"		"Build/compile of necessary libraries from source archives"
@@ -2383,16 +2383,16 @@ $(ALLOFIT):
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
 
-#WORKING : document!
+#WORK : document!
 $(FETCHIT)first-%:
 	$(RUNMAKE) $(FETCHIT)-$(*)
 	$(RUNMAKE) no$(FETCHIT)-$(*)
 
-#WORKING : document!
+#WORK : document!
 $(FETCHIT)-%:
 	$(RUNMAKE) $(BUILDIT)-$(*) BUILD_FETCH="0"
 
-#WORKING : document!
+#WORK : document!
 no$(FETCHIT)-%:
 	$(RUNMAKE) $(BUILDIT)-$(*) BUILD_FETCH=
 
@@ -2412,7 +2412,7 @@ $(foreach FILE,\
 	$(eval $(call FETCHIT_TARGET,$(FILE))) \
 )
 
-#WORKING : document! $(FETCHIT)-$(STRAPIT) $(FETCHIT)-$(BUILDIT)
+#WORK : document! $(FETCHIT)-$(STRAPIT) $(FETCHIT)-$(BUILDIT)
 .PHONY: $(FETCHIT)
 $(FETCHIT): $(FETCHIT)-$(STRAPIT)
 $(FETCHIT): $(FETCHIT)-$(BUILDIT)
@@ -2426,7 +2426,7 @@ $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
 ifeq ($(BUILD_PLAT),Msys)
-#WORKING : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
+#WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
 	$(RUNMAKE) $(BUILDIT)-msys
 endif
 	$(RUNMAKE) $(BUILDIT)-group-libs
@@ -2441,7 +2441,7 @@ $(BUILDIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
-#WORKING	$(RUNMAKE) $(BUILDIT)-texlive
+	$(RUNMAKE) $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
@@ -2676,8 +2676,8 @@ ifneq ($(BUILD_FETCH),0)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
 	$(call LIBICONV_BUILD,$(BUILD_LDLIB),\
-		--disable-static \
 		--enable-shared \
+		--enable-static \
 	)
 endif
 endif
@@ -2783,8 +2783,8 @@ ifneq ($(BUILD_FETCH),0)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
 	$(call GMP_BUILD,$(BUILD_LDLIB),\
-		--disable-static \
 		--enable-shared \
+		--enable-static \
 	)
 endif
 endif
@@ -2836,7 +2836,7 @@ override define NCURSES_PULL =
 	$(call CURL_FILE,$(NCURSES_SRC))
 endef
 
-#WORKING
+#WORKING : is the "Msys" "widec" situation still true?
 override NCURSES_BUILD_WIDEC := --enable-widec
 ifeq ($(BUILD_PLAT),Msys)
 # "$(BUILD_PLAT),Msys" doesn't build with wide character support enabled
@@ -3567,7 +3567,7 @@ endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-init-libs
 
-#WORKING : document!
+#WORK : document!
 .PHONY: $(BUILDIT)-cabal-init-libs
 $(BUILDIT)-cabal-init-libs:
 ifneq ($(BUILD_FETCH),)
@@ -3593,7 +3593,7 @@ endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-libs
 
-#WORKING : document!
+#WORK : document!
 .PHONY: $(BUILDIT)-cabal-libs
 $(BUILDIT)-cabal-libs:
 ifneq ($(BUILD_FETCH),)
@@ -3734,7 +3734,6 @@ ifneq ($(COMPOSER_TESTING),)
 		--only-dependencies \
 		--dry-run \
 		$(PANDOC_DIRECTORIES)
-#WORKING : what exactly is all left in ".cabal" after a "world" install?  different between ".Native" and "Linux", etc.?
 	$(RM) -r "$(COMPOSER_ABODE)/.cabal/packages"
 endif
 endif
@@ -4845,7 +4844,7 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 
 ########################################
 
-#WORKING : document
+#WORK : document
 .PHONY: $(NOTHING)
 $(NOTHING):
 	@$(ECHO) "\n"
