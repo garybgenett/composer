@@ -100,7 +100,7 @@
 #AFTER NOTES
 
 override COMPOSER_SETTINGS		:= .composer.mk
-override COMPOSER_INCLUDE		:= $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/$(COMPOSER_SETTINGS)
+override COMPOSER_INCLUDE		:= $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/$(COMPOSER_SETTINGS))
 
 ifneq ($(wildcard $(COMPOSER_INCLUDE)),)
 include $(COMPOSER_INCLUDE)
@@ -302,25 +302,25 @@ override TEXT_DESC			:= Plain Text (Well-Formatted)
 #WORK
 # http://www.wtfpl.net/txt/copying (license: custom = WTFPL)
 # https://github.com/jbt/markdown-editor
+override MDEDITOR_CMT			:= e8d011c71c6d2d685452ee797fde96505fe129e3
 override MDEDITOR_SRC			:= https://github.com/jbt/markdown-editor.git
 override MDEDITOR_DST			:= $(COMPOSER_DIR)/markdown-editor
-override MDEDITOR_CMT			:= e8d011c71c6d2d685452ee797fde96505fe129e3
 
 # https://github.com/Thiht/markdown-viewer/blob/master/LICENSE (license: BSD)
 # https://github.com/Thiht/markdown-viewer
+override MDVIEWER_CMT			:= 015af3868d29088472876a36afd397efd5c767af
+#WORK override MDVIEWER_CMT			:= 2fa921cf8ab7029f3a78e481c136240304ee28c8
 override MDVIEWER_SRC			:= https://github.com/Thiht/markdown-viewer.git
 override MDVIEWER_DST			:= $(COMPOSER_DIR)/markdown-viewer
 override MDVIEWER_CSS			:= $(MDVIEWER_DST)/chrome/skin/markdown-viewer.css
-override MDVIEWER_CMT			:= 015af3868d29088472876a36afd397efd5c767af
-#WORK override MDVIEWER_CMT			:= 2fa921cf8ab7029f3a78e481c136240304ee28c8
 
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE (license: BSD)
 # https://github.com/hakimel/reveal.js
+override REVEALJS_CMT			:= 2.6.2
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DST			:= $(COMPOSER_DIR)/revealjs
 #>override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/default.css
 override REVEALJS_CSS			:= $(COMPOSER_DIR)/revealjs.css
-override REVEALJS_CMT			:= 2.6.2
 
 # http://www.w3.org/Consortium/Legal/copyright-software (license: MIT)
 # http://www.w3.org/Talks/Tools/Slidy2/Overview.html#%286%29
@@ -420,6 +420,8 @@ override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
 override BUILD_FETCH			?= 1
 override BUILD_DIST			?=
 override BUILD_MSYS			?=
+#WORKING : BUILD_GHC78
+override BUILD_GHC78			:=
 
 #>override BUILD_PLAT			:= Linux
 #>override BUILD_ARCH			:= x86_64
@@ -481,21 +483,27 @@ override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
-#WORKING : GHC 7.8
-#override GHC_PLAT			:= unknown-linux-deb7
+ifneq ($(BUILD_GHC78),)
+override GHC_PLAT			:= unknown-linux-deb7
+else
 override GHC_PLAT			:= unknown-linux
+endif
 else ifeq ($(BUILD_PLAT),FreeBSD)
-#WORKING : GHC 7.8
-#override GHC_PLAT			:= portbld-freebsd
+ifneq ($(BUILD_GHC78),)
+override GHC_PLAT			:= portbld-freebsd
+else
 override GHC_PLAT			:= unknown-freebsd
+endif
 else ifeq ($(BUILD_PLAT),Darwin)
-#WORKING : GHC 7.8
-#ifeq ($(BUILD_ARCH),x86_64)
-#override GHC_PLAT			:= apple-darwin
-#else
-#override GHC_PLAT			:= apple-ios
-#endif
+ifneq ($(BUILD_GHC78),)
+ifeq ($(BUILD_ARCH),x86_64)
 override GHC_PLAT			:= apple-darwin
+else
+override GHC_PLAT			:= apple-ios
+endif
+else
+override GHC_PLAT			:= apple-darwin
+endif
 else ifeq ($(BUILD_PLAT),Msys)
 override GHC_PLAT			:= unknown-mingw32
 endif
@@ -512,11 +520,11 @@ endif
 # https://tracker.debian.org/debootstrap
 # https://packages.debian.org/search?suite=stable&keywords=build-essential
 # https://packages.debian.org/search?suite=stable&keywords=make
-override DEBIAN_SRC			:= git://anonscm.debian.org/d-i/debootstrap.git
 override DEBIAN_CMT			:= 1.0.66
+override DEBIAN_SRC			:= git://anonscm.debian.org/d-i/debootstrap.git
 override DEBIAN_ARCH			:= i386
 override DEBIAN_SUITE			:= stable
-override DEBIAN_LINUX_VERSION		:= 3.2.63
+override DEBIAN_LINUX_VERSION		:= 3.2.65
 override DEBIAN_GLIBC_VERSION		:= 2.13
 override DEBIAN_GCC_VERSION		:= 4.7.2
 override DEBIAN_BINUTILS_VERSION	:= 2.22
@@ -527,7 +535,7 @@ override DEBIAN_MAKE_VERSION		:= 3.81
 # http://www.funtoo.org/Generic_32
 # http://www.funtoo.org/Core2_64
 # http://www.funtoo.org/I686
-override FUNTOO_DATE			:= 2015-01-09
+override FUNTOO_DATE			:= 2015-02-06
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
 override FUNTOO_SARC			:= generic_$(BUILD_BITS)
@@ -538,7 +546,7 @@ override FUNTOO_SARC			:= generic_$(BUILD_BITS)
 override FUNTOO_SRC			:= http://build.funtoo.org/$(FUNTOO_TYPE)/$(FUNTOO_ARCH)/$(FUNTOO_SARC)/$(FUNTOO_DATE)/stage3-$(FUNTOO_SARC)-$(FUNTOO_TYPE)-$(FUNTOO_DATE).tar.xz
 override FUNTOO_LINUX_VERSION		:= 3.17.0
 override FUNTOO_GLIBC_VERSION		:= 2.19
-override FUNTOO_GCC_VERSION		:= 4.8.3
+override FUNTOO_GCC_VERSION		:= 4.8.4
 override FUNTOO_BINUTILS_VERSION	:= 2.24
 override FUNTOO_MAKE_VERSION		:= 3.82
 
@@ -568,12 +576,12 @@ override MSYS_DST			:= $(COMPOSER_ABODE)/msys$(BUILD_BITS)
 #WORK : cygpath - installed before bash?
 
 # http://git.savannah.gnu.org/gitweb/?p=config.git
+override GNU_CFG_CMT			:=
 override GNU_CFG_SRC			:= http://git.savannah.gnu.org/r/config.git
 override GNU_CFG_FILE_SRC		:= http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=
 override GNU_CFG_FILE_GUS		:= config.guess
 override GNU_CFG_FILE_SUB		:= config.sub
 override GNU_CFG_DST			:= $(COMPOSER_BUILD)/gnu-config
-override GNU_CFG_CMT			:=
 
 # https://www.gnu.org/software/gettext (license: GPL, LGPL)
 # https://www.gnu.org/software/gettext
@@ -699,11 +707,11 @@ override VIM_DST			:= $(COMPOSER_BUILD)/vim$(subst .,,$(VIM_VER))
 # https://www.gnu.org/software/make
 # https://savannah.gnu.org/projects/make
 override MAKE_VER			:= $(MAKE_MIN_VERSION)
+override MAKE_CMT			:= $(MAKE_CUR_VERSION)
 override MAKE_SRC_INIT			:= http://ftp.gnu.org/gnu/make/make-$(MAKE_VER).tar.gz
 override MAKE_SRC			:= http://git.savannah.gnu.org/r/make.git
 override MAKE_DST_INIT			:= $(COMPOSER_BUILD)/make-$(MAKE_VER)
 override MAKE_DST			:= $(COMPOSER_BUILD)/make
-override MAKE_CMT			:= $(MAKE_CUR_VERSION)
 # http://www.info-zip.org/license.html (license: BSD)
 # http://www.info-zip.org
 override IZIP_VER			:= 3.0
@@ -740,42 +748,51 @@ override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 #WORKING : url scrub
 # https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
+# https://ghc.haskell.org/trac/ghc/wiki/Building
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Tools
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Windows
 # https://www.haskell.org/haskellwiki/Windows
 # https://www.haskell.org/ghc/dist/latest/docs/html/users_guide/options-phases.html
 # https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
-#WORKING : GHC 7.8
-#override GHC_VER			:= 7.8.3
-#override GHC_VER_LIB			:= 1.18.1.3
-#override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
+ifneq ($(BUILD_GHC78),)
+override GHC_VER			:= 7.8.3
+override GHC_VER_LIB			:= 1.18.1.3
+override GHC_CMT			:= ghc-$(GHC_VER)-release
+override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
+else
 override GHC_VER			:= 7.6.3
 override GHC_VER_LIB			:= 1.16.0
+override GHC_CMT			:= ghc-$(GHC_VER)-release
 override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.bz2
+endif
 override GHC_SRC			:= https://git.haskell.org/ghc.git
 override GHC_DST_INIT			:= $(COMPOSER_BUILD)/ghc-$(GHC_VER)
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
-override GHC_CMT			:= ghc-$(GHC_VER)-release
-#WORKING : GHC 7.8
-#override GHC_VER			:= 7.11
-#override GHC_CMT			:= ghc-$(GHC_VER)-release
-#override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
+ifneq ($(BUILD_GHC78),)
+#WORKING : https://github.com/ghc/ghc/commit/e6756640bb410258837d186e8c2e339d6746dc11
+#WORKING : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
+#	https://github.com/ghc/ghc/commit/db19c665ec5055c2193b2174519866045aeff09a
+override GHC_VER			:= 7.11
+override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
+endif
 
 #WORKING : url scrub
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
-#WORKING https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
-#WORKING : cabal from git
-#override CABAL_VER			:= 1.20.0.2
-#override CABAL_VER_LIB			:= 1.20.0.1
 override CABAL_VER			:= 1.22.0.0
 override CABAL_VER_LIB			:= $(CABAL_VER)
+override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER)/cabal-install-$(CABAL_VER).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
 override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER)
 override CABAL_DST			:= $(COMPOSER_BUILD)/cabal
-override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
+ifneq ($(BUILD_GHC78),)
+#WORKING https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
+override CABAL_VER			:= 1.23.0.0
+override CABAL_VER_LIB			:= $(CABAL_VER)
+override CABAL_CMT			:= 5c3a514bc2662aa47caa870b9f02bd6d897e146b
+endif
 
 # https://hackage.haskell.org
 override HACKAGE_URL			= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
@@ -785,22 +802,28 @@ override HACKAGE_URL			= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
 # http://johnmacfarlane.net/pandoc/installing.html
 # https://github.com/jgm/pandoc/blob/master/INSTALL
 # https://github.com/jgm/pandoc/wiki/Installing-the-development-version-of-pandoc
-override PANDOC_TYPE_SRC		:= https://github.com/jgm/pandoc-types.git
-override PANDOC_MATH_SRC		:= https://github.com/jgm/texmath.git
-override PANDOC_HIGH_SRC		:= https://github.com/jgm/highlighting-kate.git
-override PANDOC_CITE_SRC		:= https://github.com/jgm/pandoc-citeproc.git
-override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
-override PANDOC_TYPE_DST		:= $(COMPOSER_BUILD)/pandoc-types
-override PANDOC_MATH_DST		:= $(COMPOSER_BUILD)/pandoc-texmath
-override PANDOC_HIGH_DST		:= $(COMPOSER_BUILD)/pandoc-highlighting
-override PANDOC_CITE_DST		:= $(COMPOSER_BUILD)/pandoc-citeproc
-override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
+override PANDOC_VER			:= 1.13.2
+override PANDOC_CMT			:= $(PANDOC_VER)
 override PANDOC_TYPE_CMT		:= 1.12.4
 override PANDOC_MATH_CMT		:= 0.8.0.1
 override PANDOC_HIGH_CMT		:= 0.5.11.1
 override PANDOC_CITE_CMT		:= 0.5
-override PANDOC_CMT			:= 1.13.2
-override PANDOC_VER			:= $(PANDOC_CMT)
+override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
+override PANDOC_TYPE_SRC		:= https://github.com/jgm/pandoc-types.git
+override PANDOC_MATH_SRC		:= https://github.com/jgm/texmath.git
+override PANDOC_HIGH_SRC		:= https://github.com/jgm/highlighting-kate.git
+override PANDOC_CITE_SRC		:= https://github.com/jgm/pandoc-citeproc.git
+override PANDOC_DST			:= $(COMPOSER_BUILD)/pandoc
+override PANDOC_TYPE_DST		:= $(COMPOSER_BUILD)/pandoc-types
+override PANDOC_MATH_DST		:= $(COMPOSER_BUILD)/pandoc-texmath
+override PANDOC_HIGH_DST		:= $(COMPOSER_BUILD)/pandoc-highlighting
+override PANDOC_CITE_DST		:= $(COMPOSER_BUILD)/pandoc-citeproc
+override PANDOC_DIRECTORIES		:= \
+	"$(PANDOC_TYPE_DST)" \
+	"$(PANDOC_MATH_DST)" \
+	"$(PANDOC_HIGH_DST)" \
+	"$(PANDOC_CITE_DST)" \
+	"$(PANDOC_DST)"
 
 override BUILD_PATH_MINGW		:=
 override BUILD_PATH_SHELL		:=
@@ -1007,13 +1030,23 @@ override CABAL_LIBRARIES_LIST		:= \
 	network|2.6.0.2 \
 	old-locale|1.0.0.7 \
 	old-time|1.1.0.3 \
-	parsec|3.1.7 \
 	random|1.1 \
 	stm|2.4.4 \
-	text|1.2.0.3 \
-	time|1.5 \
 	transformers|0.4.2.0 \
 	zlib|0.5.4.2
+ifneq ($(BUILD_GHC78),)
+override CABAL_LIBRARIES_LIST		:= \
+	$(CABAL_LIBRARIES_LIST) \
+	parsec|3.1.8 \
+	text|1.2.0.4 \
+	time|1.5.0.1
+else
+override CABAL_LIBRARIES_LIST		:= \
+	$(CABAL_LIBRARIES_LIST) \
+	parsec|3.1.7 \
+	text|1.2.0.3 \
+	time|1.5
+endif
 
 #WORKING : double-check this
 override GHC_LIBRARIES_LIST		:= \
@@ -1023,19 +1056,136 @@ override GHC_LIBRARIES_LIST		:= \
 	ghc-paths|0.1.0.9 \
 	xhtml|3000.2.1 \
 	\
-	alex|3.1.3 \
-	happy|1.19.4 \
+	alex|3.1.4 \
+	happy|1.19.5
+ifneq ($(BUILD_GHC78),)
+override GHC_LIBRARIES_LIST_HADDOCK	:= \
+	haddock-library|1.1.1 \
+	haddock-api|2.15.0.2 \
+	haddock|2.15.0.2
+else
+override GHC_LIBRARIES_LIST_HADDOCK	:= \
 	haddock|2.13.2.1
-
-#WORKING : GHC 7.8
-#	haddock-library|1.1.1 \
-#	haddock-api|2.15.0.2 \
-#	haddock|2.15.0.2
+endif
 
 override PANDOC_LIBRARIES_LIST		:= \
-	hsb2hs|0.2 \
+	Diff|0.3.0 \
+	HUnit|1.2.5.2 \
+	JuicyPixels|3.2.2 \
+	SHA|1.6.4.1 \
+	aeson-pretty|0.7.2 \
+	aeson|0.7.0.6 \
+	ansi-terminal|0.6.2.1 \
+	ansi-wl-pprint|0.6.7.1 \
+	asn1-encoding|0.9.0 \
+	asn1-parse|0.9.0 \
+	asn1-types|0.3.0 \
+	async|2.0.2 \
+	attoparsec|0.12.1.2 \
+	base64-bytestring|1.0.0.1 \
+	blaze-builder|0.3.3.4 \
+	blaze-html|0.7.1.0 \
+	blaze-markup|0.6.3.0 \
+	byteable|0.1.1 \
+	bytestring-builder|0.10.4.1.1 \
+	case-insensitive|1.2.0.4 \
+	cereal|0.4.1.1 \
+	cipher-aes|0.2.10 \
+	cipher-des|0.0.6 \
+	cipher-rc4|0.1.4 \
+	cmdargs|0.10.12 \
+	conduit|1.2.3.1 \
+	connection|0.2.4 \
+	cookie|0.4.1.4 \
+	crypto-cipher-types|0.0.9 \
+	crypto-numbers|0.2.7 \
+	crypto-pubkey-types|0.4.3 \
+	crypto-pubkey|0.2.8 \
+	crypto-random|0.0.8 \
+	cryptohash|0.11.6 \
+	data-default-class|0.0.1 \
+	data-default-instances-base|0.0.1 \
+	data-default-instances-containers|0.0.1 \
+	data-default-instances-dlist|0.0.1 \
+	data-default-instances-old-locale|0.0.1 \
+	data-default|0.5.3 \
+	deepseq-generics|0.1.1.2 \
+	digest|0.0.1.2 \
+	dlist|0.7.1 \
+	enclosed-exceptions|1.0.1 \
+	exceptions|0.6.1 \
+	executable-path|0.0.3 \
+	extensible-exceptions|0.1.1.4 \
+	haddock-library|1.1.1 \
+	hashable|1.2.3.1 \
+	hostname|1.0 \
+	hourglass|0.2.8 \
+	hs-bibutils|5.5 \
+	hslua|0.3.13 \
+	http-client-tls|0.2.2 \
+	http-client|0.4.7.1 \
+	http-types|0.8.5 \
+	lifted-base|0.2.3.3 \
+	mime-types|0.1.0.5 \
+	mmorph|1.0.4 \
+	monad-control|1.0.0.2 \
+	nats|1 \
+	pem|0.2.2 \
+	publicsuffixlist|0.1 \
+	regex-base|0.93.2 \
+	regex-pcre-builtin|0.94.4.8.8.35 \
+	regex-posix|0.95.2 \
+	resourcet|1.1.3.3 \
+	rfc5051|0.1.0.3 \
+	scientific|0.3.3.7 \
+	securemem|0.1.7 \
+	semigroups|0.16.1 \
+	socks|0.5.4 \
+	split|0.2.2 \
+	streaming-commons|0.1.9.1 \
+	syb|0.4.4 \
+	tagsoup|0.13.3 \
+	temporary|1.2.0.3 \
+	test-framework-hunit|0.3.0.1 \
+	test-framework-quickcheck2|0.3.0.3 \
+	test-framework|0.8.1.1 \
+	tls|1.2.16 \
+	transformers-base|0.4.3 \
+	unordered-containers|0.2.5.1 \
+	utf8-string|1 \
+	vector|0.10.12.2 \
+	void|0.7 \
+	x509-store|1.5.0 \
+	x509-system|1.5.0 \
+	x509-validation|1.5.1 \
+	x509|1.5.0.1 \
+	xml|1.3.13 \
+	yaml|0.8.10.1 \
+	zip-archive|0.2.3.7
+ifeq ($(COMPOSER_TESTING),)
+override PANDOC_LIBRARIES_LIST		:= \
+	$(PANDOC_LIBRARIES_LIST) \
+	hxt-charproperties|9.2.0.1 \
+	hxt-regex-xmlschema|9.2.0.1 \
+	hxt-unicode|9.0.2.4 \
+	hxt|9.3.1.15 \
+	\
+	auto-update|0.1.2.1 \
+	byteorder|1.0.4 \
+	easy-file|0.2.0 \
+	fast-logger|2.2.3 \
+	stringsearch|0.3.6.5 \
+	unix-compat|0.4.1.4 \
+	unix-time|0.3.4 \
+	vault|0.3.0.4 \
 	wai-extra|3.0.4.1 \
-	wai|3.0.2.2
+	wai-logger|2.2.3 \
+	wai|3.0.2.2 \
+	word8|0.1.1 \
+	\
+	hsb2hs|0.2 \
+	preprocessor-tools|1.0.1
+endif
 
 override PANDOC_FLAGS			:= \
 	make-pandoc-man-pages \
@@ -1052,7 +1202,7 @@ override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
 ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
-$(info WORKING $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh")
+#WORKING $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh")
 endif
 endif
 
@@ -1066,7 +1216,8 @@ endif
 endif
 
 #WORK : make sure pkgconfig is still needed, since only make is using autoreconf now
-override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
+#override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
+override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 override CC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
 override CXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
@@ -1077,7 +1228,7 @@ override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/S
 override PACMAN_ENV			:= "$(MSYS_DST)/usr/bin/env" - PATH="$(MSYS_DST)/usr/bin"
 override PACMAN_DB_UPGRADE		:= "$(MSYS_DST)/usr/bin/pacman-db-upgrade"
 override PACMAN_KEY			:= "$(MSYS_DST)/usr/bin/pacman-key"
-override PACMAN				:= "$(MSYS_DST)/usr/bin/pacman" --verbose --noconfirm --sync
+override PACMAN				:= "$(MSYS_DST)/usr/bin/pacman" --verbose --noconfirm --sync --needed
 
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
@@ -1144,10 +1295,6 @@ override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
-#WORKING
-ifeq ($(BUILD_PLAT),Msys)
-override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
-endif
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
@@ -1250,67 +1397,37 @@ override define DO_GIT_SUBMODULE_GHC	=
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(BUILD_BRANCH) $(GHC_CMT) && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
-#WORKING : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
-#	https://github.com/ghc/ghc/commit/db19c665ec5055c2193b2174519866045aeff09a
-override define DO_GIT_SUBMODULE_GHC_WORKING	=
-	cd "$(1)" && \
-		$(GIT) --git-dir="$(2)" checkout --force \
-			18bf6d5de5c8eed68584921f46efca79d7d59d6a \
-			\
-			.gitignore \
-			.gitmodules \
-			packages \
-			\
-			libffi-tarballs \
-			libraries/Cabal \
-			libraries/Win32 \
-			libraries/array \
-			libraries/binary \
-			libraries/bytestring \
-			libraries/containers \
-			libraries/deepseq \
-			libraries/directory \
-			libraries/dph \
-			libraries/filepath \
-			libraries/haskeline \
-			libraries/hoopl \
-			libraries/hpc \
-			libraries/parallel \
-			libraries/pretty \
-			libraries/primitive \
-			libraries/process \
-			libraries/random \
-			libraries/stm \
-			libraries/terminfo \
-			libraries/time \
-			libraries/transformers \
-			libraries/unix \
-			libraries/vector \
-			libraries/xhtml \
-			nofib \
-			utils/haddock \
-			utils/hsc2hs \
-		; \
-	$(call GIT_RUN,$(1),submodule update --init --recursive --force)
-endef
 
-override BUILD_TOOLS			:= \
-	--with-gcc="$(CC)" \
-	--with-ld="$(LD)"
-ifeq ($(BUILD_PLAT),Msys)
-override BUILD_TOOLS			:= \
-	--with-gcc="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/gcc" \
-	--with-ld="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/ld"
-endif
-override CABAL_INSTALL			= $(CABAL) install \
-	$(BUILD_TOOLS) \
-	--prefix="$(1)" \
-	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
-	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
-	--global \
+override HACKAGE_PULL			= $(call CURL_FILE,$(call HACKAGE_URL,$(1)))		$(call NEWLINE)$(ECHO)
+override HACKAGE_PREP			= $(call DO_UNTAR,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(call NEWLINE)$(ECHO)
+override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL)
+override CABAL_INFO			= $(DO_CABAL) info
+override CABAL_INSTALL			= $(DO_CABAL) install \
+	$(call CABAL_OPTIONS,$(1)) \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
+override CABAL_TOOLS			:= \
+	--with-gcc=$(CC) \
+	--with-ld=$(LD) \
+	--with-ghc=$(GHC)
+ifeq ($(BUILD_PLAT),Msys)
+override CABAL_TOOLS			:= \
+	--with-gcc="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/gcc" \
+	--with-ld="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/ld" \
+	--with-ghc=$(GHC)
+endif
+override CABAL_OPTIONS			= \
+	--prefix="$(1)" \
+	$(CABAL_TOOLS) \
+	$(foreach FILE,$(CFLAGS),	--gcc-option="$(FILE)") \
+	$(foreach FILE,$(LDFLAGS),	--ld-option="$(FILE)") \
+	$(foreach FILE,$(GHCFLAGS),	--ghc-option="$(FILE)") \
+	--extra-include-dirs="$(BUILD_LDLIB)/include" \
+	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
+	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
+	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
+	--global
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
 override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
@@ -1353,10 +1470,10 @@ override BUILD_ENV			:= $(ENV) - \
 	LC_ALL="$(LANG)" \
 	LANG="$(LANG)" \
 	TERM="$(TERM)" \
-	CC="$(CC)" \
-	CXX="$(CXX)" \
-	CPP="$(CPP)" \
-	LD="$(LD)" \
+	CC=$(CC) \
+	CXX=$(CXX) \
+	CPP=$(CPP) \
+	LD=$(LD) \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
@@ -1386,6 +1503,25 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	LD="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/ld" \
 	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
 endif
+
+override define GNU_CFG_INSTALL		=
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
+	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
+endef
+override define AUTOTOOLS_BUILD		=
+	cd "$(1)" && \
+		$(BUILD_ENV) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
+		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
+		$(BUILD_ENV) $(3) $(MAKE) install
+endef
+override define AUTOTOOLS_BUILD_MINGW	=
+	cd "$(1)" && \
+		$(BUILD_ENV_MINGW) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
+		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
+		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
+endef
+override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
+override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 
 ################################################################################
 
@@ -1741,6 +1877,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
 	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D):"		"$(_E)$(ALLOFIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(ALLOFIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
+#WORKING : ALLOFIT could maybe stand to be documented more completely...
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-libs$(_D)"		"Build/compile of necessary libraries from source archives"
@@ -1749,9 +1886,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core tools from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init$(_D)"			"Build/complie of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-pull$(_D)"		"Installs base MSYS2/MinGW-w64 system"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-prep$(_D)"		"Initializes base MSYS2/MinGW-w64 system"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-fix$(_D)"			"Proactively fixes common MSYS2/MinGW-w64 issues"
+	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-base$(_D)"		"Installs/initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-libs$(_D):"	"$(_E)$(BUILDIT)-libiconv-init$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
@@ -1789,8 +1924,6 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal$(_D)"			"Build/compile of Cabal from source repository"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc$(_D)"			"Build/compile of Pandoc(-CiteProc) from source repository"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-texlive$(_D):"	"$(_E)$(BUILDIT)-texlive-fmtutil$(_D)"		"Build/install TeX Live format files"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-pandoc$(_D):"	"$(_E)$(BUILDIT)-cabal-db$(_D)"			"Updates Cabal database/configuration"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-pandoc-prep$(_D)"		"Build/compile of Pandoc dependencies from Cabal"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)[-msys]$(_D):"	"$(_E)$(SHELLIT)-bashrc$(_D)"			"Initializes GNU Bash configuration file"
 	@$(TABLE_I3) ""					"$(_E)$(SHELLIT)-vimrc$(_D)"			"Initializes Vim configuration file"
 	@$(ECHO) "\n"
@@ -2241,17 +2374,11 @@ $(ALLOFIT):
 	$(RUNMAKE) $(ALLOFIT)-check
 #WORK : trigger based on whether $(CURL)/$(GIT) is available with error/warning, respectively?
 #	$(RUNMAKE) $(FETCHIT)
-#	$(RUNMAKE) $(STRAPIT) BUILD_FETCH=
-#	$(RUNMAKE) $(BUILDIT) BUILD_FETCH=
-#	$(RUNMAKE) $(BUILDIT)-pandoc
+#	$(RUNMAKE) no$(FETCHIT)-$(STRAPIT)
+#	$(RUNMAKE) no$(FETCHIT)-$(BUILDIT)
 #WORK
-#WORKING : only for testing
-#	$(RUNMAKE) $(FETCHIT)first-$(STRAPIT)
-#	$(RUNMAKE) $(FETCHIT)first-$(BUILDIT)
-#	$(RUNMAKE) $(BUILDIT)-pandoc
-	$(RUNMAKE) $(STRAPIT)
-	$(RUNMAKE) $(BUILDIT)
-#WORKING
+	$(RUNMAKE) $(FETCHIT)first-$(STRAPIT)
+	$(RUNMAKE) $(FETCHIT)first-$(BUILDIT)
 #WORK
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
@@ -2299,7 +2426,7 @@ $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
 ifeq ($(BUILD_PLAT),Msys)
-#WORKING : add this to $(ALLOFIT)-check, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
+#WORKING : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
 	$(RUNMAKE) $(BUILDIT)-msys
 endif
 	$(RUNMAKE) $(BUILDIT)-group-libs
@@ -2441,42 +2568,17 @@ ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
 endif
 
-override define GNU_CFG_INSTALL =
-	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
-	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
-endef
-
-override define AUTOTOOLS_BUILD =
-	cd "$(1)" && \
-		$(BUILD_ENV) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
-		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
-		$(BUILD_ENV) $(3) $(MAKE) install
-endef
-override define AUTOTOOLS_BUILD_MINGW =
-	cd "$(1)" && \
-		$(BUILD_ENV_MINGW) $(3) FORCE_UNSAFE_CONFIGURE="1" $(SH) ./configure --host="$(CHOST)" --target="$(CHOST)" --prefix="$(2)" $(4) && \
-		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
-		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
-endef
-override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
-override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
-
 .PHONY: $(BUILDIT)-msys
-ifneq ($(BUILD_FETCH),)
-$(BUILDIT)-msys: $(BUILDIT)-msys-pull
-$(BUILDIT)-msys: $(BUILDIT)-msys-prep
-$(BUILDIT)-msys: $(BUILDIT)-msys-fix
+#>ifneq ($(BUILD_FETCH),)
+$(BUILDIT)-msys: $(BUILDIT)-msys-base
 $(BUILDIT)-msys: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys: $(BUILDIT)-msys-dll
-endif
+#>endif
 
-.PHONY: $(BUILDIT)-msys-pull
-$(BUILDIT)-msys-pull:
+.PHONY: $(BUILDIT)-msys-base
+$(BUILDIT)-msys-base:
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
-
-.PHONY: $(BUILDIT)-msys-prep
-$(BUILDIT)-msys-prep:
 	@$(HEADER_1)
 	@$(TABLE_C2) "We need to initialize the MSYS2 environment."
 	@$(TABLE_C2) "To do this, we will pause here to open an initial shell window."
@@ -2495,11 +2597,12 @@ $(BUILDIT)-msys-prep:
 	@$(HEADER_1)
 	@read -s -n1 ENTER
 
-.PHONY: $(BUILDIT)-msys-fix
+.PHONY: $(BUILDIT)-msys-pkg
+$(BUILDIT)-msys-pkg:
 # thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
 $(BUILDIT)-msys-fix:
 	$(PACMAN_ENV) $(PACMAN) --refresh
-	$(PACMAN_ENV) $(PACMAN) --needed $(PACMAN_BASE_LIST)
+	$(PACMAN_ENV) $(PACMAN) $(PACMAN_BASE_LIST)
 	cd "$(MSYS_DST)" && \
 		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f && \
 		./autorebase.bat
@@ -2507,14 +2610,7 @@ $(BUILDIT)-msys-fix:
 	$(PACMAN_ENV) $(PACMAN_KEY) --init		|| $(TRUE)
 	$(PACMAN_ENV) $(PACMAN_KEY) --populate msys2	|| $(TRUE)
 	$(PACMAN_ENV) $(PACMAN_KEY) --refresh-keys	|| $(TRUE)
-
-.PHONY: $(BUILDIT)-msys-pkg
-$(BUILDIT)-msys-pkg:
-	$(PACMAN_ENV) $(PACMAN) \
-		--force \
-		--needed \
-		--sysupgrade \
-		$(PACMAN_PACKAGES_LIST)
+	$(PACMAN_ENV) $(PACMAN) --sysupgrade $(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
 
 .PHONY: $(BUILDIT)-msys-dll
@@ -2547,7 +2643,6 @@ ifneq ($(BUILD_FETCH),)
 	$(call LIBICONV_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
-	$(call LIBICONV_PREP)
 	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
@@ -2573,7 +2668,6 @@ ifneq ($(BUILD_FETCH),)
 	$(call LIBICONV_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
-	$(call LIBICONV_PREP)
 	$(call LIBICONV_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
@@ -2581,7 +2675,6 @@ ifneq ($(BUILD_FETCH),0)
 	# GHC compiler requires dynamic Iconv library (libiconv.so)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
-	$(call LIBICONV_PREP)
 	$(call LIBICONV_BUILD,$(BUILD_LDLIB),\
 		--disable-static \
 		--enable-shared \
@@ -2595,7 +2688,7 @@ endef
 
 # thanks for the patch below: https://gist.github.com/paulczar/5493708
 #	https://savannah.gnu.org/bugs/?43212
-override define LIBICONV_PREP =
+override define LIBICONV_BUILD =
 	# start with fresh source directory, due to circular dependency with "gettext"
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(LIBICONV_DST)"
@@ -2612,9 +2705,6 @@ override define LIBICONV_PREP =
 		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
 		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
 	fi
-endef
-
-override define LIBICONV_BUILD =
 	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(1),,\
 		$(2) \
 	)
@@ -2632,7 +2722,7 @@ ifneq ($(BUILD_FETCH),0)
 	)
 #WORK : could this be better?  why not just -I$(PKGCONFIG_DST)/glib/glib?
 #WORK : does the internal glib really not work, for that matter?
-	$(CP) "$(PKGCONFIG_DST)/glib/glib/glib.h"		"$(PKGCONFIG_DST)/glib/"
+	$(CP) "$(PKGCONFIG_DST)/glib/glib/glib.h"	"$(PKGCONFIG_DST)/glib/"
 	$(CP) "$(PKGCONFIG_DST)/glib/glib/glibconfig.h"	"$(PKGCONFIG_DST)/glib/"
 	$(CP) "$(PKGCONFIG_DST)/glib/glib/libglib-"*.la	"$(PKGCONFIG_DST)/glib/glib/libglib.la"
 	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_DST),$(COMPOSER_ABODE),\
@@ -2650,16 +2740,13 @@ ifneq ($(BUILD_FETCH),)
 	$(call ZLIB_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
-	$(call ZLIB_PREP)
 	$(call ZLIB_BUILD,$(COMPOSER_ABODE),\
 		--static \
 	)
 	# GHC compiler requires dynamic Zlib library (libz.so)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
-#WORKING
-#	$(call ZLIB_PREP)
-#	$(call ZLIB_BUILD,$(BUILD_LDLIB))
+	$(call ZLIB_BUILD,$(BUILD_LDLIB))
 endif
 endif
 
@@ -2672,13 +2759,10 @@ override define ZLIB_PULL =
 	$(call CURL_FILE,$(ZLIB_SRC))
 endef
 
-override define ZLIB_PREP =
+override define ZLIB_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(ZLIB_DST)"
 	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
-endef
-
-override define ZLIB_BUILD =
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
 		$(ZLIB_BUILD_BITS) \
 		$(2) \
@@ -2691,7 +2775,6 @@ ifneq ($(BUILD_FETCH),)
 	$(call GMP_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
-	$(call GMP_PREP)
 	$(call GMP_BUILD,$(COMPOSER_ABODE),\
 		--disable-shared \
 		--enable-static \
@@ -2699,7 +2782,6 @@ ifneq ($(BUILD_FETCH),0)
 	# GHC compiler requires dynamic GMP library (libgmp.so)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
-	$(call GMP_PREP)
 	$(call GMP_BUILD,$(BUILD_LDLIB),\
 		--disable-static \
 		--enable-shared \
@@ -2711,7 +2793,7 @@ override define GMP_PULL =
 	$(call CURL_FILE,$(GMP_SRC))
 endef
 
-override define GMP_PREP =
+override define GMP_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(GMP_DST)"
 	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
@@ -2720,9 +2802,6 @@ override define GMP_PREP =
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys64" ]; then \
 		$(call GNU_CFG_INSTALL,$(GMP_DST)); \
 	fi
-endef
-
-override define GMP_BUILD =
 	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(1),\
 		ABI="$(BUILD_BITS)" \
 		,\
@@ -2737,14 +2816,12 @@ ifneq ($(BUILD_FETCH),)
 	$(call NCURSES_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
-	$(call NCURSES_PREP)
 	$(call NCURSES_BUILD,$(COMPOSER_ABODE),,\
 		--without-shared \
 	)
 	# GHC compiler requires dynamic Ncurses library (libtinfo.so)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
-	$(call NCURSES_PREP)
 #WORKING : are both CFLAGS/LDFLAGS used/needed?
 	$(call NCURSES_BUILD,$(BUILD_LDLIB),\
 		CFLAGS="$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS))" \
@@ -2759,7 +2836,21 @@ override define NCURSES_PULL =
 	$(call CURL_FILE,$(NCURSES_SRC))
 endef
 
-override define NCURSES_PREP =
+#WORKING
+override NCURSES_BUILD_WIDEC := --enable-widec
+ifeq ($(BUILD_PLAT),Msys)
+# "$(BUILD_PLAT),Msys" doesn't build with wide character support enabled
+override NCURSES_BUILD_WIDEC :=
+endif
+
+override NCURSES_LIBRARIES := \
+	libform \
+	libmenu \
+	libncurses \
+	libpanel \
+	libtinfo
+
+override define NCURSES_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(NCURSES_DST)"
 	$(call DO_UNTAR,$(NCURSES_DST),$(NCURSES_SRC))
@@ -2768,23 +2859,6 @@ override define NCURSES_PREP =
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
 		$(call GNU_CFG_INSTALL,$(NCURSES_DST)); \
 	fi
-endef
-
-#WORKING
-override NCURSES_BUILD_WIDEC := --enable-widec
-ifeq ($(BUILD_PLAT),Msys)
-# "$(BUILD_PLAT),Msys" doesn't build with wide character support enabled
-override NCURSES_BUILD_WIDEC :=
-endif
-
-override NCURSES_LIBRARIES = \
-	libform \
-	libmenu \
-	libncurses \
-	libpanel \
-	libtinfo
-
-override define NCURSES_BUILD =
 	$(call AUTOTOOLS_BUILD,$(NCURSES_DST),$(1),$(2),\
 		$(NCURSES_BUILD_WIDEC) \
 		--with-termlib \
@@ -2795,7 +2869,11 @@ override define NCURSES_BUILD =
 		if [ -f "$(1)/lib/$(FILE)w.a"  ]; then $(CP) "$(1)/lib/$(FILE)w.a"  "$(1)/lib/$(FILE).a" ; fi; \
 		if [ -f "$(1)/lib/$(FILE)w.so" ]; then $(CP) "$(1)/lib/$(FILE)w.so" "$(1)/lib/$(FILE).so"; fi; \
 	)
-	$(CP) "$(1)/include/ncursesw/"* "$(1)/include/"
+	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
+		$(CP) "$(1)/include/ncurses/"* "$(1)/include/"; \
+	else \
+		$(CP) "$(1)/include/ncursesw/"* "$(1)/include/"; \
+	fi
 endef
 
 # thanks for the 'x86_64' fix below: http://openssl.6102.n7.nabble.com/compile-openssl-1-0-1e-failed-on-Ubuntu-12-10-x64-td44699.html
@@ -3075,6 +3153,7 @@ endif
 	fi
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_DST),$(COMPOSER_ABODE))
 endif
+	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-perl-modules
 
 .PHONY: $(BUILDIT)-perl-modules
@@ -3192,11 +3271,11 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 #WORKING : separate network and placement into fetch/nofetch
+#WORKING : should archive the results of "$(MAKE) update" below, similar to "CURL_CA_BUNDLE"
 	cd "$(MAKE_DST)" && \
 		$(BUILD_ENV) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update || $(TRUE)
-#WORKING : should archive the results of "$(MAKE) update" above, similar to "CURL_CA_BUNDLE"
 	$(call MAKE_BUILD,$(MAKE_DST))
 endif
 
@@ -3368,7 +3447,11 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
 else
+ifneq ($(BUILD_GHC78),)
+	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
+else
 	$(CP) "$(BUILD_LDLIB)/lib/libgmp.so" "$(BUILD_LDLIB)/lib/libgmp.so.3"
+endif
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
 		show \
@@ -3381,16 +3464,17 @@ endif
 $(BUILDIT)-ghc:
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
-#WORKING : GHC 7.8
+ifeq ($(BUILD_GHC78),)
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 endif
+endif
 ifneq ($(BUILD_FETCH),0)
-#WORKING : GHC 7.8
+#WORKING : BUILD_GHC78
 #	$(SED) -i \
 #		-e "s|7[.]11|$(GHC_VER)|g" \
 #		-e "s|(RELEASE[=])NO|\1YES|g" \
 #		"$(GHC_DST)/configure"*
-#WORKING : GHC 7.8
+#WORKING
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
 	# expose "$(BUILD_PLAT),Msys" paths as environment variables
@@ -3441,7 +3525,7 @@ endif
 #	found by: https://ghc.haskell.org/trac/ghc/ticket/9012
 #WORKING
 #	$(call DO_PATCH,$(GHC_DST),https://git.haskell.org/ghc.git/commitdiff_plain/3285a3d5bc7419464f5d2e6cef7c3adb9bca65c3)
-	$(call DO_HEREDOC,HEREDOC_GHC_BUILD_MK) >"$(GHC_DST)/mk/build.mk"
+	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK,$(COMPOSER_ABODE))) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
 #WORK
@@ -3451,11 +3535,10 @@ endif
 #WORK
 endif
 
-override EXTRA_CONFIGURE_OPTS := \
---extra-include-dirs="$(BUILD_LDLIB)/include" \
---extra-lib-dirs="$(BUILD_LDLIB)/lib" \
-
 #WORKING
+#override EXTRA_CONFIGURE_OPTS := \
+#--extra-include-dirs="$(BUILD_LDLIB)/include" \
+#--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
 #--extra-include-dirs="$(COMPOSER_ABODE)/include" \
 #--extra-lib-dirs="$(COMPOSER_ABODE)/lib"
 #WORKING
@@ -3465,68 +3548,80 @@ override SRC_HC_OPTS	:= -optc-L$(BUILD_LDLIB)/lib -optl-L$(BUILD_LDLIB)/lib $(GH
 override SRC_CC_OPTS	:= -L$(BUILD_LDLIB)/lib $(CFLAGS)
 override SRC_CPP_OPTS	:= -L$(BUILD_LDLIB)/lib $(CFLAGS)
 override SRC_LD_OPTS	:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
-override libraries/base_CONFIGURE_OPTS		:= $(EXTRA_CONFIGURE_OPTS)
-override libraries/integer-gmp_CONFIGURE_OPTS	:= $(EXTRA_CONFIGURE_OPTS)
-override libraries/terminfo_CONFIGURE_OPTS	:= $(EXTRA_CONFIGURE_OPTS)
+override libraries/base_CONFIGURE_OPTS		:= $(call CABAL_OPTIONS,$(1))
+override libraries/integer-gmp_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(1))
+override libraries/terminfo_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(1))
 endef
 
 .PHONY: $(BUILDIT)-cabal-init
 $(BUILDIT)-cabal-init:
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
-	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
-	$(call CABAL_PULL,$(CABAL_DST_INIT))
+	$(call CABAL_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
+	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PREP,$(CABAL_DST_INIT))
-	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+	$(call CABAL_BUILD_INIT,$(CABAL_DST_INIT),$(BUILD_STRAP))
+endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-init-libs
-endif
 
 #WORKING : document!
 .PHONY: $(BUILDIT)-cabal-init-libs
 $(BUILDIT)-cabal-init-libs:
-	$(call CABAL_BUILD_GHC_LIBRARIES,$(CABAL_DST_INIT),$(BUILD_STRAP))
+ifneq ($(BUILD_FETCH),)
+	$(call CABAL_BUILD_GHC_LIBRARIES_PULL)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call CABAL_BUILD_GHC_LIBRARIES_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+endif
 
 .PHONY: $(BUILDIT)-cabal
 $(BUILDIT)-cabal:
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
-	$(call CABAL_PULL,$(CABAL_DST)/cabal-install)
+	$(call CABAL_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_PREP,$(CABAL_DST)/cabal-install)
-	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+#WORKING : what is "bootstrap.sh" doing that i'm not?
+#	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+	$(call CABAL_BUILD_INIT,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+#WORKING
+endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-libs
-endif
 
 #WORKING : document!
 .PHONY: $(BUILDIT)-cabal-libs
 $(BUILDIT)-cabal-libs:
-	$(call CABAL_BUILD_GHC_LIBRARIES,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+ifneq ($(BUILD_FETCH),)
+	$(call CABAL_BUILD_GHC_LIBRARIES_PULL)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call CABAL_BUILD_GHC_LIBRARIES_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+endif
 
 override define CABAL_PULL =
-	$(foreach FILE,\
-		$(subst |,-,$(CABAL_LIBRARIES_LIST)) \
-		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
-		,\
-		$(call CURL_FILE,$(call HACKAGE_URL,$(FILE))); \
-		$(call DO_UNTAR,$(1)/$(FILE),$(call HACKAGE_URL,$(FILE))); \
+	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)), \
+		$(call HACKAGE_PULL,$(FILE)); \
 	)
 endef
 
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 override define CABAL_PREP =
+	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)), \
+		$(call HACKAGE_PREP,$(FILE),$(1)); \
+	)
 #WORK : platform_switches
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(call DO_HEREDOC,$(call HEREDOC_CABAL_BOOTSTRAP,$(1))) >"$(1)/bootstrap.patch.sh"; \
-		$(CHMOD) "$(1)/bootstrap.patch.sh"; \
 		$(SED) -i \
-			-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(1)/bootstrap.patch.sh\"|g" \
-			"$(1)/bootstrap.sh"; \
+			-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+			-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+			-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+			"$(1)/network-"*"/include/HsNet.h"; \
 		$(SED) -i \
 			-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
 			"$(1)/Distribution/Client/Install.hs"; \
@@ -3535,135 +3630,150 @@ override define CABAL_PREP =
 		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VER_LIB)|g" \
 		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
-		-e "s|([{]GHC[}][ ][-][-]make[ ])(Setup)|\1$(GHCFLAGS) \2|g" \
+		-e "s|([{]GHC[}][ ])([-][-]make[ ])|\1$(GHCFLAGS) \2|g" \
 		"$(1)/bootstrap.sh"
 endef
 
-override define HEREDOC_CABAL_BOOTSTRAP =
-#!$(SHELL)
-[ -f "$(1)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
-	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
-	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
-	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
-	"$(1)/network-"*"/include/HsNet.h" || exit 1
-exit 0
-endef
+#>$(call DO_HEREDOC,$(call HEREDOC_CABAL_BOOTSTRAP,$(1))) >"$(1)/bootstrap.patch.sh"; \
+#>$(CHMOD) "$(1)/bootstrap.patch.sh"; \
+#>$(SED) -i \
+#>	-e "s|^(.+[{]GZIP[}].+)$$|\1\n\"$(1)/bootstrap.patch.sh\"|g" \
+#>	"$(1)/bootstrap.sh"; \
+#>
+#>override define HEREDOC_CABAL_BOOTSTRAP =
+#>#!$(SHELL)
+#>[ -f "$(1)/network-"*"/include/HsNet.h" ] && $(SED) -i [B]
+#>	-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" [B]
+#>	-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" [B]
+#>	-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" [B]
+#>	"$(1)/network-"*"/include/HsNet.h" || exit 1
+#>exit 0
+#>endef
 
-override define CABAL_BUILD =
+#WORKING
+#		EXTRA_CONFIGURE_OPTS=" \
+#			--extra-include-dirs=$(BUILD_LDLIB)/include \
+#			--extra-lib-dirs=$(BUILD_LDLIB)/lib \
+#			--extra-include-dirs=$(COMPOSER_ABODE)/include \
+#			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
+#		" \
+#WORKING
+
+override define CABAL_BUILD_INIT =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
-		EXTRA_CONFIGURE_OPTS=" \
-			--extra-include-dirs=$(COMPOSER_ABODE)/include \
-			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
-		" \
+		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
+#> syntax highlighting fix: )"
 
-override define CABAL_BUILD_GHC_LIBRARIES =
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
-		cd "$(1)/$(FILE)" && \
-			$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(2)); \
+override define CABAL_BUILD =
+	$(call CABAL_INSTALL,$(2)) \
+		$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
+			"$(1)/$(FILE)" \
+		) \
+		"$(1)"
+endef
+
+override define CABAL_BUILD_GHC_LIBRARIES_PULL =
+	$(foreach FILE,\
+		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
+		$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)) \
+		,\
+		$(call HACKAGE_PULL,$(FILE)); \
 	)
 endef
 
-.PHONY: $(BUILDIT)-cabal-db
-$(BUILDIT)-cabal-db:
-	$(BUILD_ENV) $(CABAL) update
-	$(MKDIR) "$(COMPOSER_ABODE)/.cabal"
-	$(MKDIR) "$(COMPOSER_STORE)/.cabal"
-#WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  should we add a $RM statement for them?
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(MKDIR) "$(APPDATA)/cabal"
-#	$(CP) "$(APPDATA)/cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
-#	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(APPDATA)/cabal/" || $(TRUE)
-#endif
-#WORKING
-	$(CP) "$(COMPOSER_ABODE)/.cabal/"* "$(COMPOSER_STORE)/.cabal/" || $(TRUE)
-	$(CP) "$(COMPOSER_STORE)/.cabal/"* "$(COMPOSER_ABODE)/.cabal/" || $(TRUE)
-	# make sure GHC looks for libraries in the right place
-	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
-		$(SED) -i \
-			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
-			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
-			"$(COMPOSER_ABODE)/.cabal/config"; \
-	fi
+override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
+	$(foreach FILE,\
+		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
+		$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)) \
+		,\
+		$(call HACKAGE_PREP,$(FILE),$(1)); \
+	)
+	$(call CABAL_INSTALL,$(2)) \
+		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+			"$(1)/$(FILE)" \
+		)
+	$(call CABAL_INSTALL,$(2)) \
+		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
+			"$(1)/$(FILE)" \
+		)
+endef
 
-#WORKING : document!
-.PHONY: $(BUILDIT)-pandoc-pull
-$(BUILDIT)-pandoc-pull:
+.PHONY: $(BUILDIT)-pandoc
+$(BUILDIT)-pandoc:
+ifneq ($(BUILD_FETCH),)
+	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
 	$(call GIT_REPO,$(PANDOC_TYPE_DST),$(PANDOC_TYPE_SRC),$(PANDOC_TYPE_CMT))
 	$(call GIT_REPO,$(PANDOC_MATH_DST),$(PANDOC_MATH_SRC),$(PANDOC_MATH_CMT))
 	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
 	$(call GIT_REPO,$(PANDOC_CITE_DST),$(PANDOC_CITE_SRC),$(PANDOC_CITE_CMT))
-	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
-	# make sure GHC looks for libraries in the right place
-	$(SED) -i \
-		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(GHCFLAGS) \2|g" \
-		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
-		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
-		"$(PANDOC_DST)/pandoc.cabal"
-
-.PHONY: $(BUILDIT)-pandoc-prep
-$(BUILDIT)-pandoc-prep:
-	# fetch and build Pandoc dependencies
-	$(ESCAPE) "\n$(_H)$(MARKER) Dependencies"
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-		--enable-tests \
-		$(subst |,-,$(PANDOC_LIBRARIES_LIST))
-	$(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+#WORKING : should be fixed with "--*-options" arguments to "CABAL_INSTALL"
+#	# make sure GHC looks for libraries in the right place
+#	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
+#		$(SED) -i \
+#			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
+#			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
+#			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
+#			"$(COMPOSER_ABODE)/.cabal/config"; \
+#	fi
+#	$(SED) -i \
+#		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(GHCFLAGS) \2|g" \
+#		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
+#		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
+#		"$(PANDOC_DST)/pandoc.cabal"
+#WORKING
+	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
+		$(call HACKAGE_PULL,$(FILE)); \
+	)
+ifneq ($(COMPOSER_TESTING),)
+#WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  if they linger, should we warn or clean them up?
+	$(DO_CABAL) update
+	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--only-dependencies \
-		--enable-tests \
-		"$(PANDOC_TYPE_DST)" \
-		"$(PANDOC_MATH_DST)" \
-		"$(PANDOC_HIGH_DST)" \
-		"$(PANDOC_CITE_DST)" \
-		"$(PANDOC_DST)"
+		--dry-run \
+		$(PANDOC_DIRECTORIES)
+#WORKING : what exactly is all left in ".cabal" after a "world" install?  different between ".Native" and "Linux", etc.?
+	$(RM) -r "$(COMPOSER_ABODE)/.cabal/packages"
+endif
+endif
+ifneq ($(BUILD_FETCH),0)
+	@$(ESCAPE) "\n$(_H)$(MARKER) Dependencies"
+ifneq ($(COMPOSER_TESTING),0)
+	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
+		$(call HACKAGE_PREP,$(FILE),$(PANDOC_DST).libs); \
+	)
+	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
+			"$(PANDOC_DST).libs/$(FILE)" \
+		)
+endif
+	$(SED) -i \
+		-e "/cabal[ ]install[ ]HXT/d" \
+		-e "s|(ghc[ ])([-][-]make[ ])|$(subst ",\",$(GHC)) $(GHCFLAGS) \2|g" \
+		"$(PANDOC_HIGH_DST)/Makefile"
 	cd "$(PANDOC_HIGH_DST)" && \
 		$(BUILD_ENV_MINGW) $(MAKE) prep
-
-override define PANDOC_BUILD =
-	$(ESCAPE) "\n$(_H)$(MARKER) Configure$(_D) $(DIVIDE) $(_M)$(1)"
-	cd "$(1)" && $(BUILD_ENV_MINGW) $(CABAL) configure \
-		--prefix="$(COMPOSER_ABODE)" \
+	@$(ESCAPE) "\n$(_H)$(MARKER) Install"
+	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--flags="$(PANDOC_FLAGS)" \
-		--enable-tests
-	$(ESCAPE) "\n$(_H)$(MARKER) Build$(_D) $(DIVIDE) $(_M)$(1)"
-	cd "$(1)" && $(BUILD_ENV_MINGW) $(CABAL) build
-	$(ESCAPE) "\n$(_H)$(MARKER) Test$(_D) $(DIVIDE) $(_M)$(1)"
-	cd "$(1)" && $(BUILD_ENV_MINGW) $(CABAL) test || $(TRUE)
-	$(ESCAPE) "\n$(_H)$(MARKER) Install$(_D) $(DIVIDE) $(_M)$(1)"
-	cd "$(1)" && $(BUILD_ENV_MINGW) $(call CABAL_INSTALL,$(COMPOSER_ABODE))
-endef
-
-.PHONY: $(BUILDIT)-pandoc
-ifneq ($(BUILD_FETCH),)
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-pull
-endif
-ifneq ($(BUILD_FETCH),1)
-$(BUILDIT)-pandoc:
-	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_N)WARNING:"
-	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_N)In order to build Pandoc, the '$(_C)BUILD_FETCH$(_N)' variable must be set to '$(_C)1$(_N)'."
-	@$(TABLE_I3) "$(_N)Building of Pandoc dependencies is dynamically handled using Cabal, which requires network access."
-	@$(TABLE_I3) "$(_N)Due to how intimately tied these dependencies are to the build of Pandoc itself, there is no convenient way to separate the two."
-	@$(TABLE_I3) "$(_N)As such, for the purposes of $(COMPOSER_BASENAME), building of Pandoc also requires network access."
-	@$(ECHO) "\n"
-	
-else
-$(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
-$(BUILDIT)-pandoc: $(BUILDIT)-pandoc-prep
-$(BUILDIT)-pandoc: $(BUILDIT)-cabal-db
-$(BUILDIT)-pandoc:
-	$(call PANDOC_BUILD,$(PANDOC_TYPE_DST))
-	$(call PANDOC_BUILD,$(PANDOC_MATH_DST))
-	$(call PANDOC_BUILD,$(PANDOC_HIGH_DST))
-	$(call PANDOC_BUILD,$(PANDOC_DST))
-	$(call PANDOC_BUILD,$(PANDOC_CITE_DST))
-	@$(ECHO) "\n"
+		--enable-tests \
+		$(PANDOC_DIRECTORIES)
+	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
+	$(foreach FILE,$(PANDOC_DIRECTORIES),\
+		cd $(FILE) && \
+			$(DO_CABAL) test || $(TRUE); \
+	)
+	@$(ECHO) "\n$(_E)"
+	@$(TAIL) -n6 $(PANDOC_DST)*/dist/test/*-test-*.log || $(TRUE)
+	@$(ECHO) "\n$(_M)"
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
+	@$(ECHO) "$(_D)"
 endif
+#> syntax highlighting fix: )"
+
+#WORKING : added $BUILD_ENV to $CABAL for $CHECKIT and below; does a native install still report okay?
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
@@ -3679,41 +3789,41 @@ $(CHECKIT):
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version				2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version			2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version			2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
 else ifeq ($(BUILD_PLAT),Msys)
-	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VER)"		"$(_N)$(shell $(PACMAN) --version			2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VER)"		"$(_N)$(shell $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version		2>/dev/null | $(HEAD) -n1)"
 endif
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"		"$(_N)$(shell $(LS) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VER)"		"$(_N)$(shell $(FIND) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VER)"		"$(_N)$(shell $(PATCH) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VER)"		"$(_N)$(shell $(SED) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VER)"		"$(_N)$(shell BZIP= $(BZIP) --help			2>&1        | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VER)"		"$(_N)$(shell $(GZIP) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VER)"		"$(_N)$(shell $(XZ) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"		"$(_N)$(shell $(TAR) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VER)"		"$(_N)$(shell $(PERL) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"		"$(_D)$(shell $(BASH) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VER)"		"$(_D)$(shell LESS= $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VER)"		"$(_D)$(shell $(VIM) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VER)"		"$(_D)$(shell $(ZIP) --version				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VER)"		"$(_D)$(shell $(UNZIP) --version			2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VER)"		"$(_D)$(shell $(GIT) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL) info pandoc-types		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL) info texmath			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL) info highlighting-kate		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VER)"		"$(_D)$(shell $(TEX) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_VER_PDF)"		"$(_D)$(shell $(PDFLATEX) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VER)"		"$(_D)$(shell $(GHC) --version				2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VER)"		"$(_D)$(shell $(CABAL) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VER_LIB)"		"$(_D)$(shell $(CABAL) info Cabal			2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"		"$(_N)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VER)"		"$(_N)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VER)"		"$(_N)$(shell $(PATCH) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Sed"			"$(_E)$(SED_VER)"		"$(_N)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Bzip2"			"$(_E)$(BZIP_VER)"		"$(_N)$(shell BZIP= $(BZIP) --help		2>&1        | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Gzip"			"$(_E)$(GZIP_VER)"		"$(_N)$(shell $(GZIP) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)XZ Utils"			"$(_E)$(XZ_VER)"		"$(_N)$(shell $(XZ) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"		"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)Perl"			"$(_E)$(PERL_VER)"		"$(_N)$(shell $(PERL) --version			2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"		"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Less"			"$(_M)$(LESS_VER)"		"$(_D)$(shell LESS= $(LESS) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Vim"			"$(_M)$(VIM_VER)"		"$(_D)$(shell $(VIM) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GNU Make"			"$(_M)$(MAKE_VERSIONS)"		"$(_D)$(shell $(MAKE) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (Zip)"		"$(_M)$(IZIP_VER)"		"$(_D)$(shell $(ZIP) --version			2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "- $(_C)Info-ZIP (UnZip)"		"$(_M)$(UZIP_VER)"		"$(_D)$(shell $(UNZIP) --version		2>&1        | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VER)"		"$(_D)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL_INFO) pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL_INFO) texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL_INFO) highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VER)"		"$(_D)$(shell $(TEX) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_VER_PDF)"		"$(_D)$(shell $(PDFLATEX) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VER)"		"$(_D)$(shell $(GHC) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VER)"		"$(_D)$(shell $(CABAL) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VER_LIB)"		"$(_D)$(shell $(CABAL_INFO) Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VER_LIB)"
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
@@ -4048,6 +4158,7 @@ $(RELEASE)-config:
 .PHONY: $(RELEASE)-dist
 $(RELEASE)-dist: override COMPOSER_STORE := $(subst $(COMPOSER_OTHER),$(RELEASE_DIR),$(COMPOSER_STORE))
 $(RELEASE)-dist:
+ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
 	$(MKDIR) "$(COMPOSER_STORE)/.debootstrap.apt"
 	$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"
@@ -4072,11 +4183,13 @@ $(RELEASE)-dist:
 		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 	fi
 	$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"* "$(COMPOSER_STORE)/.debootstrap.apt/" || $(TRUE)
-		echo "WORKING : need to fix dynamic libgcc for pandoc in dist build"; \
-		$(MKDIR) "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib"; \
-		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(RELEASE_DIR)/$(RELEASE_TARGET)/lib/i386-linux-gnu/"; \
-		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib/"; \
-		echo "WORKING"
+#		echo "WORKING : need to fix dynamic libgcc for pandoc in dist build"; \
+#		$(MKDIR) "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib"; \
+#		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(RELEASE_DIR)/$(RELEASE_TARGET)/lib/i386-linux-gnu/"; \
+#		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib/"; \
+#		echo "WORKING"
+endif
+ifneq ($(BUILD_FETCH),0)
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
 	@$(RELEASE_CHROOT) /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
@@ -4088,12 +4201,16 @@ $(RELEASE)-dist:
 	@$(ECHO) "$(_D)"
 	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
+endif
 
 .PHONY: $(RELEASE)-test
 $(RELEASE)-test: override COMPOSER_STORE := $(subst $(COMPOSER_OTHER),$(RELEASE_DIR),$(COMPOSER_STORE))
 $(RELEASE)-test:
+ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FUNTOO_SRC))
 	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
+endif
+ifneq ($(BUILD_FETCH),0)
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
 	@$(RELEASE_CHROOT) /bin/ls /var/db/pkg/sys-kernel	2>/dev/null | $(HEAD) -n1
@@ -4105,6 +4222,9 @@ $(RELEASE)-test:
 	@$(ECHO) "$(_D)"
 	@$(HEADER_1)
 	@$(RUNMAKE) $(RELEASE)-chroot
+endif
+
+#WORKING : ideally, would archive/restore ".sources" directory when "chroot"ing
 
 .PHONY: $(RELEASE)-chroot
 $(RELEASE)-chroot:
