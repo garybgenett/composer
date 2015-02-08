@@ -2569,11 +2569,13 @@ ifneq ($(BUILD_FETCH),)
 endif
 
 .PHONY: $(BUILDIT)-msys
-#>ifneq ($(BUILD_FETCH),)
+ifneq ($(BUILD_FETCH),)
 $(BUILDIT)-msys: $(BUILDIT)-msys-base
+endif
+ifneq ($(BUILD_FETCH),0)
 $(BUILDIT)-msys: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys: $(BUILDIT)-msys-dll
-#>endif
+endif
 
 .PHONY: $(BUILDIT)-msys-base
 $(BUILDIT)-msys-base:
@@ -2600,7 +2602,6 @@ $(BUILDIT)-msys-base:
 .PHONY: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys-pkg:
 # thanks for the 'pacman-key' fix below: http://sourceforge.net/p/msys2/tickets/85/#2e02
-$(BUILDIT)-msys-fix:
 	$(PACMAN_ENV) $(PACMAN) --refresh
 	$(PACMAN_ENV) $(PACMAN) $(PACMAN_BASE_LIST)
 	cd "$(MSYS_DST)" && \
