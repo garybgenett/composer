@@ -31,6 +31,19 @@
 # _ comments, comments, comments (& formatting :)
 # _ define build target dependencies; enabling parallel make?
 # _ test native fetch/build without bootstrap, just for fun
+# _ add a version number checklist
+#	DEBIAN_*, whenever ifneq ($(BUILD_FETCH),)
+#	FUNTOO_*, when FUNTOO_DATE
+#	PERL_MODULES_LIST, when CURL_VER
+#	GHC_CABAL_VER, when GHC_VER
+#	GHC_LIBRARIES_LIST, when GHC_VER
+#	CABAL_LIBRARIES_LIST, when CABAL_VER_INIT (or CABAL_VER?)
+#	PANDOC_LIBRARIES_LIST, when PANDOC_VER (or PANDOC_CMT?)
+#	etc., more?
+# _ document COMPOSER_TESTING uses
+#	$(TESTIT): empty, 0, 1, 2 (document #2?)
+#	$(BUILDIT)-cabal: empty or non-empty
+#	$(BUILDIT)-pandoc: empty, 0 or 1
 #WORKING
 
 #WORKING
@@ -230,6 +243,7 @@ override ~				:= "'$$'"
 override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= $(~)(abspath $(~)(COMPOSER_ABSPATH)/../$(MAKEFILE))
 override COMPOSER_ALL_REGEX		:= [a-zA-Z0-9][a-zA-Z0-9_.-]+
+override COMPOSER_CMT_REGEX		:= [a-f0-9]{10}
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
@@ -420,17 +434,18 @@ override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
 override BUILD_FETCH			?= 1
 override BUILD_DIST			?=
 override BUILD_MSYS			?=
-#WORKING : BUILD_GHC78
+#ANTIQUATE : remove all BUILD_GHC78
+#WORKING : before ANTIQUATE, final test with set to empty
 override BUILD_GHC78			:= 1
+#ANTIQUATE
 
 #>override BUILD_PLAT			:= Linux
 #>override BUILD_ARCH			:= x86_64
 override BUILD_PLAT			?= $(shell $(UNAME) -o)
 override BUILD_ARCH			?= $(shell $(UNAME) -m)
 
-override IS_CYGWIN			:=
 ifeq ($(BUILD_PLAT),Cygwin)
-override IS_CYGWIN			:= 1
+override COMPOSER_PROGS_USE		:= 0
 endif
 
 ifneq ($(BUILD_MSYS),)
@@ -459,7 +474,7 @@ override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CHOST				:=
 override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc -static-libstdc++
-#WORKING override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
+override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:= $(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))
 override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
@@ -481,6 +496,11 @@ endif
 override CFLAGS				:=                  $(CFLAGS) -m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic, -optc$(FILE))
 endif
+
+override GHCFLAGS_LDLIB			:= -optc-L$(BUILD_LDLIB)/lib -optc-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
+override CFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib -I$(BUILD_LDLIB)/include $(CFLAGS)
+override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include $(CPPFLAGS)
+override LDFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
 
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_GHC78),)
@@ -755,44 +775,54 @@ override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 # https://www.haskell.org/ghc/dist/latest/docs/html/users_guide/options-phases.html
 # https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
+# https://ghc.haskell.org/trac/ghc/wiki/Building/Compiling32on64
+# http://urchin.earth.li/~ian/sec-porting-ghc.html
+#WORKING : ultimately, trying to track post-db19c665ec5055c2193b2174519866045aeff09a to ANTIQUATE GIT_SUBMODULE_GHC
+#	https://github.com/ghc/ghc/commits/db19c665ec5055c2193b2174519866045aeff09a
+#	https://github.com/ghc/ghc/commits/master/.gitmodules
+#	https://github.com/ghc/ghc/commits/master/configure.ac
+#	https://github.com/ghc/ghc/commits/master/libraries/base/base.cabal
+#	https://github.com/ghc/ghc/commits/27a642cc3a448c5b9bb0774d413f27aef0c63379
+#WORKING
 ifneq ($(BUILD_GHC78),)
-override GHC_VER			:= 7.8.3
-override GHC_VER_LIB			:= 1.18.1.3
-override GHC_CMT			:= ghc-$(GHC_VER)-release
-override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
+override GHC_VER_INIT			:= 7.8.3
+#>override GHC_VER			:= $(GHC_VER_INIT)
+override GHC_VER			:= 7.9
+override GHC_CABAL_VER			:= 1.22.0.0
+#>override GHC_CMT			:= ghc-$(GHC_VER)-release
+override GHC_CMT			:= 27a642cc3a448c5b9bb0774d413f27aef0c63379
+override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER_INIT)/ghc-$(GHC_VER_INIT)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
 else
-override GHC_VER			:= 7.6.3
-override GHC_VER_LIB			:= 1.16.0
+override GHC_VER_INIT			:= 7.6.3
+override GHC_VER			:= $(GHC_VER_INIT)
+override GHC_CABAL_VER			:= 1.16.0
 override GHC_CMT			:= ghc-$(GHC_VER)-release
-override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER)/ghc-$(GHC_VER)-$(GHC_ARCH)-$(GHC_PLAT).tar.bz2
+override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER_INIT)/ghc-$(GHC_VER_INIT)-$(GHC_ARCH)-$(GHC_PLAT).tar.bz2
 endif
 override GHC_SRC			:= https://git.haskell.org/ghc.git
-override GHC_DST_INIT			:= $(COMPOSER_BUILD)/ghc-$(GHC_VER)
+override GHC_DST_INIT			:= $(COMPOSER_BUILD)/ghc-$(GHC_VER_INIT)
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
-ifneq ($(BUILD_GHC78),)
-#WORK : https://github.com/ghc/ghc/commit/e6756640bb410258837d186e8c2e339d6746dc11
-#WORK : https://github.com/ghc/ghc/commit/18bf6d5de5c8eed68584921f46efca79d7d59d6a
-#	https://github.com/ghc/ghc/commit/db19c665ec5055c2193b2174519866045aeff09a
-override GHC_VER			:= 7.11
-override GHC_CMT			:= e6756640bb410258837d186e8c2e339d6746dc11
-endif
 
-#WORK : url scrub
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
-override CABAL_VER			:= 1.22.0.0
-override CABAL_VER_LIB			:= $(CABAL_VER)
-override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
-override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER)/cabal-install-$(CABAL_VER).tar.gz
-override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
-override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER)
-override CABAL_DST			:= $(COMPOSER_BUILD)/cabal
+#WORKING
+#	https://github.com/ghc/packages-Cabal/commits/fbaf03022ab71c1f85e5df86a966aa6caf74a672
+#WORKING
 ifneq ($(BUILD_GHC78),)
-#WORK https://git.haskell.org/packages/Cabal.git/tree/refs/heads/master:/cabal-install
+override CABAL_VER_INIT			:= 1.22.0.0
+#>override CABAL_VER			:= $(CABAL_VER_INIT)
 override CABAL_VER			:= 1.23.0.0
-override CABAL_VER_LIB			:= $(CABAL_VER)
-override CABAL_CMT			:= 5c3a514bc2662aa47caa870b9f02bd6d897e146b
+#>override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
+override CABAL_CMT			:= fbaf03022ab71c1f85e5df86a966aa6caf74a672
+else
+override CABAL_VER_INIT			:= 1.22.0.0
+override CABAL_VER			:= $(CABAL_VER_INIT)
+override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 endif
+override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
+override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
+override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER_INIT)
+override CABAL_DST			:= $(COMPOSER_BUILD)/cabal
 
 # https://hackage.haskell.org
 override HACKAGE_URL			= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
@@ -804,10 +834,14 @@ override HACKAGE_URL			= https://hackage.haskell.org/package/$(1)/$(1).tar.gz
 # https://github.com/jgm/pandoc/wiki/Installing-the-development-version-of-pandoc
 override PANDOC_VER			:= 1.13.2
 override PANDOC_CMT			:= $(PANDOC_VER)
-override PANDOC_TYPE_CMT		:= 1.12.4
-override PANDOC_MATH_CMT		:= 0.8.0.1
-override PANDOC_HIGH_CMT		:= 0.5.11.1
-override PANDOC_CITE_CMT		:= 0.5
+override PANDOC_TYPE_VER		:= 1.12.4
+override PANDOC_TYPE_CMT		:= $(PANDOC_TYPE_VER)
+override PANDOC_MATH_VER		:= 0.8.0.1
+override PANDOC_MATH_CMT		:= $(PANDOC_MATH_VER)
+override PANDOC_HIGH_VER		:= 0.5.11.1
+override PANDOC_HIGH_CMT		:= $(PANDOC_HIGH_VER)
+override PANDOC_CITE_VER		:= 0.5
+override PANDOC_CITE_CMT		:= $(PANDOC_CITE_VER)
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_TYPE_SRC		:= https://github.com/jgm/pandoc-types.git
 override PANDOC_MATH_SRC		:= https://github.com/jgm/texmath.git
@@ -844,9 +878,6 @@ override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/usr/bin:$(COMPOSER_ABOD
 endif
 override BUILD_PATH_SHELL		:= $(BUILD_PATH)
 ifeq ($(COMPOSER_PROGS_USE),0)
-override BUILD_PATH			:= $(PATH)
-endif
-ifneq ($(IS_CYGWIN),)
 override BUILD_PATH			:= $(PATH)
 endif
 
@@ -1021,7 +1052,7 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/url
 
 override CABAL_LIBRARIES_LIST		:= \
-	Cabal|$(CABAL_VER_LIB) \
+	Cabal|$(CABAL_VER_INIT) \
 	HTTP|4000.2.19 \
 	binary|0.7.2.3 \
 	deepseq|1.4.0.0 \
@@ -1030,43 +1061,33 @@ override CABAL_LIBRARIES_LIST		:= \
 	network|2.6.0.2 \
 	old-locale|1.0.0.7 \
 	old-time|1.1.0.3 \
+	parsec|3.1.7 \
 	random|1.1 \
 	stm|2.4.4 \
+	text|1.2.0.3 \
+	time|1.5 \
 	transformers|0.4.2.0 \
 	zlib|0.5.4.2
-ifneq ($(BUILD_GHC78),)
-override CABAL_LIBRARIES_LIST		:= \
-	$(CABAL_LIBRARIES_LIST) \
-	parsec|3.1.8 \
-	text|1.2.0.4 \
-	time|1.5.0.1
-else
-override CABAL_LIBRARIES_LIST		:= \
-	$(CABAL_LIBRARIES_LIST) \
-	parsec|3.1.7 \
-	text|1.2.0.3 \
-	time|1.5
-endif
 
-#WORKING : double-check this
 override GHC_LIBRARIES_LIST		:= \
+	QuickCheck|2.7.6 \
 	primitive|0.5.4.0 \
 	tf-random|0.5 \
-	QuickCheck|2.7.6 \
-	ghc-paths|0.1.0.9 \
-	xhtml|3000.2.1 \
 	\
 	alex|3.1.4 \
 	happy|1.19.5
-ifneq ($(BUILD_GHC78),)
-override GHC_LIBRARIES_LIST_HADDOCK	:= \
-	haddock-library|1.1.1 \
-	haddock-api|2.15.0.2 \
-	haddock|2.15.0.2
-else
+ifeq ($(BUILD_GHC78),)
 override GHC_LIBRARIES_LIST_HADDOCK	:= \
 	haddock|2.13.2.1
 endif
+
+#WORKING:NOW
+#	ghc-paths|0.1.0.9 \
+#	haddock-api|2.15.0.2 \
+#	haddock-library|1.1.1 \
+#	haddock|2.15.0.2 \
+#	xhtml|3000.2.1 \
+#WORKING
 
 override PANDOC_LIBRARIES_LIST		:= \
 	Diff|0.3.0 \
@@ -1116,7 +1137,6 @@ override PANDOC_LIBRARIES_LIST		:= \
 	exceptions|0.6.1 \
 	executable-path|0.0.3 \
 	extensible-exceptions|0.1.1.4 \
-	haddock-library|1.1.1 \
 	hashable|1.2.3.1 \
 	hostname|1.0 \
 	hourglass|0.2.8 \
@@ -1209,7 +1229,7 @@ endif
 ifeq ($(SHELL),/bin/sh)
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 ifeq ($(BUILD_PLAT),Msys)
-ifeq ($(IS_CYGWIN),)
+ifeq ($(COMPOSER_PROGS_USE),)
 override SHELL				:= $(MSYS_DST)/usr/bin/sh
 endif
 endif
@@ -1295,6 +1315,10 @@ override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
+#WORKING
+ifeq ($(BUILD_PLAT),Msys)
+override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
+endif
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
@@ -1335,11 +1359,15 @@ endef
 
 override define CURL_FILE		=
 	$(MKDIR) "$(COMPOSER_STORE)"; \
-	$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"
+	if [ ! -f "$(COMPOSER_STORE)/$(notdir $(1))" ]; then \
+		$(CURL) --time-cond "$(COMPOSER_STORE)/$(notdir $(1))" --output "$(COMPOSER_STORE)/$(notdir $(1))" "$(1)"; \
+	fi
 endef
 override define CURL_FILE_GNU_CFG	=
 	$(MKDIR) "$(GNU_CFG_DST)"; \
-	$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"
+	if [ ! -f "$(GNU_CFG_DST)/$(1)" ]; then \
+		$(CURL) --time-cond "$(GNU_CFG_DST)/$(1)" --output "$(GNU_CFG_DST)/$(1)" "$(GNU_CFG_FILE_SRC)$(1)"; \
+	fi
 endef
 
 override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT_PATH))../../git-core))
@@ -1371,6 +1399,7 @@ override define DO_GIT_REPO		=
 		$(call GIT_RUN,$(1),submodule update --init --recursive --force); \
 	fi
 endef
+#ANTIQUATE
 override GIT_SUBMODULE_GHC		= $(call DO_GIT_SUBMODULE_GHC,$(1),$(COMPOSER_STORE)/$(notdir $(1)).git)
 override define DO_GIT_SUBMODULE_GHC	=
 	$(ECHO) "gitdir: $(2)" >"$(1)/.git"; \
@@ -1397,6 +1426,7 @@ override define DO_GIT_SUBMODULE_GHC	=
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(BUILD_BRANCH) $(GHC_CMT) && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
+#ANTIQUATE
 
 override HACKAGE_PULL			= $(call CURL_FILE,$(call HACKAGE_URL,$(1)))		$(call NEWLINE)$(ECHO)
 override HACKAGE_PREP			= $(call DO_UNTAR,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(call NEWLINE)$(ECHO)
@@ -1407,27 +1437,30 @@ override CABAL_INSTALL			= $(DO_CABAL) install \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
-override CABAL_TOOLS			:= \
+override CABAL_OPTIONS_TOOLS		:= \
 	--with-gcc=$(CC) \
 	--with-ld=$(LD) \
 	--with-ghc=$(GHC)
 ifeq ($(BUILD_PLAT),Msys)
-override CABAL_TOOLS			:= \
+override CABAL_OPTIONS_TOOLS		:= \
 	--with-gcc="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/gcc" \
 	--with-ld="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/ld" \
 	--with-ghc=$(GHC)
 endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
-	$(CABAL_TOOLS) \
+	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS),	--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS),	--ld-option="$(FILE)") \
 	$(foreach FILE,$(GHCFLAGS),	--ghc-option="$(FILE)") \
-	--extra-include-dirs="$(BUILD_LDLIB)/include" \
-	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
 	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
+	--disable-shared \
 	--global
+override CABAL_OPTIONS_LDLIB		= \
+	--extra-include-dirs="$(BUILD_LDLIB)/include" \
+	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
+	$(call CABAL_OPTIONS,$(1))
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
 override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
@@ -1462,6 +1495,39 @@ override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VER)/pan
 endif
 endif
 
+#WORK : better spot for this?
+#WORK : would be nice to fully understand why this breaks in a 32-bit chroot?
+#WORKING:NOW			$(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc-pkg),\
+#WORKING : experiment with getting it to just two of these
+#		"$(or \
+#			$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc-pkg),\
+#			$(wildcard $(GHC_DST_INIT)/utils/ghc-pkg/dist-install/build/tmp/ghc-pkg),\
+#		)" \
+#WORKING
+ifneq ($(BUILD_GHC78),)
+ifneq ($(GHC),"$(COMPOSER_ABODE)/bin/ghc")
+override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FILE,$(shell \
+	readelf --dynamic \
+		"$(or \
+			$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc),\
+			$(wildcard $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2),\
+		)" \
+		"$(or \
+			$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/haddock),\
+			$(wildcard $(GHC_DST_INIT)/utils/haddock/dist/build/tmp/haddock),\
+		)" \
+		2>/dev/null | \
+			$(SED) -n "/[(]RPATH[)]/p" \
+			| $(SED) \
+				-e "s|^.*[ ]rpath[:][ ][[](.*)[]]$$|\1|g" \
+				-e "s|[$$]ORIGIN[/][.][.]|$(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)|g" \
+				-e "s|[:]|\n|g" \
+			| $(SORT) \
+),:$(FILE)))
+endif
+endif
+
+#WORK : better spot for this?
 ifeq ($(wildcard $(COMPOSER_TRASH)),)
 $(info $(shell $(MKDIR) "$(COMPOSER_TRASH)"))
 endif
@@ -1477,7 +1543,7 @@ override BUILD_ENV			:= $(ENV) - \
 	CHOST="$(CHOST)" \
 	CFLAGS="$(CFLAGS)" \
 	CXXFLAGS="$(CFLAGS)" \
-	CPPFLAGS="$(CFLAGS)" \
+	CPPFLAGS="$(CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" \
 	\
@@ -1578,7 +1644,7 @@ endef
 # thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
 #	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
 override define DO_HEREDOC		=
-	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(call $(1)))[N]' | $(SED) \
+	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(1))[N]' | $(SED) \
 			-e "s|[[]B[]]|\\\\|g" \
 			-e "s|[[]N[]]|\\n|g" \
 			-e "s|[[]Q[]]|\'|g"
@@ -1660,7 +1726,7 @@ override .ALL_TARGETS := \
 
 ifneq ($(COMPOSER_ESCAPES),)
 $(foreach FILE,\
-	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= COMPOSER_PROGS_USE="$(COMPOSER_PROGS_USE)" .all_targets | $(SED) -n \
+	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) -n \
 		$(foreach FILE,$(.ALL_TARGETS),\
 			-e "/^$(FILE)/p" \
 		) \
@@ -2368,20 +2434,41 @@ $(UPGRADE):
 
 ########################################
 
+override ALLOFIT_CURL	:= $(subst ",,$(word 1,$(CURL)))
+override ALLOFIT_GIT	:= $(subst ",,$(word 1,$(GIT)))
+#> syntax highlighting fix: ")")
+
+#WORKING : spell out requirements and build types in documentation
+#	reqs	= curl and/or git (and make w/ toolchain)
+#	types	= curl/git and BUILD_FETCH=* | curl and BUILD_FETCH=1
+
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(ALLOFIT)-check
-#WORK : trigger based on whether $(CURL)/$(GIT) is available with error/warning, respectively?
-#	$(RUNMAKE) $(FETCHIT)
-#	$(RUNMAKE) no$(FETCHIT)-$(STRAPIT)
-#	$(RUNMAKE) no$(FETCHIT)-$(BUILDIT)
-#WORK
+ifneq ($(and $(ALLOFIT_CURL),$(ALLOFIT_GIT)),)
+ifneq ($(BUILD_FETCH),)
+	$(RUNMAKE) $(FETCHIT)
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(RUNMAKE) no$(FETCHIT)-$(STRAPIT)
+	$(RUNMAKE) no$(FETCHIT)-$(BUILDIT)
+endif
+else ifneq ($(ALLOFIT_CURL),)
+ifeq ($(BUILD_FETCH),1)
+	#WORKING : NOTICE "don't have git; will download/build, then download/build"
 	$(RUNMAKE) $(FETCHIT)first-$(STRAPIT)
 	$(RUNMAKE) $(FETCHIT)first-$(BUILDIT)
-#WORK
+else
+	#WORKING : ERROR "need git, or BUILD_FETCH=1"
+endif
+else
+	#WORKING : ERROR "need curl"
+endif
+ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
+endif
 
 #WORK : document!
 $(FETCHIT)first-%:
@@ -2425,10 +2512,10 @@ $(FETCHIT):
 $(STRAPIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
-ifeq ($(BUILD_PLAT),Msys)
 #WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
-	$(RUNMAKE) $(BUILDIT)-msys
-endif
+#ifeq ($(BUILD_PLAT),Msys)
+#	$(RUNMAKE) $(BUILDIT)-msys
+#endif
 	$(RUNMAKE) $(BUILDIT)-group-libs
 	$(RUNMAKE) $(BUILDIT)-group-util
 	$(RUNMAKE) $(BUILDIT)-group-tool
@@ -2441,10 +2528,11 @@ $(BUILDIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
-	$(RUNMAKE) $(BUILDIT)-texlive
+#WORKING:NOW	$(RUNMAKE) $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
-	$(RUNMAKE) $(BUILDIT)-pandoc
+#WORKING:NOW	$(RUNMAKE) $(BUILDIT)-pandoc
+	$(RUNMAKE) COMPOSER_TESTING=0 $(BUILDIT)-pandoc
 
 override CHECK_FAILED		:=
 override CHECK_MSYS		:=
@@ -2503,7 +2591,7 @@ endif
 $(ALLOFIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/bin"
 ifeq ($(BUILD_PLAT),Msys)
-	$(call DO_HEREDOC,HEREDOC_MSYS_SHELL) >"$(COMPOSER_PROGS)/msys2_shell.bat"
+	$(call DO_HEREDOC,$(call HEREDOC_MSYS_SHELL)) >"$(COMPOSER_PROGS)/msys2_shell.bat"
 	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
 	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
 	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
@@ -2541,6 +2629,7 @@ else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
 
+#WORKING : does the icon work?
 override define HEREDOC_MSYS_SHELL =
 @echo off
 if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
@@ -2550,6 +2639,7 @@ set BINDIR=/usr/bin
 set PATH=%WD%%BINDIR%;%PATH%
 set OPTIONS=
 set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
+set OPTIONS=%OPTIONS% --icon %WD%/../../icon.ico
 set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
 start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
 :: end of file
@@ -2823,10 +2913,8 @@ ifneq ($(BUILD_FETCH),0)
 	# GHC compiler requires dynamic Ncurses library (libtinfo.so)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
-#WORKING : are both CFLAGS/LDFLAGS used/needed?
 	$(call NCURSES_BUILD,$(BUILD_LDLIB),\
 		CFLAGS="$(subst -L$(COMPOSER_ABODE)/lib,,$(CFLAGS))" \
-		LDFLAGS="$(subst -L$(COMPOSER_ABODE)/lib,,$(LDFLAGS))" \
 		,\
 		--with-shared \
 	)
@@ -2837,6 +2925,7 @@ override define NCURSES_PULL =
 	$(call CURL_FILE,$(NCURSES_SRC))
 endef
 
+#WORKING : if vim/less have rendering bugs, it could be that they require true --disable-widec libraries
 #WORKING : is the "Msys" "widec" situation still true?
 override NCURSES_BUILD_WIDEC := --enable-widec
 ifeq ($(BUILD_PLAT),Msys)
@@ -2848,6 +2937,7 @@ override NCURSES_LIBRARIES := \
 	libform \
 	libmenu \
 	libncurses \
+	libncurses++ \
 	libpanel \
 	libtinfo
 
@@ -2862,20 +2952,26 @@ override define NCURSES_BUILD =
 	fi
 	$(call AUTOTOOLS_BUILD,$(NCURSES_DST),$(1),$(2),\
 		$(NCURSES_BUILD_WIDEC) \
+		--enable-overwrite \
 		--with-termlib \
 		--without-gpm \
 		$(3) \
 	)
 	$(foreach FILE,$(NCURSES_LIBRARIES),\
 		if [ -f "$(1)/lib/$(FILE)w.a"  ]; then $(CP) "$(1)/lib/$(FILE)w.a"  "$(1)/lib/$(FILE).a" ; fi; \
-		if [ -f "$(1)/lib/$(FILE)w.so" ]; then $(CP) "$(1)/lib/$(FILE)w.so" "$(1)/lib/$(FILE).so"; fi; \
 	)
-	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
-		$(CP) "$(1)/include/ncurses/"* "$(1)/include/"; \
-	else \
-		$(CP) "$(1)/include/ncursesw/"* "$(1)/include/"; \
-	fi
 endef
+#WORKING:NOW : final double-check
+#	$(foreach FILE,$(NCURSES_LIBRARIES),\
+#		if [ -f "$(1)/lib/$(FILE)w.a"  ]; then $(CP) "$(1)/lib/$(FILE)w.a"  "$(1)/lib/$(FILE).a" ; fi; \
+#		if [ -f "$(1)/lib/$(FILE)w.so" ]; then $(CP) "$(1)/lib/$(FILE)w.so" "$(1)/lib/$(FILE).so"; fi; \
+#	)
+#WORKING:NOW : fixed by --enable-overwrite?
+#	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
+#		$(CP) "$(1)/include/ncurses/"* "$(1)/include/"; \
+#	else \
+#		$(CP) "$(1)/include/ncursesw/"* "$(1)/include/"; \
+#	fi
 
 # thanks for the 'x86_64' fix below: http://openssl.6102.n7.nabble.com/compile-openssl-1-0-1e-failed-on-Ubuntu-12-10-x64-td44699.html
 override OPENSSL_BUILD_TYPE :=
@@ -3157,6 +3253,7 @@ endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-perl-modules
 
+#WORKING:NOW : double check ".home/lib64" directory
 .PHONY: $(BUILDIT)-perl-modules
 $(BUILDIT)-perl-modules:
 ifneq ($(BUILD_FETCH),)
@@ -3418,6 +3515,7 @@ endif
 		--disable-shared \
 		--enable-static
 #WORK : NOTARGET?
+#ANTIQUATE
 #>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
 #>		--disable-multiplatform \
@@ -3426,6 +3524,7 @@ endif
 #>		--disable-shared \
 #>		--enable-static \
 #>	)
+#ANTIQUATE
 	$(CP) "$(TEX_TEXMF_DST)/"*		"$(COMPOSER_ABODE)/"
 	$(RM)					"$(COMPOSER_ABODE)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/bin/pdftex"	"$(COMPOSER_ABODE)/bin/pdflatex"
@@ -3444,15 +3543,24 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
+endif
+	# call recursively instead of using dependencies, so that environment variables update
+	# in particular, we need to update "$(LD_LIBRARY_PATH)" for the "$(BUILD_PLAT),Linux" build
+	$(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT)
+
+#WORKING : document!
+.PHONY: $(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT)
+$(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT):
+ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
 else
-ifneq ($(BUILD_GHC78),)
-	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
-else
-	$(CP) "$(BUILD_LDLIB)/lib/libgmp.so" "$(BUILD_LDLIB)/lib/libgmp.so.3"
-endif
+#WORKING:NOW : final double-check; only gmp seems to be needed
+#ifneq ($(BUILD_GHC78),)
+#	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
+#	$(CP) "$(BUILD_LDLIB)/lib/libgmp.so" "$(BUILD_LDLIB)/lib/libgmp.so.3"
+#endif
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
 		show \
@@ -3470,12 +3578,6 @@ ifeq ($(BUILD_GHC78),)
 endif
 endif
 ifneq ($(BUILD_FETCH),0)
-#WORKING : BUILD_GHC78
-#	$(SED) -i \
-#		-e "s|7[.]11|$(GHC_VER)|g" \
-#		-e "s|(RELEASE[=])NO|\1YES|g" \
-#		"$(GHC_DST)/configure"*
-#WORKING
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
 	# expose "$(BUILD_PLAT),Msys" paths as environment variables
@@ -3509,23 +3611,21 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 		-e "s|(call[ ]removeFiles[,])([$$][(]DESTDIR[)][$$][(]bindir[)][/]ghc.exe)|\1\"\2\"|g" \
 		"$(GHC_DST)/ghc/ghc.mk"
 endif
+#ANTIQUATE
 #>	$(SED) -i \
-#>		-e "s|$(GHC_VER_LIB)|$(CABAL_VER_LIB)|g" \
+#>		-e "s|$(GHC_CABAL_VER)|$(CABAL_VER_INIT)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Makefile"
 #>	$(SED) -i \
-#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VER_LIB)|g" \
+#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VER_INIT)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal" \
 #>		"$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal" \
 #>		"$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal"
+#ANTIQUATE
 	$(SED) -i \
+		-e "s|(RELEASE[=])NO|\1YES|g" \
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
-#WORKING
-# thanks for the 'HpcTicksLabel' fix below: https://git.haskell.org/ghc.git/commitdiff/3285a3d5bc7419464f5d2e6cef7c3adb9bca65c3
-#	found by: https://ghc.haskell.org/trac/ghc/ticket/9012
-#WORKING
-#	$(call DO_PATCH,$(GHC_DST),https://git.haskell.org/ghc.git/commitdiff_plain/3285a3d5bc7419464f5d2e6cef7c3adb9bca65c3)
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK,$(COMPOSER_ABODE))) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
@@ -3536,22 +3636,16 @@ endif
 #WORK
 endif
 
-#WORKING
-#override EXTRA_CONFIGURE_OPTS := \
-#--extra-include-dirs="$(BUILD_LDLIB)/include" \
-#--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
-#--extra-include-dirs="$(COMPOSER_ABODE)/include" \
-#--extra-lib-dirs="$(COMPOSER_ABODE)/lib"
-#WORKING
-
 override define HEREDOC_GHC_BUILD_MK =
-override SRC_HC_OPTS	:= -optc-L$(BUILD_LDLIB)/lib -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
-override SRC_CC_OPTS	:= -L$(BUILD_LDLIB)/lib $(CFLAGS)
-override SRC_CPP_OPTS	:= -L$(BUILD_LDLIB)/lib $(CFLAGS)
-override SRC_LD_OPTS	:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
-override libraries/base_CONFIGURE_OPTS		:= $(call CABAL_OPTIONS,$(1))
-override libraries/integer-gmp_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(1))
-override libraries/terminfo_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(1))
+override GhcHcOpts	:= $(GHCFLAGS_LDLIB)
+override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
+override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
+override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
+override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
+override libraries/base_CONFIGURE_OPTS		:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
+override libraries/integer-gmp2_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
+override libraries/integer-gmp_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
+override libraries/terminfo_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
 endef
 
 .PHONY: $(BUILDIT)-cabal-init
@@ -3578,6 +3672,21 @@ ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD_GHC_LIBRARIES_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 endif
 
+ifneq ($(COMPOSER_TESTING),)
+.PHONY: $(BUILDIT)-cabal
+$(BUILDIT)-cabal:
+ifneq ($(BUILD_FETCH),)
+	$(call CURL_FILE,$(CABAL_SRC_INIT))
+endif
+ifneq ($(BUILD_FETCH),0)
+	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
+	$(ECHO) "$(_C)"; \
+		$(SED) -n \
+			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
+			"$(CABAL_DST_INIT)/bootstrap.sh"; \
+	$(ECHO) "$(_D)"
+endif
+else
 .PHONY: $(BUILDIT)-cabal
 $(BUILDIT)-cabal:
 ifneq ($(BUILD_FETCH),)
@@ -3585,14 +3694,17 @@ ifneq ($(BUILD_FETCH),)
 	$(call CABAL_PULL)
 endif
 ifneq ($(BUILD_FETCH),0)
+	$(RM) -r "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
+	$(CP) "$(CABAL_DST)/Cabal" "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(call CABAL_PREP,$(CABAL_DST)/cabal-install)
-#WORKING : what is "bootstrap.sh" doing that i'm not?
+#WORKING:NOW : what is "bootstrap.sh" doing that i'm not?
 #	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 	$(call CABAL_BUILD_INIT,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 #WORKING
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-libs
+endif
 
 #WORK : document!
 .PHONY: $(BUILDIT)-cabal-libs
@@ -3618,23 +3730,26 @@ override define CABAL_PREP =
 	)
 #WORK : platform_switches
 	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(SED) -i \
-			-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-			-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-			-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-			"$(1)/network-"*"/include/HsNet.h"; \
-		$(SED) -i \
-			-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
-			"$(1)/Distribution/Client/Install.hs"; \
+		if [ -z "$(BUILD_GHC78)" ]; then \
+			$(SED) -i \
+				-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+				-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+				-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+				"$(1)/network-"*"/include/HsNet.h"; \
+			$(SED) -i \
+				-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
+				"$(1)/Distribution/Client/Install.hs"; \
+		fi; \
 	fi
 	$(SED) -i \
-		-e "s|^(CABAL_VER[=][\"])[^\"]+|\1$(CABAL_VER_LIB)|g" \
+		-e "s|^(CABAL[_]VER[=][\"])[^\"]+([\"])|\1$(CABAL_VER_INIT)\2|g" \
 		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|([{]GHC[}][ ])([-][-]make[ ])|\1$(GHCFLAGS) \2|g" \
 		"$(1)/bootstrap.sh"
 endef
 
+#ANTIQUATE
 #>$(call DO_HEREDOC,$(call HEREDOC_CABAL_BOOTSTRAP,$(1))) >"$(1)/bootstrap.patch.sh"; \
 #>$(CHMOD) "$(1)/bootstrap.patch.sh"; \
 #>$(SED) -i \
@@ -3650,15 +3765,7 @@ endef
 #>	"$(1)/network-"*"/include/HsNet.h" || exit 1
 #>exit 0
 #>endef
-
-#WORKING
-#		EXTRA_CONFIGURE_OPTS=" \
-#			--extra-include-dirs=$(BUILD_LDLIB)/include \
-#			--extra-lib-dirs=$(BUILD_LDLIB)/lib \
-#			--extra-include-dirs=$(COMPOSER_ABODE)/include \
-#			--extra-lib-dirs=$(COMPOSER_ABODE)/lib \
-#		" \
-#WORKING
+#ANTIQUATE
 
 override define CABAL_BUILD_INIT =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
@@ -3696,10 +3803,12 @@ override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 			"$(1)/$(FILE)" \
 		)
-	$(call CABAL_INSTALL,$(2)) \
-		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
-			"$(1)/$(FILE)" \
-		)
+	if [ -z "$(BUILD_GHC78)" ]; then \
+		$(call CABAL_INSTALL,$(2)) \
+			$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
+				"$(1)/$(FILE)" \
+			); \
+	fi
 endef
 
 .PHONY: $(BUILDIT)-pandoc
@@ -3710,31 +3819,33 @@ ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(PANDOC_MATH_DST),$(PANDOC_MATH_SRC),$(PANDOC_MATH_CMT))
 	$(call GIT_REPO,$(PANDOC_HIGH_DST),$(PANDOC_HIGH_SRC),$(PANDOC_HIGH_CMT))
 	$(call GIT_REPO,$(PANDOC_CITE_DST),$(PANDOC_CITE_SRC),$(PANDOC_CITE_CMT))
-#WORKING : should be fixed with "--*-options" arguments to "CABAL_INSTALL"
-#	# make sure GHC looks for libraries in the right place
-#	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
-#		$(SED) -i \
-#			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
-#			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
-#			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
-#			"$(COMPOSER_ABODE)/.cabal/config"; \
-#	fi
-#	$(SED) -i \
-#		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(GHCFLAGS) \2|g" \
-#		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
-#		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
-#		"$(PANDOC_DST)/pandoc.cabal"
-#WORKING
+#ANTIQUATE
+#>	# make sure GHC looks for libraries in the right place
+#>	if [ -f "$(COMPOSER_ABODE)/.cabal/config" ]; then \
+#>		$(SED) -i \
+#>			-e "s|(gcc[-]options[:]).*$$|\1 $(CFLAGS)|g" \
+#>			-e "s|(ld[-]options[:]).*$$|\1 $(LDFLAGS)|g" \
+#>			-e "s|(ghc[-]options[:]).*$$|\1 $(GHCFLAGS)|g" \
+#>			"$(COMPOSER_ABODE)/.cabal/config"; \
+#>	fi
+#>	$(SED) -i \
+#>		-e "s|(Ghc[-]Options[:][ ]+)([-]rtsopts)|\1$(GHCFLAGS) \2|g" \
+#>		-e "s|(ghc[-]options[:][ ]+)([-]funbox[-]strict[-]fields)|\1$(GHCFLAGS) \2|g" \
+#>		"$(PANDOC_CITE_DST)/pandoc-citeproc.cabal" \
+#>		"$(PANDOC_DST)/pandoc.cabal"
+#ANTIQUATE
 	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
 ifneq ($(COMPOSER_TESTING),)
 #WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  if they linger, should we warn or clean them up?
 	$(DO_CABAL) update
-	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
-		--only-dependencies \
-		--dry-run \
-		$(PANDOC_DIRECTORIES)
+	$(ECHO) "$(_C)"; \
+		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+			--only-dependencies \
+			--dry-run \
+			$(PANDOC_DIRECTORIES); \
+	$(ECHO) "$(_D)"
 	$(RM) -r "$(COMPOSER_ABODE)/.cabal/packages"
 endif
 endif
@@ -3773,17 +3884,25 @@ endif
 endif
 #> syntax highlighting fix: )"
 
-#WORKING : added $BUILD_ENV to $CABAL for $CHECKIT and below; does a native install still report okay?
+#WORKING:NOW : added $BUILD_ENV to $CABAL for $CHECKIT and below; does a native install still report okay?
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
+# "$(GHC)" requires "$(LD_LIBRARY_PATH)" to find it's libraries, so we wrap it in "$(BUILD_ENV)"
 .PHONY: $(CHECKIT)
-$(CHECKIT): override GLIBC_VERSIONS	:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
-$(CHECKIT): override GCC_VERSIONS	:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
-$(CHECKIT): override BINUTILS_VERSIONS	:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
-$(CHECKIT): override MAKE_VERSIONS	:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
-$(CHECKIT): override PANDOC_VERSIONS	:= $(PANDOC_CMT) $(_D)($(_H)$(PANDOC_VER)$(_D))
+$(CHECKIT): override GLIBC_VERSIONS		:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
+$(CHECKIT): override GCC_VERSIONS		:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
+$(CHECKIT): override BINUTILS_VERSIONS		:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
+$(CHECKIT): override MAKE_VERSIONS		:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
+$(CHECKIT): override PANDOC_VERSIONS		:= $(PANDOC_VER) $(_D)($(_H)$(strip		$(if $(filter $(PANDOC_VER),$(PANDOC_CMT)),		=,$(shell $(ECHO) "$(PANDOC_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override PANDOC_TYPE_VERSIONS	:= $(PANDOC_TYPE_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_TYPE_VER),$(PANDOC_TYPE_CMT)),	=,$(shell $(ECHO) "$(PANDOC_TYPE_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override PANDOC_MATH_VERSIONS	:= $(PANDOC_MATH_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_MATH_VER),$(PANDOC_MATH_CMT)),	=,$(shell $(ECHO) "$(PANDOC_MATH_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override PANDOC_HIGH_VERSIONS	:= $(PANDOC_HIGH_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_HIGH_VER),$(PANDOC_HIGH_CMT)),	=,$(shell $(ECHO) "$(PANDOC_HIGH_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override PANDOC_CITE_VERSIONS	:= $(PANDOC_CITE_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_CITE_VER),$(PANDOC_CITE_CMT)),	=,$(shell $(ECHO) "$(PANDOC_CITE_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override GHC_VERSIONS		:= $(GHC_VER) $(_D)($(_H)$(strip		$(if $(filter $(GHC_VER),$(GHC_CMT)),			=,$(shell $(ECHO) "$(GHC_CMT)"		| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override CABAL_VERSIONS		:= $(CABAL_VER) $(_D)($(_H)$(strip		$(if $(filter $(CABAL_VER),$(CABAL_CMT)),		=,$(shell $(ECHO) "$(CABAL_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
+$(CHECKIT): override CABAL_VERSIONS_LIB		:= $(CABAL_VER) $(_D)($(_H)$(strip		$(if $(filter $(CABAL_VER),$(GHC_CABAL_VER)),		=,$(_E)+=$(GHC_CABAL_VER)								))$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -3815,16 +3934,15 @@ endif
 	@$(TABLE_I3) "- $(_C)cURL"			"$(_M)$(CURL_VER)"		"$(_D)$(shell $(CURL) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Git SCM"			"$(_M)$(GIT_VER)"		"$(_D)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "$(_C)Pandoc"			"$(_M)$(PANDOC_VERSIONS)"	"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_CMT)"	"$(_D)$(shell $(CABAL_INFO) pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_CMT)"	"$(_D)$(shell $(CABAL_INFO) texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_CMT)"	"$(_D)$(shell $(CABAL_INFO) highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_CMT)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Types"			"$(_M)$(PANDOC_TYPE_VERSIONS)"	"$(_D)$(shell $(CABAL_INFO) pandoc-types	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)TeXMath"			"$(_M)$(PANDOC_MATH_VERSIONS)"	"$(_D)$(shell $(CABAL_INFO) texmath		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)Highlighting-Kate"		"$(_M)$(PANDOC_HIGH_VERSIONS)"	"$(_D)$(shell $(CABAL_INFO) highlighting-kate	2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
+	@$(TABLE_I3) "- $(_C)CiteProc"			"$(_M)$(PANDOC_CITE_VERSIONS)"	"$(_D)$(shell $(PANDOC_CITEPROC) --version	2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "$(_C)TeX Live"			"$(_M)$(TEX_VER)"		"$(_D)$(shell $(TEX) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_M)$(TEX_VER_PDF)"		"$(_D)$(shell $(PDFLATEX) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VER)"		"$(_D)$(shell $(GHC) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VER)"		"$(_D)$(shell $(CABAL) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VER_LIB)"		"$(_D)$(shell $(CABAL_INFO) Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
-	@$(TABLE_I3) "$(MARKER)"			"$(_E)GHC Library$(_D):"	"$(_M)$(GHC_VER_LIB)"
+	@$(TABLE_I3) "$(_C)GHC"				"$(_M)$(GHC_VERSIONS)"		"$(_D)$(shell $(BUILD_ENV) $(GHC) --version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSIONS)"	"$(_D)$(shell $(CABAL) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VERSIONS_LIB)"	"$(_D)$(shell $(CABAL_INFO) Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HEADER_L)
 ifeq ($(BUILD_PLAT),Linux)
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
@@ -3937,25 +4055,27 @@ $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT):
 	@$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" $(BASH) || $(TRUE)
 
+#WORKING : msys2_shell auto-detection hackery; working?
+override MSYS_SHELL_DIR := $(COMPOSER_PROGS)
+ifneq ($(COMPOSER_PROGS_USE),1)
+ifneq ($(wildcard $(MSYS_DST)),)
+override MSYS_SHELL_DIR := $(MSYS_DST)
+endif
+endif
+
 .PHONY: $(SHELLIT)-msys
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys:
-ifeq ($(COMPOSER_PROGS_USE),1)
-	@cd "$(COMPOSER_PROGS)" && \
+	@cd "$(MSYS_SHELL_DIR)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
 		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
-else
-	@cd "$(MSYS_DST)" && \
-		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
-endif
 
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
 	@$(MKDIR) "$(COMPOSER_ABODE)"
-	@$(call DO_HEREDOC,HEREDOC_BASH_PROFILE)	>"$(COMPOSER_ABODE)/.bash_profile"
-	@$(call DO_HEREDOC,HEREDOC_BASHRC)		>"$(COMPOSER_ABODE)/.bashrc"
+	@$(call DO_HEREDOC,$(call HEREDOC_BASH_PROFILE))	>"$(COMPOSER_ABODE)/.bash_profile"
+	@$(call DO_HEREDOC,$(call HEREDOC_BASHRC))		>"$(COMPOSER_ABODE)/.bashrc"
 	@if [ ! -f "$(COMPOSER_ABODE)/.bashrc.custom" ]; then \
 		$(ECHO) >"$(COMPOSER_ABODE)/.bashrc.custom"; \
 	fi
@@ -3963,7 +4083,7 @@ $(SHELLIT)-bashrc:
 .PHONY: $(SHELLIT)-vimrc
 $(SHELLIT)-vimrc:
 	@$(MKDIR) "$(COMPOSER_ABODE)"
-	@$(call DO_HEREDOC,HEREDOC_VIMRC)		>"$(COMPOSER_ABODE)/.vimrc"
+	@$(call DO_HEREDOC,$(call HEREDOC_VIMRC))		>"$(COMPOSER_ABODE)/.vimrc"
 	@if [ ! -f "$(COMPOSER_ABODE)/.vimrc.custom" ]; then \
 		$(ECHO) >"$(COMPOSER_ABODE)/.vimrc.custom"; \
 	fi
@@ -4018,6 +4138,8 @@ alias .composer_root="cd [B]"$(COMPOSER_DIR)[B]""
 alias .composer_other="cd [B]"$(COMPOSER_OTHER)[B]""
 alias .composer="$(subst ",[B]",$(RUNMAKE))"
 alias .compose="$(subst ",[B]",$(COMPOSE))"
+alias .env="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV))"
+alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
 #
 cd "$(COMPOSER_DIR)"
 source "$${HOME}/.bashrc.custom"
@@ -4168,6 +4290,7 @@ ifneq ($(BUILD_FETCH),)
 			$(MAKE) devices.tar.gz && \
 			DEBOOTSTRAP_DIR="$(RELEASE_DIR)/.debootstrap" $(SH) ./debootstrap \
 				--verbose \
+				--keep-debootstrap-dir \
 				--arch="$(DEBIAN_ARCH)" \
 				--include="$(DEBIAN_PACKAGES_LIST)" \
 				"$(DEBIAN_SUITE)" \
@@ -4224,7 +4347,7 @@ ifneq ($(BUILD_FETCH),0)
 	@$(RUNMAKE) $(RELEASE)-chroot
 endif
 
-#WORKING : ideally, would archive/restore ".sources" directory when "chroot"ing
+#WORKING : ideally, would archive/restore ".Native/.sources" directory when "chroot"ing
 
 .PHONY: $(RELEASE)-chroot
 $(RELEASE)-chroot:
@@ -4276,27 +4399,29 @@ $(RELEASE)-debug:
 	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(CURDIR)"		all \
 		BASE="$(RELEASE_MAN_DST)"
 
+override DIST_ICO		:= AAABAAEAEBACAAEAAQCwAAAAFgAAACgAAAAQAAAAIAAAAAEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqKioAAAAAAAAAAAAAAAAAGA8AAAwZgAAGMIAAAzAAAAGwAAADMAAABjAAAAwwgAAYGYAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 override DIST_ICON		:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gUQBRoEzZLzOQAAAFFJREFUKM/NUcsVADAEC1Ma0Zi9qd/THjkRCWkB64LmtqpaLiIX9Q3PNjxzqqZFALBf1+5JljjVsyYIPjVcXd7fmAVPdnh0ZSd7ltA8uz/csjih8jivOCtEBAAAAABJRU5ErkJggg==
 override DIST_SCREENSHOT	:= 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
 
 .PHONY: $(DISTRIB)
 $(DISTRIB):
-	@if [ "$(COMPOSER)" !=					"$(CURDIR)/$(MAKEFILE)" ]; then \
-		$(CP) "$(COMPOSER)"				"$(CURDIR)/$(MAKEFILE)"; \
+	@if [ "$(COMPOSER)" !=						"$(CURDIR)/$(MAKEFILE)" ]; then \
+		$(CP) "$(COMPOSER)"					"$(CURDIR)/$(MAKEFILE)"; \
 	fi
 	@if [ -d "$(COMPOSER_PROGS)" ] && \
-	    [ "$(COMPOSER_PROGS)" !=				"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))" ]; then \
-		$(MKDIR)					"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))"; \
-		$(CP) "$(COMPOSER_PROGS)/"*			"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/"; \
+	    [ "$(COMPOSER_PROGS)" !=					"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))" ]; then \
+		$(MKDIR)						"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))"; \
+		$(CP) "$(COMPOSER_PROGS)/"*				"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/"; \
 	fi
-	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>"$(CURDIR)/icon.png"
-	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>"$(CURDIR)/screenshot.png"
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)		>"$(CURDIR)/.gitignore"
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_COMPOSER_BAT)	>"$(CURDIR)/Composer.bat"
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_COMPOSER_SH)		>"$(CURDIR)/Composer.sh"
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)		>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)		>"$(CURDIR)/README.$(COMPOSER_EXT)"
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)	>"$(CURDIR)/revealjs.css"
+	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d			>"$(CURDIR)/icon.ico"
+	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d			>"$(CURDIR)/icon.png"
+	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d			>"$(CURDIR)/screenshot.png"
+	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_GITIGNORE))		>"$(CURDIR)/.gitignore"
+	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_BAT))	>"$(CURDIR)/Composer.bat"
+	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))		>"$(CURDIR)/Composer.sh"
+	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_LICENSE))		>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"
+	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_README))		>"$(CURDIR)/README.$(COMPOSER_EXT)"
+	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_REVEALJS_CSS))	>"$(CURDIR)/revealjs.css"
 	@$(CHMOD) \
 		"$(CURDIR)/$(MAKEFILE)" \
 		"$(CURDIR)/Composer.bat" \
@@ -4330,8 +4455,14 @@ override define HEREDOC_DISTRIB_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
 set _SYS=Msys
-set PATH=%_CMS%/bin/%_SYS%/usr/bin;$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))/.coreutils;%PATH%
-start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="1" shell-msys
+set _HOME=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
+set _PATH=%_HOME%/bin
+set _PATH=%_PATH%;%_HOME%/msys$(BUILD_BITS)/usr/bin
+set _PATH=%_PATH%;%_CMS%/bin/%_SYS%/usr/bin
+set _PATH=%_PATH%;%_HOME%/.coreutils
+set PATH=%_PATH%;%PATH%
+::WORKING : if [ ! -d %_HOME%/msys$(BUILD_BITS)/usr/bin ]; then COMPOSER_PROGS_USE="1"
+start /b make --makefile $(MAKEFILE) --debug="a" shell-msys
 :: end of file
 endef
 
@@ -4339,8 +4470,14 @@ override define HEREDOC_DISTRIB_COMPOSER_SH =
 # sh
 _CMS="$${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-PATH="$${_CMS}/bin/$${_SYS}/usr/bin:$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))/.coreutils:$${PATH}"
-exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="1" shell
+_HOME=$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))
+_PATH=$${_HOME}/bin
+_PATH=$${_PATH};$${_HOME}/msys$(BUILD_BITS)/usr/bin
+_PATH=$${_PATH};$${_CMS}/bin/$${_SYS}/usr/bin
+_PATH=$${_PATH};$${_HOME}/.coreutils
+PATH=$${_PATH};$${PATH}
+#WORKING : if [ ! -d %_HOME%/msys$(BUILD_BITS)/usr/bin ]; then COMPOSER_PROGS_USE="1"
+exec make --makefile $(MAKEFILE) --debug="a" shell
 # end of file
 endef
 
@@ -4855,7 +4992,7 @@ $(NOTHING):
 	@$(ECHO) "\n"
 
 override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e "s|[/]|\\\\\\\\|g"
-#WORK : OPTIONS_ENV should be a new variable with only the needed options?
+#WORK : OPTIONS_ENV should be a new variable with only the needed options?  if so, add it to the ".env" aliases in ".bashrc"
 override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
 ifeq ($(BUILD_PLAT),Msys)
