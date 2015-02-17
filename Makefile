@@ -2532,7 +2532,9 @@ $(BUILDIT):
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
 #WORKING:NOW	$(RUNMAKE) $(BUILDIT)-pandoc
-	$(RUNMAKE) COMPOSER_TESTING=0 $(BUILDIT)-pandoc
+	if [ -n $(word 1,$(CABAL)) ]; then \
+		$(RUNMAKE) COMPOSER_TESTING=0 $(BUILDIT)-pandoc; \
+	fi
 
 override CHECK_FAILED		:=
 override CHECK_MSYS		:=
