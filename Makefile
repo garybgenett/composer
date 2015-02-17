@@ -384,6 +384,7 @@ endif
 #	implicit_header_references
 #	fenced_code_attributes
 #WORKING
+#WORKING : document effects of $TOC and $LVL!
 override PANDOC_OPTIONS			:= \
 	$(OPT) \
 	\
@@ -1806,12 +1807,12 @@ HELP_OPTIONS:
 	@$(TABLE_I3) "$(_C)LIST$(_D)"	"List of input files(s)"		"[$(_M)$(LIST)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Optional Variables:"
-	@$(TABLE_I3) "$(_C)CSS$(_D)"	"Location of CSS file"			"[$(_M)$(CSS)$(_D)] $(_N)(overrides '$(COMPOSER_CSS)')"
-	@$(TABLE_I3) "$(_C)TTL$(_D)"	"Document title prefix"			"[$(_M)$(TTL)$(_D)] $(_E)$(~)(C_TITLE)"
-	@$(TABLE_I3) "$(_C)TOC$(_D)"	"Table of contents depth"		"[$(_M)$(TOC)$(_D)] $(_E)$(~)(C_TABLE_OF_CONTENTS)"
-	@$(TABLE_I3) "$(_C)LVL$(_D)"	"Chapter/slide header level"		"[$(_M)$(LVL)$(_D)] $(_E)$(~)(C_HEADER_LEVEL)"
-	@$(TABLE_I3) "$(_C)MGN$(_D)"	"Margins size ('$(TYPE_LPDF)' only)"	"[$(_M)$(MGN)$(_D)] $(_E)$(~)(C_MARGIN)"
-	@$(TABLE_I3) "$(_C)OPT$(_D)"	"Custom Pandoc options"			"[$(_M)$(OPT)$(_D)] $(_E)$(~)(C_OPTIONS)"
+	@$(TABLE_I3) "$(_C)CSS$(_D)"				"Location of CSS file"			"[$(_M)$(CSS)$(_D)] $(_N)(overrides '$(COMPOSER_CSS)')"
+	@$(TABLE_I3) "$(_C)TTL$(_D) / $(_E)C_TITLE$(_D)"	"Document title prefix"			"[$(_M)$(TTL)$(_D)]"
+	@$(TABLE_I3) "$(_C)TOC$(_D) / $(_E)C_CONTENTS$(_D)"	"Table of contents depth"		"[$(_M)$(TOC)$(_D)]"
+	@$(TABLE_I3) "$(_C)LVL$(_D) / $(_E)C_HEADERS$(_D)"	"Chapter/slide header level"		"[$(_M)$(LVL)$(_D)]"
+	@$(TABLE_I3) "$(_C)MGN$(_D) / $(_E)C_MARGIN$(_D)"	"Margin size ('$(TYPE_LPDF)' only)"	"[$(_M)$(MGN)$(_D)]"
+	@$(TABLE_I3) "$(_C)OPT$(_D) / $(_E)C_OPTIONS$(_D)"	"Custom Pandoc options"			"[$(_M)$(OPT)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Pre-Defined '$(_C)TYPE$(_H)' Values:"
 	@$(TABLE_I3) "$(_C)$(TYPE_HTML)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_HTML)$(_D)"	"$(HTML_DESC)"
