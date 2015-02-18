@@ -44,6 +44,7 @@
 #	$(TESTIT): empty, 0, 1, 2 (document #2?)
 #	$(BUILDIT)-cabal: empty or non-empty
 #	$(BUILDIT)-pandoc: empty, 0 or 1
+#	$(CHECKIT): empty or non-empty
 #WORKING
 
 #WORKING
@@ -194,6 +195,17 @@ override OPT				?=
 
 ################################################################################
 
+override ~				:= "'$$'"
+override MARKER				:= >>
+override DIVIDE				:= ::
+override NULL				:=
+override define NEWLINE			=
+$(NULL)
+$(NULL)
+endef
+
+########################################
+
 override COMPOSER_TARGET		:= compose
 override COMPOSER_PANDOC		:= pandoc
 override RUNMAKE			:= $(MAKE) --makefile "$(COMPOSER_SRC)"
@@ -239,11 +251,10 @@ override ___WORK			:= setup
 override ___WORK			:= subdirs
 override ___WORK			:= print
 
-override ~				:= "'$$'"
 override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= $(~)(abspath $(~)(COMPOSER_ABSPATH)/../$(MAKEFILE))
 override COMPOSER_ALL_REGEX		:= [a-zA-Z0-9][a-zA-Z0-9_.-]+
-override COMPOSER_CMT_REGEX		:= [a-f0-9]{10}
+override COMPOSER_CMT_REGEX		:=            [a-zA-Z0-9_.-]{10}
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER),$(COMPOSER_SRC))
@@ -305,6 +316,7 @@ override TEXT_DESC			:= Plain Text (Well-Formatted)
 
 #WORK
 # https://stackoverflow.com/questions/3828606/vim-markdown-folding
+# https://gist.github.com/vim-voom/1035030
 # http://vimcasts.org/episodes/writing-a-custom-fold-expression
 # https://pygospasprofession.wordpress.com/2013/07/10/markdown-and-vim
 # http://www.macworld.com/article/1161549/forget_fancy_formatting_why_plain_text_is_best.html
@@ -383,7 +395,7 @@ endif
 #WORKING
 #	implicit_header_references
 #	fenced_code_attributes
-#WORKING
+#WORKING : http://10.255.255.254/zactive/coding/composer/Pandoc_Manual.html#fenced-code-blocks
 #WORKING : document effects of $TOC and $LVL!
 override PANDOC_OPTIONS			:= \
 	$(OPT) \
@@ -769,6 +781,7 @@ override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 #WORK : url scrub
 # https://www.haskell.org/ghc/license (license: BSD)
 # https://www.haskell.org/ghc/download
+# https://github.com/ghc/ghc
 # https://ghc.haskell.org/trac/ghc/wiki/Building
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Tools
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Windows
@@ -778,26 +791,25 @@ override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Compiling32on64
 # http://urchin.earth.li/~ian/sec-porting-ghc.html
-#WORKING : ultimately, trying to track post-db19c665ec5055c2193b2174519866045aeff09a to ANTIQUATE GIT_SUBMODULE_GHC
+#WORK : ultimately, trying to track post-db19c665ec5055c2193b2174519866045aeff09a to ANTIQUATE GIT_SUBMODULE_GHC
 #	https://github.com/ghc/ghc/commits/db19c665ec5055c2193b2174519866045aeff09a
 #	https://github.com/ghc/ghc/commits/master/.gitmodules
 #	https://github.com/ghc/ghc/commits/master/configure.ac
 #	https://github.com/ghc/ghc/commits/master/libraries/base/base.cabal
 #	https://github.com/ghc/ghc/commits/27a642cc3a448c5b9bb0774d413f27aef0c63379
-#WORKING
 ifneq ($(BUILD_GHC78),)
 override GHC_VER_INIT			:= 7.8.3
-#>override GHC_VER			:= $(GHC_VER_INIT)
-override GHC_VER			:= 7.9
-override GHC_CABAL_VER			:= 1.22.0.0
-#>override GHC_CMT			:= ghc-$(GHC_VER)-release
-override GHC_CMT			:= 27a642cc3a448c5b9bb0774d413f27aef0c63379
+override GHC_VER			:= $(GHC_VER_INIT)
+override GHC_CABAL_VER			:= 1.18.1.3
+override GHC_CMT			:= ghc-$(GHC_VER)-release
+override GHC_BRANCH			:= ghc-$(GHC_VER)
 override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER_INIT)/ghc-$(GHC_VER_INIT)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
 else
 override GHC_VER_INIT			:= 7.6.3
 override GHC_VER			:= $(GHC_VER_INIT)
 override GHC_CABAL_VER			:= 1.16.0
 override GHC_CMT			:= ghc-$(GHC_VER)-release
+override GHC_BRANCH			:= ghc-$(GHC_VER)
 override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER_INIT)/ghc-$(GHC_VER_INIT)-$(GHC_ARCH)-$(GHC_PLAT).tar.bz2
 endif
 override GHC_SRC			:= https://git.haskell.org/ghc.git
@@ -806,20 +818,10 @@ override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
-#WORKING
-#	https://github.com/ghc/packages-Cabal/commits/fbaf03022ab71c1f85e5df86a966aa6caf74a672
-#WORKING
-ifneq ($(BUILD_GHC78),)
-override CABAL_VER_INIT			:= 1.22.0.0
-#>override CABAL_VER			:= $(CABAL_VER_INIT)
-override CABAL_VER			:= 1.23.0.0
-#>override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
-override CABAL_CMT			:= fbaf03022ab71c1f85e5df86a966aa6caf74a672
-else
+# https://github.com/ghc/packages-Cabal
 override CABAL_VER_INIT			:= 1.22.0.0
 override CABAL_VER			:= $(CABAL_VER_INIT)
 override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
-endif
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
 override CABAL_DST_INIT			:= $(COMPOSER_BUILD)/cabal-install-$(CABAL_VER_INIT)
@@ -951,14 +953,15 @@ override BUILD_BINARY_LIST		:= \
 	pdflatex \
 	\
 	ghc ghc-pkg \
-	cabal
+	cabal haddock
 # these are not included in the final distribution
 override BUILD_BINARY_LIST		:= \
 	$(filter-out perl,\
 	$(filter-out ghc,\
 	$(filter-out ghc-pkg,\
 	$(filter-out cabal,\
-	$(BUILD_BINARY_LIST)))))
+	$(filter-out haddock,\
+	$(BUILD_BINARY_LIST))))))
 
 override DYNAMIC_LIBRARY_LIST		:= \
 	ld-linux-x86-64.so.2 \
@@ -1229,12 +1232,17 @@ endif
 
 ifeq ($(SHELL),/bin/sh)
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
+#WORKING:NOW : instead of this, try putting built "sh" in "$O/.home/bin/../../bin/sh = $O/bin/sh" and "$O/bin/Msys/usr/bin/../../bin/sh = $O/bin/Msys/bin/sh"
 ifeq ($(BUILD_PLAT),Msys)
 ifeq ($(COMPOSER_PROGS_USE),)
+ifneq ($(wildcard $(MSYS_DST)/usr/bin/sh),)
 override SHELL				:= $(MSYS_DST)/usr/bin/sh
 endif
 endif
 endif
+endif
+#WORKING:NOW
+$(info $(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) $(SHELL))
 
 #WORK : make sure pkgconfig is still needed, since only make is using autoreconf now
 #override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
@@ -1343,6 +1351,11 @@ override PDFLATEX			:= "$(PDFLATEX_PATH)"
 override GHC				:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc)"
 override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
 override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
+override HADDOCK			:= "$(call COMPOSER_FIND,$(PATH_LIST),haddock)"
+ifneq ($(COMPOSER_TESTING),)
+override GHC_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc))"
+override GHC_PKG_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc-pkg),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc-pkg))"
+endif
 
 override define DO_PATCH		=
 	$(call CURL_FILE,$(2)); \
@@ -1424,7 +1437,7 @@ override define DO_GIT_SUBMODULE_GHC	=
 	done; \
 	cd "$(1)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(BUILD_BRANCH) $(GHC_CMT) && \
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
 endef
 #ANTIQUATE
@@ -1571,6 +1584,15 @@ override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	PATH="$(BUILD_PATH_MINGW):$(BUILD_PATH)"
 endif
 
+# thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
+#	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
+override define DO_HEREDOC		=
+	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(1))[N]' | $(SED) \
+			-e "s|[[]B[]]|\\\\|g" \
+			-e "s|[[]N[]]|\\n|g" \
+			-e "s|[[]Q[]]|\'|g"
+endef
+
 override define GNU_CFG_INSTALL		=
 	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_GUS)" "$(1)/"; \
 	$(CP) "$(GNU_CFG_DST)/$(GNU_CFG_FILE_SUB)" "$(1)/"
@@ -1636,23 +1658,6 @@ endif
 
 ########################################
 
-override NULL		:=
-override define NEWLINE	=
-$(NULL)
-$(NULL)
-endef
-
-# thanks for the 'newline' fix below: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
-#	also to: https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
-override define DO_HEREDOC		=
-	$(ECHO) -E '$(subst $(call NEWLINE),[N],$(1))[N]' | $(SED) \
-			-e "s|[[]B[]]|\\\\|g" \
-			-e "s|[[]N[]]|\\n|g" \
-			-e "s|[[]Q[]]|\'|g"
-endef
-
-override MARKER		:= >>
-override DIVIDE		:= ::
 override INDENTING	:= $(NULL) $(NULL) $(NULL)
 override COMMENTED	:= $(_S)\#$(_D) $(NULL)
 
@@ -2962,19 +2967,9 @@ override define NCURSES_BUILD =
 	)
 	$(foreach FILE,$(NCURSES_LIBRARIES),\
 		if [ -f "$(1)/lib/$(FILE)w.a"  ]; then $(CP) "$(1)/lib/$(FILE)w.a"  "$(1)/lib/$(FILE).a" ; fi; \
+		if [ -f "$(1)/lib/$(FILE)w.so" ]; then $(CP) "$(1)/lib/$(FILE)w.so" "$(1)/lib/$(FILE).so"; fi; \
 	)
 endef
-#WORKING:NOW : final double-check
-#	$(foreach FILE,$(NCURSES_LIBRARIES),\
-#		if [ -f "$(1)/lib/$(FILE)w.a"  ]; then $(CP) "$(1)/lib/$(FILE)w.a"  "$(1)/lib/$(FILE).a" ; fi; \
-#		if [ -f "$(1)/lib/$(FILE)w.so" ]; then $(CP) "$(1)/lib/$(FILE)w.so" "$(1)/lib/$(FILE).so"; fi; \
-#	)
-#WORKING:NOW : fixed by --enable-overwrite?
-#	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
-#		$(CP) "$(1)/include/ncurses/"* "$(1)/include/"; \
-#	else \
-#		$(CP) "$(1)/include/ncursesw/"* "$(1)/include/"; \
-#	fi
 
 # thanks for the 'x86_64' fix below: http://openssl.6102.n7.nabble.com/compile-openssl-1-0-1e-failed-on-Ubuntu-12-10-x64-td44699.html
 override OPENSSL_BUILD_TYPE :=
@@ -3559,11 +3554,11 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
 else
-#WORKING:NOW : final double-check; only gmp seems to be needed
-#ifneq ($(BUILD_GHC78),)
-#	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
-#	$(CP) "$(BUILD_LDLIB)/lib/libgmp.so" "$(BUILD_LDLIB)/lib/libgmp.so.3"
-#endif
+ifneq ($(BUILD_GHC78),)
+	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
+else
+	$(CP) "$(BUILD_LDLIB)/lib/libgmp.so" "$(BUILD_LDLIB)/lib/libgmp.so.3"
+endif
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
 		show \
@@ -3575,10 +3570,8 @@ endif
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
 $(BUILDIT)-ghc:
 ifneq ($(BUILD_FETCH),)
-	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT))
-ifeq ($(BUILD_GHC78),)
+	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
-endif
 endif
 ifneq ($(BUILD_FETCH),0)
 	cd "$(GHC_DST)" && \
@@ -3675,27 +3668,19 @@ ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD_GHC_LIBRARIES_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 endif
 
-ifneq ($(COMPOSER_TESTING),)
-.PHONY: $(BUILDIT)-cabal
-$(BUILDIT)-cabal:
-ifneq ($(BUILD_FETCH),)
-	$(call CURL_FILE,$(CABAL_SRC_INIT))
-endif
-ifneq ($(BUILD_FETCH),0)
-	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
-	$(ECHO) "$(_C)"; \
-		$(SED) -n \
-			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
-			"$(CABAL_DST_INIT)/bootstrap.sh"; \
-	$(ECHO) "$(_D)"
-endif
-else
 .PHONY: $(BUILDIT)-cabal
 $(BUILDIT)-cabal:
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL)
 endif
+ifneq ($(COMPOSER_TESTING),)
+	$(ECHO) "$(_C)"; \
+		$(SED) -n \
+			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
+			"$(CABAL_DST)/cabal-install/bootstrap.sh"; \
+	$(ECHO) "$(_D)"
+else
 ifneq ($(BUILD_FETCH),0)
 	$(RM) -r "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(CP) "$(CABAL_DST)/Cabal" "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
@@ -3892,20 +3877,20 @@ endif
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
-# "$(GHC)" requires "$(LD_LIBRARY_PATH)" to find it's libraries, so we wrap it in "$(BUILD_ENV)"
+# "$(LDD)" and "$(GHC)" require "$(LD_LIBRARY_PATH)" to find libraries, so we wrap them in "$(BUILD_ENV)"
 .PHONY: $(CHECKIT)
 $(CHECKIT): override GLIBC_VERSIONS		:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
 $(CHECKIT): override GCC_VERSIONS		:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
 $(CHECKIT): override BINUTILS_VERSIONS		:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
 $(CHECKIT): override MAKE_VERSIONS		:= $(MAKE_CUR_VERSION) $(_D)($(_H)>=$(MAKE_MIN_VERSION)$(_D))
-$(CHECKIT): override PANDOC_VERSIONS		:= $(PANDOC_VER) $(_D)($(_H)$(strip		$(if $(filter $(PANDOC_VER),$(PANDOC_CMT)),		=,$(shell $(ECHO) "$(PANDOC_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override PANDOC_TYPE_VERSIONS	:= $(PANDOC_TYPE_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_TYPE_VER),$(PANDOC_TYPE_CMT)),	=,$(shell $(ECHO) "$(PANDOC_TYPE_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override PANDOC_MATH_VERSIONS	:= $(PANDOC_MATH_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_MATH_VER),$(PANDOC_MATH_CMT)),	=,$(shell $(ECHO) "$(PANDOC_MATH_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override PANDOC_HIGH_VERSIONS	:= $(PANDOC_HIGH_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_HIGH_VER),$(PANDOC_HIGH_CMT)),	=,$(shell $(ECHO) "$(PANDOC_HIGH_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override PANDOC_CITE_VERSIONS	:= $(PANDOC_CITE_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_CITE_VER),$(PANDOC_CITE_CMT)),	=,$(shell $(ECHO) "$(PANDOC_CITE_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override GHC_VERSIONS		:= $(GHC_VER) $(_D)($(_H)$(strip		$(if $(filter $(GHC_VER),$(GHC_CMT)),			=,$(shell $(ECHO) "$(GHC_CMT)"		| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override CABAL_VERSIONS		:= $(CABAL_VER) $(_D)($(_H)$(strip		$(if $(filter $(CABAL_VER),$(CABAL_CMT)),		=,$(shell $(ECHO) "$(CABAL_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1|g")	))$(_D))
-$(CHECKIT): override CABAL_VERSIONS_LIB		:= $(CABAL_VER) $(_D)($(_H)$(strip		$(if $(filter $(CABAL_VER),$(GHC_CABAL_VER)),		=,$(_E)+=$(GHC_CABAL_VER)								))$(_D))
+$(CHECKIT): override PANDOC_VERSIONS		:= $(PANDOC_VER) $(_D)($(_H)$(strip		$(if $(filter $(PANDOC_VER),$(PANDOC_CMT)),		=,$(shell $(ECHO) "$(PANDOC_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override PANDOC_TYPE_VERSIONS	:= $(PANDOC_TYPE_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_TYPE_VER),$(PANDOC_TYPE_CMT)),	=,$(shell $(ECHO) "$(PANDOC_TYPE_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override PANDOC_MATH_VERSIONS	:= $(PANDOC_MATH_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_MATH_VER),$(PANDOC_MATH_CMT)),	=,$(shell $(ECHO) "$(PANDOC_MATH_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override PANDOC_HIGH_VERSIONS	:= $(PANDOC_HIGH_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_HIGH_VER),$(PANDOC_HIGH_CMT)),	=,$(shell $(ECHO) "$(PANDOC_HIGH_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override PANDOC_CITE_VERSIONS	:= $(PANDOC_CITE_VER) $(_D)($(_H)$(strip	$(if $(filter $(PANDOC_CITE_VER),$(PANDOC_CITE_CMT)),	=,$(shell $(ECHO) "$(PANDOC_CITE_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override GHC_VERSIONS		:= $(GHC_VER) $(_D)($(_H)$(strip		$(if $(filter $(GHC_VER),$(GHC_CMT)),			=,$(shell $(ECHO) "$(GHC_CMT)"		| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override CABAL_VERSIONS		:= $(CABAL_VER) $(_D)($(_H)$(strip		$(if $(filter $(CABAL_VER),$(CABAL_CMT)),		=,$(shell $(ECHO) "$(CABAL_CMT)"	| $(SED) "s|^($(COMPOSER_CMT_REGEX)).*$$|\1[...]|g")	))$(_D))
+$(CHECKIT): override CABAL_VERSIONS_LIB		:= $(CABAL_VER) $(_D)($(_H)$(strip		$(if $(filter $(CABAL_VER),$(GHC_CABAL_VER)),		=,$(_E)+=$(GHC_CABAL_VER)									))$(_D))
 $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
@@ -3981,7 +3966,7 @@ endif
 	@$(TABLE_I3) "$(_C)TeX Live"			"$(_D)$(subst ",,$(word 1,$(TEX)))"
 	@$(TABLE_I3) "- $(_C)PDFLaTeX"			"$(_D)$(subst ",,$(word 1,$(PDFLATEX)))"
 	@$(TABLE_I3) "$(_C)GHC"				"$(_D)$(subst ",,$(word 1,$(GHC))) $(_S)($(subst ",,$(word 1,$(GHC_PKG))))"
-	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL)))"
+	@$(TABLE_I3) "- $(_C)Cabal"			"$(_D)$(subst ",,$(word 1,$(CABAL))) $(_S)($(subst ",,$(word 1,$(HADDOCK))))"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_E)(no binary to report)"
 	@$(HEADER_L)
 	@$(foreach FILE,$(BUILD_BINARY_LIST_LDD),$(call CHECKIT_LIBRARY_LOCATE,$(FILE)))
@@ -4021,9 +4006,14 @@ $(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
 	$(word 1,$(PDFLATEX)) \
 	\
 	$(word 1,$(GHC)) $(word 1,$(GHC_PKG)) \
-	$(word 1,$(CABAL))
+	$(word 1,$(CABAL)) $(word 1,$(HADDOCK))
+ifneq ($(COMPOSER_TESTING),)
+$(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
+	$(BUILD_BINARY_LIST_CHECK) \
+	$(word 1,$(GHC_BIN)) $(word 1,$(GHC_PKG_BIN))
+endif
 $(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
-	$(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
+	$(BUILD_ENV) $(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
 	| $(SED) \
 		-e "/not[ ]a[ ]dynamic[ ]executable/d" \
 		-e "/^[:/]/d" \
