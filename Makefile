@@ -819,7 +819,7 @@ override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 # https://github.com/ghc/packages-Cabal
-override CABAL_VER_INIT			:= 1.22.0.0
+override CABAL_VER_INIT			:= 1.20.0.0
 override CABAL_VER			:= $(CABAL_VER_INIT)
 override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
@@ -1057,21 +1057,17 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 
 override CABAL_LIBRARIES_LIST		:= \
 	Cabal|$(CABAL_VER_INIT) \
-	HTTP|4000.2.19 \
-	binary|0.7.2.3 \
-	deepseq|1.4.0.0 \
-	mtl|2.2.1 \
-	network-uri|2.6.0.1 \
-	network|2.6.0.2 \
-	old-locale|1.0.0.7 \
-	old-time|1.1.0.3 \
-	parsec|3.1.7 \
-	random|1.1 \
-	stm|2.4.4 \
-	text|1.2.0.3 \
-	time|1.5 \
-	transformers|0.4.2.0 \
-	zlib|0.5.4.2
+	HTTP|4000.2.12 \
+	deepseq|1.3.0.2 \
+	mtl|2.1.3.1 \
+	network|2.4.2.3 \
+	parsec|3.1.5 \
+	random|1.0.1.1 \
+	stm|2.4.3 \
+	text|1.1.0.1 \
+	time|1.4.2 \
+	transformers|0.3.0.0 \
+	zlib|0.5.4.1
 
 override GHC_LIBRARIES_LIST		:= \
 	QuickCheck|2.7.6 \
@@ -1451,6 +1447,7 @@ override CABAL_INSTALL			= $(DO_CABAL) install \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
+#>	--allow-newer
 override CABAL_OPTIONS_TOOLS		:= \
 	--with-gcc=$(CC) \
 	--with-ld=$(LD) \
@@ -3632,16 +3629,16 @@ endif
 #WORK
 endif
 
+#WORKING : trim libraries list to only those that are needed
+#override GhcHcOpts	:= $(GHCFLAGS_LDLIB)
+#override libraries/base_CONFIGURE_OPTS		:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
+#override libraries/integer-gmp_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
+#override libraries/terminfo_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
 override define HEREDOC_GHC_BUILD_MK =
-override GhcHcOpts	:= $(GHCFLAGS_LDLIB)
 override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
 override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
 override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
-override libraries/base_CONFIGURE_OPTS		:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
-override libraries/integer-gmp2_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
-override libraries/integer-gmp_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
-override libraries/terminfo_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
 endef
 
 .PHONY: $(BUILDIT)-cabal-init
