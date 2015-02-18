@@ -3722,13 +3722,13 @@ override define CABAL_PREP =
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
 #WORK : platform_switches
-	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
+	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
+		$(SED) -i \
+			-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+			-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+			-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+			"$(1)/network-"*"/include/HsNet.h"; \
 		if [ -z "$(BUILD_GHC78)" ]; then \
-			$(SED) -i \
-				-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-				-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-				-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-				"$(1)/network-"*"/include/HsNet.h"; \
 			$(SED) -i \
 				-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
 				"$(1)/Distribution/Client/Install.hs"; \
