@@ -37,7 +37,8 @@
 #	PERL_MODULES_LIST, when CURL_VER
 #	GHC_CABAL_VER, when GHC_VER
 #	GHC_LIBRARIES_LIST, when GHC_VER
-#	CABAL_LIBRARIES_LIST, when CABAL_VER_INIT (or CABAL_VER?)
+#	CABAL_LIBRARIES_INIT_LIST, when CABAL_VER_INIT
+#	CABAL_LIBRARIES_LIST, when CABAL_VER
 #	PANDOC_LIBRARIES_LIST, when PANDOC_VER (or PANDOC_CMT?)
 #	etc., more?
 # _ document COMPOSER_TESTING uses
@@ -820,7 +821,7 @@ override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 # https://hackage.haskell.org/package/cabal-install
 # https://github.com/ghc/packages-Cabal
 override CABAL_VER_INIT			:= 1.20.0.0
-override CABAL_VER			:= $(CABAL_VER_INIT)
+override CABAL_VER			:= 1.22.0.0
 override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
@@ -1055,7 +1056,7 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/tools \
 	tex/latex/url
 
-override CABAL_LIBRARIES_LIST		:= \
+override CABAL_LIBRARIES_INIT_LIST	:= \
 	Cabal|$(CABAL_VER_INIT) \
 	HTTP|4000.2.12 \
 	deepseq|1.3.0.2 \
@@ -1068,6 +1069,24 @@ override CABAL_LIBRARIES_LIST		:= \
 	time|1.4.2 \
 	transformers|0.3.0.0 \
 	zlib|0.5.4.1
+
+override CABAL_LIBRARIES_LIST		:= \
+	Cabal|$(CABAL_VER) \
+	HTTP|4000.2.19 \
+	binary|0.7.2.3 \
+	deepseq|1.4.0.0 \
+	mtl|2.2.1 \
+	network-uri|2.6.0.1 \
+	network|2.6.0.2 \
+	old-locale|1.0.0.7 \
+	old-time|1.1.0.3 \
+	parsec|3.1.7 \
+	random|1.1 \
+	stm|2.4.4 \
+	text|1.2.0.3 \
+	time|1.5 \
+	transformers|0.4.2.0 \
+	zlib|0.5.4.2
 
 override GHC_LIBRARIES_LIST		:= \
 	QuickCheck|2.7.6 \
@@ -3606,11 +3625,11 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 endif
 #ANTIQUATE
 #>	$(SED) -i \
-#>		-e "s|$(GHC_CABAL_VER)|$(CABAL_VER_INIT)|g" \
+#>		-e "s|$(GHC_CABAL_VER)|$(CABAL_VER)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Cabal.cabal" \
 #>		"$(GHC_DST)/libraries/Cabal/Cabal/Makefile"
 #>	$(SED) -i \
-#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VER_INIT)|g" \
+#>		-e "s|([ ]+Cabal[ ]+)[>][=][^,]+|\1==$(CABAL_VER)|g" \
 #>		"$(GHC_DST)/libraries/Cabal/cabal-install/cabal-install.cabal" \
 #>		"$(GHC_DST)/libraries/bin-package-db/bin-package-db.cabal" \
 #>		"$(GHC_DST)/utils/ghc-cabal/ghc-cabal.cabal"
@@ -3650,7 +3669,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PREP,$(CABAL_DST_INIT))
-	$(call CABAL_BUILD_INIT,$(CABAL_DST_INIT),$(BUILD_STRAP))
+	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-init-libs
@@ -3671,25 +3690,14 @@ ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL)
 endif
-ifneq ($(COMPOSER_TESTING),)
-	$(ECHO) "$(_C)"; \
-		$(SED) -n \
-			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
-			"$(CABAL_DST)/cabal-install/bootstrap.sh"; \
-	$(ECHO) "$(_D)"
-else
 ifneq ($(BUILD_FETCH),0)
 	$(RM) -r "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(CP) "$(CABAL_DST)/Cabal" "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(call CABAL_PREP,$(CABAL_DST)/cabal-install)
-#WORKING:NOW : what is "bootstrap.sh" doing that i'm not?
-#	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
-	$(call CABAL_BUILD_INIT,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
-#WORKING
+	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-libs
-endif
 
 #WORK : document!
 .PHONY: $(BUILDIT)-cabal-libs
@@ -3752,22 +3760,27 @@ endef
 #>endef
 #ANTIQUATE
 
-override define CABAL_BUILD_INIT =
+ifneq ($(COMPOSER_TESTING),)
+override define CABAL_BUILD =
+	$(ECHO) "$(_C)"; \
+		$(SED) -n \
+			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
+			"$(1)/bootstrap.sh"; \
+	$(ECHO) "$(_D)"
+endef
+else
+override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
 		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
+endif
 #> syntax highlighting fix: )"
 
-override define CABAL_BUILD =
-	$(call CABAL_INSTALL,$(2)) \
-		$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)),\
-			"$(1)/$(FILE)" \
-		) \
-		"$(1)"
-endef
-
+ifneq ($(COMPOSER_TESTING),)
+override CABAL_BUILD_GHC_LIBRARIES_PULL =
+else
 override define CABAL_BUILD_GHC_LIBRARIES_PULL =
 	$(foreach FILE,\
 		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
@@ -3776,7 +3789,11 @@ override define CABAL_BUILD_GHC_LIBRARIES_PULL =
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
 endef
+endif
 
+ifneq ($(COMPOSER_TESTING),)
+override CABAL_BUILD_GHC_LIBRARIES_PULL =
+else
 override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 	$(foreach FILE,\
 		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
@@ -3795,6 +3812,7 @@ override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 			); \
 	fi
 endef
+endif
 
 .PHONY: $(BUILDIT)-pandoc
 $(BUILDIT)-pandoc:
