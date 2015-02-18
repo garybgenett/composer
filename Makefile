@@ -793,7 +793,7 @@ override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 # https://ghc.haskell.org/trac/ghc/wiki/Building/QuickStart
 # https://ghc.haskell.org/trac/ghc/wiki/Building/Compiling32on64
 # http://urchin.earth.li/~ian/sec-porting-ghc.html
-#WORK : ultimately, trying to track post-db19c665ec5055c2193b2174519866045aeff09a to ANTIQUATE GIT_SUBMODULE_GHC
+#WORK : ultimately, trying to track post-db19c665ec5055c2193b2174519866045aeff09a to ANTIQUATE GIT_SUBMODULE_GHC / GHC_BRANCH
 #	https://github.com/ghc/ghc/commits/db19c665ec5055c2193b2174519866045aeff09a
 #	https://github.com/ghc/ghc/commits/master/.gitmodules
 #	https://github.com/ghc/ghc/commits/master/configure.ac
@@ -821,8 +821,12 @@ override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 # https://github.com/ghc/packages-Cabal
+#WORKING:NOW : set CABAL_LIBRARIES_* to be identical
 override CABAL_VER_INIT			:= 1.20.0.0
 override CABAL_VER			:= 1.22.0.0
+#override CABAL_VER_INIT			:= 1.22.0.0
+#override CABAL_VER			:= $(CABAL_VER_INIT)
+#WORKING
 override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
@@ -1454,7 +1458,10 @@ override define DO_GIT_SUBMODULE_GHC	=
 	cd "$(1)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all fetch --all && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all checkout --force -B $(GHC_BRANCH) $(GHC_CMT) && \
-		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard
+		$(BUILD_ENV_MINGW) $(PERL) ./sync-all reset --hard; \
+	$(call GIT_RUN,$(1),show $(GHC_CMT)) | $(SED) -n "/\|/p" | while read FILE; do \
+		cd "$(1)/$${FILE/%|*}" && $(GIT) --git-dir="$(2)/modules/$${FILE/%|*}" --work-tree="$(1)/$${FILE/%|*}" reset --hard $${FILE/#*|}; \
+	done
 endef
 #ANTIQUATE
 
