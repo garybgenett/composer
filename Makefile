@@ -34,6 +34,7 @@
 # _ add a version number checklist
 #	DEBIAN_*, whenever ifneq ($(BUILD_FETCH),)
 #	FUNTOO_*, when FUNTOO_DATE
+#	DYNAMIC_LIBRARY_LIST, every $(RELEASE)-prep
 #	PERL_MODULES_LIST, when CURL_VER
 #	GHC_CABAL_VER, when GHC_VER
 #	GHC_LIBRARIES_LIST, when GHC_VER
@@ -3664,11 +3665,11 @@ endef
 $(BUILDIT)-cabal-init:
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
-	$(call CABAL_PULL)
+	$(call CABAL_PULL,$(CABAL_LIBRARIES_INIT_LIST))
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
-	$(call CABAL_PREP,$(CABAL_DST_INIT))
+	$(call CABAL_PREP,$(CABAL_DST_INIT),$(CABAL_LIBRARIES_INIT_LIST))
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 endif
 	# call recursively instead of using dependencies, so that environment variables update
@@ -3688,12 +3689,12 @@ endif
 $(BUILDIT)-cabal:
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
-	$(call CABAL_PULL)
+	$(call CABAL_PULL,$(CABAL_LIBRARIES_LIST))
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(RM) -r "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(CP) "$(CABAL_DST)/Cabal" "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
-	$(call CABAL_PREP,$(CABAL_DST)/cabal-install)
+	$(call CABAL_PREP,$(CABAL_DST)/cabal-install,$(CABAL_LIBRARIES_LIST))
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 endif
 	# call recursively instead of using dependencies, so that environment variables update
@@ -3710,7 +3711,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 override define CABAL_PULL =
-	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)), \
+	$(foreach FILE,$(subst |,-,$(1)), \
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
 endef
@@ -3718,7 +3719,7 @@ endef
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 # thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 override define CABAL_PREP =
-	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_LIST)), \
+	$(foreach FILE,$(subst |,-,$(2)), \
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
 #WORK : platform_switches
