@@ -34,6 +34,7 @@
 # _ add a version number checklist
 #	DEBIAN_*, whenever ifneq ($(BUILD_FETCH),)
 #	FUNTOO_*, when FUNTOO_DATE
+#	MAKE_*_VERSION, every $(RELEASE)-prep
 #	DYNAMIC_LIBRARY_LIST, every $(RELEASE)-prep
 #	PERL_MODULES_LIST, when CURL_VER
 #	GHC_CABAL_VER, when GHC_VER
@@ -56,6 +57,7 @@
 #	https://stackoverflow.com/questions/7832112/how-to-selectively-link-certain-system-libraries-statically-into-haskell-program
 #	https://stackoverflow.com/questions/8657908/deploying-yesod-to-heroku-cant-build-statically/8658468#8658468
 #	https://stackoverflow.com/questions/2558166/using-ghc-cabal-with-gmp-installed-in-user-space
+#	http://www.insanecoding.blogspot.com/2012/07/creating-portable-linux-binaries.html
 #WORKING
 
 #TODO : new features
@@ -503,6 +505,7 @@ override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:= $(foreach FILE,$(CFLAGS),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS),-optP$(FILE)) $(foreach FILE,$(LDFLAGS),-optl$(FILE))
 override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
+#WORKING:NOW : LD_PRELOAD = libgcc_s.so.1, libstc++*.so*, document licenses!
 
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_PLAT),Linux)
@@ -1251,9 +1254,7 @@ override MAKESHELL			:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 endif
 override SHELL				:= $(MAKESHELL)
 
-#WORK : make sure pkgconfig is still needed, since only make is using autoreconf now
-#override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
-override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install
+override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
 override LDD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ldd)"
 override CC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
 override CXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
@@ -3385,7 +3386,7 @@ ifneq ($(BUILD_FETCH),0)
 #WORKING : separate network and placement into fetch/nofetch
 #WORKING : should archive the results of "$(MAKE) update" below, similar to "CURL_CA_BUNDLE"
 	cd "$(MAKE_DST)" && \
-		$(BUILD_ENV) PERLLIB="$(MSYS_DST)/usr/share/autoconf:WORKING:NOW" $(PERL) $(AUTORECONF) && \
+		$(BUILD_ENV) $(PERL) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update || $(TRUE)
 	$(call MAKE_BUILD,$(MAKE_DST))
