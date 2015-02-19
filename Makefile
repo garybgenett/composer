@@ -159,6 +159,7 @@ override COMPOSER_ESCAPES		?= 1
 
 override MAKEFILE			:= Makefile
 override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --jobs=1
+override MAKEJOBS			:= 10
 
 override COMPOSER_STAMP			?= .composed
 override COMPOSER_CSS			?= composer.css
@@ -3512,7 +3513,7 @@ endif
 	$(SED) -i \
 		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_DST)/texk/web2c/configure"
-	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
+	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" TL_MAKE_FLAGS="--jobs=$(MAKEJOBS)" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
@@ -3528,6 +3529,8 @@ endif
 #>		--without-x \
 #>		--disable-shared \
 #>		--enable-static \
+#>		,\
+#>		--jobs=$(MAKEJOBS) \
 #>	)
 #ANTIQUATE
 	$(CP) "$(TEX_TEXMF_DST)/"*		"$(COMPOSER_ABODE)/"
@@ -3631,7 +3634,7 @@ endif
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK,$(COMPOSER_ABODE))) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs=10)
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs=$(MAKEJOBS))
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RM) -r "$(BUILD_STRAP)/mingw"*
