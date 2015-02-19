@@ -158,7 +158,7 @@ override COMPOSER_ESCAPES		?= 1
 ################################################################################
 
 override MAKEFILE			:= Makefile
-override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables
+override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --jobs=1
 
 override COMPOSER_STAMP			?= .composed
 override COMPOSER_CSS			?= composer.css
@@ -1568,10 +1568,26 @@ ifeq ($(wildcard $(COMPOSER_TRASH)),)
 $(info $(shell $(MKDIR) "$(COMPOSER_TRASH)"))
 endif
 
-override BUILD_ENV			:= $(ENV) - \
+override BUILD_ENV_PANDOC		:= $(ENV) - \
 	LC_ALL="$(LANG)" \
 	LANG="$(LANG)" \
 	TERM="$(TERM)" \
+	\
+	USER="$(USER)" \
+	HOME="$(COMPOSER_ABODE)" \
+	PATH="$(BUILD_PATH)" \
+	CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" \
+	TEXMFDIST="$(TEXMFDIST)" \
+	TEXMFVAR="$(TEXMFVAR)" \
+	TMPDIR="$(COMPOSER_TRASH)"
+ifeq ($(BUILD_PLAT),Msys)
+# see "$(BUILD_PLAT),Msys" paths comment in "$(BUILDIT)-ghc"
+override BUILD_ENV_PANDOC		:= $(BUILD_ENV_PANDOC) \
+	MSYSTEM="MSYS$(BUILD_BITS)" \
+	HOMEPATH="$(COMPOSER_ABODE)" \
+	TMP="$(COMPOSER_TRASH)"
+endif
+override BUILD_ENV			:= $(BUILD_ENV_PANDOC) \
 	CC=$(CC) \
 	CXX=$(CXX) \
 	CPP=$(CPP) \
@@ -1581,22 +1597,9 @@ override BUILD_ENV			:= $(ENV) - \
 	CXXFLAGS="$(CFLAGS)" \
 	CPPFLAGS="$(CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
-	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" \
-	\
-	USER="$(USER)" \
-	HOME="$(COMPOSER_ABODE)" \
-	PATH="$(BUILD_PATH)" \
-	CURL_CA_BUNDLE="$(CURL_CA_BUNDLE)" \
-	TEXMFDIST="$(TEXMFDIST)" \
-	TEXMFVAR="$(TEXMFVAR)" \
-	TMPDIR="$(COMPOSER_TRASH)"
+	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
-# see "$(BUILD_PLAT),Msys" paths comment in "$(BUILDIT)-ghc"
-override BUILD_ENV			:= $(BUILD_ENV) \
-	MSYSTEM="MSYS$(BUILD_BITS)" \
-	HOMEPATH="$(COMPOSER_ABODE)" \
-	TMP="$(COMPOSER_TRASH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
 	MSYSTEM="MINGW$(BUILD_BITS)" \
 	CC="$(MSYS_DST)/mingw$(BUILD_BITS)/bin/gcc" \
@@ -3643,7 +3646,7 @@ endif
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK,$(COMPOSER_ABODE))) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs=10)
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RM) -r "$(BUILD_STRAP)/mingw"*
@@ -4155,6 +4158,7 @@ alias .composer="$(subst ",[B]",$(RUNMAKE))"
 alias .compose="$(subst ",[B]",$(COMPOSE))"
 alias .env="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV))"
 alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
+alias .env_pandoc="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_PANDOC))"
 alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
 #
 cd "$(COMPOSER_DIR)"
@@ -5013,8 +5017,7 @@ $(NOTHING):
 	@$(ECHO) "\n"
 
 override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e "s|[/]|\\\\\\\\|g"
-#WORK : OPTIONS_ENV should be a new variable with only the needed options?  if so, add it to the ".env" aliases in ".bashrc"
-override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV))
+override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV_PANDOC))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
 ifeq ($(BUILD_PLAT),Msys)
 override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell		$(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))

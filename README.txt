@@ -2,16 +2,16 @@ Composer CMS: User Guide & Example File
 Gary B. Genett
 v1.4 (2015-02-19)
 
-
 Composer CMS
+------------
 
 [Composer Icon] “Creating Made Simple.”
 
 -   Homepage: https://github.com/garybgenett/composer
 -   License
 
-
 Contents
+--------
 
 -   Introduction
     -   Overview
@@ -23,18 +23,17 @@ Contents
     -   Dependencies
     -   Caveats
 
-
-
-INTRODUCTION
-
+Introduction
+============
 
 Overview
+--------
 
 Composer is a simple but powerful CMS based on Pandoc and Make. By
 default, input files are written in a variation of Markdown.
 
 Traditionally, CMS stands for Content Management System. In the case of
-Composer, however, CMS really means a Content MAKE System. For many
+Composer, however, CMS really means a Content Make System. For many
 types of content, maybe even most, simpler is better. Content is very
 easy to manage when it lives its full life-cycle as plain text, since
 there are a veritable multitude of solutions available for tracking and
@@ -46,8 +45,8 @@ This is the goal of Composer.
 
 [Composer Screenshot]
 
-
 Quick Start
+-----------
 
 Composer is completely self-documenting. To get the full usage and help
 output:
@@ -69,8 +68,8 @@ of output content (websites, manuals/documentation, etc.).
 
 The Readme and License also serve as example source files.
 
-
 Goals
+-----
 
 Composer is really nothing more than a Make-based wrapper to Pandoc. The
 author started out with the following requirements for an all-purpose
@@ -134,12 +133,11 @@ accomplish the original goals with a minimum amount of user knowledge
 and expertise, and to provide a solid foundation for simplified
 management of larger content production efforts.
 
-
-
-DETAILS
-
+Details
+=======
 
 Compatibility
+-------------
 
 Composer is developed and tested on a Funtoo/Gentoo GNU/Linux system. An
 effort has been made to do things in a portable way, but cross-platform
@@ -164,8 +162,8 @@ whether your system will work as expected. In particular, the make test
 command validates the proper functioning of all the supported features
 and uses of Composer.
 
-
 Versioning
+----------
 
 Composer is not really revisioned into “releases” outside of the source
 code repository. Each commit is tested using make test first, so the
@@ -174,8 +172,8 @@ latest source should always be ready for production.
 If you require greater assurance of stability, use a version of the
 source that is tagged with a version number.
 
-
 Dependencies
+------------
 
 Composer was designed to have a minimum of external dependencies:
 
@@ -208,8 +206,8 @@ Basically, any GNU-based system, such as GNU/Linux, Cygwin or FreeBSD
 external dependency is Pandoc itself and the LaTeX system it uses to
 produce some of the output formats (namely PDF).
 
-
 Caveats
+-------
 
 There are a couple important items to be aware of when using Composer:
 
