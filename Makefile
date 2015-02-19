@@ -4144,7 +4144,7 @@ alias .compose="$(subst ",[B]",$(COMPOSE))"
 alias .env="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV))"
 alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
 alias .env_pandoc="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_PANDOC))"
-alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
+alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\n\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
 #
 cd "$(COMPOSER_DIR)"
 source "$${HOME}/.bashrc.custom"
