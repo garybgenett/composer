@@ -497,7 +497,8 @@ override COMPOSER_PROGS_USE		?=
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CHOST				:=
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
+#WORKING:NOW override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -lgcc -static-libgcc -lstdc++ -static-libstdc++ -lpthread
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
 override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:= $(foreach FILE,$(CFLAGS),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS),-optP$(FILE)) $(foreach FILE,$(LDFLAGS),-optl$(FILE))
@@ -1071,20 +1072,6 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/url
 
 override CABAL_LIBRARIES_INIT_LIST	:= \
-	Cabal|$(CABAL_VER_INIT) \
-	HTTP|4000.2.12 \
-	deepseq|1.3.0.2 \
-	mtl|2.1.3.1 \
-	network|2.4.2.3 \
-	parsec|3.1.5 \
-	random|1.0.1.1 \
-	stm|2.4.3 \
-	text|1.1.0.1 \
-	time|1.4.2 \
-	transformers|0.3.0.0 \
-	zlib|0.5.4.1
-
-override CABAL_LIBRARIES_LIST		:= \
 	Cabal|$(CABAL_VER) \
 	HTTP|4000.2.19 \
 	binary|0.7.2.3 \
@@ -1101,6 +1088,8 @@ override CABAL_LIBRARIES_LIST		:= \
 	time|1.5 \
 	transformers|0.4.2.0 \
 	zlib|0.5.4.2
+override CABAL_LIBRARIES_LIST		:= \
+	$(CABAL_LIBRARIES_INIT_LIST)
 
 override GHC_LIBRARIES_LIST		:= \
 	QuickCheck|2.7.6 \
@@ -1475,7 +1464,7 @@ override HACKAGE_PREP			= $(call DO_UNTAR,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(
 override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL)
 override CABAL_INFO			= $(DO_CABAL) info
 override CABAL_INSTALL			= $(DO_CABAL) install \
-	$(call CABAL_OPTIONS,$(1)) \
+	$(call CABAL_OPTIONS$(1),$(2)) \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
@@ -1491,6 +1480,17 @@ override CABAL_OPTIONS_TOOLS		:= \
 	--with-ghc=$(GHC)
 endif
 override CABAL_OPTIONS			= \
+	--prefix="$(1)" \
+	$(CABAL_OPTIONS_TOOLS) \
+	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
+	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
+	$(foreach FILE,$(GHCFLAGS),--ghc-option="$(FILE)") \
+	--ghc-option="-static" \
+	--disable-executable-dynamic \
+	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
+	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
+	--global
+override CABAL_OPTIONS_LDLIB		= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS_LDLIB),--gcc-option="$(FILE)") \
@@ -3385,14 +3385,14 @@ ifneq ($(BUILD_FETCH),0)
 #WORKING : separate network and placement into fetch/nofetch
 #WORKING : should archive the results of "$(MAKE) update" below, similar to "CURL_CA_BUNDLE"
 	cd "$(MAKE_DST)" && \
-		$(BUILD_ENV) $(AUTORECONF) && \
+		$(BUILD_ENV) PERLLIB="$(MSYS_DST)/usr/share/autoconf:WORKING:NOW" $(PERL) $(AUTORECONF) && \
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update || $(TRUE)
 	$(call MAKE_BUILD,$(MAKE_DST))
 endif
 
 override define MAKE_BUILD =
-	$(call AUTOTOOLS_BUILD,$(MAKE_DST_INIT),$(COMPOSER_ABODE),,\
+	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
 		--without-guile \
 	)
 endef
@@ -3769,7 +3769,7 @@ else
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
-		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
+		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
 endif
@@ -3798,12 +3798,12 @@ override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 		,\
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
-	$(call CABAL_INSTALL,$(2)) \
+	$(call CABAL_INSTALL,_LDLIB,$(2)) \
 		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 			"$(1)/$(FILE)" \
 		)
 	if [ -z "$(BUILD_GHC78)" ]; then \
-		$(call CABAL_INSTALL,$(2)) \
+		$(call CABAL_INSTALL,_LDLIB,$(2)) \
 			$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
 				"$(1)/$(FILE)" \
 			); \
@@ -3842,14 +3842,14 @@ ifneq ($(word 1,$(CABAL)),"")
 #WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  if they linger, should we warn or clean them up?
 	$(DO_CABAL) update
 	$(ECHO) "$(_C)"; \
-		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 			--only-dependencies \
 			--enable-tests \
 			--dry-run \
 			$(PANDOC_DIRECTORIES); \
 	$(ECHO) "$(_D)"
 	$(ECHO) "$(_C)"; \
-		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 			--dry-run \
 			$(subst |,-,$(PANDOC_LIBRARIES_LIST)); \
 	$(ECHO) "$(_D)"
@@ -3863,7 +3863,7 @@ ifneq ($(COMPOSER_TESTING),0)
 	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 		$(call HACKAGE_PREP,$(FILE),$(PANDOC_DST).libs); \
 	)
-	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 			"$(PANDOC_DST).libs/$(FILE)" \
 		)
@@ -3875,10 +3875,8 @@ endif
 	cd "$(PANDOC_HIGH_DST)" && \
 		$(BUILD_ENV_MINGW) $(MAKE) prep
 	@$(ESCAPE) "\n$(_H)$(MARKER) Install"
-	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(call CABAL_INSTALL,,$(COMPOSER_ABODE)) \
 		--flags="$(PANDOC_FLAGS)" \
-		--disable-executable-dynamic \
-		--disable-shared \
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
 	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
@@ -4323,11 +4321,6 @@ ifneq ($(BUILD_FETCH),)
 				make install"; \
 	fi
 	$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"* "$(COMPOSER_STORE)/.debootstrap.apt/" || $(TRUE)
-#		echo "WORKING : need to fix dynamic libgcc for pandoc in dist build"; \
-#		$(MKDIR) "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib"; \
-#		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(RELEASE_DIR)/$(RELEASE_TARGET)/lib/i386-linux-gnu/"; \
-#		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/usr/lib/gcc/"*"-linux-gnu/"*"/libgcc"*.a "$(subst $(COMPOSER_OTHER),$(RELEASE_DIR)/$(RELEASE_TARGET),$(COMPOSER_ABODE))/lib/"; \
-#		echo "WORKING"
 endif
 ifneq ($(BUILD_FETCH),0)
 	@$(HEADER_1)
