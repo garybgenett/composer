@@ -459,8 +459,9 @@ override BUILD_GHC78			:= 1
 override BUILD_PLAT			?= $(shell $(UNAME) -o)
 override BUILD_ARCH			?= $(shell $(UNAME) -m)
 
+override IS_CYGWIN			:=
 ifeq ($(BUILD_PLAT),Cygwin)
-override COMPOSER_PROGS_USE		:= 0
+override IS_CYGWIN			:= 1
 endif
 
 ifneq ($(BUILD_MSYS),)
@@ -488,10 +489,10 @@ override COMPOSER_PROGS_USE		?=
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CHOST				:=
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -O1 -static-libgcc -static-libstdc++
+override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -static-libgcc -static-libstdc++
 override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
-override GHCFLAGS			:= $(foreach FILE,$(CFLAGS), -optc$(FILE)) $(foreach FILE,$(LDFLAGS), -optl$(FILE))
+override GHCFLAGS			:= $(foreach FILE,$(CFLAGS),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS),-optP$(FILE)) $(foreach FILE,$(LDFLAGS),-optl$(FILE))
 override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
 
 ifneq ($(BUILD_DIST),)
@@ -508,11 +509,12 @@ override BUILD_ARCH			:= i686
 override BUILD_BITS			:= 32
 override CHOST				:= $(BUILD_ARCH)-pc-msys$(BUILD_BITS)
 endif
-override CFLAGS				:=                  $(CFLAGS) -m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic
-override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic, -optc$(FILE))
+override CFLAGS				:=                  $(CFLAGS) -m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1
+override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-optc$(FILE))
+override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-opta$(FILE))
 endif
 
-override GHCFLAGS_LDLIB			:= -optc-L$(BUILD_LDLIB)/lib -optc-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
+override GHCFLAGS_LDLIB			:= -optc-L$(BUILD_LDLIB)/lib -optc-I$(BUILD_LDLIB)/include -optP-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
 override CFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib -I$(BUILD_LDLIB)/include $(CFLAGS)
 override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include $(CPPFLAGS)
 override LDFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
@@ -889,6 +891,9 @@ override BUILD_PATH_SHELL		:= $(BUILD_PATH)
 ifeq ($(COMPOSER_PROGS_USE),0)
 override BUILD_PATH			:= $(PATH)
 endif
+ifneq ($(IS_CYGWIN),)
+override BUILD_PATH			:= $(PATH)
+endif
 
 override DEBIAN_PACKAGES_LIST		:= \
 	automake \
@@ -1114,25 +1119,20 @@ endif
 #WORKING
 
 override PANDOC_LIBRARIES_LIST		:= \
-	Diff|0.3.0 \
-	HUnit|1.2.5.2 \
 	JuicyPixels|3.2.2 \
 	SHA|1.6.4.1 \
 	aeson-pretty|0.7.2 \
 	aeson|0.7.0.6 \
-	ansi-terminal|0.6.2.1 \
-	ansi-wl-pprint|0.6.7.1 \
 	asn1-encoding|0.9.0 \
 	asn1-parse|0.9.0 \
 	asn1-types|0.3.0 \
 	async|2.0.2 \
-	attoparsec|0.12.1.2 \
+	attoparsec|0.12.1.3 \
 	base64-bytestring|1.0.0.1 \
 	blaze-builder|0.3.3.4 \
 	blaze-html|0.7.1.0 \
 	blaze-markup|0.6.3.0 \
 	byteable|0.1.1 \
-	bytestring-builder|0.10.4.1.1 \
 	case-insensitive|1.2.0.4 \
 	cereal|0.4.1.1 \
 	cipher-aes|0.2.10 \
@@ -1158,28 +1158,26 @@ override PANDOC_LIBRARIES_LIST		:= \
 	digest|0.0.1.2 \
 	dlist|0.7.1 \
 	enclosed-exceptions|1.0.1 \
-	exceptions|0.6.1 \
-	executable-path|0.0.3 \
+	exceptions|0.8 \
 	extensible-exceptions|0.1.1.4 \
+	haddock-library|1.1.1 \
 	hashable|1.2.3.1 \
-	hostname|1.0 \
 	hourglass|0.2.8 \
 	hs-bibutils|5.5 \
 	hslua|0.3.13 \
 	http-client-tls|0.2.2 \
 	http-client|0.4.7.1 \
-	http-types|0.8.5 \
-	lifted-base|0.2.3.3 \
+	http-types|0.8.6 \
+	lifted-base|0.2.3.6 \
 	mime-types|0.1.0.5 \
 	mmorph|1.0.4 \
-	monad-control|1.0.0.2 \
+	monad-control|1.0.0.4 \
 	nats|1 \
 	pem|0.2.2 \
 	publicsuffixlist|0.1 \
 	regex-base|0.93.2 \
 	regex-pcre-builtin|0.94.4.8.8.35 \
-	regex-posix|0.95.2 \
-	resourcet|1.1.3.3 \
+	resourcet|1.1.4.1 \
 	rfc5051|0.1.0.3 \
 	scientific|0.3.3.7 \
 	securemem|0.1.7 \
@@ -1190,11 +1188,9 @@ override PANDOC_LIBRARIES_LIST		:= \
 	syb|0.4.4 \
 	tagsoup|0.13.3 \
 	temporary|1.2.0.3 \
-	test-framework-hunit|0.3.0.1 \
-	test-framework-quickcheck2|0.3.0.3 \
-	test-framework|0.8.1.1 \
 	tls|1.2.16 \
-	transformers-base|0.4.3 \
+	transformers-base|0.4.4 \
+	transformers-compat|0.4.0.4 \
 	unordered-containers|0.2.5.1 \
 	utf8-string|1 \
 	vector|0.10.12.2 \
@@ -1209,26 +1205,28 @@ override PANDOC_LIBRARIES_LIST		:= \
 ifeq ($(COMPOSER_TESTING),)
 override PANDOC_LIBRARIES_LIST		:= \
 	$(PANDOC_LIBRARIES_LIST) \
-	hxt-charproperties|9.2.0.1 \
-	hxt-regex-xmlschema|9.2.0.1 \
-	hxt-unicode|9.0.2.4 \
-	hxt|9.3.1.15 \
-	\
-	auto-update|0.1.2.1 \
-	byteorder|1.0.4 \
-	easy-file|0.2.0 \
-	fast-logger|2.2.3 \
-	stringsearch|0.3.6.5 \
-	unix-compat|0.4.1.4 \
-	unix-time|0.3.4 \
-	vault|0.3.0.4 \
-	wai-extra|3.0.4.1 \
-	wai-logger|2.2.3 \
-	wai|3.0.2.2 \
-	word8|0.1.1 \
-	\
-	hsb2hs|0.2 \
-	preprocessor-tools|1.0.1
+
+#override PANDOC_LIBRARIES_LIST		:= \
+#	hxt-charproperties|9.2.0.1 \
+#	hxt-regex-xmlschema|9.2.0.1 \
+#	hxt-unicode|9.0.2.4 \
+#	hxt|9.3.1.15 \
+#	\
+#	auto-update|0.1.2.1 \
+#	byteorder|1.0.4 \
+#	easy-file|0.2.0 \
+#	fast-logger|2.2.3 \
+#	stringsearch|0.3.6.5 \
+#	unix-compat|0.4.1.4 \
+#	unix-time|0.3.4 \
+#	vault|0.3.0.4 \
+#	wai-extra|3.0.4.1 \
+#	wai-logger|2.2.3 \
+#	wai|3.0.2.2 \
+#	word8|0.1.1 \
+#	\
+#	hsb2hs|0.2 \
+#	preprocessor-tools|1.0.1
 endif
 
 override PANDOC_FLAGS			:= \
@@ -1250,19 +1248,10 @@ $(info $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"))
 endif
 endif
 
-ifeq ($(SHELL),/bin/sh)
-override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
-#WORKING:NOW : instead of this, try putting built "sh" in "$O/.home/bin/../../bin/sh = $O/bin/sh" and "$O/bin/Msys/usr/bin/../../bin/sh = $O/bin/Msys/bin/sh"
-ifeq ($(BUILD_PLAT),Msys)
-ifeq ($(COMPOSER_PROGS_USE),)
-ifneq ($(wildcard $(MSYS_DST)/usr/bin/sh),)
-override SHELL				:= $(MSYS_DST)/usr/bin/sh
+ifeq ($(MAKESHELL),)
+override MAKESHELL			:= $(call COMPOSER_FIND,$(PATH_LIST),sh)
 endif
-endif
-endif
-endif
-#WORKING:NOW
-$(info $(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) $(SHELL))
+override SHELL				:= $(MAKESHELL)
 
 #WORK : make sure pkgconfig is still needed, since only make is using autoreconf now
 #override AUTORECONF			:= "$(call COMPOSER_FIND,$(PATH_LIST),autoreconf)" --force --install -I$(COMPOSER_ABODE)/share/aclocal
@@ -1293,32 +1282,40 @@ override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall\n" >"$(2)/install"; \
 	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
 endef
-override define COREUTILS_UNINSTALL	=
-	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-		if [ -f "$(2)/$${FILE}" ]; then \
-			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
-		fi; \
-	done; \
-	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
-endef
-ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
-ifeq ($(BUILD_PLAT),Msys)
-ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
-$(info $(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
-endif
-else
+#ANTIQUATE
+#>override define COREUTILS_UNINSTALL	=
+#>	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+#>		if [ -f "$(2)/$${FILE}" ]; then \
+#>			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
+#>		fi; \
+#>	done; \
+#>	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
+#>endef
+#>ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
+#>ifeq ($(BUILD_PLAT),Msys)
+#>ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
+#>$(info $(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
+#>endif
+#>else
+#ANTIQUATE
+ifeq ($(IS_CYGWIN),)
+ifneq ($(wildcard $(COMPOSER_ABODE)/bin/coreutils),)
 ifeq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
 $(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
 endif
 endif
-else ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
+#ANTIQUATE
+#>else ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
+#ANTIQUATE
+ifneq ($(wildcard $(COMPOSER_PROGS)/usr/bin/coreutils),)
 ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
 $(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils)))
 endif
 endif
+endif
 override BASE64				:= "$(call COMPOSER_FIND,$(PATH_LIST),base64)" -w0
 override CAT				:= "$(call COMPOSER_FIND,$(PATH_LIST),cat)"
-override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" 755
+override CHMOD				:= "$(call COMPOSER_FIND,$(PATH_LIST),chmod)" -v 755
 override CHROOT				:= "$(call COMPOSER_FIND,$(PATH_LIST),chroot)"
 override CP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cp)" -afv
 override DATE				:= "$(call COMPOSER_FIND,$(PATH_LIST),date)" --iso
@@ -1488,13 +1485,13 @@ endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
-	$(foreach FILE,$(CFLAGS),	--gcc-option="$(FILE)") \
-	$(foreach FILE,$(LDFLAGS),	--ld-option="$(FILE)") \
-	$(foreach FILE,$(GHCFLAGS),	--ghc-option="$(FILE)") \
+	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
+	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
+	$(foreach FILE,$(GHCFLAGS),--ghc-option="$(FILE)") \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
 	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
-	--disable-shared \
 	--global
+#>	--disable-shared
 override CABAL_OPTIONS_LDLIB		= \
 	--extra-include-dirs="$(BUILD_LDLIB)/include" \
 	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
@@ -1535,32 +1532,27 @@ endif
 
 #WORK : better spot for this?
 #WORK : would be nice to fully understand why this breaks in a 32-bit chroot?
-#WORKING:NOW			$(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc-pkg),\
-#WORKING : experiment with getting it to just two of these
-#		"$(or \
-#			$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc-pkg),\
-#			$(wildcard $(GHC_DST_INIT)/utils/ghc-pkg/dist-install/build/tmp/ghc-pkg),\
-#		)" \
-#WORKING
 ifneq ($(BUILD_GHC78),)
-ifneq ($(GHC),"$(COMPOSER_ABODE)/bin/ghc")
+override LD_LIBRARY_PATH_GHC_DIR	:=
+ifneq ($(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),)
+override LD_LIBRARY_PATH_GHC_DIR	:= $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
+override LD_LIBRARY_PATH_GHC_BIN	:= $(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc
+else ifneq ($(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc),)
+override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)
+override LD_LIBRARY_PATH_GHC_BIN	:= $(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc
+else ifneq ($(wildcard $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2),)
+override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)
+override LD_LIBRARY_PATH_GHC_BIN	:= $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2
+endif
+ifneq ($(LD_LIBRARY_PATH_GHC_DIR),)
 override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FILE,$(shell \
-	readelf --dynamic \
-		"$(or \
-			$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc),\
-			$(wildcard $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2),\
-		)" \
-		"$(or \
-			$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/haddock),\
-			$(wildcard $(GHC_DST_INIT)/utils/haddock/dist/build/tmp/haddock),\
-		)" \
-		2>/dev/null | \
-			$(SED) -n "/[(]RPATH[)]/p" \
-			| $(SED) \
-				-e "s|^.*[ ]rpath[:][ ][[](.*)[]]$$|\1|g" \
-				-e "s|[$$]ORIGIN[/][.][.]|$(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)|g" \
-				-e "s|[:]|\n|g" \
-			| $(SORT) \
+	readelf --dynamic "$(LD_LIBRARY_PATH_GHC_BIN)" 2>/dev/null \
+		| $(SED) -n "/[(]RPATH[)]/p" \
+		| $(SED) \
+			-e "s|^.*[ ]rpath[:][ ][[](.*)[]]$$|\1|g" \
+			-e "s|[$$]ORIGIN[/][.][.]|$(LD_LIBRARY_PATH_GHC_DIR)|g" \
+			-e "s|[:]|\n|g" \
+		| $(SORT) \
 ),:$(FILE)))
 endif
 endif
@@ -1895,9 +1887,9 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)BUILD_ARCH$(_D)"		"Overrides 'uname -m'"		"[$(_M)$(BUILD_ARCH)$(_D)] $(_E)($(BUILD_BITS)-bit)"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Environment Options:"
+	@$(TABLE_I3) "$(_C)MAKESHELL$(_D)"		"Shell script interpreter"	"[$(_M)$(SHELL)$(_D)]"
 	@$(TABLE_I3) "$(_C)LANG$(_D)"			"Locale default language"	"[$(_M)$(LANG)$(_D)] $(_N)(NOTE: use UTF-8)"
 	@$(TABLE_I3) "$(_C)TERM$(_D)"			"Terminfo terminal type"	"[$(_M)$(TERM)$(_D)]"
-	@$(TABLE_I3) "$(_C)SHELL$(_D)"			"Shell script interpreter"	"[$(_M)$(SHELL)$(_D)]"
 	@$(TABLE_I3) "$(_C)PATH$(_D)"			"Binary directories list"	"[$(_M)$(BUILD_PATH)$(_D)]"
 	@$(TABLE_I3) "$(_C)CURL_CA_BUNDLE$(_D)"		"SSL certificate bundle"	"[$(_M)$(CURL_CA_BUNDLE)$(_D)]"
 	@$(ECHO) "\n"
@@ -2633,10 +2625,10 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
 	$(CP) "$(MSYS_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
 #WORK
+	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
 	)
-	$(CP) "$(COMPOSER_ABODE)/bin/"*.dll "$(COMPOSER_PROGS)/usr/bin/"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/bin/$(FILE)" "$(COMPOSER_PROGS)/usr/bin/"; \
@@ -2665,15 +2657,13 @@ endif
 override define HEREDOC_MSYS_SHELL =
 @echo off
 if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
-if not defined MSYSCON set MSYSCON=mintty.exe
-set WD=%~dp0
-set BINDIR=/usr/bin
-set PATH=%WD%%BINDIR%;%PATH%
-set OPTIONS=
-set OPTIONS=%OPTIONS% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
-set OPTIONS=%OPTIONS% --icon %WD%/../../icon.ico
-set OPTIONS=%OPTIONS% --exec %BINDIR%/bash
-start /b %WD%%BINDIR%/%MSYSCON% %OPTIONS%
+set _CMS=%~dp0
+set _BIN=/usr/bin
+set _OPT=
+set _OPT=%_OPT% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
+set _OPT=%_OPT% --icon %_CMS%/../../icon.ico
+set _OPT=%_OPT% --exec %_BIN%/bash
+start /b %_CMS%%_BIN%/mintty %_OPT%
 :: end of file
 endef
 
@@ -3780,7 +3770,7 @@ else
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
-		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
+		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
 endif
@@ -4069,7 +4059,7 @@ endef
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT):
-	@$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" $(BASH) || $(TRUE)
+	@$(BUILD_ENV) $(BASH) || $(TRUE)
 
 #WORKING : msys2_shell auto-detection hackery; working?
 override MSYS_SHELL_DIR := $(COMPOSER_PROGS)
@@ -4085,7 +4075,7 @@ $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys:
 	@cd "$(MSYS_SHELL_DIR)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
-		$(BUILD_ENV) PATH="$(BUILD_PATH_SHELL)" ./msys2_shell.bat
+		$(BUILD_ENV) ./msys2_shell.bat
 
 .PHONY: $(SHELLIT)-bashrc
 $(SHELLIT)-bashrc:
@@ -4132,6 +4122,7 @@ export HISTCONTROL=
 export HISTIGNORE=
 #
 export CDPATH=".:$(COMPOSER_DIR):$(COMPOSER_OTHER):$(COMPOSER_ABODE):$(COMPOSER_STORE):$(COMPOSER_BUILD)"
+export PATH="$(BUILD_PATH_SHELL)"
 #
 export PROMPT_DIRTRIM="1"
 export PS1=
@@ -4156,6 +4147,7 @@ alias .composer="$(subst ",[B]",$(RUNMAKE))"
 alias .compose="$(subst ",[B]",$(COMPOSE))"
 alias .env="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV))"
 alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
+alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
 #
 cd "$(COMPOSER_DIR)"
 source "$${HOME}/.bashrc.custom"
@@ -4311,6 +4303,8 @@ ifneq ($(BUILD_FETCH),)
 				--include="$(DEBIAN_PACKAGES_LIST)" \
 				"$(DEBIAN_SUITE)" \
 				"$(RELEASE_DIR)/$(RELEASE_TARGET)"; \
+		$(RM) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
+		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 		$(call CURL_FILE,$(MAKE_SRC_INIT)); \
 		$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(notdir $(MAKE_DST_INIT)),$(MAKE_SRC_INIT)); \
 		$(RELEASE_CHROOT) /bin/sh -c \
@@ -4318,8 +4312,6 @@ ifneq ($(BUILD_FETCH),)
 				./configure --prefix=\"/usr\" && \
 				make && \
 				make install"; \
-		$(RM) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
-		$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/bash" "$(RELEASE_DIR)/$(RELEASE_TARGET)/bin/sh"; \
 	fi
 	$(CP) "$(RELEASE_DIR)/$(RELEASE_TARGET)/var/cache/apt/"* "$(COMPOSER_STORE)/.debootstrap.apt/" || $(TRUE)
 #		echo "WORKING : need to fix dynamic libgcc for pandoc in dist build"; \
@@ -4471,14 +4463,15 @@ override define HEREDOC_DISTRIB_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
 set _SYS=Msys
-set _HOME=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
-set _PATH=%_HOME%/bin
-set _PATH=%_PATH%;%_HOME%/msys$(BUILD_BITS)/usr/bin
-set _PATH=%_PATH%;%_CMS%/bin/%_SYS%/usr/bin
-set _PATH=%_PATH%;%_HOME%/.coreutils
-set PATH=%_PATH%;%PATH%
-::WORKING : if [ ! -d %_HOME%/msys$(BUILD_BITS)/usr/bin ]; then COMPOSER_PROGS_USE="1"
-start /b make --makefile $(MAKEFILE) --debug="a" shell-msys
+set _DIR=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
+set _BIN=
+set _BIN=%_BIN%%_DIR%/bin/;
+set _BIN=%_BIN%%_DIR%/msys$(BUILD_BITS)/usr/bin;
+set _BIN=%_BIN%%_CMS%/bin/%_SYS%/usr/bin;
+set PATH=%_BIN%%PATH%
+set _OPT=
+if not exist %_DIR%/msys$(BUILD_BITS)/usr/bin set _OPT=%_OPT% COMPOSER_PROGS_USE="1"
+start /b make --makefile $(MAKEFILE) --debug="a" BUILD_PLAT="%_SYS%" %_OPT% shell-msys
 :: end of file
 endef
 
@@ -4486,14 +4479,15 @@ override define HEREDOC_DISTRIB_COMPOSER_SH =
 # sh
 _CMS="$${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-_HOME=$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))
-_PATH=$${_HOME}/bin
-_PATH=$${_PATH};$${_HOME}/msys$(BUILD_BITS)/usr/bin
-_PATH=$${_PATH};$${_CMS}/bin/$${_SYS}/usr/bin
-_PATH=$${_PATH};$${_HOME}/.coreutils
-PATH=$${_PATH};$${PATH}
-#WORKING : if [ ! -d %_HOME%/msys$(BUILD_BITS)/usr/bin ]; then COMPOSER_PROGS_USE="1"
-exec make --makefile $(MAKEFILE) --debug="a" shell
+_DIR=$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))
+_BIN=
+_BIN=$${_BIN}$${_DIR}/bin:
+_BIN=$${_BIN}$${_DIR}/msys$(BUILD_BITS)/usr/bin:
+_BIN=$${_BIN}$${_CMS}/bin/$${_SYS}/usr/bin:
+PATH=$${_BIN}$${PATH}
+_OPT=
+[ ! -d $${_DIR}/msys$(BUILD_BITS)/usr/bin ] && _OPT="$${_OPT} COMPOSER_PROGS_USE=\"1\""
+exec make --makefile $(MAKEFILE) --debug="a" BUILD_PLAT="$${_SYS}" $${_OPT} shell
 # end of file
 endef
 
