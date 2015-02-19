@@ -1495,12 +1495,19 @@ override CABAL_OPTIONS			= \
 	$(foreach FILE,$(GHCFLAGS),--ghc-option="$(FILE)") \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
 	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
+	--disable-shared \
 	--global
-#>	--disable-shared
 override CABAL_OPTIONS_LDLIB		= \
+	--prefix="$(1)" \
+	$(CABAL_OPTIONS_TOOLS) \
+	$(foreach FILE,$(CFLAGS_LDLIB),--gcc-option="$(FILE)") \
+	$(foreach FILE,$(LDFLAGS_LDLIB),--ld-option="$(FILE)") \
+	$(foreach FILE,$(GHCFLAGS_LDLIB),--ghc-option="$(FILE)") \
 	--extra-include-dirs="$(BUILD_LDLIB)/include" \
 	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
-	$(call CABAL_OPTIONS,$(1))
+	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
+	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
+	--global
 
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
 override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
@@ -1541,17 +1548,17 @@ ifneq ($(BUILD_GHC78),)
 override LD_LIBRARY_PATH_GHC_DIR	:=
 ifneq ($(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),)
 override LD_LIBRARY_PATH_GHC_DIR	:= $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
-override LD_LIBRARY_PATH_GHC_BIN	:= $(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc
+override LD_LIBRARY_PATH_GHC_BIN	:= "$(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc" "$(LD_LIBRARY_PATH_GHC_DIR)/bin/haddock"
 else ifneq ($(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc),)
 override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)
-override LD_LIBRARY_PATH_GHC_BIN	:= $(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc
+override LD_LIBRARY_PATH_GHC_BIN	:= "$(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc" "$(LD_LIBRARY_PATH_GHC_DIR)/bin/haddock"
 else ifneq ($(wildcard $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2),)
 override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)
-override LD_LIBRARY_PATH_GHC_BIN	:= $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2
+override LD_LIBRARY_PATH_GHC_BIN	:= "$(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2" "$(GHC_DST_INIT)/utils/haddock/dist/build/tmp/haddock"
 endif
 ifneq ($(LD_LIBRARY_PATH_GHC_DIR),)
 override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FILE,$(shell \
-	readelf --dynamic "$(LD_LIBRARY_PATH_GHC_BIN)" 2>/dev/null \
+	readelf --dynamic $(LD_LIBRARY_PATH_GHC_BIN) 2>/dev/null \
 		| $(SED) -n "/[(]RPATH[)]/p" \
 		| $(SED) \
 			-e "s|^.*[ ]rpath[:][ ][[](.*)[]]$$|\1|g" \
