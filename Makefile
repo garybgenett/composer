@@ -44,7 +44,7 @@
 #	etc., more?
 # _ document COMPOSER_TESTING uses
 #	$(TESTIT): empty, 0, 1, 2 (document #2?)
-#	$(BUILDIT)-cabal: empty or non-empty
+#	$(BUILDIT)-cabal[-init]: empty or non-empty
 #	$(BUILDIT)-pandoc: empty, 0 or 1
 #	$(CHECKIT): empty or non-empty
 #WORKING
@@ -332,6 +332,9 @@ override LINT_DESC			:= Pandoc Markdown (for testing)
 # https://github.com/tpope/vim-markdown
 # https://github.com/hallison/vim-markdown
 # https://github.com/plasticboy/vim-markdown
+#WORK
+# https://github.com/jgm/yst
+# http://hackage.haskell.org/package/gitit
 #WORK
 # http://www.wtfpl.net/txt/copying (license: custom = WTFPL)
 # https://github.com/jbt/markdown-editor
@@ -828,12 +831,8 @@ override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 # https://github.com/ghc/packages-Cabal
-#WORKING:NOW : set CABAL_LIBRARIES_* to be identical
-override CABAL_VER_INIT			:= 1.20.0.0
-override CABAL_VER			:= 1.22.0.0
-#override CABAL_VER_INIT			:= 1.22.0.0
-#override CABAL_VER			:= $(CABAL_VER_INIT)
-#WORKING
+override CABAL_VER_INIT			:= 1.22.0.0
+override CABAL_VER			:= $(CABAL_VER_INIT)
 override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
 override CABAL_SRC			:= https://git.haskell.org/packages/Cabal.git
@@ -1115,19 +1114,15 @@ override GHC_LIBRARIES_LIST_HADDOCK	:= \
 	haddock|2.13.2.1
 endif
 
-#WORKING:NOW
-#	ghc-paths|0.1.0.9 \
-#	haddock-api|2.15.0.2 \
-#	haddock-library|1.1.1 \
-#	haddock|2.15.0.2 \
-#	xhtml|3000.2.1 \
-#WORKING
-
 override PANDOC_LIBRARIES_LIST		:= \
+	Diff|0.3.0 \
+	HUnit|1.2.5.2 \
 	JuicyPixels|3.2.2 \
 	SHA|1.6.4.1 \
 	aeson-pretty|0.7.2 \
 	aeson|0.7.0.6 \
+	ansi-terminal|0.6.2.1 \
+	ansi-wl-pprint|0.6.7.1 \
 	asn1-encoding|0.9.0 \
 	asn1-parse|0.9.0 \
 	asn1-types|0.3.0 \
@@ -1144,7 +1139,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	cipher-des|0.0.6 \
 	cipher-rc4|0.1.4 \
 	cmdargs|0.10.12 \
-	conduit|1.2.3.1 \
+	conduit|1.2.4 \
 	connection|0.2.4 \
 	cookie|0.4.1.4 \
 	crypto-cipher-types|0.0.9 \
@@ -1164,9 +1159,11 @@ override PANDOC_LIBRARIES_LIST		:= \
 	dlist|0.7.1 \
 	enclosed-exceptions|1.0.1 \
 	exceptions|0.8 \
+	executable-path|0.0.3 \
 	extensible-exceptions|0.1.1.4 \
 	haddock-library|1.1.1 \
 	hashable|1.2.3.1 \
+	hostname|1.0 \
 	hourglass|0.2.8 \
 	hs-bibutils|5.5 \
 	hslua|0.3.13 \
@@ -1182,6 +1179,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	publicsuffixlist|0.1 \
 	regex-base|0.93.2 \
 	regex-pcre-builtin|0.94.4.8.8.35 \
+	regex-posix|0.95.2 \
 	resourcet|1.1.4.1 \
 	rfc5051|0.1.0.3 \
 	scientific|0.3.3.7 \
@@ -1193,6 +1191,9 @@ override PANDOC_LIBRARIES_LIST		:= \
 	syb|0.4.4 \
 	tagsoup|0.13.3 \
 	temporary|1.2.0.3 \
+	test-framework-hunit|0.3.0.1 \
+	test-framework-quickcheck2|0.3.0.3 \
+	test-framework|0.8.1.1 \
 	tls|1.2.16 \
 	transformers-base|0.4.4 \
 	transformers-compat|0.4.0.4 \
@@ -1210,28 +1211,28 @@ override PANDOC_LIBRARIES_LIST		:= \
 ifeq ($(COMPOSER_TESTING),)
 override PANDOC_LIBRARIES_LIST		:= \
 	$(PANDOC_LIBRARIES_LIST) \
-
-#override PANDOC_LIBRARIES_LIST		:= \
-#	hxt-charproperties|9.2.0.1 \
-#	hxt-regex-xmlschema|9.2.0.1 \
-#	hxt-unicode|9.0.2.4 \
-#	hxt|9.3.1.15 \
-#	\
-#	auto-update|0.1.2.1 \
-#	byteorder|1.0.4 \
-#	easy-file|0.2.0 \
-#	fast-logger|2.2.3 \
-#	stringsearch|0.3.6.5 \
-#	unix-compat|0.4.1.4 \
-#	unix-time|0.3.4 \
-#	vault|0.3.0.4 \
-#	wai-extra|3.0.4.1 \
-#	wai-logger|2.2.3 \
-#	wai|3.0.2.2 \
-#	word8|0.1.1 \
-#	\
-#	hsb2hs|0.2 \
-#	preprocessor-tools|1.0.1
+	\
+	hxt-charproperties|9.2.0.1 \
+	hxt-regex-xmlschema|9.2.0.1 \
+	hxt-unicode|9.0.2.4 \
+	hxt|9.3.1.15 \
+	\
+	vault|0.3.0.4 \
+	wai|3.0.2.2 \
+	\
+	auto-update|0.1.2.1 \
+	byteorder|1.0.4 \
+	easy-file|0.2.0 \
+	fast-logger|2.2.3 \
+	stringsearch|0.3.6.5 \
+	unix-compat|0.4.1.4 \
+	unix-time|0.3.4 \
+	wai-extra|3.0.4.1 \
+	wai-logger|2.2.3 \
+	word8|0.1.1 \
+	\
+	hsb2hs|0.2 \
+	preprocessor-tools|1.0.1
 endif
 
 override PANDOC_FLAGS			:= \
@@ -1247,9 +1248,12 @@ override PANDOC_FLAGS			:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
+#WORKING:NOW msys shell fail!?
+ifneq ($(BUILD_PLAT),Msys)
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
 ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
 $(info $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"))
+endif
 endif
 endif
 
@@ -1282,36 +1286,35 @@ override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
 	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
 		"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=$${FILE}\n" >"$(2)/$${FILE}"; \
-		"$(1)" --coreutils-prog=chmod 755 "$(2)/$${FILE}"; \
+		"$(1)" --coreutils-prog=chmod -v 755 "$(2)/$${FILE}"; \
 	done; \
 	"$(1)" --coreutils-prog=echo -en "#!$(1) --coreutils-prog-shebang=ginstall\n" >"$(2)/install"; \
-	"$(1)" --coreutils-prog=chmod 755 "$(2)/install"
+	"$(1)" --coreutils-prog=chmod -v 755 "$(2)/install"
 endef
-#ANTIQUATE
-#>override define COREUTILS_UNINSTALL	=
-#>	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
-#>		if [ -f "$(2)/$${FILE}" ]; then \
-#>			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
-#>		fi; \
-#>	done; \
-#>	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
-#>endef
-#>ifeq ($(COREUTILS),"$(COMPOSER_ABODE)/bin/coreutils")
-#>ifeq ($(BUILD_PLAT),Msys)
-#>ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
-#>$(info $(shell $(call COREUTILS_UNINSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
-#>endif
-#>else
-#ANTIQUATE
-ifeq ($(IS_CYGWIN),)
+override define COREUTILS_UNINSTALL	=
+	"$(1)" --help | $(SED) -n "s|^[ ]([[][ ])|\1|gp" | $(SED) "s|[ ]|\n|g" | while read FILE; do \
+		if [ -f "$(2)/$${FILE}" ]; then \
+			"$(1)" --coreutils-prog=rm -fv "$(2)/$${FILE}"; \
+		fi; \
+	done; \
+	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
+endef
+ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils.null),)
+ifneq ($(word 1,$(COREUTILS)),"")
+ifneq ($(wildcard $(COMPOSER_ABODE)/bin/ls),)
+$(info $(shell $(call COREUTILS_UNINSTALL,$(subst ",,$(COREUTILS)),$(COMPOSER_ABODE)/bin)))
+#> syntax highlighting fix: "))))
+endif
+ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils/ls),)
+$(info $(shell $(COREUTILS) --coreutils-prog=rm -fv -r "$(COMPOSER_ABODE)/.coreutils"))
+endif
+endif
+else ifeq ($(IS_CYGWIN),)
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/coreutils),)
 ifeq ($(shell "$(COMPOSER_ABODE)/bin/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
 $(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/bin/coreutils,$(COMPOSER_ABODE)/bin)))
 endif
 endif
-#ANTIQUATE
-#>else ifeq ($(COREUTILS),"$(COMPOSER_PROGS)/usr/bin/coreutils")
-#ANTIQUATE
 ifneq ($(wildcard $(COMPOSER_PROGS)/usr/bin/coreutils),)
 ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
 $(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/usr/bin/coreutils,$(COMPOSER_ABODE)/.coreutils)))
@@ -1490,16 +1493,6 @@ endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
-	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
-	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
-	$(foreach FILE,$(GHCFLAGS),--ghc-option="$(FILE)") \
-	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
-	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
-	--disable-shared \
-	--global
-override CABAL_OPTIONS_LDLIB		= \
-	--prefix="$(1)" \
-	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS_LDLIB),--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS_LDLIB),--ld-option="$(FILE)") \
 	$(foreach FILE,$(GHCFLAGS_LDLIB),--ghc-option="$(FILE)") \
@@ -1559,9 +1552,9 @@ endif
 ifneq ($(LD_LIBRARY_PATH_GHC_DIR),)
 override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FILE,$(shell \
 	readelf --dynamic $(LD_LIBRARY_PATH_GHC_BIN) 2>/dev/null \
-		| $(SED) -n "/[(]RPATH[)]/p" \
+		| $(SED) -n "/[(]R(UN)?PATH[)]/p" \
 		| $(SED) \
-			-e "s|^.*[ ]rpath[:][ ][[](.*)[]]$$|\1|g" \
+			-e "s|^.*[ ]r(un)?path[:][ ][[](.*)[]]$$|\2|g" \
 			-e "s|[$$]ORIGIN[/][.][.]|$(LD_LIBRARY_PATH_GHC_DIR)|g" \
 			-e "s|[:]|\n|g" \
 		| $(SORT) \
@@ -2563,13 +2556,10 @@ $(BUILDIT):
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
-#WORKING:NOW	$(RUNMAKE) $(BUILDIT)-texlive
+	$(RUNMAKE) $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
-#WORKING:NOW	$(RUNMAKE) $(BUILDIT)-pandoc
-	if [ -n $(word 1,$(CABAL)) ]; then \
-		$(RUNMAKE) COMPOSER_TESTING=0 $(BUILDIT)-pandoc; \
-	fi
+	$(RUNMAKE) $(BUILDIT)-pandoc
 
 override CHECK_FAILED		:=
 override CHECK_MSYS		:=
@@ -3278,7 +3268,6 @@ endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-perl-modules
 
-#WORKING:NOW : double check ".home/lib64" directory
 .PHONY: $(BUILDIT)-perl-modules
 $(BUILDIT)-perl-modules:
 ifneq ($(BUILD_FETCH),)
@@ -3475,6 +3464,8 @@ ifneq ($(BUILD_FETCH),0)
 	)
 endif
 
+#WORKING : git is installing perl modules in ".home/lib64" directory, using native perl rather than built one
+
 .PHONY: $(BUILDIT)-git
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
@@ -3659,11 +3650,6 @@ endif
 #WORK
 endif
 
-#WORKING : trim libraries list to only those that are needed
-#override GhcHcOpts	:= $(GHCFLAGS_LDLIB)
-#override libraries/base_CONFIGURE_OPTS		:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
-#override libraries/integer-gmp_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
-#override libraries/terminfo_CONFIGURE_OPTS	:= $(filter-out --with-ghc="%",$(call CABAL_OPTIONS_LDLIB,$(1)))
 override define HEREDOC_GHC_BUILD_MK =
 override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
@@ -3783,7 +3769,7 @@ else
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
-		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
+		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
 endif
@@ -3852,15 +3838,23 @@ ifneq ($(BUILD_FETCH),)
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
 ifneq ($(COMPOSER_TESTING),)
+ifneq ($(word 1,$(CABAL)),"")
 #WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  if they linger, should we warn or clean them up?
 	$(DO_CABAL) update
 	$(ECHO) "$(_C)"; \
 		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 			--only-dependencies \
+			--enable-tests \
 			--dry-run \
 			$(PANDOC_DIRECTORIES); \
 	$(ECHO) "$(_D)"
+	$(ECHO) "$(_C)"; \
+		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+			--dry-run \
+			$(subst |,-,$(PANDOC_LIBRARIES_LIST)); \
+	$(ECHO) "$(_D)"
 	$(RM) -r "$(COMPOSER_ABODE)/.cabal/packages"
+endif
 endif
 endif
 ifneq ($(BUILD_FETCH),0)
@@ -3883,6 +3877,8 @@ endif
 	@$(ESCAPE) "\n$(_H)$(MARKER) Install"
 	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--flags="$(PANDOC_FLAGS)" \
+		--disable-executable-dynamic \
+		--disable-shared \
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
 	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
@@ -4479,12 +4475,15 @@ set _SYS=Msys
 set _DIR=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
 set _BIN=
 set _BIN=%_BIN%%_DIR%/bin/;
-set _BIN=%_BIN%%_DIR%/msys$(BUILD_BITS)/usr/bin;
+set _BIN=%_BIN%%_DIR%/msys64/usr/bin;
+set _BIN=%_BIN%%_DIR%/msys32/usr/bin;
 set _BIN=%_BIN%%_CMS%/bin/%_SYS%/usr/bin;
 set PATH=%_BIN%%PATH%
-set _OPT=
-if not exist %_DIR%/msys$(BUILD_BITS)/usr/bin set _OPT=%_OPT% COMPOSER_PROGS_USE="1"
-start /b make --makefile $(MAKEFILE) --debug="a" BUILD_PLAT="%_SYS%" %_OPT% shell-msys
+set _OPT=1
+if exist %_DIR%/bin set _OPT=
+if exist %_DIR%/msys64/usr/bin set _OPT=
+if exist %_DIR%/msys32/usr/bin set _OPT=
+start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="%_OPT%" BUILD_PLAT="%_SYS%" shell-msys
 :: end of file
 endef
 
@@ -4495,12 +4494,15 @@ _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
 _DIR=$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))
 _BIN=
 _BIN=$${_BIN}$${_DIR}/bin:
-_BIN=$${_BIN}$${_DIR}/msys$(BUILD_BITS)/usr/bin:
+_BIN=$${_BIN}$${_DIR}/msys64/usr/bin:
+_BIN=$${_BIN}$${_DIR}/msys32/usr/bin:
 _BIN=$${_BIN}$${_CMS}/bin/$${_SYS}/usr/bin:
 PATH=$${_BIN}$${PATH}
-_OPT=
-[ ! -d $${_DIR}/msys$(BUILD_BITS)/usr/bin ] && _OPT="$${_OPT} COMPOSER_PROGS_USE=\"1\""
-exec make --makefile $(MAKEFILE) --debug="a" BUILD_PLAT="$${_SYS}" $${_OPT} shell
+_OPT=1
+[ -d $${_DIR}/bin ] && _OPT=
+[ -d $${_DIR}/msys64/usr/bin ] && _OPT=
+[ -d $${_DIR}/msys32/usr/bin ] && _OPT=
+exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" shell
 # end of file
 endef
 
