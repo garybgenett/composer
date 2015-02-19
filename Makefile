@@ -499,13 +499,16 @@ override COMPOSER_PROGS_USE		?=
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CHOST				:=
-#WORKING:NOW override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include -lgcc -static-libgcc -lstdc++ -static-libstdc++ -lpthread
-override CFLAGS				:= -L$(COMPOSER_ABODE)/lib -I$(COMPOSER_ABODE)/include
+override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib -static-libgcc -lgcc -lgcc_eh
+#WORKING:NOW override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib -static-libgcc -lgcc -lgcc_eh -static-libstdc++ -lstdc++ -lpthread
+#WORKING:NOW override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib
 override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:= $(foreach FILE,$(CFLAGS),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS),-optP$(FILE)) $(foreach FILE,$(LDFLAGS),-optl$(FILE))
 override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
 #WORKING:NOW : LD_PRELOAD = libgcc_s.so.1, libstc++*.so*, document licenses!
+#override LD_PRELOAD			:= $(COMPOSER_PROGS)/libgcc_so.1
+#override LD_LIBRARY_PATH		:= $(COMPOSER_PROGS):$(BUILD_LDLIB)/lib
 
 ifneq ($(BUILD_DIST),)
 ifeq ($(BUILD_PLAT),Linux)
@@ -526,8 +529,8 @@ override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-opta$(FILE))
 endif
 
-override GHCFLAGS_LDLIB			:= -optc-L$(BUILD_LDLIB)/lib -optc-I$(BUILD_LDLIB)/include -optP-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
-override CFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib -I$(BUILD_LDLIB)/include $(CFLAGS)
+override GHCFLAGS_LDLIB			:= -optc-I$(BUILD_LDLIB)/include -optc-L$(BUILD_LDLIB)/lib -optP-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
+override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib $(CFLAGS)
 override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include $(CPPFLAGS)
 override LDFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
 
@@ -1240,12 +1243,9 @@ override PANDOC_FLAGS			:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
-#WORKING:NOW msys shell fail!?
-ifneq ($(BUILD_PLAT),Msys)
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
 ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
 $(info $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"))
-endif
 endif
 endif
 
@@ -3895,8 +3895,6 @@ endif
 	@$(ECHO) "$(_D)"
 endif
 #> syntax highlighting fix: )"
-
-#WORKING:NOW : added $BUILD_ENV to $CABAL for $CHECKIT and below; does a native install still report okay?
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
