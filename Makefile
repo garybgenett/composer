@@ -286,10 +286,12 @@ override TYPE_SHOW			:= slidy
 override TYPE_DOCX			:= docx
 override TYPE_EPUB			:= epub
 override TYPE_TEXT			:= text
+override TYPE_LINT			:= $(INPUT)
 
 override EXTN_PRES			:= $(TYPE_PRES).$(TYPE_HTML)
 override EXTN_SHOW			:= $(TYPE_SHOW).$(TYPE_HTML)
 override EXTN_TEXT			:= txt
+override EXTN_LINT			:= $(COMPOSER_EXT).out
 
 ifeq ($(TYPE),$(TYPE_HTML))
 override OUTPUT				:= html5
@@ -304,6 +306,8 @@ override EXTENSION			:= $(EXTN_SHOW)
 else ifeq ($(TYPE),$(TYPE_TEXT))
 override OUTPUT				:= plain
 override EXTENSION			:= $(EXTN_TEXT)
+else ifeq ($(TYPE),$(TYPE_LINT))
+override EXTENSION			:= $(EXTN_LINT)
 endif
 
 override HTML_DESC			:= HTML: HyperText Markup Language
@@ -312,7 +316,8 @@ override PRES_DESC			:= HTML/JS Presentation: Reveal.js
 override SHOW_DESC			:= HTML/JS Slideshow: W3C Slidy2
 override DOCX_DESC			:= DocX: Microsoft Office Open XML
 override EPUB_DESC			:= ePUB: Electronic Publication
-override TEXT_DESC			:= Plain Text (Well-Formatted)
+override TEXT_DESC			:= Plain Text (well-formatted)
+override LINT_DESC			:= Pandoc Markdown (for testing)
 
 ########################################
 
@@ -1843,6 +1848,7 @@ HELP_OPTIONS:
 	@$(TABLE_I3) "$(_C)$(TYPE_DOCX)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_DOCX)$(_D)"	"$(DOCX_DESC)"
 	@$(TABLE_I3) "$(_C)$(TYPE_EPUB)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_EPUB)$(_D)"	"$(EPUB_DESC)"
 	@$(TABLE_I3) "$(_C)$(TYPE_TEXT)$(_D)"	"$(_N)*$(_D).$(_E)$(EXTN_TEXT)$(_D)"	"$(TEXT_DESC)"
+	@$(TABLE_I3) "$(_C)$(TYPE_LINT)$(_D)"	"$(_N)*$(_D).$(_E)$(EXTN_LINT)$(_D)"	"$(LINT_DESC)"
 	@$(TABLE_I3) "$(_M)Any other types specified will be passed directly through to Pandoc."
 	@$(ECHO) "\n"
 
@@ -4904,6 +4910,7 @@ all: \
 	$(BASE).$(TYPE_DOCX) \
 	$(BASE).$(TYPE_EPUB) \
 	$(BASE).$(EXTN_TEXT)
+#>	$(BASE).$(EXTN_LINT)
 endif
 ifeq ($(COMPOSER_DEPENDS),)
 all: subdirs
@@ -4922,7 +4929,8 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 			"$(FILE).$(EXTN_SHOW)" \
 			"$(FILE).$(TYPE_DOCX)" \
 			"$(FILE).$(TYPE_EPUB)" \
-			"$(FILE).$(EXTN_TEXT)"; \
+			"$(FILE).$(EXTN_TEXT)" \
+			"$(FILE).$(EXTN_LINT)"; \
 	)
 	@$(RM) $(COMPOSER_STAMP)
 
@@ -5072,6 +5080,9 @@ $(BASE).$(EXTENSION): $(LIST)
 
 %.$(EXTN_TEXT): %.$(COMPOSER_EXT)
 	@$(COMPOSE) --silent TYPE="$(TYPE_TEXT)" BASE="$(*)" LIST="$(^)"
+
+%.$(EXTN_LINT): %.$(COMPOSER_EXT)
+	@$(COMPOSE) --silent TYPE="$(TYPE_LINT)" BASE="$(*)" LIST="$(^)"
 
 ################################################################################
 # End Of File
