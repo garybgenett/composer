@@ -874,10 +874,11 @@ override PANDOC_TYPE_DST		:= $(COMPOSER_BUILD)/pandoc-types
 override PANDOC_MATH_DST		:= $(COMPOSER_BUILD)/pandoc-texmath
 override PANDOC_HIGH_DST		:= $(COMPOSER_BUILD)/pandoc-highlighting
 override PANDOC_CITE_DST		:= $(COMPOSER_BUILD)/pandoc-citeproc
-override PANDOC_DIRECTORIES		:= \
+override PANDOC_DIRECTORIES_LDLIB	:= \
 	"$(PANDOC_TYPE_DST)" \
 	"$(PANDOC_MATH_DST)" \
-	"$(PANDOC_HIGH_DST)" \
+	"$(PANDOC_HIGH_DST)"
+override PANDOC_DIRECTORIES		:= \
 	"$(PANDOC_CITE_DST)" \
 	"$(PANDOC_DST)"
 
@@ -3850,6 +3851,7 @@ ifneq ($(word 1,$(CABAL)),"")
 			--only-dependencies \
 			--enable-tests \
 			--dry-run \
+			$(PANDOC_DIRECTORIES_LDLIB) \
 			$(PANDOC_DIRECTORIES); \
 	$(ECHO) "$(_D)"
 	$(ECHO) "$(_C)"; \
@@ -3879,12 +3881,16 @@ endif
 	cd "$(PANDOC_HIGH_DST)" && \
 		$(BUILD_ENV_MINGW) $(MAKE) prep
 	@$(ESCAPE) "\n$(_H)$(MARKER) Install"
+	$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
+		--flags="$(PANDOC_FLAGS)" \
+		--enable-tests \
+		$(PANDOC_DIRECTORIES_LDLIB)
 	$(call CABAL_INSTALL,,$(COMPOSER_ABODE)) \
 		--flags="$(PANDOC_FLAGS)" \
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
 	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
-	$(foreach FILE,$(PANDOC_DIRECTORIES),\
+	$(foreach FILE,$(PANDOC_DIRECTORIES_LDLIB) $(PANDOC_DIRECTORIES),\
 		cd $(FILE) && \
 			$(DO_CABAL) test || $(TRUE); \
 	)
