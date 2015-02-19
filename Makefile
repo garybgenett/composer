@@ -1367,6 +1367,8 @@ override HADDOCK			:= "$(call COMPOSER_FIND,$(PATH_LIST),haddock)"
 ifneq ($(COMPOSER_TESTING),)
 override GHC_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc))"
 override GHC_PKG_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc-pkg),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc-pkg))"
+override CABAL_BIN			:=
+override HADDOCK_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/haddock),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/haddock))"
 endif
 
 override define DO_PATCH		=
@@ -1462,7 +1464,8 @@ override HACKAGE_PREP			= $(call DO_UNTAR,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(
 override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL)
 override CABAL_INFO			= $(DO_CABAL) info
 override CABAL_INSTALL			= $(DO_CABAL) install \
-	$(call CABAL_OPTIONS,$(1)) \
+	$(call CABAL_OPTIONS$(1),$(2)) \
+	--jobs=$(MAKEJOBS) \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
@@ -1480,11 +1483,20 @@ endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
+	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
+	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
+	$(foreach FILE,$(GHCFLAGS) -static,--ghc-option="$(FILE)") \
+	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
+	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
+	--disable-executable-dynamic \
+	--disable-shared \
+	--global
+override CABAL_OPTIONS_LDLIB		= \
+	--prefix="$(1)" \
+	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS_LDLIB),--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS_LDLIB),--ld-option="$(FILE)") \
 	$(foreach FILE,$(GHCFLAGS_LDLIB),--ghc-option="$(FILE)") \
-	--ghc-option="-static" \
-	--disable-executable-dynamic \
 	--extra-include-dirs="$(BUILD_LDLIB)/include" \
 	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
@@ -2778,7 +2790,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-shared \
 		--enable-static \
 	)
-	# GHC compiler requires dynamic Iconv library (libiconv.so)
+	# GHC compiler requires dynamic Iconv library (libiconv.so, libcharset.so)
 ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
 	$(call LIBICONV_BUILD,$(BUILD_LDLIB),\
@@ -3761,7 +3773,7 @@ else
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
-		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
+		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
 endif
@@ -3790,12 +3802,12 @@ override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 		,\
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
-	$(call CABAL_INSTALL,$(2)) \
+	$(call CABAL_INSTALL,_LDLIB,$(2)) \
 		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 			"$(1)/$(FILE)" \
 		)
 	if [ -z "$(BUILD_GHC78)" ]; then \
-		$(call CABAL_INSTALL,$(2)) \
+		$(call CABAL_INSTALL,_LDLIB,$(2)) \
 			$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
 				"$(1)/$(FILE)" \
 			); \
@@ -3834,14 +3846,14 @@ ifneq ($(word 1,$(CABAL)),"")
 #WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  if they linger, should we warn or clean them up?
 	$(DO_CABAL) update
 	$(ECHO) "$(_C)"; \
-		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 			--only-dependencies \
 			--enable-tests \
 			--dry-run \
 			$(PANDOC_DIRECTORIES); \
 	$(ECHO) "$(_D)"
 	$(ECHO) "$(_C)"; \
-		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 			--dry-run \
 			$(subst |,-,$(PANDOC_LIBRARIES_LIST)); \
 	$(ECHO) "$(_D)"
@@ -3855,7 +3867,7 @@ ifneq ($(COMPOSER_TESTING),0)
 	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 		$(call HACKAGE_PREP,$(FILE),$(PANDOC_DST).libs); \
 	)
-	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 			"$(PANDOC_DST).libs/$(FILE)" \
 		)
@@ -3867,7 +3879,7 @@ endif
 	cd "$(PANDOC_HIGH_DST)" && \
 		$(BUILD_ENV_MINGW) $(MAKE) prep
 	@$(ESCAPE) "\n$(_H)$(MARKER) Install"
-	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
+	$(call CABAL_INSTALL,,$(COMPOSER_ABODE)) \
 		--flags="$(PANDOC_FLAGS)" \
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
@@ -4020,7 +4032,8 @@ $(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
 ifneq ($(COMPOSER_TESTING),)
 $(CHECKIT): override BUILD_BINARY_LIST_CHECK := \
 	$(BUILD_BINARY_LIST_CHECK) \
-	$(word 1,$(GHC_BIN)) $(word 1,$(GHC_PKG_BIN))
+	$(word 1,$(GHC_BIN)) $(word 1,$(GHC_PKG_BIN)) \
+	$(word 1,$(CABAL_BIN)) $(word 1,$(HADDOCK_BIN))
 endif
 $(CHECKIT): override BUILD_BINARY_LIST_LDD := $(shell \
 	$(BUILD_ENV) $(LDD) $(BUILD_BINARY_LIST_CHECK) 2>/dev/null \
