@@ -874,11 +874,10 @@ override PANDOC_TYPE_DST		:= $(COMPOSER_BUILD)/pandoc-types
 override PANDOC_MATH_DST		:= $(COMPOSER_BUILD)/pandoc-texmath
 override PANDOC_HIGH_DST		:= $(COMPOSER_BUILD)/pandoc-highlighting
 override PANDOC_CITE_DST		:= $(COMPOSER_BUILD)/pandoc-citeproc
-override PANDOC_DIRECTORIES_LDLIB	:= \
+override PANDOC_DIRECTORIES		:= \
 	"$(PANDOC_TYPE_DST)" \
 	"$(PANDOC_MATH_DST)" \
-	"$(PANDOC_HIGH_DST)"
-override PANDOC_DIRECTORIES		:= \
+	"$(PANDOC_HIGH_DST)" \
 	"$(PANDOC_CITE_DST)" \
 	"$(PANDOC_DST)"
 
@@ -1340,10 +1339,6 @@ override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
-#WORKING
-ifeq ($(BUILD_PLAT),Msys)
-override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
-endif
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
@@ -1466,7 +1461,7 @@ override HACKAGE_PREP			= $(call DO_UNTAR,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(
 override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL)
 override CABAL_INFO			= $(DO_CABAL) info
 override CABAL_INSTALL			= $(DO_CABAL) install \
-	$(call CABAL_OPTIONS$(1),$(2)) \
+	$(call CABAL_OPTIONS,$(1)) \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
@@ -1484,20 +1479,11 @@ endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
-	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
-	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
-	$(foreach FILE,$(GHCFLAGS),--ghc-option="$(FILE)") \
-	--ghc-option="-static" \
-	--disable-executable-dynamic \
-	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
-	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
-	--global
-override CABAL_OPTIONS_LDLIB		= \
-	--prefix="$(1)" \
-	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS_LDLIB),--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS_LDLIB),--ld-option="$(FILE)") \
 	$(foreach FILE,$(GHCFLAGS_LDLIB),--ghc-option="$(FILE)") \
+	--ghc-option="-static" \
+	--disable-executable-dynamic \
 	--extra-include-dirs="$(BUILD_LDLIB)/include" \
 	--extra-lib-dirs="$(BUILD_LDLIB)/lib" \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
@@ -2575,7 +2561,6 @@ override CHECK_FAILED		:= 1
 override CHECK_MSYS		:= 1
 endif
 endif
-#WORKING : double-check that this one is still true?  best way to test is comment out the "dash" replacement for "$RELEASE-dist"
 ifeq ($(shell $(SHELL) --version | $(SED) -n "/GNU[ ]bash/p"),)
 override CHECK_FAILED		:= 1
 override CHECK_SHELL		:= 1
@@ -2661,7 +2646,6 @@ else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
 
-#WORKING : does the icon work?
 override define HEREDOC_MSYS_SHELL =
 @echo off
 if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
@@ -3774,7 +3758,7 @@ else
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
-		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
+		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
 endif
@@ -3803,12 +3787,12 @@ override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 		,\
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
-	$(call CABAL_INSTALL,_LDLIB,$(2)) \
+	$(call CABAL_INSTALL,$(2)) \
 		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 			"$(1)/$(FILE)" \
 		)
 	if [ -z "$(BUILD_GHC78)" ]; then \
-		$(call CABAL_INSTALL,_LDLIB,$(2)) \
+		$(call CABAL_INSTALL,$(2)) \
 			$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
 				"$(1)/$(FILE)" \
 			); \
@@ -3847,15 +3831,14 @@ ifneq ($(word 1,$(CABAL)),"")
 #WORKING : is "$APPDATA/cabal" fixed?  what about "$APPDATA/ghc"?  if they linger, should we warn or clean them up?
 	$(DO_CABAL) update
 	$(ECHO) "$(_C)"; \
-		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
+		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 			--only-dependencies \
 			--enable-tests \
 			--dry-run \
-			$(PANDOC_DIRECTORIES_LDLIB) \
 			$(PANDOC_DIRECTORIES); \
 	$(ECHO) "$(_D)"
 	$(ECHO) "$(_C)"; \
-		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
+		$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 			--dry-run \
 			$(subst |,-,$(PANDOC_LIBRARIES_LIST)); \
 	$(ECHO) "$(_D)"
@@ -3869,7 +3852,7 @@ ifneq ($(COMPOSER_TESTING),0)
 	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 		$(call HACKAGE_PREP,$(FILE),$(PANDOC_DST).libs); \
 	)
-	$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
+	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 			"$(PANDOC_DST).libs/$(FILE)" \
 		)
@@ -3881,16 +3864,12 @@ endif
 	cd "$(PANDOC_HIGH_DST)" && \
 		$(BUILD_ENV_MINGW) $(MAKE) prep
 	@$(ESCAPE) "\n$(_H)$(MARKER) Install"
-	$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
-		--flags="$(PANDOC_FLAGS)" \
-		--enable-tests \
-		$(PANDOC_DIRECTORIES_LDLIB)
-	$(call CABAL_INSTALL,,$(COMPOSER_ABODE)) \
+	$(call CABAL_INSTALL,$(COMPOSER_ABODE)) \
 		--flags="$(PANDOC_FLAGS)" \
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
 	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
-	$(foreach FILE,$(PANDOC_DIRECTORIES_LDLIB) $(PANDOC_DIRECTORIES),\
+	$(foreach FILE,$(PANDOC_DIRECTORIES),\
 		cd $(FILE) && \
 			$(DO_CABAL) test || $(TRUE); \
 	)
@@ -4076,7 +4055,6 @@ $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 $(SHELLIT):
 	@$(BUILD_ENV) $(BASH) || $(TRUE)
 
-#WORKING : msys2_shell auto-detection hackery; working?
 override MSYS_SHELL_DIR := $(COMPOSER_PROGS)
 ifneq ($(COMPOSER_PROGS_USE),1)
 ifneq ($(wildcard $(MSYS_DST)),)
