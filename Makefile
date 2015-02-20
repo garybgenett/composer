@@ -1693,7 +1693,7 @@ override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="
 override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)$(1)"
 override BUILD_COMPLETE_TIMERIT		= if [ -f "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)" ]; then $(CAT) "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)"; fi
-override BUILD_COMPLETE_TIMERIT_FILES	= cd "$(COMPOSER_ABODE)/.$(BUILDIT)" && $(FIND) ./ 2>/dev/null | $(SORT) | $(SED) -e "s|^[.][/]||g"
+override BUILD_COMPLETE_TIMERIT_FILES	= $(FIND) "$(COMPOSER_ABODE)/.$(BUILDIT)" 2>/dev/null | $(SORT) | $(SED) -e "s|^$(COMPOSER_ABODE)/.$(BUILDIT)[/]?||g"
 
 ################################################################################
 
@@ -2765,15 +2765,17 @@ ifneq ($(BUILD_FETCH),)
 endif
 
 .PHONY: $(BUILDIT)-msys
+$(BUILDIT)-msys:
+	@$(call BUILD_COMPLETE,-run)
+	# call recursively instead of using dependencies, so we can track timestamps
 ifneq ($(BUILD_FETCH),)
-$(BUILDIT)-msys: $(BUILDIT)-msys-base
+	$(RUNMAKE) $(BUILDIT)-msys-base
 endif
 ifneq ($(BUILD_FETCH),0)
-$(BUILDIT)-msys: $(BUILDIT)-msys-pkg
-$(BUILDIT)-msys: $(BUILDIT)-msys-dll
-$(BUILDIT)-msys:
-	@$(call BUILD_COMPLETE)
+	$(RUNMAKE) $(BUILDIT)-msys-pkg
+	$(RUNMAKE) $(BUILDIT)-msys-dll
 endif
+	@$(call BUILD_COMPLETE,-end)
 
 .PHONY: $(BUILDIT)-msys-base
 $(BUILDIT)-msys-base:
@@ -4199,7 +4201,16 @@ endef
 
 .PHONY: $(TIMERIT)
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS_FILES	:= $(shell $(call BUILD_COMPLETE_TIMERIT_FILES))
-$(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= \
+$(TIMERIT): override BUILD_COMPLETE_TIMERITS_MSYS	:=
+ifeq ($(BUILD_PLAT),Msys)
+$(TIMERIT): override BUILD_COMPLETE_TIMERITS_MSYS	:= \
+	$(BUILDIT)-msys-run \
+		$(BUILDIT)-msys-base \
+		$(BUILDIT)-msys-pkg \
+		$(BUILDIT)-msys-dll \
+	$(BUILDIT)-msys-end
+endif
+$(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS_MSYS) \
 	$(ALLOFIT)-run \
 	$(ALLOFIT)-check \
 	$(STRAPIT)-run \
