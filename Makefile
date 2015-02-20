@@ -58,6 +58,7 @@
 #	https://stackoverflow.com/questions/8657908/deploying-yesod-to-heroku-cant-build-statically/8658468#8658468
 #	https://stackoverflow.com/questions/2558166/using-ghc-cabal-with-gmp-installed-in-user-space
 #	http://www.insanecoding.blogspot.com/2012/07/creating-portable-linux-binaries.html
+#	https://enchildfone.wordpress.com/2010/03/23/a-description-of-rpath-origin-ld_library_path-and-portable-linux-binaries
 #WORKING
 
 #TODO : new features
@@ -1257,6 +1258,20 @@ override PANDOC_FLAGS			:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
+#WORKING : "$(BUILD_PLAT),Msys" during "$(ALLOFIT)" and/or "$(BUILDIT)"
+override MSYS_HACKS			:=
+ifeq ($(BUILD_PLAT),Msys)
+override MSYS_HACKS			:= 1
+ifneq ($(wildcard $(COMPOSER_ABODE)/bin/make),)
+# prevents all kinds of errors, not the least of which is broken "$(COMPOSER_DIR)" detection
+$(info $(shell rm "$(COMPOSER_ABODE)/bin/make"))
+endif
+ifeq ($(wildcard $(COMPOSER_ABODE)/.coreutils.null),)
+# prevents miscellaneous and inexplicable "configure" build errors
+$(info $(shell echo >"$(COMPOSER_ABODE)/.coreutils.null"))
+endif
+endif
+
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
 ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
 $(info $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"))
@@ -1284,10 +1299,6 @@ override PACMAN				:= "$(MSYS_DST)/usr/bin/pacman" --verbose --noconfirm --sync 
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --mixed
-
-#WORKING : "$(BUILD_PLAT),Msys" during "$(ALLOFIT)" and/or "$(BUILDIT)"
-#WORKING	$(ECHO) >"$(COMPOSER_ABODE)/.coreutils.null"
-#WORKING	override TAR := "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
 
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override define COREUTILS_INSTALL	=
@@ -1357,6 +1368,10 @@ override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
+ifneq ($(MSYS_HACKS),)
+# prevents "unexpected eof in archive"
+override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
+endif
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
