@@ -1675,6 +1675,7 @@ override define AUTOTOOLS_BUILD_MINGW	=
 endef
 override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
 override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
+override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)"
 
 ################################################################################
 
@@ -2541,6 +2542,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
+	@$(call BUILD_COMPLETE)
 endif
 
 #WORK : document!
@@ -2595,6 +2597,7 @@ $(STRAPIT):
 	$(RUNMAKE) $(BUILDIT)-group-core
 	$(RUNMAKE) $(BUILDIT)-ghc-init
 	$(RUNMAKE) $(BUILDIT)-cabal-init
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)
 $(BUILDIT):
@@ -2605,6 +2608,7 @@ $(BUILDIT):
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
+	@$(call BUILD_COMPLETE)
 
 override CHECK_FAILED		:=
 override CHECK_MSYS		:=
@@ -2657,6 +2661,7 @@ ifneq ($(CHECK_FAILED),)
 	@$(HEADER_1)
 	@exit 1
 endif
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(ALLOFIT)-bindir
 $(ALLOFIT)-bindir:
@@ -2699,6 +2704,7 @@ else ifeq ($(BUILD_PLAT),Msys)
 else
 	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
 endif
+	@$(call BUILD_COMPLETE)
 
 override define HEREDOC_MSYS_SHELL =
 @echo off
@@ -2718,12 +2724,14 @@ $(BUILDIT)-gnu-init:
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-gnu
 $(BUILDIT)-gnu:
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-msys
@@ -2733,6 +2741,8 @@ endif
 ifneq ($(BUILD_FETCH),0)
 $(BUILDIT)-msys: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys: $(BUILDIT)-msys-dll
+$(BUILDIT)-msys:
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-msys-base
@@ -2756,6 +2766,7 @@ $(BUILDIT)-msys-base:
 	@$(TABLE_C2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
 	@$(HEADER_1)
 	@read -s -n1 ENTER
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-msys-pkg
 $(BUILDIT)-msys-pkg:
@@ -2771,6 +2782,7 @@ $(BUILDIT)-msys-pkg:
 	$(PACMAN_ENV) $(PACMAN_KEY) --refresh-keys	|| $(TRUE)
 	$(PACMAN_ENV) $(PACMAN) --sysupgrade $(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-msys-dll
 $(BUILDIT)-msys-dll:
@@ -2778,6 +2790,7 @@ $(BUILDIT)-msys-dll:
 	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
 		$(CP) "$(MSYS_DST)/usr/bin/$(FILE)" "$(COMPOSER_ABODE)/bin/"; \
 	)
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-group-libs
 $(BUILDIT)-group-libs:
@@ -2795,6 +2808,7 @@ $(BUILDIT)-group-libs:
 	$(RUNMAKE) $(BUILDIT)-bzip
 	$(RUNMAKE) $(BUILDIT)-freetype
 	$(RUNMAKE) $(BUILDIT)-fontconfig
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-libiconv-init
 $(BUILDIT)-libiconv-init:
@@ -2806,6 +2820,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-shared \
 		--enable-static \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-gettext
@@ -2819,6 +2834,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-shared \
 		--enable-static \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-libiconv
@@ -2839,6 +2855,7 @@ ifneq ($(BUILD_PLAT),Msys)
 		--enable-static \
 	)
 endif
+	@$(call BUILD_COMPLETE)
 endif
 
 override define LIBICONV_PULL =
@@ -2891,6 +2908,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-host-tool \
 		--without-internal-glib \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-zlib
@@ -2907,6 +2925,7 @@ ifneq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling
 	$(call ZLIB_BUILD,$(BUILD_LDLIB))
 endif
+	@$(call BUILD_COMPLETE)
 endif
 
 override ZLIB_BUILD_BITS :=
@@ -2946,6 +2965,7 @@ ifneq ($(BUILD_PLAT),Msys)
 		--enable-static \
 	)
 endif
+	@$(call BUILD_COMPLETE)
 endif
 
 override define GMP_PULL =
@@ -2987,6 +3007,7 @@ ifneq ($(BUILD_PLAT),Msys)
 		--with-shared \
 	)
 endif
+	@$(call BUILD_COMPLETE)
 endif
 
 override define NCURSES_PULL =
@@ -3071,6 +3092,7 @@ endif
 		no-shared \
 		no-dso \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-expat
@@ -3089,6 +3111,7 @@ endif
 		--disable-shared \
 		--enable-static \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-freetype
@@ -3102,6 +3125,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-shared \
 		--enable-static \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-fontconfig
@@ -3140,6 +3164,7 @@ else
 		--enable-static \
 	)
 endif
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-group-util
@@ -3154,6 +3179,7 @@ $(BUILDIT)-group-util:
 	$(RUNMAKE) $(BUILDIT)-xz
 	$(RUNMAKE) $(BUILDIT)-tar
 	$(RUNMAKE) $(BUILDIT)-perl
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
@@ -3174,6 +3200,7 @@ endif
 		--disable-libcap \
 		--disable-xattr \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-findutils
@@ -3189,6 +3216,7 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	$(call GNU_CFG_INSTALL,$(FINDUTILS_DST)/build-aux)
 endif
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_DST),$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-patch
@@ -3201,6 +3229,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(PATCH_DST),$(COMPOSER_ABODE),,\
 		--disable-xattr \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-sed
@@ -3218,6 +3247,7 @@ endif
 	$(call AUTOTOOLS_BUILD,$(SED_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-bzip
@@ -3233,6 +3263,7 @@ ifneq ($(BUILD_FETCH),0)
 		-e "s|^(PREFIX[=]).+$$|\1$(COMPOSER_ABODE)|g" \
 		"$(BZIP_DST)/Makefile"
 	$(call AUTOTOOLS_BUILD,$(BZIP_DST),$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-gzip
@@ -3243,6 +3274,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(GZIP_DST),$(GZIP_SRC))
 	$(call AUTOTOOLS_BUILD,$(GZIP_DST),$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-xz
@@ -3256,6 +3288,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-shared \
 		--enable-static \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-tar
@@ -3270,6 +3303,7 @@ ifneq ($(BUILD_FETCH),0)
 		--without-posix-acls \
 		--without-xattrs \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-perl
@@ -3307,6 +3341,7 @@ endif
 			"$(PERL_DST)/configure"; \
 	fi
 	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_DST),$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-perl-modules
@@ -3322,6 +3357,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call PERL_MODULES_BUILD,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 override define PERL_MODULES_PULL =
@@ -3342,9 +3378,17 @@ $(BUILDIT)-group-tool:
 	$(RUNMAKE) $(BUILDIT)-bash
 	$(RUNMAKE) $(BUILDIT)-less
 	$(RUNMAKE) $(BUILDIT)-vim
+	@$(call BUILD_COMPLETE)
+
+# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
+override BASH_BUILD_VARIABLES :=
+#WORK : platform_switches
+ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
+override BASH_BUILD_VARIABLES := bash_cv_func_sigsetjmp="missing"
+endif
 
 .PHONY: $(BUILDIT)-bash
-# thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 # thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
 $(BUILDIT)-bash:
 ifneq ($(BUILD_FETCH),)
@@ -3353,21 +3397,13 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
 	$(call DO_UNTAR,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	# "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
 	$(call AUTOTOOLS_BUILD,$(BASH_DST),$(COMPOSER_ABODE),\
-		bash_cv_func_sigsetjmp="missing" \
+		$(BASH_BUILD_VARIABLES) \
 		,\
 		--enable-static-link \
 		--without-bash-malloc \
 	)
-else
-	$(call AUTOTOOLS_BUILD,$(BASH_DST),$(COMPOSER_ABODE),,\
-		--enable-static-link \
-		--without-bash-malloc \
-	)
-endif
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-less
@@ -3378,6 +3414,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(LESS_DST),$(LESS_SRC))
 	$(call AUTOTOOLS_BUILD,$(LESS_DST),$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-vim
@@ -3396,6 +3433,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-gui \
 		--without-x \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-group-core
@@ -3405,6 +3443,7 @@ $(BUILDIT)-group-core:
 	$(RUNMAKE) $(BUILDIT)-infozip
 	$(RUNMAKE) $(BUILDIT)-curl
 	$(RUNMAKE) $(BUILDIT)-git
+	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-make-init
 $(BUILDIT)-make-init:
@@ -3417,6 +3456,7 @@ ifneq ($(BUILD_FETCH),0)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
 	$(call MAKE_BUILD,$(MAKE_DST_INIT))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-make
@@ -3432,6 +3472,7 @@ ifneq ($(BUILD_FETCH),0)
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update || $(TRUE)
 	$(call MAKE_BUILD,$(MAKE_DST))
+	@$(call BUILD_COMPLETE)
 endif
 
 override define MAKE_BUILD =
@@ -3466,6 +3507,7 @@ ifneq ($(BUILD_FETCH),0)
 	cd "$(UZIP_DST)" && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile generic && \
 		$(BUILD_ENV) $(MAKE) --makefile ./unix/Makefile install
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-curl
@@ -3505,6 +3547,7 @@ ifneq ($(BUILD_FETCH),0)
 		--disable-shared \
 		--enable-static \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 #WORKING : git is installing perl modules in ".home/lib64" directory, using native perl rather than built one
@@ -3532,6 +3575,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(call AUTOTOOLS_BUILD,$(GIT_DST),$(COMPOSER_ABODE),,\
 		--without-tcltk \
 	)
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-texlive
@@ -3589,13 +3633,17 @@ endif
 	$(CP) "$(TEX_TEXMF_DST)/"*		"$(COMPOSER_ABODE)/"
 	$(RM)					"$(COMPOSER_ABODE)/bin/pdflatex"
 	$(CP) "$(COMPOSER_ABODE)/bin/pdftex"	"$(COMPOSER_ABODE)/bin/pdflatex"
+	@$(call BUILD_COMPLETE)
+endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-texlive-fmtutil
-endif
 
 .PHONY: $(BUILDIT)-texlive-fmtutil
 $(BUILDIT)-texlive-fmtutil:
+ifneq ($(BUILD_FETCH),0)
 	$(BUILD_ENV) fmtutil --all
+	@$(call BUILD_COMPLETE)
+endif
 
 .PHONY: $(BUILDIT)-ghc-init
 $(BUILDIT)-ghc-init:
@@ -3604,6 +3652,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(GHC_DST_INIT),$(GHC_SRC_INIT))
+	@$(call BUILD_COMPLETE)
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	# in particular, we need to update "$(LD_LIBRARY_PATH)" for the "$(BUILD_PLAT),Linux" build
@@ -3627,6 +3676,7 @@ endif
 		show \
 	)
 endif
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-ghc
@@ -3693,6 +3743,7 @@ endif
 #	$(RM) -r "$(BUILD_STRAP)/mingw"*
 #endif
 #WORK
+	@$(call BUILD_COMPLETE)
 endif
 
 override define HEREDOC_GHC_BUILD_MK =
@@ -3712,6 +3763,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PREP,$(CABAL_DST_INIT),$(CABAL_LIBRARIES_INIT_LIST))
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+	@$(call BUILD_COMPLETE)
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-init-libs
@@ -3724,6 +3776,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD_GHC_LIBRARIES_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
+	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-cabal
@@ -3737,6 +3790,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(CP) "$(CABAL_DST)/Cabal" "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(call CABAL_PREP,$(CABAL_DST)/cabal-install,$(CABAL_LIBRARIES_LIST))
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-libs
@@ -3749,6 +3803,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call CABAL_BUILD_GHC_LIBRARIES_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
+	@$(call BUILD_COMPLETE)
 endif
 
 override define CABAL_PULL =
@@ -3929,9 +3984,10 @@ endif
 		cd $(FILE) && \
 			$(DO_CABAL) test || $(TRUE); \
 	)
-	@$(ECHO) "\n$(_E)"
+	@$(call BUILD_COMPLETE)
+	@$(ECHO) "$(_E)\n"
 	@$(TAIL) -n6 $(PANDOC_DST)*/dist/test/*-test-*.log || $(TRUE)
-	@$(ECHO) "\n$(_M)"
+	@$(ECHO) "$(_M)\n"
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
 	@$(ECHO) "$(_D)"
 endif
