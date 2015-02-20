@@ -1080,6 +1080,7 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/amsmath \
 	tex/latex/base \
 	tex/latex/booktabs \
+	tex/latex/geometry \
 	tex/latex/graphics \
 	tex/latex/hyperref \
 	tex/latex/latexconfig \
