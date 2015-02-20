@@ -174,21 +174,37 @@ override COMPOSER_FILES			?=
 
 ########################################
 
-override TYPE				?= html
-override BASE				?= README
-override LIST				?= $(BASE).$(COMPOSER_EXT)
-
 # have to keep these around for a bit, after changing the names of them
 $(if $(DCSS),$(eval override		CSS ?= $(DCSS)))
 $(if $(NAME),$(eval override		TTL ?= $(NAME)))
 $(if $(OPTS),$(eval override		OPT ?= $(OPTS)))
 
-# provide long aliases for shortened names
-$(if $(C_TITLE),$(eval override		TTL ?= $(C_TITLE)))
-$(if $(C_CONTENTS),$(eval override	TOC ?= $(C_CONTENTS)))
-$(if $(C_HEADERS),$(eval override	LVL ?= $(C_HEADERS)))
-$(if $(C_MARGIN),$(eval override	MGN ?= $(C_MARGIN)))
-$(if $(C_OPTIONS),$(eval override	OPT ?= $(C_OPTIONS)))
+# provide long aliases for option variables
+$(if $(c_type),$(eval override		TYPE ?= $(c_type)))
+$(if $(c_base),$(eval override		BASE ?= $(c_base)))
+$(if $(c_list),$(eval override		LIST ?= $(c_list)))
+$(if $(c_css),$(eval override		CSS ?= $(c_css)))
+$(if $(c_title),$(eval override		TTL ?= $(c_title)))
+$(if $(c_contents),$(eval override	TOC ?= $(c_contents)))
+$(if $(c_level),$(eval override		LVL ?= $(c_level)))
+$(if $(c_margin),$(eval override	MGN ?= $(c_margin)))
+$(if $(c_options),$(eval override	OPT ?= $(c_options)))
+
+# provide short aliases for option variables
+$(if $(T),$(eval override		TYPE ?= $(T)))
+$(if $(B),$(eval override		BASE ?= $(B)))
+$(if $(L),$(eval override		LIST ?= $(L)))
+$(if $(s),$(eval override		CSS ?= $(s)))
+$(if $(t),$(eval override		TTL ?= $(t)))
+$(if $(c),$(eval override		TOC ?= $(c)))
+$(if $(l),$(eval override		LVL ?= $(l)))
+$(if $(m),$(eval override		MGN ?= $(m)))
+$(if $(o),$(eval override		OPT ?= $(o)))
+
+# set defaults values if not defined
+override TYPE				?= html
+override BASE				?= README
+override LIST				?= $(BASE).$(COMPOSER_EXT)
 
 override CSS_FILE			:= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override CSS				?=
@@ -1523,7 +1539,7 @@ endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
-	$(foreach FILE,$(CFLAGS_STATIC)--gcc-option="$(FILE)") \
+	$(foreach FILE,$(CFLAGS_STATIC),--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS_STATIC),--ld-option="$(FILE)") \
 	$(foreach FILE,$(GHCFLAGS_STATIC) -static,--ghc-option="$(FILE)") \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
@@ -1877,17 +1893,17 @@ HELP_OPTIONS:
 	@$(HEADER_2)
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Variables:"
-	@$(TABLE_I3) "$(_C)TYPE$(_D)"	"Desired output format"			"[$(_M)$(TYPE)$(_D)]"
-	@$(TABLE_I3) "$(_C)BASE$(_D)"	"Base of output file(s)"		"[$(_M)$(BASE)$(_D)]"
-	@$(TABLE_I3) "$(_C)LIST$(_D)"	"List of input files(s)"		"[$(_M)$(LIST)$(_D)]"
+	@$(TABLE_I3) "$(_C)TYPE$(_D) $(_E)(T, c_type)$(_D)"	"Desired output format"			"[$(_M)$(TYPE)$(_D)]"
+	@$(TABLE_I3) "$(_C)BASE$(_D) $(_E)(B, c_base)$(_D)"	"Base of output file(s)"		"[$(_M)$(BASE)$(_D)]"
+	@$(TABLE_I3) "$(_C)LIST$(_D) $(_E)(L, c_list)$(_D)"	"List of input files(s)"		"[$(_M)$(LIST)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Optional Variables:"
-	@$(TABLE_I3) "$(_C)CSS$(_D)"				"Location of CSS file"			"[$(_M)$(CSS)$(_D)] $(_N)(overrides '$(COMPOSER_CSS)')"
-	@$(TABLE_I3) "$(_C)TTL$(_D) / $(_E)C_TITLE$(_D)"	"Document title prefix"			"[$(_M)$(TTL)$(_D)]"
-	@$(TABLE_I3) "$(_C)TOC$(_D) / $(_E)C_CONTENTS$(_D)"	"Table of contents depth"		"[$(_M)$(TOC)$(_D)]"
-	@$(TABLE_I3) "$(_C)LVL$(_D) / $(_E)C_HEADERS$(_D)"	"Chapter/slide header level"		"[$(_M)$(LVL)$(_D)]"
-	@$(TABLE_I3) "$(_C)MGN$(_D) / $(_E)C_MARGIN$(_D)"	"Margin size ('$(TYPE_LPDF)' only)"	"[$(_M)$(MGN)$(_D)]"
-	@$(TABLE_I3) "$(_C)OPT$(_D) / $(_E)C_OPTIONS$(_D)"	"Custom Pandoc options"			"[$(_M)$(OPT)$(_D)]"
+	@$(TABLE_I3) "$(_C)CSS$(_D) $(_E)(s, c_css)$(_D)"	"Location of CSS file"			"[$(_M)$(CSS)$(_D)] $(_N)(overrides '$(COMPOSER_CSS)')"
+	@$(TABLE_I3) "$(_C)TTL$(_D) $(_E)(t, c_title)$(_D)"	"Document title prefix"			"[$(_M)$(TTL)$(_D)]"
+	@$(TABLE_I3) "$(_C)TOC$(_D) $(_E)(c, c_contents)$(_D)"	"Table of contents depth"		"[$(_M)$(TOC)$(_D)]"
+	@$(TABLE_I3) "$(_C)LVL$(_D) $(_E)(l, c_level)$(_D)"	"Chapter/slide header level"		"[$(_M)$(LVL)$(_D)]"
+	@$(TABLE_I3) "$(_C)MGN$(_D) $(_E)(m, c_margin)$(_D)"	"Margin size ('$(TYPE_LPDF)' only)"	"[$(_M)$(MGN)$(_D)]"
+	@$(TABLE_I3) "$(_C)OPT$(_D) $(_E)(o, c_options)$(_D)"	"Custom Pandoc options"			"[$(_M)$(OPT)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Pre-Defined '$(_C)TYPE$(_H)' Values:"
 	@$(TABLE_I3) "$(_C)$(TYPE_HTML)$(_D)"	"$(_N)*$(_D).$(_E)$(TYPE_HTML)$(_D)"	"$(HTML_DESC)"
