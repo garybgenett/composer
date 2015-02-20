@@ -2544,7 +2544,7 @@ override ALLOFIT_GIT	:= $(subst ",,$(word 1,$(GIT)))
 
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(ALLOFIT)-check
 ifneq ($(and $(ALLOFIT_CURL),$(ALLOFIT_GIT)),)
@@ -2571,7 +2571,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(CHECKIT)
 	$(RUNMAKE) $(TIMERIT)
 endif
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 #WORK : document!
 $(FETCHGO)-%:
@@ -2613,7 +2613,7 @@ $(FETCHIT):
 
 .PHONY: $(STRAPIT)
 $(STRAPIT):
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
 #WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
@@ -2626,11 +2626,11 @@ $(STRAPIT):
 	$(RUNMAKE) $(BUILDIT)-group-core
 	$(RUNMAKE) $(BUILDIT)-ghc-init
 	$(RUNMAKE) $(BUILDIT)-cabal-init
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)
 $(BUILDIT):
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
@@ -2638,7 +2638,7 @@ $(BUILDIT):
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 override CHECK_FAILED		:=
 override CHECK_MSYS		:=
@@ -2766,7 +2766,7 @@ endif
 
 .PHONY: $(BUILDIT)-msys
 $(BUILDIT)-msys:
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so we can track timestamps
 ifneq ($(BUILD_FETCH),)
 	$(RUNMAKE) $(BUILDIT)-msys-base
@@ -2775,7 +2775,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(BUILDIT)-msys-pkg
 	$(RUNMAKE) $(BUILDIT)-msys-dll
 endif
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-msys-base
 $(BUILDIT)-msys-base:
@@ -2826,7 +2826,7 @@ $(BUILDIT)-msys-dll:
 
 .PHONY: $(BUILDIT)-group-libs
 $(BUILDIT)-group-libs:
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-libiconv-init
 	$(RUNMAKE) $(BUILDIT)-gettext
@@ -2841,7 +2841,7 @@ $(BUILDIT)-group-libs:
 	$(RUNMAKE) $(BUILDIT)-bzip
 	$(RUNMAKE) $(BUILDIT)-freetype
 	$(RUNMAKE) $(BUILDIT)-fontconfig
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-libiconv-init
 $(BUILDIT)-libiconv-init:
@@ -3202,7 +3202,7 @@ endif
 
 .PHONY: $(BUILDIT)-group-util
 $(BUILDIT)-group-util:
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-coreutils
 	$(RUNMAKE) $(BUILDIT)-findutils
@@ -3213,7 +3213,7 @@ $(BUILDIT)-group-util:
 	$(RUNMAKE) $(BUILDIT)-xz
 	$(RUNMAKE) $(BUILDIT)-tar
 	$(RUNMAKE) $(BUILDIT)-perl
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
@@ -3408,12 +3408,12 @@ endef
 
 .PHONY: $(BUILDIT)-group-tool
 $(BUILDIT)-group-tool:
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-bash
 	$(RUNMAKE) $(BUILDIT)-less
 	$(RUNMAKE) $(BUILDIT)-vim
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 override BASH_BUILD_VARIABLES :=
@@ -3473,13 +3473,13 @@ endif
 
 .PHONY: $(BUILDIT)-group-core
 $(BUILDIT)-group-core:
-	@$(call BUILD_COMPLETE,-run)
+	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-make-init
 	$(RUNMAKE) $(BUILDIT)-infozip
 	$(RUNMAKE) $(BUILDIT)-curl
 	$(RUNMAKE) $(BUILDIT)-git
-	@$(call BUILD_COMPLETE,-end)
+	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-make-init
 $(BUILDIT)-make-init:
@@ -4204,18 +4204,18 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS_FILES	:= $(shell $(call BUILD_COMPL
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS_MSYS	:=
 ifeq ($(BUILD_PLAT),Msys)
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS_MSYS	:= \
-	$(BUILDIT)-msys-run \
+	$(BUILDIT)-msys++ \
 		$(BUILDIT)-msys-base \
 		$(BUILDIT)-msys-pkg \
 		$(BUILDIT)-msys-dll \
-	$(BUILDIT)-msys-end
+	$(BUILDIT)-msys--
 endif
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS_MSYS) \
-	$(ALLOFIT)-run \
+	$(ALLOFIT)++ \
 	$(ALLOFIT)-check \
-	$(STRAPIT)-run \
+	$(STRAPIT)++ \
 		$(BUILDIT)-gnu-init \
-		$(BUILDIT)-group-libs-run \
+		$(BUILDIT)-group-libs++ \
 			$(BUILDIT)-libiconv-init \
 			$(BUILDIT)-gettext \
 			$(BUILDIT)-libiconv \
@@ -4227,8 +4227,8 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS_MSYS)
 			$(BUILDIT)-expat \
 			$(BUILDIT)-freetype \
 			$(BUILDIT)-fontconfig \
-		$(BUILDIT)-group-libs-end \
-		$(BUILDIT)-group-util-run \
+		$(BUILDIT)-group-libs-- \
+		$(BUILDIT)-group-util++ \
 			$(BUILDIT)-coreutils \
 			$(BUILDIT)-findutils \
 			$(BUILDIT)-patch \
@@ -4239,24 +4239,24 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS_MSYS)
 			$(BUILDIT)-tar \
 			$(BUILDIT)-perl \
 			$(BUILDIT)-perl-modules \
-		$(BUILDIT)-group-util-end \
-		$(BUILDIT)-group-tool-run \
+		$(BUILDIT)-group-util-- \
+		$(BUILDIT)-group-tool++ \
 			$(BUILDIT)-bash \
 			$(BUILDIT)-less \
 			$(BUILDIT)-vim \
-		$(BUILDIT)-group-tool-end \
-		$(BUILDIT)-group-core-run \
+		$(BUILDIT)-group-tool-- \
+		$(BUILDIT)-group-core++ \
 			$(BUILDIT)-make-init \
 			$(BUILDIT)-infozip \
 			$(BUILDIT)-curl \
 			$(BUILDIT)-git \
-		$(BUILDIT)-group-core-end \
+		$(BUILDIT)-group-core-- \
 		$(BUILDIT)-ghc-init \
 		$(BUILDIT)-ghc-init-build \
 		$(BUILDIT)-cabal-init \
 		$(BUILDIT)-cabal-init-libs \
-	$(STRAPIT)-end \
-	$(BUILDIT)-run \
+	$(STRAPIT)-- \
+	$(BUILDIT)++ \
 		$(BUILDIT)-gnu \
 		$(BUILDIT)-make \
 		$(BUILDIT)-texlive \
@@ -4264,9 +4264,9 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS_MSYS)
 		$(BUILDIT)-ghc \
 		$(BUILDIT)-cabal \
 		$(BUILDIT)-pandoc \
-	$(BUILDIT)-end \
+	$(BUILDIT)-- \
 	$(ALLOFIT)-bindir \
-	$(ALLOFIT)-end
+	$(ALLOFIT)--
 $(TIMERIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Meta-Target" "Build Target" "Time Completed"
@@ -4277,10 +4277,10 @@ $(TIMERIT):
 		) \
 	)
 	@$(foreach FILE,$(BUILD_COMPLETE_TIMERITS),\
-		$(if $(findstring run,$(FILE)),\
+		$(if $(filter %++,$(FILE)),\
 			$(TABLE_I3) "$(_C)$(FILE)" "" "$(_H)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
 			,\
-			$(if $(findstring end,$(FILE)),\
+			$(if $(filter %--,$(FILE)),\
 				$(TABLE_I3) "$(_E)$(FILE)" "" "$(_N)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
 				,\
 				$(TABLE_I3) "" "$(_M)$(FILE)" "$(_D)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
