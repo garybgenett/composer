@@ -259,6 +259,7 @@ override FETCHNO			:= no$(FETCHIT)
 override STRAPIT			:= bootstrap
 override BUILDIT			:= build
 override CHECKIT			:= check
+override TIMERIT			:= times
 override SHELLIT			:= shell
 
 override CONVICT			:= _commit
@@ -1492,12 +1493,12 @@ override define DO_GIT_SUBMODULE_GHC	=
 		"$(1)/sync-all"; \
 	cd "$(1)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./sync-all get; \
-	cd "$(1)" && $(FIND) ./ -mindepth 2 -type d -name ".git" 2>/dev/null | $(SED) -e "s|^[.][/]||g" -e "s|[/][.]git$$||g" | while read FILE; do \
+	cd "$(1)" && $(FIND) ./ -mindepth 2 -type d -name ".git" 2>/dev/null | $(SORT) | $(SED) -e "s|^[.][/]||g" -e "s|[/][.]git$$||g" | while read FILE; do \
 		$(MKDIR) "$(2)/modules/$${FILE}"; \
 		$(RM) -r "$(2)/modules/$${FILE}"; \
 		$(MV) "$(1)/$${FILE}/.git" "$(2)/modules/$${FILE}"; \
 	done; \
-	cd "$(2)" && $(FIND) ./modules -type f -name "index" 2>/dev/null | $(SED) -e "s|^[.][/]modules[/]||g" -e "s|[/]index$$||g" | while read FILE; do \
+	cd "$(2)" && $(FIND) ./modules -type f -name "index" 2>/dev/null | $(SORT) | $(SED) -e "s|^[.][/]modules[/]||g" -e "s|[/]index$$||g" | while read FILE; do \
 		$(MKDIR) "$(1)/$${FILE}"; \
 		$(ECHO) "gitdir: $(2)/modules/$${FILE}" >"$(1)/$${FILE}/.git"; \
 		cd "$(1)/$${FILE}" && $(GIT) --git-dir="$(2)/modules/$${FILE}" config --local --replace-all core.worktree "$(1)/$${FILE}"; \
@@ -1691,6 +1692,8 @@ endef
 override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
 override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)$(1)"
+override BUILD_COMPLETE_TIMERIT		= if [ -f "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)" ]; then $(CAT) "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)"; fi
+override BUILD_COMPLETE_TIMERIT_FILES	= cd "$(COMPOSER_ABODE)/.$(BUILDIT)" && $(FIND) ./ 2>/dev/null | $(SORT) | $(SED) -e "s|^[.][/]||g"
 
 ################################################################################
 
@@ -1804,6 +1807,7 @@ override .ALL_TARGETS := \
 	$(STRAPIT)[:-] \
 	$(BUILDIT)[:-] \
 	$(CHECKIT)[:] \
+	$(TIMERIT)[:] \
 	$(SHELLIT)[:-] \
 	all[:] \
 	clean[:] \
@@ -1997,11 +2001,12 @@ HELP_TARGETS:
 	@$(TABLE_I3) "$(_C)$(UPGRADE)$(_D)"		"Download/update all 3rd party components (need to do this at least once)"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Compilation Targets:"
-	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D)"		"Complete build with additional wrapping: $(FETCHIT), $(STRAPIT), $(BUILDIT) & $(CHECKIT)"
+	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D)"		"Complete build with additional wrapping: $(FETCHIT), $(STRAPIT), $(BUILDIT), $(CHECKIT) & $(TIMERIT)"
 	@$(TABLE_I3) "$(_C)$(FETCHIT)$(_D)"		"Download/update and prepare all source repositories and archives"
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D)"		"Build/compile specific versions of essential libraries and tools"
 	@$(TABLE_I3) "$(_C)$(BUILDIT)$(_D)"		"Build/compile specific versions of core tools necessary for $(COMPOSER_BASENAME) operation"
 	@$(TABLE_I3) "$(_C)$(CHECKIT)$(_D)"		"Diagnostic version information (for verification and/or troubleshooting)"
+	@$(TABLE_I3) "$(_C)$(TIMERIT)$(_D)"		"Lists all '$(BUILDIT)' targets and their completion timestamps"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)$(_D)"		"Launches into $(COMPOSER_BASENAME) sub-shell environment"
 	@$(TABLE_I3) "$(_C)$(SHELLIT)-msys$(_D)"	"Launches MSYS2 shell (for Windows) into $(COMPOSER_BASENAME) sub-shell environment"
 	@$(ECHO) "\n"
@@ -2329,6 +2334,9 @@ $(DEBUGIT):
 	@$(call DEBUGIT_TARGET,$(CHECKIT))
 	@$(ECHO) "\n"
 	@$(HEADER_2)
+	@$(call DEBUGIT_TARGET,$(TIMERIT))
+	@$(ECHO) "\n"
+	@$(HEADER_2)
 	@$(call DEBUGIT_TARGET,$(TARGETS))
 	@$(ECHO) "\n"
 	@$(HEADER_1)
@@ -2536,7 +2544,7 @@ override ALLOFIT_GIT	:= $(subst ",,$(word 1,$(GIT)))
 
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(ALLOFIT)-check
 ifneq ($(and $(ALLOFIT_CURL),$(ALLOFIT_GIT)),)
@@ -2561,6 +2569,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
+	$(RUNMAKE) $(TIMERIT)
 endif
 	@$(call BUILD_COMPLETE,-end)
 
@@ -2604,7 +2613,7 @@ $(FETCHIT):
 
 .PHONY: $(STRAPIT)
 $(STRAPIT):
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
 #WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
@@ -2621,7 +2630,7 @@ $(STRAPIT):
 
 .PHONY: $(BUILDIT)
 $(BUILDIT):
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
@@ -2815,7 +2824,7 @@ $(BUILDIT)-msys-dll:
 
 .PHONY: $(BUILDIT)-group-libs
 $(BUILDIT)-group-libs:
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-libiconv-init
 	$(RUNMAKE) $(BUILDIT)-gettext
@@ -3191,7 +3200,7 @@ endif
 
 .PHONY: $(BUILDIT)-group-util
 $(BUILDIT)-group-util:
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-coreutils
 	$(RUNMAKE) $(BUILDIT)-findutils
@@ -3397,7 +3406,7 @@ endef
 
 .PHONY: $(BUILDIT)-group-tool
 $(BUILDIT)-group-tool:
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-bash
 	$(RUNMAKE) $(BUILDIT)-less
@@ -3462,7 +3471,7 @@ endif
 
 .PHONY: $(BUILDIT)-group-core
 $(BUILDIT)-group-core:
-	@$(call BUILD_COMPLETE,-begin)
+	@$(call BUILD_COMPLETE,-run)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-make-init
 	$(RUNMAKE) $(BUILDIT)-infozip
@@ -4187,6 +4196,87 @@ override define CHECKIT_LIBRARY_LINKED =
 	$(NULL)
 endef
 #> syntax highlighting fix: ")
+
+.PHONY: $(TIMERIT)
+$(TIMERIT): override BUILD_COMPLETE_TIMERITS_FILES	:= $(shell $(call BUILD_COMPLETE_TIMERIT_FILES))
+$(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= \
+	$(ALLOFIT)-run \
+	$(ALLOFIT)-check \
+	$(STRAPIT)-run \
+		$(BUILDIT)-gnu-init \
+		$(BUILDIT)-group-libs-run \
+			$(BUILDIT)-libiconv-init \
+			$(BUILDIT)-gettext \
+			$(BUILDIT)-libiconv \
+			$(BUILDIT)-pkgconfig \
+			$(BUILDIT)-zlib \
+			$(BUILDIT)-gmp \
+			$(BUILDIT)-ncurses \
+			$(BUILDIT)-openssl \
+			$(BUILDIT)-expat \
+			$(BUILDIT)-freetype \
+			$(BUILDIT)-fontconfig \
+		$(BUILDIT)-group-libs-end \
+		$(BUILDIT)-group-util-run \
+			$(BUILDIT)-coreutils \
+			$(BUILDIT)-findutils \
+			$(BUILDIT)-patch \
+			$(BUILDIT)-sed \
+			$(BUILDIT)-bzip \
+			$(BUILDIT)-gzip \
+			$(BUILDIT)-xz \
+			$(BUILDIT)-tar \
+			$(BUILDIT)-perl \
+			$(BUILDIT)-perl-modules \
+		$(BUILDIT)-group-util-end \
+		$(BUILDIT)-group-tool-run \
+			$(BUILDIT)-bash \
+			$(BUILDIT)-less \
+			$(BUILDIT)-vim \
+		$(BUILDIT)-group-tool-end \
+		$(BUILDIT)-group-core-run \
+			$(BUILDIT)-make-init \
+			$(BUILDIT)-infozip \
+			$(BUILDIT)-curl \
+			$(BUILDIT)-git \
+		$(BUILDIT)-group-core-end \
+		$(BUILDIT)-ghc-init \
+		$(BUILDIT)-ghc-init-build \
+		$(BUILDIT)-cabal-init \
+		$(BUILDIT)-cabal-init-libs \
+	$(STRAPIT)-end \
+	$(BUILDIT)-run \
+		$(BUILDIT)-gnu \
+		$(BUILDIT)-make \
+		$(BUILDIT)-texlive \
+		$(BUILDIT)-texlive-fmtutil \
+		$(BUILDIT)-ghc \
+		$(BUILDIT)-cabal \
+		$(BUILDIT)-pandoc \
+	$(BUILDIT)-end \
+	$(ALLOFIT)-bindir \
+	$(ALLOFIT)-end
+$(TIMERIT):
+	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
+	@$(TABLE_I3) "$(_H)Meta-Target" "Build Target" "Time Completed"
+	@$(HEADER_L)
+	@$(foreach FILE,$(BUILD_COMPLETE_TIMERITS_FILES),\
+		$(if $(filter $(FILE),$(BUILD_COMPLETE_TIMERITS)),,\
+			$(TABLE_I3) "$(DIVIDE) $(_N)$(FILE)" "" "$(_S)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
+		) \
+	)
+	@$(foreach FILE,$(BUILD_COMPLETE_TIMERITS),\
+		$(if $(findstring run,$(FILE)),\
+			$(TABLE_I3) "$(_C)$(FILE)" "" "$(_H)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
+			,\
+			$(if $(findstring end,$(FILE)),\
+				$(TABLE_I3) "$(_E)$(FILE)" "" "$(_N)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
+				,\
+				$(TABLE_I3) "" "$(_M)$(FILE)" "$(_D)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
+			) \
+		) \
+	)
+	@$(HEADER_L)
 
 .PHONY: $(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
