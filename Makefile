@@ -239,6 +239,8 @@ override UPGRADE			:= update
 
 override ALLOFIT			:= world
 override FETCHIT			:= fetch
+override FETCHGO			:= $(FETCHIT)first
+override FETCHNO			:= no$(FETCHIT)
 override STRAPIT			:= bootstrap
 override BUILDIT			:= build
 override CHECKIT			:= check
@@ -1772,6 +1774,7 @@ override .ALL_TARGETS := \
 	EXAMPLE[_] \
 	$(COMPOSER_TARGET)[:] \
 	$(COMPOSER_PANDOC)[:] \
+	$(NOTHING)[:] \
 	$(HELPOUT)[:] \
 	$(HELPALL)[:] \
 	$(DEBUGIT)[:] \
@@ -1781,8 +1784,10 @@ override .ALL_TARGETS := \
 	$(INSTALL)[:-] \
 	$(REPLICA)[:] \
 	$(UPGRADE)[:] \
-	$(ALLOFIT)[:] \
+	$(ALLOFIT)[:-] \
 	$(FETCHIT)[:-] \
+	$(FETCHGO)[:-] \
+	$(FETCHNO)[:-] \
 	$(STRAPIT)[:-] \
 	$(BUILDIT)[:-] \
 	$(CHECKIT)[:] \
@@ -2525,14 +2530,14 @@ ifneq ($(BUILD_FETCH),)
 	$(RUNMAKE) $(FETCHIT)
 endif
 ifneq ($(BUILD_FETCH),0)
-	$(RUNMAKE) no$(FETCHIT)-$(STRAPIT)
-	$(RUNMAKE) no$(FETCHIT)-$(BUILDIT)
+	$(RUNMAKE) $(FETCHNO)-$(STRAPIT)
+	$(RUNMAKE) $(FETCHNO)-$(BUILDIT)
 endif
 else ifneq ($(ALLOFIT_CURL),)
 ifeq ($(BUILD_FETCH),1)
 	#WORKING : NOTICE "don't have git; will download/build, then download/build"
-	$(RUNMAKE) $(FETCHIT)first-$(STRAPIT)
-	$(RUNMAKE) $(FETCHIT)first-$(BUILDIT)
+	$(RUNMAKE) $(FETCHGO)-$(STRAPIT)
+	$(RUNMAKE) $(FETCHGO)-$(BUILDIT)
 else
 	#WORKING : ERROR "need git, or BUILD_FETCH=1"
 endif
@@ -2546,16 +2551,16 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 #WORK : document!
-$(FETCHIT)first-%:
+$(FETCHGO)-%:
 	$(RUNMAKE) $(FETCHIT)-$(*)
-	$(RUNMAKE) no$(FETCHIT)-$(*)
+	$(RUNMAKE) $(FETCHNO)-$(*)
 
 #WORK : document!
 $(FETCHIT)-%:
 	$(RUNMAKE) $(BUILDIT)-$(*) BUILD_FETCH="0"
 
 #WORK : document!
-no$(FETCHIT)-%:
+$(FETCHNO)-%:
 	$(RUNMAKE) $(BUILDIT)-$(*) BUILD_FETCH=
 
 override define FETCHIT_TARGET =
@@ -2563,8 +2568,8 @@ override define FETCHIT_TARGET =
 $(FETCHIT)-$(1):
 	$(RUNMAKE) $(1) BUILD_FETCH="0"
 
-.PHONY: no$(FETCHIT)-$(1)
-no$(FETCHIT)-$(1):
+.PHONY: $(FETCHNO)-$(1)
+$(FETCHNO)-$(1):
 	$(RUNMAKE) $(1) BUILD_FETCH=
 endef
 $(foreach FILE,\
@@ -3659,8 +3664,8 @@ endif
 	$(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT)
 
 #WORKING : document!
-.PHONY: $(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT)
-$(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT):
+.PHONY: $(BUILDIT)-ghc-init-$(BUILDIT)
+$(BUILDIT)-ghc-init-$(BUILDIT):
 ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
