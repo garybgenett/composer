@@ -1285,6 +1285,10 @@ override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
 override CYGPATH			:= "$(call COMPOSER_FIND,$(PATH_LIST),cygpath)" --absolute --mixed
 
+#WORKING : "$(BUILD_PLAT),Msys" during "$(ALLOFIT)" and/or "$(BUILDIT)"
+#WORKING	$(ECHO) >"$(COMPOSER_ABODE)/.coreutils.null"
+#WORKING	override TAR := "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
+
 override COREUTILS			:= "$(call COMPOSER_FIND,$(PATH_LIST),coreutils)"
 override define COREUTILS_INSTALL	=
 	"$(1)" --coreutils-prog=ginstall -dv "$(2)"; \
