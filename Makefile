@@ -1690,7 +1690,7 @@ override define AUTOTOOLS_BUILD_MINGW	=
 endef
 override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
 override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
-override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)"
+override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)$(1)"
 
 ################################################################################
 
@@ -2536,6 +2536,7 @@ override ALLOFIT_GIT	:= $(subst ",,$(word 1,$(GIT)))
 
 .PHONY: $(ALLOFIT)
 $(ALLOFIT):
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(ALLOFIT)-check
 ifneq ($(and $(ALLOFIT_CURL),$(ALLOFIT_GIT)),)
@@ -2560,8 +2561,8 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
-	@$(call BUILD_COMPLETE)
 endif
+	@$(call BUILD_COMPLETE,-end)
 
 #WORK : document!
 $(FETCHGO)-%:
@@ -2603,6 +2604,7 @@ $(FETCHIT):
 
 .PHONY: $(STRAPIT)
 $(STRAPIT):
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
 #WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/usr/bin/pacman); update locations and documentation
@@ -2615,10 +2617,11 @@ $(STRAPIT):
 	$(RUNMAKE) $(BUILDIT)-group-core
 	$(RUNMAKE) $(BUILDIT)-ghc-init
 	$(RUNMAKE) $(BUILDIT)-cabal-init
-	@$(call BUILD_COMPLETE)
+	@$(call BUILD_COMPLETE,-end)
 
 .PHONY: $(BUILDIT)
 $(BUILDIT):
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
@@ -2626,7 +2629,7 @@ $(BUILDIT):
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
 	$(RUNMAKE) $(BUILDIT)-pandoc
-	@$(call BUILD_COMPLETE)
+	@$(call BUILD_COMPLETE,-end)
 
 override CHECK_FAILED		:=
 override CHECK_MSYS		:=
@@ -2812,6 +2815,7 @@ $(BUILDIT)-msys-dll:
 
 .PHONY: $(BUILDIT)-group-libs
 $(BUILDIT)-group-libs:
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-libiconv-init
 	$(RUNMAKE) $(BUILDIT)-gettext
@@ -2826,7 +2830,7 @@ $(BUILDIT)-group-libs:
 	$(RUNMAKE) $(BUILDIT)-bzip
 	$(RUNMAKE) $(BUILDIT)-freetype
 	$(RUNMAKE) $(BUILDIT)-fontconfig
-	@$(call BUILD_COMPLETE)
+	@$(call BUILD_COMPLETE,-end)
 
 .PHONY: $(BUILDIT)-libiconv-init
 $(BUILDIT)-libiconv-init:
@@ -3187,6 +3191,7 @@ endif
 
 .PHONY: $(BUILDIT)-group-util
 $(BUILDIT)-group-util:
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-coreutils
 	$(RUNMAKE) $(BUILDIT)-findutils
@@ -3197,7 +3202,7 @@ $(BUILDIT)-group-util:
 	$(RUNMAKE) $(BUILDIT)-xz
 	$(RUNMAKE) $(BUILDIT)-tar
 	$(RUNMAKE) $(BUILDIT)-perl
-	@$(call BUILD_COMPLETE)
+	@$(call BUILD_COMPLETE,-end)
 
 .PHONY: $(BUILDIT)-coreutils
 $(BUILDIT)-coreutils:
@@ -3392,11 +3397,12 @@ endef
 
 .PHONY: $(BUILDIT)-group-tool
 $(BUILDIT)-group-tool:
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-bash
 	$(RUNMAKE) $(BUILDIT)-less
 	$(RUNMAKE) $(BUILDIT)-vim
-	@$(call BUILD_COMPLETE)
+	@$(call BUILD_COMPLETE,-end)
 
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 override BASH_BUILD_VARIABLES :=
@@ -3456,12 +3462,13 @@ endif
 
 .PHONY: $(BUILDIT)-group-core
 $(BUILDIT)-group-core:
+	@$(call BUILD_COMPLETE,-begin)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-make-init
 	$(RUNMAKE) $(BUILDIT)-infozip
 	$(RUNMAKE) $(BUILDIT)-curl
 	$(RUNMAKE) $(BUILDIT)-git
-	@$(call BUILD_COMPLETE)
+	@$(call BUILD_COMPLETE,-end)
 
 .PHONY: $(BUILDIT)-make-init
 $(BUILDIT)-make-init:
