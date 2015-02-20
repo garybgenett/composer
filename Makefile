@@ -459,6 +459,7 @@ override BUILD_LDLIB			:= $(COMPOSER_ABODE)/$(STRAPIT)
 override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
 override BUILD_FETCH			?= 1
 override BUILD_DIST			?=
+override BUILD_PORT			?=
 override BUILD_MSYS			?=
 #ANTIQUATE : remove all BUILD_GHC78
 #WORKING : before ANTIQUATE, final test with set to empty
@@ -500,18 +501,14 @@ override COMPOSER_PROGS_USE		?=
 override LANG				?= en_US.UTF-8
 override TERM				?= ansi
 override CHOST				:=
-override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib -static-libgcc -lgcc -lgcc_eh
-#WORKING:NOW override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib -static-libgcc -lgcc -lgcc_eh -static-libstdc++ -lstdc++ -lpthread
-#WORKING:NOW override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib
+override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib
 override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
 override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:= $(foreach FILE,$(CFLAGS),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS),-optP$(FILE)) $(foreach FILE,$(LDFLAGS),-optl$(FILE))
 override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
-#WORKING:NOW : LD_PRELOAD = libgcc_s.so.1, libstc++*.so*, document licenses!
-#override LD_PRELOAD			:= $(COMPOSER_PROGS)/libgcc_so.1
-#override LD_LIBRARY_PATH		:= $(COMPOSER_PROGS):$(BUILD_LDLIB)/lib
 
 ifneq ($(BUILD_DIST),)
+override BUILD_PORT			:= 1
 ifeq ($(BUILD_PLAT),Linux)
 override BUILD_MSYS			:=
 override BUILD_PLAT			:= Linux
@@ -530,10 +527,25 @@ override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-opta$(FILE))
 endif
 
-override GHCFLAGS_LDLIB			:= -optc-I$(BUILD_LDLIB)/include -optc-L$(BUILD_LDLIB)/lib -optP-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
+#WORK : document licenses!
+ifneq ($(BUILD_PORT),)
+# prevent "chicken and egg" error, since this is before the "$(PATH_LIST)" section
+override CC				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),gcc)"
+override LIBGCC				:=
+ifneq ($(word 1,$(CC)),"")
+override LIBGCC				:= \
+	-static-libgcc \
+	$(foreach FILE,gcc gcc_eh,-L$(dir $(shell $(CC) -print-file-name=lib$(FILE).a)) -l$(FILE))
+override CFLAGS				:= $(CFLAGS) $(LIBGCC)
+override LDFLAGS			:= $(LDFLAGS) $(LIBGCC)
+override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,$(LIBGCC),-optc$(FILE) -optl$(FILE)) $(patsubst -static-%,,$(LIBGCC))
+endif
+endif
+
 override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib $(CFLAGS)
 override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include $(CPPFLAGS)
 override LDFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
+override GHCFLAGS_LDLIB			:= -optc-I$(BUILD_LDLIB)/include -optc-L$(BUILD_LDLIB)/lib -optP-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
 
 ifeq ($(BUILD_PLAT),Linux)
 ifneq ($(BUILD_GHC78),)
@@ -1597,6 +1609,7 @@ override BUILD_ENV			:= $(BUILD_ENV_PANDOC) \
 	CXXFLAGS="$(CFLAGS)" \
 	CPPFLAGS="$(CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
+	GHCFLAGS="$(GHCFLAGS)" \
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)"
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
@@ -1892,6 +1905,7 @@ HELP_OPTIONS_SUB:
 	@$(ESCAPE) "$(_H)Build Options:"
 	@$(TABLE_I3) "$(_C)BUILD_FETCH$(_D)"		"Controls network usage"	"[$(_M)$(BUILD_FETCH)$(_D)] $(_N)(valid: empty, 0 or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
+	@$(TABLE_I3) "$(_C)BUILD_PORT$(_D)"		"Build portable binaries"	"[$(_M)$(BUILD_PORT)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
 	@$(TABLE_I3) "$(_C)BUILD_ARCH$(_D)"		"Overrides 'uname -m'"		"[$(_M)$(BUILD_ARCH)$(_D)] $(_E)($(BUILD_BITS)-bit)"
@@ -3655,10 +3669,10 @@ endif
 endif
 
 override define HEREDOC_GHC_BUILD_MK =
-override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
 override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
 override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
+override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
 
 .PHONY: $(BUILDIT)-cabal-init
@@ -4462,8 +4476,6 @@ $(subst $(COMPOSER_OTHER),,$(COMPOSER_TRASH))/
 $(subst $(COMPOSER_OTHER),,$(COMPOSER_BUILD))/
 endef
 
-#WORK : does this work with "$(RM) $(COMPOSER_ABODE)/.coreutils"?
-#WORK : may need these back: BUILD_PLAT="Msys" BUILD_ARCH="i686"
 override define HEREDOC_DISTRIB_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
