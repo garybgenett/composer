@@ -206,8 +206,7 @@ override TYPE				?= html
 override BASE				?= README
 override LIST				?= $(BASE).$(COMPOSER_EXT)
 
-override CSS_FILE			:= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
-override CSS				?=
+override CSS				?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override TTL				?=
 override TOC				?=
 override LVL				?= 2
@@ -388,8 +387,6 @@ override W3CSLIDY_CSS			:= $(W3CSLIDY_DST)/styles/slidy.css
 override _CSS				:= $(MDVIEWER_CSS)
 ifneq ($(wildcard $(CSS)),)
 override _CSS				:= $(CSS)
-else ifneq ($(wildcard $(CSS_FILE)),)
-override _CSS				:= $(CSS_FILE)
 else ifeq ($(OUTPUT),revealjs)
 override _CSS				:= $(REVEALJS_CSS)
 else ifeq ($(OUTPUT),slidy)
