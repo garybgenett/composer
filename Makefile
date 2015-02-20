@@ -1957,6 +1957,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PORT$(_D)"		"Build portable binaries"	"[$(_M)$(BUILD_PORT)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
+	@$(TABLE_I3) "$(_C)BUILD_GHC78$(_D)"		"GHC 7.8 instead of 7.6"	"[$(_M)$(BUILD_GHC78)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
 	@$(TABLE_I3) "$(_C)BUILD_ARCH$(_D)"		"Overrides 'uname -m'"		"[$(_M)$(BUILD_ARCH)$(_D)] $(_E)($(BUILD_BITS)-bit)"
 	@$(ECHO) "\n"
