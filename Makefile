@@ -464,7 +464,7 @@ override BUILD_PORT			?=
 override BUILD_MSYS			?=
 #ANTIQUATE : remove all BUILD_GHC78
 #WORKING : before ANTIQUATE, final test with set to empty
-override BUILD_GHC78			:= 1
+override BUILD_GHC78			?= 1
 #ANTIQUATE
 
 #>override BUILD_PLAT			:= Linux
@@ -1121,6 +1121,9 @@ override GHC_LIBRARIES_LIST		:= \
 	happy|1.19.5
 ifeq ($(BUILD_GHC78),)
 override GHC_LIBRARIES_LIST_HADDOCK	:= \
+	ghc-paths|0.1.0.9 \
+	xhtml|3000.2.1 \
+	\
 	haddock|2.13.2.1
 endif
 
