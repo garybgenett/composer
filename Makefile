@@ -528,6 +528,9 @@ override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-opta$(FILE))
 endif
 
+override CFLAGS_STATIC			:= $(CFLAGS)
+override LDFLAGS_STATIC			:= $(LDFLAGS)
+override GHCFLAGS_STATIC		:= $(GHCFLAGS)
 #WORK : document licenses!
 ifneq ($(BUILD_PORT),)
 # prevent "chicken and egg" error, since this is before the "$(PATH_LIST)" section
@@ -537,9 +540,9 @@ ifneq ($(word 1,$(CC)),"")
 override LIBGCC				:= \
 	-static-libgcc \
 	$(foreach FILE,gcc gcc_eh,-L$(dir $(shell $(CC) -print-file-name=lib$(FILE).a)) -l$(FILE))
-override CFLAGS				:= $(CFLAGS) $(LIBGCC)
-override LDFLAGS			:= $(LDFLAGS) $(LIBGCC)
-override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,$(LIBGCC),-optc$(FILE) -optl$(FILE)) $(patsubst -static-%,,$(LIBGCC))
+override CFLAGS_STATIC			:= $(CFLAGS_STATIC) $(LIBGCC)
+override LDFLAGS_STATIC			:= $(LDFLAGS_STATIC) $(LIBGCC)
+override GHCFLAGS_STATIC		:= $(GHCFLAGS_STATIC) $(foreach FILE,$(LIBGCC),-optc$(FILE) -optl$(FILE)) $(patsubst -static-%,,$(LIBGCC))
 endif
 endif
 
@@ -1518,9 +1521,9 @@ endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
 	$(CABAL_OPTIONS_TOOLS) \
-	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
-	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
-	$(foreach FILE,$(GHCFLAGS) -static,--ghc-option="$(FILE)") \
+	$(foreach FILE,$(CFLAGS_STATIC)--gcc-option="$(FILE)") \
+	$(foreach FILE,$(LDFLAGS_STATIC),--ld-option="$(FILE)") \
+	$(foreach FILE,$(GHCFLAGS_STATIC) -static,--ghc-option="$(FILE)") \
 	--extra-include-dirs="$(COMPOSER_ABODE)/include" \
 	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
 	--disable-executable-dynamic \
