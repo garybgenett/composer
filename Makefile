@@ -160,7 +160,6 @@ override COMPOSER_ESCAPES		?= 1
 
 override MAKEFILE			:= Makefile
 override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --jobs=1
-override MAKEJOBS			:= 10
 
 override COMPOSER_STAMP			?= .composed
 override COMPOSER_CSS			?= composer.css
@@ -459,6 +458,7 @@ override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_LDLIB			:= $(COMPOSER_ABODE)/$(STRAPIT)
 override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
 override BUILD_FETCH			?= 1
+override BUILD_JOBS			?= 9
 override BUILD_DIST			?=
 override BUILD_PORT			?=
 override BUILD_MSYS			?=
@@ -1503,7 +1503,7 @@ override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL)
 override CABAL_INFO			= $(DO_CABAL) info
 override CABAL_INSTALL			= $(DO_CABAL) install \
 	$(call CABAL_OPTIONS$(1),$(2)) \
-	--jobs=$(MAKEJOBS) \
+	--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)) \
 	--reinstall \
 	--force-reinstalls
 #>	--avoid-reinstalls
@@ -1930,6 +1930,7 @@ HELP_OPTIONS_SUB:
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Build Options:"
 	@$(TABLE_I3) "$(_C)BUILD_FETCH$(_D)"		"Controls network usage"	"[$(_M)$(BUILD_FETCH)$(_D)] $(_N)(valid: empty, 0 or 1)"
+	@$(TABLE_I3) "$(_C)BUILD_JOBS$(_D)"		"Thread count for large builds"	"[$(_M)$(BUILD_JOBS)$(_D)] $(_N)(valid: empty or [0-9]+) $(_E)(ideally = # CPUs/cores +1)"
 	@$(TABLE_I3) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PORT$(_D)"		"Build portable binaries"	"[$(_M)$(BUILD_PORT)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
@@ -3565,7 +3566,7 @@ endif
 	$(SED) -i \
 		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_DST)/texk/web2c/configure"
-	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" TL_MAKE_FLAGS="--jobs=$(MAKEJOBS)" \
+	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" TL_MAKE_FLAGS="--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS))" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
@@ -3582,7 +3583,7 @@ endif
 #>		--disable-shared \
 #>		--enable-static \
 #>		,\
-#>		--jobs=$(MAKEJOBS) \
+#>		--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)) \
 #>	)
 #ANTIQUATE
 	$(CP) "$(TEX_TEXMF_DST)/"*		"$(COMPOSER_ABODE)/"
@@ -3686,7 +3687,7 @@ endif
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK,$(COMPOSER_ABODE))) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs=$(MAKEJOBS))
+	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RM) -r "$(BUILD_STRAP)/mingw"*
