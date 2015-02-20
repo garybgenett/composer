@@ -2400,6 +2400,8 @@ $(TARGETS):
 	@$(TABLE_I3) "$(_H)$(MARKER) clean";	$(ECHO) "$(addsuffix -clean,$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | $(SORT)
 	@$(TABLE_I3) "$(_H)$(MARKER) subdirs";	$(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
 	@$(HEADER_L)
+#WORK : keep? document?
+	@$(RUNMAKE) --silent print
 
 ########################################
 
@@ -5226,7 +5228,7 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 
 ########################################
 
-#WORK : document
+#WORK : document!
 .PHONY: $(NOTHING)
 $(NOTHING):
 	@$(ECHO) "\n"
