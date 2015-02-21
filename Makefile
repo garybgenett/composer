@@ -3788,21 +3788,12 @@ endif
 	@$(call BUILD_COMPLETE)
 endif
 
-ifneq ($(BUILD_GHC78),)
 override define HEREDOC_GHC_BUILD_MK =
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
 override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
 override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
 override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
-else
-override define HEREDOC_GHC_BUILD_MK =
-override SRC_CC_OPTS	:= $(CFLAGS)
-override SRC_CPP_OPTS	:= $(CPPFLAGS)
-override SRC_LD_OPTS	:= $(LDFLAGS)
-override SRC_HC_OPTS	:= $(GHCFLAGS)
-endef
-endif
 
 .PHONY: $(BUILDIT)-cabal-init
 $(BUILDIT)-cabal-init:
