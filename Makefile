@@ -2572,9 +2572,9 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(ALLOFIT)-bindir
 	$(RUNMAKE) $(CHECKIT)
-	$(RUNMAKE) $(TIMERIT)
 endif
 	@$(call BUILD_COMPLETE,--)
+	$(RUNMAKE) $(TIMERIT)
 
 #WORK : document!
 $(FETCHGO)-%:
@@ -3785,12 +3785,21 @@ endif
 	@$(call BUILD_COMPLETE)
 endif
 
+ifneq ($(BUILD_GHC78),)
 override define HEREDOC_GHC_BUILD_MK =
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
 override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
 override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
 override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
+else
+override define HEREDOC_GHC_BUILD_MK =
+override SRC_CC_OPTS	:= $(CFLAGS)
+override SRC_CPP_OPTS	:= $(CPPFLAGS)
+override SRC_LD_OPTS	:= $(LDFLAGS)
+override SRC_HC_OPTS	:= $(GHCFLAGS)
+endef
+endif
 
 .PHONY: $(BUILDIT)-cabal-init
 $(BUILDIT)-cabal-init:
@@ -4266,6 +4275,7 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS_MSYS)
 		$(BUILDIT)-texlive-fmtutil \
 		$(BUILDIT)-ghc \
 		$(BUILDIT)-cabal \
+		$(BUILDIT)-cabal-libs \
 		$(BUILDIT)-pandoc \
 	$(BUILDIT)-- \
 	$(ALLOFIT)-bindir \
