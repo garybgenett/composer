@@ -479,7 +479,6 @@ override BUILD_DIST			?=
 override BUILD_PORT			?=
 override BUILD_MSYS			?=
 #ANTIQUATE : remove all BUILD_GHC78
-#WORKING : before ANTIQUATE, final test with set to empty
 override BUILD_GHC78			?= 1
 #ANTIQUATE
 
@@ -3777,7 +3776,7 @@ endif
 		-e "s|(RELEASE[=])NO|\1YES|g" \
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
-	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK,$(COMPOSER_ABODE))) >"$(GHC_DST)/mk/build.mk"
+	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
 #WORK
@@ -3788,12 +3787,24 @@ endif
 	@$(call BUILD_COMPLETE)
 endif
 
+ifneq ($(BUILD_GHC78),)
 override define HEREDOC_GHC_BUILD_MK =
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
 override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
 override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
 override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
+else
+override define HEREDOC_GHC_BUILD_MK =
+override SRC_CC_OPTS	:= $(CFLAGS)
+override SRC_CPP_OPTS	:= $(CPPFLAGS)
+override SRC_LD_OPTS	:= $(LDFLAGS)
+override SRC_HC_OPTS	:= $(GHCFLAGS)
+override libraries/base_CONFIGURE_OPTS		:= $(call CABAL_OPTIONS,$(COMPOSER_ABODE))
+override libraries/integer-gmp_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(COMPOSER_ABODE))
+override libraries/terminfo_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(COMPOSER_ABODE))
+endef
+endif
 
 .PHONY: $(BUILDIT)-cabal-init
 $(BUILDIT)-cabal-init:
