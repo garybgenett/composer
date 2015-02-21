@@ -1294,9 +1294,12 @@ $(info $(shell echo >"$(COMPOSER_ABODE)/.coreutils.null"))
 endif
 endif
 
+ifeq ($(MSYS_HACKS),)
+# suspected of causing issues with "configure" scripts
 ifneq ($(wildcard $(COMPOSER_ABODE)/bin/bash),)
 ifeq ($(wildcard $(COMPOSER_ABODE)/bin/sh),)
 $(info $(shell $(CP) "$(COMPOSER_ABODE)/bin/bash" "$(COMPOSER_ABODE)/bin/sh"))
+endif
 endif
 endif
 
