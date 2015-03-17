@@ -30,6 +30,7 @@
 # _ can "if*eq" stanzas be properly nested, with tabs, so that they are more readable?
 # _ comments, comments, comments (& formatting :)
 # _ define build target dependencies; enabling parallel make?
+# _ remove recursion and "$(RUNMAKE)"; opt for "include" tree instead?
 # _ test native fetch/build without bootstrap, just for fun
 # _ add a version number checklist
 #	DEBIAN_*, whenever ifneq ($(BUILD_FETCH),)
@@ -38,16 +39,17 @@
 #	DYNAMIC_LIBRARY_LIST, every $(RELEASE)-prep
 #	PERL_MODULES_LIST, when CURL_VER
 #	GHC_CABAL_VER, when GHC_VER
+#	GHC_LIBRARIES_INIT_LIST, when GHC_VER
 #	GHC_LIBRARIES_LIST, when GHC_VER
 #	CABAL_LIBRARIES_INIT_LIST, when CABAL_VER_INIT
 #	CABAL_LIBRARIES_LIST, when CABAL_VER
 #	PANDOC_LIBRARIES_LIST, when PANDOC_VER (or PANDOC_CMT?)
 #	etc., more?
 # _ document COMPOSER_TESTING uses
-#	$(TESTIT): empty, 0, 1, 2 (document #2?)
-#	$(BUILDIT)-cabal[-init]: empty or non-empty
-#	$(BUILDIT)-pandoc: empty, 0 or 1
-#	$(CHECKIT): empty or non-empty
+#	$(TESTIT): empty, 0, 1, -1 (document -1?)
+#	$(BUILDIT)-cabal[-init]: empty, non-empty
+#	$(BUILDIT)-pandoc: empty, 0, 1, -1
+#	$(CHECKIT): empty, non-empty
 #WORKING
 
 #WORKING
@@ -402,12 +404,14 @@ override _TOC				:= \
 endif
 
 #WORKING
+#	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.out README.markdown
+#	--from "docx" --track-changes="all"
+#	--from "docx|epub" --extract-media="[...]"
+#WORKING
 #	--default-image-extension="png"?
 #	--highlight-style="kate"?
 #	--incremental?
 #
-#	--from "docx" --track-changes="all"
-#	--from "docx|epub" --extract-media="[...]"
 #	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
 #	--email-obfuscation="[...]"
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
@@ -457,10 +461,10 @@ override PANDOC_OPTIONS			:= \
 	\
 	$(LIST)
 
-#>	--variable="geometry=top=$(MGN)" \
-#>	--variable="geometry=bottom=$(MGN)" \
-#>	--variable="geometry=left=$(MGN)" \
-#>	--variable="geometry=right=$(MGN)" \
+#>	--variable="geometry=top=$(MGN)"
+#>	--variable="geometry=bottom=$(MGN)"
+#>	--variable="geometry=left=$(MGN)"
+#>	--variable="geometry=right=$(MGN)"
 
 ########################################
 
@@ -474,7 +478,7 @@ override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_LDLIB			:= $(COMPOSER_ABODE)/$(STRAPIT)
 override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
 override BUILD_FETCH			?= 1
-override BUILD_JOBS			?= 9
+override BUILD_JOBS			?= 3
 override BUILD_DIST			?=
 override BUILD_PORT			?=
 override BUILD_MSYS			?=
@@ -519,7 +523,7 @@ override TERM				?= ansi
 override CHOST				:=
 override CFLAGS				:= -I$(COMPOSER_ABODE)/include -L$(COMPOSER_ABODE)/lib
 override CPPFLAGS			:= -I$(COMPOSER_ABODE)/include
-override LDFLAGS			:= -L$(COMPOSER_ABODE)/lib
+override LDFLAGS			:=                             -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:= $(foreach FILE,$(CFLAGS),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS),-optP$(FILE)) $(foreach FILE,$(LDFLAGS),-optl$(FILE))
 override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
 
@@ -543,12 +547,22 @@ override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-opta$(FILE))
 endif
 
-override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib $(CFLAGS)
-override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include $(CPPFLAGS)
-override LDFLAGS_LDLIB			:= -L$(BUILD_LDLIB)/lib $(LDFLAGS)
-override GHCFLAGS_LDLIB			:= -optc-I$(BUILD_LDLIB)/include -optc-L$(BUILD_LDLIB)/lib -optP-I$(BUILD_LDLIB)/include -optl-L$(BUILD_LDLIB)/lib $(GHCFLAGS)
+#WORKING:NOW : $(GHC_VER) isn't defined until later; is it even doing anything, then?
+#override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib -L$(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
+override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib
+override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include
+#override LDFLAGS_LDLIB			:=                          -L$(BUILD_LDLIB)/lib -L$(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
+override LDFLAGS_LDLIB			:=                          -L$(BUILD_LDLIB)/lib
+override GHCFLAGS_LDLIB			:= $(foreach FILE,$(CFLAGS_LDLIB),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS_LDLIB),-optP$(FILE)) $(foreach FILE,$(LDFLAGS_LDLIB),-optl$(FILE))
+
+override CFLAGS_LDLIB			:= $(CFLAGS_LDLIB) $(CFLAGS)
+override CPPFLAGS_LDLIB			:= $(CPPFLAGS_LDLIB) $(CPPFLAGS)
+override LDFLAGS_LDLIB			:= $(LDFLAGS_LDLIB) $(LDFLAGS)
+override GHCFLAGS_LDLIB			:= $(GHCFLAGS_LDLIB) $(GHCFLAGS)
 
 #WORK : document licenses!
+#WORK : is this the best way to do the fix for "Msys"?
+ifneq ($(BUILD_PLAT),Msys)
 ifneq ($(BUILD_PORT),)
 # prevent "chicken and egg" error, since this is before the "$(PATH_LIST)" section
 override CC				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),gcc)"
@@ -560,6 +574,7 @@ override LIBGCC				:= \
 override CFLAGS				:= $(CFLAGS) $(LIBGCC)
 override LDFLAGS			:= $(LDFLAGS) $(LIBGCC)
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,$(LIBGCC),-optc$(FILE) -optl$(FILE)) $(patsubst -static-%,,$(LIBGCC))
+endif
 endif
 endif
 
@@ -968,12 +983,24 @@ override PACMAN_PACKAGES_LIST		:= \
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override MSYS_BINARY_LIST		:= \
 	mintty cygwin-console-helper \
-	cygpath \
+	cygpath
+ifeq ($(BUILD_BITS),64)
+override MSYS_BINARY_LIST		:= \
+	$(MSYS_BINARY_LIST) \
+	\
+	msys-2.0.dll \
+	msys-gcc_s-seh-1.dll \
+	msys-ssp-0.dll \
+	msys-stdc++-6.dll
+else
+override MSYS_BINARY_LIST		:= \
+	$(MSYS_BINARY_LIST) \
 	\
 	msys-2.0.dll \
 	msys-gcc_s-1.dll \
 	msys-ssp-0.dll \
 	msys-stdc++-6.dll
+endif
 
 # this list should be mirrored to "$(PATH_LIST)" and "$(CHECKIT)" sections
 override BUILD_BINARY_LIST		:= \
@@ -1040,7 +1067,6 @@ override DYNAMIC_LIBRARY_LIST		:= \
 	CRYPTBASE.dll \
 	GDI32.dll \
 	IMM32.DLL \
-	IMM32.DLL \
 	KERNELBASE.dll \
 	LPK.dll \
 	MSASN1.dll \
@@ -1054,6 +1080,7 @@ override DYNAMIC_LIBRARY_LIST		:= \
 	USER32.dll \
 	USERENV.dll \
 	USP10.dll \
+	WINMM.DLL \
 	WINSPOOL.DRV \
 	WS2_32.dll \
 	WSOCK32.DLL \
@@ -1107,6 +1134,116 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/tools \
 	tex/latex/url
 
+ifneq ($(BUILD_GHC78),)
+override GHC_LIBRARIES_INIT_LIST	:= \
+	ghc|$(GHC_VER) \
+	Cabal|$(GHC_CABAL_VER) \
+	Win32|2.3.0.2 \
+	array|0.5.0.0 \
+	base|4.7.0.1 \
+	bench-bytestring|0.1.0.0 \
+	bin-package-db|0.0.0.0 \
+	binary|0.7.1.0 \
+	bytestring-tests|0.0.0.0 \
+	bytestring|0.10.4.0 \
+	cabal-install|1.18.0.3 \
+	compareSizes|0.1.0.0 \
+	containers|0.5.5.1 \
+	deepseq|1.3.0.2 \
+	directory|1.2.1.0 \
+	dll-split|0.1 \
+	dph-base|0.8.0.1 \
+	dph-builbot|0.8.0.1 \
+	dph-event-seer|0.8.0.1 \
+	dph-examples|0.8.0.1 \
+	dph-lifted-base|0.8.0.1 \
+	dph-lifted-boxed|0.8.0.1 \
+	dph-lifted-copy|0.8.0.1 \
+	dph-lifted-vseg|0.8.0.1 \
+	dph-plugin|0.8.1 \
+	dph-prim-interface|0.8.0.1 \
+	dph-prim-par|0.8.0.1 \
+	dph-prim-seq|0.8.0.1 \
+	filepath|1.3.0.2 \
+	ghc-cabal|0.1 \
+	ghc-pkg|6.9 \
+	ghc-prim|0.3.1.0 \
+	ghc-pwd|0.1 \
+	ghctags|0.1 \
+	haddock|2.14.3 \
+	haskeline|0.7.1.2 \
+	haskell2010|1.1.2.0 \
+	haskell98|2.0.0.3 \
+	hoopl|3.10.0.1 \
+	hpc-bin|0.67 \
+	hpc|0.6.0.1 \
+	hsc2hs|0.67 \
+	integer-gmp|0.5.1.0 \
+	integer-simple|0.1.1.0 \
+	mkUserGuidePart|0.1 \
+	old-locale|1.0.0.6 \
+	old-time|1.1.0.2 \
+	pretty|1.1.1.1 \
+	primitive|0.5.2.1 \
+	process|1.2.0.0 \
+	random|1.0.1.1 \
+	rts|1.0 \
+	runghc|7.8.3 \
+	template-haskell|2.9.0.0 \
+	terminfo|0.4.0.0 \
+	time|1.4.2 \
+	transformers|0.3.0.0 \
+	unix|2.7.0.1 \
+	vector-benchmarks|0.10.0.1 \
+	vector-tests|0.10.0.1 \
+	vector|0.10.9.1 \
+	xhtml|3000.2.1
+else
+override GHC_LIBRARIES_INIT_LIST	:= \
+	ghc|$(GHC_VER) \
+	Cabal|$(GHC_CABAL_VER) \
+	Win32|2.3.0.0 \
+	array|0.4.0.1 \
+	base|4.6.0.1 \
+	bin-package-db|0.0.0.0 \
+	binary|0.5.1.1 \
+	bytestring|0.10.0.2 \
+	cabal-install|0.15.1 \
+	compareSizes|0.1.0.0 \
+	containers|0.5.0.0 \
+	deepseq|1.3.0.1 \
+	directory|1.2.0.1 \
+	filepath|1.3.0.1 \
+	ghc-cabal|0.1 \
+	ghc-pkg|6.9 \
+	ghc-prim|0.3.0.0 \
+	ghc-pwd|0.1 \
+	haddock|2.13.2 \
+	haskeline|0.7.0.2 \
+	haskell2010|1.1.1.0 \
+	haskell98|2.0.0.2 \
+	hoopl|3.9.0.0 \
+	hpc-bin|0.67 \
+	hpc|0.6.0.0 \
+	hsc2hs|0.67 \
+	integer-gmp|0.5.0.0 \
+	integer-simple|0.1.0.1 \
+	old-locale|1.0.0.5 \
+	old-time|1.1.0.1 \
+	pretty|1.1.1.0 \
+	primitive|0.5.2.1 \
+	process|1.1.0.2 \
+	rts|1.0 \
+	runghc|7.6.3 \
+	template-haskell|2.8.0.0 \
+	terminfo|0.3.2.4 \
+	time|1.4.0.1 \
+	transformers|0.3.0.0 \
+	unix|2.6.0.1 \
+	utf8-string|0.3.8 \
+	xhtml|3000.2.1
+endif
+
 override CABAL_LIBRARIES_INIT_LIST	:= \
 	Cabal|$(CABAL_VER) \
 	HTTP|4000.2.19 \
@@ -1142,10 +1279,26 @@ override GHC_LIBRARIES_LIST_HADDOCK	:= \
 	haddock|2.13.2.1
 endif
 
+override PANDOC_LIBRARIES_LIST_REQUIRED	:= \
+	$(filter-out primitive|%,\
+	$(filter-out random|%,\
+	$(filter-out transformers|%,\
+	$(filter-out vector|%,\
+	$(GHC_LIBRARIES_INIT_LIST))))) \
+	$(filter-out binary|%,\
+	$(filter-out deepseq|%,\
+	$(filter-out old-locale|%,\
+	$(filter-out old-time|%,\
+	$(filter-out time|%,\
+	$(CABAL_LIBRARIES_LIST)))))) \
+	$(GHC_LIBRARIES_LIST) \
+	$(GHC_LIBRARIES_LIST_HADDOCK)
+
 override PANDOC_LIBRARIES_LIST		:= \
 	Diff|0.3.0 \
 	HUnit|1.2.5.2 \
-	JuicyPixels|3.2.2 \
+	JuicyPixels|3.2.3 \
+	List|0.5.2 \
 	SHA|1.6.4.1 \
 	aeson-pretty|0.7.2 \
 	aeson|0.7.0.6 \
@@ -1166,6 +1319,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	cipher-aes|0.2.10 \
 	cipher-des|0.0.6 \
 	cipher-rc4|0.1.4 \
+	clock|0.4.1.3 \
 	cmdargs|0.10.12 \
 	conduit|1.2.4 \
 	connection|0.2.4 \
@@ -1186,17 +1340,18 @@ override PANDOC_LIBRARIES_LIST		:= \
 	digest|0.0.1.2 \
 	dlist|0.7.1 \
 	enclosed-exceptions|1.0.1 \
-	exceptions|0.8 \
+	exceptions|0.8.0.2 \
 	executable-path|0.0.3 \
 	extensible-exceptions|0.1.1.4 \
 	haddock-library|1.1.1 \
-	hashable|1.2.3.1 \
+	hashable|1.2.3.2 \
+	hexpat|0.20.9 \
 	hostname|1.0 \
 	hourglass|0.2.8 \
 	hs-bibutils|5.5 \
 	hslua|0.3.13 \
 	http-client-tls|0.2.2 \
-	http-client|0.4.7.1 \
+	http-client|0.4.9 \
 	http-types|0.8.6 \
 	lifted-base|0.2.3.6 \
 	mime-types|0.1.0.5 \
@@ -1212,10 +1367,10 @@ override PANDOC_LIBRARIES_LIST		:= \
 	rfc5051|0.1.0.3 \
 	scientific|0.3.3.7 \
 	securemem|0.1.7 \
-	semigroups|0.16.1 \
+	semigroups|0.16.2.2 \
 	socks|0.5.4 \
 	split|0.2.2 \
-	streaming-commons|0.1.9.1 \
+	streaming-commons|0.1.10.0 \
 	syb|0.4.4 \
 	tagsoup|0.13.3 \
 	temporary|1.2.0.3 \
@@ -1233,10 +1388,11 @@ override PANDOC_LIBRARIES_LIST		:= \
 	x509-system|1.5.0 \
 	x509-validation|1.5.1 \
 	x509|1.5.0.1 \
-	xml|1.3.13 \
+	xml|1.3.14 \
 	yaml|0.8.10.1 \
 	zip-archive|0.2.3.7
-ifeq ($(COMPOSER_TESTING),)
+# if "$(COMPOSER_TESTING)" is empty or -1, then we want these packages in the list
+ifneq ($(or $(if $(COMPOSER_TESTING),,1),$(filter -1,$(COMPOSER_TESTING))),)
 override PANDOC_LIBRARIES_LIST		:= \
 	$(PANDOC_LIBRARIES_LIST) \
 	\
@@ -1415,7 +1571,7 @@ override PDFLATEX_PATH			:=  $(call COMPOSER_FIND,$(PATH_LIST),pdflatex)
 override PDFLATEX			:= "$(PDFLATEX_PATH)"
 override GHC				:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc)"
 override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
-override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)" --verbose
+override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)"
 override HADDOCK			:= "$(call COMPOSER_FIND,$(PATH_LIST),haddock)"
 ifneq ($(COMPOSER_TESTING),)
 override GHC_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc))"
@@ -1514,7 +1670,8 @@ endef
 
 override HACKAGE_PULL			= $(call CURL_FILE,$(call HACKAGE_URL,$(1)))		$(call NEWLINE)$(ECHO)
 override HACKAGE_PREP			= $(call DO_UNTAR,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(call NEWLINE)$(ECHO)
-override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL)
+override DO_GHC_PKG			= $(BUILD_ENV_MINGW) $(GHC_PKG) --verbose --global --force
+override DO_CABAL			= $(BUILD_ENV_MINGW) $(CABAL) --verbose
 override CABAL_INFO			= $(DO_CABAL) info
 override CABAL_INSTALL			= $(DO_CABAL) install \
 	$(call CABAL_OPTIONS$(1),$(2)) \
@@ -1570,7 +1727,8 @@ endif
 override TEXMFDIST			:= $(wildcard $(abspath $(dir $(PDFLATEX_PATH))../../texmf-dist))
 override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(PDFLATEX_PATH))../texmf-dist))
 override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(PANDOC_PATH))../../pandoc/data))
-override PANDOC_DATA_BUILD		:=
+#WORKING:NOW
+#override PANDOC_DATA_BUILD		:=
 
 ifeq ($(TEXMFDIST),)
 ifneq ($(TEXMFDIST_BUILD),)
@@ -1581,12 +1739,13 @@ override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
 
 ifneq ($(PANDOC_DATA),)
 override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DATA)" $(PANDOC_OPTIONS)
-#TODO : some better way to do this?
-ifeq ($(BUILD_PLAT),Linux)
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
-else ifeq ($(BUILD_PLAT),Msys)
-override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
-endif
+#WORKING:NOW
+##TODO : some better way to do this?
+#ifeq ($(BUILD_PLAT),Linux)
+#override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
+#else ifeq ($(BUILD_PLAT),Msys)
+#override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
+#endif
 endif
 
 #WORK : better spot for this?
@@ -2444,7 +2603,7 @@ ifneq ($(COMPOSER_TESTING),0)
 endif
 	@$(MKDIR) "$(TESTING_DIR)/$(COMPOSER_BASENAME)"
 	@$(RUNMAKE) --directory "$(TESTING_DIR)/$(COMPOSER_BASENAME)" $(REPLICA)
-ifeq ($(COMPOSER_TESTING),2)
+ifeq ($(COMPOSER_TESTING),-1)
 	@$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1\$$(COMPOSER_ABSPATH)/$(COMPOSER_BASENAME)/$(MAKEFILE)|g" "$(TESTING_DIR)/$(MAKEFILE)"
 endif
 	@$(MAKE) --directory "$(TESTING_DIR)"
@@ -2751,6 +2910,20 @@ start /b %_CMS%%_BIN%/mintty %_OPT%
 :: end of file
 endef
 
+#WORK : better location?
+#WORK : document!
+override BUILD_CLEAN_DIRS := $(sort \
+	$(foreach FILE,$(filter-out $(COMPOSER_ABODE)/msys%,$(wildcard $(COMPOSER_ABODE)/*)),"$(FILE)") \
+	"$(COMPOSER_ABODE)/.coreutils" \
+	"$(COMPOSER_TRASH)" \
+	"$(COMPOSER_BUILD)" \
+	"$(COMPOSER_PROGS)" \
+)
+.PHONY: $(BUILDIT)-clean
+$(BUILDIT)-clean:
+	@$(LS) -d $(BUILD_CLEAN_DIRS) 2>/dev/null || $(TRUE)
+	@$(RM) -r $(BUILD_CLEAN_DIRS)
+
 .PHONY: $(BUILDIT)-gnu-init
 $(BUILDIT)-gnu-init:
 ifneq ($(BUILD_FETCH),)
@@ -2865,6 +3038,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(GETTEXT_DST),$(GETTEXT_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(GETTEXT_DST)/build-aux)
 	$(call AUTOTOOLS_BUILD,$(GETTEXT_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -2904,18 +3079,14 @@ override define LIBICONV_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(LIBICONV_DST)"
 	$(call DO_UNTAR,$(LIBICONV_DST),$(LIBICONV_SRC))
-#WORK : platform_switches
 #WORK : DO_PATCH is network access inside of $(BUILD_FETCH),0
-	# "$(BUILD_PLAT),Linux" requires some patching
+	# "$(BUILD_PLAT),Linux" requires some patching; "$(BUILD_PLAT),Msys" doesn't build with this patch
 	if [ "$(BUILD_PLAT)" == "Linux" ]; then \
 		$(call DO_PATCH,$(LIBICONV_DST)/srclib,https://gist.githubusercontent.com/paulczar/5493708/raw/169f5cb3c11351ad839cf35c454ae55a508625c3/gistfile1.txt); \
 	fi
-#WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux); \
-		$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux); \
-	fi
+	$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/build-aux)
+	$(call GNU_CFG_INSTALL,$(LIBICONV_DST)/libcharset/build-aux)
 	$(call AUTOTOOLS_BUILD,$(LIBICONV_DST),$(1),,\
 		$(2) \
 	)
@@ -2928,6 +3099,9 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(PKGCONFIG_DST),$(PKGCONFIG_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(PKGCONFIG_DST))
+	$(call GNU_CFG_INSTALL,$(PKGCONFIG_DST)/glib)
 	$(call AUTOTOOLS_BUILD,$(PKGCONFIG_DST)/glib,$(COMPOSER_ABODE),,\
 		--with-libiconv="gnu" \
 	)
@@ -3011,11 +3185,8 @@ override define GMP_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(GMP_DST)"
 	$(call DO_UNTAR,$(GMP_DST),$(GMP_SRC))
-#WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys64" ]; then \
-		$(call GNU_CFG_INSTALL,$(GMP_DST)); \
-	fi
+	$(call GNU_CFG_INSTALL,$(GMP_DST))
 	$(call AUTOTOOLS_BUILD,$(GMP_DST),$(1),\
 		ABI="$(BUILD_BITS)" \
 		,\
@@ -3049,8 +3220,7 @@ override define NCURSES_PULL =
 	$(call CURL_FILE,$(NCURSES_SRC))
 endef
 
-#WORKING : if vim/less have rendering bugs, it could be that they require true --disable-widec libraries
-#WORKING : is the "Msys" "widec" situation still true?
+#WORKING : if vim/less have rendering issues, it could be that they require true --disable-widec libraries
 override NCURSES_BUILD_WIDEC := --enable-widec
 ifeq ($(BUILD_PLAT),Msys)
 # "$(BUILD_PLAT),Msys" doesn't build with wide character support enabled
@@ -3069,11 +3239,8 @@ override define NCURSES_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(NCURSES_DST)"
 	$(call DO_UNTAR,$(NCURSES_DST),$(NCURSES_SRC))
-#WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
-	if [ "$(BUILD_PLAT)$(BUILD_BITS)" == "Msys32" ]; then \
-		$(call GNU_CFG_INSTALL,$(NCURSES_DST)); \
-	fi
+	$(call GNU_CFG_INSTALL,$(NCURSES_DST))
 	$(call AUTOTOOLS_BUILD,$(NCURSES_DST),$(1),$(2),\
 		$(NCURSES_BUILD_WIDEC) \
 		--enable-overwrite \
@@ -3126,6 +3293,7 @@ endif
 		$(OPENSSL_BUILD_TYPE) \
 		no-shared \
 		no-dso \
+		no-asm \
 	)
 	@$(call BUILD_COMPLETE)
 endif
@@ -3137,11 +3305,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(EXPAT_DST),$(EXPAT_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(EXPAT_DST)/conftools)
-endif
 	$(call AUTOTOOLS_BUILD,$(EXPAT_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -3156,6 +3321,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(FREETYPE_DST),$(FREETYPE_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(FREETYPE_DST)/builds/unix)
 	$(call AUTOTOOLS_BUILD,$(FREETYPE_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -3170,23 +3337,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(FONTCONFIG_DST),$(FONTCONFIG_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	# "$(BUILD_PLAT),Msys" requires "expat" options in order to find it
-	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_DST),$(COMPOSER_ABODE),\
-		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
-		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm" \
-		,\
-		--disable-docs \
-		--enable-iconv \
-		--with-libiconv-includes="$(COMPOSER_ABODE)/include" \
-		--with-libiconv-lib="$(COMPOSER_ABODE)/lib" \
-		--with-expat-includes="$(COMPOSER_ABODE)/include" \
-		--with-expat-lib="$(COMPOSER_ABODE)/lib" \
-		--disable-shared \
-		--enable-static \
-	)
-else
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(FONTCONFIG_DST))
 	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
 		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm" \
@@ -3198,7 +3350,6 @@ else
 		--disable-shared \
 		--enable-static \
 	)
-endif
 	@$(call BUILD_COMPLETE)
 endif
 
@@ -3224,12 +3375,11 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(COREUTILS_DST),$(COREUTILS_SRC))
-ifeq ($(BUILD_PLAT),Msys)
+#WORKING : if linux coreutils has buffering issues, it could be that this should be msys-specific
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
 		-e "s|(stdbuf[_]supported[=])yes|\1no|g" \
 		"$(COREUTILS_DST)/configure"
-endif
 	$(call AUTOTOOLS_BUILD,$(COREUTILS_DST),$(COMPOSER_ABODE),,\
 		--enable-single-binary="shebangs" \
 		--disable-acl \
@@ -3246,11 +3396,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(FINDUTILS_DST),$(FINDUTILS_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(FINDUTILS_DST)/build-aux)
-endif
 	$(call AUTOTOOLS_BUILD,$(FINDUTILS_DST),$(COMPOSER_ABODE))
 	@$(call BUILD_COMPLETE)
 endif
@@ -3262,6 +3409,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(PATCH_DST),$(PATCH_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(PATCH_DST)/build-aux)
 	$(call AUTOTOOLS_BUILD,$(PATCH_DST),$(COMPOSER_ABODE),,\
 		--disable-xattr \
 	)
@@ -3275,11 +3424,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(SED_DST),$(SED_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(SED_DST)/build-aux)
-endif
 	$(call AUTOTOOLS_BUILD,$(SED_DST),$(COMPOSER_ABODE),,\
 		--disable-acl \
 	)
@@ -3309,6 +3455,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(GZIP_DST),$(GZIP_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(GZIP_DST)/build-aux)
 	$(call AUTOTOOLS_BUILD,$(GZIP_DST),$(COMPOSER_ABODE))
 	@$(call BUILD_COMPLETE)
 endif
@@ -3320,6 +3468,8 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(XZ_DST),$(XZ_SRC))
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(XZ_DST)/build-aux)
 	$(call AUTOTOOLS_BUILD,$(XZ_DST),$(COMPOSER_ABODE),,\
 		--disable-shared \
 		--enable-static \
@@ -3350,6 +3500,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(PERL_DST),$(PERL_SRC))
+#WORK : DO_PATCH is network access inside of $(BUILD_FETCH),0
 ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" requires some patching
 	if [ ! -f "$(PERL_DST)/Configure.perl" ]; then \
@@ -3401,8 +3552,8 @@ override define PERL_MODULES_PULL =
 endef
 
 override define PERL_MODULES_BUILD =
-	$(call DO_UNTAR,$(PERL_DST)/$(1),$(2)); \
-	cd "$(PERL_DST)/$(1)" && \
+	$(call DO_UNTAR,$(PERL_DST).libs/$(1),$(2)); \
+	cd "$(PERL_DST).libs/$(1)" && \
 		$(BUILD_ENV) $(PERL) ./Makefile.PL PREFIX="$(COMPOSER_ABODE)" && \
 		$(BUILD_ENV) $(MAKE) && \
 		$(BUILD_ENV) $(MAKE) install
@@ -3419,13 +3570,13 @@ $(BUILDIT)-group-tool:
 
 # thanks for the 'sigsetjmp' fix below: https://www.mail-archive.com/cygwin@cygwin.com/msg137488.html
 override BASH_BUILD_VARIABLES :=
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+ifeq ($(BUILD_PLAT),Msys)
 # "$(BUILD_PLAT),Msys" requires "sigsetjmp" fix in order to build
 override BASH_BUILD_VARIABLES := bash_cv_func_sigsetjmp="missing"
 endif
 
 .PHONY: $(BUILDIT)-bash
+# thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/bash
 # thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
 $(BUILDIT)-bash:
 ifneq ($(BUILD_FETCH),)
@@ -3434,6 +3585,13 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	# "$(BUILD_PLAT),Msys" does not support symlinks, so we have to exclude some files
 	$(call DO_UNTAR,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
+	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
+	$(call GNU_CFG_INSTALL,$(BASH_DST)/support)
+#WORK : DO_PATCH is network access inside of $(BUILD_FETCH),0
+ifeq ($(BUILD_PLAT),Msys)
+	# "$(BUILD_PLAT),Msys" requires some patching
+	$(call DO_PATCH,$(BASH_DST),https://raw.githubusercontent.com/Alexpux/MSYS2-packages/master/bash/0004-bash-4.3-deprecations.patch)
+endif
 	$(call AUTOTOOLS_BUILD,$(BASH_DST),$(COMPOSER_ABODE),\
 		$(BASH_BUILD_VARIABLES) \
 		,\
@@ -3490,10 +3648,13 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(MAKE_DST_INIT),$(MAKE_SRC_INIT))
-#WORK : platform_switches
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
 	$(call MAKE_BUILD,$(MAKE_DST_INIT))
+ifneq ($(MSYS_HACKS),)
+	# prevents all kinds of errors, not the least of which is broken "$(COMPOSER_DIR)" detection
+	$(RM) "$(COMPOSER_ABODE)/bin/make"
+endif
 	@$(call BUILD_COMPLETE)
 endif
 
@@ -3510,6 +3671,10 @@ ifneq ($(BUILD_FETCH),0)
 		$(BUILD_ENV) $(SH) ./configure && \
 		$(BUILD_ENV) $(MAKE) update || $(TRUE)
 	$(call MAKE_BUILD,$(MAKE_DST))
+ifneq ($(MSYS_HACKS),)
+	# prevents all kinds of errors, not the least of which is broken "$(COMPOSER_DIR)" detection
+	$(RM) "$(COMPOSER_ABODE)/bin/make"
+endif
 	@$(call BUILD_COMPLETE)
 endif
 
@@ -3618,6 +3783,8 @@ endif
 
 .PHONY: $(BUILDIT)-texlive
 # thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
+# thanks for the 'luajittex' fix below: http://permalink.gmane.org/gmane.comp.tex.texlive.build/2351
+#	also to: http://permalink.gmane.org/gmane.comp.tex.texlive.build/2332
 $(BUILDIT)-texlive:
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
@@ -3626,8 +3793,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(TEX_TEXMF_DST),$(TEX_TEXMF_SRC))
 	$(call DO_UNTAR,$(TEX_DST),$(TEX_SRC))
-#WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+ifeq ($(BUILD_PLAT),Msys)
 	# "$(BUILD_PLAT),Msys" is not detected, so default to "linux" settings
 	$(CP) \
 		"$(TEX_DST)/libs/icu/icu-"*"/source/config/mh-linux" \
@@ -3648,11 +3814,13 @@ endif
 	$(SED) -i \
 		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/bin/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_DST)/texk/web2c/configure"
+	# "$(BUILD_PLAT)$(BUILD_BITS),Msys64" requires "--disable-luajittex" in order to build
 	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" TL_MAKE_FLAGS="--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS))" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
 		--without-x \
+		--disable-luajittex \
 		--disable-shared \
 		--enable-static
 #WORK : NOTARGET?
@@ -3662,6 +3830,7 @@ endif
 #>		--disable-multiplatform \
 #>		--without-ln-s \
 #>		--without-x \
+#>		--disable-luajittex \
 #>		--disable-shared \
 #>		--enable-static \
 #>		,\
@@ -3679,7 +3848,10 @@ endif
 .PHONY: $(BUILDIT)-texlive-fmtutil
 $(BUILDIT)-texlive-fmtutil:
 ifneq ($(BUILD_FETCH),0)
-	$(BUILD_ENV) fmtutil --all
+	# the "--no-error-if-no-engine" option goes with "--disable-luajittex" above
+	$(BUILD_ENV) fmtutil \
+		--no-error-if-no-engine="luajittex" \
+		--all
 	@$(call BUILD_COMPLETE)
 endif
 
@@ -3736,20 +3908,35 @@ ifneq ($(BUILD_FETCH),0)
 	#		getUserDocumentsDirectory	Win32.cSIDL_PERSONAL					HOME
 	#		getTemporaryDirectory		Win32.getTemporaryDirectory (TMP, TEMP, USERPROFILE)	TMPDIR
 	# using 'USERPROFILE' causes 'cabal.exe: illegal operation'
-	$(SED) -i \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PROFILE[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_WINDOWS[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_APPDATA[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
-		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PERSONAL[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
-		-e "s|([^.])(.)([:]appName[)])|\1\2:\2.\2\3|g" \
-		"$(GHC_DST)/libraries/directory/System/Directory.hs"
 #WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-	# "$(BUILD_PLAT),Msys" seems to find "gmp.h" in a different spot
-	$(SED) -i \
-		-e "s|^([#]include[ ].)(gmp[.]h.)$$|\1../gmp/\2|g" \
-		"$(GHC_DST)/libraries/integer-gmp/cbits/alloc.c" \
-		"$(GHC_DST)/libraries/integer-gmp/cbits/float.c"
+#WORKING:NOW : this does not seem to work for 7.8
+# "inplace/bin/ghc-stage1.exe" -hisuf hi -osuf  o -hcsuf hc -static  -optc-I/c/.composer/.home/bootstrap/include -optc-L/c/.composer/.home/bootstrap/lib -optP-I/c/.composer/.home/bootstrap/include -optl-L/c/.composer/.home/bootstrap/lib -optc-I/c/.composer/.home/include -optc-L/c/.composer/.home/lib -optP-I/c/.composer/.home/include -optl-L/c/.composer/.home/lib -optc-m32 -optc-march=i686 -optc-mtune=generic -optc-O1 -opta-m32 -opta-march=i686 -opta-mtune=generic -opta-O1    -package-name directory-1.2.1.0 -hide-all-packages -i -ilibraries/directory/. -ilibraries/directory/dist-install/build -ilibraries/directory/dist-install/build/autogen -Ilibraries/directory/dist-install/build -Ilibraries/directory/dist-install/build/autogen -Ilibraries/directory/include    -optP-include -optPlibraries/directory/dist-install/build/autogen/cabal_macros.h -package Win32-2.3.0.2 -package base-4.7.0.1 -package filepath-1.3.0.2 -package time-1.4.2 -Wall -XHaskell2010 -O2  -no-user-package-db -rtsopts      -odir libraries/directory/dist-install/build -hidir libraries/directory/dist-install/build -stubdir libraries/directory/dist-install/build -split-objs  -c libraries/directory/./System/Directory.hs -o libraries/directory/dist-install/build/System/Directory.o
+# libraries\directory\System\Directory.hs:1096:18:
+#     Not in scope: `getEnv'
+# libraries\directory\System\Directory.hs:1100:23:
+#     Not in scope: `getEnv'
+# libraries\directory\System\Directory.hs:1139:10:
+#     Not in scope: `getEnv'
+# libraries\directory\System\Directory.hs:1171:5:
+#     Not in scope: `getEnv'
+# libraries/directory/ghc.mk:4: recipe for target 'libraries/directory/dist-install/build/System/Directory.o' failed
+# make[1]: *** [libraries/directory/dist-install/build/System/Directory.o] Error 1
+# Makefile:64: recipe for target 'all' failed
+# make: *** [all] Error 2
+# /c/.composer/Makefile:3732: recipe for target 'build-ghc' failed
+# make[1]: *** [build-ghc] Error 2
+# make[1]: Leaving directory '/c/.composer'
+# Makefile:2593: recipe for target 'nofetch-ghc' failed
+# make: *** [nofetch-ghc] Error 2
+#WORKING
+#	$(SED) -i \
+#		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PROFILE[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+#		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_WINDOWS[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+#		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_APPDATA[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+#		-e "s|Win32[.]sHGetFolderPath[ ]nullPtr[ ]Win32[.]cSIDL_PERSONAL[ ]nullPtr[ ]0|getEnv \"HOMEPATH\"|g" \
+#		-e "s|([^.])(.)([:]appName[)])|\1\2:\2.\2\3|g" \
+#		"$(GHC_DST)/libraries/directory/System/Directory.hs"
+#WORKING
 	# "$(BUILD_PLAT),Msys" fails if we don't have these calls quoted
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]GHCII[_]SCRIPT[)])|\1\"\2\"|g" \
@@ -3757,7 +3944,6 @@ ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 	$(SED) -i \
 		-e "s|(call[ ]removeFiles[,])([$$][(]DESTDIR[)][$$][(]bindir[)][/]ghc.exe)|\1\"\2\"|g" \
 		"$(GHC_DST)/ghc/ghc.mk"
-endif
 #ANTIQUATE
 #>	$(SED) -i \
 #>		-e "s|$(GHC_CABAL_VER)|$(CABAL_VER)|g" \
@@ -3775,7 +3961,23 @@ endif
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
+ifneq ($(COMPOSER_TESTING),)
+	$(ECHO) "$(_C)"; \
+		$(foreach FILE,$(wildcard \
+			$(GHC_DST)/libraries/*/*/*.cabal \
+			$(GHC_DST)/libraries/*/*.cabal \
+			$(GHC_DST)/utils/*/*.cabal \
+			$(GHC_DST)/rts/package.conf.in \
+			),\
+			$(ECHO) "$(notdir $(subst .cabal,,$(subst /package.conf.in,,$(FILE))))|"; \
+			$(SED) -n \
+				-e "s|^[Vv]ersion[:][[:space:]]+||gp" \
+				"$(FILE)"; \
+		) \
+	$(ECHO) "$(_D)"
+else
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
+endif
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RM) -r "$(BUILD_STRAP)/mingw"*
@@ -3793,13 +3995,12 @@ override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
 else
 override define HEREDOC_GHC_BUILD_MK =
-override SRC_CC_OPTS	:= $(CFLAGS)
-override SRC_CPP_OPTS	:= $(CPPFLAGS)
-override SRC_LD_OPTS	:= $(LDFLAGS)
-override SRC_HC_OPTS	:= $(GHCFLAGS)
-override libraries/base_CONFIGURE_OPTS		:= $(call CABAL_OPTIONS,$(COMPOSER_ABODE))
-override libraries/integer-gmp_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(COMPOSER_ABODE))
-override libraries/terminfo_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS,$(COMPOSER_ABODE))
+override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
+override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
+override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
+override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
+override libraries/base_CONFIGURE_OPTS		:= $(call CABAL_OPTIONS_LDLIB,$(COMPOSER_ABODE))
+override libraries/integer-gmp_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS_LDLIB,$(COMPOSER_ABODE))
 endef
 endif
 
@@ -3863,24 +4064,17 @@ override define CABAL_PULL =
 endef
 
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
-# thanks for the 'createDirectory' fix below: https://github.com/haskell/cabal/issues/1698
 override define CABAL_PREP =
 	$(foreach FILE,$(subst |,-,$(2)), \
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
-#WORK : platform_switches
-	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
-		$(SED) -i \
-			-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-			-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-			-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-			"$(1)/network-"*"/include/HsNet.h"; \
-		if [ -z "$(BUILD_GHC78)" ]; then \
-			$(SED) -i \
-				-e "s|createDirectoryIfMissingVerbose[ ]verbosity[ ]False[ ]distDirPath||g" \
-				"$(1)/Distribution/Client/Install.hs"; \
-		fi; \
-	fi
+	# "$(BUILD_PLAT),Msys" requires some patching
+	$(SED) -i \
+		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+		"$(1)/network-"*"/include/HsNet.h"
+	# exert control over how packages are built and installed
 	$(SED) -i \
 		-e "s|^(CABAL[_]VER[=][\"])[^\"]+([\"])|\1$(CABAL_VER_INIT)\2|g" \
 		-e "s|^([ ]+fetch[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
@@ -3961,8 +4155,45 @@ override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
 endef
 endif
 
+override PANDOC_LIBRARIES_LIST_REQUESTED := $(sort $(subst |,-,\
+	$(PANDOC_LIBRARIES_LIST_REQUIRED) \
+))
+override PANDOC_LIBRARIES_LIST_PACKAGEDB := $(strip $(shell \
+	$(filter-out --verbose,$(DO_GHC_PKG)) list 2>/dev/null | \
+	$(SED) \
+		-e "/package[.]conf[.]d/d" \
+		-e "s|[{()}]||g" \
+))
+override PANDOC_LIBRARIES_LIST_NOTLISTED := $(filter-out \
+	$(PANDOC_LIBRARIES_LIST_PACKAGEDB) \
+	,\
+	$(PANDOC_LIBRARIES_LIST_REQUESTED) \
+)
+override PANDOC_LIBRARIES_LIST_UNINSTALL := $(filter-out \
+	$(PANDOC_LIBRARIES_LIST_REQUESTED) \
+	,\
+	$(PANDOC_LIBRARIES_LIST_PACKAGEDB) \
+)
+
 .PHONY: $(BUILDIT)-pandoc
 $(BUILDIT)-pandoc:
+ifeq ($(COMPOSER_TESTING),-1)
+ifneq ($(word 1,$(GHC_PKG)),"")
+	@$(foreach FILE,\
+		REQUESTED \
+		PACKAGEDB \
+		NOTLISTED \
+		UNINSTALL \
+		,\
+		$(ESCAPE) "$(_C)$(FILE): $(_M)$(PANDOC_LIBRARIES_LIST_$(FILE))"; \
+	)
+ifneq ($(PANDOC_LIBRARIES_LIST_UNINSTALL),)
+	@$(ECHO) "$(subst $(NULL) ,\n,$(PANDOC_LIBRARIES_LIST_UNINSTALL))\n" | while read FILE; do \
+		$(DO_GHC_PKG) unregister $${FILE}; \
+	done
+endif
+endif
+else
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(PANDOC_DST),$(PANDOC_SRC),$(PANDOC_CMT))
 	$(call GIT_REPO,$(PANDOC_TYPE_DST),$(PANDOC_TYPE_SRC),$(PANDOC_TYPE_CMT))
@@ -3993,6 +4224,7 @@ ifneq ($(word 1,$(CABAL)),"")
 	$(DO_CABAL) update
 	$(ECHO) "$(_C)"; \
 		$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
+			$(foreach FILE,$(PANDOC_LIBRARIES_LIST_REQUIRED),--constraint="$(subst |,==,$(FILE))") \
 			--only-dependencies \
 			--enable-tests \
 			--dry-run \
@@ -4041,6 +4273,7 @@ endif
 	@$(BUILD_ENV) "$(COMPOSER_ABODE)/bin/pandoc" --version
 	@$(ECHO) "$(_D)"
 endif
+endif
 #> syntax highlighting fix: )"
 
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
@@ -4064,15 +4297,14 @@ $(CHECKIT):
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Project"			"$(COMPOSER_BASENAME) Version"	"Current Version(s)"
 	@$(HEADER_L)
-ifeq ($(BUILD_PLAT),Linux)
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version			2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version			2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
-else ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_E)$(MSYS_VER)"		"$(_N)$(shell $(PACMAN) --version		2>/dev/null | $(SED) -n "s|^.*(Pacman[ ].*)$$|\1|gp")"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_E)*"			"$(_N)$(shell $(MINTTY) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_E)*"			"$(_N)$(shell $(CYGPATH) --version		2>/dev/null | $(HEAD) -n1)"
 endif
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_E)$(GLIBC_VERSIONS)"	"$(_N)$(shell $(LDD) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_E)$(GCC_VERSIONS)"		"$(_N)$(shell $(CC) --version			2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CXX) --version 2>/dev/null | $(HEAD) -n1)]"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_E)$(BINUTILS_VERSIONS)"	"$(_N)$(shell $(LD) --version			2>/dev/null | $(HEAD) -n1) $(_S)[$(shell $(CPP) --version 2>/dev/null | $(HEAD) -n1)]"
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"		"$(_N)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU Findutils"		"$(_E)$(FINDUTILS_VER)"		"$(_N)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_E)$(PATCH_VER)"		"$(_N)$(shell $(PATCH) --version		2>/dev/null | $(HEAD) -n1)"
@@ -4101,15 +4333,14 @@ endif
 	@$(TABLE_I3) "- $(_C)Cabal"			"$(_M)$(CABAL_VERSIONS)"	"$(_D)$(shell $(CABAL) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_I3) "- $(_C)Library"			"$(_M)$(CABAL_VERSIONS_LIB)"	"$(_D)$(shell $(CABAL_INFO) Cabal		2>/dev/null | $(SED) -n "s|^.*installed[:][ ](.+)$$|\1|gp")"
 	@$(HEADER_L)
-ifeq ($(BUILD_PLAT),Linux)
-	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
-	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(CC))) $(_S)($(subst ",,$(word 1,$(CXX))))"
-	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD))) $(_S)($(subst ",,$(word 1,$(CPP))))"
-else ifeq ($(BUILD_PLAT),Msys)
+ifeq ($(BUILD_PLAT),Msys)
 	@$(TABLE_I3) "$(MARKER) $(_E)MSYS2"		"$(_N)$(subst ",,$(word 1,$(PACMAN)))"
 	@$(TABLE_I3) "- $(_E)MinTTY"			"$(_N)$(subst ",,$(word 1,$(MINTTY))) $(_S)($(subst ",,$(word 1,$(CYGWIN_CONSOLE_HELPER))))"
 	@$(TABLE_I3) "- $(_E)Cygpath"			"$(_N)$(subst ",,$(word 1,$(CYGPATH)))"
 endif
+	@$(TABLE_I3) "$(MARKER) $(_E)GNU C Library"	"$(_N)$(subst ",,$(word 1,$(LDD)))"
+	@$(TABLE_I3) "- $(_E)GNU C Compiler"		"$(_N)$(subst ",,$(word 1,$(CC))) $(_S)($(subst ",,$(word 1,$(CXX))))"
+	@$(TABLE_I3) "- $(_E)GNU Linker"		"$(_N)$(subst ",,$(word 1,$(LD))) $(_S)($(subst ",,$(word 1,$(CPP))))"
 	@$(TABLE_I3) "$(MARKER) $(_E)GNU Coreutils"	"$(_N)$(subst ",,$(word 1,$(COREUTILS)))"
 	@$(TABLE_I3) "- $(_E)GNU Find"			"$(_N)$(subst ",,$(word 1,$(FIND)))"
 	@$(TABLE_I3) "- $(_E)GNU Patch"			"$(_N)$(subst ",,$(word 1,$(PATCH)))"
@@ -4294,13 +4525,11 @@ $(TIMERIT):
 	@$(foreach FILE,$(BUILD_COMPLETE_TIMERITS),\
 		$(if $(filter %++,$(FILE)),\
 			$(TABLE_I3) "$(_C)$(FILE)" "" "$(_H)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
-			,\
-			$(if $(filter %--,$(FILE)),\
-				$(TABLE_I3) "$(_E)$(FILE)" "" "$(_N)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
-				,\
-				$(TABLE_I3) "" "$(_M)$(FILE)" "$(_D)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
-			) \
-		) \
+		,$(if $(filter %--,$(FILE)),\
+			$(TABLE_I3) "$(_E)$(FILE)" "" "$(_N)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
+		,\
+			$(TABLE_I3) "" "$(_M)$(FILE)" "$(_D)$(shell $(call BUILD_COMPLETE_TIMERIT,$(FILE)))"; \
+		)) \
 	)
 	@$(HEADER_L)
 
@@ -4397,7 +4626,7 @@ alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
 alias .env_pandoc="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_PANDOC))"
 alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\n\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
 #
-cd "$(COMPOSER_DIR)"
+#WORK cd "$(COMPOSER_DIR)"
 source "$${HOME}/.bashrc.custom"
 # end of file
 endef
@@ -4612,7 +4841,17 @@ $(RELEASE)-chroot:
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS))
 	@$(HEADER_L)
 	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd / ; make $(ALLOFIT)"
+#WORK : maybe a(nother) "$RELEASE_CHROOT" option?
+#	@$(RUNMAKE) $(RELEASE)-chroot RELEASE_CHROOT="cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT)"
+#	$(RELEASE_CHROOT) /bin/bash $(RELEASE_CHROOT)
+#	ifneq ($(RELEASE_CHROOT),)
+#		RELEASE_CHROOT := -c "$(RELEASE_CHROOT)"
+#	else
+#		RELEASE_CHROOT := -o vi
+#	endif
+#	$(RELEASE_CHROOT) /bin/bash $(RELEASE_CHROOT)
+#WORK
+	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
 	$(RELEASE_CHROOT) /bin/bash -o vi
 
@@ -4707,14 +4946,12 @@ set _SYS=Msys
 set _DIR=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
 set _BIN=
 set _BIN=%_BIN%%_DIR%/bin/;
-set _BIN=%_BIN%%_DIR%/msys64/usr/bin;
-set _BIN=%_BIN%%_DIR%/msys32/usr/bin;
+set _BIN=%_BIN%%_DIR%/msys$(BUILD_BITS)/usr/bin;
 set _BIN=%_BIN%%_CMS%/bin/%_SYS%/usr/bin;
 set PATH=%_BIN%%PATH%
 set _OPT=1
 if exist %_DIR%/bin set _OPT=
-if exist %_DIR%/msys64/usr/bin set _OPT=
-if exist %_DIR%/msys32/usr/bin set _OPT=
+if exist %_DIR%/msys$(BUILD_BITS)/usr/bin set _OPT=
 start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="%_OPT%" BUILD_PLAT="%_SYS%" shell-msys
 :: end of file
 endef
@@ -4726,14 +4963,12 @@ _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
 _DIR=$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))
 _BIN=
 _BIN=$${_BIN}$${_DIR}/bin:
-_BIN=$${_BIN}$${_DIR}/msys64/usr/bin:
-_BIN=$${_BIN}$${_DIR}/msys32/usr/bin:
+_BIN=$${_BIN}$${_DIR}/msys$(BUILD_BITS)/usr/bin:
 _BIN=$${_BIN}$${_CMS}/bin/$${_SYS}/usr/bin:
 PATH=$${_BIN}$${PATH}
 _OPT=1
 [ -d $${_DIR}/bin ] && _OPT=
-[ -d $${_DIR}/msys64/usr/bin ] && _OPT=
-[ -d $${_DIR}/msys32/usr/bin ] && _OPT=
+[ -d $${_DIR}/msys$(BUILD_BITS)/usr/bin ] && _OPT=
 exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" shell
 # end of file
 endef
@@ -5219,14 +5454,15 @@ settings:
 .PHONY: setup
 setup:
 	@$(ECHO) "$(_S)"
-ifeq ($(TYPE),$(TYPE_DOCX))
-ifneq ($(PANDOC_DATA),)
-ifneq ($(PANDOC_DATA_BUILD),)
-	@$(MKDIR) "$(PANDOC_DATA_BUILD)"
-	@$(CP) "$(PANDOC_DATA)/reference.docx" "$(PANDOC_DATA_BUILD)/"
-endif
-endif
-endif
+#WORKING:NOW
+#ifeq ($(TYPE),$(TYPE_DOCX))
+#ifneq ($(PANDOC_DATA),)
+#ifneq ($(PANDOC_DATA_BUILD),)
+#	@$(MKDIR) "$(PANDOC_DATA_BUILD)"
+#	@$(CP) "$(PANDOC_DATA)/reference.docx" "$(PANDOC_DATA_BUILD)/"
+#endif
+#endif
+#endif
 	@$(ECHO) "$(_D)"
 
 .PHONY: subdirs $(COMPOSER_SUBDIRS)
@@ -5265,11 +5501,11 @@ endif
 #	https://stackoverflow.com/questions/21423952/self-contained-reveal-js-file-without-relative-reveal-js-folder-using-pandoc
 # remove the "WARNING" below once this is fixed
 #WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-ifeq ($(TYPE),$(TYPE_PRES))
-override OPTIONS_DOC	:= $(filter-out --self-contained,$(OPTIONS_DOC))
-endif
-endif
+#ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+#ifeq ($(TYPE),$(TYPE_PRES))
+#override OPTIONS_DOC	:= $(filter-out --self-contained,$(OPTIONS_DOC))
+#endif
+#endif
 
 .PHONY: $(COMPOSER_TARGET)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
@@ -5277,19 +5513,19 @@ $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(LIST) settings setup
 #WORK : platform_switches
-ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-ifeq ($(TYPE),$(TYPE_PRES))
-	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_N)WARNING:"
-	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_N)There is currently a bug in Pandoc which precludes building self-contained Reveal.js documents on Windows systems."
-	@$(TABLE_I3) "$(_N)Any Reveal.js documents produced will only be viewable on this system, with the current $(COMPOSER_BASENAME) directory in place."
-	@$(TABLE_I3) "$(_N)To build self-contained Reveal.js documents, you will need to use a non-Windows system until this bug is fixed upstream."
-	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_N)This is an unfortunate situation, and the $(COMPOSER_BASENAME) author apologizes for the inconvenience."
-	@$(ECHO) "\n"
-endif
-endif
+#ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
+#ifeq ($(TYPE),$(TYPE_PRES))
+#	@$(ECHO) "\n"
+#	@$(TABLE_I3) "$(_N)WARNING:"
+#	@$(ECHO) "\n"
+#	@$(TABLE_I3) "$(_N)There is currently a bug in Pandoc which precludes building self-contained Reveal.js documents on Windows systems."
+#	@$(TABLE_I3) "$(_N)Any Reveal.js documents produced will only be viewable on this system, with the current $(COMPOSER_BASENAME) directory in place."
+#	@$(TABLE_I3) "$(_N)To build self-contained Reveal.js documents, you will need to use a non-Windows system until this bug is fixed upstream."
+#	@$(ECHO) "\n"
+#	@$(TABLE_I3) "$(_N)This is an unfortunate situation, and the $(COMPOSER_BASENAME) author apologizes for the inconvenience."
+#	@$(ECHO) "\n"
+#endif
+#endif
 	@$(TABLE_I3) "$(_H)Environment:"	'$(_D)$(OPTIONS_ENV)'
 	@$(TABLE_I3) "$(_H)Pandoc Options:"	'$(_D)$(OPTIONS_DOC)'
 	@$(ECHO) "$(_N)"
