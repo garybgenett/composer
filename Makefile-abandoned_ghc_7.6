@@ -482,6 +482,9 @@ override BUILD_JOBS			?= 3
 override BUILD_DIST			?=
 override BUILD_PORT			?=
 override BUILD_MSYS			?=
+#ANTIQUATE : remove all BUILD_GHC78
+override BUILD_GHC78			?= 1
+#ANTIQUATE
 
 #>override BUILD_PLAT			:= Linux
 #>override BUILD_ARCH			:= x86_64
@@ -576,14 +579,26 @@ endif
 endif
 
 ifeq ($(BUILD_PLAT),Linux)
+ifneq ($(BUILD_GHC78),)
 override GHC_PLAT			:= unknown-linux-deb7
+else
+override GHC_PLAT			:= unknown-linux
+endif
 else ifeq ($(BUILD_PLAT),FreeBSD)
+ifneq ($(BUILD_GHC78),)
 override GHC_PLAT			:= portbld-freebsd
+else
+override GHC_PLAT			:= unknown-freebsd
+endif
 else ifeq ($(BUILD_PLAT),Darwin)
+ifneq ($(BUILD_GHC78),)
 ifeq ($(BUILD_ARCH),x86_64)
 override GHC_PLAT			:= apple-darwin
 else
 override GHC_PLAT			:= apple-ios
+endif
+else
+override GHC_PLAT			:= apple-darwin
 endif
 else ifeq ($(BUILD_PLAT),Msys)
 override GHC_PLAT			:= unknown-mingw32
@@ -845,12 +860,21 @@ override TEX_DST			:= $(COMPOSER_BUILD)/texlive-$(TEX_VER)-source
 #	https://github.com/ghc/ghc/commits/master/configure.ac
 #	https://github.com/ghc/ghc/commits/master/libraries/base/base.cabal
 #	https://github.com/ghc/ghc/commits/27a642cc3a448c5b9bb0774d413f27aef0c63379
+ifneq ($(BUILD_GHC78),)
 override GHC_VER_INIT			:= 7.8.3
 override GHC_VER			:= $(GHC_VER_INIT)
 override GHC_CABAL_VER			:= 1.18.1.3
 override GHC_CMT			:= ghc-$(GHC_VER)-release
 override GHC_BRANCH			:= ghc-$(GHC_VER)
 override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER_INIT)/ghc-$(GHC_VER_INIT)-$(GHC_ARCH)-$(GHC_PLAT).tar.xz
+else
+override GHC_VER_INIT			:= 7.6.3
+override GHC_VER			:= $(GHC_VER_INIT)
+override GHC_CABAL_VER			:= 1.16.0
+override GHC_CMT			:= ghc-$(GHC_VER)-release
+override GHC_BRANCH			:= ghc-$(GHC_VER)
+override GHC_SRC_INIT			:= https://www.haskell.org/ghc/dist/$(GHC_VER_INIT)/ghc-$(GHC_VER_INIT)-$(GHC_ARCH)-$(GHC_PLAT).tar.bz2
+endif
 override GHC_SRC			:= https://git.haskell.org/ghc.git
 override GHC_DST_INIT			:= $(COMPOSER_BUILD)/ghc-$(GHC_VER_INIT)
 override GHC_DST			:= $(COMPOSER_BUILD)/ghc
@@ -1110,6 +1134,7 @@ override TEXLIVE_DIRECTORY_LIST		:= \
 	tex/latex/tools \
 	tex/latex/url
 
+ifneq ($(BUILD_GHC78),)
 override GHC_LIBRARIES_INIT_LIST	:= \
 	ghc|$(GHC_VER) \
 	Cabal|$(GHC_CABAL_VER) \
@@ -1173,6 +1198,51 @@ override GHC_LIBRARIES_INIT_LIST	:= \
 	vector-tests|0.10.0.1 \
 	vector|0.10.9.1 \
 	xhtml|3000.2.1
+else
+override GHC_LIBRARIES_INIT_LIST	:= \
+	ghc|$(GHC_VER) \
+	Cabal|$(GHC_CABAL_VER) \
+	Win32|2.3.0.0 \
+	array|0.4.0.1 \
+	base|4.6.0.1 \
+	bin-package-db|0.0.0.0 \
+	binary|0.5.1.1 \
+	bytestring|0.10.0.2 \
+	cabal-install|0.15.1 \
+	compareSizes|0.1.0.0 \
+	containers|0.5.0.0 \
+	deepseq|1.3.0.1 \
+	directory|1.2.0.1 \
+	filepath|1.3.0.1 \
+	ghc-cabal|0.1 \
+	ghc-pkg|6.9 \
+	ghc-prim|0.3.0.0 \
+	ghc-pwd|0.1 \
+	haddock|2.13.2 \
+	haskeline|0.7.0.2 \
+	haskell2010|1.1.1.0 \
+	haskell98|2.0.0.2 \
+	hoopl|3.9.0.0 \
+	hpc-bin|0.67 \
+	hpc|0.6.0.0 \
+	hsc2hs|0.67 \
+	integer-gmp|0.5.0.0 \
+	integer-simple|0.1.0.1 \
+	old-locale|1.0.0.5 \
+	old-time|1.1.0.1 \
+	pretty|1.1.1.0 \
+	primitive|0.5.2.1 \
+	process|1.1.0.2 \
+	rts|1.0 \
+	runghc|7.6.3 \
+	template-haskell|2.8.0.0 \
+	terminfo|0.3.2.4 \
+	time|1.4.0.1 \
+	transformers|0.3.0.0 \
+	unix|2.6.0.1 \
+	utf8-string|0.3.8 \
+	xhtml|3000.2.1
+endif
 
 override CABAL_LIBRARIES_INIT_LIST	:= \
 	Cabal|$(CABAL_VER) \
@@ -1201,6 +1271,13 @@ override GHC_LIBRARIES_LIST		:= \
 	\
 	alex|3.1.4 \
 	happy|1.19.5
+ifeq ($(BUILD_GHC78),)
+override GHC_LIBRARIES_LIST_HADDOCK	:= \
+	ghc-paths|0.1.0.9 \
+	xhtml|3000.2.1 \
+	\
+	haddock|2.13.2.1
+endif
 
 override PANDOC_LIBRARIES_LIST_REQUIRED	:= \
 	$(filter-out primitive|%,\
@@ -1214,7 +1291,8 @@ override PANDOC_LIBRARIES_LIST_REQUIRED	:= \
 	$(filter-out old-time|%,\
 	$(filter-out time|%,\
 	$(CABAL_LIBRARIES_LIST)))))) \
-	$(GHC_LIBRARIES_LIST)
+	$(GHC_LIBRARIES_LIST) \
+	$(GHC_LIBRARIES_LIST_HADDOCK)
 
 override PANDOC_LIBRARIES_LIST		:= \
 	Diff|0.3.0 \
@@ -1672,6 +1750,7 @@ endif
 
 #WORK : better spot for this?
 #WORK : would be nice to fully understand why this breaks in a 32-bit chroot?
+ifneq ($(BUILD_GHC78),)
 override LD_LIBRARY_PATH_GHC_DIR	:=
 ifneq ($(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),)
 override LD_LIBRARY_PATH_GHC_DIR	:= $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
@@ -1693,6 +1772,7 @@ override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FIL
 			-e "s|[:]|\n|g" \
 		| $(SORT) \
 ),:$(FILE)))
+endif
 endif
 
 #WORK : better spot for this?
@@ -2035,6 +2115,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)BUILD_DIST$(_D)"		"Build generic binaries"	"[$(_M)$(BUILD_DIST)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PORT$(_D)"		"Build portable binaries"	"[$(_M)$(BUILD_PORT)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_MSYS$(_D)"		"Force Windows detection"	"[$(_M)$(BUILD_MSYS)$(_D)] $(_N)(valid: empty or 1)"
+	@$(TABLE_I3) "$(_C)BUILD_GHC78$(_D)"		"GHC 7.8 instead of 7.6"	"[$(_M)$(BUILD_GHC78)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)BUILD_PLAT$(_D)"		"Overrides 'uname -o'"		"[$(_M)$(BUILD_PLAT)$(_D)]"
 	@$(TABLE_I3) "$(_C)BUILD_ARCH$(_D)"		"Overrides 'uname -m'"		"[$(_M)$(BUILD_ARCH)$(_D)] $(_E)($(BUILD_BITS)-bit)"
 	@$(ECHO) "\n"
@@ -3795,7 +3876,11 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
 else
+ifneq ($(BUILD_GHC78),)
 	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
+else
+	$(CP) "$(BUILD_LDLIB)/lib/libgmp.so" "$(BUILD_LDLIB)/lib/libgmp.so.3"
+endif
 #WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
 		show \
@@ -3901,12 +3986,23 @@ endif
 	@$(call BUILD_COMPLETE)
 endif
 
+ifneq ($(BUILD_GHC78),)
 override define HEREDOC_GHC_BUILD_MK =
 override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
 override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
 override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
 override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
+else
+override define HEREDOC_GHC_BUILD_MK =
+override SRC_CC_OPTS	:= $(CFLAGS_LDLIB)
+override SRC_CPP_OPTS	:= $(CPPFLAGS_LDLIB)
+override SRC_LD_OPTS	:= $(LDFLAGS_LDLIB)
+override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
+override libraries/base_CONFIGURE_OPTS		:= $(call CABAL_OPTIONS_LDLIB,$(COMPOSER_ABODE))
+override libraries/integer-gmp_CONFIGURE_OPTS	:= $(call CABAL_OPTIONS_LDLIB,$(COMPOSER_ABODE))
+endef
+endif
 
 .PHONY: $(BUILDIT)-cabal-init
 $(BUILDIT)-cabal-init:
@@ -4027,7 +4123,10 @@ ifneq ($(COMPOSER_TESTING),)
 override CABAL_BUILD_GHC_LIBRARIES_PULL =
 else
 override define CABAL_BUILD_GHC_LIBRARIES_PULL =
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+	$(foreach FILE,\
+		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
+		$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)) \
+		,\
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
 endef
@@ -4037,13 +4136,22 @@ ifneq ($(COMPOSER_TESTING),)
 override CABAL_BUILD_GHC_LIBRARIES_PULL =
 else
 override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+	$(foreach FILE,\
+		$(subst |,-,$(GHC_LIBRARIES_LIST)) \
+		$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)) \
+		,\
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
 	$(call CABAL_INSTALL,_LDLIB,$(2)) \
 		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
 			"$(1)/$(FILE)" \
 		)
+	if [ -z "$(BUILD_GHC78)" ]; then \
+		$(call CABAL_INSTALL,_LDLIB,$(2)) \
+			$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST_HADDOCK)),\
+				"$(1)/$(FILE)" \
+			); \
+	fi
 endef
 endif
 
