@@ -4789,8 +4789,8 @@ override DIST_SCREENSHOT	:= iVBORw0KGgoAAAANSUhEUgAAAeQAAADjCAIAAADbvvCiAAAABmJL
 
 .PHONY: $(DISTRIB)
 $(DISTRIB):
-	@if [ "$(COMPOSER)" !=						"$(CURDIR)/$(MAKEFILE)" ]; then \
-		$(CP) "$(COMPOSER)"					"$(CURDIR)/$(MAKEFILE)"; \
+	@if [ "$(COMPOSER)" !=						"$(abspath $(CURDIR)/$(MAKEFILE))" ]; then \
+		$(CP) "$(COMPOSER)"					"$(abspath $(CURDIR)/$(MAKEFILE))"; \
 	fi
 	@if [ -d "$(COMPOSER_PROGS)" ] && \
 	    [ "$(COMPOSER_PROGS)" !=					"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))" ]; then \
@@ -5420,8 +5420,10 @@ $(COMPOSER_PANDOC): $(LIST) settings setup
 #	@$(ECHO) "\n"
 #endif
 #endif
+	@$(TABLE_I3) "$(_H)Shell:"		'$(_D)$(ENV)'
 	@$(TABLE_I3) "$(_H)Environment:"	'$(_D)$(OPTIONS_ENV)'
-	@$(TABLE_I3) "$(_H)Pandoc Options:"	'$(_D)$(OPTIONS_DOC)'
+	@$(TABLE_I3) "$(_H)Pandoc:"		'$(_D)$(PANDOC)'
+	@$(TABLE_I3) "$(_H)Options:"		'$(_D)$(OPTIONS_DOC)'
 	@$(ECHO) "$(_N)"
 	@$(ENV) - $(OPTIONS_ENV) $(PANDOC) $(OPTIONS_DOC)
 	@$(ECHO) "$(_D)"
