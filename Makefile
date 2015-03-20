@@ -40,7 +40,7 @@
 #	PERL_MODULES_LIST, when CURL_VER
 #	GHC_CABAL_VER, when GHC_VER
 #	GHC_LIBRARIES_INIT_LIST, when GHC_VER
-#	GHC_LIBRARIES_LIST, when GHC_VER
+#	CABAL_LIBRARIES_GHC_LIST, when GHC_VER
 #	CABAL_LIBRARIES_INIT_LIST, when CABAL_VER_INIT
 #	CABAL_LIBRARIES_LIST, when CABAL_VER
 #	PANDOC_LIBRARIES_LIST, when PANDOC_VER (or PANDOC_CMT?)
@@ -461,10 +461,10 @@ override PANDOC_OPTIONS			:= \
 	\
 	$(LIST)
 
-#>	--variable="geometry=top=$(MGN)"
-#>	--variable="geometry=bottom=$(MGN)"
-#>	--variable="geometry=left=$(MGN)"
-#>	--variable="geometry=right=$(MGN)"
+#>	--variable="geometry=top=$(MGN)" \
+#>	--variable="geometry=bottom=$(MGN)" \
+#>	--variable="geometry=left=$(MGN)" \
+#>	--variable="geometry=right=$(MGN)" \
 
 ########################################
 
@@ -858,7 +858,7 @@ override GHC_DST			:= $(COMPOSER_BUILD)/ghc
 # https://www.haskell.org/cabal/download.html
 # https://hackage.haskell.org/package/cabal-install
 # https://github.com/ghc/packages-Cabal
-override CABAL_VER_INIT			:= 1.22.0.0
+override CABAL_VER_INIT			:= 1.20.0.0
 override CABAL_VER			:= $(CABAL_VER_INIT)
 override CABAL_CMT			:= Cabal-$(CABAL_VER)-release
 override CABAL_SRC_INIT			:= https://www.haskell.org/cabal/release/cabal-install-$(CABAL_VER_INIT)/cabal-install-$(CABAL_VER_INIT).tar.gz
@@ -1176,25 +1176,21 @@ override GHC_LIBRARIES_INIT_LIST	:= \
 
 override CABAL_LIBRARIES_INIT_LIST	:= \
 	Cabal|$(CABAL_VER) \
-	HTTP|4000.2.19 \
-	binary|0.7.2.3 \
-	deepseq|1.4.0.0 \
-	mtl|2.2.1 \
-	network-uri|2.6.0.1 \
-	network|2.6.0.2 \
-	old-locale|1.0.0.7 \
-	old-time|1.1.0.3 \
-	parsec|3.1.7 \
-	random|1.1 \
-	stm|2.4.4 \
-	text|1.2.0.3 \
-	time|1.5 \
-	transformers|0.4.2.0 \
-	zlib|0.5.4.2
+	HTTP|4000.2.12 \
+	deepseq|1.3.0.2 \
+	mtl|2.1.3.1 \
+	network|2.4.2.3 \
+	parsec|3.1.5 \
+	random|1.0.1.1 \
+	stm|2.4.3 \
+	text|1.1.0.1 \
+	time|1.4.2 \
+	transformers|0.3.0.0 \
+	zlib|0.5.4.1
 override CABAL_LIBRARIES_LIST		:= \
 	$(CABAL_LIBRARIES_INIT_LIST)
 
-override GHC_LIBRARIES_LIST		:= \
+override CABAL_LIBRARIES_GHC_LIST	:= \
 	QuickCheck|2.7.6 \
 	primitive|0.5.4.0 \
 	tf-random|0.5 \
@@ -1203,18 +1199,15 @@ override GHC_LIBRARIES_LIST		:= \
 	happy|1.19.5
 
 override PANDOC_LIBRARIES_LIST_REQUIRED	:= \
+	$(filter-out deepseq|%,\
 	$(filter-out primitive|%,\
 	$(filter-out random|%,\
+	$(filter-out time|%,\
 	$(filter-out transformers|%,\
 	$(filter-out vector|%,\
-	$(GHC_LIBRARIES_INIT_LIST))))) \
-	$(filter-out binary|%,\
-	$(filter-out deepseq|%,\
-	$(filter-out old-locale|%,\
-	$(filter-out old-time|%,\
-	$(filter-out time|%,\
-	$(CABAL_LIBRARIES_LIST)))))) \
-	$(GHC_LIBRARIES_LIST)
+	$(GHC_LIBRARIES_INIT_LIST))))))) \
+	$(CABAL_LIBRARIES_LIST) \
+	$(CABAL_LIBRARIES_GHC_LIST)
 
 override PANDOC_LIBRARIES_LIST		:= \
 	Diff|0.3.0 \
@@ -1230,7 +1223,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	asn1-parse|0.9.0 \
 	asn1-types|0.3.0 \
 	async|2.0.2 \
-	attoparsec|0.12.1.3 \
+	attoparsec|0.11.3.4 \
 	base64-bytestring|1.0.0.1 \
 	blaze-builder|0.3.3.4 \
 	blaze-html|0.7.1.0 \
@@ -1250,7 +1243,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	crypto-numbers|0.2.7 \
 	crypto-pubkey-types|0.4.3 \
 	crypto-pubkey|0.2.8 \
-	crypto-random|0.0.8 \
+	crypto-random|0.0.9 \
 	cryptohash|0.11.6 \
 	data-default-class|0.0.1 \
 	data-default-instances-base|0.0.1 \
@@ -1260,7 +1253,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	data-default|0.5.3 \
 	deepseq-generics|0.1.1.2 \
 	digest|0.0.1.2 \
-	dlist|0.7.1 \
+	dlist|0.7.1.1 \
 	enclosed-exceptions|1.0.1 \
 	exceptions|0.8.0.2 \
 	executable-path|0.0.3 \
@@ -1276,10 +1269,11 @@ override PANDOC_LIBRARIES_LIST		:= \
 	http-client|0.4.9 \
 	http-types|0.8.6 \
 	lifted-base|0.2.3.6 \
-	mime-types|0.1.0.5 \
+	mime-types|0.1.0.6 \
 	mmorph|1.0.4 \
 	monad-control|1.0.0.4 \
 	nats|1 \
+	network-uri|2.6.0.1 \
 	pem|0.2.2 \
 	publicsuffixlist|0.1 \
 	regex-base|0.93.2 \
@@ -1287,7 +1281,7 @@ override PANDOC_LIBRARIES_LIST		:= \
 	regex-posix|0.95.2 \
 	resourcet|1.1.4.1 \
 	rfc5051|0.1.0.3 \
-	scientific|0.3.3.7 \
+	scientific|0.3.3.8 \
 	securemem|0.1.7 \
 	semigroups|0.16.2.2 \
 	socks|0.5.4 \
@@ -1322,6 +1316,9 @@ override PANDOC_LIBRARIES_LIST		:= \
 	hxt-regex-xmlschema|9.2.0.1 \
 	hxt-unicode|9.0.2.4 \
 	hxt|9.3.1.15 \
+	\
+	HTTP|4000.2.19 \
+	network|2.6.0.2 \
 	\
 	vault|0.3.0.4 \
 	wai|3.0.2.2 \
@@ -2832,7 +2829,10 @@ endef
 #WORK : better location?
 #WORK : document!
 override BUILD_CLEAN_DIRS := $(sort \
-	$(foreach FILE,$(filter-out $(COMPOSER_ABODE)/msys%,$(wildcard $(COMPOSER_ABODE)/*)),"$(FILE)") \
+	$(foreach FILE,\
+		$(filter-out $(COMPOSER_ABODE)/.%,\
+		$(filter-out $(COMPOSER_ABODE)/msys%,\
+		$(wildcard $(COMPOSER_ABODE)/*))),"$(FILE)") \
 	"$(COMPOSER_ABODE)/.coreutils" \
 	"$(COMPOSER_TRASH)" \
 	"$(COMPOSER_BUILD)" \
@@ -3812,6 +3812,21 @@ ifneq ($(BUILD_FETCH),)
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
 endif
 ifneq ($(BUILD_FETCH),0)
+ifneq ($(COMPOSER_TESTING),)
+	$(ECHO) "$(_C)"; \
+		$(foreach FILE,$(wildcard \
+			$(GHC_DST)/libraries/*/*/*.cabal \
+			$(GHC_DST)/libraries/*/*.cabal \
+			$(GHC_DST)/utils/*/*.cabal \
+			$(GHC_DST)/rts/package.conf.in \
+			),\
+			$(ECHO) "$(notdir $(subst .cabal,,$(subst /package.conf.in,,$(FILE))))|"; \
+			$(SED) -n \
+				-e "s|^[Vv]ersion[:][[:space:]]+||gp" \
+				"$(FILE)"; \
+		) \
+	$(ECHO) "$(_D)"
+else
 	cd "$(GHC_DST)" && \
 		$(BUILD_ENV_MINGW) $(PERL) ./boot
 	# expose "$(BUILD_PLAT),Msys" paths as environment variables
@@ -3876,29 +3891,14 @@ ifneq ($(BUILD_FETCH),0)
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
 #WORK : NOTARGET?
-ifneq ($(COMPOSER_TESTING),)
-	$(ECHO) "$(_C)"; \
-		$(foreach FILE,$(wildcard \
-			$(GHC_DST)/libraries/*/*/*.cabal \
-			$(GHC_DST)/libraries/*/*.cabal \
-			$(GHC_DST)/utils/*/*.cabal \
-			$(GHC_DST)/rts/package.conf.in \
-			),\
-			$(ECHO) "$(notdir $(subst .cabal,,$(subst /package.conf.in,,$(FILE))))|"; \
-			$(SED) -n \
-				-e "s|^[Vv]ersion[:][[:space:]]+||gp" \
-				"$(FILE)"; \
-		) \
-	$(ECHO) "$(_D)"
-else
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
-endif
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RM) -r "$(BUILD_STRAP)/mingw"*
 #endif
 #WORK
 	@$(call BUILD_COMPLETE)
+endif
 endif
 
 override define HEREDOC_GHC_BUILD_MK =
@@ -3915,13 +3915,19 @@ ifneq ($(BUILD_FETCH),)
 	$(call CABAL_PULL,$(CABAL_LIBRARIES_INIT_LIST))
 endif
 ifneq ($(BUILD_FETCH),0)
+ifneq ($(COMPOSER_TESTING),)
+	$(call CABAL_COMPOSER_TESTING,$(CABAL_DST_INIT))
+else
 	$(call DO_UNTAR,$(CABAL_DST_INIT),$(CABAL_SRC_INIT))
 	$(call CABAL_PREP,$(CABAL_DST_INIT),$(CABAL_LIBRARIES_INIT_LIST))
 	$(call CABAL_BUILD,$(CABAL_DST_INIT),$(BUILD_STRAP))
 	@$(call BUILD_COMPLETE)
 endif
+endif
+ifeq ($(COMPOSER_TESTING),)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-init-libs
+endif
 
 #WORK : document!
 .PHONY: $(BUILDIT)-cabal-init-libs
@@ -3941,14 +3947,20 @@ ifneq ($(BUILD_FETCH),)
 	$(call CABAL_PULL,$(CABAL_LIBRARIES_LIST))
 endif
 ifneq ($(BUILD_FETCH),0)
+ifneq ($(COMPOSER_TESTING),)
+	$(call CABAL_COMPOSER_TESTING,$(CABAL_DST)/cabal-install)
+else
 	$(RM) -r "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(CP) "$(CABAL_DST)/Cabal" "$(CABAL_DST)/cabal-install/Cabal-$(CABAL_VER_INIT)"
 	$(call CABAL_PREP,$(CABAL_DST)/cabal-install,$(CABAL_LIBRARIES_LIST))
 	$(call CABAL_BUILD,$(CABAL_DST)/cabal-install,$(COMPOSER_ABODE))
 	@$(call BUILD_COMPLETE)
 endif
+endif
+ifeq ($(COMPOSER_TESTING),)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-cabal-libs
+endif
 
 #WORK : document!
 .PHONY: $(BUILDIT)-cabal-libs
@@ -3965,6 +3977,14 @@ override define CABAL_PULL =
 	$(foreach FILE,$(subst |,-,$(1)), \
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
+endef
+
+override define CABAL_COMPOSER_TESTING =
+	$(ECHO) "$(_C)"; \
+		$(SED) -n \
+			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
+			"$(1)/bootstrap.sh"; \
+	$(ECHO) "$(_D)"
 endef
 
 # thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
@@ -4005,47 +4025,29 @@ endef
 #>endef
 #ANTIQUATE
 
-ifneq ($(COMPOSER_TESTING),)
-override define CABAL_BUILD =
-	$(ECHO) "$(_C)"; \
-		$(SED) -n \
-			-e "s|^([A-Z_]+)[_]VER[=][\"]([^\"]+)[\"].+REGEXP.+$$|\1=\2|gp" \
-			"$(1)/bootstrap.sh"; \
-	$(ECHO) "$(_D)"
-endef
-else
 override define CABAL_BUILD =
 	cd "$(1)" && $(BUILD_ENV_MINGW) \
 		PREFIX="$(2)" \
 		EXTRA_CONFIGURE_OPTS="$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
 		$(SH) ./bootstrap.sh --global
 endef
-endif
 #> syntax highlighting fix: )"
 
-ifneq ($(COMPOSER_TESTING),)
-override CABAL_BUILD_GHC_LIBRARIES_PULL =
-else
 override define CABAL_BUILD_GHC_LIBRARIES_PULL =
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_GHC_LIST)),\
 		$(call HACKAGE_PULL,$(FILE)); \
 	)
 endef
-endif
 
-ifneq ($(COMPOSER_TESTING),)
-override CABAL_BUILD_GHC_LIBRARIES_PULL =
-else
 override define CABAL_BUILD_GHC_LIBRARIES_BUILD =
-	$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+	$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_GHC_LIST)),\
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
 	$(call CABAL_INSTALL,_LDLIB,$(2)) \
-		$(foreach FILE,$(subst |,-,$(GHC_LIBRARIES_LIST)),\
+		$(foreach FILE,$(subst |,-,$(CABAL_LIBRARIES_GHC_LIST)),\
 			"$(1)/$(FILE)" \
 		)
 endef
-endif
 
 override PANDOC_LIBRARIES_LIST_REQUESTED := $(sort $(subst |,-,\
 	$(PANDOC_LIBRARIES_LIST_REQUIRED) \
