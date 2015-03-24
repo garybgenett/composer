@@ -272,7 +272,6 @@ override ___WORK			:= all
 override ___WORK			:= clean
 override ___WORK			:= whoami
 override ___WORK			:= settings
-override ___WORK			:= setup
 override ___WORK			:= subdirs
 override ___WORK			:= print
 
@@ -375,10 +374,10 @@ override MDVIEWER_CSS			:= $(MDVIEWER_DST)/chrome/skin/markdown-viewer.css
 
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE (license: BSD)
 # https://github.com/hakimel/reveal.js
-override REVEALJS_CMT			:= 2.6.2
+override REVEALJS_CMT			:= 3.0.0
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DST			:= $(COMPOSER_DIR)/revealjs
-#>override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/default.css
+#>override REVEALJS_CSS			:= $(REVEALJS_DST)/css/theme/black.css
 override REVEALJS_CSS			:= $(COMPOSER_DIR)/revealjs.css
 
 # http://www.w3.org/Consortium/Legal/copyright-software (license: MIT)
@@ -430,7 +429,7 @@ endif
 #	fenced_code_attributes
 #WORKING : http://10.255.255.254/zactive/coding/composer/Pandoc_Manual.html#fenced-code-blocks
 #WORKING : document effects of $TOC and $LVL!
-override PANDOC_OPTIONS			:= \
+override PANDOC_OPTIONS			:= $(strip \
 	$(OPT) \
 	\
 	--standalone \
@@ -459,7 +458,8 @@ override PANDOC_OPTIONS			:= \
 	--normalize \
 	--smart \
 	\
-	$(LIST)
+	$(LIST) \
+)
 
 #>	--variable="geometry=top=$(MGN)" \
 #>	--variable="geometry=bottom=$(MGN)" \
@@ -469,10 +469,10 @@ override PANDOC_OPTIONS			:= \
 ########################################
 
 override COMPOSER_OTHER			?= $(COMPOSER_DIR)
-override COMPOSER_ABODE			?= $(COMPOSER_OTHER)/.home
-override COMPOSER_STORE			?= $(COMPOSER_OTHER)/.sources
-override COMPOSER_TRASH			?= $(COMPOSER_OTHER)/.tmp
-override COMPOSER_BUILD			?= $(COMPOSER_OTHER)/build
+override COMPOSER_ABODE			?= $(abspath $(COMPOSER_OTHER)/.home)
+override COMPOSER_STORE			?= $(abspath $(COMPOSER_OTHER)/.sources)
+override COMPOSER_TRASH			?= $(abspath $(COMPOSER_OTHER)/.tmp)
+override COMPOSER_BUILD			?= $(abspath $(COMPOSER_OTHER)/build)
 
 override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_LDLIB			:= $(COMPOSER_ABODE)/$(STRAPIT)
@@ -510,7 +510,7 @@ ifeq ($(BUILD_ARCH),x86_64)
 override BUILD_BITS			:= 64
 endif
 
-override COMPOSER_PROGS			?= $(COMPOSER_OTHER)/bin/$(BUILD_PLAT)
+override COMPOSER_PROGS			?= $(abspath $(COMPOSER_OTHER)/bin/$(BUILD_PLAT))
 override COMPOSER_PROGS_USE		?=
 
 # thanks for the 'LANG' fix below: https://stackoverflow.com/questions/23370392/failed-installing-dependencies-with-cabal
@@ -544,11 +544,8 @@ override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD
 override GHCFLAGS			:= $(GHCFLAGS) $(foreach FILE,-m$(BUILD_BITS) -march=$(BUILD_ARCH) -mtune=generic -O1,-opta$(FILE))
 endif
 
-#WORKING:NOW : $(GHC_VER) isn't defined until later; is it even doing anything, then?
-#override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib -L$(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
 override CFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include -L$(BUILD_LDLIB)/lib
 override CPPFLAGS_LDLIB			:= -I$(BUILD_LDLIB)/include
-#override LDFLAGS_LDLIB			:=                          -L$(BUILD_LDLIB)/lib -L$(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
 override LDFLAGS_LDLIB			:=                          -L$(BUILD_LDLIB)/lib
 override GHCFLAGS_LDLIB			:= $(foreach FILE,$(CFLAGS_LDLIB),-optc$(FILE)) $(foreach FILE,$(CPPFLAGS_LDLIB),-optP$(FILE)) $(foreach FILE,$(LDFLAGS_LDLIB),-optl$(FILE))
 
@@ -616,7 +613,7 @@ override DEBIAN_MAKE_VERSION		:= 3.81
 # http://www.funtoo.org/Generic_32
 # http://www.funtoo.org/Core2_64
 # http://www.funtoo.org/I686
-override FUNTOO_DATE			:= 2015-02-06
+override FUNTOO_DATE			:= 2015-03-20
 override FUNTOO_TYPE			:= funtoo-stable
 override FUNTOO_ARCH			:= x86-$(BUILD_BITS)bit
 override FUNTOO_SARC			:= generic_$(BUILD_BITS)
@@ -693,7 +690,8 @@ override ZLIB_DST			:= $(COMPOSER_BUILD)/zlib-$(ZLIB_VER)
 # https://gmplib.org (license: GPL, LGPL)
 # https://gmplib.org
 override GMP_VER			:= 6.0.0a
-override GMP_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VER).tar.xz
+#>override GMP_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VER).tar.xz
+override GMP_SRC			:= https://gmplib.org/download/gmp/gmp-$(GMP_VER).tar.bz2
 override GMP_DST			:= $(COMPOSER_BUILD)/gmp-$(subst a,,$(GMP_VER))
 # https://www.gnu.org/software/ncurses (license: custom = as-is)
 # https://www.gnu.org/software/ncurses
@@ -1464,10 +1462,6 @@ override BZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),bzip2)"
 override GZIP				:= "$(call COMPOSER_FIND,$(PATH_LIST),gzip)"
 override XZ				:= "$(call COMPOSER_FIND,$(PATH_LIST),xz)"
 override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -vvx
-ifneq ($(MSYS_HACKS),)
-# prevents "unexpected eof in archive"
-override TAR				:= "$(call COMPOSER_FIND,$(PATH_LIST),tar)" -x
-endif
 override PERL				:= "$(call COMPOSER_FIND,$(PATH_LIST),perl)"
 
 override BASH				:= "$(call COMPOSER_FIND,$(PATH_LIST),bash)"
@@ -1526,10 +1520,16 @@ override define CURL_FILE_GNU_CFG	=
 	fi
 endef
 
-override GIT_EXEC			:= $(wildcard $(abspath $(dir $(GIT_PATH))../../git-core))
+override GIT_EXEC			:=
+ifeq ($(GIT_PATH),$(COMPOSER_ABODE)/bin/git)
+override GIT_EXEC			:= $(wildcard $(COMPOSER_ABODE)/libexec/git-core)
+else ifeq ($(GIT_PATH),$(COMPOSER_PROGS)/usr/bin/git)
+override GIT_EXEC			:= $(wildcard $(COMPOSER_PROGS)/git-core)
+endif
 ifneq ($(GIT_EXEC),)
 override GIT				:= $(GIT) --exec-path="$(GIT_EXEC)"
 endif
+
 override REPLICA_GIT_DIR		:= $(COMPOSER_STORE)/$(COMPOSER_BASENAME).git
 override REPLICA_GIT			:= cd "$(CURDIR)" && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
 override COMPOSER_GIT_RUN		= cd "$(1)" && $(GIT) --git-dir="$(COMPOSER_GITREPO)" --work-tree="$(1)" $(2)
@@ -1643,28 +1643,31 @@ ifneq ($(CURL_CA_BUNDLE),)
 export CURL_CA_BUNDLE
 endif
 
-override TEXMFDIST			:= $(wildcard $(abspath $(dir $(PDFLATEX_PATH))../../texmf-dist))
-override TEXMFDIST_BUILD		:= $(wildcard $(abspath $(dir $(PDFLATEX_PATH))../texmf-dist))
-override PANDOC_DATA			:= $(wildcard $(abspath $(dir $(PANDOC_PATH))../../pandoc/data))
-#WORKING:NOW
-#override PANDOC_DATA_BUILD		:=
-
-ifeq ($(TEXMFDIST),)
-ifneq ($(TEXMFDIST_BUILD),)
-override TEXMFDIST			:= $(TEXMFDIST_BUILD)
+override TEXMFDIST			:=
+override TEXMFVAR			:=
+ifeq ($(PDFLATEX_PATH),$(COMPOSER_ABODE)/bin/pdflatex)
+override TEXMFDIST			:= $(wildcard $(COMPOSER_ABODE)/texmf-dist)
+else ifeq ($(PDFLATEX_PATH),$(COMPOSER_PROGS)/usr/bin/pdflatex)
+override TEXMFDIST			:= $(wildcard $(COMPOSER_PROGS)/texmf-dist)
 endif
-endif
+ifneq ($(TEXMFDIST),)
 override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
+endif
 
+override PANDOC_DATA			:=
+ifeq ($(PANDOC_PATH),$(COMPOSER_ABODE)/bin/pandoc)
+override PANDOC_DATA			:= $(wildcard $(COMPOSER_ABODE)/.pandoc)
+#>else ifeq ($(PANDOC_PATH),$(COMPOSER_PROGS)/usr/bin/pandoc)
+else
+override PANDOC_DATA			:= $(wildcard $(COMPOSER_PROGS)/pandoc)
+endif
 ifneq ($(PANDOC_DATA),)
+ifneq ($(wildcard $(PANDOC_DATA)/data/reference.$(OUTPUT)),)
+override PANDOC_OPTIONS			:= --template="$(PANDOC_DATA)/data/reference.$(OUTPUT)" $(PANDOC_OPTIONS)
+else ifneq ($(wildcard $(PANDOC_DATA)/data/templates/default.$(OUTPUT)),)
+override PANDOC_OPTIONS			:= --template="$(PANDOC_DATA)/data/templates/default.$(OUTPUT)" $(PANDOC_OPTIONS)
+endif
 override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DATA)" $(PANDOC_OPTIONS)
-#WORKING:NOW
-##TODO : some better way to do this?
-#ifeq ($(BUILD_PLAT),Linux)
-#override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/share/i386-linux-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
-#else ifeq ($(BUILD_PLAT),Msys)
-#override PANDOC_DATA_BUILD		:= $(COMPOSER_ABODE)/i386-windows-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/data
-#endif
 endif
 
 #WORK : better spot for this?
@@ -1888,7 +1891,6 @@ override .ALL_TARGETS := \
 	clean[:] \
 	whoami[:] \
 	settings[:] \
-	setup[:] \
 	subdirs[:] \
 	print[:]
 
@@ -2109,7 +2111,6 @@ HELP_TARGETS_SUB:
 	@$(ESCAPE) "$(_H)Static Sub-Targets:"
 	@$(TABLE_I3) "$(_C)$(COMPOSER_TARGET)$(_D):"	"$(_E)$(COMPOSER_PANDOC)$(_D)"			"Wrapper target which calls Pandoc directly"
 	@$(TABLE_I3) "$(_E)$(COMPOSER_PANDOC)$(_D):"	"$(_E)settings$(_D)"				"Prints marker and variable values, for readability"
-	@$(TABLE_I3) ""					"$(_E)setup$(_D)"				"Does essential configuration for correct building of documents"
 	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
 	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
@@ -2804,13 +2805,7 @@ endif
 	$(MKDIR)							"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex"
 	$(CP) "$(COMPOSER_ABODE)/texmf-var/web2c/pdftex/pdflatex.fmt"	"$(COMPOSER_PROGS)/texmf-var/web2c/pdftex/"
 	$(MKDIR) "$(COMPOSER_PROGS)/pandoc"
-ifeq ($(BUILD_PLAT),Linux)
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
-else ifeq ($(BUILD_PLAT),Msys)
-	$(CP) "$(COMPOSER_ABODE)/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
-else
-	$(CP) "$(COMPOSER_ABODE)/share/"*"-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/"* "$(COMPOSER_PROGS)/pandoc/"
-endif
+	$(CP) "$(COMPOSER_ABODE)/.pandoc/"* "$(COMPOSER_PROGS)/pandoc/"
 	@$(call BUILD_COMPLETE)
 
 override define HEREDOC_MSYS_SHELL =
@@ -3987,17 +3982,11 @@ override define CABAL_COMPOSER_TESTING =
 	$(ECHO) "$(_D)"
 endef
 
-# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
 override define CABAL_PREP =
 	$(foreach FILE,$(subst |,-,$(2)), \
 		$(call HACKAGE_PREP,$(FILE),$(1)); \
 	)
-	# "$(BUILD_PLAT),Msys" requires some patching
-	$(SED) -i \
-		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
-		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
-		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
-		"$(1)/network-"*"/include/HsNet.h"
+	$(call CABAL_NETWORK_FIX,$(1))
 	# exert control over how packages are built and installed
 	$(SED) -i \
 		-e "s|^(CABAL[_]VER[=][\"])[^\"]+([\"])|\1$(CABAL_VER_INIT)\2|g" \
@@ -4005,6 +3994,16 @@ override define CABAL_PREP =
 		-e "s|^([ ]+unpack[_]pkg[ ][$$][{]PKG[}])|#\1|g" \
 		-e "s|([{]GHC[}][ ])([-][-]make[ ])|\1$(GHCFLAGS) \2|g" \
 		"$(1)/bootstrap.sh"
+endef
+
+# thanks for the 'getnameinfo' fix below: https://www.mail-archive.com/haskell-cafe@haskell.org/msg60731.html
+override define CABAL_NETWORK_FIX =
+	# "$(BUILD_PLAT),Msys" requires some patching
+	$(SED) -i \
+		-e "s|(return[ ])(getnameinfo)|\1hsnet_\2|g" \
+		-e "s|(return[ ])(getaddrinfo)|\1hsnet_\2|g" \
+		-e "s|^([ ]+)(freeaddrinfo)|\1hsnet_\2|g" \
+		"$(1)/network-"*"/include/HsNet.h"
 endef
 
 #ANTIQUATE
@@ -4139,6 +4138,7 @@ ifneq ($(COMPOSER_TESTING),0)
 	$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 		$(call HACKAGE_PREP,$(FILE),$(PANDOC_DST).libs); \
 	)
+	$(call CABAL_NETWORK_FIX,$(PANDOC_DST).libs)
 	$(call CABAL_INSTALL,_LDLIB,$(COMPOSER_ABODE)) \
 		$(foreach FILE,$(subst |,-,$(PANDOC_LIBRARIES_LIST)),\
 			"$(PANDOC_DST).libs/$(FILE)" \
@@ -4160,6 +4160,16 @@ endif
 		cd $(FILE) && \
 			$(DO_CABAL) test || $(TRUE); \
 	)
+	$(RM) -r "$(COMPOSER_ABODE)/.pandoc"
+	$(MKDIR) "$(COMPOSER_ABODE)/.pandoc"
+ifeq ($(BUILD_PLAT),Msys)
+	$(CP) "$(COMPOSER_ABODE)/"*-*-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/* "$(COMPOSER_ABODE)/.pandoc/"
+else
+	$(CP) "$(COMPOSER_ABODE)/share/"*-*-ghc-$(GHC_VER)/pandoc-$(PANDOC_VER)/* "$(COMPOSER_ABODE)/.pandoc/"
+endif
+	$(SED) -i \
+		-e "s|(reveal[.])min[.]|\1|g" \
+		"$(COMPOSER_ABODE)/.pandoc/data/templates/default.revealjs"
 	@$(call BUILD_COMPLETE)
 	@$(ECHO) "$(_E)\n"
 	@$(TAIL) -n6 $(PANDOC_DST)*/dist/test/*-test-*.log || $(TRUE)
@@ -5224,7 +5234,7 @@ decide for themselves if [Composer] will be beneficial for their needs.
 endef
 
 override define HEREDOC_DISTRIB_REVEALJS_CSS =
-@import url("./revealjs/css/theme/default.css");
+@import url("./revealjs/css/theme/black.css");
 
 body {
 	background-image:	url("screenshot.png");
@@ -5345,20 +5355,6 @@ settings:
 	@$(TABLE_I3) "$(_C)OPT$(_D)"	"[$(_M)$(OPT)$(_D)]"
 	@$(HEADER_L)
 
-.PHONY: setup
-setup:
-	@$(ECHO) "$(_S)"
-#WORKING:NOW
-#ifeq ($(TYPE),$(TYPE_DOCX))
-#ifneq ($(PANDOC_DATA),)
-#ifneq ($(PANDOC_DATA_BUILD),)
-#	@$(MKDIR) "$(PANDOC_DATA_BUILD)"
-#	@$(CP) "$(PANDOC_DATA)/reference.docx" "$(PANDOC_DATA_BUILD)/"
-#endif
-#endif
-#endif
-	@$(ECHO) "$(_D)"
-
 .PHONY: subdirs $(COMPOSER_SUBDIRS)
 subdirs: $(COMPOSER_SUBDIRS)
 $(COMPOSER_SUBDIRS):
@@ -5405,7 +5401,7 @@ endif
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(LIST) settings setup
+$(COMPOSER_PANDOC): $(LIST) settings
 #WORK : platform_switches
 #ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
 #ifeq ($(TYPE),$(TYPE_PRES))
