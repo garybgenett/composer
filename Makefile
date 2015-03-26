@@ -3626,6 +3626,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(CP) "$(BZIP_DST)/"* "$(UZIP_DST)/bzip2/"
 	$(SED) -i \
 		-e "s|^(prefix[ ][=][ ]).+$$|\1$(COMPOSER_ABODE)|g" \
+		-e "s|([(]prefix[)][/])bin|\1$(BUILD_BINDIR)|g" \
 		"$(IZIP_DST)/unix/Makefile" \
 		"$(UZIP_DST)/unix/Makefile"
 	cd "$(IZIP_DST)" && \
@@ -3726,17 +3727,19 @@ ifeq ($(BUILD_PLAT),Msys)
 		-e "s|kpsetool[:]kpsepath||g" \
 		"$(TEX_DST)/texk/texlive/tl_scripts/Makefile.in"
 endif
+	# dear texlive, please don't remove the destination directory before installing to it...
+	$(SED) -i \
+		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
+		"$(TEX_DST)/Build"
 	# make sure we link in all the right libraries
 	$(SED) -i \
 		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/freetype-config" --libs) -lm\"|g" \
 		"$(TEX_DST)/texk/web2c/configure"
-	# dear texlive, please don't remove the destination directory before installing to it...
-	$(SED) -i \
-		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
-		-e "s|^(bindir[=][$$]TL_INSTALL_DEST[/])bin|\1$(BUILD_BINDIR)|g" \
-		"$(TEX_DST)/Build"
 	# "$(BUILD_PLAT)$(BUILD_BITS),Msys64" requires "--disable-luajittex" in order to build
-	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" TL_MAKE_FLAGS="--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS))" \
+	cd "$(TEX_DST)" && $(BUILD_ENV) \
+		TL_INSTALL_DEST="$(COMPOSER_ABODE)" \
+		TL_CONFIGURE_ARGS="--bindir=\"$(COMPOSER_ABODE)/$(BUILD_BINDIR)\"" \
+		TL_MAKE_FLAGS="--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS))" \
 		$(SH) ./Build \
 		--disable-multiplatform \
 		--without-ln-s \
