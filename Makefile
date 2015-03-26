@@ -556,7 +556,6 @@ override LDFLAGS_LDLIB			:= $(LDFLAGS_LDLIB) $(LDFLAGS)
 override GHCFLAGS_LDLIB			:= $(GHCFLAGS_LDLIB) $(GHCFLAGS)
 
 #WORK : document licenses!
-#WORK : is this the best way to do the fix for "Msys"?
 ifneq ($(BUILD_PLAT),Msys)
 ifneq ($(BUILD_PORT),)
 # prevent "chicken and egg" error, since this is before the "$(PATH_LIST)" section
@@ -1396,7 +1395,6 @@ override define COREUTILS_UNINSTALL	=
 	done; \
 	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
 endef
-#WORK : this whole thing is ugly and hard to read, needs fixing
 ifeq ($(BUILD_PLAT),Msys)
 ifneq ($(COREUTILS_PATH),)
 ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls),)
@@ -2479,7 +2477,6 @@ $(TARGETS):
 	@$(TABLE_I3) "$(_H)$(MARKER) clean";	$(ECHO) "$(addsuffix -clean,$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | $(SORT)
 	@$(TABLE_I3) "$(_H)$(MARKER) subdirs";	$(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
 	@$(HEADER_L)
-#WORK : keep? document?
 	@$(RUNMAKE) --silent print
 
 ########################################
@@ -3692,10 +3689,6 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR,$(GIT_DST),$(GIT_SRC))
-#WORK
-#	cd "$(GIT_DST)" && \
-#		$(BUILD_ENV) $(MAKE) configure
-#WORK
 	$(SED) -i \
 		-e "s|([-]lcurl)(.[^-])|\1 -lssl -lcrypto -lz -lrt\2|g" \
 		"$(GIT_DST)/configure"
@@ -3898,11 +3891,6 @@ else
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
-#WORK
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(RM) -r "$(BUILD_STRAP)/mingw"*
-#endif
-#WORK
 	@$(call BUILD_COMPLETE)
 endif
 endif
@@ -4541,7 +4529,6 @@ alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
 alias .env_pandoc="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_PANDOC))"
 alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\n\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
 #
-#WORK cd "$(COMPOSER_DIR)"
 source "$${HOME}/.bashrc.custom"
 # end of file
 endef
@@ -4642,16 +4629,12 @@ $(RELEASE):
 	@$(TABLE_I3) "$(_C)Testing"			""			""
 	@$(TABLE_I3) "- $(_C)Linux$(_D)"		"$(RELEASE)-test"	"BUILD_ARCH=\"x86_64\" RELEASE_TARGET=\"_linux_64\""
 	@$(TABLE_I3) "- $(_C)Linux$(_D)"		"$(RELEASE)-test"	"BUILD_ARCH=\"i686\"   RELEASE_TARGET=\"_linux_32\""
-#WORK
 	@$(TABLE_I3) "- $(_C)Msys$(_D)"			"$(ALLOFIT)"		"BUILD_ARCH=\"x86_64\""
 	@$(TABLE_I3) "- $(_C)Msys$(_D)"			"$(ALLOFIT)"		"BUILD_ARCH=\"i686\""
-#WORK
 	@$(TABLE_I3) "$(MARKER) $(_E)Release"		""			""
 	@$(TABLE_I3) "- $(_E)Msys$(_N)"			"$(~)(CP)"		"$(RELEASE_DIR)/Msys"
-#WORK
 	@$(TABLE_I3) "- $(_E)Msys (x86_64)$(_N)"	"$(~)(CP)"		"$(RELEASE_DIR)/_msys_64"
 	@$(TABLE_I3) "- $(_E)Msys (i686)$(_N)"		"$(~)(CP)"		"$(RELEASE_DIR)/_msys_32"
-#WORK
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-prep"	""
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(RELEASE)-debug"	"$(_S)(repeat until successful)"
 	@$(TABLE_I3) "$(MARKER)$(_N)"			"$(TESTING)"		"COMPOSER_TESTING=\"0\" $(_S)(repeat until successful)"
@@ -4756,16 +4739,6 @@ $(RELEASE)-chroot:
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS))
 	@$(HEADER_L)
 	@$(ECHO) "\n"
-#WORK : maybe a(nother) "$RELEASE_CHROOT" option?
-#	@$(RUNMAKE) $(RELEASE)-chroot RELEASE_CHROOT="cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT)"
-#	$(RELEASE_CHROOT) /bin/bash $(RELEASE_CHROOT)
-#	ifneq ($(RELEASE_CHROOT),)
-#		RELEASE_CHROOT := -c "$(RELEASE_CHROOT)"
-#	else
-#		RELEASE_CHROOT := -o vi
-#	endif
-#	$(RELEASE_CHROOT) /bin/bash $(RELEASE_CHROOT)
-#WORK
 	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT)"
 	@$(ECHO) "\n"
 	$(RELEASE_CHROOT) /bin/bash -o vi
@@ -5392,43 +5365,21 @@ $(NOTHING):
 override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e "s|[/]|\\\\\\\\|g"
 override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV_PANDOC))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
-ifeq ($(BUILD_PLAT),Msys)
-override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell		$(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
-override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell		$(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
-override OPTIONS_DOC	:= $(subst $(_CSS),$(shell		$(ECHO) '$(_CSS)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell	$(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-endif
-
-#BUG : "pandoc" hangs indefinitely on "$(BUILD_PLAT),Msys" when doing a self-contained "revealjs"
-#	https://stackoverflow.com/questions/21423952/self-contained-reveal-js-file-without-relative-reveal-js-folder-using-pandoc
-# remove the "WARNING" below once this is fixed
-#WORK : platform_switches
-#ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-#ifeq ($(TYPE),$(TYPE_PRES))
-#override OPTIONS_DOC	:= $(filter-out --self-contained,$(OPTIONS_DOC))
+#WORKING:NOW
+#ifeq ($(BUILD_PLAT),Msys)
+#override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell		$(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
+#override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell		$(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
+#override OPTIONS_DOC	:= $(subst $(_CSS),$(shell		$(ECHO) '$(_CSS)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+#override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell	$(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+#override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
 #endif
-#endif
+#WORKING:NOW
 
 .PHONY: $(COMPOSER_TARGET)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(LIST) settings
-#WORK : platform_switches
-#ifeq ($(BUILD_PLAT)$(BUILD_BITS),Msys32)
-#ifeq ($(TYPE),$(TYPE_PRES))
-#	@$(ECHO) "\n"
-#	@$(TABLE_I3) "$(_N)WARNING:"
-#	@$(ECHO) "\n"
-#	@$(TABLE_I3) "$(_N)There is currently a bug in Pandoc which precludes building self-contained Reveal.js documents on Windows systems."
-#	@$(TABLE_I3) "$(_N)Any Reveal.js documents produced will only be viewable on this system, with the current $(COMPOSER_BASENAME) directory in place."
-#	@$(TABLE_I3) "$(_N)To build self-contained Reveal.js documents, you will need to use a non-Windows system until this bug is fixed upstream."
-#	@$(ECHO) "\n"
-#	@$(TABLE_I3) "$(_N)This is an unfortunate situation, and the $(COMPOSER_BASENAME) author apologizes for the inconvenience."
-#	@$(ECHO) "\n"
-#endif
-#endif
 	@$(TABLE_I3) "$(_H)Shell:"		'$(_D)$(ENV)'
 	@$(TABLE_I3) "$(_H)Environment:"	'$(_D)$(OPTIONS_ENV)'
 	@$(TABLE_I3) "$(_H)Pandoc:"		'$(_D)$(PANDOC)'
