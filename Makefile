@@ -477,7 +477,7 @@ override COMPOSER_BUILD			?= $(abspath $(COMPOSER_OTHER)/build)
 override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_LDLIB			:= $(COMPOSER_ABODE)/$(STRAPIT)
 override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
-override BUILD_BINDIR			:= /usr/bin
+override BUILD_BINDIR			:= usr/bin
 override BUILD_FETCH			?= 1
 override BUILD_JOBS			?= 3
 override BUILD_DIST			?=
@@ -903,19 +903,19 @@ override PANDOC_DIRECTORIES		:= \
 override BUILD_PATH_MINGW		:=
 override BUILD_PATH_SHELL		:=
 ifeq ($(COMPOSER_PROGS_USE),1)
-override BUILD_PATH			:= $(COMPOSER_PROGS)$(BUILD_BINDIR):$(COMPOSER_ABODE)/.coreutils
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)$(BUILD_BINDIR)
+override BUILD_PATH			:= $(COMPOSER_PROGS)/$(BUILD_BINDIR):$(COMPOSER_ABODE)/.coreutils
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_ABODE)/$(BUILD_BINDIR)
 else
-override BUILD_PATH			:= $(COMPOSER_ABODE)$(BUILD_BINDIR)
+override BUILD_PATH			:= $(COMPOSER_ABODE)/$(BUILD_BINDIR)
 endif
-override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)$(BUILD_BINDIR)
+override BUILD_PATH			:= $(BUILD_PATH):$(BUILD_STRAP)/$(BUILD_BINDIR)
 ifeq ($(BUILD_PLAT),Msys)
 override BUILD_PATH_MINGW		:=               $(MSYS_DST)/mingw$(BUILD_BITS)/bin
-override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_DST)$(BUILD_BINDIR)
+override BUILD_PATH			:= $(BUILD_PATH):$(MSYS_DST)/$(BUILD_BINDIR)
 endif
 override BUILD_PATH			:= $(BUILD_PATH):$(PATH)
 ifneq ($(COMPOSER_PROGS_USE),1)
-override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)$(BUILD_BINDIR):$(COMPOSER_ABODE)/.coreutils
+override BUILD_PATH			:= $(BUILD_PATH):$(COMPOSER_PROGS)/$(BUILD_BINDIR):$(COMPOSER_ABODE)/.coreutils
 endif
 override BUILD_PATH_SHELL		:= $(BUILD_PATH)
 ifeq ($(COMPOSER_PROGS_USE),0)
@@ -1350,9 +1350,9 @@ override PANDOC_FLAGS			:= \
 
 override PATH_LIST			:= $(subst :, ,$(BUILD_PATH))
 
-ifneq ($(wildcard $(COMPOSER_ABODE)$(BUILD_BINDIR)/bash),)
-ifeq ($(wildcard $(COMPOSER_ABODE)$(BUILD_BINDIR)/sh),)
-$(info $(shell $(CP) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/bash" "$(COMPOSER_ABODE)$(BUILD_BINDIR)/sh"))
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/bash),)
+ifeq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/sh),)
+$(info $(shell $(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/bash" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/sh"))
 endif
 endif
 
@@ -1369,9 +1369,9 @@ override CPP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cpp)"
 override LD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
-override PACMAN_ENV			:= "$(MSYS_DST)$(BUILD_BINDIR)/env" - PATH="$(MSYS_DST)$(BUILD_BINDIR)"
-override PACMAN_DB_UPGRADE		:= "$(MSYS_DST)$(BUILD_BINDIR)/pacman-db-upgrade"
-override PACMAN				:= "$(MSYS_DST)$(BUILD_BINDIR)/pacman" --verbose --noconfirm --sync --needed
+override PACMAN_ENV			:= "$(MSYS_DST)/$(BUILD_BINDIR)/env" - PATH="$(MSYS_DST)/$(BUILD_BINDIR)"
+override PACMAN_DB_UPGRADE		:= "$(MSYS_DST)/$(BUILD_BINDIR)/pacman-db-upgrade"
+override PACMAN				:= "$(MSYS_DST)/$(BUILD_BINDIR)/pacman" --verbose --noconfirm --sync --needed
 
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
 override CYGWIN_CONSOLE_HELPER		:= "$(call COMPOSER_FIND,$(PATH_LIST),cygwin-console-helper)"
@@ -1399,28 +1399,28 @@ endef
 #WORK : this whole thing is ugly and hard to read, needs fixing
 ifeq ($(BUILD_PLAT),Msys)
 ifneq ($(COREUTILS_PATH),)
-ifneq ($(wildcard $(COMPOSER_ABODE)$(BUILD_BINDIR)/ls),)
-$(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)$(BUILD_BINDIR))))
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls),)
+$(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
 endif
 endif
 else ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils.null),)
 ifneq ($(COREUTILS_PATH),)
-ifneq ($(wildcard $(COMPOSER_ABODE)$(BUILD_BINDIR)/ls),)
-$(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)$(BUILD_BINDIR))))
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls),)
+$(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
 endif
 ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils/ls),)
 $(info $(shell $(COREUTILS) --coreutils-prog=rm -fv -r "$(COMPOSER_ABODE)/.coreutils"))
 endif
 endif
 else ifeq ($(IS_CYGWIN),)
-ifneq ($(wildcard $(COMPOSER_ABODE)$(BUILD_BINDIR)/coreutils),)
-ifeq ($(shell "$(COMPOSER_ABODE)$(BUILD_BINDIR)/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)$(BUILD_BINDIR))))
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/coreutils),)
+ifeq ($(shell "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
+$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
 endif
 endif
-ifneq ($(wildcard $(COMPOSER_PROGS)$(BUILD_BINDIR)/coreutils),)
+ifneq ($(wildcard $(COMPOSER_PROGS)/$(BUILD_BINDIR)/coreutils),)
 ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)/.coreutils)))
+$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)/.coreutils)))
 endif
 endif
 endif
@@ -1511,9 +1511,9 @@ override define CURL_FILE_GNU_CFG	=
 endef
 
 override GIT_EXEC			:=
-ifeq ($(GIT_PATH),$(COMPOSER_ABODE)$(BUILD_BINDIR)/git)
+ifeq ($(GIT_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR)/git)
 override GIT_EXEC			:= $(wildcard $(COMPOSER_ABODE)/libexec/git-core)
-else ifeq ($(GIT_PATH),$(COMPOSER_PROGS)$(BUILD_BINDIR)/git)
+else ifeq ($(GIT_PATH),$(COMPOSER_PROGS)/$(BUILD_BINDIR)/git)
 override GIT_EXEC			:= $(wildcard $(COMPOSER_PROGS)/git-core)
 endif
 ifneq ($(GIT_EXEC),)
@@ -1601,7 +1601,7 @@ override CABAL_OPTIONS_TOOLS		:= \
 endif
 override CABAL_OPTIONS			= \
 	--prefix="$(1)" \
-	--bindir="$(1)$(BUILD_BINDIR)" \
+	--bindir="$(1)/$(BUILD_BINDIR)" \
 	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS),--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS),--ld-option="$(FILE)") \
@@ -1613,7 +1613,7 @@ override CABAL_OPTIONS			= \
 	--global
 override CABAL_OPTIONS_LDLIB		= \
 	--prefix="$(1)" \
-	--bindir="$(1)$(BUILD_BINDIR)" \
+	--bindir="$(1)/$(BUILD_BINDIR)" \
 	$(CABAL_OPTIONS_TOOLS) \
 	$(foreach FILE,$(CFLAGS_LDLIB),--gcc-option="$(FILE)") \
 	$(foreach FILE,$(LDFLAGS_LDLIB),--ld-option="$(FILE)") \
@@ -1637,9 +1637,9 @@ endif
 
 override TEXMFDIST			:=
 override TEXMFVAR			:=
-ifeq ($(PDFLATEX_PATH),$(COMPOSER_ABODE)$(BUILD_BINDIR)/pdflatex)
+ifeq ($(PDFLATEX_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR)/pdflatex)
 override TEXMFDIST			:= $(wildcard $(COMPOSER_ABODE)/texmf-dist)
-else ifeq ($(PDFLATEX_PATH),$(COMPOSER_PROGS)$(BUILD_BINDIR)/pdflatex)
+else ifeq ($(PDFLATEX_PATH),$(COMPOSER_PROGS)/$(BUILD_BINDIR)/pdflatex)
 override TEXMFDIST			:= $(wildcard $(COMPOSER_PROGS)/texmf-dist)
 endif
 ifneq ($(TEXMFDIST),)
@@ -1647,9 +1647,9 @@ override TEXMFVAR			:= $(subst -dist,-var,$(TEXMFDIST))
 endif
 
 override PANDOC_DATA			:=
-ifeq ($(PANDOC_PATH),$(COMPOSER_ABODE)$(BUILD_BINDIR)/pandoc)
+ifeq ($(PANDOC_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR)/pandoc)
 override PANDOC_DATA			:= $(wildcard $(COMPOSER_ABODE)/.pandoc)
-#>else ifeq ($(PANDOC_PATH),$(COMPOSER_PROGS)$(BUILD_BINDIR)/pandoc)
+#>else ifeq ($(PANDOC_PATH),$(COMPOSER_PROGS)/$(BUILD_BINDIR)/pandoc)
 else
 override PANDOC_DATA			:= $(wildcard $(COMPOSER_PROGS)/pandoc)
 endif
@@ -1753,7 +1753,7 @@ override define AUTOTOOLS_BUILD		=
 			--host="$(CHOST)" \
 			--target="$(CHOST)" \
 			--prefix="$(2)" \
-			--bindir="$(2)$(BUILD_BINDIR)" \
+			--bindir="$(2)/$(BUILD_BINDIR)" \
 			$(4) && \
 		$(BUILD_ENV) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV) $(3) $(MAKE) install
@@ -1764,13 +1764,14 @@ override define AUTOTOOLS_BUILD_MINGW	=
 			--host="$(CHOST)" \
 			--target="$(CHOST)" \
 			--prefix="$(2)" \
-			--bindir="$(2)$(BUILD_BINDIR)" \
+			--bindir="$(2)/$(BUILD_BINDIR)" \
 			$(4) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
 endef
-override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(patsubst --bindir="%",,$(AUTOTOOLS_BUILD))))
-override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(patsubst --bindir="%",,$(AUTOTOOLS_BUILD_MINGW))))
+override AUTOTOOLS_BUILD_NOOPTION	= $(patsubst --host="%",,$(patsubst --target="%",,$(patsubst --bindir="%",,$(AUTOTOOLS_BUILD))))
+override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
+override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
 override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)$(1)"
 override BUILD_COMPLETE_TIMERIT		= if [ -f "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)" ]; then $(CAT) "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)"; fi
 override BUILD_COMPLETE_TIMERIT_FILES	= $(FIND) "$(COMPOSER_ABODE)/.$(BUILDIT)" 2>/dev/null | $(SORT) | $(SED) -e "s|^$(COMPOSER_ABODE)/.$(BUILDIT)[/]?||g"
@@ -2696,7 +2697,7 @@ $(STRAPIT):
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
-#WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root ($(BUILD_BINDIR)/pacman); update locations and documentation
+#WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/$(BUILD_BINDIR)/pacman); update locations and documentation
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RUNMAKE) $(BUILDIT)-msys
 #endif
@@ -2775,7 +2776,7 @@ endif
 
 .PHONY: $(ALLOFIT)-bindir
 $(ALLOFIT)-bindir:
-	$(MKDIR) "$(COMPOSER_PROGS)$(BUILD_BINDIR)"
+	$(MKDIR) "$(COMPOSER_PROGS)/$(BUILD_BINDIR)"
 ifeq ($(BUILD_PLAT),Msys)
 	$(call DO_HEREDOC,$(call HEREDOC_MSYS_SHELL_BAT)) >"$(COMPOSER_PROGS)/msys2_shell.bat"
 	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
@@ -2787,21 +2788,21 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
 	$(CP) "$(MSYS_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
 #WORK
-	$(CP) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/"*.dll "$(COMPOSER_PROGS)$(BUILD_BINDIR)/"
+	$(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"*.dll "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
-		$(CP) "$(MSYS_DST)$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)$(BUILD_BINDIR)/"; \
+		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"; \
 	)
 endif
 #WORKING:NOW
 ifeq ($(BUILD_PLAT),Msys)
-	$(MV) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)" "$(COMPOSER_ABODE)$(BUILD_BINDIR)/make"
+	$(MV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make"
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
-		$(CP) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)$(BUILD_BINDIR)/"; \
+		$(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"; \
 	)
 #WORKING:NOW
 ifeq ($(BUILD_PLAT),Msys)
-	$(MV) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/make" "$(COMPOSER_ABODE)$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)"
+	$(MV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)"
 endif
 	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
@@ -2822,7 +2823,7 @@ override define HEREDOC_MSYS_SHELL_BAT =
 @echo off
 if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
 set _CMS=%~dp0
-set _BIN=$(BUILD_BINDIR)
+set _BIN=/$(BUILD_BINDIR)
 set _OPT=
 set _OPT=%_OPT% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
 set _OPT=%_OPT% --icon %_CMS%/../../icon.ico
@@ -2913,9 +2914,9 @@ $(BUILDIT)-msys-pkg:
 
 .PHONY: $(BUILDIT)-msys-dll
 $(BUILDIT)-msys-dll:
-	$(MKDIR) "$(COMPOSER_ABODE)$(BUILD_BINDIR)"
+	$(MKDIR) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)"
 	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
-		$(CP) "$(MSYS_DST)$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_ABODE)$(BUILD_BINDIR)/"; \
+		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"; \
 	)
 	@$(call BUILD_COMPLETE)
 
@@ -3070,7 +3071,7 @@ override define ZLIB_BUILD =
 	# start with fresh source directory, due to dual static/dynamic builds
 	$(RM) -r "$(ZLIB_DST)"
 	$(call DO_UNTAR,$(ZLIB_DST),$(ZLIB_SRC))
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(ZLIB_DST),$(1),,\
+	$(call AUTOTOOLS_BUILD_NOOPTION,$(ZLIB_DST),$(1),,\
 		$(ZLIB_BUILD_BITS) \
 		$(2) \
 	)
@@ -3209,7 +3210,12 @@ endif
 		-e "s|(termio)([^s])|\1s\2|g" \
 		"$(OPENSSL_DST)/configure" \
 		"$(OPENSSL_DST)/crypto/ui/ui_openssl.c"
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(OPENSSL_DST),$(COMPOSER_ABODE),,\
+	$(SED) -i \
+		-e "s|([(]INSTALLTOP[)][/])bin|\1$(BUILD_BINDIR)|g" \
+		"$(OPENSSL_DST)/Makefile.org" \
+		"$(OPENSSL_DST)/apps/Makefile" \
+		"$(OPENSSL_DST)/tools/Makefile"
+	$(call AUTOTOOLS_BUILD_NOOPTION,$(OPENSSL_DST),$(COMPOSER_ABODE),,\
 		$(OPENSSL_BUILD_TYPE) \
 		no-shared \
 		no-dso \
@@ -3261,7 +3267,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(call GNU_CFG_INSTALL,$(FONTCONFIG_DST))
 	$(call AUTOTOOLS_BUILD,$(FONTCONFIG_DST),$(COMPOSER_ABODE),\
 		FREETYPE_CFLAGS="$(CFLAGS) -I$(COMPOSER_ABODE)/include/freetype2" \
-		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)$(BUILD_BINDIR)/freetype-config" --libs) -lm" \
+		FREETYPE_LIBS="$(shell "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/freetype-config" --libs) -lm" \
 		,\
 		--disable-docs \
 		--enable-iconv \
@@ -3363,8 +3369,9 @@ ifneq ($(BUILD_FETCH),0)
 	$(CHMOD) "$(BZIP_DST)/configure"
 	$(SED) -i \
 		-e "s|^(PREFIX[=]).+$$|\1$(COMPOSER_ABODE)|g" \
+		-e "s|([(]PREFIX[)][/])bin|\1$(BUILD_BINDIR)|g" \
 		"$(BZIP_DST)/Makefile"
-	$(call AUTOTOOLS_BUILD,$(BZIP_DST),$(COMPOSER_ABODE))
+	$(call AUTOTOOLS_BUILD_NOOPTION,$(BZIP_DST),$(COMPOSER_ABODE))
 	@$(call BUILD_COMPLETE)
 endif
 
@@ -3447,7 +3454,11 @@ endif
 			"$(PERL_DST)/MANIFEST" \
 			"$(PERL_DST)/configure"; \
 	fi
-	$(call AUTOTOOLS_BUILD_NOTARGET,$(PERL_DST),$(COMPOSER_ABODE))
+	$(SED) -i \
+		-e "s|^(set[ ]dflt[ ]bin[ ])bin$$|\1$(BUILD_BINDIR)|g" \
+		-e "s|(prefix[/])bin([ ])|\1$(BUILD_BINDIR)\2|g" \
+		"$(PERL_DST)/Configure.perl"
+	$(call AUTOTOOLS_BUILD_NOOPTION,$(PERL_DST),$(COMPOSER_ABODE))
 	@$(call BUILD_COMPLETE)
 endif
 	# call recursively instead of using dependencies, so that environment variables update
@@ -3596,7 +3607,7 @@ override define MAKE_BUILD =
 	)
 #WORKING:NOW
 	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
-		$(MV) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/make" "$(COMPOSER_ABODE)$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)"; \
+		$(MV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)"; \
 	fi
 endef
 
@@ -3722,14 +3733,15 @@ ifeq ($(BUILD_PLAT),Msys)
 		-e "s|kpsetool[:]kpsepath||g" \
 		"$(TEX_DST)/texk/texlive/tl_scripts/Makefile.in"
 endif
+	# make sure we link in all the right libraries
+	$(SED) -i \
+		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/freetype-config" --libs) -lm\"|g" \
+		"$(TEX_DST)/texk/web2c/configure"
 	# dear texlive, please don't remove the destination directory before installing to it...
 	$(SED) -i \
 		-e "s|^([ ]*rm[ ][-]rf[ ][$$]TL[_]WORKDIR[ ]).+$$|\1|g" \
+		-e "s|^(bindir[=][$$]TL_INSTALL_DEST[/])bin|\1$(BUILD_BINDIR)|g" \
 		"$(TEX_DST)/Build"
-	# make sure we link in all the right libraries
-	$(SED) -i \
-		-e "s|(kpse_cv_fontconfig_libs[=]).*$$|\1\"-lfontconfig -lexpat -liconv -L$(TEX_DST)/Work/libs/freetype2 $(shell "$(COMPOSER_ABODE)$(BUILD_BINDIR)/freetype-config" --libs) -lm\"|g" \
-		"$(TEX_DST)/texk/web2c/configure"
 	# "$(BUILD_PLAT)$(BUILD_BITS),Msys64" requires "--disable-luajittex" in order to build
 	cd "$(TEX_DST)" && $(BUILD_ENV) TL_INSTALL_DEST="$(COMPOSER_ABODE)" TL_MAKE_FLAGS="--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS))" \
 		$(SH) ./Build \
@@ -3739,7 +3751,6 @@ endif
 		--disable-luajittex \
 		--disable-shared \
 		--enable-static
-#WORK : NOTARGET?
 #ANTIQUATE
 #>	$(call AUTOTOOLS_BUILD_NOTARGET,$(TEX_DST),$(COMPOSER_ABODE),,\
 #>		--enable-build-in-source-tree \
@@ -3753,9 +3764,9 @@ endif
 #>		--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)) \
 #>	)
 #ANTIQUATE
-	$(CP) "$(TEX_TEXMF_DST)/"*			"$(COMPOSER_ABODE)/"
-	$(RM)						"$(COMPOSER_ABODE)$(BUILD_BINDIR)/pdflatex"
-	$(CP) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/pdftex"	"$(COMPOSER_ABODE)$(BUILD_BINDIR)/pdflatex"
+	$(CP) "$(TEX_TEXMF_DST)/"*				"$(COMPOSER_ABODE)/"
+	$(RM)							"$(COMPOSER_ABODE)/$(BUILD_BINDIR)/pdflatex"
+	$(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/pdftex"	"$(COMPOSER_ABODE)/$(BUILD_BINDIR)/pdflatex"
 	@$(call BUILD_COMPLETE)
 endif
 	# call recursively instead of using dependencies, so that environment variables update
@@ -3793,7 +3804,6 @@ ifeq ($(BUILD_PLAT),Msys)
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
 else
 	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
-#WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
 		show \
 	)
@@ -3887,7 +3897,6 @@ else
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
-#WORK : NOTARGET?
 	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
 #WORK
 #ifeq ($(BUILD_PLAT),Msys)
@@ -4176,7 +4185,7 @@ endif
 	@$(ECHO) "$(_E)\n"
 	@$(TAIL) -n6 $(PANDOC_DST)*/dist/test/*-test-*.log || $(TRUE)
 	@$(ECHO) "$(_M)\n"
-	@$(BUILD_ENV) "$(COMPOSER_ABODE)$(BUILD_BINDIR)/pandoc" --version
+	@$(BUILD_ENV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/pandoc" --version
 	@$(ECHO) "$(_D)"
 endif
 endif
@@ -4849,7 +4858,7 @@ override define HEREDOC_DISTRIB_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
 set _SYS=Msys
-set _BIN=$(BUILD_BINDIR)
+set _BIN=/$(BUILD_BINDIR)
 set _DIR=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
 set _PTH=
 set _PTH=%_PTH%%_DIR%%_BIN%;
@@ -4867,7 +4876,7 @@ override define HEREDOC_DISTRIB_COMPOSER_SH =
 # sh
 _CMS="$${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-_BIN="$(BUILD_BINDIR)"
+_BIN="/$(BUILD_BINDIR)"
 _DIR="$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))"
 _PTH=
 _PTH="$${_PTH}$${_DIR}$${_BIN}:"
