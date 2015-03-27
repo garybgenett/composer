@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib (split(/:/, $ENV{GITPERLLIB} || "//.home/share/perl/5.14.2"));
+use lib (split(/:/, $ENV{GITPERLLIB} || "/.home/share/perl/5.14.2"));
 #
 # Copyright 2002,2005 Greg Kroah-Hartman <greg@kroah.com>
 # Copyright 2005 Ryan Anderson <ryan@michonline.com>

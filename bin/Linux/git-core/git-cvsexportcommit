@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib (split(/:/, $ENV{GITPERLLIB} || "//.home/share/perl/5.14.2"));
+use lib (split(/:/, $ENV{GITPERLLIB} || "/.home/share/perl/5.14.2"));
 
 use 5.008;
 use strict;
