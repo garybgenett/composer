@@ -421,9 +421,6 @@ endif
 #	--variable="links-as-notes=[...]"
 #	--variable="lof=[...]"
 #	--variable="lot=[...]"
-#
-#	--epub-chapter-level
-#	--latex-engine
 #WORKING
 #	implicit_header_references
 #	fenced_code_attributes
@@ -4159,11 +4156,14 @@ endif
 		--flags="$(PANDOC_FLAGS)" \
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
+ifeq ($(BUILD_PLAT),Msys)
+#WORKING:NOW : FUCK FUCKING WINDOZE; I'M FUCKING SICK OF IT!  FUCK WINDOZE!
 	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
 	$(foreach FILE,$(PANDOC_DIRECTORIES),\
 		cd $(FILE) && \
 			$(DO_CABAL) test || $(TRUE); \
 	)
+endif
 	$(RM) -r "$(COMPOSER_ABODE)/.pandoc"
 	$(MKDIR) "$(COMPOSER_ABODE)/.pandoc"
 ifeq ($(BUILD_PLAT),Msys)
@@ -5374,15 +5374,13 @@ $(NOTHING):
 override MSYS_SED_FIXES	:= -e "s|[:]|;|g" -e "s|[/]([a-z])[/]|\1:\\\\\\\\|g" -e "s|[/]|\\\\\\\\|g"
 override OPTIONS_ENV	:= $(subst $(ENV) - ,,$(BUILD_ENV_PANDOC))
 override OPTIONS_DOC	:= $(PANDOC_OPTIONS)
-#WORKING:NOW
-#ifeq ($(BUILD_PLAT),Msys)
-#override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell		$(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
-#override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell		$(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
-#override OPTIONS_DOC	:= $(subst $(_CSS),$(shell		$(ECHO) '$(_CSS)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-#override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell	$(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-#override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
-#endif
-#WORKING:NOW
+ifeq ($(BUILD_PLAT),Msys)
+override OPTIONS_ENV	:= $(subst $(TEXMFDIST),$(shell		$(ECHO) '$(TEXMFDIST)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
+override OPTIONS_ENV	:= $(subst $(TEXMFVAR),$(shell		$(ECHO) '$(TEXMFVAR)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_ENV))
+override OPTIONS_DOC	:= $(subst $(_CSS),$(shell		$(ECHO) '$(_CSS)'		| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+override OPTIONS_DOC	:= $(subst $(REVEALJS_DST),$(shell	$(ECHO) '$(REVEALJS_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)'	| $(SED) $(MSYS_SED_FIXES)),$(OPTIONS_DOC))
+endif
 
 .PHONY: $(COMPOSER_TARGET)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
