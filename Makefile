@@ -4800,21 +4800,23 @@ $(DISTRIB):
 		$(MKDIR)						"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))"; \
 		$(CP) "$(COMPOSER_PROGS)/"*				"$(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/"; \
 	fi
-	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d			>"$(CURDIR)/icon.ico"
-	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d			>"$(CURDIR)/icon.png"
-	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d			>"$(CURDIR)/screenshot.png"
-	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_GITIGNORE))		>"$(CURDIR)/.gitignore"
-	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_BAT))	>"$(CURDIR)/Composer.bat"
-	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))		>"$(CURDIR)/Composer.sh"
-	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_LICENSE))		>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"
-	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_README))		>"$(CURDIR)/README.$(COMPOSER_EXT)"
-	@$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_REVEALJS_CSS))	>"$(CURDIR)/revealjs.css"
-	@$(CHMOD) \
-		"$(CURDIR)/$(MAKEFILE)" \
-		"$(CURDIR)/Composer.bat" \
-		"$(CURDIR)/Composer.sh"
-	@$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE)
-	@$(RUNMAKE) --directory "$(CURDIR)" all
+	@if [ "$(COMPOSER_PROGS_USE)" !=				"0" ]; then \
+		$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d		>"$(CURDIR)/icon.ico"; \
+		$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>"$(CURDIR)/icon.png"; \
+		$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>"$(CURDIR)/screenshot.png"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_GITIGNORE))	>"$(CURDIR)/.gitignore"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_BAT))	>"$(CURDIR)/Composer.bat"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))	>"$(CURDIR)/Composer.sh"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_LICENSE))	>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_README))	>"$(CURDIR)/README.$(COMPOSER_EXT)"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_REVEALJS_CSS))	>"$(CURDIR)/revealjs.css"; \
+		$(CHMOD) \
+			"$(CURDIR)/$(MAKEFILE)" \
+			"$(CURDIR)/Composer.bat" \
+			"$(CURDIR)/Composer.sh"; \
+		$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE); \
+		$(RUNMAKE) --directory "$(CURDIR)" all; \
+	fi
 
 override define HEREDOC_DISTRIB_GITIGNORE =
 # $(COMPOSER_BASENAME)
