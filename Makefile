@@ -1475,10 +1475,10 @@ override GHC_PKG			:= "$(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg)"
 override CABAL				:= "$(call COMPOSER_FIND,$(PATH_LIST),cabal)"
 override HADDOCK			:= "$(call COMPOSER_FIND,$(PATH_LIST),haddock)"
 ifneq ($(COMPOSER_TESTING),)
-override GHC_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc))"
-override GHC_PKG_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc-pkg),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc-pkg))"
+override GHC_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)/bin/ghc),$(wildcard $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)/bin/ghc))"
+override GHC_PKG_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)/bin/ghc-pkg),$(wildcard $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)/bin/ghc-pkg))"
 override CABAL_BIN			:=
-override HADDOCK_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/haddock),$(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/haddock))"
+override HADDOCK_BIN			:= "$(or $(wildcard $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)/bin/haddock),$(wildcard $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)/bin/haddock))"
 endif
 
 override define DO_PATCH		=
@@ -1663,14 +1663,14 @@ endif
 #WORK : better spot for this?
 #WORK : would be nice to fully understand why this breaks in a 32-bit chroot?
 override LD_LIBRARY_PATH_GHC_DIR	:=
-ifneq ($(wildcard $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)/bin/ghc),)
-override LD_LIBRARY_PATH_GHC_DIR	:= $(COMPOSER_ABODE)/lib/ghc-$(GHC_VER)
+ifneq ($(wildcard $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)/bin/ghc),)
+override LD_LIBRARY_PATH_GHC_DIR	:= $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)
 override LD_LIBRARY_PATH_GHC_BIN	:= "$(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc" "$(LD_LIBRARY_PATH_GHC_DIR)/bin/haddock"
-else ifneq ($(wildcard $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)/bin/ghc),)
-override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)
+else ifneq ($(wildcard $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)/bin/ghc),)
+override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)
 override LD_LIBRARY_PATH_GHC_BIN	:= "$(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc" "$(LD_LIBRARY_PATH_GHC_DIR)/bin/haddock"
 else ifneq ($(wildcard $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2),)
-override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/lib/ghc-$(GHC_VER_INIT)
+override LD_LIBRARY_PATH_GHC_DIR	:= $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)
 override LD_LIBRARY_PATH_GHC_BIN	:= "$(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2" "$(GHC_DST_INIT)/utils/haddock/dist/build/tmp/haddock"
 endif
 ifneq ($(LD_LIBRARY_PATH_GHC_DIR),)
@@ -1767,9 +1767,9 @@ override define AUTOTOOLS_BUILD_MINGW	=
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) $(5) && \
 		$(BUILD_ENV_MINGW) $(3) $(MAKE) install
 endef
-override AUTOTOOLS_BUILD_NOOPTION	= $(patsubst --host="%",,$(patsubst --target="%",,$(patsubst --bindir="%",,$(AUTOTOOLS_BUILD))))
 override AUTOTOOLS_BUILD_NOTARGET	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD)))
-override AUTOTOOLS_BUILD_NOTARGET_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(AUTOTOOLS_BUILD_MINGW)))
+override AUTOTOOLS_BUILD_NOOPTION	= $(patsubst --host="%",,$(patsubst --target="%",,$(patsubst --bindir="%",,$(AUTOTOOLS_BUILD))))
+override AUTOTOOLS_BUILD_NOOPTION_MINGW	= $(patsubst --host="%",,$(patsubst --target="%",,$(patsubst --bindir="%",,$(AUTOTOOLS_BUILD_MINGW))))
 override BUILD_COMPLETE			= $(MKDIR) "$(COMPOSER_ABODE)/.$(BUILDIT)"; $(DATESTAMP) >"$(COMPOSER_ABODE)/.$(BUILDIT)/$(@)$(1)"
 override BUILD_COMPLETE_TIMERIT		= if [ -f "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)" ]; then $(CAT) "$(COMPOSER_ABODE)/.$(BUILDIT)/$(1)"; fi
 override BUILD_COMPLETE_TIMERIT_FILES	= $(FIND) "$(COMPOSER_ABODE)/.$(BUILDIT)" 2>/dev/null | $(SORT) | $(SED) -e "s|^$(COMPOSER_ABODE)/.$(BUILDIT)[/]?||g"
@@ -3796,11 +3796,11 @@ endif
 $(BUILDIT)-ghc-init-$(BUILDIT):
 ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT),Msys)
-	$(MKDIR) "$(BUILD_STRAP)"
-	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/"
+	$(MKDIR) "$(BUILD_STRAP)/usr"
+	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/usr/"
 else
 	$(CP) "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP),,,\
+	$(call AUTOTOOLS_BUILD_NOOPTION_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP)/usr,,,\
 		show \
 	)
 endif
@@ -3893,7 +3893,7 @@ else
 		-e "s|([\"][$$]WithGhc[\"][ ])([-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
-	$(call AUTOTOOLS_BUILD_NOTARGET_MINGW,$(GHC_DST),$(COMPOSER_ABODE),,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
+	$(call AUTOTOOLS_BUILD_NOOPTION_MINGW,$(GHC_DST),$(COMPOSER_ABODE)/usr,,,--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)))
 	@$(call BUILD_COMPLETE)
 endif
 endif
