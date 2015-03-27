@@ -4748,7 +4748,7 @@ $(RELEASE)-chroot:
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS))
 	@$(HEADER_L)
 	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT)"
+	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT) ; make $(DISTRIB)"
 	@$(ECHO) "\n"
 	$(RELEASE_CHROOT) /bin/bash -o vi
 
