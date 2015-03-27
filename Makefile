@@ -2454,10 +2454,12 @@ override define DEBUGIT_LISTING =
 endef
 
 override define DEBUGIT_CONTENTS =
-	$(HEADER_L); \
-	$(TABLE_I3) "$(_H)$(MARKER) $(_M)$(1)"; \
-	$(HEADER_L); \
-	$(CAT) "$(1)"
+	if [ -f "$(1)" ]; then \
+		$(HEADER_L); \
+		$(TABLE_I3) "$(_H)$(MARKER) $(_M)$(1)"; \
+		$(HEADER_L); \
+		$(CAT) "$(1)"; \
+	fi
 endef
 
 .PHONY: $(TARGETS)
@@ -4660,7 +4662,11 @@ $(RELEASE)-config:
 	@$(ECHO) "override BUILD_DIST := 1\n"				>"$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS)"
 	@$(call DEBUGIT_CONTENTS,$(CURDIR)/$(COMPOSER_SETTINGS))
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Linux/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/_linux_64/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/_linux_32/$(COMPOSER_SETTINGS))
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/Msys/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/_msys_64/$(COMPOSER_SETTINGS))
+	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/_msys_32/$(COMPOSER_SETTINGS))
 	@$(HEADER_L)
 
 .PHONY: $(RELEASE)-dist
