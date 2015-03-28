@@ -4738,7 +4738,11 @@ $(RELEASE)-chroot:
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT) ; make $(DISTRIB)"
 	@$(ECHO) "\n"
+#WORKING:NOW : any way "make" can not segfault without "/dev/pts" mounted?
+	@$(foreach FILE,dev/pts dev proc,umount $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE) || $(TRUE);)
+	@$(foreach FILE,dev dev/pts proc,mount --bind /$(FILE) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
 	$(RELEASE_CHROOT) /bin/bash -o vi
+	@$(foreach FILE,dev/pts dev proc,umount $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
