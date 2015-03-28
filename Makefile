@@ -143,7 +143,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v1.4
+override COMPOSER_VERSION_CURRENT	:= v2.0
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -638,7 +638,7 @@ override BINUTILS_CUR_VERSION		:= $(FUNTOO_BINUTILS_VERSION)
 #>override MAKE_MIN_VERSION		:= $(DEBIAN_MAKE_VERSION)
 override MAKE_MIN_VERSION		:= 3.82
 #>override MAKE_CUR_VERSION		:= $(FUNTOO_MAKE_VERSION)
-override MAKE_CUR_VERSION		:= 4.0
+override MAKE_CUR_VERSION		:= 4.1
 
 # http://sourceforge.net/p/msys2/code/ci/master/tree/COPYING3 (license: GPL, LGPL)
 # http://sourceforge.net/projects/msys2
@@ -2789,17 +2789,9 @@ ifeq ($(BUILD_PLAT),Msys)
 		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"; \
 	)
 endif
-#WORKING:NOW
-ifeq ($(BUILD_PLAT),Msys)
-	$(MV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make"
-endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
 		$(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"; \
 	)
-#WORKING:NOW
-ifeq ($(BUILD_PLAT),Msys)
-	$(MV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)"
-endif
 	$(CP) "$(COMPOSER_ABODE)/ca-bundle.crt" "$(COMPOSER_PROGS)/"
 	$(CP) "$(COMPOSER_ABODE)/libexec/git-core" "$(COMPOSER_PROGS)/"
 	$(foreach FILE,$(TEXLIVE_DIRECTORY_LIST),\
@@ -3601,10 +3593,6 @@ override define MAKE_BUILD =
 	$(call AUTOTOOLS_BUILD,$(1),$(COMPOSER_ABODE),,\
 		--without-guile \
 	)
-#WORKING:NOW
-	if [ "$(BUILD_PLAT)" == "Msys" ]; then \
-		$(MV) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make.$(COMPOSER_BASENAME)"; \
-	fi
 endef
 
 .PHONY: $(BUILDIT)-infozip
