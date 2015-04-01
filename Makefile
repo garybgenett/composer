@@ -474,6 +474,7 @@ override COMPOSER_BUILD			?= $(abspath $(COMPOSER_OTHER)/build)
 override BUILD_BRANCH			:= composer_$(BUILDIT)
 override BUILD_LDLIB			:= $(COMPOSER_ABODE)/$(STRAPIT)
 override BUILD_STRAP			:= $(COMPOSER_BUILD)/$(STRAPIT)
+override BUILD_FSFILE			:= etc/fstab
 override BUILD_BINDIR			:= usr/bin
 override BUILD_FETCH			?= 1
 override BUILD_JOBS			?= 3
@@ -2135,7 +2136,7 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-base$(_D)"		"Installs/initializes base MSYS2/MinGW-w64 system"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-dll$(_D)"			"Copies needed MSYS2/MinGW-w64 DLL files"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-bin$(_D)"			"Copies needed MSYS2/MinGW-w64 binaries"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-libs$(_D):"	"$(_E)$(BUILDIT)-libiconv-init$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gettext$(_D)"			"Build/compile of Gettext from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-libiconv$(_D)"			"Build/compile of Libiconv (after Gettext) from source archive"
@@ -2784,19 +2785,14 @@ endif
 $(ALLOFIT)-bindir:
 	$(MKDIR) "$(COMPOSER_PROGS)/$(BUILD_BINDIR)"
 ifeq ($(BUILD_PLAT),Msys)
-	$(call DO_HEREDOC,$(call HEREDOC_MSYS_SHELL_BAT)) >"$(COMPOSER_PROGS)/msys2_shell.bat"
-	$(CHMOD) "$(COMPOSER_PROGS)/msys2_shell.bat"
-	$(MKDIR) "$(COMPOSER_PROGS)/tmp"
-	$(ECHO) >"$(COMPOSER_PROGS)/tmp/.null"
-	$(MKDIR) "$(COMPOSER_PROGS)/etc"
-	$(CP) "$(MSYS_DST)/etc/"{bash.bashrc,fstab} "$(COMPOSER_PROGS)/etc/"
+	$(call ALLOFIT_BINDIR_MSYS_MISC,$(COMPOSER_ABODE))
+	$(call ALLOFIT_BINDIR_MSYS_MISC,$(COMPOSER_PROGS))
 #WORK : probably need this for linux, too
-	$(MKDIR) "$(COMPOSER_PROGS)/usr/share"
-	$(CP) "$(MSYS_DST)/usr/share/"{locale,terminfo} "$(COMPOSER_PROGS)/usr/share/"
+	$(MKDIR) "$(COMPOSER_PROGS)/share"
+	$(CP) "$(COMPOSER_ABODE)/share/"{locale,terminfo} "$(COMPOSER_PROGS)/share/"
 #WORK
-	$(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"*.dll "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
-		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"; \
+		$(CP) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_PROGS)/$(BUILD_BINDIR)/"; \
 	)
 endif
 	$(foreach FILE,$(BUILD_BINARY_LIST),\
@@ -2817,16 +2813,28 @@ endif
 	$(CP) "$(COMPOSER_ABODE)/.pandoc/"* "$(COMPOSER_PROGS)/pandoc/"
 	@$(call BUILD_COMPLETE)
 
+override define ALLOFIT_BINDIR_MSYS_MISC =
+$(call DO_HEREDOC,$(call HEREDOC_MSYS_SHELL_BAT)) >"$(1)/msys2_shell.bat"
+$(CHMOD) "$(1)/msys2_shell.bat"
+$(MKDIR) "$(1)/tmp"
+$(ECHO) >"$(1)/tmp/.null"
+$(MKDIR) "$(1)/etc"
+$(CP) "$(MSYS_DST)/etc/"{bash.bashrc,fstab} "$(1)/etc/"
+endef
+
 override define HEREDOC_MSYS_SHELL_BAT =
 @echo off
 if not defined MSYSTEM set MSYSTEM=MSYS$(BUILD_BITS)
 set _CMS=%~dp0
 set _BIN=$(BUILD_BINDIR)
+set _ICO=%_CMS%/../icon.ico
+if not exist %_ICO% set _ICO=%_CMS%/../../icon.ico
 set _OPT=
 set _OPT=%_OPT% --title "$(MARKER) $(COMPOSER_FULLNAME) $(DIVIDE) MSYS2 Shell"
-set _OPT=%_OPT% --icon %_CMS%/../../icon.ico
-set _OPT=%_OPT% --exec /%_BIN%/bash
+set _OPT=%_OPT% --icon "%_ICO%"
+set _OPT=%_OPT% --exec "/%_BIN%/bash"
 start /b %_CMS%/%_BIN%/mintty %_OPT%
+::#>set /p ENTER="Hit ENTER to proceed."
 :: end of file
 endef
 
@@ -2871,7 +2879,7 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(RUNMAKE) $(BUILDIT)-msys-pkg
-	$(RUNMAKE) $(BUILDIT)-msys-dll
+	$(RUNMAKE) $(BUILDIT)-msys-bin
 endif
 	@$(call BUILD_COMPLETE,--)
 
@@ -2910,10 +2918,10 @@ $(BUILDIT)-msys-pkg:
 	$(PACMAN_ENV) $(PACMAN) --clean
 	@$(call BUILD_COMPLETE)
 
-.PHONY: $(BUILDIT)-msys-dll
-$(BUILDIT)-msys-dll:
+.PHONY: $(BUILDIT)-msys-bin
+$(BUILDIT)-msys-bin:
 	$(MKDIR) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)"
-	$(foreach FILE,$(filter %.dll,$(MSYS_BINARY_LIST)),\
+	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"; \
 	)
 	@$(call BUILD_COMPLETE)
@@ -3838,7 +3846,6 @@ else
 	#		getUserDocumentsDirectory	Win32.cSIDL_PERSONAL					HOME
 	#		getTemporaryDirectory		Win32.getTemporaryDirectory (TMP, TEMP, USERPROFILE)	TMPDIR
 	# using 'USERPROFILE' causes 'cabal.exe: illegal operation'
-#WORK : platform_switches
 #WORKING:NOW : this does not seem to work for 7.8
 # "inplace/bin/ghc-stage1.exe" -hisuf hi -osuf  o -hcsuf hc -static  -optc-I/c/.composer/.home/bootstrap/include -optc-L/c/.composer/.home/bootstrap/lib -optP-I/c/.composer/.home/bootstrap/include -optl-L/c/.composer/.home/bootstrap/lib -optc-I/c/.composer/.home/include -optc-L/c/.composer/.home/lib -optP-I/c/.composer/.home/include -optl-L/c/.composer/.home/lib -optc-m32 -optc-march=i686 -optc-mtune=generic -optc-O1 -opta-m32 -opta-march=i686 -opta-mtune=generic -opta-O1    -package-name directory-1.2.1.0 -hide-all-packages -i -ilibraries/directory/. -ilibraries/directory/dist-install/build -ilibraries/directory/dist-install/build/autogen -Ilibraries/directory/dist-install/build -Ilibraries/directory/dist-install/build/autogen -Ilibraries/directory/include    -optP-include -optPlibraries/directory/dist-install/build/autogen/cabal_macros.h -package Win32-2.3.0.2 -package base-4.7.0.1 -package filepath-1.3.0.2 -package time-1.4.2 -Wall -XHaskell2010 -O2  -no-user-package-db -rtsopts      -odir libraries/directory/dist-install/build -hidir libraries/directory/dist-install/build -stubdir libraries/directory/dist-install/build -split-objs  -c libraries/directory/./System/Directory.hs -o libraries/directory/dist-install/build/System/Directory.o
 # libraries\directory\System\Directory.hs:1096:18:
@@ -4358,7 +4365,7 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= \
 	$(BUILDIT)-msys++ \
 		$(BUILDIT)-msys-base \
 		$(BUILDIT)-msys-pkg \
-		$(BUILDIT)-msys-dll \
+		$(BUILDIT)-msys-bin \
 	$(BUILDIT)-msys--
 endif
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS) \
@@ -4446,8 +4453,13 @@ $(SHELLIT):
 
 override MSYS_SHELL_DIR := $(COMPOSER_PROGS)
 ifneq ($(COMPOSER_PROGS_USE),1)
-ifneq ($(wildcard $(MSYS_DST)),)
+ifneq ($(wildcard $(MSYS_DST)/$(BUILD_FSFILE)),)
 override MSYS_SHELL_DIR := $(MSYS_DST)
+endif
+ifneq ($(COMPOSER_PROGS_USE),0)
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_FSFILE)),)
+override MSYS_SHELL_DIR := $(COMPOSER_ABODE)
+endif
 endif
 endif
 
@@ -4494,9 +4506,11 @@ export LC_ALL="$${LANG}"
 export LC_COLLATE="C"
 export LC_ALL=
 #
-if [ -f "$${HOME}/.bash_history" ]; then $(call HEREDOC_BASHRC_CMD,$(RM)) "$${HOME}/.bash_history"; fi
-$(call HEREDOC_BASHRC_CMD,$(MKDIR)) "$${HOME}/.bash_history"
-export HISTFILE="$${HOME}/.bash_history/$$(date +%Y-%m)"
+if [ "$${HOME}" != "/" ]; then export HOME="$${HOME}/"; fi
+#
+if [ -f "$${HOME}.bash_history" ]; then $(call HEREDOC_BASHRC_CMD,$(RM)) "$${HOME}.bash_history"; fi
+$(call HEREDOC_BASHRC_CMD,$(MKDIR)) "$${HOME}.bash_history"
+export HISTFILE="$${HOME}.bash_history/$$(date +%Y-%m)"
 export HISTSIZE="$$(( (2**31)-1 ))"
 export HISTFILESIZE="$${HISTSIZE}"
 export HISTTIMEFORMAT="%Y-%m-%dT%H:%M:%S "
@@ -4534,7 +4548,7 @@ alias .env_mingw="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_MINGW))"
 alias .env_pandoc="$(call HEREDOC_BASHRC_CMD,$(BUILD_ENV_PANDOC))"
 alias .path="$(call HEREDOC_BASHRC_CMD,$(ECHO)) \"$${PATH}\n\" | $(call HEREDOC_BASHRC_CMD,$(SED)) \"s|[:]|\n|g\""
 #
-source "$${HOME}/.bashrc.custom"
+source "$${HOME}.bashrc.custom"
 # end of file
 endef
 
@@ -4846,20 +4860,20 @@ override define HEREDOC_DISTRIB_COMPOSER_BAT =
 @echo off
 set _CMS=%~dp0
 set _SYS=Msys
+set _TAB=$(BUILD_FSFILE)
 set _BIN=$(BUILD_BINDIR)
 set _ABD=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_ABODE))
 set _PRG=$(subst $(COMPOSER_OTHER),%_CMS%,$(COMPOSER_PROGS))
-set _OPT=1
-if exist %_ABD%/%_BIN%				goto dir_home
-if exist %_ABD%/msys$(BUILD_BITS)/%_BIN%	goto dir_msys
-if exist %_CMS%/bin/%_SYS%/%_BIN%		goto dir_prog
+if exist %_ABD%/%_TAB%				goto dir_home
+if exist %_ABD%/msys$(BUILD_BITS)/%_TAB%	goto dir_msys
+if exist %_CMS%/bin/%_SYS%/%_TAB%		goto dir_prog
 :dir_home
 set PATH=%_ABD%/%_BIN%;%PATH%
 set _OPT=
 goto do_make
 :dir_msys
 set PATH=%_ABD%/msys$(BUILD_BITS)/%_BIN%;%PATH%
-set _OPT=
+set _OPT=0
 goto do_make
 :dir_prog
 set PATH=%_CMS%/bin/%_SYS%/%_BIN%;%PATH%
@@ -4875,19 +4889,19 @@ override define HEREDOC_DISTRIB_COMPOSER_SH =
 # sh
 _CMS="$${PWD}"
 _SYS="Linux"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
+_TAB="$(BUILD_FSFILE)"
 _BIN="$(BUILD_BINDIR)"
 _ABD="$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))"
 _PRG="$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_PROGS))"
-_OPT="1"
-if [ -e "$${_ABD}/$${_BIN}" ]; then
+if [ -e "$${_ABD}/$${_TAB}" ]; then
 PATH="$${_ABD}/$${_BIN}:$${PATH}"
 _OPT=
-elif [ -e "$${_ABD}/msys$(BUILD_BITS)/$${_BIN}" ]; then
+elif [ -e "$${_ABD}/msys$(BUILD_BITS)/$${_TAB}" ]; then
 PATH="$${_ABD}/msys$(BUILD_BITS)/$${_BIN}:$${PATH}"
-_OPT=
-elif [ -e "$${_CMS}/bin/$${_SYS}/$${_BIN}" ]; then
+_OPT="0"
+elif [ -e "$${_CMS}/bin/$${_SYS}/$${_TAB}" ]; then
 PATH="$${_CMS}/bin/$${_SYS}/$${_BIN}:$${PATH}"
-_OPT=1
+_OPT="1"
 fi
 exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_ESCAPES="0" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" BUILD_ARCH= shell
 # end of file
