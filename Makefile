@@ -143,7 +143,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta1
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -1366,6 +1366,8 @@ override CC				:= "$(call COMPOSER_FIND,$(PATH_LIST),gcc)"
 override CXX				:= "$(call COMPOSER_FIND,$(PATH_LIST),g++)"
 override CPP				:= "$(call COMPOSER_FIND,$(PATH_LIST),cpp)"
 override LD				:= "$(call COMPOSER_FIND,$(PATH_LIST),ld)"
+override MOUNT				:= "$(call COMPOSER_FIND,$(PATH_LIST),mount)"
+override UMOUNT				:= "$(call COMPOSER_FIND,$(PATH_LIST),umount)"
 
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
 override PACMAN_ENV			:= "$(MSYS_DST)/$(BUILD_BINDIR)/env" - PATH="$(MSYS_DST)/$(BUILD_BINDIR)"
@@ -1395,37 +1397,34 @@ override define COREUTILS_UNINSTALL	=
 	done; \
 	"$(1)" --coreutils-prog=rm -fv "$(2)/install"
 endef
-#WORKING:NOW : this really does need to be cleaned up, now...
-ifeq ($(BUILD_PLAT),Msys)
 ifneq ($(COREUTILS_PATH),)
+ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils.null),)
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/coreutils),)
 ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls),)
 $(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
 endif
 endif
 ifneq ($(wildcard $(COMPOSER_PROGS)/$(BUILD_BINDIR)/coreutils),)
-ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
-$(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)/.coreutils)))
-endif
-endif
-#WORKING:NOW
-else ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils.null),)
-ifneq ($(COREUTILS_PATH),)
-ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls),)
-$(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
-endif
 ifneq ($(wildcard $(COMPOSER_ABODE)/.coreutils/ls),)
 $(info $(shell $(COREUTILS) --coreutils-prog=rm -fv -r "$(COMPOSER_ABODE)/.coreutils"))
 endif
 endif
 else ifeq ($(IS_CYGWIN),)
 ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/coreutils),)
+ifeq ($(BUILD_PLAT),Msys)
+ifneq ($(wildcard $(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls),)
+$(info $(shell $(call COREUTILS_UNINSTALL,$(COREUTILS_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
+endif
+else
 ifeq ($(shell "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
 $(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_ABODE)/$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)/$(BUILD_BINDIR))))
+endif
 endif
 endif
 ifneq ($(wildcard $(COMPOSER_PROGS)/$(BUILD_BINDIR)/coreutils),)
 ifeq ($(shell "$(COMPOSER_ABODE)/.coreutils/ls" "$(COMPOSER_DIR)" 2>/dev/null),)
 $(info $(shell $(call COREUTILS_INSTALL,$(COMPOSER_PROGS)/$(BUILD_BINDIR)/coreutils,$(COMPOSER_ABODE)/.coreutils)))
+endif
 endif
 endif
 endif
@@ -4156,7 +4155,7 @@ endif
 		--enable-tests \
 		$(PANDOC_DIRECTORIES)
 ifeq ($(BUILD_PLAT),Msys)
-#WORKING:NOW : FUCK FUCKING WINDOZE; I'M FUCKING SICK OF IT!  FUCK WINDOZE!
+	# "$(BUILD_PLAT),Msys" hangs when running "test-pandoc*"
 	@$(ESCAPE) "\n$(_H)$(MARKER) Test"
 	$(foreach FILE,$(PANDOC_DIRECTORIES),\
 		cd $(FILE) && \
@@ -4608,6 +4607,7 @@ override RELEASE_DIR_NATIVE	:= $(RELEASE_DIR)/.Native
 override RELEASE_MAN_SRC	:= $(subst $(COMPOSER_OTHER),$(CURDIR),$(COMPOSER_PROGS))/pandoc/README
 override RELEASE_MAN_DST	:= $(CURDIR)/Pandoc_Manual
 
+override RELEASE_CHROOT_MOUNTS	:= dev/pts proc
 override RELEASE_CHROOT		:= $(ENV) - \
 	HOME="$(subst $(COMPOSER_OTHER),,$(COMPOSER_ABODE))" \
 	PATH="$(PATH)" \
@@ -4749,11 +4749,10 @@ $(RELEASE)-chroot:
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT) ; make $(DISTRIB)"
 	@$(ECHO) "\n"
-#WORKING:NOW : any way "make" can not segfault without "/dev/pts" mounted?
-	@$(foreach FILE,dev/pts dev proc,umount $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE) || $(TRUE);)
-	@$(foreach FILE,dev dev/pts proc,mount --bind /$(FILE) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
+	@$(foreach FILE,$(RELEASE_CHROOT_MOUNTS),$(UMOUNT) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE) || $(TRUE);)
+	@$(foreach FILE,$(RELEASE_CHROOT_MOUNTS),$(MOUNT) --bind /$(FILE) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
 	$(RELEASE_CHROOT) /bin/bash -o vi
-	@$(foreach FILE,dev/pts dev proc,umount $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
+	@$(foreach FILE,$(RELEASE_CHROOT_MOUNTS),$(UMOUNT) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
 
 .PHONY: $(RELEASE)-prep
 $(RELEASE)-prep:
