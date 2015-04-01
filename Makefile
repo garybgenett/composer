@@ -143,7 +143,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0.beta2
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta3
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -4516,6 +4516,7 @@ export PAGER="$(call HEREDOC_BASHRC_CMD,$(LESS))"
 export EDITOR="$(call HEREDOC_BASHRC_CMD,$(VIM))"
 unset VISUAL
 #
+alias .git="$(call HEREDOC_BASHRC_CMD,$(GIT)) --git-dir=\"$(REPLICA_GIT_DIR)\" --work-tree=\"$(COMPOSER_DIR)\""
 alias git="$(call HEREDOC_BASHRC_CMD,$(GIT))"
 alias ll="$(call HEREDOC_BASHRC_CMD,$(LS))"
 alias less="$${PAGER}"
