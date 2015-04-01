@@ -1,20 +1,20 @@
 @echo off
 set _CMS=%~dp0
 set _SYS=Msys
+set _TAB=etc/fstab
 set _BIN=usr/bin
 set _ABD=%_CMS%/.home
 set _PRG=%_CMS%/bin/Linux
-set _OPT=1
-if exist %_ABD%/%_BIN%				goto dir_home
-if exist %_ABD%/msys32/%_BIN%	goto dir_msys
-if exist %_CMS%/bin/%_SYS%/%_BIN%		goto dir_prog
+if exist %_ABD%/%_TAB%				goto dir_home
+if exist %_ABD%/msys32/%_TAB%	goto dir_msys
+if exist %_CMS%/bin/%_SYS%/%_TAB%		goto dir_prog
 :dir_home
 set PATH=%_ABD%/%_BIN%;%PATH%
 set _OPT=
 goto do_make
 :dir_msys
 set PATH=%_ABD%/msys32/%_BIN%;%PATH%
-set _OPT=
+set _OPT=0
 goto do_make
 :dir_prog
 set PATH=%_CMS%/bin/%_SYS%/%_BIN%;%PATH%
