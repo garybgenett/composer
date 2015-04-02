@@ -1,6 +1,6 @@
 Composer CMS: User Guide & Example File
 Gary B. Genett
-v2.0.beta4 (2015-04-01)
+v2.0.beta5 (2015-04-02)
 
 
 Composer CMS

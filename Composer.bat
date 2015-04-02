@@ -21,6 +21,6 @@ set PATH=%_CMS%/bin/%_SYS%/%_BIN%;%PATH%
 set _OPT=1
 goto do_make
 :do_make
-start /b make --makefile Makefile --debug="a" COMPOSER_ESCAPES="0" COMPOSER_PROGS_USE="%_OPT%" BUILD_PLAT="%_SYS%" BUILD_ARCH= shell-msys
+start /b make --makefile Makefile --debug="a" COMPOSER_PROGS_USE="%_OPT%" BUILD_PLAT="%_SYS%" BUILD_ARCH= shell-msys
 ::#>set /p ENTER="Hit ENTER to proceed."
 :: end of file
