@@ -143,7 +143,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0.beta5
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta6
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -1630,12 +1630,13 @@ override CABAL_OPTIONS_LDLIB		= \
 	--extra-lib-dirs="$(COMPOSER_ABODE)/lib" \
 	--global
 
+ifeq ($(wildcard $(CURL_CA_BUNDLE)),)
+override CURL_CA_BUNDLE			:=
 ifneq ($(wildcard $(COMPOSER_ABODE)/ca-bundle.crt),)
-override CURL_CA_BUNDLE			?= $(COMPOSER_ABODE)/ca-bundle.crt
+override CURL_CA_BUNDLE			:= $(COMPOSER_ABODE)/ca-bundle.crt
 else ifneq ($(wildcard $(COMPOSER_PROGS)/ca-bundle.crt),)
-override CURL_CA_BUNDLE			?= $(COMPOSER_PROGS)/ca-bundle.crt
-else
-override CURL_CA_BUNDLE			?=
+override CURL_CA_BUNDLE			:= $(COMPOSER_PROGS)/ca-bundle.crt
+endif
 endif
 ifneq ($(CURL_CA_BUNDLE),)
 export CURL_CA_BUNDLE
