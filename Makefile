@@ -143,7 +143,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0.beta4
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta5
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -235,7 +235,8 @@ override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 #WORK : turn remaining targets into variables, as well...
-# grep PHONY Makefile
+# grep "[.]PHONY" Makefile
+# grep "[.]set_title-" Makefile
 
 override ___WORK			:= .make_database
 override ___WORK			:= .all_targets
@@ -1871,6 +1872,7 @@ override EXAMPLE_OUTPUT	:= Users_Guide
 		$(SED) -n -e "/^$(COMPOSER_ALL_REGEX)[:]/p" | \
 		$(SORT)
 
+#WORK : document!?
 override .ALL_TARGETS := \
 	HELP[_] \
 	EXAMPLE[_] \
@@ -1902,21 +1904,9 @@ override .ALL_TARGETS := \
 	subdirs[:] \
 	print[:]
 
-# if "$(COMPOSER_ESCAPES)" is not empty and not 0, then we want these packages in the list
-ifneq ($(and $(COMPOSER_ESCAPES),$(if $(filter 0,$(COMPOSER_ESCAPES)),,1)),)
-$(foreach FILE,\
-	$(shell $(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) -n \
-		$(foreach FILE,$(.ALL_TARGETS),\
-			-e "/^$(FILE)/p" \
-		) \
-		| $(SED) "s|[:].*$$||g" \
-	),\
-	$(eval $(FILE): .set_title-$(FILE))\
-)
 .set_title-%:
-	@if [ "$(*)" != "$(EXAMPLE)" ]; then \
-		$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"; \
-	fi
+ifneq ($(COMPOSER_ESCAPES),)
+	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
 endif
 
 ########################################
@@ -2013,7 +2003,7 @@ HELP_OPTIONS_SUB:
 	@$(ESCAPE) "$(_H)Options:"
 	@$(TABLE_I3) "$(_C)COMPOSER_GITREPO$(_D)"	"Source repository"		"[$(_M)$(COMPOSER_GITREPO)$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_VERSION$(_D)"	"Version for cloning"		"[$(_M)$(COMPOSER_VERSION)$(_D)] $(_N)(valid: any Git tag or commit)"
-	@$(TABLE_I3) "$(_C)COMPOSER_ESCAPES$(_D)"	"Enable color/title sequences"	"[$(_M)$(COMPOSER_ESCAPES)$(_D)] $(_N)(valid: empty, 0 or 1)"
+	@$(TABLE_I3) "$(_C)COMPOSER_ESCAPES$(_D)"	"Enable color/title sequences"	"[$(_M)$(COMPOSER_ESCAPES)$(_D)] $(_N)(valid: empty or 1)"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)File Options:"
 	@$(TABLE_I3) "$(_C)COMPOSER_STAMP$(_D)"		"Timestamp file"		"[$(_M)$(COMPOSER_STAMP)$(_D)]"
@@ -2397,7 +2387,7 @@ HELP_FOOTER:
 ########################################
 
 .PHONY: $(DEBUGIT)
-$(DEBUGIT):
+$(DEBUGIT): .set_title-$(DEBUGIT)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"		"[$(_N)$(MAKEFILE_LIST)$(_D)]"
@@ -2471,12 +2461,12 @@ override define DEBUGIT_CONTENTS =
 endef
 
 .PHONY: $(TARGETS)
-$(TARGETS):
+$(TARGETS): .set_title-$(TARGETS)
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Targets$(_D) $(DIVIDE) $(_M)$(COMPOSER_SRC)"
 	@$(HEADER_L)
 	@$(ECHO) "$(_C)"
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .all_targets | $(SED) \
+	@$(RUNMAKE) --silent .all_targets | $(SED) \
 		$(foreach FILE,$(.ALL_TARGETS),\
 			-e "/^$(FILE)/d" \
 		) \
@@ -2510,7 +2500,7 @@ override TEST_DEPEND_SUB	:= example1
 override TEST_FULLMK_SUB	:= subdir1 subdir2
 
 .PHONY: $(TESTING)
-$(TESTING):
+$(TESTING): .set_title-$(TESTING)
 	@$(foreach FILE,$(TEST_DIRECTORIES),\
 		$(MKDIR) "$(FILE)"; \
 		$(CP) \
@@ -2542,6 +2532,7 @@ ifneq ($(COMPOSER_TESTING),)
 endif
 
 .PHONY: $(INSTALL)
+$(INSTALL): .set_title-$(INSTALL)
 $(INSTALL): $(INSTALL)-dir
 	@$(SED) -i "s|^(override[ ]COMPOSER_TEACHER[ ][:][=][ ]).+$$|\1$(COMPOSER)|g" "$(CURDIR)/$(MAKEFILE)"
 
@@ -2568,7 +2559,7 @@ $(REPLICA)-%:
 		$(REPLICA)
 
 .PHONY: $(REPLICA)
-$(REPLICA):
+$(REPLICA): .set_title-$(REPLICA)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"		"[$(_N)$(MAKEFILE_LIST)$(_D)]"
@@ -2601,7 +2592,7 @@ $(REPLICA):
 	@$(ECHO) "$(_D)"
 
 .PHONY: $(UPGRADE)
-$(UPGRADE):
+$(UPGRADE): .set_title-$(UPGRADE)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"
@@ -2631,7 +2622,7 @@ override ALLOFIT_GIT	:= $(subst ",,$(word 1,$(GIT)))
 #	types	= curl/git and BUILD_FETCH=* | curl and BUILD_FETCH=1
 
 .PHONY: $(ALLOFIT)
-$(ALLOFIT):
+$(ALLOFIT): .set_title-$(ALLOFIT)
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(ALLOFIT)-check
@@ -2692,15 +2683,15 @@ $(foreach FILE,\
 
 #WORK : document! $(FETCHIT)-$(STRAPIT) $(FETCHIT)-$(BUILDIT)
 .PHONY: $(FETCHIT)
+$(FETCHIT): .set_title-$(FETCHIT)
 $(FETCHIT): $(FETCHIT)-$(STRAPIT)
 $(FETCHIT): $(FETCHIT)-$(BUILDIT)
-$(FETCHIT):
 	@$(LS) \
 		"$(COMPOSER_STORE)" \
 		"$(COMPOSER_BUILD)"
 
 .PHONY: $(STRAPIT)
-$(STRAPIT):
+$(STRAPIT): .set_title-$(STRAPIT)
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
@@ -2717,7 +2708,7 @@ $(STRAPIT):
 	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)
-$(BUILDIT):
+$(BUILDIT): .set_title-$(BUILDIT)
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
@@ -2743,7 +2734,7 @@ override CHECK_SHELL		:= 1
 endif
 
 .PHONY: $(ALLOFIT)-check
-$(ALLOFIT)-check:
+$(ALLOFIT)-check: .set_title-$(ALLOFIT)-check
 ifneq ($(CHECK_MSYS),)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
@@ -2782,7 +2773,7 @@ endif
 	@$(call BUILD_COMPLETE)
 
 .PHONY: $(ALLOFIT)-bindir
-$(ALLOFIT)-bindir:
+$(ALLOFIT)-bindir: .set_title-$(ALLOFIT)-bindir
 	$(MKDIR) "$(COMPOSER_PROGS)/$(BUILD_BINDIR)"
 ifeq ($(BUILD_PLAT),Msys)
 	$(call ALLOFIT_BINDIR_MSYS_MISC,$(COMPOSER_ABODE))
@@ -2851,12 +2842,12 @@ override BUILD_CLEAN_DIRS := $(sort \
 	"$(COMPOSER_PROGS)" \
 )
 .PHONY: $(BUILDIT)-clean
-$(BUILDIT)-clean:
+$(BUILDIT)-clean: .set_title-$(BUILDIT)-clean
 	@$(LS) -d $(BUILD_CLEAN_DIRS) 2>/dev/null || $(TRUE)
 	@$(RM) -r $(BUILD_CLEAN_DIRS)
 
 .PHONY: $(BUILDIT)-gnu-init
-$(BUILDIT)-gnu-init:
+$(BUILDIT)-gnu-init: .set_title-$(BUILDIT)-gnu-init
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_GUS))
 	$(call CURL_FILE_GNU_CFG,$(GNU_CFG_FILE_SUB))
@@ -2864,14 +2855,14 @@ ifneq ($(BUILD_FETCH),)
 endif
 
 .PHONY: $(BUILDIT)-gnu
-$(BUILDIT)-gnu:
+$(BUILDIT)-gnu: .set_title-$(BUILDIT)-gnu
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GNU_CFG_DST),$(GNU_CFG_SRC),$(GNU_CFG_CMT))
 	@$(call BUILD_COMPLETE)
 endif
 
 .PHONY: $(BUILDIT)-msys
-$(BUILDIT)-msys:
+$(BUILDIT)-msys: .set_title-$(BUILDIT)-msy
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so we can track timestamps
 ifneq ($(BUILD_FETCH),)
@@ -2884,7 +2875,7 @@ endif
 	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-msys-base
-$(BUILDIT)-msys-base:
+$(BUILDIT)-msys-base: .set_title-$(BUILDIT)-msys-base
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
 	@$(HEADER_1)
@@ -2910,7 +2901,7 @@ $(BUILDIT)-msys-base:
 	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-msys-pkg
-$(BUILDIT)-msys-pkg:
+$(BUILDIT)-msys-pkg: .set_title-$(BUILDIT)-msys-pkg
 	$(PACMAN_ENV) $(PACMAN) --refresh
 	$(PACMAN_ENV) $(PACMAN) $(PACMAN_BASE_LIST)
 	$(PACMAN_ENV) $(PACMAN_DB_UPGRADE)
@@ -2919,7 +2910,7 @@ $(BUILDIT)-msys-pkg:
 	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-msys-bin
-$(BUILDIT)-msys-bin:
+$(BUILDIT)-msys-bin: .set_title-$(BUILDIT)-msys-bin
 	$(MKDIR) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"; \
@@ -2927,7 +2918,7 @@ $(BUILDIT)-msys-bin:
 	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-group-libs
-$(BUILDIT)-group-libs:
+$(BUILDIT)-group-libs:  .set_title-$(BUILDIT)-group-libs
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-libiconv-init
@@ -2946,7 +2937,7 @@ $(BUILDIT)-group-libs:
 	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-libiconv-init
-$(BUILDIT)-libiconv-init:
+$(BUILDIT)-libiconv-init: .set_title-$(BUILDIT)-libiconv-init
 ifneq ($(BUILD_FETCH),)
 	$(call LIBICONV_PULL)
 endif
@@ -2959,7 +2950,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-gettext
-$(BUILDIT)-gettext:
+$(BUILDIT)-gettext: .set_title-$(BUILDIT)-gettext
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GETTEXT_SRC))
 endif
@@ -2975,7 +2966,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-libiconv
-$(BUILDIT)-libiconv:
+$(BUILDIT)-libiconv: .set_title-$(BUILDIT)-libiconv
 ifneq ($(BUILD_FETCH),)
 	$(call LIBICONV_PULL)
 endif
@@ -3020,7 +3011,7 @@ override define LIBICONV_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-pkgconfig
-$(BUILDIT)-pkgconfig:
+$(BUILDIT)-pkgconfig: .set_title-$(BUILDIT)-pkgconfig
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(PKGCONFIG_SRC))
 endif
@@ -3048,7 +3039,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-zlib
-$(BUILDIT)-zlib:
+$(BUILDIT)-zlib: .set_title-$(BUILDIT)-zlib
 ifneq ($(BUILD_FETCH),)
 	$(call ZLIB_PULL)
 endif
@@ -3084,7 +3075,7 @@ override define ZLIB_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-gmp
-$(BUILDIT)-gmp:
+$(BUILDIT)-gmp: .set_title-$(BUILDIT)-gmp
 ifneq ($(BUILD_FETCH),)
 	$(call GMP_PULL)
 endif
@@ -3123,7 +3114,7 @@ override define GMP_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-ncurses
-$(BUILDIT)-ncurses:
+$(BUILDIT)-ncurses: .set_title-$(BUILDIT)-ncurses
 ifneq ($(BUILD_FETCH),)
 	$(call NCURSES_PULL)
 endif
@@ -3198,7 +3189,7 @@ endif
 endif
 
 .PHONY: $(BUILDIT)-openssl
-$(BUILDIT)-openssl:
+$(BUILDIT)-openssl: .set_title-$(BUILDIT)-openssl
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(OPENSSL_SRC))
 endif
@@ -3231,7 +3222,7 @@ endif
 endif
 
 .PHONY: $(BUILDIT)-expat
-$(BUILDIT)-expat:
+$(BUILDIT)-expat: .set_title-$(BUILDIT)-expat
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(EXPAT_SRC))
 endif
@@ -3247,7 +3238,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-freetype
-$(BUILDIT)-freetype:
+$(BUILDIT)-freetype: .set_title-$(BUILDIT)-freetype
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FREETYPE_SRC))
 endif
@@ -3263,7 +3254,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-fontconfig
-$(BUILDIT)-fontconfig:
+$(BUILDIT)-fontconfig: .set_title-$(BUILDIT)-fontconfig
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FONTCONFIG_SRC))
 endif
@@ -3286,7 +3277,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-group-util
-$(BUILDIT)-group-util:
+$(BUILDIT)-group-util: .set_title-$(BUILDIT)-group-util
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-coreutils
@@ -3301,7 +3292,7 @@ $(BUILDIT)-group-util:
 	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-coreutils
-$(BUILDIT)-coreutils:
+$(BUILDIT)-coreutils: .set_title-$(BUILDIT)-coreutils
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(COREUTILS_SRC))
 endif
@@ -3322,7 +3313,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-findutils
-$(BUILDIT)-findutils:
+$(BUILDIT)-findutils: .set_title-$(BUILDIT)-findutils
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FINDUTILS_SRC))
 endif
@@ -3335,7 +3326,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-patch
-$(BUILDIT)-patch:
+$(BUILDIT)-patch: .set_title-$(BUILDIT)-patch
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(PATCH_SRC))
 endif
@@ -3350,7 +3341,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-sed
-$(BUILDIT)-sed:
+$(BUILDIT)-sed: .set_title-$(BUILDIT)-sed
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(SED_SRC))
 endif
@@ -3365,7 +3356,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-bzip
-$(BUILDIT)-bzip:
+$(BUILDIT)-bzip: .set_title-$(BUILDIT)-bzip
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(BZIP_SRC))
 endif
@@ -3382,7 +3373,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-gzip
-$(BUILDIT)-gzip:
+$(BUILDIT)-gzip: .set_title-$(BUILDIT)-gzip
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GZIP_SRC))
 endif
@@ -3395,7 +3386,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-xz
-$(BUILDIT)-xz:
+$(BUILDIT)-xz: .set_title-$(BUILDIT)-xz
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(XZ_SRC))
 endif
@@ -3411,7 +3402,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-tar
-$(BUILDIT)-tar:
+$(BUILDIT)-tar: .set_title-$(BUILDIT)-tar
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(TAR_SRC))
 endif
@@ -3427,7 +3418,7 @@ endif
 
 .PHONY: $(BUILDIT)-perl
 # thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/perl
-$(BUILDIT)-perl:
+$(BUILDIT)-perl: .set_title-$(BUILDIT)-perl
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(PERL_SRC))
 endif
@@ -3471,7 +3462,7 @@ endif
 	$(RUNMAKE) $(BUILDIT)-perl-modules
 
 .PHONY: $(BUILDIT)-perl-modules
-$(BUILDIT)-perl-modules:
+$(BUILDIT)-perl-modules: .set_title-$(BUILDIT)-perl-modules
 ifneq ($(BUILD_FETCH),)
 	$(foreach FILE,$(PERL_MODULES_LIST),\
 		$(call PERL_MODULES_PULL,$(word 1,$(subst |, ,$(FILE))),$(word 2,$(subst |, ,$(FILE)))); \
@@ -3497,7 +3488,7 @@ override define PERL_MODULES_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-group-tool
-$(BUILDIT)-group-tool:
+$(BUILDIT)-group-tool: .set_title-$(BUILDIT)-group-tool
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-bash
@@ -3515,7 +3506,7 @@ endif
 .PHONY: $(BUILDIT)-bash
 # thanks for the patch below: https://github.com/Alexpux/MSYS2-packages/tree/master/bash
 # thanks for the 'malloc' fix below: http://www.linuxfromscratch.org/lfs/view/stable/chapter05/bash.html
-$(BUILDIT)-bash:
+$(BUILDIT)-bash: .set_title-$(BUILDIT)-bash
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(BASH_SRC))
 endif
@@ -3539,7 +3530,7 @@ endif
 endif
 
 .PHONY: $(BUILDIT)-less
-$(BUILDIT)-less:
+$(BUILDIT)-less: .set_title-$(BUILDIT)-less
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(LESS_SRC))
 endif
@@ -3551,7 +3542,7 @@ endif
 
 .PHONY: $(BUILDIT)-vim
 # thanks for the 'EXTRA_DEFS' fix below: http://vim.1045645.n5.nabble.com/Conflicting-definitions-for-tgoto-etc-when-cross-building-td1210909.html
-$(BUILDIT)-vim:
+$(BUILDIT)-vim: .set_title-$(BUILDIT)-vim
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(VIM_SRC))
 endif
@@ -3569,7 +3560,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-group-core
-$(BUILDIT)-group-core:
+$(BUILDIT)-group-core: .set_title-$(BUILDIT)-group-core
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-make-init
@@ -3579,7 +3570,7 @@ $(BUILDIT)-group-core:
 	@$(call BUILD_COMPLETE,--)
 
 .PHONY: $(BUILDIT)-make-init
-$(BUILDIT)-make-init:
+$(BUILDIT)-make-init: .set_title-$(BUILDIT)-make-init
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(MAKE_SRC_INIT))
 endif
@@ -3592,7 +3583,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-make
-$(BUILDIT)-make:
+$(BUILDIT)-make: .set_title-$(BUILDIT)-make
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(MAKE_DST),$(MAKE_SRC),$(MAKE_CMT))
 endif
@@ -3614,7 +3605,7 @@ override define MAKE_BUILD =
 endef
 
 .PHONY: $(BUILDIT)-infozip
-$(BUILDIT)-infozip:
+$(BUILDIT)-infozip: .set_title-$(BUILDIT)-infozip
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(IZIP_SRC))
 	$(call CURL_FILE,$(UZIP_SRC))
@@ -3646,7 +3637,7 @@ endif
 .PHONY: $(BUILDIT)-curl
 # thanks for the 'CURL_CA_BUNDLE' fix below: http://www.curl.haxx.se/mail/lib-2006-11/0276.html
 #	also to: http://comments.gmane.org/gmane.comp.web.curl.library/29555
-$(BUILDIT)-curl:
+$(BUILDIT)-curl: .set_title-$(BUILDIT)-curl
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(CURL_SRC))
 endif
@@ -3689,7 +3680,7 @@ endif
 # thanks for the 'curl' fix below: http://www.curl.haxx.se/mail/lib-2007-05/0155.html
 #	also to: http://www.makelinux.net/alp/021
 # thanks for the 'librt' fix below: https://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim
-$(BUILDIT)-git:
+$(BUILDIT)-git: .set_title-$(BUILDIT)-git
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GIT_SRC))
 endif
@@ -3711,7 +3702,7 @@ endif
 # thanks for the 'libpng/floor' fix below: https://stackoverflow.com/questions/14743023/c-undefined-reference-to-floor
 # thanks for the 'luajittex' fix below: http://permalink.gmane.org/gmane.comp.tex.texlive.build/2351
 #	also to: http://permalink.gmane.org/gmane.comp.tex.texlive.build/2332
-$(BUILDIT)-texlive:
+$(BUILDIT)-texlive: .set_title-$(BUILDIT)-texlive
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(TEX_TEXMF_SRC))
 	$(call CURL_FILE,$(TEX_SRC))
@@ -3774,7 +3765,7 @@ endif
 	$(RUNMAKE) $(BUILDIT)-texlive-fmtutil
 
 .PHONY: $(BUILDIT)-texlive-fmtutil
-$(BUILDIT)-texlive-fmtutil:
+$(BUILDIT)-texlive-fmtutil: .set_title-$(BUILDIT)-texlive-fmtutil
 ifneq ($(BUILD_FETCH),0)
 	# the "--no-error-if-no-engine" option goes with "--disable-luajittex" above
 	$(BUILD_ENV) fmtutil \
@@ -3784,7 +3775,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-ghc-init
-$(BUILDIT)-ghc-init:
+$(BUILDIT)-ghc-init: .set_title-$(BUILDIT)-ghc-init
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(GHC_SRC_INIT))
 endif
@@ -3798,7 +3789,7 @@ endif
 
 #WORKING : document!
 .PHONY: $(BUILDIT)-ghc-init-$(BUILDIT)
-$(BUILDIT)-ghc-init-$(BUILDIT):
+$(BUILDIT)-ghc-init-$(BUILDIT): .set_title-$(BUILDIT)-ghc-init-$(BUILDIT)
 ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)/usr"
@@ -3814,7 +3805,7 @@ endif
 
 .PHONY: $(BUILDIT)-ghc
 # thanks for the 'removeFiles' fix below: https://ghc.haskell.org/trac/ghc/ticket/7712
-$(BUILDIT)-ghc:
+$(BUILDIT)-ghc: .set_title-$(BUILDIT)-ghc
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(GHC_DST),$(GHC_SRC),$(GHC_CMT),$(GHC_BRANCH))
 	$(call GIT_SUBMODULE_GHC,$(GHC_DST))
@@ -3910,7 +3901,7 @@ override SRC_HC_OPTS	:= $(GHCFLAGS_LDLIB)
 endef
 
 .PHONY: $(BUILDIT)-cabal-init
-$(BUILDIT)-cabal-init:
+$(BUILDIT)-cabal-init: .set_title-$(BUILDIT)-cabal-init
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(CABAL_SRC_INIT))
 	$(call CABAL_PULL,$(CABAL_LIBRARIES_INIT_LIST))
@@ -3932,7 +3923,7 @@ endif
 
 #WORK : document!
 .PHONY: $(BUILDIT)-cabal-init-libs
-$(BUILDIT)-cabal-init-libs:
+$(BUILDIT)-cabal-init-libs: .set_title-$(BUILDIT)-cabal-init-libs
 ifneq ($(BUILD_FETCH),)
 	$(call CABAL_BUILD_GHC_LIBRARIES_PULL)
 endif
@@ -3942,7 +3933,7 @@ ifneq ($(BUILD_FETCH),0)
 endif
 
 .PHONY: $(BUILDIT)-cabal
-$(BUILDIT)-cabal:
+$(BUILDIT)-cabal: .set_title-$(BUILDIT)-cabal
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(CABAL_DST),$(CABAL_SRC),$(CABAL_CMT))
 	$(call CABAL_PULL,$(CABAL_LIBRARIES_LIST))
@@ -3965,7 +3956,7 @@ endif
 
 #WORK : document!
 .PHONY: $(BUILDIT)-cabal-libs
-$(BUILDIT)-cabal-libs:
+$(BUILDIT)-cabal-libs: .set_title-$(BUILDIT)-cabal-libs
 ifneq ($(BUILD_FETCH),)
 	$(call CABAL_BUILD_GHC_LIBRARIES_PULL)
 endif
@@ -4075,7 +4066,7 @@ override PANDOC_LIBRARIES_LIST_UNINSTALL := $(filter-out \
 )
 
 .PHONY: $(BUILDIT)-pandoc
-$(BUILDIT)-pandoc:
+$(BUILDIT)-pandoc: .set_title-$(BUILDIT)-pandoc
 ifeq ($(COMPOSER_TESTING),-1)
 ifneq ($(word 1,$(GHC_PKG)),"")
 	@$(foreach FILE,\
@@ -4194,6 +4185,7 @@ endif
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
 # "$(LDD)" and "$(GHC)" require "$(LD_LIBRARY_PATH)" to find libraries, so we wrap them in "$(BUILD_ENV)"
 .PHONY: $(CHECKIT)
+$(CHECKIT): .set_title-$(CHECKIT)
 $(CHECKIT): override GLIBC_VERSIONS		:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
 $(CHECKIT): override GCC_VERSIONS		:= $(GCC_CUR_VERSION) $(_D)($(_H)>=$(GCC_MIN_VERSION)$(_D))
 $(CHECKIT): override BINUTILS_VERSIONS		:= $(BINUTILS_CUR_VERSION) $(_D)($(_H)>=$(BINUTILS_MIN_VERSION)$(_D))
@@ -4358,6 +4350,7 @@ endef
 #> syntax highlighting fix: ")
 
 .PHONY: $(TIMERIT)
+$(TIMERIT): .set_title-$(TIMERIT)
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS_FILES	:= $(shell $(call BUILD_COMPLETE_TIMERIT_FILES))
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:=
 ifeq ($(BUILD_PLAT),Msys)
@@ -4447,8 +4440,8 @@ $(TIMERIT):
 	@$(HEADER_L)
 
 .PHONY: $(SHELLIT)
+$(SHELLIT): .set_title-$(SHELLIT)
 $(SHELLIT): $(SHELLIT)-bashrc $(SHELLIT)-vimrc
-$(SHELLIT):
 	@$(BUILD_ENV) $(BASH) || $(TRUE)
 
 override MSYS_SHELL_DIR := $(COMPOSER_PROGS)
@@ -4464,9 +4457,9 @@ endif
 endif
 
 .PHONY: $(SHELLIT)-msys
-$(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
+$(SHELLIT)-msys: .set_title-$(SHELLIT)-msys
 $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
-$(SHELLIT)-msys:
+$(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 	@cd "$(MSYS_SHELL_DIR)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
 		$(BUILD_ENV) ./msys2_shell.bat
@@ -4631,12 +4624,12 @@ override RELEASE_CHROOT		:= $(ENV) - \
 	"$(RELEASE_DIR)/$(RELEASE_TARGET)"
 
 .PHONY: $(CONVICT)
-$(CONVICT):
+$(CONVICT): .set_title-$(CONVICT)
 	@$(call COMPOSER_GIT_RUN,$(CURDIR),add --verbose --all ./)
 	@$(call COMPOSER_GIT_RUN,$(CURDIR),commit --verbose --all --edit --message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))]")
 
 .PHONY: $(RELEASE)
-$(RELEASE):
+$(RELEASE): .set_title-$(RELEASE)
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_H)Build"			"Target"		"Options"
 	@$(HEADER_L)
@@ -4668,7 +4661,7 @@ $(RELEASE):
 	@$(HEADER_L)
 
 .PHONY: $(RELEASE)-config
-$(RELEASE)-config:
+$(RELEASE)-config: .set_title-$(RELEASE)-config
 	@$(DATESTAMP) >"$(CURDIR)/.$(COMPOSER_BASENAME).$(RELEASE)"
 	@$(MKDIR) "$(RELEASE_DIR)/Linux"
 	@$(MKDIR) "$(RELEASE_DIR)/Msys"
@@ -4686,7 +4679,7 @@ $(RELEASE)-config:
 
 .PHONY: $(RELEASE)-dist
 $(RELEASE)-dist: override COMPOSER_STORE := $(subst $(COMPOSER_OTHER),$(RELEASE_DIR),$(COMPOSER_STORE))
-$(RELEASE)-dist:
+$(RELEASE)-dist: .set_title-$(RELEASE)-dist
 ifneq ($(BUILD_FETCH),)
 	$(call GIT_REPO,$(RELEASE_DIR)/.debootstrap,$(DEBIAN_SRC),$(DEBIAN_CMT))
 	$(MKDIR) "$(COMPOSER_STORE)/.debootstrap.apt"
@@ -4730,7 +4723,7 @@ endif
 
 .PHONY: $(RELEASE)-test
 $(RELEASE)-test: override COMPOSER_STORE := $(subst $(COMPOSER_OTHER),$(RELEASE_DIR),$(COMPOSER_STORE))
-$(RELEASE)-test:
+$(RELEASE)-test: .set_title-$(RELEASE)-test
 ifneq ($(BUILD_FETCH),)
 	$(call CURL_FILE,$(FUNTOO_SRC))
 	$(call DO_UNTAR,$(RELEASE_DIR)/$(RELEASE_TARGET)/boot,$(FUNTOO_SRC))
@@ -4752,7 +4745,7 @@ endif
 #WORKING : ideally, would archive/restore ".Native/.sources" directory when "chroot"ing
 
 .PHONY: $(RELEASE)-chroot
-$(RELEASE)-chroot:
+$(RELEASE)-chroot: .set_title-$(RELEASE)-chroot
 	@$(MKDIR) "$(RELEASE_DIR)/$(RELEASE_TARGET)"
 	@$(DATESTAMP) >"$(RELEASE_DIR)/$(RELEASE_TARGET)/.$(COMPOSER_BASENAME).$(RELEASE).$(RELEASE_TARGET)"
 	@$(CP) "$(COMPOSER)" "$(RELEASE_DIR)/$(RELEASE_TARGET)/"
@@ -4771,7 +4764,7 @@ $(RELEASE)-chroot:
 	@$(foreach FILE,$(RELEASE_CHROOT_MOUNTS),$(UMOUNT) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
 
 .PHONY: $(RELEASE)-prep
-$(RELEASE)-prep:
+$(RELEASE)-prep: .set_title-$(RELEASE)-prep
 	@$(RUNMAKE) COMPOSER_PROGS_USE="0" BUILD_DIST="1" BUILD_PLAT="Msys"	COMPOSER_OTHER="$(RELEASE_DIR)/Msys"	$(DISTRIB)
 	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(RELEASE_DIR)/Linux"	$(DISTRIB)
 #WORK : should this go somewhere else?
@@ -4784,7 +4777,7 @@ $(RELEASE)-prep:
 		BASE="$(RELEASE_MAN_DST)" LIST="$(RELEASE_MAN_SRC)" TYPE="html" TOC="3"
 
 .PHONY: $(RELEASE)-debug
-$(RELEASE)-debug:
+$(RELEASE)-debug: .set_title-$(RELEASE)-debug
 	@$(RM) "$(RELEASE_MAN_DST)."*
 	@$(CP) "$(RELEASE_MAN_SRC)" "$(RELEASE_MAN_DST).$(COMPOSER_EXT)"
 	# fix multi-line footnotes and copyright symbols, so "pdflatex" doesn't choke on them
@@ -4809,7 +4802,7 @@ override DIST_ICON		:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/
 override DIST_SCREENSHOT	:= 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
 
 .PHONY: $(DISTRIB)
-$(DISTRIB):
+$(DISTRIB): .set_title-$(DISTRIB)
 	@if [ "$(COMPOSER)" !=						"$(abspath $(CURDIR)/$(MAKEFILE))" ]; then \
 		$(CP) "$(COMPOSER)"					"$(abspath $(CURDIR)/$(MAKEFILE))"; \
 	fi
@@ -4880,7 +4873,7 @@ set PATH=%_CMS%/bin/%_SYS%/%_BIN%;%PATH%
 set _OPT=1
 goto do_make
 :do_make
-start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_ESCAPES="0" COMPOSER_PROGS_USE="%_OPT%" BUILD_PLAT="%_SYS%" BUILD_ARCH= shell-msys
+start /b make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="%_OPT%" BUILD_PLAT="%_SYS%" BUILD_ARCH= shell-msys
 ::#>set /p ENTER="Hit ENTER to proceed."
 :: end of file
 endef
@@ -4903,7 +4896,7 @@ elif [ -e "$${_CMS}/bin/$${_SYS}/$${_TAB}" ]; then
 PATH="$${_CMS}/bin/$${_SYS}/$${_BIN}:$${PATH}"
 _OPT="1"
 fi
-exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_ESCAPES="0" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" BUILD_ARCH= shell
+exec make --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" BUILD_ARCH= shell
 # end of file
 endef
 
@@ -5303,6 +5296,7 @@ endef
 ########################################
 
 .PHONY: all
+all: .set_title-all
 ifeq ($(COMPOSER_DEPENDS),)
 all: whoami
 else
@@ -5327,6 +5321,7 @@ all: subdirs
 endif
 
 .PHONY: clean
+clean: .set_title-clean
 .PHONY: $(addsuffix -clean,$(COMPOSER_TARGETS))
 clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
@@ -5391,6 +5386,7 @@ $(COMPOSER_SUBDIRS):
 	@$(MAKE) --directory "$(CURDIR)/$(@)"
 
 .PHONY: print
+print: .set_title-print
 print: $(COMPOSER_STAMP)
 $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 	@$(LS) $(?)
@@ -5399,7 +5395,7 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 
 #WORK : document!
 .PHONY: $(NOTHING)
-$(NOTHING):
+$(NOTHING): .set_title-$(NOTHING)
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_N)WARNING:"
 	@$(ECHO) "\n"
@@ -5418,6 +5414,7 @@ override OPTIONS_DOC	:= $(subst $(W3CSLIDY_DST),$(shell	$(ECHO) '$(W3CSLIDY_DST)
 endif
 
 .PHONY: $(COMPOSER_TARGET)
+$(COMPOSER_TARGET): .set_title-$(COMPOSER_TARGET)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)

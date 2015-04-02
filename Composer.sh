@@ -15,5 +15,5 @@ elif [ -e "${_CMS}/bin/${_SYS}/${_TAB}" ]; then
 PATH="${_CMS}/bin/${_SYS}/${_BIN}:${PATH}"
 _OPT="1"
 fi
-exec make --makefile Makefile --debug="a" COMPOSER_ESCAPES="0" COMPOSER_PROGS_USE="${_OPT}" BUILD_PLAT="${_SYS}" BUILD_ARCH= shell
+exec make --makefile Makefile --debug="a" COMPOSER_PROGS_USE="${_OPT}" BUILD_PLAT="${_SYS}" BUILD_ARCH= shell
 # end of file
