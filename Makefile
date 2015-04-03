@@ -357,7 +357,7 @@ override LINT_DESC			:= Pandoc Markdown (for testing)
 #WORK
 # http://www.wtfpl.net/txt/copying (license: custom = WTFPL)
 # https://github.com/jbt/markdown-editor
-override MDEDITOR_CMT			:= e8d011c71c6d2d685452ee797fde96505fe129e3
+override MDEDITOR_CMT			:= 130c59848542c52fa44ec035b49f15ff6598b955
 override MDEDITOR_SRC			:= https://github.com/jbt/markdown-editor.git
 override MDEDITOR_DST			:= $(COMPOSER_DIR)/markdown-editor
 

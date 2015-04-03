@@ -4,32 +4,52 @@
   <title>Markdown Editor</title>
   <script src="marked.js"></script>
   <script src="highlight.pack.js"></script>
+  <script src="emojify.js"></script>
   <script src="codemirror/lib/codemirror.js"></script>
+  <script src="codemirror/overlay.js"></script>
   <script src="codemirror/xml/xml.js"></script>
   <script src="codemirror/markdown/markdown.js"></script>
   <script src="codemirror/gfm/gfm.js"></script>
   <script src="codemirror/javascript/javascript.js"></script>
+  <script src="codemirror/css/css.js"></script>
+  <script src="codemirror/htmlmixed/htmlmixed.js"></script>
   <script src="rawinflate.js"></script>
   <script src="rawdeflate.js"></script>
+  <link rel="stylesheet" href="base16-light.css">
   <link rel="stylesheet" href="codemirror/lib/codemirror.css">
   <link rel="stylesheet" href="default.css">
   <style>
+    body {margin: 0;}
+
     .CodeMirror pre{
-      line-height: 14px;
+      line-height: 16px;
     }
-    #in, .CodeMirror{
+
+    #in{
       position: fixed;
       top: 0;
       left: 0;
       bottom: 0;
       width: 50%;
+      height: auto;
       overflow: auto;
       font-size: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      box-shadow: -10px 2px 6px 10px rgba(0,0,0,0.4);
     }
+
+    .CodeMirror {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: auto;
+      height: auto;
+    }
+
     .CodeMirror-scroll {
-      height: 100%;
-      min-height: 100%;
+      padding: 30px;
+      box-sizing: border-box;
     }
 
     #out{
@@ -47,6 +67,26 @@
       line-height: 1.5em
     }
 
+    #menu {
+      position: absolute;
+      background-color: #fff;
+      border-bottom: 1px solid #999;
+      margin: 0;
+      padding: 15px;
+      z-index: 99;
+      list-style: none;
+      width: 100%;
+    }
+    #menu li a {
+      display: inline-block;
+      padding: 15px;
+    }
+
+    .emoji {
+      width: 20px;
+      height: 20px;
+    }
+
     @media screen and (max-width: 1024px) {
       #in {
         display: none;
@@ -56,6 +96,15 @@
         padding-left: 10px;
       }
     }
+
+    .cm-header-1 { font-size: 2em; }
+    .cm-header-2 { font-size: 1.75em; }
+    .cm-header-3 { font-size: 1.5em; }
+    .cm-header-4 { font-size: 1.3em; }
+    .cm-header-5 { font-size: 1.2em; }
+    .cm-header-6 { font-size: 1.15em; }
+
+    .cm-quote { color: #90a959; font-style: italic; }
 
     .view #in {
       display: none;
@@ -90,8 +139,8 @@
 
     pre, code{
       color: #000;
-      font-family: monospace;
-      font-size: 0.88em;
+      font-family:Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      font-size: 0.94em; /* 0.94 = 0.88 + (1.00 - 0.88) / 2 */
       border-radius:3px;
       background-color: #F8F8F8;
       border: 1px solid #CCC;
@@ -129,7 +178,7 @@ Look, a list!
  * bar
  * baz
 
-And here's some code!
+And here's some code! :+1:
 
 ```javascript
 $(function(){
@@ -151,8 +200,12 @@ the inspiration to this, and some handy implementation hints, came.
  * [js-deflate](https://github.com/dankogai/js-deflate) for gzipping of data to make it fit in URLs
 </textarea></form></div>
   <div id="out"></div>
-
-  <script>
+  <ul id="menu">
+    <h3>Save as</h3>
+    <li><a id="saveas-markdown">Save as Markdown</a></li>
+    <li><a id="saveas-html">Save as HTML</a></li>
+  </ul>
+  <script type="text/javascript">
     var URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
     navigator.saveBlob = navigator.saveBlob || navigator.msSaveBlob || navigator.mozSaveBlob || navigator.webkitSaveBlob;
     window.saveAs = window.saveAs || window.webkitSaveAs || window.mozSaveAs || window.msSaveAs;
@@ -163,10 +216,14 @@ the inspiration to this, and some handy implementation hints, came.
       html: 'xml'
     }
 
+    emojify.setConfig({
+      img_dir: 'emoji'
+    });
+
     marked.setOptions({
       highlight: function(code, lang){
         if(languageOverrides[lang]) lang = languageOverrides[lang];
-        return hljs.LANGUAGES[lang] ? hljs.highlight(lang, code).value : code;
+        return hljs.listLanguages().indexOf(lang) !== -1 ? hljs.highlight(lang, code).value : code;
       }
     });
 
@@ -184,17 +241,36 @@ the inspiration to this, and some handy implementation hints, came.
         return '<img src="http://latex.codecogs.com/png.latex?' + encodeURIComponent(b) + '" />';
       });
 
-      document.getElementById('out').innerHTML = marked(val);
+      var out = document.getElementById('out');
+      var old = out.cloneNode(true);
+      out.innerHTML = marked(val);
+      emojify.run(out);
+
+      var allold = old.getElementsByTagName("*");
+      if (allold === undefined) {
+        return;
+      }
+      var allnew = out.getElementsByTagName("*");
+      if (allnew === undefined) {
+        return;
+      }
+      for (var i = 0, max = Math.min(allold.length, allnew.length); i < max; i++) {
+        if (!allold[i].isEqualNode(allnew[i])) {
+          out.scrollTop = allnew[i].offsetTop;
+          return;
+        }
+      }
     }
 
     var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
       mode: 'gfm',
-      lineNumbers: true,
+      lineNumbers: false,
       matchBrackets: true,
       lineWrapping: true,
-      theme: 'default',
-      onChange: update
+      theme: 'base16-light'
     });
+
+    editor.on('change', update);
 
     document.addEventListener('drop', function(e){
       e.preventDefault();
@@ -209,14 +285,31 @@ the inspiration to this, and some handy implementation hints, came.
       theReader.readAsText(theFile);
     }, false);
 
-    function save(){
+    function saveAsMarkdown(){
       var code = editor.getValue();
       var blob = new Blob([code], { type: 'text/plain' });
-      saveBlob(blob);
+      saveBlob(blob, "untitled.md");
     }
 
-    function saveBlob(blob){
-      var name = "untitled.md";
+    document.getElementById('saveas-markdown').addEventListener('click', function() {
+      saveAsMarkdown();
+      hideMenu();
+      return false;
+    });
+
+    function saveAsHtml() {
+      var code = document.getElementById('out').innerHTML;
+      var blob = new Blob([code], { type: 'text/plain' });
+      saveBlob(blob, "untitled.html");
+    }
+
+    document.getElementById('saveas-html').addEventListener('click', function() {
+      saveAsHtml();
+      hideMenu();
+      return false;
+    });
+
+    function saveBlob(blob, name){
       if(window.saveAs){
         window.saveAs(blob, name);
       }else if(navigator.saveBlob){
@@ -232,10 +325,19 @@ the inspiration to this, and some handy implementation hints, came.
       }
     }
 
+    function showMenu() {
+      document.getElementById('menu').style.display = 'block';
+    }
+
+    function hideMenu() {
+      document.getElementById('menu').style.display = 'none';
+    }
+    hideMenu();
+
     document.addEventListener('keydown', function(e){
       if(e.keyCode == 83 && (e.ctrlKey || e.metaKey)){
         e.preventDefault();
-        save();
+        showMenu();
         return false;
       }
     })
@@ -260,9 +362,6 @@ the inspiration to this, and some handy implementation hints, came.
       update(editor);
       editor.focus();
     }
-
-    var GoSquared = { acct: 'GSN-265185-D' };
   </script>
-  <script src="//d1l6p2sc9645hc.cloudfront.net/tracker.js" async></script>
 </body>
 </html>
