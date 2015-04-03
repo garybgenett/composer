@@ -3575,6 +3575,10 @@ ifneq ($(BUILD_FETCH),0)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(MAKE_DST_INIT)/config)
 	$(call MAKE_BUILD,$(MAKE_DST_INIT))
+ifeq ($(BUILD_PLAT),Msys)
+	# "$(BUILD_PLAT),Msys" doesn't play nice with older versions
+	$(RM) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/make"
+endif
 	@$(call BUILD_COMPLETE)
 endif
 
