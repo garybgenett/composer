@@ -2,9 +2,8 @@
 % Gary B. Genett
 % v2.0.beta6 (2015-04-02)
 
-## Composer CMS
-<!-- ############################################################### -->
-[Composer]: #composer-cms
+Composer CMS
+------------------------------------------------------------------------
 
 ![Composer Icon](icon.png "Composer Icon")
 "Creating Made Simple."
@@ -12,26 +11,8 @@
 * Homepage: [https://github.com/garybgenett/composer](https://github.com/garybgenett/composer)
 * [License]
 
-[License]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
-[Readme]: https://github.com/garybgenett/composer/blob/master/README.md
-
-[Make]: http://www.gnu.org/software/make
-[Pandoc]: http://www.johnmacfarlane.net/pandoc
-[Markdown]: http://daringfireball.net/projects/markdown
-[LaTeX]: http://www.tug.org
-[GNU]: http://www.gnu.org
-[Coreutils]: http://www.gnu.org/software/coreutils
-
-[Wget]: https://www.gnu.org/software/wget
-[Git]: http://www.git-scm.com
-
-[Markdown Viewer]: https://github.com/Thiht/markdown-viewer
-[Reveal.js]: https://github.com/hakimel/reveal.js
-[W3C Slidy2]: http://www.w3.org/Talks/Tools/Slidy2
-
-<!-- ########################### -->
-## Contents
-[Contents]: #contents
+Contents
+------------------------------------
 
   * [Introduction]
     * [Overview]
@@ -43,13 +24,39 @@
     * [Dependencies]
     * [Caveats]
 
-<!-- ############################################################### -->
-# Introduction
-[Introduction]: #introduction
+[Composer]: #composer-cms
+[Contents]: #contents
 
-<!-- ########################### -->
-## Overview
+[Introduction]: #introduction
 [Overview]: #overview
+[Quick Start]: #quick-start
+[Goals]: #goals
+[Details]: #details
+[Compatibility]: #compatibility
+[Versioning]: #versioning
+[Dependencies]: #dependencies
+[Caveats]: #caveats
+
+[License]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
+[Readme]: https://github.com/garybgenett/composer/blob/master/README.md
+
+[Coreutils]: http://www.gnu.org/software/coreutils
+[GNU]: http://www.gnu.org
+[Git]: http://www.git-scm.com
+[LaTeX]: http://www.tug.org
+[Make]: http://www.gnu.org/software/make
+[Markdown Viewer]: https://github.com/Thiht/markdown-viewer
+[Markdown]: http://daringfireball.net/projects/markdown
+[Pandoc]: http://www.johnmacfarlane.net/pandoc
+[Reveal.js]: https://github.com/hakimel/reveal.js
+[W3C Slidy2]: http://www.w3.org/Talks/Tools/Slidy2
+[Wget]: https://www.gnu.org/software/wget
+
+Introduction
+========================================================================
+
+Overview
+------------------------------------
 
 [Composer] is a simple but powerful CMS based on [Pandoc] and [Make].
 By default, input files are written in a variation of [Markdown].
@@ -67,9 +74,8 @@ This is the goal of [Composer].
 
 ![Composer Screenshot](screenshot.png "Composer Screenshot")
 
-<!-- ########################### -->
-## Quick Start
-[Quick Start]: #quick-start
+Quick Start
+------------------------------------
 
 [Composer] is completely self-documenting.  To get the full usage and
 help output:
@@ -91,9 +97,8 @@ of output content (websites, manuals/documentation, etc.).
 
 The [Readme] and [License] also serve as example source files.
 
-<!-- ########################### -->
-## Goals
-[Goals]: #goals
+Goals
+------------------------------------
 
 [Composer] is really nothing more than a [Make]-based wrapper to
 [Pandoc].  The author started out with the following requirements for an
@@ -157,13 +162,11 @@ accomplish the original goals with a minimum amount of user knowledge
 and expertise, and to provide a solid foundation for simplified
 management of larger content production efforts.
 
-<!-- ############################################################### -->
-# Details
-[Details]: #details
+Details
+========================================================================
 
-<!-- ########################### -->
-## Compatibility
-[Compatibility]: #compatibility
+Compatibility
+------------------------------------
 
 [Composer] is developed and tested on a Funtoo/Gentoo [GNU]/Linux
 system.  An effort has been made to do things in a portable way, but
@@ -192,9 +195,8 @@ whether your system will work as expected.  In particular, the `make
 test` command validates the proper functioning of all the supported
 features and uses of [Composer].
 
-<!-- ########################### -->
-## Versioning
-[Versioning]: #versioning
+Versioning
+------------------------------------
 
 [Composer] is not really revisioned into "releases" outside of the
 source code repository.  Each commit is tested using `make test` first,
@@ -203,9 +205,8 @@ so the latest source should always be ready for production.
 If you require greater assurance of stability, use a version of the
 source that is tagged with a version number.
 
-<!-- ########################### -->
-## Dependencies
-[Dependencies]: #dependencies
+Dependencies
+------------------------------------
 
 [Composer] was designed to have a minimum of external dependencies:
 
@@ -238,9 +239,8 @@ FreeBSD (with the [GNU] tools installed), should work just fine.  The
 biggest external dependency is [Pandoc] itself and the [LaTeX] system it
 uses to produce some of the output formats (namely PDF).
 
-<!-- ########################### -->
-## Caveats
-[Caveats]: #caveats
+Caveats
+------------------------------------
 
 There are a couple important items to be aware of when using [Composer]:
 
@@ -296,7 +296,3 @@ does add value, which this author guesses is likely true for many.
 
 The author encourages the reader to review the [Goals] section and
 decide for themselves if [Composer] will be beneficial for their needs.
-
-<!-- ############################################################### -->
-<!-- End Of File -->
-<!-- ############################################################### -->
