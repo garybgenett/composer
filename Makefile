@@ -234,12 +234,8 @@ override RUNMAKE			:= $(MAKE) --makefile "$(COMPOSER_SRC)"
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
-#WORK : turn remaining targets into variables, as well...
-# grep "[.]PHONY" Makefile
-# grep "[.]set_title-" Makefile
-
-override ___WORK			:= .make_database
-override ___WORK			:= .all_targets
+override MAKE_DB			:= .make_database
+override LISTING			:= .all_targets
 
 override NOTHING			:= NULL
 
@@ -269,12 +265,12 @@ override CONVICT			:= _commit
 override RELEASE			:= _release
 override DISTRIB			:= _dist
 
-override ___WORK			:= all
-override ___WORK			:= clean
-override ___WORK			:= whoami
-override ___WORK			:= settings
-override ___WORK			:= subdirs
-override ___WORK			:= print
+override DOITALL			:= all
+override CLEANER			:= clean
+override WHOWHAT			:= whoami
+override SETTING			:= settings
+override SUBDIRS			:= subdirs
+override PRINTER			:= print
 
 override COMPOSER_ABSPATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= $(~)(abspath $(~)(COMPOSER_ABSPATH)/../$(MAKEFILE))
@@ -1856,8 +1852,8 @@ override EXAMPLE_OUTPUT	:= Users_Guide
 #	also to: https://stackoverflow.com/questions/3063507/list-goals-targets-in-gnu-make
 #	also to: http://backreference.org/2010/05/31/working-with-blocks-in-sed
 
-.PHONY: .make_database
-.make_database:
+.PHONY: $(MAKE_DB)
+$(MAKE_DB):
 	@$(RUNMAKE) \
 		--silent \
 		--question \
@@ -1866,9 +1862,9 @@ override EXAMPLE_OUTPUT	:= Users_Guide
 		--no-builtin-variables \
 		: 2>/dev/null | $(CAT)
 
-.PHONY: .all_targets
-.all_targets:
-	@$(RUNMAKE) --silent .make_database 2>/dev/null | \
+.PHONY: $(LISTING)
+$(LISTING):
+	@$(RUNMAKE) --silent $(MAKE_DB) 2>/dev/null | \
 		$(SED) -n -e "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" | \
 		$(SED) -n -e "/^$(COMPOSER_ALL_REGEX)[:]/p" | \
 		$(SORT)
@@ -1898,12 +1894,12 @@ override .ALL_TARGETS := \
 	$(CHECKIT)[:] \
 	$(TIMERIT)[:] \
 	$(SHELLIT)[:-] \
-	all[:] \
-	clean[:] \
-	whoami[:] \
-	settings[:] \
-	subdirs[:] \
-	print[:]
+	$(DOITALL)[:] \
+	$(CLEANER)[:] \
+	$(WHOWHAT)[:] \
+	$(SETTING)[:] \
+	$(SUBDIRS)[:] \
+	$(PRINTER)[:]
 
 .set_title-%:
 ifneq ($(COMPOSER_ESCAPES),)
@@ -2013,7 +2009,7 @@ HELP_OPTIONS_SUB:
 	@$(TABLE_I3) "$(_C)COMPOSER_FILES$(_D)"		"List for '$(REPLICA)' target"	"[$(_M)$(COMPOSER_FILES)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Recursion Options:"
-	@$(TABLE_I3) "$(_C)COMPOSER_TARGETS$(_D)"	"Target list for 'all'"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
+	@$(TABLE_I3) "$(_C)COMPOSER_TARGETS$(_D)"	"Target list for '$(DOITALL)'"	"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_SUBDIRS$(_D)"	"Sub-directories list"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
 	@$(TABLE_I3) "$(_C)COMPOSER_DEPENDS$(_D)"	"Sub-directory dependency"	"[$(_M)$(COMPOSER_DEPENDS)$(_D)] $(_N)(valid: empty or 1)"
 	@$(TABLE_I3) "$(_C)COMPOSER_DEBUGIT$(_D)"	"Modifies '$(DEBUGIT)' target"	"[$(_M)$(COMPOSER_DEBUGIT)$(_D)] $(_N)(valid: any target)"
@@ -2062,9 +2058,9 @@ HELP_TARGETS:
 	@$(TABLE_I3) "$(_C)$(COMPOSER_TARGET)$(_D)"	"Main target used to build/format documents"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Helper Targets:"
-	@$(TABLE_I3) "$(_C)all$(_D)"			"Create all of the default output formats or configured targets"
-	@$(TABLE_I3) "$(_C)clean$(_D)"			"Remove all of the default output files or configured targets"
-	@$(TABLE_I3) "$(_C)print$(_D)"			"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
+	@$(TABLE_I3) "$(_C)$(DOITALL)$(_D)"		"Create all of the default output formats or configured targets"
+	@$(TABLE_I3) "$(_C)$(CLEANER)$(_D)"		"Remove all of the default output files or configured targets"
+	@$(TABLE_I3) "$(_C)$(PRINTER)$(_D)"		"List all source files newer than the '$(COMPOSER_STAMP)' timestamp file"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Diagnostic Targets:"
 	@$(TABLE_I3) "$(_C)$(DEBUGIT)$(_D)"		"Runs several key sub-targets and commands, to provide all helpful information in one place"
@@ -2098,21 +2094,21 @@ HELP_TARGETS_SUB:
 	@$(ESCAPE) "These are all the rest of the sub-targets used by the main targets above:"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Dynamic Sub-Targets:"
-	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)$(_D)"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
-	@$(TABLE_I3) "$(_C)clean$(_D):"			"$(_E)$(~)(COMPOSER_TARGETS)-clean$(_D)"	"[$(_M)$(addsuffix -clean,$(COMPOSER_TARGETS))$(_D)]"
-	@$(TABLE_I3) "$(_C)subdirs$(_D):"		"$(_E)$(~)(COMPOSER_SUBDIRS)$(_D)"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
+	@$(TABLE_I3) "$(_C)$(DOITALL)$(_D):"		"$(_E)$(~)(COMPOSER_TARGETS)$(_D)"		"[$(_M)$(COMPOSER_TARGETS)$(_D)]"
+	@$(TABLE_I3) "$(_C)$(CLEANER)$(_D):"		"$(_E)$(~)(COMPOSER_TARGETS)-$(CLEANER)$(_D)"	"[$(_M)$(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))$(_D)]"
+	@$(TABLE_I3) "$(_C)$(SUBDIRS)$(_D):"		"$(_E)$(~)(COMPOSER_SUBDIRS)$(_D)"		"[$(_M)$(COMPOSER_SUBDIRS)$(_D)]"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Hidden Sub-Targets:"
 	@$(TABLE_I3) "$(_C)$(_N)%$(_D):"		"$(_E).set_title-$(_N)*$(_D)"			"Set window title to current target using escape sequence"
-	@$(TABLE_I3) "$(_C)$(DEBUGIT)$(_D):"		"$(_E).make_database$(_D)"			"Output internal Make database, based on current '$(MAKEFILE)'"
-	@$(TABLE_I3) "$(_C)$(TARGETS)$(_D):"		"$(_E).all_targets$(_D)"			"Dynamically parse and print all potential targets"
+	@$(TABLE_I3) "$(_C)$(DEBUGIT)$(_D):"		"$(_E)$(MAKE_DB)$(_D)"				"Output internal Make database, based on current '$(MAKEFILE)'"
+	@$(TABLE_I3) "$(_C)$(TARGETS)$(_D):"		"$(_E)$(LISTING)$(_D)"				"Dynamically parse and print all potential targets"
 	@$(TABLE_I3) "$(_C)$(EXAMPLE)$(_D):"		"$(_E).$(EXAMPLE)$(_D)"				"Prints raw template, with escape sequences"
 	@$(ECHO) "\n"
 	@$(ESCAPE) "$(_H)Static Sub-Targets:"
 	@$(TABLE_I3) "$(_C)$(COMPOSER_TARGET)$(_D):"	"$(_E)$(COMPOSER_PANDOC)$(_D)"			"Wrapper target which calls Pandoc directly"
-	@$(TABLE_I3) "$(_E)$(COMPOSER_PANDOC)$(_D):"	"$(_E)settings$(_D)"				"Prints marker and variable values, for readability"
-	@$(TABLE_I3) "$(_C)all$(_D):"			"$(_E)whoami$(_D)"				"Prints marker and variable values, for readability"
-	@$(TABLE_I3) ""					"$(_E)subdirs$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
+	@$(TABLE_I3) "$(_E)$(COMPOSER_PANDOC)$(_D):"	"$(_E)$(SETTING)$(_D)"				"Prints marker and variable values, for readability"
+	@$(TABLE_I3) "$(_C)$(DOITALL)$(_D):"		"$(_E)$(WHOWHAT)$(_D)"				"Prints marker and variable values, for readability"
+	@$(TABLE_I3) ""					"$(_E)$(SUBDIRS)$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
 	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D):"		"$(_E)$(ALLOFIT)-check$(_D)"			"Tries to proactively prevent common errors"
 	@$(TABLE_I3) ""					"$(_E)$(ALLOFIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
@@ -2201,7 +2197,7 @@ EXAMPLE_MAKEFILE_1:
 	@$(TABLE_C2) "$(_E)Simple, with filename targets and \"automagic\" detection of them:"
 	@$(TABLE_C2) "$(_S)include $(COMPOSER)"
 	@$(ESCAPE) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_TARGET)"
-	@$(ESCAPE) "$(_C)$(BASE)$(_D): $(_N)# so \"clean\" will catch the below files"
+	@$(ESCAPE) "$(_C)$(BASE)$(_D): $(_N)# so \"$(CLEANER)\" will catch the below files"
 	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)$(_D): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
 	@$(ESCAPE) "$(_C)$(EXAMPLE_SECOND).$(EXTENSION)$(_D):"
 	@$(ECHO) "\n"
@@ -2217,12 +2213,12 @@ EXAMPLE_MAKEFILE_2:
 	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)$(_D): $(BASE).$(COMPOSER_EXT) $(EXAMPLE_SECOND).$(COMPOSER_EXT)"
 	@$(ESCAPE) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_HTML)\""
 	@$(ESCAPE) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUTPUT)\" TYPE=\"$(TYPE_LPDF)\""
-	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)-clean$(_D):"
+	@$(ESCAPE) "$(_C)$(EXAMPLE_TARGET)-$(CLEANER)$(_D):"
 	@$(ESCAPE) "	$(~)(RM) $(EXAMPLE_OUTPUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
-	@$(ECHO) "#WORK : document this version of 'clean'?\n"
+	@$(ECHO) "#WORK : document this version of '$(CLEANER)'?\n"
 	@$(ECHO) "#WORK : make $(RELEASE)-debug\n"
-	@$(ESCAPE) "$(_C)clean$(_D): COMPOSER_TARGETS += $(notdir $(RELEASE_MAN_DST))"
-	@$(ESCAPE) "$(_C)clean$(_D): TYPE := latex"
+	@$(ESCAPE) "$(_C)$(CLEANER)$(_D): COMPOSER_TARGETS += $(notdir $(RELEASE_MAN_DST))"
+	@$(ESCAPE) "$(_C)$(CLEANER)$(_D): TYPE := latex"
 	@$(ESCAPE) "$(_C)$(notdir $(RELEASE_MAN_DST)):"
 	@$(ESCAPE) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(RELEASE_MAN_DST)).\"* ./"
 	@$(ECHO) "#WORK\n"
@@ -2231,7 +2227,7 @@ EXAMPLE_MAKEFILE_2:
 .PHONY: EXAMPLE_MAKEFILES_FOOTER
 EXAMPLE_MAKEFILES_FOOTER:
 	@$(TABLE_C2) "$(_E)Then, from the command line:"
-	@$(ESCAPE) "$(_M)make clean && make all"
+	@$(ESCAPE) "$(_M)make $(CLEANER) && make $(DOITALL)"
 	@$(ECHO) "\n"
 
 .PHONY: HELP_SYSTEM
@@ -2249,7 +2245,7 @@ HELP_SYSTEM:
 	@$(ESCAPE) "override $(_C)COMPOSER_ABSPATH$(_D) := $(_C)$(COMPOSER_ABSPATH)"
 	@$(ESCAPE) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(COMPOSER_TEACHER)"
 	@$(ESCAPE) "override $(_C)COMPOSER_SUBDIRS$(_D) ?="
-	@$(ESCAPE) "$(_C).DEFAULT_GOAL$(_D) := $(_C)all"
+	@$(ESCAPE) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
 	@$(ECHO) "\n"
 	@$(TABLE_C2) "$(_E)And end with:"
 	@$(ESCAPE) "include $(_C)$(~)(COMPOSER_TEACHER)"
@@ -2293,7 +2289,7 @@ EXAMPLE_MAKEFILE_FULL:
 	@$(TABLE_C2) "$(_E)$(INDENTING)* Use '?=' declarations and define *before* the upstream 'include' statement"
 	@$(TABLE_C2) "$(_E)$(INDENTING)* They pass their values *up* the '$(MAKEFILE)' chain"
 	@$(TABLE_C2) "$(_E)$(INDENTING)* Should always be defined, even if empty, to prevent downward propagation of values"
-	@$(TABLE_C2) "$(_N)(NOTE: List of 'all' targets is '$(COMPOSER_ALL_REGEX)' if '$(~)(COMPOSER_TARGETS)' is empty.)"
+	@$(TABLE_C2) "$(_N)(NOTE: List of '$(DOITALL)' targets is '$(COMPOSER_ALL_REGEX)' if '$(~)(COMPOSER_TARGETS)' is empty.)"
 	@$(ESCAPE) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE).$(EXTENSION) $(EXAMPLE_SECOND).$(EXTENSION)"
 	@$(ESCAPE) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
 	@$(ESCAPE) "override $(_C)COMPOSER_DEPENDS$(_D) ?= $(_C)$(COMPOSER_DEPENDS)"
@@ -2328,10 +2324,10 @@ EXAMPLE_MAKEFILE_FULL:
 	@$(ESCAPE) "include $(_C)$(~)(COMPOSER_TEACHER)"
 	@$(TABLE_C2) ""
 	@$(TABLE_C2) "$(_E)For recursion to work, a default target needs to be defined:"
-	@$(TABLE_C2) "$(_E)$(INDENTING)* Needs to be 'all' for directories which must recurse into sub-directories"
-	@$(TABLE_C2) "$(_E)$(INDENTING)* The 'subdirs' target can be used manually, if desired, so this can be changed to another value"
-	@$(TABLE_C2) "$(_N)(NOTE: Recursion will cease if not 'all', unless 'subdirs' target is called.)"
-	@$(ESCAPE) "$(_C).DEFAULT_GOAL$(_D) := $(_C)all"
+	@$(TABLE_C2) "$(_E)$(INDENTING)* Needs to be '$(DOITALL)' for directories which must recurse into sub-directories"
+	@$(TABLE_C2) "$(_E)$(INDENTING)* The '$(SUBDIRS)' target can be used manually, if desired, so this can be changed to another value"
+	@$(TABLE_C2) "$(_N)(NOTE: Recursion will cease if not '$(DOITALL)', unless '$(SUBDIRS)' target is called.)"
+	@$(ESCAPE) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
 	@$(ECHO) "\n"
 	@$(TABLE_C2) "$(_H)$(MARKER) RECURSION"
 	@$(TABLE_C2) "$(_E)Dependencies can be specified, if needed:"
@@ -2365,7 +2361,7 @@ EXAMPLE_MAKEFILE_FULL:
 	@$(ECHO) "\n"
 	@$(TABLE_C2) "$(_H)$(MARKER) INCLUDE"
 	@$(ESCAPE) "include $(_C)$(~)(COMPOSER_TEACHER)"
-	@$(ESCAPE) "$(_C).DEFAULT_GOAL$(_D) := $(_C)all"
+	@$(ESCAPE) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
 	@$(ECHO) "\n"
 	@$(TABLE_C2) "$(_H)$(MARKER) MAKEFILE"
 	@$(TABLE_C2) "$(_N)(Contents of file go here.)"
@@ -2427,7 +2423,7 @@ $(DEBUGIT): .set_title-$(DEBUGIT)
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H) Make Database Dump"
 	@$(HEADER_1)
-	@$(call DEBUGIT_TARGET,.make_database)
+	@$(call DEBUGIT_TARGET,$(MAKE_DB))
 	@$(call DEBUGIT_LISTING,NULL,DIR)
 	@$(call DEBUGIT_LISTING,DIR,OTHER)
 	@$(call DEBUGIT_LISTING,OTHER,ABODE)
@@ -2467,18 +2463,18 @@ $(TARGETS): .set_title-$(TARGETS)
 	@$(TABLE_I3) "$(_H)Targets$(_D) $(DIVIDE) $(_M)$(COMPOSER_SRC)"
 	@$(HEADER_L)
 	@$(ECHO) "$(_C)"
-	@$(RUNMAKE) --silent .all_targets | $(SED) \
+	@$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		$(foreach FILE,$(.ALL_TARGETS),\
 			-e "/^$(FILE)/d" \
 		) \
 		-e "/^[^:]*[.]$(COMPOSER_EXT)[:]/d" \
 		-e "/^$$/d"
 	@$(HEADER_L)
-	@$(TABLE_I3) "$(_H)$(MARKER) all";	$(ECHO) "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
-	@$(TABLE_I3) "$(_H)$(MARKER) clean";	$(ECHO) "$(addsuffix -clean,$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | $(SORT)
-	@$(TABLE_I3) "$(_H)$(MARKER) subdirs";	$(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]|\n|g" | $(SORT)
+	@$(TABLE_I3) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"					| $(SED) "s|[ ]|\n|g" | $(SORT)
+	@$(TABLE_I3) "$(_H)$(MARKER) $(CLEANER)"; $(ECHO) "$(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))"	| $(SED) "s|[ ]|\n|g" | $(SORT)
+	@$(TABLE_I3) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"					| $(SED) "s|[ ]|\n|g" | $(SORT)
 	@$(HEADER_L)
-	@$(RUNMAKE) --silent print
+	@$(RUNMAKE) --silent $(PRINTER)
 
 ########################################
 
@@ -2842,8 +2838,8 @@ override BUILD_CLEAN_DIRS := $(sort \
 	"$(COMPOSER_BUILD)" \
 	"$(COMPOSER_PROGS)" \
 )
-.PHONY: $(BUILDIT)-clean
-$(BUILDIT)-clean: .set_title-$(BUILDIT)-clean
+.PHONY: $(BUILDIT)-$(CLEANER)
+$(BUILDIT)-$(CLEANER): .set_title-$(BUILDIT)-$(CLEANER)
 	@$(LS) -d $(BUILD_CLEAN_DIRS) 2>/dev/null || $(TRUE)
 	@$(RM) -r $(BUILD_CLEAN_DIRS)
 
@@ -4757,7 +4753,7 @@ $(RELEASE)-chroot: .set_title-$(RELEASE)-chroot
 	@$(call DEBUGIT_CONTENTS,$(RELEASE_DIR)/$(RELEASE_TARGET)/$(COMPOSER_SETTINGS))
 	@$(HEADER_L)
 	@$(ECHO) "\n"
-	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-clean ; make $(ALLOFIT) ; make $(DISTRIB)"
+	@$(TABLE_I3) "$(_C)# cd / ; make $(BUILDIT)-$(CLEANER) ; make $(ALLOFIT) ; make $(DISTRIB)"
 	@$(ECHO) "\n"
 	@$(foreach FILE,$(RELEASE_CHROOT_MOUNTS),$(UMOUNT) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE) || $(TRUE);)
 	@$(foreach FILE,$(RELEASE_CHROOT_MOUNTS),$(MOUNT) --bind /$(FILE) $(RELEASE_DIR)/$(RELEASE_TARGET)/$(FILE);)
@@ -4795,7 +4791,7 @@ $(RELEASE)-debug: .set_title-$(RELEASE)-debug
 	@$(BUILD_ENV) $(PDFLATEX) "$(RELEASE_MAN_DST).latex"
 	# test conversion of the full Pandoc manual syntax into our primary document types
 	@$(RM) "$(RELEASE_MAN_DST).pdf"
-	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(CURDIR)"		all \
+	@$(RUNMAKE) COMPOSER_PROGS_USE="1" BUILD_DIST="1" BUILD_PLAT="Linux"	COMPOSER_OTHER="$(CURDIR)"		$(DOITALL) \
 		BASE="$(RELEASE_MAN_DST)"
 
 override DIST_ICO		:= AAABAAEAEBACAAEAAQCwAAAAFgAAACgAAAAQAAAAIAAAAAEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAGA8AAAwZgAAGMIAAAzAAAAGwAAADMAAABjAAAAwwgAAYGYAAAA8AAAAAAAAAAAAAAAAAAD//wAA//8AAA+BAAAHAAAAAgAAAIAAAADAGAAA4B8AAMAfAACAGAAAAgAAAAYAAAAPAAAA/4EAAP//AAD//wAA
@@ -4827,7 +4823,7 @@ $(DISTRIB): .set_title-$(DISTRIB)
 			"$(CURDIR)/Composer.bat" \
 			"$(CURDIR)/Composer.sh"; \
 		$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE); \
-		$(RUNMAKE) --directory "$(CURDIR)" all; \
+		$(RUNMAKE) --directory "$(CURDIR)" $(DOITALL); \
 	fi
 
 override define HEREDOC_DISTRIB_GITIGNORE =
@@ -5296,18 +5292,18 @@ endef
 
 ########################################
 
-.PHONY: all
-all: .set_title-all
+.PHONY: $(DOITALL)
+$(DOITALL): .set_title-$(DOITALL)
 ifeq ($(COMPOSER_DEPENDS),)
-all: whoami
+$(DOITALL): $(WHOWHAT)
 else
-all: whoami subdirs
+$(DOITALL): $(WHOWHAT) $(SUBDIRS)
 endif
 ifneq ($(COMPOSER_TARGETS),$(BASE))
-all: \
+$(DOITALL): \
 	$(COMPOSER_TARGETS)
 else
-all: \
+$(DOITALL): \
 	$(BASE).$(TYPE_HTML) \
 	$(BASE).$(TYPE_LPDF) \
 	$(BASE).$(EXTN_PRES) \
@@ -5318,13 +5314,13 @@ all: \
 #>	$(BASE).$(EXTN_LINT)
 endif
 ifeq ($(COMPOSER_DEPENDS),)
-all: subdirs
+$(DOITALL): $(SUBDIRS)
 endif
 
-.PHONY: clean
-clean: .set_title-clean
-.PHONY: $(addsuffix -clean,$(COMPOSER_TARGETS))
-clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
+.PHONY: $(CLEANER)
+$(CLEANER): .set_title-$(CLEANER)
+.PHONY: $(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))
+$(CLEANER): $(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
 		$(RM) \
 			"$(FILE)" \
@@ -5340,8 +5336,8 @@ clean: $(addsuffix -clean,$(COMPOSER_TARGETS))
 	)
 	@$(RM) $(COMPOSER_STAMP)
 
-.PHONY: whoami
-whoami:
+.PHONY: $(WHOWHAT)
+$(WHOWHAT):
 	@$(HEADER_1)
 	@$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_C2) "$(_E)MAKEFILE_LIST$(_D)"		"[$(_N)$(MAKEFILE_LIST)$(_D)]"
@@ -5362,8 +5358,8 @@ whoami:
 	@$(TABLE_C2) "$(_C)OPT$(_D)"	"[$(_M)$(OPT)$(_D)]"
 	@$(HEADER_1)
 
-.PHONY: settings
-settings:
+.PHONY: $(SETTING)
+$(SETTING):
 	@$(HEADER_L)
 	@$(TABLE_I3) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"
 	@$(TABLE_I3) "$(_E)MAKEFILE_LIST$(_D)"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"
@@ -5381,14 +5377,14 @@ settings:
 	@$(TABLE_I3) "$(_C)OPT$(_D)"	"[$(_M)$(OPT)$(_D)]"
 	@$(HEADER_L)
 
-.PHONY: subdirs $(COMPOSER_SUBDIRS)
-subdirs: $(COMPOSER_SUBDIRS)
+.PHONY: $(SUBDIRS) $(COMPOSER_SUBDIRS)
+$(SUBDIRS): $(COMPOSER_SUBDIRS)
 $(COMPOSER_SUBDIRS):
 	@$(MAKE) --directory "$(CURDIR)/$(@)"
 
-.PHONY: print
-print: .set_title-print
-print: $(COMPOSER_STAMP)
+.PHONY: $(PRINTER)
+$(PRINTER): .set_title-$(PRINTER)
+$(PRINTER): $(COMPOSER_STAMP)
 $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 	@$(LS) $(?)
 
@@ -5396,7 +5392,7 @@ $(COMPOSER_STAMP): *.$(COMPOSER_EXT)
 
 #WORK : document!
 .PHONY: $(NOTHING)
-$(NOTHING): .set_title-$(NOTHING)
+$(NOTHING):
 	@$(ECHO) "\n"
 	@$(TABLE_I3) "$(_N)WARNING:"
 	@$(ECHO) "\n"
@@ -5419,7 +5415,7 @@ $(COMPOSER_TARGET): .set_title-$(COMPOSER_TARGET)
 $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(LIST) settings
+$(COMPOSER_PANDOC): $(LIST) $(SETTING)
 	@$(TABLE_I3) "$(_H)Shell:"		'$(_D)$(ENV)'
 	@$(TABLE_I3) "$(_H)Environment:"	'$(_D)$(OPTIONS_ENV)'
 	@$(TABLE_I3) "$(_H)Pandoc:"		'$(_D)$(PANDOC)'
