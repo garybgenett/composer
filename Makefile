@@ -143,7 +143,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0.beta6
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta7
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -943,6 +943,7 @@ override PACMAN_PACKAGES_LIST		:= \
 	mingw-w64-x86_64-gcc \
 	msys2-devel \
 	\
+	make \
 	curl
 
 #TODO : is cygwin-console-helper really needed?
@@ -2110,19 +2111,19 @@ HELP_TARGETS_SUB:
 	@$(TABLE_I3) ""					"$(_E)$(SUBDIRS)$(_D)"				"Aggregates/runs the 'COMPOSER_SUBDIRS' targets"
 	@$(TABLE_I3) "$(_C)$(INSTALL)$(_D):"		"$(_E)$(INSTALL)-dir$(_D)"			"Per-directory engine which does all the work"
 	@$(TABLE_I3) "$(_C)$(ALLOFIT)$(_D):"		"$(_E)$(ALLOFIT)-check$(_D)"			"Tries to proactively prevent common errors"
+#WORKING:NOW
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-init$(_D)"		"Installs/initializes MSYS2/MinGW-w64 environment (for Windows)"
+	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
+#WORKING:NOW
 	@$(TABLE_I3) ""					"$(_E)$(ALLOFIT)-bindir$(_D)"			"Copies compiled binaries to repository binaries directory"
 #WORK : ALLOFIT could maybe stand to be documented more completely...
 	@$(TABLE_I3) "$(_C)$(STRAPIT)$(_D):"		"$(_E)$(BUILDIT)-gnu-init$(_D)"			"Fetches current Gnu.org configuration files/scripts"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys$(_D)"			"Installs MSYS2 environment with MinGW-w64 (for Windows)"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-libs$(_D)"		"Build/compile of necessary libraries from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-util$(_D)"		"Build/compile of necessary utilities from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-tool$(_D)"		"Build/compile of helpful tools from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-group-core$(_D)"		"Build/compile of core tools from source archives"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-ghc-init$(_D)"			"Build/complie of GHC from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-cabal-init$(_D)"		"Build/complie of Cabal from source archive"
-	@$(TABLE_I3) "$(_E)$(BUILDIT)-msys$(_D):"	"$(_E)$(BUILDIT)-msys-base$(_D)"		"Installs/initializes base MSYS2/MinGW-w64 system"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-pkg$(_D)"			"Installs/updates MSYS2/MinGW-w64 packages"
-	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-msys-bin$(_D)"			"Copies needed MSYS2/MinGW-w64 binaries"
 	@$(TABLE_I3) "$(_E)$(BUILDIT)-group-libs$(_D):"	"$(_E)$(BUILDIT)-libiconv-init$(_D)"		"Build/compile of Libiconv (before Gettext) from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-gettext$(_D)"			"Build/compile of Gettext from source archive"
 	@$(TABLE_I3) ""					"$(_E)$(BUILDIT)-libiconv$(_D)"			"Build/compile of Libiconv (after Gettext) from source archive"
@@ -2691,18 +2692,6 @@ $(STRAPIT): .set_title-$(STRAPIT)
 	@$(call BUILD_COMPLETE,++)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
-#WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/$(BUILD_BINDIR)/pacman); update locations and documentation
-#	* [Composer.bat]
-#	* $(RUNMAKE) COMPOSER_PROGS_USE=0 BUILD_FETCH=0 $(BUILDIT)-msys
-#	* $(RUNMAKE) COMPOSER_PROGS_USE=0 BUILD_FETCH=0 $(SHELLIT)-msys
-#	* {in new window: pacman -S make}
-#	* {close all windows}
-#	* [.home/msys##/autorebase.bat]
-#	* [Composer.bat]
-#	* $(RUNMAKE) BUILD_FETCH=  $(BUILDIT)-msys
-#ifeq ($(BUILD_PLAT),Msys)
-#	$(RUNMAKE) $(BUILDIT)-msys
-#endif
 	$(RUNMAKE) $(BUILDIT)-group-libs
 	$(RUNMAKE) $(BUILDIT)-group-util
 	$(RUNMAKE) $(BUILDIT)-group-tool
@@ -2865,21 +2854,15 @@ ifneq ($(BUILD_FETCH),)
 	@$(call BUILD_COMPLETE)
 endif
 
-.PHONY: $(BUILDIT)-msys
-$(BUILDIT)-msys: .set_title-$(BUILDIT)-msy
-	@$(call BUILD_COMPLETE,++)
-	# call recursively instead of using dependencies, so we can track timestamps
-ifneq ($(BUILD_FETCH),)
-	$(RUNMAKE) $(BUILDIT)-msys-base
-endif
-ifneq ($(BUILD_FETCH),0)
-	$(RUNMAKE) $(BUILDIT)-msys-pkg
-	$(RUNMAKE) $(BUILDIT)-msys-bin
-endif
-	@$(call BUILD_COMPLETE,--)
-
-.PHONY: $(BUILDIT)-msys-base
-$(BUILDIT)-msys-base: .set_title-$(BUILDIT)-msys-base
+#WORKING:NOW : fix and re-document all of this!
+#WORKING:NOW : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/$(BUILD_BINDIR)/pacman); update locations and documentation
+#	* [Composer.bat]
+#		* .composer_root
+#		* $(RUNMAKE) COMPOSER_PROGS_USE=0 $(BUILDIT)-msys-init
+#WORKING
+.PHONY: $(BUILDIT)-msys-init
+#WORKING:NOW $(BUILDIT)-msys-init: export MSYS2_ARG_CONV_EXCL := /grant:r
+$(BUILDIT)-msys-init: .set_title-$(BUILDIT)-msys-init
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
 	@$(HEADER_1)
@@ -2890,36 +2873,55 @@ $(BUILDIT)-msys-base: .set_title-$(BUILDIT)-msys-base
 	@$(TABLE_C2) "$(_N)Hit $(_C)ENTER$(_N) to proceed."
 	@$(HEADER_1)
 	@read -s -n1 ENTER
-	@$(RUNMAKE) --silent $(SHELLIT)-msys
+	@$(RUNMAKE) --silent COMPOSER_PROGS_USE=0 $(SHELLIT)-msys
 	@$(HEADER_1)
 	@$(TABLE_C2) "The shell window has been launched."
 	@$(TABLE_C2) "It should have processed to a command prompt, after which you typed '$(_M)exit$(_D)' and hit $(_M)ENTER$(_D)."
-	@$(TABLE_C2) "If everything was successful $(_E)(no errors above)$(_D), the build process can continue without interaction."
+	@$(TABLE_C2) "If everything was successful $(_E)(no errors above)$(_D), you can continue with the build process."
 	@$(TABLE_C2)
 	@$(TABLE_C2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
 	@$(HEADER_1)
 	@read -s -n1 ENTER
-	@cd "$(MSYS_DST)" && \
-		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f && \
-		./autorebase.bat
+	@$(call MSYS_REBASE)
+	@$(RUNMAKE) --silent COMPOSER_PROGS_USE=0 $(SHELLIT)-msys
+	@$(HEADER_1)
+	@$(TABLE_C2) "WORKING:NOW : .composer_root"
+	@$(TABLE_C2) "WORKING:NOW : $(PACMAN) make"
+	@$(TABLE_C2)
+	@$(TABLE_C2) "$(_N)Hit $(_C)ENTER$(_N) to proceed, or $(_C)CTRL-C$(_N) to quit."
+	@$(HEADER_1)
+	@read -s -n1 ENTER
+	@$(call MSYS_REBASE)
+	@$(HEADER_1)
+	@$(TABLE_C2) "WORKING:NOW : $(COMPOSER_BASENAME).bat"
+	@$(TABLE_C2) "WORKING:NOW : .composer_root"
+	@$(TABLE_C2) "WORKING:NOW : $(MAKE) $(BUILDIT)-$(CLEANER)"
+	@$(TABLE_C2) "WORKING:NOW : $(MAKE) $(BUILDIT)-msys"
+	@$(TABLE_C2) "WORKING:NOW : SAFE TO CLOSE THIS WINDOW; READY TO GO!"
+	@$(TABLE_C2) "WORKING:NOW : STILL NEED TO FIX THE EXTRA NEEDED REBASE AFTER PACMAN_BASE_LIST!"
+	@$(HEADER_1)
 	@$(call BUILD_COMPLETE)
 
-.PHONY: $(BUILDIT)-msys-pkg
-$(BUILDIT)-msys-pkg: .set_title-$(BUILDIT)-msys-pkg
+.PHONY: $(BUILDIT)-msys
+#WORKING:NOW $(BUILDIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
+$(BUILDIT)-msys: .set_title-$(BUILDIT)-msys
 	$(PACMAN_ENV) $(PACMAN) --refresh
 	$(PACMAN_ENV) $(PACMAN) $(PACMAN_BASE_LIST)
+	$(call MSYS_REBASE)
 	$(PACMAN_ENV) $(PACMAN_DB_UPGRADE)
 	$(PACMAN_ENV) $(PACMAN) --sysupgrade $(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
-	@$(call BUILD_COMPLETE)
-
-.PHONY: $(BUILDIT)-msys-bin
-$(BUILDIT)-msys-bin: .set_title-$(BUILDIT)-msys-bin
 	$(MKDIR) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"; \
 	)
 	@$(call BUILD_COMPLETE)
+
+override define MSYS_REBASE =
+	cd "$(MSYS_DST)" && \
+		$(WINDOWS_ACL) ./autorebase.bat /grant:r $(USERNAME):f && \
+		./autorebase.bat
+endef
 
 .PHONY: $(BUILDIT)-group-libs
 $(BUILDIT)-group-libs:  .set_title-$(BUILDIT)-group-libs
@@ -4363,15 +4365,13 @@ $(TIMERIT): override BUILD_COMPLETE_TIMERITS_FILES	:= $(shell $(call BUILD_COMPL
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:=
 ifeq ($(BUILD_PLAT),Msys)
 $(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= \
-	$(BUILDIT)-msys++ \
-		$(BUILDIT)-msys-base \
-		$(BUILDIT)-msys-pkg \
-		$(BUILDIT)-msys-bin \
-	$(BUILDIT)-msys--
+	$(BUILDIT)-msys-init \
+	$(BUILDIT)-msys
 endif
-$(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= $(BUILD_COMPLETE_TIMERITS) \
+$(TIMERIT): override BUILD_COMPLETE_TIMERITS		:= \
 	$(ALLOFIT)++ \
 	$(ALLOFIT)-check \
+	$(BUILD_COMPLETE_TIMERITS) \
 	$(STRAPIT)++ \
 		$(BUILDIT)-gnu-init \
 		$(BUILDIT)-group-libs++ \
@@ -4466,7 +4466,7 @@ endif
 
 .PHONY: $(SHELLIT)-msys
 $(SHELLIT)-msys: .set_title-$(SHELLIT)-msys
-$(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
+#WORKING:NOW $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 	@cd "$(MSYS_SHELL_DIR)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
@@ -4824,15 +4824,15 @@ $(DISTRIB): .set_title-$(DISTRIB)
 		$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>"$(CURDIR)/icon.png"; \
 		$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>"$(CURDIR)/screenshot.png"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_GITIGNORE))	>"$(CURDIR)/.gitignore"; \
-		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_BAT))	>"$(CURDIR)/Composer.bat"; \
-		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))	>"$(CURDIR)/Composer.sh"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_BAT))	>"$(CURDIR)/$(COMPOSER_BASENAME).bat"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))	>"$(CURDIR)/$(COMPOSER_BASENAME).sh"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_LICENSE))	>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_README))	>"$(CURDIR)/README.$(COMPOSER_EXT)"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_REVEALJS_CSS))	>"$(CURDIR)/revealjs.css"; \
 		$(CHMOD) \
 			"$(CURDIR)/$(MAKEFILE)" \
-			"$(CURDIR)/Composer.bat" \
-			"$(CURDIR)/Composer.sh"; \
+			"$(CURDIR)/$(COMPOSER_BASENAME).bat" \
+			"$(CURDIR)/$(COMPOSER_BASENAME).sh"; \
 		$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE); \
 		$(RUNMAKE) --directory "$(CURDIR)" $(DOITALL); \
 	fi
@@ -5312,8 +5312,8 @@ $(DOITALL): \
 	$(BASE).$(EXTN_PRES) \
 	$(BASE).$(EXTN_SHOW) \
 	$(BASE).$(TYPE_DOCX) \
-	$(BASE).$(TYPE_EPUB) \
-	$(BASE).$(EXTN_TEXT)
+	$(BASE).$(TYPE_EPUB)
+#>	$(BASE).$(EXTN_TEXT)
 #>	$(BASE).$(EXTN_LINT)
 endif
 ifeq ($(COMPOSER_DEPENDS),)
