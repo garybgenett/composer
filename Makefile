@@ -2692,6 +2692,14 @@ $(STRAPIT): .set_title-$(STRAPIT)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu-init
 #WORK : add this to $(ALLOFIT)-check as $(ALLOFIT)-msys, as a check of $MSYSTEM and whether root (/$(BUILD_BINDIR)/pacman); update locations and documentation
+#	* [Composer.bat]
+#	* $(RUNMAKE) COMPOSER_PROGS_USE=0 BUILD_FETCH=0 $(BUILDIT)-msys
+#	* $(RUNMAKE) COMPOSER_PROGS_USE=0 BUILD_FETCH=0 $(SHELLIT)-msys
+#	* {in new window: pacman -S make}
+#	* {close all windows}
+#	* [.home/msys##/autorebase.bat]
+#	* [Composer.bat]
+#	* $(RUNMAKE) BUILD_FETCH=  $(BUILDIT)-msys
 #ifeq ($(BUILD_PLAT),Msys)
 #	$(RUNMAKE) $(BUILDIT)-msys
 #endif
