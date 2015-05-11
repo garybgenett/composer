@@ -527,6 +527,12 @@ override BUILD_PLAT			:= Linux
 override BUILD_ARCH			:= i686
 override BUILD_BITS			:= 32
 override CHOST				:= $(BUILD_ARCH)-pc-linux-gnu
+else ifeq ($(BUILD_PLAT),Darwin)
+override BUILD_MSYS			:=
+override BUILD_PLAT			:= Darwin
+override BUILD_ARCH			:= i686
+override BUILD_BITS			:= 32
+override CHOST				:= $(BUILD_ARCH)-apple-darwin
 else ifeq ($(BUILD_PLAT),Msys)
 override BUILD_MSYS			:= 1
 override BUILD_PLAT			:= Msys
