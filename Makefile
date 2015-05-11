@@ -1370,6 +1370,7 @@ override UMOUNT				:= "$(call COMPOSER_FIND,$(PATH_LIST),umount)"
 override WINDOWS_ACL			:= "$(call COMPOSER_FIND,/c/Windows/SysWOW64 /c/Windows/System32 /c/Windows/System,icacls)"
 override PACMAN_ENV			:= "$(MSYS_DST)/$(BUILD_BINDIR)/env" - PATH="$(MSYS_DST)/$(BUILD_BINDIR)"
 override PACMAN_DB_UPGRADE		:= "$(MSYS_DST)/$(BUILD_BINDIR)/pacman-db-upgrade"
+override PACMAN_DB			:= "$(MSYS_DST)/$(BUILD_BINDIR)/pacman" --query
 override PACMAN				:= "$(MSYS_DST)/$(BUILD_BINDIR)/pacman" --verbose --noconfirm --sync --needed
 
 override MINTTY				:= "$(call COMPOSER_FIND,$(PATH_LIST),mintty)"
@@ -2861,7 +2862,6 @@ endif
 #		* $(RUNMAKE) COMPOSER_PROGS_USE=0 $(BUILDIT)-msys-init
 #WORKING
 .PHONY: $(BUILDIT)-msys-init
-#WORKING:NOW $(BUILDIT)-msys-init: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(BUILDIT)-msys-init: .set_title-$(BUILDIT)-msys-init
 	$(call CURL_FILE,$(MSYS_SRC))
 	$(call DO_UNTAR,$(MSYS_DST),$(MSYS_SRC))
@@ -2903,7 +2903,6 @@ $(BUILDIT)-msys-init: .set_title-$(BUILDIT)-msys-init
 	@$(call BUILD_COMPLETE)
 
 .PHONY: $(BUILDIT)-msys
-#WORKING:NOW $(BUILDIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(BUILDIT)-msys: .set_title-$(BUILDIT)-msys
 	$(PACMAN_ENV) $(PACMAN) --refresh
 	$(PACMAN_ENV) $(PACMAN) $(PACMAN_BASE_LIST)
@@ -2911,6 +2910,9 @@ $(BUILDIT)-msys: .set_title-$(BUILDIT)-msys
 	$(PACMAN_ENV) $(PACMAN_DB_UPGRADE)
 	$(PACMAN_ENV) $(PACMAN) --sysupgrade $(PACMAN_PACKAGES_LIST)
 	$(PACMAN_ENV) $(PACMAN) --clean
+	$(PACMAN_ENV) $(PACMAN_DB)		>"$(MSYS_DST)/.packages.txt"
+	$(PACMAN_ENV) $(PACMAN_DB) --groups	>"$(MSYS_DST)/.packages.groups.txt"
+	$(PACMAN_ENV) $(PACMAN_DB) --info	>"$(MSYS_DST)/.packages.info.txt"
 	$(MKDIR) "$(COMPOSER_ABODE)/$(BUILD_BINDIR)"
 	$(foreach FILE,$(MSYS_BINARY_LIST),\
 		$(CP) "$(MSYS_DST)/$(BUILD_BINDIR)/$(FILE)" "$(COMPOSER_ABODE)/$(BUILD_BINDIR)/"; \
@@ -4466,7 +4468,6 @@ endif
 
 .PHONY: $(SHELLIT)-msys
 $(SHELLIT)-msys: .set_title-$(SHELLIT)-msys
-#WORKING:NOW $(SHELLIT)-msys: export MSYS2_ARG_CONV_EXCL := /grant:r
 $(SHELLIT)-msys: $(SHELLIT)-bashrc $(SHELLIT)-vimrc
 	@cd "$(MSYS_SHELL_DIR)" && \
 		$(WINDOWS_ACL) ./msys2_shell.bat /grant:r $(USERNAME):f && \
@@ -4718,6 +4719,7 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
+	@$(RELEASE_CHROOT) /usr/bin/dpkg --list >"$(RELEASE_DIR)/$(RELEASE_TARGET)/.packages.txt"
 	@$(RELEASE_CHROOT) /usr/bin/dpkg --list linux-libc-dev	2>/dev/null | $(TAIL) -n1
 	@$(RELEASE_CHROOT) /usr/bin/dpkg --list libc-bin	2>/dev/null | $(TAIL) -n1
 	@$(RELEASE_CHROOT) /usr/bin/dpkg --list gcc		2>/dev/null | $(TAIL) -n1
@@ -4739,6 +4741,12 @@ endif
 ifneq ($(BUILD_FETCH),0)
 	@$(HEADER_1)
 	@$(ECHO) "$(_E)"
+	@$(RELEASE_CHROOT) /bin/bash -c "\
+		cd /var/db/pkg ; \
+		/usr/bin/find ./ -mindepth 2 -maxdepth 2 -type d | \
+		/bin/sed -r 's|[.][/]||g' | \
+		/usr/bin/sort \
+		" >"$(RELEASE_DIR)/$(RELEASE_TARGET)/.packages.txt"
 	@$(RELEASE_CHROOT) /bin/ls /var/db/pkg/sys-kernel	2>/dev/null | $(HEAD) -n1
 	@$(RELEASE_CHROOT) /usr/bin/ldd --version		2>/dev/null | $(HEAD) -n1
 	@$(RELEASE_CHROOT) /usr/bin/gcc --version		2>/dev/null | $(HEAD) -n1
