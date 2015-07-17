@@ -1,6 +1,7 @@
 # sh
 _CMS="${PWD}"
-_SYS="Linux"; [ -n "${MSYSTEM}" ] && _SYS="Msys"
+#WORKING:NOW : Darwin?
+_SYS="Linux"; [ "${TERM_PROGRAM}" == "Apple_Terminal" ] && _SYS="Darwin"; [ -n "${MSYSTEM}" ] && _SYS="Msys"
 _TAB="etc/fstab"
 _BIN="usr/bin"
 _ABD="${_CMS}/.home"

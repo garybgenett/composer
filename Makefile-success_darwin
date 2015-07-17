@@ -145,7 +145,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0.beta8
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta7
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
@@ -535,8 +535,7 @@ override CHOST				:= $(BUILD_ARCH)-pc-linux-gnu
 else ifeq ($(BUILD_PLAT),Darwin)
 override BUILD_MSYS			:=
 override BUILD_PLAT			:= Darwin
-override BUILD_ARCH			:= i686
-#WORKING:NOW override BUILD_ARCH			:= i386
+override BUILD_ARCH			:= i386
 override BUILD_BITS			:= 32
 override CHOST				:= $(BUILD_ARCH)-apple-darwin
 else ifeq ($(BUILD_PLAT),Msys)
