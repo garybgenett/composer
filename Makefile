@@ -148,7 +148,7 @@ override UNAME				:= "$(call COMPOSER_FIND,$(subst :, ,$(PATH)),uname)"
 
 ########################################
 
-override COMPOSER_VERSION_CURRENT	:= v2.0.beta8
+override COMPOSER_VERSION_CURRENT	:= v2.0.beta9
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION_CURRENT)
 
