@@ -2,6 +2,7 @@
 _CMS="${PWD}"
 #WORKING:NOW : Darwin?
 _SYS="Linux"; [ "${TERM_PROGRAM}" == "Apple_Terminal" ] && _SYS="Darwin"; [ -n "${MSYSTEM}" ] && _SYS="Msys"
+_MAK="make"; [ "${_SYS}" == "Darwin" ] && _MAK="gmake"
 _TAB="etc/fstab"
 _BIN="usr/bin"
 _ABD="${_CMS}/.home"
@@ -9,12 +10,12 @@ _PRG="${_CMS}/bin/Linux"
 if [ -e "${_ABD}/${_TAB}" ]; then
 PATH="${_ABD}/${_BIN}:${PATH}"
 _OPT=
-elif [ -e "${_ABD}/msys32/${_TAB}" ]; then
-PATH="${_ABD}/msys32/${_BIN}:${PATH}"
+elif [ -e "${_ABD}/msys64/${_TAB}" ]; then
+PATH="${_ABD}/msys64/${_BIN}:${PATH}"
 _OPT="0"
 elif [ -e "${_CMS}/bin/${_SYS}/${_TAB}" ]; then
 PATH="${_CMS}/bin/${_SYS}/${_BIN}:${PATH}"
 _OPT="1"
 fi
-exec make --makefile Makefile --debug="a" COMPOSER_PROGS_USE="${_OPT}" BUILD_PLAT="${_SYS}" BUILD_ARCH= shell
+exec ${_MAK} --makefile Makefile --debug="a" COMPOSER_PROGS_USE="${_OPT}" BUILD_PLAT="${_SYS}" BUILD_ARCH= shell
 # end of file

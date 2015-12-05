@@ -1,0 +1,113 @@
+﻿<!-- % Resume for Gary B. Genett -->
+<!-- % Gary B. Genett -->
+<!-- % v1.4 (2015-02-01) -->
+<!-- ############################################################### -->
+
+# Gary B. Genett
+
+[Composer]: https://github.com/garybgenett/composer
+[GaryOS]: http://sourceforge.net/projects/gary-os
+[DWM multimon]: http://dwm.suckless.org/patches/multimon
+
++--------------------+----------------------------------------------------------------------------+
+| Seattle WA, USA    | <http://garybgenett.net/resume.pdf> \| <me@garybgenett.net> \| 206-391-6606
++====================+===+
+| []()               | * GNU/Linux since 1999; Debian
+| ![](_profile.jpg)\ | * Shell scripting since 2000; vi editor, regular expressions
+|                    | * TCP/IP protocols since 2001; architecture, design, security, implementation, troubleshooting
+|                    | * Web applications since 2001; development, integration
+|                    | * Perl programming since 2003; automation, text manipulation, custom applications
+|                    | * F5 BIG-IP & iRules since 2004; deployment, customization, monitoring, system internals
+|                    | * Performance testing since 2005; methodology, results processing and documentation
+|                    | * Opensource projects and contributions:
+|                    |     * [Composer] -- simple but powerful CMS based on Pandoc and Make[^composer]
+|                    |     * [GaryOS] -- an entire GNU/Linux system in a single bootable file[^gary-os]
+| February, 2015     |     * [DWM multimon] -- patches to DWM, for working with multiple monitors[^dwm]
++--------------------+---+
+
+[^composer]: Composer on GitHub: <https://github.com/garybgenett/composer>
+[^gary-os]: GaryOS on SourceForge: <http://sourceforge.net/projects/gary-os>
+
+	Source code on GitHub: <https://github.com/garybgenett/gary-os>
+
+[^dwm]: DWM multimon patches: <http://dwm.suckless.org/patches/multimon>
+
+<!-- ########################### -->
+## F5 Networks, Seattle WA
+
+### Field Systems Engineer (Sales), 2007-2009
+  * Lead technical resource dedicated to Microsoft, directly supporting thousands of BIG-IPs in the largest publicly-known application environment in the world (MSN)
+  * Facilitated a triple in customer BIG-IP device count and quadruple in revenue with a double in the account team
+  * First two production deployments of revolutionary BIG-IP VIPRION chassis-based architecture
+  * Assist with network architecture, planning, provisioning and operations through consultation, training, documentation, custom configurations and iRule development
+  * Wrote comprehensive BIG-IP monitoring integration documentation and training materials for 3rd party development team
+  * Reverse-engineered and automated BIG-IP product installer to provide rapid provisioning
+  * Ensured publicly acknowledged success with BIG-IP at MSNBC[^msnbc]
+
+[^msnbc]: F5 MSNBC Case Study: <http://www.f5.com/pdf/case-studies/msnbc-election-day-cs.pdf>
+
+	Archived for posterity: <http://garybgenett.net/resume/msnbc-election-day-cs.pdf>
+
+### Product Management Engineer, 2005-2006
+  * First non-management member of team, helped define role and responsibilities
+  * Expert-level knowledge of BIG-IP design, architecture and internals through hands-on testing and constant interaction with product development
+  * Provide consultation and guidance to the executive team, product management, product development, services and sales in regards to company vision, product direction and inter-departmental processes, based on business and technical analysis of the marketplace
+  * Initial performance testing, competitive analysis and development guidance integrating three acquisition products (FirePass SSL VPN, WebAccelerator and WANJet Optimization)
+  * Authored internal BIG-IP performance testing document, later released publicly in conjunction with most comprehensive L4-L7 performance testing ever done[^performance]
+
+[^performance]: F5 Performance Testing Document: <http://devcentral.f5.com/downloads/f5/creating-performance-test-methodology.pdf>
+
+	Archived for posterity: <http://garybgenett.net/resume/creating-performance-test-methodology.pdf>
+
+### Network Support Engineer, 2004
+  * Built first shared lab environment and created web checkout system to manage BIG-IP devices for global accessibility
+  * Management go-to for situations requiring heightened attentiveness
+  * Expert-level consultation and support for BIG-IP as a single point of contact for internal and external customers
+  * Utilize knowledge and industry-standard tools to rapidly familiarize with new environments and resolve incidents in a logical and efficient manner
+  * Identification of BIG-IP product defects and escalation to development in the form of actionable documentation
+  * Diffuse heated situations and provided guidance; earn customer trust and ensure confidence in BIG-IP product capabilities
+
+<!-- ########################### -->
+## University of Washington, Seattle WA
+
+### Perl Programming, 2003-2004
+  * Modules, references and complex data structures, persistence, object oriented programming, relational databases, and web-services
+  * Designed and implemented a web-based application using object-oriented programming and SQL/XML to provide user-defined RSS news feed aggregation
+
+<!-- ########################### -->
+## MICROS Systems, Seattle WA
+
+### Implementation Specialist, 2001-2004
+  * Solely responsible for largest customers requiring UNIX-based systems
+  * Design and support mission-critical financial systems in a 24/7 environment
+  * Hands-on management of customer expectations and experience from pre-sales to ongoing support
+  * Increased revenue and customer loyalty by developing custom solutions using shell scripting, Perl, SQL and a proprietary scripting language unique to the products
+
+<!-- ########################### -->
+## HostPro, Bellevue WA
+
+### UNIX Tier 3 Support Specialist, 2001
+  * Maintain customer satisfaction and personal performance metrics in a high-volume 24/7 call center environment
+  * Increase customer understanding and proficiency managing and securing FreeBSD servers
+  * Provide guidance for customers creating web-based applications using various languages, including PHP, Perl and Python
+  * Enhance products and services by identifying design flaws and security issues, submitting feature requests, and writing documentation
+
+<!-- ########################### -->
+## VoiceStream Wireless, Bothell WA
+
+### Operations and Systems Production Support, 2000
+  * Ensure the integrity and 24/7 operation of all systems within the company
+  * Monitor and test client-facing services
+  * Pilot new services and report on functionality and ease-of-use
+
+<!-- ########################### -->
+## Seattle Central Community College, Seattle WA
+
+### Computer Programming, 2000
+  * Programming (UNIX, C/C++ and databases)
+  * Mathematics (Algebra, Geometry and Calculus)
+  * Hardware and networking
+
+<!-- ############################################################### -->
+###### exit(0);
+<!-- ############################################################### -->

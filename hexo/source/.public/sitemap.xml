@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://0.0.0.0:4000/2015/04/16/2015/2015-05-15T08-20-46-0700/</loc>
+    <lastmod>2015-07-24T15:44:51.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/projects/composer/README.html</loc>
+    <lastmod>2015-07-22T21:14:21.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/projects/composer/LICENSE.html</loc>
+    <lastmod>2015-07-22T21:08:06.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/projects/index.html</loc>
+    <lastmod>2015-07-14T20:19:42.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/404.html</loc>
+    <lastmod>2015-07-14T19:36:48.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/Test-page/index.html</loc>
+    <lastmod>2015-07-14T16:25:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/2015/07/14/Test-post/</loc>
+    <lastmod>2015-07-14T16:05:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/2015/07/14/Test-poster/</loc>
+    <lastmod>2015-07-14T16:05:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/2015/06/14/hello-world/</loc>
+    <lastmod>2015-07-14T16:05:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/projects/gary-os/README.html</loc>
+    <lastmod>2015-03-17T14:15:25.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/resume/index.html</loc>
+    <lastmod>2015-02-02T14:12:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/resume.html</loc>
+    <lastmod>2015-02-02T14:12:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/resume/resume.html</loc>
+    <lastmod>2015-02-02T14:12:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/resume/resume.html</loc>
+    <lastmod>2015-02-02T14:12:30.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://0.0.0.0:4000/projects/gary-os/LICENSE.html</loc>
+    <lastmod>2014-03-01T08:30:21.000Z</lastmod>
+  </url>
+  
+</urlset>
