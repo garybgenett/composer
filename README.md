@@ -1,6 +1,6 @@
 % Composer CMS: User Guide & Example File
 % Gary B. Genett
-% v2.0.beta7 (2015-05-10)
+% v2.0.beta8 (2015-12-04)
 
 Composer CMS
 ------------------------------------------------------------------------
@@ -238,6 +238,9 @@ Basically, any [GNU]-based system, such as [GNU]/Linux, Cygwin or
 FreeBSD (with the [GNU] tools installed), should work just fine.  The
 biggest external dependency is [Pandoc] itself and the [LaTeX] system it
 uses to produce some of the output formats (namely PDF).
+
+Officially, [Composer] is tested on [GNU]/Linux, Mac OS X and Windows (using
+the included MSYS2 tools).
 
 Caveats
 ------------------------------------

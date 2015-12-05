@@ -1,0 +1,31 @@
+title:		"Composer CMS v2.0.beta8: Hexo"
+subtitle:	a simple proof of concept
+description:	a brief summary
+author:		Gary B. Genett
+language:	en
+timezone:	US/Pacific
+
+url:		http://0.0.0.0:4000
+root:		/
+permalink:	:year/:month/:day/:title/
+date_format:	YYYY-MM-DD
+time_format:	HH:mm:ss
+per_page:	10
+
+theme:		landscape
+#WORKING:NOW source_dir:	/.g/_data/zactive/coding/composer/test.dir
+#WORKING:NOW public_dir:	/.g/_data/zactive/coding/composer/test.dir/.public
+skip_render: 
+	- CNAME
+
+sitemap:
+	path:	/sitemap.xml
+
+feed:
+	path:	/atom.xml
+	type:	atom
+	limit:	10
+
+deploy:
+	repo:	git@github.com:garybgenett/garybgenett.net.git
+	type:	git

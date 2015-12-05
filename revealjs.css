@@ -1,14 +1,17 @@
 @import url("./revealjs/css/theme/black.css");
 
 body {
-	background-image:	url("screenshot.png");
+	background-image:	url("./screenshot.png");
 	background-repeat:	no-repeat;
 	background-position:	98% 2%;
 	background-size:	auto 20%;
 }
 
 .reveal h1 {
-	font-size:	200%;
+	font-size:	160%;
+}
+.reveal h2 {
+	font-size:	140%;
 }
 
 .reveal h1,
