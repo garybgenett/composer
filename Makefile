@@ -851,7 +851,6 @@ override LDFLAGS			:=                             -L$(COMPOSER_ABODE)/lib
 override GHCFLAGS			:=	$(foreach FILE,$(CFLAGS),-optc$(FILE)) \
 						$(foreach FILE,$(CPPFLAGS),-optP$(FILE)) \
 						$(foreach FILE,$(LDFLAGS),-optl$(FILE))
-#WORKING:NOW override LD_LIBRARY_PATH		:= $(BUILD_LDLIB)/lib
 
 #WORKING:NOW # thanks for the 'mfpmath' fix below: http://cboard.cprogramming.com/c-programming/151085-unknown-type-name-__m128-not-enabled.html
 #WORKING:NOW : $(BUILD_PLAT),Darwin CFLAGS options
@@ -900,11 +899,14 @@ override CPPFLAGS_LDLIB			:= $(CPPFLAGS_LDLIB) $(CPPFLAGS)
 override LDFLAGS_LDLIB			:= $(LDFLAGS_LDLIB) $(LDFLAGS)
 override GHCFLAGS_LDLIB			:= $(GHCFLAGS_LDLIB) $(GHCFLAGS)
 
+#WORKING:NOW : http://trac.haskell.org/haskell-platform/report/1?format=rss&USER=anonymous
+#	http://trac.haskell.org/haskell-platform/ticket/216
+#	"$(BUILD_PLAT),Darwin" doesn't like the "libiconv" that we build
+#WORKING:NOW
+
 #WORKING:NOW :: reverse this; should default to not having, and manually add in for the two cases where it is needed
 override GHCFLAGS_SYSLIB_SUBST		= $(1)
 ifeq ($(BUILD_PLAT),Darwin)
-#WORKING:NOW override CFLAGS				:= -L/usr/lib $(CFLAGS)
-#WORKING:NOW override LDFLAGS			:= -L/usr/lib $(LDFLAGS)
 override GHCFLAGS			:= -optc-L/usr/lib -optl-L/usr/lib $(GHCFLAGS)
 override GHCFLAGS_LDLIB			:= -optc-L/usr/lib -optl-L/usr/lib $(GHCFLAGS_LDLIB)
 override GHCFLAGS_SYSLIB_SUBST		= $(if $(2),\
@@ -2001,32 +2003,6 @@ override define DO_GIT_SUBMODULE_GHC	=
 endef
 #ANTIQUATE
 
-#WORKING:NOW : static won't work on Darwin?
-#	https://developer.apple.com/library/mac/qa/qa1118/_index.html
-#		http://www.opensource.apple.com/source/Csu/Csu-79
-#	https://stackoverflow.com/questions/3801011/ld-library-not-found-for-lcrt0-o-on-osx-10-6-with-gcc-clang-static-flag
-#		http://www.cplusplus.com/forum/beginner/90152
-#		http://www.mitp0sh.de/?p=192
-#WORKING:NOW : LD_LIBRARY_PATH and $(BUILD_PLAT),Darwin
-#WORKING:NOW : http://trac.haskell.org/haskell-platform/report/1?format=rss&USER=anonymous
-#	http://trac.haskell.org/haskell-platform/ticket/216
-#ifeq ($(BUILD_PLAT),Darwin)
-#ifneq ($(GHC_PATH),$(COMPOSER_ABODE)/$(BUILD_BINDIR)/ghc)
-#override CFLAGS				:= -I/usr/include -L/usr/lib $(CFLAGS)
-#override CFLAGS_LDLIB			:= -I/usr/include -L/usr/lib $(CFLAGS_LDLIB)
-#override CFLAGS				:= -L/usr/lib $(CFLAGS)
-#override CFLAGS_LDLIB			:= -L/usr/lib $(CFLAGS_LDLIB)
-#override CPPFLAGS			:= -I/usr/include            $(CPPFLAGS)
-#override CPPFLAGS_LDLIB			:= -I/usr/include            $(CPPFLAGS_LDLIB)
-#override LDFLAGS			:=                -L/usr/lib $(LDFLAGS)
-#override LDFLAGS_LDLIB			:=                -L/usr/lib $(LDFLAGS_LDLIB)
-#override GHCFLAGS			:= -optc-I/usr/include -optc-L/usr/lib -optP-I/usr/include -optl-L/usr/lib $(GHCFLAGS)
-#override GHCFLAGS_LDLIB			:= -optc-I/usr/include -optc-L/usr/lib -optP-I/usr/include -optl-L/usr/lib $(GHCFLAGS_LDLIB)
-#override GHCFLAGS			:= -optl-L/usr/lib $(GHCFLAGS)
-#override GHCFLAGS_LDLIB			:= -optl-L/usr/lib $(GHCFLAGS_LDLIB)
-#endif
-#endif
-
 override HACKAGE_PULL			= $(call CURL_FILE,$(call HACKAGE_URL,$(1)))			$(call NEWLINE)$(ECHO)
 override HACKAGE_PREP			= $(call DO_UNTAR_CLEAN,$(2)/$(1),$(call HACKAGE_URL,$(1)))	$(call NEWLINE)$(ECHO)
 override DO_GHC_PKG			= $(BUILD_ENV_MINGW) $(GHC_PKG) --verbose --global --force
@@ -2114,49 +2090,6 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DATA)" $(PANDOC_OPTIONS)
 endif
 
 #WORK : better spot for this?
-#WORK : would be nice to fully understand why this breaks in a 32-bit chroot?
-#WORKING:NOW
-#override LD_LIBRARY_PATH_GHC_DIR	:=
-#ifneq ($(wildcard			    $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)/bin/ghc),)
-#override LD_LIBRARY_PATH_GHC_DIR	:=  $(COMPOSER_ABODE)/usr/lib/ghc-$(GHC_VER)
-#override LD_LIBRARY_PATH_GHC_BIN	:= "$(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc" "$(LD_LIBRARY_PATH_GHC_DIR)/bin/haddock"
-#else ifneq ($(wildcard			    $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)/bin/ghc),)
-#override LD_LIBRARY_PATH_GHC_DIR	:=  $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)
-#override LD_LIBRARY_PATH_GHC_BIN	:= "$(LD_LIBRARY_PATH_GHC_DIR)/bin/ghc" "$(LD_LIBRARY_PATH_GHC_DIR)/bin/haddock"
-#else ifneq ($(wildcard			    $(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2),)
-#override LD_LIBRARY_PATH_GHC_DIR	:=  $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)
-#override LD_LIBRARY_PATH_GHC_BIN	:= "$(GHC_DST_INIT)/ghc/stage2/build/tmp/ghc-stage2" "$(GHC_DST_INIT)/utils/haddock/dist/build/tmp/haddock"
-#endif
-#ifneq ($(LD_LIBRARY_PATH_GHC_DIR),)
-#ifeq ($(BUILD_PLAT),Darwin)
-#override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FILE,$(shell \
-#	otool -l $(LD_LIBRARY_PATH_GHC_BIN) 2>/dev/null \
-#		| $(SED) -n "/[@]loader[_]path/p" \
-#		| $(SED) \
-#			-e "s|^.*[@]loader[_]path[/][.][.]|$(LD_LIBRARY_PATH_GHC_DIR)|g" \
-#			-e "s|[ ][(]offset[ ].*[)]$$|\n|g" \
-#		| $(SORT) \
-#),:$(FILE)))
-#else
-#override LD_LIBRARY_PATH		:= $(LD_LIBRARY_PATH)$(subst $(NULL) :,:,$(foreach FILE,$(shell \
-#	readelf --dynamic $(LD_LIBRARY_PATH_GHC_BIN) 2>/dev/null \
-#		| $(SED) -n "/[(]R(UN)?PATH[)]/p" \
-#		| $(SED) \
-#			-e "s|^.*[ ]r(un)?path[:][ ][[](.*)[]]$$|\2|g" \
-#			-e "s|[$$]ORIGIN[/][.][.]|$(LD_LIBRARY_PATH_GHC_DIR)|g" \
-#			-e "s|[:]|\n|g" \
-#		| $(SORT) \
-#),:$(FILE)))
-#endif
-#endif
-#$(info WORKING:NOW)
-#$(info TEST  [$(wildcard $(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER_INIT)/bin/ghc)])
-#$(info GHCDIR[$(LD_LIBRARY_PATH_GHC_DIR)])
-#$(info GHCBIN[$(LD_LIBRARY_PATH_GHC_BIN)])
-#$(info LD_LIB[$(LD_LIBRARY_PATH)])
-#$(info WORKING:NOW)
-
-#WORK : better spot for this?
 ifeq ($(wildcard $(COMPOSER_TRASH)),)
 $(info $(shell $(MKDIR) "$(COMPOSER_TRASH)"))
 endif
@@ -2191,17 +2124,6 @@ override BUILD_ENV			:= $(BUILD_ENV_PANDOC) \
 	CPPFLAGS="$(CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
 	GHCFLAGS="$(GHCFLAGS)" \
-
-#WORKING:NOW	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)"
-#WORKING:NOW
-#ifeq ($(BUILD_PLAT),Darwin)
-#override BUILD_ENV			:= $(BUILD_ENV) \
-#	DYLD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" \
-#	DYLD_FALLBACK_LIBRARY_PATH="$(LD_LIBRARY_PATH)" \
-#	DYLD_BIND_AT_LAUNCH="1" \
-#	DYLD_PRINT_LIBRARIES="1" \
-#	DYLD_PRINT_LIBRARIES_POST_LAUNCH="1"
-#endif
 override BUILD_ENV_MINGW		:= $(BUILD_ENV)
 ifeq ($(BUILD_PLAT),Msys)
 override BUILD_ENV_MINGW		:= $(BUILD_ENV) \
@@ -3842,11 +3764,6 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR_CLEAN,$(COREUTILS_DST),$(COREUTILS_SRC))
-#WORKING:NOW
-#	# "$(BUILD_PLAT),Darwin" requires some patching
-#	$(SED) -i \
-#		-e "s|[-]Wl[,]([-]framework)|\1|g" \
-#		"$(COREUTILS_DST)/configure"
 #WORKING : if linux coreutils has buffering issues, it could be that this should be msys-specific
 	# "$(BUILD_PLAT),Msys" can't build dynamic libraries, so disabling "stdbuf" which requires "libstdbuf.so"
 	$(SED) -i \
@@ -4461,25 +4378,6 @@ ifneq ($(BUILD_FETCH),)
 endif
 ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR_CLEAN,$(GHC_DST_INIT),$(GHC_SRC_INIT))
-#WORKING:NOW
-#	$(SED) -i \
-#		-e "s|/bin/sh|$(MAKESHELL)|g" \
-#		"$(GHC_DST_INIT)/configure"
-#	$(SED) -i \
-#		-e "s|/bin/bash|$(MAKESHELL)|g" \
-#		"$(GHC_DST_INIT)/utils/ghc-cabal/dist-install/build/tmp/ghc-cabal-bindist" \
-#		"$(GHC_DST_INIT)/utils/ghc-pwd/dist-install/build/tmp/ghc-pwd-bindist"
-#WORKING:NOW
-#	@$(call BUILD_COMPLETE)
-#endif
-#	# call recursively instead of using dependencies, so that environment variables update
-#	# in particular, we need to update "$(LD_LIBRARY_PATH)" for the "$(BUILD_PLAT),Linux" and "$(BUILD_PLAT),Darwin" builds
-#	$(RUNMAKE) $(BUILDIT)-ghc-init-$(BUILDIT)
-#
-##WORKING : document!
-#.PHONY: $(BUILDIT)-ghc-init-$(BUILDIT)
-#$(BUILDIT)-ghc-init-$(BUILDIT): .set_title-$(BUILDIT)-ghc-init-$(BUILDIT)
-#ifneq ($(BUILD_FETCH),0)
 ifeq ($(BUILD_PLAT),Msys)
 	$(MKDIR) "$(BUILD_STRAP)/usr"
 	$(CP) "$(GHC_DST_INIT)/"* "$(BUILD_STRAP)/usr/"
@@ -4487,10 +4385,6 @@ else
 ifeq ($(BUILD_PLAT),Linux)
 	$(MKDIR) "$(BUILD_LDLIB)/lib"
 	$(CP) -L "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_LDLIB)/lib/libtinfo.so.5"
-#WORKING:NOW
-#	$(MKDIR) "$(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER)/bin-package-db-0.0.0.0"
-#	$(CP) -L "$(BUILD_LDLIB)/lib/libtinfo.so" "$(BUILD_STRAP)/usr/lib/ghc-$(GHC_VER)/bin-package-db-0.0.0.0/libtinfo.so.5"
-#WORKING:NOW
 endif
 	$(call AUTOTOOLS_BUILD_NOOPTION_MINGW,$(GHC_DST_INIT),$(BUILD_STRAP)/usr,,,\
 		show \
@@ -4584,43 +4478,6 @@ else
 		-e "s|([\"][$$]WithGhc[\"][ ])([$$]GHC[_]LDFLAGS[ ][-]v0)|\1$(GHCFLAGS) \2|g" \
 		"$(GHC_DST)/configure"
 	$(call DO_HEREDOC,$(call HEREDOC_GHC_BUILD_MK)) >"$(GHC_DST)/mk/build.mk"
-#WORKING:NOW
-#		$(if $(filter $(BUILD_PLAT),Darwin),CC="clang") \
-#		CFLAGS="$(if $(filter $(BUILD_PLAT),Darwin),-L/usr/lib) $(CFLAGS_LDLIB)" \
-#		LDFLAGS="$(if $(filter $(BUILD_PLAT),Darwin),-L/usr/lib) $(LDFLAGS_LDLIB)" \
-#		GHCFLAGS="$(if $(filter $(BUILD_PLAT),Darwin),\
-#			--gcc-option=-L/usr/lib \
-#			--ld-option=-L/usr/lib \
-#			--ghc-option=-optc-L/usr/lib \
-#			--ghc-option=-optl-L/usr/lib \
-#			--extra-lib-dirs=/usr/lib \
-#			) \
-#			$(GHCFLAGS_LDLIB)" \
-#		,\
-#		$(if $(filter $(BUILD_PLAT),Darwin),--with-iconv-includes="/usr/include") \
-#		$(if $(filter $(BUILD_PLAT),Darwin),--with-iconv-libraries="/usr/lib") \
-#WORKING:NOW
-#		CPPFLAGS="$(CPPFLAGS_LDLIB)" \
-#		EXTRA_CONFIGURE_OPTS="$(if $(filter $(BUILD_PLAT),Darwin),\
-#			--gcc-option=-L/usr/lib \
-#			--ld-option=-L/usr/lib \
-#			--ghc-option=-optc-L/usr/lib \
-#			--ghc-option=-optl-L/usr/lib \
-#			--extra-lib-dirs=/usr/lib \
-#			$(subst ",,$(call CABAL_OPTIONS_LDLIB,$(2)))" \
-#		) \
-#		--with-iconv-includes="/usr/include" \
-#		--with-iconv-libraries="/usr/lib" \
-#		--with-gmp-includes="$(BUILD_LDLIB)/include" \
-#		--with-gmp-libraries="$(BUILD_LDLIB)/lib" \
-#WORKING:NOW
-#> syntax highlighting fix: ")
-#WORKING:NOW
-#		$(if $(filter $(BUILD_PLAT),Darwin),--with-iconv-includes="/usr/include") \
-#		$(if $(filter $(BUILD_PLAT),Darwin),--with-iconv-libraries="/usr/lib") \
-#WORKING:NOW
-	# "$(BUILD_PLAT),Darwin" doesn't like the "libiconv" that we build
-#WORKING:NOW
 	$(call AUTOTOOLS_BUILD_NOOPTION_MINGW,$(GHC_DST),$(COMPOSER_ABODE)/usr,,,\
 		--jobs$(if $(BUILD_JOBS),=$(BUILD_JOBS)) \
 	)
@@ -4918,8 +4775,10 @@ endif
 # this list should be mirrored from "$(MSYS_BINARY_LIST)" and "$(BUILD_BINARY_LIST)"
 # for some reason, "$(BZIP)" hangs with the "--version" argument, so we'll use "--help" instead
 # "$(BZIP)" and "$(LESS)" use those environment variables as additional arguments, so they need to be empty
-#WORKING:NOW : LD_LIBRARY_PATH
-# "$(LDD)", "$(GHC)" and "$(CABAL)" require "$(LD_LIBRARY_PATH)" to find libraries, so we wrap them in "$(BUILD_ENV)"
+#WORKING:NOW
+# "$(LDD)", "$(GHC)" and "$(CABAL)" require "$(WORKING)" to find libraries, so we wrap them in "$(BUILD_ENV)"
+# VERIFY WHETHER THIS IS TRUE!
+#WORKING:NOW
 .PHONY: $(CHECKIT)
 $(CHECKIT): .set_title-$(CHECKIT)
 $(CHECKIT): override GLIBC_VERSIONS		:= $(GLIBC_CUR_VERSION)[$(LINUX_CUR_VERSION)] $(_D)($(_H)>=$(GLIBC_MIN_VERSION)[$(LINUX_MIN_VERSION)]$(_D))
@@ -5612,6 +5471,8 @@ override define HEREDOC_DISTRIB_GITIGNORE =
 $(subst $(COMPOSER_DIR),,$(TESTING_DIR))/
 #WORKING:NOW
 $(subst $(COMPOSER_DIR),,$(TESTING_DIR)).hexo/
+$(subst $(COMPOSER_DIR),,$(TESTING)).public/
+$(subst $(COMPOSER_DIR),,$(TESTING)).source/
 
 # $(UPGRADE) && $(BUILDIT)
 $(subst $(COMPOSER_OTHER),,$(COMPOSER_ABODE))/
