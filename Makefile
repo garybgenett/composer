@@ -3180,6 +3180,9 @@ $(ALLOFIT)-bindir: .set_title-$(ALLOFIT)-bindir
 #WORKING:NOW : need to sort out all $(BUILD_FSFILE) entries; this one is to make COMPOSER_SH work correctly
 	$(MKDIR) "$(dir $(COMPOSER_PROGS)/$(BUILD_FSFILE))"
 	$(DATESTAMP) >"$(COMPOSER_PROGS)/$(BUILD_FSFILE)"
+#WORKING:NOW : and another hack to make $(BUILD_PLAT),Darwin COMPOSER_SH work correctly
+	$(MKDIR) "$(dir $(COMPOSER_ABODE)/$(BUILD_FSFILE))"
+	$(DATESTAMP) >"$(COMPOSER_ABODE)/$(BUILD_FSFILE)"
 #WORKING:NOW
 ifeq ($(BUILD_PLAT),Msys)
 	$(call ALLOFIT_BINDIR_MSYS_MISC,$(COMPOSER_ABODE))
