@@ -1,8 +1,7 @@
 # sh
-_CMS="${PWD}"
-#WORKING:NOW : Darwin?
+_CMS="${PWD}"; [ "${TERM_PROGRAM}" == "Apple_Terminal" ] && _CMS="$(dirname ${0})" && cd "${_CMS}"
 _SYS="Linux"; [ "${TERM_PROGRAM}" == "Apple_Terminal" ] && _SYS="Darwin"; [ -n "${MSYSTEM}" ] && _SYS="Msys"
-_MAK="make"; [ "${_SYS}" == "Darwin" ] && _MAK="gmake"
+_MAK="make";
 _TAB="etc/fstab"
 _BIN="usr/bin"
 _ABD="${_CMS}/.home"
@@ -17,5 +16,5 @@ elif [ -e "${_CMS}/bin/${_SYS}/${_TAB}" ]; then
 PATH="${_CMS}/bin/${_SYS}/${_BIN}:${PATH}"
 _OPT="1"
 fi
-exec ${_MAK} --makefile Makefile --debug="a" COMPOSER_PROGS_USE="${_OPT}" BUILD_PLAT="${_SYS}" BUILD_ARCH= shell
+${_MAK} --makefile Makefile --debug="a" COMPOSER_PROGS_USE="${_OPT}" BUILD_PLAT="${_SYS}" BUILD_ARCH= shell
 # end of file
