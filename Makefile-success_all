@@ -3192,7 +3192,7 @@ $(BUILDIT): .set_title-$(BUILDIT)
 	# call recursively instead of using dependencies, so that environment variables update
 	$(RUNMAKE) $(BUILDIT)-gnu
 	$(RUNMAKE) $(BUILDIT)-make
-#WORKING:NOW Darwin	$(RUNMAKE) $(BUILDIT)-node
+	$(RUNMAKE) $(BUILDIT)-node
 	$(RUNMAKE) $(BUILDIT)-texlive
 	$(RUNMAKE) $(BUILDIT)-ghc
 	$(RUNMAKE) $(BUILDIT)-cabal
@@ -3255,6 +3255,10 @@ endif
 .PHONY: $(ALLOFIT)-bindir
 $(ALLOFIT)-bindir: .set_title-$(ALLOFIT)-bindir
 	$(MKDIR) "$(COMPOSER_PROGS)/$(BUILD_BINDIR)"
+#WORKING:NOW : need to sort out all $(BUILD_FSFILE) entries; this one is to make COMPOSER_SH work correctly
+	$(MKDIR) "$(dir $(COMPOSER_PROGS)/$(BUILD_FSFILE))"
+	$(DATESTAMP) >"$(COMPOSER_PROGS)/$(BUILD_FSFILE)"
+#WORKING:NOW
 ifeq ($(BUILD_PLAT),Msys)
 	$(call ALLOFIT_BINDIR_MSYS_MISC,$(COMPOSER_ABODE))
 	$(call ALLOFIT_BINDIR_MSYS_MISC,$(COMPOSER_PROGS))
@@ -4129,7 +4133,7 @@ ifneq ($(BUILD_FETCH),0)
 	$(call DO_UNTAR_CLEAN,$(BASH_DST),$(BASH_SRC),$(notdir $(BASH_DST))/ChangeLog)
 	# "$(BUILD_PLAT),Msys" requires "GNU_CFG_INSTALL"
 	$(call GNU_CFG_INSTALL,$(BASH_DST)/support)
-#WORKING:NOW
+#WORKING:NOW :: why does $(BUILD_PLAT),Darwin keep linking against system libncurses?
 #ifeq ($(BUILD_PLAT),Darwin)
 #	# "$(BUILD_PLAT),Darwin" requires some patching
 #	$(SED) -i \
@@ -5582,15 +5586,14 @@ $(DISTRIB): .set_title-$(DISTRIB)
 		$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>"$(CURDIR)/screenshot.png"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_GITIGNORE))	>"$(CURDIR)/.gitignore"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_BAT))	>"$(CURDIR)/$(COMPOSER_BASENAME).bat"; \
-		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))	>"$(CURDIR)/$(COMPOSER_BASENAME).sh"; \
-		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_TRM))	>"$(CURDIR)/$(COMPOSER_BASENAME).terminal"; \
+		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_COMPOSER_SH))	>"$(CURDIR)/$(COMPOSER_BASENAME).command"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_LICENSE))	>"$(CURDIR)/LICENSE.$(COMPOSER_EXT)"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_README))	>"$(CURDIR)/README.$(COMPOSER_EXT)"; \
 		$(call DO_HEREDOC,$(call HEREDOC_DISTRIB_REVEALJS_CSS))	>"$(CURDIR)/revealjs.css"; \
 		$(CHMOD) \
 			"$(CURDIR)/$(MAKEFILE)" \
 			"$(CURDIR)/$(COMPOSER_BASENAME).bat" \
-			"$(CURDIR)/$(COMPOSER_BASENAME).sh"; \
+			"$(CURDIR)/$(COMPOSER_BASENAME).command"; \
 		$(RUNMAKE) --directory "$(CURDIR)" $(UPGRADE); \
 		$(RUNMAKE) --directory "$(CURDIR)" $(DOITALL); \
 	fi
@@ -5657,10 +5660,9 @@ endef
 
 override define HEREDOC_DISTRIB_COMPOSER_SH =
 # sh
-_CMS="$${PWD}"
-#WORKING:NOW : Darwin?
+_CMS="$${PWD}"; [ "$${TERM_PROGRAM}" == "Apple_Terminal" ] && _CMS="$$(dirname $${0})" && cd "$${_CMS}"
 _SYS="Linux"; [ "$${TERM_PROGRAM}" == "Apple_Terminal" ] && _SYS="Darwin"; [ -n "$${MSYSTEM}" ] && _SYS="Msys"
-_MAK="make"; [ "$${_SYS}" == "Darwin" ] && _MAK="gmake"
+_MAK="make";
 _TAB="$(BUILD_FSFILE)"
 _BIN="$(BUILD_BINDIR)"
 _ABD="$(subst $(COMPOSER_OTHER),$${_CMS},$(COMPOSER_ABODE))"
@@ -5675,39 +5677,8 @@ elif [ -e "$${_CMS}/bin/$${_SYS}/$${_TAB}" ]; then
 PATH="$${_CMS}/bin/$${_SYS}/$${_BIN}:$${PATH}"
 _OPT="1"
 fi
-exec $${_MAK} --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" BUILD_ARCH= shell
+$${_MAK} --makefile $(MAKEFILE) --debug="a" COMPOSER_PROGS_USE="$${_OPT}" BUILD_PLAT="$${_SYS}" BUILD_ARCH= shell
 # end of file
-endef
-
-override define HEREDOC_DISTRIB_COMPOSER_TRM =
-<plist><dict>
-<key>name</key><string>Composer WORKING</string>
-<!-- Composer.sh :: echo ${BASH_VERSINFO[*]} | grep -i darwin
-<key>CommandString</key><string>/bin/bash -c /.composer/Composer.sh ; exit</string>
--->
-<key>CommandString</key><string>/bin/bash -c /.composer/Composer.sh</string>
-<key>RunCommandAsShell</key><false/>
-<key>shellExitAction</key><integer>1</integer>
-<key>type</key><string>Window Settings</string>
-<key>BackgroundColor</key><data>YnBsaXN0MDDUAQIDBAUGFRZYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKMHCA9VJG51bGzTCQoLDA0OV05TV2hpdGVcTlNDb2xvclNwYWNlViRjbGFzc00wIDAuODUwMDAwMDIAEAOAAtIQERITWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqISFFhOU09iamVjdF8QD05TS2V5ZWRBcmNoaXZlctEXGFRyb290gAEIERojLTI3O0FIUF1kcnR2e4aPl5qjtbi9AAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAAL8=</data>
-<key>TextColor</key><data>YnBsaXN0MDDUAQIDBAUGFRZYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKMHCA9VJG51bGzTCQoLDA0OV05TV2hpdGVcTlNDb2xvclNwYWNlViRjbGFzc0swLjk0NzU4MDY0ABADgALSEBESE1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiEhRYTlNPYmplY3RfEA9OU0tleWVkQXJjaGl2ZXLRFxhUcm9vdIABCBEaIy0yNztBSFBdZHBydHmEjZWYobO2uwAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAAC9</data>
-<key>TextBoldColor</key><data>YnBsaXN0MDDUAQIDBAUGFRZYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKMHCA9VJG51bGzTCQoLDA0OV05TV2hpdGVcTlNDb2xvclNwYWNlViRjbGFzc0IxABADgALSEBESE1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiEhRYTlNPYmplY3RfEA9OU0tleWVkQXJjaGl2ZXLRFxhUcm9vdIABCBEaIy0yNztBSFBdZGdpa3B7hIyPmKqtsgAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAAC0</data>
-<key>SelectionColor</key><data>YnBsaXN0MDDUAQIDBAUGFRZYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKMHCA9VJG51bGzTCQoLDA0OV05TV2hpdGVcTlNDb2xvclNwYWNlViRjbGFzc0swLjI1NDAzMjI1ABADgALSEBESE1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiEhRYTlNPYmplY3RfEA9OU0tleWVkQXJjaGl2ZXLRFxhUcm9vdIABCBEaIy0yNztBSFBdZHBydHmEjZWYobO2uwAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAAC9</data>
-<key>CursorColor</key><data>YnBsaXN0MDDUAQIDBAUGFRZYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKMHCA9VJG51bGzTCQoLDA0OVU5TUkdCXE5TQ29sb3JTcGFjZVYkY2xhc3NGMSAwIDAAEAGAAtIQERITWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqISFFhOU09iamVjdF8QD05TS2V5ZWRBcmNoaXZlctEXGFRyb290gAEIERojLTI3O0FITltiaWttcn2GjpGarK+0AAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAALY=</data>
-<key>columnCount</key><integer>80</integer>
-<key>rowCount</key><integer>30</integer>
-<key>Bell</key><false/>
-<key>ShowActiveProcessInTitle</key><false/>
-<key>ShowCommandKeyInTitle</key><true/>
-<key>ShowDimensionsInTitle</key><true/>
-<key>ShowShellCommandInTitle</key><false/>
-<key>ShowTTYNameInTitle</key><false/>
-<key>ShowWindowSettingsNameInTitle</key><false/>
-<key>VisualBell</key><false/>
-<key>VisualBellOnlyWhenMuted</key><false/>
-<key>scrollOnInput</key><true/>
-<key>useOptionAsMetaKey</key><true/>
-</dict></plist>
 endef
 
 override define HEREDOC_DISTRIB_LICENSE =
