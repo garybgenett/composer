@@ -1,11 +1,11 @@
 % Composer CMS: User Guide & Example File
 % Gary B. Genett
-% v2.0.beta9 (2015-12-16)
+% v2.0.beta9 (2019-07-25)
 
 Composer CMS
 ------------------------------------------------------------------------
 
-![Composer Icon](icon.png "Composer Icon")
+![Composer Icon](_artifacts/icon.png "Composer Icon")
 "Creating Made Simple."
 
 * Homepage: [https://github.com/garybgenett/composer](https://github.com/garybgenett/composer)
@@ -72,7 +72,7 @@ files into richer, more capable document types.
 
 This is the goal of [Composer].
 
-![Composer Screenshot](screenshot.png "Composer Screenshot")
+![Composer Screenshot](_artifacts/screenshot.png "Composer Screenshot")
 
 Quick Start
 ------------------------------------

@@ -20,9 +20,9 @@
       </nav>
       <nav id="sub-nav"><% if (theme.url_googleplus){ %><a id="nav-googleplus-link" class="nav-icon" href="<%- theme.url_googleplus %>" target="_blank"></a><% } %> <% if (theme.url_facebook){ %><a id="nav-facebook-link" class="nav-icon" href="<%- theme.url_facebook %>" target="_blank"></a><% } %> <% if (theme.url_linkedin){ %><a id="nav-linkedin-link" class="nav-icon" href="<%- theme.url_linkedin %>" target="_blank"></a><% } %> <% if (theme.url_twitter){ %><a id="nav-twitter-link" class="nav-icon" href="<%- theme.url_twitter %>" target="_blank"></a><% } %> <% if (theme.url_github){ %><a id="nav-github-link" class="nav-icon" href="<%- theme.url_github %>" target="_blank"></a><% } %>
         <% if (theme.rss){ %>
-          <a id="nav-rss-link" class="nav-icon" href="<%- theme.rss %>" title="RSS Feed"></a>
+          <a id="nav-rss-link" class="nav-icon" href="<%- theme.rss %>" title="<%= __('rss_feed') %>"></a>
         <% } %>
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        <a id="nav-search-btn" class="nav-icon" title="<%= __('search') %>"></a>
       </nav>
       <div id="search-form-wrap">
         <%- search_form({button: '&#xF002;'}) %>

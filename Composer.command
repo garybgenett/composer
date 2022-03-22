@@ -5,10 +5,14 @@ _MAK="make";
 _TAB="etc/fstab"
 _BIN="usr/bin"
 _ABD="${_CMS}/.home"
+#WORKING:MACP : need to convert to ${_SYS}, since Linux,Linux and Linux,Darwin are both using this (same with COMPOSER_BAT above)
 _PRG="${_CMS}/bin/Linux"
 if [ -e "${_ABD}/${_TAB}" ]; then
 PATH="${_ABD}/${_BIN}:${PATH}"
 _OPT=
+elif [ -e "${_ABD}/macports/${_TAB}" ]; then
+PATH="${_ABD}/macports/bin:${_ABD}/macports/libexec/gnubin:${PATH}"
+_OPT="0"
 elif [ -e "${_ABD}/msys64/${_TAB}" ]; then
 PATH="${_ABD}/msys64/${_BIN}:${PATH}"
 _OPT="0"

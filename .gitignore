@@ -11,8 +11,8 @@
 /test.dir/
 #WORKING:NOW
 /test.dir.hexo/
-/test.public/
-/test.source/
+test.public/
+test.source/
 
 # update && build
 /.home/
