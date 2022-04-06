@@ -452,7 +452,7 @@ override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --relative-to
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
-override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times
+override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
@@ -2415,17 +2415,11 @@ $(TESTING)-$(INSTALL):
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
 	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
-	@$(SED) -i \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_TARGETS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
-		$(TESTING_DIR)/$(COMPOSER_SETTINGS)
-	@sleep 2
 #WORKING:NOW
-#	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
-#	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS= $(DOITALL)-$(DOITALL)
+#	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+#	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS= $(DOITALL)-$(DOITALL)
 	exit 1
 
 .PHONY: $(TESTING)-$(INSTALL)-done
