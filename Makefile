@@ -2597,27 +2597,20 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 .PHONY: $(TESTING)-$(NOTHING)
 $(TESTING)-$(NOTHING):
 	@$(call $(TESTING)-$(HEADERS),\
-		$(NOTHING) ,\
-		$(NOTHING) \
+		Template '$(_C)$(TESTING)$(_D)' test case ,\
+		\n\t * Displays manual '$(_C)$(NOTHING)$(_D)' markers \
 	)
-	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(NOTHING)-init
 $(TESTING)-$(NOTHING)-init:
-#WORKING:NOW
-	@$(call $(TESTING)-run) J=0 $(INSTALL)-$(DOITALL)
-	@$(call $(TESTING)-run) J=0 $(DOITALL)-$(DOITALL)
-	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
-	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) V=1 $(CLEANER)-$(DOITALL)
+	@$(RUNMAKE) --silent $(NOTHING)
 
 .PHONY: $(TESTING)-$(NOTHING)-done
 $(TESTING)-$(NOTHING)-done:
-	$(call $(TESTING)-find,Creating.+README.html)
+	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
+#>	@$(call $(TESTING)-hold)
 
 #WORKING
 #	@$(RSYNC) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call $(TESTING)-pwd)/
