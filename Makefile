@@ -260,6 +260,7 @@ override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 ########################################
 
 override DEFAULT_TYPE			:= html
+override DEFAULT_EXTN			:= $(DEFAULT_TYPE)
 
 override OUTPUT_FILENAME		= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
 override TESTING_DIR			:= $(COMPOSER_DIR)/testing
@@ -289,16 +290,21 @@ override COMPOSER_EXT			:= $(notdir $(COMPOSER_EXT))
 ########################################
 
 #WORK document COMPOSER_TARGETS and COMPOSER_SUBDIRS auto-detection behavior, including *-$(CLEANER) target stripping
+#WORK dot "." files are ignored completely... which makes sense
 #WORK a note about this is that COMPOSER_SUBDIRS may pick up directories that override core recipies ('docs' and 'test' are primary candidates)
 #	warning: overriding recipe for target 'pandoc'
 #	warning: ignoring old recipe for target 'pandoc'
 
+override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
+override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
+override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
+
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER_DIR),$(CURDIR))
 ifneq ($(COMPOSER_EXT),)
-override COMPOSER_TARGETS		:= $(sort $(subst $(COMPOSER_EXT),.$(DEFAULT_TYPE),$(notdir $(wildcard $(CURDIR)/*$(COMPOSER_EXT)))))
+override COMPOSER_TARGETS		:= $(subst $(COMPOSER_EXT),.$(DEFAULT_EXTN),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
 else
-override COMPOSER_TARGETS		:= $(sort $(addsuffix .$(DEFAULT_TYPE),$(notdir $(wildcard $(CURDIR)/*$(COMPOSER_EXT)))))
+override COMPOSER_TARGETS		:= $(addsuffix .$(DEFAULT_EXTN),$(filter-out %.$(DEFAULT_EXTN),$(COMPOSER_CONTENTS_FILES)))
 endif
 endif
 endif
@@ -315,8 +321,8 @@ endif
 
 ifeq ($(COMPOSER_SUBDIRS),)
 ifneq ($(COMPOSER_DIR),$(CURDIR))
-#>override COMPOSER_SUBDIRS		:= $(sort $(notdir $(filter-out $(CURDIR),$(abspath $(dir $(wildcard $(CURDIR)/*/$(MAKEFILE)))))))
-override COMPOSER_SUBDIRS		:= $(sort $(notdir $(filter-out $(CURDIR),$(abspath $(dir $(wildcard $(CURDIR)/*/))))))
+#>override COMPOSER_SUBDIRS		:= $(subst /$(MAKEFILE),,$(wildcard $(addsuffix /$(MAKEFILE),$(COMPOSER_CONTENTS_DIRS))))
+override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
 endif
 endif
 
@@ -799,6 +805,8 @@ endif
 ########################################
 
 #WORK document effects of $TOC and $LVL!
+#WORK TODO OPTIONS
+#	--resource-path = something like COMPOSER_CSS?
 #WORK TODO OPTIONS
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
 #	--from "docx" --track-changes="all"
@@ -2243,6 +2251,7 @@ override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(INSTALL).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
 override TESTING_ENV			:= $(ENV) \
+	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 	COMPOSER_ESCAPES="$(COMPOSER_ESCAPES)" \
 
 #WORK document TESTING-file
@@ -2300,7 +2309,7 @@ $(TESTING)-init:
 override TESTING_PWD			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
 override TESTING_LOG			= $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override TESTING_MAKE			= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(MAKEFILE)
-override TESTING_RUN			= $(TESTING_ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
+override TESTING_RUN			= $(TESTING_ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
 override TESTING_FIND			= if [ $(if $(3),-n,-z) "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
 
 override define TESTING_LOAD =
@@ -2557,15 +2566,31 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT):
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
-	@$(foreach FILE,$(wildcard $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
-		$(RSYNC) $(FILE) $(call TESTING_PWD)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
-	)
-	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
-	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(PRINTER)
+#	@$(foreach FILE,$(wildcard $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
+#		$(RSYNC) $(FILE) $(call TESTING_PWD)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
+#	)
+#WORK should we need the COMPOSER_ART directory...?  maybe this is part of "resource-path" testing...?
+#	@$(MKDIR) $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
+#	@$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
+#WORKING:NOW
+#	@$(call TESTING_RUN) COMPOSER_EXT= $(DOITALL)
+#	@$(call TESTING_RUN) $(CLEANER)
+#WORKING:NOW missing makefiles!?
+	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
+	@$(call TESTING_RUN) $(DOITALL)-$(DOITALL)
+#WORKING:NOW missing makefiles!?
+#	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
+#	@$(ECHO) "$(COMPOSER_BASENAME)" >>$(firstword $(sort $(subst .$(DEFAULT_EXTN),,$(wildcard $(call TESTING_PWD)/*.$(DEFAULT_EXTN)))))
+#	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
+#WORKING:NOW
+#	@$(call TESTING_RUN) COMPOSER_STAMP= $(PRINTER)
+#	@$(call TESTING_RUN) COMPOSER_EXT= $(PRINTER)
+#	@$(call TESTING_RUN) $(PRINTER)
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 	@$(PRINT) "#WORKING:NOW"
+	@$(LS) $(call TESTING_PWD)
 	$(call TESTING_FIND,Creating.+README.html)
 	exit 1
 
@@ -2768,7 +2793,7 @@ else
 endif
 	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(MAKEFILE),-$(INSTALL))
 #>	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(COMPOSER_SETTINGS))
-	@+$(MAKE) --directory="$($(@))" $(INSTALL)-$(SUBDIRS)
+	@+$(MAKE) --directory $($(@)) $(INSTALL)-$(SUBDIRS)
 endif
 
 override define $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME) =
@@ -2814,6 +2839,14 @@ endif
 
 .PHONY: $(CLEANER)-do
 $(CLEANER)-do:
+ifeq ($(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-dir,$(CURDIR))
+else
+	@$(call $(HEADERS),\
+		COMPOSER_INCLUDE \
+		COMPOSER_SUBDIRS \
+	)
+endif
 ifneq ($(COMPOSER_STAMP),)
 	@$(RM) $(CURDIR)/$(COMPOSER_STAMP)
 endif
@@ -2838,15 +2871,10 @@ $(CLEANER)-$(SUBDIRS): $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 .PHONY: $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 	@$(eval override $(@) := $(CURDIR)/$(subst $(CLEANER)-$(SUBDIRS)-,,$(@)))
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-dir,$($(@)))
-else
-	@$(call $(HEADERS),\
-		COMPOSER_INCLUDE \
-		COMPOSER_SUBDIRS \
+	@$(if $(wildcard $($(@))/$(MAKEFILE)),\
+		+$(MAKE) --directory $($(@)) $(CLEANER)-do,\
+		$(RUNMAKE) --directory $($(@)) $(NOTHING)-$(MAKEFILE) \
 	)
-endif
-	@+$(MAKE) --directory="$($(@))" $(CLEANER)-do
 endif
 
 override define CLEANER_LISTING =
@@ -2909,11 +2937,10 @@ $(SUBDIRS): $(COMPOSER_SUBDIRS)
 
 .PHONY: $(COMPOSER_SUBDIRS)
 $(COMPOSER_SUBDIRS):
-ifneq ($(wildcard $(CURDIR)/$(@)/$(MAKEFILE)),)
-	@+$(MAKE) --directory $(CURDIR)/$(@)
-else
-	@+$(MAKE) --directory $(CURDIR)/$(@) $(NOTHING)-$(MAKEFILE)
-endif
+	@$(if $(wildcard $(CURDIR)/$(@)/$(MAKEFILE)),\
+		+$(MAKE) --directory $(CURDIR)/$(@),\
+		$(RUNMAKE) --directory $(CURDIR)/$(@) $(NOTHING)-$(MAKEFILE) \
+	)
 endif
 
 ########################################
@@ -2928,7 +2955,7 @@ ifneq ($(COMPOSER_STAMP),)
 $(PRINTER): $(PRINTER)-list
 $(PRINTER)-list: $(COMPOSER_STAMP)
 
-$(COMPOSER_STAMP): $(if $(wildcard $(CURDIR)/*$(COMPOSER_EXT)),*$(COMPOSER_EXT))
+$(COMPOSER_STAMP): $(if $(COMPOSER_EXT),$(wildcard *$(COMPOSER_EXT)),$(NOTHING)-COMPOSER_EXT)
 	@$(LS) --directory $(COMPOSER_STAMP) $(?) 2>/dev/null || $(TRUE)
 else
 $(PRINTER): $(NOTHING)-COMPOSER_STAMP
@@ -2963,7 +2990,7 @@ $(BASE).$(EXTENSION): $(LIST)
 
 #> update: TYPE_TARGETS
 
-#WORK dual targets... document!  also, empty COMPOSER_EXT
+#WORK dual targets... document!  also, empty COMPOSER_EXT ... technically there is three ... readme/readme.html readme.md/readme.html readme.md/readme.md.html
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
