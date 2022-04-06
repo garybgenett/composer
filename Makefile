@@ -2256,6 +2256,7 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-use_case_template
+$(TESTING): $(TESTING)-template
 
 $(TESTING): HELP_FOOTER
 
@@ -2453,6 +2454,27 @@ $(TESTING)-use_case_template-init:
 
 .PHONY: $(TESTING)-use_case_template-done
 $(TESTING)-use_case_template-done:
+	@$(PRINT) "$(NOTHING)"
+
+########################################
+# {{{3 $(TESTING)-template -------------
+
+.PHONY: $(TESTING)-template
+$(TESTING)-template:
+	@$(call TESTING_HEADER,\
+		$(NOTHING) ,\
+		$(NOTHING) \
+	)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
+
+.PHONY: $(TESTING)-template-init
+$(TESTING)-template-init:
+	@$(PRINT) "$(NOTHING)"
+
+.PHONY: $(TESTING)-template-done
+$(TESTING)-template-done:
 	@$(PRINT) "$(NOTHING)"
 
 #WORK
