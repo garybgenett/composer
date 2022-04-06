@@ -2270,7 +2270,8 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
 #WORK $(TESTING): $(TESTING)-$(DEBUGIT)
 #WORK $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
-$(TESTING): $(TESTING)-$(CLEANER)-$(NOTHING)
+#WORK $(TESTING): $(TESTING)-$(CLEANER)-$(NOTHING)
+$(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 $(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
@@ -2365,16 +2366,13 @@ $(TESTING)-$(COMPOSER_BASENAME):
 	@$(ENDOLINE)
 	@$(call TESTING_DONE,$(TESTING_COMPOSER_DIR))
 
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-root
-$(TESTING)-$(COMPOSER_BASENAME)-root:
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
+$(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
 	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(TESTING_DIR)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
 	@$(ECHO) "\n# $(COMPOSER_BASENAME) $(DIVIDE) $(COMPOSER_SETTINGS)\n" >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
-
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
-$(TESTING)-$(COMPOSER_BASENAME)-init: $(TESTING)-$(COMPOSER_BASENAME)-root
 	@$(ENDOLINE)
 	@$(LS) $(COMPOSER) $(TESTING_DIR) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))
 #>	@$(ENDOLINE)
@@ -2437,15 +2435,15 @@ $(TESTING)-$(INSTALL):
 
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
-	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS= $(INSTALL)-$(DOITALL)
-	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS= $(DOITALL)-$(DOITALL)
-	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)
-	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@$(call TESTING_RUN) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@$(call TESTING_RUN) MAKEJOBS= $(DOITALL)-$(DOITALL)
+	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)
+	@$(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(SLEEP) $(TESTING_SLEEP)
+	@$(TESTING_HOLD)
 
 ########################################
 # {{{3 $(TESTING)-$(DEBUGIT) -----------
@@ -2511,8 +2509,6 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 ########################################
 # {{{3 $(TESTING)-$(CLEANER)-$(NOTHING)
 
-# {{{4 $(TESTING) #WORKING:NOW CASES ---
-
 .PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)
 $(TESTING)-$(CLEANER)-$(NOTHING):
 	@$(call TESTING_HEADER,\
@@ -2544,31 +2540,47 @@ $(TESTING)-$(CLEANER)-$(NOTHING)-done:
 	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/doc\/.composed,,1)
 	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data)
 
+########################################
+# {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
+
+# {{{4 $(TESTING) #WORKING:NOW CASES ---
+
+.PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
+$(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT):
+	@$(call TESTING_HEADER,\
+		#WORKING:NOW ,\
+		#WORKING:NOW \
+	)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
+
+.PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init
+$(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
+	@$(foreach FILE,$(wildcard $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
+		$(RSYNC) $(FILE) $(call TESTING_PWD)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
+	)
+	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
+	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(PRINTER)
+
+.PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done
+$(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
+	@$(PRINT) "#WORKING:NOW"
+	$(call TESTING_FIND,Creating.+README.html)
+	exit 1
+
 #WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
 #		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
 #		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
-#	for FILE in {999..1} ; do echo -en "\n.PHONY: test-${FILE}-clean\ntest-${FILE}-clean:\n\t@echo \$(@)\n" ; done
 #	make TYPE="man" compose && man ./README.man
 # review:
 #	$(HELPOUT) -> COMPOSER_ESCAPES
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
 #	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
-# recursion / setup:
-#	MAKEJOBS=0 $(INSTALL)
-#	$(INSTALL)
-#	$(INSTALL)-$(DOITALL)
-#	MAKEJOBS=8 $(DOITALL)-$(DOITALL)
-#	MAKEJOBS=8 $(CLEANER)-$(DOITALL)
-#	$(DOITALL)-$(DOITALL)
-#	$(CLEANER)-$(DOITALL)
-#	$(DOITALL)
-#	$(CLEANER)
 # features:
-#	$(DISTRIB) -> $(UPGRADE) + $(CREATOR) + $(DOITALL)
-#	$(CLEANER) -> *-$(CLEANER)
 #	$(DOITALL) -> $(NOTHING) -> no $(MAKEFILE)	= $(TARGETS) -> COMPOSER_TARGETS empty/full = from * / *$(COMPOSER_EXT) / COMPOSER_SETTINGS / COMPOSER_SRC
 #	$(DOITALL) -> $(NOTHING) -> no *$(COMPOSER_EXT)	= $(TARGETS) -> COMPOSER_SUBDIRS empty/full
 #	$(NOTHING) -> file "$(NOTHING)" exempted during $(CLEANER)
@@ -2578,7 +2590,6 @@ $(TESTING)-$(CLEANER)-$(NOTHING)-done:
 #	$(COMPOSER_TARGET) -> from environment + COMPOSER_SETTINGS + COMPOSER_CSS (css_alt) = @$(CP) $(MDVIEWER_CSS) $(CURDIR)/$(COMPOSER_CSS)
 #	COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
 # flags / options:
-#	MAKEJOBS=0 -> $(HELPOUT) / $(HELPALL) / ?
 #	COMPOSER_DEBUGIT="0"
 #	COMPOSER_DEBUGIT="1"
 #	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
