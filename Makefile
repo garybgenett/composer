@@ -99,6 +99,8 @@ override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 # variable definitions must be the 'source_regex' (create this), or may not work properly (COMPOSER_INCLUDE, especially): override[ ][^ ]+[ ][:?][=].*
 #WORK
 
+#WORKING:NOW add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to this list, and add to $(TESTING)...
+
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
 $(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
 #>include $(CURDIR)/$(COMPOSER_SETTINGS)
@@ -259,7 +261,7 @@ override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 
 override DEFAULT_TYPE			:= html
 
-override OUTPUT_FILENAME		= $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
+override OUTPUT_FILENAME		= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
 override TESTING_DIR			:= $(COMPOSER_DIR)/testing
 
 #WORK keep EXAMPLE_OUT?
@@ -356,10 +358,12 @@ override OPT				?=
 # {{{1 Tooling Versions --------------------------------------------------------
 ################################################################################
 
+#WORKING:NOW made the *_CMT variables user defined... are they in the right spot in $(CONFIGS), or is some relocation necessary?
+
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
+override PANDOC_CMT			?= 2.13
 override PANDOC_LIC			:= GPL
-override PANDOC_CMT			:= 2.13
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
 #WORK override PANDOC_TEX_PDF			:= xelatex
@@ -367,8 +371,8 @@ override PANDOC_TEX_PDF			:= pdflatex
 
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
+override REVEALJS_CMT			?= 4.3.1
 override REVEALJS_LIC			:= MIT
-override REVEALJS_CMT			:= 4.3.1
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
 override REVEALJS_CSS_THEME		:= $(notdir $(REVEALJS_DIR))/dist/theme/black.css
@@ -376,9 +380,9 @@ override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
+#>override MDVIEWER_CMT			?= 059f3192d4ebf5fa9776478ea221d586480e7fa7
+override MDVIEWER_CMT			?= 059f3192d4ebf5fa9776
 override MDVIEWER_LIC			:= MIT
-#>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
-override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 #>override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/screen.css
@@ -488,7 +492,7 @@ override COMPOSER_GIT_RUN		= cd $(COMPOSER_ROOT) && $(GIT) --git-dir="$(strip $(
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(COMPOSER_PKG)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
 override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
 override define DO_GIT_REPO =
-	$(MKDIR) $(COMPOSER_PKG)/$(1); \
+	$(MKDIR) $(COMPOSER_PKG) $(1); \
 	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) $(1).git  $(5); fi; \
 	if [ ! -d "$(5)" ] && [ -d "$(1)/.git" ]; then $(MV) $(1)/.git $(5); fi; \
 	if [ ! -d "$(5)" ]; then \
@@ -2164,7 +2168,7 @@ endif
 #WORK document DEBUGIT-file
 
 .PHONY: $(DEBUGIT)-file
-$(DEBUGIT)-file: override DEBUGIT_FILE := $(call OUTPUT_FILENAME,$(DEBUGIT))
+$(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
 	@$(RUNMAKE) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" COMPOSER_ESCAPES= $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
@@ -2226,13 +2230,14 @@ $(DEBUGIT)-%:
 
 #> update: $(TESTING):
 
-override TESTING_COMPOSER_DIR		:= $(TESTING_DIR)/.$(COMPOSER_BASENAME)
-override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_COMPOSER_DIR)/$(MAKEFILE)
+override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(INSTALL).log
+override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
+override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
 
 #WORK document TESTING-file
 
 .PHONY: $(TESTING)-file
-$(TESTING)-file: override TESTING_FILE := $(call OUTPUT_FILENAME,$(TESTING))
+$(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 $(TESTING)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
 	@$(RUNMAKE) COMPOSER_ESCAPES= $(TESTING) >>$(TESTING_FILE) 2>&1
@@ -2246,16 +2251,18 @@ $(TESTING): .set_title-$(TESTING)
 #WORK $(TESTING): $(HEADERS)-$(TESTING)
 #WORK $(TESTING): $(TESTING)-$(HEADERS)
 #WORK $(TESTING): $(CONFIGS)
+#WORK $(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORKING:NOW
-$(TESTING): $(TESTING)-$(DISTRIB)
+#WORK $(TESTING): $(TESTING)-$(DISTRIB)
 $(TESTING): $(TESTING)-$(INSTALL)
 #WORK $(TESTING): $(TESTING)-use_case_1
-#WORK $(TESTING): $(TESTING)-use_case_2
-#WORK $(TESTING): $(TESTING)-use_case_3
 
 $(TESTING): HELP_FOOTER
+
+########################################
+# {{{3 $(TESTING)-$(HEADERS) -----------
 
 .PHONY: $(TESTING)-$(HEADERS)
 $(TESTING)-$(HEADERS):
@@ -2269,6 +2276,12 @@ $(TESTING)-$(HEADERS):
 	@$(PRINT) "  * #WORKING:NOW"
 	@$(LINERULE)
 
+.PHONY: $(TESTING)-init
+$(TESTING)-init:
+	@$(LINERULE)
+#>	@$(RM) --recursive $(TESTING_DIR)
+	@$(RM) --recursive $(TESTING_DIR)/*
+
 override define TESTING_HEADER =
 	$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING)); \
 	$(ECHO) "$(_M)$(MARKER) PURPOSE:$(_D) $(strip $(1))$(_D)\n"; \
@@ -2281,16 +2294,32 @@ override define TESTING_HEADER =
 	fi
 endef
 
-override define TESTING_INIT =
-	$(MKDIR) $(call TESTING_INIT_DIRS,$(@)); \
-	$(foreach FILE,$(call TESTING_INIT_DIRS,$(@)),\
+override TESTING_PWD = $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
+override TESTING_LOG = $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
+override TESTING_FIND = if [ -z "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
+
+override define TESTING_TEST =
+	$(PRINT) "$(_M)$(MARKER) INIT:"; \
+	$(MKDIR) $(TESTING_DIR)/$(if $(1),$(1),$(@)); \
+	$(ECHO) "" >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
+	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
+	$(ENDOLINE); \
+	$(PRINT) "$(_M)$(MARKER) DONE:"; \
+	$(ENV) $(RUNMAKE) $(@)-done 2>&1
+endef
+
+#WORKING keep TESTING_INIT_DIR?
+
+override define TESTING_INIT_DIR =
+	$(MKDIR) $(call TESTING_INIT_DIRS,$(subst -init,,$(@))); \
+	$(foreach FILE,$(call TESTING_INIT_DIRS,$(subst -init,,$(@))),\
 		$(CP) $(COMPOSER_DIR)/*$(COMPOSER_EXT) $(FILE)/; \
 	)
-	$(RUNMAKE) --directory $(TESTING_DIR)/$(@) $(INSTALL)-$(DOITALL); \
+	$(ENV) $(RUNMAKE) --directory $(TESTING_DIR)/$(subst -init,,$(@)) $(INSTALL)-$(DOITALL); \
 endef
 
 override define TESTING_INIT_DIRS =
-	$(TESTING_DIR)/$(1) \
+	$(TESTING_DIR)/$(if $(1),$(1),$(@)) \
 	$(foreach DIR,\
 		subdir1 \
 		subdir2 \
@@ -2301,7 +2330,7 @@ override define TESTING_INIT_DIRS =
 			example2 \
 			example3 \
 			,\
-			$(TESTING_DIR)/$(1)/$(DIR)/$(FILE) \
+			$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(DIR)/$(FILE) \
 		)\
 	)
 endef
@@ -2309,27 +2338,37 @@ endef
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
 
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
-$(TESTING)-$(COMPOSER_BASENAME)-init:
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
+$(TESTING)-$(COMPOSER_BASENAME):
 	@$(call TESTING_HEADER,\
-		Install the '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' directory ,\
+		Install the '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory ,\
 		Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
 	)
-#>	@$(RM) --recursive $(TESTING_COMPOSER_DIR)
-	@$(MKDIR) $(TESTING_COMPOSER_DIR)
+	@$(call TESTING_TEST,$(TESTING_COMPOSER_DIR))
+
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
+$(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE)
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
 	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(TESTING_DIR)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
+	@$(ENV) $(REALMAKE) --silent --directory $(TESTING_DIR) COMPOSER_ESCAPES= .$(EXAMPLE) >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
+	@$(SED) -i \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_TARGETS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
+		$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ENDOLINE)
-	@$(LS) $(COMPOSER) $(TESTING_DIR) $(TESTING_COMPOSER_DIR)
+	@$(LS) $(COMPOSER) $(TESTING_DIR) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))
 #>	@$(ENDOLINE)
-	@$(CAT) $(TESTING_DIR)/$(MAKEFILE)
+	@$(CAT) $(TESTING_DIR)/$(MAKEFILE) $(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ENDOLINE)
-	@$(ENV) $(REALMAKE) --silent --directory $(TESTING_DIR) $(CONFIGS)
+	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR) $(CONFIGS)
+	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR) $(DOITALL)-$(DOITALL)
 
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
-$(TESTING)-$(COMPOSER_BASENAME):
-	@$(ENV) $(REALMAKE) --silent --directory $(TESTING_DIR) $(CONFIGS) | $(TEE)
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
+$(TESTING)-$(COMPOSER_BASENAME)-done:
+	$(call TESTING_FIND,^override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)/$(MAKEFILE)$$,$(TESTING_COMPOSER_DIR))
+	$(call TESTING_FIND,NOTICE.+$(NOTHING).+$(DOITALL),$(TESTING_COMPOSER_DIR))
+	$(call TESTING_FIND,NOTICE.+$(NOTHING).+$(SUBDIRS),$(TESTING_COMPOSER_DIR))
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -2337,15 +2376,18 @@ $(TESTING)-$(COMPOSER_BASENAME):
 .PHONY: $(TESTING)-$(DISTRIB)
 $(TESTING)-$(DISTRIB):
 	@$(call TESTING_HEADER,\
-		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. Verify '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' configuration \
-		\n\t 2. Examine output to validate '$(NOTHING)' markers \
-		\n\t 3. Parallel forced install \
-		\n\t 4. Parallel build all [default target] \
-		\n\t 5. Linear forced install \
-		\n\t 6. Linear build all [default target] \
+		Install/update '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory with '$(_C)$(DISTRIB)$(_D)' ,\
+		Successful run; no specific validation \
 	)
-#>	@$(call TESTING_INIT)
+	@$(call TESTING_TEST)
+
+.PHONY: $(TESTING)-$(DISTRIB)-init
+$(TESTING)-$(DISTRIB)-init:
+	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(TESTING_COMPOSER_DIR) $(DISTRIB)
+
+.PHONY: $(TESTING)-$(DISTRIB)-done
+$(TESTING)-$(DISTRIB)-done:
+	$(TRUE)
 
 ########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
@@ -2354,25 +2396,34 @@ $(TESTING)-$(DISTRIB):
 $(TESTING)-$(INSTALL):
 	@$(call TESTING_HEADER,\
 		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. Verify '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' configuration \
-		\n\t 2. Examine output to validate '$(NOTHING)' markers \
+		\n\t 1. Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
+		\n\t 2. Examine output to validate '$(_C)$(NOTHING)$(_D)' markers \
 		\n\t 3. Parallel forced install \
 		\n\t 4. Parallel build all [default target] \
 		\n\t 5. Linear forced install \
 		\n\t 6. Linear build all [default target] \
 	)
-#>	@$(call TESTING_INIT)
-	@$(RSYNC) $(PANDOC_DIR)/ $(TESTING_DIR)/$(@)
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(@)/$(MAKEFILE)
+	@$(call TESTING_TEST)
+
+.PHONY: $(TESTING)-$(INSTALL)-init
+$(TESTING)-$(INSTALL)-init:
+	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
 #WORKING:NOW
-	@$(CAT) $(TESTING_DIR)/$(@)/$(MAKEFILE)
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(CONFIGS)
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	exit 1
+	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
+	@$(SED) -i \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_TARGETS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
+		$(TESTING_DIR)/$(COMPOSER_SETTINGS)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS= $(DOITALL)-$(DOITALL)
+
+.PHONY: $(TESTING)-$(INSTALL)-done
+$(TESTING)-$(INSTALL)-done:
+	$(call TESTING_FIND,NOTICE.+$(NOTHING).+$(DOITALL))
 	@exit 1
-#WORKING:NOW
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0"
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS= $(INSTALL)-$(DOITALL)
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS=
 
 ########################################
 # {{{3 $(TESTING)-use_case_1 -----------
@@ -2386,31 +2437,9 @@ $(TESTING)-use_case_1:
 		#WORKING:NOW \
 	)
 	$(PRINT) "$(call TESTING_INIT_DIRS,testing)"
-	@$(call TESTING_INIT)
+	@$(call TESTING_TEST)
 
-########################################
-# {{{3 $(TESTING)-use_case_2 -----------
-
-.PHONY: $(TESTING)-use_case_2
-$(TESTING)-use_case_2:
-	@$(call TESTING_HEADER,\
-		#WORKING:NOW ,\
-		#WORKING:NOW \
-	)
-	@$(call TESTING_INIT)
-
-########################################
-# {{{3 $(TESTING)-use_case_3 -----------
-
-.PHONY: $(TESTING)-use_case_3
-$(TESTING)-use_case_3:
-	@$(call TESTING_HEADER,\
-		#WORKING:NOW ,\
-		#WORKING:NOW \
-	)
-	@$(call TESTING_INIT)
-
-# {{{3 $(TESTING)-#WORKING:NOW CASES ---
+# {{{3 $(TESTING) #WORKING:NOW CASES ---
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
