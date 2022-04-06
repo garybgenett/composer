@@ -2725,6 +2725,8 @@ $(TESTING)-COMPOSER_DEPENDS:
 #		use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
 #WORK add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
 #	ordering only applies to $DOITALL... $INSTALL and $CLEANER always go top-down
+#WORKING:NOW
+#	if it is enabled, disable MAKEJOBS...?  then, test on a sub-directory tree with MAKEJBOS="0"
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
@@ -2829,6 +2831,9 @@ $(TESTING)-other:
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
+
+#WORKING:NOW
+# Manual.html: README.md LICENSE.md = make V=! manual.html
 
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
