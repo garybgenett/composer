@@ -543,7 +543,8 @@ override define DO_GIT_REPO =
 	$(call GIT_RUN,$(1),reset --hard); \
 	if [ -f "$(1)/.gitmodules" ]; then \
 		$(call GIT_RUN,$(1),submodule update --init --recursive --force); \
-	fi
+	fi; \
+	$(RM) $(1)/.git
 endef
 
 ################################################################################
@@ -869,6 +870,7 @@ endif
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
 #WORK TODO OPTIONS
+#	man: pandoc -o custom-reference.docx --print-default-data-file reference.docx
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
@@ -2143,9 +2145,9 @@ endif
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) DETAILS"
 	@$(ENDOLINE)
-	@$(PRINT) "  * It is possible that this is the result of a missing input file"
+	@$(PRINT) "  * This may be the result of a missing input file"
 	@$(PRINT) "  * New targets can be defined in '$(_C)$(COMPOSER_SETTINGS)$(_D)'"
-	@$(PRINT) "  * Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets for this '$(_C)$(MAKEFILE)$(_D)'"
+	@$(PRINT) "  * Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets"
 	@$(PRINT) "  * Use '$(_M)$(HELPOUT)$(_D)' or '$(_M)$(HELPALL)$(_D)' for more information"
 	@$(LINERULE)
 	@exit 1
@@ -2196,7 +2198,7 @@ $(NOTHING):
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORK override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+#WORKING override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
 override CONVICT_GIT_OPTS		:= --verbose $(MAKEFILE)
 
 $(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
@@ -2383,11 +2385,11 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORKING #>$(TESTING): $(TESTING)-$(DEBUGIT)
 #WORKING $(TESTING): $(TESTING)-$(INSTALL)
 #WORKING $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
-$(TESTING): $(TESTING)-COMPOSER_INCLUDE
+#WORKING:NOW $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
 #WORKING $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 #WORKING $(TESTING): $(TESTING)-CSS
-$(TESTING): $(TESTING)-other
+#WORKING $(TESTING): $(TESTING)-other
 #WORKING $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
 
@@ -2674,8 +2676,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
 		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
 	)
-#>	@$(call $(TESTING)-load)
-#>	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
@@ -2697,14 +2698,13 @@ $(TESTING)-COMPOSER_INCLUDE:
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-init
 $(TESTING)-COMPOSER_INCLUDE-init:
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= $(NOTHING)
+#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
-	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_INCLUDE$$)
-#>	@$(call $(TESTING)-hold)
+#WORK	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
+#WORK	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_INCLUDE$$)
 
 ########################################
 # {{{3 $(TESTING)-COMPOSER_DEPENDS -----
@@ -2716,8 +2716,7 @@ $(TESTING)-COMPOSER_DEPENDS:
 		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
 		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
 	)
-#>	@$(call $(TESTING)-load)
-#>	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
@@ -2728,14 +2727,13 @@ $(TESTING)-COMPOSER_DEPENDS:
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= $(NOTHING)
+#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
-	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_DEPENDS$$)
-#>	@$(call $(TESTING)-hold)
+#WORK	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
+#WORK	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_DEPENDS$$)
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
@@ -2795,14 +2793,14 @@ $(TESTING)-CSS:
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
 	@$(ECHO) "override CSS := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
@@ -2819,29 +2817,34 @@ $(TESTING)-CSS-done:
 .PHONY: $(TESTING)-other
 $(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
-		Template '$(_C)$(TESTING)$(_D)' test case ,\
-		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
-		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+		Miscellaneous test cases ,\
+		\n\t * Pandoc '$(_C)TYPE$(_D)' pass-through \
+		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
-#>	@$(call $(TESTING)-load)
-#>	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING:NOW
-#	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
-#	make TYPE="man" compose && man ./README.man
-
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="json" $(COMPOSER_PANDOC)
+	@$(CAT) $(call $(TESTING)-pwd)/$(EXAMPLE_ONE).json | $(SED) "s|[]][}][,].+$$||g"
+	@$(call $(TESTING)-make)
+	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(call $(TESTING)-pwd)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
+	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
+	@cd $(call $(TESTING)-pwd) \
+		&& $(GIT) init \
+		&& $(GIT) config --local user.name "$(COMPOSER_FULLNAME)" \
+		&& $(GIT) config --local user.email "$(COMPOSER_BASENAME)@example.com"
+	@$(call $(TESTING)-run) $(CONVICT)-$(DOITALL)
+	@cd $(call $(TESTING)-pwd) \
+		&& $(GIT) log
+	@$(call $(TESTING)-make)
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
-	$(call $(TESTING)-find,NOTICE.+$(TESTING)-other$$)
-#>	@$(call $(TESTING)-hold)
+	$(call $(TESTING)-find,pandoc-api-version)
+	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
 
 ########################################
 # {{{3 $(TESTING)-$(EXAMPLE) -----------
@@ -2860,8 +2863,8 @@ $(TESTING)-$(EXAMPLE):
 
 .PHONY: $(TESTING)-$(EXAMPLE)-init
 $(TESTING)-$(EXAMPLE)-init:
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= $(NOTHING)
+	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
 $(TESTING)-$(EXAMPLE)-done:
