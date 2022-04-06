@@ -196,12 +196,13 @@ override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-dir
 #> update: includes duplicates
 #> update: $(EXAMPLE):
 
-$(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 $(call READ_ALIASES,C,c_color,COMPOSER_ESCAPES)
+$(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 
+override COMPOSER_ESCAPES		?= 1
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_INCLUDE		?=
-override COMPOSER_ESCAPES		?= 1
+override COMPOSER_DEPENDS		?=
 
 ########################################
 
@@ -330,7 +331,6 @@ endif
 #> update: $(EXAMPLE):
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
-override COMPOSER_DEPENDS		?=
 
 ########################################
 
@@ -1560,18 +1560,18 @@ HELP_VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"						":---"
 	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS) )$(_N)(makejobs)"
+	@$(TABLE_M3) "$(_C)COMPOSER_ESCAPES"	"Enable title/color sequences"			"$(if $(COMPOSER_ESCAPES),$(_M)$(COMPOSER_ESCAPES) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_ESCAPES"	"Enable title/color sequences"			"$(if $(COMPOSER_ESCAPES),$(_M)$(COMPOSER_ESCAPES) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
 	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
 	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
 	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"		"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS) )$(_N)(boolean)"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_ESCAPES$(_D) ~= $(_E)(C, c_color)$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
 	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
 
@@ -1876,13 +1876,12 @@ $(EXAMPLE):
 .$(EXAMPLE):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
 #>	@$(call EXAMPLE_VAR,1,MAKEJOBS)
+#>	@$(call EXAMPLE_VAR,1,COMPOSER_ESCAPES)
 #>	@$(call EXAMPLE_VAR,1,COMPOSER_DEBUGIT)
 	@$(call EXAMPLE_VAR,1,COMPOSER_INCLUDE)
-	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)	#>
-#>	@$(call EXAMPLE_VAR,1,COMPOSER_ESCAPES)
+	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)
 	@$(call EXAMPLE_VAR,1,COMPOSER_TARGETS)
 	@$(call EXAMPLE_VAR,1,COMPOSER_SUBDIRS)
-#>	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)
 #>	@$(call EXAMPLE_VAR,1,CSS)
 #>	@$(call EXAMPLE_VAR,1,TTL)
 	@$(call EXAMPLE_VAR,1,TOC)
@@ -1961,6 +1960,11 @@ override define $(HEADERS)-run =
 	$(LINERULE)
 endef
 
+override $(HEADERS)-list := \
+	COMPOSER_TARGETS \
+	COMPOSER_SUBDIRS \
+	COMPOSER_DEPENDS \
+
 #> update: $(HEADERS)-vars
 override $(HEADERS)-vars := \
 	TYPE \
@@ -1997,11 +2001,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-dir,$(CURDIR))
 else
 	@$(call $(HEADERS),\
-		COMPOSER_INCLUDE \
-		COMPOSER_TARGETS \
-		COMPOSER_SUBDIRS \
-		COMPOSER_DEPENDS \
-		$($(HEADERS)-vars) \
+		$($(HEADERS)-list) \
 		,$(*) \
 	)
 endif
@@ -2188,7 +2188,7 @@ endif
 $(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
-	@$(RUNMAKE) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" COMPOSER_ESCAPES= $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_ESCAPES= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
 	@$(LS) $(DEBUGIT_FILE)
 
 .PHONY: $(DEBUGIT)
@@ -2232,7 +2232,7 @@ $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
 		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
 		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
-			$(RUNMAKE) --just-print COMPOSER_DEBUGIT="!" COMPOSER_ESCAPES= $(FILE) 2>&1; \
+			$(RUNMAKE) --just-print COMPOSER_ESCAPES= COMPOSER_DEBUGIT="!" $(FILE) 2>&1; \
 		elif [ -d "$(FILE)" ]; then \
 			$(LS) --recursive $(FILE); \
 		elif [ -f "$(FILE)" ]; then \
@@ -2251,8 +2251,8 @@ override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(INSTALL).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
 override TESTING_ENV			:= $(ENV) \
-	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 	COMPOSER_ESCAPES="$(COMPOSER_ESCAPES)" \
+	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 
 #WORK document TESTING-file
 
@@ -2279,9 +2279,8 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
 #WORK $(TESTING): $(TESTING)-$(DEBUGIT)
 #WORK $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
-#WORK $(TESTING): $(TESTING)-$(CLEANER)-$(NOTHING)
 $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
-$(TESTING): $(TESTING)-$(EXAMPLE)
+#WORK $(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
 
@@ -2433,9 +2432,10 @@ $(TESTING)-$(INSTALL):
 		\n\t 1. Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
 		\n\t 2. Examine output to validate '$(_C)$(NOTHING)$(_D)' markers \
 		\n\t 3. Parallel forced install \
-		\n\t 4. Parallel build all [default target] \
+		\n\t 4. Parallel build all \
 		\n\t 5. Linear forced install \
-		\n\t 6. Linear build all [default target] \
+		\n\t 6. Linear build all \
+		\n\t 6. Linear clean all \
 	)
 	@$(call TESTING_LOAD)
 	@$(call TESTING_INIT)
@@ -2446,6 +2446,7 @@ $(TESTING)-$(INSTALL):
 $(TESTING)-$(INSTALL)-init:
 	@$(call TESTING_RUN) MAKEJOBS= $(INSTALL)-$(DOITALL)
 	@$(call TESTING_RUN) MAKEJOBS= $(DOITALL)-$(DOITALL)
+	@$(call TESTING_RUN) MAKEJOBS= $(CLEANER)-$(DOITALL)
 	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)
 	@$(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 
@@ -2488,8 +2489,8 @@ $(TESTING)-$(DEBUGIT)-done:
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING)-$(CLEANER)-$(DOITALL):
 	@$(call TESTING_HEADER,\
-		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. #WORKING:NOW \
+		Test '$(_C)$(CLEANER)$(_D)' and '$(_C)$(DOITALL)$(_D)' on a directory of random contents ,\
+		\n\t 1. #WORKING:NOW missing makefile detection... is this where it should be? \
 		\n\t 1. #WORKING:NOW \
 		\n\t 1. #WORKING:NOW \
 	)
@@ -2500,11 +2501,12 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
+	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(RM) $(call TESTING_PWD)/data/*/$(MAKEFILE)
 	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>$(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
-	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@$(call TESTING_RUN) $(DOITALL)-$(DOITALL)
 	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
@@ -2513,41 +2515,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call TESTING_FIND,Creating.+getting-started.html)
 	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/.composed)
 	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/doc\/.composed)
-	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data)
-
-########################################
-# {{{3 $(TESTING)-$(CLEANER)-$(NOTHING)
-
-.PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)
-$(TESTING)-$(CLEANER)-$(NOTHING):
-	@$(call TESTING_HEADER,\
-		Test non-recursive '$(_C)$(CLEANER)$(_D)' and '$(_C)$(DOITALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. #WORKING:NOW \
-		\n\t 1. #WORKING:NOW \
-		\n\t 1. #WORKING:NOW \
-	)
-	@$(call TESTING_LOAD)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
-
-.PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)-init
-$(TESTING)-$(CLEANER)-$(NOTHING)-init:
-	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>$(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
-	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(call TESTING_RUN) $(DOITALL)
-	@$(call TESTING_RUN) $(CLEANER)
-	@$(call TESTING_RUN,$(subst -init,,$(@))/data) $(CLEANER)
-
-.PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)-done
-$(TESTING)-$(CLEANER)-$(NOTHING)-done:
-	$(call TESTING_FIND,Creating.+changelog.html)
-	$(call TESTING_FIND,Creating.+getting-started.html,,1)
-	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/.composed)
-	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/doc\/.composed,,1)
-	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data)
+	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data$$)
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
@@ -2566,33 +2534,30 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT):
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
-#	@$(foreach FILE,$(wildcard $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
-#		$(RSYNC) $(FILE) $(call TESTING_PWD)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
-#	)
+	@$(foreach FILE,$(wildcard $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
+		$(RSYNC) $(FILE) $(call TESTING_PWD)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
+	)
 #WORK should we need the COMPOSER_ART directory...?  maybe this is part of "resource-path" testing...?
-#	@$(MKDIR) $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
-#	@$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
+	@$(MKDIR) $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
+	@$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
+	@$(call TESTING_RUN) COMPOSER_EXT= $(DOITALL)
+	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(CLEANER)
 #WORKING:NOW
-#	@$(call TESTING_RUN) COMPOSER_EXT= $(DOITALL)
-#	@$(call TESTING_RUN) $(CLEANER)
-#WORKING:NOW missing makefiles!?
-	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
-	@$(call TESTING_RUN) $(DOITALL)-$(DOITALL)
-#WORKING:NOW missing makefiles!?
-#	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
+#	@$(call TESTING_RUN) V=1 COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
 #	@$(ECHO) "$(COMPOSER_BASENAME)" >>$(firstword $(sort $(subst .$(DEFAULT_EXTN),,$(wildcard $(call TESTING_PWD)/*.$(DEFAULT_EXTN)))))
-#	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
+#	@$(call TESTING_RUN) V=1 COMPOSER_STAMP= COMPOSER_EXT= $(DOITALL)
 #WORKING:NOW
-#	@$(call TESTING_RUN) COMPOSER_STAMP= $(PRINTER)
-#	@$(call TESTING_RUN) COMPOSER_EXT= $(PRINTER)
-#	@$(call TESTING_RUN) $(PRINTER)
+#	@$(call TESTING_RUN) COMPOSER_STAMP= $(PRINTER)	# check for .null
+#	@$(call TESTING_RUN) COMPOSER_EXT= $(PRINTER)	# check for .null
+#	@$(call TESTING_RUN) $(PRINTER)			# add an *.md and verify it lists
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
-	@$(PRINT) "#WORKING:NOW"
+#WORKING:NOW
 	@$(LS) $(call TESTING_PWD)
+#WORKING:NOW
 	$(call TESTING_FIND,Creating.+README.html)
-	exit 1
+	$(call TESTING_FIND,^removed .+\/README.html)
 
 #WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 #WORK
@@ -2763,8 +2728,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS))
 else
 	@$(call $(HEADERS),\
-		COMPOSER_INCLUDE \
-		COMPOSER_SUBDIRS \
+		$($(HEADERS)-list) \
 	)
 endif
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL))
@@ -2787,8 +2751,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-dir,$($(@)))
 else
 	@$(call $(HEADERS),\
-		COMPOSER_INCLUDE \
-		COMPOSER_SUBDIRS \
+		$($(HEADERS)-list) \
 	)
 endif
 	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(MAKEFILE),-$(INSTALL))
@@ -2831,11 +2794,12 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS))
 else
 	@$(call $(HEADERS),\
-		COMPOSER_INCLUDE \
-		COMPOSER_SUBDIRS \
+		$($(HEADERS)-list) \
 	)
 endif
 	@+$(MAKE) $(CLEANER)-do
+
+#WORKING:NOW this cleaner-do thing is still driving me nuts...!
 
 .PHONY: $(CLEANER)-do
 $(CLEANER)-do:
@@ -2843,8 +2807,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-dir,$(CURDIR))
 else
 	@$(call $(HEADERS),\
-		COMPOSER_INCLUDE \
-		COMPOSER_SUBDIRS \
+		$($(HEADERS)-list) \
 	)
 endif
 ifneq ($(COMPOSER_STAMP),)
