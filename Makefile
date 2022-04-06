@@ -2402,7 +2402,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Install the '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory ,\
 		\n\t * Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
-		\n\t * Output of '$(_C)$(NOTHING)$(_D)' markers \
+		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
 	@$(call $(TESTING)-init,$(TESTING_COMPOSER_DIR))
 	@$(call $(TESTING)-done,$(TESTING_COMPOSER_DIR))
@@ -2619,36 +2619,25 @@ $(TESTING)-$(NOTHING)-init:
 $(TESTING)-$(NOTHING)-done:
 	$(call $(TESTING)-find,Creating.+README.html)
 
-#WORKING @$(RSYNC) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call $(TESTING)-pwd)/
-#WORKING @$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL)
-#WORKING	if [ "$(shell $(SED) -n "/$(TESTING)-1-$(CLEANER)/p" $(call $(TESTING)-log,$(subst -done,,$(@))) | $(WC))" = "1" ]; then exit 1; fi
-#WORKING	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
-#WORK
-#	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
-#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
-#		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
-#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
-#	make TYPE="man" compose && man ./README.man
-# review:
-#	$(HELPOUT) -> COMPOSER_DOCOLOR
-#	$(HELPALL) -> COMPOSER_DOCOLOR = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
-#	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
-# features:
-#	$(DOITALL) -> $(NOTHING) -> no $(MAKEFILE)	= $(TARGETS) -> COMPOSER_TARGETS empty/full = from * / *$(COMPOSER_EXT) / COMPOSER_SETTINGS / COMPOSER_SRC
-#	$(DOITALL) -> $(NOTHING) -> no *$(COMPOSER_EXT)	= $(TARGETS) -> COMPOSER_SUBDIRS empty/full
-#	$(NOTHING) -> file "$(NOTHING)" exempted during $(CLEANER)
-#	$(NOTHING) -> COMPOSER_TARGETS="$(NOTHING)"
-#	$(TARGETS) -> *-$(CLEANER)			= $(TARGETS) -> COMPOSER_TARGETS only *-$(CLEANER) entries
-#	$(TARGETS) -> $(PRINTER)			= $(PRINTER)
-#	$(COMPOSER_TARGET) -> from environment + COMPOSER_SETTINGS + COMPOSER_CSS (css_alt) = @$(CP) $(MDVIEWER_CSS) $(CURDIR)/$(COMPOSER_CSS)
-#	COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
+#WORKING
+#	@$(RSYNC) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call $(TESTING)-pwd)/
 # flags / options:
 #	COMPOSER_DEBUGIT="0"
 #	COMPOSER_DEBUGIT="1"
 #	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
-#	COMPOSER_STAMP=
-#	COMPOSER_EXT= -> #WORK need more than $(DOITALL) above?
-#WORK
+#		@$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL) -> $(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
+#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
+#		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
+#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
+# cases:
+#	*-$(CLEANER) = $(TARGETS) COMPOSER_TARGETS only *-$(CLEANER) entries
+#	$(DOITALL) / $(TARGETS) = COMPOSER_TARGETS auto-detect from COMPOSER_SETTINGS
+#	$(COMPOSER_TARGET) -> from environment + COMPOSER_SETTINGS + COMPOSER_CSS (css_alt) = @$(CP) $(MDVIEWER_CSS) $(CURDIR)/$(COMPOSER_CSS)
+#	COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
+# extra:
+#	make TYPE="man" compose && man ./README.man
+#	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
+#WORKING
 
 ########################################
 # {{{3 $(TESTING)-$(EXAMPLE) -----------
@@ -2842,7 +2831,10 @@ endef
 
 #> update: COMPOSER_TARGETS.*filter-out
 
-#WORK document "*-clean" -> note that if it starts with a special, like 'test-clean', it will not show up in 'targets'
+#WORK document "*-clean"
+#	note that if it starts with a special, like 'test-clean', it will not show up in 'targets'
+#	also, if COMPOSER_TARGETS is only *-clean entries, it might as well be empty
+#	what do we do about '.null' file being exempted?  anything?  total edge case...
 #WORK document somewhere that clean removes files that match a phony target name?
 
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
