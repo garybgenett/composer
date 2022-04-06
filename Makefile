@@ -2459,27 +2459,6 @@ $(TESTING)-use_case_template-init:
 $(TESTING)-use_case_template-done:
 	@$(PRINT) "$(NOTHING)"
 
-########################################
-# {{{3 $(TESTING)-$(EXAMPLE) -----------
-
-.PHONY: $(TESTING)-$(EXAMPLE)
-$(TESTING)-$(EXAMPLE):
-	@$(call TESTING_HEADER,\
-		$(NOTHING) ,\
-		$(NOTHING) \
-	)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
-
-.PHONY: $(TESTING)-$(EXAMPLE)-init
-$(TESTING)-$(EXAMPLE)-init:
-	@$(PRINT) "$(NOTHING)"
-
-.PHONY: $(TESTING)-$(EXAMPLE)-done
-$(TESTING)-$(EXAMPLE)-done:
-	@$(PRINT) "$(NOTHING)"
-
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
@@ -2522,6 +2501,27 @@ $(TESTING)-$(EXAMPLE)-done:
 #	COMPOSER_STAMP=
 #	COMPOSER_EXT= -> #WORK need more than $(DOITALL) above?
 #WORK
+
+########################################
+# {{{3 $(TESTING)-$(EXAMPLE) -----------
+
+.PHONY: $(TESTING)-$(EXAMPLE)
+$(TESTING)-$(EXAMPLE):
+	@$(call TESTING_HEADER,\
+		$(NOTHING) ,\
+		$(NOTHING) \
+	)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
+
+.PHONY: $(TESTING)-$(EXAMPLE)-init
+$(TESTING)-$(EXAMPLE)-init:
+	@$(PRINT) "$(NOTHING)"
+
+.PHONY: $(TESTING)-$(EXAMPLE)-done
+$(TESTING)-$(EXAMPLE)-done:
+	@$(PRINT) "$(NOTHING)"
 
 ########################################
 # {{{2 $(CHECKIT) ----------------------
