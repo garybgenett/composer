@@ -195,6 +195,11 @@ unexport TITLE_LN
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
 override MAKEJOBS			?=
 
+#WORKING:NOW probably needs an "update" marker...
+ifneq ($(COMPOSER_DEPENDS),)
+override MAKEJOBS			:=
+endif
+
 ifeq ($(MAKEJOBS),)
 .NOTPARALLEL:
 endif
@@ -2713,34 +2718,33 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 .PHONY: $(TESTING)-COMPOSER_DEPENDS
 $(TESTING)-COMPOSER_DEPENDS:
 	@$(call $(TESTING)-$(HEADERS),\
-		#WORKING:NOW ,\
-		\n\t * #WORKING:NOW \
+		Validate '$(_C)COMPOSER_DEPENDS$(_D)' behavior ,\
+		\n\t * Disable '$(_C)MAKEJOBS$(_D)' threading \
+		\n\t * Reverse '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' processing \
+		\n\t * Manual specification of dependencies $(_E)('templates' before 'docx')$(_D) \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 #WORKING:NOW
-#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS = does not work... PHONY targets... :^{
-#		use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
-#WORK add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
-#	ordering only applies to $DOITALL... $INSTALL and $CLEANER always go top-down
-#WORKING:NOW
-#	if it is enabled, disable MAKEJOBS...?  then, test on a sub-directory tree with MAKEJBOS="0"
+#	document: if COMPOSER_DEPENDS is enabled, disable MAKEJOBS... it is thusly single-threaded, regardless of MAKEJOBS
+#		MAKEJOBS = does not work... PHONY targets... :^{
+#		ordering only applies to $DOITALL... $INSTALL and $CLEANER always go top-down
+#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
+#			#WORKING:NOW does this work for files, also...?
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(call $(TESTING)-run) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(call $(TESTING)-run) COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL)
-	@$(call $(TESTING)-run) MAKEJOBS="0" $(CLEANER)-$(DOITALL)
-	@$(call $(TESTING)-run) MAKEJOBS="0" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "docx: templates" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) MAKEJOBS="0" COMPOSER_DEBUGIT="1" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
-#WORK	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
-#WORK	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_DEPENDS$$)
-#WORK it would be nice to not hold here... but it's probably best to look at the output in addition to whatever hackery to test this...
-#WORK	@$(call $(TESTING)-hold)
+	$(call $(TESTING)-find,CURDIR.+\/data\/)
+	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
