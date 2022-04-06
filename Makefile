@@ -431,6 +431,8 @@ export SHELL
 
 ########################################
 
+#WORK verify all of these are in packages listed in $(CHECKIT)
+
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
@@ -1014,12 +1016,15 @@ endef
 ################################################################################
 
 #WORK gitignore better headers/formatting?
+#WORK review list!  SETTINGS and BASENAME should match everywhere...
+#WORK	and then we need a new filename for adding per-release test & debug files into the repository?
 #WORK gitignore REPLICA?
 
 override define HEREDOC_DISTRIB_GITIGNORE =
 # $(COMPOSER_BASENAME)
 /.$(COMPOSER_BASENAME).*/
 **/$(COMPOSER_SETTINGS)
+**/$(COMPOSER_BASENAME)-*
 
 # $(COMPOSER_TARGET)
 **/$(COMPOSER_STAMP)
@@ -2234,6 +2239,7 @@ $(TESTING): $(TESTING)-init
 $(TESTING):
 	@$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING))
 #WORK	@$(RUNMAKE) --silent --directory $(TESTING_DIR) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+#WORK somewhere in the main run we want to use "env - ..."
 	@$(RUNMAKE) --silent --directory $(TESTING_DIR) MAKEJOBS= COMPOSER_DEBUGIT=
 $(TESTING): HELP_FOOTER
 
