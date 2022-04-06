@@ -6,7 +6,8 @@ override VIM_OPTIONS := vim: foldmethod=marker foldtext=foldtext() foldlevel=0 f
 override VIM_FOLDING := {{{1
 ################################################################################
 #
-#WORK portability? + bash shell is required?
+#WORK portability? + bash shell is required?  need this notice?  put it in readme instead?
+#WORK is there a better use for this space?  who is going to read this besides me, anyway?
 #
 # Every attempt has been made to make this as portable as possible:
 #	http://www.gnu.org/software/make/manual/make.html#toc-Features-of-GNU-make
