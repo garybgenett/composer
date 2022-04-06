@@ -108,9 +108,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override COMPOSER_SETTINGS		:= .composer.mk
 override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 
-#WORKIN:NOW switch back to final repository, and commit all the bak files
-#	fix CONVICT to use COMPOSER_ROOT, after adding change to accept COMPOSER_DIR as root
-#WORKING:NOW COMPOSER_INCLUDES
+#WORKING:NOW switch back to final repository, and commit all the bak files
 # by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
 #	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
 # setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
@@ -285,8 +283,9 @@ override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override DEFAULT_TYPE			:= html
 override DEFAULT_EXTN			:= $(DEFAULT_TYPE)
 
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
 override OUTPUT_FILENAME		= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
-override TESTING_DIR			:= $(COMPOSER_DIR)/testing
+override TESTING_DIR			:= $(COMPOSER_DIR)/$(COMPOSER_BASENAME)-testing
 
 #WORK keep EXAMPLE_OUT?
 override EXAMPLE_TGT			:= manual
@@ -730,6 +729,14 @@ $(DOITALL): $(eval unexport COMPOSER_SUBDIRS)
 
 ########################################
 
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+ifeq ($(notdir $(COMPOSER_ROOT)),$(notdir $(TESTING_DIR)))
+override TESTING_DIR			:= $(COMPOSER_ROOT)
+endif
+ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
+override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
+endif
+
 #> update: Composer Operation: COMPOSER_TARGETS
 #> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
 #> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
@@ -740,7 +747,6 @@ override COMPOSER_TARGETS		:= $(NOTHING)-$(CLEANER)-$(TARGETS)-only
 endif
 endif
 
-#> update: $(COMPOSER_DIR).*$(TESTING_DIR)
 #> update: $(NOTHING).*$(TARGETS)
 #> update: $(NOTHING).*$(SUBDIRS)
 ifneq ($(COMPOSER_DIR),$(CURDIR))
@@ -2324,10 +2330,10 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORKING:NOW
 #>$(TESTING): $(TESTING)-$(DEBUGIT)
-$(TESTING): $(TESTING)-$(DISTRIB)
-$(TESTING): $(TESTING)-$(INSTALL)
-$(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
-$(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
+#WORKING $(TESTING): $(TESTING)-$(DISTRIB)
+#WORKING $(TESTING): $(TESTING)-$(INSTALL)
+#WORKING $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+#WORKING $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 $(TESTING): $(TESTING)-$(NOTHING)
 
 #WORKING:NOW $(TESTING): $(TESTING)-$(EXAMPLE)
@@ -2374,25 +2380,29 @@ override define $(TESTING)-$(HEADERS) =
 	fi
 endef
 
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
 override define $(TESTING)-load =
-	$(ENDOLINE)
+	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
-	$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
-	$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
+	if [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
+		$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
+		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
+	fi; \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --silent COMPOSER_DOCOLOR= .$(EXAMPLE) \
 		>$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(SED) -i "s|^[#][[:space:]]+($(call COMPOSER_INCLUDE_REGEX,COMPOSER_SUBDIRS))(.*)($(TESTING))(.*)$$|\1\3\5|g" \
 		$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
 endef
 
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
 override define $(TESTING)-init =
-	$(ENDOLINE)
+	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) INIT [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(ECHO) "" >$(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$(@)" = "$(TESTING)-$(COMPOSER_BASENAME)" ]; then \
 		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
-	else \
+	elif [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
 	$(TESTING_ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
@@ -2400,7 +2410,7 @@ override define $(TESTING)-init =
 endef
 
 override define $(TESTING)-done =
-	$(ENDOLINE)
+	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) DONE [$(@)]"; \
 	$(TESTING_ENV) $(RUNMAKE) $(@)-done 2>&1
 endef
@@ -2435,14 +2445,13 @@ endif
 $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Install the '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory ,\
-		\n\t * Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
+		\n\t * Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory ready for direct use \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' \
 		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
 	@$(call $(TESTING)-init,$(TESTING_COMPOSER_DIR))
 	@$(call $(TESTING)-done,$(TESTING_COMPOSER_DIR))
 
-#> update: $(COMPOSER_DIR).*$(TESTING_DIR)
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
@@ -2585,8 +2594,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Creating.+getting-started.html)
 	$(call $(TESTING)-find,^removed.+changelog.html)
 	$(call $(TESTING)-find,^removed.+getting-started.html)
-	$(call $(TESTING)-find,^removed.+\/$(subst -done,,$(@))\/.composed)
-	$(call $(TESTING)-find,^removed.+\/$(subst -done,,$(@))\/doc\/.composed)
+	$(call $(TESTING)-find,^removed.+\/$(notdir $(call $(TESTING)-pwd))\/.composed)
+	$(call $(TESTING)-find,^removed.+\/$(notdir $(call $(TESTING)-pwd))\/doc\/.composed)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+Makefile)
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 
@@ -2618,7 +2627,7 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
 	@$(call $(TESTING)-run) COMPOSER_STAMP= COMPOSER_EXT= $(CLEANER)
 	@$(call $(TESTING)-run) COMPOSER_STAMP= $(PRINTER)
 	@$(call $(TESTING)-run) COMPOSER_EXT= $(PRINTER)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(subst -init,,$(@))$(COMPOSER_EXT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT)
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_STAMP)
 	@$(call $(TESTING)-run) $(PRINTER)
 
@@ -2628,7 +2637,7 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 	$(call $(TESTING)-find,^removed.+README.html)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_EXT)
-	$(call $(TESTING)-find, $(subst -done,,$(@))$(COMPOSER_EXT)$$)
+	$(call $(TESTING)-find, $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT)$$)
 	$(call $(TESTING)-find, $(COMPOSER_STAMP)$$)
 
 ########################################
@@ -2648,10 +2657,9 @@ $(TESTING)-$(NOTHING):
 
 .PHONY: $(TESTING)-$(NOTHING)-init
 $(TESTING)-$(NOTHING)-init:
-	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(subst -init,,$(@))" $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
 
-#WORKING:NOW test doing 'make test-dir' to see if it runs the test?
 .PHONY: $(TESTING)-$(NOTHING)-done
 $(TESTING)-$(NOTHING)-done:
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
@@ -2696,8 +2704,8 @@ $(TESTING)-$(EXAMPLE):
 
 .PHONY: $(TESTING)-$(EXAMPLE)-init
 $(TESTING)-$(EXAMPLE)-init:
-	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(subst -init,,$(@))" $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
 $(TESTING)-$(EXAMPLE)-done:
