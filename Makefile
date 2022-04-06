@@ -456,6 +456,7 @@ override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicaliz
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
+override SLEEP				:= $(call COMPOSER_FIND,$(PATH_LIST),sleep)
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
@@ -621,8 +622,8 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 ########################################
 
-#> update: $(DEBUGIT):
-#> update: $(TESTING):
+#> update: $(DEBUGIT): targets list
+#> update: $(TESTING): targets list
 
 override HELPOUT			:= usage
 override HELPALL			:= help
@@ -2065,7 +2066,7 @@ $(LISTING):
 ########################################
 # {{{2 $(NOTHING) ----------------------
 
-#WORK document NOTHING! ...and COMPOSER_NOTHING?
+#WORK document NOTHING! ...and COMPOSER_NOTHING?  set this variable up just like the COMPOSER_DOITALL_* variables...
 #>override COMPOSER_NOTHING ?=
 
 #>.PHONY: $(NOTHING)-%
@@ -2102,6 +2103,11 @@ $(CONVICT): .set_title-$(CONVICT)
 
 ########################################
 # {{{2 $(DISTRIB) ----------------------
+
+#> update: $(DISTRIB):
+#	$(UPGRADE)
+#	$(CREATOR)
+#	$(DOITALL)
 
 .PHONY: $(DISTRIB)
 $(DISTRIB): .set_title-$(DISTRIB)
@@ -2163,7 +2169,11 @@ endif
 ########################################
 # {{{2 $(DEBUGIT) ----------------------
 
+#> update: $(DEBUGIT): targets list
 #> update: $(DEBUGIT):
+#	$(CHECKIT)
+#	$(CONFIGS)
+#	$(TARGETS)
 
 #WORK document DEBUGIT-file
 
@@ -2228,11 +2238,12 @@ $(DEBUGIT)-%:
 ########################################
 # {{{2 $(TESTING) ----------------------
 
-#> update: $(TESTING):
+#> update: $(TESTING): targets list
 
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(INSTALL).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
+override TESTING_SLEEP			:= 2
 
 #WORK document TESTING-file
 
@@ -2257,7 +2268,7 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORKING:NOW
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
-$(TESTING): $(TESTING)-use_case_template
+$(TESTING): $(TESTING)-$(DEBUGIT)
 $(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
@@ -2379,6 +2390,11 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
 
+#> update: $(DISTRIB):
+#	$(UPGRADE)
+#	$(CREATOR)
+#	$(DOITALL)
+
 .PHONY: $(TESTING)-$(DISTRIB)
 $(TESTING)-$(DISTRIB):
 	@$(call TESTING_HEADER,\
@@ -2395,7 +2411,8 @@ $(TESTING)-$(DISTRIB)-init:
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
-	$(TRUE)
+	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
+	@$(SLEEP) $(TESTING_SLEEP)
 
 ########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
@@ -2417,47 +2434,58 @@ $(TESTING)-$(INSTALL):
 
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
-	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_PWD)/$(MAKEFILE)
+	@$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call TESTING_PWD)
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD)/$(MAKEFILE)
+	@$(RUNMAKE) $(TESTING)-$(INSTALL)-init-1-$(DOITALL)
+	@$(RUNMAKE) $(TESTING)-$(INSTALL)-init-0
 
-.PHONY: $(TESTING)-$(INSTALL)-done
-$(TESTING)-$(INSTALL)-done: $(TESTING)-$(INSTALL)-done-0
-$(TESTING)-$(INSTALL)-done: $(TESTING)-$(INSTALL)-done-1
-$(TESTING)-$(INSTALL)-done:
-	@$(PRINT) "$(NOTHING)"
-	@sleep 2
-
-.PHONY: $(TESTING)-$(INSTALL)-done-%
-$(TESTING)-$(INSTALL)-done-%:
-	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(*)" $(INSTALL)-$(DOITALL)
+.PHONY: $(TESTING)-$(INSTALL)-init-%
+$(TESTING)-$(INSTALL)-init-%:
+	@$(SLEEP) $(TESTING_SLEEP)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(firstword $(subst -, ,$(*)))" $(INSTALL)$(if $(word 2,$(subst -, ,$(*))),-$(word 2,$(subst -, ,$(*))))
 	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD,$(TESTING)-$(INSTALL))/$(COMPOSER_SETTINGS)
 	@$(SED) -i \
 		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
 		$(call TESTING_PWD,$(TESTING)-$(INSTALL))/$(COMPOSER_SETTINGS)
-	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(*)" $(DOITALL)-$(DOITALL)
+	@$(SLEEP) $(TESTING_SLEEP)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(firstword $(subst -, ,$(*)))" $(DOITALL)-$(DOITALL)
+
+.PHONY: $(TESTING)-$(INSTALL)-done
+$(TESTING)-$(INSTALL)-done:
+	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
+	@$(SLEEP) $(TESTING_SLEEP)
 
 ########################################
-# {{{3 $(TESTING)-use_case_template ----
+# {{{3 $(TESTING)-$(DEBUGIT) -----------
 
 # {{{4 $(TESTING) #WORKING:NOW CASES ---
 
-.PHONY: $(TESTING)-use_case_template
-$(TESTING)-use_case_template:
+#> update: $(DEBUGIT):
+#	$(CHECKIT)
+#	$(CONFIGS)
+#	$(TARGETS)
+
+.PHONY: $(TESTING)-$(DEBUGIT)
+$(TESTING)-$(DEBUGIT):
 	@$(call TESTING_HEADER,\
-		#WORKING:NOW ,\
-		#WORKING:NOW \
+		Validate '$(_C)$(DEBUGIT)$(_D)' using '$(_C)COMPOSER_DEBUGIT$(_D)' ,\
+		Manual review of output \
 	)
 	@$(call TESTING_INIT)
 	@$(ENDOLINE)
 	@$(call TESTING_DONE)
 
-.PHONY: $(TESTING)-use_case_template-init
-$(TESTING)-use_case_template-init:
-	@$(PRINT) "$(NOTHING)"
+.PHONY: $(TESTING)-$(DEBUGIT)-init
+$(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(CHECKIT)
+$(TESTING)-$(DEBUGIT)-init:
+	@$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD)/$(MAKEFILE)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
 
-.PHONY: $(TESTING)-use_case_template-done
-$(TESTING)-use_case_template-done:
-	@$(PRINT) "$(NOTHING)"
+.PHONY: $(TESTING)-$(DEBUGIT)-done
+$(TESTING)-$(DEBUGIT)-done:
+	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
+	@$(SLEEP) $(TESTING_SLEEP)
 
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
@@ -2469,8 +2497,6 @@ $(TESTING)-use_case_template-done:
 # review:
 #	$(HELPOUT) -> COMPOSER_ESCAPES
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
-#	$(DEBUGIT) -> $(CHECKIT) + $(CONFIGS) + $(TARGETS)
-#	$(CREATOR) -> $(DISTRIB)?
 #	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
 # recursion / setup:
 #	MAKEJOBS=0 $(INSTALL)
@@ -2517,11 +2543,13 @@ $(TESTING)-$(EXAMPLE):
 
 .PHONY: $(TESTING)-$(EXAMPLE)-init
 $(TESTING)-$(EXAMPLE)-init:
-	@$(PRINT) "$(NOTHING)"
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING_COMPOSER_DIR)) $(PRINTER)
+	@$(RUNMAKE) --silent $(NOTHING)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
 $(TESTING)-$(EXAMPLE)-done:
-	@$(PRINT) "$(NOTHING)"
+	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
+	@$(SLEEP) $(TESTING_SLEEP)
 
 ########################################
 # {{{2 $(CHECKIT) ----------------------
