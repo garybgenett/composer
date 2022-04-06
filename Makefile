@@ -2314,6 +2314,7 @@ override define TESTING_INIT =
 	$(PRINT) "$(_M)$(MARKER) INIT:"; \
 	$(MKDIR) $(TESTING_DIR)/$(if $(1),$(1),$(@)); \
 	$(ECHO) "" >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
+	$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(MAKEFILE); \
 	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
@@ -2435,7 +2436,6 @@ $(TESTING)-$(INSTALL):
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
 	@$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call TESTING_PWD)
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD)/$(MAKEFILE)
 	@$(RUNMAKE) $(TESTING)-$(INSTALL)-init-1-$(DOITALL)
 	@$(RUNMAKE) $(TESTING)-$(INSTALL)-init-0
 
@@ -2478,7 +2478,6 @@ $(TESTING)-$(DEBUGIT):
 .PHONY: $(TESTING)-$(DEBUGIT)-init
 $(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(CHECKIT)
 $(TESTING)-$(DEBUGIT)-init:
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD)/$(MAKEFILE)
 	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
 
 .PHONY: $(TESTING)-$(DEBUGIT)-done
@@ -2543,7 +2542,7 @@ $(TESTING)-$(EXAMPLE):
 
 .PHONY: $(TESTING)-$(EXAMPLE)-init
 $(TESTING)-$(EXAMPLE)-init:
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING_COMPOSER_DIR)) $(PRINTER)
+	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) $(PRINTER)
 	@$(RUNMAKE) --silent $(NOTHING)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
@@ -2649,12 +2648,7 @@ $(TARGETS): .set_title-$(TARGETS)
 	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
-ifneq ($(COMPOSER_STAMP),)
-ifneq ($(wildcard $(CURDIR)/*$(COMPOSER_EXT)),)
-#>	@$(RUNMAKE) --silent $(PRINTER)
-	@$(RUNMAKE) --silent $(COMPOSER_STAMP)
-endif
-endif
+	@$(RUNMAKE) --silent $(PRINTER)-list
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
@@ -2856,15 +2850,18 @@ endif
 # {{{2 $(PRINTER) ----------------------
 
 .PHONY: $(PRINTER)
+.PHONY: $(PRINTER)-list
 $(PRINTER): .set_title-$(PRINTER)
 $(PRINTER): $(HEADERS)-$(PRINTER)
-ifneq ($(COMPOSER_STAMP),)
-ifneq ($(wildcard $(CURDIR)/*$(COMPOSER_EXT)),)
-$(PRINTER): $(COMPOSER_STAMP)
 
-$(COMPOSER_STAMP): *$(COMPOSER_EXT)
+ifneq ($(COMPOSER_STAMP),)
+$(PRINTER): $(PRINTER)-list
+$(PRINTER)-list: $(COMPOSER_STAMP)
+
+$(COMPOSER_STAMP): $(if $(wildcard $(CURDIR)/*$(COMPOSER_EXT)),*$(COMPOSER_EXT))
 	@$(LS) --directory $(COMPOSER_STAMP) $(?) 2>/dev/null || $(TRUE)
-endif
+else
+$(PRINTER): $(NOTHING)-COMPOSER_STAMP
 endif
 
 ################################################################################
