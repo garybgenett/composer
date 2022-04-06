@@ -2384,9 +2384,10 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORKING $(TESTING): $(TESTING)-$(INSTALL)
 #WORKING $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
-#WORKING $(TESTING): $(TESTING)-COMPOSER_DEPENDS
+$(TESTING): $(TESTING)-COMPOSER_DEPENDS
 #WORKING $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 #WORKING $(TESTING): $(TESTING)-CSS
+$(TESTING): $(TESTING)-other
 #WORKING $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
 
@@ -2679,6 +2680,20 @@ $(TESTING)-COMPOSER_INCLUDE:
 	@$(call $(TESTING)-done)
 
 #WORKING:NOW
+# by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
+#	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
+# setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
+#	using := is the only thing supported
+# variable definitions must match COMPOSER_INCLUDE_REGEX or will not work properly
+# once you start using COMPOSER_TARGETS and COMPOSER_SUBDIRS, there is no going back...
+#	this is fine, since including is per-directory, anyway...
+#WORKING
+#	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
+#		@$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL) -> $(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
+#		test COMPOSER_TARGETS and COMPOSER_SUBDIRS chaining
+#		COMPOSER_TARGETS auto-detect from COMPOSER_SETTINGS
+#		COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
+#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-init
 $(TESTING)-COMPOSER_INCLUDE-init:
@@ -2707,6 +2722,9 @@ $(TESTING)-COMPOSER_DEPENDS:
 	@$(call $(TESTING)-done)
 
 #WORKING:NOW
+#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
+#		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
+#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
@@ -2795,31 +2813,35 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,3,\/$(COMPOSER_CSS))
 	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 
-# {{{4 $(TESTING) #WORKING:NOW CASES ---
+########################################
+# {{{3 $(TESTING)-other ----------------
 
-#WORKING COMPOSER_INCLUDES
-# by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
-#	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
-# setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
-#	using := is the only thing supported
-# variable definitions must match COMPOSER_INCLUDE_REGEX or will not work properly
-# once you start using COMPOSER_TARGETS and COMPOSER_SUBDIRS, there is no going back...
-#	this is fine, since including is per-directory, anyway...
+.PHONY: $(TESTING)-other
+$(TESTING)-other:
+	@$(call $(TESTING)-$(HEADERS),\
+		Template '$(_C)$(TESTING)$(_D)' test case ,\
+		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
+		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+	)
+#>	@$(call $(TESTING)-load)
+#>	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
 #WORKING:NOW
-# flags / options:
-#	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
-#		@$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL) -> $(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
-#		test COMPOSER_TARGETS and COMPOSER_SUBDIRS chaining
-#		COMPOSER_TARGETS auto-detect from COMPOSER_SETTINGS
-#		COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
-#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
-#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
-#		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
-#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
-# cases:
 #	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
 #	make TYPE="man" compose && man ./README.man
-#WORKING
+
+.PHONY: $(TESTING)-other-init
+$(TESTING)-other-init:
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+
+.PHONY: $(TESTING)-other-done
+$(TESTING)-other-done:
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
+	$(call $(TESTING)-find,NOTICE.+$(TESTING)-other$$)
+#>	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(EXAMPLE) -----------
