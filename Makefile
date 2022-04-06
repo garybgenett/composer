@@ -108,7 +108,8 @@ override COMPOSER_SETTINGS		:= .composer.mk
 override COMPOSER_CSS			:= .composer.css
 override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 
-override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
+#WORKING this is likely to get squirrelly, with the "?:"... need to decide if this will be allowed (for allowing global override)... and there there is documenting it...
+override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,?:)][=]
 
 override COMPOSER_INCLUDES		:=
 ifneq ($(COMPOSER_INCLUDE),)
@@ -1655,18 +1656,19 @@ HELP_VARIABLES_FORMAT_%:
 #>.PHONY: HELP_VARIABLES_CONTROL_%
 HELP_VARIABLES_CONTROL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"						"$(_H)Value"
-	@$(TABLE_M3) ":---"			":---"							":---"
-	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"				"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS) )$(_N)(makejobs)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"				"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"					"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"		"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"		"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"					"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
-	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"				"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
-	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"				"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_EXCLUDE"	"Exclude list: $(_C)$(DOITALL)$(_D) / $(_C)$(SUBDIRS)"	"$(if $(COMPOSER_EXCLUDE),$(_M)$(COMPOSER_EXCLUDE))"
+	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
+	@$(TABLE_M3) ":---"			":---"						":---"
+	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS) )$(_N)(makejobs)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
+	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
+	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"		"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_EXCLUDE"	"Exclude list: $(_C)$(DOITALL)$(_D) $(_E)&$(_D) $(_C)$(SUBDIRS)" \
+												"$(if $(COMPOSER_EXCLUDE),$(_M)$(COMPOSER_EXCLUDE))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~= $(_E)(C, c_color)$(_D)*"
@@ -1947,7 +1949,7 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
-$(CREATOR):
+$(CREATOR): .set_title-$(CREATOR)
 	@$(call $(HEADERS))
 	@$(MKDIR)						$(CURDIR)/$(notdir $(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.ico
@@ -2857,9 +2859,6 @@ $(TESTING)-other:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING:NOW
-# Manual.html: README.md LICENSE.md = make V=! manual.html
-
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="json" $(COMPOSER_PANDOC)
@@ -2986,7 +2985,18 @@ $(CONFIGS): .set_title-$(CONFIGS)
 $(TARGETS): .set_title-$(TARGETS)
 	@$(call $(HEADERS))
 	@$(LINERULE)
-	@$(foreach FILE,$(shell $(RUNMAKE) --silent $(LISTING) | $(SED) \
+	@$(foreach FILE,$(shell $(call $(TARGETS)-list)),\
+		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ~, ,$(FILE)))"; \
+	)
+	@$(LINERULE)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $($(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(LINERULE)
+	@$(RUNMAKE) --silent $(PRINTER)-list
+
+override define $(TARGETS)-list =
+	$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		$(foreach FILE,$(LISTING_VAR),\
 			-e "/^$(FILE)/d" \
 		) \
@@ -2996,16 +3006,8 @@ $(TARGETS): .set_title-$(TARGETS)
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		-e "/^$$/d" \
 		-e "s|[:]$$||g" \
-		-e "s|[[:space:]]+|~|g" \
-		),\
-		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ~, ,$(FILE)))"; \
-	)
-	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $($(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(LINERULE)
-	@$(RUNMAKE) --silent $(PRINTER)-list
+		-e "s|[[:space:]]+|~|g"
+endef
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
@@ -3268,6 +3270,19 @@ $(eval $(call TYPE_TARGETS,$(TYPE_DOCX),$(EXTN_DOCX)))
 $(eval $(call TYPE_TARGETS,$(TYPE_EPUB),$(EXTN_EPUB)))
 $(eval $(call TYPE_TARGETS,$(TYPE_TEXT),$(EXTN_TEXT)))
 $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
+
+########################################
+# {{{2 BOOK ----------------------------
+
+# document: we have book-%!
+
+#>.PHONY: book-%
+book-%:
+	@$(call $(HEADERS))
+	@$(COMPOSE) \
+		TYPE="$(lastword $(subst ., ,$(*)))" \
+		BASE="$(firstword $(subst ., ,$(*)))" \
+		LIST="$(^)"
 
 ################################################################################
 # }}}1
