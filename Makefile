@@ -2415,12 +2415,18 @@ $(TESTING)-$(INSTALL):
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
 	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
-#WORKING:NOW
-#	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-#	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
+	@$(SED) -i \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
+		$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
+	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
+	@$(SED) -i \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
+		$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
 	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS= $(DOITALL)-$(DOITALL)
-	exit 1
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
