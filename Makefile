@@ -170,8 +170,6 @@ endif
 
 ifeq ($(MAKEJOBS),)
 override MAKEJOBS			:= 1
-else ifeq ($(MAKEJOBS),0)
-override MAKEJOBS			:=
 endif
 
 ifeq ($(MAKEJOBS),1)
@@ -180,7 +178,7 @@ else
 #>override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=line
 override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
 endif
-ifeq ($(MAKEJOBS),)
+ifeq ($(MAKEJOBS),0)
 override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
 endif
 
@@ -2417,17 +2415,18 @@ $(TESTING)-$(INSTALL):
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
 	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
-#WORKING:NOW
 	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	exit 1
 	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
 	@$(SED) -i \
 		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_TARGETS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
 		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
 		$(TESTING_DIR)/$(COMPOSER_SETTINGS)
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@sleep 2
+#WORKING:NOW
+#	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+#	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
 	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS= $(DOITALL)-$(DOITALL)
+	exit 1
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
