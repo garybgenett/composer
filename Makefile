@@ -29,6 +29,7 @@ override VIM_FOLDING := {{{1
 #WORK comments, comments, comments (& formatting :)
 #WORK document, somehow, all the places "composer" is used personally, for debugging/testing...
 #WORK prompt -z, my friend... early and everywhere...
+#WORK patches directory?  heredocs below... starting with v3.0, just as a pattern?  I'm sure there is stuff that is changed... just good practice...
 
 #WORK document not to use *-[...] target names...
 #WORK a note somewhere about symlinks...
@@ -245,14 +246,6 @@ override COMPOSER_VERSION		:= v3.0
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
-ifeq ($(COMPOSER_GITREPO),)
-ifneq ($(wildcard $(COMPOSER_DIR).git),)
-override COMPOSER_GITREPO		:= $(COMPOSER_DIR).git
-else ifneq ($(wildcard $(COMPOSER_DIR)/.git),)
-override COMPOSER_GITREPO		:= $(COMPOSER_DIR)/.git
-endif
-endif
-
 ########################################
 
 #WORK keep COMPOSER_MAN?
@@ -278,12 +271,6 @@ override EXAMPLE_TWO			:= LICENSE
 ################################################################################
 # {{{1 Composer Options --------------------------------------------------------
 ################################################################################
-
-#> update: $(EXAMPLE):
-override COMPOSER_GITREPO		?= https://github.com/garybgenett/composer.git
-override COMPOSER_REPLICA		?= $(COMPOSER_VERSION)
-
-########################################
 
 #> update: $(EXAMPLE):
 
@@ -404,11 +391,12 @@ override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
 
 ########################################
 
+override BASH_VER			:= 5.0.18
 override COREUTILS_VER			:= 8.31
 override FINDUTILS_VER			:= 4.8.0
+override DIFFUTILS_VER			:= 3.7
 override SED_VER			:= 4.8
-override TAR_VER			:= 1.34
-override BASH_VER			:= 5.0.18
+override RSYNC_VER			:= 3.2.3
 override MAKE_VER			:= 4.2.1
 override GIT_VER			:= 2.32.0
 override NPM_VER			:= 6.14.8
@@ -423,7 +411,7 @@ override PANDOC_CITE_VER		:= 0.3.0.9
 override TEX_YEAR			:= 2021
 override TEX_PI				:= 3.141592653
 override TEX_VER			:= $(TEX_PI) ($(TEX_YEAR))
-override TEX_VER_PDF			:= $(TEX_PI) (2.6-1.40.22)
+override TEX_PDF_VER			:= $(TEX_PI) (2.6-1.40.22)
 
 ################################################################################
 # {{{1 Tooling Options ---------------------------------------------------------
@@ -466,7 +454,7 @@ override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive -
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
-override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
+override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
@@ -491,25 +479,23 @@ override DATENAME			:= $(shell $(DATE) | $(SED) \
 	-e "s|T|-|g" \
 )
 
-override REPLICA_GIT_DIR		:= $(COMPOSER_PKG)/$(COMPOSER_BASENAME).git
-override REPLICA_GIT			:= cd $(CURDIR) && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
+override COMPOSER_GIT_RUN		= cd $(COMPOSER_ROOT) && $(GIT) --git-dir="$(strip $(if \
+		$(wildcard $(COMPOSER_ROOT).git),\
+		$(COMPOSER_ROOT).git ,\
+		$(COMPOSER_ROOT)/.git \
+	))" --work-tree="$(COMPOSER_ROOT)" $(1)
 
-#WORK do CONVICT and COMPOSER_GIT_RUN have any value...?  these seem to be more for the olden days of testing...
-#WORK	now, combined COMPOSER_ROOT, this could be a serious part of a valid workflow...
-override COMPOSER_GIT_RUN		= cd $(1) && $(GIT) --git-dir="$(COMPOSER_GITREPO)" --work-tree="$(1)" $(2)
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(COMPOSER_PKG)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
-
 override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
 override define DO_GIT_REPO =
-	$(MKDIR) $(COMPOSER_PKG); \
-	$(MKDIR) $(1); \
+	$(MKDIR) $(COMPOSER_PKG)/$(1); \
 	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) $(1).git  $(5); fi; \
 	if [ ! -d "$(5)" ] && [ -d "$(1)/.git" ]; then $(MV) $(1)/.git $(5); fi; \
 	if [ ! -d "$(5)" ]; then \
 		$(call GIT_RUN,$(1),init); \
 		$(call GIT_RUN,$(1),remote add origin $(2)); \
 	fi; \
-	$(ECHO) "gitdir: $(5)" >$(1)/.git; \
+	$(ECHO) "gitdir: `$(REALPATH) $(1) $(5)`" >$(1)/.git; \
 	$(call GIT_RUN,$(1),config --local --replace-all core.worktree $(1)); \
 	$(call GIT_RUN,$(1),fetch --all); \
 	if [ -n "$(3)" ] && [ -n "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(4) $(3)); fi; \
@@ -657,7 +643,6 @@ override CHECKIT			:= check
 
 override CONFIGS			:= config
 override TARGETS			:= targets
-override REPLICA			:= clone
 override INSTALL			:= install
 
 override DOITALL			:= all
@@ -698,7 +683,6 @@ override LISTING_VAR := \
 	\
 	$(CONFIGS)[:-] \
 	$(TARGETS)[:-] \
-	$(REPLICA)[:-] \
 	$(INSTALL)[:-] \
 	\
 	$(CLEANER)[:-] \
@@ -1028,7 +1012,6 @@ endef
 #WORK gitignore better headers/formatting?
 #WORK review list!  SETTINGS and BASENAME should match everywhere...
 #WORK	and then we need a new filename for adding per-release test & debug files into the repository?
-#WORK gitignore REPLICA?
 
 override define HEREDOC_DISTRIB_GITIGNORE =
 # $(COMPOSER_BASENAME)
@@ -1568,8 +1551,6 @@ HELP_VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_ESCAPES"	"Enable title/color sequences"			"$(if $(COMPOSER_ESCAPES),$(_M)$(COMPOSER_ESCAPES) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_GITREPO"	"Git repository for pull/push"			"$(if $(COMPOSER_GITREPO),$(_M)$(COMPOSER_GITREPO))"
-	@$(TABLE_M3) "$(_C)COMPOSER_REPLICA"	"Version to use: $(_C)$(REPLICA)"		"$(if $(COMPOSER_REPLICA),$(_M)$(COMPOSER_REPLICA) )$(_N)(Git tag/commit)"
 	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
 	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
 	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
@@ -1614,12 +1595,10 @@ HELP_TARGETS_MAIN_%:
 HELP_TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 #WORKING
-	@$(TABLE_M2) "$(_C)$(REPLICA)"		"Clone key components into current directory (for inclusion in content repositories)"
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)"		"Runs several key sub-targets and commands, to provide all helpful information in one place"
 	@$(TABLE_M2) "$(_C)$(TARGETS)"		"Parse for all potential targets (for verification and/or troubleshooting): $(_C)$(MAKEFILE)"
 	@$(TABLE_M2) "$(_C)$(TESTING)"		"Build example/test directory using all features and test/validate success"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
-	@$(TABLE_M2) "$(_C)$(REPLICA)-$(_N)%"	"$(_E)$(REPLICA) COMPOSER_REPLICA=$(_N)*"
 
 #WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
 
@@ -2100,13 +2079,22 @@ $(NOTHING):
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORK test CONVICT... in a subdirectory...?
+override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+
+$(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
+.PHONY: $(CONVICT)-$(DOITALL)
+$(CONVICT)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(CONVICT)="1" $(CONVICT)
 
 .PHONY: $(CONVICT)
 $(CONVICT): .set_title-$(CONVICT)
 	@$(call $(HEADERS))
-	@$(call COMPOSER_GIT_RUN,$(CURDIR),add --verbose --all ./)
-	@$(call COMPOSER_GIT_RUN,$(CURDIR),commit --verbose --all --edit --message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]")
+	$(call COMPOSER_GIT_RUN,add --all $(CONVICT_GIT_OPTS))
+	$(call COMPOSER_GIT_RUN,commit \
+		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
+		--message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]" \
+		$(CONVICT_GIT_OPTS) \
+	)
 
 ########################################
 # {{{2 $(DISTRIB) ----------------------
@@ -2261,7 +2249,8 @@ $(TESTING): .set_title-$(TESTING)
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORKING:NOW
-$(TESTING): $(TESTING)-random_directory
+$(TESTING): $(TESTING)-$(DISTRIB)
+$(TESTING): $(TESTING)-$(INSTALL)
 #WORK $(TESTING): $(TESTING)-use_case_1
 #WORK $(TESTING): $(TESTING)-use_case_2
 #WORK $(TESTING): $(TESTING)-use_case_3
@@ -2320,8 +2309,8 @@ endef
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
 
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
-$(TESTING)-$(COMPOSER_BASENAME):
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
+$(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call TESTING_HEADER,\
 		Install the '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' directory ,\
 		Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
@@ -2338,11 +2327,31 @@ $(TESTING)-$(COMPOSER_BASENAME):
 	@$(ENDOLINE)
 	@$(ENV) $(REALMAKE) --silent --directory $(TESTING_DIR) $(CONFIGS)
 
-########################################
-# {{{3 $(TESTING)-random_directory -----
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
+$(TESTING)-$(COMPOSER_BASENAME):
+	@$(ENV) $(REALMAKE) --silent --directory $(TESTING_DIR) $(CONFIGS) | $(TEE)
 
-.PHONY: $(TESTING)-random_directory
-$(TESTING)-random_directory:
+########################################
+# {{{3 $(TESTING)-$(DISTRIB) -----------
+
+.PHONY: $(TESTING)-$(DISTRIB)
+$(TESTING)-$(DISTRIB):
+	@$(call TESTING_HEADER,\
+		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
+		\n\t 1. Verify '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' configuration \
+		\n\t 2. Examine output to validate '$(NOTHING)' markers \
+		\n\t 3. Parallel forced install \
+		\n\t 4. Parallel build all [default target] \
+		\n\t 5. Linear forced install \
+		\n\t 6. Linear build all [default target] \
+	)
+#>	@$(call TESTING_INIT)
+
+########################################
+# {{{3 $(TESTING)-$(INSTALL) -----------
+
+.PHONY: $(TESTING)-$(INSTALL)
+$(TESTING)-$(INSTALL):
 	@$(call TESTING_HEADER,\
 		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
 		\n\t 1. Verify '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' configuration \
@@ -2401,6 +2410,7 @@ $(TESTING)-use_case_3:
 	)
 	@$(call TESTING_INIT)
 
+# {{{3 $(TESTING)-#WORKING:NOW CASES ---
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
@@ -2413,7 +2423,7 @@ $(TESTING)-use_case_3:
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
 #	$(DEBUGIT) -> $(CHECKIT) + $(CONFIGS) + $(TARGETS)
 #	$(CREATOR) -> $(DISTRIB)?
-#	$(CONVICT)
+#	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
 # recursion / setup:
 #	MAKEJOBS=0 $(INSTALL)
 #	$(INSTALL)
@@ -2425,7 +2435,7 @@ $(TESTING)-use_case_3:
 #	$(DOITALL)
 #	$(CLEANER)
 # features:
-#	$(DISTRIB) -> $(UPGRADE) + $(CREATOR) + $(DOITALL) = #WORK $(REPLICA)?
+#	$(DISTRIB) -> $(UPGRADE) + $(CREATOR) + $(DOITALL)
 #	$(CLEANER) -> *-$(CLEANER)
 #	$(DOITALL) -> $(NOTHING) -> no $(MAKEFILE)	= $(TARGETS) -> COMPOSER_TARGETS empty/full = from * / *$(COMPOSER_EXT) / COMPOSER_SETTINGS / COMPOSER_SRC
 #	$(DOITALL) -> $(NOTHING) -> no *$(COMPOSER_EXT)	= $(TARGETS) -> COMPOSER_SUBDIRS empty/full
@@ -2461,8 +2471,9 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) "$(_E)GNU Bash"		"$(_E)$(BASH_VER)"			"$(_N)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"			"$(_N)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Findutils"	"$(_E)$(FINDUTILS_VER)"			"$(_N)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Diffutils"	"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Sed"		"$(_E)$(SED_VER)"			"$(_N)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Tar"		"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Rsync"		"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
 #>	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(MAKE) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Git SCM"		"$(_M)$(GIT_VER)"			"$(_D)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
@@ -2474,7 +2485,7 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) "- $(_C)Skylighting"	"$(_M)$(PANDOC_SKYL_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) skylighting	2>/dev/null | $(TAIL) -n1)"
 	@$(TABLE_M3) "- $(_C)CiteProc"		"$(_M)$(PANDOC_CITE_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) citeproc		2>/dev/null | $(TAIL) -n1)"
 	@$(TABLE_M3) "$(_C)TeX Live"		"$(_M)$(TEX_VER)"			"$(_D)$(shell $(TEX) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)TeX PDF"		"$(_M)$(TEX_VER_PDF)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)TeX PDF"		"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"		"$(_H)Location & Options"
 	@$(TABLE_M2) ":---"			":---"
@@ -2482,8 +2493,9 @@ $(CHECKIT): .set_title-$(CHECKIT)
 #>	@$(TABLE_M2) "- $(_E)GNU Coreutils"	"$(_N)$(COREUTILS)"
 	@$(TABLE_M2) "- $(_E)GNU Coreutils"	"$(_N)$(LS)"
 	@$(TABLE_M2) "- $(_E)GNU Findutils"	"$(_N)$(FIND)"
+	@$(TABLE_M2) "- $(_E)GNU Diffutils"	"$(_N)$(DIFF)"
 	@$(TABLE_M2) "- $(_E)GNU Sed"		"$(_N)$(SED)"
-	@$(TABLE_M2) "- $(_E)GNU Tar"		"$(_N)$(TAR)"
+	@$(TABLE_M2) "- $(_E)Rsync"		"$(_N)$(RSYNC)"
 #>	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(MAKE)"
 	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(REALMAKE)"
 	@$(TABLE_M2) "- $(_C)Git SCM"		"$(_D)$(GIT)"
@@ -2546,64 +2558,14 @@ ifneq ($(COMPOSER_STAMP),)
 endif
 
 ########################################
-# {{{2 $(REPLICA) ----------------------
-
-#WORKING keep REPLICA?  it probably can/should be replaced with DISTRIB, or just be a wrapper to it...?  basically, trying to automate the ".Composer" directory workflow...
-
-#>.PHONY: $(REPLICA)-%:
-$(REPLICA)-%:
-	@$(RUNMAKE) COMPOSER_REPLICA="$(*)" $(REPLICA)
-
-#WORKING keep COMPOSER_FILES? if not, then remove TAR from entire file...
-#	@$(TABLE_M3) "$(_C)COMPOSER_FILES"	"List for '$(REPLICA)' target"	"$(_M)$(COMPOSER_FILES)"
-#override COMPOSER_FILES			?=
-##>	$(MAKEFILE) \
-##>	*$(COMPOSER_EXT) \
-##>	*.png \
-##>	*.css
-
-.PHONY: $(REPLICA)
-$(REPLICA): .set_title-$(REPLICA)
-$(REPLICA): override REPLICA_FILE := $(call OUTPUT_FILENAME,$(REPLICA))
-$(REPLICA):
-	@$(call $(HEADERS),\
-		COMPOSER_REPLICA \
-		COMPOSER_FILES \
-	)
-	@if [ ! -d "$(REPLICA_GIT_DIR)" ]; then \
-		$(MKDIR) $(abspath $(dir $(REPLICA_GIT_DIR))); \
-		$(REPLICA_GIT) init --bare; \
-		$(REPLICA_GIT) remote add origin $(COMPOSER_GITREPO); \
-	fi
-	@$(REPLICA_GIT) remote remove origin
-	@$(REPLICA_GIT) remote add origin $(COMPOSER_GITREPO)
-	@$(REPLICA_GIT) fetch --all
-	@$(ECHO) "$(_C)"
-	@$(REPLICA_GIT) archive \
-			--format="tar" \
-			--prefix="" \
-			$(COMPOSER_REPLICA) \
-			$(foreach FILE,$(COMPOSER_FILES),$(FILE)) \
-		| $(TAR) -C $(CURDIR) -f -
-	@$(ECHO) "$(_E)"
-	@if [ -f "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" ] && \
-	    [ "$(COMPOSER_DIR)/$(COMPOSER_SETTINGS)" != "$(CURDIR)/$(COMPOSER_SETTINGS)" ]; then \
-		$(CP) $(COMPOSER_DIR)/$(COMPOSER_SETTINGS) $(CURDIR)/$(COMPOSER_SETTINGS); \
-	fi
-	@$(ECHO) "$(_D)"
-	@$(ECHO) "$(DATESTAMP)" >$(REPLICA_FILE)
-	@$(LS) $(REPLICA_FILE)
-
-########################################
 # {{{2 $(INSTALL) ----------------------
 
 #WORK document *-DOITALL and COMPOSER_DOITALL_*?
 #WORK somehow mark as "update" that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 
 $(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
-
 .PHONY: $(INSTALL)-$(DOITALL)
-$(INSTALL)-$(DOITALL): .set_title-$(INSTALL)-$(DOITALL)
+$(INSTALL)-$(DOITALL):
 	@$(RUNMAKE) COMPOSER_DOITALL_$(INSTALL)="1" $(INSTALL)
 
 .PHONY: $(INSTALL)
@@ -2646,7 +2608,7 @@ endif
 endif
 
 override define $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME) =
-	$(SED) -i "s|^(override[[:space:]]+COMPOSER_TEACHER[[:space:]]+[:][=]).*$$|\1 \$$(COMPOSER_MY_PATH)/$(shell $(REALPATH) $(dir $(1)) $(2))|g" $(1)
+	$(SED) -i "s|^(override[[:space:]]+COMPOSER_TEACHER[[:space:]]+[:][=]).*$$|\1 \$$(COMPOSER_MY_PATH)/`$(REALPATH) $(dir $(1)) $(2)`|g" $(1)
 endef
 override define $(INSTALL)-$(MAKEFILE) =
 	if [ -z "$(COMPOSER_DOITALL_$(INSTALL))" ] && [ -f "$(1)" ]; then \
@@ -2670,9 +2632,8 @@ endef
 #WORK document somewhere that clean removes files that match a phony target name?
 
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
-
 .PHONY: $(CLEANER)-$(DOITALL)
-$(CLEANER)-$(DOITALL): .set_title-$(CLEANER)-$(DOITALL)
+$(CLEANER)-$(DOITALL):
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CLEANER)="1" $(CLEANER)
 
 .PHONY: $(CLEANER)
@@ -2734,9 +2695,8 @@ endef
 # {{{2 $(DOITALL) ----------------------
 
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
-
 .PHONY: $(DOITALL)-$(DOITALL)
-$(DOITALL)-$(DOITALL): .set_title-$(DOITALL)-$(DOITALL)
+$(DOITALL)-$(DOITALL):
 	@$(RUNMAKE) COMPOSER_DOITALL_$(DOITALL)="1" $(DOITALL)
 
 .PHONY: $(DOITALL)
