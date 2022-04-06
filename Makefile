@@ -714,6 +714,7 @@ override OUTPUT				:= $(TYPE)
 override EXTENSION			:= $(TYPE)
 
 #> update: COMPOSER_TARGETS.*strip
+#> update: TYPE_TARGETS
 override TYPE_HTML			:= html
 override TYPE_LPDF			:= pdf
 override TYPE_PRES			:= revealjs
@@ -722,21 +723,31 @@ override TYPE_EPUB			:= epub
 override TYPE_TEXT			:= text
 override TYPE_LINT			:= $(INPUT)
 
+override EXTN_HTML			:= $(TYPE_HTML)
+override EXTN_LPDF			:= $(TYPE_LPDF)
 override EXTN_PRES			:= $(TYPE_PRES).$(TYPE_HTML)
+override EXTN_DOCX			:= $(TYPE_DOCX)
+override EXTN_EPUB			:= $(TYPE_EPUB)
 override EXTN_TEXT			:= txt
 override EXTN_LINT			:= $(subst ~,,$(subst ~.,,$(addprefix ~,$(COMPOSER_EXT_DEFAULT)))).$(EXTN_TEXT)
 
 ifeq ($(TYPE),$(TYPE_HTML))
 override OUTPUT				:= html5
+override EXTENSION			:= $(EXTN_HTML)
 else ifeq ($(TYPE),$(TYPE_LPDF))
 override OUTPUT				:= latex
+override EXTENSION			:= $(EXTN_LPDF)
 else ifeq ($(TYPE),$(TYPE_PRES))
-override OUTPUT				:= revealjs
+override OUTPUT				:= $(TYPE_PRES)
 override EXTENSION			:= $(EXTN_PRES)
+else ifeq ($(TYPE),$(TYPE_EPUB))
+override OUTPUT				:= epub3
+override EXTENSION			:= $(EXTN_EPUB)
 else ifeq ($(TYPE),$(TYPE_TEXT))
 override OUTPUT				:= plain
 override EXTENSION			:= $(EXTN_TEXT)
 else ifeq ($(TYPE),$(TYPE_LINT))
+override OUTPUT				:= $(TYPE_LINT)
 override EXTENSION			:= $(EXTN_LINT)
 endif
 
@@ -755,11 +766,11 @@ override LINT_DESC			:= Pandoc Markdown (for testing)
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(strip \
-	$(BASE).$(TYPE_HTML) \
-	$(BASE).$(TYPE_LPDF) \
+	$(BASE).$(EXTN_HTML) \
+	$(BASE).$(EXTN_LPDF) \
 	$(BASE).$(EXTN_PRES) \
-	$(BASE).$(TYPE_DOCX) \
-	$(BASE).$(TYPE_EPUB) \
+	$(BASE).$(EXTN_DOCX) \
+	$(BASE).$(EXTN_EPUB) \
 	$(BASE).$(EXTN_TEXT) \
 	$(BASE).$(EXTN_LINT) \
 )
@@ -1513,11 +1524,11 @@ HELP_VARIABLES_FORMAT_%:
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Defined $(_C)TYPE$(_H) Values"	"$(_H)Format"				"$(_H)Extension"
 	@$(TABLE_M3) ":---"					":---"					":---"
-	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"			"$(HTML_DESC)"				"$(_N)*$(_D).$(_E)$(TYPE_HTML)"
-	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"			"$(LPDF_DESC)"				"$(_N)*$(_D).$(_E)$(TYPE_LPDF)"
+	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"			"$(HTML_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
+	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"			"$(LPDF_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
 	@$(TABLE_M3) "$(_C)$(TYPE_PRES)"			"$(PRES_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
-	@$(TABLE_M3) "$(_C)$(TYPE_DOCX)"			"$(DOCX_DESC)"				"$(_N)*$(_D).$(_E)$(TYPE_DOCX)"
-	@$(TABLE_M3) "$(_C)$(TYPE_EPUB)"			"$(EPUB_DESC)"				"$(_N)*$(_D).$(_E)$(TYPE_EPUB)"
+	@$(TABLE_M3) "$(_C)$(TYPE_DOCX)"			"$(DOCX_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
+	@$(TABLE_M3) "$(_C)$(TYPE_EPUB)"			"$(EPUB_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
 	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"			"$(TEXT_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
 	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"			"$(LINT_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
@@ -2158,6 +2169,7 @@ $(DEBUGIT): $(DEBUGIT)-COMPOSER_INCLUDES
 $(DEBUGIT): $(DEBUGIT)-TESTING
 $(DEBUGIT): $(DEBUGIT)-LISTING
 $(DEBUGIT): $(DEBUGIT)-MAKE_DB
+$(DEBUGIT): $(DEBUGIT)-CURDIR
 $(DEBUGIT): HELP_FOOTER
 
 .PHONY: $(DEBUGIT)-$(HEADERS)
@@ -2183,10 +2195,12 @@ $(DEBUGIT)-%:
 		$(call TITLE_LN,6,$(*) $(DIVIDE) BEGIN [$(FILE)] $(VIM_FOLDING)); \
 		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
 			$(RUNMAKE) --silent --just-print COMPOSER_DEBUGIT="!" COMPOSER_ESCAPES= $(FILE) 2>&1; \
-		elif [ ! -f "$(FILE)" ]; then \
-			$(RUNMAKE) --silent COMPOSER_DEBUGIT= $(FILE) 2>&1; \
-		else \
+		elif [ -d "$(FILE)" ]; then \
+			$(LS) --recursive $(FILE); \
+		elif [ -f "$(FILE)" ]; then \
 			$(CAT) $(FILE); \
+		else \
+			$(RUNMAKE) --silent COMPOSER_DEBUGIT= $(FILE) 2>&1; \
 		fi; \
 		$(call TITLE_LN,6,$(*) $(DIVIDE) END [$(FILE)]); \
 	)
@@ -2239,6 +2253,7 @@ endef
 #		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
 #		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
 #	for FILE in {999..1} ; do echo -en "\n.PHONY: test-${FILE}-clean\ntest-${FILE}-clean:\n\t@echo \$(@)\n" ; done
+#	make TYPE="man" compose && man ./README.man
 # review:
 #	$(HELPOUT) -> COMPOSER_ESCAPES
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
@@ -2667,61 +2682,25 @@ $(BASE).$(EXTENSION): $(LIST)
 ########################################
 # $(COMPOSER_EXT) {{{2
 
+#> update: TYPE_TARGETS
+
 #WORK dual targets... document!  also, empty COMPOSER_EXT
 
-%.$(TYPE_HTML): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
+override define TYPE_TARGETS =
+%.$(2): %$(COMPOSER_EXT)
+	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 
-%.$(TYPE_HTML): %
-	@$(COMPOSE) TYPE="$(TYPE_HTML)" BASE="$(*)" LIST="$(^)"
+%.$(2): %
+	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+endef
 
-########################################
-
-%.$(TYPE_LPDF): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
-
-%.$(TYPE_LPDF): %
-	@$(COMPOSE) TYPE="$(TYPE_LPDF)" BASE="$(*)" LIST="$(^)"
-
-########################################
-
-%.$(EXTN_PRES): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
-
-%.$(EXTN_PRES): %
-	@$(COMPOSE) TYPE="$(TYPE_PRES)" BASE="$(*)" LIST="$(^)"
-
-########################################
-
-%.$(TYPE_DOCX): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_DOCX)" BASE="$(*)" LIST="$(^)"
-
-%.$(TYPE_DOCX): %
-	@$(COMPOSE) TYPE="$(TYPE_DOCX)" BASE="$(*)" LIST="$(^)"
-
-########################################
-
-%.$(TYPE_EPUB): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
-
-%.$(TYPE_EPUB): %
-	@$(COMPOSE) TYPE="$(TYPE_EPUB)" BASE="$(*)" LIST="$(^)"
-
-########################################
-
-%.$(EXTN_TEXT): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_TEXT)" BASE="$(*)" LIST="$(^)"
-
-%.$(EXTN_TEXT): %
-	@$(COMPOSE) TYPE="$(TYPE_TEXT)" BASE="$(*)" LIST="$(^)"
-
-########################################
-
-%.$(EXTN_LINT): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(TYPE_LINT)" BASE="$(*)" LIST="$(^)"
-
-%.$(EXTN_LINT): %
-	@$(COMPOSE) TYPE="$(TYPE_LINT)" BASE="$(*)" LIST="$(^)"
+$(eval $(call TYPE_TARGETS,$(TYPE_HTML),$(EXTN_HTML)))
+$(eval $(call TYPE_TARGETS,$(TYPE_LPDF),$(EXTN_LPDF)))
+$(eval $(call TYPE_TARGETS,$(TYPE_PRES),$(EXTN_PRES)))
+$(eval $(call TYPE_TARGETS,$(TYPE_DOCX),$(EXTN_DOCX)))
+$(eval $(call TYPE_TARGETS,$(TYPE_EPUB),$(EXTN_EPUB)))
+$(eval $(call TYPE_TARGETS,$(TYPE_TEXT),$(EXTN_TEXT)))
+$(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 ################################################################################
 # }}}1
