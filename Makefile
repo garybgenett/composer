@@ -271,9 +271,9 @@ override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
 ########################################
 
-#WORK keep COMPOSER_MAN?
 override COMPOSER_CSS			:= .composer.css
 
+#WORK keep COMPOSER_MAN?
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_MAN			:= $(COMPOSER_DIR)/Pandoc_Manual
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
@@ -1061,22 +1061,33 @@ endef
 # {{{1 Heredoc: gitignore ------------------------------------------------------
 ################################################################################
 
-#WORK gitignore better headers/formatting?
-#WORK review list!  SETTINGS and BASENAME should match everywhere...
-#WORK	and then we need a new filename for adding per-release test & debug files into the repository?
-
 override define HEREDOC_DISTRIB_GITIGNORE =
-# $(COMPOSER_BASENAME)
-/$(COMPOSER_BASENAME)*
-/$(COMPOSER_SETTINGS)
-/$(COMPOSER_CSS)
-/$(COMPOSER_STAMP)
+################################################################################
+# $(subst $(NULL) $(COMPOSER_VERSION),,$(COMPOSER_FULLNAME))
+################################################################################
 
+########################################
+# $(COMPOSER_BASENAME)
+
+/$(COMPOSER_BASENAME)**
+
+#>/$(COMPOSER_SETTINGS)
+#>/$(COMPOSER_CSS)
+#>/$(COMPOSER_STAMP)
+
+########################################
 # $(UPGRADE)
+
 $(subst $(COMPOSER_DIR),,$(COMPOSER_PKG))/
 
+########################################
 # $(TESTING)
+
 $(subst $(COMPOSER_DIR),,$(TESTING_DIR))/
+
+################################################################################
+# End Of File
+################################################################################
 endef
 
 ################################################################################
@@ -1084,7 +1095,13 @@ endef
 ################################################################################
 
 override define HEREDOC_DISTRIB_REVEALJS_CSS =
+/* #############################################################################
+# $(subst $(NULL) $(COMPOSER_VERSION),,$(COMPOSER_FULLNAME))
+############################################################################# */
+
 @import url("../$(REVEALJS_CSS_THEME)");
+
+/* ########################################################################## */
 
 body {
 	background-image:	url("./screenshot.png");
@@ -1092,6 +1109,8 @@ body {
 	background-position:	98% 2%;
 	background-size:	auto 20%;
 }
+
+/* ################################## */
 
 .reveal h1 {
 	font-size:	160%;
@@ -1111,16 +1130,24 @@ body {
 	text-transform:	none;
 }
 
+/* ################################## */
+
 .reveal ol,
 .reveal ul {
 	display:	block;
 }
+
+/* ################################## */
 
 .reveal figure {
 	/* percent does not seem to work here */
 	/* optimized for 1024x768 fullscreen */
 	height:		18em;
 }
+
+/* #############################################################################
+# End Of File
+############################################################################# */
 endef
 
 ################################################################################
@@ -1882,15 +1909,30 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 ########################################
 # {{{2 $(CREATOR) ----------------------
 
-#WORKING
-
 .PHONY: $(CREATOR)
 ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
 $(CREATOR):
-#WORKING
-	@$(PRINT) "#WORKING CREATING DOCUMENTATION"
+	@$(call $(HEADERS))
+	@$(MKDIR)						$(CURDIR)/$(notdir $(COMPOSER_ART))
+	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.ico
+	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.png
+	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/screenshot.png
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)		>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)	>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)		>$(CURDIR)/LICENSE$(COMPOSER_EXT)
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)		>$(CURDIR)/README$(COMPOSER_EXT)
+	@$(LS) \
+		$(CURDIR)/.gitignore \
+		$(CURDIR)/$(notdir $(COMPOSER_ART)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS)) \
+		$(CURDIR)/*$(COMPOSER_EXT)
+#> update: $(CREATOR):
+	@$(RUNMAKE) $(DOITALL)
+ifneq ($(COMPOSER_STAMP),)
+	@$(RM) $(CURDIR)/$(COMPOSER_STAMP)
+endif
 
 ########################################
 # {{{2 $(EXAMPLE) ----------------------
@@ -2161,21 +2203,17 @@ $(CONVICT): .set_title-$(CONVICT)
 .PHONY: $(DISTRIB)
 $(DISTRIB): .set_title-$(DISTRIB)
 	@$(call $(HEADERS))
-	@if [ "$(COMPOSER)" !=						"$(CURDIR)/$(MAKEFILE)" ]; then \
-		$(CP) $(COMPOSER)					$(CURDIR)/$(MAKEFILE); \
+	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
+		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
 	fi
-	@$(MKDIR)							$(CURDIR)/$(notdir $(COMPOSER_ART))
-	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d			>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.ico
-	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d			>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.png
-	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d			>$(CURDIR)/$(notdir $(COMPOSER_ART))/screenshot.png
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)			>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)		>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)			>$(CURDIR)/LICENSE$(COMPOSER_EXT)
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)			>$(CURDIR)/README$(COMPOSER_EXT)
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
 	@$(RUNMAKE) $(UPGRADE)
 	@$(RUNMAKE) $(CREATOR)
-	@$(RUNMAKE) $(DOITALL)
+#> update: $(CREATOR):
+#>	@$(RUNMAKE) $(DOITALL)
+#>ifneq ($(COMPOSER_STAMP),)
+#>	@$(RM) $(CURDIR)/$(COMPOSER_STAMP)
+#>endif
 
 ########################################
 # {{{2 $(UPGRADE) ----------------------
@@ -2318,16 +2356,15 @@ $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(CONFIGS)
 #>$(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
-
-#WORKING:NOW
 #>$(TESTING): $(TESTING)-$(DEBUGIT)
 #WORKING $(TESTING): $(TESTING)-$(DISTRIB)
 #WORKING $(TESTING): $(TESTING)-$(INSTALL)
 #WORKING $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 #WORKING $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
+#WORKING:NOW
 $(TESTING): $(TESTING)-$(NOTHING)
-
-#WORKING:NOW $(TESTING): $(TESTING)-$(EXAMPLE)
+#WORKING:NOW
+#WORKING $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
 
 ########################################
