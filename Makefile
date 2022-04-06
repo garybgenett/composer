@@ -2254,8 +2254,8 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORKING:NOW
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
-$(TESTING): $(TESTING)-$(INSTALL)
-#WORK $(TESTING): $(TESTING)-use_case_1
+#WORK $(TESTING): $(TESTING)-$(INSTALL)
+$(TESTING): $(TESTING)-use_case_template
 
 $(TESTING): HELP_FOOTER
 
@@ -2433,22 +2433,28 @@ $(TESTING)-$(INSTALL)-done:
 	@$(PRINT) "$(NOTHING)"
 
 ########################################
-# {{{3 $(TESTING)-use_case_1 -----------
+# {{{3 $(TESTING)-use_case_template ----
 
-#WORKING:NOW
+# {{{4 $(TESTING) #WORKING:NOW CASES ---
 
-.PHONY: $(TESTING)-use_case_1
-$(TESTING)-use_case_1:
+.PHONY: $(TESTING)-use_case_template
+$(TESTING)-use_case_template:
 	@$(call TESTING_HEADER,\
 		#WORKING:NOW ,\
 		#WORKING:NOW \
 	)
-	$(PRINT) "$(call TESTING_INIT_DIRS,testing)"
 	@$(call TESTING_INIT)
 	@$(ENDOLINE)
 	@$(call TESTING_DONE)
 
-# {{{3 $(TESTING) #WORKING:NOW CASES ---
+.PHONY: $(TESTING)-use_case_template-init
+$(TESTING)-use_case_template-init:
+	@$(PRINT) "$(NOTHING)"
+
+.PHONY: $(TESTING)-use_case_template-done
+$(TESTING)-use_case_template-done:
+	@$(PRINT) "$(NOTHING)"
+
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
