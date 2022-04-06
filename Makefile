@@ -33,7 +33,7 @@ override VIM_FOLDING := {{{1
 
 #WORK document not to use *-[...] target names...
 #WORK a note somewhere about symlinks...
-#WORK test: windows: wsl
+#WORK test: windows: wsl -> sudo apt-get install pandoc texlive / rsync nodejs
 #WORK test: mac osx: macports
 
 #WORK TODO FEATURES
@@ -2262,13 +2262,13 @@ $(TESTING): .set_title-$(TESTING)
 #WORK $(TESTING): $(HEADERS)-$(TESTING)
 #WORK $(TESTING): $(TESTING)-$(HEADERS)
 #WORK $(TESTING): $(CONFIGS)
-#WORK $(TESTING): $(TESTING)-init
+$(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORKING:NOW
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
-$(TESTING): $(TESTING)-$(DEBUGIT)
+#WORK $(TESTING): $(TESTING)-$(DEBUGIT)
 $(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
@@ -2478,7 +2478,6 @@ $(TESTING)-$(DEBUGIT):
 .PHONY: $(TESTING)-$(DEBUGIT)-init
 $(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(CHECKIT)
 $(TESTING)-$(DEBUGIT)-init:
-	@$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD)/$(MAKEFILE)
 	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
 
@@ -2487,6 +2486,7 @@ $(TESTING)-$(DEBUGIT)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
 	@$(SLEEP) $(TESTING_SLEEP)
 
+#WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
@@ -2650,8 +2650,10 @@ $(TARGETS): .set_title-$(TARGETS)
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
 ifneq ($(COMPOSER_STAMP),)
+ifneq ($(wildcard $(CURDIR)/*$(COMPOSER_EXT)),)
 #>	@$(RUNMAKE) --silent $(PRINTER)
 	@$(RUNMAKE) --silent $(COMPOSER_STAMP)
+endif
 endif
 
 ########################################
@@ -2857,10 +2859,12 @@ endif
 $(PRINTER): .set_title-$(PRINTER)
 $(PRINTER): $(HEADERS)-$(PRINTER)
 ifneq ($(COMPOSER_STAMP),)
+ifneq ($(wildcard $(CURDIR)/*$(COMPOSER_EXT)),)
 $(PRINTER): $(COMPOSER_STAMP)
 
 $(COMPOSER_STAMP): *$(COMPOSER_EXT)
 	@$(LS) --directory $(COMPOSER_STAMP) $(?) 2>/dev/null || $(TRUE)
+endif
 endif
 
 ################################################################################
