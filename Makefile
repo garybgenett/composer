@@ -1936,6 +1936,7 @@ override define $(HEADERS)-run =
 	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(COMPOSER)"; \
 	$(TABLE_M2) ":---"			":---"; \
 	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(MAKEFILE_LIST)"; \
+	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(COMPOSER_INCLUDES)"; \
 	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(CURDIR)"; \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@)))$(_D))"; \
 	$(foreach FILE,$(1),\
@@ -2150,7 +2151,7 @@ endif
 #WORK document DEBUGIT-file
 
 .PHONY: $(DEBUGIT)-file
-$(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)-$(DEBUGIT)-$(DATENAME).$(EXTN_TEXT)
+$(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(DEBUGIT)-$(DATENAME).$(EXTN_TEXT)
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
 	@$(RUNMAKE) \
@@ -2163,24 +2164,23 @@ $(DEBUGIT)-file:
 .PHONY: $(DEBUGIT)
 $(DEBUGIT): .NOTPARALLEL
 $(DEBUGIT): .set_title-$(DEBUGIT)
+$(DEBUGIT): $(HEADERS)-$(DEBUGIT)
 $(DEBUGIT): $(DEBUGIT)-$(HEADERS)
+$(DEBUGIT): $(CONFIGS)
 $(DEBUGIT): $(DEBUGIT)-CHECKIT
-$(DEBUGIT): $(DEBUGIT)-CONFIGS
 $(DEBUGIT): $(DEBUGIT)-TARGETS
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DEBUGIT
 $(DEBUGIT): $(DEBUGIT)-MAKEFILE_LIST
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_INCLUDES
-$(DEBUGIT): $(DEBUGIT)-TESTING
+#>$(DEBUGIT): $(DEBUGIT)-TESTING
 $(DEBUGIT): $(DEBUGIT)-LISTING
 $(DEBUGIT): $(DEBUGIT)-MAKE_DB
+$(DEBUGIT): $(DEBUGIT)-COMPOSER_DIR
 $(DEBUGIT): $(DEBUGIT)-CURDIR
 $(DEBUGIT): HELP_FOOTER
 
 .PHONY: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(HEADERS):
-	@$(call $(HEADERS),\
-		COMPOSER_DEBUGIT \
-	)
 	@$(LINERULE)
 	@$(PRINT) "$(_H)$(MARKER) DEBUG"
 	@$(ENDOLINE)
@@ -2193,10 +2193,12 @@ $(DEBUGIT)-$(HEADERS):
 	@$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"
 	@$(LINERULE)
 
+#WORK document COMPOSER_DEBUGIT="!" ...?  (just need to remember for myself... maybe $(TESTING) is enough?
+
 #>.PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
-		$(call TITLE_LN,6,$(*) $(DIVIDE) BEGIN [$(FILE)] $(VIM_FOLDING)); \
+		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
 		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
 			$(RUNMAKE) --silent --just-print COMPOSER_DEBUGIT="!" COMPOSER_ESCAPES= $(FILE) 2>&1; \
 		elif [ -d "$(FILE)" ]; then \
@@ -2206,7 +2208,6 @@ $(DEBUGIT)-%:
 		else \
 			$(RUNMAKE) --silent COMPOSER_DEBUGIT= $(FILE) 2>&1; \
 		fi; \
-		$(call TITLE_LN,6,$(*) $(DIVIDE) END [$(FILE)]); \
 	)
 
 ########################################
@@ -2214,24 +2215,55 @@ $(DEBUGIT)-%:
 
 #> update: $(TESTING):
 
-#WORKING:NOW
-#WORK document COMPOSER_DEBUGIT="!" ...?  (just need to remember for myself... maybe $(TESTING) is enough?
 #WORK incorporate and document COMPOSER_TESTING!
+#WORK document TESTING-file
+
+.PHONY: $(TESTING)-file
+$(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(TESTING)-$(DATENAME).$(EXTN_TEXT)
+$(TESTING)-file:
+	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
+	@$(RUNMAKE) \
+		COMPOSER_ESCAPES= \
+		$(TESTING) \
+		>>$(TESTING_FILE) 2>&1
+	@$(LS) $(TESTING_FILE)
 
 .PHONY: $(TESTING)
+#WORK $(TESTING): .NOTPARALLEL
 $(TESTING): .set_title-$(TESTING)
-	@$(call TESTING_DIRECTORY,$(@))
+$(TESTING): $(HEADERS)-$(TESTING)
+$(TESTING): $(TESTING)-$(HEADERS)
+$(TESTING): $(CONFIGS)
 
-override define TESTING_DIRECTORY =
-	$(call $(HEADERS)); \
-	$(MKDIR) $(call TESTING_DIRECTORIES,$(1)); \
-	$(RUNMAKE) --silent --directory $(TESTING_DIR)/$(1) COMPOSER_TESTING="1" $(INSTALL)-$(DOITALL); \
-	$(foreach FILE,$(call TESTING_DIRECTORIES,$(1)),\
+#WORKING:NOW
+$(TESTING): $(TESTING)-use_case_1
+$(TESTING): $(TESTING)-use_case_2
+$(TESTING): $(TESTING)-use_case_3
+
+$(TESTING): HELP_FOOTER
+
+.PHONY: $(TESTING)-$(HEADERS)
+$(TESTING)-$(HEADERS):
+	@$(LINERULE)
+	@$(PRINT) "$(_H)$(MARKER) TESTING"
+	@$(ENDOLINE)
+	@$(PRINT) "  * $(_N)This is the output of the '$(_C)$(TESTING)$(_N)' target"
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) DETAILS"
+	@$(ENDOLINE)
+	@$(PRINT) "  * #WORKING:NOW"
+	@$(LINERULE)
+
+override define TESTING_INIT =
+	$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING)); \
+	$(MKDIR) $(call TESTING_INIT_DIRS,$(@)); \
+	$(RUNMAKE) --silent --directory $(TESTING_DIR)/$(@) COMPOSER_TESTING="1" $(INSTALL)-$(DOITALL); \
+	$(foreach FILE,$(call TESTING_INIT_DIRS,$(@)),\
 		$(CP) $(COMPOSER_DIR)/*$(COMPOSER_EXT) $(FILE)/; \
 	)
 endef
 
-override define TESTING_DIRECTORIES =
+override define TESTING_INIT_DIRS =
 	$(TESTING_DIR)/$(1) \
 	$(foreach DIR,\
 		subdir1 \
@@ -2249,9 +2281,20 @@ override define TESTING_DIRECTORIES =
 endef
 
 ########################################
-# {{{3 WORKING:NOW TEST CASES ----------
+# {{{3 #WORKING:NOW TEST CASES ---------
 
-#WORKING:NOW
+.PHONY: $(TESTING)-use_case_1
+$(TESTING)-use_case_1:
+	@$(call TESTING_INIT)
+
+.PHONY: $(TESTING)-use_case_2
+$(TESTING)-use_case_2:
+	@$(call TESTING_INIT)
+
+.PHONY: $(TESTING)-use_case_3
+$(TESTING)-use_case_3:
+	@$(call TESTING_INIT)
+
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
