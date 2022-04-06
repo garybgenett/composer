@@ -2124,7 +2124,7 @@ $(DISTRIB): .set_title-$(DISTRIB)
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)			>$(CURDIR)/LICENSE$(COMPOSER_EXT)
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)			>$(CURDIR)/README$(COMPOSER_EXT)
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
-#WORK	@$(RUNMAKE) $(UPGRADE)
+	@$(RUNMAKE) $(UPGRADE)
 	@$(RUNMAKE) $(CREATOR)
 	@$(RUNMAKE) $(DOITALL)
 
@@ -2269,6 +2269,7 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
 #WORK $(TESTING): $(TESTING)-$(DEBUGIT)
+$(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
@@ -2294,6 +2295,21 @@ $(TESTING)-init:
 #>	@$(RM) --recursive $(TESTING_DIR)
 	@$(RM) --recursive $(TESTING_DIR)/*
 
+override TESTING_PWD			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
+override TESTING_LOG			= $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
+override TESTING_MAKE			= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(MAKEFILE)
+override TESTING_RUN			= $(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
+override TESTING_FIND			= if [ -z "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
+
+override define TESTING_LOAD =
+	$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call TESTING_PWD,$(if $(1),$(1),$(@))); \
+	$(call TESTING_MAKE,$(if $(1),$(1),$(@))); \
+	$(call TESTING_RUN,$(if $(1),$(1),$(@))) --silent COMPOSER_ESCAPES= .$(EXAMPLE) \
+		>$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
+	$(SED) -i "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
+		$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
+endef
+
 override define TESTING_HEADER =
 	$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING)); \
 	$(ECHO) "$(_M)$(MARKER) PURPOSE:$(_D) $(strip $(1))$(_D)\n"; \
@@ -2301,54 +2317,27 @@ override define TESTING_HEADER =
 	if [ -z "$(1)" ]; then exit 1; fi; \
 	if [ -z "$(2)" ]; then exit 1; fi; \
 	$(ENDOLINE); \
-	if [ "$(@)" != $(TESTING)-$(COMPOSER_BASENAME) ]; then \
+	if [ "$(@)" != "$(TESTING)-$(COMPOSER_BASENAME)" ]; then \
 		$(DIFF) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
 	fi
 endef
 
-override TESTING_PWD = $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
-override TESTING_LOG = $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
-override TESTING_FIND = if [ -z "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
-
 override define TESTING_INIT =
 	$(PRINT) "$(_M)$(MARKER) INIT:"; \
-	$(MKDIR) $(TESTING_DIR)/$(if $(1),$(1),$(@)); \
-	$(ECHO) "" >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
-	$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(MAKEFILE); \
-	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
+	$(MKDIR) $(call TESTING_PWD,$(if $(1),$(1),$(@))); \
+	$(ECHO) "" >$(call TESTING_LOG,$(if $(1),$(1),$(@))); \
+	if [ "$(@)" = "$(TESTING)-$(COMPOSER_BASENAME)" ]; then \
+		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
+	else \
+		$(call TESTING_MAKE,$(if $(1),$(1),$(@))); \
+	fi; \
+	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call TESTING_LOG,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
 override define TESTING_DONE =
 	$(PRINT) "$(_M)$(MARKER) DONE:"; \
 	$(ENV) $(RUNMAKE) $(@)-done 2>&1
-endef
-
-#WORKING keep TESTING_INIT_DIR?
-
-override define TESTING_INIT_DIR =
-	$(MKDIR) $(call TESTING_INIT_DIRS,$(subst -init,,$(@))); \
-	$(foreach FILE,$(call TESTING_INIT_DIRS,$(subst -init,,$(@))),\
-		$(CP) $(COMPOSER_DIR)/*$(COMPOSER_EXT) $(FILE)/; \
-	)
-	$(ENV) $(RUNMAKE) --directory $(TESTING_DIR)/$(subst -init,,$(@)) $(INSTALL)-$(DOITALL); \
-endef
-
-override define TESTING_INIT_DIRS =
-	$(TESTING_DIR)/$(if $(1),$(1),$(@)) \
-	$(foreach DIR,\
-		subdir1 \
-		subdir2 \
-		subdir3 \
-		,\
-		$(foreach FILE,\
-			example1 \
-			example2 \
-			example3 \
-			,\
-			$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(DIR)/$(FILE) \
-		)\
-	)
 endef
 
 ########################################
@@ -2364,16 +2353,16 @@ $(TESTING)-$(COMPOSER_BASENAME):
 	@$(ENDOLINE)
 	@$(call TESTING_DONE,$(TESTING_COMPOSER_DIR))
 
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
-$(TESTING)-$(COMPOSER_BASENAME)-init:
-	@$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE)
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-root
+$(TESTING)-$(COMPOSER_BASENAME)-root:
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
 	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(TESTING_DIR)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
-	@$(ENV) $(REALMAKE) --silent --directory $(TESTING_DIR) COMPOSER_ESCAPES= .$(EXAMPLE) >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
-	@$(SED) -i \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_TARGETS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=]).*$$|\1 $(NOTHING)|g" \
-		$(TESTING_DIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\n# $(COMPOSER_BASENAME) $(DIVIDE) $(COMPOSER_SETTINGS)\n" >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
+
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
+$(TESTING)-$(COMPOSER_BASENAME)-init: $(TESTING)-$(COMPOSER_BASENAME)-root
 	@$(ENDOLINE)
 	@$(LS) $(COMPOSER) $(TESTING_DIR) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))
 #>	@$(ENDOLINE)
@@ -2408,7 +2397,7 @@ $(TESTING)-$(DISTRIB):
 
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(TESTING_COMPOSER_DIR) $(DISTRIB)
+	@$(call TESTING_RUN,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
@@ -2429,26 +2418,17 @@ $(TESTING)-$(INSTALL):
 		\n\t 5. Linear forced install \
 		\n\t 6. Linear build all [default target] \
 	)
+	@$(call TESTING_LOAD)
 	@$(call TESTING_INIT)
 	@$(ENDOLINE)
 	@$(call TESTING_DONE)
 
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
-	@$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call TESTING_PWD)
-	@$(RUNMAKE) $(TESTING)-$(INSTALL)-init-1-$(DOITALL)
-	@$(RUNMAKE) $(TESTING)-$(INSTALL)-init-0
-
-.PHONY: $(TESTING)-$(INSTALL)-init-%
-$(TESTING)-$(INSTALL)-init-%:
-	@$(SLEEP) $(TESTING_SLEEP)
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(firstword $(subst -, ,$(*)))" $(INSTALL)$(if $(word 2,$(subst -, ,$(*))),-$(word 2,$(subst -, ,$(*))))
-	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD,$(TESTING)-$(INSTALL))/$(COMPOSER_SETTINGS)
-	@$(SED) -i \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
-		$(call TESTING_PWD,$(TESTING)-$(INSTALL))/$(COMPOSER_SETTINGS)
-	@$(SLEEP) $(TESTING_SLEEP)
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(firstword $(subst -, ,$(*)))" $(DOITALL)-$(DOITALL)
+	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS= $(DOITALL)-$(DOITALL)
+	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)
+	@$(SLEEP) $(TESTING_SLEEP); $(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
@@ -2457,8 +2437,6 @@ $(TESTING)-$(INSTALL)-done:
 
 ########################################
 # {{{3 $(TESTING)-$(DEBUGIT) -----------
-
-# {{{4 $(TESTING) #WORKING:NOW CASES ---
 
 #> update: $(DEBUGIT):
 #	$(CHECKIT)
@@ -2478,12 +2456,46 @@ $(TESTING)-$(DEBUGIT):
 .PHONY: $(TESTING)-$(DEBUGIT)-init
 $(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(CHECKIT)
 $(TESTING)-$(DEBUGIT)-init:
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
+	@$(call TESTING_RUN) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
 
 .PHONY: $(TESTING)-$(DEBUGIT)-done
 $(TESTING)-$(DEBUGIT)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
 	@$(SLEEP) $(TESTING_SLEEP)
+
+########################################
+# {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
+
+# {{{4 $(TESTING) #WORKING:NOW CASES ---
+
+.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
+$(TESTING)-$(CLEANER)-$(DOITALL):
+	@$(call TESTING_HEADER,\
+		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' on a directory of random contents ,\
+		\n\t 1. #WORKING:NOW \
+		\n\t 1. #WORKING:NOW \
+		\n\t 1. #WORKING:NOW \
+	)
+	@$(call TESTING_LOAD)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
+
+.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
+$(TESTING)-$(CLEANER)-$(DOITALL)-init:
+	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+		>$(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
+	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
+	@$(PRINT) "#WORKING:NOW"
+	@exit 1
+
+.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
+$(TESTING)-$(CLEANER)-$(DOITALL)-done:
+	$(call TESTING_FIND,test-1-clean: .+$(TESTING)-$(CLEANER)-$(DOITALL)/data)
+	@$(PRINT) "#WORKING:NOW"
+	@exit 1
 
 #WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 #WORK
@@ -2542,7 +2554,7 @@ $(TESTING)-$(EXAMPLE):
 
 .PHONY: $(TESTING)-$(EXAMPLE)-init
 $(TESTING)-$(EXAMPLE)-init:
-	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) $(PRINTER)
+	@$(call TESTING_RUN) $(PRINTER)
 	@$(RUNMAKE) --silent $(NOTHING)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
