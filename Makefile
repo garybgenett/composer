@@ -2350,15 +2350,14 @@ $(TESTING)-random_directory:
 		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
 		\n\t 1. Examine output to validate '$(NOTHING)' markers \
 		\n\t 2. Parallel forced install \
-		\n\t 3. Parallel re-install \
+		\n\t 3. Parallel build all [default target] \
 		\n\t 4. Linear forced install \
-		\n\t 5. Linear re-install \
+		\n\t 5. Linear build all [default target] \
 	)
 	$(PRINT) "$(call TESTING_INIT_DIRS,testing)"
 	@exit 1
 	@$(RSYNC) $(PANDOC_DIR)/ $(TESTING_DIR)/$(@)
-#>	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(ENV) $(RUNMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0"
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS= $(INSTALL)-$(DOITALL)
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS=
