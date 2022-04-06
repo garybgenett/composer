@@ -88,12 +88,17 @@ override MAKEFILE			:= Makefile
 
 ifeq ($(MAKEJOBS),)
 override MAKEJOBS			:= 1
+else ifeq ($(MAKEJOBS),0)
+override MAKEJOBS			:=
 endif
 ifeq ($(MAKEJOBS),1)
 override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
 else
 #>override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=line
 override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
+endif
+ifeq ($(MAKEJOBS),)
+override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
 endif
 
 override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory $(MAKEJOBS_OPTS)
@@ -510,6 +515,8 @@ endef
 
 #WORKING:NOW convert all output to markdown
 #WORKING:NOW ensure all output fits within 80 characters
+#WORKING:NOW do a mouse-select of all text, to ensure proper color handling
+#WORKING:NOW the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
 
 override NUMCOLUMN			:= 80
 override HEAD_MAIN			:= 1
@@ -1380,6 +1387,7 @@ endef
 ################################################################################
 
 .PHONY: $(HELPOUT)
+$(HELPOUT): $(eval .NOTPARALLEL:)
 $(HELPOUT): \
 	HELP_TITLE_Usage \
 	HELP_USAGE \
@@ -1395,6 +1403,7 @@ $(HELPOUT): \
 #	HELP_VARIABLES_FORMAT_2 \
 
 .PHONY: $(HELPALL)
+$(HELPALL): $(eval .NOTPARALLEL:)
 $(HELPALL): \
 	HELP_VARIABLES_CONTROL_2 \
 	HELP_TARGETS_TITLE_1 \
@@ -1460,8 +1469,7 @@ HELP_VARIABLES_CONTROL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"						":---"
-#WORK document COMPOSER_DEBUGIT=!...?  (just need to remember for myself... maybe $(TESTING) is enough?
-	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS) )$(_N)(number, 1 disables)"
+	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS) )$(_N)(makejobs)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_ESCAPES"	"Enable title/color sequences"			"$(if $(COMPOSER_ESCAPES),$(_M)$(COMPOSER_ESCAPES) )$(_N)(boolean)"
@@ -1476,6 +1484,7 @@ HELP_VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_ESCAPES$(_D) ~= $(_E)(E, c_color)$(_D)*"
+	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
 
 #>.PHONY: HELP_TARGETS_TITLE_%
@@ -1604,6 +1613,7 @@ HELP_SYSTEM:
 # #WORKING {{{1
 
 .PHONY: $(CREATOR)
+$(CREATOR): $(eval .NOTPARALLEL:)
 $(CREATOR):
 #WORKING
 	@$(PRINT) "#WORKING CREATING DOCUMENTATION"
@@ -2110,6 +2120,7 @@ endef
 # #WORKING:NOW {{{1
 
 #WORKING:NOW incorporate and document COMPOSER_TESTING!
+#WORK document COMPOSER_DEBUGIT=!...?  (just need to remember for myself... maybe $(TESTING) is enough?
 
 .PHONY: $(TESTING)
 $(TESTING): .set_title-$(TESTING)
@@ -2126,7 +2137,7 @@ $(TESTING): .set_title-$(TESTING)
 #	$(CREATOR) -> $(DISTRIB)?
 #	$(CONVICT)
 # recursion / setup:
-#	MAKEJOBS=8 $(INSTALL)
+#	MAKEJOBS=0 $(INSTALL)
 #	$(INSTALL)
 #	$(INSTALL)-$(DOITALL)
 #	MAKEJOBS=8 $(DOITALL)-$(DOITALL)
@@ -2146,6 +2157,7 @@ $(TESTING): .set_title-$(TESTING)
 #	$(TARGETS) -> $(PRINTER)			= $(PRINTER)
 #	$(COMPOSER_TARGET) -> from environment + COMPOSER_SETTINGS + COMPOSER_CSS (css_alt) = @$(CP) $(MDVIEWER_CSS) $(CURDIR)/$(COMPOSER_CSS)
 # flags / options:
+#	MAKEJOBS=0 -> $(HELPOUT) / $(HELPALL) / ?
 #	COMPOSER_DEBUGIT="0"
 #	COMPOSER_DEBUGIT="1"
 #	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
