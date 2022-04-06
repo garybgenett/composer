@@ -2269,7 +2269,8 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
 #WORK $(TESTING): $(TESTING)-$(DEBUGIT)
-$(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+#WORK $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+$(TESTING): $(TESTING)-$(CLEANER)-$(NOTHING)
 $(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
@@ -2299,7 +2300,7 @@ override TESTING_PWD			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),
 override TESTING_LOG			= $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override TESTING_MAKE			= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(MAKEFILE)
 override TESTING_RUN			= $(TESTING_ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
-override TESTING_FIND			= if [ -z "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
+override TESTING_FIND			= if [ $(if $(3),-n,-z) "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
 
 override define TESTING_LOAD =
 	$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call TESTING_PWD,$(if $(1),$(1),$(@))); \
@@ -2340,11 +2341,14 @@ override define TESTING_DONE =
 	$(TESTING_ENV) $(RUNMAKE) $(@)-done 2>&1
 endef
 
-override TESTING_HOLD :=
 ifneq ($(COMPOSER_ESCAPES),)
 override define TESTING_HOLD =
 	$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
 	read TESTING_HOLD
+endef
+else
+override define TESTING_HOLD =
+	$(PRINT) "$(_H)$(MARKER) PAUSE TO REVIEW"
 endef
 endif
 
@@ -2474,8 +2478,6 @@ $(TESTING)-$(DEBUGIT)-done:
 ########################################
 # {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
 
-# {{{4 $(TESTING) #WORKING:NOW CASES ---
-
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING)-$(CLEANER)-$(DOITALL):
 	@$(call TESTING_HEADER,\
@@ -2491,18 +2493,56 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
-	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
 	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>$(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
+	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
-	@$(PRINT) "#WORKING:NOW"
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
-	$(call TESTING_FIND,test-1-clean: .+$(TESTING)-$(CLEANER)-$(DOITALL)\/data)
-	@$(PRINT) "#WORKING:NOW"
-	@$(TESTING_HOLD)
+	$(call TESTING_FIND,Creating.+changelog.html)
+	$(call TESTING_FIND,Creating.+getting-started.html)
+	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/.composed)
+	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/doc\/.composed)
+	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data)
+
+########################################
+# {{{3 $(TESTING)-$(CLEANER)-$(NOTHING)
+
+# {{{4 $(TESTING) #WORKING:NOW CASES ---
+
+.PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)
+$(TESTING)-$(CLEANER)-$(NOTHING):
+	@$(call TESTING_HEADER,\
+		Test non-recursive '$(_C)$(CLEANER)$(_D)' and '$(_C)$(DOITALL)$(_D)' on a directory of random contents ,\
+		\n\t 1. #WORKING:NOW \
+		\n\t 1. #WORKING:NOW \
+		\n\t 1. #WORKING:NOW \
+	)
+	@$(call TESTING_LOAD)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
+
+.PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)-init
+$(TESTING)-$(CLEANER)-$(NOTHING)-init:
+	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+		>$(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
+	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(call TESTING_RUN) $(DOITALL)
+	@$(call TESTING_RUN) $(CLEANER)
+	@$(call TESTING_RUN,$(subst -init,,$(@))/data) $(CLEANER)
+
+.PHONY: $(TESTING)-$(CLEANER)-$(NOTHING)-done
+$(TESTING)-$(CLEANER)-$(NOTHING)-done:
+	$(call TESTING_FIND,Creating.+changelog.html)
+	$(call TESTING_FIND,Creating.+getting-started.html,,1)
+	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/.composed)
+	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/doc\/.composed,,1)
+	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data)
 
 #WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 #WORK
