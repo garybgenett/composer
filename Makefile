@@ -2302,7 +2302,8 @@ override define TESTING_INIT =
 	$(PRINT) "$(_M)$(MARKER) INIT:"; \
 	$(MKDIR) $(TESTING_DIR)/$(if $(1),$(1),$(@)); \
 	$(ECHO) "" >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
-	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE)
+	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
+	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
 override define TESTING_DONE =
@@ -2415,7 +2416,6 @@ $(TESTING)-$(INSTALL):
 
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
-	exit 1
 	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
 #WORKING:NOW
 	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
@@ -2431,8 +2431,7 @@ $(TESTING)-$(INSTALL)-init:
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
-	$(call TESTING_FIND,NOTICE.+$(NOTHING).+$(DOITALL))
-	@exit 1
+	@$(PRINT) "$(NOTHING)"
 
 ########################################
 # {{{3 $(TESTING)-use_case_1 -----------
