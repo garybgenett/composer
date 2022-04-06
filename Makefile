@@ -108,16 +108,6 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override COMPOSER_SETTINGS		:= .composer.mk
 override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 
-#WORKING:NOW switch back to final repository, and commit all the bak files
-# by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
-#	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
-# setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
-#	using := is the only thing supported
-# variable definitions must match COMPOSER_INCLUDE_REGEX or will not work properly
-# once you start using COMPOSER_TARGETS and COMPOSER_SUBDIRS, there is no going back...
-#	this is fine, since including is per-directory, anyway...
-#WORK
-
 override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
 
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
@@ -2695,6 +2685,14 @@ $(TESTING)-$(NOTHING)-done:
 	$(call $(TESTING)-find,NOTICE.+$(TESTING)-$(NOTHING))
 #>	@$(call $(TESTING)-hold)
 
+#WORKING COMPOSER_INCLUDES
+# by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
+#	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
+# setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
+#	using := is the only thing supported
+# variable definitions must match COMPOSER_INCLUDE_REGEX or will not work properly
+# once you start using COMPOSER_TARGETS and COMPOSER_SUBDIRS, there is no going back...
+#	this is fine, since including is per-directory, anyway...
 #WORKING
 #	@$(RSYNC) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call $(TESTING)-pwd)/
 # flags / options:
