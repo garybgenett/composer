@@ -130,6 +130,8 @@ $(foreach FILE,$(COMPOSER_INCLUDES),\
 	$(eval include $(FILE)); \
 )
 
+override COMPOSER_INCLUDES		:= $(strip $(COMPOSER_INCLUDES))
+
 ################################################################################
 # Make Settings {{{1
 ################################################################################
@@ -712,6 +714,16 @@ override INPUT				:= markdown
 override OUTPUT				:= $(TYPE)
 override EXTENSION			:= $(TYPE)
 
+########################################
+
+override HTML_DESC			:= HyperText Markup Language
+override LPDF_DESC			:= Portable Document Format
+override PRES_DESC			:= Reveal.js Presentation
+override DOCX_DESC			:= Microsoft Office Open XML
+override EPUB_DESC			:= Electronic Publication
+override TEXT_DESC			:= Plain Text (well-formatted)
+override LINT_DESC			:= Pandoc Markdown (for testing)
+
 #> update: COMPOSER_TARGETS.*strip
 #> update: TYPE_TARGETS
 override TYPE_HTML			:= html
@@ -749,14 +761,6 @@ else ifeq ($(TYPE),$(TYPE_LINT))
 override OUTPUT				:= $(TYPE_LINT)
 override EXTENSION			:= $(EXTN_LINT)
 endif
-
-override HTML_DESC			:= HyperText Markup Language
-override LPDF_DESC			:= Portable Document Format
-override PRES_DESC			:= Reveal.js Presentation
-override DOCX_DESC			:= Microsoft Office Open XML
-override EPUB_DESC			:= Electronic Publication
-override TEXT_DESC			:= Plain Text (well-formatted)
-override LINT_DESC			:= Pandoc Markdown (for testing)
 
 ########################################
 
@@ -1888,6 +1892,9 @@ endef
 #>.PHONY: --- HEADERS ---
 ################################################################################
 
+########################################
+# .set_title {{{2
+
 #WORK should really "reset" the status line once we're done...
 
 #> grep -E "[.]set_title" Makefile
@@ -1915,6 +1922,7 @@ override define $(HEADERS) =
 	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)";
 	$(HEADER_L)
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"; \
+	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(COMPOSER_INCLUDES)$(_D)]"; \
 	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(CURDIR)$(_D)]"; \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@)))$(_D))"; \
 	$(foreach FILE,$(1),\
@@ -2689,7 +2697,6 @@ $(BASE).$(EXTENSION): $(LIST)
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
 	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
-
 %.$(2): %
 	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 endef
