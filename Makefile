@@ -447,7 +447,7 @@ override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
-override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -u
+override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
@@ -548,8 +548,8 @@ endef
 
 # #WORKING:NOW {{{1
 
-#WORK make COMPOSER_ESCAPES= config | grep -v "^[#]"
-#WORK make COMPOSER_ESCAPES= check | grep -v "^[#]"
+#WORK make COMPOSER_ESCAPES= config | grep -vE "^[#]"
+#WORK make COMPOSER_ESCAPES= check | grep -vE "^[#]"
 
 #WORKING:NOW convert all output to markdown
 #WORKING:NOW ensure all output fits within 80 characters
@@ -644,7 +644,8 @@ override CLEANER			:= clean
 override SUBDIRS			:= subdirs
 override PRINTER			:= print
 
-#> grep "^([#][>])?[.]PHONY[:]" Makefile
+#> grep -E "^([#][>])?[.]PHONY[:]" Makefile
+#> grep -E "[)]-[a-z]+" Makefile
 override LISTING_VAR := \
 	$(COMPOSER_TARGET)[:] \
 	$(COMPOSER_PANDOC)[:] \
@@ -1061,7 +1062,7 @@ endef
 #WORK replace license and readme with help/license output
 #WORK should the README be broken up into sections throughout the Makefile anyway?
 #WORK add some sort of composer_readme variable, like composer_escapes or *_debugit, so that targets like "check" can be pulled in, also...
-#WORK	the 'grep -v ^#" technique should work fine...?
+#WORK	the 'grep -vE "^[#]"' technique should work fine...?
 
 #WORKING format and update license
 
@@ -1568,7 +1569,7 @@ HELP_TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
 	@$(TABLE_M2) "$(_C)$(REPLICA)-$(_N)%"	"$(_E)$(REPLICA) COMPOSER_REPLICA=$(_N)*"
 
-#WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
+#WORKING grep -E "^([#][>])?[.]PHONY[:]" Makefile
 
 #>.PHONY: HELP_TARGETS_SUBTARGET_%
 HELP_TARGETS_SUBTARGET_%:
@@ -1870,7 +1871,7 @@ endef
 
 #WORK should really "reset" the status line once we're done...
 
-#> grep "[.]set_title" Makefile
+#> grep -E "[.]set_title" Makefile
 #>.PHONY: .set_title-%:
 .set_title-%:
 ifneq ($(COMPOSER_ESCAPES),)
@@ -2013,6 +2014,8 @@ $(MAKE_DB):
 	|| $(TRUE)
 
 ########################################
+
+#WORK document that targets which start with $(COMPOSER_REGEX_PREFIX) are special and skipped by most detection (they are hidden)
 
 .PHONY: $(LISTING)
 $(LISTING):
@@ -2185,7 +2188,7 @@ $(TESTING): .set_title-$(TESTING)
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
 #		/.g/_data/zactive/coding/composer/pandoc -> make MAKEJOBS=8 COMPOSER_DEPENDS=1 $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
 #		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
-#	for FILE in {1..999} ; do echo -en "\n.PHONY: test-${FILE}-clean\ntest-${FILE}-clean:\n\t@echo \$(@)\n" ; done
+#	for FILE in {999..1} ; do echo -en "\n.PHONY: test-${FILE}-clean\ntest-${FILE}-clean:\n\t@echo \$(@)\n" ; done
 # review:
 #	$(HELPOUT) -> COMPOSER_ESCAPES
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
@@ -2481,8 +2484,6 @@ else
 	)
 endif
 	@+$(MAKE) $(CLEANER)-do
-
-#WORKING:NOW need a better, variable-based name for this... and for all the other targets/variables that are hacked like this...
 
 .PHONY: $(CLEANER)-do
 $(CLEANER)-do:
