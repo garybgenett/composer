@@ -2298,12 +2298,14 @@ override TESTING_PWD = $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(
 override TESTING_LOG = $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override TESTING_FIND = if [ -z "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
 
-override define TESTING_TEST =
+override define TESTING_INIT =
 	$(PRINT) "$(_M)$(MARKER) INIT:"; \
 	$(MKDIR) $(TESTING_DIR)/$(if $(1),$(1),$(@)); \
 	$(ECHO) "" >$(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
-	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE); \
-	$(ENDOLINE); \
+	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(TESTING_DIR)/$(if $(1),$(1),$(@))/$(TESTING_LOGFILE)
+endef
+
+override define TESTING_DONE =
 	$(PRINT) "$(_M)$(MARKER) DONE:"; \
 	$(ENV) $(RUNMAKE) $(@)-done 2>&1
 endef
@@ -2344,7 +2346,9 @@ $(TESTING)-$(COMPOSER_BASENAME):
 		Install the '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory ,\
 		Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
 	)
-	@$(call TESTING_TEST,$(TESTING_COMPOSER_DIR))
+	@$(call TESTING_INIT,$(TESTING_COMPOSER_DIR))
+	@$(ENDOLINE)
+	@$(call TESTING_DONE,$(TESTING_COMPOSER_DIR))
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
@@ -2379,7 +2383,9 @@ $(TESTING)-$(DISTRIB):
 		Install/update '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory with '$(_C)$(DISTRIB)$(_D)' ,\
 		Successful run; no specific validation \
 	)
-	@$(call TESTING_TEST)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
 
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
@@ -2403,10 +2409,13 @@ $(TESTING)-$(INSTALL):
 		\n\t 5. Linear forced install \
 		\n\t 6. Linear build all [default target] \
 	)
-	@$(call TESTING_TEST)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
 
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
+	exit 1
 	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
 #WORKING:NOW
 	@$(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
@@ -2437,7 +2446,9 @@ $(TESTING)-use_case_1:
 		#WORKING:NOW \
 	)
 	$(PRINT) "$(call TESTING_INIT_DIRS,testing)"
-	@$(call TESTING_TEST)
+	@$(call TESTING_INIT)
+	@$(ENDOLINE)
+	@$(call TESTING_DONE)
 
 # {{{3 $(TESTING) #WORKING:NOW CASES ---
 #WORK
