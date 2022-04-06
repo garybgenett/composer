@@ -33,6 +33,8 @@ override VIM_FOLDING := {{{1
 
 #WORK document not to use *-[...] target names...
 #WORK a note somewhere about symlinks...
+#WORK test: windows: wsl
+#WORK test: mac osx: macports
 
 #WORK TODO FEATURES
 # https://stackoverflow.com/questions/3828606/vim-markdown-folding
@@ -612,8 +614,8 @@ endef
 override COMPOSER_TARGET		:= compose
 override COMPOSER_PANDOC		:= pandoc
 
-#>override RUNMAKE			:= $(MAKE) --makefile "$(COMPOSER_SRC)"
-override RUNMAKE			:= $(REALMAKE) --makefile "$(COMPOSER_SRC)"
+#>override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER_SRC)
+override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC)
 override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
 override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
@@ -2256,7 +2258,7 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 #WORK $(TESTING): $(TESTING)-$(DISTRIB)
 #WORK $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-use_case_template
-$(TESTING): $(TESTING)-template
+$(TESTING): $(TESTING)-$(EXAMPLE)
 
 $(TESTING): HELP_FOOTER
 
@@ -2416,22 +2418,23 @@ $(TESTING)-$(INSTALL):
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
 	@$(RSYNC) $(PANDOC_DIR)/ $(call TESTING_PWD)
-	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
-	@$(SED) -i \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
-		$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
-	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
-	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) MAKEJOBS= $(INSTALL)-$(DOITALL)
-	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
-	@$(SED) -i \
-		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
-		$(call TESTING_PWD)/$(COMPOSER_SETTINGS)
-	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD) MAKEJOBS= $(DOITALL)-$(DOITALL)
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_PWD)/$(MAKEFILE)
 
 .PHONY: $(TESTING)-$(INSTALL)-done
+$(TESTING)-$(INSTALL)-done: $(TESTING)-$(INSTALL)-done-0
+$(TESTING)-$(INSTALL)-done: $(TESTING)-$(INSTALL)-done-1
 $(TESTING)-$(INSTALL)-done:
 	@$(PRINT) "$(NOTHING)"
+	@sleep 2
+
+.PHONY: $(TESTING)-$(INSTALL)-done-%
+$(TESTING)-$(INSTALL)-done-%:
+	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(*)" $(INSTALL)-$(DOITALL)
+	@$(ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) COMPOSER_ESCAPES= .$(EXAMPLE) >$(call TESTING_PWD,$(TESTING)-$(INSTALL))/$(COMPOSER_SETTINGS)
+	@$(SED) -i \
+		-e "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
+		$(call TESTING_PWD,$(TESTING)-$(INSTALL))/$(COMPOSER_SETTINGS)
+	@sleep 2; $(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(TESTING)-$(INSTALL)) MAKEJOBS="$(*)" $(DOITALL)-$(DOITALL)
 
 ########################################
 # {{{3 $(TESTING)-use_case_template ----
@@ -2457,10 +2460,10 @@ $(TESTING)-use_case_template-done:
 	@$(PRINT) "$(NOTHING)"
 
 ########################################
-# {{{3 $(TESTING)-template -------------
+# {{{3 $(TESTING)-$(EXAMPLE) -----------
 
-.PHONY: $(TESTING)-template
-$(TESTING)-template:
+.PHONY: $(TESTING)-$(EXAMPLE)
+$(TESTING)-$(EXAMPLE):
 	@$(call TESTING_HEADER,\
 		$(NOTHING) ,\
 		$(NOTHING) \
@@ -2469,12 +2472,12 @@ $(TESTING)-template:
 	@$(ENDOLINE)
 	@$(call TESTING_DONE)
 
-.PHONY: $(TESTING)-template-init
-$(TESTING)-template-init:
+.PHONY: $(TESTING)-$(EXAMPLE)-init
+$(TESTING)-$(EXAMPLE)-init:
 	@$(PRINT) "$(NOTHING)"
 
-.PHONY: $(TESTING)-template-done
-$(TESTING)-template-done:
+.PHONY: $(TESTING)-$(EXAMPLE)-done
+$(TESTING)-$(EXAMPLE)-done:
 	@$(PRINT) "$(NOTHING)"
 
 #WORK
@@ -2632,7 +2635,8 @@ endif
 $(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
 .PHONY: $(INSTALL)-$(DOITALL)
 $(INSTALL)-$(DOITALL):
-	@$(RUNMAKE) COMPOSER_DOITALL_$(INSTALL)="1" $(INSTALL)
+#>	@$(RUNMAKE) COMPOSER_DOITALL_$(INSTALL)="1" $(INSTALL)
+	@$(REALMAKE) --makefile $(COMPOSER) COMPOSER_DOITALL_$(INSTALL)="1" $(INSTALL)
 
 .PHONY: $(INSTALL)
 $(INSTALL): .set_title-$(INSTALL)
