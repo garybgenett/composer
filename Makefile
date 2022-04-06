@@ -92,7 +92,6 @@ endef
 
 #> update: includes duplicates
 
-$(call READ_ALIASES,J,c_jobs,MAKEJOBS)
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 
 override COMPOSER_DEBUGIT_ALL		:=
@@ -106,21 +105,10 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 ########################################
 
 override COMPOSER_SETTINGS		:= .composer.mk
+override COMPOSER_CSS			:= .composer.css
 override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 
 override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
-
-ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
-#>include $(CURDIR)/$(COMPOSER_SETTINGS)
-$(foreach FILE,\
-	$(shell \
-		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
-		| $(SED) -e "s|[[:space:]]+|~|g" -e "s|$$| |g" \
-	),\
-	$(eval $(subst ~, ,$(FILE))) \
-)
-endif
 
 override COMPOSER_INCLUDES		:=
 ifneq ($(COMPOSER_INCLUDE),)
@@ -134,20 +122,55 @@ else
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDE[$(COMPOSER_INCLUDE)]))
-$(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(abspath $(dir $(COMPOSER_INCLUDES_LIST)))),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #WILDCARD $(FILE))); \
-	$(if $(wildcard $(FILE)),$(eval override COMPOSER_INCLUDES := \
-		$(FILE) $(COMPOSER_INCLUDES) \
-	)); \
+$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
+ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
+$(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
+#>include $(CURDIR)/$(COMPOSER_SETTINGS)
+$(foreach FILE,\
+	$(shell \
+		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
+		| $(SED) -e "s|[[:space:]]+|~|g" -e "s|$$| |g" \
+	),\
+	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #OVERRIDE [$(subst ~, ,$(FILE))])) \
+	$(eval $(subst ~, ,$(FILE))) \
 )
-$(foreach FILE,$(COMPOSER_INCLUDES),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #INCLUDE $(FILE))); \
-	$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))); \
-	$(eval include $(FILE)); \
+endif
+
+$(if $(COMPOSER_DEBUGIT_ALL),$(warning #MAKEFILE_LIST [$(MAKEFILE_LIST)]))
+$(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
+	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)); \
+)
+override COMPOSER_INCLUDES_LIST		:= $(strip $(COMPOSER_INCLUDES))
+override COMPOSER_INCLUDES		:=
+$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDES_LIST [$(COMPOSER_INCLUDES_LIST)]))
+
+$(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
+	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #WILDCARD $(FILE))); \
+	$(if $(wildcard $(FILE)),\
+		$(if $(COMPOSER_DEBUGIT_ALL),$(warning #INCLUDE $(FILE))); \
+		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))); \
+		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)); \
+		$(eval include $(FILE)); \
+	) \
 )
 
-override COMPOSER_INCLUDES		:= $(strip $(COMPOSER_INCLUDES))
+#> update: includes duplicates
+$(call READ_ALIASES,s,c_css,CSS)
+
+override _CSS				:=
+ifeq ($(subst override,,$(origin CSS)),)
+override _CSS				:= $(CSS)
+endif
+ifeq ($(_CSS),)
+$(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
+	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #WILDCARD_CSS $(FILE))); \
+	$(if $(wildcard $(FILE)),\
+		$(if $(COMPOSER_DEBUGIT_ALL),$(warning #INCLUDE_CSS $(FILE))); \
+		$(eval override _CSS := $(FILE)); \
+	) \
+)
+endif
+$(if $(COMPOSER_DEBUGIT_ALL),$(warning #_CSS [$(_CSS)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
@@ -168,7 +191,6 @@ unexport TITLE_LN
 
 ########################################
 
-#> update: includes duplicates
 #> update: $(EXAMPLE):
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
 override MAKEJOBS			?=
@@ -261,8 +283,6 @@ override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
 ########################################
 
-override COMPOSER_CSS			:= .composer.css
-
 #WORK keep COMPOSER_MAN?
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_MAN			:= $(COMPOSER_DIR)/Pandoc_Manual
@@ -313,7 +333,7 @@ override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COM
 
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
-override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_REGEX))[:]+.*$$|\1|gp" $(CURDIR)/$(COMPOSER_SETTINGS) 2>/dev/null)
+override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_REGEX))[:]+.*$$|\1|gp" $(CURDIR)/$(COMPOSER_SETTINGS))
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
@@ -341,6 +361,7 @@ override COMPOSER_SUBDIRS		?=
 
 ########################################
 
+#> update: includes duplicates
 $(call READ_ALIASES,T,c_type,TYPE)
 $(call READ_ALIASES,B,c_base,BASE)
 $(call READ_ALIASES,L,c_list,LIST)
@@ -357,7 +378,8 @@ $(call READ_ALIASES,o,c_options,OPT)
 override TYPE				?= $(DEFAULT_TYPE)
 override BASE				?= $(EXAMPLE_ONE)
 override LIST				?= $(BASE)$(COMPOSER_EXT)
-override CSS				?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
+#>override CSS				?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
+override CSS				?=
 override TTL				?=
 override TOC				?=
 override LVL				?= 2
@@ -820,15 +842,24 @@ endif
 
 ########################################
 
-override _COL				:= $(NUMCOLUMN)
-override _CSS				:= $(MDVIEWER_CSS)
 #WORK css_alt = document!
-ifeq ($(CSS),css_alt)
-override _CSS				:= $(MDVIEWER_CSS_ALT)
-else ifneq ($(wildcard $(CSS)),)
-override _CSS				:= $(CSS)
-else ifeq ($(OUTPUT),revealjs)
+override _COL				:= $(NUMCOLUMN)
+override _CSS_ALT			:= css_alt
+
+ifeq ($(_CSS),)
+ifeq ($(CSS),)
+ifeq ($(OUTPUT),$(TYPE_PRES))
 override _CSS				:= $(REVEALJS_CSS)
+else
+override _CSS				:= $(MDVIEWER_CSS)
+endif
+else
+ifeq ($(CSS),$(_CSS_ALT))
+override _CSS				:= $(MDVIEWER_CSS_ALT)
+else
+override _CSS				:= $(abspath $(CSS))
+endif
+endif
 endif
 
 ########################################
@@ -2165,7 +2196,8 @@ $(NOTHING):
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+#WORK override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+override CONVICT_GIT_OPTS		:= --verbose $(MAKEFILE)
 
 $(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
 .PHONY: $(CONVICT)-$(DOITALL)
@@ -2346,14 +2378,15 @@ $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(CONFIGS)
 #>$(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
-#>$(TESTING): $(TESTING)-$(DEBUGIT)
+#WORKING:NOW
 #WORKING $(TESTING): $(TESTING)-$(DISTRIB)
+#WORKING #>$(TESTING): $(TESTING)-$(DEBUGIT)
 #WORKING $(TESTING): $(TESTING)-$(INSTALL)
 #WORKING $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+$(TESTING): $(TESTING)-COMPOSER_INCLUDE
+#WORKING $(TESTING): $(TESTING)-COMPOSER_DEPENDS
 #WORKING $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
-#WORKING:NOW
-$(TESTING): $(TESTING)-$(NOTHING)
-#WORKING:NOW
+#WORKING $(TESTING): $(TESTING)-CSS
 #WORKING $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
 
@@ -2398,6 +2431,16 @@ override define $(TESTING)-$(HEADERS) =
 	fi
 endef
 
+override define $(TESTING)-mark =
+	$(ENDOLINE); \
+	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
+	$(foreach FILE,$(wildcard $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
+		$(RSYNC) $(FILE) $(call $(TESTING)-pwd)/$(if $(1),$(subst $(COMPOSER_EXT),,$(notdir $(FILE)))); \
+	) \
+	$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART)); \
+	$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART))
+endef
+
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
 override define $(TESTING)-load =
 	$(ENDOLINE); \
@@ -2439,6 +2482,7 @@ override define $(TESTING)-find =
 endef
 
 override define $(TESTING)-count =
+	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))); \
 	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC); \
 	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC))" != "$(1)" ]; then exit 1; fi
 endef
@@ -2488,11 +2532,11 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "override COMPOSER_TARGETS :=\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS :=\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(TESTING_ENV) $(REALMAKE) --directory $(TESTING_DIR) $(DOITALL)-$(DOITALL)
-	@$(RM) $(TESTING_DIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "" >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
-	$(call $(TESTING)-find,^override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE).$$,$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-find,^override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE),$(TESTING_COMPOSER_DIR))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS),$(TESTING_COMPOSER_DIR))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
@@ -2616,7 +2660,64 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,^removed.+\/$(notdir $(call $(TESTING)-pwd))\/.composed)
 	$(call $(TESTING)-find,^removed.+\/$(notdir $(call $(TESTING)-pwd))\/doc\/.composed)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
+	$(call $(TESTING)-count,1,$(CLEANER)-$(TARGETS)-only)
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
+
+########################################
+# {{{3 $(TESTING)-COMPOSER_INCLUDE -----
+
+.PHONY: $(TESTING)-COMPOSER_INCLUDE
+$(TESTING)-COMPOSER_INCLUDE:
+	@$(call $(TESTING)-$(HEADERS),\
+		Template '$(_C)$(TESTING)$(_D)' test case ,\
+		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
+		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+	)
+#>	@$(call $(TESTING)-load)
+#>	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+#WORKING:NOW
+
+.PHONY: $(TESTING)-COMPOSER_INCLUDE-init
+$(TESTING)-COMPOSER_INCLUDE-init:
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+
+.PHONY: $(TESTING)-COMPOSER_INCLUDE-done
+$(TESTING)-COMPOSER_INCLUDE-done:
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
+	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_INCLUDE$$)
+#>	@$(call $(TESTING)-hold)
+
+########################################
+# {{{3 $(TESTING)-COMPOSER_DEPENDS -----
+
+.PHONY: $(TESTING)-COMPOSER_DEPENDS
+$(TESTING)-COMPOSER_DEPENDS:
+	@$(call $(TESTING)-$(HEADERS),\
+		Template '$(_C)$(TESTING)$(_D)' test case ,\
+		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
+		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+	)
+#>	@$(call $(TESTING)-load)
+#>	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+#WORKING:NOW
+
+.PHONY: $(TESTING)-COMPOSER_DEPENDS-init
+$(TESTING)-COMPOSER_DEPENDS-init:
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
+	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+
+.PHONY: $(TESTING)-COMPOSER_DEPENDS-done
+$(TESTING)-COMPOSER_DEPENDS-done:
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
+	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_DEPENDS$$)
+#>	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
@@ -2631,17 +2732,12 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT):
 		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
 		\n\t * Detect updated files with '$(_C)$(PRINTER)$(_D)' \
 	)
+	@$(call $(TESTING)-mark,1)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
-	@$(foreach FILE,$(wildcard $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
-		$(RSYNC) $(FILE) $(call $(TESTING)-pwd)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
-	)
-#WORK should we need the COMPOSER_ART directory...?  maybe this is part of "resource-path" testing...?
-	@$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART))
-	@$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART))
 	@$(call $(TESTING)-run) COMPOSER_EXT= $(DOITALL)
 	@$(call $(TESTING)-run) COMPOSER_STAMP= COMPOSER_EXT= $(CLEANER)
 	@$(call $(TESTING)-run) COMPOSER_STAMP= $(PRINTER)
@@ -2656,34 +2752,50 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 	$(call $(TESTING)-find,^removed.+README.html)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_EXT)
-	$(call $(TESTING)-find, $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT)$$)
-	$(call $(TESTING)-find, $(COMPOSER_STAMP)$$)
+	$(call $(TESTING)-find, $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT))
+	$(call $(TESTING)-find, $(COMPOSER_STAMP))
 
 ########################################
-# {{{3 $(TESTING)-$(NOTHING) -----------
+# {{{3 $(TESTING)-CSS ------------------
 
-# {{{4 $(TESTING) #WORKING:NOW CASES ---
-
-.PHONY: $(TESTING)-$(NOTHING)
-$(TESTING)-$(NOTHING):
+.PHONY: $(TESTING)-CSS
+$(TESTING)-CSS:
 	@$(call $(TESTING)-$(HEADERS),\
-		Template '$(_C)$(TESTING)$(_D)' test case ,\
-		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
-		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+		Verify each method of setting variables ,\
+		\n\t * From the environment \
+		\n\t * Default '$(_C)CSS$(_D)' value \
+		\n\t * Default '$(_C)CSS$(_D)' for '$(_C)$(TYPE_PRES)$(_D)' \
+		\n\t * Use '$(_C)$(_CSS_ALT)$(_D)' as '$(_C)CSS$(_D)' \
+		\n\t * A '$(_C)$(COMPOSER_CSS)$(_D)' for '$(_C)CSS$(_D)' $(_E)(precedence over environment)$(_D) \
+		\n\t * A '$(_C)$(COMPOSER_SETTINGS)$(_D)' file $(_E)(precedence over everything)$(_D) \
 	)
+	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-.PHONY: $(TESTING)-$(NOTHING)-init
-$(TESTING)-$(NOTHING)-init:
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= $(NOTHING)
-	@$(call $(TESTING)-run) --silent COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+.PHONY: $(TESTING)-CSS-init
+$(TESTING)-CSS-init:
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)
+	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
+	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(ECHO) "override CSS := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) --silent COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
 
-.PHONY: $(TESTING)-$(NOTHING)-done
-$(TESTING)-$(NOTHING)-done:
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
-	$(call $(TESTING)-find,NOTICE.+$(TESTING)-$(NOTHING))
-#>	@$(call $(TESTING)-hold)
+.PHONY: $(TESTING)-CSS-done
+$(TESTING)-CSS-done:
+	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS)))
+	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS_ALT)))
+	$(call $(TESTING)-count,3,\/$(COMPOSER_CSS))
+	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
+
+# {{{4 $(TESTING) #WORKING:NOW CASES ---
 
 #WORKING COMPOSER_INCLUDES
 # by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
@@ -2693,27 +2805,20 @@ $(TESTING)-$(NOTHING)-done:
 # variable definitions must match COMPOSER_INCLUDE_REGEX or will not work properly
 # once you start using COMPOSER_TARGETS and COMPOSER_SUBDIRS, there is no going back...
 #	this is fine, since including is per-directory, anyway...
-#WORKING
-#	@$(RSYNC) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call $(TESTING)-pwd)/
+#WORKING:NOW
 # flags / options:
-#	COMPOSER_DEBUGIT="0"
-#	COMPOSER_DEBUGIT="1"
 #	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
 #		@$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL) -> $(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 #		test COMPOSER_TARGETS and COMPOSER_SUBDIRS chaining
+#		COMPOSER_TARGETS auto-detect from COMPOSER_SETTINGS
+#		COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
+#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
 #		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
 #		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
 # cases:
-#	COMPOSR_STAMP check in CONFIG, to catch broken regex
-#	COMPOSER_TARGETS.*filter-out.*$(CLEANER) = add test cases = 1 cleaner stripping = 2 cleaner only
-#		*-$(CLEANER) = $(TARGETS) COMPOSER_TARGETS only *-$(CLEANER) entries
-#	$(DOITALL) / $(TARGETS) = COMPOSER_TARGETS auto-detect from COMPOSER_SETTINGS
-#	$(COMPOSER_TARGET) -> from environment + COMPOSER_SETTINGS + COMPOSER_CSS (css_alt) = @$(CP) $(MDVIEWER_CSS) $(CURDIR)/$(COMPOSER_CSS)
-#	COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
-# extra:
-#	make TYPE="man" compose && man ./README.man
 #	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
+#	make TYPE="man" compose && man ./README.man
 #WORKING
 
 ########################################
@@ -2726,6 +2831,8 @@ $(TESTING)-$(EXAMPLE):
 		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
 		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
 	)
+#>	@$(call $(TESTING)-load)
+#>	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
