@@ -62,6 +62,7 @@ endef
 
 ########################################
 
+# update: .$(EXAMPLE):
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
 override MAKEJOBS			?=
 
@@ -117,8 +118,9 @@ override SED				:= $(shell which sed) -r
 override COMPOSER_SETTINGS		:= .composer.mk
 
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
-$(call READ_ALIASES,E,c_color,COMPOSER_ESCAPES)
+$(call READ_ALIASES,C,c_color,COMPOSER_ESCAPES)
 
+# update: .$(EXAMPLE):
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_INCLUDE		?=
 override COMPOSER_ESCAPES		?= 1
@@ -235,10 +237,13 @@ override EXAMPLE_TWO			:= LICENSE
 # Composer Options {{{1
 ################################################################################
 
+# update: .$(EXAMPLE):
 override COMPOSER_GITREPO		?= https://github.com/garybgenett/composer.git
 override COMPOSER_REPLICA		?= $(COMPOSER_VERSION)
 
 ########################################
+
+# update: .$(EXAMPLE):
 
 override COMPOSER_STAMP			?= .composed
 
@@ -280,7 +285,8 @@ override COMPOSER_SUBDIRS		:= $(sort $(notdir $(filter-out $(CURDIR),$(abspath $
 endif
 endif
 
-#update: COMPOSER_TARGETS: Pandoc Options
+# update: COMPOSER_TARGETS: Pandoc Options
+# update: .$(EXAMPLE):
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
@@ -298,6 +304,7 @@ $(call READ_ALIASES,m,c_margin,MGN)
 $(call READ_ALIASES,f,c_font,FNT)
 $(call READ_ALIASES,o,c_options,OPT)
 
+# update: .$(EXAMPLE):
 # update: $(HEADERS)-vars
 override TYPE				?= $(DEFAULT_TYPE)
 override BASE				?= $(EXAMPLE_ONE)
@@ -812,6 +819,8 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 ################################################################################
 # Bootstrap Options {{{1
 ################################################################################
+
+# update: .$(EXAMPLE):
 
 #WORK bootstrap!
 #WORK need some default content for TESTING
@@ -1483,7 +1492,7 @@ HELP_VARIABLES_CONTROL_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_ESCAPES$(_D) ~= $(_E)(E, c_color)$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_ESCAPES$(_D) ~= $(_E)(C, c_color)$(_D)*"
 	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
 
@@ -1774,35 +1783,42 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 $(EXAMPLE):
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES="" .$(EXAMPLE)
 
-########################################
-
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))))
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))override $(_E)COMPOSER_MY_PATH$(_D) := $(_N)$(COMPOSER_MY_PATH)"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))override $(_E)COMPOSER_TEACHER$(_D) := $(_N)$(COMPOSER_TEACHER)"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))include $(_E)$(~)(COMPOSER_TEACHER)"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL)"
-
-########################################
+	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_MY_PATH)
+	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_TEACHER)
+	@$(call EXAMPLE_PRINT,,include $(_E)$(~)(COMPOSER_TEACHER))
+	@$(call EXAMPLE_PRINT,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))))
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)COMPOSER_DEBUGIT$(_D) :=$(if $(COMPOSER_DEBUGIT), $(_M)$(COMPOSER_DEBUGIT))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)COMPOSER_INCLUDE$(_D) :=$(if $(COMPOSER_INCLUDE), $(_M)$(COMPOSER_INCLUDE))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)COMPOSER_ESCAPES$(_D) :=$(if $(COMPOSER_ESCAPES), $(_M)$(COMPOSER_ESCAPES))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)COMPOSER_TARGETS$(_D) :=$(if $(COMPOSER_TARGETS), $(_M)$(COMPOSER_TARGETS))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)COMPOSER_SUBDIRS$(_D) :=$(if $(COMPOSER_SUBDIRS), $(_M)$(COMPOSER_SUBDIRS))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)COMPOSER_DEPENDS$(_D) :=$(if $(COMPOSER_DEPENDS), $(_M)$(COMPOSER_DEPENDS))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)CSS$(_D) :=$(if $(CSS), $(_M)$(CSS))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)TTL$(_D) :=$(if $(TTL), $(_M)$(TTL))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)TOC$(_D) :=$(if $(TOC), $(_M)$(TOC))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)LVL$(_D) :=$(if $(LVL), $(_M)$(LVL))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)MGN$(_D) :=$(if $(MGN), $(_M)$(MGN))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)FNT$(_D) :=$(if $(FNT), $(_M)$(FNT))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))override $(_C)OPT$(_D) :=$(if $(OPT), $(_M)$(OPT))"
-	@$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK),$(COMMENTED))$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL)"
+#>	@$(call EXAMPLE_VAR,1,COMPOSER_DEBUGIT)
+	@$(call EXAMPLE_VAR,1,COMPOSER_INCLUDE)
+	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)	#>
+#>	@$(call EXAMPLE_VAR,1,COMPOSER_ESCAPES)
+	@$(call EXAMPLE_VAR,1,COMPOSER_TARGETS)
+	@$(call EXAMPLE_VAR,1,COMPOSER_SUBDIRS)
+#>	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)
+#>	@$(call EXAMPLE_VAR,1,CSS)
+#>	@$(call EXAMPLE_VAR,1,TTL)
+	@$(call EXAMPLE_VAR,1,TOC)
+	@$(call EXAMPLE_VAR,1,LVL)
+	@$(call EXAMPLE_VAR,1,MGN)
+	@$(call EXAMPLE_VAR,1,FNT)
+	@$(call EXAMPLE_VAR,1,OPT)
+	@$(call EXAMPLE_PRINT,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
+
+override define EXAMPLE_PRINT =
+	$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
+endef
+override define EXAMPLE_VAR_STATIC =
+	$(call EXAMPLE_PRINT,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
+endef
+override define EXAMPLE_VAR =
+	$(call EXAMPLE_PRINT,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$($(2))))
+endef
 
 ################################################################################
 # }}}1
@@ -1832,9 +1848,10 @@ $(HEADERS)-%:
 $(HEADERS)-run-%:
 	@$(call $(HEADERS)-run,,$(*))
 
+#>	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)";
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"; \
+	$(PRINT) "$(COMMENTED)$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"; \
 	$(HEADER_L)
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"; \
 	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(CURDIR)$(_D)]"; \
@@ -2156,6 +2173,7 @@ $(TESTING): .set_title-$(TESTING)
 #	$(TARGETS) -> *-$(CLEANER)			= $(TARGETS) -> COMPOSER_TARGETS only *-$(CLEANER) entries
 #	$(TARGETS) -> $(PRINTER)			= $(PRINTER)
 #	$(COMPOSER_TARGET) -> from environment + COMPOSER_SETTINGS + COMPOSER_CSS (css_alt) = @$(CP) $(MDVIEWER_CSS) $(CURDIR)/$(COMPOSER_CSS)
+#	COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
 # flags / options:
 #	MAKEJOBS=0 -> $(HELPOUT) / $(HELPALL) / ?
 #	COMPOSER_DEBUGIT="0"
@@ -2173,7 +2191,6 @@ override define TESTING_DIRECTORY =
 		$(CP) $(COMPOSER_DIR)/*$(COMPOSER_EXT) $(FILE)/; \
 	)
 endef
-
 override define TESTING_DIRECTORIES =
 	$(TESTING_DIR)/$(1) \
 	$(foreach DIR,\
