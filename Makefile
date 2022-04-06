@@ -479,7 +479,7 @@ override DATENAME			:= $(shell $(DATE) | $(SED) \
 override REPLICA_GIT_DIR		:= $(COMPOSER_PKG)/$(COMPOSER_BASENAME).git
 override REPLICA_GIT			:= cd $(CURDIR) && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
 
-#WORKING:NOW do CONVICT and COMPOSER_GIT_RUN have any value...?  these seem to be more for the olden days of testing...
+#WORK do CONVICT and COMPOSER_GIT_RUN have any value...?  these seem to be more for the olden days of testing...
 #WORK	now, combined COMPOSER_ROOT, this could be a serious part of a valid workflow...
 override COMPOSER_GIT_RUN		= cd $(1) && $(GIT) --git-dir="$(COMPOSER_GITREPO)" --work-tree="$(1)" $(2)
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(COMPOSER_PKG)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
@@ -554,14 +554,13 @@ endef
 ########################################
 
 #WORKING:NOW
+#WORKING convert all output to markdown
+#WORKING ensure all output fits within 80 characters
+#WORKING do a mouse-select of all text, to ensure proper color handling
+#WORKING the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
 
 #WORK make COMPOSER_ESCAPES= config | grep -vE "^[#]"
 #WORK make COMPOSER_ESCAPES= check | grep -vE "^[#]"
-
-#WORKING:NOW convert all output to markdown
-#WORKING:NOW ensure all output fits within 80 characters
-#WORKING:NOW do a mouse-select of all text, to ensure proper color handling
-#WORKING:NOW the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
 
 override NUMCOLUMN			:= 80
 override HEAD_MAIN			:= 1
@@ -2247,6 +2246,7 @@ endef
 ########################################
 # WORKING:NOW TEST CASES {{{3
 
+#WORKING:NOW
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
