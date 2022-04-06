@@ -58,7 +58,7 @@ override VIM_FOLDING := {{{1
 ################################################################################
 # }}}1
 ################################################################################
-# Include Files {{{1
+# {{{1 Include Files -----------------------------------------------------------
 ################################################################################
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
@@ -133,7 +133,7 @@ $(foreach FILE,$(COMPOSER_INCLUDES),\
 override COMPOSER_INCLUDES		:= $(strip $(COMPOSER_INCLUDES))
 
 ################################################################################
-# Make Settings {{{1
+# {{{1 Make Settings -----------------------------------------------------------
 ################################################################################
 
 .POSIX:
@@ -185,7 +185,7 @@ override MAKEFILE			:= Makefile
 override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory $(MAKEJOBS_OPTS)
 
 ################################################################################
-# Composer Globals {{{1
+# {{{1 Composer Globals --------------------------------------------------------
 ################################################################################
 
 #> update: includes duplicates
@@ -236,7 +236,7 @@ override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
 override COMPOSER_REGEX_PREFIX		:= [_.]
 
 ################################################################################
-# Composer Settings {{{1
+# {{{1 Composer Settings -------------------------------------------------------
 ################################################################################
 
 override COMPOSER_VERSION		:= v3.0
@@ -273,7 +273,7 @@ override EXAMPLE_ONE			:= README
 override EXAMPLE_TWO			:= LICENSE
 
 ################################################################################
-# Composer Options {{{1
+# {{{1 Composer Options --------------------------------------------------------
 ################################################################################
 
 #> update: $(EXAMPLE):
@@ -359,7 +359,7 @@ override OPT				?=
 ################################################################################
 # }}}1
 ################################################################################
-# Tooling Versions {{{1
+# {{{1 Tooling Versions --------------------------------------------------------
 ################################################################################
 
 # https://github.com/jgm/pandoc
@@ -419,7 +419,7 @@ override TEX_VER			:= $(TEX_PI) ($(TEX_YEAR))
 override TEX_VER_PDF			:= $(TEX_PI) (2.6-1.40.22)
 
 ################################################################################
-# Tooling Options {{{1
+# {{{1 Tooling Options ---------------------------------------------------------
 ################################################################################
 
 #> update: includes duplicates
@@ -511,7 +511,7 @@ endef
 ################################################################################
 # }}}1
 ################################################################################
-# Composer Output {{{1
+# {{{1 Composer Output ---------------------------------------------------------
 ################################################################################
 
 # https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
@@ -605,7 +605,7 @@ override define TITLE_LN =
 endef
 
 ################################################################################
-# Composer Operation {{{1
+# {{{1 Composer Operation ------------------------------------------------------
 ################################################################################
 
 override COMPOSER_TARGET		:= compose
@@ -652,7 +652,9 @@ override CLEANER			:= clean
 override SUBDIRS			:= subdirs
 override PRINTER			:= print
 
-#> grep -E "^([#][>])?[.]PHONY[:]" Makefile
+#WORKING replace HELP_* / EXAMPLE_* with $(CREATOR)_*, and re-sort the file...
+
+#> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> grep -E "[)]-[a-z]+" Makefile
 override LISTING_VAR := \
 	$(COMPOSER_TARGET)[:] \
@@ -661,9 +663,9 @@ override LISTING_VAR := \
 	$(HELPOUT)[:-] \
 	$(HELPALL)[:-] \
 	$(CREATOR)[:-] \
+	$(EXAMPLE)[:-] \
 	HELP[_] \
 	EXAMPLE[_] \
-	[.]?$(EXAMPLE)[:-] \
 	\
 	$(HEADERS)[:-] \
 	$(WHOWHAT)[:-] \
@@ -707,7 +709,7 @@ $(DOITALL): $(eval unexport COMPOSER_SUBDIRS)
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 
 ################################################################################
-# Pandoc Options {{{1
+# {{{1 Pandoc Options ----------------------------------------------------------
 ################################################################################
 
 override INPUT				:= markdown
@@ -876,7 +878,7 @@ endif
 override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 
 ################################################################################
-# Bootstrap Options {{{1
+# {{{1 Bootstrap Options -------------------------------------------------------
 ################################################################################
 
 #WORK think about this...
@@ -988,7 +990,7 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 ################################################################################
 # }}}1
 ################################################################################
-# Embedded Files {{{1
+# {{{1 Embedded Files ----------------------------------------------------------
 ################################################################################
 
 override DIST_ICO			:= AAABAAEAEBACAAEAAQCwAAAAFgAAACgAAAAQAAAAIAAAAAEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAGA8AAAwZgAAGMIAAAzAAAAGwAAADMAAABjAAAAwwgAAYGYAAAA8AAAAAAAAAAAAAAAAAAD//wAA//8AAA+BAAAHAAAAAgAAAIAAAADAGAAA4B8AAMAfAACAGAAAAgAAAAYAAAAPAAAA/4EAAP//AAD//wAA
@@ -996,7 +998,7 @@ override DIST_ICON			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA
 override DIST_SCREENSHOT		:= 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
 
 ################################################################################
-# Heredoc Function {{{1
+# {{{1 Heredoc Function --------------------------------------------------------
 ################################################################################
 
 override define DO_HEREDOC =
@@ -1007,7 +1009,7 @@ override define DO_HEREDOC =
 endef
 
 ################################################################################
-# Heredoc: gitignore {{{1
+# {{{1 Heredoc: gitignore ------------------------------------------------------
 ################################################################################
 
 #WORK gitignore better headers/formatting?
@@ -1030,7 +1032,7 @@ $(subst $(COMPOSER_DIR),,$(TESTING_DIR))/
 endef
 
 ################################################################################
-# Heredoc: revealjs_css {{{1
+# {{{1 Heredoc: revealjs_css ---------------------------------------------------
 ################################################################################
 
 override define HEREDOC_DISTRIB_REVEALJS_CSS =
@@ -1074,7 +1076,7 @@ body {
 endef
 
 ################################################################################
-# Heredoc: license {{{1
+# {{{1 Heredoc: license --------------------------------------------------------
 ################################################################################
 
 #WORKING
@@ -1134,7 +1136,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 endef
 
 ################################################################################
-# Heredoc: readme {{{1
+# {{{1 Heredoc: readme ---------------------------------------------------------
 ################################################################################
 
 #WORKING format and update readme
@@ -1446,12 +1448,11 @@ endef
 ################################################################################
 # }}}1
 ################################################################################
-# Documentation {{{1
-#>.PHONY: --- DOCUMENTATION ---
+# {{{1 Documentation -----------------------------------------------------------
 ################################################################################
 
 ########################################
-# $(HELPOUT) $(HELPALL) {{{2
+# {{{2 $(HELPOUT) $(HELPALL) -----------
 
 .PHONY: $(HELPOUT)
 $(HELPOUT): .NOTPARALLEL
@@ -1502,7 +1503,7 @@ HELP_FOOTER:
 	@$(PRINT) "*$(_H)Happy Hacking!$(_D)*"
 
 ########################################
-# HELP_VARIABLES {{{3
+# {{{3 HELP_VARIABLES ------------------
 
 #>.PHONY: HELP_VARIABLES_TITLE_%
 HELP_VARIABLES_TITLE_%:
@@ -1562,7 +1563,7 @@ HELP_VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
 
 ########################################
-# HELP_TARGETS {{{3
+# {{{3 HELP_TARGETS --------------------
 
 #>.PHONY: HELP_TARGETS_TITLE_%
 HELP_TARGETS_TITLE_%:
@@ -1600,7 +1601,7 @@ HELP_TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
 	@$(TABLE_M2) "$(_C)$(REPLICA)-$(_N)%"	"$(_E)$(REPLICA) COMPOSER_REPLICA=$(_N)*"
 
-#WORKING grep -E "^([#][>])?[.]PHONY[:]" Makefile
+#WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
 
 #>.PHONY: HELP_TARGETS_SUBTARGET_%
 HELP_TARGETS_SUBTARGET_%:
@@ -1631,7 +1632,7 @@ HELP_TARGETS_SUBTARGET_%:
 	@$(ENDOLINE)
 
 ########################################
-# HELP_* {{{3
+# {{{3 HELP_* --------------------------
 
 #>.PHONY: HELP_COMMANDS_%
 HELP_COMMANDS_%:
@@ -1679,7 +1680,7 @@ HELP_SYSTEM:
 	@$(ENDOLINE)
 
 ########################################
-# EXAMPLE_* {{{3
+# {{{3 EXAMPLE_* -----------------------
 
 .PHONY: EXAMPLE_MAKEFILES
 EXAMPLE_MAKEFILES: \
@@ -1695,7 +1696,7 @@ EXAMPLE_MAKEFILE: \
 	EXAMPLE_MAKEFILE_TEMPLATE
 
 ########################################
-# EXAMPLE_MAKEFILES {{{3
+# {{{3 EXAMPLE_MAKEFILES ---------------
 
 .PHONY: EXAMPLE_MAKEFILES_HEADER
 EXAMPLE_MAKEFILES_HEADER:
@@ -1743,7 +1744,7 @@ EXAMPLE_MAKEFILES_FOOTER:
 	@$(ENDOLINE)
 
 ########################################
-# EXAMPLE_MAKEFILE {{{3
+# {{{3 EXAMPLE_MAKEFILE ----------------
 
 .PHONY: EXAMPLE_MAKEFILE_HEADER
 EXAMPLE_MAKEFILE_HEADER:
@@ -1828,7 +1829,7 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 	@$(ENDOLINE)
 
 ########################################
-# $(CREATOR) {{{2
+# {{{2 $(CREATOR) ----------------------
 
 #WORKING
 
@@ -1839,7 +1840,7 @@ $(CREATOR):
 	@$(PRINT) "#WORKING CREATING DOCUMENTATION"
 
 ########################################
-# $(EXAMPLE) {{{2
+# {{{2 $(EXAMPLE) ----------------------
 
 #> update: $(EXAMPLE):
 
@@ -1888,12 +1889,11 @@ endef
 ################################################################################
 # }}}1
 ################################################################################
-# Composer Headers {{{1
-#>.PHONY: --- HEADERS ---
+# {{{1 Composer Headers --------------------------------------------------------
 ################################################################################
 
 ########################################
-# .set_title {{{2
+# {{{2 .set_title ----------------------
 
 #WORK should really "reset" the status line once we're done...
 
@@ -1907,7 +1907,7 @@ else
 endif
 
 ########################################
-# $(HEADERS) {{{2
+# {{{2 $(HEADERS) ----------------------
 
 #>.PHONY: $(HEADERS)-%
 $(HEADERS)-%:
@@ -1972,7 +1972,7 @@ override define $(HEADERS)-skip =
 endef
 
 ########################################
-# $(WHOWHAT) {{{2
+# {{{2 $(WHOWHAT) ----------------------
 
 #>.PHONY: $(WHOWHAT)-%
 $(WHOWHAT)-%:
@@ -1990,7 +1990,7 @@ else
 endif
 
 ########################################
-# $(SETTING) {{{2
+# {{{2 $(SETTING) ----------------------
 
 #>.PHONY: $(SETTING)-%
 $(SETTING)-%:
@@ -2005,12 +2005,11 @@ else
 endif
 
 ################################################################################
-# Global Targets {{{1
-#>.PHONY: --- GLOBAL ---
+# {{{1 Global Targets ----------------------------------------------------------
 ################################################################################
 
 ########################################
-# .DEFAULT {{{2
+# {{{2 .DEFAULT ------------------------
 
 .DEFAULT_GOAL := $(HELPOUT)
 .DEFAULT:
@@ -2030,7 +2029,7 @@ endif
 	@exit 1
 
 ########################################
-# $(MAKE_DB) {{{2
+# {{{2 $(MAKE_DB) ----------------------
 
 .PHONY: $(MAKE_DB)
 $(MAKE_DB):
@@ -2043,7 +2042,7 @@ $(MAKE_DB):
 	|| $(TRUE)
 
 ########################################
-# $(LISTING) {{{2
+# {{{2 $(LISTING) ----------------------
 
 #WORK document that targets which start with $(COMPOSER_REGEX_PREFIX) are special and skipped by most detection (they are hidden)
 
@@ -2055,7 +2054,7 @@ $(LISTING):
 		| $(SORT)
 
 ########################################
-# $(NOTHING) {{{2
+# {{{2 $(NOTHING) ----------------------
 
 #WORK document NOTHING! ...and COMPOSER_NOTHING?
 #>override COMPOSER_NOTHING ?=
@@ -2069,12 +2068,11 @@ $(NOTHING):
 	@$(call $(HEADERS)-note,$(COMPOSER_NOTHING))
 
 ################################################################################
-# Release Targets {{{1
-#>.PHONY: --- RELEASE ---
+# {{{1 Release Targets ---------------------------------------------------------
 ################################################################################
 
 ########################################
-# $(CONVICT) {{{2
+# {{{2 $(CONVICT) ----------------------
 
 #WORK test CONVICT... in a subdirectory...?
 
@@ -2085,7 +2083,7 @@ $(CONVICT): .set_title-$(CONVICT)
 	@$(call COMPOSER_GIT_RUN,$(CURDIR),commit --verbose --all --edit --message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]")
 
 ########################################
-# $(DISTRIB) {{{2
+# {{{2 $(DISTRIB) ----------------------
 
 .PHONY: $(DISTRIB)
 $(DISTRIB): .set_title-$(DISTRIB)
@@ -2107,7 +2105,7 @@ $(DISTRIB): .set_title-$(DISTRIB)
 	@$(RUNMAKE) $(DOITALL)
 
 ########################################
-# $(UPGRADE) {{{2
+# {{{2 $(UPGRADE) ----------------------
 
 .PHONY: $(UPGRADE)
 $(UPGRADE): .set_title-$(UPGRADE)
@@ -2141,12 +2139,11 @@ endif
 	@$(ECHO) "$(_D)"
 
 ################################################################################
-# Debug Targets {{{1
-#>.PHONY: --- DEBUG ---
+# {{{1 Debug Targets -----------------------------------------------------------
 ################################################################################
 
 ########################################
-# $(DEBUGIT) {{{2
+# {{{2 $(DEBUGIT) ----------------------
 
 #> update: $(DEBUGIT):
 
@@ -2213,7 +2210,7 @@ $(DEBUGIT)-%:
 	)
 
 ########################################
-# $(TESTING) {{{2
+# {{{2 $(TESTING) ----------------------
 
 #> update: $(TESTING):
 
@@ -2252,7 +2249,7 @@ override define TESTING_DIRECTORIES =
 endef
 
 ########################################
-# WORKING:NOW TEST CASES {{{3
+# {{{3 WORKING:NOW TEST CASES ----------
 
 #WORKING:NOW
 #WORK
@@ -2299,7 +2296,7 @@ endef
 #WORK
 
 ########################################
-# $(CHECKIT) {{{2
+# {{{2 $(CHECKIT) ----------------------
 
 .PHONY: $(CHECKIT)
 $(CHECKIT): .set_title-$(CHECKIT)
@@ -2352,12 +2349,11 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M2) "- $(_C)TeX PDF"		"$(_D)$(TEX_PDF)"
 
 ################################################################################
-# Helper Targets {{{1
-#>.PHONY: --- HELPER ---
+# {{{1 Helper Targets ----------------------------------------------------------
 ################################################################################
 
 ########################################
-# $(CONFIGS) {{{2
+# {{{2 $(CONFIGS) ----------------------
 
 .PHONY: $(CONFIGS)
 $(CONFIGS): .set_title-$(CONFIGS)
@@ -2370,7 +2366,7 @@ $(CONFIGS): .set_title-$(CONFIGS)
 	)
 
 ########################################
-# $(TARGETS) {{{2
+# {{{2 $(TARGETS) ----------------------
 
 .PHONY: $(TARGETS)
 $(TARGETS): .set_title-$(TARGETS)
@@ -2401,7 +2397,7 @@ ifneq ($(COMPOSER_STAMP),)
 endif
 
 ########################################
-# $(REPLICA) {{{2
+# {{{2 $(REPLICA) ----------------------
 
 #WORKING keep REPLICA?  it probably can/should be replaced with DISTRIB, or just be a wrapper to it...?  basically, trying to automate the ".Composer" directory workflow...
 
@@ -2450,7 +2446,7 @@ $(REPLICA):
 	@$(LS) $(REPLICA_FILE)
 
 ########################################
-# $(INSTALL) {{{2
+# {{{2 $(INSTALL) ----------------------
 
 #WORK document *-DOITALL and COMPOSER_DOITALL_*?
 #WORK somehow mark as "update" that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
@@ -2514,12 +2510,11 @@ override define $(INSTALL)-$(MAKEFILE) =
 endef
 
 ################################################################################
-# Main Targets {{{1
-#>.PHONY: --- MAIN ---
+# {{{1 Main Targets ------------------------------------------------------------
 ################################################################################
 
 ########################################
-# $(CLEANER) {{{2
+# {{{2 $(CLEANER) ----------------------
 
 #> update: COMPOSER_TARGETS.*filter-out
 
@@ -2588,7 +2583,7 @@ override define CLEANER_LISTING =
 endef
 
 ########################################
-# $(DOITALL) {{{2
+# {{{2 $(DOITALL) ----------------------
 
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
 
@@ -2630,7 +2625,7 @@ endif
 endif
 
 ########################################
-# $(SUBDIRS) {{{2
+# {{{2 $(SUBDIRS) ----------------------
 
 .PHONY: $(SUBDIRS)
 ifeq ($(COMPOSER_SUBDIRS),)
@@ -2650,7 +2645,7 @@ endif
 endif
 
 ########################################
-# $(PRINTER) {{{2
+# {{{2 $(PRINTER) ----------------------
 
 .PHONY: $(PRINTER)
 $(PRINTER): .set_title-$(PRINTER)
@@ -2663,12 +2658,11 @@ $(COMPOSER_STAMP): *$(COMPOSER_EXT)
 endif
 
 ################################################################################
-# Pandoc Targets {{{1
-#>.PHONY: --- PANDOC ---
+# {{{1 Pandoc Targets ----------------------------------------------------------
 ################################################################################
 
 ########################################
-# $(COMPOSER_TARGET) $(COMPOSER_PANDOC) {{{2
+# {{{2 $(COMPOSER_TARGET) $(COMPOSER_PANDOC)
 
 .PHONY: $(COMPOSER_TARGET)
 $(COMPOSER_TARGET): .set_title-$(COMPOSER_TARGET)
@@ -2688,7 +2682,7 @@ $(BASE).$(EXTENSION): $(LIST)
 	@$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 
 ########################################
-# $(COMPOSER_EXT) {{{2
+# {{{2 $(COMPOSER_EXT) -----------------
 
 #> update: TYPE_TARGETS
 
