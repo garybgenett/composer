@@ -398,6 +398,7 @@ override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override COREUTILS			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
 
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
+override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
 override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso
@@ -479,8 +480,6 @@ endef
 #	extra	= magenta
 #	syntax	= dark blue
 ifneq ($(COMPOSER_ESCAPES),)
-override [				:= \[
-override ]				:= \]
 #>override _D				:= \e[0;37m
 override _D				:= \e[0m
 override _H				:= \e[0;32m
@@ -490,8 +489,6 @@ override _N				:= \e[0;31m
 override _E				:= \e[0;35m
 override _S				:= \e[0;34m
 else
-override [				:=
-override ]				:=
 override _D				:=
 override _H				:=
 override _C				:=
@@ -617,9 +614,9 @@ override LISTING_VAR := \
 	$(COMPOSER_TARGET)[:] \
 	$(COMPOSER_PANDOC)[:] \
 	\
-	$(HELPOUT)[:] \
-	$(HELPALL)[:] \
-	$(CREATOR)[:] \
+	$(HELPOUT)[:-] \
+	$(HELPALL)[:-] \
+	$(CREATOR)[:-] \
 	HELP[_] \
 	EXAMPLE[_] \
 	[.]?$(EXAMPLE)[:-] \
@@ -628,27 +625,27 @@ override LISTING_VAR := \
 	$(WHOWHAT)[:-] \
 	$(SETTING)[:-] \
 	\
-	$(MAKE_DB)[:] \
-	$(LISTING)[:] \
+	$(MAKE_DB)[:-] \
+	$(LISTING)[:-] \
 	$(NOTHING)[:-] \
 	\
-	$(CONVICT)[:] \
-	$(DISTRIB)[:] \
-	$(UPGRADE)[:] \
+	$(CONVICT)[:-] \
+	$(DISTRIB)[:-] \
+	$(UPGRADE)[:-] \
 	\
-	$(DEBUGIT)[:] \
+	$(DEBUGIT)[:-] \
 	$(TESTING)[:-] \
-	$(CHECKIT)[:] \
+	$(CHECKIT)[:-] \
 	\
-	$(CONFIGS)[:] \
-	$(TARGETS)[:] \
+	$(CONFIGS)[:-] \
+	$(TARGETS)[:-] \
 	$(REPLICA)[:-] \
 	$(INSTALL)[:-] \
 	\
 	$(CLEANER)[:-] \
 	$(DOITALL)[:-] \
-	$(SUBDIRS)[:] \
-	$(PRINTER)[:] \
+	$(SUBDIRS)[:-] \
+	$(PRINTER)[:-] \
 
 ########################################
 
@@ -1471,7 +1468,7 @@ HELP_VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"			"$(LINT_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
 #WORK need to experiment with TYPE pass-through, or else just call it unsupported...
-	@$(PRINT) "  * *Other $(_C)TYPE$(_D) values will be passed directly to Pandoc.*"
+	@$(PRINT) "  * *Other $(_C)TYPE$(_D) values will be passed directly to Pandoc*"
 
 #>.PHONY: HELP_VARIABLES_CONTROL_%
 HELP_VARIABLES_CONTROL_%:
@@ -1781,7 +1778,7 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 
 .PHONY: $(EXAMPLE)
 $(EXAMPLE):
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES="" .$(EXAMPLE)
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
@@ -1848,10 +1845,9 @@ $(HEADERS)-%:
 $(HEADERS)-run-%:
 	@$(call $(HEADERS)-run,,$(*))
 
-#>	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)";
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(PRINT) "$(COMMENTED)$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)"; \
+	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)";
 	$(HEADER_L)
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"; \
 	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(CURDIR)$(_D)]"; \
@@ -1945,15 +1941,18 @@ endif
 .DEFAULT_GOAL := $(HELPOUT)
 .DEFAULT:
 	@$(call $(HEADERS))
-	@$(HEADER_L)
-	@$(TABLE_C2) "$(_H)$(MARKER) ERROR:"
-	@$(TABLE_C2) "$(_N)Target '$(_C)$(@)$(_N)' is not defined."
-	@$(TABLE_C2)
-	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
-	@$(TABLE_C2) "You either need to define this target, or call a target which is already defined."
-	@$(TABLE_C2) "Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets for this '$(MAKEFILE)'."
-	@$(TABLE_C2) "Or, review the output of '$(_M)$(HELPOUT)$(_D)' and/or '$(_M)$(HELPALL)$(_D)' for more information."
-	@$(HEADER_L)
+	@$(LINERULE)
+	@$(PRINT) "$(_H)$(MARKER) ERROR"
+	@$(ENDOLINE)
+	@$(PRINT) "  * $(_N)Target '$(_C)$(@)$(_N)' is not defined"
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) DETAILS"
+	@$(ENDOLINE)
+	@$(PRINT) "  * It is possible that this is the result of a missing input file"
+	@$(PRINT) "  * New targets can be defined in '$(_C)$(COMPOSER_SETTINGS)$(_D)'"
+	@$(PRINT) "  * Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets for this '$(_C)$(MAKEFILE)$(_D)'"
+	@$(PRINT) "  * Use '$(_M)$(HELPOUT)$(_D)' or '$(_M)$(HELPALL)$(_D)' for more information"
+	@$(LINERULE)
 	@exit 1
 
 ########################################
@@ -2062,75 +2061,64 @@ endif
 #>.PHONY: --- DEBUG ---
 ################################################################################
 
-# #WORKING {{{1
+#WORK document DEBUGIT-file
 
-#WORKING DEBUGIT needs to be completely re-done
+.PHONY: $(DEBUGIT)-file
+$(DEBUGIT)-file: override DEBUGIT_FOLD := {{{1
+$(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)-$(DEBUGIT)-$(shell $(DATE)).$(EXTN_TEXT)
+$(DEBUGIT)-file:
+	@$(ECHO) "# vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make\n" >$(DEBUGIT_FILE)
+	@$(RUNMAKE) \
+		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+		COMPOSER_ESCAPES= \
+		$(DEBUGIT) \
+		>>$(DEBUGIT_FILE) 2>&1
 
 .PHONY: $(DEBUGIT)
 $(DEBUGIT): .set_title-$(DEBUGIT)
+$(DEBUGIT): $(eval .NOTPARALLEL:)
+$(DEBUGIT): $(DEBUGIT)-$(HEADERS)
+$(DEBUGIT): $(DEBUGIT)-CHECKIT
+$(DEBUGIT): $(DEBUGIT)-CONFIGS
+$(DEBUGIT): $(DEBUGIT)-TARGETS
+$(DEBUGIT): $(DEBUGIT)-COMPOSER_DEBUGIT
+$(DEBUGIT): $(DEBUGIT)-MAKEFILE_LIST
+$(DEBUGIT): $(DEBUGIT)-COMPOSER_INCLUDES
+$(DEBUGIT): $(DEBUGIT)-TESTING
+$(DEBUGIT): $(DEBUGIT)-LISTING
+$(DEBUGIT): $(DEBUGIT)-MAKE_DB
+$(DEBUGIT): HELP_FOOTER
+
+.PHONY: $(DEBUGIT)-$(HEADERS)
+$(DEBUGIT)-$(HEADERS):
 	@$(call $(HEADERS),\
 		COMPOSER_DEBUGIT \
 	)
-	@$(TABLE_C2) "$(_H)$(MARKER) DEBUG:"
-	@$(TABLE_C2) "$(_N)This is the output of the '$(_C)$(DEBUGIT)$(_N)' target."
-	@$(TABLE_C2)
-	@$(TABLE_C2) "$(_H)$(MARKER) DETAILS:"
-	@$(TABLE_C2) "This target runs several key sub-targets and diagnostic commands."
-	@$(TABLE_C2) "The goal is to provide all needed troubleshooting information in one place."
-	@$(TABLE_C2) "Set the '$(_M)COMPOSER_DEBUGIT$(_D)' variable to troubleshoot a particular list of targets $(_E)(they may be run)$(_D)."
-	@$(HEADER_L)
-	@$(call DEBUGIT_TARGET,HELP_TITLE_Usage HELP_USAGE HELP_VARIABLES_FORMAT_1 HELP_TARGETS_MAIN_1)
-	@$(HEADER_L)
-	@$(TABLE_C2) "$(_H) Diagnostics"
-	@$(HEADER_L)
-	@$(call DEBUGIT_TARGET,$(CHECKIT))
+	@$(LINERULE)
+	@$(PRINT) "$(_H)$(MARKER) DEBUG"
 	@$(ENDOLINE)
-	@$(HEADER_L)
-	@$(call DEBUGIT_TARGET,$(TARGETS))
+	@$(PRINT) "  * $(_N)This is the output of the '$(_C)$(DEBUGIT)$(_N)' target"
 	@$(ENDOLINE)
-	@$(HEADER_L)
-	@$(TABLE_C2) "$(_H) Targets Debug"
-	@$(HEADER_L)
-	@$(call DEBUGIT_TARGET,--debug="a" --just-print $(COMPOSER_DEBUGIT))
+	@$(PRINT) "$(_H)$(MARKER) DETAILS"
 	@$(ENDOLINE)
-	@$(foreach FILE,$(MAKEFILE_LIST),\
-		$(call DEBUGIT_CONTENTS,$(FILE)); \
-		$(ENDOLINE); \
-	)
-	@$(HEADER_L)
-	@$(TABLE_C2) "$(_H) Make Database Dump"
-	@$(HEADER_L)
-	@$(call DEBUGIT_TARGET,$(MAKE_DB))
-	@$(call DEBUGIT_LISTING,NULL,DIR)
-	@$(call DEBUGIT_LISTING,DIR,OTHER)
-	@$(call DEBUGIT_LISTING,OTHER,ABODE)
-	@$(call DEBUGIT_LISTING,OTHER,STORE)
-	@$(call DEBUGIT_LISTING,OTHER,BUILD)
-	@$(call DEBUGIT_LISTING,OTHER,PROGS)
-	@$(RUNMAKE) --silent HELP_FOOTER
+	@$(PRINT) "  * It runs several targets and diagnostic commands"
+	@$(PRINT) "  * All information needed for troubleshooting is included"
+	@$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"
+	@$(LINERULE)
 
-override define DEBUGIT_TARGET =
-	$(ENDOLINE); \
-	$(RUNMAKE) --silent $(1)
-endef
-override define DEBUGIT_LISTING =
-	if [ "$(COMPOSER_$(2))" = "$(subst $(COMPOSER_$(1)),,$(COMPOSER_$(2)))" ]; then \
-		$(HEADER_L); \
-		$(TABLE_C2) "$(_H) Directory Listing: COMPOSER_$(2)"; \
-		$(HEADER_L); \
-		$(ENDOLINE); \
-		$(LS) -R "$(COMPOSER_$(2))"; \
-		$(ENDOLINE); \
-	fi
-endef
-override define DEBUGIT_CONTENTS =
-	if [ -f "$(1)" ]; then \
-		$(LINERULE); \
-		$(TABLE_C2) "$(_H)$(MARKER) $(_M)$(1)"; \
-		$(LINERULE); \
-		$(CAT) "$(1)"; \
-	fi
-endef
+#>.PHONY: $(DEBUGIT)-%
+$(DEBUGIT)-%:
+	@$(foreach FILE,$($(*)),\
+		$(call TITLE_LN,6,$(*) $(DIVIDE) BEGIN [$(FILE)] $(DEBUGIT_FOLD)); \
+		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
+			$(RUNMAKE) --silent --just-print COMPOSER_DEBUGIT=! COMPOSER_ESCAPES= $(FILE) 2>&1; \
+		elif [ ! -f "$(FILE)" ]; then \
+			$(RUNMAKE) --silent COMPOSER_DEBUGIT= $(FILE) 2>&1; \
+		else \
+			$(CAT) $(FILE); \
+		fi; \
+		$(call TITLE_LN,6,$(*) $(DIVIDE) END [$(FILE)]); \
+	)
 
 ########################################
 
@@ -2179,8 +2167,8 @@ $(TESTING): .set_title-$(TESTING)
 #	COMPOSER_DEBUGIT="0"
 #	COMPOSER_DEBUGIT="1"
 #	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
-#	COMPOSER_STAMP=""
-#	COMPOSER_EXT="" -> #WORK need more than $(DOITALL) above?
+#	COMPOSER_STAMP=
+#	COMPOSER_EXT= -> #WORK need more than $(DOITALL) above?
 #WORK
 
 override define TESTING_DIRECTORY =
@@ -2280,8 +2268,8 @@ $(CONFIGS): .set_title-$(CONFIGS)
 .PHONY: $(TARGETS)
 $(TARGETS): .set_title-$(TARGETS)
 	@$(call $(HEADERS))
-	@$(ECHO) "$(_C)"
-	@$(RUNMAKE) --silent $(LISTING) | $(SED) \
+	@$(LINERULE)
+	@$(foreach FILE,$(shell $(RUNMAKE) --silent $(LISTING) | $(SED) \
 		$(foreach FILE,$(LISTING_VAR),\
 			-e "/^$(FILE)/d" \
 		) \
@@ -2289,8 +2277,11 @@ $(TARGETS): .set_title-$(TARGETS)
 			-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d" \
 		) \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
-		-e "/^$$/d"
-	@$(ECHO) "$(_D)"
+		-e "/^$$/d" \
+		-e "s|[[:space:]]+|~|g" \
+		),\
+		$(PRINT) "$(_M)$(subst : ,:$(_D) $(_C),$(subst ~, ,$(FILE)))"; \
+	)
 	@$(LINERULE)
 	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(CLEANER_LISTING)		| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
@@ -2405,7 +2396,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(RUNMAKE) --silent COMPOSER_ESCAPES="" .$(EXAMPLE)$(2) >$(1); \
+		$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)$(2) >$(1); \
 	fi
 endef
 
