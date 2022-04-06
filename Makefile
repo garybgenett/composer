@@ -33,7 +33,7 @@ override VIM_FOLDING := {{{1
 
 #WORK document not to use *-[...] target names...
 #WORK a note somewhere about symlinks...
-#WORK test: windows: wsl -> sudo apt-get install pandoc texlive / rsync nodejs
+#WORK test: windows: wsl -> sudo apt-get install pandoc texlive / rsync npm
 #WORK test: mac osx: macports
 
 #WORK TODO FEATURES
@@ -475,6 +475,7 @@ override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
+override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
@@ -506,6 +507,7 @@ override COMPOSER_GIT_RUN		= cd $(COMPOSER_ROOT) && $(GIT) --git-dir="$(strip $(
 
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(COMPOSER_PKG)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
 override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
+#>	$(ECHO) "gitdir: $(shell $(REALPATH) $(1) $(5))" >$(1)/.git
 override define DO_GIT_REPO =
 	$(MKDIR) $(COMPOSER_PKG) $(1); \
 	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) $(1).git  $(5); fi; \
@@ -1874,10 +1876,10 @@ $(EXAMPLE):
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
-	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_MY_PATH)
-	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_TEACHER)
-	@$(call EXAMPLE_PRINT,,include $(_E)$(~)(COMPOSER_TEACHER))
-	@$(call EXAMPLE_PRINT,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
+	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
+	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
+	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
+	@$(call $(EXAMPLE)-print,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
 
 #WORKING document that COMPOSER_TARGETS and COMPOSER_SUBDIRS will always auto-detect unless they are defined or ".null"
 #WORKING what are the implications of DEFAULT_GOAL?  we should probably remove it in all cases... this is what COMPOSER_TARGETS is for...
@@ -1885,30 +1887,30 @@ $(EXAMPLE):
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
-#>	@$(call EXAMPLE_VAR,1,MAKEJOBS)
-#>	@$(call EXAMPLE_VAR,1,COMPOSER_ESCAPES)
-#>	@$(call EXAMPLE_VAR,1,COMPOSER_DEBUGIT)
-	@$(call EXAMPLE_VAR,1,COMPOSER_INCLUDE)
-	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)
-	@$(call EXAMPLE_VAR,1,COMPOSER_TARGETS)
-	@$(call EXAMPLE_VAR,1,COMPOSER_SUBDIRS)
-#>	@$(call EXAMPLE_VAR,1,CSS)
-#>	@$(call EXAMPLE_VAR,1,TTL)
-	@$(call EXAMPLE_VAR,1,TOC)
-	@$(call EXAMPLE_VAR,1,LVL)
-	@$(call EXAMPLE_VAR,1,MGN)
-	@$(call EXAMPLE_VAR,1,FNT)
-	@$(call EXAMPLE_VAR,1,OPT)
-#>	@$(call EXAMPLE_PRINT,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
+#>	@$(call $(EXAMPLE)-var,1,MAKEJOBS)
+#>	@$(call $(EXAMPLE)-var,1,COMPOSER_ESCAPES)
+#>	@$(call $(EXAMPLE)-var,1,COMPOSER_DEBUGIT)
+	@$(call $(EXAMPLE)-var,1,COMPOSER_INCLUDE)
+	@$(call $(EXAMPLE)-var,1,COMPOSER_DEPENDS)
+	@$(call $(EXAMPLE)-var,1,COMPOSER_TARGETS)
+	@$(call $(EXAMPLE)-var,1,COMPOSER_SUBDIRS)
+#>	@$(call $(EXAMPLE)-var,1,CSS)
+#>	@$(call $(EXAMPLE)-var,1,TTL)
+	@$(call $(EXAMPLE)-var,1,TOC)
+	@$(call $(EXAMPLE)-var,1,LVL)
+	@$(call $(EXAMPLE)-var,1,MGN)
+	@$(call $(EXAMPLE)-var,1,FNT)
+	@$(call $(EXAMPLE)-var,1,OPT)
+#>	@$(call $(EXAMPLE)-print,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
 
-override define EXAMPLE_PRINT =
+override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
 endef
-override define EXAMPLE_VAR_STATIC =
-	$(call EXAMPLE_PRINT,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
+override define $(EXAMPLE)-var-static =
+	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
 endef
-override define EXAMPLE_VAR =
-	$(call EXAMPLE_PRINT,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$($(2))))
+override define $(EXAMPLE)-var =
+	$(call $(EXAMPLE)-print,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$($(2))))
 endef
 
 ################################################################################
@@ -1950,6 +1952,7 @@ override define $(HEADERS) =
 	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(COMPOSER_INCLUDES)$(_D)]"; \
 	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(CURDIR)$(_D)]"; \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@)))$(_D))"; \
+	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
 	$(foreach FILE,$(1),\
 		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$($(FILE))$(_D)]"; \
 	) \
@@ -1964,6 +1967,7 @@ override define $(HEADERS)-run =
 	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(COMPOSER_INCLUDES)"; \
 	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(CURDIR)"; \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@)))$(_D))"; \
+	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(1),\
 		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$($(FILE))"; \
 	) \
@@ -2224,7 +2228,7 @@ $(DEBUGIT): HELP_FOOTER
 .PHONY: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(HEADERS):
 	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) DEBUG"
+	@$(PRINT) "$(_H)$(MARKER) DEBUGIT"
 	@$(ENDOLINE)
 	@$(PRINT) "  * $(_N)This is the output of the '$(_C)$(DEBUGIT)$(_N)' target"
 	@$(ENDOLINE)
@@ -2233,6 +2237,7 @@ $(DEBUGIT)-$(HEADERS):
 	@$(PRINT) "  * It runs several targets and diagnostic commands"
 	@$(PRINT) "  * All information needed for troubleshooting is included"
 	@$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"
+	@$(PRINT) "  * Use '$(_C)$(DEBUGIT)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
 
 #WORK document COMPOSER_DEBUGIT="!" ...?  (just need to remember for myself... maybe $(TESTING) is enough?
@@ -2278,21 +2283,20 @@ ifneq ($(MAKECMDGOALS),$(filter-out $(TESTING),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
 $(TESTING): .set_title-$(TESTING)
-#WORK $(TESTING): $(HEADERS)-$(TESTING)
-#WORK $(TESTING): $(TESTING)-$(HEADERS)
-#WORK $(TESTING): $(CONFIGS)
-#WORKING:NOW $(TESTING): $(TESTING)-init
+$(TESTING): $(HEADERS)-$(TESTING)
+$(TESTING): $(TESTING)-$(HEADERS)
+$(TESTING): $(CONFIGS)
+#>$(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
-#WORKING:NOW
-#WORK $(TESTING): $(TESTING)-$(DISTRIB)
-#WORK $(TESTING): $(TESTING)-$(INSTALL)
-#WORK $(TESTING): $(TESTING)-$(DEBUGIT)
-#WORK $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
-#WORK $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
+#>$(TESTING): $(TESTING)-$(DISTRIB)
+#>$(TESTING): $(TESTING)-$(DEBUGIT)
+#WORKING:NOW $(TESTING): $(TESTING)-$(INSTALL)
+#WORKING:NOW $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+#WORKING:NOW $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 $(TESTING): $(TESTING)-$(NOTHING)
-#WORK $(TESTING): $(TESTING)-$(EXAMPLE)
 
+#WORKING:NOW $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
 
 ########################################
@@ -2307,7 +2311,10 @@ $(TESTING)-$(HEADERS):
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) DETAILS"
 	@$(ENDOLINE)
-	@$(PRINT) "  * #WORKING:NOW"
+	@$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"
+	@$(PRINT) "  * All cases are run in the '$(_C)$(subst $(COMPOSER_DIR)/,,$(TESTING_DIR))$(_D)' directory"
+	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(MAKE)$(_D)' can be run anywhere in the tree"
+	@$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
 
 .PHONY: $(TESTING)-init
@@ -2316,22 +2323,12 @@ $(TESTING)-init:
 #>	@$(RM) --recursive $(TESTING_DIR)
 	@$(RM) --recursive $(TESTING_DIR)/*
 
-override TESTING_PWD			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
-override TESTING_LOG			= $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
-override TESTING_MAKE			= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(MAKEFILE)
-override TESTING_RUN			= $(TESTING_ENV) $(REALMAKE) --silent --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
-override TESTING_FIND			= if [ $(if $(3),-n,-z) "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
+override $(TESTING)-pwd			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
+override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
+override $(TESTING)-make		= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE)
+override $(TESTING)-run			= $(TESTING_ENV) $(REALMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
-override define TESTING_LOAD =
-	$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call TESTING_PWD,$(if $(1),$(1),$(@))); \
-	$(call TESTING_MAKE,$(if $(1),$(1),$(@))); \
-	$(call TESTING_RUN,$(if $(1),$(1),$(@))) --silent COMPOSER_ESCAPES= .$(EXAMPLE) \
-		>$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
-	$(SED) -i "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
-		$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
-endef
-
-override define TESTING_HEADER =
+override define $(TESTING)-$(HEADERS) =
 	$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING)); \
 	$(ECHO) "$(_M)$(MARKER) PURPOSE:$(_D) $(strip $(1))$(_D)\n"; \
 	$(ECHO) "$(_M)$(MARKER) RESULTS:$(_D) $(strip $(2))$(_D)\n"; \
@@ -2343,31 +2340,56 @@ override define TESTING_HEADER =
 	fi
 endef
 
-override define TESTING_INIT =
-	$(PRINT) "$(_M)$(MARKER) INIT:"; \
-	$(MKDIR) $(call TESTING_PWD,$(if $(1),$(1),$(@))); \
-	$(ECHO) "" >$(call TESTING_LOG,$(if $(1),$(1),$(@))); \
+override define $(TESTING)-load =
+	$(ENDOLINE)
+	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
+	$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
+	$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
+	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --silent COMPOSER_ESCAPES= .$(EXAMPLE) \
+		>$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
+	$(SED) -i "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
+		$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
+endef
+
+override define $(TESTING)-init =
+	$(ENDOLINE)
+	$(PRINT) "$(_M)$(MARKER) INIT [$(@)]:"; \
+	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
+	$(ECHO) "" >$(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$(@)" = "$(TESTING)-$(COMPOSER_BASENAME)" ]; then \
 		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
 	else \
-		$(call TESTING_MAKE,$(if $(1),$(1),$(@))); \
+		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
-	$(TESTING_ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call TESTING_LOG,$(if $(1),$(1),$(@))); \
+	$(TESTING_ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
-override define TESTING_DONE =
-	$(PRINT) "$(_M)$(MARKER) DONE:"; \
+override define $(TESTING)-done =
+	$(ENDOLINE)
+	$(PRINT) "$(_M)$(MARKER) DONE [$(@)]"; \
 	$(TESTING_ENV) $(RUNMAKE) $(@)-done 2>&1
 endef
 
+override define $(TESTING)-find =
+	$(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))); \
+	if [ $(if $(3),-n,-z) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))) | $(SED) "s|[$$]|.|g")" ]; then exit 1; fi
+endef
+
+override define $(TESTING)-count =
+	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC); \
+	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC))" != "$(1)" ]; then exit 1; fi
+endef
+
 ifneq ($(COMPOSER_ESCAPES),)
-override define TESTING_HOLD =
+override define $(TESTING)-hold =
+	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
-	read TESTING_HOLD
+	read $(TESTING)
 endef
 else
-override define TESTING_HOLD =
+override define $(TESTING)-hold =
+	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) PAUSE TO REVIEW"
 endef
 endif
@@ -2377,13 +2399,13 @@ endif
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME):
-	@$(call TESTING_HEADER,\
+	@$(call $(TESTING)-$(HEADERS),\
 		Install the '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory ,\
-		Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
+		\n\t * Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory is ready for direct use \
+		\n\t * Output of '$(_C)$(NOTHING)$(_D)' markers \
 	)
-	@$(call TESTING_INIT,$(TESTING_COMPOSER_DIR))
-	@$(ENDOLINE)
-	@$(call TESTING_DONE,$(TESTING_COMPOSER_DIR))
+	@$(call $(TESTING)-init,$(TESTING_COMPOSER_DIR))
+	@$(call $(TESTING)-done,$(TESTING_COMPOSER_DIR))
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
@@ -2393,7 +2415,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ENDOLINE)
-	@$(LS) $(COMPOSER) $(TESTING_DIR) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))
+	@$(LS) $(COMPOSER) $(TESTING_DIR) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))
 #>	@$(ENDOLINE)
 	@$(CAT) $(TESTING_DIR)/$(MAKEFILE) $(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ENDOLINE)
@@ -2402,9 +2424,9 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
-	$(call TESTING_FIND,^override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)/$(MAKEFILE)$$,$(TESTING_COMPOSER_DIR))
-	$(call TESTING_FIND,NOTICE.+$(NOTHING).+$(DOITALL),$(TESTING_COMPOSER_DIR))
-	$(call TESTING_FIND,NOTICE.+$(NOTHING).+$(SUBDIRS),$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-find,^override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE).$$,$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(DOITALL),$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(SUBDIRS),$(TESTING_COMPOSER_DIR))
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -2416,55 +2438,20 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 
 .PHONY: $(TESTING)-$(DISTRIB)
 $(TESTING)-$(DISTRIB):
-	@$(call TESTING_HEADER,\
+	@$(call $(TESTING)-$(HEADERS),\
 		Install/update '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory with '$(_C)$(DISTRIB)$(_D)' ,\
-		Successful run; no specific validation \
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 	)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
-	@$(call TESTING_RUN,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
+	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
-	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(TESTING_HOLD)
-
-########################################
-# {{{3 $(TESTING)-$(INSTALL) -----------
-
-.PHONY: $(TESTING)-$(INSTALL)
-$(TESTING)-$(INSTALL):
-	@$(call TESTING_HEADER,\
-		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
-		\n\t 2. Examine output to validate '$(_C)$(NOTHING)$(_D)' markers \
-		\n\t 3. Parallel forced install \
-		\n\t 4. Parallel build all \
-		\n\t 5. Linear forced install \
-		\n\t 6. Linear build all \
-		\n\t 6. Linear clean all \
-	)
-	@$(call TESTING_LOAD)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
-
-.PHONY: $(TESTING)-$(INSTALL)-init
-$(TESTING)-$(INSTALL)-init:
-	@$(call TESTING_RUN) MAKEJOBS= $(INSTALL)-$(DOITALL)
-	@$(call TESTING_RUN) MAKEJOBS= $(DOITALL)-$(DOITALL)
-	@$(call TESTING_RUN) MAKEJOBS= $(CLEANER)-$(DOITALL)
-	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)
-	@$(call TESTING_RUN) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
-
-.PHONY: $(TESTING)-$(INSTALL)-done
-$(TESTING)-$(INSTALL)-done:
-	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(TESTING_HOLD)
+	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(DEBUGIT) -----------
@@ -2476,97 +2463,131 @@ $(TESTING)-$(INSTALL)-done:
 
 .PHONY: $(TESTING)-$(DEBUGIT)
 $(TESTING)-$(DEBUGIT):
-	@$(call TESTING_HEADER,\
+	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)$(DEBUGIT)$(_D)' using '$(_C)COMPOSER_DEBUGIT$(_D)' ,\
-		Manual review of output \
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 	)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(DEBUGIT)-init
 $(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(CHECKIT)
 $(TESTING)-$(DEBUGIT)-init:
-	@$(call TESTING_RUN) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
 
 .PHONY: $(TESTING)-$(DEBUGIT)-done
 $(TESTING)-$(DEBUGIT)-done:
-	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(TESTING_HOLD)
+	@$(call $(TESTING)-hold)
+
+########################################
+# {{{3 $(TESTING)-$(INSTALL) -----------
+
+.PHONY: $(TESTING)-$(INSTALL)
+$(TESTING)-$(INSTALL):
+	@$(call $(TESTING)-$(HEADERS),\
+		Test '$(_C)$(INSTALL)$(_D)' in an existing directory ,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+		\n\t * Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
+		\n\t * Examine output to validate '$(_C)$(NOTHING)$(_D)' markers \
+		\n\t * Test runs: \
+		\n\t\t * Linear forced install \
+		\n\t\t * Linear build all \
+		\n\t\t * Linear clean all \
+		\n\t\t * Parallel safe install \
+		\n\t\t * Parallel build all \
+	)
+	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+.PHONY: $(TESTING)-$(INSTALL)-init
+$(TESTING)-$(INSTALL)-init:
+	@$(call $(TESTING)-run) MAKEJOBS= $(INSTALL)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS= $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS= $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="0" $(INSTALL)
+	@$(call $(TESTING)-run) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+
+.PHONY: $(TESTING)-$(INSTALL)-done
+$(TESTING)-$(INSTALL)-done:
+	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING)-$(CLEANER)-$(DOITALL):
-	@$(call TESTING_HEADER,\
-		Test '$(_C)$(CLEANER)$(_D)' and '$(_C)$(DOITALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. #WORKING:NOW missing makefile detection... is this where it should be? \
-		\n\t 1. #WORKING:NOW \
-		\n\t 1. #WORKING:NOW \
+	@$(call $(TESTING)-$(HEADERS),\
+		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' behavior ,\
+		\n\t * Creation and deletion of files \
+		\n\t * Missing '$(_C)$(MAKEFILE)$(_D)' detection \
+		\n\t * Proper execution of '$(_C)*-$(CLEANER)$(_D)' targets \
 	)
-	@$(call TESTING_LOAD)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
+	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
-	@$(call TESTING_RUN) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(RM) $(call TESTING_PWD)/data/*/$(MAKEFILE)
+	@$(call $(TESTING)-run) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
 	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>$(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
-	@$(call TESTING_RUN) $(DOITALL)-$(DOITALL)
-	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
+		>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
-	$(call TESTING_FIND,Creating.+changelog.html)
-	$(call TESTING_FIND,Creating.+getting-started.html)
-	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/.composed)
-	$(call TESTING_FIND,^removed .+\/$(subst -done,,$(@))\/doc\/.composed)
-	$(call TESTING_FIND,test-1-clean: .+$(subst -done,,$(@))\/data$$)
+	$(call $(TESTING)-find,Creating.+changelog.html)
+	$(call $(TESTING)-find,Creating.+getting-started.html)
+	$(call $(TESTING)-find,^removed.+changelog.html)
+	$(call $(TESTING)-find,^removed.+getting-started.html)
+	$(call $(TESTING)-find,^removed.+\/$(subst -done,,$(@))\/.composed)
+	$(call $(TESTING)-find,^removed.+\/$(subst -done,,$(@))\/doc\/.composed)
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+Makefile)
+	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT):
-	@$(call TESTING_HEADER,\
-		#WORKING:NOW ,\
-		#WORKING:NOW \
+	@$(call $(TESTING)-$(HEADERS),\
+		Proper operation of '$(_C)COMPOSER_STAMP$(_D)' and '$(_C)COMPOSER_EXT$(_D)' ,\
+		\n\t * Build '$(_C)$(DOITALL)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
+		\n\t * Do '$(_C)$(CLEANER)$(_D)' with both empty \
+		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_STAMP$(_D)' \
+		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
+		\n\t * Detect updated files with '$(_C)$(PRINTER)$(_D)' \
 	)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
-	@$(foreach FILE,$(wildcard $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
-		$(RSYNC) $(FILE) $(call TESTING_PWD)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
+	@$(foreach FILE,$(wildcard $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
+		$(RSYNC) $(FILE) $(call $(TESTING)-pwd)/$(subst $(COMPOSER_EXT),,$(notdir $(FILE))); \
 	)
 #WORK should we need the COMPOSER_ART directory...?  maybe this is part of "resource-path" testing...?
-	@$(MKDIR) $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
-	@$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call TESTING_PWD),$(COMPOSER_ART))
-	@$(call TESTING_RUN) COMPOSER_EXT= $(DOITALL)
-	@$(call TESTING_RUN) COMPOSER_STAMP= COMPOSER_EXT= $(CLEANER)
-	@$(call TESTING_RUN) COMPOSER_STAMP= $(PRINTER)
-	@$(call TESTING_RUN) COMPOSER_EXT= $(PRINTER)
-	@$(ECHO) "" >$(call TESTING_PWD)/$(subst -init,,$(@))$(COMPOSER_EXT)
-	@$(RM) $(call TESTING_PWD)/$(COMPOSER_STAMP)
-	@$(call TESTING_RUN) $(PRINTER)
+	@$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART))
+	@$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART))
+	@$(call $(TESTING)-run) COMPOSER_EXT= $(DOITALL)
+	@$(call $(TESTING)-run) COMPOSER_STAMP= COMPOSER_EXT= $(CLEANER)
+	@$(call $(TESTING)-run) COMPOSER_STAMP= $(PRINTER)
+	@$(call $(TESTING)-run) COMPOSER_EXT= $(PRINTER)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(subst -init,,$(@))$(COMPOSER_EXT)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_STAMP)
+	@$(call $(TESTING)-run) $(PRINTER)
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
-#WORKING:NOW
-	@$(LS) $(call TESTING_PWD)
-	$(call TESTING_FIND,Creating.+README.html)
-	$(call TESTING_FIND,^removed .+\/README.html)
-	$(call TESTING_FIND,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
-	$(call TESTING_FIND,NOTICE.+$(NOTHING).+COMPOSER_EXT)
-	$(call TESTING_FIND, $(subst -done,,$(@))$(COMPOSER_EXT)$$)
-	$(call TESTING_FIND, $(COMPOSER_STAMP)$$)
+	$(call $(TESTING)-find,Creating.+README.html)
+	$(call $(TESTING)-find,^removed.+README.html)
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_EXT)
+	$(call $(TESTING)-find, $(subst -done,,$(@))$(COMPOSER_EXT)$$)
+	$(call $(TESTING)-find, $(COMPOSER_STAMP)$$)
 
 ########################################
 # {{{3 $(TESTING)-$(NOTHING) -----------
@@ -2575,25 +2596,33 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 
 .PHONY: $(TESTING)-$(NOTHING)
 $(TESTING)-$(NOTHING):
-	@$(call TESTING_HEADER,\
+	@$(call $(TESTING)-$(HEADERS),\
 		$(NOTHING) ,\
 		$(NOTHING) \
 	)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
+	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(NOTHING)-init
 $(TESTING)-$(NOTHING)-init:
-	@$(call TESTING_RUN) $(PRINTER)
-	@$(RUNMAKE) --silent $(NOTHING)
+#WORKING:NOW
+	@$(call $(TESTING)-run) J=0 $(INSTALL)-$(DOITALL)
+	@$(call $(TESTING)-run) J=0 $(DOITALL)-$(DOITALL)
+	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
+	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+		>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) V=1 $(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(NOTHING)-done
 $(TESTING)-$(NOTHING)-done:
-	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-#>	@$(TESTING_HOLD)
+	$(call $(TESTING)-find,Creating.+README.html)
 
-#WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
+#WORKING @$(RSYNC) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call $(TESTING)-pwd)/
+#WORKING @$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL)
+#WORKING	if [ "$(shell $(SED) -n "/$(TESTING)-1-$(CLEANER)/p" $(call $(TESTING)-log,$(subst -done,,$(@))) | $(WC))" = "1" ]; then exit 1; fi
+#WORKING	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
@@ -2626,23 +2655,21 @@ $(TESTING)-$(NOTHING)-done:
 
 .PHONY: $(TESTING)-$(EXAMPLE)
 $(TESTING)-$(EXAMPLE):
-	@$(call TESTING_HEADER,\
-		$(NOTHING) ,\
-		$(NOTHING) \
+	@$(call $(TESTING)-$(HEADERS),\
+		Template '$(_C)$(TESTING)$(_D)' test case ,\
+		\n\t * Displays manual '$(_C)$(NOTHING)$(_D)' markers \
 	)
-	@$(call TESTING_INIT)
-	@$(ENDOLINE)
-	@$(call TESTING_DONE)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-init
 $(TESTING)-$(EXAMPLE)-init:
-	@$(call TESTING_RUN) $(PRINTER)
 	@$(RUNMAKE) --silent $(NOTHING)
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
 $(TESTING)-$(EXAMPLE)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-#>	@$(TESTING_HOLD)
+#>	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{2 $(CHECKIT) ----------------------
@@ -2738,7 +2765,7 @@ $(TARGETS): .set_title-$(TARGETS)
 		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ~, ,$(FILE)))"; \
 	)
 	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(CLEANER_LISTING)		| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $($(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
@@ -2794,8 +2821,9 @@ endif
 endif
 
 override define $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME) =
-	$(SED) -i "s|^(override[[:space:]]+COMPOSER_TEACHER[[:space:]]+[:][=]).*$$|\1 \$$(COMPOSER_MY_PATH)/`$(REALPATH) $(dir $(1)) $(2)`|g" $(1)
+	$(SED) -i "s|^(override[[:space:]]+COMPOSER_TEACHER[[:space:]]+[:][=]).*$$|\1 \$$(abspath \$$(COMPOSER_MY_PATH)/$(shell $(REALPATH) $(dir $(1)) $(2)))|g" $(1)
 endef
+
 override define $(INSTALL)-$(MAKEFILE) =
 	if [ -z "$(COMPOSER_DOITALL_$(INSTALL))" ] && [ -f "$(1)" ]; then \
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
@@ -2814,7 +2842,7 @@ endef
 
 #> update: COMPOSER_TARGETS.*filter-out
 
-#WORK document "*-clean"
+#WORK document "*-clean" -> note that if it starts with a special, like 'test-clean', it will not show up in 'targets'
 #WORK document somewhere that clean removes files that match a phony target name?
 
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
@@ -2833,8 +2861,6 @@ else
 endif
 	@+$(MAKE) $(CLEANER)-do
 
-#WORKING:NOW this cleaner-do thing is still driving me nuts...!
-
 .PHONY: $(CLEANER)-do
 $(CLEANER)-do:
 ifeq ($(COMPOSER_DEBUGIT),)
@@ -2852,7 +2878,7 @@ endif
 			$(RM) "$(CURDIR)/$(FILE)"; \
 		fi; \
 	)
-	@+$(MAKE) $(if $(shell $(CLEANER_LISTING)),$(shell $(CLEANER_LISTING)),$(NOTHING)-$(CLEANER))
+	@+$(MAKE) $(if $(shell $($(CLEANER)-$(TARGETS)-list)),$(shell $($(CLEANER)-$(TARGETS)-list)),$(NOTHING)-$(CLEANER)-$(TARGETS))
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@+$(MAKE) $(CLEANER)-$(SUBDIRS)
 endif
@@ -2874,7 +2900,7 @@ $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 	)
 endif
 
-override define CLEANER_LISTING =
+override define $(CLEANER)-$(TARGETS)-list =
 	$(RUNMAKE) --silent $(LISTING) \
 	| $(SED) -n "s|^([^:]+[-]$(CLEANER))[:]+.*$$|\1|gp" \
 	| $(SED) "/^.set_title[-]/d"
