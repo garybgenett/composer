@@ -1857,6 +1857,9 @@ $(EXAMPLE):
 	@$(call EXAMPLE_PRINT,,include $(_E)$(~)(COMPOSER_TEACHER))
 	@$(call EXAMPLE_PRINT,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
 
+#WORKING document that COMPOSER_TARGETS and COMPOSER_SUBDIRS will always auto-detect unless they are defined or ".null"
+#WORKING what are the implications of DEFAULT_GOAL?  we should probably remove it in all cases... this is what COMPOSER_TARGETS is for...
+
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
@@ -1875,7 +1878,7 @@ $(EXAMPLE):
 	@$(call EXAMPLE_VAR,1,MGN)
 	@$(call EXAMPLE_VAR,1,FNT)
 	@$(call EXAMPLE_VAR,1,OPT)
-	@$(call EXAMPLE_PRINT,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
+#WORK	@$(call EXAMPLE_PRINT,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
 
 override define EXAMPLE_PRINT =
 	$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
@@ -2155,11 +2158,7 @@ endif
 $(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(DEBUGIT)-$(DATENAME).$(EXTN_TEXT)
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
-	@$(RUNMAKE) \
-		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
-		COMPOSER_ESCAPES= \
-		$(DEBUGIT) \
-		>>$(DEBUGIT_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" COMPOSER_ESCAPES= $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
 	@$(LS) $(DEBUGIT_FILE)
 
 .PHONY: $(DEBUGIT)
@@ -2216,31 +2215,26 @@ $(DEBUGIT)-%:
 
 #> update: $(TESTING):
 
-#WORK incorporate and document COMPOSER_TESTING!
 #WORK document TESTING-file
 
 .PHONY: $(TESTING)-file
 $(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(TESTING)-$(DATENAME).$(EXTN_TEXT)
 $(TESTING)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
-	@$(RUNMAKE) \
-		COMPOSER_ESCAPES= \
-		$(TESTING) \
-		>>$(TESTING_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_ESCAPES= $(TESTING) >>$(TESTING_FILE) 2>&1
 	@$(LS) $(TESTING_FILE)
 
 .PHONY: $(TESTING)
-#WORK $(TESTING): .NOTPARALLEL
+$(TESTING): .NOTPARALLEL
 $(TESTING): .set_title-$(TESTING)
 $(TESTING): $(HEADERS)-$(TESTING)
 $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(CONFIGS)
-
-#WORKING:NOW
-$(TESTING): $(TESTING)-use_case_1
-$(TESTING): $(TESTING)-use_case_2
-$(TESTING): $(TESTING)-use_case_3
-
+$(TESTING): $(TESTING)-init
+$(TESTING):
+	@$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING))
+#WORK	@$(RUNMAKE) --silent --directory $(TESTING_DIR) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(RUNMAKE) --silent --directory $(TESTING_DIR) MAKEJOBS= COMPOSER_DEBUGIT=
 $(TESTING): HELP_FOOTER
 
 .PHONY: $(TESTING)-$(HEADERS)
@@ -2256,12 +2250,17 @@ $(TESTING)-$(HEADERS):
 	@$(LINERULE)
 
 override define TESTING_INIT =
-	$(call TITLE_LN,1,$(MARKER)[ $(@) ]$(MARKER) $(VIM_FOLDING)); \
+	$(call TITLE_LN,1,$(MARKER)[ $(@) $(DIVIDE) init ]$(MARKER) $(VIM_FOLDING)); \
+	$(RUNMAKE) --silent --directory $(TESTING_DIR)/$(@) MAKEJOBS= $(INSTALL)-$(DOITALL); \
 	$(MKDIR) $(call TESTING_INIT_DIRS,$(@)); \
-	$(RUNMAKE) --silent --directory $(TESTING_DIR)/$(@) COMPOSER_TESTING="1" $(INSTALL)-$(DOITALL); \
 	$(foreach FILE,$(call TESTING_INIT_DIRS,$(@)),\
 		$(CP) $(COMPOSER_DIR)/*$(COMPOSER_EXT) $(FILE)/; \
 	)
+endef
+
+override define TESTING_RUN =
+	$(call TITLE_LN,1,$(MARKER)[ $(@) $(DIVIDE) run ]$(MARKER) $(VIM_FOLDING)); \
+	$(RUNMAKE) --silent --directory $(TESTING_DIR)/$(@) MAKEJOBS=
 endef
 
 override define TESTING_INIT_DIRS =
@@ -2282,19 +2281,40 @@ override define TESTING_INIT_DIRS =
 endef
 
 ########################################
-# {{{3 #WORKING:NOW TEST CASES ---------
+# {{{3 $(TESTING)-init -----------------
+
+.PHONY: $(TESTING)-init
+$(TESTING)-init: .NOTPARALLEL
+#WORKING:NOW
+$(TESTING)-init: $(TESTING)-use_case_1
+$(TESTING)-init: $(TESTING)-use_case_2
+$(TESTING)-init: $(TESTING)-use_case_3
+
+########################################
+# {{{3 $(TESTING)-use_case_1 -----------
 
 .PHONY: $(TESTING)-use_case_1
 $(TESTING)-use_case_1:
 	@$(call TESTING_INIT)
+	@$(call TESTING_RUN)
+
+########################################
+# {{{3 $(TESTING)-use_case_2 -----------
 
 .PHONY: $(TESTING)-use_case_2
 $(TESTING)-use_case_2:
 	@$(call TESTING_INIT)
+	@$(call TESTING_RUN)
+
+########################################
+# {{{3 $(TESTING)-use_case_3 -----------
 
 .PHONY: $(TESTING)-use_case_3
 $(TESTING)-use_case_3:
 	@$(call TESTING_INIT)
+	@$(call TESTING_RUN)
+
+#WORKING:NOW
 
 #WORK
 #	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
@@ -2512,9 +2532,7 @@ else
 	)
 endif
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL))
-ifneq ($(COMPOSER_TESTING),)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(COMPOSER_SETTINGS))
-endif
+#>	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(COMPOSER_SETTINGS))
 	@$(SED) -i "s|^(override[[:space:]]+COMPOSER_TEACHER[[:space:]]+[:][=][[:space:]]+).+$$|\1$(COMPOSER)|g" $(CURDIR)/$(MAKEFILE)
 	@+$(MAKE) $(INSTALL)-$(SUBDIRS)
 
@@ -2538,9 +2556,7 @@ else
 	)
 endif
 	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(MAKEFILE),-$(INSTALL))
-ifneq ($(COMPOSER_TESTING),)
-	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(COMPOSER_SETTINGS))
-endif
+#>	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(COMPOSER_SETTINGS))
 	@+$(MAKE) --directory="$($(@))" $(INSTALL)-$(SUBDIRS)
 endif
 
