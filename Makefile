@@ -60,6 +60,22 @@ override VIM_FOLDING := {{{1
 # https://www.w3.org/community/markdown/wiki/MarkdownImplementations
 #WORK TODO FEATURES
 
+#WORK
+#c_book_title := This is a test title
+#c_book_file := book
+#c_book_format := html
+#c_book_chapters := README.md LICENSE.md
+#
+#.PHONY: book
+#book: $(c_book_file)
+#$(c_book_file): $(c_book_chapters)
+#	$(RUNMAKE) compose \
+#		c_type="$(c_book_format)" \
+#		c_base="$(c_book_file)" \
+#		c_list="$(c_book_chapters)" \
+#		c_title="$(c_book_title)" \
+#WORK
+
 ################################################################################
 # }}}1
 ################################################################################
@@ -301,22 +317,17 @@ override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$
 override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
 
 ifeq ($(COMPOSER_TARGETS),)
+ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
+override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_REGEX))[:]+.*$$|\1|gp" $(CURDIR)/$(COMPOSER_SETTINGS) 2>/dev/null)
+endif
+endif
+ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER_DIR),$(CURDIR))
 ifneq ($(COMPOSER_EXT),)
 override COMPOSER_TARGETS		:= $(subst $(COMPOSER_EXT),.$(DEFAULT_EXTN),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
 else
 override COMPOSER_TARGETS		:= $(addsuffix .$(DEFAULT_EXTN),$(filter-out %.$(DEFAULT_EXTN),$(COMPOSER_CONTENTS_FILES)))
 endif
-endif
-endif
-ifeq ($(COMPOSER_TARGETS),)
-ifneq ($(COMPOSER),$(COMPOSER_SRC))
-override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_REGEX))[:]+.*$$|\1|gp" $(CURDIR)/$(COMPOSER_SETTINGS) 2>/dev/null)
-endif
-endif
-ifeq ($(COMPOSER_TARGETS),)
-ifneq ($(COMPOSER),$(COMPOSER_SRC))
-override COMPOSER_TARGETS		:= $(shell $(SED) -n "s|^($(COMPOSER_REGEX))[:]+.*$$|\1|gp" $(COMPOSER_SRC))
 endif
 endif
 
@@ -364,11 +375,9 @@ override OPT				?=
 # {{{1 Tooling Versions --------------------------------------------------------
 ################################################################################
 
-#WORKING:NOW made the *_CMT variables user defined... are they in the right spot in $(CONFIGS), or is some relocation necessary?
-
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
-override PANDOC_CMT			?= 2.13
+override PANDOC_CMT			:= 2.13
 override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
@@ -377,7 +386,7 @@ override PANDOC_TEX_PDF			:= pdflatex
 
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
-override REVEALJS_CMT			?= 4.3.1
+override REVEALJS_CMT			:= 4.3.1
 override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
@@ -386,8 +395,8 @@ override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
-#>override MDVIEWER_CMT			?= 059f3192d4ebf5fa9776478ea221d586480e7fa7
-override MDVIEWER_CMT			?= 059f3192d4ebf5fa9776
+#>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
+override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
@@ -806,6 +815,7 @@ endif
 
 #WORK document effects of $TOC and $LVL!
 #WORK TODO OPTIONS
+#	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
 #WORK TODO OPTIONS
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
