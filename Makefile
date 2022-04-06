@@ -20,14 +20,14 @@
 
 #WORK limit global shell calls!
 #WORK replace sort, as much as possible?  also removes the need for strip
-
 #WORK reduce use of --silent to only what is mandatory
 #WORK remove quotes from all filenames... make a note in documentation that spaces are evil...
 #WORK comments, comments, comments (& formatting :)
 #WORK document, somehow, all the places "composer" is used personally, for debugging/testing...
-#WORK a note somewhere about symlinks...
-
 #WORK prompt -z, my friend... early and everywhere...
+
+#WORK document not to use *-[...] target names...
+#WORK a note somewhere about symlinks...
 
 #WORK TODO FEATURES
 # https://stackoverflow.com/questions/3828606/vim-markdown-folding
@@ -54,92 +54,33 @@
 #WORK TODO FEATURES
 
 ################################################################################
-# Make Settings {{{1
+# Include Files {{{1
 ################################################################################
 
+override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 override define READ_ALIASES =
 	$(if $(subst undefined,,$(origin $(1))),$(eval override $(3) := $($(1))))
 	$(if $(subst undefined,,$(origin $(2))),$(eval override $(3) := $($(2))))
 endef
 
 ########################################
+# update: includes duplicates
 
-# update: .$(EXAMPLE):
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
-override MAKEJOBS			?=
-
-ifeq ($(MAKEJOBS),)
-.NOTPARALLEL:
-endif
-
-.POSIX:
-.SUFFIXES:
-
-########################################
-
-export
-
-unexport TITLE_LN
-
-# update: eval unexport
-#>unexport COMPOSER_TARGETS
-#>unexport COMPOSER_SUBDIRS
-
-########################################
-
-override MAKEFILE			:= Makefile
-
-ifeq ($(MAKEJOBS),)
-override MAKEJOBS			:= 1
-else ifeq ($(MAKEJOBS),0)
-override MAKEJOBS			:=
-endif
-ifeq ($(MAKEJOBS),1)
-override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
-else
-#>override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=line
-override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
-endif
-ifeq ($(MAKEJOBS),)
-override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
-endif
-
-override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory $(MAKEJOBS_OPTS)
-override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
-
-########################################
-
-override SED				:= $(shell which sed) -r
-
-################################################################################
-# Composer Globals {{{1
-################################################################################
-
-#WORKING:NOW debugit and includes need to be the first thing in the file, above make settinga
-#WORKING:NOW document not to use *-[...] target names...
-
-override COMPOSER_SETTINGS		:= .composer.mk
-
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
-$(call READ_ALIASES,C,c_color,COMPOSER_ESCAPES)
-
-# update: .$(EXAMPLE):
-override COMPOSER_DEBUGIT		?=
-override COMPOSER_INCLUDE		?=
-override COMPOSER_ESCAPES		?= 1
 
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),!)
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
-ifneq ($(COMPOSER_DEBUGIT_ALL),)
-#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=all
-#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
-#WORK what is the difference in output?
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=makefile
-else
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
-endif
+
+override PATH_LIST			:= $(subst :, ,$(PATH))
+override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
+
+########################################
+
+override COMPOSER_SETTINGS		:= .composer.mk
+override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 
 #WORK COMPOSER_INCLUDES documentation:
 # by default, just the local .composer.mk and the one in composer, from top to bottom
@@ -184,6 +125,89 @@ $(foreach FILE,$(COMPOSER_INCLUDES),\
 	$(eval include $(FILE)); \
 )
 
+################################################################################
+# Make Settings {{{1
+################################################################################
+
+.POSIX:
+.SUFFIXES:
+
+########################################
+
+export
+
+unexport TITLE_LN
+
+# update: eval unexport
+#>unexport COMPOSER_TARGETS
+#>unexport COMPOSER_SUBDIRS
+
+########################################
+
+# update: includes duplicates
+# update: $(EXAMPLE):
+$(call READ_ALIASES,J,c_jobs,MAKEJOBS)
+override MAKEJOBS			?=
+
+ifeq ($(MAKEJOBS),)
+.NOTPARALLEL:
+endif
+ifeq ($(MAKEJOBS),1)
+.NOTPARALLEL:
+endif
+
+ifeq ($(MAKEJOBS),)
+override MAKEJOBS			:= 1
+else ifeq ($(MAKEJOBS),0)
+override MAKEJOBS			:=
+endif
+
+ifeq ($(MAKEJOBS),1)
+override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
+else
+#>override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=line
+override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
+endif
+ifeq ($(MAKEJOBS),)
+override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
+endif
+
+########################################
+
+override MAKEFILE			:= Makefile
+override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory $(MAKEJOBS_OPTS)
+
+################################################################################
+# Composer Globals {{{1
+################################################################################
+
+# update: includes duplicates
+# update: $(EXAMPLE):
+
+$(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
+$(call READ_ALIASES,C,c_color,COMPOSER_ESCAPES)
+
+override COMPOSER_DEBUGIT		?=
+override COMPOSER_INCLUDE		?=
+override COMPOSER_ESCAPES		?= 1
+
+########################################
+
+# update: includes duplicates
+override COMPOSER_DEBUGIT_ALL		:=
+ifeq ($(COMPOSER_DEBUGIT),!)
+override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
+endif
+
+ifneq ($(COMPOSER_DEBUGIT_ALL),)
+#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=all
+#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
+#WORK what is the difference in output?
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=makefile
+else
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
+endif
+
 ########################################
 
 override COMPOSER			:= $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -194,8 +218,6 @@ override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),
 ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(COMPOSER_DIR)
 endif
-
-override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 
 ########################################
 
@@ -247,13 +269,13 @@ override EXAMPLE_TWO			:= LICENSE
 # Composer Options {{{1
 ################################################################################
 
-# update: .$(EXAMPLE):
+# update: $(EXAMPLE):
 override COMPOSER_GITREPO		?= https://github.com/garybgenett/composer.git
 override COMPOSER_REPLICA		?= $(COMPOSER_VERSION)
 
 ########################################
 
-# update: .$(EXAMPLE):
+# update: $(EXAMPLE):
 
 override COMPOSER_STAMP			?= .composed
 
@@ -296,7 +318,7 @@ endif
 endif
 
 # update: COMPOSER_TARGETS: Pandoc Options
-# update: .$(EXAMPLE):
+# update: $(EXAMPLE):
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
@@ -314,7 +336,7 @@ $(call READ_ALIASES,m,c_margin,MGN)
 $(call READ_ALIASES,f,c_font,FNT)
 $(call READ_ALIASES,o,c_options,OPT)
 
-# update: .$(EXAMPLE):
+# update: $(EXAMPLE):
 # update: $(HEADERS)-vars
 override TYPE				?= $(DEFAULT_TYPE)
 override BASE				?= $(EXAMPLE_ONE)
@@ -395,6 +417,7 @@ override TEX_VER_PDF			:= $(TEX_PI) (2.6-1.40.22)
 # Tooling Options {{{1
 ################################################################################
 
+# update: includes duplicates
 override PATH_LIST			:= $(subst :, ,$(PATH))
 
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
@@ -423,8 +446,7 @@ override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
 override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
-#>override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
-override SED				:= $(SED)
+override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -u
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
@@ -588,6 +610,7 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 ########################################
 
+# update: $(DEBUGIT):
 # update: $(TESTING):
 
 override HELPOUT			:= usage
@@ -661,6 +684,8 @@ override LISTING_VAR := \
 
 ########################################
 
+# update: eval unexport
+
 $(INSTALL): $(eval unexport COMPOSER_TARGETS)
 $(INSTALL): $(eval unexport COMPOSER_SUBDIRS)
 
@@ -669,6 +694,7 @@ $(DOITALL): $(eval unexport COMPOSER_SUBDIRS)
 
 ########################################
 
+# update: COMPOSER_TARGETS.*filter-out
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 
 ################################################################################
@@ -716,6 +742,8 @@ override LINT_DESC			:= Pandoc Markdown (for testing)
 
 ########################################
 
+# update: COMPOSER_TARGETS: Pandoc Options
+# update: COMPOSER_TARGETS.*strip
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(strip \
@@ -829,10 +857,11 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 # Bootstrap Options {{{1
 ################################################################################
 
-# update: .$(EXAMPLE):
+# update: $(EXAMPLE):
 
 #WORK bootstrap!
 #WORK need some default content for TESTING... actually, TESTING should already have this...
+#WORK realpath --relative-to /tmp ./
 
 # override SITE_SOURCE			?= $(COMPOSER_ROOT)
 # override SITE_OUTPUT			?= $(COMPOSER_ROOT)/_site
@@ -1546,20 +1575,20 @@ HELP_TARGETS_SUBTARGET_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Target Dependencies); fi
 	@$(PRINT) "These are all the rest of the sub-targets used by the main targets above:"
 	@$(ENDOLINE)
-	@$(PRINT) "$(_H)Dynamic Sub-Targets:"
+	@$(TABLE_M3) "$(_H)Dynamic"		"-"						"-"
 	@$(TABLE_M3) ":---"			":---"						":---"
 	@$(TABLE_M3) "$(_C)$(CLEANER)"		"$(_E)$(~)(COMPOSER_TARGETS)-$(CLEANER)"	"$(_M)$(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))"
 	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(~)(COMPOSER_TARGETS)"			"$(_M)$(COMPOSER_TARGETS)"
 	@$(TABLE_M3) "$(_C)$(SUBDIRS)"		"$(_E)$(~)(COMPOSER_SUBDIRS)"			"$(_M)$(COMPOSER_SUBDIRS)"
 	@$(ENDOLINE)
-	@$(PRINT) "$(_H)Hidden Sub-Targets:"
+	@$(TABLE_M3) "$(_H)Hidden"		"-"						"-"
 	@$(TABLE_M3) ":---"			":---"						":---"
 	@$(TABLE_M3) "$(_C)$(_N)%"		"$(_E).set_title-$(_N)*"			"Set window title to current target using escape sequence"
 	@$(TABLE_M3) "$(_C)$(DEBUGIT)"		"$(_E)$(MAKE_DB)"				"Output internal Make database, based on current: $(_C)$(MAKEFILE)"
 	@$(TABLE_M3) "$(_C)$(TARGETS)"		"$(_E)$(LISTING)"				"Dynamically parse and print all potential targets"
 	@$(TABLE_M3) "$(_C)$(EXAMPLE)"		"$(_E).$(EXAMPLE){-$(INSTALL)}"			"Prints raw template, with escape sequences"
 	@$(ENDOLINE)
-	@$(PRINT) "$(_H)Static Sub-Targets:"
+	@$(TABLE_M3) "$(_H)Static"		"-"						"-"
 	@$(TABLE_M3) ":---"			":---"						":---"
 	@$(TABLE_M3) "$(_C)$(COMPOSER_TARGET)"	"$(_E)$(COMPOSER_PANDOC)"			"Wrapper target which calls Pandoc directly"
 	@$(TABLE_M3) "$(_E)$(COMPOSER_PANDOC)"	"$(_E)$(SETTING)-$(_N)%"			"Prints marker and variable values, for readability"
@@ -1786,6 +1815,8 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 # Makefile Templates {{{1
 ################################################################################
 
+# update: $(EXAMPLE):
+
 .PHONY: $(EXAMPLE)
 $(EXAMPLE):
 	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)
@@ -1801,6 +1832,7 @@ $(EXAMPLE):
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))))
+#>	@$(call EXAMPLE_VAR,1,MAKEJOBS)
 #>	@$(call EXAMPLE_VAR,1,COMPOSER_DEBUGIT)
 	@$(call EXAMPLE_VAR,1,COMPOSER_INCLUDE)
 	@$(call EXAMPLE_VAR,1,COMPOSER_DEPENDS)	#>
@@ -1835,6 +1867,8 @@ endef
 # Composer Headers {{{1
 #>.PHONY: --- HEADERS ---
 ################################################################################
+
+#WORK should really "reset" the status line once we're done...
 
 #> grep "[.]set_title" Makefile
 #>.PHONY: .set_title-%:
@@ -1881,6 +1915,7 @@ override define $(HEADERS)-run =
 	$(LINERULE)
 endef
 
+# update: $(HEADERS)-vars
 override $(HEADERS)-vars := \
 	TYPE \
 	BASE \
@@ -2071,6 +2106,8 @@ endif
 #>.PHONY: --- DEBUG ---
 ################################################################################
 
+# update: $(DEBUGIT):
+
 #WORK document DEBUGIT-file
 
 .PHONY: $(DEBUGIT)-file
@@ -2133,6 +2170,8 @@ $(DEBUGIT)-%:
 ########################################
 
 # #WORKING:NOW {{{1
+
+# update: $(TESTING):
 
 #WORKING:NOW incorporate and document COMPOSER_TESTING!
 #WORK document COMPOSER_DEBUGIT=!...?  (just need to remember for myself... maybe $(TESTING) is enough?
@@ -2440,6 +2479,8 @@ else
 endif
 	@+$(MAKE) $(CLEANER)-do
 
+#WORKING:NOW need a better, variable-based name for this... and for all the other targets/variables that are hacked like this...
+
 .PHONY: $(CLEANER)-do
 $(CLEANER)-do:
 ifneq ($(COMPOSER_STAMP),)
@@ -2450,6 +2491,7 @@ endif
 			$(RM) "$(CURDIR)/$(FILE)"; \
 		fi; \
 	)
+#WORKING:NOW test that this runs in parallel... maybe TESTING has one big parallelization test suite...?
 	@+$(MAKE) $(if $(shell $(CLEANER_LISTING)),$(shell $(CLEANER_LISTING)),$(NOTHING)-$(CLEANER))
 ifneq ($(COMPOSER_DOITALL),)
 	@+$(MAKE) $(CLEANER)-$(SUBDIRS)
