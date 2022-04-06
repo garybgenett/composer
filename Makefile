@@ -1,8 +1,9 @@
 #!/usr/bin/make --makefile
-# vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make
+override VIM_OPTIONS := vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
+# {{{1
 #
 #WORK portability? + bash shell is required?
 #
@@ -13,7 +14,7 @@
 #
 # Please report any cross-platform issues, or issues with other versions of Make.
 #
-################################################################################
+#WORK ##########################################################################
 
 #WORK ultimately, before committing the new version, do a git-patch of Makefile (tags?), and git-am it in, for posterity...?
 #WORK	what do the dates report, in this case?
@@ -53,6 +54,8 @@
 # https://www.w3.org/community/markdown/wiki/MarkdownImplementations
 #WORK TODO FEATURES
 
+#WORK ##########################################################################
+# }}}1
 ################################################################################
 # Include Files {{{1
 ################################################################################
@@ -64,7 +67,7 @@ override define READ_ALIASES =
 endef
 
 ########################################
-# update: includes duplicates
+#> update: includes duplicates
 
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
@@ -138,14 +141,14 @@ export
 
 unexport TITLE_LN
 
-# update: eval unexport
+#> update: eval unexport
 #>unexport COMPOSER_TARGETS
 #>unexport COMPOSER_SUBDIRS
 
 ########################################
 
-# update: includes duplicates
-# update: $(EXAMPLE):
+#> update: includes duplicates
+#> update: $(EXAMPLE):
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
 override MAKEJOBS			?=
 
@@ -181,8 +184,8 @@ override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-dir
 # Composer Globals {{{1
 ################################################################################
 
-# update: includes duplicates
-# update: $(EXAMPLE):
+#> update: includes duplicates
+#> update: $(EXAMPLE):
 
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 $(call READ_ALIASES,C,c_color,COMPOSER_ESCAPES)
@@ -193,7 +196,7 @@ override COMPOSER_ESCAPES		?= 1
 
 ########################################
 
-# update: includes duplicates
+#> update: includes duplicates
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),!)
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
@@ -269,13 +272,13 @@ override EXAMPLE_TWO			:= LICENSE
 # Composer Options {{{1
 ################################################################################
 
-# update: $(EXAMPLE):
+#> update: $(EXAMPLE):
 override COMPOSER_GITREPO		?= https://github.com/garybgenett/composer.git
 override COMPOSER_REPLICA		?= $(COMPOSER_VERSION)
 
 ########################################
 
-# update: $(EXAMPLE):
+#> update: $(EXAMPLE):
 
 override COMPOSER_STAMP			?= .composed
 
@@ -317,8 +320,8 @@ override COMPOSER_SUBDIRS		:= $(sort $(notdir $(filter-out $(CURDIR),$(abspath $
 endif
 endif
 
-# update: COMPOSER_TARGETS: Pandoc Options
-# update: $(EXAMPLE):
+#> update: COMPOSER_TARGETS: Pandoc Options
+#> update: $(EXAMPLE):
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_DEPENDS		?=
@@ -336,8 +339,8 @@ $(call READ_ALIASES,m,c_margin,MGN)
 $(call READ_ALIASES,f,c_font,FNT)
 $(call READ_ALIASES,o,c_options,OPT)
 
-# update: $(EXAMPLE):
-# update: $(HEADERS)-vars
+#> update: $(EXAMPLE):
+#> update: $(HEADERS)-vars
 override TYPE				?= $(DEFAULT_TYPE)
 override BASE				?= $(EXAMPLE_ONE)
 override LIST				?= $(BASE)$(COMPOSER_EXT)
@@ -351,8 +354,6 @@ override OPT				?=
 
 ################################################################################
 # }}}1
-################################################################################
-
 ################################################################################
 # Tooling Versions {{{1
 ################################################################################
@@ -417,7 +418,7 @@ override TEX_VER_PDF			:= $(TEX_PI) (2.6-1.40.22)
 # Tooling Options {{{1
 ################################################################################
 
-# update: includes duplicates
+#> update: includes duplicates
 override PATH_LIST			:= $(subst :, ,$(PATH))
 
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
@@ -434,8 +435,7 @@ override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
-override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso
-override DATESTAMP			:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
+override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
 override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
 override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
@@ -466,6 +466,13 @@ override TEX				:= $(call COMPOSER_FIND,$(PATH_LIST),tex)
 override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 
 ########################################
+
+override DATESTAMP			:= $(shell $(DATE))
+override DATENAME			:= $(shell $(DATE) | $(SED) \
+	-e "s|[-]([0-9]{2}[:]?[0-9]{2})$$|T\1|g" \
+	-e "s|[-:]||g" \
+	-e "s|T|-|g" \
+)
 
 override REPLICA_GIT_DIR		:= $(COMPOSER_PKG)/$(COMPOSER_BASENAME).git
 override REPLICA_GIT			:= cd $(CURDIR) && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
@@ -499,8 +506,6 @@ endef
 
 ################################################################################
 # }}}1
-################################################################################
-
 ################################################################################
 # Composer Output {{{1
 ################################################################################
@@ -546,7 +551,7 @@ endef
 
 ########################################
 
-# #WORKING:NOW {{{1
+#WORKING:NOW {{{1
 
 #WORK make COMPOSER_ESCAPES= config | grep -vE "^[#]"
 #WORK make COMPOSER_ESCAPES= check | grep -vE "^[#]"
@@ -565,8 +570,8 @@ override ENDOLINE			:= $(ECHO) "$(_D)\n"
 override LINERULE			:= $(ECHO) "$(_H)";	$(PRINTF)  "-%.0s" {1..$(NUMCOLUMN)}	; $(ENDOLINE)
 override HEADER_L			:= $(ECHO) "$(_S)";	$(PRINTF) "\#%.0s" {1..$(NUMCOLUMN)}	; $(ENDOLINE)
 
-ifneq ($(COMPOSER_ESCAPES),)
 # https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
+ifneq ($(COMPOSER_ESCAPES),)
 override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%b$(_D)\e[128D\e[22C%b$(_D)\n"
 override TABLE_M2			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\n"
 override TABLE_M3			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\e[128D\e[54C| %b$(_D)\n"
@@ -610,8 +615,8 @@ override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 ########################################
 
-# update: $(DEBUGIT):
-# update: $(TESTING):
+#> update: $(DEBUGIT):
+#> update: $(TESTING):
 
 override HELPOUT			:= usage
 override HELPALL			:= help
@@ -685,7 +690,7 @@ override LISTING_VAR := \
 
 ########################################
 
-# update: eval unexport
+#> update: eval unexport
 
 $(INSTALL): $(eval unexport COMPOSER_TARGETS)
 $(INSTALL): $(eval unexport COMPOSER_SUBDIRS)
@@ -695,7 +700,7 @@ $(DOITALL): $(eval unexport COMPOSER_SUBDIRS)
 
 ########################################
 
-# update: COMPOSER_TARGETS.*filter-out
+#> update: COMPOSER_TARGETS.*filter-out
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 
 ################################################################################
@@ -706,7 +711,7 @@ override INPUT				:= markdown
 override OUTPUT				:= $(TYPE)
 override EXTENSION			:= $(TYPE)
 
-# update: COMPOSER_TARGETS.*strip
+#> update: COMPOSER_TARGETS.*strip
 override TYPE_HTML			:= html
 override TYPE_LPDF			:= pdf
 override TYPE_PRES			:= revealjs
@@ -743,8 +748,8 @@ override LINT_DESC			:= Pandoc Markdown (for testing)
 
 ########################################
 
-# update: COMPOSER_TARGETS: Pandoc Options
-# update: COMPOSER_TARGETS.*strip
+#> update: COMPOSER_TARGETS: Pandoc Options
+#> update: COMPOSER_TARGETS.*strip
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(strip \
@@ -858,7 +863,7 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 # Bootstrap Options {{{1
 ################################################################################
 
-# update: $(EXAMPLE):
+#> update: $(EXAMPLE):
 
 #WORK bootstrap!
 #WORK need some default content for TESTING... actually, TESTING should already have this...
@@ -966,8 +971,6 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 ################################################################################
 # }}}1
 ################################################################################
-
-################################################################################
 # Embedded Files {{{1
 ################################################################################
 
@@ -1057,7 +1060,7 @@ endef
 # Heredoc: license {{{1
 ################################################################################
 
-# #WORKING {{{1
+#WORKING {{{1
 
 #WORK replace license and readme with help/license output
 #WORK should the README be broken up into sections throughout the Makefile anyway?
@@ -1122,7 +1125,7 @@ endef
 override define HEREDOC_DISTRIB_README =
 % Composer CMS: User Guide & Example File
 % Gary B. Genett
-% $(COMPOSER_VERSION) ($(shell $(DATE)))
+% $(COMPOSER_VERSION) ($(DATESTAMP))
 
 Composer CMS
 ------------------------------------------------------------------------
@@ -1426,8 +1429,6 @@ endef
 ################################################################################
 # }}}1
 ################################################################################
-
-################################################################################
 # Help Output {{{1
 #>.PHONY: --- DOCUMENTATION ---
 ################################################################################
@@ -1537,7 +1538,7 @@ HELP_VARIABLES_CONTROL_%:
 HELP_TARGETS_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
 
-# #WORKING:NOW {{{1
+#WORKING:NOW {{{1
 
 #>.PHONY: HELP_TARGETS_MAIN_%
 HELP_TARGETS_MAIN_%:
@@ -1656,7 +1657,7 @@ HELP_SYSTEM:
 # Documentation Output {{{1
 ################################################################################
 
-# #WORKING {{{1
+#WORKING {{{1
 
 .PHONY: $(CREATOR)
 $(CREATOR): .NOTPARALLEL
@@ -1816,7 +1817,7 @@ EXAMPLE_MAKEFILE_TEMPLATE:
 # Makefile Templates {{{1
 ################################################################################
 
-# update: $(EXAMPLE):
+#> update: $(EXAMPLE):
 
 .PHONY: $(EXAMPLE)
 $(EXAMPLE):
@@ -1824,7 +1825,7 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))))
+	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
 	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_MY_PATH)
 	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_TEACHER)
 	@$(call EXAMPLE_PRINT,,include $(_E)$(~)(COMPOSER_TEACHER))
@@ -1832,7 +1833,7 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))))
+	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
 #>	@$(call EXAMPLE_VAR,1,MAKEJOBS)
 #>	@$(call EXAMPLE_VAR,1,COMPOSER_DEBUGIT)
 	@$(call EXAMPLE_VAR,1,COMPOSER_INCLUDE)
@@ -1862,8 +1863,6 @@ endef
 
 ################################################################################
 # }}}1
-################################################################################
-
 ################################################################################
 # Composer Headers {{{1
 #>.PHONY: --- HEADERS ---
@@ -1916,7 +1915,7 @@ override define $(HEADERS)-run =
 	$(LINERULE)
 endef
 
-# update: $(HEADERS)-vars
+#> update: $(HEADERS)-vars
 override $(HEADERS)-vars := \
 	TYPE \
 	BASE \
@@ -2048,7 +2047,7 @@ $(NOTHING):
 $(CONVICT): .set_title-$(CONVICT)
 	@$(call $(HEADERS))
 	@$(call COMPOSER_GIT_RUN,$(CURDIR),add --verbose --all ./)
-	@$(call COMPOSER_GIT_RUN,$(CURDIR),commit --verbose --all --edit --message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(shell $(DATESTAMP))]")
+	@$(call COMPOSER_GIT_RUN,$(CURDIR),commit --verbose --all --edit --message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]")
 
 ########################################
 
@@ -2109,20 +2108,21 @@ endif
 #>.PHONY: --- DEBUG ---
 ################################################################################
 
-# update: $(DEBUGIT):
+#> update: $(DEBUGIT):
 
 #WORK document DEBUGIT-file
 
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: override DEBUGIT_FOLD := {{{1
-$(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)-$(DEBUGIT)-$(shell $(DATE)).$(EXTN_TEXT)
+$(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)-$(DEBUGIT)-$(DATENAME).$(EXTN_TEXT)
 $(DEBUGIT)-file:
-	@$(ECHO) "# vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make\n" >$(DEBUGIT_FILE)
+	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
 	@$(RUNMAKE) \
 		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 		COMPOSER_ESCAPES= \
 		$(DEBUGIT) \
 		>>$(DEBUGIT_FILE) 2>&1
+	@$(LS) $(DEBUGIT_FILE)
 
 .PHONY: $(DEBUGIT)
 $(DEBUGIT): .set_title-$(DEBUGIT)
@@ -2172,14 +2172,14 @@ $(DEBUGIT)-%:
 
 ########################################
 
-# #WORKING:NOW {{{1
+#WORKING:NOW {{{1
 
-# update: $(TESTING):
+#> update: $(TESTING):
 
 #WORKING:NOW incorporate and document COMPOSER_TESTING!
 #WORK document COMPOSER_DEBUGIT=!...?  (just need to remember for myself... maybe $(TESTING) is enough?
 
-.PHONY: $(TESTING)
+.PHONY: $(TESTING)			{{{2
 $(TESTING): .set_title-$(TESTING)
 	@$(call TESTING_DIRECTORY,$(@))
 
@@ -2349,7 +2349,7 @@ endif
 
 ########################################
 
-# #WORKING {{{1
+#WORKING {{{1
 
 #WORKING keep REPLICA?  it probably can/should be replaced with DISTRIB, or just be a wrapper to it...?  basically, trying to automate the ".Composer" directory workflow...
 
@@ -2367,6 +2367,8 @@ $(REPLICA)-%:
 
 .PHONY: $(REPLICA)
 $(REPLICA): .set_title-$(REPLICA)
+$(REPLICA): override REPLICA_FILE := $(CURDIR)/$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)-$(REPLICA)-$(DATENAME).$(EXTN_TEXT)
+$(REPLICA):
 	@$(call $(HEADERS),\
 		COMPOSER_REPLICA \
 		COMPOSER_FILES \
@@ -2392,7 +2394,8 @@ $(REPLICA): .set_title-$(REPLICA)
 		$(CP) $(COMPOSER_DIR)/$(COMPOSER_SETTINGS) $(CURDIR)/$(COMPOSER_SETTINGS); \
 	fi
 	@$(ECHO) "$(_D)"
-	@$(DATESTAMP) >$(CURDIR)/.$(COMPOSER_BASENAME).$(REPLICA)
+	@$(ECHO) "$(DATESTAMP)" >$(REPLICA_FILE)
+	@$(LS) $(REPLICA_FILE)
 
 ########################################
 
@@ -2465,7 +2468,7 @@ endef
 #WORK document "*-clean"
 #WORK document somewhere that clean removes files that match a phony target name?
 
-# update: COMPOSER_TARGETS.*filter-out
+#> update: COMPOSER_TARGETS.*filter-out
 
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
 
@@ -2618,7 +2621,7 @@ $(COMPOSER_PANDOC): $(LIST)
 	@$(PANDOC) $(PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_STAMP),)
-	@$(DATESTAMP) >$(CURDIR)/$(COMPOSER_STAMP)
+	@$(ECHO) "$(DATESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
 endif
 
 ########################################
@@ -2686,8 +2689,6 @@ $(BASE).$(EXTENSION): $(LIST)
 
 ################################################################################
 # }}}1
-################################################################################
-
 ################################################################################
 # End Of File
 ################################################################################
