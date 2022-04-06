@@ -456,7 +456,6 @@ override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicaliz
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
-override SLEEP				:= $(call COMPOSER_FIND,$(PATH_LIST),sleep)
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
@@ -2243,7 +2242,8 @@ $(DEBUGIT)-%:
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(INSTALL).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
-override TESTING_SLEEP			:= 2
+override TESTING_ENV			:= $(ENV) \
+	COMPOSER_ESCAPES="$(COMPOSER_ESCAPES)" \
 
 #WORK document TESTING-file
 
@@ -2262,7 +2262,7 @@ $(TESTING): .set_title-$(TESTING)
 #WORK $(TESTING): $(HEADERS)-$(TESTING)
 #WORK $(TESTING): $(TESTING)-$(HEADERS)
 #WORK $(TESTING): $(CONFIGS)
-$(TESTING): $(TESTING)-init
+#WORKING:NOW $(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORKING:NOW
@@ -2298,7 +2298,7 @@ $(TESTING)-init:
 override TESTING_PWD			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
 override TESTING_LOG			= $(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override TESTING_MAKE			= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call TESTING_PWD,$(if $(1),$(1),$(@)))/$(MAKEFILE)
-override TESTING_RUN			= $(ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
+override TESTING_RUN			= $(TESTING_ENV) $(REALMAKE) --directory $(call TESTING_PWD,$(if $(1),$(1),$(@)))
 override TESTING_FIND			= if [ -z "`$(SED) -n "/$(1)/p" $(call TESTING_LOG,$(if $(2),$(2),$(@)))`" ]; then exit 1; fi
 
 override define TESTING_LOAD =
@@ -2331,14 +2331,22 @@ override define TESTING_INIT =
 	else \
 		$(call TESTING_MAKE,$(if $(1),$(1),$(@))); \
 	fi; \
-	$(ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call TESTING_LOG,$(if $(1),$(1),$(@))); \
+	$(TESTING_ENV) $(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call TESTING_LOG,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
 override define TESTING_DONE =
 	$(PRINT) "$(_M)$(MARKER) DONE:"; \
-	$(ENV) $(RUNMAKE) $(@)-done 2>&1
+	$(TESTING_ENV) $(RUNMAKE) $(@)-done 2>&1
 endef
+
+override TESTING_HOLD :=
+ifneq ($(COMPOSER_ESCAPES),)
+override define TESTING_HOLD =
+	$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
+	read TESTING_HOLD
+endef
+endif
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
@@ -2368,8 +2376,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-init: $(TESTING)-$(COMPOSER_BASENAME)-root
 #>	@$(ENDOLINE)
 	@$(CAT) $(TESTING_DIR)/$(MAKEFILE) $(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ENDOLINE)
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR) $(CONFIGS)
-	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR) $(DOITALL)-$(DOITALL)
+	@$(TESTING_ENV) $(REALMAKE) --directory $(TESTING_DIR) $(CONFIGS)
+	@$(TESTING_ENV) $(REALMAKE) --directory $(TESTING_DIR) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
@@ -2402,7 +2410,7 @@ $(TESTING)-$(DISTRIB)-init:
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(SLEEP) $(TESTING_SLEEP)
+	@$(TESTING_HOLD)
 
 ########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
@@ -2461,7 +2469,7 @@ $(TESTING)-$(DEBUGIT)-init:
 .PHONY: $(TESTING)-$(DEBUGIT)-done
 $(TESTING)-$(DEBUGIT)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(SLEEP) $(TESTING_SLEEP)
+	@$(TESTING_HOLD)
 
 ########################################
 # {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
@@ -2489,13 +2497,12 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(CAT) $(call TESTING_PWD)/data/$(COMPOSER_SETTINGS)
 	@$(call TESTING_RUN) $(CLEANER)-$(DOITALL)
 	@$(PRINT) "#WORKING:NOW"
-	@exit 1
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
-	$(call TESTING_FIND,test-1-clean: .+$(TESTING)-$(CLEANER)-$(DOITALL)/data)
+	$(call TESTING_FIND,test-1-clean: .+$(TESTING)-$(CLEANER)-$(DOITALL)\/data)
 	@$(PRINT) "#WORKING:NOW"
-	@exit 1
+	@$(TESTING_HOLD)
 
 #WORKING @$(RSYNC) $(call TESTING_PWD,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT) $(call TESTING_PWD)/
 #WORK
@@ -2560,7 +2567,7 @@ $(TESTING)-$(EXAMPLE)-init:
 .PHONY: $(TESTING)-$(EXAMPLE)-done
 $(TESTING)-$(EXAMPLE)-done:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(@)" $(NOTHING)
-	@$(SLEEP) $(TESTING_SLEEP)
+#>	@$(TESTING_HOLD)
 
 ########################################
 # {{{2 $(CHECKIT) ----------------------
