@@ -212,10 +212,10 @@ override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-dir
 #> update: includes duplicates
 #> update: $(EXAMPLE):
 
-$(call READ_ALIASES,C,c_color,COMPOSER_ESCAPES)
+$(call READ_ALIASES,C,c_color,COMPOSER_DOCOLOR)
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 
-override COMPOSER_ESCAPES		?= 1
+override COMPOSER_DOCOLOR		?= 1
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_INCLUDE		?=
 override COMPOSER_DEPENDS		?=
@@ -542,7 +542,7 @@ endef
 #	note	= red
 #	extra	= magenta
 #	syntax	= dark blue
-ifneq ($(COMPOSER_ESCAPES),)
+ifneq ($(COMPOSER_DOCOLOR),)
 #>override _D				:= \e[0;37m
 override _D				:= \e[0m
 override _H				:= \e[0;32m
@@ -581,8 +581,8 @@ endef
 #WORKING do a mouse-select of all text, to ensure proper color handling
 #WORKING the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
 
-#WORK make COMPOSER_ESCAPES= config | grep -vE "^[#]"
-#WORK make COMPOSER_ESCAPES= check | grep -vE "^[#]"
+#WORK make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
+#WORK make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
 
 override NUMCOLUMN			:= 80
 override HEAD_MAIN			:= 1
@@ -594,7 +594,7 @@ override LINERULE			:= $(ECHO) "$(_H)";	$(PRINTF)  "-%.0s" {1..$(NUMCOLUMN)}	; $
 override HEADER_L			:= $(ECHO) "$(_S)";	$(PRINTF) "\#%.0s" {1..$(NUMCOLUMN)}	; $(ENDOLINE)
 
 # https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
-ifneq ($(COMPOSER_ESCAPES),)
+ifneq ($(COMPOSER_DOCOLOR),)
 override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%b$(_D)\e[128D\e[22C%b$(_D)\n"
 override TABLE_M2			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\n"
 override TABLE_M3			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\e[128D\e[54C| %b$(_D)\n"
@@ -1572,7 +1572,7 @@ HELP_VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"						":---"
 	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS) )$(_N)(makejobs)"
-	@$(TABLE_M3) "$(_C)COMPOSER_ESCAPES"	"Enable title/color sequences"			"$(if $(COMPOSER_ESCAPES),$(_M)$(COMPOSER_ESCAPES) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS) )$(_N)(boolean)"
@@ -1582,7 +1582,7 @@ HELP_VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"		"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_ESCAPES$(_D) ~= $(_E)(C, c_color)$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~= $(_E)(C, c_color)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
 	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
@@ -1871,11 +1871,11 @@ $(CREATOR):
 
 .PHONY: $(EXAMPLE)
 $(EXAMPLE):
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)
+	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
@@ -1886,9 +1886,9 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_ESCAPES),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
 #>	@$(call $(EXAMPLE)-var,1,MAKEJOBS)
-#>	@$(call $(EXAMPLE)-var,1,COMPOSER_ESCAPES)
+#>	@$(call $(EXAMPLE)-var,1,COMPOSER_DOCOLOR)
 #>	@$(call $(EXAMPLE)-var,1,COMPOSER_DEBUGIT)
 	@$(call $(EXAMPLE)-var,1,COMPOSER_INCLUDE)
 	@$(call $(EXAMPLE)-var,1,COMPOSER_DEPENDS)
@@ -1904,7 +1904,7 @@ $(EXAMPLE):
 #>	@$(call $(EXAMPLE)-print,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
 
 override define $(EXAMPLE)-print =
-	$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
+	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
 endef
 override define $(EXAMPLE)-var-static =
 	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
@@ -1927,7 +1927,7 @@ endef
 #> grep -E "[.]set_title" Makefile
 #>.PHONY: .set_title-%:
 .set_title-%:
-ifneq ($(COMPOSER_ESCAPES),)
+ifneq ($(COMPOSER_DOCOLOR),)
 	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
 else
 	@$(ECHO) ""
@@ -2202,7 +2202,7 @@ endif
 $(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
-	@$(RUNMAKE) COMPOSER_ESCAPES= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
 	@$(LS) $(DEBUGIT_FILE)
 
 .PHONY: $(DEBUGIT)
@@ -2247,7 +2247,7 @@ $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
 		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
 		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
-			$(RUNMAKE) --just-print COMPOSER_ESCAPES= COMPOSER_DEBUGIT="!" $(FILE) 2>&1; \
+			$(RUNMAKE) --just-print COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="!" $(FILE) 2>&1; \
 		elif [ -d "$(FILE)" ]; then \
 			$(LS) --recursive $(FILE); \
 		elif [ -f "$(FILE)" ]; then \
@@ -2266,7 +2266,7 @@ override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(INSTALL).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
 override TESTING_ENV			:= $(ENV) \
-	COMPOSER_ESCAPES="$(COMPOSER_ESCAPES)" \
+	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
 	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 
 #WORK document TESTING-file
@@ -2275,7 +2275,7 @@ override TESTING_ENV			:= $(ENV) \
 $(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 $(TESTING)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
-	@$(RUNMAKE) COMPOSER_ESCAPES= $(TESTING) >>$(TESTING_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(TESTING) >>$(TESTING_FILE) 2>&1
 	@$(LS) $(TESTING_FILE)
 
 .PHONY: $(TESTING)
@@ -2325,7 +2325,7 @@ $(TESTING)-init:
 
 override $(TESTING)-pwd			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
-override $(TESTING)-make		= $(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE)
+override $(TESTING)-make		= $(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE)
 override $(TESTING)-run			= $(TESTING_ENV) $(REALMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
@@ -2345,7 +2345,7 @@ override define $(TESTING)-load =
 	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
 	$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
-	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --silent COMPOSER_ESCAPES= .$(EXAMPLE) \
+	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --silent COMPOSER_DOCOLOR= .$(EXAMPLE) \
 		>$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(SED) -i "s|^[#][[:space:]]+(override[[:space:]]+COMPOSER_SUBDIRS[[:space:]]+[:][=])(.*)($(TESTING))(.*)$$|\1\2\4|g" \
 		$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
@@ -2381,7 +2381,7 @@ override define $(TESTING)-count =
 	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC))" != "$(1)" ]; then exit 1; fi
 endef
 
-ifneq ($(COMPOSER_ESCAPES),)
+ifneq ($(COMPOSER_DOCOLOR),)
 override define $(TESTING)-hold =
 	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
@@ -2409,7 +2409,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
-	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
+	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
 	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(TESTING_DIR)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
 	@$(ECHO) "\n# $(COMPOSER_BASENAME) $(DIVIDE) $(COMPOSER_SETTINGS)\n" >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
@@ -2630,8 +2630,8 @@ $(TESTING)-$(NOTHING)-done:
 #		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
 #	make TYPE="man" compose && man ./README.man
 # review:
-#	$(HELPOUT) -> COMPOSER_ESCAPES
-#	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
+#	$(HELPOUT) -> COMPOSER_DOCOLOR
+#	$(HELPALL) -> COMPOSER_DOCOLOR = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
 #	$(CONVICT) -> git show --summary -1 2>/dev/null | cat
 # features:
 #	$(DOITALL) -> $(NOTHING) -> no $(MAKEFILE)	= $(TARGETS) -> COMPOSER_TARGETS empty/full = from * / *$(COMPOSER_EXT) / COMPOSER_SETTINGS / COMPOSER_SRC
@@ -2829,7 +2829,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)$(2) >$(1); \
+		$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)$(2) >$(1); \
 	fi
 endef
 
