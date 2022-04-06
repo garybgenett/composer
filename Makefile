@@ -1,5 +1,5 @@
 #!/usr/bin/make --makefile
-# vim: foldmethod=marker foldtext=foldtext() foldlevel=0
+# vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
@@ -26,6 +26,8 @@
 #WORK comments, comments, comments (& formatting :)
 #WORK document, somehow, all the places "composer" is used personally, for debugging/testing...
 #WORK a note somewhere about symlinks...
+
+#WORK prompt -z, my friend... early and everywhere...
 
 #WORK TODO FEATURES
 # https://stackoverflow.com/questions/3828606/vim-markdown-folding
@@ -114,6 +116,7 @@ override SED				:= $(shell which sed) -r
 ################################################################################
 
 #WORKING:NOW debugit and includes need to be the first thing in the file, above make settinga
+#WORKING:NOW document not to use *-[...] target names...
 
 override COMPOSER_SETTINGS		:= .composer.mk
 
@@ -162,6 +165,8 @@ endif
 override COMPOSER_INCLUDES		:=
 ifneq ($(COMPOSER_INCLUDE),)
 override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
+else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(MAKEFILE_LIST)))
+override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
 else
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
@@ -184,6 +189,11 @@ $(foreach FILE,$(COMPOSER_INCLUDES),\
 override COMPOSER			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 override COMPOSER_SRC			:= $(abspath $(firstword $(MAKEFILE_LIST)))
 override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
+
+override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),$(MAKEFILE_LIST)))))
+ifeq ($(COMPOSER_ROOT),)
+override COMPOSER_ROOT			:= $(COMPOSER_DIR)
+endif
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 
@@ -438,6 +448,8 @@ override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 override REPLICA_GIT_DIR		:= $(COMPOSER_PKG)/$(COMPOSER_BASENAME).git
 override REPLICA_GIT			:= cd $(CURDIR) && $(GIT) --git-dir="$(REPLICA_GIT_DIR)"
 
+#WORKING:NOW do CONVICT and COMPOSER_GIT_RUN have any value...?  these seem to be more for the olden days of testing...
+#WORK	now, combined COMPOSER_ROOT, this could be a serious part of a valid workflow...
 override COMPOSER_GIT_RUN		= cd $(1) && $(GIT) --git-dir="$(COMPOSER_GITREPO)" --work-tree="$(1)" $(2)
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(COMPOSER_PKG)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
 
@@ -552,7 +564,7 @@ override define TITLE_LN =
 	$(ECHO) "$(_S)"; \
 	if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
 	if [ "$(1)" -gt "0" ]; then $(PRINTF) "#%.0s" {1..$(1)}; fi; \
-	$(ECHO) " $(_H)$(2) $(_S)"; \
+	$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
 	$(PRINTF) "#%.0s" {1..$(TTL_LEN)}; \
 	$(ENDOLINE); \
 	$(if $(3),\
@@ -820,12 +832,10 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DST)" $(PANDOC_OPTIONS)
 # update: .$(EXAMPLE):
 
 #WORK bootstrap!
-#WORK need some default content for TESTING
-#WORK add a variable for root of document directory, such as COMPOSER_ROOT (last Makefile before current), up by COMPOSER_DIR, which is available for general use... and also replaces SITE_SOURCE?
-#WORK	auto detect by adding it to the top $(MAKEFILE) in $(INSTALL)?
+#WORK need some default content for TESTING... actually, TESTING should already have this...
 
-# override SITE_SOURCE			?= $(TESTING_DIR)
-# override SITE_PUBLIC			?= $(SITE_SOURCE)/.public
+# override SITE_SOURCE			?= $(COMPOSER_ROOT)
+# override SITE_OUTPUT			?= $(COMPOSER_ROOT)/_site
 # override SITE_SEARCH			?= 1
 
 # override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
@@ -2135,6 +2145,7 @@ $(TESTING): .set_title-$(TESTING)
 #WORK	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
 #WORK	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
 #WORK		/.g/_data/zactive/coding/composer/pandoc -> make MAKEJOBS=8 COMPOSER_DEPENDS=1 $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
+#WORK		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
 # review:
 #	$(HELPOUT) -> COMPOSER_ESCAPES
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
