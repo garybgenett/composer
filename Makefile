@@ -1972,7 +1972,6 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
-	@$(call $(EXAMPLE)-print,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
 
 #WORKING document that COMPOSER_TARGETS and COMPOSER_SUBDIRS will always auto-detect unless they are defined or ".null"
 #WORKING what are the implications of DEFAULT_GOAL?  we should probably remove it in all cases... this is what COMPOSER_TARGETS is for... document!
@@ -1994,7 +1993,6 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-var,1,MGN)
 	@$(call $(EXAMPLE)-var,1,FNT)
 	@$(call $(EXAMPLE)-var,1,OPT)
-#>	@$(call $(EXAMPLE)-print,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
 
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
@@ -2136,6 +2134,10 @@ endif
 # {{{2 .DEFAULT ------------------------
 
 .DEFAULT_GOAL := $(HELPOUT)
+ifneq ($(COMPOSER_SRC),$(COMPOSER))
+.DEFAULT_GOAL := $(DOITALL)
+endif
+
 .DEFAULT:
 	@$(call $(HEADERS))
 	@$(LINERULE)
@@ -2672,9 +2674,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE:
 	@$(call $(TESTING)-$(HEADERS),\
-		Template '$(_C)$(TESTING)$(_D)' test case ,\
-		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
-		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+		#WORKING:NOW ,\
+		\n\t * #WORKING:NOW \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -2712,28 +2713,32 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 .PHONY: $(TESTING)-COMPOSER_DEPENDS
 $(TESTING)-COMPOSER_DEPENDS:
 	@$(call $(TESTING)-$(HEADERS),\
-		Template '$(_C)$(TESTING)$(_D)' test case ,\
-		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
-		\n\t * Manual '$(_C)$(NOTHING)$(_D)' markers \
+		#WORKING:NOW ,\
+		\n\t * #WORKING:NOW \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 #WORKING:NOW
-#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
-#		/.g/_data/zactive/coding/composer/pandoc -> $(RUNMAKE) MAKEJOBS="8" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
-#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
+#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS = does not work... PHONY targets... :^{
+#		use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
+#WORK add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
+#	ordering only applies to $DOITALL... $INSTALL and $CLEANER always go top-down
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
-#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= $(NOTHING)
-#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+	@$(call $(TESTING)-run) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@$(call $(TESTING)-run) COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="0" $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="0" COMPOSER_DEPENDS="1" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
 #WORK	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
 #WORK	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_DEPENDS$$)
+#WORK it would be nice to not hold here... but it's probably best to look at the output in addition to whatever hackery to test this...
+#WORK	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
