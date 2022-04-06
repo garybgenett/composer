@@ -1432,7 +1432,7 @@ endef
 ################################################################################
 
 .PHONY: $(HELPOUT)
-$(HELPOUT): $(eval .NOTPARALLEL:)
+$(HELPOUT): .NOTPARALLEL
 $(HELPOUT): \
 	HELP_TITLE_Usage \
 	HELP_USAGE \
@@ -1448,7 +1448,7 @@ $(HELPOUT): \
 #	HELP_VARIABLES_FORMAT_2 \
 
 .PHONY: $(HELPALL)
-$(HELPALL): $(eval .NOTPARALLEL:)
+$(HELPALL): .NOTPARALLEL
 $(HELPALL): \
 	HELP_VARIABLES_CONTROL_2 \
 	HELP_TARGETS_TITLE_1 \
@@ -1658,7 +1658,7 @@ HELP_SYSTEM:
 # #WORKING {{{1
 
 .PHONY: $(CREATOR)
-$(CREATOR): $(eval .NOTPARALLEL:)
+$(CREATOR): .NOTPARALLEL
 $(CREATOR):
 #WORKING
 	@$(PRINT) "#WORKING CREATING DOCUMENTATION"
@@ -2123,7 +2123,7 @@ $(DEBUGIT)-file:
 
 .PHONY: $(DEBUGIT)
 $(DEBUGIT): .set_title-$(DEBUGIT)
-$(DEBUGIT): $(eval .NOTPARALLEL:)
+$(DEBUGIT): .NOTPARALLEL
 $(DEBUGIT): $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT): $(DEBUGIT)-CHECKIT
 $(DEBUGIT): $(DEBUGIT)-CONFIGS
@@ -2181,10 +2181,11 @@ $(TESTING): .set_title-$(TESTING)
 	@$(call TESTING_DIRECTORY,$(@))
 
 #WORKING:NOW testing cases:
-#WORK	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
-#WORK	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
-#WORK		/.g/_data/zactive/coding/composer/pandoc -> make MAKEJOBS=8 COMPOSER_DEPENDS=1 $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
-#WORK		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
+#	pull in EXAMPLE_* variables, from up by DEFAULT_TYPE?
+#	COMPOSER_DEPENDS seems to work... test it with MAKEJOBS... https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
+#		/.g/_data/zactive/coding/composer/pandoc -> make MAKEJOBS=8 COMPOSER_DEPENDS=1 $(DOITALL)-$(DOITALL) | grep pptx -> use a COMPOSER_SETTINGS target and COMPOSER_TARGETS to create a timestamp directory
+#		add a note to documentation for "parent: child" targets, which establish a prerequisite dependency
+#	for FILE in {1..999} ; do echo -en "\n.PHONY: test-${FILE}-clean\ntest-${FILE}-clean:\n\t@echo \$(@)\n" ; done
 # review:
 #	$(HELPOUT) -> COMPOSER_ESCAPES
 #	$(HELPALL) -> COMPOSER_ESCAPES = .$(EXAMPLE)-$(INSTALL) .$(EXAMPLE)
@@ -2328,9 +2329,10 @@ $(TARGETS): .set_title-$(TARGETS)
 		) \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		-e "/^$$/d" \
+		-e "s|[:]$$||g" \
 		-e "s|[[:space:]]+|~|g" \
 		),\
-		$(PRINT) "$(_M)$(subst : ,:$(_D) $(_C),$(subst ~, ,$(FILE)))"; \
+		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ~, ,$(FILE)))"; \
 	)
 	@$(LINERULE)
 	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(CLEANER_LISTING)		| $(SED) "s|[ ]+|\n|g" | $(SORT)
@@ -2391,12 +2393,14 @@ $(REPLICA): .set_title-$(REPLICA)
 
 ########################################
 
-#WORK document INSTALL-DOITALL! ...and COMPOSER_DOITALL?
-#>override COMPOSER_DOITALL ?=
+#WORK document *-DOITALL and COMPOSER_DOITALL_*?
+#WORK somehow mark as "update" that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
+
+$(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
 
 .PHONY: $(INSTALL)-$(DOITALL)
 $(INSTALL)-$(DOITALL): .set_title-$(INSTALL)-$(DOITALL)
-	@$(RUNMAKE) --silent COMPOSER_DOITALL="1" $(INSTALL)
+	@$(RUNMAKE) --silent COMPOSER_DOITALL_$(INSTALL)="1" $(INSTALL)
 
 .PHONY: $(INSTALL)
 $(INSTALL): .set_title-$(INSTALL)
@@ -2442,7 +2446,7 @@ endif
 endif
 
 override define $(INSTALL)-$(MAKEFILE) =
-	if [ -z "$(COMPOSER_DOITALL)" ] && [ -f "$(1)" ]; then \
+	if [ -z "$(COMPOSER_DOITALL_$(INSTALL))" ] && [ -f "$(1)" ]; then \
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
@@ -2455,17 +2459,16 @@ endef
 #>.PHONY: --- MAIN ---
 ################################################################################
 
-#WORK "*-clean" -> document!
+#WORK document "*-clean"
 #WORK document somewhere that clean removes files that match a phony target name?
-
-#WORK document CLEANER-DOITALL! ...and COMPOSER_DOITALL?
-#>override COMPOSER_DOITALL ?=
 
 # update: COMPOSER_TARGETS.*filter-out
 
+$(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
+
 .PHONY: $(CLEANER)-$(DOITALL)
 $(CLEANER)-$(DOITALL): .set_title-$(CLEANER)-$(DOITALL)
-	@$(RUNMAKE) --silent COMPOSER_DOITALL="1" $(CLEANER)
+	@$(RUNMAKE) --silent COMPOSER_DOITALL_$(CLEANER)="1" $(CLEANER)
 
 .PHONY: $(CLEANER)
 $(CLEANER): .set_title-$(CLEANER)
@@ -2491,9 +2494,8 @@ endif
 			$(RM) "$(CURDIR)/$(FILE)"; \
 		fi; \
 	)
-#WORKING:NOW test that this runs in parallel... maybe TESTING has one big parallelization test suite...?
 	@+$(MAKE) $(if $(shell $(CLEANER_LISTING)),$(shell $(CLEANER_LISTING)),$(NOTHING)-$(CLEANER))
-ifneq ($(COMPOSER_DOITALL),)
+ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@+$(MAKE) $(CLEANER)-$(SUBDIRS)
 endif
 
@@ -2527,29 +2529,28 @@ endef
 
 ########################################
 
-#WORK document DOITALL-DOITALL! ...and COMPOSER_DOITALL?
-#>override COMPOSER_DOITALL ?=
+$(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
 
 .PHONY: $(DOITALL)-$(DOITALL)
 $(DOITALL)-$(DOITALL): .set_title-$(DOITALL)-$(DOITALL)
-	@$(RUNMAKE) --silent COMPOSER_DOITALL="1" $(DOITALL)
+	@$(RUNMAKE) --silent COMPOSER_DOITALL_$(DOITALL)="1" $(DOITALL)
 
 .PHONY: $(DOITALL)
 $(DOITALL): .set_title-$(DOITALL)
 ifeq ($(COMPOSER_DEBUGIT),)
-ifeq ($(COMPOSER_DOITALL),)
+ifeq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(MAKELEVEL),0)
 $(DOITALL): $(HEADERS)-$(DOITALL)
 endif
 endif
-ifneq ($(COMPOSER_DOITALL),)
+ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(MAKELEVEL),1)
 $(DOITALL): $(HEADERS)-$(DOITALL)
 endif
 endif
 endif
 $(DOITALL): $(WHOWHAT)-$(DOITALL)
-ifneq ($(COMPOSER_DOITALL),)
+ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
 $(DOITALL): $(SUBDIRS)
 endif
@@ -2561,7 +2562,7 @@ $(DOITALL): $(NOTHING)-$(DOITALL)
 else
 $(DOITALL): $(COMPOSER_TARGETS)
 endif
-ifneq ($(COMPOSER_DOITALL),)
+ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
 $(DOITALL): $(SUBDIRS)
 endif
