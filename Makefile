@@ -1876,8 +1876,7 @@ $(EXAMPLE):
 	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_MY_PATH)
 	@$(call EXAMPLE_VAR_STATIC,,COMPOSER_TEACHER)
 	@$(call EXAMPLE_PRINT,,include $(_E)$(~)(COMPOSER_TEACHER))
-#>	@$(call EXAMPLE_PRINT,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
-	@$(call EXAMPLE_PRINT,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL)-$(DOITALL))
+	@$(call EXAMPLE_PRINT,,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL))
 
 #WORKING document that COMPOSER_TARGETS and COMPOSER_SUBDIRS will always auto-detect unless they are defined or ".null"
 #WORKING what are the implications of DEFAULT_GOAL?  we should probably remove it in all cases... this is what COMPOSER_TARGETS is for...
@@ -1901,7 +1900,6 @@ $(EXAMPLE):
 	@$(call EXAMPLE_VAR,1,FNT)
 	@$(call EXAMPLE_VAR,1,OPT)
 #>	@$(call EXAMPLE_PRINT,1,$(_E).DEFAULT_GOAL$(_D) := $(_M)$(DOITALL))
-#>	@$(call EXAMPLE_PRINT,1,$(_E).DEFAULT_GOAL$(_D) := $(_N)$(DOITALL)-$(DOITALL))
 
 override define EXAMPLE_PRINT =
 	$(PRINT) "$(if $(COMPOSER_ESCAPES),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
@@ -2343,21 +2341,26 @@ $(TESTING)-$(COMPOSER_BASENAME):
 ########################################
 # {{{3 $(TESTING)-random_directory -----
 
-#WORKING:NOW keep this?
 .PHONY: $(TESTING)-random_directory
 $(TESTING)-random_directory:
 	@$(call TESTING_HEADER,\
 		Test '$(_C)$(INSTALL)$(_D)' on a directory of random contents ,\
-		\n\t 1. Examine output to validate '$(NOTHING)' markers \
-		\n\t 2. Parallel forced install \
-		\n\t 3. Parallel build all [default target] \
-		\n\t 4. Linear forced install \
-		\n\t 5. Linear build all [default target] \
+		\n\t 1. Verify '$(_C)$(notdir $(TESTING_COMPOSER_DIR))$(_D)' configuration \
+		\n\t 2. Examine output to validate '$(NOTHING)' markers \
+		\n\t 3. Parallel forced install \
+		\n\t 4. Parallel build all [default target] \
+		\n\t 5. Linear forced install \
+		\n\t 6. Linear build all [default target] \
 	)
-	$(PRINT) "$(call TESTING_INIT_DIRS,testing)"
-	@exit 1
+#>	@$(call TESTING_INIT)
 	@$(RSYNC) $(PANDOC_DIR)/ $(TESTING_DIR)/$(@)
+	@$(RUNMAKE) --silent COMPOSER_ESCAPES= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(@)/$(MAKEFILE)
+#WORKING:NOW
+	@$(CAT) $(TESTING_DIR)/$(@)/$(MAKEFILE)
+	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(CONFIGS)
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
+	@exit 1
+#WORKING:NOW
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS="0"
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS= $(INSTALL)-$(DOITALL)
 	@$(ENV) $(REALMAKE) --directory $(TESTING_DIR)/$(@) MAKEJOBS=
@@ -2373,6 +2376,7 @@ $(TESTING)-use_case_1:
 		#WORKING:NOW ,\
 		#WORKING:NOW \
 	)
+	$(PRINT) "$(call TESTING_INIT_DIRS,testing)"
 	@$(call TESTING_INIT)
 
 ########################################
