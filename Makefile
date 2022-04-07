@@ -68,6 +68,18 @@ override VIM_FOLDING := {{{1
 #		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
 #WORK
 
+#WORKING:NOW
+# windows version: 2.21
+#	pdf: pdfTeX 3.14159265-2.6-1.40.19 (TeX Live 2019/dev/Debian)
+#		touch README.md ; make V=1 README.pdf
+#		pdflatex: fatal: Could not undump 1 4-byte item(s) from /var/lib/texmf/web2c/pdftex/pdflatex.fmt.
+#		[makePDF] Run #2
+#		This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2019/dev/Debian) (preloaded format=pdflatex)
+#		restricted \write18 enabled.
+#	revealjs.html
+#		touch README.md ; make V=1 README.revealjs.html
+#		/Users/admin/Desktop/composer/revealjs/css/reveal.css: openBinaryFile: does not exist (No such file or directory)
+
 ################################################################################
 # }}}1
 ################################################################################
@@ -816,10 +828,12 @@ endif
 #> update: COMPOSER_TARGETS.*strip
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 ifeq ($(COMPOSER_TARGETS),)
+#WORKING: right after HTML
+#	$(BASE).$(EXTN_LPDF) \
+#	$(BASE).$(EXTN_PRES) \
+
 override COMPOSER_TARGETS		:= $(strip \
 	$(BASE).$(EXTN_HTML) \
-	$(BASE).$(EXTN_LPDF) \
-	$(BASE).$(EXTN_PRES) \
 	$(BASE).$(EXTN_DOCX) \
 	$(BASE).$(EXTN_EPUB) \
 	$(BASE).$(EXTN_TEXT) \
@@ -2206,6 +2220,8 @@ $(DISTRIB): .set_title-$(DISTRIB)
 ########################################
 # {{{2 $(UPGRADE) ----------------------
 
+#WORKING
+$(eval override NPM :=)
 .PHONY: $(UPGRADE)
 $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call $(HEADERS))
@@ -2689,6 +2705,7 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 $(TESTING)-COMPOSER_DEPENDS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_DEPENDS$(_D)' behavior ,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 		\n\t * Disable '$(_C)MAKEJOBS$(_D)' threading \
 		\n\t * Reverse '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' processing \
 		\n\t * Manual '$(_C)$(DOITALL)-$(DOITALL)$(_D)' dependencies $(_E)('templates' before 'docx')$(_D) \
