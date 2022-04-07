@@ -49,6 +49,8 @@ override VIM_FOLDING := {{{1
 #		do not to use $(LISTING_VAR_LIST) names (or as prefixes)
 #		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
 #	code
+#		PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
+#			COMPOSER_SETTINGS only
 #		document *-$(DOITALL) ...and COMPOSER_DOITALL_*?
 #			DEBUGIT-file / TESTING-file
 #			NOTHING ...and COMPOSER_NOTHING?
@@ -378,7 +380,9 @@ override OPT				?=
 
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
+ifneq ($(subst override,,$(origin PANDOC_CMT)),)
 override PANDOC_CMT			:= 2.13
+endif
 override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
@@ -387,7 +391,9 @@ override PANDOC_TEX_PDF			:= pdflatex
 
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
+ifneq ($(subst override,,$(origin REVEALJS_CMT)),)
 override REVEALJS_CMT			:= 4.3.1
+endif
 override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
@@ -397,7 +403,9 @@ override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 #>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
+ifneq ($(subst override,,$(origin MDVIEWER_CMT)),)
 override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
+endif
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
