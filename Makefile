@@ -7,6 +7,8 @@ override VIM_FOLDING := {{{1
 ################################################################################
 
 #WORK
+#	make _release debug-file test-file
+#WORK
 #	test: windows: wsl -> sudo apt-get install pandoc texlive / rsync npm
 #	test: mac osx: macports -> sudo port install pandoc texlive / rsync npm
 #WORK
@@ -52,7 +54,7 @@ override VIM_FOLDING := {{{1
 #			NOTHING ...and COMPOSER_NOTHING?
 #			COMPOSER_DEBUGIT="!"...?  maybe $(TESTING) is enough?
 #		document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
-#WORKING:NOW
+#WORKING
 #	convert all output to markdown
 #		replace license and readme with help/license output
 #		ensure all output fits within 80 characters
@@ -868,7 +870,7 @@ endif
 #WORK TODO
 
 override PANDOC_EXTENSIONS		:= +smart
-override PANDOC_OPTIONS			:= $(strip \
+override PANDOC_OPTIONS			:= $(strip --verbose \
 	\
 	--self-contained \
 	--standalone \
@@ -1140,7 +1142,7 @@ endef
 # {{{1 Heredoc: license --------------------------------------------------------
 ################################################################################
 
-#WORKING:NOW
+#WORKING
 
 override define HEREDOC_DISTRIB_LICENSE =
 Composer CMS License
@@ -1193,7 +1195,7 @@ endef
 # {{{1 Heredoc: readme ---------------------------------------------------------
 ################################################################################
 
-#WORKING:NOW
+#WORKING
 
 override define HEREDOC_DISTRIB_README =
 % Composer CMS: User Guide & Example File
@@ -1523,7 +1525,7 @@ $(HELPOUT): \
 	HELP_COMMANDS_1 \
 	HELP_FOOTER
 
-#WORKING:NOW
+#WORKING
 #	HELP_TITLE_Help \
 #	HELP_USAGE \
 #	HELP_VARIABLES_TITLE_1 \
