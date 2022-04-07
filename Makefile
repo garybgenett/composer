@@ -421,9 +421,11 @@ override OPT				?=
 
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
-ifneq ($(subst override,,$(origin PANDOC_CMT)),)
+ifneq ($(subst override,,$(origin PANDOC_VER)),)
 #>override PANDOC_VER			:= 2.13
 override PANDOC_VER			:= 2.18
+endif
+ifneq ($(subst override,,$(origin PANDOC_CMT)),)
 override PANDOC_CMT			:= $(PANDOC_VER)
 endif
 override PANDOC_LIC			:= GPL
@@ -451,9 +453,11 @@ endif
 # https://mikefarah.gitbook.io/yq
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
-ifneq ($(subst override,,$(origin YQ_CMT)),)
+ifneq ($(subst override,,$(origin YQ_VER)),)
 #>override YQ_VER			:= 2.7.2
 override YQ_VER				:= 4.24.2
+endif
+ifneq ($(subst override,,$(origin YQ_CMT)),)
 override YQ_CMT				:= v$(YQ_VER)
 endif
 override YQ_LIC				:= MIT
@@ -589,10 +593,10 @@ override GHC_PKG_INFO			:= $(GHC_PKG) latest
 override TEX				:= $(call COMPOSER_FIND,$(PATH_LIST),tex)
 override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 
-ifneq ($(PANDOC_BIN),)
-override PANDOC_BIN			:= $(PANDOC_BIN)
+ifneq ($(wildcard $(PANDOC_BIN)),)
+override PANDOC				:= $(PANDOC_BIN)
 endif
-ifneq ($(YQ_BIN),)
+ifneq ($(wildcard $(YQ_BIN)),)
 override YQ				:= $(YQ_BIN)
 endif
 
@@ -3051,13 +3055,22 @@ $(TESTING)-$(EXAMPLE)-done:
 ########################################
 # {{{2 $(CHECKIT) ----------------------
 
+override PANDOC_CMT_DISPLAY := $(PANDOC_CMT)
+override YQ_CMT_DISPLAY := $(YQ_CMT)
+ifneq ($(PANDOC_CMT),$(PANDOC_VER))
+override PANDOC_CMT_DISPLAY := $(PANDOC_CMT)$(_D) ($(_N)$(PANDOC_VER)$(_D))
+endif
+ifneq ($(subst v,,$(YQ_CMT)),$(YQ_VER))
+override YQ_CMT_DISPLAY := $(YQ_CMT)$(_D) ($(_N)$(YQ_VER)$(_D))
+endif
+
 .PHONY: $(CHECKIT)
 $(CHECKIT): .set_title-$(CHECKIT)
 	@$(call $(HEADERS))
 	@$(TABLE_M3) "$(_H)Repository"		"$(_H)Commit"				"$(_H)License"
 	@$(TABLE_M3) ":---"			":---"					":---"
-	@$(TABLE_M3) "$(_E)Pandoc"		"$(_E)$(PANDOC_CMT)"			"$(_N)$(PANDOC_LIC)"
-	@$(TABLE_M3) "$(_E)YQ"			"$(_E)$(YQ_CMT)"			"$(_N)$(YQ_LIC)"
+	@$(TABLE_M3) "$(_E)Pandoc"		"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
+	@$(TABLE_M3) "$(_E)YQ"			"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
 	@$(TABLE_M3) "$(_E)Reveal.js"		"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(TABLE_M3) "$(_E)Markdown Viewer"	"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(ENDOLINE)
