@@ -18,8 +18,6 @@ override VIM_FOLDING := {{{1
 #
 ################################################################################
 
-#WORK reduce use of --silent to only what is mandatory = done!  working?
-
 #WORK ultimately, before committing the new version, do a git-patch of Makefile (tags?), and git-am it in, for posterity...?
 #WORK	what do the dates report, in this case?
 
@@ -102,6 +100,8 @@ endif
 override PATH_LIST			:= $(subst :, ,$(PATH))
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
+override TOKEN				:= ~
+
 ########################################
 
 override COMPOSER_SETTINGS		:= .composer.mk
@@ -117,10 +117,10 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
 $(foreach FILE,\
 	$(shell \
 		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
-		| $(SED) -e "s|[[:space:]]+|~|g" -e "s|$$| |g" \
+		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
 	),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #OVERRIDE [$(subst ~, ,$(FILE))])) \
-	$(eval $(subst ~, ,$(FILE))) \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #OVERRIDE [$(subst $(TOKEN), ,$(FILE))])) \
+	$(eval $(subst $(TOKEN), ,$(FILE))) \
 )
 endif
 $(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
@@ -589,8 +589,10 @@ endif
 
 ########################################
 
+#> update: includes duplicates
 override MARKER				:= >>
 override DIVIDE				:= ::
+override TOKEN				:= ~
 override NULL				:=
 
 # https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
@@ -810,7 +812,7 @@ override EXTN_PRES			:= $(TYPE_PRES).$(TYPE_HTML)
 override EXTN_DOCX			:= $(TYPE_DOCX)
 override EXTN_EPUB			:= $(TYPE_EPUB)
 override EXTN_TEXT			:= txt
-override EXTN_LINT			:= $(subst ~,,$(subst ~.,,$(addprefix ~,$(COMPOSER_EXT_DEFAULT)))).$(EXTN_TEXT)
+override EXTN_LINT			:= $(subst $(TOKEN),,$(subst $(TOKEN).,,$(addprefix $(TOKEN),$(COMPOSER_EXT_DEFAULT)))).$(EXTN_TEXT)
 
 ifeq ($(TYPE),$(TYPE_HTML))
 override OUTPUT				:= html5
@@ -2299,7 +2301,6 @@ endif
 ########################################
 # {{{2 $(DEBUGIT) ----------------------
 
-#> update: $(DEBUGIT): targets list
 #> update: $(DEBUGIT):
 #	$(CHECKIT)
 #	$(CONFIGS)
@@ -2314,6 +2315,7 @@ $(DEBUGIT)-file:
 	@$(RUNMAKE) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
 	@$(LS) $(DEBUGIT_FILE)
 
+#> update: $(DEBUGIT): targets list
 .PHONY: $(DEBUGIT)
 ifneq ($(MAKECMDGOALS),$(filter-out $(DEBUGIT),$(MAKECMDGOALS)))
 .NOTPARALLEL:
@@ -2369,8 +2371,6 @@ $(DEBUGIT)-%:
 ########################################
 # {{{2 $(TESTING) ----------------------
 
-#> update: $(TESTING): targets list
-
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
@@ -2387,6 +2387,7 @@ $(TESTING)-file:
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(TESTING) >>$(TESTING_FILE) 2>&1
 	@$(LS) $(TESTING_FILE)
 
+#> update: $(TESTING): targets list
 .PHONY: $(TESTING)
 ifneq ($(MAKECMDGOALS),$(filter-out $(TESTING),$(MAKECMDGOALS)))
 .NOTPARALLEL:
@@ -2453,17 +2454,19 @@ endef
 override define $(TESTING)-mark =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
+	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(foreach FILE,$(wildcard $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
-		$(RSYNC) $(FILE) $(call $(TESTING)-pwd)/$(if $(1),$(subst $(COMPOSER_EXT),,$(notdir $(FILE)))); \
+		$(RSYNC) $(FILE) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(if $(2),$(subst $(COMPOSER_EXT),,$(notdir $(FILE)))); \
 	) \
-	$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART)); \
-	$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd),$(COMPOSER_ART))
+	$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),$(COMPOSER_ART)); \
+	$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),$(COMPOSER_ART))
 endef
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
 override define $(TESTING)-load =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
+	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	if [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
 		$(RSYNC) --filter="-_/$(TESTING_LOGFILE)" $(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
@@ -2664,6 +2667,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(DOITALL)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 
@@ -2742,9 +2746,9 @@ endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-	$(call $(TESTING)-count,2,\|.+$(subst /,.,$(call $(TESTING)-pwd))[^/])
-	$(call $(TESTING)-count,1,\|.+$(subst /,.,$(call $(TESTING)-pwd,/))[^/])
-	$(call $(TESTING)-count,3,\|.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))[^/])
+	$(call $(TESTING)-count,2,\|.+$(subst /,.,$(call $(TESTING)-pwd)))
+	$(call $(TESTING)-count,1,\|.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],$$))
+	$(call $(TESTING)-count,3,\|.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))))
 
 ########################################
 # {{{3 $(TESTING)-COMPOSER_DEPENDS -----
@@ -2811,7 +2815,7 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT):
 		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
 		\n\t * Detect updated files with '$(_C)$(PRINTER)$(_D)' \
 	)
-	@$(call $(TESTING)-mark,1)
+	@$(call $(TESTING)-mark,,1)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
@@ -2840,12 +2844,12 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS:
 	@$(call $(TESTING)-$(HEADERS),\
-		Verify each method of setting variables ,\
+		Use '$(_C)CSS$(_D)' to verify each method of setting variables ,\
+		\n\t * Default value \
+		\n\t * Default for '$(_C)$(TYPE_PRES)$(_D)' \
 		\n\t * From the environment \
-		\n\t * Default '$(_C)CSS$(_D)' value \
-		\n\t * Default '$(_C)CSS$(_D)' for '$(_C)$(TYPE_PRES)$(_D)' \
-		\n\t * Use '$(_C)$(_CSS_ALT)$(_D)' as '$(_C)CSS$(_D)' \
-		\n\t * A '$(_C)$(COMPOSER_CSS)$(_D)' for '$(_C)CSS$(_D)' $(_E)(precedence over environment)$(_D) \
+		\n\t * From '$(_C)$(_CSS_ALT)$(_D)' alias \
+		\n\t * A '$(_C)$(COMPOSER_CSS)$(_D)' file $(_E)(precedence over environment)$(_D) \
 		\n\t * A '$(_C)$(COMPOSER_SETTINGS)$(_D)' file $(_E)(precedence over everything)$(_D) \
 	)
 	@$(call $(TESTING)-mark)
@@ -2855,10 +2859,10 @@ $(TESTING)-CSS:
 .PHONY: $(TESTING)-CSS-init
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS= $(COMPOSER_PANDOC)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(COMPOSER_PANDOC)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
@@ -2867,11 +2871,11 @@ $(TESTING)-CSS-init:
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
-	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS)))
 	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS_ALT)))
-	$(call $(TESTING)-count,3,\/$(COMPOSER_CSS))
+	$(call $(TESTING)-count,2,\/$(COMPOSER_CSS))
 	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 
 ########################################
@@ -3033,18 +3037,19 @@ $(CONFIGS): .set_title-$(CONFIGS)
 $(TARGETS): .set_title-$(TARGETS)
 	@$(call $(HEADERS))
 	@$(LINERULE)
-	@$(foreach FILE,$(shell $(call $(TARGETS)-list)),\
-		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ~, ,$(FILE)))"; \
+	@$(foreach FILE,$(shell $(RUNMAKE) $(TARGETS)-list),\
+		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(FILE)))"; \
 	)
 	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $($(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(RUNMAKE) $(CLEANER)-$(TARGETS)-list	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
 	@$(RUNMAKE) --silent $(PRINTER)-list
 
-override define $(TARGETS)-list =
-	$(RUNMAKE) --silent $(LISTING) | $(SED) \
+.PHONY: $(TARGETS)-list
+$(TARGETS)-list:
+	@$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		$(foreach FILE,$(LISTING_VAR),\
 			-e "/^$(FILE)/d" \
 		) \
@@ -3054,8 +3059,7 @@ override define $(TARGETS)-list =
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		-e "/^$$/d" \
 		-e "s|[:]$$||g" \
-		-e "s|[[:space:]]+|~|g"
-endef
+		-e "s|[[:space:]]+|$(TOKEN)|g"
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
@@ -3167,7 +3171,11 @@ endif
 			$(RM) "$(CURDIR)/$(FILE)"; \
 		fi; \
 	)
-	@+$(MAKE) $(if $(shell $($(CLEANER)-$(TARGETS)-list)),$(shell $($(CLEANER)-$(TARGETS)-list)),$(NOTHING)-$(CLEANER)-$(TARGETS))
+	@+$(MAKE) $(if \
+		$(shell $(RUNMAKE) $(CLEANER)-$(TARGETS)-list), \
+		$(shell $(RUNMAKE) $(CLEANER)-$(TARGETS)-list), \
+		$(NOTHING)-$(CLEANER)-$(TARGETS) \
+		)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@+$(MAKE) $(CLEANER)-$(SUBDIRS)
 endif
@@ -3189,11 +3197,11 @@ $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 	)
 endif
 
-override define $(CLEANER)-$(TARGETS)-list =
-	$(RUNMAKE) --silent $(LISTING) \
-	| $(SED) -n "s|^([^:]+[-]$(CLEANER))[:]+.*$$|\1|gp" \
-	| $(SED) "/^.set_title[-]/d"
-endef
+.PHONY: $(CLEANER)-$(TARGETS)-list
+$(CLEANER)-$(TARGETS)-list:
+	@$(RUNMAKE) --silent $(LISTING) \
+		| $(SED) -n "s|^([^:]+[-]$(CLEANER))[:]+.*$$|\1|gp" \
+		| $(SED) "/^.set_title[-]/d"
 
 ########################################
 # {{{2 $(DOITALL) ----------------------
