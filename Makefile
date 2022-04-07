@@ -69,7 +69,7 @@ override VIM_FOLDING := {{{1
 #WORK
 
 #WORKING:NOW
-# windows version: 2.21
+# windows version: 2.2.1
 #	pdf: pdfTeX 3.14159265-2.6-1.40.19 (TeX Live 2019/dev/Debian)
 #		touch README.md ; make V=1 README.pdf
 #		pdflatex: fatal: Could not undump 1 4-byte item(s) from /var/lib/texmf/web2c/pdftex/pdflatex.fmt.
@@ -515,9 +515,9 @@ override NPM_RUN			:= $(NPM) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
 ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
 override NPM				:=
 endif
-#>ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
-#>override NPM				:=
-#>endif
+ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
+override NPM				:=
+endif
 
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
 override GHC_PKG			:= $(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg) --verbose
@@ -2824,14 +2824,14 @@ $(TESTING)-CSS:
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS= $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(COMPOSER_PANDOC)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "override CSS := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
