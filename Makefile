@@ -51,6 +51,11 @@ override VIM_FOLDING := {{{1
 #	code
 #		PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
 #			COMPOSER_SETTINGS only
+#			for windows/darwin, document the need to do a "make _updatee" and/or add "override" for the right "pandoc" version
+#			for windows/darwin, results of "_update-all" will be variable and untested
+#			all that is done for windows/darwin is to keep the pandoc version up-to-date with wsl/debian and macports
+#			windows/darwin should work just fine, provided the pandoc version matches
+#			darwin also needs gmake, and the /opt/local/libexec/gnubin needs to be higher in $PATH
 #		document *-$(DOITALL) ...and COMPOSER_DOITALL_*?
 #			DEBUGIT-file / TESTING-file
 #			NOTHING ...and COMPOSER_NOTHING?
@@ -79,6 +84,17 @@ override VIM_FOLDING := {{{1
 #	revealjs.html
 #		touch README.md ; make V=1 README.revealjs.html
 #		/Users/admin/Desktop/composer/revealjs/css/reveal.css: openBinaryFile: does not exist (No such file or directory)
+#WORK
+
+#WORKING
+#	release checklist
+#		version numbers
+#		make update-all
+#		make _release
+#		make test-file
+#		make debug-file
+#		mv Composer-*.log artifacts
+#WORK
 
 ################################################################################
 # }}}1
@@ -293,6 +309,7 @@ override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
+override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 
 ########################################
@@ -398,7 +415,6 @@ endif
 override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
-#WORKING override PANDOC_TEX_PDF			:= xelatex
 override PANDOC_TEX_PDF			:= pdflatex
 
 ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
@@ -510,14 +526,6 @@ override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm)
 override NPM_PKG			:= $(COMPOSER_PKG)/_npm
 override NPM_RUN			:= $(NPM) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
-
-#WORKING needs npm6
-ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
-override NPM				:=
-endif
-ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
-override NPM				:=
-endif
 
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
 override GHC_PKG			:= $(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg) --verbose
@@ -855,12 +863,8 @@ override COMPOSER_TARGETS		:= $(strip \
 endif
 endif
 
-#WORKING
+#WORKING:NOW
 ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
-override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
-override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
-endif
-ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
 override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
 override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
 endif
@@ -889,6 +893,10 @@ endif
 ########################################
 
 #WORK TODO
+#	--defaults = switch to this, in a heredoc that goes to artifacts
+#		maybe add additional ones, like COMPOSER_INCLUDE
+#	turn "lang" into a LANG variable, just above TYPE
+#WORK TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
 #WORK TODO
@@ -915,10 +923,12 @@ endif
 #WORK TODO
 
 override PANDOC_EXTENSIONS		:= +smart
-override PANDOC_OPTIONS			:= $(strip --verbose \
+override PANDOC_OPTIONS			:= $(strip \
+	$(if $(COMPOSER_DEBUGIT),$(if $(subst !,,$(COMPOSER_DEBUGIT)),,--verbose)) \
 	\
 	--self-contained \
 	--standalone \
+	--variable="lang=en-US" \
 	\
 	--title-prefix="$(TTL)" \
 	--output="$(CURDIR)/$(BASE).$(EXTENSION)" \
@@ -938,6 +948,7 @@ override PANDOC_OPTIONS			:= $(strip --verbose \
 	--css="$(_CSS)" \
 	\
 	--pdf-engine="$(PANDOC_TEX_PDF)" \
+	--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
 	--variable="geometry=margin=$(MGN)" \
 	--variable="fontsize=$(FNT)" \
 	--variable="revealjs-url=$(REVEALJS_DIR)" \
@@ -949,7 +960,6 @@ override PANDOC_OPTIONS			:= $(strip --verbose \
 )
 
 #WORK TODO
-#>	--pdf-engine="$(PANDOC_TEX_PDF)" \
 #>	--variable="geometry=top=$(MGN)" \
 #>	--variable="geometry=bottom=$(MGN)" \
 #>	--variable="geometry=left=$(MGN)" \
@@ -1107,6 +1117,8 @@ override define HEREDOC_DISTRIB_GITIGNORE =
 #>/$(COMPOSER_SETTINGS)
 #>/$(COMPOSER_CSS)
 #>/$(COMPOSER_STAMP)
+
+$(subst $(COMPOSER_DIR),,$(COMPOSER_TMP))/
 
 ########################################
 # $(UPGRADE)
@@ -2243,12 +2255,18 @@ $(DISTRIB): .set_title-$(DISTRIB)
 ########################################
 # {{{2 $(UPGRADE) ----------------------
 
+$(eval override COMPOSER_DOITALL_$(UPGRADE) ?=)
+.PHONY: $(UPGRADE)-$(DOITALL)
+$(UPGRADE)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(UPGRADE)="1" $(UPGRADE)
+
 .PHONY: $(UPGRADE)
 $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call $(HEADERS))
 	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 ifneq ($(wildcard $(NPM)),)
 	@$(MKDIR) $(NPM_PKG)
 	@$(RM)					$(MDVIEWER_DIR)/node_modules
@@ -2266,6 +2284,7 @@ ifneq ($(wildcard $(NPM)),)
 		$(NPM_RUN) run-script build:remark && \
 		$(NPM_RUN) run-script build:prism && \
 		$(NPM_RUN) run-script build:themes
+endif
 endif
 	@$(LN) $(MDVIEWER_DIR)/manifest.json $(MDVIEWER_DIR)/manifest.chrome.json
 	@$(ECHO) "$(_C)"
@@ -2359,6 +2378,16 @@ override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(M
 override TESTING_ENV			:= $(ENV) \
 	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
 	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+
+#WORKING:NOW
+#	make it continue, even on failure
+#	also skip *-hold
+#	add to *-file
+#	add to DEBUGIT
+$(eval override COMPOSER_DOITALL_$(TESTING) ?=)
+.PHONY: $(TESTING)-$(DOITALL)
+$(TESTING)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(TESTING)="1" $(TESTING)
 
 .PHONY: $(TESTING)-file
 $(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
@@ -3251,6 +3280,7 @@ $(COMPOSER_TARGET): $(BASE).$(EXTENSION)
 $(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(LIST)
 	@$(ECHO) "$(_N)"
+	@$(MKDIR) $(COMPOSER_TMP)
 	@$(PANDOC) $(PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_STAMP),)
