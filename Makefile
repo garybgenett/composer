@@ -499,6 +499,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
+override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 
@@ -2312,7 +2313,11 @@ endif
 $(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) >>$(DEBUGIT_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) 2>&1 \
+		| $(TEE) $(DEBUGIT_FILE) \
+		| $(SED) "s|^.*$$||g" \
+		| $(TR) '\n' '.'
+	@$(TAIL) -n10 $(DEBUGIT_FILE)
 	@$(LS) $(DEBUGIT_FILE)
 
 #> update: $(DEBUGIT): targets list
@@ -2384,7 +2389,11 @@ override TESTING_ENV			:= $(ENV) \
 $(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 $(TESTING)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(TESTING) >>$(TESTING_FILE) 2>&1
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(TESTING) 2>&1 \
+		| $(TEE) $(TESTING_FILE) \
+		| $(SED) "s|^.*$$||g" \
+		| $(TR) '\n' '.'
+	@$(TAIL) -n10 $(TESTING_FILE)
 	@$(LS) $(TESTING_FILE)
 
 #> update: $(TESTING): targets list
@@ -2424,7 +2433,7 @@ $(TESTING)-$(HEADERS):
 	@$(ENDOLINE)
 	@$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"
 	@$(PRINT) "  * All cases are run in the '$(_C)$(subst $(COMPOSER_DIR)/,,$(TESTING_DIR))$(_D)' directory"
-	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(MAKE)$(_D)' can be run anywhere in the tree"
+	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(notdir $(MAKE))$(_D)' can be run anywhere in the tree"
 	@$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
 
@@ -2606,7 +2615,7 @@ $(TESTING)-$(DEBUGIT):
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(DEBUGIT)-init
-$(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(CHECKIT)
+$(TESTING)-$(DEBUGIT)-init: override COMPOSER_DEBUGIT := $(CONFIGS) $(TARGETS)
 $(TESTING)-$(DEBUGIT)-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT)
 
