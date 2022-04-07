@@ -111,19 +111,6 @@ override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 #WORKING this is likely to get squirrelly, with the "?:"... need to decide if this will be allowed (for allowing global override)... and there there is documenting it...
 override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,?:)][=]
 
-override COMPOSER_INCLUDES		:=
-ifneq ($(COMPOSER_INCLUDE),)
-override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
-else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(MAKEFILE_LIST)))
-override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
-else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(filter-out $(lastword $(MAKEFILE_LIST)),$(MAKEFILE_LIST))))
-override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
-else
-#>override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(filter-out $(lastword $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
-override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
-endif
-
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
 $(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
 #>include $(CURDIR)/$(COMPOSER_SETTINGS)
@@ -135,6 +122,19 @@ $(foreach FILE,\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #OVERRIDE [$(subst ~, ,$(FILE))])) \
 	$(eval $(subst ~, ,$(FILE))) \
 )
+endif
+$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
+
+override COMPOSER_INCLUDES		:=
+ifneq ($(COMPOSER_INCLUDE),)
+override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
+else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(MAKEFILE_LIST)))
+override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
+else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(filter-out $(lastword $(MAKEFILE_LIST)),$(MAKEFILE_LIST))))
+override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
+else
+#>override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(filter-out $(lastword $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
+override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
 
 $(if $(COMPOSER_DEBUGIT_ALL),$(warning #MAKEFILE_LIST [$(MAKEFILE_LIST)]))
@@ -2397,17 +2397,16 @@ $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(CONFIGS)
 #>$(TESTING): $(TESTING)-init
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
-#WORKING:NOW
-#WORKING $(TESTING): $(TESTING)-$(DISTRIB)
-#WORKING #>$(TESTING): $(TESTING)-$(DEBUGIT)
-#WORKING $(TESTING): $(TESTING)-$(INSTALL)
-#WORKING $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+$(TESTING): $(TESTING)-$(DISTRIB)
+#>$(TESTING): $(TESTING)-$(DEBUGIT)
+$(TESTING): $(TESTING)-$(INSTALL)
+$(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
-#WORKING $(TESTING): $(TESTING)-COMPOSER_DEPENDS
-#WORKING $(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
-#WORKING $(TESTING): $(TESTING)-CSS
-#WORKING $(TESTING): $(TESTING)-other
-#WORKING $(TESTING): $(TESTING)-$(EXAMPLE)
+$(TESTING): $(TESTING)-COMPOSER_DEPENDS
+$(TESTING): $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
+$(TESTING): $(TESTING)-CSS
+$(TESTING): $(TESTING)-other
+$(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
 
 ########################################
@@ -2434,7 +2433,7 @@ $(TESTING)-init:
 #>	@$(RM) --recursive $(TESTING_DIR)
 	@$(RM) --recursive $(TESTING_DIR)/*
 
-override $(TESTING)-pwd			= $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@))))
+override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override $(TESTING)-make		= $(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE)
 override $(TESTING)-run			= $(TESTING_ENV) $(REALMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
@@ -2550,11 +2549,12 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "override COMPOSER_TARGETS :=\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS :=\n" >>$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run,/) $(DOITALL)-$(DOITALL)
+	@$(ECHO) "" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "" >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
-	$(call $(TESTING)-find,^override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE),$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-find,override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE),$(TESTING_COMPOSER_DIR))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS),$(TESTING_COMPOSER_DIR))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
@@ -2671,10 +2671,10 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Creating.+changelog.html)
 	$(call $(TESTING)-find,Creating.+getting-started.html)
-	$(call $(TESTING)-find,^removed.+changelog.html)
-	$(call $(TESTING)-find,^removed.+getting-started.html)
-	$(call $(TESTING)-find,^removed.+\/$(notdir $(call $(TESTING)-pwd))\/.composed)
-	$(call $(TESTING)-find,^removed.+\/$(notdir $(call $(TESTING)-pwd))\/doc\/.composed)
+	$(call $(TESTING)-find,removed.+changelog.html)
+	$(call $(TESTING)-find,removed.+getting-started.html)
+	$(call $(TESTING)-find,removed.+\/$(notdir $(call $(TESTING)-pwd))\/.composed)
+	$(call $(TESTING)-find,removed.+\/$(notdir $(call $(TESTING)-pwd))\/doc\/.composed)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
 	$(call $(TESTING)-count,1,$(CLEANER)-$(TARGETS)-only)
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
@@ -2685,14 +2685,18 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE:
 	@$(call $(TESTING)-$(HEADERS),\
-		#WORKING:NOW ,\
-		\n\t * #WORKING:NOW \
+		Validate '$(_C)COMPOSER_INCLUDE$(_D)' behavior ,\
+		\n\t * Delete '$(_C)$(COMPOSER_SETTINGS)$(_D)' files in reverse \
+		\n\t * One run each with '$(_C)COMPOSER_INCLUDE$(_D)' enabled and disabled: \
+		\n\t\t * All files in place \
+		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
+		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
+		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))$(_D)' \
 	)
-	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING:NOW
+#WORKING
 # by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
 #	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
 # setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
@@ -2709,13 +2713,40 @@ $(TESTING)-COMPOSER_INCLUDE:
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-init
 $(TESTING)-COMPOSER_INCLUDE-init:
-#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= $(NOTHING)
-#WORK	@$(call $(TESTING)-run) COMPOSER_DOCOLOR= COMPOSER_NOTHING="$(notdir $(call $(TESTING)-pwd))" $(NOTHING)
+	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
+	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
+	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
+	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
+	@$(ECHO) "" >$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
+
+override define $(TESTING)-COMPOSER_INCLUDE-init =
+	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,/)\n" >$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"; \
+	$(CAT) \
+		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS) \
+		$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS) \
+		$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-done =
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"
+endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-#WORK	$(call $(TESTING)-find,NOTICE.+$(NOTHING)[]].?$$)
-#WORK	$(call $(TESTING)-find,NOTICE.+$(TESTING)-COMPOSER_INCLUDE$$)
+	$(call $(TESTING)-count,2,\|.+$(subst /,.,$(call $(TESTING)-pwd))[^/])
+	$(call $(TESTING)-count,1,\|.+$(subst /,.,$(call $(TESTING)-pwd,/))[^/])
+	$(call $(TESTING)-count,3,\|.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))[^/])
 
 ########################################
 # {{{3 $(TESTING)-COMPOSER_DEPENDS -----
@@ -2799,7 +2830,7 @@ $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-init:
 .PHONY: $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done
 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)-done:
 	$(call $(TESTING)-find,Creating.+$(EXAMPLE_ONE).$(DEFAULT_EXTN))
-	$(call $(TESTING)-find,^removed.+$(EXAMPLE_ONE).$(DEFAULT_EXTN))
+	$(call $(TESTING)-find,removed.+$(EXAMPLE_ONE).$(DEFAULT_EXTN))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_EXT)
 	$(call $(TESTING)-find, $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT))
