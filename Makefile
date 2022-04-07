@@ -380,7 +380,7 @@ override OPT				?=
 
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
-ifeq ($(subst override,,$(origin PANDOC_CMT)),)
+ifneq ($(subst override,,$(origin PANDOC_CMT)),)
 override PANDOC_CMT			:= 2.13
 endif
 override PANDOC_LIC			:= GPL
@@ -391,7 +391,7 @@ override PANDOC_TEX_PDF			:= pdflatex
 
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
-ifeq ($(subst override,,$(origin REVEALJS_CMT)),)
+ifneq ($(subst override,,$(origin REVEALJS_CMT)),)
 override REVEALJS_CMT			:= 4.3.1
 endif
 override REVEALJS_LIC			:= MIT
@@ -403,7 +403,7 @@ override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 #>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
-ifeq ($(subst override,,$(origin MDVIEWER_CMT)),)
+ifneq ($(subst override,,$(origin MDVIEWER_CMT)),)
 override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
 endif
 override MDVIEWER_LIC			:= MIT
