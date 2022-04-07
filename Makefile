@@ -9,11 +9,10 @@ override VIM_FOLDING := {{{1
 #WORK
 #	make _release debug-file test-file
 #WORK
-#	test: windows: wsl -> sudo apt-get install pandoc texlive / rsync npm
+#	test: windows: wsl/debian(testing) -> sudo apt-get install pandoc texlive / rsync npm
 #	test: mac osx: macports -> sudo port gmake install pandoc texlive / rsync npm6
 #WORK
 #	https://www.w3.org/community/markdown/wiki/MarkdownImplementations
-#	https://github.com/mikefarah/yq
 #	http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
 #WORK
 #	features
@@ -91,8 +90,8 @@ override VIM_FOLDING := {{{1
 #		version numbers
 #		make update-all
 #		make _release
-#		make test-file
-#		make debug-file
+#		make test-file (review)
+#		make debug-file (review)
 #		mv Composer-*.log artifacts
 #WORK
 
@@ -312,6 +311,8 @@ override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 
+override NPM_PKG			:= $(COMPOSER_PKG)/_npm
+
 ########################################
 
 override DEFAULT_TYPE			:= html
@@ -324,6 +325,18 @@ override TESTING_DIR			:= $(COMPOSER_DIR)/$(COMPOSER_BASENAME)-testing
 override EXAMPLE_ONE			:= README
 override EXAMPLE_TWO			:= LICENSE
 override EXAMPLE_OUT			:= MANUAL
+
+########################################
+
+override OS_UNAME			:= $(shell uname --all 2>/dev/null)
+override OS_TYPE			:=
+ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Linux
+else ifneq ($(subst Windows,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Windows
+else ifneq ($(subst Darwin,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Darwin
+endif
 
 ################################################################################
 # {{{1 Composer Options --------------------------------------------------------
@@ -417,11 +430,34 @@ override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
 override PANDOC_TEX_PDF			:= pdflatex
 
-ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
+ifeq ($(OS_TYPE),Windows)
 override PANDOC_CMT			:= 2.2.1
 endif
-ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
+ifeq ($(OS_TYPE),Darwin)
 override PANDOC_CMT			:= 2.18
+endif
+
+# https://mikefarah.gitbook.io/yq
+# https://github.com/mikefarah/yq
+# https://github.com/mikefarah/yq/blob/master/LICENSE
+ifneq ($(subst override,,$(origin YQ_CMT)),)
+override YQ_CMT				:= v4.24.2
+endif
+override YQ_LIC				:= MIT
+override YQ_SRC				:= https://github.com/mikefarah/yq.git
+override YQ_DIR				:= $(COMPOSER_DIR)/yq
+override YQ_BIN				:=
+override YQ_BIN_URL			:=
+ifeq ($(OS_TYPE),Linux)
+override YQ_BIN_URL			:= yq_linux_amd64
+else ifeq ($(OS_TYPE),Windows)
+override YQ_BIN_URL			:= yq_windows_amd64.exe
+else ifeq ($(OS_TYPE),Darwin)
+override YQ_BIN_URL			:= yq_darwin_amd64
+endif
+ifneq ($(YQ_BIN_URL),)
+override YQ_BIN				:= $(YQ_DIR)/$(YQ_BIN_URL)
+override YQ_BIN_URL			:= https://github.com/mikefarah/yq/releases/download/$(YQ_CMT)/$(YQ_BIN_URL)
 endif
 
 # https://github.com/hakimel/reveal.js
@@ -461,19 +497,22 @@ override DIFFUTILS_VER			:= 3.7
 override SED_VER			:= 4.8
 override RSYNC_VER			:= 3.2.3
 override MAKE_VER			:= 4.2.1
+#>override YQ_VER				:= 2.7.2
+override YQ_VER				:= $(subst v,,$(YQ_CMT))
 override GIT_VER			:= 2.32.0
+override WGET_VER			:= 1.20.3
 override NPM_VER			:= 6.14.8
 
 override GHC_VER			:= 8.10.5
+#>override PANDOC_VER			:= 2.13
 override PANDOC_VER			:= $(PANDOC_CMT)
 override PANDOC_TYPE_VER		:= 1.22
 override PANDOC_MATH_VER		:= 0.12.2
 override PANDOC_SKYL_VER		:= 0.10.5
 override PANDOC_CITE_VER		:= 0.3.0.9
 
-override TEX_YEAR			:= 2021
 override TEX_PI				:= 3.141592653
-override TEX_VER			:= $(TEX_PI) ($(TEX_YEAR))
+override TEX_VER			:= $(TEX_PI) (2021)
 override TEX_PDF_VER			:= $(TEX_PI) (2.6-1.40.22)
 
 ################################################################################
@@ -522,10 +561,14 @@ override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
+override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
-override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm)
-override NPM_PKG			:= $(COMPOSER_PKG)/_npm
-override NPM_RUN			:= $(NPM) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=bar --server-response --timestamping
+override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
+
+ifneq ($(YQ_BIN),)
+override YQ				:= $(YQ_BIN)
+endif
 
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
 override GHC_PKG			:= $(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg) --verbose
@@ -864,10 +907,10 @@ endif
 endif
 
 #WORKING:NOW
-ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
-override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
-override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
-endif
+#ifeq ($(OS_TYPE),Windows)
+#override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
+#override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
+#endif
 
 ########################################
 
@@ -1112,8 +1155,6 @@ override define HEREDOC_DISTRIB_GITIGNORE =
 ########################################
 # $(COMPOSER_BASENAME)
 
-/$(COMPOSER_BASENAME)**
-
 #>/$(COMPOSER_SETTINGS)
 #>/$(COMPOSER_CSS)
 #>/$(COMPOSER_STAMP)
@@ -1124,6 +1165,11 @@ $(subst $(COMPOSER_DIR),,$(COMPOSER_TMP))/
 # $(UPGRADE)
 
 $(subst $(COMPOSER_DIR),,$(COMPOSER_PKG))/
+
+########################################
+# $(DEBUGIT)
+
+/$(COMPOSER_BASENAME)**
 
 ########################################
 # $(TESTING)
@@ -2214,6 +2260,7 @@ $(NOTHING):
 #WORKING override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
 override CONVICT_GIT_OPTS		:= --verbose $(MAKEFILE)
 
+#> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
 .PHONY: $(CONVICT)-$(DOITALL)
 $(CONVICT)-$(DOITALL):
@@ -2255,6 +2302,7 @@ $(DISTRIB): .set_title-$(DISTRIB)
 ########################################
 # {{{2 $(UPGRADE) ----------------------
 
+#> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(UPGRADE) ?=)
 .PHONY: $(UPGRADE)-$(DOITALL)
 $(UPGRADE)-$(DOITALL):
@@ -2264,10 +2312,15 @@ $(UPGRADE)-$(DOITALL):
 $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call $(HEADERS))
 	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
+	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
 	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+ifneq ($(YQ_BIN_URL),)
+	@$(WGET) --output-document $(YQ_BIN) $(YQ_BIN_URL)
+	@$(CHMOD) $(YQ_BIN)
+endif
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
-ifneq ($(wildcard $(NPM)),)
+ifneq ($(wildcard $(firstword $(NPM))),)
 	@$(MKDIR) $(NPM_PKG)
 	@$(RM)					$(MDVIEWER_DIR)/node_modules
 	@$(LN) $(NPM_PKG)/node_modules		$(MDVIEWER_DIR)/
@@ -2279,11 +2332,11 @@ ifneq ($(wildcard $(NPM)),)
 	@$(LN) $(MDVIEWER_DIR)/themes		$(dir $(NPM_PKG))markdown-themes
 	@$(LN) $(MDVIEWER_DIR)/package.json	$(NPM_PKG)/
 	@cd $(MDVIEWER_DIR) && \
-		$(NPM_RUN) install && \
-		$(NPM_RUN) run-script build:mdc && \
-		$(NPM_RUN) run-script build:remark && \
-		$(NPM_RUN) run-script build:prism && \
-		$(NPM_RUN) run-script build:themes
+		$(NPM) install && \
+		$(NPM) run-script build:mdc && \
+		$(NPM) run-script build:remark && \
+		$(NPM) run-script build:prism && \
+		$(NPM) run-script build:themes
 endif
 endif
 	@$(LN) $(MDVIEWER_DIR)/manifest.json $(MDVIEWER_DIR)/manifest.chrome.json
@@ -2382,8 +2435,11 @@ override TESTING_ENV			:= $(ENV) \
 #WORKING:NOW
 #	make it continue, even on failure
 #	also skip *-hold
+#	$(UPGRADE)-$(DOITALL)
 #	add to *-file
 #	add to DEBUGIT
+
+#> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(TESTING) ?=)
 .PHONY: $(TESTING)-$(DOITALL)
 $(TESTING)-$(DOITALL):
@@ -2422,6 +2478,13 @@ $(TESTING): $(TESTING)-CSS
 $(TESTING): $(TESTING)-other
 $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP_FOOTER
+
+#> update: PHONY.*$(DOITALL)
+#	$(CONVICT)-$(DOITALL)
+#	$(UPGRADE)-$(DOITALL)
+#	$(INSTALL)-$(DOITALL)
+#	$(CLEANER)-$(DOITALL)
+#	$(DOITALL)-$(DOITALL)
 
 ########################################
 # {{{3 $(TESTING)-$(HEADERS) -----------
@@ -2595,6 +2658,9 @@ $(TESTING)-$(DISTRIB):
 
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
+ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
+	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(UPGRADE)-$(DOITALL)
+endif
 	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
@@ -2960,6 +3026,7 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) "$(_H)Repository"		"$(_H)Commit"				"$(_H)License"
 	@$(TABLE_M3) ":---"			":---"					":---"
 	@$(TABLE_M3) "$(_E)Pandoc"		"$(_E)$(PANDOC_CMT)"			"$(_N)$(PANDOC_LIC)"
+	@$(TABLE_M3) "$(_E)YQ"			"$(_E)$(YQ_CMT)"			"$(_N)$(YQ_LIC)"
 	@$(TABLE_M3) "$(_E)Reveal.js"		"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(TABLE_M3) "$(_E)Markdown Viewer"	"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(ENDOLINE)
@@ -2973,7 +3040,9 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) "- $(_E)Rsync"		"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
 #>	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(MAKE) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)YQ"		"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Git SCM"		"$(_M)$(GIT_VER)"			"$(_D)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)Wget"		"$(_M)$(WGET_VER)"			"$(_D)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Node.js NPM"	"$(_M)$(NPM_VER)"			"$(_D)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)Pandoc"		"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)GHC"		"$(_M)$(GHC_VER)"			"$(_D)$(shell $(GHC_PKG) --version		2>/dev/null | $(HEAD) -n1)"
@@ -2995,7 +3064,9 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M2) "- $(_E)Rsync"		"$(_N)$(RSYNC)"
 #>	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(MAKE)"
 	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(REALMAKE)"
+	@$(TABLE_M2) "- $(_C)YQ"		"$(_D)$(YQ)"
 	@$(TABLE_M2) "- $(_C)Git SCM"		"$(_D)$(GIT)"
+	@$(TABLE_M2) "- $(_C)Wget"		"$(_D)$(WGET)"
 	@$(TABLE_M2) "- $(_C)Node.js NPM"	"$(_D)$(NPM)"
 	@$(TABLE_M2) "$(_C)Pandoc"		"$(_D)$(PANDOC)"
 	@$(TABLE_M2) "- $(_C)GHC"		"$(_D)$(GHC_PKG)"
@@ -3005,6 +3076,8 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M2) "- $(_C)CiteProc"		"$(_E)(GHC package)"
 	@$(TABLE_M2) "$(_C)TeX Live"		"$(_D)$(TEX)"
 	@$(TABLE_M2) "- $(_C)TeX PDF"		"$(_D)$(TEX_PDF)"
+	@$(ENDOLINE)
+	@$(PRINT) "  * *Operating System: $(OS_UNAME)*"
 
 ################################################################################
 # {{{1 Helper Targets ----------------------------------------------------------
@@ -3057,6 +3130,7 @@ endef
 ########################################
 # {{{2 $(INSTALL) ----------------------
 
+#> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
 .PHONY: $(INSTALL)-$(DOITALL)
 $(INSTALL)-$(DOITALL):
@@ -3122,6 +3196,7 @@ endef
 
 #> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
 
+#> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
 .PHONY: $(CLEANER)-$(DOITALL)
 $(CLEANER)-$(DOITALL):
@@ -3190,6 +3265,7 @@ endef
 ########################################
 # {{{2 $(DOITALL) ----------------------
 
+#> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
 .PHONY: $(DOITALL)-$(DOITALL)
 $(DOITALL)-$(DOITALL):
