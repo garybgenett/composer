@@ -10,7 +10,7 @@ override VIM_FOLDING := {{{1
 #	make _release debug-file test-file
 #WORK
 #	test: windows: wsl -> sudo apt-get install pandoc texlive / rsync npm
-#	test: mac osx: macports -> sudo port install pandoc texlive / rsync npm
+#	test: mac osx: macports -> sudo port gmake install pandoc texlive / rsync npm6
 #WORK
 #	https://www.w3.org/community/markdown/wiki/MarkdownImplementations
 #	https://github.com/mikefarah/yq
@@ -401,6 +401,13 @@ override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
 #WORKING override PANDOC_TEX_PDF			:= xelatex
 override PANDOC_TEX_PDF			:= pdflatex
 
+ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
+override PANDOC_CMT			:= 2.2.1
+endif
+ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
+override PANDOC_CMT			:= 2.18
+endif
+
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
 ifneq ($(subst override,,$(origin REVEALJS_CMT)),)
@@ -503,6 +510,14 @@ override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm)
 override NPM_PKG			:= $(COMPOSER_PKG)/_npm
 override NPM_RUN			:= $(NPM) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
+
+#WORKING needs npm6
+ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
+override NPM				:=
+endif
+#>ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
+#>override NPM				:=
+#>endif
 
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
 override GHC_PKG			:= $(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg) --verbose
@@ -828,18 +843,26 @@ endif
 #> update: COMPOSER_TARGETS.*strip
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 ifeq ($(COMPOSER_TARGETS),)
-#WORKING: right after HTML
-#	$(BASE).$(EXTN_LPDF) \
-#	$(BASE).$(EXTN_PRES) \
-
 override COMPOSER_TARGETS		:= $(strip \
 	$(BASE).$(EXTN_HTML) \
+	$(BASE).$(EXTN_LPDF) \
+	$(BASE).$(EXTN_PRES) \
 	$(BASE).$(EXTN_DOCX) \
 	$(BASE).$(EXTN_EPUB) \
 	$(BASE).$(EXTN_TEXT) \
 	$(BASE).$(EXTN_LINT) \
 )
 endif
+endif
+
+#WORKING
+ifneq ($(shell uname -a | $(SED) -n "/Windows/p"),)
+override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
+override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
+endif
+ifneq ($(shell uname -a | $(SED) -n "/Darwin/p"),)
+override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
+override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
 endif
 
 ########################################
@@ -2220,8 +2243,6 @@ $(DISTRIB): .set_title-$(DISTRIB)
 ########################################
 # {{{2 $(UPGRADE) ----------------------
 
-#WORKING
-$(eval override NPM :=)
 .PHONY: $(UPGRADE)
 $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call $(HEADERS))
