@@ -88,7 +88,7 @@ override VIM_FOLDING := {{{1
 #WORKING
 #	release checklist
 #		version numbers
-#		make _release-all
+#		make V=1 _release-all
 #		make test-file (review)
 #		make debug-file (review)
 #		mv Composer-*.log artifacts/
@@ -2348,6 +2348,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call $(UPGRADE)-package,$(YQ_DIR),$(YQ_BIN_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call $(UPGRADE)-package,$(YQ_DIR),$(YQ_BIN_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call $(UPGRADE)-package,$(YQ_DIR),$(YQ_BIN_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(wildcard $(firstword $(NPM))),)
 	@$(MKDIR) $(NPM_PKG)
 	@$(RM)					$(MDVIEWER_DIR)/node_modules
@@ -2365,6 +2366,7 @@ ifneq ($(wildcard $(firstword $(NPM))),)
 		$(NPM) run-script build:remark && \
 		$(NPM) run-script build:prism && \
 		$(NPM) run-script build:themes
+endif
 endif
 endif
 	@$(RM)					$(MDVIEWER_DIR)/node_modules
@@ -2449,6 +2451,7 @@ $(DEBUGIT)-$(HEADERS):
 	@$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"
 	@$(PRINT) "  * Use '$(_C)$(DEBUGIT)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
+	@$(PRINT) "$(_E)*Operating System: $(OS_UNAME)*"
 
 #>.PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
@@ -2533,6 +2536,7 @@ $(TESTING)-$(HEADERS):
 	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(notdir $(MAKE))$(_D)' can be run anywhere in the tree"
 	@$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
+	@$(PRINT) "$(_E)*Operating System: $(OS_UNAME)*"
 
 .PHONY: $(TESTING)-init
 $(TESTING)-init:
@@ -3099,8 +3103,6 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M2) "- $(_C)CiteProc"		"$(_E)(GHC package)"
 	@$(TABLE_M2) "$(_C)TeX Live"		"$(_D)$(TEX)"
 	@$(TABLE_M2) "- $(_C)TeX PDF"		"$(_D)$(TEX_PDF)"
-	@$(ENDOLINE)
-	@$(PRINT) "  * *Operating System: $(OS_UNAME)*"
 
 ################################################################################
 # {{{1 Helper Targets ----------------------------------------------------------
