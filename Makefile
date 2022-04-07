@@ -5,73 +5,63 @@
 override VIM_OPTIONS := vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make
 override VIM_FOLDING := {{{1
 ################################################################################
-#
-#WORK portability? + bash shell is required?  need this notice?  put it in readme instead?
-#WORK is there a better use for this space?  who is going to read this besides me, anyway?
-#
-# Every attempt has been made to make this as portable as possible:
-#	http://www.gnu.org/software/make/manual/make.html#toc-Features-of-GNU-make
-#	http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Make
-#	http://www.gnu.org/software/autoconf/manual/autoconf.html#Portable-Shell
-#
-# Please report any cross-platform issues, or issues with other versions of Make.
-#
-################################################################################
-
-#WORK ultimately, before committing the new version, do a git-patch of Makefile (tags?), and git-am it in, for posterity...?
-#WORK	what do the dates report, in this case?
-
-#WORK limit global shell calls!
-#WORK replace sort, as much as possible?  also removes the need for strip
-#WORK remove quotes from all filenames... make a note in documentation that spaces are evil...
-#WORK comments, comments, comments (& formatting :)
-#WORK document, somehow, all the places "composer" is used personally, for debugging/testing...
-#WORK prompt -z, my friend... early and everywhere...
-#WORK patches directory?  heredocs below... starting with v3.0, just as a pattern?  I'm sure there is stuff that is changed... just good practice...
-
-#WORK document not to use *-[...] target names...
-#WORK a note somewhere about symlinks...
-#WORK test: windows: wsl -> sudo apt-get install pandoc texlive / rsync npm
-#WORK test: mac osx: macports
-
-#WORK TODO FEATURES
-# https://stackoverflow.com/questions/3828606/vim-markdown-folding
-# https://gist.github.com/vim-voom/1035030
-# http://vimcasts.org/episodes/writing-a-custom-fold-expression
-# https://pygospasprofession.wordpress.com/2013/07/10/markdown-and-vim
-# http://www.macworld.com/article/1161549/forget_fancy_formatting_why_plain_text_is_best.html
-#WORK TODO FEATURES
-# https://github.com/nelstrom/vim-markdown-folding
-# https://github.com/tpope/vim-markdown
-# https://github.com/hallison/vim-markdown
-# https://github.com/plasticboy/vim-markdown
-#WORK TODO FEATURES
-# https://github.com/mikefarah/yq
-# https://github.com/jgm/yst
-# http://hackage.haskell.org/package/gitit
-#WORK TODO FEATURES
-# http://make.mad-scientist.net/constructed-include-files
-# http://www.html5rocks.com/en/tutorials/webcomponents/imports
-# http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
-# https://gist.github.com/ryangray/1882525
-# https://gist.github.com/Dashed/6714393
-# https://www.w3.org/community/markdown/wiki/MarkdownImplementations
-#WORK TODO FEATURES
 
 #WORK
-#c_book_title := This is a test title
-#c_book_file := book
-#c_book_format := html
-#c_book_chapters := README.md LICENSE.md
-#
-#.PHONY: book
-#book: $(c_book_file)
-#$(c_book_file): $(c_book_chapters)
-#	$(RUNMAKE) compose \
-#		c_type="$(c_book_format)" \
-#		c_base="$(c_book_file)" \
-#		c_list="$(c_book_chapters)" \
-#		c_title="$(c_book_title)" \
+#	test: windows: wsl -> sudo apt-get install pandoc texlive / rsync npm
+#	test: mac osx: macports -> sudo port install pandoc texlive / rsync npm
+#WORK
+#	https://www.w3.org/community/markdown/wiki/MarkdownImplementations
+#	https://github.com/mikefarah/yq
+#	http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
+#WORK
+#	features
+#		dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
+#		document effects of $TOC and $LVL = test this first...
+#		css_alt
+#		install-all / cleaner-all / all-all
+#		COMPOSER_TARGETS / COMPOSER_SUBDIRS / COMPOSER_EXCLUDE auto-detection behavior
+#			will always auto-detect unless they are defined or COMPOSER_EXCLUDE or $(NOTHING)
+#			COMPOSER_SUBDIRS may pick up directories that override core recipies ('docs' and 'test')
+#				warning: overriding recipe for target 'pandoc'
+#				warning: ignoring old recipe for target 'pandoc'
+#			COMPOSER_EXCLUDE removes from both targets and subdirs
+#			also, there is *-$(CLEANER) target stripping
+#			DEFAULT_GOAL does not work = this is what COMPOSER_TARGETS is for
+#		document "*-clean"
+#			if COMPOSER_TARGETS is only *-clean entries, it is empty
+#			edge case: the '.null' file will never be deleted, even if it is a target
+#			document: we have book-%!
+#		COMPOSER_INCLUDE
+#			global to local = COMPOSER_DIR + COMPOSER_SETTINGS
+#			COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
+#			COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
+#			using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
+#			using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_EXCLUDE is a commitment...
+#		COMPOSER_DEPENDS
+#			disables MAKEJOBS and is single-threaded
+#			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
+#			dependencies using "parent: child" targets
+#	notes
+#		a brief note about filenames with spaces and symlinks...?
+#		document empty COMPOSER_EXT value
+#		do not to use $(LISTING_VAR_LIST) names (or as prefixes)
+#		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
+#	code
+#		document *-$(DOITALL) ...and COMPOSER_DOITALL_*?
+#			DEBUGIT-file / TESTING-file
+#			NOTHING ...and COMPOSER_NOTHING?
+#			COMPOSER_DEBUGIT="!"...?  maybe $(TESTING) is enough?
+#		document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
+#WORKING:NOW
+#	convert all output to markdown
+#		replace license and readme with help/license output
+#		ensure all output fits within 80 characters
+#		do a mouse-select of all text, to ensure proper color handling
+#		the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
+#	dynamic import of targets
+#		add some sort of composer_readme variable?
+#		make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
+#		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
 #WORK
 
 ################################################################################
@@ -108,8 +98,7 @@ override COMPOSER_SETTINGS		:= .composer.mk
 override COMPOSER_CSS			:= .composer.css
 override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
 
-#WORKING this is likely to get squirrelly, with the "?:"... need to decide if this will be allowed (for allowing global override)... and there there is documenting it...
-override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,?:)][=]
+override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
 
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
 $(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
@@ -254,10 +243,7 @@ override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
 
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
-#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=all
-#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
-#WORK what is the difference in output?
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=makefile
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
 else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
 endif
@@ -290,11 +276,7 @@ override COMPOSER_VERSION		:= v3.0
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
-########################################
-
-#WORK keep COMPOSER_MAN?
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
-override COMPOSER_MAN			:= $(COMPOSER_DIR)/Pandoc_Manual
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 
 ########################################
@@ -318,7 +300,6 @@ override EXAMPLE_OUT			:= MANUAL
 
 override COMPOSER_STAMP			?= .composed
 
-#WORK document empty COMPOSER_EXT value...
 override COMPOSER_EXT_DEFAULT		:= .md
 override COMPOSER_EXT			?= $(COMPOSER_EXT_DEFAULT)
 #>ifeq ($(COMPOSER_EXT),)
@@ -327,13 +308,6 @@ override COMPOSER_EXT			?= $(COMPOSER_EXT_DEFAULT)
 override COMPOSER_EXT			:= $(notdir $(COMPOSER_EXT))
 
 ########################################
-
-#WORK document COMPOSER_TARGETS ('TARGET:' only), COMPOSER_EXCLUDE and COMPOSER_SUBDIRS auto-detection behavior, including *-$(CLEANER) target stripping
-#	dot "." files are ignored completely... which makes sense
-#	a note about this is that COMPOSER_SUBDIRS may pick up directories that override core recipies ('docs' and 'test' are primary candidates)
-#		warning: overriding recipe for target 'pandoc'
-#		warning: ignoring old recipe for target 'pandoc'
-#	COMPOSER_EXCLUDE removes all targets and subdirs, regardless of where they came from
 
 override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
 override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
@@ -406,7 +380,7 @@ override PANDOC_CMT			:= 2.13
 override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
-#WORK override PANDOC_TEX_PDF			:= xelatex
+#WORKING override PANDOC_TEX_PDF			:= xelatex
 override PANDOC_TEX_PDF			:= pdflatex
 
 # https://github.com/hakimel/reveal.js
@@ -468,8 +442,6 @@ override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 export SHELL
 
 ########################################
-
-#WORK verify all of these are in packages listed in $(CHECKIT)
 
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
@@ -604,15 +576,6 @@ endef
 
 ########################################
 
-#WORKING:NOW
-#WORKING convert all output to markdown
-#WORKING ensure all output fits within 80 characters
-#WORKING do a mouse-select of all text, to ensure proper color handling
-#WORKING the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
-
-#WORK make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
-#WORK make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
-
 override NUMCOLUMN			:= 80
 override HEAD_MAIN			:= 1
 
@@ -700,7 +663,7 @@ override CLEANER			:= clean
 override SUBDIRS			:= subdirs
 override PRINTER			:= print
 
-#WORKING replace HELP_* / EXAMPLE_* with $(CREATOR)_*, and re-sort the file...
+#WORKING:NOW replace HELP_* / EXAMPLE_* with $(CREATOR)_*, and re-sort the file...
 
 #> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> grep -E "[)]-[a-z]+" Makefile
@@ -739,6 +702,8 @@ override LISTING_VAR := \
 	$(DOITALL)[:-] \
 	$(SUBDIRS)[:-] \
 	$(PRINTER)[:-] \
+
+override LISTING_VAR_LIST		:= $(sort $(subst [_],,$(subst [:],,$(subst [:-],,$(LISTING_VAR)))))
 
 ########################################
 
@@ -855,7 +820,6 @@ endif
 
 ########################################
 
-#WORK css_alt = document!
 override _COL				:= $(NUMCOLUMN)
 override _CSS_ALT			:= css_alt
 
@@ -877,41 +841,32 @@ endif
 
 ########################################
 
-#WORK document effects of $TOC and $LVL!
-#WORK TODO OPTIONS
+#WORK TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
-#WORK TODO OPTIONS
-#	man: pandoc -o custom-reference.docx --print-default-data-file reference.docx
+#WORK TODO
+#	man pandoc = pandoc -o custom-reference.docx --print-default-data-file reference.docx
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
-#WORK TODO OPTIONS
+#WORK TODO
 #	--default-image-extension="png"?
 #	--highlight-style="kate"?
 #	--incremental?
-#WORK TODO OPTIONS
+#WORK TODO
 #	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
 #	--email-obfuscation="[...]"
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
-#WORK add a way to add additional arguments, like: --variable=fontsize=28pt
-#	--variable="fontsize=[...]"
-#	--variable="theme=[...]"
-#	--variable="transition=[...]"
-#	--variable="links-as-notes=[...]"
-#	--variable="lof=[...]"
-#	--variable="lot=[...]"
-#WORK TODO OPTIONS
-#	http://10.255.255.254/zactive/coding/composer/Pandoc_Manual.html#fenced-code-blocks
-#	implicit_header_references
-#	fenced_code_attributes
-#WORK TODO OPTIONS
-#	--chapters has been removed. Use --top-level-division=chapter instead.
-#	--epub-stylesheet has been removed. Use --css instead.
-#	--latex-engine has been removed.  Use --pdf-engine instead.
-#	--normalize has been removed.  Normalization is now automatic.
-#	--smart/-S has been removed.  Use +smart or -smart extension instead.
-#WORK TODO OPTIONS
+#WORK TODO
+#	add a way to add additional arguments, like: --variable=fontsize=28pt
+#		--variable="fontsize=[...]"
+#		--variable="theme=[...]"
+#		--variable="transition=[...]"
+#		--variable="links-as-notes=[...]"
+#		--variable="lof=[...]"
+#		--variable="lot=[...]"
+#WORK TODO
+
 override PANDOC_EXTENSIONS		:= +smart
 override PANDOC_OPTIONS			:= $(strip \
 	\
@@ -946,9 +901,8 @@ override PANDOC_OPTIONS			:= $(strip \
 	$(LIST) \
 )
 
-#WORK	--latex-engine="$(PANDOC_TEX_PDF)" => https://github.com/wkhtmltopdf/wkhtmltopdf
-#WORK latex and geometry options
-#>	--latex-engine="$(PANDOC_TEX_PDF)" \
+#WORK TODO
+#>	--pdf-engine="$(PANDOC_TEX_PDF)" \
 #>	--variable="geometry=top=$(MGN)" \
 #>	--variable="geometry=bottom=$(MGN)" \
 #>	--variable="geometry=left=$(MGN)" \
@@ -969,8 +923,6 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 #> update: $(EXAMPLE):
 
 #WORK bootstrap!
-#WORK need some default content for TESTING... actually, TESTING should already have this...
-#WORK realpath --relative-to /tmp ./
 
 # override SITE_SOURCE			?= $(COMPOSER_ROOT)
 # override SITE_OUTPUT			?= $(COMPOSER_ROOT)/_site
@@ -1054,7 +1006,6 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 # override SITE_SEARCH_SCRIPT		:= <script>function search_submit() { window.location.href = \"https://duckduckgo.com?kp=-1\&kz=-1\&kv=1\&kae=d\&ko=1\&q=site:\1 + config.url + \1 \" + document.search_form.q.value; }</script>
 # override SITE_SEARCH_FORM		:= action=\"javascript:search_submit();\" name=\"search_form\"
 
-#WORK http://jr0cket.co.uk/hexo/
 # http://navaneeth.me/font-awesome-icons-css-content-values
 #>override SITE_SOCIAL_ICON_googleplus	:= f0d5
 #>override SITE_SOCIAL_ICON_facebook	:= f09a
@@ -1189,14 +1140,7 @@ endef
 # {{{1 Heredoc: license --------------------------------------------------------
 ################################################################################
 
-#WORKING
-
-#WORK replace license and readme with help/license output
-#WORK should the README be broken up into sections throughout the Makefile anyway?
-#WORK add some sort of composer_readme variable, like composer_escapes or *_debugit, so that targets like "check" can be pulled in, also...
-#WORK	the 'grep -vE "^[#]"' technique should work fine...?
-
-#WORKING format and update license
+#WORKING:NOW
 
 override define HEREDOC_DISTRIB_LICENSE =
 Composer CMS License
@@ -1249,7 +1193,7 @@ endef
 # {{{1 Heredoc: readme ---------------------------------------------------------
 ################################################################################
 
-#WORKING format and update readme
+#WORKING:NOW
 
 override define HEREDOC_DISTRIB_README =
 % Composer CMS: User Guide & Example File
@@ -1596,6 +1540,7 @@ $(HELPALL): \
 	HELP_TARGETS_ADDITIONAL_2 \
 	HELP_TARGETS_SUBTARGET_2 \
 
+#WORKING
 #	HELP_COMMANDS_1 \
 #	EXAMPLE_MAKEFILES \
 #	HELP_SYSTEM \
@@ -1638,9 +1583,9 @@ HELP_VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)TTL $(_E)(t, c_title)"		"Document title prefix"			"$(_M)$(TTL)"
 	@$(TABLE_M3) "$(_C)TOC $(_E)(c, c_contents)"		"Table of contents depth"		"$(_M)$(TOC)"
 	@$(TABLE_M3) "$(_C)LVL $(_E)(l, c_level)"		"Chapter/slide header level"		"$(_M)$(LVL)"
-#WORK are MGN and FNT only for PDF?
 	@$(TABLE_M3) "$(_C)MGN $(_E)(m, c_margin)"		"Margin size [$(_C)$(TYPE_LPDF)$(_D)]"	"$(_M)$(MGN)"
-	@$(TABLE_M3) "$(_C)FNT $(_E)(f, c_font)"		"Font size [$(_C)$(TYPE_LPDF)$(_D)]"	"$(_M)$(FNT)"
+	@$(TABLE_M3) "$(_C)FNT $(_E)(f, c_font)"		"Font size [$(_C)$(TYPE_HTML)$(_D) $(_E)&$(_D) $(_C)$(TYPE_LPDF)$(_D)]" \
+													"$(_M)$(FNT)"
 	@$(TABLE_M3) "$(_C)OPT $(_E)(o, c_options)"		"Custom Pandoc options"			"$(_M)$(OPT)"
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Defined $(_C)TYPE$(_H) Values"	"$(_H)Format"				"$(_H)Extension"
@@ -1653,7 +1598,6 @@ HELP_VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"			"$(TEXT_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
 	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"			"$(LINT_DESC)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
-#WORK need to experiment with TYPE pass-through, or else just call it unsupported...
 	@$(PRINT) "  * *Other $(_C)TYPE$(_D) values will be passed directly to Pandoc*"
 
 #>.PHONY: HELP_VARIABLES_CONTROL_%
@@ -1700,7 +1644,6 @@ HELP_TARGETS_MAIN_%:
 #WORK	[.]$(EXAMPLE)*
 	@$(TABLE_M2) "$(_C)$(COMPOSER_TARGET)"	"Document creation $(_N)(see: $(_C)usage$(_N))"
 #WORK	$(COMPOSER_PANDOC)
-#WORK document install-all / cleaner-all / all-all
 	@$(TABLE_M2) "$(_C)$(INSTALL)"		"Recursive directory initialization: $(_C)$(MAKEFILE)"
 	@$(TABLE_M2) "$(_C)$(CLEANER)"		"Remove output files: $(_C)COMPOSER_TARGETS$(_D) $(_E)$(DIVIDE)$(_D) $(_N)*$(_C)-$(CLEANER)"
 #WORK not recursive
@@ -1846,12 +1789,12 @@ EXAMPLE_MAKEFILE_2:
 	@$(PRINT) "$(_C)$(EXAMPLE_OUT)-$(CLEANER)$(_D):"
 	@$(PRINT) "	$(~)(RM) $(EXAMPLE_OUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
 	@$(ECHO) "#WORK document this version of '$(CLEANER)'?\n"
-	@$(ECHO) "#WORK 2017-07-31 : nope, this should be $(CLEANER): $(notdir $(COMPOSER_MAN))-clean, and skip the TYPE business\n"
+	@$(ECHO) "#WORK 2017-07-31 : nope, this should be $(CLEANER): $(notdir $(COMPOSER_OUT))-clean, and skip the TYPE business\n"
 	@$(ECHO) "#WORK make $(RELEASE)-debug\n"
-	@$(PRINT) "$(_C)$(CLEANER)$(_D): COMPOSER_TARGETS += $(notdir $(COMPOSER_MAN))"
+	@$(PRINT) "$(_C)$(CLEANER)$(_D): COMPOSER_TARGETS += $(notdir $(COMPOSER_OUT))"
 	@$(PRINT) "$(_C)$(CLEANER)$(_D): TYPE := latex"
-	@$(PRINT) "$(_C)$(notdir $(COMPOSER_MAN)):"
-	@$(PRINT) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(COMPOSER_MAN)).\"* ./"
+	@$(PRINT) "$(_C)$(notdir $(COMPOSER_OUT)):"
+	@$(PRINT) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(COMPOSER_OUT)).\"* ./"
 	@$(ENDOLINE)
 
 .PHONY: EXAMPLE_MAKEFILES_FOOTER
@@ -1989,9 +1932,6 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
 
-#WORKING document that COMPOSER_TARGETS and COMPOSER_SUBDIRS will always auto-detect unless they are defined or COMPOSER_EXCLUDE or ".null"
-#WORKING what are the implications of DEFAULT_GOAL?  we should probably remove it in all cases... this is what COMPOSER_TARGETS is for... document!
-
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
@@ -2029,8 +1969,6 @@ endef
 
 ########################################
 # {{{2 .set_title ----------------------
-
-#WORK should really "reset" the status line once we're done...
 
 #> grep -E "[.]set_title" Makefile
 #>.PHONY: .set_title-%:
@@ -2188,8 +2126,6 @@ $(MAKE_DB):
 ########################################
 # {{{2 $(LISTING) ----------------------
 
-#WORK document that targets which start with $(COMPOSER_REGEX_PREFIX) are special and skipped by most detection (they are hidden)
-
 .PHONY: $(LISTING)
 $(LISTING):
 	@$(RUNMAKE) --silent $(MAKE_DB) \
@@ -2199,8 +2135,6 @@ $(LISTING):
 
 ########################################
 # {{{2 $(NOTHING) ----------------------
-
-#WORK document NOTHING! ...and COMPOSER_NOTHING?
 
 $(eval override COMPOSER_NOTHING ?=)
 #>.PHONY: $(NOTHING)-%
@@ -2307,8 +2241,6 @@ endif
 #	$(CONFIGS)
 #	$(TARGETS)
 
-#WORK document DEBUGIT-file
-
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file:
@@ -2356,8 +2288,6 @@ $(DEBUGIT)-$(HEADERS):
 	@$(PRINT) "  * Use '$(_C)$(DEBUGIT)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
 
-#WORK document COMPOSER_DEBUGIT="!" ...?  (just need to remember for myself... maybe $(TESTING) is enough?
-
 #>.PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
@@ -2382,8 +2312,6 @@ override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(M
 override TESTING_ENV			:= $(ENV) \
 	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
 	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
-
-#WORK document TESTING-file
 
 .PHONY: $(TESTING)-file
 $(TESTING)-file: override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
@@ -2709,21 +2637,6 @@ $(TESTING)-COMPOSER_INCLUDE:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING
-# by default, just the local .composer.mk and the COMPOSER_ROOT = no COMPOSER_ROOT!  globals must be in COMPOSER_DIR
-#	add $(COMPOSER_ROOT)/$(COMPOSER_SETTINGS) to the list below, and add to $(TESTING)...
-# setting COMPOSER_INCLUDE includes all the intermediary .composer.mk files, from global-to-local
-#	using := is the only thing supported
-# variable definitions must match COMPOSER_INCLUDE_REGEX or will not work properly
-# once you start using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_EXCLUDE, there is no going back...
-#	this is fine, since including is per-directory, anyway...
-#WORKING
-#	COMPOSER_INCLUDE="1" -> test local over global + #SOURCE functionality
-#		@$(call $(TESTING)-run) COMPOSER_INCLUDE="1" $(CLEANER)-$(DOITALL) -> $(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
-#		test COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_EXCLUDE chaining
-#		COMPOSER_SETTINGS -> global in COMPOSER_DIR and unset in local
-#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
-
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-init
 $(TESTING)-COMPOSER_INCLUDE-init:
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
@@ -2775,12 +2688,6 @@ $(TESTING)-COMPOSER_DEPENDS:
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
-
-#WORKING
-#	document: if COMPOSER_DEPENDS is enabled, disable MAKEJOBS... it is thusly single-threaded, regardless of MAKEJOBS
-#		MAKEJOBS = does not work... PHONY targets... :^{
-#		ordering only applies to $DOITALL... $INSTALL and $CLEANER always go top-down
-#		dependencies using "parent: child" targets
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
@@ -2913,7 +2820,7 @@ $(TESTING)-other-init:
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT)" >$(call $(TESTING)-pwd)/$(EXAMPLE_OUT)$(COMPOSER_EXT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
-#WORK turn these into variables with the readme/license work... also fix *-count checks below
+#WORKING turn these into variables with the readme/license work... also fix *-count checks below
 	@$(SED) -n \
 		-e "/h1.+User Guide/p" \
 		-e "/h1.+Composer CMS License/p" \
@@ -3073,9 +2980,6 @@ $(TARGETS)-list:
 ########################################
 # {{{2 $(INSTALL) ----------------------
 
-#WORK document *-DOITALL and COMPOSER_DOITALL_*?
-#WORK somehow mark as "update" that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
-
 $(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
 .PHONY: $(INSTALL)-$(DOITALL)
 $(INSTALL)-$(DOITALL):
@@ -3141,12 +3045,6 @@ endef
 
 #> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
 
-#WORK document "*-clean"
-#	note that if it starts with a special, like 'test-clean', it will not show up in 'targets'
-#	also, if COMPOSER_TARGETS is only *-clean entries, it might as well be empty
-#	what do we do about '.null' file being exempted?  anything?  total edge case...
-#WORK document somewhere that clean removes files that match a phony target name?
-
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
 .PHONY: $(CLEANER)-$(DOITALL)
 $(CLEANER)-$(DOITALL):
@@ -3177,7 +3075,7 @@ ifneq ($(COMPOSER_STAMP),)
 endif
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
 		if [ "$(FILE)" != "$(NOTHING)" ] && [ ! -d "$(FILE)" ]; then \
-			$(RM) "$(CURDIR)/$(FILE)"; \
+			$(RM) $(CURDIR)/$(FILE); \
 		fi; \
 	)
 	@+$(MAKE) $(if \
@@ -3319,8 +3217,6 @@ $(BASE).$(EXTENSION): $(LIST)
 
 #> update: TYPE_TARGETS
 
-#WORK dual targets... document!  also, empty COMPOSER_EXT ... technically there is three ... readme/readme.html readme.md/readme.html readme.md/readme.md.html
-
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
 	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
@@ -3338,8 +3234,6 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 ########################################
 # {{{2 BOOK ----------------------------
-
-# document: we have book-%!
 
 #>.PHONY: book-%
 book-%:
