@@ -2686,7 +2686,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 $(TESTING)-COMPOSER_INCLUDE:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_INCLUDE$(_D)' behavior ,\
-		\n\t * Delete '$(_C)$(COMPOSER_SETTINGS)$(_D)' files in reverse \
+		\n\t * Use '$(_C)COMPOSER_DEPENDS$(_D)' in '$(_C)$(COMPOSER_SETTINGS)$(_D)' \
 		\n\t * One run each with '$(_C)COMPOSER_INCLUDE$(_D)' enabled and disabled: \
 		\n\t\t * All files in place \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
@@ -2717,8 +2717,6 @@ $(TESTING)-COMPOSER_INCLUDE-init:
 	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
-	@$(ECHO) "" >$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 
 override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
@@ -2883,6 +2881,7 @@ $(TESTING)-CSS-done:
 $(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
 		Miscellaneous test cases ,\
+		\n\t * Use '$(_C)book-*$(_D)' wrapper \
 		\n\t * Pandoc '$(_C)TYPE$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -2892,6 +2891,21 @@ $(TESTING)-other:
 
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
+	@$(ECHO) "override COMPOSER_TARGETS := book-$(notdir $(call $(TESTING)-pwd)).$(DEFAULT_EXTN)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "book-$(notdir $(call $(TESTING)-pwd)).$(DEFAULT_EXTN):" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(EXAMPLE_ONE)$(COMPOSER_EXT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(EXAMPLE_TWO)$(COMPOSER_EXT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(EXAMPLE_OUT)$(COMPOSER_EXT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT)" >$(call $(TESTING)-pwd)/$(EXAMPLE_OUT)$(COMPOSER_EXT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
+#WORK turn these into variables with the readme/license work... also fix *-count checks below
+	@$(SED) -n \
+		-e "/h1.+User Guide/p" \
+		-e "/h1.+Composer CMS License/p" \
+		-e "/h1.+$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT)/p" \
+		$(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(DEFAULT_EXTN)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="json" $(COMPOSER_PANDOC)
 	@$(CAT) $(call $(TESTING)-pwd)/$(EXAMPLE_ONE).json | $(SED) "s|[]][}][,].+$$||g"
 	@$(call $(TESTING)-make)
@@ -2908,6 +2922,9 @@ $(TESTING)-other-init:
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
+	$(call $(TESTING)-count,1,h1.+User Guide)
+	$(call $(TESTING)-count,1,h1.+Composer CMS License)
+	$(call $(TESTING)-count,1,h1.+$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT))
 	$(call $(TESTING)-find,pandoc-api-version)
 	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
 
