@@ -2963,19 +2963,18 @@ $(CONFIGS): .set_title-$(CONFIGS)
 $(TARGETS): .set_title-$(TARGETS)
 	@$(call $(HEADERS))
 	@$(LINERULE)
-	@$(foreach FILE,$(shell $(RUNMAKE) $(TARGETS)-list),\
+	@$(foreach FILE,$(shell $(call $(TARGETS)-list)),\
 		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(FILE)))"; \
 	)
 	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(RUNMAKE) $(CLEANER)-$(TARGETS)-list	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(call $(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
 	@$(RUNMAKE) --silent $(PRINTER)-list
 
-.PHONY: $(TARGETS)-list
-$(TARGETS)-list:
-	@$(RUNMAKE) --silent $(LISTING) | $(SED) \
+override define $(TARGETS)-list =
+	$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		$(foreach FILE,$(LISTING_VAR),\
 			-e "/^$(FILE)/d" \
 		) \
@@ -2986,6 +2985,7 @@ $(TARGETS)-list:
 		-e "/^$$/d" \
 		-e "s|[:]$$||g" \
 		-e "s|[[:space:]]+|$(TOKEN)|g"
+endef
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
@@ -3089,8 +3089,8 @@ endif
 		fi; \
 	)
 	@+$(MAKE) $(if \
-		$(shell $(RUNMAKE) $(CLEANER)-$(TARGETS)-list), \
-		$(shell $(RUNMAKE) $(CLEANER)-$(TARGETS)-list), \
+		$(shell $(call $(CLEANER)-$(TARGETS)-list)), \
+		$(shell $(call $(CLEANER)-$(TARGETS)-list)), \
 		$(NOTHING)-$(CLEANER)-$(TARGETS) \
 		)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
@@ -3114,11 +3114,11 @@ $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 	)
 endif
 
-.PHONY: $(CLEANER)-$(TARGETS)-list
-$(CLEANER)-$(TARGETS)-list:
-	@$(RUNMAKE) --silent $(LISTING) \
+override define $(CLEANER)-$(TARGETS)-list =
+	$(RUNMAKE) --silent $(LISTING) \
 		| $(SED) -n "s|^([^:]+[-]$(CLEANER))[:]+.*$$|\1|gp" \
 		| $(SED) "/^.set_title[-]/d"
+endef
 
 ########################################
 # {{{2 $(DOITALL) ----------------------
