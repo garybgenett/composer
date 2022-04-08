@@ -517,10 +517,16 @@ override COREUTILS_VER			:= 8.31
 override FINDUTILS_VER			:= 4.8.0
 override DIFFUTILS_VER			:= 3.7
 override SED_VER			:= 4.8
-override RSYNC_VER			:= 3.2.3
 override MAKE_VER			:= 4.2.1
 override YQ_VER				:= $(YQ_VER)
 override GIT_VER			:= 2.32.0
+
+override RSYNC_VER			:= 3.2.3
+override WGET_VER			:= 1.20.3
+override GZIP_VER			:= 1.10
+override TAR_VER			:= 1.34
+override 7Z_VER				:= 16.02
+override NPM_VER			:= 6.14.8
 
 override GHC_VER			:= 8.10.5
 override PANDOC_VER			:= $(PANDOC_VER)
@@ -568,7 +574,6 @@ override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --relative-to
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
-override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
@@ -578,7 +583,10 @@ override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
+#>override GZIP				:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
+override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
+override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --server-response
 
@@ -2393,7 +2401,7 @@ override define $(UPGRADE)-package =
 		$(7Z) -o$(COMPOSER_PKG)/$${pkg_dst} $(COMPOSER_PKG)/$${pkg_dst}.pkg; \
 	fi; \
 	$(RM) $(COMPOSER_PKG)/$${pkg_dst}.pkg; \
-	$(RSYNC) $(COMPOSER_PKG)/$(4) $(1)/$(5); \
+	$(CP) $(COMPOSER_PKG)/$(4) $(1)/$(5); \
 	$(CHMOD) $(1)/$(5)
 endef
 
@@ -2425,6 +2433,7 @@ $(DEBUGIT)-file:
 ifneq ($(MAKECMDGOALS),$(filter-out $(DEBUGIT),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
+$(DEBUGIT): override COMPOSER_DOITALL_$(CHECKIT) := 1
 $(DEBUGIT): .set_title-$(DEBUGIT)
 $(DEBUGIT): $(HEADERS)-$(DEBUGIT)
 $(DEBUGIT): $(DEBUGIT)-$(HEADERS)
@@ -2570,7 +2579,7 @@ override define $(TESTING)-mark =
 	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(foreach FILE,$(wildcard $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT)),\
-		$(RSYNC) $(FILE) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(if $(2),$(subst $(COMPOSER_EXT),,$(notdir $(FILE)))); \
+		$(CP) $(FILE) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(if $(2),$(subst $(COMPOSER_EXT),,$(notdir $(FILE)))); \
 	) \
 	$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),$(COMPOSER_ART)); \
 	$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),$(COMPOSER_ART))
@@ -3064,6 +3073,12 @@ ifneq ($(subst v,,$(YQ_CMT)),$(YQ_VER))
 override YQ_CMT_DISPLAY := $(YQ_CMT)$(_D) ($(_N)$(YQ_VER)$(_D))
 endif
 
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(CHECKIT) ?=)
+.PHONY: $(CHECKIT)-$(DOITALL)
+$(CHECKIT)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(CHECKIT)="1" $(CHECKIT)
+
 .PHONY: $(CHECKIT)
 $(CHECKIT): .set_title-$(CHECKIT)
 	@$(call $(HEADERS))
@@ -3077,44 +3092,64 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) "$(_H)Project"		"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"			":---"					":---"
 	@$(TABLE_M3) "$(_E)GNU Bash"		"$(_E)$(BASH_VER)"			"$(_N)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
+ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "- $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"			"$(_N)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Findutils"	"$(_E)$(FINDUTILS_VER)"			"$(_N)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Diffutils"	"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Sed"		"$(_E)$(SED_VER)"			"$(_N)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Rsync"		"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_E)Rsync"		"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Wget"		"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
+#>	@$(TABLE_M3) "- $(_E)GNU Gzip"		"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Gzip"		"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Tar"		"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)7z"		"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_M3) "- $(_E)Node.js NPM"	"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
+endif
 #>	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(MAKE) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)YQ"		"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Git SCM"		"$(_M)$(GIT_VER)"			"$(_D)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)Pandoc"		"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "- $(_C)GHC"		"$(_M)$(GHC_VER)"			"$(_D)$(shell $(GHC_PKG) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) pandoc-types	2>/dev/null | $(TAIL) -n1)"
 	@$(TABLE_M3) "- $(_C)TeXmath"		"$(_M)$(PANDOC_MATH_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) texmath		2>/dev/null | $(TAIL) -n1)"
 	@$(TABLE_M3) "- $(_C)Skylighting"	"$(_M)$(PANDOC_SKYL_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) skylighting	2>/dev/null | $(TAIL) -n1)"
 	@$(TABLE_M3) "- $(_C)CiteProc"		"$(_M)$(PANDOC_CITE_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) citeproc		2>/dev/null | $(TAIL) -n1)"
 	@$(TABLE_M3) "$(_C)TeX Live"		"$(_M)$(TEX_VER)"			"$(_D)$(shell $(TEX) --version			2>/dev/null | $(HEAD) -n1)"
+endif
 	@$(TABLE_M3) "- $(_C)TeX PDF"		"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"		"$(_H)Location & Options"
 	@$(TABLE_M2) ":---"			":---"
 	@$(TABLE_M2) "$(_E)GNU Bash"		"$(_N)$(BASH)"
+ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 #>	@$(TABLE_M2) "- $(_E)GNU Coreutils"	"$(_N)$(COREUTILS)"
 	@$(TABLE_M2) "- $(_E)GNU Coreutils"	"$(_N)$(LS)"
 	@$(TABLE_M2) "- $(_E)GNU Findutils"	"$(_N)$(FIND)"
 	@$(TABLE_M2) "- $(_E)GNU Diffutils"	"$(_N)$(DIFF)"
 	@$(TABLE_M2) "- $(_E)GNU Sed"		"$(_N)$(SED)"
-	@$(TABLE_M2) "- $(_E)Rsync"		"$(_N)$(RSYNC)"
+	@$(TABLE_M2) "$(_E)Rsync"		"$(_N)$(RSYNC)"
+	@$(TABLE_M2) "- $(_E)Wget"		"$(_N)$(WGET)"
+#>	@$(TABLE_M2) "- $(_E)GNU Gzip"		"$(_N)$(GZIP)"
+	@$(TABLE_M2) "- $(_E)GNU Gzip"		"$(_N)$(GZIP_BIN)"
+	@$(TABLE_M2) "- $(_E)GNU Tar"		"$(_N)$(TAR)"
+	@$(TABLE_M2) "- $(_E)7z"		"$(_N)$(7Z)"
+	@$(TABLE_M2) "- $(_E)Node.js NPM"	"$(_N)$(NPM)"
+endif
 #>	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(MAKE)"
 	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(REALMAKE)"
 	@$(TABLE_M2) "- $(_C)YQ"		"$(_D)$(YQ)"
 	@$(TABLE_M2) "- $(_C)Git SCM"		"$(_D)$(GIT)"
 	@$(TABLE_M2) "$(_C)Pandoc"		"$(_D)$(PANDOC)"
+ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "- $(_C)GHC"		"$(_D)$(GHC_PKG)"
 	@$(TABLE_M2) "- $(_C)Types"		"$(_E)(GHC package)"
 	@$(TABLE_M2) "- $(_C)TeXmath"		"$(_E)(GHC package)"
 	@$(TABLE_M2) "- $(_C)Skylighting"	"$(_E)(GHC package)"
 	@$(TABLE_M2) "- $(_C)CiteProc"		"$(_E)(GHC package)"
 	@$(TABLE_M2) "$(_C)TeX Live"		"$(_D)$(TEX)"
+endif
 	@$(TABLE_M2) "- $(_C)TeX PDF"		"$(_D)$(TEX_PDF)"
 
 ################################################################################
