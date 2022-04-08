@@ -5,9 +5,22 @@
 override VIM_OPTIONS := vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make
 override VIM_FOLDING := {{{1
 ################################################################################
-
-#WORK
-#	make _release debug-file test-file
+# Release Checklist:
+#	* Upgrade
+#		* Update: Tooling Versions
+#		* Update: Pandoc Options
+#	* Verify
+#		* `make COMPOSER_DEBUGIT="1" _release-all`
+#		* `make debug-file` (review)
+#		* `make test-file` (review)
+#		* `mv Composer-*.log artifacts/`
+#	* Publish
+#		* Update: README.md
+#		* Review: `make docs`
+#		* #WORKING release notes?
+#		* Git commit and tag
+#		* Update: COMPOSER_VERSION
+################################################################################
 #WORK
 #	test: windows: wsl/debian(testing) -> sudo apt-get install pandoc texlive / rsync npm
 #	test: mac osx: macports -> sudo port gmake install pandoc texlive / rsync npm6
@@ -71,29 +84,6 @@ override VIM_FOLDING := {{{1
 #		make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
 #		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
 #WORK
-
-#WORKING:NOW
-# windows version: 2.2.1
-#	pdf: pdfTeX 3.14159265-2.6-1.40.19 (TeX Live 2019/dev/Debian)
-#		touch README.md ; make V=1 README.pdf
-#		pdflatex: fatal: Could not undump 1 4-byte item(s) from /var/lib/texmf/web2c/pdftex/pdflatex.fmt.
-#		[makePDF] Run #2
-#		This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2019/dev/Debian) (preloaded format=pdflatex)
-#		restricted \write18 enabled.
-#	revealjs.html
-#		touch README.md ; make V=1 README.revealjs.html
-#		/Users/admin/Desktop/composer/revealjs/css/reveal.css: openBinaryFile: does not exist (No such file or directory)
-#WORK
-
-#WORKING
-#	release checklist
-#		version numbers
-#		make V=1 _release-all
-#		make test-file (review)
-#		make debug-file (review)
-#		mv Composer-*.log artifacts/
-#WORK
-
 ################################################################################
 # }}}1
 ################################################################################
@@ -937,12 +927,6 @@ override COMPOSER_TARGETS		:= $(strip \
 )
 endif
 endif
-
-#WORKING:NOW
-#ifeq ($(OS_TYPE),Windows)
-#override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_LPDF),$(COMPOSER_TARGETS))
-#override COMPOSER_TARGETS		:= $(filter-out $(BASE).$(EXTN_PRES),$(COMPOSER_TARGETS))
-#endif
 
 ########################################
 
