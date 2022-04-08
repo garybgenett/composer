@@ -730,13 +730,11 @@ endef
 # {{{1 Composer Operation ------------------------------------------------------
 ################################################################################
 
-override COMPOSER_TARGET		:= compose
+override COMPOSER_CREATE		:= compose
 override COMPOSER_PANDOC		:= pandoc
 
 #>override RUNMAKE			:= $(MAKE) --makefile $(COMPOSER_SRC)
 override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC)
-override COMPOSE			:= $(RUNMAKE) $(COMPOSER_TARGET)
-override MAKEDOC			:= $(RUNMAKE) $(COMPOSER_PANDOC)
 
 ########################################
 
@@ -778,7 +776,7 @@ override PRINTER			:= print
 #> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> grep -E "[)]-[a-z]+" Makefile
 override LISTING_VAR := \
-	$(COMPOSER_TARGET)[:] \
+	$(COMPOSER_CREATE)[:] \
 	$(COMPOSER_PANDOC)[:] \
 	\
 	$(HELPOUT)[:-] \
@@ -1674,10 +1672,8 @@ HELP_TITLE_%:
 
 .PHONY: HELP_USAGE
 HELP_USAGE:
-	@$(PRINT) '$(CODEBLOCK)$(_C)RUNMAKE$(_D) := $(_E)$(RUNMAKE)'
-	@$(PRINT) '$(CODEBLOCK)$(_C)COMPOSE$(_D) := $(_E)$(COMPOSE)'
-	@$(PRINT) "$(CODEBLOCK)$(_M)$(~)RUNMAKE [variables] <filename>.<extension>"
-	@$(PRINT) "$(CODEBLOCK)$(_M)$(~)COMPOSE [variables]"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(MAKE)$(_D) $(_M)[variables]$(_D) $(_C)$(COMPOSER_CREATE)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(MAKE)$(_D) $(_M)[variables] <filename>.<extension>"
 
 .PHONY: HELP_FOOTER
 HELP_FOOTER:
@@ -1763,7 +1759,7 @@ HELP_TARGETS_MAIN_%:
 #WORK	$(CREATOR)
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"		"Print settings template: $(_C)$(COMPOSER_SETTINGS)"
 #WORK	[.]$(EXAMPLE)*
-	@$(TABLE_M2) "$(_C)$(COMPOSER_TARGET)"	"Document creation $(_N)(see: $(_C)usage$(_N))"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"	"Document creation $(_N)(see: $(_C)usage$(_N))"
 #WORK	$(COMPOSER_PANDOC)
 	@$(TABLE_M2) "$(_C)$(INSTALL)"		"Recursive directory initialization: $(_C)$(MAKEFILE)"
 	@$(TABLE_M2) "$(_C)$(CLEANER)"		"Remove output files: $(_C)COMPOSER_TARGETS$(_D) $(_E)$(DIVIDE)$(_D) $(_N)*$(_C)-$(CLEANER)"
@@ -1804,7 +1800,7 @@ HELP_TARGETS_SUBTARGET_%:
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Static"		"-"						"-"
 	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)$(COMPOSER_TARGET)"	"$(_E)$(COMPOSER_PANDOC)"			"Wrapper target which calls Pandoc directly"
+	@$(TABLE_M3) "$(_C)$(COMPOSER_CREATE)"	"$(_E)$(COMPOSER_PANDOC)"			"Wrapper target which calls Pandoc directly"
 	@$(TABLE_M3) "$(_E)$(COMPOSER_PANDOC)"	"$(_E)$(SETTING)-$(_N)%"			"Prints marker and variable values, for readability"
 	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(WHOWHAT)-$(_N)%"			"Prints marker and variable values, for readability"
 	@$(TABLE_M3) ""				"$(_E)$(SUBDIRS)"				"Aggregates/runs the targets: $(_C)COMPOSER_SUBDIRS"
@@ -3403,11 +3399,7 @@ endif
 ################################################################################
 
 ########################################
-# {{{2 $(COMPOSER_TARGET) $(COMPOSER_PANDOC)
-
-.PHONY: $(COMPOSER_TARGET)
-$(COMPOSER_TARGET): .set_title-$(COMPOSER_TARGET)
-$(COMPOSER_TARGET): $(BASE).$(EXTENSION)
+# {{{2 $(COMPOSER_CREATE) $(COMPOSER_PANDOC)
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
@@ -3420,8 +3412,11 @@ ifneq ($(COMPOSER_STAMP),)
 	@$(ECHO) "$(DATESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
 endif
 
+.PHONY: $(COMPOSER_CREATE)
+$(COMPOSER_CREATE): $(BASE).$(EXTENSION)
+
 $(BASE).$(EXTENSION): $(LIST)
-	@$(MAKEDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
+	@$(RUNMAKE) $(COMPOSER_PANDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
 
 ########################################
 # {{{2 $(COMPOSER_EXT) -----------------
@@ -3430,9 +3425,9 @@ $(BASE).$(EXTENSION): $(LIST)
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
-	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 %.$(2): %
-	@$(COMPOSE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 endef
 
 $(eval $(call TYPE_TARGETS,$(TYPE_HTML),$(EXTN_HTML)))
@@ -3449,7 +3444,7 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 #>.PHONY: book-%
 book-%:
 	@$(call $(HEADERS))
-	@$(COMPOSE) \
+	@$(RUNMAKE) $(COMPOSER_CREATE) \
 		TYPE="$(lastword $(subst ., ,$(*)))" \
 		BASE="$(firstword $(subst ., ,$(*)))" \
 		LIST="$(^)"
