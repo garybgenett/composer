@@ -163,7 +163,6 @@ endef
 #> update: includes duplicates
 
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
-
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),!)
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
@@ -256,24 +255,18 @@ unexport
 ########################################
 
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
-override MAKEJOBS			?=
+override MAKEJOBS			?= 1
 
 #> update: COMPOSER_DEPENDS: MAKEJOBS
 ifneq ($(COMPOSER_DEPENDS),)
-override MAKEJOBS			:=
+override MAKEJOBS			:= 1
 endif
 
-ifeq ($(MAKEJOBS),)
-.NOTPARALLEL:
-endif
 ifeq ($(MAKEJOBS),1)
 .NOTPARALLEL:
 endif
 
-ifeq ($(MAKEJOBS),)
-override MAKEJOBS			:= 1
-endif
-
+override MAKEJOBS_OPTS			:=
 ifeq ($(MAKEJOBS),1)
 override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
 else
@@ -337,6 +330,7 @@ override COMPOSER_IGNORES		?=
 ########################################
 
 #> update: includes duplicates
+
 $(call READ_ALIASES,T,c_type,TYPE)
 $(call READ_ALIASES,B,c_base,BASE)
 $(call READ_ALIASES,L,c_list,LIST)
@@ -398,6 +392,8 @@ else ifeq ($(OS_TYPE),Darwin)
 override PANDOC_BIN			:= $(PANDOC_DIR)/$(PANDOC_MAC_BIN)
 endif
 
+########################################
+
 # https://mikefarah.gitbook.io/yq
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
@@ -428,6 +424,8 @@ else ifeq ($(OS_TYPE),Darwin)
 override YQ_BIN				:= $(YQ_DIR)/$(YQ_MAC_BIN)
 endif
 
+########################################
+
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
 ifeq ($(filter override,$(origin REVEALJS_CMT)),)
@@ -438,6 +436,8 @@ override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
 override REVEALJS_CSS_THEME		:= $(notdir $(REVEALJS_DIR))/dist/theme/black.css
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
+
+########################################
 
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
@@ -483,12 +483,14 @@ override LESS_VER			:= 551
 ################################################################################
 
 #> update: includes duplicates
+
 override PATH_LIST			:= $(subst :, ,$(PATH))
 
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 export SHELL
 
 ########################################
+# {{{2 Paths ---------------------------
 
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
@@ -547,6 +549,9 @@ ifneq ($(wildcard $(YQ_BIN)),)
 override YQ				:= $(YQ_BIN)
 endif
 
+########################################
+# {{{2 Wrappers ------------------------
+
 override DATESTAMP			:= $(shell $(DATE))
 override DATENAME			:= $(shell $(DATE) | $(SED) \
 	-e "s|[-]([0-9]{2}[:]?[0-9]{2})$$|T\1|g" \
@@ -554,6 +559,8 @@ override DATENAME			:= $(shell $(DATE) | $(SED) \
 	-e "s|T|-|g" \
 )
 override DATEMARK			:= $(firstword $(subst T, ,$(DATESTAMP)))
+
+########################################
 
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(2)" --work-tree="$(1)" $(3)
 override GIT_RUN_COMPOSER		= $(call GIT_RUN,$(COMPOSER_ROOT),$(strip $(if \
@@ -585,6 +592,8 @@ override define GIT_REPO_DO =
 	$(RM) $(1)/.git
 endef
 
+########################################
+
 override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_PKG))
 override define WGET_PACKAGE_DO =
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(5)"; \
@@ -611,6 +620,7 @@ override OUTPUT				:= $(TYPE)
 override EXTENSION			:= $(TYPE)
 
 ########################################
+# {{{2 Types ---------------------------
 
 #> update: TYPE_TARGETS
 
@@ -684,6 +694,7 @@ endif
 endif
 
 ########################################
+# {{{2 CSS -----------------------------
 
 override _COL				:= $(COLUMNS)
 override _CSS_ALT			:= css_alt
@@ -705,6 +716,7 @@ endif
 endif
 
 ########################################
+# {{{2 Command -------------------------
 
 #WORK TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
@@ -916,7 +928,50 @@ override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
 override COMPOSER_REGEX_PREFIX		:= [_.]
 
 ########################################
-# {{{2 TARGETS -------------------------
+# {{{2 Options -------------------------
+
+#> update: COMPOSER_OPTIONS
+
+override COMPOSER_EXPORTED := \
+	MAKEJOBS \
+	COMPOSER_DOCOLOR \
+	COMPOSER_DEBUGIT \
+	COMPOSER_INCLUDE \
+	COMPOSER_DEPENDS \
+	COMPOSER_STAMP \
+	COMPOSER_EXT \
+	TYPE \
+	CSS \
+	TTL \
+	TOC \
+	LVL \
+	MGN \
+	FNT \
+	OPT \
+
+override COMPOSER_EXPORTED_NOT := \
+	COMPOSER_TARGETS \
+	COMPOSER_SUBDIRS \
+	COMPOSER_IGNORES \
+	BASE \
+	LIST \
+
+#> update: $(MAKE)
+override MAKE_RECURSIVE			= $(MAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+override RUNMAKE			:= $(RUNMAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+$(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
+
+override COMPOSER_OPTIONS		:= $(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER))
+$(foreach FILE,$(COMPOSER_OPTIONS),\
+	$(if $(or \
+		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
+		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
+	),,$(error COMPOSER_OPTIONS: $(FILE))) \
+)
+
+########################################
+# {{{2 Targets -------------------------
 
 #> update: $(DEBUGIT): targets list
 #> update: $(TESTING): targets list
@@ -958,7 +1013,7 @@ override PUBLISH			:= site
 override DOITALL			:= all
 override CLEANER			:= clean
 override SUBDIRS			:= subdirs
-override PRINTER			:= print
+override PRINTER			:= list
 
 #WORKING:NOW replace HELP-* / EXAMPLE-* with $(CREATOR)_*, and re-sort the file...
 
@@ -1001,7 +1056,47 @@ override COMPOSER_RESERVED := \
 	$(PRINTER) \
 
 ########################################
-# {{{2 FILESYSTEM ----------------------
+# {{{2 Specials ------------------------
+
+override DO_BOOK			:= book
+override DO_POST			:= post
+
+override COMPOSER_RESERVED_SPECIAL := \
+	$(DO_BOOK) \
+
+$(DO_POST)s: $(NOTHING)-$(DO_POST)s-FUTURE
+#>	$(DO_POST) \
+
+########################################
+
+#> update: $(MAKE)
+override define COMPOSER_RESERVED_SPECIAL_TARGETS =
+.PHONY: $(1)s
+$(1)s: .set_title-$(1)s
+	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"),\
+		$$(call $(HEADERS)); \
+		$$(MAKE)$$(foreach FILE,$(COMPOSER_EXPORTED), $$(FILE)="$$($$(FILE))") $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"); \
+		,$(ECHO) ""; \
+	)
+.PHONY: $(1)s-clean
+$(1)s-clean:
+	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp"),\
+		$$(RM) $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|$$(CURDIR)/\1|gp"); \
+		,$(ECHO) ""; \
+	)
+ifeq ($(COMPOSER_DIR),$(CURDIR))
+$(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
+	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
+	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
+endif
+endef
+
+$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
+	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
+)
+
+########################################
+# {{{2 Filesystem ----------------------
 
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
@@ -1056,90 +1151,7 @@ endif
 endif
 
 ########################################
-# {{{2 OPTIONS -------------------------
-
-#> update: COMPOSER_OPTIONS
-
-override COMPOSER_EXPORTED := \
-	MAKEJOBS \
-	COMPOSER_DOCOLOR \
-	COMPOSER_DEBUGIT \
-	COMPOSER_INCLUDE \
-	COMPOSER_DEPENDS \
-	COMPOSER_STAMP \
-	COMPOSER_EXT \
-	TYPE \
-	CSS \
-	TTL \
-	TOC \
-	LVL \
-	MGN \
-	FNT \
-	OPT \
-
-override COMPOSER_EXPORTED_NOT := \
-	COMPOSER_TARGETS \
-	COMPOSER_SUBDIRS \
-	COMPOSER_IGNORES \
-	BASE \
-	LIST \
-
-#> update: $(MAKE)
-override MAKE_RECURSIVE			= $(MAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-override RUNMAKE			:= $(RUNMAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-$(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
-$(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
-
-override COMPOSER_OPTIONS		:= $(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER))
-$(foreach FILE,$(COMPOSER_OPTIONS),\
-	$(if $(or \
-		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
-		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
-	),,$(error COMPOSER_OPTIONS: $(FILE))) \
-)
-
-########################################
-# {{{2 SPECIALS ------------------------
-
-override DO_BOOK			:= book
-override DO_POST			:= post
-
-override COMPOSER_RESERVED_SPECIAL := \
-	$(DO_BOOK) \
-
-$(DO_POST)s: $(NOTHING)-$(DO_POST)s-FUTURE
-#>	$(DO_POST) \
-
-########################################
-
-#> update: $(MAKE)
-override define COMPOSER_RESERVED_SPECIAL_TARGETS =
-.PHONY: $(1)s
-$(1)s: .set_title-$(1)s
-	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"),\
-		$$(call $(HEADERS)); \
-		$$(MAKE)$$(foreach FILE,$(COMPOSER_EXPORTED), $$(FILE)="$$($$(FILE))") $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"); \
-		,$(ECHO) ""; \
-	)
-.PHONY: $(1)s-clean
-$(1)s-clean:
-	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp"),\
-		$$(RM) $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|$$(CURDIR)/\1|gp"); \
-		,$(ECHO) ""; \
-	)
-ifeq ($(COMPOSER_DIR),$(CURDIR))
-$(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
-	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
-	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
-endif
-endef
-
-$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
-)
-
-########################################
-# {{{2 UNAME ---------------------------
+# {{{2 Uname ---------------------------
 
 override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
 override OS_TYPE			:=
@@ -3467,19 +3479,20 @@ $(SUBDIRS): $(NOTHING)-$(SUBDIRS)
 # {{{2 $(PRINTER) ----------------------
 
 .PHONY: $(PRINTER)
-.PHONY: $(PRINTER)-list
 $(PRINTER): .set_title-$(PRINTER)
 $(PRINTER): $(HEADERS)-$(PRINTER)
 
-ifneq ($(COMPOSER_STAMP),)
+ifeq ($(COMPOSER_STAMP),)
+$(PRINTER): $(NOTHING)-COMPOSER_STAMP
+endif
 $(PRINTER): $(PRINTER)-list
+
+.PHONY: $(PRINTER)-list
 $(PRINTER)-list: $(COMPOSER_STAMP)
+	@$(ECHO) ""
 
 $(COMPOSER_STAMP): $(if $(COMPOSER_EXT),$(wildcard *$(COMPOSER_EXT)),$(NOTHING)-COMPOSER_EXT)
 	@$(LS) --directory $(COMPOSER_STAMP) $(?) 2>/dev/null || $(TRUE)
-else
-$(PRINTER): $(NOTHING)-COMPOSER_STAMP
-endif
 
 ################################################################################
 # {{{1 Pandoc Targets ----------------------------------------------------------
