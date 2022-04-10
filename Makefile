@@ -430,16 +430,16 @@ override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
 override PANDOC_TEX_PDF			:= pdflatex
-override PANDOC_BIN_URL			:= https://github.com/jgm/pandoc/releases/download/$(PANDOC_VER)
+override PANDOC_URL			:= https://github.com/jgm/pandoc/releases/download/$(PANDOC_VER)
 override PANDOC_LNX_SRC			:= pandoc-$(PANDOC_VER)-linux-amd64.tar.gz
 override PANDOC_WIN_SRC			:= pandoc-$(PANDOC_VER)-windows-x86_64.zip
 override PANDOC_MAC_SRC			:= pandoc-$(PANDOC_VER)-macOS.zip
 override PANDOC_LNX_DST			:= $(subst .tar.gz,,$(PANDOC_LNX_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
 override PANDOC_WIN_DST			:= $(subst .zip,,$(PANDOC_WIN_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/pandoc.exe
 override PANDOC_MAC_DST			:= $(subst .zip,,$(PANDOC_MAC_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
-override PANDOC_LNX_BIN			:= $(word 1,$(subst /, ,$(PANDOC_LNX_DST)))
-override PANDOC_WIN_BIN			:= $(word 1,$(subst /, ,$(PANDOC_WIN_DST))).exe
-override PANDOC_MAC_BIN			:= $(word 1,$(subst /, ,$(PANDOC_MAC_DST))).bin
+override PANDOC_LNX_BIN			:= $(firstword $(subst /, ,$(PANDOC_LNX_DST)))
+override PANDOC_WIN_BIN			:= $(firstword $(subst /, ,$(PANDOC_WIN_DST))).exe
+override PANDOC_MAC_BIN			:= $(firstword $(subst /, ,$(PANDOC_MAC_DST))).bin
 ifeq ($(OS_TYPE),Linux)
 override PANDOC_BIN			:= $(PANDOC_DIR)/$(PANDOC_LNX_BIN)
 else ifeq ($(OS_TYPE),Windows)
@@ -461,16 +461,16 @@ endif
 override YQ_LIC				:= MIT
 override YQ_SRC				:= https://github.com/mikefarah/yq.git
 override YQ_DIR				:= $(COMPOSER_DIR)/yq
-override YQ_BIN_URL			:= https://github.com/mikefarah/yq/releases/download/v$(YQ_VER)
+override YQ_URL				:= https://github.com/mikefarah/yq/releases/download/v$(YQ_VER)
 override YQ_LNX_SRC			:= yq_linux_amd64.tar.gz
 override YQ_WIN_SRC			:= yq_windows_amd64.zip
 override YQ_MAC_SRC			:= yq_darwin_amd64.tar.gz
 override YQ_LNX_DST			:= $(subst .tar.gz,,$(YQ_LNX_SRC))-$(YQ_VER)/$(subst .tar.gz,,$(YQ_LNX_SRC))
 override YQ_WIN_DST			:= $(subst .zip,,$(YQ_WIN_SRC))-$(YQ_VER)/$(subst .zip,,$(YQ_WIN_SRC)).exe
 override YQ_MAC_DST			:= $(subst .tar.gz,,$(YQ_MAC_SRC))-$(YQ_VER)/$(subst .tar.gz,,$(YQ_MAC_SRC))
-override YQ_LNX_BIN			:= $(word 1,$(subst /, ,$(YQ_LNX_DST)))
-override YQ_WIN_BIN			:= $(word 1,$(subst /, ,$(YQ_WIN_DST))).exe
-override YQ_MAC_BIN			:= $(word 1,$(subst /, ,$(YQ_MAC_DST))).bin
+override YQ_LNX_BIN			:= $(firstword $(subst /, ,$(YQ_LNX_DST)))
+override YQ_WIN_BIN			:= $(firstword $(subst /, ,$(YQ_WIN_DST))).exe
+override YQ_MAC_BIN			:= $(firstword $(subst /, ,$(YQ_MAC_DST))).bin
 override YQ_BIN				:=
 ifeq ($(OS_TYPE),Linux)
 override YQ_BIN				:= $(YQ_DIR)/$(YQ_LNX_BIN)
@@ -588,7 +588,7 @@ override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
-override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --server-response
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
@@ -601,6 +601,8 @@ override GHC_PKG_INFO			:= $(GHC_PKG) latest
 override TEX				:= $(call COMPOSER_FIND,$(PATH_LIST),tex)
 override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 
+########################################
+
 ifneq ($(wildcard $(PANDOC_BIN)),)
 override PANDOC				:= $(PANDOC_BIN)
 endif
@@ -608,43 +610,59 @@ ifneq ($(wildcard $(YQ_BIN)),)
 override YQ				:= $(YQ_BIN)
 endif
 
-########################################
-
 override DATESTAMP			:= $(shell $(DATE))
 override DATENAME			:= $(shell $(DATE) | $(SED) \
 	-e "s|[-]([0-9]{2}[:]?[0-9]{2})$$|T\1|g" \
 	-e "s|[-:]||g" \
 	-e "s|T|-|g" \
 )
-override DATEMARK			:= $(word 1,$(subst T, ,$(DATESTAMP)))
+override DATEMARK			:= $(firstword $(subst T, ,$(DATESTAMP)))
 
-override COMPOSER_GIT_RUN		= cd $(COMPOSER_ROOT) && $(GIT) --git-dir="$(strip $(if \
+override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(2)" --work-tree="$(1)" $(3)
+override GIT_RUN_COMPOSER		= $(call GIT_RUN,$(COMPOSER_ROOT),$(strip $(if \
 		$(wildcard $(COMPOSER_ROOT).git),\
 		$(COMPOSER_ROOT).git ,\
 		$(COMPOSER_ROOT)/.git \
-	))" --work-tree="$(COMPOSER_ROOT)" $(1)
+	)),$(1))
 
-override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(COMPOSER_PKG)/$(notdir $(1)).git" --work-tree="$(1)" $(2)
-override GIT_REPO			= $(call DO_GIT_REPO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
-override define DO_GIT_REPO =
-	$(MKDIR) $(COMPOSER_PKG) $(1); \
+override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
+override define GIT_REPO_DO =
+	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)$(3)$(_D))"; \
+	$(MKDIR) $(abspath $(dir $(5))) $(1); \
 	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) $(1).git  $(5); fi; \
 	if [ ! -d "$(5)" ] && [ -d "$(1)/.git" ]; then $(MV) $(1)/.git $(5); fi; \
 	if [ ! -d "$(5)" ]; then \
-		$(call GIT_RUN,$(1),init); \
-		$(call GIT_RUN,$(1),remote add origin $(2)); \
+		$(call GIT_RUN,$(1),$(5),init); \
+		$(call GIT_RUN,$(1),$(5),remote add origin $(2)); \
 	fi; \
 	$(ECHO) "gitdir: `$(REALPATH) $(1) $(5)`" >$(1)/.git; \
-	$(call GIT_RUN,$(1),config --local --replace-all core.worktree $(1)); \
-	$(call GIT_RUN,$(1),fetch --all); \
-	if [ -n "$(3)" ] && [ -n "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(4) $(3)); fi; \
-	if [ -n "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force -B $(COMPOSER_BASENAME) $(3)); fi; \
-	if [ -z "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),checkout --force master); fi; \
-	$(call GIT_RUN,$(1),reset --hard); \
+	$(call GIT_RUN,$(1),$(5),config --local --replace-all core.worktree $(1)); \
+	$(call GIT_RUN,$(1),$(5),fetch --all); \
+	if [ -n "$(3)" ] && [ -n "$(4)" ]; then $(call GIT_RUN,$(1),$(5),checkout --force -B $(4) $(3)); fi; \
+	if [ -n "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),$(5),checkout --force -B $(COMPOSER_BASENAME) $(3)); fi; \
+	if [ -z "$(3)" ] && [ -z "$(4)" ]; then $(call GIT_RUN,$(1),$(5),checkout --force master); fi; \
+	$(call GIT_RUN,$(1),$(5),reset --hard); \
 	if [ -f "$(1)/.gitmodules" ]; then \
-		$(call GIT_RUN,$(1),submodule update --init --recursive --force); \
+		$(call GIT_RUN,$(1),$(5),submodule update --init --recursive --force); \
 	fi; \
 	$(RM) $(1)/.git
+endef
+
+override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_PKG))
+override define WGET_PACKAGE_DO =
+	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(5)"; \
+	$(MKDIR) $(8); \
+	$(WGET) --directory-prefix $(8) $(2)/$(3); \
+	$(RM) --recursive $(8)/$(7); \
+	$(MKDIR) $(8)/$(7); \
+	if [ -z "$(6)" ]; then \
+		$(TAR) -C $(8)/$(7) -f $(8)/$(3); \
+	else \
+		$(7Z) -o$(8)/$(7) $(8)/$(3); \
+	fi; \
+	$(MKDIR) $(1); \
+	$(CP) $(8)/$(4) $(1)/$(5); \
+	$(CHMOD) $(1)/$(5)
 endef
 
 ################################################################################
@@ -2154,6 +2172,7 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-var,1,MGN)
 	@$(call $(EXAMPLE)-var,1,FNT)
 	@$(call $(EXAMPLE)-var,1,OPT)
+#WORKING:NOW add specials examples...?
 
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
@@ -2358,8 +2377,8 @@ $(NOTHING):
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORKING override CONVICT_GIT_OPTS		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
-override CONVICT_GIT_OPTS		:= --verbose $(MAKEFILE)
+#WORKING override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
@@ -2370,11 +2389,11 @@ $(CONVICT)-$(DOITALL):
 .PHONY: $(CONVICT)
 $(CONVICT): .set_title-$(CONVICT)
 	@$(call $(HEADERS))
-	$(call COMPOSER_GIT_RUN,add --all $(CONVICT_GIT_OPTS))
-	$(call COMPOSER_GIT_RUN,commit \
+	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
+	$(call GIT_RUN_COMPOSER,commit \
 		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
 		--message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]" \
-		$(CONVICT_GIT_OPTS) \
+		$(GIT_OPTS_CONVICT) \
 	)
 
 ########################################
@@ -2413,12 +2432,12 @@ $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
-	@$(call $(UPGRADE)-package,$(PANDOC_DIR),$(PANDOC_BIN_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
-	@$(call $(UPGRADE)-package,$(PANDOC_DIR),$(PANDOC_BIN_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
-	@$(call $(UPGRADE)-package,$(PANDOC_DIR),$(PANDOC_BIN_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
-	@$(call $(UPGRADE)-package,$(YQ_DIR),$(YQ_BIN_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
-	@$(call $(UPGRADE)-package,$(YQ_DIR),$(YQ_BIN_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
-	@$(call $(UPGRADE)-package,$(YQ_DIR),$(YQ_BIN_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
+	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
+	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
+	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(wildcard $(firstword $(NPM))),)
 	@$(MKDIR) $(NPM_PKG)
@@ -2442,31 +2461,13 @@ endif
 endif
 	@$(RM)					$(MDVIEWER_DIR)/node_modules
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
-	@$(ECHO) "$(_C)"
+	@$(ECHO) "$(_M)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_DIR)/data/templates \
 		$(MDVIEWER_DIR)/manifest.firefox.json \
 		$(MDVIEWER_DIR)/manifest.chrome.json \
 		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME)
 	@$(ECHO) "$(_D)"
-
-#WORKING:NOW
-#	fix this to keep the files in place so timestamping doesn't download them every time...
-#		that's the whole point of .sources...
-#	also, remove the unpack directories before unpacking them, so it is fresh after every run...
-override define $(UPGRADE)-package =
-	pkg_dst="$(word 1,$(subst /, ,$(4)))"; \
-	$(WGET) --output-document $(COMPOSER_PKG)/$${pkg_dst}.pkg $(2)/$(3); \
-	$(MKDIR) $(COMPOSER_PKG)/$${pkg_dst}; \
-	if [ -z "$(6)" ]; then \
-		$(TAR) -C $(COMPOSER_PKG)/$${pkg_dst} -f $(COMPOSER_PKG)/$${pkg_dst}.pkg; \
-	else \
-		$(7Z) -o$(COMPOSER_PKG)/$${pkg_dst} $(COMPOSER_PKG)/$${pkg_dst}.pkg; \
-	fi; \
-	$(RM) $(COMPOSER_PKG)/$${pkg_dst}.pkg; \
-	$(CP) $(COMPOSER_PKG)/$(4) $(1)/$(5); \
-	$(CHMOD) $(1)/$(5)
-endef
 
 ################################################################################
 # {{{1 Debug Targets -----------------------------------------------------------
