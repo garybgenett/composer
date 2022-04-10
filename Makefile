@@ -93,15 +93,58 @@ override VIM_FOLDING := {{{1
 ################################################################################
 # }}}1
 ################################################################################
-# {{{1 Include Files -----------------------------------------------------------
+# {{{1 Composer Globals --------------------------------------------------------
 ################################################################################
 
-override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
+override COMPOSER_VERSION		:= v3.0
+override COMPOSER_BASENAME		:= Composer
+override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 
 ########################################
 
+override COLUMNS			:= 80
+override HEAD_MAIN			:= 1
+
 override COMPOSER_SETTINGS		:= .composer.mk
 override COMPOSER_CSS			:= .composer.css
+override COMPOSER_STAMP_DEFAULT		:= .composed
+override COMPOSER_EXT_DEFAULT		:= .md
+
+#> update: TYPE_TARGETS
+override TYPE_DEFAULT			:= html
+override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
+
+override EXAMPLE_ONE			:= README
+override EXAMPLE_TWO			:= LICENSE
+override EXAMPLE_OUT			:= MANUAL
+
+########################################
+
+override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
+override COMPOSER			:= $(lastword $(MAKEFILE_LIST))
+override COMPOSER_SRC			:= $(firstword $(MAKEFILE_LIST))
+
+override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
+override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),$(MAKEFILE_LIST)))))
+ifeq ($(COMPOSER_ROOT),)
+override COMPOSER_ROOT			:= $(COMPOSER_DIR)
+endif
+
+override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
+override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
+override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
+
+override NPM_PKG			:= $(COMPOSER_PKG)/_npm
+
+########################################
+
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+override OUTPUT_FILENAME		= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
+override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
+
+################################################################################
+# {{{1 Include Files -----------------------------------------------------------
+################################################################################
 
 override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
 override COMPOSER_INCLUDES		:=
@@ -247,8 +290,14 @@ endif
 override MAKEFILE			:= Makefile
 override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory $(MAKEJOBS_OPTS)
 
+ifneq ($(COMPOSER_DEBUGIT_ALL),)
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
+else
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
+endif
+
 ################################################################################
-# {{{1 Composer Globals --------------------------------------------------------
+# {{{1 Composer Options --------------------------------------------------------
 ################################################################################
 
 #> update: includes duplicates
@@ -262,88 +311,15 @@ override COMPOSER_DEBUGIT		?=
 override COMPOSER_INCLUDE		?=
 override COMPOSER_DEPENDS		?=
 
-########################################
-
-#> update: includes duplicates
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),!)
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
 
-ifneq ($(COMPOSER_DEBUGIT_ALL),)
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
-else
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
-endif
-
 ########################################
 
-override COMPOSER			:= $(lastword $(MAKEFILE_LIST))
-override COMPOSER_SRC			:= $(firstword $(MAKEFILE_LIST))
-
-override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
-override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),$(MAKEFILE_LIST)))))
-ifeq ($(COMPOSER_ROOT),)
-override COMPOSER_ROOT			:= $(COMPOSER_DIR)
-endif
-
-########################################
-
-override ~				:= "'$$'"
-override COMPOSER_MY_PATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
-override COMPOSER_TEACHER		:= $(~)(abspath $(~)(dir $(~)(COMPOSER_MY_PATH)))/$(MAKEFILE)
-
-override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
-override COMPOSER_REGEX_PREFIX		:= [_.]
-
-################################################################################
-# {{{1 Composer Settings -------------------------------------------------------
-################################################################################
-
-override COMPOSER_VERSION		:= v3.0
-override COMPOSER_BASENAME		:= Composer
-override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
-
-override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
-override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
-override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
-
-override NPM_PKG			:= $(COMPOSER_PKG)/_npm
-
-########################################
-
-#> update: TYPE_TARGETS
-override TYPE_DEFAULT			:= html
-override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
-
-#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-override OUTPUT_FILENAME		= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
-override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
-
-override EXAMPLE_ONE			:= README
-override EXAMPLE_TWO			:= LICENSE
-override EXAMPLE_OUT			:= MANUAL
-
-########################################
-
-override OS_UNAME			:= $(shell uname --all 2>/dev/null)
-override OS_TYPE			:=
-ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
-override OS_TYPE			:= Linux
-else ifneq ($(subst Windows,,$(OS_UNAME)),$(OS_UNAME))
-override OS_TYPE			:= Windows
-else ifneq ($(subst Darwin,,$(OS_UNAME)),$(OS_UNAME))
-override OS_TYPE			:= Darwin
-endif
-
-################################################################################
-# {{{1 Composer Options --------------------------------------------------------
-################################################################################
-
-override COMPOSER_STAMP_DEFAULT		:= .composed
 override COMPOSER_STAMP			?= $(COMPOSER_STAMP_DEFAULT)
 
-override COMPOSER_EXT_DEFAULT		:= .md
 override COMPOSER_EXT			?= $(COMPOSER_EXT_DEFAULT)
 #>ifeq ($(COMPOSER_EXT),)
 #>override COMPOSER_EXT			:= $(COMPOSER_EXT_DEFAULT)
@@ -352,36 +328,11 @@ override COMPOSER_EXT			:= $(notdir $(COMPOSER_EXT))
 
 ########################################
 
-override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
-override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
-override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
-
-#WORKING:NOW we need EXTENSION, not TYPE, but it is not until later! also fix in DO_BOOK?
-ifeq ($(COMPOSER_TARGETS),)
-ifneq ($(COMPOSER_DIR),$(CURDIR))
-ifneq ($(COMPOSER_EXT),)
-override COMPOSER_TARGETS		:= $(patsubst %$(COMPOSER_EXT),%.$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
-else
-override COMPOSER_TARGETS		:= $(addsuffix .$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(filter-out %.$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(COMPOSER_CONTENTS_FILES)))
-endif
-endif
-endif
-
-ifeq ($(COMPOSER_SUBDIRS),)
-ifneq ($(COMPOSER_DIR),$(CURDIR))
-#>override COMPOSER_SUBDIRS		:= $(subst /$(MAKEFILE),,$(wildcard $(addsuffix /$(MAKEFILE),$(COMPOSER_CONTENTS_DIRS))))
-override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
-endif
-endif
-
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_IGNORES		?=
-
-override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
-override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
 
 ########################################
 
@@ -667,295 +618,6 @@ override define WGET_PACKAGE_DO =
 endef
 
 ################################################################################
-# }}}1
-################################################################################
-# {{{1 Composer Output ---------------------------------------------------------
-################################################################################
-
-# https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
-#	default	= light gray
-#	header	= light green
-#	core	= cyan
-#	mark	= yellow
-#	note	= red
-#	extra	= magenta
-#	syntax	= dark blue
-ifneq ($(COMPOSER_DOCOLOR),)
-#>override _D				:= \e[0;37m
-override _D				:= \e[0m
-override _H				:= \e[0;32m
-override _C				:= \e[0;36m
-override _M				:= \e[0;33m
-override _N				:= \e[0;31m
-override _E				:= \e[0;35m
-override _S				:= \e[0;34m
-else
-override _D				:=
-override _H				:=
-override _C				:=
-override _M				:=
-override _N				:=
-override _E				:=
-override _S				:=
-endif
-
-########################################
-
-#> update: includes duplicates
-override MARKER				:= >>
-override DIVIDE				:= ::
-override TOKEN				:= ~
-override NULL				:=
-
-# https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
-override define NEWLINE =
-$(NULL)
-$(NULL)
-endef
-
-########################################
-
-override NUMCOLUMN			:= 80
-override HEAD_MAIN			:= 1
-
-override COMMENTED			:= $(_S)\#$(_D) $(NULL)
-override CODEBLOCK			:= $(NULL)	$(NULL)
-override ENDOLINE			:= $(ECHO) "$(_D)\n"
-override LINERULE			:= $(ECHO) "$(_H)";	$(PRINTF)  "-%.0s" {1..$(NUMCOLUMN)}	; $(ENDOLINE)
-override HEADER_L			:= $(ECHO) "$(_S)";	$(PRINTF) "\#%.0s" {1..$(NUMCOLUMN)}	; $(ENDOLINE)
-
-# https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
-ifneq ($(COMPOSER_DOCOLOR),)
-override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%b$(_D)\e[128D\e[22C%b$(_D)\n"
-override TABLE_M2			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\n"
-override TABLE_M3			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\e[128D\e[54C| %b$(_D)\n"
-override PRINT				:= $(PRINTF) "%b$(_D)\n"
-else
-override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%-20s%s\n"
-override TABLE_M2			:= $(PRINTF) "| %-20s| %s\n"
-override TABLE_M3			:= $(PRINTF) "| %-20s| %-30s| %s\n"
-override PRINT				:= $(PRINTF) "%s\n"
-endif
-
-override define TITLE_LN =
-	ttl_len="`$(EXPR) length '$(2)'`"; \
-	ttl_len="`$(EXPR) $(NUMCOLUMN) - 2 - $(1) - $${ttl_len}`"; \
-	if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
-	$(ENDOLINE); \
-	$(ECHO) "$(_S)"; \
-	if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
-	if [ "$(1)" -gt "0" ]; then $(PRINTF) "#%.0s" {1..$(1)}; fi; \
-	$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
-	eval $(PRINTF) \"#%.0s\" {1..$${ttl_len}}; \
-	$(ENDOLINE); \
-	$(if $(3),\
-		if [ "$(1)" -gt "$(HEAD_MAIN)" ]; then $(ENDOLINE); fi \
-		,$(ENDOLINE) \
-	); \
-	if [ "$(1)" -le "0" ]; then $(LINERULE); $(ENDOLINE); fi
-endef
-
-################################################################################
-# {{{1 Composer Operation ------------------------------------------------------
-################################################################################
-
-override COMPOSER_CREATE		:= compose
-override COMPOSER_PANDOC		:= pandoc
-
-#> update: $(MAKE)
-override MAKE_RECURSIVE			= $(MAKE)
-override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC)
-
-########################################
-
-override DO_BOOK			:= book
-override DO_POST			:= post
-
-override COMPOSER_RESERVED_SPECIAL := \
-	$(DO_BOOK) \
-	$(DO_POST) \
-
-########################################
-
-#> update: $(DEBUGIT): targets list
-#> update: $(TESTING): targets list
-
-#> update: PHONY.*$(DOITALL)
-#	$(CONVICT)-$(DOITALL)
-#	$(UPGRADE)-$(DOITALL)
-#	$(CHECKIT)-$(DOITALL)
-#	$(INSTALL)-$(DOITALL)
-#	$(CLEANER)-$(DOITALL)
-#	$(DOITALL)-$(DOITALL)
-
-override HELPOUT			:= usage
-override HELPALL			:= help
-override CREATOR			:= docs
-override EXAMPLE			:= template
-
-override HEADERS			:= headers
-override WHOWHAT			:= whoami
-override SETTING			:= settings
-
-override MAKE_DB			:= .make_database
-override LISTING			:= .all_targets
-override NOTHING			:= .null
-
-override CONVICT			:= _commit
-override DISTRIB			:= _release
-override UPGRADE			:= _update
-
-override DEBUGIT			:= debug
-override TESTING			:= test
-override CHECKIT			:= check
-
-override CONFIGS			:= config
-override TARGETS			:= targets
-override INSTALL			:= install
-
-override DOITALL			:= all
-override CLEANER			:= clean
-override SUBDIRS			:= subdirs
-override PRINTER			:= print
-
-#WORKING:NOW replace HELP-* / EXAMPLE-* with $(CREATOR)_*, and re-sort the file...
-
-#> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
-#> grep -E "[)]-[a-z]+" Makefile
-override COMPOSER_RESERVED := \
-	$(COMPOSER_CREATE) \
-	$(COMPOSER_PANDOC) \
-	\
-	$(HELPOUT) \
-	$(HELPALL) \
-	$(CREATOR) \
-	$(EXAMPLE) \
-	HELP \
-	EXAMPLE \
-	\
-	$(HEADERS) \
-	$(WHOWHAT) \
-	$(SETTING) \
-	\
-	$(MAKE_DB) \
-	$(LISTING) \
-	$(NOTHING) \
-	\
-	$(CONVICT) \
-	$(DISTRIB) \
-	$(UPGRADE) \
-	\
-	$(DEBUGIT) \
-	$(TESTING) \
-	$(CHECKIT) \
-	\
-	$(CONFIGS) \
-	$(TARGETS) \
-	$(INSTALL) \
-	\
-	$(CLEANER) \
-	$(DOITALL) \
-	$(SUBDIRS) \
-	$(PRINTER) \
-
-########################################
-
-#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-ifeq ($(notdir $(COMPOSER_ROOT)),$(notdir $(TESTING_DIR)))
-override TESTING_DIR			:= $(COMPOSER_ROOT)
-endif
-ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
-override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
-endif
-
-#> update: COMPOSER_TARGETS.*=
-#> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
-#> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
-ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
-ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(CLEANER)-$(TARGETS)-only
-endif
-endif
-
-#> update: $(TESTING)-$(COMPOSER_BASENAME)
-ifeq ($(notdir $(TESTING_DIR)),$(notdir $(CURDIR)))
-ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
-override COMPOSER_SUBDIRS		:=
-endif
-endif
-
-########################################
-
-#> update: COMPOSER_OPTIONS
-
-override COMPOSER_EXPORTED := \
-	MAKEJOBS \
-	COMPOSER_DOCOLOR \
-	COMPOSER_DEBUGIT \
-	COMPOSER_INCLUDE \
-	COMPOSER_DEPENDS \
-	COMPOSER_STAMP \
-	COMPOSER_EXT \
-	TYPE \
-	CSS \
-	TTL \
-	TOC \
-	LVL \
-	MGN \
-	FNT \
-	OPT \
-
-override COMPOSER_EXPORTED_NOT := \
-	COMPOSER_TARGETS \
-	COMPOSER_SUBDIRS \
-	COMPOSER_IGNORES \
-	BASE \
-	LIST \
-
-#> update: $(MAKE)
-override MAKE_RECURSIVE			= $(MAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-override RUNMAKE			:= $(RUNMAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-$(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
-$(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
-
-override COMPOSER_OPTIONS		:= $(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER))
-$(foreach FILE,$(COMPOSER_OPTIONS),\
-	$(if $(or \
-		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
-		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
-	),,$(error COMPOSER_OPTIONS: $(FILE))) \
-)
-
-########################################
-
-#> update: $(MAKE)
-override define COMPOSER_RESERVED_SPECIAL_TARGETS =
-.PHONY: $(1)s
-$(1)s: .set_title-$(1)s
-	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"),\
-		$$(call $(HEADERS)); \
-		$$(MAKE)$$(foreach FILE,$(COMPOSER_EXPORTED), $$(FILE)="$$($$(FILE))") $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"); \
-		,$(ECHO) ""; \
-	)
-.PHONY: $(1)s-clean
-$(1)s-clean:
-	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp"),\
-		$$(RM) $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|$$(CURDIR)/\1|gp"); \
-		,$(ECHO) ""; \
-	)
-ifeq ($(COMPOSER_DIR),$(CURDIR))
-$(1)-$(COMPOSER_BASENAME)-$(1).$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)): \
-	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
-	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
-endif
-endef
-
-$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
-)
-
-################################################################################
 # {{{1 Pandoc Options ----------------------------------------------------------
 ################################################################################
 
@@ -1038,7 +700,7 @@ endif
 
 ########################################
 
-override _COL				:= $(NUMCOLUMN)
+override _COL				:= $(COLUMNS)
 override _CSS_ALT			:= css_alt
 
 ifeq ($(_CSS),)
@@ -1249,7 +911,720 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 # override SITE_SOCIAL_LINK		:= $(foreach FILE,googleplus facebook linkedin twitter github,<% if (theme.url_$(FILE)){ %><a id=\"nav-$(FILE)-link\" class=\"nav-icon\" href=\"<%- theme.url_$(FILE) %>\" target=\"_blank\"></a><% } %>)
 
 ################################################################################
+# {{{1 Composer Operation ------------------------------------------------------
+################################################################################
+
+override COMPOSER_CREATE		:= compose
+override COMPOSER_PANDOC		:= pandoc
+
+#> update: $(MAKE)
+override MAKE_RECURSIVE			= $(MAKE)
+override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC)
+
+########################################
+
+override ~				:= "'$$'"
+override COMPOSER_MY_PATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
+override COMPOSER_TEACHER		:= $(~)(abspath $(~)(dir $(~)(COMPOSER_MY_PATH)))/$(MAKEFILE)
+
+override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
+override COMPOSER_REGEX_PREFIX		:= [_.]
+
+########################################
+# {{{2 TARGETS -------------------------
+
+#> update: $(DEBUGIT): targets list
+#> update: $(TESTING): targets list
+
+#> update: PHONY.*$(DOITALL)
+#	$(CONVICT)-$(DOITALL)
+#	$(UPGRADE)-$(DOITALL)
+#	$(CHECKIT)-$(DOITALL)
+#	$(INSTALL)-$(DOITALL)
+#	$(CLEANER)-$(DOITALL)
+#	$(DOITALL)-$(DOITALL)
+
+override HELPOUT			:= usage
+override HELPALL			:= help
+override CREATOR			:= docs
+override EXAMPLE			:= template
+
+override HEADERS			:= headers
+override WHOWHAT			:= whoami
+override SETTING			:= settings
+
+override MAKE_DB			:= .make_database
+override LISTING			:= .all_targets
+override NOTHING			:= .null
+
+override CONVICT			:= _commit
+override DISTRIB			:= _release
+override UPGRADE			:= _update
+
+override DEBUGIT			:= debug
+override TESTING			:= test
+override CHECKIT			:= check
+
+override CONFIGS			:= config
+override TARGETS			:= targets
+override INSTALL			:= install
+
+override DOITALL			:= all
+override CLEANER			:= clean
+override SUBDIRS			:= subdirs
+override PRINTER			:= print
+
+#WORKING:NOW replace HELP-* / EXAMPLE-* with $(CREATOR)_*, and re-sort the file...
+
+#> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
+#> grep -E "[)]-[a-z]+" Makefile
+override COMPOSER_RESERVED := \
+	$(COMPOSER_CREATE) \
+	$(COMPOSER_PANDOC) \
+	\
+	$(HELPOUT) \
+	$(HELPALL) \
+	$(CREATOR) \
+	$(EXAMPLE) \
+	HELP \
+	EXAMPLE \
+	\
+	$(HEADERS) \
+	$(WHOWHAT) \
+	$(SETTING) \
+	\
+	$(MAKE_DB) \
+	$(LISTING) \
+	$(NOTHING) \
+	\
+	$(CONVICT) \
+	$(DISTRIB) \
+	$(UPGRADE) \
+	\
+	$(DEBUGIT) \
+	$(TESTING) \
+	$(CHECKIT) \
+	\
+	$(CONFIGS) \
+	$(TARGETS) \
+	$(INSTALL) \
+	\
+	$(CLEANER) \
+	$(DOITALL) \
+	$(SUBDIRS) \
+	$(PRINTER) \
+
+########################################
+# {{{2 FILESYSTEM ----------------------
+
+#> update: COMPOSER_TARGETS.*=
+#> update: COMPOSER_SUBDIRS.*=
+
+override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
+override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
+override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
+
+#WORKING:NOW we need EXTENSION, not TYPE, but it is not until later! also fix in DO_BOOK?
+ifeq ($(COMPOSER_TARGETS),)
+ifneq ($(COMPOSER_DIR),$(CURDIR))
+ifneq ($(COMPOSER_EXT),)
+override COMPOSER_TARGETS		:= $(patsubst %$(COMPOSER_EXT),%.$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
+else
+override COMPOSER_TARGETS		:= $(addsuffix .$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(filter-out %.$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(COMPOSER_CONTENTS_FILES)))
+endif
+endif
+endif
+
+#> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
+#> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(CLEANER)-$(TARGETS)-only
+endif
+endif
+
+ifeq ($(COMPOSER_SUBDIRS),)
+ifneq ($(COMPOSER_DIR),$(CURDIR))
+#>override COMPOSER_SUBDIRS		:= $(subst /$(MAKEFILE),,$(wildcard $(addsuffix /$(MAKEFILE),$(COMPOSER_CONTENTS_DIRS))))
+override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
+endif
+endif
+
+override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
+override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
+
+########################################
+
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+ifeq ($(notdir $(COMPOSER_ROOT)),$(notdir $(TESTING_DIR)))
+override TESTING_DIR			:= $(COMPOSER_ROOT)
+endif
+ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
+override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
+endif
+
+#> update: $(TESTING)-$(COMPOSER_BASENAME)
+ifeq ($(notdir $(TESTING_DIR)),$(notdir $(CURDIR)))
+ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
+override COMPOSER_SUBDIRS		:=
+endif
+endif
+
+########################################
+# {{{2 OPTIONS -------------------------
+
+#> update: COMPOSER_OPTIONS
+
+override COMPOSER_EXPORTED := \
+	MAKEJOBS \
+	COMPOSER_DOCOLOR \
+	COMPOSER_DEBUGIT \
+	COMPOSER_INCLUDE \
+	COMPOSER_DEPENDS \
+	COMPOSER_STAMP \
+	COMPOSER_EXT \
+	TYPE \
+	CSS \
+	TTL \
+	TOC \
+	LVL \
+	MGN \
+	FNT \
+	OPT \
+
+override COMPOSER_EXPORTED_NOT := \
+	COMPOSER_TARGETS \
+	COMPOSER_SUBDIRS \
+	COMPOSER_IGNORES \
+	BASE \
+	LIST \
+
+#> update: $(MAKE)
+override MAKE_RECURSIVE			= $(MAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+override RUNMAKE			:= $(RUNMAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+$(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
+
+override COMPOSER_OPTIONS		:= $(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER))
+$(foreach FILE,$(COMPOSER_OPTIONS),\
+	$(if $(or \
+		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
+		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
+	),,$(error COMPOSER_OPTIONS: $(FILE))) \
+)
+
+########################################
+# {{{2 SPECIALS ------------------------
+
+override DO_BOOK			:= book
+override DO_POST			:= post
+
+override COMPOSER_RESERVED_SPECIAL := \
+	$(DO_BOOK) \
+	$(DO_POST) \
+
+########################################
+
+#> update: $(MAKE)
+override define COMPOSER_RESERVED_SPECIAL_TARGETS =
+.PHONY: $(1)s
+$(1)s: .set_title-$(1)s
+	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"),\
+		$$(call $(HEADERS)); \
+		$$(MAKE)$$(foreach FILE,$(COMPOSER_EXPORTED), $$(FILE)="$$($$(FILE))") $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"); \
+		,$(ECHO) ""; \
+	)
+.PHONY: $(1)s-clean
+$(1)s-clean:
+	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp"),\
+		$$(RM) $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|$$(CURDIR)/\1|gp"); \
+		,$(ECHO) ""; \
+	)
+ifeq ($(COMPOSER_DIR),$(CURDIR))
+$(1)-$(COMPOSER_BASENAME)-$(1).$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)): \
+	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
+	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
+endif
+endef
+
+$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
+	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
+)
+
+########################################
+# {{{2 UNAME ---------------------------
+
+override OS_UNAME			:= $(shell uname --all 2>/dev/null)
+override OS_TYPE			:=
+ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Linux
+else ifneq ($(subst Windows,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Windows
+else ifneq ($(subst Darwin,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Darwin
+endif
+
+################################################################################
 # }}}1
+################################################################################
+# {{{1 Documentation -----------------------------------------------------------
+################################################################################
+
+########################################
+# {{{2 $(HELPOUT) $(HELPALL) -----------
+
+.PHONY: $(HELPOUT)
+ifeq ($(MAKECMDGOALS),)
+.NOTPARALLEL:
+endif
+ifneq ($(MAKECMDGOALS),$(filter-out $(HELPOUT),$(MAKECMDGOALS)))
+.NOTPARALLEL:
+endif
+$(HELPOUT): \
+	HELP-TITLE_Usage \
+	HELP-USAGE \
+	HELP-VARIABLES_FORMAT_1 \
+	HELP-TARGETS_MAIN_1 \
+	HELP-COMMANDS_1 \
+	HELP-FOOTER
+
+#WORKING
+#	HELP-TITLE_Help \
+#	HELP-USAGE \
+#	HELP-VARIABLES_TITLE_1 \
+#	HELP-VARIABLES_FORMAT_2 \
+
+.PHONY: $(HELPALL)
+ifneq ($(MAKECMDGOALS),$(filter-out $(HELPALL),$(MAKECMDGOALS)))
+.NOTPARALLEL:
+endif
+$(HELPALL): \
+	HELP-VARIABLES_CONTROL_2 \
+	HELP-TARGETS_TITLE_1 \
+	HELP-TARGETS_MAIN_2 \
+	HELP-TARGETS_ADDITIONAL_2 \
+	HELP-TARGETS_SUBTARGET_2 \
+
+#WORKING
+#	HELP-COMMANDS_1 \
+#	EXAMPLE-MAKEFILES \
+#	HELP-SYSTEM \
+#	EXAMPLE-MAKEFILE \
+#	HELP-FOOTER
+
+#>.PHONY: HELP-TITLE_%
+HELP-TITLE_%:
+	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
+
+.PHONY: HELP-USAGE
+HELP-USAGE:
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(MAKE)$(_D) $(_M)[variables]$(_D) $(_C)$(COMPOSER_CREATE)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(MAKE)$(_D) $(_M)[variables] <filename>.<extension>"
+
+.PHONY: HELP-FOOTER
+HELP-FOOTER:
+	@$(ENDOLINE)
+	@$(LINERULE)
+	@$(PRINT) "*$(_H)Happy Making!$(_D)*"
+
+########################################
+# {{{3 HELP-VARIABLES ------------------
+
+#>.PHONY: HELP-VARIABLES_TITLE_%
+HELP-VARIABLES_TITLE_%:
+	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,$(HEAD_MAIN))
+
+#> update: TYPE_TARGETS
+#>.PHONY: HELP-VARIABLES_FORMAT_%
+HELP-VARIABLES_FORMAT_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
+	@$(TABLE_M3) "$(_H)Variable"				"$(_H)Purpose"				"$(_H)Value"
+	@$(TABLE_M3) ":---"					":---"					":---"
+	@$(TABLE_M3) "$(_C)TYPE $(_E)(T, c_type)"		"Desired output format"			"$(_M)$(TYPE)"
+	@$(TABLE_M3) "$(_C)BASE $(_E)(B, c_base)"		"Base of output file"			"$(_M)$(BASE)"
+	@$(TABLE_M3) "$(_C)LIST $(_E)(L, c_list)"		"List of input files(s)"		"$(_M)$(LIST)"
+	@$(TABLE_M3) "$(_C)CSS $(_E)(s, c_css)"			"Location of CSS file"			"$(if $(CSS),$(_M)$(CSS)$(_D) )$(_N)($(COMPOSER_CSS))"
+	@$(TABLE_M3) "$(_C)TTL $(_E)(t, c_title)"		"Document title prefix"			"$(_M)$(TTL)"
+	@$(TABLE_M3) "$(_C)TOC $(_E)(c, c_contents)"		"Table of contents depth"		"$(_M)$(TOC)"
+	@$(TABLE_M3) "$(_C)LVL $(_E)(l, c_level)"		"Chapter/slide header level"		"$(_M)$(LVL)"
+	@$(TABLE_M3) "$(_C)MGN $(_E)(m, c_margin)"		"Margin size [$(_C)$(TYPE_LPDF)$(_D)]"	"$(_M)$(MGN)"
+	@$(TABLE_M3) "$(_C)FNT $(_E)(f, c_font)"		"Font size [$(_C)$(TYPE_HTML)$(_D) $(_E)&$(_D) $(_C)$(TYPE_LPDF)$(_D)]" \
+													"$(_M)$(FNT)"
+	@$(TABLE_M3) "$(_C)OPT $(_E)(o, c_options)"		"Custom Pandoc options"			"$(_M)$(OPT)"
+	@$(ENDOLINE)
+	@$(TABLE_M3) "$(_H)Defined $(_C)TYPE$(_H) Values"	"$(_H)Format"				"$(_H)Extension"
+	@$(TABLE_M3) ":---"					":---"					":---"
+	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"			"$(DESC_HTML)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
+	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"			"$(DESC_LPDF)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
+	@$(TABLE_M3) "$(_C)$(TYPE_EPUB)"			"$(DESC_EPUB)"				"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
+	@$(TABLE_M3) "$(_C)$(TYPE_PRES)"			"$(DESC_PRES)"				"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
+	@$(TABLE_M3) "$(_C)$(TYPE_DOCX)"			"$(DESC_DOCX)"				"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
+	@$(TABLE_M3) "$(_C)$(TYPE_PPTX)"			"$(DESC_PPTX)"				"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
+	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"			"$(DESC_TEXT)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
+	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"			"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
+	@$(ENDOLINE)
+	@$(PRINT) "  * *Other $(_C)TYPE$(_D) values will be passed directly to Pandoc*"
+
+#>.PHONY: HELP-VARIABLES_CONTROL_%
+HELP-VARIABLES_CONTROL_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
+	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
+	@$(TABLE_M3) ":---"			":---"						":---"
+	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )$(_E)(makejobs)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )$(_E)(debugit)"
+	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
+	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
+	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"		"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore list: $(_C)$(DOITALL)$(_D) $(_E)&$(_D) $(_C)$(SUBDIRS)" \
+												"$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
+	@$(ENDOLINE)
+	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~= $(_E)(C, c_color)$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
+	@$(PRINT) "  * *$(_E)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
+	@$(PRINT) "  * *$(_E)(debugit)$(_D) = empty value disables / any value enables / ! is full tracing*"
+	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
+
+########################################
+# {{{3 HELP-TARGETS --------------------
+
+#>.PHONY: HELP-TARGETS_TITLE_%
+HELP-TARGETS_TITLE_%:
+	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
+
+#WORKING:NOW
+
+#>.PHONY: HELP-TARGETS_MAIN_%
+HELP-TARGETS_MAIN_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
+	@$(TABLE_M2) "$(_H)Target"		"$(_H)Purpose"
+	@$(TABLE_M2) ":---"			":---"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"		"Basic help output $(_N)(default)"
+	@$(TABLE_M2) "$(_C)$(HELPALL)"		"Complete help output"
+#WORK	$(CREATOR)
+	@$(TABLE_M2) "$(_C)$(EXAMPLE)"		"Print settings template: $(_C)$(COMPOSER_SETTINGS)"
+#WORK	[.]$(EXAMPLE)*
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"	"Document creation $(_N)(see: $(_C)usage$(_N))"
+#WORK	$(COMPOSER_PANDOC)
+	@$(TABLE_M2) "$(_C)$(INSTALL)"		"Recursive directory initialization: $(_C)$(MAKEFILE)"
+	@$(TABLE_M2) "$(_C)$(CLEANER)"		"Remove output files: $(_C)COMPOSER_TARGETS$(_D) $(_E)$(DIVIDE)$(_D) $(_N)*$(_C)-$(CLEANER)"
+#WORK not recursive
+	@$(TABLE_M2) "$(_C)$(DOITALL)"		"Recursive run of directory tree: $(_C)$(MAKEFILE)"
+#WORK these change!
+	@$(TABLE_M2) "$(_C)$(PRINTER)"		"List updated files: $(_N)*$(_C)$(COMPOSER_EXT)$(_D) $(_E)$(MARKER)$(_D) $(_C)$(COMPOSER_STAMP)"
+
+#>.PHONY: HELP-TARGETS_ADDITIONAL_%
+HELP-TARGETS_ADDITIONAL_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
+#WORKING
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)"		"Runs several key sub-targets and commands, to provide all helpful information in one place"
+	@$(TABLE_M2) "$(_C)$(TARGETS)"		"Parse for all potential targets (for verification and/or troubleshooting): $(_C)$(MAKEFILE)"
+	@$(TABLE_M2) "$(_C)$(TESTING)"		"Build example/test directory using all features and test/validate success"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
+
+#WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
+
+#>.PHONY: HELP-TARGETS_SUBTARGET_%
+HELP-TARGETS_SUBTARGET_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Target Dependencies); fi
+	@$(PRINT) "These are all the rest of the sub-targets used by the main targets above:"
+	@$(ENDOLINE)
+	@$(TABLE_M3) "$(_H)Dynamic"		"-"						"-"
+	@$(TABLE_M3) ":---"			":---"						":---"
+	@$(TABLE_M3) "$(_C)$(CLEANER)"		"$(_E)$(~)(COMPOSER_TARGETS)-$(CLEANER)"	"$(_M)$(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))"
+	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(~)(COMPOSER_TARGETS)"			"$(_M)$(COMPOSER_TARGETS)"
+	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(~)(COMPOSER_IGNORES)"			"$(_M)$(COMPOSER_IGNORES)"
+	@$(TABLE_M3) "$(_C)$(SUBDIRS)"		"$(_E)$(~)(COMPOSER_SUBDIRS)"			"$(_M)$(COMPOSER_SUBDIRS)"
+	@$(TABLE_M3) "$(_C)$(SUBDIRS)"		"$(_E)$(~)(COMPOSER_IGNORES)"			"$(_M)$(COMPOSER_IGNORES)"
+	@$(ENDOLINE)
+	@$(TABLE_M3) "$(_H)Hidden"		"-"						"-"
+	@$(TABLE_M3) ":---"			":---"						":---"
+	@$(TABLE_M3) "$(_C)$(_N)%"		"$(_E).set_title-$(_N)*"			"Set window title to current target using escape sequence"
+	@$(TABLE_M3) "$(_C)$(DEBUGIT)"		"$(_E)$(MAKE_DB)"				"Output internal Make database, based on current: $(_C)$(MAKEFILE)"
+	@$(TABLE_M3) "$(_C)$(TARGETS)"		"$(_E)$(LISTING)"				"Dynamically parse and print all potential targets"
+	@$(TABLE_M3) "$(_C)$(EXAMPLE)"		"$(_E).$(EXAMPLE){-$(INSTALL)}"			"Prints raw template, with escape sequences"
+	@$(ENDOLINE)
+	@$(TABLE_M3) "$(_H)Static"		"-"						"-"
+	@$(TABLE_M3) ":---"			":---"						":---"
+	@$(TABLE_M3) "$(_C)$(COMPOSER_CREATE)"	"$(_E)$(COMPOSER_PANDOC)"			"Wrapper target which calls Pandoc directly"
+	@$(TABLE_M3) "$(_E)$(COMPOSER_PANDOC)"	"$(_E)$(SETTING)-$(_N)%"			"Prints marker and variable values, for readability"
+	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(WHOWHAT)-$(_N)%"			"Prints marker and variable values, for readability"
+	@$(TABLE_M3) ""				"$(_E)$(SUBDIRS)"				"Aggregates/runs the targets: $(_C)COMPOSER_SUBDIRS"
+	@$(ENDOLINE)
+	@$(PRINT) "These do not need to be used directly during normal use, and are only documented for completeness."
+	@$(ENDOLINE)
+
+########################################
+# {{{3 HELP-* --------------------------
+
+#>.PHONY: HELP-COMMANDS_%
+HELP-COMMANDS_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
+#WORK clean up HELP-COMMANDS section
+#WORK add "make all COMPOSER_TARGETS=[...]" example
+	@$(TABLE_C2) "$(_E)Have the system do all the work:"
+	@$(ENDOLINE)
+	@$(PRINT) "$(CODEBLOCK)$(_M)make $(BASE).$(EXTENSION)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)Be clear about what is wanted (or, for multiple or differently named input files):"
+	@$(ENDOLINE)
+	@$(PRINT) "$(CODEBLOCK)$(_M)make compose TYPE=\"$(TYPE)\" BASE=\"$(EXAMPLE_OUT)\" LIST=\"$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)\""
+
+.PHONY: HELP-SYSTEM
+HELP-SYSTEM: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
+HELP-SYSTEM:
+	@$(HEADER_L)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)Completely recursive build system:"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)The top-level '$(MAKEFILE)' is the only one which needs a direct reference:"
+	@$(TABLE_C2) "$(_N)(NOTE: This must be an absolute path.)"
+	@$(PRINT) "include $(COMPOSER)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)All sub-directories then each start with:"
+	@$(PRINT) "override $(_C)COMPOSER_MY_PATH$(_D) := $(_C)$(COMPOSER_MY_PATH)"
+	@$(PRINT) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(COMPOSER_TEACHER)"
+	@$(PRINT) "override $(_C)COMPOSER_SUBDIRS$(_D) ?="
+	@$(PRINT) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)And end with:"
+	@$(PRINT) "include $(_C)$(~)(COMPOSER_TEACHER)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)Back in the top-level '$(MAKEFILE)', and in all sub-'$(MAKEFILE)' instances which recurse further down:"
+	@$(PRINT) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
+	@$(PRINT) "include [...]"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)Create a new '$(MAKEFILE)' using a helpful template:"
+	@$(PRINT) "$(_M)$(~)(RUNMAKE) COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_E)Or, recursively initialize the current directory tree:"
+	@$(TABLE_C2) "$(_N)(NOTE: This is a non-destructive operation.)"
+	@$(PRINT) "$(_M)$(~)(RUNMAKE) $(INSTALL)"
+	@$(ENDOLINE)
+
+########################################
+# {{{3 EXAMPLE-* -----------------------
+
+.PHONY: EXAMPLE-MAKEFILES
+EXAMPLE-MAKEFILES: \
+	EXAMPLE-MAKEFILES_HEADER \
+	EXAMPLE-MAKEFILE_1 \
+	EXAMPLE-MAKEFILE_2 \
+	EXAMPLE-MAKEFILES_FOOTER
+
+.PHONY: EXAMPLE-MAKEFILE
+EXAMPLE-MAKEFILE: \
+	EXAMPLE-MAKEFILE_HEADER \
+	EXAMPLE-MAKEFILE_FULL \
+	EXAMPLE-MAKEFILE_TEMPLATE
+
+########################################
+# {{{3 EXAMPLE-MAKEFILES ---------------
+
+.PHONY: EXAMPLE-MAKEFILES_HEADER
+EXAMPLE-MAKEFILES_HEADER:
+	@$(HEADER_L)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)Calling from children '$(MAKEFILE)' files:"
+	@$(ENDOLINE)
+
+.PHONY: EXAMPLE-MAKEFILE_1
+EXAMPLE-MAKEFILE_1:
+	@$(TABLE_C2) "$(_E)Simple, with filename targets and \"automagic\" detection of them:"
+	@$(TABLE_C2) "$(_S)include $(COMPOSER)"
+	@$(PRINT) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_OUT)"
+	@$(PRINT) "$(_C)$(BASE)$(_D): $(_N)# so \"$(CLEANER)\" will catch the below files"
+	@$(PRINT) "$(_C)$(EXAMPLE_OUT)$(_D): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
+	@$(PRINT) "$(_C)$(EXAMPLE_TWO).$(EXTENSION)$(_D):"
+	@$(ENDOLINE)
+
+.PHONY: EXAMPLE-MAKEFILE_2
+EXAMPLE-MAKEFILE_2:
+	@$(TABLE_C2) "$(_E)Advanced, with manual enumeration of user-defined targets and per-target variables:"
+	@$(PRINT) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE) $(EXAMPLE_OUT) $(EXAMPLE_TWO).$(EXTENSION)"
+	@$(TABLE_C2) "$(_S)include $(COMPOSER)"
+	@$(PRINT) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_OUT)"
+	@$(PRINT) "$(_C)$(BASE)$(_D): export TOC := 1"
+	@$(PRINT) "$(_C)$(BASE)$(_D): $(BASE).$(EXTENSION)"
+	@$(PRINT) "$(_C)$(EXAMPLE_OUT)$(_D): $(BASE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)"
+	@$(PRINT) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUT)\" TYPE=\"$(TYPE_HTML)\""
+	@$(PRINT) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUT)\" TYPE=\"$(TYPE_LPDF)\""
+	@$(PRINT) "$(_C)$(EXAMPLE_OUT)-$(CLEANER)$(_D):"
+	@$(PRINT) "	$(~)(RM) $(EXAMPLE_OUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
+	@$(ECHO) "#WORK document this version of '$(CLEANER)'?\n"
+	@$(ECHO) "#WORK 2017-07-31 : nope, this should be $(CLEANER): $(notdir $(COMPOSER_OUT))-clean, and skip the TYPE business\n"
+	@$(ECHO) "#WORK make $(RELEASE)-debug\n"
+	@$(PRINT) "$(_C)$(CLEANER)$(_D): COMPOSER_TARGETS += $(notdir $(COMPOSER_OUT))"
+	@$(PRINT) "$(_C)$(CLEANER)$(_D): TYPE := latex"
+	@$(PRINT) "$(_C)$(notdir $(COMPOSER_OUT)):"
+	@$(PRINT) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(COMPOSER_OUT)).\"* ./"
+	@$(ENDOLINE)
+
+.PHONY: EXAMPLE-MAKEFILES_FOOTER
+EXAMPLE-MAKEFILES_FOOTER:
+	@$(TABLE_C2) "$(_E)Then, from the command line:"
+	@$(PRINT) "$(_M)make $(CLEANER) && make $(DOITALL)"
+	@$(ENDOLINE)
+
+########################################
+# {{{3 EXAMPLE-MAKEFILE ----------------
+
+.PHONY: EXAMPLE-MAKEFILE_HEADER
+EXAMPLE-MAKEFILE_HEADER:
+	@$(HEADER_L)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)Finally, a completely recursive '$(MAKEFILE)' example:"
+	@$(ENDOLINE)
+
+.PHONY: EXAMPLE-MAKEFILE_FULL
+EXAMPLE-MAKEFILE_FULL: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
+EXAMPLE-MAKEFILE_FULL:
+	@$(TABLE_C2) "$(_H)$(MARKER) HEADERS"
+	@$(TABLE_C2) "$(_E)These two statements must be at the top of every file:"
+	@$(TABLE_C2) "$(_N)(NOTE: The 'COMPOSER_TEACHER' variable can be modified for custom chaining, but with care.)"
+	@$(PRINT) "override $(_C)COMPOSER_MY_PATH$(_D) := $(_C)$(COMPOSER_MY_PATH)"
+	@$(PRINT) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(COMPOSER_TEACHER)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_H)$(MARKER) DEFINITIONS"
+	@$(TABLE_C2) "$(_E)These statements are also required:"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Use '?=' declarations and define *before* the upstream 'include' statement"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* They pass their values *up* the '$(MAKEFILE)' chain"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Should always be defined, even if empty, to prevent downward propagation of values"
+	@$(TABLE_C2) "$(_N)(NOTE: List of '$(DOITALL)' targets is '$(COMPOSER_REGEX)' if '$(~)(COMPOSER_TARGETS)' is empty.)"
+	@$(PRINT) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE).$(EXTENSION) $(EXAMPLE_TWO).$(EXTENSION)"
+	@$(PRINT) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
+	@$(PRINT) "override $(_C)COMPOSER_DEPENDS$(_D) ?= $(_C)$(COMPOSER_DEPENDS)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_H)$(MARKER) VARIABLES"
+	@$(TABLE_C2) "$(_E)The option variables are not required, but are available for locally-scoped configuration:"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* For proper inheritance, use '?=' declarations and define *before* the upstream 'include' statement"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* They pass their values *down* the '$(MAKEFILE)' chain"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Do not need to be defined when empty, unless necessary to override upstream values"
+	@$(TABLE_C2) "$(_E)To disable inheritance and/or insulate from environment variables:"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Replace 'override VAR ?=' with 'override VAR :='"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Define *after* the upstream 'include' statement"
+	@$(TABLE_C2) "$(_N)(NOTE: Any settings here will apply to all children, unless 'override' is used downstream.)"
+	@$(TABLE_C2) ""
+	@$(TABLE_C2) "$(_E)Define the CSS template to use in this entire directory tree:"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Absolute path names should be used, so that children will be able to find it"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)$(CODEBLOCK)* The 'COMPOSER_MY_PATH' variable can be used to simplify this"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
+	@$(PRINT) "$(~)(eval override $(_C)CSS$(_D) ?= $(_C)$(~)(COMPOSER_MY_PATH)/$(COMPOSER_CSS)$(_D))"
+	@$(TABLE_C2) ""
+	@$(TABLE_C2) "$(_E)All the other optional variables can also be made global in this directory scope:"
+	@$(PRINT) "override $(_C)TTL$(_D) ?="
+	@$(PRINT) "override $(_C)TOC$(_D) ?= $(_C)2"
+	@$(PRINT) "override $(_C)LVL$(_D) ?= $(_C)$(LVL)"
+	@$(PRINT) "override $(_C)MGN$(_D) ?= $(_C)$(MGN)"
+	@$(PRINT) "override $(_C)FNT$(_D) ?= $(_C)$(FNT)"
+	@$(PRINT) "override $(_C)OPT$(_D) ?="
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_H)$(MARKER) INCLUDE"
+	@$(TABLE_C2) "$(_E)Necessary include statement:"
+	@$(TABLE_C2) "$(_N)(NOTE: This must be after all references to 'COMPOSER_MY_PATH' but before '.DEFAULT_GOAL'.)"
+	@$(PRINT) "include $(_C)$(~)(COMPOSER_TEACHER)"
+	@$(TABLE_C2) ""
+	@$(TABLE_C2) "$(_E)For recursion to work, a default target needs to be defined:"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Needs to be '$(DOITALL)' for directories which must recurse into sub-directories"
+	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* The '$(SUBDIRS)' target can be used manually, if desired, so this can be changed to another value"
+	@$(TABLE_C2) "$(_N)(NOTE: Recursion will cease if not '$(DOITALL)', unless '$(SUBDIRS)' target is called.)"
+	@$(PRINT) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_H)$(MARKER) RECURSION"
+	@$(TABLE_C2) "$(_E)Dependencies can be specified, if needed:"
+	@$(TABLE_C2) "$(_N)(NOTE: This defines the sub-directories which must be built before '$(firstword $(COMPOSER_SUBDIRS))'.)"
+	@$(TABLE_C2) "$(_N)(NOTE: For parent/child directory dependencies, set 'COMPOSER_DEPENDS' to a non-empty value.)"
+	@$(PRINT) "$(_C)$(firstword $(COMPOSER_SUBDIRS))$(_D): $(_C)$(wordlist 2,$(words $(COMPOSER_SUBDIRS)),$(COMPOSER_SUBDIRS))"
+	@$(ENDOLINE)
+	@$(TABLE_C2) "$(_H)$(MARKER) MAKEFILE"
+	@$(TABLE_C2) "$(_E)This is where the rest of the file should be defined."
+	@$(TABLE_C2) "$(_N)(NOTE: In this example, 'COMPOSER_TARGETS' is used completely in lieu of any explicit targets.)"
+	@$(ENDOLINE)
+
+.PHONY: EXAMPLE-MAKEFILE_TEMPLATE
+EXAMPLE-MAKEFILE_TEMPLATE:
+	@$(HEADER_L)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)With the current settings, the output of '$(EXAMPLE)' would be:"
+	@$(ENDOLINE)
+	@$(RUNMAKE) --silent .$(EXAMPLE)
+	@$(ENDOLINE)
+
+########################################
+# {{{2 $(CREATOR) ----------------------
+
+.PHONY: $(CREATOR)
+ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
+.NOTPARALLEL:
+endif
+$(CREATOR): .set_title-$(CREATOR)
+	@$(call $(HEADERS))
+	@$(MKDIR)						$(CURDIR)/$(notdir $(COMPOSER_ART))
+	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.ico
+	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.png
+	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/screenshot.png
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)		>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)	>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)		>$(CURDIR)/LICENSE$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)		>$(CURDIR)/README$(COMPOSER_EXT_DEFAULT)
+	@$(LS) \
+		$(CURDIR)/.gitignore \
+		$(CURDIR)/$(notdir $(COMPOSER_ART)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS)) \
+		$(CURDIR)/*$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+
+########################################
+# {{{2 $(EXAMPLE) ----------------------
+
+#> update: COMPOSER_OPTIONS
+
+.PHONY: $(EXAMPLE)
+$(EXAMPLE):
+	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)
+
+.PHONY: .$(EXAMPLE)-$(INSTALL)
+.$(EXAMPLE)-$(INSTALL):
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
+	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
+	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
+	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
+
+.PHONY: .$(EXAMPLE)
+.$(EXAMPLE):
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
+	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global)
+	@$(foreach FILE,$(COMPOSER_EXPORTED),\
+		$(call $(EXAMPLE)-var,1,$(FILE)); \
+	)
+	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
+	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Local)
+	@$(foreach FILE,$(COMPOSER_EXPORTED_NOT),\
+		$(call $(EXAMPLE)-var,1,$(FILE)); \
+	)
+	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
+	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Special)
+	@$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
+		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(EXTENSION)$(_D): $(_M)$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)); \
+	)
+
+override define $(EXAMPLE)-print =
+	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
+endef
+override define $(EXAMPLE)-var-static =
+	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
+endef
+override define $(EXAMPLE)-var =
+	$(call $(EXAMPLE)-print,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$($(2))))
+endef
+
 ################################################################################
 # {{{1 Embedded Files ----------------------------------------------------------
 ################################################################################
@@ -1729,465 +2104,91 @@ endef
 ################################################################################
 # }}}1
 ################################################################################
-# {{{1 Documentation -----------------------------------------------------------
-################################################################################
-
-########################################
-# {{{2 $(HELPOUT) $(HELPALL) -----------
-
-.PHONY: $(HELPOUT)
-ifeq ($(MAKECMDGOALS),)
-.NOTPARALLEL:
-endif
-ifneq ($(MAKECMDGOALS),$(filter-out $(HELPOUT),$(MAKECMDGOALS)))
-.NOTPARALLEL:
-endif
-$(HELPOUT): \
-	HELP-TITLE_Usage \
-	HELP-USAGE \
-	HELP-VARIABLES_FORMAT_1 \
-	HELP-TARGETS_MAIN_1 \
-	HELP-COMMANDS_1 \
-	HELP-FOOTER
-
-#WORKING
-#	HELP-TITLE_Help \
-#	HELP-USAGE \
-#	HELP-VARIABLES_TITLE_1 \
-#	HELP-VARIABLES_FORMAT_2 \
-
-.PHONY: $(HELPALL)
-ifneq ($(MAKECMDGOALS),$(filter-out $(HELPALL),$(MAKECMDGOALS)))
-.NOTPARALLEL:
-endif
-$(HELPALL): \
-	HELP-VARIABLES_CONTROL_2 \
-	HELP-TARGETS_TITLE_1 \
-	HELP-TARGETS_MAIN_2 \
-	HELP-TARGETS_ADDITIONAL_2 \
-	HELP-TARGETS_SUBTARGET_2 \
-
-#WORKING
-#	HELP-COMMANDS_1 \
-#	EXAMPLE-MAKEFILES \
-#	HELP-SYSTEM \
-#	EXAMPLE-MAKEFILE \
-#	HELP-FOOTER
-
-#>.PHONY: HELP-TITLE_%
-HELP-TITLE_%:
-	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
-
-.PHONY: HELP-USAGE
-HELP-USAGE:
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(MAKE)$(_D) $(_M)[variables]$(_D) $(_C)$(COMPOSER_CREATE)"
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(MAKE)$(_D) $(_M)[variables] <filename>.<extension>"
-
-.PHONY: HELP-FOOTER
-HELP-FOOTER:
-	@$(ENDOLINE)
-	@$(LINERULE)
-	@$(PRINT) "*$(_H)Happy Making!$(_D)*"
-
-########################################
-# {{{3 HELP-VARIABLES ------------------
-
-#>.PHONY: HELP-VARIABLES_TITLE_%
-HELP-VARIABLES_TITLE_%:
-	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,$(HEAD_MAIN))
-
-#> update: TYPE_TARGETS
-#>.PHONY: HELP-VARIABLES_FORMAT_%
-HELP-VARIABLES_FORMAT_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"				"$(_H)Purpose"				"$(_H)Value"
-	@$(TABLE_M3) ":---"					":---"					":---"
-	@$(TABLE_M3) "$(_C)TYPE $(_E)(T, c_type)"		"Desired output format"			"$(_M)$(TYPE)"
-	@$(TABLE_M3) "$(_C)BASE $(_E)(B, c_base)"		"Base of output file"			"$(_M)$(BASE)"
-	@$(TABLE_M3) "$(_C)LIST $(_E)(L, c_list)"		"List of input files(s)"		"$(_M)$(LIST)"
-	@$(TABLE_M3) "$(_C)CSS $(_E)(s, c_css)"			"Location of CSS file"			"$(if $(CSS),$(_M)$(CSS)$(_D) )$(_N)($(COMPOSER_CSS))"
-	@$(TABLE_M3) "$(_C)TTL $(_E)(t, c_title)"		"Document title prefix"			"$(_M)$(TTL)"
-	@$(TABLE_M3) "$(_C)TOC $(_E)(c, c_contents)"		"Table of contents depth"		"$(_M)$(TOC)"
-	@$(TABLE_M3) "$(_C)LVL $(_E)(l, c_level)"		"Chapter/slide header level"		"$(_M)$(LVL)"
-	@$(TABLE_M3) "$(_C)MGN $(_E)(m, c_margin)"		"Margin size [$(_C)$(TYPE_LPDF)$(_D)]"	"$(_M)$(MGN)"
-	@$(TABLE_M3) "$(_C)FNT $(_E)(f, c_font)"		"Font size [$(_C)$(TYPE_HTML)$(_D) $(_E)&$(_D) $(_C)$(TYPE_LPDF)$(_D)]" \
-													"$(_M)$(FNT)"
-	@$(TABLE_M3) "$(_C)OPT $(_E)(o, c_options)"		"Custom Pandoc options"			"$(_M)$(OPT)"
-	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Defined $(_C)TYPE$(_H) Values"	"$(_H)Format"				"$(_H)Extension"
-	@$(TABLE_M3) ":---"					":---"					":---"
-	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"			"$(DESC_HTML)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
-	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"			"$(DESC_LPDF)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
-	@$(TABLE_M3) "$(_C)$(TYPE_EPUB)"			"$(DESC_EPUB)"				"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
-	@$(TABLE_M3) "$(_C)$(TYPE_PRES)"			"$(DESC_PRES)"				"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
-	@$(TABLE_M3) "$(_C)$(TYPE_DOCX)"			"$(DESC_DOCX)"				"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
-	@$(TABLE_M3) "$(_C)$(TYPE_PPTX)"			"$(DESC_PPTX)"				"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
-	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"			"$(DESC_TEXT)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
-	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"			"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
-	@$(ENDOLINE)
-	@$(PRINT) "  * *Other $(_C)TYPE$(_D) values will be passed directly to Pandoc*"
-
-#>.PHONY: HELP-VARIABLES_CONTROL_%
-HELP-VARIABLES_CONTROL_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
-	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )$(_E)(makejobs)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )$(_E)(debugit)"
-	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: $(_C)$(COMPOSER_SETTINGS)"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
-	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
-	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"		"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore list: $(_C)$(DOITALL)$(_D) $(_E)&$(_D) $(_C)$(SUBDIRS)" \
-												"$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
-	@$(ENDOLINE)
-	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~= $(_E)(C, c_color)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
-	@$(PRINT) "  * *$(_E)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
-	@$(PRINT) "  * *$(_E)(debugit)$(_D) = empty value disables / any value enables / ! is full tracing*"
-	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
-
-########################################
-# {{{3 HELP-TARGETS --------------------
-
-#>.PHONY: HELP-TARGETS_TITLE_%
-HELP-TARGETS_TITLE_%:
-	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
-
-#WORKING:NOW
-
-#>.PHONY: HELP-TARGETS_MAIN_%
-HELP-TARGETS_MAIN_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
-	@$(TABLE_M2) "$(_H)Target"		"$(_H)Purpose"
-	@$(TABLE_M2) ":---"			":---"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)"		"Basic help output $(_N)(default)"
-	@$(TABLE_M2) "$(_C)$(HELPALL)"		"Complete help output"
-#WORK	$(CREATOR)
-	@$(TABLE_M2) "$(_C)$(EXAMPLE)"		"Print settings template: $(_C)$(COMPOSER_SETTINGS)"
-#WORK	[.]$(EXAMPLE)*
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"	"Document creation $(_N)(see: $(_C)usage$(_N))"
-#WORK	$(COMPOSER_PANDOC)
-	@$(TABLE_M2) "$(_C)$(INSTALL)"		"Recursive directory initialization: $(_C)$(MAKEFILE)"
-	@$(TABLE_M2) "$(_C)$(CLEANER)"		"Remove output files: $(_C)COMPOSER_TARGETS$(_D) $(_E)$(DIVIDE)$(_D) $(_N)*$(_C)-$(CLEANER)"
-#WORK not recursive
-	@$(TABLE_M2) "$(_C)$(DOITALL)"		"Recursive run of directory tree: $(_C)$(MAKEFILE)"
-#WORK these change!
-	@$(TABLE_M2) "$(_C)$(PRINTER)"		"List updated files: $(_N)*$(_C)$(COMPOSER_EXT)$(_D) $(_E)$(MARKER)$(_D) $(_C)$(COMPOSER_STAMP)"
-
-#>.PHONY: HELP-TARGETS_ADDITIONAL_%
-HELP-TARGETS_ADDITIONAL_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
-#WORKING
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)"		"Runs several key sub-targets and commands, to provide all helpful information in one place"
-	@$(TABLE_M2) "$(_C)$(TARGETS)"		"Parse for all potential targets (for verification and/or troubleshooting): $(_C)$(MAKEFILE)"
-	@$(TABLE_M2) "$(_C)$(TESTING)"		"Build example/test directory using all features and test/validate success"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)"		"Download/update all 3rd party components (need to do this at least once)"
-
-#WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
-
-#>.PHONY: HELP-TARGETS_SUBTARGET_%
-HELP-TARGETS_SUBTARGET_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Target Dependencies); fi
-	@$(PRINT) "These are all the rest of the sub-targets used by the main targets above:"
-	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Dynamic"		"-"						"-"
-	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)$(CLEANER)"		"$(_E)$(~)(COMPOSER_TARGETS)-$(CLEANER)"	"$(_M)$(addsuffix -$(CLEANER),$(COMPOSER_TARGETS))"
-	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(~)(COMPOSER_TARGETS)"			"$(_M)$(COMPOSER_TARGETS)"
-	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(~)(COMPOSER_IGNORES)"			"$(_M)$(COMPOSER_IGNORES)"
-	@$(TABLE_M3) "$(_C)$(SUBDIRS)"		"$(_E)$(~)(COMPOSER_SUBDIRS)"			"$(_M)$(COMPOSER_SUBDIRS)"
-	@$(TABLE_M3) "$(_C)$(SUBDIRS)"		"$(_E)$(~)(COMPOSER_IGNORES)"			"$(_M)$(COMPOSER_IGNORES)"
-	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Hidden"		"-"						"-"
-	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)$(_N)%"		"$(_E).set_title-$(_N)*"			"Set window title to current target using escape sequence"
-	@$(TABLE_M3) "$(_C)$(DEBUGIT)"		"$(_E)$(MAKE_DB)"				"Output internal Make database, based on current: $(_C)$(MAKEFILE)"
-	@$(TABLE_M3) "$(_C)$(TARGETS)"		"$(_E)$(LISTING)"				"Dynamically parse and print all potential targets"
-	@$(TABLE_M3) "$(_C)$(EXAMPLE)"		"$(_E).$(EXAMPLE){-$(INSTALL)}"			"Prints raw template, with escape sequences"
-	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Static"		"-"						"-"
-	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)$(COMPOSER_CREATE)"	"$(_E)$(COMPOSER_PANDOC)"			"Wrapper target which calls Pandoc directly"
-	@$(TABLE_M3) "$(_E)$(COMPOSER_PANDOC)"	"$(_E)$(SETTING)-$(_N)%"			"Prints marker and variable values, for readability"
-	@$(TABLE_M3) "$(_C)$(DOITALL)"		"$(_E)$(WHOWHAT)-$(_N)%"			"Prints marker and variable values, for readability"
-	@$(TABLE_M3) ""				"$(_E)$(SUBDIRS)"				"Aggregates/runs the targets: $(_C)COMPOSER_SUBDIRS"
-	@$(ENDOLINE)
-	@$(PRINT) "These do not need to be used directly during normal use, and are only documented for completeness."
-	@$(ENDOLINE)
-
-########################################
-# {{{3 HELP-* --------------------------
-
-#>.PHONY: HELP-COMMANDS_%
-HELP-COMMANDS_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
-#WORK clean up HELP-COMMANDS section
-#WORK add "make all COMPOSER_TARGETS=[...]" example
-	@$(TABLE_C2) "$(_E)Have the system do all the work:"
-	@$(ENDOLINE)
-	@$(PRINT) "$(CODEBLOCK)$(_M)make $(BASE).$(EXTENSION)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)Be clear about what is wanted (or, for multiple or differently named input files):"
-	@$(ENDOLINE)
-	@$(PRINT) "$(CODEBLOCK)$(_M)make compose TYPE=\"$(TYPE)\" BASE=\"$(EXAMPLE_OUT)\" LIST=\"$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)\""
-
-.PHONY: HELP-SYSTEM
-HELP-SYSTEM: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
-HELP-SYSTEM:
-	@$(HEADER_L)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)Completely recursive build system:"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)The top-level '$(MAKEFILE)' is the only one which needs a direct reference:"
-	@$(TABLE_C2) "$(_N)(NOTE: This must be an absolute path.)"
-	@$(PRINT) "include $(COMPOSER)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)All sub-directories then each start with:"
-	@$(PRINT) "override $(_C)COMPOSER_MY_PATH$(_D) := $(_C)$(COMPOSER_MY_PATH)"
-	@$(PRINT) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(COMPOSER_TEACHER)"
-	@$(PRINT) "override $(_C)COMPOSER_SUBDIRS$(_D) ?="
-	@$(PRINT) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)And end with:"
-	@$(PRINT) "include $(_C)$(~)(COMPOSER_TEACHER)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)Back in the top-level '$(MAKEFILE)', and in all sub-'$(MAKEFILE)' instances which recurse further down:"
-	@$(PRINT) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
-	@$(PRINT) "include [...]"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)Create a new '$(MAKEFILE)' using a helpful template:"
-	@$(PRINT) "$(_M)$(~)(RUNMAKE) COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_E)Or, recursively initialize the current directory tree:"
-	@$(TABLE_C2) "$(_N)(NOTE: This is a non-destructive operation.)"
-	@$(PRINT) "$(_M)$(~)(RUNMAKE) $(INSTALL)"
-	@$(ENDOLINE)
-
-########################################
-# {{{3 EXAMPLE-* -----------------------
-
-.PHONY: EXAMPLE-MAKEFILES
-EXAMPLE-MAKEFILES: \
-	EXAMPLE-MAKEFILES_HEADER \
-	EXAMPLE-MAKEFILE_1 \
-	EXAMPLE-MAKEFILE_2 \
-	EXAMPLE-MAKEFILES_FOOTER
-
-.PHONY: EXAMPLE-MAKEFILE
-EXAMPLE-MAKEFILE: \
-	EXAMPLE-MAKEFILE_HEADER \
-	EXAMPLE-MAKEFILE_FULL \
-	EXAMPLE-MAKEFILE_TEMPLATE
-
-########################################
-# {{{3 EXAMPLE-MAKEFILES ---------------
-
-.PHONY: EXAMPLE-MAKEFILES_HEADER
-EXAMPLE-MAKEFILES_HEADER:
-	@$(HEADER_L)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)Calling from children '$(MAKEFILE)' files:"
-	@$(ENDOLINE)
-
-.PHONY: EXAMPLE-MAKEFILE_1
-EXAMPLE-MAKEFILE_1:
-	@$(TABLE_C2) "$(_E)Simple, with filename targets and \"automagic\" detection of them:"
-	@$(TABLE_C2) "$(_S)include $(COMPOSER)"
-	@$(PRINT) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_OUT)"
-	@$(PRINT) "$(_C)$(BASE)$(_D): $(_N)# so \"$(CLEANER)\" will catch the below files"
-	@$(PRINT) "$(_C)$(EXAMPLE_OUT)$(_D): $(BASE).$(TYPE_HTML) $(BASE).$(TYPE_LPDF)"
-	@$(PRINT) "$(_C)$(EXAMPLE_TWO).$(EXTENSION)$(_D):"
-	@$(ENDOLINE)
-
-.PHONY: EXAMPLE-MAKEFILE_2
-EXAMPLE-MAKEFILE_2:
-	@$(TABLE_C2) "$(_E)Advanced, with manual enumeration of user-defined targets and per-target variables:"
-	@$(PRINT) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE) $(EXAMPLE_OUT) $(EXAMPLE_TWO).$(EXTENSION)"
-	@$(TABLE_C2) "$(_S)include $(COMPOSER)"
-	@$(PRINT) "$(_C).PHONY$(_D): $(BASE) $(EXAMPLE_OUT)"
-	@$(PRINT) "$(_C)$(BASE)$(_D): export TOC := 1"
-	@$(PRINT) "$(_C)$(BASE)$(_D): $(BASE).$(EXTENSION)"
-	@$(PRINT) "$(_C)$(EXAMPLE_OUT)$(_D): $(BASE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)"
-	@$(PRINT) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUT)\" TYPE=\"$(TYPE_HTML)\""
-	@$(PRINT) "	$(~)(COMPOSE) LIST=\"$(~)(^)\" BASE=\"$(EXAMPLE_OUT)\" TYPE=\"$(TYPE_LPDF)\""
-	@$(PRINT) "$(_C)$(EXAMPLE_OUT)-$(CLEANER)$(_D):"
-	@$(PRINT) "	$(~)(RM) $(EXAMPLE_OUT).{$(TYPE_HTML),$(TYPE_LPDF)}"
-	@$(ECHO) "#WORK document this version of '$(CLEANER)'?\n"
-	@$(ECHO) "#WORK 2017-07-31 : nope, this should be $(CLEANER): $(notdir $(COMPOSER_OUT))-clean, and skip the TYPE business\n"
-	@$(ECHO) "#WORK make $(RELEASE)-debug\n"
-	@$(PRINT) "$(_C)$(CLEANER)$(_D): COMPOSER_TARGETS += $(notdir $(COMPOSER_OUT))"
-	@$(PRINT) "$(_C)$(CLEANER)$(_D): TYPE := latex"
-	@$(PRINT) "$(_C)$(notdir $(COMPOSER_OUT)):"
-	@$(PRINT) "	$(~)(CP) \"$(COMPOSER_DIR)/$(notdir $(COMPOSER_OUT)).\"* ./"
-	@$(ENDOLINE)
-
-.PHONY: EXAMPLE-MAKEFILES_FOOTER
-EXAMPLE-MAKEFILES_FOOTER:
-	@$(TABLE_C2) "$(_E)Then, from the command line:"
-	@$(PRINT) "$(_M)make $(CLEANER) && make $(DOITALL)"
-	@$(ENDOLINE)
-
-########################################
-# {{{3 EXAMPLE-MAKEFILE ----------------
-
-.PHONY: EXAMPLE-MAKEFILE_HEADER
-EXAMPLE-MAKEFILE_HEADER:
-	@$(HEADER_L)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)Finally, a completely recursive '$(MAKEFILE)' example:"
-	@$(ENDOLINE)
-
-.PHONY: EXAMPLE-MAKEFILE_FULL
-EXAMPLE-MAKEFILE_FULL: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
-EXAMPLE-MAKEFILE_FULL:
-	@$(TABLE_C2) "$(_H)$(MARKER) HEADERS"
-	@$(TABLE_C2) "$(_E)These two statements must be at the top of every file:"
-	@$(TABLE_C2) "$(_N)(NOTE: The 'COMPOSER_TEACHER' variable can be modified for custom chaining, but with care.)"
-	@$(PRINT) "override $(_C)COMPOSER_MY_PATH$(_D) := $(_C)$(COMPOSER_MY_PATH)"
-	@$(PRINT) "override $(_C)COMPOSER_TEACHER$(_D) := $(_C)$(COMPOSER_TEACHER)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_H)$(MARKER) DEFINITIONS"
-	@$(TABLE_C2) "$(_E)These statements are also required:"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Use '?=' declarations and define *before* the upstream 'include' statement"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* They pass their values *up* the '$(MAKEFILE)' chain"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Should always be defined, even if empty, to prevent downward propagation of values"
-	@$(TABLE_C2) "$(_N)(NOTE: List of '$(DOITALL)' targets is '$(COMPOSER_REGEX)' if '$(~)(COMPOSER_TARGETS)' is empty.)"
-	@$(PRINT) "override $(_C)COMPOSER_TARGETS$(_D) ?= $(_C)$(BASE).$(EXTENSION) $(EXAMPLE_TWO).$(EXTENSION)"
-	@$(PRINT) "override $(_C)COMPOSER_SUBDIRS$(_D) ?= $(_C)$(COMPOSER_SUBDIRS)"
-	@$(PRINT) "override $(_C)COMPOSER_DEPENDS$(_D) ?= $(_C)$(COMPOSER_DEPENDS)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_H)$(MARKER) VARIABLES"
-	@$(TABLE_C2) "$(_E)The option variables are not required, but are available for locally-scoped configuration:"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* For proper inheritance, use '?=' declarations and define *before* the upstream 'include' statement"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* They pass their values *down* the '$(MAKEFILE)' chain"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Do not need to be defined when empty, unless necessary to override upstream values"
-	@$(TABLE_C2) "$(_E)To disable inheritance and/or insulate from environment variables:"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Replace 'override VAR ?=' with 'override VAR :='"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Define *after* the upstream 'include' statement"
-	@$(TABLE_C2) "$(_N)(NOTE: Any settings here will apply to all children, unless 'override' is used downstream.)"
-	@$(TABLE_C2) ""
-	@$(TABLE_C2) "$(_E)Define the CSS template to use in this entire directory tree:"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Absolute path names should be used, so that children will be able to find it"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)$(CODEBLOCK)* The 'COMPOSER_MY_PATH' variable can be used to simplify this"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* If not defined, the lowest-level '$(COMPOSER_CSS)' file will be used"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* If not defined, and no '$(COMPOSER_CSS)' file can be found, will use default CSS file"
-	@$(PRINT) "$(~)(eval override $(_C)CSS$(_D) ?= $(_C)$(~)(COMPOSER_MY_PATH)/$(COMPOSER_CSS)$(_D))"
-	@$(TABLE_C2) ""
-	@$(TABLE_C2) "$(_E)All the other optional variables can also be made global in this directory scope:"
-	@$(PRINT) "override $(_C)TTL$(_D) ?="
-	@$(PRINT) "override $(_C)TOC$(_D) ?= $(_C)2"
-	@$(PRINT) "override $(_C)LVL$(_D) ?= $(_C)$(LVL)"
-	@$(PRINT) "override $(_C)MGN$(_D) ?= $(_C)$(MGN)"
-	@$(PRINT) "override $(_C)FNT$(_D) ?= $(_C)$(FNT)"
-	@$(PRINT) "override $(_C)OPT$(_D) ?="
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_H)$(MARKER) INCLUDE"
-	@$(TABLE_C2) "$(_E)Necessary include statement:"
-	@$(TABLE_C2) "$(_N)(NOTE: This must be after all references to 'COMPOSER_MY_PATH' but before '.DEFAULT_GOAL'.)"
-	@$(PRINT) "include $(_C)$(~)(COMPOSER_TEACHER)"
-	@$(TABLE_C2) ""
-	@$(TABLE_C2) "$(_E)For recursion to work, a default target needs to be defined:"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* Needs to be '$(DOITALL)' for directories which must recurse into sub-directories"
-	@$(TABLE_C2) "$(_E)$(CODEBLOCK)* The '$(SUBDIRS)' target can be used manually, if desired, so this can be changed to another value"
-	@$(TABLE_C2) "$(_N)(NOTE: Recursion will cease if not '$(DOITALL)', unless '$(SUBDIRS)' target is called.)"
-	@$(PRINT) "$(_C).DEFAULT_GOAL$(_D) := $(_C)$(DOITALL)"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_H)$(MARKER) RECURSION"
-	@$(TABLE_C2) "$(_E)Dependencies can be specified, if needed:"
-	@$(TABLE_C2) "$(_N)(NOTE: This defines the sub-directories which must be built before '$(firstword $(COMPOSER_SUBDIRS))'.)"
-	@$(TABLE_C2) "$(_N)(NOTE: For parent/child directory dependencies, set 'COMPOSER_DEPENDS' to a non-empty value.)"
-	@$(PRINT) "$(_C)$(firstword $(COMPOSER_SUBDIRS))$(_D): $(_C)$(wordlist 2,$(words $(COMPOSER_SUBDIRS)),$(COMPOSER_SUBDIRS))"
-	@$(ENDOLINE)
-	@$(TABLE_C2) "$(_H)$(MARKER) MAKEFILE"
-	@$(TABLE_C2) "$(_E)This is where the rest of the file should be defined."
-	@$(TABLE_C2) "$(_N)(NOTE: In this example, 'COMPOSER_TARGETS' is used completely in lieu of any explicit targets.)"
-	@$(ENDOLINE)
-
-.PHONY: EXAMPLE-MAKEFILE_TEMPLATE
-EXAMPLE-MAKEFILE_TEMPLATE:
-	@$(HEADER_L)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)With the current settings, the output of '$(EXAMPLE)' would be:"
-	@$(ENDOLINE)
-	@$(RUNMAKE) --silent .$(EXAMPLE)
-	@$(ENDOLINE)
-
-########################################
-# {{{2 $(CREATOR) ----------------------
-
-.PHONY: $(CREATOR)
-ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
-.NOTPARALLEL:
-endif
-$(CREATOR): .set_title-$(CREATOR)
-	@$(call $(HEADERS))
-	@$(MKDIR)						$(CURDIR)/$(notdir $(COMPOSER_ART))
-	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.ico
-	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.png
-	@$(ECHO) "$(DIST_SCREENSHOT)"	| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/screenshot.png
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)		>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)	>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)		>$(CURDIR)/LICENSE$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)		>$(CURDIR)/README$(COMPOSER_EXT_DEFAULT)
-	@$(LS) \
-		$(CURDIR)/.gitignore \
-		$(CURDIR)/$(notdir $(COMPOSER_ART)) \
-		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS)) \
-		$(CURDIR)/*$(COMPOSER_EXT_DEFAULT)
-	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
-
-########################################
-# {{{2 $(EXAMPLE) ----------------------
-
-#> update: COMPOSER_OPTIONS
-
-.PHONY: $(EXAMPLE)
-$(EXAMPLE):
-	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)
-
-.PHONY: .$(EXAMPLE)-$(INSTALL)
-.$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
-	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
-	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
-	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
-
-.PHONY: .$(EXAMPLE)
-.$(EXAMPLE):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
-	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global)
-	@$(foreach FILE,$(COMPOSER_EXPORTED),\
-		$(call $(EXAMPLE)-var,1,$(FILE)); \
-	)
-	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
-	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Local)
-	@$(foreach FILE,$(COMPOSER_EXPORTED_NOT),\
-		$(call $(EXAMPLE)-var,1,$(FILE)); \
-	)
-	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
-	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Special)
-	@$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(EXTENSION)$(_D): $(_M)$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)); \
-	)
-
-override define $(EXAMPLE)-print =
-	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
-endef
-override define $(EXAMPLE)-var-static =
-	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
-endef
-override define $(EXAMPLE)-var =
-	$(call $(EXAMPLE)-print,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$($(2))))
-endef
-
-################################################################################
 # }}}1
+################################################################################
+# {{{1 Composer Output ---------------------------------------------------------
+################################################################################
+
+# https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+#	default	= light gray
+#	header	= light green
+#	core	= cyan
+#	mark	= yellow
+#	note	= red
+#	extra	= magenta
+#	syntax	= dark blue
+ifneq ($(COMPOSER_DOCOLOR),)
+#>override _D				:= \e[0;37m
+override _D				:= \e[0m
+override _H				:= \e[0;32m
+override _C				:= \e[0;36m
+override _M				:= \e[0;33m
+override _N				:= \e[0;31m
+override _E				:= \e[0;35m
+override _S				:= \e[0;34m
+else
+override _D				:=
+override _H				:=
+override _C				:=
+override _M				:=
+override _N				:=
+override _E				:=
+override _S				:=
+endif
+
+########################################
+
+#> update: includes duplicates
+override MARKER				:= >>
+override DIVIDE				:= ::
+override TOKEN				:= ~
+override NULL				:=
+
+# https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
+override define NEWLINE =
+$(NULL)
+$(NULL)
+endef
+
+########################################
+
+override COMMENTED			:= $(_S)\#$(_D) $(NULL)
+override CODEBLOCK			:= $(NULL)	$(NULL)
+override ENDOLINE			:= $(ECHO) "$(_D)\n"
+override LINERULE			:= $(ECHO) "$(_H)";	$(PRINTF)  "-%.0s" {1..$(COLUMNS)}	; $(ENDOLINE)
+override HEADER_L			:= $(ECHO) "$(_S)";	$(PRINTF) "\#%.0s" {1..$(COLUMNS)}	; $(ENDOLINE)
+
+# https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
+ifneq ($(COMPOSER_DOCOLOR),)
+override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%b$(_D)\e[128D\e[22C%b$(_D)\n"
+override TABLE_M2			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\n"
+override TABLE_M3			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\e[128D\e[54C| %b$(_D)\n"
+override PRINT				:= $(PRINTF) "%b$(_D)\n"
+else
+override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%-20s%s\n"
+override TABLE_M2			:= $(PRINTF) "| %-20s| %s\n"
+override TABLE_M3			:= $(PRINTF) "| %-20s| %-30s| %s\n"
+override PRINT				:= $(PRINTF) "%s\n"
+endif
+
+override define TITLE_LN =
+	ttl_len="`$(EXPR) length '$(2)'`"; \
+	ttl_len="`$(EXPR) $(COLUMNS) - 2 - $(1) - $${ttl_len}`"; \
+	if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
+	$(ENDOLINE); \
+	$(ECHO) "$(_S)"; \
+	if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
+	if [ "$(1)" -gt "0" ]; then $(PRINTF) "#%.0s" {1..$(1)}; fi; \
+	$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
+	eval $(PRINTF) \"#%.0s\" {1..$${ttl_len}}; \
+	$(ENDOLINE); \
+	$(if $(3),\
+		if [ "$(1)" -gt "$(HEAD_MAIN)" ]; then $(ENDOLINE); fi \
+		,$(ENDOLINE) \
+	); \
+	if [ "$(1)" -le "0" ]; then $(LINERULE); $(ENDOLINE); fi
+endef
+
 ################################################################################
 # {{{1 Composer Headers --------------------------------------------------------
 ################################################################################
@@ -2370,105 +2371,6 @@ $(NOTHING)-%:
 .PHONY: $(NOTHING)
 $(NOTHING):
 	@$(call $(HEADERS)-note,$(COMPOSER_NOTHING))
-
-################################################################################
-# {{{1 Release Targets ---------------------------------------------------------
-################################################################################
-
-########################################
-# {{{2 $(CONVICT) ----------------------
-
-#WORKING override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
-override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
-
-#> update: PHONY.*$(DOITALL)$
-$(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
-.PHONY: $(CONVICT)-$(DOITALL)
-$(CONVICT)-$(DOITALL):
-	@$(RUNMAKE) COMPOSER_DOITALL_$(CONVICT)="1" $(CONVICT)
-
-.PHONY: $(CONVICT)
-$(CONVICT): .set_title-$(CONVICT)
-	@$(call $(HEADERS))
-	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
-	$(call GIT_RUN_COMPOSER,commit \
-		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
-		--message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]" \
-		$(GIT_OPTS_CONVICT) \
-	)
-
-########################################
-# {{{2 $(DISTRIB) ----------------------
-
-#> update: PHONY.*$(DISTRIB)
-#	$(UPGRADE)
-#	$(CREATOR)
-
-.PHONY: $(DISTRIB)
-$(DISTRIB): .set_title-$(DISTRIB)
-	@$(call $(HEADERS))
-	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
-		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
-	fi
-	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
-	@$(RUNMAKE) $(UPGRADE)-$(DOITALL)
-	@$(RUNMAKE) $(CREATOR)
-
-########################################
-# {{{2 $(UPGRADE) ----------------------
-
-#> update: PHONY.*(UPGRADE)
-
-#> update: PHONY.*$(DOITALL)$
-$(eval override COMPOSER_DOITALL_$(UPGRADE) ?=)
-.PHONY: $(UPGRADE)-$(DOITALL)
-$(UPGRADE)-$(DOITALL):
-	@$(RUNMAKE) COMPOSER_DOITALL_$(UPGRADE)="1" $(UPGRADE)
-
-.PHONY: $(UPGRADE)
-$(UPGRADE): .set_title-$(UPGRADE)
-	@$(call $(HEADERS))
-	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
-	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
-	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
-	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
-ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
-	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
-	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
-	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
-	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
-ifneq ($(COMPOSER_DEBUGIT),)
-ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(MKDIR) $(NPM_PKG)
-	@$(RM)					$(MDVIEWER_DIR)/node_modules
-	@$(LN) $(NPM_PKG)/node_modules		$(MDVIEWER_DIR)/
-	@$(RM)					$(NPM_PKG)/build
-	@$(LN) $(MDVIEWER_DIR)/build		$(NPM_PKG)/
-	@$(RM)					$(NPM_PKG)/themes
-	@$(LN) $(MDVIEWER_DIR)/themes		$(NPM_PKG)/
-	@$(RM)					$(dir $(NPM_PKG))markdown-themes
-	@$(LN) $(MDVIEWER_DIR)/themes		$(dir $(NPM_PKG))markdown-themes
-	@$(LN) $(MDVIEWER_DIR)/package.json	$(NPM_PKG)/
-	@cd $(MDVIEWER_DIR) && \
-		$(NPM) install && \
-		$(NPM) run-script build:mdc && \
-		$(NPM) run-script build:remark && \
-		$(NPM) run-script build:prism && \
-		$(NPM) run-script build:themes
-endif
-endif
-endif
-	@$(RM)					$(MDVIEWER_DIR)/node_modules
-	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
-	@$(ECHO) "$(_M)"
-	@$(LS) --color=never --directory \
-		$(PANDOC_DIR)/data/templates \
-		$(MDVIEWER_DIR)/manifest.firefox.json \
-		$(MDVIEWER_DIR)/manifest.chrome.json \
-		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME)
-	@$(ECHO) "$(_D)"
 
 ################################################################################
 # {{{1 Debug Targets -----------------------------------------------------------
@@ -3235,6 +3137,105 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 endif
 
 ################################################################################
+# {{{1 Release Targets ---------------------------------------------------------
+################################################################################
+
+########################################
+# {{{2 $(CONVICT) ----------------------
+
+#WORKING override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
+
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
+.PHONY: $(CONVICT)-$(DOITALL)
+$(CONVICT)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(CONVICT)="1" $(CONVICT)
+
+.PHONY: $(CONVICT)
+$(CONVICT): .set_title-$(CONVICT)
+	@$(call $(HEADERS))
+	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
+	$(call GIT_RUN_COMPOSER,commit \
+		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
+		--message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]" \
+		$(GIT_OPTS_CONVICT) \
+	)
+
+########################################
+# {{{2 $(DISTRIB) ----------------------
+
+#> update: PHONY.*$(DISTRIB)
+#	$(UPGRADE)
+#	$(CREATOR)
+
+.PHONY: $(DISTRIB)
+$(DISTRIB): .set_title-$(DISTRIB)
+	@$(call $(HEADERS))
+	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
+		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
+	fi
+	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
+	@$(RUNMAKE) $(UPGRADE)-$(DOITALL)
+	@$(RUNMAKE) $(CREATOR)
+
+########################################
+# {{{2 $(UPGRADE) ----------------------
+
+#> update: PHONY.*(UPGRADE)
+
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(UPGRADE) ?=)
+.PHONY: $(UPGRADE)-$(DOITALL)
+$(UPGRADE)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(UPGRADE)="1" $(UPGRADE)
+
+.PHONY: $(UPGRADE)
+$(UPGRADE): .set_title-$(UPGRADE)
+	@$(call $(HEADERS))
+	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
+	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
+	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
+	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
+	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
+	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
+	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
+	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+ifneq ($(COMPOSER_DEBUGIT),)
+ifneq ($(wildcard $(firstword $(NPM))),)
+	@$(MKDIR) $(NPM_PKG)
+	@$(RM)					$(MDVIEWER_DIR)/node_modules
+	@$(LN) $(NPM_PKG)/node_modules		$(MDVIEWER_DIR)/
+	@$(RM)					$(NPM_PKG)/build
+	@$(LN) $(MDVIEWER_DIR)/build		$(NPM_PKG)/
+	@$(RM)					$(NPM_PKG)/themes
+	@$(LN) $(MDVIEWER_DIR)/themes		$(NPM_PKG)/
+	@$(RM)					$(dir $(NPM_PKG))markdown-themes
+	@$(LN) $(MDVIEWER_DIR)/themes		$(dir $(NPM_PKG))markdown-themes
+	@$(LN) $(MDVIEWER_DIR)/package.json	$(NPM_PKG)/
+	@cd $(MDVIEWER_DIR) && \
+		$(NPM) install && \
+		$(NPM) run-script build:mdc && \
+		$(NPM) run-script build:remark && \
+		$(NPM) run-script build:prism && \
+		$(NPM) run-script build:themes
+endif
+endif
+endif
+	@$(RM)					$(MDVIEWER_DIR)/node_modules
+	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
+	@$(ECHO) "$(_M)"
+	@$(LS) --color=never --directory \
+		$(PANDOC_DIR)/data/templates \
+		$(MDVIEWER_DIR)/manifest.firefox.json \
+		$(MDVIEWER_DIR)/manifest.chrome.json \
+		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME)
+	@$(ECHO) "$(_D)"
+
+################################################################################
 # {{{1 Helper Targets ----------------------------------------------------------
 ################################################################################
 
@@ -3563,7 +3564,7 @@ endif
 endif
 
 ########################################
-# {{{2 BOOKS ---------------------------
+# {{{2 SPECIALS ------------------------
 
 #>.PHONY: $(DO_BOOK)-%
 $(DO_BOOK)-%:
@@ -3571,9 +3572,6 @@ $(DO_BOOK)-%:
 		TYPE="$(lastword $(subst ., ,$(*)))" \
 		BASE="$(subst .$(lastword $(subst ., ,$(*))),,$(*))" \
 		LIST="$(^)"
-
-########################################
-# {{{2 POSTS ---------------------------
 
 #>.PHONY: $(DO_POST)-%
 $(DO_POST)-%:
