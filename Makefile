@@ -154,8 +154,8 @@ override COMPOSER_INCLUDES_LIST		:=
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 override define READ_ALIASES =
-	$(if $(subst undefined,,$(origin $(1))),$(eval override $(3) := $($(1))))
-	$(if $(subst undefined,,$(origin $(2))),$(eval override $(3) := $($(2))))
+	$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1))))
+	$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2))))
 endef
 
 ########################################
@@ -227,7 +227,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 $(call READ_ALIASES,s,c_css,CSS)
 
 override _CSS				:=
-ifeq ($(subst override,,$(origin CSS)),)
+ifneq ($(filter override,$(origin CSS)),)
 override _CSS				:= $(CSS)
 endif
 ifeq ($(_CSS),)
@@ -371,11 +371,9 @@ override OPT				?=
 
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
-ifneq ($(subst override,,$(origin PANDOC_VER)),)
 #>override PANDOC_VER			:= 2.13
 override PANDOC_VER			:= 2.18
-endif
-ifneq ($(subst override,,$(origin PANDOC_CMT)),)
+ifeq ($(filter override,$(origin PANDOC_CMT)),)
 override PANDOC_CMT			:= $(PANDOC_VER)
 endif
 override PANDOC_LIC			:= GPL
@@ -403,11 +401,9 @@ endif
 # https://mikefarah.gitbook.io/yq
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
-ifneq ($(subst override,,$(origin YQ_VER)),)
 #>override YQ_VER			:= 2.7.2
 override YQ_VER				:= 4.24.2
-endif
-ifneq ($(subst override,,$(origin YQ_CMT)),)
+ifeq ($(filter override,$(origin YQ_CMT)),)
 override YQ_CMT				:= v$(YQ_VER)
 endif
 override YQ_LIC				:= MIT
@@ -434,7 +430,7 @@ endif
 
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
-ifneq ($(subst override,,$(origin REVEALJS_CMT)),)
+ifeq ($(filter override,$(origin REVEALJS_CMT)),)
 override REVEALJS_CMT			:= 4.3.1
 endif
 override REVEALJS_LIC			:= MIT
@@ -446,7 +442,7 @@ override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 #>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
-ifneq ($(subst override,,$(origin MDVIEWER_CMT)),)
+ifeq ($(filter override,$(origin MDVIEWER_CMT)),)
 override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
 endif
 override MDVIEWER_LIC			:= MIT
@@ -464,31 +460,23 @@ override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
 
 override BASH_VER			:= 5.0.18
 override COREUTILS_VER			:= 8.31
-override FINDUTILS_VER			:= 4.8.0
-override DIFFUTILS_VER			:= 3.7
 override SED_VER			:= 4.8
-override LESS_VER			:= 551
-override MAKE_VER			:= 4.2.1
-override YQ_VER				:= $(YQ_VER)
-override GIT_VER			:= 2.32.0
 
-override RSYNC_VER			:= 3.2.3
+override MAKE_VER			:= 4.2.1
+override PANDOC_VER			:= $(PANDOC_VER)
+override TEX_PDF_VER			:= 2021 3.14159 2.6-1.40.22
+override YQ_VER				:= $(YQ_VER)
+
+override GIT_VER			:= 2.32.0
 override WGET_VER			:= 1.20.3
-override GZIP_VER			:= 1.10
 override TAR_VER			:= 1.34
+override GZIP_VER			:= 1.10
 override 7Z_VER				:= 16.02
 override NPM_VER			:= 6.14.8
 
-override GHC_VER			:= 8.10.5
-override PANDOC_VER			:= $(PANDOC_VER)
-override PANDOC_TYPE_VER		:= 1.22
-override PANDOC_MATH_VER		:= 0.12.2
-override PANDOC_SKYL_VER		:= 0.10.5
-override PANDOC_CITE_VER		:= 0.3.0.9
-
-override TEX_PI				:= 3.141592653
-override TEX_VER			:= $(TEX_PI) (2021)
-override TEX_PDF_VER			:= $(TEX_PI) (2.6-1.40.22)
+override DIFFUTILS_VER			:= 3.7
+override RSYNC_VER			:= 3.2.3
+override LESS_VER			:= 551
 
 ################################################################################
 # {{{1 Tooling Options ---------------------------------------------------------
@@ -505,22 +493,17 @@ export SHELL
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
-override COREUTILS			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
+override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
-#WORKING:NOW sort out coreutils!
-#WORKING:NOW sort out MAKEFLAGS vs command line option!
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
 override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
-override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
 override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - PATH="$(PATH)"
 override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
-override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
 override HEAD				:= $(call COMPOSER_FIND,$(PATH_LIST),head)
-override LESS				:= $(call COMPOSER_FIND,$(PATH_LIST),less)
 override LN				:= $(call COMPOSER_FIND,$(PATH_LIST),ln) -fsv --relative
 override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) --color=auto --time-style=long-iso -asF -l
 override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
@@ -528,7 +511,6 @@ override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --relative-to
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
-override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
@@ -537,24 +519,24 @@ override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 
-override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
-#>override GZIP				:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
-override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
-override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
-override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
-override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
-override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
-
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
-override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
-override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
-
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
-override GHC_PKG			:= $(call COMPOSER_FIND,$(PATH_LIST),ghc-pkg) --verbose
-override GHC_PKG_INFO			:= $(GHC_PKG) latest
-override TEX				:= $(call COMPOSER_FIND,$(PATH_LIST),tex)
 override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
+override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
+
+override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
+override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
+override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
+#>override GZIP				:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
+override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
+override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
+override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
+
+override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
+override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
+#>override LESS				:= $(call COMPOSER_FIND,$(PATH_LIST),less)
+override LESS_BIN				:= $(call COMPOSER_FIND,$(PATH_LIST),less)
 
 ########################################
 
@@ -972,6 +954,7 @@ override CONFIGS			:= config
 override TARGETS			:= targets
 override INSTALL			:= install
 
+override PUBLISH			:= site
 override DOITALL			:= all
 override CLEANER			:= clean
 override SUBDIRS			:= subdirs
@@ -1123,7 +1106,9 @@ override DO_POST			:= post
 
 override COMPOSER_RESERVED_SPECIAL := \
 	$(DO_BOOK) \
-	$(DO_POST) \
+
+$(DO_POST)s: $(NOTHING)-$(DO_POST)s-FUTURE
+#>	$(DO_POST) \
 
 ########################################
 
@@ -3061,77 +3046,62 @@ $(CHECKIT)-$(DOITALL):
 .PHONY: $(CHECKIT)
 $(CHECKIT): .set_title-$(CHECKIT)
 	@$(call $(HEADERS))
-	@$(TABLE_M3) "$(_H)Repository"		"$(_H)Commit"				"$(_H)License"
-	@$(TABLE_M3) ":---"			":---"					":---"
-	@$(TABLE_M3) "$(_E)Pandoc"		"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
-	@$(TABLE_M3) "$(_E)YQ"			"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
-	@$(TABLE_M3) "$(_E)Reveal.js"		"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
-	@$(TABLE_M3) "$(_E)Markdown Viewer"	"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
+	@$(TABLE_M3) "$(_H)Repository"			"$(_H)Commit"				"$(_H)License"
+	@$(TABLE_M3) ":---"				":---"					":---"
+	@$(TABLE_M3) "$(_E)Pandoc"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
+	@$(TABLE_M3) "$(_E)YQ"				"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
+	@$(TABLE_M3) "$(_E)Reveal.js"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
+	@$(TABLE_M3) "$(_E)Markdown Viewer"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Project"		"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
-	@$(TABLE_M3) ":---"			":---"					":---"
-	@$(TABLE_M3) "$(_E)GNU Bash"		"$(_E)$(BASH_VER)"			"$(_N)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
+	@$(TABLE_M3) ":---"				":---"					":---"
+	@$(TABLE_M3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(_M)$(YQ_VER)"		"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
-	@$(TABLE_M3) "- $(_E)GNU Coreutils"	"$(_E)$(COREUTILS_VER)"			"$(_N)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Findutils"	"$(_E)$(FINDUTILS_VER)"			"$(_N)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Diffutils"	"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Sed"		"$(_E)$(SED_VER)"			"$(_N)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Less"		"$(_E)$(LESS_VER)"			"$(_N)$(shell $(LESS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_E)Rsync"		"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Wget"		"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
-#>	@$(TABLE_M3) "- $(_E)GNU Gzip"		"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Gzip"		"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Tar"		"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)7z"		"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_M3) "- $(_E)Node.js NPM"	"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
+	@$(TABLE_M3) "- $(_E)Git SCM"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Wget"			"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Gzip"			"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)7z"			"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+ifneq ($(wildcard $(firstword $(NPM))),)
+	@$(TABLE_M3) "- $(_E)Node.js (npm)"		"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
 endif
-#>	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(MAKE) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_C)GNU Make"		"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)YQ"		"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)Git SCM"		"$(_M)$(GIT_VER)"			"$(_D)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_C)Pandoc"		"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
-	@$(TABLE_M3) "- $(_C)GHC"		"$(_M)$(GHC_VER)"			"$(_D)$(shell $(GHC_PKG) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)Types"		"$(_M)$(PANDOC_TYPE_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) pandoc-types	2>/dev/null | $(TAIL) -n1)"
-	@$(TABLE_M3) "- $(_C)TeXmath"		"$(_M)$(PANDOC_MATH_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) texmath		2>/dev/null | $(TAIL) -n1)"
-	@$(TABLE_M3) "- $(_C)Skylighting"	"$(_M)$(PANDOC_SKYL_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) skylighting	2>/dev/null | $(TAIL) -n1)"
-	@$(TABLE_M3) "- $(_C)CiteProc"		"$(_M)$(PANDOC_CITE_VER)"		"$(_D)$(shell $(GHC_PKG_INFO) citeproc		2>/dev/null | $(TAIL) -n1)"
-	@$(TABLE_M3) "$(_C)TeX Live"		"$(_M)$(TEX_VER)"			"$(_D)$(shell $(TEX) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
+	@$(TABLE_M3) "- $(_E)GNU Diffutils"		"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Rsync"			"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Less"			"$(_E)$(LESS_VER)"			"$(_N)$(shell $(LESS_BIN) --version		2>/dev/null | $(HEAD) -n1)"
 endif
-	@$(TABLE_M3) "- $(_C)TeX PDF"		"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(ENDOLINE)
-	@$(TABLE_M2) "$(_H)Project"		"$(_H)Location & Options"
-	@$(TABLE_M2) ":---"			":---"
-	@$(TABLE_M2) "$(_E)GNU Bash"		"$(_N)$(BASH)"
+	@$(TABLE_M2) "$(_H)Project"			"$(_H)Location & Options"
+	@$(TABLE_M2) ":---"				":---"
+	@$(TABLE_M2) "$(_C)GNU Bash"			"$(_D)$(BASH)"
+	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_D)$(LS)"
+	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_D)$(SED)"
+	@$(TABLE_M2) "$(_C)GNU Make"			"$(_D)$(REALMAKE)"
+	@$(TABLE_M2) "- $(_C)Pandoc"			"$(_D)$(PANDOC)"
+	@$(TABLE_M2) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
+	@$(TABLE_M2) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(_D)$(YQ)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
-#>	@$(TABLE_M2) "- $(_E)GNU Coreutils"	"$(_N)$(COREUTILS)"
-	@$(TABLE_M2) "- $(_E)GNU Coreutils"	"$(_N)$(LS)"
-	@$(TABLE_M2) "- $(_E)GNU Findutils"	"$(_N)$(FIND)"
-	@$(TABLE_M2) "- $(_E)GNU Diffutils"	"$(_N)$(DIFF)"
-	@$(TABLE_M2) "- $(_E)GNU Sed"		"$(_N)$(SED)"
-	@$(TABLE_M2) "- $(_E)Less"		"$(_N)$(LESS)"
-	@$(TABLE_M2) "$(_E)Rsync"		"$(_N)$(RSYNC)"
-	@$(TABLE_M2) "- $(_E)Wget"		"$(_N)$(WGET)"
-#>	@$(TABLE_M2) "- $(_E)GNU Gzip"		"$(_N)$(GZIP)"
-	@$(TABLE_M2) "- $(_E)GNU Gzip"		"$(_N)$(GZIP_BIN)"
-	@$(TABLE_M2) "- $(_E)GNU Tar"		"$(_N)$(TAR)"
-	@$(TABLE_M2) "- $(_E)7z"		"$(_N)$(7Z)"
-	@$(TABLE_M2) "- $(_E)Node.js NPM"	"$(_N)$(NPM)"
+	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"
+	@$(TABLE_M2) "- $(_E)Git SCM"			"$(_N)$(GIT)"
+	@$(TABLE_M2) "- $(_E)Wget"			"$(_N)$(WGET)"
+	@$(TABLE_M2) "- $(_E)GNU Tar"			"$(_N)$(TAR)"
+	@$(TABLE_M2) "- $(_E)GNU Gzip"			"$(_N)$(GZIP_BIN)"
+	@$(TABLE_M2) "- $(_E)7z"			"$(_N)$(7Z)"
+ifneq ($(wildcard $(firstword $(NPM))),)
+	@$(TABLE_M2) "- $(_E)Node.js (npm)"		"$(_N)$(NPM)"
 endif
-#>	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(MAKE)"
-	@$(TABLE_M2) "$(_C)GNU Make"		"$(_D)$(REALMAKE)"
-	@$(TABLE_M2) "- $(_C)YQ"		"$(_D)$(YQ)"
-	@$(TABLE_M2) "- $(_C)Git SCM"		"$(_D)$(GIT)"
-	@$(TABLE_M2) "$(_C)Pandoc"		"$(_D)$(PANDOC)"
-ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
-	@$(TABLE_M2) "- $(_C)GHC"		"$(_D)$(GHC_PKG)"
-	@$(TABLE_M2) "- $(_C)Types"		"$(_E)(GHC package)"
-	@$(TABLE_M2) "- $(_C)TeXmath"		"$(_E)(GHC package)"
-	@$(TABLE_M2) "- $(_C)Skylighting"	"$(_E)(GHC package)"
-	@$(TABLE_M2) "- $(_C)CiteProc"		"$(_E)(GHC package)"
-	@$(TABLE_M2) "$(_C)TeX Live"		"$(_D)$(TEX)"
+	@$(TABLE_M2) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"
+	@$(TABLE_M2) "- $(_E)GNU Diffutils"		"$(_N)$(DIFF)"
+	@$(TABLE_M2) "- $(_E)Rsync"			"$(_N)$(RSYNC)"
+	@$(TABLE_M2) "- $(_E)Less"			"$(_N)$(LESS_BIN)"
 endif
-	@$(TABLE_M2) "- $(_C)TeX PDF"		"$(_D)$(TEX_PDF)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_E)*$(OS_UNAME)*"
@@ -3348,6 +3318,17 @@ endef
 ################################################################################
 # {{{1 Main Targets ------------------------------------------------------------
 ################################################################################
+
+########################################
+# {{{2 $(PUBLISH) ----------------------
+
+.PHONY: $(PUBLISH)
+$(PUBLISH): .set_title-$(PUBLISH)
+	@$(RUNMAKE) $(NOTHING)-$(DO_POST)-FUTURE
+
+.PHONY: $(PUBLISH)-$(CLEANER)
+$(PUBLISH)-$(CLEANER):
+	@$(ECHO) ""
 
 ########################################
 # {{{2 $(CLEANER) ----------------------
@@ -3576,10 +3557,7 @@ $(DO_BOOK)-%:
 
 #>.PHONY: $(DO_POST)-%
 $(DO_POST)-%:
-	@$(RUNMAKE) $(COMPOSER_CREATE) \
-		TYPE="$(lastword $(subst ., ,$(*)))" \
-		BASE="$(subst .$(lastword $(subst ., ,$(*))),,$(*))" \
-		LIST="$(^)"
+	@$(RUNMAKE) $(NOTHING)-$(DO_POST)-FUTURE
 
 ################################################################################
 # }}}1
