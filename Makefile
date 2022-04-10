@@ -1285,14 +1285,10 @@ $(subst $(COMPOSER_DIR),,$(COMPOSER_TMP))/
 $(subst $(COMPOSER_DIR),,$(COMPOSER_PKG))/
 
 ########################################
-# $(DEBUGIT)
+# $(DEBUGIT) / $(TESTING)
 
+/.$(COMPOSER_BASENAME)**
 /$(COMPOSER_BASENAME)**
-
-########################################
-# $(TESTING)
-
-$(subst $(COMPOSER_DIR),,$(TESTING_DIR))/
 
 ################################################################################
 # End Of File
