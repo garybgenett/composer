@@ -507,6 +507,8 @@ export SHELL
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override COREUTILS			:= $(call COMPOSER_FIND,$(PATH_LIST),coreutils)
 
+#WORKING:NOW sort out coreutils!
+#WORKING:NOW sort out MAKEFLAGS vs command line option!
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
@@ -532,6 +534,7 @@ override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
+override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
@@ -683,8 +686,8 @@ override EXTENSION			:= $(EXTN_LINT)
 endif
 
 #> update: COMPOSER_TARGETS.*=
-ifeq ($(COMPOSER_DIR),$(CURDIR))
 ifeq ($(COMPOSER_TARGETS),)
+ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_TARGETS		:= $(strip \
 	$(BASE).$(EXTN_HTML) \
 	$(BASE).$(EXTN_LPDF) \
@@ -1024,18 +1027,16 @@ override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
 override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
 override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
 
-#WORKING:NOW we need EXTENSION, not TYPE, but it is not until later! also fix in DO_BOOK?
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER_DIR),$(CURDIR))
 ifneq ($(COMPOSER_EXT),)
-override COMPOSER_TARGETS		:= $(patsubst %$(COMPOSER_EXT),%.$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
+override COMPOSER_TARGETS		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
 else
-override COMPOSER_TARGETS		:= $(addsuffix .$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(filter-out %.$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)),$(COMPOSER_CONTENTS_FILES)))
+override COMPOSER_TARGETS		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
 endif
 endif
 endif
 
-#> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
 #> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
 ifneq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
@@ -1142,7 +1143,7 @@ $(1)s-clean:
 		,$(ECHO) ""; \
 	)
 ifeq ($(COMPOSER_DIR),$(CURDIR))
-$(1)-$(COMPOSER_BASENAME)-$(1).$(if $(TYPE),$(TYPE),$(EXTN_DEFAULT)): \
+$(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
 	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
 	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
 endif
@@ -1155,7 +1156,7 @@ $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
 ########################################
 # {{{2 UNAME ---------------------------
 
-override OS_UNAME			:= $(shell uname --all 2>/dev/null)
+override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
 override OS_TYPE			:=
 ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
 override OS_TYPE			:= Linux
@@ -3351,8 +3352,8 @@ endef
 ########################################
 # {{{2 $(CLEANER) ----------------------
 
-#> update: COMPOSER_TARGETS.*filter-out.*$(CLEANER)
 #> update: $(MAKE)
+#> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
