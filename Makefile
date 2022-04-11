@@ -23,8 +23,8 @@ override VIM_FOLDING := {{{1
 #		* Update: COMPOSER_VERSION
 ################################################################################
 #WORK
-#	test: windows: wsl/debian(testing) -> sudo apt-get install pandoc texlive / rsync npm
-#	test: mac osx: macports -> sudo port gmake install pandoc texlive / rsync npm6
+#	test: windows: wsl/debian(testing) -> sudo apt-get install pandoc yq texlive
+#	test: mac osx: macports -> sudo port gmake install pandoc yq texlive
 #WORK
 #	https://www.w3.org/community/markdown/wiki/MarkdownImplementations
 #	http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
@@ -134,8 +134,6 @@ endif
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
-
-override NPM_PKG			:= $(COMPOSER_PKG)/_npm
 
 ########################################
 
@@ -497,7 +495,6 @@ override WGET_VER			:= 1.20.3
 override TAR_VER			:= 1.34
 override GZIP_VER			:= 1.10
 override 7Z_VER				:= 16.02
-override NPM_VER			:= 6.14.8
 
 override DIFFUTILS_VER			:= 3.7
 override RSYNC_VER			:= 3.2.3
@@ -558,7 +555,6 @@ override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 #>override GZIP				:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
-override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --prefix $(NPM_PKG) --cache $(NPM_PKG) --verbose
 
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
@@ -3143,9 +3139,6 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Gzip"			"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)7z"			"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(TABLE_M3) "- $(_E)Node.js (npm)"		"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
-endif
 	@$(TABLE_M3) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "- $(_E)GNU Diffutils"		"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)Rsync"			"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
@@ -3168,9 +3161,6 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "- $(_E)GNU Tar"			"$(_N)$(TAR)"
 	@$(TABLE_M2) "- $(_E)GNU Gzip"			"$(_N)$(GZIP_BIN)"
 	@$(TABLE_M2) "- $(_E)7z"			"$(_N)$(7Z)"
-ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(TABLE_M2) "- $(_E)Node.js (npm)"		"$(_N)$(NPM)"
-endif
 	@$(TABLE_M2) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"
 	@$(TABLE_M2) "- $(_E)GNU Diffutils"		"$(_N)$(DIFF)"
 	@$(TABLE_M2) "- $(_E)Rsync"			"$(_N)$(RSYNC)"
@@ -3249,28 +3239,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
-ifneq ($(COMPOSER_DEBUGIT),)
-ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(MKDIR) $(NPM_PKG)
-	@$(RM)					$(MDVIEWER_DIR)/node_modules
-	@$(LN) $(NPM_PKG)/node_modules		$(MDVIEWER_DIR)/
-	@$(RM)					$(NPM_PKG)/build
-	@$(LN) $(MDVIEWER_DIR)/build		$(NPM_PKG)/
-	@$(RM)					$(NPM_PKG)/themes
-	@$(LN) $(MDVIEWER_DIR)/themes		$(NPM_PKG)/
-	@$(RM)					$(dir $(NPM_PKG))markdown-themes
-	@$(LN) $(MDVIEWER_DIR)/themes		$(dir $(NPM_PKG))markdown-themes
-	@$(LN) $(MDVIEWER_DIR)/package.json	$(NPM_PKG)/
-	@cd $(MDVIEWER_DIR) && \
-		$(NPM) install && \
-		$(NPM) run-script build:mdc && \
-		$(NPM) run-script build:remark && \
-		$(NPM) run-script build:prism && \
-		$(NPM) run-script build:themes
 endif
-endif
-endif
-	@$(RM)					$(MDVIEWER_DIR)/node_modules
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
 	@$(ECHO) "$(_M)"
 	@$(LS) --color=never --directory \
