@@ -2505,9 +2505,9 @@ $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(TESTING)-$(HEADERS)-CHECKIT
 $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 $(TESTING): $(TESTING)-Think
-$(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
-$(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-$(DEBUGIT)
+$(TESTING): $(TESTING)-$(DISTRIB)
+$(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
@@ -2596,6 +2596,7 @@ override define $(TESTING)-init =
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(ECHO) "" >$(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$(@)" = "$(TESTING)-Think" ]; then \
+		$(MKDIR) $(abspath $(dir $(TESTING_COMPOSER_MAKEFILE))); \
 		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
 	elif [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
