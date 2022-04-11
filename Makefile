@@ -13,8 +13,8 @@ override VIM_FOLDING := {{{1
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
 #		* `make all` (examine)
-#		* `make debug-file` (review)
-#		* `make test-file` (review)
+#		* `make debug` && `make debug-file` (review)
+#		* `make test` && `make test-file` (review)
 #		* `mv Composer-*.log artifacts/`
 #	* Publish
 #		* Update: README.md (#WORKING release notes?)
@@ -80,7 +80,11 @@ override VIM_FOLDING := {{{1
 #		document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #			COMPOSER_EXPORTED! = need to make a note for me?
 #WORKING
-#	ensure no empty targets: @$(ECHO) ""
+#	site
+#		post = comments ability through *-comments-$(date) files
+#		index = yq crawl of directory to create a central file to build "search" pages out of
+#WORKING:NOW
+#	ensure no empty targets: @$(ECHO) "" = done?
 #	convert all output to markdown
 #		replace license and readme with help/license output
 #		ensure all output fits within 80 characters
@@ -148,7 +152,10 @@ override COMPOSER_RELEASE		:=
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_RELEASE		:= 1
 ifeq ($(MAKELEVEL),0)
+#> update: includes duplicates
+override HELPALL			:= help
 $(warning # $(COMPOSER_FULLNAME): Main directory: Some features are disabled)
+$(warning # $(COMPOSER_FULLNAME): Please use as '.$(COMPOSER_BASENAME)' (see '$(notdir $(MAKE)) $(HELPALL)'))
 endif
 endif
 
@@ -611,6 +618,7 @@ override GIT_RUN_COMPOSER		= $(call GIT_RUN,$(COMPOSER_ROOT),$(strip $(if \
 
 override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
 override define GIT_REPO_DO =
+	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)$(3)$(_D))"; \
 	$(MKDIR) $(abspath $(dir $(5))) $(1); \
 	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) $(1).git  $(5); fi; \
@@ -636,6 +644,7 @@ endef
 
 override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_PKG))
 override define WGET_PACKAGE_DO =
+	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(5)"; \
 	$(MKDIR) $(8); \
 	$(WGET) --directory-prefix $(8) $(2)/$(3); \
@@ -720,14 +729,14 @@ endif
 #> update: COMPOSER_TARGETS.*=
 ifneq ($(COMPOSER_RELEASE),)
 override COMPOSER_TARGETS		:= $(strip \
-	$(BASE).$(EXTN_HTML) \
-	$(BASE).$(EXTN_LPDF) \
-	$(BASE).$(EXTN_EPUB) \
-	$(BASE).$(EXTN_PRES) \
-	$(BASE).$(EXTN_DOCX) \
-	$(BASE).$(EXTN_PPTX) \
-	$(BASE).$(EXTN_TEXT) \
-	$(BASE).$(EXTN_LINT) \
+	$(EXAMPLE_ONE).$(EXTN_HTML) \
+	$(EXAMPLE_ONE).$(EXTN_LPDF) \
+	$(EXAMPLE_ONE).$(EXTN_EPUB) \
+	$(EXAMPLE_ONE).$(EXTN_PRES) \
+	$(EXAMPLE_ONE).$(EXTN_DOCX) \
+	$(EXAMPLE_ONE).$(EXTN_PPTX) \
+	$(EXAMPLE_ONE).$(EXTN_TEXT) \
+	$(EXAMPLE_ONE).$(EXTN_LINT) \
 )
 endif
 
@@ -1019,13 +1028,17 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #> update: $(DEBUGIT): targets list
 #> update: $(TESTING): targets list
 
-#> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOITALL)$
+#	$(DEBUGIT)-$(DOITALL)
+#	$(TESTING)-$(DOITALL)
+#	$(CHECKIT)-$(DOITALL)
 #	$(CONVICT)-$(DOITALL)
 #	$(UPGRADE)-$(DOITALL)
-#	$(CHECKIT)-$(DOITALL)
 #	$(INSTALL)-$(DOITALL)
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
+
+#> update: includes duplicates
 
 override HELPOUT			:= usage
 override HELPALL			:= help
@@ -2460,14 +2473,25 @@ endif
 
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
+$(DEBUGIT)-file: export override COMPOSER_DOITALL_$(TESTING) := 1
 $(DEBUGIT)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DEBUGIT) 2>&1 \
+	@$(RUNMAKE) \
+		COMPOSER_DOITALL_$(TESTING)="1" \
+		COMPOSER_DOCOLOR= \
+		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+		$(DEBUGIT) 2>&1 \
 		| $(TEE) $(DEBUGIT_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
 	@$(TAIL) -n10 $(DEBUGIT_FILE)
 	@$(LS) $(DEBUGIT_FILE)
+
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(DEBUGIT) ?=)
+.PHONY: $(DEBUGIT)-$(DOITALL)
+$(DEBUGIT)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(DEBUGIT)="1" $(DEBUGIT)
 
 #> update: $(DEBUGIT): targets list
 .PHONY: $(DEBUGIT)
@@ -2482,9 +2506,11 @@ $(DEBUGIT): $(DEBUGIT)-CHECKIT
 $(DEBUGIT): $(DEBUGIT)-CONFIGS
 $(DEBUGIT): $(DEBUGIT)-TARGETS
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DEBUGIT
+ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),)
+$(DEBUGIT): $(DEBUGIT)-TESTING
+endif
 $(DEBUGIT): $(DEBUGIT)-MAKEFILE_LIST
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_INCLUDES
-#>$(DEBUGIT): $(DEBUGIT)-TESTING
 $(DEBUGIT): $(DEBUGIT)-LISTING
 $(DEBUGIT): $(DEBUGIT)-MAKE_DB
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DIR
@@ -2526,14 +2552,24 @@ $(DEBUGIT)-%:
 
 .PHONY: $(TESTING)-file
 $(TESTING)-file: export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
+$(TESTING)-file: export override COMPOSER_DOITALL_$(TESTING) := 1
 $(TESTING)-file:
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(TESTING) 2>&1 \
+	@$(RUNMAKE) \
+		COMPOSER_DOITALL_$(TESTING)="1" \
+		COMPOSER_DOCOLOR= \
+		$(TESTING) 2>&1 \
 		| $(TEE) $(TESTING_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
 	@$(TAIL) -n10 $(TESTING_FILE)
 	@$(LS) $(TESTING_FILE)
+
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(TESTING) ?=)
+.PHONY: $(TESTING)-$(DOITALL)
+$(TESTING)-$(DOITALL):
+	@$(RUNMAKE) COMPOSER_DOITALL_$(TESTING)="1" $(TESTING)
 
 #> update: $(TESTING): targets list
 .PHONY: $(TESTING)
@@ -2547,8 +2583,10 @@ $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(TESTING)-$(HEADERS)-CHECKIT
 $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 $(TESTING): $(TESTING)-Think
-#>$(TESTING): $(TESTING)-$(DEBUGIT)
 $(TESTING): $(TESTING)-$(DISTRIB)
+ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
+$(TESTING): $(TESTING)-$(DEBUGIT)
+endif
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
@@ -2655,27 +2693,40 @@ endef
 
 override define $(TESTING)-find =
 	$(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))); \
-	if [ $(if $(3),-n,-z) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))) | $(SED) "s|[$$]|.|g")" ]; then exit 1; fi
+	if [ $(if $(3),-n,-z) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))) | $(SED) "s|[$$]|.|g")" ]; then \
+		$(call $(TESTING)-fail); \
+		if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
+			exit 1; \
+		fi; \
+	fi
 endef
 
 override define $(TESTING)-count =
 	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))); \
 	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC); \
-	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC))" != "$(1)" ]; then exit 1; fi
+	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC))" != "$(1)" ]; then \
+		$(call $(TESTING)-fail); \
+		if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
+			exit 1; \
+		fi; \
+	fi
 endef
 
-ifneq ($(COMPOSER_DOCOLOR),)
+override define $(TESTING)-fail =
+	$(ENDOLINE); \
+	$(call $(HEADERS)-note,FAILED!); \
+	$(ENDOLINE)
+endef
+
 override define $(TESTING)-hold =
 	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
-	read $(TESTING)
+	if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
+		$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
+		read $(TESTING); \
+	else \
+		$(PRINT) "$(_H)$(MARKER) PAUSE TO REVIEW"; \
+	fi
 endef
-else
-override define $(TESTING)-hold =
-	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) PAUSE TO REVIEW"
-endef
-endif
 
 ########################################
 # {{{3 $(TESTING)-Think ----------------
@@ -2918,7 +2969,7 @@ endef
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
 	$(call $(TESTING)-count,2,\|.+$(subst /,.,$(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,\|.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],$$))
+	$(call $(TESTING)-count,1,\|.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],[ $$]))
 	$(call $(TESTING)-count,3,\|.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))))
 
 ########################################
@@ -3100,8 +3151,14 @@ $(TESTING)-other-done:
 	#> pandoc
 	@$(PRINT) "$(_C)Pandoc: $(PANDOC_BIN) = $(PANDOC)"
 	@$(PRINT) "$(_C)YQ: $(YQ_BIN) = $(YQ)"
-	@$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(ECHO) "",exit 1)
-	@$(if $(filter $(YQ),$(YQ_BIN)),$(ECHO) "",exit 1)
+	@if	[ "$(PANDOC)" != "$(PANDOC_BIN)" ] || \
+		[ "$(YQ)" != "$(YQ_BIN)" ]; \
+	then \
+		$(call $(TESTING)-fail); \
+		if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
+			exit 1; \
+		fi; \
+	fi
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,User Guide)
@@ -3286,13 +3343,21 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
+	@$(ENDOLINE)
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
 	@$(ECHO) "$(_M)"
+	@$(LS) --color=never --directory \
+		$(PANDOC_BIN) \
+		$(YQ_BIN) \
+		2>/dev/null
+	@$(ECHO) "$(_C)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_DIR)/data/templates \
 		$(MDVIEWER_DIR)/manifest.firefox.json \
 		$(MDVIEWER_DIR)/manifest.chrome.json \
-		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME)
+		$(MDVIEWER_DIR)/manifest.edge.json \
+		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME) \
+		2>/dev/null
 	@$(ECHO) "$(_D)"
 
 ################################################################################
