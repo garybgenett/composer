@@ -387,7 +387,9 @@ override OPT				?=
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
 #>override PANDOC_VER			:= 2.13
+ifeq ($(filter override,$(origin PANDOC_VER)),)
 override PANDOC_VER			:= 2.18
+endif
 ifeq ($(filter override,$(origin PANDOC_CMT)),)
 override PANDOC_CMT			:= $(PANDOC_VER)
 endif
@@ -419,7 +421,9 @@ endif
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
 #>override YQ_VER			:= 2.7.2
+ifeq ($(filter override,$(origin YQ_VER)),)
 override YQ_VER				:= 4.24.2
+endif
 ifeq ($(filter override,$(origin YQ_CMT)),)
 override YQ_CMT				:= v$(YQ_VER)
 endif
@@ -485,8 +489,8 @@ override SED_VER			:= 4.8
 
 override MAKE_VER			:= 4.2.1
 override PANDOC_VER			:= $(PANDOC_VER)
-override TEX_PDF_VER			:= 2021 3.14159 2.6-1.40.22
 override YQ_VER				:= $(YQ_VER)
+override TEX_PDF_VER			:= 2021 3.14159 2.6-1.40.22
 
 override GIT_VER			:= 2.32.0
 override WGET_VER			:= 1.20.3
@@ -545,8 +549,8 @@ override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
-override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
+override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
@@ -3130,8 +3134,8 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(_M)$(YQ_VER)"		"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "- $(_E)Git SCM"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
@@ -3154,9 +3158,9 @@ endif
 	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_D)$(LS)"
 	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_D)$(SED)"
 	@$(TABLE_M2) "$(_C)GNU Make"			"$(_D)$(REALMAKE)"
-	@$(TABLE_M2) "- $(_C)Pandoc"			"$(_D)$(PANDOC)"
+	@$(TABLE_M2) "- $(_C)Pandoc"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(PANDOC)"
+	@$(TABLE_M2) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(YQ)"
 	@$(TABLE_M2) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
-	@$(TABLE_M2) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(_D)$(YQ)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"
 	@$(TABLE_M2) "- $(_E)Git SCM"			"$(_N)$(GIT)"
