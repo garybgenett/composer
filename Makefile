@@ -100,6 +100,7 @@ override VIM_FOLDING := {{{1
 override COMPOSER_VERSION		:= v3.0
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
+override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 ########################################
 
@@ -117,7 +118,7 @@ override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
 
 override EXAMPLE_ONE			:= README
 override EXAMPLE_TWO			:= LICENSE
-override EXAMPLE_OUT			:= MANUAL
+override EXAMPLE_OUT			:= $(COMPOSER_FILENAME).Manual
 
 ########################################
 
@@ -138,8 +139,18 @@ override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 ########################################
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-override OUTPUT_FILENAME		= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION).$(1)-$(DATENAME).$(EXTN_TEXT)
-override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
+override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(DATENAME).$(EXTN_TEXT)
+override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
+
+########################################
+
+override COMPOSER_RELEASE		:=
+ifeq ($(COMPOSER_DIR),$(CURDIR))
+override COMPOSER_RELEASE		:= 1
+ifeq ($(MAKELEVEL),0)
+$(warning # $(COMPOSER_FULLNAME): Main directory: Some features are disabled)
+endif
+endif
 
 ################################################################################
 # {{{1 Include Files -----------------------------------------------------------
@@ -342,9 +353,16 @@ override COMPOSER_EXT			:= $(notdir $(COMPOSER_EXT))
 
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
+
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_IGNORES		?=
+
+ifneq ($(COMPOSER_RELEASE),)
+override COMPOSER_TARGETS		:=
+override COMPOSER_SUBDIRS		:=
+override COMPOSER_IGNORES		:=
+endif
 
 ########################################
 
@@ -700,8 +718,7 @@ override EXTENSION			:= $(EXTN_LINT)
 endif
 
 #> update: COMPOSER_TARGETS.*=
-ifeq ($(COMPOSER_TARGETS),)
-ifeq ($(COMPOSER_DIR),$(CURDIR))
+ifneq ($(COMPOSER_RELEASE),)
 override COMPOSER_TARGETS		:= $(strip \
 	$(BASE).$(EXTN_HTML) \
 	$(BASE).$(EXTN_LPDF) \
@@ -712,7 +729,6 @@ override COMPOSER_TARGETS		:= $(strip \
 	$(BASE).$(EXTN_TEXT) \
 	$(BASE).$(EXTN_LINT) \
 )
-endif
 endif
 
 ########################################
@@ -994,7 +1010,7 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 	$(if $(or \
 		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
 		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
-	),,$(error COMPOSER_OPTIONS: $(FILE))) \
+	),,$(error # $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE))) \
 )
 
 ########################################
@@ -1110,7 +1126,7 @@ $(1)s-clean:
 		$$(RM) $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|$$(CURDIR)/\1|gp"); \
 		,$(ECHO) ""; \
 	)
-ifeq ($(COMPOSER_DIR),$(CURDIR))
+ifneq ($(COMPOSER_RELEASE),)
 $(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
 	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
 	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
@@ -1131,13 +1147,13 @@ override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
 override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
 override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
 
+ifeq ($(COMPOSER_RELEASE),)
+
 ifeq ($(COMPOSER_TARGETS),)
-ifneq ($(COMPOSER_DIR),$(CURDIR))
 ifneq ($(COMPOSER_EXT),)
 override COMPOSER_TARGETS		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
 else
 override COMPOSER_TARGETS		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
-endif
 endif
 endif
 
@@ -1150,14 +1166,14 @@ endif
 endif
 
 ifeq ($(COMPOSER_SUBDIRS),)
-ifneq ($(COMPOSER_DIR),$(CURDIR))
 #>override COMPOSER_SUBDIRS		:= $(subst /$(MAKEFILE),,$(wildcard $(addsuffix /$(MAKEFILE),$(COMPOSER_CONTENTS_DIRS))))
 override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
-endif
 endif
 
 override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
 override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
+
+endif
 
 ########################################
 
@@ -1592,8 +1608,19 @@ $(CREATOR): .set_title-$(CREATOR)
 		$(CURDIR)/$(notdir $(COMPOSER_ART)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS)) \
 		$(CURDIR)/*$(COMPOSER_EXT_DEFAULT)
+ifneq ($(COMPOSER_RELEASE),)
+#WORKING:NOW MANUAL = $(EXAMPLE_OUT) ?
+	@$(ECHO) "" >$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER) $(DOITALL)
+	@$(RM) \
+		$(CURDIR)/$(COMPOSER_SETTINGS) \
+		$(CURDIR)/$(COMPOSER_STAMP) \
+		>/dev/null 2>&1
+else
+#WORKING:NOW what do we actually want here...?
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+endif
 
 ########################################
 # {{{2 $(EXAMPLE) ----------------------
@@ -2224,6 +2251,15 @@ endif
 
 #> update: COMPOSER_OPTIONS
 
+override HEADERS_MAKEFILE_LIST		:= $(MAKEFILE_LIST)
+override HEADERS_COMPOSER_INCLUDES	:= $(COMPOSER_INCLUDES)
+override HEADERS_CURDIR			:= $(HEADERS_CURDIR)
+ifneq ($(COMPOSER_RELEASE),)
+override HEADERS_MAKEFILE_LIST		:= $(subst $(abspath $(dir $(CURDIR))),...,$(MAKEFILE_LIST))
+override HEADERS_COMPOSER_INCLUDES	:= $(subst $(abspath $(dir $(CURDIR))),...,$(COMPOSER_INCLUDES))
+override HEADERS_CURDIR			:= $(subst $(abspath $(dir $(CURDIR))),...,$(CURDIR))
+endif
+
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override $(HEADERS)-list := $(COMPOSER_OPTIONS)
 override $(HEADERS)-vars := $($(HEADERS)-list)
@@ -2260,9 +2296,9 @@ override define $(HEADERS) =
 	$(HEADER_L); \
 	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)";
 	$(HEADER_L)
-	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(MAKEFILE_LIST)$(_D)]"; \
-	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(COMPOSER_INCLUDES)$(_D)]"; \
-	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(CURDIR)$(_D)]"; \
+	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(HEADERS_MAKEFILE_LIST)$(_D)]"; \
+	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(HEADERS_COMPOSER_INCLUDES)$(_D)]"; \
+	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(HEADERS_CURDIR)$(_D)]"; \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@)))$(_D)$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(DOITALL)$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
 	$(foreach FILE,$(if $(COMPOSER_DEBUGIT_ALL),$($(HEADERS)-list),$(if $(1),$($(HEADERS)-list))),\
@@ -2275,9 +2311,9 @@ override define $(HEADERS)-run =
 	$(LINERULE); \
 	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(COMPOSER)"; \
 	$(TABLE_M2) ":---"			":---"; \
-	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(MAKEFILE_LIST)"; \
-	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(COMPOSER_INCLUDES)"; \
-	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(CURDIR)"; \
+	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(HEADERS_MAKEFILE_LIST)"; \
+	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(HEADERS_COMPOSER_INCLUDES)"; \
+	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(HEADERS_CURDIR)"; \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@)))$(_D)$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(DOITALL)$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(if $(COMPOSER_DEBUGIT_ALL),$($(HEADERS)-vars),$(if $(1),$($(HEADERS)-vars))),\
@@ -2287,16 +2323,16 @@ override define $(HEADERS)-run =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_N)$(CURDIR)$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(1)"
+	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_N)$(HEADERS_CURDIR)$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(1)"
 endef
 override define $(HEADERS)-dir =
-	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(1)$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 override define $(HEADERS)-file =
-	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(1)$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_N)$(MARKER) Skipping" "$(_N)$(1)$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
+	$(TABLE_M2) "$(_N)$(MARKER) Skipping" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
 endef
 
 ########################################
