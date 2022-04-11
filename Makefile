@@ -58,6 +58,7 @@ override VIM_FOLDING := {{{1
 #			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
 #			dependencies using "parent: child" targets
 #	notes
+#		we can use *_DEFAULTS variables in the documentation!  create more of these...?
 #		a brief note about filenames with spaces and symlinks...?
 #		document empty COMPOSER_EXT value
 #		do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
@@ -254,12 +255,17 @@ unexport
 
 ########################################
 
+override MAKEJOBS_DEFAULT		:= 1
+
 $(call READ_ALIASES,J,c_jobs,MAKEJOBS)
-override MAKEJOBS			?= 1
+override MAKEJOBS			?= $(MAKEJOBS_DEFAULT)
+ifeq ($(MAKEJOBS),)
+override MAKEJOBS			:= $(MAKEJOBS_DEFAULT)
+endif
 
 #> update: COMPOSER_DEPENDS: MAKEJOBS
 ifneq ($(COMPOSER_DEPENDS),)
-override MAKEJOBS			:= 1
+override MAKEJOBS			:= $(MAKEJOBS_DEFAULT)
 endif
 
 ifeq ($(MAKEJOBS),1)
@@ -287,6 +293,21 @@ ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
 else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
+endif
+
+########################################
+
+#> update: includes duplicates
+override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
+
+override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
+override OS_TYPE			:=
+ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Linux
+else ifneq ($(subst Windows,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Windows
+else ifneq ($(subst Darwin,,$(OS_UNAME)),$(OS_UNAME))
+override OS_TYPE			:= Darwin
 endif
 
 ################################################################################
@@ -984,6 +1005,8 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
 
+#WORKING:NOW re-sort these already...!
+
 override HELPOUT			:= usage
 override HELPALL			:= help
 override CREATOR			:= docs
@@ -1143,24 +1166,11 @@ ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
 override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
 endif
 
-#> update: $(TESTING)-$(COMPOSER_BASENAME)
+#> update: $(TESTING)-$(COMPOSER_BASENAME)-init
 ifeq ($(notdir $(TESTING_DIR)),$(notdir $(CURDIR)))
 ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 override COMPOSER_SUBDIRS		:=
 endif
-endif
-
-########################################
-# {{{2 Uname ---------------------------
-
-override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
-override OS_TYPE			:=
-ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
-override OS_TYPE			:= Linux
-else ifneq ($(subst Windows,,$(OS_UNAME)),$(OS_UNAME))
-override OS_TYPE			:= Windows
-else ifneq ($(subst Darwin,,$(OS_UNAME)),$(OS_UNAME))
-override OS_TYPE			:= Darwin
 endif
 
 ################################################################################
@@ -2360,15 +2370,41 @@ $(LISTING):
 ########################################
 # {{{2 $(NOTHING) ----------------------
 
+#> grep -E "[$][(]NOTHING[)][-]" Makefile
+#> update: $(TESTING)-$(COMPOSER_BASENAME)-done
+#> update: $(TESTING)-COMPOSER_DEPENDS-done
+override NOTHING_IGNORES := \
+	$(CLEANER)-$(SUBDIRS) \
+	$(CLEANER)-$(TARGETS) \
+	$(DOITALL)-$(SUBDIRS) \
+	$(DOITALL)-$(TARGETS) \
+	$(INSTALL)-$(SUBDIRS) \
+
+#>	$(CLEANER)-$(TARGETS)-only \
+#>	$(MAKEFILE) \
+#>	$(NOTHING)-$(CLEANER)-$(SUBDIRS)
+#>	$(NOTHING)-$(DOITALL)-$(SUBDIRS)
+#>	$(NOTHING)-$(DOITALL)-$(TARGETS)
+#>	$(NOTHING)-$(INSTALL)-$(SUBDIRS)
+#>	$(SUBDIRS) \
+#>	COMPOSER_EXT
+#>	COMPOSER_STAMP
+
 $(eval override COMPOSER_NOTHING ?=)
 #>.PHONY: $(NOTHING)-%
 $(NOTHING)-%:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(*)" $(NOTHING)
 
-#WORKING:NOW use COMPOSER_DEBUGIT to suppress all the NOTHING calls scattered everywhere... all-targets subdirs-targets cleaner-targets... we still want them, just not all the time... this will impact test cases!
 .PHONY: $(NOTHING)
 $(NOTHING):
+ifeq ($(COMPOSER_DEBUGIT),)
+	@$(if \
+		$(filter $(COMPOSER_NOTHING),$(NOTHING_IGNORES)),,\
+		$(call $(HEADERS)-note,$(COMPOSER_NOTHING)) \
+	)
+else
 	@$(call $(HEADERS)-note,$(COMPOSER_NOTHING))
+endif
 
 ################################################################################
 # {{{1 Debug Targets -----------------------------------------------------------
@@ -2620,7 +2656,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-init,$(TESTING_COMPOSER_DIR))
 	@$(call $(TESTING)-done,$(TESTING_COMPOSER_DIR))
 
-#> update: $(TESTING)-$(COMPOSER_BASENAME)
+#> update: $(TESTING)-$(COMPOSER_BASENAME)-init
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(TESTING_DIR)/$(MAKEFILE)
@@ -2641,13 +2677,14 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "" >$(TESTING_DIR)/$(COMPOSER_SETTINGS)
 
+#> update: $(TESTING)-$(COMPOSER_BASENAME)-done
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-find,override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE),$(TESTING_COMPOSER_DIR))
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS),$(TESTING_COMPOSER_DIR))
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(DOITALL)-$(SUBDIRS),$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS),$(TESTING_COMPOSER_DIR))
+#>	$(call $(TESTING)-count,2,NOTICE.+$(NOTHING).+$(DOITALL)-$(TARGETS),$(TESTING_COMPOSER_DIR))
+#>	$(call $(TESTING)-count,2,NOTICE.+$(NOTHING).+$(DOITALL)-$(SUBDIRS),$(TESTING_COMPOSER_DIR))
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -2858,10 +2895,11 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_SUBDIRS/p"
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data MAKEJOBS="0" $(DOITALL)
 
+#> update: $(TESTING)-COMPOSER_DEPENDS-done
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
 	$(call $(TESTING)-count,1,MAKEJOBS.+1)
-	$(call $(TESTING)-find,NOTICE.+$(notdir $(call $(TESTING)-pwd))\/data\/docx\/_rels)
+#>	$(call $(TESTING)-count,2,NOTICE.+$(notdir $(call $(TESTING)-pwd))\/data\/docx\/_rels)
 	$(call $(TESTING)-find,Directory.+$(notdir $(call $(TESTING)-pwd))\/data)
 	$(call $(TESTING)-find,Creating.+$(notdir $(call $(TESTING)-pwd))\/data)
 	$(call $(TESTING)-find,Creating.+$(EXAMPLE_OUT).$(EXTN_DEFAULT),,1)
@@ -2971,7 +3009,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(EXAMPLE_OUT)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 #WORKING turn these into variables with the readme/license work... also fix *-count checks below
-	@$(LESS) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
+	@$(LESS_BIN) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
 		| $(SED) -n \
 			-e "/User Guide/p" \
 			-e "/Composer CMS License/p" \
@@ -2995,7 +3033,7 @@ $(TESTING)-other-init:
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
-	#> pandoc/yq
+	#> pandoc
 	@$(PRINT) "$(_C)Pandoc: $(PANDOC_BIN) = $(PANDOC)"
 	@$(PRINT) "$(_C)YQ: $(YQ_BIN) = $(YQ)"
 	@$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(ECHO) "",exit 1)
