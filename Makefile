@@ -300,11 +300,11 @@ override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 
 override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
 override OS_TYPE			:=
-ifneq ($(subst Linux,,$(OS_UNAME)),$(OS_UNAME))
+ifneq ($(filter Linux,$(OS_UNAME)),)
 override OS_TYPE			:= Linux
-else ifneq ($(subst Windows,,$(OS_UNAME)),$(OS_UNAME))
+else ifneq ($(filter Windows,$(OS_UNAME)),)
 override OS_TYPE			:= Windows
-else ifneq ($(subst Darwin,,$(OS_UNAME)),$(OS_UNAME))
+else ifneq ($(filter Darwin,$(OS_UNAME)),)
 override OS_TYPE			:= Darwin
 endif
 
@@ -552,14 +552,15 @@ override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
-#>override GZIP				:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
 
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
-#>override LESS				:= $(call COMPOSER_FIND,$(PATH_LIST),less)
-override LESS_BIN				:= $(call COMPOSER_FIND,$(PATH_LIST),less)
+override LESS_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),less) --force --raw-control-chars
+
+export GZIP				:=
+export LESS				:=
 
 ########################################
 
@@ -746,6 +747,11 @@ endif
 #WORK TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
+#	--strip-comments
+#	--eol=lf
+#	site:
+#		--include-before-body
+#		--include-after-body
 #WORK TODO
 #	man pandoc = pandoc -o custom-reference.docx --print-default-data-file reference.docx
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
@@ -3029,11 +3035,13 @@ $(TESTING)-other-init:
 	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(EXAMPLE_OUT)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 #WORKING turn these into variables with the readme/license work... also fix *-count checks below
+ifeq ($(OS_TYPE),Linux)
 	@$(LESS_BIN) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
 		| $(SED) -n \
 			-e "/User Guide/p" \
 			-e "/Composer CMS License/p" \
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
+endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="json" $(COMPOSER_PANDOC)
@@ -3059,9 +3067,11 @@ $(TESTING)-other-done:
 	@$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(ECHO) "",exit 1)
 	@$(if $(filter $(YQ),$(YQ_BIN)),$(ECHO) "",exit 1)
 	#> book
+ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,User Guide)
 	$(call $(TESTING)-count,1,Composer CMS License)
 	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
+endif
 	$(call $(TESTING)-find,removed.+$(subst /,.,$(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF)))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
