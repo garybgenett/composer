@@ -58,6 +58,7 @@ override VIM_FOLDING := {{{1
 #			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
 #			dependencies using "parent: child" targets
 #	notes
+#		variable aliases, order of precedence (now that it is fixed)
 #		we can use *_DEFAULTS variables in the documentation!  create more of these...?
 #		a brief note about filenames with spaces and symlinks...?
 #		document empty COMPOSER_EXT value
@@ -86,7 +87,6 @@ override VIM_FOLDING := {{{1
 #WORKING:NOW
 #	make $INSTALL just the local $MAKEFILE, and create $INSTALL-dir, which does the recursion
 #		replace all the hackery everywhere that does the templates...
-#	ensure no empty targets: @$(ECHO) "" = done?
 #	convert all output to markdown
 #		replace license and readme with help/license output
 #		ensure all output fits within 80 characters
@@ -174,8 +174,12 @@ override COMPOSER_INCLUDES_LIST		:=
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 override define READ_ALIASES =
-	$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1))))
-	$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2))))
+	$(if $(filter undefined,$(origin $(3))),\
+		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1))); $(eval override undefine $(1))); \
+		$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2))); $(eval override undefine $(2))); \
+	); \
+	$(eval override undefine $(1)); \
+	$(eval override undefine $(2))
 endef
 
 ########################################
@@ -859,11 +863,6 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 
 #WORK bootstrap!
 
-#WORK #> update: COMPOSER_OPTIONS
-#WORK $(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $($(FILE)))) = gah! the export is above in: Composer Operation
-
-#WORK think about this...
-
 # override SITE_SOURCE			?= $(COMPOSER_ROOT)
 # override SITE_OUTPUT			?= $(COMPOSER_ROOT)/_site
 # override SITE_SEARCH			?= 1
@@ -1240,6 +1239,9 @@ $(HELPOUT): \
 #	HELP-VARIABLES_TITLE_1 \
 #	HELP-VARIABLES_FORMAT_2 \
 
+$(HELPOUT):
+	@$(ECHO) ""
+
 .PHONY: $(HELPALL)
 ifneq ($(MAKECMDGOALS),$(filter-out $(HELPALL),$(MAKECMDGOALS)))
 .NOTPARALLEL:
@@ -1257,6 +1259,9 @@ $(HELPALL): \
 #	HELP-SYSTEM \
 #	EXAMPLE-MAKEFILE \
 #	HELP-FOOTER
+
+$(HELPALL):
+	@$(ECHO) ""
 
 #>.PHONY: HELP-TITLE_%
 HELP-TITLE_%:
@@ -1281,6 +1286,7 @@ HELP-VARIABLES_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,$(HEAD_MAIN))
 
 #> update: TYPE_TARGETS
+#> update: READ_ALIASES
 #>.PHONY: HELP-VARIABLES_FORMAT_%
 HELP-VARIABLES_FORMAT_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
@@ -2455,8 +2461,8 @@ $(NOTHING)-%:
 .PHONY: $(NOTHING)
 $(NOTHING):
 ifeq ($(COMPOSER_DEBUGIT),)
-	@$(if \
-		$(filter $(COMPOSER_NOTHING),$(NOTHING_IGNORES)),,\
+	@$(if $(filter $(COMPOSER_NOTHING),$(NOTHING_IGNORES)),\
+		$(ECHO) "",\
 		$(call $(HEADERS)-note,$(COMPOSER_NOTHING)) \
 	)
 else
@@ -2520,6 +2526,8 @@ $(DEBUGIT): $(DEBUGIT)-MAKE_DB
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DIR
 $(DEBUGIT): $(DEBUGIT)-CURDIR
 $(DEBUGIT): HELP-FOOTER
+$(DEBUGIT):
+	@$(ECHO) ""
 
 .PHONY: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(HEADERS):
@@ -2601,6 +2609,8 @@ $(TESTING): $(TESTING)-CSS
 $(TESTING): $(TESTING)-other
 $(TESTING): $(TESTING)-$(EXAMPLE)
 $(TESTING): HELP-FOOTER
+$(TESTING):
+	@$(ECHO) ""
 
 .PHONY: $(TESTING)-$(HEADERS)
 $(TESTING)-$(HEADERS):
@@ -3459,6 +3469,8 @@ endif
 #>	@$(call $(INSTALL)-$(MAKEFILE),$($(@))/$(COMPOSER_SETTINGS))
 	@+$(call MAKE_RECURSIVE) --directory $($(@)) $(INSTALL)-$(SUBDIRS)
 endif
+$(INSTALL)-$(SUBDIRS):
+	@$(ECHO) ""
 
 override define $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME) =
 	$(SED) -i "s|^($(call COMPOSER_INCLUDE_REGEX,COMPOSER_TEACHER)).*$$|\1 \$$(abspath \$$(COMPOSER_MY_PATH)/$(shell $(REALPATH) $(dir $(1)) $(2)))|g" $(1)
@@ -3547,6 +3559,8 @@ $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 		$(RUNMAKE) --directory $($(@)) $(NOTHING)-$(MAKEFILE) \
 	)
 endif
+$(CLEANER)-$(SUBDIRS):
+	@$(ECHO) ""
 
 override define $(CLEANER)-$(TARGETS)-list =
 	$(RUNMAKE) --silent $(LISTING) \
@@ -3613,6 +3627,8 @@ $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 		$(RUNMAKE) --directory $($(@)) $(NOTHING)-$(MAKEFILE) \
 	)
 endif
+$(DOITALL)-$(SUBDIRS):
+	@$(ECHO) ""
 
 ########################################
 # {{{2 $(SUBDIRS) ----------------------
@@ -3632,6 +3648,8 @@ ifeq ($(COMPOSER_STAMP),)
 $(PRINTER): $(NOTHING)-COMPOSER_STAMP
 endif
 $(PRINTER): $(PRINTER)-list
+$(PRINTER):
+	@$(ECHO) ""
 
 .PHONY: $(PRINTER)-list
 $(PRINTER)-list: $(COMPOSER_STAMP)
