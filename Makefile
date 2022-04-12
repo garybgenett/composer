@@ -2905,6 +2905,7 @@ $(TESTING)-$(INSTALL): $(TESTING)-Think
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 		\n\t * Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
 		\n\t * Examine output to validate '$(_C)$(NOTHING)$(_D)' markers \
+		\n\t * Ensure threading is working properly \
 		\n\t * Test runs: \
 		\n\t\t * Forced install $(_E)(from '$(TESTING)-load')$(_D) \
 		\n\t\t * Linear build all \
@@ -3615,6 +3616,10 @@ endef
 #> update: $(MAKE)
 
 #WORKING:NOW unified recursion
+#WORKING:NOW add *-all handling, identical to *-clean
+#	add specials to that instead of *s, and link *s to the *-all
+#	replace specials call in all, and leave it to *-all instead
+#		this will blend in those targets more seamlessly, and still leave the *s option
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
