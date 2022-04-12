@@ -515,6 +515,7 @@ override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
 
 override BASH_VER			:= 5.0.18
 override COREUTILS_VER			:= 8.31
+override FINDUTILS_VER			:= 4.8.0
 override SED_VER			:= 4.8
 
 override MAKE_VER			:= 4.2.1
@@ -549,6 +550,7 @@ export SHELL
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
+override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
@@ -2273,8 +2275,6 @@ endif
 ########################################
 # {{{2 $(HEADERS) ----------------------
 
-#> update: COMPOSER_OPTIONS
-
 override HEADERS_COMPOSER_DIR		:= $(COMPOSER_DIR)
 override HEADERS_MAKEFILE_LIST		:= $(MAKEFILE_LIST)
 override HEADERS_COMPOSER_INCLUDES	:= $(COMPOSER_INCLUDES)
@@ -2286,6 +2286,7 @@ override HEADERS_COMPOSER_INCLUDES	:= $(subst $(abspath $(dir $(CURDIR))),...,$(
 override HEADERS_CURDIR			:= $(subst $(abspath $(dir $(CURDIR))),...,$(CURDIR))
 endif
 
+#> update: COMPOSER_OPTIONS
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override $(HEADERS)-list := $(COMPOSER_OPTIONS)
 override $(HEADERS)-vars := $($(HEADERS)-list)
@@ -2309,6 +2310,26 @@ override $(HEADERS)-vars := \
 	FNT \
 	OPT
 endif
+
+.PHONY: $(HEADERS)-$(TESTING)-$(DOITALL)
+$(HEADERS)-$(TESTING)-$(DOITALL): override export COMPOSER_DOITALL_$(HEADERS)-$(TESTING) := $(DOITALL)
+$(HEADERS)-$(TESTING)-$(DOITALL): override export $(HEADERS)-list := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(TESTING)-$(DOITALL): override export $(HEADERS)-vars := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(TESTING)-$(DOITALL): $(HEADERS)-$(TESTING)
+$(HEADERS)-$(TESTING)-$(DOITALL):
+	@$(ECHO) ""
+
+.PHONY: $(HEADERS)-$(TESTING)
+$(HEADERS)-$(TESTING):
+	@$(call $(HEADERS))
+	@$(call $(HEADERS),1)
+	@$(call $(HEADERS)-run)
+	@$(call $(HEADERS)-run,1)
+	@$(call $(HEADERS)-note,this is a note)
+	@$(call $(HEADERS)-dir,$(CURDIR),more on that)
+	@$(call $(HEADERS)-file,$(CURDIR),more on that)
+	@$(call $(HEADERS)-skip,$(CURDIR),more on that)
+	@$(call $(HEADERS)-rm,$(CURDIR),more on that)
 
 .PHONY: $(HEADERS)
 $(HEADERS): $(NOTHING)-$(HEADERS)
@@ -2353,7 +2374,7 @@ override define $(HEADERS)-run =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_N)$(HEADERS_CURDIR)$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(1)"
+	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(HEADERS_CURDIR)$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(1)"
 endef
 override define $(HEADERS)-dir =
 	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
@@ -2362,7 +2383,10 @@ override define $(HEADERS)-file =
 	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_N)$(MARKER) Skipping" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
+endef
+override define $(HEADERS)-rm =
+	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 
 ########################################
@@ -3277,10 +3301,11 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) ":---"				":---"					":---"
 	@$(TABLE_M3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)YQ"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
@@ -3299,10 +3324,11 @@ endif
 	@$(TABLE_M2) ":---"				":---"
 	@$(TABLE_M2) "$(_C)GNU Bash"			"$(_D)$(BASH)"
 	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_D)$(LS)"
+	@$(TABLE_M2) "- $(_C)GNU Findutils"		"$(_D)$(FIND)"
 	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_D)$(SED)"
 	@$(TABLE_M2) "$(_C)GNU Make"			"$(_D)$(REALMAKE)"
 	@$(TABLE_M2) "- $(_C)Pandoc"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(PANDOC)"
-	@$(TABLE_M2) "- $(_C)YQ $(_H)[$(PUBLISH)]"	"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(YQ)"
+	@$(TABLE_M2) "- $(_C)YQ"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(YQ)"
 	@$(TABLE_M2) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"
@@ -3578,7 +3604,8 @@ endif
 	)
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
 		if [ "$(FILE)" != "$(NOTHING)" ] && [ ! -d "$(FILE)" ]; then \
-			$(RM) $(CURDIR)/$(FILE); \
+			$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
+			$(RM) $(CURDIR)/$(FILE) >/dev/null 2>&1; \
 		fi; \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
@@ -3618,8 +3645,38 @@ endef
 #WORKING:NOW unified recursion
 #WORKING:NOW add *-all handling, identical to *-clean
 #	add specials to that instead of *s, and link *s to the *-all
+#	need to make sure that all-all doesn't create a circular reference!
+#		(shouldn't, since that is now a wildcard target)
+#	add specials (*s, and site) to another variable that is included in all?
+#		link *s: header *-all
+#		actually, need something better for site, which will probably remain singular...
+#			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
+#				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
+#				verify that pandoc ignores leading yaml/json, and that yq can be used to just grab the headers?
+#			a page-* of post-*s will be <variable> post-*s truncated to <variable> length (and then [...])
+#			this way, manual page-*s can be created that stay static (like gary-os and composer readmes on "project" pages)
+#			also, the dynamic "index" pages, which pull in all post-*s that match
+#				this can look like index: entries that use the dependencies to know which index to build?
 #	replace specials call in all, and leave it to *-all instead
 #		this will blend in those targets more seamlessly, and still leave the *s option
+#	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
+#		will need to do something with "targets" output, which will get super crowded (maybe only if there are dependencies? affirmative.)
+#			they will show up in composer_targets, anyway, right? yes, ugly, parse them out and let *-all handle it
+#			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
+#			test case this instead... it should be identical for all of book/page/post...
+#		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
+#	switch clean to do a if -f then headers-rm >/dev/null 2&1
+#		move both *-all and *-clean to be first, just after composer_stamp
+#		maybe composer_targets is just targets-clean? naw, messes with targets output. well, actually, there is already a targets list, so...
+#	add findutils back in... we're going to need it later, which is probably why we had it in there in the first place...
+#		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
+#		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
+#		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
+#	get rid of .Composer? yes, it's going to make testing increasingly difficult... need a play space linked to the main makefile
+#		it's already compilcated, anyway...
+#		probably best to comment out distrib, then... unnecessary
+#		(don't do this... it'll start everything all over, and break tests like COMPOSER_INCLUDE... not worth it)
+#		need to truly switch to test-driven coding, where the code is being written along with the test...
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
