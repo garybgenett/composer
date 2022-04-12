@@ -84,6 +84,8 @@ override VIM_FOLDING := {{{1
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
 #WORKING:NOW
+#	make $INSTALL just the local $MAKEFILE, and create $INSTALL-dir, which does the recursion
+#		replace all the hackery everywhere that does the templates...
 #	ensure no empty targets: @$(ECHO) "" = done?
 #	convert all output to markdown
 #		replace license and readme with help/license output
@@ -153,9 +155,10 @@ ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_RELEASE		:= 1
 ifeq ($(MAKELEVEL),0)
 #> update: includes duplicates
-override HELPALL			:= help
-$(warning # $(COMPOSER_FULLNAME): Main directory: Some features are disabled)
-$(warning # $(COMPOSER_FULLNAME): Please use as '.$(COMPOSER_BASENAME)' (see '$(notdir $(MAKE)) $(HELPALL)'))
+override HELPOUT			:= usage
+$(info # $(COMPOSER_FULLNAME))
+$(info #	Because this is the main directory, some features are disabled)
+$(info #	Please set up as '.$(COMPOSER_BASENAME)', or use '-f' (see '$(notdir $(MAKE)) $(HELPOUT)'))
 endif
 endif
 
@@ -193,18 +196,18 @@ override TOKEN				:= ~
 ########################################
 
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #SOURCE $(CURDIR)/$(COMPOSER_SETTINGS)))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #SOURCE [$(CURDIR)/$(COMPOSER_SETTINGS)]))
 #>include $(CURDIR)/$(COMPOSER_SETTINGS)
 $(foreach FILE,\
 	$(shell \
 		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
 		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
 	),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #OVERRIDE [$(subst $(TOKEN), ,$(FILE))])) \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #OVERRIDE [$(subst $(TOKEN), ,$(FILE))])) \
 	$(eval $(subst $(TOKEN), ,$(FILE))) \
 )
 endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
 
 ########################################
 
@@ -219,18 +222,18 @@ else
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #MAKEFILE_LIST [$(MAKEFILE_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #MAKEFILE_LIST [$(MAKEFILE_LIST)]))
 $(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
 	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)); \
 )
 override COMPOSER_INCLUDES_LIST		:= $(strip $(COMPOSER_INCLUDES))
 override COMPOSER_INCLUDES		:=
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #COMPOSER_INCLUDES_LIST [$(COMPOSER_INCLUDES_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #COMPOSER_INCLUDES_LIST [$(COMPOSER_INCLUDES_LIST)]))
 
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #WILDCARD $(FILE))); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #WILDCARD [$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(warning #INCLUDE $(FILE))); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #INCLUDE [$(FILE)])); \
 		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))); \
 		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)); \
 		$(eval include $(FILE)); \
@@ -248,14 +251,14 @@ override _CSS				:= $(CSS)
 endif
 ifeq ($(_CSS),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(warning #WILDCARD_CSS $(FILE))); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #WILDCARD_CSS [$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(warning #INCLUDE_CSS $(FILE))); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #INCLUDE_CSS [$(FILE)])); \
 		$(eval override _CSS := $(FILE)); \
 	) \
 )
 endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(warning #_CSS [$(_CSS)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #_CSS [$(_CSS)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
@@ -1039,7 +1042,6 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #	$(DOITALL)-$(DOITALL)
 
 #> update: includes duplicates
-
 override HELPOUT			:= usage
 override HELPALL			:= help
 override CREATOR			:= docs
@@ -2264,10 +2266,12 @@ endif
 
 #> update: COMPOSER_OPTIONS
 
+override HEADERS_COMPOSER_DIR		:= $(COMPOSER_DIR)
 override HEADERS_MAKEFILE_LIST		:= $(MAKEFILE_LIST)
 override HEADERS_COMPOSER_INCLUDES	:= $(COMPOSER_INCLUDES)
 override HEADERS_CURDIR			:= $(HEADERS_CURDIR)
 ifneq ($(COMPOSER_RELEASE),)
+override HEADERS_COMPOSER_DIR		:= $(subst $(abspath $(dir $(CURDIR))),...,$(COMPOSER_DIR))
 override HEADERS_MAKEFILE_LIST		:= $(subst $(abspath $(dir $(CURDIR))),...,$(MAKEFILE_LIST))
 override HEADERS_COMPOSER_INCLUDES	:= $(subst $(abspath $(dir $(CURDIR))),...,$(COMPOSER_INCLUDES))
 override HEADERS_CURDIR			:= $(subst $(abspath $(dir $(CURDIR))),...,$(CURDIR))
@@ -2307,7 +2311,7 @@ $(HEADERS)-run-%:
 
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(COMPOSER)";
+	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(HEADERS_COMPOSER_DIR)";
 	$(HEADER_L)
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(HEADERS_MAKEFILE_LIST)$(_D)]"; \
 	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(HEADERS_COMPOSER_INCLUDES)$(_D)]"; \
@@ -2322,7 +2326,7 @@ endef
 
 override define $(HEADERS)-run =
 	$(LINERULE); \
-	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(COMPOSER)"; \
+	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(HEADERS_COMPOSER_DIR)"; \
 	$(TABLE_M2) ":---"			":---"; \
 	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(HEADERS_MAKEFILE_LIST)"; \
 	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(HEADERS_COMPOSER_INCLUDES)"; \
