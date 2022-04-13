@@ -85,8 +85,6 @@ override VIM_FOLDING := {{{1
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
 #WORKING:NOW
-#	make $INSTALL just the local $MAKEFILE, and create $INSTALL-dir, which does the recursion
-#		replace all the hackery everywhere that does the templates...
 #	convert all output to markdown
 #		replace license and readme with help/license output
 #		ensure all output fits within 80 characters
@@ -551,6 +549,7 @@ export SHELL
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
+override XARGS				:= $(call COMPOSER_FIND,$(PATH_LIST),xargs) --max-procs=$(MAKEJOBS) -I {}
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
@@ -1134,17 +1133,18 @@ override COMPOSER_RESERVED_SPECIAL := \
 override define COMPOSER_RESERVED_SPECIAL_TARGETS =
 .PHONY: $(1)s
 $(1)s: .set_title-$(1)s
-	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"),\
-		$$(call $(HEADERS)); \
-		$$(MAKE)$$(foreach FILE,$(COMPOSER_EXPORTED), $$(FILE)="$$($$(FILE))") $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp"); \
-		,$(ECHO) ""; \
-	)
+	@$$(call $$(HEADERS))
+	@+$$(strip $$(call $$(TARGETS)-list)) \
+		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
+		| $$(XARGS) $$(call MAKE_RECURSIVE) {}
 .PHONY: $(1)s-clean
 $(1)s-clean:
-	@+$$(if $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp"),\
-		$$(RM) $$(shell $$(call $(TARGETS)-list) | $(SED) -n "s|^$(1)[-]([^:]+).*$$$$|$$(CURDIR)/\1|gp"); \
-		,$(ECHO) ""; \
-	)
+	@+$$(strip $$(call $$(TARGETS)-list)) \
+		| $$(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp" \
+		| $$(XARGS) bash -c '\
+			$$(call $$(HEADERS)-rm,$$(CURDIR),{}); \
+			$$(RM) $$(CURDIR)/{} >/dev/null; \
+		'
 ifneq ($(COMPOSER_RELEASE),)
 $(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
 	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
@@ -1176,11 +1176,11 @@ override COMPOSER_TARGETS		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSI
 endif
 endif
 
-#> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
+#> update: $(CLEANER)-$(TARGETS)
 ifneq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(CLEANER)-$(TARGETS)-only
+override COMPOSER_TARGETS		:= $(NOTHING)-$(CLEANER)-$(TARGETS)
 endif
 endif
 
@@ -1403,6 +1403,7 @@ HELP-TARGETS_SUBTARGET_%:
 	@$(TABLE_M3) "$(_C)$(_N)%"		"$(_E).set_title-$(_N)*"			"Set window title to current target using escape sequence"
 	@$(TABLE_M3) "$(_C)$(DEBUGIT)"		"$(_E)$(MAKE_DB)"				"Output internal Make database, based on current: $(_C)$(MAKEFILE)"
 	@$(TABLE_M3) "$(_C)$(TARGETS)"		"$(_E)$(LISTING)"				"Dynamically parse and print all potential targets"
+#WORK don't expose this
 	@$(TABLE_M3) "$(_C)$(EXAMPLE)"		"$(_E).$(EXAMPLE){-$(INSTALL)}"			"Prints raw template, with escape sequences"
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Static"		"-"						"-"
@@ -1621,6 +1622,9 @@ ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 endif
 $(CREATOR): .set_title-$(CREATOR)
 	@$(call $(HEADERS))
+ifneq ($(COMPOSER_RELEASE),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
+endif
 	@$(MKDIR)						$(CURDIR)/$(notdir $(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICO)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.ico
 	@$(ECHO) "$(DIST_ICON)"		| $(BASE64) -d		>$(CURDIR)/$(notdir $(COMPOSER_ART))/icon.png
@@ -1641,9 +1645,10 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_STAMP) \
-		>/dev/null 2>&1
+		>/dev/null
 else
-#WORKING:NOW what do we actually want here...?
+#WORKING:NOW what do we actually want here...?  this whole target should just be COMPOSER_DIR instead of CURDIR
+#	unless... we can use it to replace $(TESTING)-mark...?
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 endif
@@ -2325,7 +2330,7 @@ $(HEADERS)-$(TESTING):
 	@$(call $(HEADERS),1)
 	@$(call $(HEADERS)-run)
 	@$(call $(HEADERS)-run,1)
-	@$(call $(HEADERS)-note,this is a note)
+	@$(call $(HEADERS)-note,$(CURDIR),this is a note)
 	@$(call $(HEADERS)-dir,$(CURDIR),more on that)
 	@$(call $(HEADERS)-file,$(CURDIR),more on that)
 	@$(call $(HEADERS)-skip,$(CURDIR),more on that)
@@ -2374,7 +2379,7 @@ override define $(HEADERS)-run =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(HEADERS_CURDIR)$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(1)"
+	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(2)"
 endef
 override define $(HEADERS)-dir =
 	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
@@ -2470,14 +2475,13 @@ $(LISTING):
 #> grep -E "[$][(]NOTHING[)][-]" Makefile
 override NOTHING_IGNORES := \
 	$(INSTALL)-$(SUBDIRS) \
-	$(CLEANER)-$(TARGETS) \
 	$(CLEANER)-$(SUBDIRS) \
 	$(DOITALL)-$(TARGETS) \
 	$(DOITALL)-$(SUBDIRS) \
 
 #>	COMPOSER_STAMP \
 #>	COMPOSER_EXT \
-#>	$(CLEANER)-$(TARGETS)-only \
+#>	$(CLEANER)-$(TARGETS) \
 #>	$(HEADERS) \
 #>	$(NOTHING)-$(INSTALL)-$(SUBDIRS) \
 #>	$(NOTHING)-$(CLEANER)-$(SUBDIRS) \
@@ -2496,10 +2500,10 @@ $(NOTHING):
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(if $(filter $(COMPOSER_NOTHING),$(NOTHING_IGNORES)),\
 		$(ECHO) "",\
-		$(call $(HEADERS)-note,$(COMPOSER_NOTHING)) \
+		$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_NOTHING)) \
 	)
 else
-	@$(call $(HEADERS)-note,$(COMPOSER_NOTHING))
+	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_NOTHING))
 endif
 
 ################################################################################
@@ -2641,11 +2645,11 @@ $(TESTING): $(TESTING)-$(HEADERS)-CHECKIT
 $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 $(TESTING): $(TESTING)-Think
 $(TESTING): $(TESTING)-$(DISTRIB)
-ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
-ifneq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
-$(TESTING): $(TESTING)-$(DEBUGIT)
-endif
-endif
+#>ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
+#>ifneq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
+#>$(TESTING): $(TESTING)-$(DEBUGIT)
+#>endif
+#>endif
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
@@ -2691,8 +2695,8 @@ override TESTING_ENV			:= $(ENV) \
 
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(subst -init,,$(subst -done,,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
-override $(TESTING)-make		= $(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE)
-#>override $(TESTING)-run			= $(TESTING_ENV) $(RUNMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
+override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE),-$(INSTALL),$(2),1)
+#>override $(TESTING)-run		= $(TESTING_ENV) $(RUNMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 override $(TESTING)-run			= $(TESTING_ENV) $(REALMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
@@ -2746,7 +2750,7 @@ override define $(TESTING)-init =
 	if [ "$(@)" = "$(TESTING)-Think" ]; then \
 		$(MKDIR) $(abspath $(dir $(TESTING_COMPOSER_MAKEFILE))); \
 		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
-	elif [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
+	else \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
 	$(RUNMAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
@@ -2782,7 +2786,7 @@ endef
 
 override define $(TESTING)-fail =
 	$(ENDOLINE); \
-	$(call $(HEADERS)-note,FAILED!); \
+	$(call $(HEADERS)-note,$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),FAILED!); \
 	$(ENDOLINE)
 endef
 
@@ -2811,16 +2815,18 @@ $(TESTING)-Think:
 #> update: $(TESTING)-Think
 .PHONY: $(TESTING)-Think-init
 $(TESTING)-Think-init:
-	@$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)-$(INSTALL) >$(call $(TESTING)-pwd,/)/$(MAKEFILE)
-	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(call $(TESTING)-pwd,/)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
-	@$(ECHO) "" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "" >$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS),,,1)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS),,,1)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(MAKEFILE),-$(INSTALL),$(TESTING_COMPOSER_MAKEFILE),1)
 	@$(ENDOLINE)
 	@$(LS) \
 		$(COMPOSER) \
+		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)) \
 		$(call $(TESTING)-pwd,/) \
-		$(call $(TESTING)-pwd) \
-		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))
+		$(call $(TESTING)-pwd)
+#>	@$(CAT) \
+#>		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS) \
+#>		$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
 	@$(CAT) \
 		$(call $(TESTING)-pwd,/)/$(MAKEFILE)
 
@@ -2977,6 +2983,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 
+#> update: $(CLEANER)-$(TARGETS)
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Creating.+changelog.html)
@@ -2986,7 +2993,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,removed.+\/$(notdir $(call $(TESTING)-pwd))\/.composed)
 	$(call $(TESTING)-find,removed.+\/$(notdir $(call $(TESTING)-pwd))\/doc\/.composed)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
-	$(call $(TESTING)-count,1,$(CLEANER)-$(TARGETS)-only)
+	$(call $(TESTING)-count,1,$(CLEANER)-$(TARGETS))
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 
 ########################################
@@ -3205,8 +3212,7 @@ endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="json" $(COMPOSER_PANDOC)
 	@$(CAT) $(call $(TESTING)-pwd)/$(EXAMPLE_ONE).json | $(SED) "s|[]][}][,].+$$||g"
 	#> git
-	@$(call $(TESTING)-make)
-	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(call $(TESTING)-pwd)/$(MAKEFILE),$(TESTING_COMPOSER_MAKEFILE))
+	@$(call $(TESTING)-make,,$(TESTING_COMPOSER_MAKEFILE))
 	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) init \
@@ -3299,25 +3305,25 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)YQ"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)YQ"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>&1 | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
-	@$(TABLE_M3) "- $(_E)Git SCM"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Wget"			"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Gzip"			"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)7z"			"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_M3) "- $(_E)Git SCM"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Wget"			"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Gzip"			"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)7z"			"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>&1 | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_M3) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
-	@$(TABLE_M3) "- $(_E)GNU Diffutils"		"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Rsync"			"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Less"			"$(_E)$(LESS_VER)"			"$(_N)$(shell $(LESS_BIN) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)GNU Diffutils"		"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Rsync"			"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>&1 | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_E)Less"			"$(_E)$(LESS_VER)"			"$(_N)$(shell $(LESS_BIN) --version		2>&1 | $(HEAD) -n1)"
 endif
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"			"$(_H)Location & Options"
@@ -3421,16 +3427,14 @@ endif
 	@$(ECHO) "$(_M)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_BIN) \
-		$(YQ_BIN) \
-		2>/dev/null
+		$(YQ_BIN)
 	@$(ECHO) "$(_C)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_DIR)/data/templates \
 		$(MDVIEWER_DIR)/manifest.firefox.json \
 		$(MDVIEWER_DIR)/manifest.chrome.json \
 		$(MDVIEWER_DIR)/manifest.edge.json \
-		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME) \
-		2>/dev/null
+		$(dir $(REVEALJS_DIR))$(REVEALJS_CSS_THEME)
 	@$(ECHO) "$(_D)"
 
 ################################################################################
@@ -3493,6 +3497,15 @@ endef
 # {{{2 $(INSTALL) ----------------------
 
 #WORKING:NOW move this above CLEANER... shouldn't affect all the "ordering" in the file... except for Composer Operation...
+#WORKING:NOW test case?
+#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
+#	make -f ../Makefile install-force	= Creating.+$(call $(TESTING)-pwd)/$(MAKEFILE)
+#	make -f ../Makefile install-all		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	make -f ../Makefile install		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
+#	make install-force			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 
 #> update: $(MAKE)
 
@@ -3504,50 +3517,56 @@ $(INSTALL)-%:
 
 .PHONY: $(INSTALL)
 $(INSTALL): .set_title-$(INSTALL)
-#WORKING:NOW make this into a SUBDIR-$(HEADERS), and use for all three...
-ifeq ($(MAKELEVEL),0)
-$(INSTALL): $(HEADERS)-$(INSTALL)
-endif
-ifeq ($(MAKELEVEL),1)
-$(INSTALL): $(HEADERS)-$(INSTALL)
-endif
-ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
-$(INSTALL): $(WHOWHAT)-$(INSTALL)
-endif
-#WORKING
-$(INSTALL):
+	@$(call $(SUBDIRS)-$(HEADERS),$(INSTALL))
+ifneq ($(COMPOSER_RELEASE),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
+else
+ifneq ($(wildcard $(CURDIR)/$(MAKEFILE)),)
+ifeq ($(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))),)
 ifeq ($(COMPOSER_ROOT),$(COMPOSER_DIR))
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL))
-#>	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(COMPOSER_SETTINGS))
-	@$(call $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME),$(CURDIR)/$(MAKEFILE),$(COMPOSER))
+	@$(call $(HEADERS)-note,$(CURDIR),Main_$(MAKEFILE))
+endif
+ifeq ($(COMPOSER_ROOT),$(CURDIR))
+	@$(call $(HEADERS)-note,$(CURDIR),Main_$(MAKEFILE))
+endif
+endif
+endif
+ifeq ($(COMPOSER_ROOT),$(COMPOSER_DIR))
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER))
 endif
 ifeq ($(COMPOSER_ROOT),$(CURDIR))
 ifneq ($(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))),)
-	@$(PRINT) "#WORKING:NOW maybe an error/notice here?"
-	@$(call $(HEADERS)-skip,$(CURDIR),$(MAKEFILE))
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL),$(COMPOSER))
+	@$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) >/dev/null
+else
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER))
 endif
 endif
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
-#>		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(COMPOSER_SETTINGS))
 	@$(foreach FILE,$(COMPOSER_SUBDIRS),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
-endif
 	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(INSTALL)
 endif
-	@$(ECHO) ""
+endif
 
-override define $(INSTALL)-$(MAKEFILE)-$(COMPOSER_BASENAME) =
-	$(SED) -i "s|^($(call COMPOSER_INCLUDE_REGEX,COMPOSER_TEACHER)).*$$|\1 \$$(abspath \$$(COMPOSER_MY_PATH)/$(shell $(REALPATH) $(dir $(1)) $(2)))|g" $(1)
-endef
+endif
 
 override define $(INSTALL)-$(MAKEFILE) =
-	if [ "$(COMPOSER_DOITALL_$(INSTALL))" != "$(DOFORCE)" ] && [ -f "$(1)" ]; then \
+	if	[ "$(COMPOSER_DOITALL_$(@))" != "$(DOFORCE)" ] && \
+		[ -z "$(4)" ] && \
+		[ -f "$(1)" ]; \
+	then \
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
 		$(RUNMAKE) --silent COMPOSER_DOCOLOR= .$(EXAMPLE)$(2) >$(1); \
+	fi; \
+	if [ -n "$(3)" ]; then \
+		$(SED) -i \
+			"s|^($(call COMPOSER_INCLUDE_REGEX,COMPOSER_TEACHER)).*$$|\1 $(~)(abspath $(~)(COMPOSER_MY_PATH)/`$(REALPATH) $(abspath $(dir $(1))) $(3)`)|g" \
+			$(1); \
 	fi
 endef
 
@@ -3560,6 +3579,7 @@ endef
 
 .PHONY: $(PUBLISH)
 $(PUBLISH): .set_title-$(PUBLISH)
+	@$(call $(HEADERS))
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
 
 .PHONY: $(PUBLISH)-$(CLEANER)
@@ -3570,7 +3590,7 @@ $(PUBLISH)-$(CLEANER):
 # {{{2 $(CLEANER) ----------------------
 
 #> update: $(MAKE)
-#> update: $(NOTHING)-$(CLEANER)-$(TARGETS)
+#> update: $(CLEANER)-$(TARGETS)
 
 #WORKING:NOW unified recursion
 
@@ -3597,15 +3617,12 @@ endif
 ifneq ($(COMPOSER_STAMP),)
 	@$(RM) $(CURDIR)/$(COMPOSER_STAMP)
 endif
-	@+$(call MAKE_RECURSIVE) $(if \
-		$(shell $(call $(CLEANER)-$(TARGETS)-list)),\
-		$(shell $(call $(CLEANER)-$(TARGETS)-list)),\
-		$(NOTHING)-$(CLEANER)-$(TARGETS) \
-	)
+	@+$(call $(CLEANER)-$(TARGETS)-list) \
+		| $(XARGS) $(call MAKE_RECURSIVE) {}
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
 		if [ "$(FILE)" != "$(NOTHING)" ] && [ ! -d "$(FILE)" ]; then \
 			$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
-			$(RM) $(CURDIR)/$(FILE) >/dev/null 2>&1; \
+			$(RM) $(CURDIR)/$(FILE) >/dev/null; \
 		fi; \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
@@ -3754,13 +3771,23 @@ else
 	)
 endif
 
+override define $(SUBDIRS)-$(HEADERS) =
+	if	[ "$(MAKELEVEL)" = "0" ] || \
+		[ "$(MAKELEVEL)" = "1" ]; \
+	then \
+		$(RUNMAKE) $(HEADERS)-$(1); \
+	fi; \
+	if [ -n "$(COMPOSER_DOITALL_$(1))" ]; then \
+		$(RUNMAKE) $(WHOWHAT)-$(1); \
+	fi
+endef
+
 ########################################
 # {{{2 $(PRINTER) ----------------------
 
 .PHONY: $(PRINTER)
 $(PRINTER): .set_title-$(PRINTER)
 $(PRINTER): $(HEADERS)-$(PRINTER)
-
 ifeq ($(COMPOSER_STAMP),)
 $(PRINTER): $(NOTHING)-COMPOSER_STAMP
 endif
@@ -3777,7 +3804,8 @@ $(COMPOSER_STAMP): $(if \
 		$(wildcard $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))),\
 		$(NOTHING)-COMPOSER_EXT \
 		)
-	@$(LS) --directory $(COMPOSER_STAMP) $(?) 2>/dev/null || $(TRUE)
+	@$(LS) --directory $(COMPOSER_STAMP) $(?) \
+		|| $(TRUE)
 
 ################################################################################
 # {{{1 Pandoc Targets ----------------------------------------------------------
