@@ -57,6 +57,7 @@ override VIM_FOLDING := {{{1
 #			disables MAKEJOBS and is single-threaded
 #			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
 #			dependencies using "parent: child" targets
+#		nice new little feature: make subdirs-*, such as subdirs-list
 #	notes
 #		variable aliases, order of precedence (now that it is fixed)
 #		we can use *_DEFAULTS variables in the documentation!  create more of these...?
@@ -1094,16 +1095,15 @@ override NOTHING			:= .null
 override DEBUGIT			:= debug
 override TESTING			:= test
 override CHECKIT			:= check
+override CONFIGS			:= config
+override TARGETS			:= targets
 
 override CONVICT			:= _commit
 override DISTRIB			:= _release
 override UPGRADE			:= _update
 
-override CONFIGS			:= config
-override TARGETS			:= targets
-override INSTALL			:= install
-
 override PUBLISH			:= site
+override INSTALL			:= install
 override CLEANER			:= clean
 override DOITALL			:= all
 override SUBDIRS			:= subdirs
@@ -1135,16 +1135,15 @@ override COMPOSER_RESERVED := \
 	$(DEBUGIT) \
 	$(TESTING) \
 	$(CHECKIT) \
+	$(CONFIGS) \
+	$(TARGETS) \
 	\
 	$(CONVICT) \
 	$(DISTRIB) \
 	$(UPGRADE) \
 	\
-	$(CONFIGS) \
-	$(TARGETS) \
-	$(INSTALL) \
-	\
 	$(PUBLISH) \
+	$(INSTALL) \
 	$(CLEANER) \
 	$(DOITALL) \
 	$(SUBDIRS) \
@@ -1168,7 +1167,6 @@ override COMPOSER_RESERVED_SPECIAL := \
 override define COMPOSER_RESERVED_SPECIAL_TARGETS =
 .PHONY: $(1)s
 $(1)s: .set_title-$(1)s
-	@$$(call $$(HEADERS))
 	@+$$(strip $$(call $$(TARGETS)-list)) \
 		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
 		| $$(XARGS) $$(call MAKE_RECURSIVE) {}
@@ -2385,8 +2383,8 @@ $(HEADERS)-run-%:
 
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(HEADERS_COMPOSER_DIR)";
-	$(HEADER_L)
+	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(HEADERS_COMPOSER_DIR)"; \
+	$(HEADER_L); \
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(HEADERS_MAKEFILE_LIST)$(_D)]"; \
 	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(HEADERS_COMPOSER_INCLUDES)$(_D)]"; \
 	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(HEADERS_CURDIR)$(_D)]"; \
@@ -3023,10 +3021,10 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Creating.+changelog.html)
 	$(call $(TESTING)-find,Creating.+getting-started.html)
-	$(call $(TESTING)-find,removed.+changelog.html)
-	$(call $(TESTING)-find,removed.+getting-started.html)
-	$(call $(TESTING)-find,removed.+\/$(notdir $(call $(TESTING)-pwd))\/.composed)
-	$(call $(TESTING)-find,removed.+\/$(notdir $(call $(TESTING)-pwd))\/doc\/.composed)
+	$(call $(TESTING)-find,Removing.+changelog.html)
+	$(call $(TESTING)-find,Removing.+getting-started.html)
+	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))[^\/].+$(COMPOSER_STAMP_DEFAULT))
+	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))\/doc[^\/].+$(COMPOSER_STAMP_DEFAULT))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
 	$(call $(TESTING)-count,1,$(CLEANER)-$(TARGETS))
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
@@ -3161,7 +3159,7 @@ $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-init:
 .PHONY: $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done
 $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 	$(call $(TESTING)-find,Creating.+$(EXAMPLE_ONE).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,removed.+$(EXAMPLE_ONE).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Removing.+$(EXAMPLE_ONE).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_EXT)
 	$(call $(TESTING)-find, $(subst $(TESTING)-.,,$(notdir $(call $(TESTING)-pwd))))
@@ -3277,7 +3275,7 @@ ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,Composer CMS License)
 	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
-	$(call $(TESTING)-find,removed.+$(subst /,.,$(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF)))
+	$(call $(TESTING)-find,Removing.+$(subst /,.,$(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF)))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -3561,8 +3559,8 @@ $(INSTALL)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(INSTALL)="$(*)" $(INSTALL)
 
 .PHONY: $(INSTALL)
-$(INSTALL): .set_title-$(INSTALL)
-	@$(call $(SUBDIRS)-$(HEADERS),$(INSTALL))
+#>$(INSTALL): .set_title-$(INSTALL)
+$(INSTALL): $(SUBDIRS)-$(HEADERS)-$(INSTALL)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 else
@@ -3595,7 +3593,6 @@ ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(INSTALL)
 endif
 endif
-
 endif
 
 override define $(INSTALL)-$(MAKEFILE) =
@@ -3621,8 +3618,6 @@ endef
 #> update: $(MAKE)
 #> update: $(CLEANER)-$(TARGETS)
 
-#WORKING:NOW unified recursion
-
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
 .PHONY: $(CLEANER)-%
@@ -3630,21 +3625,13 @@ $(CLEANER)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CLEANER)="$(*)" $(CLEANER)
 
 .PHONY: $(CLEANER)
-$(CLEANER): .set_title-$(CLEANER)
-	@$(call $(HEADERS))
-	@+$(call MAKE_RECURSIVE) $(CLEANER)-do
-
-.PHONY: $(CLEANER)-do
-$(CLEANER)-do:
-ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-dir,$(CURDIR))
-else
-	@$(call $(HEADERS))
-endif
-endif
+#>$(CLEANER): .set_title-$(CLEANER)
+$(CLEANER): $(SUBDIRS)-$(HEADERS)-$(CLEANER)
 ifneq ($(COMPOSER_STAMP),)
-	@$(RM) $(CURDIR)/$(COMPOSER_STAMP)
+ifneq ($(wildcard $(CURDIR)/$(COMPOSER_STAMP)),)
+	@$(call $(HEADERS)-rm,$(CURDIR),$(COMPOSER_STAMP))
+	@$(RM) $(CURDIR)/$(COMPOSER_STAMP) >/dev/null
+endif
 endif
 	@+$(call $(CLEANER)-$(TARGETS)-list) \
 		| $(XARGS) $(call MAKE_RECURSIVE) {}
@@ -3655,27 +3642,8 @@ endif
 		fi; \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@+$(call MAKE_RECURSIVE) $(CLEANER)-$(SUBDIRS)
+	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(CLEANER)
 endif
-
-.PHONY: $(CLEANER)-$(SUBDIRS)
-ifeq ($(COMPOSER_SUBDIRS),)
-$(CLEANER)-$(SUBDIRS): $(NOTHING)-$(CLEANER)-$(SUBDIRS)
-else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
-$(CLEANER)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(CLEANER)-$(SUBDIRS)
-else
-$(CLEANER)-$(SUBDIRS): $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
-
-.PHONY: $(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
-$(addprefix $(CLEANER)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
-	@$(eval override $(@) := $(CURDIR)/$(subst $(CLEANER)-$(SUBDIRS)-,,$(@)))
-	@$(if $(wildcard $($(@))/$(MAKEFILE)),\
-		+$(call MAKE_RECURSIVE) --directory $($(@)) $(CLEANER)-do,\
-		$(RUNMAKE) --directory $($(@)) $(NOTHING)-$(MAKEFILE) \
-	)
-endif
-$(CLEANER)-$(SUBDIRS):
-	@$(ECHO) ""
 
 override define $(CLEANER)-$(TARGETS)-list =
 	$(RUNMAKE) --silent $(LISTING) \
@@ -3688,8 +3656,6 @@ endef
 
 #> update: $(MAKE)
 
-#WORKING:NOW unified recursion
-
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
 .PHONY: $(DOITALL)-%
@@ -3698,19 +3664,11 @@ $(DOITALL)-%:
 
 .PHONY: $(DOITALL)
 $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),$(eval $(DOITALL): $(FILE)s))
-$(DOITALL): .set_title-$(DOITALL)
-ifeq ($(MAKELEVEL),0)
-$(DOITALL): $(HEADERS)-$(DOITALL)
-endif
-ifeq ($(MAKELEVEL),1)
-$(DOITALL): $(HEADERS)-$(DOITALL)
-endif
-ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
-$(DOITALL): $(WHOWHAT)-$(DOITALL)
-endif
+#>$(DOITALL): .set_title-$(DOITALL)
+$(DOITALL): $(SUBDIRS)-$(HEADERS)-$(DOITALL)
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-$(DOITALL): $(DOITALL)-$(SUBDIRS)
+$(DOITALL): $(SUBDIRS)-$(DOITALL)
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
@@ -3722,29 +3680,10 @@ $(DOITALL): $(COMPOSER_TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-$(DOITALL): $(DOITALL)-$(SUBDIRS)
+$(DOITALL): $(SUBDIRS)-$(DOITALL)
 endif
 endif
 $(DOITALL):
-	@$(ECHO) ""
-
-.PHONY: $(DOITALL)-$(SUBDIRS)
-ifeq ($(COMPOSER_SUBDIRS),)
-$(DOITALL)-$(SUBDIRS): $(NOTHING)-$(DOITALL)-$(SUBDIRS)
-else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
-$(DOITALL)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(DOITALL)-$(SUBDIRS)
-else
-$(DOITALL)-$(SUBDIRS): $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
-
-.PHONY: $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
-$(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
-	@$(eval override $(@) := $(CURDIR)/$(subst $(DOITALL)-$(SUBDIRS)-,,$(@)))
-	@$(if $(wildcard $($(@))/$(MAKEFILE)),\
-		+$(call MAKE_RECURSIVE) --directory $($(@)) $(DOITALL)-$(DOITALL),\
-		$(RUNMAKE) --directory $($(@)) $(NOTHING)-$(MAKEFILE) \
-	)
-endif
-$(DOITALL)-$(SUBDIRS):
 	@$(ECHO) ""
 
 ########################################
@@ -3762,20 +3701,27 @@ else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@$(RUNMAKE) $(NOTHING)-$(NOTHING)-$(*)-$(SUBDIRS)
 else
 	@+$(foreach FILE,$(COMPOSER_SUBDIRS),\
-		$(call MAKE_RECURSIVE) --directory $(CURDIR)/$(FILE) $(*); \
+		$(if $(wildcard $(CURDIR)/$(FILE)/$(MAKEFILE)),\
+			$(call MAKE_RECURSIVE) \
+				--directory $(CURDIR)/$(FILE) \
+				--makefile $(CURDIR)/$(FILE)/$(MAKEFILE) \
+				$(*);,\
+			$(RUNMAKE) --directory $(CURDIR)/$(FILE) $(NOTHING)-$(MAKEFILE); \
+		) \
 	)
 endif
 
-override define $(SUBDIRS)-$(HEADERS) =
-	if	[ "$(MAKELEVEL)" = "0" ] || \
+.PHONY: $(SUBDIRS)-$(HEADERS)-%
+$(SUBDIRS)-$(HEADERS)-%:
+	@if	[ "$(MAKELEVEL)" = "0" ] || \
 		[ "$(MAKELEVEL)" = "1" ]; \
 	then \
-		$(RUNMAKE) $(HEADERS)-$(1); \
-	fi; \
-	if [ -n "$(COMPOSER_DOITALL_$(1))" ]; then \
-		$(RUNMAKE) $(WHOWHAT)-$(1); \
+		$(RUNMAKE) .set_title-$(*); \
+		$(call $(HEADERS),,$(*)); \
 	fi
-endef
+	@if [ -n "$(COMPOSER_DOITALL_$(*))" ]; then \
+		$(RUNMAKE) $(WHOWHAT)-$(*); \
+	fi
 
 ########################################
 # {{{2 $(PRINTER) ----------------------
