@@ -94,6 +94,41 @@ override VIM_FOLDING := {{{1
 #		add some sort of composer_readme variable?
 #		make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
 #		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
+#WORKING:NOW add *-all handling, identical to *-clean
+#	add specials to that instead of *s, and link *s to the *-all
+#	need to make sure that all-all doesn't create a circular reference!
+#		(shouldn't, since that is now a wildcard target)
+#	add specials (*s, and site) to another variable that is included in all?
+#		link *s: header *-all
+#		actually, need something better for site, which will probably remain singular...
+#			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
+#				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
+#				verify that pandoc ignores leading yaml/json, and that yq can be used to just grab the headers?
+#			a page-* of post-*s will be <variable> post-*s truncated to <variable> length (and then [...])
+#			this way, manual page-*s can be created that stay static (like gary-os and composer readmes on "project" pages)
+#			also, the dynamic "index" pages, which pull in all post-*s that match
+#				this can look like index: entries that use the dependencies to know which index to build?
+#	replace specials call in all, and leave it to *-all instead
+#		this will blend in those targets more seamlessly, and still leave the *s option
+#	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
+#		will need to do something with "targets" output, which will get super crowded (maybe only if there are dependencies? affirmative.)
+#			they will show up in composer_targets, anyway, right? yes, ugly, parse them out and let *-all handle it
+#			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
+#			test case this instead... it should be identical for all of book/page/post...
+#		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
+#	switch clean to do a if -f then headers-rm >/dev/null 2&1
+#		move both *-all and *-clean to be first, just after composer_stamp
+#		maybe composer_targets is just targets-clean? naw, messes with targets output. well, actually, there is already a targets list, so...
+#	add findutils back in... we're going to need it later, which is probably why we had it in there in the first place...
+#		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
+#		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
+#		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
+#	get rid of .Composer? yes, it's going to make testing increasingly difficult... need a play space linked to the main makefile
+#		it's already compilcated, anyway...
+#		probably best to comment out distrib, then... unnecessary
+#		(don't do this... it'll start everything all over, and break tests like COMPOSER_INCLUDE... not worth it)
+#		need to truly switch to test-driven coding, where the code is being written along with the test...
+
 #WORK
 ################################################################################
 # }}}1
@@ -3353,6 +3388,57 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(PRINT) "$(_E)*$(OS_UNAME)*"
 endif
 
+########################################
+# {{{2 $(CONFIGS) ----------------------
+
+#> update: COMPOSER_OPTIONS
+
+.PHONY: $(CONFIGS)
+$(CONFIGS): .set_title-$(CONFIGS)
+	@$(call $(HEADERS))
+	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
+	@$(TABLE_M2) ":---"			":---"
+	@$(foreach FILE,$(COMPOSER_OPTIONS),\
+		$(TABLE_M2) "$(_C)$(FILE)"	"$($(FILE))$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $($(FILE)), )$(_E)$(MARKER)$(_D))"; \
+	)
+
+########################################
+# {{{2 $(TARGETS) ----------------------
+
+.PHONY: $(TARGETS)
+$(TARGETS): .set_title-$(TARGETS)
+	@$(call $(HEADERS))
+	@$(LINERULE)
+	@$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) \
+		$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
+			-e "/^$(FILE)[s-]/d" \
+		)),\
+		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(FILE)))"; \
+	)
+	@$(LINERULE)
+	@$(foreach SPECIAL,$(COMPOSER_RESERVED_SPECIAL),\
+		$(PRINT) "$(_H)$(MARKER) $(SPECIAL)s"; \
+		$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) -n "s|^$(SPECIAL)[-]||gp"),\
+			$(PRINT) "$(_E)$(subst : ,$(_D) $(DIVIDE) $(_N),$(subst $(TOKEN), ,$(FILE)))"; \
+		) \
+	)
+	@$(LINERULE)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(call $(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(LINERULE)
+	@$(RUNMAKE) --silent $(PRINTER)-list
+
+override define $(TARGETS)-list =
+	$(RUNMAKE) --silent $(LISTING) | $(SED) \
+		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
+		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d")
+		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
+		-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
+		-e "s|[:]$$||g" \
+		-e "s|[[:space:]]+|$(TOKEN)|g"
+endef
+
 ################################################################################
 # {{{1 Release Targets ---------------------------------------------------------
 ################################################################################
@@ -3438,65 +3524,24 @@ endif
 	@$(ECHO) "$(_D)"
 
 ################################################################################
-# {{{1 Helper Targets ----------------------------------------------------------
+# {{{1 Main Targets ------------------------------------------------------------
 ################################################################################
 
-#WORKING:NOW move these to "Debug" and remove this section... shouldn't affect all the ordering in the file... except for Composer Operation...
 ########################################
-# {{{2 $(CONFIGS) ----------------------
+# {{{2 $(PUBLISH) ----------------------
 
-#> update: COMPOSER_OPTIONS
-
-.PHONY: $(CONFIGS)
-$(CONFIGS): .set_title-$(CONFIGS)
+.PHONY: $(PUBLISH)
+$(PUBLISH): .set_title-$(PUBLISH)
 	@$(call $(HEADERS))
-	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
-	@$(TABLE_M2) ":---"			":---"
-	@$(foreach FILE,$(COMPOSER_OPTIONS),\
-		$(TABLE_M2) "$(_C)$(FILE)"	"$($(FILE))$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $($(FILE)), )$(_E)$(MARKER)$(_D))"; \
-	)
+	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
 
-########################################
-# {{{2 $(TARGETS) ----------------------
-
-.PHONY: $(TARGETS)
-$(TARGETS): .set_title-$(TARGETS)
-	@$(call $(HEADERS))
-	@$(LINERULE)
-	@$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) \
-		$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-			-e "/^$(FILE)[s-]/d" \
-		)),\
-		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(FILE)))"; \
-	)
-	@$(LINERULE)
-	@$(foreach SPECIAL,$(COMPOSER_RESERVED_SPECIAL),\
-		$(PRINT) "$(_H)$(MARKER) $(SPECIAL)s"; \
-		$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) -n "s|^$(SPECIAL)[-]||gp"),\
-			$(PRINT) "$(_E)$(subst : ,$(_D) $(DIVIDE) $(_N),$(subst $(TOKEN), ,$(FILE)))"; \
-		) \
-	)
-	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(call $(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(LINERULE)
-	@$(RUNMAKE) --silent $(PRINTER)-list
-
-override define $(TARGETS)-list =
-	$(RUNMAKE) --silent $(LISTING) | $(SED) \
-		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
-		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d")
-		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
-		-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
-		-e "s|[:]$$||g" \
-		-e "s|[[:space:]]+|$(TOKEN)|g"
-endef
+.PHONY: $(PUBLISH)-$(CLEANER)
+$(PUBLISH)-$(CLEANER):
+	@$(ECHO) ""
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
 
-#WORKING:NOW move this above CLEANER... shouldn't affect all the "ordering" in the file... except for Composer Operation...
 #WORKING:NOW test case?
 #	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
 #	make -f ../Makefile install-force	= Creating.+$(call $(TESTING)-pwd)/$(MAKEFILE)
@@ -3569,22 +3614,6 @@ override define $(INSTALL)-$(MAKEFILE) =
 			$(1); \
 	fi
 endef
-
-################################################################################
-# {{{1 Main Targets ------------------------------------------------------------
-################################################################################
-
-########################################
-# {{{2 $(PUBLISH) ----------------------
-
-.PHONY: $(PUBLISH)
-$(PUBLISH): .set_title-$(PUBLISH)
-	@$(call $(HEADERS))
-	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
-
-.PHONY: $(PUBLISH)-$(CLEANER)
-$(PUBLISH)-$(CLEANER):
-	@$(ECHO) ""
 
 ########################################
 # {{{2 $(CLEANER) ----------------------
@@ -3660,40 +3689,6 @@ endef
 #> update: $(MAKE)
 
 #WORKING:NOW unified recursion
-#WORKING:NOW add *-all handling, identical to *-clean
-#	add specials to that instead of *s, and link *s to the *-all
-#	need to make sure that all-all doesn't create a circular reference!
-#		(shouldn't, since that is now a wildcard target)
-#	add specials (*s, and site) to another variable that is included in all?
-#		link *s: header *-all
-#		actually, need something better for site, which will probably remain singular...
-#			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
-#				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
-#				verify that pandoc ignores leading yaml/json, and that yq can be used to just grab the headers?
-#			a page-* of post-*s will be <variable> post-*s truncated to <variable> length (and then [...])
-#			this way, manual page-*s can be created that stay static (like gary-os and composer readmes on "project" pages)
-#			also, the dynamic "index" pages, which pull in all post-*s that match
-#				this can look like index: entries that use the dependencies to know which index to build?
-#	replace specials call in all, and leave it to *-all instead
-#		this will blend in those targets more seamlessly, and still leave the *s option
-#	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
-#		will need to do something with "targets" output, which will get super crowded (maybe only if there are dependencies? affirmative.)
-#			they will show up in composer_targets, anyway, right? yes, ugly, parse them out and let *-all handle it
-#			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
-#			test case this instead... it should be identical for all of book/page/post...
-#		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
-#	switch clean to do a if -f then headers-rm >/dev/null 2&1
-#		move both *-all and *-clean to be first, just after composer_stamp
-#		maybe composer_targets is just targets-clean? naw, messes with targets output. well, actually, there is already a targets list, so...
-#	add findutils back in... we're going to need it later, which is probably why we had it in there in the first place...
-#		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
-#		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
-#		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
-#	get rid of .Composer? yes, it's going to make testing increasingly difficult... need a play space linked to the main makefile
-#		it's already compilcated, anyway...
-#		probably best to comment out distrib, then... unnecessary
-#		(don't do this... it'll start everything all over, and break tests like COMPOSER_INCLUDE... not worth it)
-#		need to truly switch to test-driven coding, where the code is being written along with the test...
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
