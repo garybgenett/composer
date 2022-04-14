@@ -3575,6 +3575,13 @@ else
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER))
 endif
 endif
+#WORKING:NOW need a way to "install" in current directory... maybe a ($(MAKELEVEL),0) override?
+#WORKING:NOW something like this, but it doubles-up on a "root" directory...
+ifeq ($(MAKELEVEL),0)
+ifeq ($(COMPOSER_DOITALL_$(INSTALL)),)
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL))
+endif
+endif
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@$(foreach FILE,$(COMPOSER_SUBDIRS),\
@@ -3680,19 +3687,22 @@ $(DOITALL)-specials:
 $(SUBDIRS): $(NOTHING)-$(SUBDIRS)
 	@$(ECHO) ""
 
-.PHONY: %-$(SUBDIRS)-$(HEADERS)
-%-$(SUBDIRS)-$(HEADERS):
-	@if	[ "$(MAKELEVEL)" = "0" ] || \
-		[ "$(MAKELEVEL)" = "1" ]; \
-	then \
-		$(RUNMAKE) .set_title-$(*); \
-		$(call $(HEADERS),,$(*)); \
-	fi
-	@if [ -n "$(COMPOSER_DOITALL_$(*))" ]; then \
-		$(RUNMAKE) $(WHOWHAT)-$(*); \
-	fi
-
 override define $(SUBDIRS)-$(EXAMPLE) =
+.PHONY: $(1)-$(SUBDIRS)-$(HEADERS)
+ifeq ($(MAKELEVEL),0)
+$(1)-$(SUBDIRS)-$(HEADERS): .set_title-$(1)
+$(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
+endif
+ifeq ($(MAKELEVEL),1)
+$(1)-$(SUBDIRS)-$(HEADERS): .set_title-$(1)
+$(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
+endif
+ifneq ($(COMPOSER_DOITALL_$(1)),)
+$(1)-$(SUBDIRS)-$(HEADERS): $(WHOWHAT)-$(1)
+endif
+$(1)-$(SUBDIRS)-$(HEADERS):
+	@$(ECHO) ""
+
 .PHONY: $(1)-$(SUBDIRS)
 $(1)-$(SUBDIRS):
 ifeq ($(COMPOSER_SUBDIRS),)
