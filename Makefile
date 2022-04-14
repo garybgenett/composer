@@ -1455,6 +1455,9 @@ HELP-COMMANDS_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
 #WORK clean up HELP-COMMANDS section
 #WORK add "make all COMPOSER_TARGETS=[...]" example
+#WORK make MANUAL.html LIST="README.md LICENSE.md"
+#WORK make MANUAL.revealjs.html LIST="README.md LICENSE.md"
+#WORK make TYPE="json" compose
 	@$(TABLE_C2) "$(_E)Have the system do all the work:"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_M)make $(BASE).$(EXTENSION)"
@@ -3542,7 +3545,7 @@ $(INSTALL)-%:
 
 .PHONY: $(INSTALL)
 #>$(INSTALL): .set_title-$(INSTALL)
-$(INSTALL): $(SUBDIRS)-$(HEADERS)-$(INSTALL)
+$(INSTALL): $(INSTALL)-$(SUBDIRS)-$(HEADERS)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 else
@@ -3572,7 +3575,7 @@ ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@$(foreach FILE,$(COMPOSER_SUBDIRS),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
-	@+$(MAKE) $(MAKE_OPTIONS) $(SUBDIRS)-$(INSTALL)
+	@+$(MAKE) $(MAKE_OPTIONS) $(INSTALL)-$(SUBDIRS)
 endif
 endif
 endif
@@ -3607,7 +3610,7 @@ $(CLEANER)-%:
 
 .PHONY: $(CLEANER)
 #>$(CLEANER): .set_title-$(CLEANER)
-$(CLEANER): $(SUBDIRS)-$(HEADERS)-$(CLEANER)
+$(CLEANER): $(CLEANER)-$(SUBDIRS)-$(HEADERS)
 ifneq ($(COMPOSER_STAMP),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_STAMP)),)
 	@$(call $(HEADERS)-rm,$(CURDIR),$(COMPOSER_STAMP))
@@ -3624,7 +3627,7 @@ endif
 		$(NEWLINE) \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@+$(MAKE) $(MAKE_OPTIONS) $(SUBDIRS)-$(CLEANER)
+	@+$(MAKE) $(MAKE_OPTIONS) $(CLEANER)-$(SUBDIRS)
 endif
 
 ########################################
@@ -3640,11 +3643,11 @@ $(DOITALL)-%:
 
 .PHONY: $(DOITALL)
 #>$(DOITALL): .set_title-$(DOITALL)
-$(DOITALL): $(SUBDIRS)-$(HEADERS)-$(DOITALL)
+$(DOITALL): $(DOITALL)-$(SUBDIRS)-$(HEADERS)
 $(DOITALL): $(DOITALL)-specials
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-$(DOITALL): $(SUBDIRS)-$(DOITALL)
+$(DOITALL): $(DOITALL)-$(SUBDIRS)
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
@@ -3656,7 +3659,7 @@ $(DOITALL): $(COMPOSER_TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-$(DOITALL): $(SUBDIRS)-$(DOITALL)
+$(DOITALL): $(DOITALL)-$(SUBDIRS)
 endif
 endif
 
@@ -3673,24 +3676,24 @@ $(SUBDIRS): $(NOTHING)-$(SUBDIRS)
 	@$(ECHO) ""
 
 override define $(SUBDIRS)-$(EXAMPLE) =
-.PHONY: $(SUBDIRS)-$(1)
-$(SUBDIRS)-$(1):
+.PHONY: $(1)-$(SUBDIRS)
+$(1)-$(SUBDIRS):
 ifeq ($(COMPOSER_SUBDIRS),)
-$(SUBDIRS)-$(1): $(NOTHING)-$(1)-$(SUBDIRS)
+$(1)-$(SUBDIRS): $(NOTHING)-$(1)-$(SUBDIRS)
 else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
-$(SUBDIRS)-$(1): $(NOTHING)-$(NOTHING)-$(1)-$(SUBDIRS)
+$(1)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(1)-$(SUBDIRS)
 else
-$(SUBDIRS)-$(1): $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
+$(1)-$(SUBDIRS): $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 
-.PHONY: $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
-$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)):
-	@$$(eval override $$(@) := $(CURDIR)/$$(subst $(SUBDIRS)-$(1)-,,$$(@)))
+.PHONY: $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
+$(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
+	@$$(eval override $$(@) := $(CURDIR)/$$(subst $(1)-$(SUBDIRS)-,,$$(@)))
 	@+$$(if $$(wildcard $$($$(@))/$(MAKEFILE)),\
 		$$(MAKE) $$(MAKE_OPTIONS) --directory $$($$(@)) $(1),\
 		$$(RUNMAKE) --directory $$($$(@)) $(NOTHING)-$(MAKEFILE) \
 	)
 endif
-$(SUBDIRS)-$(1):
+$(1)-$(SUBDIRS):
 	@$(ECHO) ""
 endef
 
@@ -3698,8 +3701,8 @@ $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 
-.PHONY: $(SUBDIRS)-$(HEADERS)-%
-$(SUBDIRS)-$(HEADERS)-%:
+.PHONY: %-$(SUBDIRS)-$(HEADERS)
+%-$(SUBDIRS)-$(HEADERS):
 	@if	[ "$(MAKELEVEL)" = "0" ] || \
 		[ "$(MAKELEVEL)" = "1" ]; \
 	then \
@@ -3767,8 +3770,15 @@ $(BASE).$(EXTENSION): $(LIST)
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
+	@$(PRINT) "#WORKING:NOW [MARKDOWN]"
 	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+
 %.$(2): %
+	@$(PRINT) "#WORKING:NOW [WILDCARD]"
+	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+
+%.$(2): $(LIST)
+	@$(PRINT) "#WORKING:NOW [LIST]"
 	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 endef
 
@@ -3782,33 +3792,33 @@ $(eval $(call TYPE_TARGETS,$(TYPE_TEXT),$(EXTN_TEXT)))
 $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 ########################################
-
-override define TYPE_WILDCARD =
-$(1): $(LIST)
-	@$(RUNMAKE) $(COMPOSER_CREATE) \
-		TYPE="$(lastword $(subst ., ,$(1)))" \
-		BASE="$(subst .$(lastword $(subst ., ,$(1))),,$(1))" \
-		LIST="$$(^)"
-endef
-
-ifeq ($(MAKELEVEL),0)
-ifneq ($(word 2,$(LIST)),)
-$(foreach FILE,$(MAKECMDGOALS),\
-	$(if $(word 2,$(subst ., ,$(FILE))), \
-	$(eval $(call TYPE_WILDCARD,$(FILE))); \
-))
-endif
-endif
-
-########################################
 # {{{2 SPECIALS ------------------------
 
-.PHONY: $(DO_BOOK)-%
-$(DO_BOOK)-%:
-	@$(RUNMAKE) $(COMPOSER_CREATE) \
-		TYPE="$(lastword $(subst ., ,$(*)))" \
-		BASE="$(subst .$(lastword $(subst ., ,$(*))),,$(*))" \
-		LIST="$(^)"
+#> update: TYPE_TARGETS
+
+#WORKING:NOW: this magic should probably apply for all specials, as part of the template...
+
+$(eval override COMPOSER_TARGETS := $(filter-out $(DO_BOOK)-%,$(COMPOSER_TARGETS)))
+$(foreach FILE,$(filter $(DO_BOOK)-%$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)),\
+	$(eval $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(FILE)): $(FILE)); \
+)
+
+override define TYPE_DO_BOOK =
+$(DO_BOOK)-%.$(2):
+	@$(PRINT) "#WORKING:NOW [DO_BOOK]"
+	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+endef
+
+$(eval $(call TYPE_DO_BOOK,$(TYPE_HTML),$(EXTN_HTML)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_LPDF),$(EXTN_LPDF)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_EPUB),$(EXTN_EPUB)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_PRES),$(EXTN_PRES)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_DOCX),$(EXTN_DOCX)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_PPTX),$(EXTN_PPTX)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_TEXT),$(EXTN_TEXT)))
+$(eval $(call TYPE_DO_BOOK,$(TYPE_LINT),$(EXTN_LINT)))
+
+########################################
 
 .PHONY: $(DO_POST)-%
 $(DO_POST)-%:
