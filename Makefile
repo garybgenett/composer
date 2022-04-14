@@ -1670,18 +1670,16 @@ endif
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS)) \
 		$(CURDIR)/*$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
-#WORKING:NOW MANUAL = $(EXAMPLE_OUT) ?
-	@$(ECHO) "" >$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER) $(DOITALL)
+	@$(ECHO) "$(DO_BOOK)-$(EXAMPLE_OUT).$(EXTN_LPDF):" >$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT)" >>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)" >>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\n" >>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_STAMP) \
 		>/dev/null
-else
-#WORKING:NOW what do we actually want here...?  this whole target should just be COMPOSER_DIR instead of CURDIR
-#	unless... we can use it to replace $(TESTING)-mark...?
-	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 endif
 
 ########################################
@@ -2732,13 +2730,12 @@ override define $(TESTING)-mark =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
-	$(foreach FILE,$(wildcard $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/*$(COMPOSER_EXT_DEFAULT)),\
-		$(CP) $(FILE) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(if $(2),$(subst $(COMPOSER_EXT_DEFAULT),,$(notdir $(FILE)))); \
-	) \
-	$(MKDIR) $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),$(COMPOSER_ART)); \
-	$(RSYNC) $(COMPOSER_ART)/ $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),$(COMPOSER_ART))
+	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) $(CREATOR); \
+	if [ -n "$(2)" ]; then \
+		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_ONE); \
+		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_TWO); \
+	fi
 endef
-
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
 override define $(TESTING)-load =
@@ -2754,7 +2751,7 @@ override define $(TESTING)-load =
 			$(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
-	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS);
+	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) MAKEJOBS="0" $(INSTALL)-$(DOFORCE)
 endef
 
@@ -2865,10 +2862,6 @@ $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
-
-#> update: $(TESTING)-$(COMPOSER_BASENAME)-init
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
-$(TESTING)-$(COMPOSER_BASENAME)-init:
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
@@ -3259,7 +3252,7 @@ ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,Composer CMS License)
 	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
-	$(call $(TESTING)-find,Removing.+$(subst /,.,$(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF)))
+	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -3495,10 +3488,12 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 endif
 	@$(ENDOLINE)
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(ECHO) "$(_M)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_BIN) \
 		$(YQ_BIN)
+endif
 	@$(ECHO) "$(_C)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_DIR)/data/templates \
