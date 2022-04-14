@@ -2741,7 +2741,6 @@ endef
 
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-#>	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS);
 override define $(TESTING)-load =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
@@ -2755,6 +2754,7 @@ override define $(TESTING)-load =
 			$(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
+	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS);
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) MAKEJOBS="0" $(INSTALL)-$(DOFORCE)
 endef
 
@@ -2986,6 +2986,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
 		\n\t * Proper execution of '$(_C)*-$(CLEANER)$(_D)' targets \
 	)
 	@$(call $(TESTING)-load)
+	@$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
@@ -3067,8 +3068,6 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 ########################################
 # {{{3 $(TESTING)-COMPOSER_DEPENDS -----
 
-#WORKING:NOW move COMPOSER_IGNORES to its own test...
-
 .PHONY: $(TESTING)-COMPOSER_DEPENDS
 $(TESTING)-COMPOSER_DEPENDS: $(TESTING)-Think
 	@$(call $(TESTING)-$(HEADERS),\
@@ -3098,7 +3097,7 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(EXAMPLE_OUT)$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "$(EXAMPLE_TWO).$(EXTN_DEFAULT): $(EXAMPLE_ONE).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := artifacts $(EXAMPLE_OUT).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(EXAMPLE_OUT).$(EXTN_DEFAULT) artifacts\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_TARGETS/p"
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_SUBDIRS/p"
@@ -3110,6 +3109,8 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 	$(call $(TESTING)-find,Directory.+$(notdir $(call $(TESTING)-pwd))\/data)
 	$(call $(TESTING)-find,Creating.+$(notdir $(call $(TESTING)-pwd))\/data)
 	$(call $(TESTING)-find,Creating.+$(EXAMPLE_OUT).$(EXTN_DEFAULT),,1)
+	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(EXAMPLE_OUT).$(EXTN_DEFAULT),,1)
+	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts,,1)
 	@$(call $(TESTING)-hold)
 
 ########################################
