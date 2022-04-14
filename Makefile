@@ -95,12 +95,8 @@ override VIM_FOLDING := {{{1
 #		add some sort of composer_readme variable?
 #		make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
 #		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
-#WORKING:NOW add *-all handling, identical to *-clean
-#	add specials to that instead of *s, and link *s to the *-all
-#	need to make sure that all-all doesn't create a circular reference!
-#		(shouldn't, since that is now a wildcard target)
-#	add specials (*s, and site) to another variable that is included in all?
-#		link *s: header *-all
+#WORKING:NOW
+#	specials...
 #		actually, need something better for site, which will probably remain singular...
 #			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
 #				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
@@ -109,26 +105,17 @@ override VIM_FOLDING := {{{1
 #			this way, manual page-*s can be created that stay static (like gary-os and composer readmes on "project" pages)
 #			also, the dynamic "index" pages, which pull in all post-*s that match
 #				this can look like index: entries that use the dependencies to know which index to build?
-#	replace specials call in all, and leave it to *-all instead
-#		this will blend in those targets more seamlessly, and still leave the *s option
 #	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
 #		will need to do something with "targets" output, which will get super crowded (maybe only if there are dependencies? affirmative.)
 #			they will show up in composer_targets, anyway, right? yes, ugly, parse them out and let *-all handle it
 #			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
 #			test case this instead... it should be identical for all of book/page/post...
 #		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
-#	switch clean to do a if -f then headers-rm >/dev/null 2&1
-#		move both *-all and *-clean to be first, just after composer_stamp
-#		maybe composer_targets is just targets-clean? naw, messes with targets output. well, actually, there is already a targets list, so...
 #	add findutils back in... we're going to need it later, which is probably why we had it in there in the first place...
 #		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
 #		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
 #		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
-#	get rid of .Composer? yes, it's going to make testing increasingly difficult... need a play space linked to the main makefile
-#		it's already compilcated, anyway...
-#		probably best to comment out distrib, then... unnecessary
-#		(don't do this... it'll start everything all over, and break tests like COMPOSER_INCLUDE... not worth it)
-#		need to truly switch to test-driven coding, where the code is being written along with the test...
+#	need to truly switch to test-driven coding, where the code is being written along with the test...
 
 #WORK
 ################################################################################
@@ -1005,7 +992,7 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 override COMPOSER_CREATE		:= compose
 override COMPOSER_PANDOC		:= pandoc
 
-#> update: $(MAKE)
+#> update: $(MAKE) / @+
 override MAKE_RECURSIVE			= $(MAKE) --makefile $(COMPOSER_SRC)
 override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC)
 
@@ -1047,7 +1034,7 @@ override COMPOSER_EXPORTED_NOT := \
 	BASE \
 	LIST \
 
-#> update: $(MAKE)
+#> update: $(MAKE) / @+
 override MAKE_RECURSIVE			= $(MAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
 override RUNMAKE			:= $(RUNMAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
 $(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
@@ -1163,21 +1150,32 @@ override COMPOSER_RESERVED_SPECIAL := \
 
 ########################################
 
-#> update: $(MAKE)
+#> update: $(MAKE) / @+
 override define COMPOSER_RESERVED_SPECIAL_TARGETS =
 .PHONY: $(1)s
 $(1)s: .set_title-$(1)s
+$(1)s: $$(HEADERS)-$(1)s
+$(1)s: $(1)s-$(DOITALL)
+$(1)s:
+	@$(ECHO) ""
+
+.PHONY: $(1)s-$(DOITALL)
+$(1)s-$(DOITALL):
 	@+$$(strip $$(call $$(TARGETS)-list)) \
 		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
-		| $$(XARGS) $$(call MAKE_RECURSIVE) {}
-.PHONY: $(1)s-clean
-$(1)s-clean:
+		| $$(XARGS) $$(call MAKE_RECURSIVE) --silent {}
+
+.PHONY: $(1)s-$(CLEANER)
+$(1)s-$(CLEANER):
 	@+$$(strip $$(call $$(TARGETS)-list)) \
 		| $$(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp" \
 		| $$(XARGS) bash -c '\
-			$$(call $$(HEADERS)-rm,$$(CURDIR),{}); \
-			$$(RM) $$(CURDIR)/{} >/dev/null; \
+			if [ -f "$$(CURDIR)/{}" ]; then \
+				$$(call $$(HEADERS)-rm,$$(CURDIR),{}); \
+				$$(RM) $$(CURDIR)/{} >/dev/null; \
+			fi; \
 		'
+
 ifneq ($(COMPOSER_RELEASE),)
 $(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
 	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
@@ -2506,6 +2504,7 @@ $(LISTING):
 
 
 #> grep -E "[$][(]NOTHING[)][-]" Makefile
+#> update: $(CLEANER)-$(TARGETS)
 override NOTHING_IGNORES := \
 	$(INSTALL)-$(SUBDIRS) \
 	$(CLEANER)-$(SUBDIRS) \
@@ -2547,10 +2546,11 @@ endif
 # {{{2 $(DEBUGIT) ----------------------
 
 #> update: PHONY.*$(DEBUGIT)
-#	$(CHECKIT)
 #	$(CONFIGS)
 #	$(TARGETS)
 
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(DEBUGIT) ?=)
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file: export override COMPOSER_DOITALL_$(DEBUGIT) := file
@@ -2568,15 +2568,6 @@ $(DEBUGIT)-file:
 		| $(TR) '\n' '.'
 	@$(TAIL) -n10 $(DEBUGIT_FILE)
 	@$(LS) $(DEBUGIT_FILE)
-
-#> update: PHONY.*$(DOITALL)$
-$(eval override COMPOSER_DOITALL_$(DEBUGIT) ?=)
-#>.PHONY: $(DEBUGIT)-%
-#>$(DEBUGIT)-%:
-#>	@$(RUNMAKE) COMPOSER_DOITALL_$(DEBUGIT)="$(*)" $(DEBUGIT)
-.PHONY: $(DEBUGIT)-$(DOITALL)
-$(DEBUGIT)-$(DOITALL):
-	@$(RUNMAKE) COMPOSER_DOITALL_$(DEBUGIT)="$(DOITALL)" $(DEBUGIT)
 
 #> update: $(DEBUGIT): targets list
 .PHONY: $(DEBUGIT)
@@ -2639,6 +2630,8 @@ $(DEBUGIT)-%:
 ########################################
 # {{{2 $(TESTING) ----------------------
 
+#> update: PHONY.*$(DOITALL)$
+$(eval override COMPOSER_DOITALL_$(TESTING) ?=)
 .PHONY: $(TESTING)-file
 $(TESTING)-file: export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 $(TESTING)-file: export override COMPOSER_DOITALL_$(TESTING) := file
@@ -2655,15 +2648,6 @@ $(TESTING)-file:
 		| $(TR) '\n' '.'
 	@$(TAIL) -n10 $(TESTING_FILE)
 	@$(LS) $(TESTING_FILE)
-
-#> update: PHONY.*$(DOITALL)$
-$(eval override COMPOSER_DOITALL_$(TESTING) ?=)
-#>.PHONY: $(TESTING)-%
-#>$(TESTING)-%:
-#>	@$(RUNMAKE) COMPOSER_DOITALL_$(TESTING)="$(*)" $(TESTING)
-.PHONY: $(TESTING)-$(DOITALL)
-$(TESTING)-$(DOITALL):
-	@$(RUNMAKE) COMPOSER_DOITALL_$(TESTING)="$(DOITALL)" $(TESTING)
 
 #> update: $(TESTING): targets list
 .PHONY: $(TESTING)
@@ -2757,6 +2741,7 @@ endef
 
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+#>	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS);
 override define $(TESTING)-load =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
@@ -2770,7 +2755,6 @@ override define $(TESTING)-load =
 			$(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
-	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) MAKEJOBS="0" $(INSTALL)-$(DOFORCE)
 endef
 
@@ -2870,7 +2854,7 @@ $(TESTING)-Think-done:
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
 
-PHONY: $(TESTING)-$(COMPOSER_BASENAME)
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
@@ -2936,7 +2920,6 @@ $(TESTING)-$(DISTRIB)-done:
 # {{{3 $(TESTING)-$(DEBUGIT) -----------
 
 #> update: PHONY.*$(DEBUGIT)
-#	$(CHECKIT)
 #	$(CONFIGS)
 #	$(TARGETS)
 
@@ -3421,9 +3404,10 @@ $(TARGETS): .set_title-$(TARGETS)
 		) \
 	)
 	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(call $(CLEANER)-$(TARGETS)-list)	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(ECHO) "$(COMPOSER_TARGETS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(strip $(call $(TARGETS)-list,$(CLEANER)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(strip $(call $(TARGETS)-list,$(DOITALL)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(TARGETS)"; $(ECHO) "$(COMPOSER_TARGETS)"			| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"			| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
 	@$(RUNMAKE) --silent $(PRINTER)-list
 
@@ -3431,10 +3415,12 @@ override define $(TARGETS)-list =
 	$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d")
-		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
-		-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
+		$(if $(1),,$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d")) \
+		$(if $(1),,-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d") \
+		$(if $(1),,-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d") \
 		-e "s|[:]$$||g" \
-		-e "s|[[:space:]]+|$(TOKEN)|g"
+		-e "s|[[:space:]]+|$(TOKEN)|g" \
+		$(if $(1),| $(SED) -n "s|^([^:]+[-]$(1))$$|\1|gp")
 endef
 
 ################################################################################
@@ -3550,7 +3536,7 @@ $(PUBLISH)-$(CLEANER):
 #	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 #	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 
-#> update: $(MAKE)
+#> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
@@ -3560,7 +3546,7 @@ $(INSTALL)-%:
 
 .PHONY: $(INSTALL)
 #>$(INSTALL): .set_title-$(INSTALL)
-$(INSTALL): $(SUBDIRS)-$(HEADERS)-$(INSTALL)
+$(INSTALL): $(SUBDIRS)-$(INSTALL)-$(HEADERS)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 else
@@ -3615,8 +3601,7 @@ endef
 ########################################
 # {{{2 $(CLEANER) ----------------------
 
-#> update: $(MAKE)
-#> update: $(CLEANER)-$(TARGETS)
+#> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
@@ -3626,35 +3611,30 @@ $(CLEANER)-%:
 
 .PHONY: $(CLEANER)
 #>$(CLEANER): .set_title-$(CLEANER)
-$(CLEANER): $(SUBDIRS)-$(HEADERS)-$(CLEANER)
+$(CLEANER): $(SUBDIRS)-$(CLEANER)-$(HEADERS)
 ifneq ($(COMPOSER_STAMP),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_STAMP)),)
 	@$(call $(HEADERS)-rm,$(CURDIR),$(COMPOSER_STAMP))
 	@$(RM) $(CURDIR)/$(COMPOSER_STAMP) >/dev/null
 endif
 endif
-	@+$(call $(CLEANER)-$(TARGETS)-list) \
+	@+$(strip $(call $(TARGETS)-list,$(CLEANER))) \
 		| $(XARGS) $(call MAKE_RECURSIVE) {}
-	@$(foreach FILE,$(COMPOSER_TARGETS),\
+	@+$(foreach FILE,$(COMPOSER_TARGETS),\
 		if [ "$(FILE)" != "$(NOTHING)" ] && [ ! -d "$(FILE)" ]; then \
 			$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
 			$(RM) $(CURDIR)/$(FILE) >/dev/null; \
 		fi; \
+		$(NEWLINE) \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(CLEANER)
 endif
 
-override define $(CLEANER)-$(TARGETS)-list =
-	$(RUNMAKE) --silent $(LISTING) \
-		| $(SED) "/^.set_title[-]/d" \
-		| $(SED) -n "s|^([^:]+[-]$(CLEANER))[:]+.*$$|\1|gp"
-endef
-
 ########################################
 # {{{2 $(DOITALL) ----------------------
 
-#> update: $(MAKE)
+#> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)$
 $(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
@@ -3663,28 +3643,30 @@ $(DOITALL)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(DOITALL)="$(*)" $(DOITALL)
 
 .PHONY: $(DOITALL)
-$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),$(eval $(DOITALL): $(FILE)s))
 #>$(DOITALL): .set_title-$(DOITALL)
-$(DOITALL): $(SUBDIRS)-$(HEADERS)-$(DOITALL)
+$(DOITALL): $(SUBDIRS)-$(DOITALL)-$(HEADERS)
+	@+$(strip $(call $(TARGETS)-list,$(DOITALL))) \
+		| $(XARGS) $(call MAKE_RECURSIVE) {}
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-$(DOITALL): $(SUBDIRS)-$(DOITALL)
+	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
-$(DOITALL): $(NOTHING)-$(DOITALL)-$(TARGETS)
+	@$(RUNMAKE) $(NOTHING)-$(DOITALL)-$(TARGETS)
 else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
-$(DOITALL): $(NOTHING)-$(NOTHING)-$(DOITALL)-$(TARGETS)
+	@$(RUNMAKE) $(NOTHING)-$(NOTHING)-$(DOITALL)-$(TARGETS)
 else
-$(DOITALL): $(COMPOSER_TARGETS)
+	@+$(foreach FILE,$(COMPOSER_TARGETS),\
+		$(call MAKE_RECURSIVE) --silent $(FILE); \
+		$(NEWLINE) \
+	)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-$(DOITALL): $(SUBDIRS)-$(DOITALL)
+	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(DOITALL)
 endif
 endif
-$(DOITALL):
-	@$(ECHO) ""
 
 ########################################
 # {{{2 $(SUBDIRS) ----------------------
@@ -3711,8 +3693,8 @@ else
 	)
 endif
 
-.PHONY: $(SUBDIRS)-$(HEADERS)-%
-$(SUBDIRS)-$(HEADERS)-%:
+.PHONY: $(SUBDIRS)-%-$(HEADERS)
+$(SUBDIRS)-%-$(HEADERS):
 	@if	[ "$(MAKELEVEL)" = "0" ] || \
 		[ "$(MAKELEVEL)" = "1" ]; \
 	then \
