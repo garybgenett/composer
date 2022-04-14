@@ -1721,7 +1721,7 @@ $(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Special)
 	@$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(EXTENSION)$(_D): $(_M)$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)); \
+		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTENSION)$(_D): $(_M)$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)); \
 	)
 
 override define $(EXAMPLE)-print =
