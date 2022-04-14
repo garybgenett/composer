@@ -156,7 +156,7 @@ override COMPOSER_SRC			:= $(firstword $(MAKEFILE_LIST))
 override COMPOSER_DIR			:= $(abspath $(dir $(COMPOSER)))
 override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),$(MAKEFILE_LIST)))))
 ifeq ($(COMPOSER_ROOT),)
-override COMPOSER_ROOT			:= $(COMPOSER_DIR)
+override COMPOSER_ROOT			:= $(CURDIR)
 endif
 
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
@@ -3554,34 +3554,31 @@ $(INSTALL): $(INSTALL)-$(SUBDIRS)-$(HEADERS)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 else
-ifneq ($(wildcard $(CURDIR)/$(MAKEFILE)),)
-ifeq ($(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))),)
-ifeq ($(COMPOSER_ROOT),$(COMPOSER_DIR))
-	@$(call $(HEADERS)-note,$(CURDIR),Main_$(MAKEFILE))
-endif
-ifeq ($(COMPOSER_ROOT),$(CURDIR))
-	@$(call $(HEADERS)-note,$(CURDIR),Main_$(MAKEFILE))
-endif
-endif
-endif
-ifeq ($(COMPOSER_ROOT),$(COMPOSER_DIR))
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER))
-endif
-ifeq ($(COMPOSER_ROOT),$(CURDIR))
-ifneq ($(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))),)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL),$(COMPOSER))
-	@$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) >/dev/null
-else
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER))
-endif
-endif
-#WORKING:NOW need a way to "install" in current directory... maybe a ($(MAKELEVEL),0) override?
-#WORKING:NOW something like this, but it doubles-up on a "root" directory...
-ifeq ($(MAKELEVEL),0)
-ifeq ($(COMPOSER_DOITALL_$(INSTALL)),)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL))
-endif
-endif
+	@if	[ "$(COMPOSER_ROOT)" = "$(CURDIR)" ]; \
+	then \
+		if	[ -f "$(CURDIR)/$(MAKEFILE)" ] && \
+			[ "$(COMPOSER_DOITALL_$(INSTALL))" != "$(DOFORCE)" ]; \
+		then \
+			$(call $(HEADERS)-note,$(CURDIR),Main_$(MAKEFILE)); \
+		fi; \
+		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
+		then \
+			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL),$(COMPOSER)); \
+			$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) >/dev/null; \
+		else \
+			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER)); \
+		fi; \
+	elif	[ "$(MAKELEVEL)" = "0" ] || \
+		[ "$(MAKELEVEL)" = "1" ]; \
+	then \
+		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
+		then \
+			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL)); \
+			$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) >/dev/null; \
+		else \
+			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL)); \
+		fi; \
+	fi
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@$(foreach FILE,$(COMPOSER_SUBDIRS),\
@@ -3632,7 +3629,9 @@ endif
 	@+$(strip $(call $(TARGETS)-list,$(CLEANER))) \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 	@+$(foreach FILE,$(COMPOSER_TARGETS),\
-		if [ "$(FILE)" != "$(NOTHING)" ] && [ ! -d "$(FILE)" ]; then \
+		if	[ "$(FILE)" != "$(NOTHING)" ] && \
+			[ -f "$(FILE)" ]; \
+		then \
 			$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
 			$(RM) $(CURDIR)/$(FILE) >/dev/null; \
 		fi; \
@@ -3697,10 +3696,11 @@ ifeq ($(MAKELEVEL),1)
 $(1)-$(SUBDIRS)-$(HEADERS): .set_title-$(1)
 $(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
 endif
-ifneq ($(COMPOSER_DOITALL_$(1)),)
-$(1)-$(SUBDIRS)-$(HEADERS): $(WHOWHAT)-$(1)
-endif
 $(1)-$(SUBDIRS)-$(HEADERS):
+ifneq ($(COMPOSER_DOITALL_$(1)),)
+#>$(1)-$(SUBDIRS)-$(HEADERS): $(WHOWHAT)-$(1)
+	@$(RUNMAKE) $(WHOWHAT)-$(1)
+endif
 	@$(ECHO) ""
 
 .PHONY: $(1)-$(SUBDIRS)
