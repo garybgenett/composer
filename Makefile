@@ -3680,6 +3680,18 @@ $(DOITALL)-specials:
 $(SUBDIRS): $(NOTHING)-$(SUBDIRS)
 	@$(ECHO) ""
 
+.PHONY: %-$(SUBDIRS)-$(HEADERS)
+%-$(SUBDIRS)-$(HEADERS):
+	@if	[ "$(MAKELEVEL)" = "0" ] || \
+		[ "$(MAKELEVEL)" = "1" ]; \
+	then \
+		$(RUNMAKE) .set_title-$(*); \
+		$(call $(HEADERS),,$(*)); \
+	fi
+	@if [ -n "$(COMPOSER_DOITALL_$(*))" ]; then \
+		$(RUNMAKE) $(WHOWHAT)-$(*); \
+	fi
+
 override define $(SUBDIRS)-$(EXAMPLE) =
 .PHONY: $(1)-$(SUBDIRS)
 $(1)-$(SUBDIRS):
@@ -3705,18 +3717,6 @@ endef
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
-
-.PHONY: %-$(SUBDIRS)-$(HEADERS)
-%-$(SUBDIRS)-$(HEADERS):
-	@if	[ "$(MAKELEVEL)" = "0" ] || \
-		[ "$(MAKELEVEL)" = "1" ]; \
-	then \
-		$(RUNMAKE) .set_title-$(*); \
-		$(call $(HEADERS),,$(*)); \
-	fi
-	@if [ -n "$(COMPOSER_DOITALL_$(*))" ]; then \
-		$(RUNMAKE) $(WHOWHAT)-$(*); \
-	fi
 
 ########################################
 # {{{2 $(PRINTER) ----------------------
