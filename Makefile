@@ -3773,10 +3773,16 @@ endif
 
 .PHONY: $(COMPOSER_CREATE)
 $(COMPOSER_CREATE): $(BASE).$(EXTENSION)
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := create)$(call $(HEADERS)-note,$(BASE) $(MARKER) $(EXTENSION),$(LIST))
+endif
 	@$(ECHO) ""
 
 $(BASE).$(EXTENSION): $(LIST)
 	@$(RUNMAKE) $(COMPOSER_PANDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := base)$(call $(HEADERS)-note,$(BASE) $(MARKER) $(TYPE),$(LIST))
+endif
 
 ########################################
 # {{{2 $(COMPOSER_EXT) -----------------
@@ -3785,16 +3791,22 @@ $(BASE).$(EXTENSION): $(LIST)
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
-	@$(PRINT) "#WORKING:NOW [MARKDOWN]"
 	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+endif
 
 %.$(2): %
-	@$(PRINT) "#WORKING:NOW [WILDCARD]"
 	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+endif
 
 %.$(2): $(LIST)
-	@$(PRINT) "#WORKING:NOW [LIST]"
 	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+endif
 endef
 
 $(eval $(call TYPE_TARGETS,$(TYPE_HTML),$(EXTN_HTML)))
@@ -3817,8 +3829,10 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 override define TYPE_DO_BOOK =
 $(DO_BOOK)-%.$(2):
-	@$(PRINT) "#WORKING:NOW [DO_BOOK]"
 	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := do_book)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+endif
 endef
 
 $(eval $(call TYPE_DO_BOOK,$(TYPE_HTML),$(EXTN_HTML)))
@@ -3832,9 +3846,24 @@ $(eval $(call TYPE_DO_BOOK,$(TYPE_LINT),$(EXTN_LINT)))
 
 ########################################
 
-.PHONY: $(DO_POST)-%
-$(DO_POST)-%:
+#> update: TYPE_TARGETS
+
+override define TYPE_DO_POST =
+$(DO_POST)-%.$(2):
 	@$(RUNMAKE) $(NOTHING)-$(DO_POST)-FUTURE
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := do_post)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+endif
+endef
+
+$(eval $(call TYPE_DO_POST,$(TYPE_HTML),$(EXTN_HTML)))
+$(eval $(call TYPE_DO_POST,$(TYPE_LPDF),$(EXTN_LPDF)))
+$(eval $(call TYPE_DO_POST,$(TYPE_EPUB),$(EXTN_EPUB)))
+$(eval $(call TYPE_DO_POST,$(TYPE_PRES),$(EXTN_PRES)))
+$(eval $(call TYPE_DO_POST,$(TYPE_DOCX),$(EXTN_DOCX)))
+$(eval $(call TYPE_DO_POST,$(TYPE_PPTX),$(EXTN_PPTX)))
+$(eval $(call TYPE_DO_POST,$(TYPE_TEXT),$(EXTN_TEXT)))
+$(eval $(call TYPE_DO_POST,$(TYPE_LINT),$(EXTN_LINT)))
 
 ################################################################################
 # }}}1
