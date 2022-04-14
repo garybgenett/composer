@@ -993,8 +993,8 @@ override COMPOSER_CREATE		:= compose
 override COMPOSER_PANDOC		:= pandoc
 
 #> update: $(MAKE) / @+
-override MAKE_RECURSIVE			= $(MAKE) --makefile $(COMPOSER_SRC)
-override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC)
+override MAKE_OPTIONS			:=
+override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC) $(MAKE_OPTIONS)
 
 ########################################
 
@@ -1035,8 +1035,8 @@ override COMPOSER_EXPORTED_NOT := \
 	LIST \
 
 #> update: $(MAKE) / @+
-override MAKE_RECURSIVE			= $(MAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-override RUNMAKE			:= $(RUNMAKE)$(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+override RUNMAKE			:= $(RUNMAKE) $(MAKE_OPTIONS)
 $(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
 
@@ -1163,7 +1163,7 @@ $(1)s:
 $(1)s-$(DOITALL):
 	@+$$(strip $$(call $$(TARGETS)-list)) \
 		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
-		| $$(XARGS) $$(call MAKE_RECURSIVE) --silent {}
+		| $$(XARGS) $$(MAKE) $$(MAKE_OPTIONS) --silent {}
 
 .PHONY: $(1)s-$(CLEANER)
 $(1)s-$(CLEANER):
@@ -2470,7 +2470,7 @@ endif
 	@$(PRINT) "  * This may be the result of a missing input file"
 	@$(PRINT) "  * New targets can be defined in '$(_C)$(COMPOSER_SETTINGS)$(_D)'"
 	@$(PRINT) "  * Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets"
-	@$(PRINT) "  * Use '$(_M)$(HELPOUT)$(_D)' or '$(_M)$(HELPALL)$(_D)' for more information"
+	@$(PRINT) "  * See '$(_M)$(HELPOUT)$(_D)' or '$(_M)$(HELPALL)$(_D)' for more information"
 	@$(LINERULE)
 	@exit 1
 
@@ -3542,7 +3542,7 @@ $(INSTALL)-%:
 
 .PHONY: $(INSTALL)
 #>$(INSTALL): .set_title-$(INSTALL)
-$(INSTALL): $(SUBDIRS)-$(INSTALL)-$(HEADERS)
+$(INSTALL): $(SUBDIRS)-$(HEADERS)-$(INSTALL)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 else
@@ -3572,7 +3572,7 @@ ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@$(foreach FILE,$(COMPOSER_SUBDIRS),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
-	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(INSTALL)
+	@+$(MAKE) $(MAKE_OPTIONS) $(SUBDIRS)-$(INSTALL)
 endif
 endif
 endif
@@ -3607,7 +3607,7 @@ $(CLEANER)-%:
 
 .PHONY: $(CLEANER)
 #>$(CLEANER): .set_title-$(CLEANER)
-$(CLEANER): $(SUBDIRS)-$(CLEANER)-$(HEADERS)
+$(CLEANER): $(SUBDIRS)-$(HEADERS)-$(CLEANER)
 ifneq ($(COMPOSER_STAMP),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_STAMP)),)
 	@$(call $(HEADERS)-rm,$(CURDIR),$(COMPOSER_STAMP))
@@ -3615,7 +3615,7 @@ ifneq ($(wildcard $(CURDIR)/$(COMPOSER_STAMP)),)
 endif
 endif
 	@+$(strip $(call $(TARGETS)-list,$(CLEANER))) \
-		| $(XARGS) $(call MAKE_RECURSIVE) {}
+		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 	@+$(foreach FILE,$(COMPOSER_TARGETS),\
 		if [ "$(FILE)" != "$(NOTHING)" ] && [ ! -d "$(FILE)" ]; then \
 			$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
@@ -3624,7 +3624,7 @@ endif
 		$(NEWLINE) \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(CLEANER)
+	@+$(MAKE) $(MAKE_OPTIONS) $(SUBDIRS)-$(CLEANER)
 endif
 
 ########################################
@@ -3640,29 +3640,30 @@ $(DOITALL)-%:
 
 .PHONY: $(DOITALL)
 #>$(DOITALL): .set_title-$(DOITALL)
-$(DOITALL): $(SUBDIRS)-$(DOITALL)-$(HEADERS)
-	@+$(strip $(call $(TARGETS)-list,$(DOITALL))) \
-		| $(XARGS) $(call MAKE_RECURSIVE) {}
+$(DOITALL): $(SUBDIRS)-$(HEADERS)-$(DOITALL)
+$(DOITALL): $(DOITALL)-specials
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(DOITALL)
+$(DOITALL): $(SUBDIRS)-$(DOITALL)
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
-	@$(RUNMAKE) $(NOTHING)-$(DOITALL)-$(TARGETS)
+$(DOITALL): $(NOTHING)-$(DOITALL)-$(TARGETS)
 else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
-	@$(RUNMAKE) $(NOTHING)-$(NOTHING)-$(DOITALL)-$(TARGETS)
+$(DOITALL): $(NOTHING)-$(NOTHING)-$(DOITALL)-$(TARGETS)
 else
-	@+$(foreach FILE,$(COMPOSER_TARGETS),\
-		$(call MAKE_RECURSIVE) --silent $(FILE); \
-		$(NEWLINE) \
-	)
+$(DOITALL): $(COMPOSER_TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-	@+$(call MAKE_RECURSIVE) $(SUBDIRS)-$(DOITALL)
+$(DOITALL): $(SUBDIRS)-$(DOITALL)
 endif
 endif
+
+.PHONY: $(DOITALL)-specials
+$(DOITALL)-specials:
+	@+$(strip $(call $(TARGETS)-list,$(DOITALL))) \
+		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 
 ########################################
 # {{{2 $(SUBDIRS) ----------------------
@@ -3671,26 +3672,34 @@ endif
 $(SUBDIRS): $(NOTHING)-$(SUBDIRS)
 	@$(ECHO) ""
 
-.PHONY: $(SUBDIRS)-%
-$(SUBDIRS)-%:
+override define $(SUBDIRS)-$(EXAMPLE) =
+.PHONY: $(SUBDIRS)-$(1)
+$(SUBDIRS)-$(1):
 ifeq ($(COMPOSER_SUBDIRS),)
-	@$(RUNMAKE) $(NOTHING)-$(*)-$(SUBDIRS)
+$(SUBDIRS)-$(1): $(NOTHING)-$(1)-$(SUBDIRS)
 else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
-	@$(RUNMAKE) $(NOTHING)-$(NOTHING)-$(*)-$(SUBDIRS)
+$(SUBDIRS)-$(1): $(NOTHING)-$(NOTHING)-$(1)-$(SUBDIRS)
 else
-	@+$(foreach FILE,$(COMPOSER_SUBDIRS),\
-		$(if $(wildcard $(CURDIR)/$(FILE)/$(MAKEFILE)),\
-			$(call MAKE_RECURSIVE) \
-				--directory $(CURDIR)/$(FILE) \
-				--makefile $(CURDIR)/$(FILE)/$(MAKEFILE) \
-				$(*);,\
-			$(RUNMAKE) --directory $(CURDIR)/$(FILE) $(NOTHING)-$(MAKEFILE); \
-		) \
+$(SUBDIRS)-$(1): $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
+
+.PHONY: $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
+$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)):
+	@$$(eval override $$(@) := $(CURDIR)/$$(subst $(SUBDIRS)-$(1)-,,$$(@)))
+	@+$$(if $$(wildcard $$($$(@))/$(MAKEFILE)),\
+		$$(MAKE) $$(MAKE_OPTIONS) --directory $$($$(@)) $(1),\
+		$$(RUNMAKE) --directory $$($$(@)) $(NOTHING)-$(MAKEFILE) \
 	)
 endif
+$(SUBDIRS)-$(1):
+	@$(ECHO) ""
+endef
 
-.PHONY: $(SUBDIRS)-%-$(HEADERS)
-$(SUBDIRS)-%-$(HEADERS):
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
+
+.PHONY: $(SUBDIRS)-$(HEADERS)-%
+$(SUBDIRS)-$(HEADERS)-%:
 	@if	[ "$(MAKELEVEL)" = "0" ] || \
 		[ "$(MAKELEVEL)" = "1" ]; \
 	then \
