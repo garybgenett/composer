@@ -1139,55 +1139,6 @@ override COMPOSER_RESERVED := \
 override DOFORCE			:= force
 
 ########################################
-# {{{2 Specials ------------------------
-
-override DO_BOOK			:= book
-override DO_POST			:= post
-
-override COMPOSER_RESERVED_SPECIAL := \
-	$(DO_BOOK) \
-	$(DO_POST) \
-
-########################################
-
-#> update: $(MAKE) / @+
-override define COMPOSER_RESERVED_SPECIAL_TARGETS =
-.PHONY: $(1)s
-$(1)s: .set_title-$(1)s
-$(1)s: $$(HEADERS)-$(1)s
-$(1)s: $(1)s-$(DOITALL)
-$(1)s:
-	@$(ECHO) ""
-
-.PHONY: $(1)s-$(DOITALL)
-$(1)s-$(DOITALL):
-	@+$$(strip $$(call $$(TARGETS)-list)) \
-		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
-		| $$(XARGS) $$(MAKE) $$(MAKE_OPTIONS) --silent {}
-
-.PHONY: $(1)s-$(CLEANER)
-$(1)s-$(CLEANER):
-	@+$$(strip $$(call $$(TARGETS)-list)) \
-		| $$(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp" \
-		| $$(XARGS) bash -c '\
-			if [ -f "$$(CURDIR)/{}" ]; then \
-				$$(call $$(HEADERS)-rm,$$(CURDIR),{}); \
-				$$(RM) $$(CURDIR)/{} >/dev/null; \
-			fi; \
-		'
-
-ifneq ($(COMPOSER_RELEASE),)
-$(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
-	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
-	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
-endif
-endef
-
-$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
-)
-
-########################################
 # {{{2 Filesystem ----------------------
 
 #> update: COMPOSER_TARGETS.*=
@@ -1244,6 +1195,60 @@ ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 override COMPOSER_SUBDIRS		:=
 endif
 endif
+
+########################################
+# {{{2 Specials ------------------------
+
+override DO_BOOK			:= book
+override DO_POST			:= post
+
+override COMPOSER_RESERVED_SPECIAL := \
+	$(DO_BOOK) \
+	$(DO_POST) \
+
+########################################
+
+#> update: $(MAKE) / @+
+override define COMPOSER_RESERVED_SPECIAL_TARGETS =
+override COMPOSER_TARGETS := $(filter-out $(1)-%,$(COMPOSER_TARGETS))
+$(foreach FILE,$(filter $(1)-%$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)),\
+	$(eval $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(FILE)): $(FILE)) \
+)
+
+.PHONY: $(1)s
+$(1)s: .set_title-$(1)s
+$(1)s: $$(HEADERS)-$(1)s
+$(1)s: $(1)s-$(DOITALL)
+$(1)s:
+	@$(ECHO) ""
+
+.PHONY: $(1)s-$(DOITALL)
+$(1)s-$(DOITALL):
+	@+$$(strip $$(call $$(TARGETS)-list)) \
+		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
+		| $$(XARGS) $$(MAKE) $$(MAKE_OPTIONS) --silent {}
+
+.PHONY: $(1)s-$(CLEANER)
+$(1)s-$(CLEANER):
+	@+$$(strip $$(call $$(TARGETS)-list)) \
+		| $$(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp" \
+		| $$(XARGS) bash -c '\
+			if [ -f "$$(CURDIR)/{}" ]; then \
+				$$(call $$(HEADERS)-rm,$$(CURDIR),{}); \
+				$$(RM) $$(CURDIR)/{} >/dev/null; \
+			fi; \
+		'
+
+ifneq ($(COMPOSER_RELEASE),)
+$(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
+	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
+	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
+endif
+endef
+
+$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
+	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
+)
 
 ################################################################################
 # }}}1
@@ -3794,14 +3799,11 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 ########################################
 # {{{2 SPECIALS ------------------------
 
+#WORKING:NOW
+#	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
+#	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
+
 #> update: TYPE_TARGETS
-
-#WORKING:NOW: this magic should probably apply for all specials, as part of the template...
-
-$(eval override COMPOSER_TARGETS := $(filter-out $(DO_BOOK)-%,$(COMPOSER_TARGETS)))
-$(foreach FILE,$(filter $(DO_BOOK)-%$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)),\
-	$(eval $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(FILE)): $(FILE)); \
-)
 
 override define TYPE_DO_BOOK =
 $(DO_BOOK)-%.$(2):
