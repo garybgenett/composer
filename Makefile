@@ -67,6 +67,9 @@ override VIM_FOLDING := {{{1
 #			meta: $(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
 #			individual: $(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
 #		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
+#		document build times (~1100 dirs, ~87k files): 1 thead = ~75m, 10 = ~5m, 50 = ?m)
+#			every effort has been made to parallelize (word?)
+#			double-check xargs commands, and add to clean
 #	code
 #		PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
 #			COMPOSER_SETTINGS only
@@ -86,6 +89,8 @@ override VIM_FOLDING := {{{1
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
 #WORKING:NOW
+#	double-check all "$$" and the new defines, to make sure the expanded make_database text makes sense...
+#	symlink (e.g.../) in dependencies...?  if so, document!
 #	convert all output to markdown
 #		replace license and readme with help/license output
 #		ensure all output fits within 80 characters
@@ -2673,6 +2678,7 @@ $(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-$(DEBUGIT)
 #>endif
 #>endif
+#>$(TESTING): $(TESTING)-speed
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
@@ -2940,6 +2946,44 @@ $(TESTING)-$(DEBUGIT)-init:
 
 .PHONY: $(TESTING)-$(DEBUGIT)-done
 $(TESTING)-$(DEBUGIT)-done:
+	@$(call $(TESTING)-hold)
+
+########################################
+# {{{3 $(TESTING)-speed ----------------
+
+.PHONY: $(TESTING)-speed
+$(TESTING)-speed: $(TESTING)-Think
+	@$(call $(TESTING)-$(HEADERS),\
+		Performance test of the speed processing a large directory ,\
+		\n\t * $(_H)For general information and fun only$(_D) \
+	)
+	@$(call $(TESTING)-speed-init)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+override define $(TESTING)-speed-init =
+	for TLD in {0..9}; do \
+		$(MKDIR)			$(call $(TESTING)-pwd)/tld$${TLD}; \
+		$(RSYNC) --filter="-_/sub**"	$(PANDOC_DIR)/ $(call $(TESTING)-pwd)/tld$${TLD}; \
+		for SUB in {0..9}; do \
+			$(MKDIR)		$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}; \
+			$(RSYNC)		$(PANDOC_DIR)/ $(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}; \
+		done; \
+	done
+endef
+
+.PHONY: $(TESTING)-speed-init
+$(TESTING)-speed-init: export override COMPOSER_DEBUGIT := $(CONFIGS) $(TARGETS)
+$(TESTING)-speed-init:
+	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(INSTALL)-$(DOFORCE)
+	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(DOITALL)-$(DOITALL)
+
+.PHONY: $(TESTING)-speed-done
+$(TESTING)-speed-done:
+	@$(TABLE_M2) "$(_H)$(MARKER)Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type d | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER)Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER)Output"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(EXTN_DEFAULT)$$/p" | $(WC))"
+	@$(call $(TESTING)-find,[0-9]s$$)		| $(SED) "s|^(real)|\n\1|g"
 	@$(call $(TESTING)-hold)
 
 ########################################
