@@ -518,19 +518,6 @@ endif
 
 ########################################
 
-# https://github.com/hakimel/reveal.js
-# https://github.com/hakimel/reveal.js/blob/master/LICENSE
-ifeq ($(filter override,$(origin REVEALJS_CMT)),)
-override REVEALJS_CMT			:= 4.3.1
-endif
-override REVEALJS_LIC			:= MIT
-override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
-override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
-override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
-override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
-
-########################################
-
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 #>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
@@ -547,6 +534,19 @@ override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
 #>override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
+
+########################################
+
+# https://github.com/hakimel/reveal.js
+# https://github.com/hakimel/reveal.js/blob/master/LICENSE
+ifeq ($(filter override,$(origin REVEALJS_CMT)),)
+override REVEALJS_CMT			:= 4.3.1
+endif
+override REVEALJS_LIC			:= MIT
+override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
+override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
+override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
+override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
 ########################################
 
@@ -3231,8 +3231,8 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) ":---"				":---"					":---"
 	@$(TABLE_M3) "$(_E)Pandoc"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
 	@$(TABLE_M3) "$(_E)YQ"				"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
-	@$(TABLE_M3) "$(_E)Reveal.js"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(TABLE_M3) "$(_E)Markdown Viewer"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
+	@$(TABLE_M3) "$(_E)Reveal.js"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"				":---"					":---"
@@ -3407,8 +3407,8 @@ $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call $(HEADERS))
 	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
-	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
 	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
@@ -3428,12 +3428,12 @@ endif
 	@$(ECHO) "$(_C)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_DIR)/data/templates \
-		$(REVEALJS_CSS_THEME) \
 		$(MDVIEWER_DIR)/manifest.firefox.json \
 		$(MDVIEWER_DIR)/manifest.chrome.json \
 		$(MDVIEWER_DIR)/manifest.edge.json \
 		$(MDVIEWER_CSS) \
-		$(MDVIEWER_CSS_ALT)
+		$(MDVIEWER_CSS_ALT) \
+		$(REVEALJS_CSS_THEME)
 	@$(ECHO) "$(_D)"
 
 ################################################################################
