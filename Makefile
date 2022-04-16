@@ -2821,13 +2821,22 @@ $(TESTING)-speed: $(TESTING)-Think
 
 override define $(TESTING)-speed-init =
 	for TLD in {0..9}; do \
-		$(MKDIR)			$(call $(TESTING)-pwd)/tld$${TLD}; \
-		$(RSYNC) --filter="-_/sub**"	$(PANDOC_DIR)/ $(call $(TESTING)-pwd)/tld$${TLD}; \
+		$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
 		for SUB in {0..9}; do \
-			$(MKDIR)		$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}; \
-			$(RSYNC)		$(PANDOC_DIR)/ $(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}; \
+			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
 		done; \
 	done
+endef
+
+override define $(TESTING)-speed-init-load =
+	$(MKDIR) $(1); \
+	$(RSYNC) \
+		--filter="-_/$(notdir $(PANDOC_LNX_BIN))" \
+		--filter="-_/$(notdir $(PANDOC_WIN_BIN))" \
+		--filter="-_/$(notdir $(PANDOC_MAC_BIN))" \
+		--filter="-_/sub**" \
+		$(PANDOC_DIR)/ \
+		$(1)
 endef
 
 .PHONY: $(TESTING)-speed-init
