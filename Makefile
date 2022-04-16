@@ -2173,17 +2173,6 @@ endif
 ########################################
 # {{{2 $(HEADERS) ----------------------
 
-override HEADERS_COMPOSER_DIR		:= $(COMPOSER_DIR)
-override HEADERS_MAKEFILE_LIST		:= $(MAKEFILE_LIST)
-override HEADERS_COMPOSER_INCLUDES	:= $(COMPOSER_INCLUDES)
-override HEADERS_CURDIR			:= $(CURDIR)
-ifneq ($(COMPOSER_RELEASE),)
-override HEADERS_COMPOSER_DIR		:= $(subst $(abspath $(dir $(CURDIR))),...,$(COMPOSER_DIR))
-override HEADERS_MAKEFILE_LIST		:= $(subst $(abspath $(dir $(CURDIR))),...,$(MAKEFILE_LIST))
-override HEADERS_COMPOSER_INCLUDES	:= $(subst $(abspath $(dir $(CURDIR))),...,$(COMPOSER_INCLUDES))
-override HEADERS_CURDIR			:= $(subst $(abspath $(dir $(CURDIR))),...,$(CURDIR))
-endif
-
 #> update: COMPOSER_OPTIONS
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override $(HEADERS)-list := $(COMPOSER_OPTIONS)
@@ -2209,6 +2198,12 @@ override $(HEADERS)-vars := \
 	OPT
 endif
 
+ifneq ($(COMPOSER_RELEASE),)
+override $(HEADERS)-release = $(subst $(abspath $(dir $(COMPOSER_DIR))),...,$(1))
+else
+override $(HEADERS)-release = $(1)
+endif
+
 .PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): override export COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): override export $(HEADERS)-list := $(COMPOSER_OPTIONS)
@@ -2223,11 +2218,11 @@ $(HEADERS)-$(EXAMPLE):
 	@$(call $(HEADERS),1)
 	@$(call $(HEADERS)-run)
 	@$(call $(HEADERS)-run,1)
-	@$(call $(HEADERS)-note,$(CURDIR),this is a note)
-	@$(call $(HEADERS)-dir,$(CURDIR),more on that)
-	@$(call $(HEADERS)-file,$(CURDIR),more on that)
-	@$(call $(HEADERS)-skip,$(CURDIR),more on that)
-	@$(call $(HEADERS)-rm,$(CURDIR),more on that)
+	@$(call $(HEADERS)-note,$(CURDIR),$(@))
+	@$(call $(HEADERS)-dir,$(CURDIR),directory)
+	@$(call $(HEADERS)-file,$(CURDIR),creating)
+	@$(call $(HEADERS)-skip,$(CURDIR),skipping)
+	@$(call $(HEADERS)-rm,$(CURDIR),removing)
 
 .PHONY: $(HEADERS)
 $(HEADERS): $(NOTHING)-$(HEADERS)
@@ -2243,11 +2238,11 @@ $(HEADERS)-run-%:
 
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(HEADERS_COMPOSER_DIR)"; \
+	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))"; \
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(HEADERS_MAKEFILE_LIST)$(_D)]"; \
-	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(HEADERS_COMPOSER_INCLUDES)$(_D)]"; \
-	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(HEADERS_CURDIR)$(_D)]"; \
+	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(call $(HEADERS)-release,$(MAKEFILE_LIST))$(_D)]"; \
+	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_INCLUDES))$(_D)]"; \
+	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(call $(HEADERS)-release,$(CURDIR))$(_D)]"; \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
 	$(foreach FILE,$(if $(COMPOSER_DEBUGIT_ALL),$($(HEADERS)-list),$(if $(1),$($(HEADERS)-list))),\
@@ -2258,11 +2253,11 @@ endef
 
 override define $(HEADERS)-run =
 	$(LINERULE); \
-	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(HEADERS_COMPOSER_DIR)"; \
+	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))"; \
 	$(TABLE_M2) ":---"			":---"; \
-	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(HEADERS_MAKEFILE_LIST)"; \
-	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(HEADERS_COMPOSER_INCLUDES)"; \
-	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(HEADERS_CURDIR)"; \
+	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(call $(HEADERS)-release,$(MAKEFILE_LIST))"; \
+	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(call $(HEADERS)-release,$(COMPOSER_INCLUDES))"; \
+	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(call $(HEADERS)-release,$(CURDIR))"; \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(if $(COMPOSER_DEBUGIT_ALL),$($(HEADERS)-vars),$(if $(1),$($(HEADERS)-vars))),\
@@ -2272,19 +2267,19 @@ override define $(HEADERS)-run =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(2)"
+	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(2)"
 endef
 override define $(HEADERS)-dir =
-	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 override define $(HEADERS)-file =
-	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
 endef
 override define $(HEADERS)-rm =
-	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(if $(COMPOSER_RELEASE),$(HEADERS_CURDIR),$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
 
 ########################################
@@ -3623,13 +3618,15 @@ endif
 	@$(ECHO) ""
 
 .PHONY: $(1)-$(SUBDIRS)
-$(1)-$(SUBDIRS):
 ifeq ($(COMPOSER_SUBDIRS),)
 $(1)-$(SUBDIRS): $(NOTHING)-$(1)-$(SUBDIRS)
 else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
 $(1)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(1)-$(SUBDIRS)
 else
 $(1)-$(SUBDIRS): $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
+endif
+$(1)-$(SUBDIRS):
+	@$(ECHO) ""
 
 .PHONY: $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
@@ -3638,9 +3635,6 @@ $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 		$$(MAKE) $$(MAKE_OPTIONS) --directory $$($$(@)) $(1),\
 		$$(RUNMAKE) --directory $$($$(@)) $(NOTHING)-$(MAKEFILE) \
 	)
-endif
-$(1)-$(SUBDIRS):
-	@$(ECHO) ""
 endef
 
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
