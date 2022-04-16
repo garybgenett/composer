@@ -76,10 +76,19 @@ override VIM_FOLDING := {{{1
 #			every effort has been made to parallelize (word?)
 #			double-check xargs commands, and add to clean
 #			J=1
-#				#WORKING:NOW
-#			J=10
-#				install user: 1m3.932s
-#				all user: 119m33.289s
+#				threads: ~20-30
+#				Directories 18041
+#				Files 81510
+#				Output 82610
+#				install 15m8.018s
+#				all 140m43.641s
+#			J=6
+#				threads: 4478
+#				Directories 18041
+#				Files 81510
+#				Output 82610
+#				install 1m20.155s
+#				all 17m46.724s
 #	code
 #		PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
 #			COMPOSER_SETTINGS only
@@ -2847,9 +2856,9 @@ $(TESTING)-speed-init:
 
 .PHONY: $(TESTING)-speed-done
 $(TESTING)-speed-done:
-	@$(TABLE_M2) "$(_H)$(MARKER)Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type d | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER)Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER)Output"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(EXTN_DEFAULT)$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type d | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+[.]$(EXTN_DEFAULT)$$/p" | $(WC))"
 	@$(call $(TESTING)-find,[0-9]s$$)		| $(SED) "s|^(real)|\n\1|g"
 	@$(call $(TESTING)-hold)
 
