@@ -99,6 +99,7 @@ override VIM_FOLDING := {{{1
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
 #WORKING:NOW
+#	add a "force" variable/option
 #	double-check all "$$" and the new defines, to make sure the expanded make_database text makes sense...
 #	symlink (e.g.../) in dependencies...?  if so, document!
 #	convert all output to markdown
@@ -110,7 +111,6 @@ override VIM_FOLDING := {{{1
 #		add some sort of composer_readme variable?
 #		make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
 #		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
-#	update revealjs.css
 #WORKING:NOW
 #	specials...
 #		actually, need something better for site, which will probably remain singular...
@@ -140,7 +140,9 @@ override VIM_FOLDING := {{{1
 # {{{1 Composer Globals --------------------------------------------------------
 ################################################################################
 
+override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_VERSION		:= v3.0
+
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
@@ -545,6 +547,7 @@ endif
 override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
+#>override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
@@ -911,7 +914,7 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 # override SITE_SUBTITLE			?= a simple proof of concept
 # override SITE_DESCRIPTION		?= a brief summary
 # override SITE_EXCERPT			?= Please expand on that...
-# override SITE_AUTHOR			?= Gary B. Genett
+# override SITE_AUTHOR			?= $(COMPOSER_COMPOSER)
 # override SITE_LANGUAGE			?= en
 # override SITE_TIMEZONE			?= US/Pacific
 
@@ -1658,50 +1661,41 @@ override define HEREDOC_DISTRIB_REVEALJS_CSS =
 # $(subst $(NULL) $(COMPOSER_VERSION),,$(COMPOSER_FULLNAME))
 ############################################################################# */
 
-@import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME)));
+@import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME))");
 
 /* ########################################################################## */
 
-body {
-	background-image:	url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_ART)/screenshot.png)");
-	background-repeat:	no-repeat;
-	background-position:	98% 2%;
-	background-size:	auto 20%;
+.reveal .slides {
+	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_ART)/icon.png)");
+	background-repeat:		no-repeat;
+	background-position:		100% 0%;
+	background-size:		auto 20%;
 }
 
 /* ################################## */
 
-.reveal h1 {
-	font-size:	160%;
-}
-.reveal h2 {
-	font-size:	140%;
-}
-
-.reveal h1,
-.reveal h2,
-.reveal h3,
-.reveal h4,
-.reveal h5,
-.reveal h6,
-.reveal p {
-	text-align:	left;
-	text-transform:	none;
+:root {
+	--r-heading-text-transform:	none;
+	--r-heading1-size:		200%;
+	--r-heading2-size:		160%;
+	--r-heading3-size:		140%;
+	--r-heading4-size:		120%;
+	--r-heading5-size:		100%;
+	--r-heading6-size:		100%;
 }
 
-/* ################################## */
+.reveal * {
+	text-transform:			none;
+	text-align:			left;
+	block-align:			left;
+}
 
+.reveal dl,
 .reveal ol,
-.reveal ul {
-	display:	block;
-}
-
-/* ################################## */
-
-.reveal figure {
-	/* percent does not seem to work here */
-	/* optimized for 1024x768 fullscreen */
-	height:		18em;
+.reveal ul,
+.reveal table {
+	display:			block;
+	margin-left:			2em;
 }
 
 /* #############################################################################
@@ -1727,7 +1721,7 @@ License Source
 Copyright
 ------------------------------------
 
-    Copyright (c) 2014, Gary B. Genett
+    Copyright (c) 2014, $(COMPOSER_COMPOSER)
     All rights reserved.
 
 License
@@ -1770,7 +1764,7 @@ endef
 
 override define HEREDOC_DISTRIB_README =
 % Composer CMS: User Guide & Example File
-% Gary B. Genett
+% $(COMPOSER_COMPOSER)
 % $(COMPOSER_VERSION) ($(DATEMARK))
 
 Composer CMS
