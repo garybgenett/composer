@@ -108,18 +108,16 @@ override VIM_FOLDING := {{{1
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
 #WORKING:NOW
-#	add a "force" variable/option
-#	double-check all "$$" and the new defines, to make sure the expanded make_database text makes sense...
 #	symlink (e.g.../) in dependencies...?  if so, document!
 #	convert all output to markdown
 #		replace license and readme with help/license output
 #		ensure all output fits within 80 characters
 #		do a mouse-select of all text, to ensure proper color handling
-#		the above should be reviewed during testing... maybe output some notes in $(TESTING)...?
+#		the above should be reviewed during testing... maybe output some notes in $(TESTING)...? == release checklist
 #	dynamic import of targets
 #		add some sort of composer_readme variable?
-#		make COMPOSER_DOCOLOR= config | grep -vE "^[#]"
-#		make COMPOSER_DOCOLOR= check | grep -vE "^[#]"
+#		$(RUNMAKE) COMPOSER_DOCOLOR= $(CONFIGS) | $(SED) -n "/^[#]/d"
+#		$(RUNMAKE) COMPOSER_DOCOLOR= $(CHECKIT) | $(SED) -n "/^[#]/d"
 #WORKING:NOW
 #	specials...
 #		actually, need something better for site, which will probably remain singular...
@@ -435,7 +433,7 @@ $(call READ_ALIASES,B,c_base,BASE)
 $(call READ_ALIASES,L,c_list,LIST)
 $(call READ_ALIASES,s,c_css,CSS)
 $(call READ_ALIASES,t,c_title,TTL)
-$(call READ_ALIASES,c,c_contents,TOC)
+$(call READ_ALIASES,c,c_toc,TOC)
 $(call READ_ALIASES,l,c_level,LVL)
 $(call READ_ALIASES,m,c_margin,MGN)
 $(call READ_ALIASES,f,c_font,FNT)
@@ -1094,6 +1092,9 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
 
+#> update: PHONY.*$(DOFORCE)
+#	$(INSTALL)-$(DOFORCE)
+
 #> update: includes duplicates
 override HELPOUT			:= usage
 override HELPALL			:= help
@@ -1225,10 +1226,12 @@ endif
 # {{{2 Specials ------------------------
 
 override DO_BOOK			:= book
+override DO_PAGE			:= page
 override DO_POST			:= post
 
 override COMPOSER_RESERVED_SPECIAL := \
 	$(DO_BOOK) \
+	$(DO_PAGE) \
 	$(DO_POST) \
 
 ########################################
@@ -1306,14 +1309,13 @@ ifneq ($(MAKECMDGOALS),$(filter-out $(HELPALL),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
 #WORKING
-#$(HELPALL): \
 #	$(HELPALL)-TITLE_Help \
 #	$(HELPALL)-USAGE \
 #	$(HELPALL)-VARIABLES_TITLE_1 \
 #	$(HELPALL)-VARIABLES_FORMAT_2 \
+#	$(HELPALL)-VARIABLES_CONTROL_2 \
 
 $(HELPALL): \
-	$(HELPALL)-VARIABLES_CONTROL_2 \
 	$(HELPALL)-TARGETS_TITLE_1 \
 	$(HELPALL)-TARGETS_MAIN_2 \
 	$(HELPALL)-TARGETS_ADDITIONAL_2 \
@@ -1360,7 +1362,7 @@ $(HELPALL)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)LIST $(_E)(L, c_list)"		"List of input files(s)"		"$(_M)$(LIST)"
 	@$(TABLE_M3) "$(_C)CSS $(_E)(s, c_css)"			"Location of CSS file"			"$(if $(CSS),$(_M)$(CSS)$(_D) )$(_N)($(COMPOSER_CSS))"
 	@$(TABLE_M3) "$(_C)TTL $(_E)(t, c_title)"		"Document title prefix"			"$(_M)$(TTL)"
-	@$(TABLE_M3) "$(_C)TOC $(_E)(c, c_contents)"		"Table of contents depth"		"$(_M)$(TOC)"
+	@$(TABLE_M3) "$(_C)TOC $(_E)(c, c_toc)"			"Table of contents depth"		"$(_M)$(TOC)"
 	@$(TABLE_M3) "$(_C)LVL $(_E)(l, c_level)"		"Chapter/slide header level"		"$(_M)$(LVL)"
 	@$(TABLE_M3) "$(_C)MGN $(_E)(m, c_margin)"		"Margin size [$(_C)$(TYPE_LPDF)$(_D)]"	"$(_M)$(MGN)"
 	@$(TABLE_M3) "$(_C)FNT $(_E)(f, c_font)"		"Font size [$(_C)$(TYPE_HTML)$(_D) $(_E)&$(_D) $(_C)$(TYPE_LPDF)$(_D)]" \
@@ -1392,10 +1394,9 @@ $(HELPALL)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: $(_C)$(DOITALL)"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
 	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
-	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Target list: $(_C)$(DOITALL)"			"$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Directories list: $(_C)$(DOITALL)"		"$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore list: $(_C)$(DOITALL)$(_D) $(_E)&$(_D) $(_C)$(SUBDIRS)" \
-												"$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
+	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Targets:   $(_C)$(DOITALL)$(_D)$(_E)/$(_D)$(_C)$(CLEANER)"					"('$(_C)$(CONFIGS)$(_D)' or '$(_C)$(TARGETS)$(_D)')"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Recursion: $(_C)$(DOITALL)$(_D)$(_E)/$(_D)$(_C)$(CLEANER)$(_D)$(_E)/$(_D)$(_C)$(INSTALL)"	"('$(_C)$(CONFIGS)$(_D)' or '$(_C)$(TARGETS)$(_D)')"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore:    $(_C)$(DOITALL)$(_D)$(_E)/$(_D)$(_C)$(CLEANER)$(_D)$(_E)/$(_D)$(_C)$(INSTALL)"	"('$(_C)$(CONFIGS)$(_D)')"				#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~= $(_E)(C, c_color)$(_D)*"
@@ -3475,6 +3476,7 @@ $(PUBLISH)-$(CLEANER):
 #> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
 $(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
 .PHONY: $(INSTALL)-%
 $(INSTALL)-%:
@@ -3631,9 +3633,9 @@ endif
 $(1)-$(SUBDIRS)-$(HEADERS):
 ifneq ($(COMPOSER_DOITALL_$(1)),)
 #>$(1)-$(SUBDIRS)-$(HEADERS): $(WHOWHAT)-$(1)
-	@$(RUNMAKE) $(WHOWHAT)-$(1)
+	@$$(RUNMAKE) $$(WHOWHAT)-$(1)
 endif
-	@$(ECHO) ""
+	@$$(ECHO) ""
 
 .PHONY: $(1)-$(SUBDIRS)
 ifeq ($(COMPOSER_SUBDIRS),)
@@ -3648,10 +3650,10 @@ $(1)-$(SUBDIRS):
 
 .PHONY: $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
-	@$$(eval override $$(@) := $(CURDIR)/$$(subst $(1)-$(SUBDIRS)-,,$$(@)))
-	@+$$(if $$(wildcard $$($$(@))/$(MAKEFILE)),\
+	@$$(eval override $$(@) := $$(CURDIR)/$$(subst $(1)-$$(SUBDIRS)-,,$$(@)))
+	@+$$(if $$(wildcard $$($$(@))/$$(MAKEFILE)),\
 		$$(MAKE) $$(MAKE_OPTIONS) --directory $$($$(@)) $(1),\
-		$$(RUNMAKE) --directory $$($$(@)) $(NOTHING)-$(MAKEFILE) \
+		$$(RUNMAKE) --directory $$($$(@)) $$(NOTHING)-$$(MAKEFILE) \
 	)
 endef
 
@@ -3722,19 +3724,19 @@ endif
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
-	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): %
-	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): $(LIST)
-	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
@@ -3760,7 +3762,7 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 override define TYPE_DO_BOOK =
 $(DO_BOOK)-%.$(2):
-	@$(RUNMAKE) $(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := do_book)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
@@ -3779,9 +3781,30 @@ $(eval $(call TYPE_DO_BOOK,$(TYPE_LINT),$(EXTN_LINT)))
 
 #> update: TYPE_TARGETS
 
+override define TYPE_DO_PAGE =
+$(DO_PAGE)-%.$(2):
+	@$$(RUNMAKE) $$(NOTHING)-$$(DO_PAGE)-FUTURE
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := do_post)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+endif
+endef
+
+$(eval $(call TYPE_DO_PAGE,$(TYPE_HTML),$(EXTN_HTML)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_LPDF),$(EXTN_LPDF)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_EPUB),$(EXTN_EPUB)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_PRES),$(EXTN_PRES)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_DOCX),$(EXTN_DOCX)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_PPTX),$(EXTN_PPTX)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_TEXT),$(EXTN_TEXT)))
+$(eval $(call TYPE_DO_PAGE,$(TYPE_LINT),$(EXTN_LINT)))
+
+########################################
+
+#> update: TYPE_TARGETS
+
 override define TYPE_DO_POST =
 $(DO_POST)-%.$(2):
-	@$(RUNMAKE) $(NOTHING)-$(DO_POST)-FUTURE
+	@$$(RUNMAKE) $$(NOTHING)-$$(DO_POST)-FUTURE
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := do_post)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
