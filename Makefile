@@ -293,22 +293,22 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 ########################################
 
 #> update: includes duplicates
-$(call READ_ALIASES,s,c_css,CSS)
+$(call READ_ALIASES,s,s,c_css)
 
-override _CSS				:=
+override c_css_use			:=
 ifneq ($(filter override,$(origin CSS)),)
-override _CSS				:= $(CSS)
+override c_css_use			:= $(c_css)
 endif
-ifeq ($(_CSS),)
+ifeq ($(c_css_use),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #WILDCARD_CSS [$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
 		$(if $(COMPOSER_DEBUGIT_ALL),$(info #INCLUDE_CSS [$(FILE)])); \
-		$(eval override _CSS := $(FILE)); \
+		$(eval override c_css_use := $(FILE)); \
 	) \
 )
 endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #_CSS [$(_CSS)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #CSS_USE [$(c_css_use)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
@@ -428,29 +428,29 @@ endif
 
 #> update: includes duplicates
 
-$(call READ_ALIASES,T,c_type,TYPE)
-$(call READ_ALIASES,B,c_base,BASE)
-$(call READ_ALIASES,L,c_list,LIST)
-$(call READ_ALIASES,s,c_css,CSS)
-$(call READ_ALIASES,t,c_title,TTL)
-$(call READ_ALIASES,c,c_toc,TOC)
-$(call READ_ALIASES,l,c_level,LVL)
-$(call READ_ALIASES,m,c_margin,MGN)
-$(call READ_ALIASES,f,c_font,FNT)
-$(call READ_ALIASES,o,c_options,OPT)
+$(call READ_ALIASES,T,T,c_type)
+$(call READ_ALIASES,B,B,c_base)
+$(call READ_ALIASES,L,L,c_list)
+$(call READ_ALIASES,s,s,c_css)
+$(call READ_ALIASES,t,t,c_title)
+$(call READ_ALIASES,c,c,c_toc)
+$(call READ_ALIASES,l,l,c_level)
+$(call READ_ALIASES,m,m,c_margin)
+$(call READ_ALIASES,f,f,c_font)
+$(call READ_ALIASES,o,o,c_options)
 
 #> update: $(HEADERS)-vars
-override TYPE				?= $(TYPE_DEFAULT)
-override BASE				?= $(EXAMPLE_ONE)
-override LIST				?= $(BASE)$(COMPOSER_EXT)
-#>override CSS				?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
-override CSS				?=
-override TTL				?=
-override TOC				?=
-override LVL				?= 2
-override MGN				?= 0.8in
-override FNT				?= 10pt
-override OPT				?=
+override c_type				?= $(TYPE_DEFAULT)
+override c_base				?= $(EXAMPLE_ONE)
+override c_list				?= $(c_base)$(COMPOSER_EXT)
+#>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
+override c_css				?=
+override c_title			?=
+override c_toc				?=
+override c_level			?= 2
+override c_margin			?= 0.8in
+override c_font				?= 10pt
+override c_options			?=
 
 ################################################################################
 # }}}1
@@ -722,8 +722,8 @@ endef
 ################################################################################
 
 override INPUT				:= markdown
-override OUTPUT				:= $(TYPE)
-override EXTENSION			:= $(TYPE)
+override OUTPUT				:= $(c_type)
+override EXTENSION			:= $(c_type)
 
 ########################################
 # {{{2 Types ---------------------------
@@ -757,28 +757,28 @@ override EXTN_PPTX			:= $(TYPE_PPTX)
 override EXTN_TEXT			:= txt
 override EXTN_LINT			:= $(subst $(TOKEN),,$(subst $(TOKEN).,,$(addprefix $(TOKEN),$(COMPOSER_EXT_DEFAULT)))).$(EXTN_TEXT)
 
-ifeq ($(TYPE),$(TYPE_HTML))
+ifeq ($(c_type),$(TYPE_HTML))
 override OUTPUT				:= html5
 override EXTENSION			:= $(EXTN_HTML)
-else ifeq ($(TYPE),$(TYPE_LPDF))
+else ifeq ($(c_type),$(TYPE_LPDF))
 override OUTPUT				:= latex
 override EXTENSION			:= $(EXTN_LPDF)
-else ifeq ($(TYPE),$(TYPE_EPUB))
+else ifeq ($(c_type),$(TYPE_EPUB))
 override OUTPUT				:= epub3
 override EXTENSION			:= $(EXTN_EPUB)
-else ifeq ($(TYPE),$(TYPE_PRES))
+else ifeq ($(c_type),$(TYPE_PRES))
 override OUTPUT				:= $(TYPE_PRES)
 override EXTENSION			:= $(EXTN_PRES)
-else ifeq ($(TYPE),$(TYPE_DOCX))
+else ifeq ($(c_type),$(TYPE_DOCX))
 override OUTPUT				:= $(TYPE_DOCX)
 override EXTENSION			:= $(EXTN_DOCX)
-else ifeq ($(TYPE),$(TYPE_PPTX))
+else ifeq ($(c_type),$(TYPE_PPTX))
 override OUTPUT				:= $(TYPE_PPTX)
 override EXTENSION			:= $(EXTN_PPTX)
-else ifeq ($(TYPE),$(TYPE_TEXT))
+else ifeq ($(c_type),$(TYPE_TEXT))
 override OUTPUT				:= plain
 override EXTENSION			:= $(EXTN_TEXT)
-else ifeq ($(TYPE),$(TYPE_LINT))
+else ifeq ($(c_type),$(TYPE_LINT))
 override OUTPUT				:= $(TYPE_LINT)
 override EXTENSION			:= $(EXTN_LINT)
 endif
@@ -800,21 +800,20 @@ endif
 ########################################
 # {{{2 CSS -----------------------------
 
-override _COL				:= $(COLUMNS)
-override _CSS_ALT			:= css_alt
+override CSS_ALT			:= css_alt
 
-ifeq ($(_CSS),)
-ifeq ($(CSS),)
+ifeq ($(c_css_use),)
+ifeq ($(c_css),)
 ifeq ($(OUTPUT),$(TYPE_PRES))
-override _CSS				:= $(REVEALJS_CSS)
+override c_css_use			:= $(REVEALJS_CSS)
 else
-override _CSS				:= $(MDVIEWER_CSS)
+override c_css_use			:= $(MDVIEWER_CSS)
 endif
 else
-ifeq ($(CSS),$(_CSS_ALT))
-override _CSS				:= $(MDVIEWER_CSS_ALT)
+ifeq ($(c_css),$(CSS_ALT))
+override c_css_use			:= $(MDVIEWER_CSS_ALT)
 else
-override _CSS				:= $(abspath $(CSS))
+override c_css_use			:= $(abspath $(c_css))
 endif
 endif
 endif
@@ -865,40 +864,40 @@ override PANDOC_OPTIONS			:= $(strip \
 	--standalone \
 	--variable="lang=en-US" \
 	\
-	--title-prefix="$(TTL)" \
-	--output="$(CURDIR)/$(BASE).$(EXTENSION)" \
+	--title-prefix="$(c_title)" \
+	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
 	--from="$(INPUT)$(PANDOC_EXTENSIONS)" \
 	--to="$(OUTPUT)" \
 	\
-	$(if $(TOC),--table-of-contents) \
-	$(if $(TOC),--number-sections) \
-	$(if $(TOC),--toc-depth="$(TOC)") \
+	$(if $(c_toc),--table-of-contents) \
+	$(if $(c_toc),--number-sections) \
+	$(if $(c_toc),--toc-depth="$(c_toc)") \
 	\
-	$(if $(LVL),--section-divs) \
-	$(if $(LVL),--top-level-division=chapter) \
-	$(if $(LVL),--slide-level="$(LVL)") \
-	$(if $(LVL),--epub-chapter-level="$(LVL)") \
+	$(if $(c_level),--section-divs) \
+	$(if $(c_level),--top-level-division=chapter) \
+	$(if $(c_level),--slide-level="$(c_level)") \
+	$(if $(c_level),--epub-chapter-level="$(c_level)") \
 	\
-	--columns="$(_COL)" \
-	--css="$(_CSS)" \
+	--columns="$(COLUMNS)" \
+	--css="$(c_css_use)" \
 	\
 	--pdf-engine="$(PANDOC_TEX_PDF)" \
 	--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
-	--variable="geometry=margin=$(MGN)" \
-	--variable="fontsize=$(FNT)" \
+	--variable="geometry=margin=$(c_margin)" \
+	--variable="fontsize=$(c_font)" \
 	--variable="revealjs-url=$(REVEALJS_DIR)" \
 	\
 	--listings \
 	\
-	$(OPT) \
-	$(LIST) \
+	$(c_options) \
+	$(c_list) \
 )
 
 #WORK TODO
-#>	--variable="geometry=top=$(MGN)" \
-#>	--variable="geometry=bottom=$(MGN)" \
-#>	--variable="geometry=left=$(MGN)" \
-#>	--variable="geometry=right=$(MGN)" \
+#>	--variable="geometry=top=$(c_margin)" \
+#>	--variable="geometry=bottom=$(c_margin)" \
+#>	--variable="geometry=left=$(c_margin)" \
+#>	--variable="geometry=right=$(c_margin)" \
 
 ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
 override PANDOC_OPTIONS			:= --template="$(COMPOSER_ART)/reference.$(EXTENSION)" $(PANDOC_OPTIONS)
@@ -1044,21 +1043,21 @@ override COMPOSER_EXPORTED := \
 	COMPOSER_DEPENDS \
 	COMPOSER_STAMP \
 	COMPOSER_EXT \
-	TYPE \
-	CSS \
-	TTL \
-	TOC \
-	LVL \
-	MGN \
-	FNT \
-	OPT \
+	c_type \
+	c_css \
+	c_title \
+	c_toc \
+	c_level \
+	c_margin \
+	c_font \
+	c_options \
 
 override COMPOSER_EXPORTED_NOT := \
 	COMPOSER_TARGETS \
 	COMPOSER_SUBDIRS \
 	COMPOSER_IGNORES \
-	BASE \
-	LIST \
+	c_base \
+	c_list \
 
 #> update: $(MAKE) / @+
 override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
@@ -1353,34 +1352,35 @@ $(HELPALL)-VARIABLES_TITLE_%:
 #> update: TYPE_TARGETS
 #> update: READ_ALIASES
 .PHONY: $(HELPALL)-VARIABLES_FORMAT_%
+$(HELPALL)-VARIABLES_FORMAT_%: override MARGIN_LIST	= $(_C)$(TYPE_LPDF)$(_D)
+$(HELPALL)-VARIABLES_FORMAT_%: override FONT_LIST	= $(_C)$(TYPE_HTML)$(_D), $(_C)$(TYPE_LPDF)$(_D)
 $(HELPALL)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"				"$(_H)Purpose"				"$(_H)Value"
-	@$(TABLE_M3) ":---"					":---"					":---"
-	@$(TABLE_M3) "$(_C)TYPE $(_E)(T, c_type)"		"Desired output format"			"$(_M)$(TYPE)"
-	@$(TABLE_M3) "$(_C)BASE $(_E)(B, c_base)"		"Base of output file"			"$(_M)$(BASE)"
-	@$(TABLE_M3) "$(_C)LIST $(_E)(L, c_list)"		"List of input files(s)"		"$(_M)$(LIST)"
-	@$(TABLE_M3) "$(_C)CSS $(_E)(s, c_css)"			"Location of CSS file"			"$(if $(CSS),$(_M)$(CSS)$(_D) )$(_N)($(COMPOSER_CSS))"
-	@$(TABLE_M3) "$(_C)TTL $(_E)(t, c_title)"		"Document title prefix"			"$(_M)$(TTL)"
-	@$(TABLE_M3) "$(_C)TOC $(_E)(c, c_toc)"			"Table of contents depth"		"$(_M)$(TOC)"
-	@$(TABLE_M3) "$(_C)LVL $(_E)(l, c_level)"		"Chapter/slide header level"		"$(_M)$(LVL)"
-	@$(TABLE_M3) "$(_C)MGN $(_E)(m, c_margin)"		"Margin size [$(_C)$(TYPE_LPDF)$(_D)]"	"$(_M)$(MGN)"
-	@$(TABLE_M3) "$(_C)FNT $(_E)(f, c_font)"		"Font size [$(_C)$(TYPE_HTML)$(_D) $(_E)&$(_D) $(_C)$(TYPE_LPDF)$(_D)]" \
-													"$(_M)$(FNT)"
-	@$(TABLE_M3) "$(_C)OPT $(_E)(o, c_options)"		"Custom Pandoc options"			"$(_M)$(OPT)"
+	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
+	@$(TABLE_M3) ":---"				":---"					":---"
+	@$(TABLE_M3) "$(_C)c_type$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
+	@$(TABLE_M3) "$(_C)c_base$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
+	@$(TABLE_M3) "$(_C)c_list$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(c_list)"
+	@$(TABLE_M3) "$(_C)c_css$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(c_css)$(_D) )$(_N)($(COMPOSER_CSS))"
+	@$(TABLE_M3) "$(_C)c_title$(_D)   ~ $(_E)t"	"Document title prefix"			"$(_M)$(c_title)"
+	@$(TABLE_M3) "$(_C)c_toc$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
+	@$(TABLE_M3) "$(_C)c_level$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
+	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Margin size [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
+	@$(TABLE_M3) "$(_C)c_font$(_D)    ~ $(_E)f"	"Font size [$(call FONT_LIST)]"		"$(_M)$(c_font)"
+	@$(TABLE_M3) "$(_C)c_options$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Defined $(_C)TYPE$(_H) Values"	"$(_H)Format"				"$(_H)Extension"
-	@$(TABLE_M3) ":---"					":---"					":---"
-	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"			"$(DESC_HTML)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
-	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"			"$(DESC_LPDF)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
-	@$(TABLE_M3) "$(_C)$(TYPE_EPUB)"			"$(DESC_EPUB)"				"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
-	@$(TABLE_M3) "$(_C)$(TYPE_PRES)"			"$(DESC_PRES)"				"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
-	@$(TABLE_M3) "$(_C)$(TYPE_DOCX)"			"$(DESC_DOCX)"				"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
-	@$(TABLE_M3) "$(_C)$(TYPE_PPTX)"			"$(DESC_PPTX)"				"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
-	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"			"$(DESC_TEXT)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
-	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"			"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
+	@$(TABLE_M3) "$(_H)Values: $(_C)c_type"		"$(_H)Format"				"$(_H)Extension"
+	@$(TABLE_M3) ":---"				":---"					":---"
+	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"		"$(DESC_HTML)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
+	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"		"$(DESC_LPDF)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
+	@$(TABLE_M3) "$(_C)$(TYPE_EPUB)"		"$(DESC_EPUB)"				"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
+	@$(TABLE_M3) "$(_C)$(TYPE_PRES)"		"$(DESC_PRES)"				"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
+	@$(TABLE_M3) "$(_C)$(TYPE_DOCX)"		"$(DESC_DOCX)"				"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
+	@$(TABLE_M3) "$(_C)$(TYPE_PPTX)"		"$(DESC_PPTX)"				"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
+	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"		"$(DESC_TEXT)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
+	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"		"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *Other $(_C)TYPE$(_D) values will be passed directly to Pandoc*"
+	@$(PRINT) "  * *Other '$(_C)c_type$(_D)' values will be passed directly to Pandoc*"
 
 .PHONY: $(HELPALL)-VARIABLES_CONTROL_%
 $(HELPALL)-VARIABLES_CONTROL_%:
@@ -1398,12 +1398,12 @@ $(HELPALL)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Recursion: $(_C)$(DOITALL)$(_D)$(_E)/$(_D)$(_C)$(CLEANER)$(_D)$(_E)/$(_D)$(_C)$(INSTALL)"	"('$(_C)$(CONFIGS)$(_D)' or '$(_C)$(TARGETS)$(_D)')"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
 	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore:    $(_C)$(DOITALL)$(_D)$(_E)/$(_D)$(_C)$(CLEANER)$(_D)$(_E)/$(_D)$(_C)$(INSTALL)"	"('$(_C)$(CONFIGS)$(_D)')"				#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D) ~= $(_E)(J, c_jobs)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~= $(_E)(C, c_color)$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~= $(_E)(V, c_debug)$(_D)*"
+	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D)         ~ $(_E)c_jobs$(_D)  ~ $(_E)J$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~ $(_E)c_color$(_D) ~ $(_E)C$(_D)*"
+	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~ $(_E)c_debug$(_D) ~ $(_E)V$(_D)*"
 	@$(PRINT) "  * *$(_E)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
-	@$(PRINT) "  * *$(_E)(debugit)$(_D) = empty value disables / any value enables / ! is full tracing*"
-	@$(PRINT) "  * *$(_N)(boolean)$(_D) = empty value disables / any value enables*"
+	@$(PRINT) "  * *$(_E)(debugit)$(_D)  = empty value disables / any value enables / ! is full tracing*"
+	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty value disables / any value enables*"
 
 ########################################
 # {{{3 $(HELPALL)-TARGETS --------------
@@ -1488,11 +1488,11 @@ $(HELPALL)-COMMANDS_%:
 #WORK make TYPE="json" compose
 	@$(TABLE_C2) "$(_E)Have the system do all the work:"
 	@$(ENDOLINE)
-	@$(PRINT) "$(CODEBLOCK)$(_M)make $(BASE).$(EXTENSION)"
+	@$(PRINT) "$(CODEBLOCK)$(_M)make $(c_base).$(EXTENSION)"
 	@$(ENDOLINE)
 	@$(TABLE_C2) "$(_E)Be clear about what is wanted (or, for multiple or differently named input files):"
 	@$(ENDOLINE)
-	@$(PRINT) "$(CODEBLOCK)$(_M)make compose TYPE=\"$(TYPE)\" BASE=\"$(EXAMPLE_OUT)\" LIST=\"$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)\""
+	@$(PRINT) "$(CODEBLOCK)$(_M)make compose c_type=\"$(c_type)\" c_base=\"$(EXAMPLE_OUT)\" c_list=\"$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)\""
 
 .PHONY: $(HELPALL)-SYSTEM
 $(HELPALL)-SYSTEM: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
@@ -1519,7 +1519,7 @@ $(HELPALL)-SYSTEM:
 	@$(PRINT) "include [...]"
 	@$(ENDOLINE)
 	@$(TABLE_C2) "$(_E)Create a new '$(MAKEFILE)' using a helpful template:"
-	@$(PRINT) "$(_M)$(~)(RUNMAKE) COMPOSER_TARGETS=\"$(BASE).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
+	@$(PRINT) "$(_M)$(~)(RUNMAKE) COMPOSER_TARGETS=\"$(c_base).$(EXTENSION)\" $(EXAMPLE) >$(MAKEFILE)"
 	@$(ENDOLINE)
 	@$(TABLE_C2) "$(_E)Or, recursively initialize the current directory tree:"
 	@$(TABLE_C2) "$(_N)(NOTE: This is a non-destructive operation.)"
@@ -2055,7 +2055,7 @@ There are a couple important items to be aware of when using [Composer]:
       inheritance behavior work.
         * If you wish to be insulated from this, you can make all the
           option variable definitions in children [Make] files explicit
-          (use `override OPTS :=` instead of `override OPTS ?=`) and
+          (use `override c_options :=` instead of `override c_options ?=`) and
           place them below the upstream `include` statements.
         * The side effect of this will be that each directory will need
           to define it's own behavior (i.e. no inheritance).
@@ -2195,17 +2195,17 @@ override $(HEADERS)-list := \
 	COMPOSER_IGNORES
 #> update: $(HEADERS)-vars
 override $(HEADERS)-vars := \
-	TYPE \
-	BASE \
-	LIST \
-	_CSS \
-	CSS \
-	TTL \
-	TOC \
-	LVL \
-	MGN \
-	FNT \
-	OPT
+	c_type \
+	c_base \
+	c_list \
+	c_css_use \
+	c_css \
+	c_title \
+	c_toc \
+	c_level \
+	c_margin \
+	c_font \
+	c_options
 endif
 
 ifneq ($(COMPOSER_RELEASE),)
@@ -2309,7 +2309,7 @@ endif
 .PHONY: $(SETTING)-%
 $(SETTING)-%:
 ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-file,$(CURDIR),$(BASE).$(EXTENSION))
+	@$(call $(HEADERS)-file,$(CURDIR),$(c_base).$(EXTENSION))
 else
 	@$(call $(HEADERS)-run,1,$(*))
 	@$(PRINT) '$(_C)$(MARKER) $(PANDOC) $(PANDOC_OPTIONS)'
@@ -2737,7 +2737,7 @@ $(TESTING)-Think-done:
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
-		\n\t * Command-line '$(_C)LIST$(_D)' shortcut \
+		\n\t * Command-line '$(_C)c_list$(_D)' shortcut \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' \
 		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
@@ -2754,7 +2754,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(EXAMPLE_OUT).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) $(EXAMPLE_OUT).$(EXTN_DEFAULT) LIST="$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) $(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)"
+	@$(call $(TESTING)-run) $(EXAMPLE_OUT).$(EXTN_DEFAULT) c_list="$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) $(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)"
 #WORKING turn these into variables with the readme/license work... also fix *-count checks below
 	@$(SED) -n "/Composer CMS License/p" $(call $(TESTING)-pwd)/$(EXAMPLE_OUT).$(EXTN_DEFAULT)
 
@@ -3081,7 +3081,7 @@ $(TESTING)-CSS: $(TESTING)-Think
 		\n\t * Default value \
 		\n\t * Default for '$(_C)$(TYPE_PRES)$(_D)' \
 		\n\t * From the environment \
-		\n\t * From '$(_C)$(_CSS_ALT)$(_D)' alias \
+		\n\t * From '$(_C)$(CSS_ALT)$(_D)' alias \
 		\n\t * A '$(_C)$(COMPOSER_CSS)$(_D)' file $(_E)(precedence over environment)$(_D) \
 		\n\t * A '$(_C)$(COMPOSER_SETTINGS)$(_D)' file $(_E)(precedence over everything)$(_D) \
 	)
@@ -3094,13 +3094,13 @@ $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="$(TYPE_PRES)" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="$(TYPE_PRES)" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "override CSS := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(_CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
@@ -3120,7 +3120,7 @@ $(TESTING)-other: $(TESTING)-Think
 		Miscellaneous test cases ,\
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
 		\n\t\t * Verify '$(_C)$(TYPE_LPDF)$(_D)' format $(_E)(TeX Live)$(_D) \
-		\n\t * Pandoc '$(_C)TYPE$(_D)' pass-through \
+		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
 	@$(call $(TESTING)-mark)
@@ -3148,7 +3148,7 @@ ifeq ($(OS_TYPE),Linux)
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
 	#> pandoc
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" TYPE="json" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="json" $(COMPOSER_PANDOC)
 	@$(CAT) $(call $(TESTING)-pwd)/$(EXAMPLE_ONE).json | $(SED) "s|[]][}][,].+$$||g"
 	#> git
 	@$(call $(TESTING)-make,,$(TESTING_COMPOSER_MAKEFILE))
@@ -3695,7 +3695,7 @@ $(COMPOSER_STAMP): $(if \
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(LIST)
+$(COMPOSER_PANDOC): $(c_list)
 	@$(ECHO) "$(_N)"
 	@$(MKDIR) $(COMPOSER_TMP)
 	@$(PANDOC) $(PANDOC_OPTIONS)
@@ -3705,16 +3705,16 @@ ifneq ($(COMPOSER_STAMP),)
 endif
 
 .PHONY: $(COMPOSER_CREATE)
-$(COMPOSER_CREATE): $(BASE).$(EXTENSION)
+$(COMPOSER_CREATE): $(c_base).$(EXTENSION)
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := create)$(call $(HEADERS)-note,$(BASE) $(MARKER) $(EXTENSION),$(LIST))
+	@$(eval override @ := create)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(EXTENSION),$(c_list))
 endif
 	@$(ECHO) ""
 
-$(BASE).$(EXTENSION): $(LIST)
-	@$(RUNMAKE) $(COMPOSER_PANDOC) TYPE="$(TYPE)" BASE="$(BASE)" LIST="$(LIST)"
+$(c_base).$(EXTENSION): $(c_list)
+	@$(RUNMAKE) $(COMPOSER_PANDOC) c_type="$(c_type)" c_base="$(c_base)" c_list="$(c_list)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := base)$(call $(HEADERS)-note,$(BASE) $(MARKER) $(TYPE),$(LIST))
+	@$(eval override @ := base)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
 endif
 
 ########################################
@@ -3724,19 +3724,19 @@ endif
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): %
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
-%.$(2): $(LIST)
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+%.$(2): $(c_list)
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
@@ -3762,7 +3762,7 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 override define TYPE_DO_BOOK =
 $(DO_BOOK)-%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) TYPE="$(1)" BASE="$$(*)" LIST="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := do_book)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
