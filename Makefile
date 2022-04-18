@@ -296,7 +296,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 $(call READ_ALIASES,s,s,c_css)
 
 override c_css_use			:=
-ifneq ($(filter override,$(origin CSS)),)
+ifneq ($(filter override,$(origin c_css)),)
 override c_css_use			:= $(c_css)
 endif
 ifeq ($(c_css_use),)
@@ -443,6 +443,7 @@ $(call READ_ALIASES,o,o,c_options)
 override c_type				?= $(TYPE_DEFAULT)
 override c_base				?= $(EXAMPLE_ONE)
 override c_list				?= $(c_base)$(COMPOSER_EXT)
+override c_css_use			?= #> update: includes duplicates / COMPOSER_OPTIONS
 #>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override c_css				?=
 override c_title			?=
@@ -1058,6 +1059,7 @@ override COMPOSER_EXPORTED_NOT := \
 	COMPOSER_IGNORES \
 	c_base \
 	c_list \
+	c_css_use \
 
 #> update: $(MAKE) / @+
 override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
@@ -3077,7 +3079,7 @@ $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
 	@$(call $(TESTING)-$(HEADERS),\
-		Use '$(_C)CSS$(_D)' to verify each method of setting variables ,\
+		Use '$(_C)c_css$(_D)' to verify each method of setting variables ,\
 		\n\t * Default value \
 		\n\t * Default for '$(_C)$(TYPE_PRES)$(_D)' \
 		\n\t * From the environment \
@@ -3099,7 +3101,7 @@ $(TESTING)-CSS-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(ECHO) "override CSS := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override c_css := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 
 .PHONY: $(TESTING)-CSS-done
