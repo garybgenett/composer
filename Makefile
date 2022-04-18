@@ -1419,8 +1419,8 @@ $(HELPALL)-TARGETS_MAIN_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
 	@$(TABLE_M2) "$(_H)Target"		"$(_H)Purpose"
 	@$(TABLE_M2) ":---"			":---"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)"		"Basic help output $(_N)(default)"
-	@$(TABLE_M2) "$(_C)$(HELPALL)"		"Complete help output"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"		"Basic $(HELPOUT) overview $(_N)(default)"
+	@$(TABLE_M2) "$(_C)$(HELPALL)"		"Complete $(HELPALL) output"
 #WORK	$(CREATOR)
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"		"Print settings template: $(_C)$(COMPOSER_SETTINGS)"
 #WORK	[.]$(EXAMPLE)*
@@ -3093,14 +3093,14 @@ $(TESTING)-CSS: $(TESTING)-Think
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="$(TYPE_PRES)" CSS= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="$(TYPE_PRES)" c_css= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "override CSS := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" CSS="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
