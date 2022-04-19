@@ -151,7 +151,8 @@ override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_VERSION		:= v3.0
 
 override COMPOSER_BASENAME		:= Composer
-override COMPOSER_FULLNAME		:= $(COMPOSER_BASENAME) CMS $(COMPOSER_VERSION)
+override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
+override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 ########################################
@@ -168,9 +169,9 @@ override COMPOSER_EXT_DEFAULT		:= .md
 override TYPE_DEFAULT			:= html
 override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
 
-override EXAMPLE_ONE			:= README
-override EXAMPLE_TWO			:= LICENSE
-override EXAMPLE_OUT			:= $(COMPOSER_FILENAME).Manual
+override OUT_README			:= README
+override OUT_LICENSE			:= LICENSE
+override OUT_MANUAL			:= $(COMPOSER_FILENAME).Manual
 
 ########################################
 
@@ -202,9 +203,9 @@ override COMPOSER_RELEASE		:= 1
 ifeq ($(MAKELEVEL),0)
 #> update: includes duplicates
 override HELPOUT			:= usage
-$(info # $(COMPOSER_FULLNAME))
-$(info #	Because this is the main directory, some features are disabled)
-$(info #	Please set up as '.$(COMPOSER_BASENAME)', or use '-f' (see '$(notdir $(MAKE)) $(HELPOUT)'))
+$(info #> $(COMPOSER_FULLNAME))
+$(info #>	Because this is the main directory, some features are disabled)
+$(info #>	Please set up as '.$(COMPOSER_BASENAME)', or use '-f' (see '$(notdir $(MAKE)) $(HELPOUT)'))
 endif
 endif
 
@@ -246,18 +247,18 @@ override TOKEN				:= ~
 ########################################
 
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #SOURCE [$(CURDIR)/$(COMPOSER_SETTINGS)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE			[$(CURDIR)/$(COMPOSER_SETTINGS)]))
 #>include $(CURDIR)/$(COMPOSER_SETTINGS)
 $(foreach FILE,\
 	$(shell \
 		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
 		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
 	),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #OVERRIDE [$(subst $(TOKEN), ,$(FILE))])) \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE			[$(subst $(TOKEN), ,$(FILE))])) \
 	$(eval $(subst $(TOKEN), ,$(FILE))) \
 )
 endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #COMPOSER_INCLUDE [$(COMPOSER_INCLUDE)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDE		[$(COMPOSER_INCLUDE)]))
 
 ########################################
 
@@ -272,18 +273,18 @@ else
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #MAKEFILE_LIST [$(MAKEFILE_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
 $(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
 	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)); \
 )
 override COMPOSER_INCLUDES_LIST		:= $(strip $(COMPOSER_INCLUDES))
 override COMPOSER_INCLUDES		:=
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #COMPOSER_INCLUDES_LIST [$(COMPOSER_INCLUDES_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUDES_LIST)]))
 
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #WILDCARD [$(FILE)])); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD			[$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #INCLUDE [$(FILE)])); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE			[$(FILE)])); \
 		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))); \
 		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)); \
 		$(eval include $(FILE)); \
@@ -301,14 +302,14 @@ override c_css_use			:= $(c_css)
 endif
 ifeq ($(c_css_use),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #WILDCARD_CSS [$(FILE)])); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS			[$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #INCLUDE_CSS [$(FILE)])); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS			[$(FILE)])); \
 		$(eval override c_css_use := $(FILE)); \
 	) \
 )
 endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #CSS_USE [$(c_css_use)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE			[$(c_css_use)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
@@ -441,7 +442,7 @@ $(call READ_ALIASES,o,o,c_options)
 
 #> update: $(HEADERS)-vars
 override c_type				?= $(TYPE_DEFAULT)
-override c_base				?= $(EXAMPLE_ONE)
+override c_base				?= $(OUT_README)
 override c_list				?= $(c_base)$(COMPOSER_EXT)
 override c_css_use			?= #> update: includes duplicates / COMPOSER_OPTIONS
 #>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
@@ -537,13 +538,10 @@ endif
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
-#>override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/screen.css
-#>override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown-alt.css
-#>override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markedapp-byword.css
-#>override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown9.css
 override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
 #>override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
-override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
+#>override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
+override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
 
 ########################################
 
@@ -642,6 +640,7 @@ override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override LESS_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),less) --force --raw-control-chars
 
+override DOMAKE				:= $(notdir $(MAKE))
 export GZIP				:=
 export LESS				:=
 
@@ -787,14 +786,14 @@ endif
 #> update: COMPOSER_TARGETS.*=
 ifneq ($(COMPOSER_RELEASE),)
 override COMPOSER_TARGETS		:= $(strip \
-	$(EXAMPLE_ONE).$(EXTN_HTML) \
-	$(EXAMPLE_ONE).$(EXTN_LPDF) \
-	$(EXAMPLE_ONE).$(EXTN_EPUB) \
-	$(EXAMPLE_ONE).$(EXTN_PRES) \
-	$(EXAMPLE_ONE).$(EXTN_DOCX) \
-	$(EXAMPLE_ONE).$(EXTN_PPTX) \
-	$(EXAMPLE_ONE).$(EXTN_TEXT) \
-	$(EXAMPLE_ONE).$(EXTN_LINT) \
+	$(OUT_README).$(EXTN_HTML) \
+	$(OUT_README).$(EXTN_LPDF) \
+	$(OUT_README).$(EXTN_EPUB) \
+	$(OUT_README).$(EXTN_PRES) \
+	$(OUT_README).$(EXTN_DOCX) \
+	$(OUT_README).$(EXTN_PPTX) \
+	$(OUT_README).$(EXTN_TEXT) \
+	$(OUT_README).$(EXTN_LINT) \
 )
 endif
 
@@ -1072,7 +1071,7 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 	$(if $(or \
 		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
 		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
-		),,$(error # $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE)) \
+		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE)) \
 	) \
 )
 
@@ -1270,8 +1269,8 @@ $(1)s-$(CLEANER):
 
 ifneq ($(COMPOSER_RELEASE),)
 $(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
-	$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) \
-	$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
+	$(OUT_README)$(COMPOSER_EXT_DEFAULT) \
+	$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 endif
 endef
 
@@ -1494,7 +1493,7 @@ $(HELPALL)-COMMANDS_%:
 	@$(ENDOLINE)
 	@$(TABLE_C2) "$(_E)Be clear about what is wanted (or, for multiple or differently named input files):"
 	@$(ENDOLINE)
-	@$(PRINT) "$(CODEBLOCK)$(_M)make compose c_type=\"$(c_type)\" c_base=\"$(EXAMPLE_OUT)\" c_list=\"$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)\""
+	@$(PRINT) "$(CODEBLOCK)$(_M)make compose c_type=\"$(c_type)\" c_base=\"$(OUT_MANUAL)\" c_list=\"$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)\""
 
 .PHONY: $(HELPALL)-SYSTEM
 $(HELPALL)-SYSTEM: export COMPOSER_SUBDIRS = $(TEST_FULLMK_SUB)
@@ -1555,9 +1554,9 @@ endif
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 ifneq ($(COMPOSER_RELEASE),)
-	@$(ECHO) "$(DO_BOOK)-$(EXAMPLE_OUT).$(EXTN_LPDF):" >$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT)" >>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)" >>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):" >$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)" >>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "\n" >>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_STAMP= COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
@@ -1598,7 +1597,7 @@ $(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Special)
 	@$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTENSION)$(_D): $(_M)$(EXAMPLE_ONE)$(COMPOSER_EXT) $(EXAMPLE_TWO)$(COMPOSER_EXT)); \
+		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTENSION)$(_D): $(_M)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)); \
 	)
 
 override define $(EXAMPLE)-print =
@@ -1636,7 +1635,7 @@ endef
 
 override define HEREDOC_DISTRIB_GITIGNORE =
 ################################################################################
-# $(subst $(NULL) $(COMPOSER_VERSION),,$(COMPOSER_FULLNAME))
+# $(COMPOSER_TECHNAME)
 ################################################################################
 
 ########################################
@@ -1670,7 +1669,7 @@ endef
 
 override define HEREDOC_DISTRIB_REVEALJS_CSS =
 /* #############################################################################
-# $(subst $(NULL) $(COMPOSER_VERSION),,$(COMPOSER_FULLNAME))
+# $(COMPOSER_TECHNAME)
 ############################################################################# */
 
 @import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME))");
@@ -1722,7 +1721,7 @@ endef
 #WORKING
 
 override define HEREDOC_DISTRIB_LICENSE =
-Composer CMS License
+$(COMPOSER_TECHNAME) License
 ========================================================================
 
 License Source
@@ -2573,7 +2572,7 @@ $(TESTING)-$(HEADERS):
 	@$(ENDOLINE)
 	@$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"
 	@$(PRINT) "  * All cases are run in the '$(_C)$(subst $(COMPOSER_DIR)/,,$(TESTING_DIR))$(_D)' directory"
-	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(notdir $(MAKE))$(_D)' can be run anywhere in the tree"
+	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(DOMAKE)$(_D)' can be run anywhere in the tree"
 	@$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
 
@@ -2616,8 +2615,8 @@ override define $(TESTING)-mark =
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) $(CREATOR); \
 	if [ -n "$(2)" ]; then \
-		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_ONE); \
-		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(EXAMPLE_TWO); \
+		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_README); \
+		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_LICENSE); \
 	fi
 endef
 
@@ -2755,19 +2754,19 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
-	@$(RM) $(call $(TESTING)-pwd)/$(EXAMPLE_OUT).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) $(EXAMPLE_OUT).$(EXTN_DEFAULT) c_list="$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT) $(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)"
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
 #WORKING turn these into variables with the readme/license work... also fix *-count checks below
-	@$(SED) -n "/Composer CMS License/p" $(call $(TESTING)-pwd)/$(EXAMPLE_OUT).$(EXTN_DEFAULT)
+	@$(SED) -n "/$(COMPOSER_TECHNAME) License/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS))
 	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS))
-	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(EXAMPLE_ONE).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
-	$(call $(TESTING)-find,Creating.+$(EXAMPLE_OUT).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,Composer CMS License)
+	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME) License)
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -3000,7 +2999,7 @@ $(TESTING)-COMPOSER_DEPENDS: $(TESTING)-Think
 		\n\t * Disable '$(_C)MAKEJOBS$(_D)' threading \
 		\n\t * Reverse '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' processing \
 		\n\t * Manual '$(_C)$(DOITALL)-$(DOITALL)$(_D)' dependencies $(_E)('templates' before 'docx')$(_D) \
-		\n\t * Manual '$(_C)$(DOITALL)$(_D)' dependencies $(_E)('$(EXAMPLE_TWO).$(EXTN_DEFAULT)' before '$(EXAMPLE_ONE).$(EXTN_DEFAULT)')$(_D) \
+		\n\t * Manual '$(_C)$(DOITALL)$(_D)' dependencies $(_E)('$(OUT_LICENSE).$(EXTN_DEFAULT)' before '$(OUT_README).$(EXTN_DEFAULT)')$(_D) \
 		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' \
 	)
 	@$(call $(TESTING)-load)
@@ -3017,11 +3016,11 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(ECHO) "docx: templates\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(EXAMPLE_OUT)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "$(EXAMPLE_TWO).$(EXTN_DEFAULT): $(EXAMPLE_ONE).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := $(EXAMPLE_OUT).$(EXTN_DEFAULT) artifacts\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_MANUAL).$(EXTN_DEFAULT) artifacts\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_TARGETS/p"
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_SUBDIRS/p"
@@ -3032,8 +3031,8 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 	$(call $(TESTING)-count,1,MAKEJOBS.+1)
 	$(call $(TESTING)-find,Directory.+$(notdir $(call $(TESTING)-pwd))\/data)
 	$(call $(TESTING)-find,Creating.+$(notdir $(call $(TESTING)-pwd))\/data)
-	$(call $(TESTING)-find,Creating.+$(EXAMPLE_OUT).$(EXTN_DEFAULT),,1)
-	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(EXAMPLE_OUT).$(EXTN_DEFAULT),,1)
+	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT),,1)
+	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_MANUAL).$(EXTN_DEFAULT),,1)
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts,,1)
 	@$(call $(TESTING)-hold)
 
@@ -3066,8 +3065,8 @@ $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-init:
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done
 $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
-	$(call $(TESTING)-find,Creating.+$(EXAMPLE_ONE).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Removing.+$(EXAMPLE_ONE).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Removing.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_STAMP)
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+COMPOSER_EXT)
 	$(call $(TESTING)-find, $(subst $(TESTING)-.,,$(notdir $(call $(TESTING)-pwd))))
@@ -3133,25 +3132,25 @@ $(TESTING)-other: $(TESTING)-Think
 $(TESTING)-other-init:
 	#> book
 	@$(ECHO) "$(DO_BOOK)-$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF):" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(EXAMPLE_ONE)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(EXAMPLE_TWO)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(EXAMPLE_OUT)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(EXAMPLE_OUT)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 #WORKING turn these into variables with the readme/license work... also fix *-count checks below
 ifeq ($(OS_TYPE),Linux)
 	@$(LESS_BIN) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
 		| $(SED) -n \
 			-e "/User Guide/p" \
-			-e "/Composer CMS License/p" \
+			-e "/$(COMPOSER_TECHNAME) License/p" \
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="json" $(COMPOSER_PANDOC)
-	@$(CAT) $(call $(TESTING)-pwd)/$(EXAMPLE_ONE).json | $(SED) "s|[]][}][,].+$$||g"
+	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
 	#> git
 	@$(call $(TESTING)-make,,$(TESTING_COMPOSER_MAKEFILE))
 	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
@@ -3180,7 +3179,7 @@ $(TESTING)-other-done:
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,User Guide)
-	$(call $(TESTING)-count,1,Composer CMS License)
+	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME) License)
 	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
