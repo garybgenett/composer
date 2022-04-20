@@ -437,8 +437,8 @@ $(call READ_ALIASES,s,s,c_css)
 $(call READ_ALIASES,t,t,c_title)
 $(call READ_ALIASES,c,c,c_toc)
 $(call READ_ALIASES,l,l,c_level)
-$(call READ_ALIASES,m,m,c_margin)
 $(call READ_ALIASES,f,f,c_font)
+$(call READ_ALIASES,m,m,c_margin)
 $(call READ_ALIASES,o,o,c_options)
 
 #> update: $(HEADERS)-vars
@@ -451,8 +451,8 @@ override c_css				?=
 override c_title			?=
 override c_toc				?=
 override c_level			?= 2
-override c_margin			?= 0.8in
 override c_font				?= 10pt
+override c_margin			?= 0.8in
 override c_options			?=
 
 ################################################################################
@@ -873,9 +873,20 @@ override PANDOC_EXTENSIONS		:= +smart
 override PANDOC_OPTIONS			:= $(strip \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
 	\
-	--self-contained \
 	--standalone \
+	--self-contained \
 	--variable="lang=en-US" \
+	--columns="$(COLUMNS)" \
+	\
+	$(if $(c_site),--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js") \
+	$(if $(c_site),--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css") \
+	--css="$(c_css_use)" \
+	\
+	--pdf-engine="$(PANDOC_TEX_PDF)" \
+	--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
+	--listings \
+	\
+	--variable="revealjs-url=$(REVEALJS_DIR)" \
 	\
 	--title-prefix="$(c_title)" \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
@@ -888,19 +899,11 @@ override PANDOC_OPTIONS			:= $(strip \
 	\
 	$(if $(c_level),--section-divs) \
 	$(if $(c_level),--top-level-division=chapter) \
-	$(if $(c_level),--slide-level="$(c_level)") \
 	$(if $(c_level),--epub-chapter-level="$(c_level)") \
+	$(if $(c_level),--slide-level="$(c_level)") \
 	\
-	--columns="$(COLUMNS)" \
-	--css="$(c_css_use)" \
-	\
-	--pdf-engine="$(PANDOC_TEX_PDF)" \
-	--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
-	--variable="geometry=margin=$(c_margin)" \
 	--variable="fontsize=$(c_font)" \
-	--variable="revealjs-url=$(REVEALJS_DIR)" \
-	\
-	--listings \
+	--variable="geometry=margin=$(c_margin)" \
 	\
 	$(c_options) \
 	$(c_list) \
@@ -1061,8 +1064,8 @@ override COMPOSER_EXPORTED := \
 	c_title \
 	c_toc \
 	c_level \
-	c_margin \
 	c_font \
+	c_margin \
 	c_options \
 
 override COMPOSER_EXPORTED_NOT := \
@@ -1354,8 +1357,8 @@ $(HELPOUT)-VARIABLES_TITLE_%:
 #> update: TYPE_TARGETS
 #> update: READ_ALIASES
 .PHONY: $(HELPOUT)-VARIABLES_FORMAT_%
-$(HELPOUT)-VARIABLES_FORMAT_%: override MARGIN_LIST	= $(_C)$(TYPE_LPDF)$(_D)
 $(HELPOUT)-VARIABLES_FORMAT_%: override FONT_LIST	= $(_C)$(TYPE_HTML)$(_D), $(_C)$(TYPE_LPDF)$(_D)
+$(HELPOUT)-VARIABLES_FORMAT_%: override MARGIN_LIST	= $(_C)$(TYPE_LPDF)$(_D)
 $(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
@@ -1367,8 +1370,8 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)c_title$(_D)   ~ $(_E)t"	"Document title prefix"			"$(_M)$(c_title)"
 	@$(TABLE_M3) "$(_C)c_toc$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)c_level$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
-	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Margin size [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
 	@$(TABLE_M3) "$(_C)c_font$(_D)    ~ $(_E)f"	"Font size [$(call FONT_LIST)]"		"$(_M)$(c_font)"
+	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Margin size [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
 	@$(TABLE_M3) "$(_C)c_options$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Values: $(_C)c_type"		"$(_H)Format"				"$(_H)Extension"
@@ -2655,8 +2658,8 @@ override $(HEADERS)-vars := \
 	c_title \
 	c_toc \
 	c_level \
-	c_margin \
 	c_font \
+	c_margin \
 	c_options
 endif
 
