@@ -1574,10 +1574,11 @@ formatting that is dynamic and feature-rich.
 [Pandoc] is a veritable swiss-army knife of document conversion, and is
 a widely-used standard for processing [Markdown] into other formats.  While it
 has reasonable defaults, there are a large number of options, and additional
-tools are required for some formats and features.  [Composer] packages all the
-necessary tools, streamlines the options, and prettifies the output formats, all
-in one place.  It also serves as a build system, so that large repositories can
-be managed as documentation archives or published as [Bootstrap] websites.
+tools are required for some formats and features.  [Composer] consoldiates all
+the necessary components, streamlines the options, and prettifies the output
+formats, all in one place.  It also serves as a build system, so that large
+repositories can be managed as documentation archives or published as
+[Bootstrap] websites.
 
 ![Composer Icon]
 ![Composer Screenshot]
@@ -1598,7 +1599,7 @@ The guiding principles of [Composer]:
 
 Direct support for key document types:
 
-  * HTML
+  * HTML (standalone and websites)
   * PDF
   * EPUB
   * Presentations
@@ -1613,7 +1614,7 @@ override define $(HELPOUT)-$(DOITALL)-REQUIRE =
 included directly in the repository, including [Pandoc].  It does require
 a minimal command-line environment based on [GNU] tools, which is standard for
 all [GNU/Linux] systems.  The [Windows Subsystem for Linux] for Windows and
-[MacPorts] for macOS provide an identical environment.
+[MacPorts] for macOS both provide suitable environments.
 
 The one large external requirement is [TeX Live], and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
