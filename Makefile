@@ -203,7 +203,7 @@ ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_RELEASE		:= 1
 ifeq ($(MAKELEVEL),0)
 #> update: includes duplicates
-override HELPOUT			:= usage
+override HELPOUT			:= help
 $(info #> $(COMPOSER_FULLNAME))
 $(info #>	Because this is the main directory, some features are disabled)
 $(info #>	Please set up as '.$(COMPOSER_BASENAME)', or use '-f' (see '$(notdir $(MAKE)) $(HELPOUT)'))
@@ -1109,9 +1109,7 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #	$(INSTALL)-$(DOFORCE)
 
 #> update: includes duplicates
-override HELPOUT			:= usage
-override HELPALL			:= help
-override READALL			:= readme
+override HELPOUT			:= help
 override CREATOR			:= docs
 override EXAMPLE			:= template
 
@@ -1147,8 +1145,6 @@ override COMPOSER_RESERVED := \
 	$(COMPOSER_PANDOC) \
 	\
 	$(HELPOUT) \
-	$(HELPALL) \
-	$(READALL) \
 	$(CREATOR) \
 	$(EXAMPLE) \
 	\
@@ -1300,19 +1296,19 @@ $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
 ################################################################################
 
 ########################################
-# {{{2 $(HELPOUT) $(HELPALL) -----------
+# {{{2 $(HELPOUT) ----------------------
 
-.PHONY: $(HELPALL)-TITLE_%
-$(HELPALL)-TITLE_%:
+.PHONY: $(HELPOUT)-TITLE_%
+$(HELPOUT)-TITLE_%:
 	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
 
-.PHONY: $(HELPALL)-USAGE
-$(HELPALL)-USAGE:
+.PHONY: $(HELPOUT)-USAGE
+$(HELPOUT)-USAGE:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f .../$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<filename>.<extension>"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f .../$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<target>"
 
-.PHONY: $(HELPALL)-FOOTER
-$(HELPALL)-FOOTER:
+.PHONY: $(HELPOUT)-FOOTER
+$(HELPOUT)-FOOTER:
 	@$(ENDOLINE)
 	@$(LINERULE)
 	@$(ENDOLINE)
@@ -1327,47 +1323,40 @@ endif
 ifneq ($(MAKECMDGOALS),$(filter-out $(HELPOUT),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
+#>$(HELPOUT): \
+#>	$(HELPOUT)-TITLE_Usage \
+#>	$(HELPOUT)-USAGE \
+#>	$(HELPOUT)-VARIABLES_FORMAT_1 \
+#>	$(HELPOUT)-TARGETS_MAIN_1 \
+#>	$(HELPOUT)-QUICK_START_1 \
+#>	$(HELPOUT)-FOOTER
 $(HELPOUT): \
-	$(HELPALL)-TITLE_Usage \
-	$(HELPALL)-USAGE \
-	$(HELPALL)-VARIABLES_FORMAT_1 \
-	$(HELPALL)-TARGETS_MAIN_1 \
-	$(HELPALL)-QUICK_START_1 \
-	$(HELPALL)-FOOTER
+	$(HELPOUT)-TITLE_Help \
+	$(HELPOUT)-USAGE \
+	$(HELPOUT)-VARIABLES_TITLE_1 \
+	$(HELPOUT)-VARIABLES_FORMAT_2 \
+	$(HELPOUT)-VARIABLES_CONTROL_2 \
+	$(HELPOUT)-TARGETS_TITLE_1 \
+	$(HELPOUT)-TARGETS_MAIN_2 \
+	$(HELPOUT)-TARGETS_ADDITIONAL_2 \
+	$(HELPOUT)-QUICK_START_1 \
+	$(HELPOUT)-FOOTER
 $(HELPOUT):
 	@$(ECHO) ""
 
-.PHONY: $(HELPALL)
-ifneq ($(MAKECMDGOALS),$(filter-out $(HELPALL),$(MAKECMDGOALS)))
-.NOTPARALLEL:
-endif
-$(HELPALL): \
-	$(HELPALL)-TITLE_Help \
-	$(HELPALL)-USAGE \
-	$(HELPALL)-VARIABLES_TITLE_1 \
-	$(HELPALL)-VARIABLES_FORMAT_2 \
-	$(HELPALL)-VARIABLES_CONTROL_2 \
-	$(HELPALL)-TARGETS_TITLE_1 \
-	$(HELPALL)-TARGETS_MAIN_2 \
-	$(HELPALL)-TARGETS_ADDITIONAL_2 \
-	$(HELPALL)-QUICK_START_1 \
-	$(HELPALL)-FOOTER
-$(HELPALL):
-	@$(ECHO) ""
-
 ########################################
-# {{{3 $(HELPALL)-VARIABLES ------------
+# {{{3 $(HELPOUT)-VARIABLES ------------
 
-.PHONY: $(HELPALL)-VARIABLES_TITLE_%
-$(HELPALL)-VARIABLES_TITLE_%:
+.PHONY: $(HELPOUT)-VARIABLES_TITLE_%
+$(HELPOUT)-VARIABLES_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,$(HEAD_MAIN))
 
 #> update: TYPE_TARGETS
 #> update: READ_ALIASES
-.PHONY: $(HELPALL)-VARIABLES_FORMAT_%
-$(HELPALL)-VARIABLES_FORMAT_%: override MARGIN_LIST	= $(_C)$(TYPE_LPDF)$(_D)
-$(HELPALL)-VARIABLES_FORMAT_%: override FONT_LIST	= $(_C)$(TYPE_HTML)$(_D), $(_C)$(TYPE_LPDF)$(_D)
-$(HELPALL)-VARIABLES_FORMAT_%:
+.PHONY: $(HELPOUT)-VARIABLES_FORMAT_%
+$(HELPOUT)-VARIABLES_FORMAT_%: override MARGIN_LIST	= $(_C)$(TYPE_LPDF)$(_D)
+$(HELPOUT)-VARIABLES_FORMAT_%: override FONT_LIST	= $(_C)$(TYPE_HTML)$(_D), $(_C)$(TYPE_LPDF)$(_D)
+$(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
 	@$(TABLE_M3) ":---"				":---"					":---"
@@ -1395,8 +1384,8 @@ $(HELPALL)-VARIABLES_FORMAT_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other '$(_C)c_type$(_D)' values will be passed directly to Pandoc*"
 
-.PHONY: $(HELPALL)-VARIABLES_CONTROL_%
-$(HELPALL)-VARIABLES_CONTROL_%:
+.PHONY: $(HELPOUT)-VARIABLES_CONTROL_%
+$(HELPOUT)-VARIABLES_CONTROL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"						":---"
@@ -1419,21 +1408,21 @@ $(HELPALL)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty value disables / any value enables*"
 
 ########################################
-# {{{3 $(HELPALL)-TARGETS --------------
+# {{{3 $(HELPOUT)-TARGETS --------------
 
-.PHONY: $(HELPALL)-TARGETS_TITLE_%
-$(HELPALL)-TARGETS_TITLE_%:
+.PHONY: $(HELPOUT)-TARGETS_TITLE_%
+$(HELPOUT)-TARGETS_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
 
 #WORKING:NOW
 
-.PHONY: $(HELPALL)-TARGETS_MAIN_%
-$(HELPALL)-TARGETS_MAIN_%:
+.PHONY: $(HELPOUT)-TARGETS_MAIN_%
+$(HELPOUT)-TARGETS_MAIN_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
 	@$(TABLE_M2) "$(_H)Target"		"$(_H)Purpose"
 	@$(TABLE_M2) ":---"			":---"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)"		"Basic $(HELPOUT) overview $(_N)(default)"
-	@$(TABLE_M2) "$(_C)$(HELPALL)"		"Complete $(HELPALL) output"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"		"Complete $(HELPOUT) output"
 #WORK	$(CREATOR)
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"		"Print settings template: $(_C)$(COMPOSER_SETTINGS)"
 #WORK	[.]$(EXAMPLE)*
@@ -1446,8 +1435,8 @@ $(HELPALL)-TARGETS_MAIN_%:
 #WORK these change!
 	@$(TABLE_M2) "$(_C)$(PRINTER)"		"List updated files: $(_N)*$(_C)$(COMPOSER_EXT)$(_D) $(_E)$(MARKER)$(_D) $(_C)$(COMPOSER_STAMP)"
 
-.PHONY: $(HELPALL)-TARGETS_ADDITIONAL_%
-$(HELPALL)-TARGETS_ADDITIONAL_%:
+.PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
+$(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 #WORKING
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)"		"Runs several key sub-targets and commands, to provide all helpful information in one place"
@@ -1458,17 +1447,17 @@ $(HELPALL)-TARGETS_ADDITIONAL_%:
 #WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
 
 ########################################
-# {{{3 $(HELPALL)-QUICK_START ----------
+# {{{3 $(HELPOUT)-QUICK_START ----------
 
-.PHONY: $(HELPALL)-QUICK_START_%
-$(HELPALL)-QUICK_START_%:
+.PHONY: $(HELPOUT)-QUICK_START_%
+$(HELPOUT)-QUICK_START_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
 	@$(PRINT) "Create documents from source $(INPUT) files:"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list=\"$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)\""
 	@$(ENDOLINE)
-	@$(PRINT) "Use a persistent configuration:"
+	@$(PRINT) "Save a persistent configuration:"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"
@@ -1482,25 +1471,25 @@ $(HELPALL)-QUICK_START_%:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)"
 	@$(ENDOLINE)
-	@$(PRINT) "See '$(_C)$(READALL)$(_D)' (or '$(_C)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)') for full details and additional targets."
+	@$(PRINT) "See '$(_C)$(HELPOUT)-$(DOITALL)$(_D)' for full details and additional targets."
 
 ########################################
-# {{{2 $(READALL) ----------------------
+# {{{2 $(HELPOUT)-$(DOITALL) -----------
 
-override define $(READALL)-HEREDOC_TITLE =
+override define $(HELPOUT)-$(DOITALL)-HEREDOC_TITLE =
 % $(COMPOSER_TECHNAME): Content Make System
 % $(COMPOSER_COMPOSER)
 % $(COMPOSER_VERSION) ($(DATEMARK))
 endef
 
-.PHONY: $(READALL)-HEADER
-$(READALL)-HEADER:
+.PHONY: $(HELPOUT)-$(DOITALL)-HEADER
+$(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_H)![Composer Icon]"		"$(_H)\"Creating Made Simple.\""
 	@$(TABLE_M2) ":---"				":---"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"	"$(_C)[License]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"	"$(_C)[composer@garybgenett.net]"
 
-override define $(READALL)-HEREDOC_LINKS =
+override define $(HELPOUT)-$(DOITALL)-HEREDOC_LINKS =
 [$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer
 [License]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
 [$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer
@@ -1511,7 +1500,7 @@ override define $(READALL)-HEREDOC_LINKS =
 [Composer Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png
 endef
 
-override define $(READALL)-HEREDOC_LINKS_EXT =
+override define $(HELPOUT)-$(DOITALL)-HEREDOC_LINKS_EXT =
 [GNU Make]: http://www.gnu.org/software/make
 [Markdown]: http://daringfireball.net/projects/markdown
 [Pandoc]: http://www.johnmacfarlane.net/pandoc
@@ -1524,26 +1513,26 @@ endef
 
 ########################################
 
-.PHONY: $(READALL)
-$(READALL):
-	@$(ECHO) "$(_M)";	$(call DO_HEREDOC,$(READALL)-HEREDOC_TITLE)	; $(ECHO) "$(_D)"
+.PHONY: $(HELPOUT)-$(DOITALL)
+$(HELPOUT)-$(DOITALL):
+	@$(ECHO) "$(_M)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-HEREDOC_TITLE)		; $(ECHO) "$(_D)"
 	@$(ECHO) "";		$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
-	@$(RUNMAKE)		$(READALL)-HEADER				| $(SED) "/^[^#]*[#]/d"	; $(ENDOLINE)
-	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(READALL)-HEREDOC_LINKS)	; $(ECHO) "$(_D)"	; $(ENDOLINE)
-	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(READALL)-HEREDOC_LINKS_EXT)	; $(ECHO) "$(_D)"
+	@$(RUNMAKE)		$(HELPOUT)-$(DOITALL)-HEADER					| $(SED) "/^[^#]*[#]/d"	; $(ENDOLINE)
+	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-HEREDOC_LINKS)		; $(ECHO) "$(_D)"	; $(ENDOLINE)
+	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-HEREDOC_LINKS_EXT)	; $(ECHO) "$(_D)"
 	@			$(call TITLE_LN,2,Overview,0)
-	@			$(call DO_HEREDOC,$(READALL)-HEREDOC_OVERVIEW)
+	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-HEREDOC_OVERVIEW)
 	@			$(call TITLE_LN,2,Quick Start,0)
-	@$(PRINT)		"Basic Usage:"					; $(ENDOLINE)
-	@$(RUNMAKE)		$(HELPALL)-USAGE				| $(SED) "/^[^#]*[#]/d"	; $(ENDOLINE)
-	@$(RUNMAKE)		$(HELPALL)-QUICK_START_0			| $(SED) "/^[^#]*[#]/d"
+	@$(PRINT)		"Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"	; $(ENDOLINE)
+	@$(RUNMAKE)		$(HELPOUT)-USAGE						| $(SED) "/^[^#]*[#]/d"	; $(ENDOLINE)
+	@$(RUNMAKE)		$(HELPOUT)-QUICK_START_0					| $(SED) "/^[^#]*[#]/d"
 #WORKING:NOW
-	@$(RUNMAKE) $(HELPALL)-FOOTER
+	@$(RUNMAKE) $(HELPOUT)-FOOTER
 
 ########################################
-# {{{3 $(READALL)-OVERVIEW -------------
+# {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW --
 
-override define $(READALL)-HEREDOC_OVERVIEW =
+override define $(HELPOUT)-$(DOITALL)-HEREDOC_OVERVIEW =
 [Composer] is a simple but powerful CMS based on [Pandoc] and [GNU Make].  It is
 a document and website build system that processes directories or individual
 files in [Markdown] format.
@@ -1578,19 +1567,19 @@ $(CREATOR): .set_title-$(CREATOR)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 endif
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)				>$(CURDIR)/.gitignore
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(READALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)					>$(CURDIR)/.gitignore
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #WORKING:NOW
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)				>>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)					>>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #WORK
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)				>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-	@$(MKDIR)								$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
-	@$(ECHO) "$(DIST_ICON_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"		| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"		| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
-	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png	$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
-	@$(MKDIR)								$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)			>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)					>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
+	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 	@$(LS) \
 		$(CURDIR)/.gitignore \
 		$(CURDIR)/*$(COMPOSER_EXT_DEFAULT) \
@@ -2960,8 +2949,8 @@ endif
 	@$(ENDOLINE)
 	@$(PRINT) "  * This may be the result of a missing input file"
 	@$(PRINT) "  * New targets can be defined in '$(_C)$(COMPOSER_SETTINGS)$(_D)'"
-	@$(PRINT) "  * Use '$(_M)$(TARGETS)$(_D)' to get a list of available targets"
-	@$(PRINT) "  * See '$(_M)$(HELPOUT)$(_D)' or '$(_M)$(HELPALL)$(_D)' for more information"
+	@$(PRINT) "  * Use '$(_C)$(TARGETS)$(_D)' to get a list of available targets"
+	@$(PRINT) "  * See '$(_C)$(HELPOUT)$(_D)' or '$(_C)$(HELPOUT)-$(DOITALL)$(_D)' for more information"
 	@$(LINERULE)
 	@exit 1
 
@@ -3088,7 +3077,7 @@ $(DEBUGIT): $(DEBUGIT)-LISTING
 $(DEBUGIT): $(DEBUGIT)-MAKE_DB
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DIR
 $(DEBUGIT): $(DEBUGIT)-CURDIR
-$(DEBUGIT): $(HELPALL)-FOOTER
+$(DEBUGIT): $(HELPOUT)-FOOTER
 $(DEBUGIT):
 	@$(ECHO) ""
 
@@ -3178,7 +3167,7 @@ $(TESTING): $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING): $(TESTING)-CSS
 $(TESTING): $(TESTING)-other
 $(TESTING): $(TESTING)-$(EXAMPLE)
-$(TESTING): $(HELPALL)-FOOTER
+$(TESTING): $(HELPOUT)-FOOTER
 $(TESTING):
 	@$(ECHO) ""
 
