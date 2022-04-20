@@ -530,6 +530,18 @@ endif
 
 ########################################
 
+# https://getbootstrap.com
+# https://github.com/twbs/bootstrap
+# https://github.com/twbs/bootstrap/blob/main/LICENSE
+ifeq ($(filter override,$(origin BOOTSTRAP_CMT)),)
+override BOOTSTRAP_CMT			:= v5.1.3
+endif
+override BOOTSTRAP_LIC			:= MIT
+override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
+override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
+
+########################################
+
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 ifeq ($(filter override,$(origin MDVIEWER_CMT)),)
@@ -1504,6 +1516,7 @@ override define $(READALL)-HEREDOC_LINKS_EXT =
 [Markdown]: http://daringfireball.net/projects/markdown
 [Pandoc]: http://www.johnmacfarlane.net/pandoc
 [YQ]: https://mikefarah.gitbook.io/yq
+[Bootstrap]: https://getbootstrap.com
 [Markdown Viewer]: https://github.com/Thiht/markdown-viewer
 [Reveal.js]: https://github.com/hakimel/reveal.js
 [LaTeX]: http://www.tug.org
@@ -3848,6 +3861,7 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(TABLE_M3) ":---"				":---"					":---"
 	@$(TABLE_M3) "$(_E)Pandoc"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
 	@$(TABLE_M3) "$(_E)YQ"				"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
+	@$(TABLE_M3) "$(_E)Bootstrap"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
 	@$(TABLE_M3) "$(_E)Markdown Viewer"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(TABLE_M3) "$(_E)Reveal.js"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
@@ -4037,6 +4051,7 @@ $(UPGRADE): .set_title-$(UPGRADE)
 	@$(call $(HEADERS))
 	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
+	@$(call GIT_REPO,$(BOOTSTRAP_DIR),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
 	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
 	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
@@ -4058,6 +4073,7 @@ endif
 	@$(ECHO) "$(_C)"
 	@$(LS) --color=never --directory \
 		$(PANDOC_DIR)/data/templates \
+		$(BOOTSTRAP_DIR)/dist \
 		$(MDVIEWER_DIR)/manifest.firefox.json \
 		$(MDVIEWER_DIR)/manifest.chrome.json \
 		$(MDVIEWER_DIR)/manifest.edge.json \
