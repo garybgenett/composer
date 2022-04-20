@@ -1541,16 +1541,7 @@ $(HELPOUT)-$(DOITALL):
 	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
 	@$(ECHO) "";		$(call TITLE_LN,2,Requirements,0)
 	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)		; $(ENDOLINE)
-	@$(RUNMAKE) $(CHECKIT)-$(DOFORCE)							| $(SED) "/^[^#]*[#]/d" \
-		| $(SED) \
-			-e "s|(Pandoc)|[\1]|g" \
-			-e "s|(YQ)|[\1]|g" \
-			-e "s|(Bootstrap)|[\1]|g" \
-			-e "s|(Markdown Viewer)|[\1]|g" \
-			-e "s|(Reveal.js)|[\1]|g" \
-			\
-			-e "s|(GNU Make)|[\1]|g" \
-			-e "s|(TeX Live)|[\1]|g"
+	@$(RUNMAKE) $(CHECKIT)-$(DOFORCE)							| $(SED) "/^[^#]*[#]/d"
 	@$(ECHO) "";		$(call TITLE_LN,2,#WORKING:NOW,0)
 	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKING)		; $(ENDOLINE)
 #WORKING:NOW
@@ -3692,11 +3683,11 @@ $(CHECKIT): .set_title-$(CHECKIT)
 	@$(call $(HEADERS))
 	@$(TABLE_M3) "$(_H)Repository"			"$(_H)Commit"				"$(_H)License"
 	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_E)Pandoc"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
-	@$(TABLE_M3) "$(_E)YQ"				"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
-	@$(TABLE_M3) "$(_E)Bootstrap"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
-	@$(TABLE_M3) "$(_E)Markdown Viewer"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
-	@$(TABLE_M3) "$(_E)Reveal.js"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
+	@$(TABLE_M3) "$(_E)[Pandoc]"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
+	@$(TABLE_M3) "$(_E)[YQ]"			"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
+	@$(TABLE_M3) "$(_E)[Bootstrap]"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
+	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
+	@$(TABLE_M3) "$(_E)[Reveal.js]"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
 	@$(TABLE_M2) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"
@@ -3705,10 +3696,10 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
 	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"
 	@$(TABLE_M2) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"
 	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"
-	@$(TABLE_M2) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"
-	@$(TABLE_M2) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"
-	@$(TABLE_M2) "- $(_C)YQ"			"$(_M)$(YQ_VER)"
-	@$(TABLE_M2) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"
+	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_M)$(MAKE_VER)"
+	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(_M)$(PANDOC_VER)"
+	@$(TABLE_M2) "- $(_C)[YQ]"			"$(_M)$(YQ_VER)"
+	@$(TABLE_M2) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"
 else
 	@$(TABLE_M3) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"				":---"					":---"
@@ -3716,10 +3707,10 @@ else
 	@$(TABLE_M3) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_C)GNU Make"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)Pandoc"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)YQ"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)[GNU Make]"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)[Pandoc]"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)[YQ]"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "- $(_E)Git SCM"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
@@ -3739,10 +3730,10 @@ endif
 	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_D)$(LS)"
 	@$(TABLE_M2) "- $(_C)GNU Findutils"		"$(_D)$(FIND)"
 	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_D)$(SED)"
-	@$(TABLE_M2) "$(_C)GNU Make"			"$(_D)$(REALMAKE)"
-	@$(TABLE_M2) "- $(_C)Pandoc"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-release,$(PANDOC))"
-	@$(TABLE_M2) "- $(_C)YQ"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-release,$(YQ))"
-	@$(TABLE_M2) "- $(_C)TeX Live ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
+	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_D)$(REALMAKE)"
+	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-release,$(PANDOC))"
+	@$(TABLE_M2) "- $(_C)[YQ]"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-release,$(YQ))"
+	@$(TABLE_M2) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"
 	@$(TABLE_M2) "- $(_E)Git SCM"			"$(_N)$(GIT)"
