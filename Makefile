@@ -1098,8 +1098,9 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #> update: $(TESTING): targets list
 
 #> update: PHONY.*$(DOITALL)
-#	$(DEBUGIT)-$(DOITALL)
-#	$(TESTING)-$(DOITALL)
+#	$(DEBUGIT)-file
+#	$(TESTING)-file
+#> update: PHONY.*$(DOITALL)
 #	$(CHECKIT)-$(DOITALL)
 #	$(CONFIGS)-$(DOITALL)
 #	$(CONVICT)-$(DOITALL)
@@ -1107,8 +1108,8 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #	$(INSTALL)-$(DOITALL)
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
-
 #> update: PHONY.*$(DOFORCE)
+#	$(CHECKIT)-$(DOFORCE)
 #	$(INSTALL)-$(DOFORCE)
 
 #> update: includes duplicates
@@ -1342,6 +1343,7 @@ $(HELPOUT): \
 	$(HELPOUT)-TARGETS_TITLE_1 \
 	$(HELPOUT)-TARGETS_MAIN_2 \
 	$(HELPOUT)-TARGETS_ADDITIONAL_2 \
+	$(HELPOUT)-TARGETS_INTERNAL_2 \
 	$(HELPOUT)-QUICK_START_1 \
 	$(HELPOUT)-FOOTER
 $(HELPOUT):
@@ -1449,7 +1451,58 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(TESTING)"			"Build example/test directory using all features and test/validate success"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"			"Download/update all 3rd party components (need to do this at least once)"
 
-#WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
+.PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
+$(HELPOUT)-TARGETS_INTERNAL_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
+	@$(TABLE_M2) "$(_H)Target"			"$(_H)Purpose"
+	@$(TABLE_M2) ":---"				":---"
+
+#WORKING:NOW
+#	$(COMPOSER_CREATE)
+#	$(COMPOSER_PANDOC)
+#	\
+#	$(HELPOUT)
+#	$(CREATOR)
+#	$(EXAMPLE)
+#	\
+#	$(HEADERS)
+#	$(WHOWHAT)
+#	$(SETTING)
+#	\
+#	$(MAKE_DB)
+#	$(LISTING)
+#	$(NOTHING)
+#	\
+#	$(DEBUGIT)
+#	$(TESTING)
+#	$(CHECKIT)
+#	$(CONFIGS)
+#	$(TARGETS)
+#	\
+#	$(CONVICT)
+#	$(DISTRIB)
+#	$(UPGRADE)
+#	\
+#	$(PUBLISH)
+#	$(INSTALL)
+#	$(CLEANER)
+#	$(DOITALL)
+#	$(SUBDIRS)
+#	$(PRINTER)
+#> update: PHONY.*$(DOITALL)
+#	$(DEBUGIT)-file
+#	$(TESTING)-file
+#> update: PHONY.*$(DOITALL)
+#	$(CHECKIT)-$(DOITALL)
+#	$(CONFIGS)-$(DOITALL)
+#	$(CONVICT)-$(DOITALL)
+#	$(UPGRADE)-$(DOITALL)
+#	$(INSTALL)-$(DOITALL)
+#	$(CLEANER)-$(DOITALL)
+#	$(DOITALL)-$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
+#	$(CHECKIT)-$(DOFORCE)
+#	$(INSTALL)-$(DOFORCE)
 
 ########################################
 # {{{3 $(HELPOUT)-QUICK_START ----------
@@ -1491,12 +1544,12 @@ endef
 $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_H)![Composer Icon]"		"$(_H)\"Creating Made Simple.\""
 	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"	"$(_C)[License]"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"	"$(_C)[License: GPL]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"	"$(_C)[composer@garybgenett.net]"
 
 override define $(HELPOUT)-$(DOITALL)-LINKS =
 [$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer
-[License]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
+[License: GPL]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
 [$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer
 [composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21
 
@@ -1554,7 +1607,11 @@ $(HELPOUT)-$(DOITALL):
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
-#WORK
+	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
+#WORKING:NOW
+#	@$(RUNMAKE)		.$(EXAMPLE)-$(INSTALL)
+#	@$(RUNMAKE)		.$(EXAMPLE)
+#WORKING:NOW
 	@$(RUNMAKE)		$(HELPOUT)-FOOTER
 
 ########################################
@@ -2877,7 +2934,7 @@ endif
 #	$(CONFIGS)
 #	$(TARGETS)
 
-#> update: PHONY.*$(DOITALL)$
+#> update: PHONY.*$(DOITALL)
 $(eval override COMPOSER_DOITALL_$(DEBUGIT) ?=)
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
@@ -2964,7 +3021,7 @@ $(DEBUGIT)-%:
 ########################################
 # {{{2 $(TESTING) ----------------------
 
-#> update: PHONY.*$(DOITALL)$
+#> update: PHONY.*$(DOITALL)
 $(eval override COMPOSER_DOITALL_$(TESTING) ?=)
 .PHONY: $(TESTING)-file
 $(TESTING)-file: export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
@@ -3686,7 +3743,8 @@ ifneq ($(subst v,,$(YQ_CMT)),$(YQ_VER))
 override YQ_CMT_DISPLAY := $(YQ_CMT)$(_D) ($(_N)$(YQ_VER)$(_D))
 endif
 
-#> update: PHONY.*$(DOITALL)$
+#> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
 $(eval override COMPOSER_DOITALL_$(CHECKIT) ?=)
 .PHONY: $(CHECKIT)-%
 $(CHECKIT)-%:
