@@ -64,6 +64,7 @@ override VIM_FOLDING := {{{1
 #			dependencies using "parent: child" targets
 #		nice new little feature: make subdirs-*, such as subdirs-list
 #		revealjs = artifacts/logo.img for logo
+#		document this?  $(RUNMAKE) c_type="json" $(OUT_README).json
 #	notes
 #		variable aliases, order of precedence (now that it is fixed)
 #		we can use *_DEFAULTS variables in the documentation!  create more of these...?
@@ -3660,13 +3661,13 @@ $(TESTING)-other-init:
 ifeq ($(OS_TYPE),Linux)
 	@$(LESS_BIN) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
 		| $(SED) -n \
-			-e "/User Guide/p" \
+			-e "/$(COMPOSER_TECHNAME): Content Make System/p" \
 			-e "/$(COMPOSER_TECHNAME) License/p" \
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
 	#> pandoc
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="json" $(COMPOSER_PANDOC)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="json" $(OUT_README).json
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
 	#> git
 	@$(call $(TESTING)-make,,$(TESTING_COMPOSER_MAKEFILE))
@@ -3695,7 +3696,7 @@ $(TESTING)-other-done:
 	fi
 	#> book
 ifeq ($(OS_TYPE),Linux)
-	$(call $(TESTING)-count,1,User Guide)
+	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME): Content Make System)
 	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME) License)
 	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
@@ -4146,6 +4147,7 @@ endif
 .PHONY: $(DOITALL)-specials
 $(DOITALL)-specials:
 	@+$(strip $(call $(TARGETS)-list,$(DOITALL))) \
+		| $(SED) "/^$(HELPOUT)[-]/d" \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 
 ########################################
