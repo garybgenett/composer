@@ -63,6 +63,7 @@ override VIM_FOLDING := {{{1
 #			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
 #			dependencies using "parent: child" targets
 #		nice new little feature: make subdirs-*, such as subdirs-list
+#		revealjs = artifacts/logo.img for logo
 #	notes
 #		variable aliases, order of precedence (now that it is fixed)
 #		we can use *_DEFAULTS variables in the documentation!  create more of these...?
@@ -118,7 +119,7 @@ override VIM_FOLDING := {{{1
 #		add some sort of composer_readme variable?
 #		$(RUNMAKE) COMPOSER_DOCOLOR= $(CONFIGS) | $(SED) -n "/^[#]/d"
 #		$(RUNMAKE) COMPOSER_DOCOLOR= $(CHECKIT) | $(SED) -n "/^[#]/d"
-#WORKING:NOW
+#WORKING
 #	specials...
 #		actually, need something better for site, which will probably remain singular...
 #			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
@@ -531,8 +532,8 @@ endif
 
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
-#>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
 ifeq ($(filter override,$(origin MDVIEWER_CMT)),)
+#>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
 override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
 endif
 override MDVIEWER_LIC			:= MIT
@@ -1295,13 +1296,14 @@ $(HELPALL)-TITLE_%:
 
 .PHONY: $(HELPALL)-USAGE
 $(HELPALL)-USAGE:
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)[variables]$(_D) $(_M)<filename>.<extension>"
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)[variables]$(_D) $(_M)<target>"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f .../$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<filename>.<extension>"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f .../$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<target>"
 
 .PHONY: $(HELPALL)-FOOTER
 $(HELPALL)-FOOTER:
 	@$(ENDOLINE)
 	@$(LINERULE)
+	@$(ENDOLINE)
 	@$(PRINT) "*$(_H)Happy Making!$(_D)*"
 
 ########################################
@@ -1318,7 +1320,7 @@ $(HELPOUT): \
 	$(HELPALL)-USAGE \
 	$(HELPALL)-VARIABLES_FORMAT_1 \
 	$(HELPALL)-TARGETS_MAIN_1 \
-	$(HELPALL)-COMMANDS_1 \
+	$(HELPALL)-QUICK_START_1 \
 	$(HELPALL)-FOOTER
 $(HELPOUT):
 	@$(ECHO) ""
@@ -1336,7 +1338,7 @@ $(HELPALL): \
 	$(HELPALL)-TARGETS_TITLE_1 \
 	$(HELPALL)-TARGETS_MAIN_2 \
 	$(HELPALL)-TARGETS_ADDITIONAL_2 \
-	$(HELPALL)-COMMANDS_1 \
+	$(HELPALL)-QUICK_START_1 \
 	$(HELPALL)-FOOTER
 $(HELPALL):
 	@$(ECHO) ""
@@ -1444,10 +1446,10 @@ $(HELPALL)-TARGETS_ADDITIONAL_%:
 #WORKING grep "^([#][>])?[.]PHONY[:]" Makefile
 
 ########################################
-# {{{3 $(HELPALL)-COMMANDS -------------
+# {{{3 $(HELPALL)-QUICK_START ----------
 
-.PHONY: $(HELPALL)-COMMANDS_%
-$(HELPALL)-COMMANDS_%:
+.PHONY: $(HELPALL)-QUICK_START_%
+$(HELPALL)-QUICK_START_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
 	@$(PRINT) "Create documents from source $(INPUT) files:"
 	@$(ENDOLINE)
@@ -1457,7 +1459,7 @@ $(HELPALL)-COMMANDS_%:
 	@$(PRINT) "Use a persistent configuration:"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
-	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_E)$(OUT_MANUAL).$(EXTENSION):$(_D) $(_N)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"
+	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
 	@$(ENDOLINE)
@@ -1465,36 +1467,39 @@ $(HELPALL)-COMMANDS_%:
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)cd$(_D) $(_M).../documents"
 	@$(PRINT) "$(CODEBLOCK)$(_C)mv$(_D) $(_M)$(call $(HEADERS)-release,$(COMPOSER_DIR)) .$(COMPOSER_BASENAME)"
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)--filename .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)"
 	@$(ENDOLINE)
-	@$(PRINT) "See the '$(_C)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)' for full details and additional targets."
+	@$(PRINT) "See '$(_C)$(READALL)$(_D)' (or '$(_C)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)') for full details and additional targets."
 
 ########################################
 # {{{2 $(READALL) ----------------------
 
-override define HEREDOC_$(READALL)_TITLE =
+override define $(READALL)-HEREDOC_TITLE =
 % $(COMPOSER_TECHNAME): Content Make System
 % $(COMPOSER_COMPOSER)
 % $(COMPOSER_VERSION) ($(DATEMARK))
 endef
 
-override define HEREDOC_$(READALL)_INFO =
-| "Creating Made Simple."	| ![Composer Icon]
-| :---				| :---
-| [$(COMPOSER_FULLNAME)]		| [License]
-| [$(COMPOSER_COMPOSER)]		| [composer@garybgenett.net]
+.PHONY: $(READALL)-HEADER
+$(READALL)-HEADER:
+	@$(TABLE_M2) "$(_H)![Composer Icon]"		"$(_H)\"Creating Made Simple.\""
+	@$(TABLE_M2) ":---"				":---"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"	"$(_C)[License]"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"	"$(_C)[composer@garybgenett.net]"
 
-[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)
+override define $(READALL)-HEREDOC_LINKS =
+[$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer
 [License]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
 [$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer
 [composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21
 
+[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)
 [Composer Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png
 [Composer Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png
 endef
 
-override define HEREDOC_$(READALL)_LINKS =
+override define $(READALL)-HEREDOC_LINKS_EXT =
 [GNU Make]: http://www.gnu.org/software/make
 [Markdown]: http://daringfireball.net/projects/markdown
 [Pandoc]: http://www.johnmacfarlane.net/pandoc
@@ -1506,31 +1511,46 @@ endef
 
 ########################################
 
-#WORKING:NOW
-
 .PHONY: $(READALL)
 $(READALL):
-	@$(call DO_HEREDOC,HEREDOC_$(READALL)_TITLE)
-	@$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
-	@$(call DO_HEREDOC,HEREDOC_$(READALL)_INFO)
-	@$(ENDOLINE)
-	@$(call DO_HEREDOC,HEREDOC_$(READALL)_LINKS)
-	@$(call TITLE_LN,2,Overview,0)
-	@$(call DO_HEREDOC,HEREDOC_$(READALL)_INTRO)
-	@$(call TITLE_LN,2,Quick Start,0)
-	@$(PRINT) "Basic Usage:"
-	@$(ENDOLINE)
-	@$(RUNMAKE) $(HELPALL)-USAGE
-	@$(ENDOLINE)
-	@$(RUNMAKE) $(HELPALL)-COMMANDS_0
+	@$(ECHO) "$(_M)";	$(call DO_HEREDOC,$(READALL)-HEREDOC_TITLE)	; $(ECHO) "$(_D)"
+	@$(ECHO) "";		$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
+	@$(RUNMAKE)		$(READALL)-HEADER				| $(SED) "/^[^#]*[#]/d"	; $(ENDOLINE)
+	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(READALL)-HEREDOC_LINKS)	; $(ECHO) "$(_D)"	; $(ENDOLINE)
+	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(READALL)-HEREDOC_LINKS_EXT)	; $(ECHO) "$(_D)"
+	@			$(call TITLE_LN,2,Overview,0)
+	@			$(call DO_HEREDOC,$(READALL)-HEREDOC_OVERVIEW)
+	@			$(call TITLE_LN,2,Quick Start,0)
+	@$(PRINT)		"Basic Usage:"					; $(ENDOLINE)
+	@$(RUNMAKE)		$(HELPALL)-USAGE				| $(SED) "/^[^#]*[#]/d"	; $(ENDOLINE)
+	@$(RUNMAKE)		$(HELPALL)-QUICK_START_0			| $(SED) "/^[^#]*[#]/d"
 #WORKING:NOW
 	@$(RUNMAKE) $(HELPALL)-FOOTER
 
 ########################################
-# {{{3 $(READALL)-INTRO ----------------
+# {{{3 $(READALL)-OVERVIEW -------------
 
-override define HEREDOC_$(READALL)_INTRO =
-THIS IS THE #WORKING:NOW INTRO.
+override define $(READALL)-HEREDOC_OVERVIEW =
+[Composer] is a simple but powerful CMS based on [Pandoc] and [GNU Make].  It is
+a document and website build system that processes directories or individual
+files in [Markdown] format.
+
+Traditionally, CMS stands for Content Management System.  [Composer] is designed
+to be a Content **Make** System.  Written content is vastly easier to manage as
+plain text, which can be crafted with simple editors and tracked with revision
+control.  However, professional documentation, publications and websites require
+formatting that is dynamic and feature-rich.
+
+[Pandoc] is a veritable swiss-army knife of document conversion, and is
+a widely-used standard for processing [Markdown] into other formats.  While it
+has reasonable defaults, there are a large number of options, and additional
+tools are required for some formats and features.  [Composer] packages all the
+necessary tools, streamlines the options, and prettifies the output formats, all
+in one place.  It also serves as a build system, so that large repositories can
+be managed as documentation archives or published as [Bootstrap] websites.
+
+![Composer Icon]
+![Composer Screenshot]
 endef
 
 ########################################
@@ -1551,11 +1571,11 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_README)				>>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #WORK
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)				>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPALL)-FOOTER	| $(SED) "/^[#][>]/d"	>>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(MKDIR)								$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICON_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"		| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"		| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png	$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
 	@$(MKDIR)								$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)			>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 	@$(LS) \
@@ -1571,6 +1591,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM)							$(CURDIR)/$(COMPOSER_CSS)
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_STAMP=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+	@$(ECHO) "" >$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_CSS) \
@@ -1689,7 +1710,7 @@ override define HEREDOC_DISTRIB_REVEALJS_CSS =
 /* ########################################################################## */
 
 .reveal .slides {
-	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_ART)/icon-v1.0.png)");
+	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_ART)/logo.img)");
 	background-repeat:		no-repeat;
 	background-position:		100% 0%;
 	background-size:		auto 20%;
@@ -2365,7 +2386,7 @@ an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
 
-#### END OF TERMS AND CONDITIONS
+### END OF TERMS AND CONDITIONS
 
 How to Apply These Terms to Your New Programs
 
@@ -2419,6 +2440,10 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+--------------------------------------------------------------------------------
+
+*End Of File*
 endef
 
 ################################################################################
@@ -2428,28 +2453,6 @@ endef
 override define HEREDOC_DISTRIB_README =
 
 # #WORKING:NOW
-
-Introduction
-========================================================================
-
-Overview
-------------------------------------
-
-[Composer] is a simple but powerful CMS based on [Pandoc] and [Make].
-By default, input files are written in a variation of [Markdown].
-
-Traditionally, CMS stands for Content Management System.  In the case of
-[Composer], however, CMS really means a Content **Make** System.  For
-many types of content, maybe even most, simpler is better.  Content is
-very easy to manage when it lives its full life-cycle as plain text,
-since there are a veritable multitude of solutions available for
-tracking and managing text and source files.  What is really needed is
-a basic system with advanced capabilities for "making" these simple text
-files into richer, more capable document types.
-
-This is the goal of [Composer].
-
-![Composer Screenshot]($(notdir $(COMPOSER_ART))/screenshot-v3.0.png "Composer Screenshot")
 
 Quick Start
 ------------------------------------
@@ -2678,8 +2681,6 @@ The author encourages the reader to review the [Goals] section and
 decide for themselves if [Composer] will be beneficial for their needs.
 endef
 
-################################################################################
-# }}}1
 ################################################################################
 # }}}1
 ################################################################################
