@@ -1575,28 +1575,37 @@ $(HELPOUT)-%:
 	@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-#WORKING:NOW
 	@$(call TITLE_LN,2,Principles,0)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
 	@$(call TITLE_LN,2,Requirements,0)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 	@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-#	@$(call TITLE_LN,2,#WORKING:NOW,0)
-#	@$(ENDOLINE)
 #WORKING:NOW
-#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_TITLE_1
-#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_FORMAT_2
-#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_CONTROL_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_SPECIALS_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2
 #WORKING:NOW
-#	@$(RUNMAKE)		.$(EXAMPLE)-$(INSTALL)
-#	@$(RUNMAKE)		.$(EXAMPLE)
-#WORKING:NOW
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_MAIN_2
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2
+#	@$(call TITLE_LN,1,Templates)
+#	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_C)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
+#	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
+#		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
+#			-e "/^[#]{6}/d" \
+#			-e "/^$$/d" \
+#			-e "s|^|\t|g" \
+#		)
+#	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_C)$(COMPOSER_SETTINGS)$(_D)\` files:"
+#	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
+#		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
+#			-e "/^[#]{6}/d" \
+#			-e "/^$$/d" \
+#			-e "s|^|\t|g" \
+#		)
 	@$(RUNMAKE)		$(HELPOUT)-FOOTER
 
 ########################################
