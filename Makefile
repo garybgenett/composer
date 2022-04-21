@@ -1556,6 +1556,52 @@ $(HELPOUT)-EXAMPLES_%:
 ########################################
 # {{{2 $(HELPOUT)-$(DOITALL) -----------
 
+#> update: PHONY.*$(DOITALL)
+#>$(eval override COMPOSER_DOITALL_$(HELPOUT) ?=)
+.PHONY: $(HELPOUT)-%
+$(HELPOUT)-%:
+#>	@$(RUNMAKE) COMPOSER_DOITALL_$(HELPOUT)="$(*)" $(HELPOUT)
+#>
+#>.PHONY: $(HELPOUT)-$(DOITALL)
+#>$(HELPOUT)-$(DOITALL):
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
+	@$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
+	@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
+	@$(call TITLE_LN,2,Overview,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+	@$(call TITLE_LN,2,Quick Start,0)
+	@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
+	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
+#WORKING:NOW
+	@$(call TITLE_LN,2,Principles,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+	@$(call TITLE_LN,2,Requirements,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+	@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+#	@$(call TITLE_LN,2,#WORKING:NOW,0)
+#	@$(ENDOLINE)
+#WORKING:NOW
+#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_TITLE_1
+#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_FORMAT_2
+#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_CONTROL_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_SPECIALS_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
+#WORKING:NOW
+#	@$(RUNMAKE)		.$(EXAMPLE)-$(INSTALL)
+#	@$(RUNMAKE)		.$(EXAMPLE)
+#WORKING:NOW
+	@$(RUNMAKE)		$(HELPOUT)-FOOTER
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TITLE -----
+
 override define $(HELPOUT)-$(DOITALL)-TITLE =
 $(_M)% $(COMPOSER_TECHNAME): Content Make System$(_D)
 $(_M)% $(COMPOSER_COMPOSER)$(_D)
@@ -1596,53 +1642,6 @@ $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
 $(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
 $(_S)[MacPorts]: https://www.macports.org$(_D)
 endef
-
-########################################
-
-#> update: PHONY.*$(DOITALL)
-#>$(eval override COMPOSER_DOITALL_$(HELPOUT) ?=)
-.PHONY: $(HELPOUT)-%
-$(HELPOUT)-%:
-#>	@$(RUNMAKE) COMPOSER_DOITALL_$(HELPOUT)="$(*)" $(HELPOUT)
-#>
-#>.PHONY: $(HELPOUT)-$(DOITALL)
-#>$(HELPOUT)-$(DOITALL):
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
-	@$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
-	@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
-	@$(call TITLE_LN,2,Overview,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-	@$(call TITLE_LN,2,Quick Start,0)
-	@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
-	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
-	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-#WORKING:NOW
-	@$(call TITLE_LN,1,#WORKING:NOW: Details,0)
-	@$(PRINT) "#WORKING:NOW"
-	@$(call TITLE_LN,2,#WORKING:NOW: Goals,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-	@$(call TITLE_LN,2,Requirements,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
-	@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
-	@$(call TITLE_LN,2,#WORKING:NOW,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKING)
-#	@$(ENDOLINE)
-#WORKING:NOW
-#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_TITLE_1
-#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_FORMAT_2
-#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_CONTROL_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_SPECIALS_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
-#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
-#WORKING:NOW
-#	@$(RUNMAKE)		.$(EXAMPLE)-$(INSTALL)
-#	@$(RUNMAKE)		.$(EXAMPLE)
-#WORKING:NOW
-	@$(RUNMAKE)		$(HELPOUT)-FOOTER
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW --
@@ -1712,18 +1711,10 @@ versions of external tools for this iteration of $(_C)[Composer]$(_D).  Use `$(_
 to validate your system.
 endef
 
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-WORKING ---
-
-override define $(HELPOUT)-$(DOITALL)-WORKING =
-#WORKING:NOW
-
-  * [Markdown Viewer]
-    * Simple and elegant CSS for HTML files
-  * [Reveal.js]
-    * Beautifully slick HTML presentation framework
-  * [W3C Slidy2]
-    * Essentially the grandfather of HTML presentation systems
+override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
+$(_C)[Markdown Viewer]$(_D) is included both for its CSS stylesheets, and for real-time
+rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appropriate
+`$(_M)manifest.$(_N)*$(_M).json$(_D)` file for your browser to install.
 endef
 
 ########################################
@@ -1761,9 +1752,12 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM)							$(CURDIR)/$(COMPOSER_CSS)
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORKING:NOW
-#	@$(RUNMAKE) COMPOSER_STAMP=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
-	@$(RUNMAKE) c_toc=6 README.html
-#	@$(RUNMAKE) README.revealjs.html
+	@$(RUNMAKE) COMPOSER_STAMP=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" \
+		c_css="css_alt" \
+		c_toc="6" \
+		README.html \
+#		README.revealjs.html \
+#		$(DOITALL)
 #WORK
 	@$(ECHO) "" >$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
 	@$(RM) \
