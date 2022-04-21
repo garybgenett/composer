@@ -1398,7 +1398,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)$(TYPE_TEXT)"		"$(DESC_TEXT)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
 	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"		"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *Other \`$(_C)c_type$(_D)\` values will be passed directly to Pandoc*"
+	@$(PRINT) "  * *Other \`$(_C)c_type$(_D)\` values will be passed directly to $(_C)[Pandoc]$(_D)*"
 
 .PHONY: $(HELPOUT)-VARIABLES_CONTROL_%
 $(HELPOUT)-VARIABLES_CONTROL_%:
@@ -1701,10 +1701,10 @@ The guiding principles of $(_C)[Composer]$(_D):
 
 Direct support for key document types:
 
-  * $(_M)HTML$(_D) $(_E)(standalone and websites)$(_D)
+  * $(_M)HTML$(_D) $(_E)(standalone and [Bootstrap] websites)$(_D)
   * $(_M)PDF$(_D)
   * $(_M)EPUB$(_D)
-  * $(_M)Presentations$(_D) $(_E)(Reveal.js)$(_D)
+  * $(_M)Presentations$(_D) $(_E)([Reveal.js])$(_D)
   * $(_M)Microsoft Office$(_D) $(_E)(Word & PowerPoint)$(_D)
 endef
 
@@ -1720,7 +1720,7 @@ $(_M)[MacPorts]$(_D) for macOS both provide suitable environments.
 
 The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
-creating PDF files.
+creating $(_M)PDF$(_D) files.
 
 Below are the versions of the components in the repository, and the tested
 versions of external tools for this iteration of $(_C)[Composer]$(_D).  Use `$(_C)$(DOMAKE) $(CHECKIT)$(_D)`
@@ -1728,7 +1728,7 @@ to validate your system.
 endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
-$(_C)[Markdown Viewer]$(_D) is included both for its CSS stylesheets, and for real-time
+$(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appropriate
 `$(_M)manifest.$(_N)*$(_M).json$(_D)` file for your browser to install.
 endef
@@ -1737,13 +1737,32 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
-THIS IS SOME #WORKING:NOW TEXT!
+The `$(_C)$(COMPOSER_CREATE)$(_D)` and `$(_C)$(COMPOSER_PANDOC)$(_D)` targets use these variables to decide what to build
+and how.  The output file ends up being `$(_C)c_base$(_D).$(_C)extension$(_D)`, and use `$(_C)c_list$(_D)` as
+the input files, in order.  The `$(_C)extension$(_D)` is selected based on the `$(_C)c_type$(_D)`
+table above.  Generally, neither of these targets is required to be used
+directly, since they are run automatically based on what output file targets are
+specified $(_E)(see [Quick Start])$(_D):
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list="$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"$(_D)
+
+Other values for `$(_C)c_type$(_D)`, such as `$(_C)json$(_D)` or `$(_C)man$(_D)`, for example, can be passed
+through to $(_C)[Pandoc]$(_D) manually:
+
+$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) \\
+$(CODEBLOCK)$(CODEBLOCK)$(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+
+Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
+limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
 endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
+################################################################################
 THIS IS SOME #WORKING:NOW TEXT!
 endef
 
