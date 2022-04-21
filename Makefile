@@ -1557,9 +1557,9 @@ $(HELPOUT)-EXAMPLES_%:
 # {{{2 $(HELPOUT)-$(DOITALL) -----------
 
 override define $(HELPOUT)-$(DOITALL)-TITLE =
-% $(COMPOSER_TECHNAME): Content Make System
-% $(COMPOSER_COMPOSER)
-% $(COMPOSER_VERSION) ($(DATEMARK))
+$(_M)% $(COMPOSER_TECHNAME): Content Make System$(_D)
+$(_M)% $(COMPOSER_COMPOSER)$(_D)
+$(_M)% $(COMPOSER_VERSION) ($(DATEMARK))$(_D)
 endef
 
 .PHONY: $(HELPOUT)-$(DOITALL)-HEADER
@@ -1570,31 +1570,31 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"	"$(_C)[composer@garybgenett.net]"
 
 override define $(HELPOUT)-$(DOITALL)-LINKS =
-[$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer
-[License: GPL]: https://github.com/garybgenett/composer/blob/master/LICENSE.md
-[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer
-[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21
+$(_E)[$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer$(_D)
+$(_E)[License: GPL]: https://github.com/garybgenett/composer/blob/master/LICENSE.md$(_D)
+$(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
+$(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
-[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)
-[Composer Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png
-[Composer Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png
+$(_S)[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)$(_D)
+$(_S)[Composer Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png$(_D)
+$(_S)[Composer Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
-[GNU Make]: http://www.gnu.org/software/make
-[Markdown]: http://daringfireball.net/projects/markdown
+$(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
+$(_E)[Markdown]: http://daringfireball.net/projects/markdown$(_D)
 
-[Pandoc]: http://www.johnmacfarlane.net/pandoc
-[YQ]: https://mikefarah.gitbook.io/yq
-[Bootstrap]: https://getbootstrap.com
-[Markdown Viewer]: https://github.com/Thiht/markdown-viewer
-[Reveal.js]: https://revealjs.com
-[TeX Live]: https://tug.org/texlive
+$(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
+$(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
+$(_E)[Bootstrap]: https://getbootstrap.com$(_D)
+$(_E)[Markdown Viewer]: https://github.com/Thiht/markdown-viewer$(_D)
+$(_E)[Reveal.js]: https://revealjs.com$(_D)
+$(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
-[GNU]: http://www.gnu.org
-[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html
-[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl
-[MacPorts]: https://www.macports.org
+$(_S)[GNU]: http://www.gnu.org$(_D)
+$(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
+$(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
+$(_S)[MacPorts]: https://www.macports.org$(_D)
 endef
 
 ########################################
@@ -1607,36 +1607,37 @@ $(HELPOUT)-%:
 #>
 #>.PHONY: $(HELPOUT)-$(DOITALL)
 #>$(HELPOUT)-$(DOITALL):
-	@$(ECHO) "$(_M)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)			; $(ECHO) "$(_D)"
-	@$(ECHO) "";		$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
-	@$(RUNMAKE)		$(HELPOUT)-$(DOITALL)-HEADER								; $(ENDOLINE)
-	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)			; $(ECHO) "$(_D)"	; $(ENDOLINE)
-	@$(ECHO) "$(_S)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)		; $(ECHO) "$(_D)"
-	@			$(call TITLE_LN,2,Overview,0)
-	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-	@			$(call TITLE_LN,2,Quick Start,0)
-	@$(PRINT)		"Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"	; $(ENDOLINE)
-	@$(RUNMAKE)		$(HELPOUT)-USAGE						; $(ENDOLINE)
-	@$(RUNMAKE)		$(HELPOUT)-EXAMPLES_0
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
+	@$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
+	@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
+	@$(call TITLE_LN,2,Overview,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+	@$(call TITLE_LN,2,Quick Start,0)
+	@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
+	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
 #WORKING:NOW
-	@$(ECHO) "";		$(call TITLE_LN,1,#WORKING:NOW: Details,$(HEAD_MAIN))
+	@$(call TITLE_LN,1,#WORKING:NOW: Details,0)
 	@$(PRINT) "#WORKING:NOW"
-	@$(ECHO) "";		$(call TITLE_LN,2,#WORKING:NOW: Goals,0)
-	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-	@$(ECHO) "";		$(call TITLE_LN,2,Requirements,0)
-	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)		; $(ENDOLINE)
-	@$(RUNMAKE) $(CHECKIT)-$(DOFORCE)							| $(SED) "/^[^#]*[#]/d"
-	@$(ECHO) "";		$(call TITLE_LN,2,#WORKING:NOW,0)
-	@			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKING)		; $(ENDOLINE)
+	@$(call TITLE_LN,2,#WORKING:NOW: Goals,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+	@$(call TITLE_LN,2,Requirements,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+	@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+	@$(call TITLE_LN,2,#WORKING:NOW,0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKING)
+#	@$(ENDOLINE)
 #WORKING:NOW
-	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_TITLE_1
-	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_FORMAT_2
-	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_CONTROL_2
-	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
-	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
-	@$(RUNMAKE)		$(HELPOUT)-TARGETS_SPECIALS_2
-	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
-	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
+#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_TITLE_1
+#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_FORMAT_2
+#	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_CONTROL_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_SPECIALS_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
+#	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
 #WORKING:NOW
 #	@$(RUNMAKE)		.$(EXAMPLE)-$(INSTALL)
 #	@$(RUNMAKE)		.$(EXAMPLE)
@@ -1647,34 +1648,34 @@ $(HELPOUT)-%:
 # {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW --
 
 override define $(HELPOUT)-$(DOITALL)-OVERVIEW =
-[Composer] is a simple but powerful CMS based on [Pandoc] and [GNU Make].  It is
-a document and website build system that processes directories or individual
-files in [Markdown] format.
+**$(_C)[Composer]$(_D) is a simple but powerful CMS based on $(_C)[Pandoc]$(_D) and $(_C)[GNU Make]$(_D).**
+It is a document and website build system that processes directories or
+individual files in $(_C)[Markdown]$(_D) format.
 
-Traditionally, CMS stands for Content Management System.  [Composer] is designed
-to be a Content **Make** System.  Written content is vastly easier to manage as
+Traditionally, CMS stands for $(_M)Content Management System$(_D).  $(_C)[Composer]$(_D) is designed
+to be a $(_M)Content **Make** System$(_D).  Written content is vastly easier to manage as
 plain text, which can be crafted with simple editors and tracked with revision
 control.  However, professional documentation, publications and websites require
 formatting that is dynamic and feature-rich.
 
-[Pandoc] is a veritable swiss-army knife of document conversion, and is
-a widely-used standard for processing [Markdown] into other formats.  While it
-has reasonable defaults, there are a large number of options, and additional
-tools are required for some formats and features.  [Composer] consoldiates all
-the necessary components, streamlines the options, and prettifies the output
+$(_C)[Pandoc]$(_D) is a veritable swiss-army knife of document conversion, and is a
+widely-used standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has
+reasonable defaults, there are a large number of options, and additional tools
+are required for some formats and features.  $(_C)[Composer]$(_D) consoldiates all the
+necessary components, streamlines the options, and prettifies the output
 formats, all in one place.  It also serves as a build system, so that large
 repositories can be managed as documentation archives or published as
-[Bootstrap] websites.
+$(_C)[Bootstrap]$(_D) websites.
 
-![Composer Icon]
-![Composer Screenshot]
+$(_S)![Composer Icon]$(_D)
+$(_S)![Composer Screenshot]$(_D)
 endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-GOALS -----
 
 override define $(HELPOUT)-$(DOITALL)-GOALS =
-The guiding principles of [Composer]:
+The guiding principles of $(_C)[Composer]$(_D):
 
   * All source files in readable plain text
   * Professional output, suitable for publication
@@ -1685,30 +1686,30 @@ The guiding principles of [Composer]:
 
 Direct support for key document types:
 
-  * HTML (standalone and websites)
-  * PDF
-  * EPUB
-  * Presentations
-  * Microsoft Office
+  * $(_M)HTML$(_D) $(_E)(standalone and websites)$(_D)
+  * $(_M)PDF$(_D)
+  * $(_M)EPUB$(_D)
+  * $(_M)Presentations$(_D) $(_E)(Reveal.js)$(_D)
+  * $(_M)Microsoft Office$(_D) $(_E)(Word & PowerPoint)$(_D)
 endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-REQUIRE ---
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
-[Composer] has almost no external dependencies.  All needed components are
-included directly in the repository, including [Pandoc].  It does require
-a minimal command-line environment based on [GNU] tools, which is standard for
-all [GNU/Linux] systems.  The [Windows Subsystem for Linux] for Windows and
-[MacPorts] for macOS both provide suitable environments.
+$(_C)[Composer]$(_D) has almost no external dependencies.  All needed components are
+integrated directly into the repository, including $(_C)[Pandoc]$(_D).  It does require a
+minimal command-line environment based on $(_M)[GNU]$(_D) tools, which is standard for all
+$(_M)[GNU/Linux]$(_D) systems.  The $(_M)[Windows Subsystem for Linux]$(_D) for Windows and
+$(_M)[MacPorts]$(_D) for macOS both provide suitable environments.
 
-The one large external requirement is [TeX Live], and it can be installed using
+The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
 creating PDF files.
 
 Below are the versions of the components in the repository, and the tested
-versions of external tools for this iteration of [Composer].  Use
-`$(_C)$(DOMAKE) $(CHECKIT)$(_D)` to validate your system.
+versions of external tools for this iteration of $(_C)[Composer]$(_D).  Use `$(_C)$(DOMAKE) $(CHECKIT)$(_D)`
+to validate your system.
 endef
 
 ########################################
