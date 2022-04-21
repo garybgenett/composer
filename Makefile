@@ -65,6 +65,11 @@ override VIM_FOLDING := {{{1
 #		nice new little feature: make subdirs-*, such as subdirs-list
 #		revealjs = artifacts/logo.img for logo
 #		document this?  $(RUNMAKE) c_type="json" $(OUT_README).json
+#		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
+#			README.%: override c_css := css_alt
+#			README.%: override c_toc := 6
+#			README.revealjs.html: override c_css :=
+#			README.revealjs.html: override c_toc :=
 #	notes
 #		variable aliases, order of precedence (now that it is fixed)
 #		we can use *_DEFAULTS variables in the documentation!  create more of these...?
@@ -1078,8 +1083,8 @@ override COMPOSER_EXPORTED_NOT := \
 	c_css_use \
 
 #> update: $(MAKE) / @+
-override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-override RUNMAKE			:= $(RUNMAKE) $(MAKE_OPTIONS)
+#>override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
+#>override RUNMAKE			:= $(RUNMAKE) $(MAKE_OPTIONS)
 $(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
 
@@ -1584,7 +1589,9 @@ $(HELPOUT)-%:
 #WORKING:NOW
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2
+	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 #WORKING:NOW
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_MAIN_2
@@ -1727,6 +1734,20 @@ rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appr
 endef
 
 ########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
+
+override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
+THIS IS SOME #WORKING:NOW TEXT!
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
+
+override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
+THIS IS SOME #WORKING:NOW TEXT!
+endef
+
+########################################
 # {{{2 $(CREATOR) ----------------------
 
 .PHONY: $(CREATOR)
@@ -1745,7 +1766,7 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
-	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 	@$(LS) \
@@ -1754,21 +1775,26 @@ endif
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 ifneq ($(COMPOSER_RELEASE),)
-	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"	>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)"	>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"	>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "\n"						>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(RM)							$(CURDIR)/$(COMPOSER_CSS)
-	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_css := css_alt\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_toc := 6\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\n"									>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(_C)"
+	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(_D)"
+	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORKING:NOW
-	@$(RUNMAKE) COMPOSER_STAMP=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" \
-		c_css="css_alt" \
-		c_toc="6" \
-		README.html \
-#		README.revealjs.html \
-#		$(DOITALL)
-#WORK
-	@$(ECHO) "" >$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+#	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_HTML)
+#	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_PRES)
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_CSS) \
