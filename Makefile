@@ -1569,35 +1569,28 @@ $(HELPOUT)-%:
 #>
 #>.PHONY: $(HELPOUT)-$(DOITALL)
 #>$(HELPOUT)-$(DOITALL):
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
-	@$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
-	@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
-	@$(call TITLE_LN,2,Overview,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-	@$(call TITLE_LN,2,Quick Start,0)
-	@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
-	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
-	@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-	@$(call TITLE_LN,2,Principles,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-	@$(call TITLE_LN,2,Requirements,0)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
-	@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
+		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
+		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
+		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
+	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+	@$(call TITLE_LN,2,Quick Start,0)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
+		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
+	@$(call TITLE_LN,2,Principles,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 #WORKING:NOW
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2
-	@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 #WORKING:NOW
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_MAIN_2
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_MAIN_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_MAIN)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 #	@$(call TITLE_LN,1,Templates)
 #	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_C)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
@@ -1762,8 +1755,35 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
-################################################################################
-THIS IS SOME #WORKING:NOW TEXT!
+#WORKING:NOW -------------------------------------------------------------------
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_MAIN
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_MAIN =
+#WORKING:NOW -------------------------------------------------------------------
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
+#WORKING:NOW -------------------------------------------------------------------
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
+#WORKING:NOW -------------------------------------------------------------------
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
+#WORKING:NOW -------------------------------------------------------------------
 endef
 
 ########################################
