@@ -1098,10 +1098,14 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 #> update: $(DEBUGIT): targets list
 #> update: $(TESTING): targets list
 
+#> update: PHONY.*$(CLEANER)
+#	$(PUBLISH)-$(CLEANER)
 #> update: PHONY.*$(DOITALL)
-#	$(DEBUGIT)-file
-#	$(TESTING)-file
+#	$(DEBUGIT)-file + COMPOSER_DOITALL_$(TESTING)="$(DEBUGIT)"
+#	$(TESTING)-file + COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)"
 #> update: PHONY.*$(DOITALL)
+#	$(HELPOUT)-$(DOITALL)
+#	$(HEADERS)-$(EXAMPLE)-$(DOITALL)
 #	$(CHECKIT)-$(DOITALL)
 #	$(CONFIGS)-$(DOITALL)
 #	$(CONVICT)-$(DOITALL)
@@ -1333,6 +1337,7 @@ endif
 #>	$(HELPOUT)-USAGE \
 #>	$(HELPOUT)-VARIABLES_FORMAT_1 \
 #>	$(HELPOUT)-TARGETS_MAIN_1 \
+#>	$(HELPOUT)-TARGETS_SPECIALS_1 \
 #>	$(HELPOUT)-QUICK_START_1 \
 #>	$(HELPOUT)-FOOTER
 $(HELPOUT): \
@@ -1343,6 +1348,7 @@ $(HELPOUT): \
 	$(HELPOUT)-VARIABLES_CONTROL_2 \
 	$(HELPOUT)-TARGETS_TITLE_1 \
 	$(HELPOUT)-TARGETS_MAIN_2 \
+	$(HELPOUT)-TARGETS_SPECIALS_2 \
 	$(HELPOUT)-TARGETS_ADDITIONAL_2 \
 	$(HELPOUT)-TARGETS_INTERNAL_2 \
 	$(HELPOUT)-QUICK_START_1 \
@@ -1416,94 +1422,110 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 ########################################
 # {{{3 $(HELPOUT)-TARGETS --------------
 
+#> update: PHONY.*$(CLEANER)
+#> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
+
 .PHONY: $(HELPOUT)-TARGETS_TITLE_%
 $(HELPOUT)-TARGETS_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
 
-#WORKING:NOW
-#WORK	$(CREATOR)
-#WORK	[.]$(EXAMPLE)*
-#WORK	$(COMPOSER_PANDOC)
-
 .PHONY: $(HELPOUT)-TARGETS_MAIN_%
 $(HELPOUT)-TARGETS_MAIN_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
-	@$(TABLE_M2) "$(_H)Target"			"$(_H)Purpose"
-	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)"			"Basic $(HELPOUT) overview $(_N)(default)"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"	"Complete $(OUT_README) output"
-	@$(TABLE_M2) "$(_C)$(EXAMPLE)"			"Print settings template: \`$(_C)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"		"Document creation $(_N)(see: \`$(_C)$(HELPOUT)$(_N)\`)"
-	@$(TABLE_M2) "$(_C)$(INSTALL)"			"Recursive directory initialization: \`$(_C)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(CLEANER)"			"Remove output files: \`$(_C)COMPOSER_TARGETS$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_N)*$(_C)-$(CLEANER)$(_D)\`"
+	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
+	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_N)(default)"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_C)$(OUT_README)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_C)$(COMPOSER_SETTINGS)$(_D)\`"
+#WORKING:NOW
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see: \`$(_C)$(HELPOUT)$(_N)\`)"
+	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Recursive directory initialization: \`$(_C)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(CLEANER)"				"Remove output files: \`$(_C)COMPOSER_TARGETS$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_N)*$(_C)-$(CLEANER)$(_D)\`"
 #WORK not recursive
-	@$(TABLE_M2) "$(_C)$(DOITALL)"			"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"	"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(PRINTER)"			"List updated files: \`$(_N)*$(_C)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_C)$(COMPOSER_STAMP)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(DOITALL)"				"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(PRINTER)"				"List updated files: \`$(_N)*$(_C)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_C)$(COMPOSER_STAMP)$(_D)\`"
+#WORKING:NOW -------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(INSTALL)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOFORCE)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CLEANER)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DOITALL)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(SUBDIRS)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(PRINTER)"				"#WORKING:NOW"
+
+.PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
+$(HELPOUT)-TARGETS_SPECIALS_%:
+	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Special Targets); fi
+	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
+	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(CLEANER)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)s"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)-$(_N)*"			"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(CLEANER)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)s"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)-$(_N)*"			"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(CLEANER)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_POST)s"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DO_POST)-$(_N)*"			"#WORKING:NOW"
 
 .PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
 $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
-	@$(TABLE_M2) "$(_H)Target"			"$(_H)Purpose"
-	@$(TABLE_M2) ":---"				":---"
+	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
+	@$(TABLE_M2) ":---"					":---"
 #WORKING
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)"			"Runs several key sub-targets and commands, to provide all helpful information in one place"
-	@$(TABLE_M2) "$(_C)$(TARGETS)"			"Parse for all potential targets (for verification and/or troubleshooting): \`$(_C)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(TESTING)"			"Build example/test directory using all features and test/validate success"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)"			"Download/update all 3rd party components (need to do this at least once)"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"Runs several key sub-targets and commands, to provide all helpful information in one place"
+	@$(TABLE_M2) "$(_C)$(TARGETS)"				"Parse for all potential targets (for verification and/or troubleshooting): \`$(_C)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(TESTING)"				"Build example/test directory using all features and test/validate success"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Download/update all 3rd party components (need to do this at least once)"
+#WORKING:NOW -------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(TESTING)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(TARGETS)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CONVICT)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"#WORKING:NOW"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
-	@$(TABLE_M2) "$(_H)Target"			"$(_H)Purpose"
-	@$(TABLE_M2) ":---"				":---"
-
-#WORKING:NOW
-#	$(COMPOSER_CREATE)
-#	$(COMPOSER_PANDOC)
-#	\
-#	$(HELPOUT)
-#	$(CREATOR)
-#	$(EXAMPLE)
-#	\
-#	$(HEADERS)
-#	$(WHOWHAT)
-#	$(SETTING)
-#	\
-#	$(MAKE_DB)
-#	$(LISTING)
-#	$(NOTHING)
-#	\
-#	$(DEBUGIT)
-#	$(TESTING)
-#	$(CHECKIT)
-#	$(CONFIGS)
-#	$(TARGETS)
-#	\
-#	$(CONVICT)
-#	$(DISTRIB)
-#	$(UPGRADE)
-#	\
-#	$(PUBLISH)
-#	$(INSTALL)
-#	$(CLEANER)
-#	$(DOITALL)
-#	$(SUBDIRS)
-#	$(PRINTER)
-#> update: PHONY.*$(DOITALL)
-#	$(DEBUGIT)-file
-#	$(TESTING)-file
-#> update: PHONY.*$(DOITALL)
-#	$(CHECKIT)-$(DOITALL)
-#	$(CONFIGS)-$(DOITALL)
-#	$(CONVICT)-$(DOITALL)
-#	$(UPGRADE)-$(DOITALL)
-#	$(INSTALL)-$(DOITALL)
-#	$(CLEANER)-$(DOITALL)
-#	$(DOITALL)-$(DOITALL)
-#> update: PHONY.*$(DOFORCE)
-#	$(CHECKIT)-$(DOFORCE)
-#	$(INSTALL)-$(DOFORCE)
+	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
+	@$(TABLE_M2) ":---"					":---"
+#WORKING:NOW -------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(HEADERS)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(WHOWHAT)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(SETTING)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(MAKE_DB)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(LISTING)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(NOTHING)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOFORCE)"		"#WORKING:NOW"
 
 ########################################
 # {{{3 $(HELPOUT)-QUICK_START ----------
@@ -1578,8 +1600,14 @@ endef
 
 ########################################
 
-.PHONY: $(HELPOUT)-$(DOITALL)
-$(HELPOUT)-$(DOITALL):
+#> update: PHONY.*$(DOITALL)
+#>$(eval override COMPOSER_DOITALL_$(HELPOUT) ?=)
+.PHONY: $(HELPOUT)-%
+$(HELPOUT)-%:
+#>	@$(RUNMAKE) COMPOSER_DOITALL_$(HELPOUT)="$(*)" $(HELPOUT)
+#>
+#>.PHONY: $(HELPOUT)-$(DOITALL)
+#>$(HELPOUT)-$(DOITALL):
 	@$(ECHO) "$(_M)";	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)			; $(ECHO) "$(_D)"
 	@$(ECHO) "";		$(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
 	@$(RUNMAKE)		$(HELPOUT)-$(DOITALL)-HEADER								; $(ENDOLINE)
@@ -1607,6 +1635,7 @@ $(HELPOUT)-$(DOITALL):
 	@$(RUNMAKE)		$(HELPOUT)-VARIABLES_CONTROL_2
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_MAIN_2
+	@$(RUNMAKE)		$(HELPOUT)-TARGETS_SPECIALS_2
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_ADDITIONAL_2
 	@$(RUNMAKE)		$(HELPOUT)-TARGETS_INTERNAL_2
 #WORKING:NOW
@@ -3881,7 +3910,7 @@ $(TARGETS): .set_title-$(TARGETS)
 override define $(TARGETS)-list =
 	$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
-		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d")
+		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
 		$(if $(1),,$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d")) \
 		$(if $(1),,-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d") \
 		$(if $(1),,-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d") \
@@ -3992,6 +4021,7 @@ $(PUBLISH): .set_title-$(PUBLISH)
 	@$(call $(HEADERS))
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
 
+#> update: PHONY.*$(CLEANER)
 .PHONY: $(PUBLISH)-$(CLEANER)
 $(PUBLISH)-$(CLEANER):
 	@$(ECHO) ""
@@ -4147,7 +4177,6 @@ endif
 .PHONY: $(DOITALL)-specials
 $(DOITALL)-specials:
 	@+$(strip $(call $(TARGETS)-list,$(DOITALL))) \
-		| $(SED) "/^$(HELPOUT)[-]/d" \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 
 ########################################
