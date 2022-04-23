@@ -330,6 +330,8 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE			[$(c_css_use)]))
 #> update: COMPOSER_OPTIONS
 unexport
 
+export MAKEFLAGS
+
 ########################################
 
 override MAKEJOBS_DEFAULT		:= 1
@@ -1040,7 +1042,7 @@ override COMPOSER_CREATE		:= compose
 override COMPOSER_PANDOC		:= pandoc
 
 #> update: $(MAKE) / @+
-override MAKE_OPTIONS			:=
+override MAKE_OPTIONS			:= $(MAKEFLAGS)
 override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC) $(MAKE_OPTIONS)
 
 ########################################
@@ -1285,7 +1287,7 @@ $(1)s-$(DOITALL):
 $(1)s-$(CLEANER):
 	@+$$(strip $$(call $$(TARGETS)-list)) \
 		| $$(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp" \
-		| $$(XARGS) bash -c '\
+		| $$(XARGS) $$(BASH) -ec '\
 			if [ -f "$$(CURDIR)/{}" ]; then \
 				$$(call $$(HEADERS)-rm,$$(CURDIR),{}); \
 				$$(RM) $$(CURDIR)/{} >/dev/null; \
@@ -1443,46 +1445,47 @@ $(HELPOUT)-TARGETS_MAIN_%:
 	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_C)$(OUT_README)$(_D)\` output"
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_C)$(COMPOSER_SETTINGS)$(_D)\`"
 #WORKING:NOW
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see: \`$(_C)$(HELPOUT)$(_N)\`)"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see \`$(_C)$(HELPOUT)$(_N)\`)"
 	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Recursive directory initialization: \`$(_C)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(CLEANER)"				"Remove output files: \`$(_C)COMPOSER_TARGETS$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_N)*$(_C)-$(CLEANER)$(_D)\`"
 #WORK not recursive
 	@$(TABLE_M2) "$(_C)$(DOITALL)"				"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(PRINTER)"				"List updated files: \`$(_N)*$(_C)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_C)$(COMPOSER_STAMP)$(_D)\`"
-#WORKING:NOW -------------------------------------------------------------------
-	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(INSTALL)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOFORCE)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CLEANER)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DOITALL)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(SUBDIRS)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(PRINTER)"				"#WORKING:NOW"
+#WORKING -----------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(INSTALL)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOFORCE)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CLEANER)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DOITALL)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(SUBDIRS)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(PRINTER)"				"#WORKING"
 
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Special Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(CLEANER)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)s"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)-$(_N)*"			"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(CLEANER)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)s"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)-$(_N)*"			"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(CLEANER)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_POST)s"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DO_POST)-$(_N)*"			"#WORKING:NOW"
+#WORKING -----------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(CLEANER)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)s"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)-$(_N)*"			"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(CLEANER)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)s"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)-$(_N)*"			"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(CLEANER)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_POST)s"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DO_POST)-$(_N)*"			"#WORKING"
 
 .PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
 $(HELPOUT)-TARGETS_ADDITIONAL_%:
@@ -1494,42 +1497,42 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(TARGETS)"				"Parse for all potential targets (for verification and/or troubleshooting): \`$(_C)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(TESTING)"				"Build example/test directory using all features and test/validate success"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Download/update all 3rd party components (need to do this at least once)"
-#WORKING:NOW -------------------------------------------------------------------
-	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(TESTING)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(TARGETS)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CONVICT)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"#WORKING:NOW"
+#WORKING -----------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"#WORKING"
+	@$(TABLE_M2) "$(_C)$(TESTING)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(TARGETS)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CONVICT)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"#WORKING"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-#WORKING:NOW -------------------------------------------------------------------
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(HEADERS)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(WHOWHAT)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(SETTING)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(MAKE_DB)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(LISTING)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(NOTHING)"				"#WORKING:NOW"
-	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOFORCE)"		"#WORKING:NOW"
+#WORKING -----------------------------------------------------------------------
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"#WORKING"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(HEADERS)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"#WORKING"
+	@$(TABLE_M2) "$(_C)$(WHOWHAT)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(SETTING)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(MAKE_DB)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(LISTING)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(NOTHING)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOFORCE)"		"#WORKING"
 
 ########################################
 # {{{3 $(HELPOUT)-EXAMPLES -------------
@@ -1585,7 +1588,7 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-#WORKING:NOW
+#WORKING
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_MAIN_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_MAIN)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
@@ -1638,6 +1641,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
 $(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
 $(_E)[Markdown]: http://daringfireball.net/projects/markdown$(_D)
+$(_E)[GitHub]: https://github.com$(_D)
 
 $(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
 $(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
@@ -1667,7 +1671,7 @@ control.  However, professional documentation, publications and websites require
 formatting that is dynamic and feature-rich.
 
 $(_C)[Pandoc]$(_D) is a veritable swiss-army knife of document conversion, and is a
-widely-used standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has
+widely used standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has
 reasonable defaults, there are a large number of options, and additional tools
 are required for some formats and features.  $(_C)[Composer]$(_D) consoldiates all the
 necessary components, streamlines the options, and prettifies the output
@@ -1716,8 +1720,8 @@ the package managers of each of the above systems.  It is only necessary for
 creating $(_M)PDF$(_D) files.
 
 Below are the versions of the components in the repository, and the tested
-versions of external tools for this iteration of $(_C)[Composer]$(_D).  Use `$(_C)$(DOMAKE) $(CHECKIT)$(_D)`
-to validate your system.
+versions of external tools for this iteration of $(_C)[Composer]$(_D).  Use `$(_C)$(CHECKIT)$(_D)` to
+validate your system.
 endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
@@ -1731,8 +1735,8 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
 The `$(_C)$(COMPOSER_CREATE)$(_D)` and `$(_C)$(COMPOSER_PANDOC)$(_D)` targets use these variables to decide what to build
-and how.  The output file ends up being `$(_C)c_base$(_D).$(_C)extension$(_D)`, and use `$(_C)c_list$(_D)` as
-the input files, in order.  The `$(_C)extension$(_D)` is selected based on the `$(_C)c_type$(_D)`
+and how.  The output file ends up being `$(_M)c_base$(_D).$(_M)extension$(_D)`, and use `$(_C)c_list$(_D)` as
+the input files, in order.  The `$(_M)extension$(_D)` is selected based on the `$(_C)c_type$(_D)`
 table above.  Generally, neither of these targets is required to be used
 directly, since they are run automatically based on what output file targets are
 specified $(_E)(see [Quick Start])$(_D):
@@ -1740,7 +1744,7 @@ specified $(_E)(see [Quick Start])$(_D):
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list="$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"$(_D)
 
-Other values for `$(_C)c_type$(_D)`, such as `$(_C)json$(_D)` or `$(_C)man$(_D)`, for example, can be passed
+Other values for `$(_C)c_type$(_D)`, such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
 through to $(_C)[Pandoc]$(_D) manually:
 
 $(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
@@ -1755,7 +1759,129 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
-#WORKING:NOW -------------------------------------------------------------------
+$(_C)MAKEJOBS$(_D)
+
+  * By default, $(_C)[Composer]$(_D) progresses linearly, doing one task at a time.  If
+    there are dependencies between items, this can be beneficial, since it
+    ensures things will happen in a particular order.  The downside, however, is
+    that it is very slow.
+  * $(_C)[Composer]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
+    can be working through tasks independently.  Experiment with lower values
+    first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
+    instantiates into a subdirectory has it's own jobs server, so the total
+    number of threads running can proliferate rapidly.
+  * Using `$(_C)$(TESTING)-speed$(_D)` to validate an archive with $(_M)~18k$(_D) directories and $(_M)~80k$(_D)
+    files, `$(_C)$(INSTALL)-$(DOITALL)$(_D)` time was reduced from $(_M)~15$(_D) minutes to less than $(_M)~2$(_D), and
+    `$(_C)$(DOITALL)-$(DOITALL)$(_D)` dropped from $(_M)~140$(_D) minutes to less than $(_M)~20$(_D).  This was using a
+    value of $(_M)6$(_D).  Higher values exhausted the system thread limit, multiplying to
+    upwards of $(_M)~5k$(_D) threads.  With great power comes great responsibility.
+
+$(_C)COMPOSER_DOCOLOR$(_D)
+
+  * $(_C)[Composer]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
+    The escape sequences used to accomplish this can create mixed results when
+    reading in an output file or using a pager like `$(_C)$(lastword $(subst /, ,$(firstword $(LESS_BIN))))$(_D)`.
+  * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
+    where plain text is required or desired.
+
+$(_C)COMPOSER_DEBUGIT$(_D)
+
+  * Provides more explicit details about what is happening at each step.
+    Produces a lot more output, and can be slower.
+  * Full tracing also displays $(_C)[GNU Make]$(_D) debugging output.
+
+$(_C)COMPOSER_INCLUDE$(_D)
+
+  * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)` tree, all the way
+    back to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each
+    directory.  By default, it only reads the one in its main directory and the
+    current directory, in that order.  Enabling this causes all of them to be
+    read.
+  * In the example directory tree below, normally the `$(_M)$(COMPOSER_SETTINGS)$(_D)` in
+    `$(_M).$(COMPOSER_BASENAME)$(_D)` is read first, and then `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this
+    enabled, it will read all of them in order from top to bottom:
+    `$(_M).$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
+    `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
+  * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
+    level for each directory tree.  Not only does it allow for strict version
+    control of $(_C)[Composer]$(_D) per-directory, it provides a mechanism for setting
+    $(_C)[Control Variables]$(_D) globally.
+  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(_C)$(EXAMPLE)$(_E)`)$(_D) when using
+    this option.  In that case, they will be propagated down the tree.  This may
+    be desired in some cases, but it will require that each directory set these
+    manually, which could require a lot of maintenance.
+  * This setting also causes `$(_M)$(COMPOSER_CSS)$(_D)` files to be processed in an
+    identical manner.
+
+Example directory tree:
+
+$(CODEBLOCK).../.$(COMPOSER_BASENAME)/$(MAKEFILE)
+$(CODEBLOCK).../.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
+$(CODEBLOCK).../$(MAKEFILE)
+$(CODEBLOCK).../$(COMPOSER_SETTINGS)
+$(CODEBLOCK).../tld/$(MAKEFILE)
+$(CODEBLOCK).../tld/$(COMPOSER_SETTINGS)
+$(CODEBLOCK).../tld/sub/$(MAKEFILE)
+$(CODEBLOCK).../tld/sub/$(COMPOSER_SETTINGS)
+
+$(_C)COMPOSER_DEPENDS$(_D)
+
+  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[Composer]$(_D) will process the current diretory before
+    recursing into sub-directories.  This reverses that, and sub-directories
+    will be processed first.
+  * In the example directory tree in `$(_C)COMPOSER_INCLUDE$(_D)` above, the default would
+    be: `$(_M).../$(_D)`, `$(_M).../tld$(_D)`, and then `$(_M).../tld/sub$(_D)`.  If the higher-level
+    directories have dependencies on the sub-directories being run first, this
+    will support that by doing them in reverse order, processing them from
+    bottom to top.
+
+$(_C)COMPOSER_STAMP$(_D)
+
+  * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
+    whenever it converts a $(_C)[Markdown]$(_D) file.  This provides some accounting, and
+    is used by `$(_C)$(PRINTER)$(_D)` to determine which `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)` files have been updated since
+    the last run.
+  * This setting can change the name of the timestamp files, or disable them
+    completely.
+
+$(_C)COMPOSER_EXT$(_D)
+
+  * The $(_C)[Markdown]$(_D) file extension $(_C)[Composer]$(_D) uses: `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)`.  This is for
+    auto-detection of files to add to `$(_C)COMPOSER_TARGETS$(_D)`, files to output for
+    `$(_C)$(PRINTER)$(_D)`, and other tasks.  This is a widely used standard, including
+    $(_C)[GitHub]$(_D).  Another commonly used extension is: `$(_N)*$(_M).$(INPUT)$(_D)`.
+  * In some cases, they do not have any extension, such as `$(_M)$(OUT_README)$(_D)` and
+    `$(_M)$(OUT_LICENSE)$(_D)` in source code directories.  Setting this to an empty value causes
+    these to be detected and output.  It also causes all other files to be
+    processed, because it becomes the wildcard `$(_N)*$(_D)`, so use with care.  It is
+    likely best to use `$(_C)COMPOSER_TARGETS$(_D)` to explicitly set the targets list in
+    these cases.
+  * All files must share the same extension per-directory, but this value can be
+    different between directories.
+
+$(_C)COMPOSER_TARGETS$(_D)
+
+  * The list of output files to create or delete with `$(_C)$(DOITALL)$(_D)` and `$(_C)$(CLEANER)$(_D)`.
+    $(_C)[Composer]$(_D) does auto-detection and output using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`,
+    so this does not usually need to be set.  Hidden files that start with `$(_M).$(_D)`
+    are skipped.
+  * Setting this manually disables auto-detection.  It can also include non-file
+    targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file.
+  * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
+
+$(_C)COMPOSER_SUBDIRS$(_D)
+
+  * The list of sub-directories to recurse into with `$(_C)$(DOITALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
+    `$(_C)$(INSTALL)$(_D)`, similar to `$(_C)COMPOSER_TARGETS$(_D)` above.  $(_C)[Composer]$(_D) does full
+    auto-detection.  Hidden directories that start with `$(_M).$(_D)` are skipped.
+  * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
+
+$(_C)COMPOSER_IGNORES$(_D)
+
+  * The list of `$(_C)COMPOSER_TARGETS$(_D)` and `$(_C)COMPOSER_SUBDIRS$(_D)` to skip with `$(_C)$(DOITALL)$(_D)`,
+    `$(_C)$(CLEANER)$(_D)`, and `$(_C)$(INSTALL)$(_D)`.  This allows for selective auto-detection, when the
+    list of items to process is larger than those to leave alone.
+  * Use `$(_C)$(CONFIGS)$(_D)` to check the current value.
 endef
 
 ########################################
