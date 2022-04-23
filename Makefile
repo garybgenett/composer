@@ -1443,7 +1443,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_N)(default)"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output $(_E)(identical, only colorized)$(_D)"
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"Recursively create $(_C)[Bootstrap]$(_D) website"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"Remove all \`$(_C)$(PUBLISH)$(_D)\` output files"
@@ -1451,9 +1451,11 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOITALL)"		"Do \`$(_C)$(INSTALL)$(_D)\` recursively $(_E)(no overwrite)$(_D)"
 	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOFORCE)"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
 	@$(TABLE_M2) "$(_C)$(CLEANER)"				"Remove output files: \`$(_C)COMPOSER_TARGETS$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_N)*$(_C)-$(CLEANER)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"Do \`$(_C)$(CLEANER)$(_D)\` recursively"
-	@$(TABLE_M2) "$(_C)$(DOITALL)"				"Process current directory tree: \`$(_C)COMPOSER_TARGETS$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"Do \`$(_C)$(CLEANER)$(_D)\` recursively: \`$(_C)COMPOSER_SUBDIRS$(_D)\`"
+	@$(TABLE_M2) "$(_N)*$(_C)-$(CLEANER)"			"Any targets named this way will also be run by \`$(_C)$(CLEANER)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(DOITALL)"				"Run current directory: \`$(_C)COMPOSER_TARGETS$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_N)*$(_C)-$(DOITALL)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"Do \`$(_C)$(DOITALL)$(_D)\` recursively: \`$(_C)COMPOSER_SUBDIRS$(_D)\`"
+	@$(TABLE_M2) "$(_N)*$(_C)-$(DOITALL)"			"Any targets named this way will also be run by \`$(_C)$(DOITALL)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(PRINTER)"				"Print updated files: \`$(_N)*$(_C)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_C)$(COMPOSER_STAMP)$(_D)\`"
 
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
@@ -1536,6 +1538,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(ENDOLINE)
 	@$(PRINT) "Save a persistent configuration:"
 	@$(ENDOLINE)
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
@@ -1803,14 +1806,14 @@ $(_C)COMPOSER_INCLUDE$(_D)
 
 Example directory tree:
 
-$(CODEBLOCK).../.$(COMPOSER_BASENAME)/$(MAKEFILE)
-$(CODEBLOCK).../.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
-$(CODEBLOCK).../$(MAKEFILE)
-$(CODEBLOCK).../$(COMPOSER_SETTINGS)
-$(CODEBLOCK).../tld/$(MAKEFILE)
-$(CODEBLOCK).../tld/$(COMPOSER_SETTINGS)
-$(CODEBLOCK).../tld/sub/$(MAKEFILE)
-$(CODEBLOCK).../tld/sub/$(COMPOSER_SETTINGS)
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK).../$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK).../tld/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../tld/$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK).../tld/sub/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
 
 $(_C)COMPOSER_DEPENDS$(_D)
 
@@ -1876,7 +1879,33 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
-#WORKING:NOW -------------------------------------------------------------------
+The ideal workflow is to put $(_C)[Composer]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
+directory you want to manage, creating a tree similar to this:
+
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_N)*$(_D)
+$(CODEBLOCK).../
+$(CODEBLOCK).../tld/
+$(CODEBLOCK).../tld/sub/
+
+Then, it can be converted to a $(_C)[Composer]$(_D) working directory $(_E)(same as the $(_C)[Quick
+Start]$(_E) example)$(_D):
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
+
+If specific settings need to be used, either globally or per-directory,
+`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see `$(_C)COMPOSER_INCLUDE$(_E)` in $(_C)[Control
+Variables]$(_E) for details)$(_D):
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
+
+Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax.  Naming
+them as `$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective
+targets.
+
+Another best practice is to do `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[Composer]$(_D) upgrade.
 endef
 
 ########################################
