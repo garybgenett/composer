@@ -1343,7 +1343,7 @@ endif
 #>	$(HELPOUT)-TITLE_Usage \
 #>	$(HELPOUT)-USAGE \
 #>	$(HELPOUT)-VARIABLES_FORMAT_1 \
-#>	$(HELPOUT)-TARGETS_MAIN_1 \
+#>	$(HELPOUT)-TARGETS_PRIMARY_1 \
 #>	$(HELPOUT)-TARGETS_SPECIALS_1 \
 #>	$(HELPOUT)-EXAMPLES_1 \
 #>	$(HELPOUT)-FOOTER
@@ -1353,10 +1353,10 @@ $(HELPOUT): $(HELPOUT)-VARIABLES_TITLE_1
 $(HELPOUT): $(HELPOUT)-VARIABLES_FORMAT_2
 $(HELPOUT): $(HELPOUT)-VARIABLES_CONTROL_2
 $(HELPOUT): $(HELPOUT)-TARGETS_TITLE_1
-$(HELPOUT): $(HELPOUT)-TARGETS_MAIN_2
+$(HELPOUT): $(HELPOUT)-TARGETS_PRIMARY_2
 $(HELPOUT): $(HELPOUT)-TARGETS_SPECIALS_2
 $(HELPOUT): $(HELPOUT)-TARGETS_ADDITIONAL_2
-$(HELPOUT): $(HELPOUT)-TARGETS_INTERNAL_2
+#>$(HELPOUT): $(HELPOUT)-TARGETS_INTERNAL_2
 $(HELPOUT): $(HELPOUT)-EXAMPLES_1
 $(HELPOUT): $(HELPOUT)-FOOTER
 $(HELPOUT):
@@ -1401,6 +1401,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"		"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other \`$(_C)c_type$(_D)\` values will be passed directly to $(_C)[Pandoc]$(_D)*"
+	@$(PRINT) "  * *Using \`$(_C)$(CSS_ALT)$(_D)\` as the value for \`$(_C)c_css$(_D)\` will select the secondary theme*"
 
 .PHONY: $(HELPOUT)-VARIABLES_CONTROL_%
 $(HELPOUT)-VARIABLES_CONTROL_%:
@@ -1410,7 +1411,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )$(_E)(makejobs)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )$(_E)(debugit)"
-	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: \`$(_C)$(COMPOSER_SETTINGS)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )$(_N)(boolean)"
+	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: \`$(_M)$(COMPOSER_SETTINGS)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: \`$(_C)$(DOITALL)\`"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
 	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
@@ -1436,44 +1437,31 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 $(HELPOUT)-TARGETS_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
 
-.PHONY: $(HELPOUT)-TARGETS_MAIN_%
-$(HELPOUT)-TARGETS_MAIN_%:
+.PHONY: $(HELPOUT)-TARGETS_PRIMARY_%
+$(HELPOUT)-TARGETS_PRIMARY_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_N)(default)"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_C)$(OUT_README)$(_D)\` output"
-	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_C)$(COMPOSER_SETTINGS)$(_D)\`"
-#WORKING:NOW
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see \`$(_C)$(HELPOUT)$(_N)\`)"
-	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Recursive directory initialization: \`$(_C)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"Recursively create $(_C)[Bootstrap]$(_D) website"
+	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"Remove all \`$(_C)$(PUBLISH)$(_D)\` output files"
+	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOITALL)"		"Do \`$(_C)$(INSTALL)$(_D)\` recursively $(_E)(no overwrite)$(_D)"
+	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOFORCE)"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
 	@$(TABLE_M2) "$(_C)$(CLEANER)"				"Remove output files: \`$(_C)COMPOSER_TARGETS$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_N)*$(_C)-$(CLEANER)$(_D)\`"
-#WORK not recursive
-	@$(TABLE_M2) "$(_C)$(DOITALL)"				"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"Recursive run of directory tree: \`$(_C)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(PRINTER)"				"List updated files: \`$(_N)*$(_C)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_C)$(COMPOSER_STAMP)$(_D)\`"
-#WORKING -----------------------------------------------------------------------
-	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(INSTALL)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(INSTALL)-$(DOFORCE)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CLEANER)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DOITALL)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(SUBDIRS)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(PRINTER)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CLEANER)-$(DOITALL)"		"Do \`$(_C)$(CLEANER)$(_D)\` recursively"
+	@$(TABLE_M2) "$(_C)$(DOITALL)"				"Process current directory tree: \`$(_C)COMPOSER_TARGETS$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(DOITALL)-$(DOITALL)"		"Do \`$(_C)$(DOITALL)$(_D)\` recursively: \`$(_C)COMPOSER_SUBDIRS$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(PRINTER)"				"Print updated files: \`$(_N)*$(_C)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_C)$(COMPOSER_STAMP)$(_D)\`"
 
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Special Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-#WORKING -----------------------------------------------------------------------
+	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
 	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(CLEANER)"		"#WORKING"
 	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(DOITALL)"		"#WORKING"
 	@$(TABLE_M2) "$(_C)$(DO_BOOK)s"				"#WORKING"
@@ -1492,12 +1480,12 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-#WORKING
+#WORKING:NOW
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"Runs several key sub-targets and commands, to provide all helpful information in one place"
-	@$(TABLE_M2) "$(_C)$(TARGETS)"				"Parse for all potential targets (for verification and/or troubleshooting): \`$(_C)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(TARGETS)"				"Parse for all potential targets (for verification and/or troubleshooting): \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(TESTING)"				"Build example/test directory using all features and test/validate success"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Download/update all 3rd party components (need to do this at least once)"
-#WORKING -----------------------------------------------------------------------
+	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
 	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING"
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"#WORKING"
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"#WORKING"
@@ -1519,8 +1507,8 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-#WORKING -----------------------------------------------------------------------
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"#WORKING"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see $(_C)[Formatting Variables]$(_D) in \`$(_C)$(HELPOUT)$(_N)\`)"
+	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
 	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING"
 	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"#WORKING"
 	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"#WORKING"
@@ -1533,6 +1521,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)$(LISTING)"				"#WORKING"
 	@$(TABLE_M2) "$(_C)$(NOTHING)"				"#WORKING"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOFORCE)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(SUBDIRS)"				"#WORKING"
 
 ########################################
 # {{{3 $(HELPOUT)-EXAMPLES -------------
@@ -1584,25 +1573,24 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-#WORKING:NOW
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-#WORKING
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_MAIN_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_MAIN)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+#WORKING:NOW
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 #	@$(call TITLE_LN,1,Templates)
-#	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_C)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
+#	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
 #			-e "s|^|\t|g" \
 #		)
-#	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_C)$(COMPOSER_SETTINGS)$(_D)\` files:"
+#	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
@@ -1885,9 +1873,9 @@ $(_C)COMPOSER_IGNORES$(_D)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_MAIN
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
-override define $(HELPOUT)-$(DOITALL)-TARGETS_MAIN =
+override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
 #WORKING:NOW -------------------------------------------------------------------
 endef
 
@@ -1963,7 +1951,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_CSS) \
-		$(CURDIR)/$(COMPOSER_STAMP) \
+		$(CURDIR)/$(COMPOSER_STAMP_DEFAULT) \
 		>/dev/null
 endif
 
@@ -3079,7 +3067,7 @@ endif
 	@$(PRINT) "$(_H)$(MARKER) DETAILS"
 	@$(ENDOLINE)
 	@$(PRINT) "  * This may be the result of a missing input file"
-	@$(PRINT) "  * New targets can be defined in '$(_C)$(COMPOSER_SETTINGS)$(_D)'"
+	@$(PRINT) "  * New targets can be defined in '$(_M)$(COMPOSER_SETTINGS)$(_D)'"
 	@$(PRINT) "  * Use '$(_C)$(TARGETS)$(_D)' to get a list of available targets"
 	@$(PRINT) "  * See '$(_C)$(HELPOUT)$(_D)' or '$(_C)$(HELPOUT)-$(DOITALL)$(_D)' for more information"
 	@$(LINERULE)
@@ -3312,8 +3300,8 @@ $(TESTING)-$(HEADERS):
 	@$(PRINT) "$(_H)$(MARKER) DETAILS"
 	@$(ENDOLINE)
 	@$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"
-	@$(PRINT) "  * All cases are run in the '$(_C)$(subst $(COMPOSER_DIR)/,,$(TESTING_DIR))$(_D)' directory"
-	@$(PRINT) "  * It has a dedicated '$(_C)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(DOMAKE)$(_D)' can be run anywhere in the tree"
+	@$(PRINT) "  * All cases are run in the '$(_M)$(subst $(COMPOSER_DIR)/,,$(TESTING_DIR))$(_D)' directory"
+	@$(PRINT) "  * It has a dedicated '$(_M)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(DOMAKE)$(_D)' can be run anywhere in the tree"
 	@$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"
 	@$(LINERULE)
 
@@ -3647,7 +3635,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
 		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' behavior ,\
 		\n\t * Creation and deletion of files \
 		\n\t * Missing '$(_C)$(MAKEFILE)$(_D)' detection \
-		\n\t * Proper execution of '$(_C)*-$(CLEANER)$(_D)' targets \
+		\n\t * Proper execution of '$(_N)*$(_C)-$(CLEANER)$(_D)' targets \
 	)
 	@$(call $(TESTING)-load)
 	@$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
