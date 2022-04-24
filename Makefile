@@ -1461,21 +1461,22 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Special Targets); fi
+	@$(PRINT) "There are a few targets considered *$(_C)Specials$(_D)*, that have unique properties:"
+	@$(ENDOLINE)
+	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
+	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)$(DO_BOOK)"				"Concatenate a source list into a single output file"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)"				"*$(_N)Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature$(_D)*"
+	@$(TABLE_M2) "$(_C)$(DO_POST)"				"*$(_N)Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature$(_D)*"
+	@$(ENDOLINE)
+	@$(PRINT) "For each of these base names, there are a standard set of actual targets:"
+	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(CLEANER)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)s-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)s"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_BOOK)-$(_N)*"			"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(CLEANER)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)s-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)s"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)-$(_N)*"			"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(CLEANER)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_POST)s-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_POST)s"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DO_POST)-$(_N)*"			"#WORKING"
+	@$(TABLE_M2) "$(_E)%$(_C)s-$(CLEANER)"			"Called by \`$(_C)$(CLEANER)$(_D)\`, removes all \`$(_E)%$(_C)-$(_N)*$(_D)\` files"
+	@$(TABLE_M2) "$(_E)%$(_C)s-$(DOITALL)"			"Called by \`$(_C)$(DOITALL)$(_D)\`, creates all \`$(_E)%$(_C)-$(_N)*$(_D)\` files"
+	@$(TABLE_M2) "$(_E)%$(_C)s"				"Main target, which is a wrapper to \`$(_E)%$(_C)s-$(DOITALL)$(_D)\`"
+	@$(TABLE_M2) "$(_E)%$(_C)-$(_N)*"			"Target files will be processed according to the base"
 
 .PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
 $(HELPOUT)-TARGETS_ADDITIONAL_%:
@@ -1912,7 +1913,19 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
-#WORKING:NOW -------------------------------------------------------------------
+An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(same as the $(_C)[Quick Start]$(_E)
+example)$(_D):
+
+$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)
+
+This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)` from
+`$(_M)$(OUT_README)$(COMPOSER_EXT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT)$(_D)`, concatenated together in order.  The primary
+purpose of this *$(_C)Special$(_D)* is to gather multiple source files in this manner, so
+that larger works can be comprised of multple files, such as a $(DO_BOOK) with each
+chapter in a separate file.
+
+*$(_N)Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
+build website pages using $(_C)[Bootstrap]$(_N).$(_D)*
 endef
 
 ########################################
