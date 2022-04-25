@@ -18,23 +18,21 @@ override VIM_FOLDING := {{{1
 #		* `mv Composer-*.log artifacts/`
 #	* Publish
 #		* Update: README.md (#WORKING release notes?)
+#			#WORKING
+#				output should be reviewed during testing... maybe output some notes in $(TESTING)...? == release checklist
+#				ensure all output fits within 80 characters
+#				do a mouse-select of all text, to ensure proper color handling
 #		* Review: `make docs`
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
-#WORK
-#	test: windows: wsl/debian(testing) -> sudo apt-get install pandoc yq texlive
-#	test: mac osx: macports -> sudo port gmake install pandoc yq texlive
-#WORK
-#	https://www.w3.org/community/markdown/wiki/MarkdownImplementations
-#	http://filoxus.blogspot.com/2008/01/how-to-insert-watermark-in-latex.html
-#WORK
-#	features
+#WORKING:NOW
+#	docs
 #		dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
 #			and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
+#			also, random note that extensions must match to get picked up
 #		document effects of $TOC and $LVL = test this first...
 #		css_alt
-#		install-all / cleaner-all / all-all
 #		COMPOSER_TARGETS / COMPOSER_SUBDIRS / COMPOSER_IGNORES auto-detection behavior
 #			will always auto-detect unless they are defined or COMPOSER_IGNORES or $(NOTHING)
 #			COMPOSER_SUBDIRS may pick up directories that override core recipies ('docs' and 'test')
@@ -46,13 +44,14 @@ override VIM_FOLDING := {{{1
 #		document "*-clean"
 #			if COMPOSER_TARGETS is only *-clean entries, it is empty
 #			edge case: the '.null' file will never be deleted, even if it is a target
-#			document: we have $(DO_BOOK)-%!
 #		somewhere: per-target variables = book-testing.html: export override TOC := 1
-#			also, random note that extensions must match to get picked up
-#				time to decide about TYPE/BASE/LIST... probably need to just drop these internals and only use the long/short ones...
-#					another option = C_TYPE, etc.?
-#			beware, internal variables like $TESTING, will be overwritten = ummm, no they won't, silly...
-#		COMPOSER_INCLUDE
+#			$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
+#				README.%: override c_css := css_alt
+#				README.%: override c_toc := 6
+#				README.revealjs.html: override c_css :=
+#				README.revealjs.html: override c_toc :=
+#		COMPOSER_INCLUDE + orders of precedence
+#			variable aliases, order of precedence (now that it is fixed)
 #			global to local = COMPOSER_DIR + COMPOSER_SETTINGS
 #			COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
 #			COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
@@ -62,71 +61,28 @@ override VIM_FOLDING := {{{1
 #			disables MAKEJOBS and is single-threaded
 #			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
 #			dependencies using "parent: child" targets
-#		nice new little feature: make subdirs-*, such as subdirs-list
 #		revealjs = artifacts/logo.img for logo
-#		document this?  $(RUNMAKE) c_type="json" $(OUT_README).json
-#		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
-#			README.%: override c_css := css_alt
-#			README.%: override c_toc := 6
-#			README.revealjs.html: override c_css :=
-#			README.revealjs.html: override c_toc :=
-#	notes
-#		variable aliases, order of precedence (now that it is fixed)
-#		we can use *_DEFAULTS variables in the documentation!  create more of these...?
-#		a brief note about filenames with spaces and symlinks...?
-#		document empty COMPOSER_EXT value
-#		do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
-#			meta: $(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
-#			individual: $(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
-#		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
-#		document build times (~1100 dirs, ~87k files): 1 thead = ~75m, 10 = ~120m, 50 = resource exhaustion)
-#			every effort has been made to parallelize (word?)
-#			double-check xargs commands, and add to clean
-#			J=1
-#				threads: ~20-30
-#				Directories 18041
-#				Files 81510
-#				Output 82610
-#				install 15m8.018s
-#				all 140m43.641s
-#			J=6
-#				threads: 4478
-#				Directories 18041
-#				Files 81510
-#				Output 82610
-#				install 1m20.155s
-#				all 17m46.724s
-#	code
+#		requirements
+#			darwin also needs gmake, and the /opt/local/libexec/gnubin needs to be higher in $PATH
+#		custom targets
+#			do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
+#			do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
+#				meta: $(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
+#				individual: $(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
+#		COMPOSER_TARGETS / SUBDIRS = .null marker
 #		PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
 #			COMPOSER_SETTINGS only
-#			for windows/darwin, document the need to do a "make _updatee" and/or add "override" for the right "pandoc" version
-#			for windows/darwin, results of "_update-all" will be variable and untested
-#			all that is done for windows/darwin is to keep the pandoc version up-to-date with wsl/debian and macports
-#			windows/darwin should work just fine, provided the pandoc version matches
-#			darwin also needs gmake, and the /opt/local/libexec/gnubin needs to be higher in $PATH
-#		document *-$(DOITALL) ...and COMPOSER_DOITALL_*?
-#			DEBUGIT-file / TESTING-file
-#			NOTHING ...and COMPOSER_NOTHING?
-#			COMPOSER_DEBUGIT="!"...?  maybe $(TESTING) is enough?
+#			system version is a gamble, and version must match repository (_update)
+#		a brief note about filenames with spaces and symlinks...?
+#			symlink (e.g.../) in dependencies...?  if so, document!
+#	code
 #		document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #			COMPOSER_EXPORTED! = need to make a note for me?
-#WORKING
+#WORKING : site
 #	site
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
-#WORKING:NOW
-#	symlink (e.g.../) in dependencies...?  if so, document!
-#	convert all output to markdown
-#		replace license and readme with help/license output
-#		ensure all output fits within 80 characters
-#		do a mouse-select of all text, to ensure proper color handling
-#		the above should be reviewed during testing... maybe output some notes in $(TESTING)...? == release checklist
-#	dynamic import of targets
-#		add some sort of composer_readme variable?
-#		$(RUNMAKE) COMPOSER_DOCOLOR= $(CONFIGS) | $(SED) -n "/^[#]/d"
-#		$(RUNMAKE) COMPOSER_DOCOLOR= $(CHECKIT) | $(SED) -n "/^[#]/d"
-#WORKING
-#	specials...
+#	site is a special...?
 #		actually, need something better for site, which will probably remain singular...
 #			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
 #				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
@@ -145,8 +101,6 @@ override VIM_FOLDING := {{{1
 #		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
 #		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
 #		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
-#	need to truly switch to test-driven coding, where the code is being written along with the test...
-
 #WORK
 ################################################################################
 # }}}1
@@ -1466,7 +1420,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Special Targets); fi
-	@$(PRINT) "There are a few targets considered *$(_C)Specials$(_D)*, that have unique properties:"
+	@$(PRINT) "There are a few targets considered $(_C)[Specials]$(_D), that have unique properties:"
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
@@ -1633,6 +1587,9 @@ $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst
 $(_S)[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)$(_D)
 $(_S)[Composer Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png$(_D)
 $(_S)[Composer Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
+
+$(_S)[Specials]: #special-targets
+$(_S)[Special]: #special-targets
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
@@ -1935,7 +1892,7 @@ $(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$
 
 This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)` from
 `$(_M)$(OUT_README)$(COMPOSER_EXT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT)$(_D)`, concatenated together in order.  The primary
-purpose of this *$(_C)Special$(_D)* is to gather multiple source files in this manner, so
+purpose of this $(_C)[Special]$(_D) is to gather multiple source files in this manner, so
 that larger works can be comprised of multple files, such as a $(DO_BOOK) with each
 chapter in a separate file.
 
@@ -1959,6 +1916,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
     * `$(_C)$(CONFIGS)$(_D)`
   * If issues are occuring when running a particular set of targets, list them
     in `$(_C)COMPOSER_DEBUGIT$(_D)`.
+  * For general issues, run in the top-level directory $(_E)(see `$(_C)$(CONVICT)$(_E)` below)$(_D).
+    For specific issues, run in the directory where the issue is occurring.
 
 For example:
 
@@ -1978,18 +1937,35 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
 
-#WORKING:NOW -------------------------------------------------------------------
+  * Using the recommended directory structure in $(_C)[Primary Targets]$(_D), `$(_M).../$(_D)` is
+    considered the top-level directory.  Meaning, it is the last directory
+    before linking to $(_C)[Composer]$(_D).
+  * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `$(_M)<directory>.git$(_E)`
+    or `$(_M)<directory>/.git`$(_E))$(_D), this target creates a commit of the current
+    directory tree with the title format below.
+  * For example, if it is run in the `$(_M).../tld/sub$(_D)` directory, that entire tree
+    would be included in the commit.  The purpose of this is to create quick and
+    easy checkpoints when working on documentation that does not necessarily fit
+    in a process where there are specific atomic steps being accomplished.
+  * When this target is run in a $(_C)[Composer]$(_D) directory, it uses itself as the
+    top-level repository.
+
+Commit title format:
+
+$(CODEBLOCK)[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
 
 #WORKING:NOW -------------------------------------------------------------------
+
 endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
-#WORKING:NOW -------------------------------------------------------------------
+*$(_N)(None of these are intented to be run directly during normal use, and are only
+documented for completeness.)$(_D)*
 endef
 
 ########################################
@@ -3602,6 +3578,10 @@ $(TESTING)-$(DISTRIB): $(TESTING)-Think
 		Install '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' using '$(_C)$(DISTRIB)$(_D)' ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 	)
+	@if [ -d "$(COMPOSER_PKG)" ]; then \
+		$(MKDIR) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(notdir $(COMPOSER_PKG)); \
+		$(RSYNC) $(COMPOSER_PKG)/ $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(notdir $(COMPOSER_PKG)); \
+	fi
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
