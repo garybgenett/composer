@@ -45,7 +45,6 @@ override VIM_FOLDING := {{{1
 #TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
 #		maybe add additional ones, like COMPOSER_INCLUDE
-#	turn "lang" into a LANG variable, just above TYPE
 #TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
@@ -399,6 +398,7 @@ endif
 $(call READ_ALIASES,T,T,c_type)
 $(call READ_ALIASES,B,B,c_base)
 $(call READ_ALIASES,L,L,c_list)
+$(call READ_ALIASES,g,g,c_lang)
 $(call READ_ALIASES,s,s,c_css)
 $(call READ_ALIASES,t,t,c_title)
 $(call READ_ALIASES,c,c,c_toc)
@@ -415,6 +415,7 @@ $(call READ_ALIASES,o,o,c_options)
 override c_type				?= $(TYPE_DEFAULT)
 override c_base				?= $(OUT_README)
 override c_list				?= $(c_base)$(COMPOSER_EXT)
+override c_lang				?= en-US
 override c_css_use			?= #> update: includes duplicates / COMPOSER_OPTIONS
 #>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override c_css				?=
@@ -814,44 +815,54 @@ override PANDOC_OPTIONS			:= $(strip \
 	\
 	--standalone \
 	--self-contained \
-	--variable="lang=en-US" \
 	--columns="$(COLUMNS)" \
 	\
-	$(if $(c_site),--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js") \
-	$(if $(c_site),--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css") \
-	--css="$(c_css_use)" \
-	\
-	--pdf-engine="$(PANDOC_TEX_PDF)" \
-	--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
-	--variable="header-includes=\\usepackage{longtable}\\setlength{\\LTleft}{1.5em}" \
-	--variable="header-includes=\\usepackage{listings}\\lstset{xleftmargin=1.5em}" \
-	--listings \
-	\
-	--variable="revealjs-url=$(REVEALJS_DIR)" \
-	\
-	$(if $(c_title),--title-prefix="$(c_title)") \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
 	--from="$(INPUT)$(PANDOC_EXTENSIONS)" \
 	--to="$(OUTPUT)" \
 	\
-	$(if $(c_toc),--table-of-contents) \
-	$(if $(c_toc),--number-sections) \
-	$(if $(c_toc),--toc-depth="$(c_toc)") \
+	$(if $(c_lang),\
+		--variable="lang=$(c_lang)" \
+	) \
+	$(if $(c_site),\
+		--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js" \
+		--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css" \
+	) \
+		--css="$(c_css_use)" \
 	\
-	$(if $(c_level),--section-divs) \
-	$(if $(c_level),--top-level-division=chapter) \
-	$(if $(c_level),--epub-chapter-level="$(c_level)") \
-	$(if $(c_level),--slide-level="$(c_level)") \
-	\
-	$(if $(c_font),--variable="fontsize=$(c_font)") \
-	\
+	$(if $(filter $(TYPE_LPDF),$(c_type)),\
+		--pdf-engine="$(PANDOC_TEX_PDF)" \
+		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
+		--variable="header-includes=\\usepackage{longtable}\\setlength{\\LTleft}{1.5em}" \
+		--variable="header-includes=\\usepackage{listings}\\lstset{xleftmargin=1.5em}" \
+		--listings \
+	) \
+	$(if $(filter $(TYPE_PRES),$(c_type)),\
+		--variable="revealjs-url=$(REVEALJS_DIR)" \
+	) \
+	$(if $(c_title),\
+		--title-prefix="$(c_title)" \
+	) \
+	$(if $(c_toc),\
+		--table-of-contents \
+		--number-sections \
+		--toc-depth="$(c_toc)" \
+	) \
+	$(if $(c_level),\
+		--section-divs \
+		--top-level-division=chapter \
+		--epub-chapter-level="$(c_level)" \
+		--slide-level="$(c_level)" \
+	) \
+	$(if $(c_font),\
+		--variable="fontsize=$(c_font)" \
+	) \
 	$(if $(c_margin)		,--variable="geometry=margin=$(c_margin)",\
 		$(if $(c_margin_top)	,--variable="geometry=top=$(c_margin_top)") \
 		$(if $(c_margin_bottom)	,--variable="geometry=bottom=$(c_margin_bottom)") \
 		$(if $(c_margin_left)	,--variable="geometry=left=$(c_margin_left)") \
 		$(if $(c_margin_right)	,--variable="geometry=right=$(c_margin_right)") \
 	) \
-	\
 	$(if $(c_options),$(c_options)) \
 	$(c_list) \
 )
@@ -1001,6 +1012,7 @@ override COMPOSER_EXPORTED := \
 	COMPOSER_STAMP \
 	COMPOSER_EXT \
 	c_type \
+	c_lang \
 	c_css \
 	c_title \
 	c_toc \
@@ -1332,6 +1344,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)c_type$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
 	@$(TABLE_M3) "$(_C)c_base$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
 	@$(TABLE_M3) "$(_C)c_list$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(c_list)"
+	@$(TABLE_M3) "$(_C)c_lang$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
 	@$(TABLE_M3) "$(_C)c_css$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(c_css)$(_D) )$(_N)($(COMPOSER_CSS))"
 	@$(TABLE_M3) "$(_C)c_title$(_D)   ~ $(_E)t"	"Document title prefix"			"$(_M)$(c_title)"
 	@$(TABLE_M3) "$(_C)c_toc$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
@@ -3072,6 +3085,7 @@ override $(HEADERS)-vars := \
 	c_type \
 	c_base \
 	c_list \
+	c_lang \
 	c_css_use \
 	c_css \
 	c_title \
