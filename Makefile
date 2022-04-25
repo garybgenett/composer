@@ -1408,9 +1408,9 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )$(_E)(makejobs)"
+	@$(TABLE_M3) "$(_C)MAKEJOBS"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )$(_N)(makejobs)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DOCOLOR"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )$(_N)(boolean)"
-	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )$(_E)(debugit)"
+	@$(TABLE_M3) "$(_C)COMPOSER_DEBUGIT"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )$(_N)(debugit)"
 	@$(TABLE_M3) "$(_C)COMPOSER_INCLUDE"	"Include all: \`$(_M)$(COMPOSER_SETTINGS)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: \`$(_C)$(DOITALL)\`"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
@@ -1422,8 +1422,8 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D)         ~ $(_E)c_jobs$(_D)  ~ $(_E)J$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~ $(_E)c_color$(_D) ~ $(_E)C$(_D)*"
 	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~ $(_E)c_debug$(_D) ~ $(_E)V$(_D)*"
-	@$(PRINT) "  * *$(_E)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
-	@$(PRINT) "  * *$(_E)(debugit)$(_D)  = empty value disables / any value enables / ! is full tracing*"
+	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
+	@$(PRINT) "  * *$(_N)(debugit)$(_D)  = empty value disables / any value enables / ! is full tracing*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty value disables / any value enables*"
 
 ########################################
@@ -1442,10 +1442,10 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_N)(default)"
+	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_E)(default)"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output $(_E)(identical, only colorized)$(_D)"
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see $(_C)[Formatting Variables]$(_N) in \`$(_C)$(HELPOUT)$(_N)\`)"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_E)(see $(_C)[Formatting Variables]$(_E) in \`$(_C)$(HELPOUT)$(_E)\`)"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"Recursively create $(_C)[Bootstrap]$(_D) website"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"Remove all \`$(_C)$(PUBLISH)$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
@@ -1467,8 +1467,8 @@ $(HELPOUT)-TARGETS_SPECIALS_%:
 	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)$(DO_BOOK)"				"Concatenate a source list into a single output file"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)"				"*$(_N)Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature$(_D)*"
-	@$(TABLE_M2) "$(_C)$(DO_POST)"				"*$(_N)Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature$(_D)*"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)"				"*$(_N)(Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature)$(_D)*"
+	@$(TABLE_M2) "$(_C)$(DO_POST)"				"*$(_N)(Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature)$(_D)*"
 	@$(ENDOLINE)
 	@$(PRINT) "For each of these base names, there are a standard set of actual targets:"
 	@$(ENDOLINE)
@@ -1504,15 +1504,15 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by \`$(_C)$(INSTALL)$(_D)\` $(_E)(see $(_C)[Templates]$(_E))"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by \`$(_C)$(EXAMPLE)$(_D)\` $(_E)(see $(_C)[Templates]$(_E))"
+	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING:NOW"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"Document creation engine $(_E)(backend to \`$(_C)$(COMPOSER_CREATE)$(_E)\`)"
 	@$(ENDOLINE)
 	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING"
 	@$(TABLE_M2) "$(_C)$(HEADERS)"				"#WORKING"
 	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"#WORKING"
 	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"#WORKING"
@@ -1583,23 +1583,26 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+	@$(call TITLE_LN,1,Templates)
+	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #WORKING:NOW
-#	@$(call TITLE_LN,1,Templates)
-#	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
 #			-e "s|^|\t|g" \
 #		)
-#	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
+#WORK
+	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
+#WORK
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
 #			-e "s|^|\t|g" \
 #		)
-	@$(RUNMAKE)		$(HELPOUT)-FOOTER
+#WORK
+	@$(RUNMAKE) $(HELPOUT)-FOOTER
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-TITLE -----
@@ -1934,8 +1937,8 @@ chapter in a separate file.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
 
-*$(_N)Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
-build website pages using $(_C)[Bootstrap]$(_N).$(_D)*
+*$(_N)(Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
+build website pages using $(_C)[Bootstrap]$(_N).)$(_D)*
 endef
 
 ########################################
