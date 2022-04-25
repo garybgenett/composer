@@ -1445,6 +1445,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_N)(default)"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output $(_E)(identical, only colorized)$(_D)"
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see $(_C)[Formatting Variables]$(_N) in \`$(_C)$(HELPOUT)$(_N)\`)"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"Recursively create $(_C)[Bootstrap]$(_D) website"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"Remove all \`$(_C)$(PUBLISH)$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
@@ -1483,38 +1484,35 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-#WORKING:NOW
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"Runs several key sub-targets and commands, to provide all helpful information in one place"
-	@$(TABLE_M2) "$(_C)$(TARGETS)"				"Parse for all potential targets (for verification and/or troubleshooting): \`$(_M)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(TESTING)"				"Build example/test directory using all features and test/validate success"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Download/update all 3rd party components (need to do this at least once)"
-	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
-	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"#WORKING"
-	@$(TABLE_M2) "$(_C)$(TESTING)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(TARGETS)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CONVICT)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"#WORKING"
-	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"#WORKING"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"#WORKING"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"Diagnostics, tests targets list in \`$(_C)COMPOSER_DEBUGIT$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"Export \`$(_C)$(DEBUGIT)$(_D)\` results to a plain text file"
+	@$(TABLE_M2) "$(_C)$(TESTING)"				"Test suite, validates all supported features"
+	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"Export \`$(_C)$(TESTING)$(_D)\` results to a plain text file"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"List system packages and versions $(_E)(see $(_C)[Requirements]$(_E))"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"Complete \`$(_C)$(CHECKIT)$(_D)\` package list, and system information"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"Show values of all $(_C)[Composer Variables]$(_D)"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"Complete \`$(_C)$(CONFIGS)$(_D)\`, including environment variables"
+	@$(TABLE_M2) "$(_C)$(TARGETS)"				"List all available targets for the current directory"
+	@$(TABLE_M2) "$(_C)$(CONVICT)"				"Time-stamped $(_M)[Git]$(_D) commit of the current directory tree"
+	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"Automatic \`$(_C)$(CONVICT)$(_D)\`, without \`$(_C)"'$$EDITOR'"$(_D)\` step"
+	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"Full upgrade to current release: \`$(_C)$(UPGRADE)-$(DOITALL)$(_D)\`, \`$(_C)$(CREATOR)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Update all included components $(_E)(see $(_C)[Requirements]$(_E))"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"Complete \`$(_C)$(UPGRADE)$(_D)\`, including binaries: $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_N)(see $(_C)[Formatting Variables]$(_D) in \`$(_C)$(HELPOUT)$(_N)\`)"
+	@$(ENDOLINE)
 	@$(PRINT) "#WORKING:NOW -------------------------------------------------------------------"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING"
+	@$(ENDOLINE)
+	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
+	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"#WORKING"
 	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"#WORKING"
 	@$(TABLE_M2) "$(_C)$(HEADERS)"				"#WORKING"
 	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"#WORKING"
 	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"#WORKING"
@@ -1580,12 +1578,12 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-#WORKING:NOW
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+#WORKING:NOW
 #	@$(call TITLE_LN,1,Templates)
 #	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
@@ -1646,6 +1644,11 @@ $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
 $(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
 $(_S)[MacPorts]: https://www.macports.org$(_D)
+$(_S)[Git]: https://git-scm.com$(_D)
+endef
+
+override define $(HELPOUT)-$(DOITALL)-SECTION =
+**$(_C)$(shell $(ECHO) "$(1)" | $(SED) -e "s|^([_])|\\\\\1|g" -e "s|([[:space:]])([_])|\1\\\\\2|g" | $(TR) 'a-z' 'A-Z')$(_D)**
 endef
 
 ########################################
@@ -1751,7 +1754,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
-$(_C)MAKEJOBS$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
 
   * By default, $(_C)[Composer]$(_D) progresses linearly, doing one task at a time.  If
     there are dependencies between items, this can be beneficial, since it
@@ -1768,7 +1771,7 @@ $(_C)MAKEJOBS$(_D)
     value of $(_M)6$(_D).  Higher values exhausted the system thread limit, multiplying to
     upwards of $(_M)~5k$(_D) threads.  With great power comes great responsibility.
 
-$(_C)COMPOSER_DOCOLOR$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
 
   * $(_C)[Composer]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
     The escape sequences used to accomplish this can create mixed results when
@@ -1776,13 +1779,16 @@ $(_C)COMPOSER_DOCOLOR$(_D)
   * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
     where plain text is required or desired.
 
-$(_C)COMPOSER_DEBUGIT$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
 
   * Provides more explicit details about what is happening at each step.
-    Produces a lot more output, and can be slower.
+    Produces a lot more output, and can be slower.  It will also be hard to read
+    unless `$(_C)MAKEJOBS$(_D)` is set to default.
   * Full tracing also displays $(_C)[GNU Make]$(_D) debugging output.
+  * *When doing `$(_C)$(DEBUGIT)$(_D)`, this is used to pass a list of targets to test $(_E)(see
+    $(_C)[Additional Targets]$(_E))$(_D).*
 
-$(_C)COMPOSER_INCLUDE$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
 
   * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)` tree, all the way
     back to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each
@@ -1816,7 +1822,7 @@ $(CODEBLOCK).../tld/$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK).../tld/sub/$(_M)$(MAKEFILE)$(_D)
 $(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
 
-$(_C)COMPOSER_DEPENDS$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 
   * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[Composer]$(_D) will process the current diretory before
     recursing into sub-directories.  This reverses that, and sub-directories
@@ -1827,7 +1833,7 @@ $(_C)COMPOSER_DEPENDS$(_D)
     will support that by doing them in reverse order, processing them from
     bottom to top.
 
-$(_C)COMPOSER_STAMP$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
 
   * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
     whenever it converts a $(_C)[Markdown]$(_D) file.  This provides some accounting, and
@@ -1836,7 +1842,7 @@ $(_C)COMPOSER_STAMP$(_D)
   * This setting can change the name of the timestamp files, or disable them
     completely.
 
-$(_C)COMPOSER_EXT$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
 
   * The $(_C)[Markdown]$(_D) file extension $(_C)[Composer]$(_D) uses: `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)`.  This is for
     auto-detection of files to add to `$(_C)COMPOSER_TARGETS$(_D)`, files to output for
@@ -1851,7 +1857,7 @@ $(_C)COMPOSER_EXT$(_D)
   * All files must share the same extension per-directory, but this value can be
     different between directories.
 
-$(_C)COMPOSER_TARGETS$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
   * The list of output files to create or delete with `$(_C)$(DOITALL)$(_D)` and `$(_C)$(CLEANER)$(_D)`.
     $(_C)[Composer]$(_D) does auto-detection and output using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`,
@@ -1861,14 +1867,14 @@ $(_C)COMPOSER_TARGETS$(_D)
     targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file.
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
-$(_C)COMPOSER_SUBDIRS$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
   * The list of sub-directories to recurse into with `$(_C)$(DOITALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
     `$(_C)$(INSTALL)$(_D)`, similar to `$(_C)COMPOSER_TARGETS$(_D)` above.  $(_C)[Composer]$(_D) does full
     auto-detection.  Hidden directories that start with `$(_M).$(_D)` are skipped.
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
-$(_C)COMPOSER_IGNORES$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
   * The list of `$(_C)COMPOSER_TARGETS$(_D)` and `$(_C)COMPOSER_SUBDIRS$(_D)` to skip with `$(_C)$(DOITALL)$(_D)`,
     `$(_C)$(CLEANER)$(_D)`, and `$(_C)$(INSTALL)$(_D)`.  This allows for selective auto-detection, when the
@@ -1913,6 +1919,8 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
+
 An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(same as the $(_C)[Quick Start]$(_E)
 example)$(_D):
 
@@ -1924,6 +1932,8 @@ purpose of this *$(_C)Special$(_D)* is to gather multiple source files in this m
 that larger works can be comprised of multple files, such as a $(DO_BOOK) with each
 chapter in a separate file.
 
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
+
 *$(_N)Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
 build website pages using $(_C)[Bootstrap]$(_N).$(_D)*
 endef
@@ -1932,6 +1942,39 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
+
+  * This is the tool to use for any support issues.  Submit the output file to:
+    $(_E)[composer@garybgenett.net]$(_D)
+  * Internally, it also runs:
+    * `$(_C)$(TESTING)$(_D)`
+    * `$(_C)$(CHECKIT)-$(DOITALL)$(_D)`
+    * `$(_C)$(CONFIGS)$(_D)`
+  * If issues are occuring when running a particular set of targets, list them
+    in `$(_C)COMPOSER_DEBUGIT$(_D)`.
+
+For example:
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(TARGETS) $(OUT_README).$(EXTENSION)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(TESTING))
+
+  * This is primarily intended for development purposes, and not general use.
+  * It is run as part of `$(_C)$(DEBUGIT)-file$(_D)`, which is more comprehensive, so that
+    target should be used instead.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
+
+  * Useful targets for validating tooling and configurations.
+  * Together, `$(_C)$(CONFIGS)$(_D)` and `$(_C)$(TARGETS)$(_D)` reveal the entire internal state of
+    $(_C)[Composer]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
+
+#WORKING:NOW -------------------------------------------------------------------
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
+
 #WORKING:NOW -------------------------------------------------------------------
 endef
 
