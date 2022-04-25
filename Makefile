@@ -27,57 +27,12 @@ override VIM_FOLDING := {{{1
 #		* Update: COMPOSER_VERSION
 ################################################################################
 #WORKING:NOW
-#	docs
-#		dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
-#			and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
-#			also, random note that extensions must match to get picked up
-#		document effects of $TOC and $LVL = test this first...
-#		css_alt
-#		COMPOSER_TARGETS / COMPOSER_SUBDIRS / COMPOSER_IGNORES auto-detection behavior
-#			will always auto-detect unless they are defined or COMPOSER_IGNORES or $(NOTHING)
-#			COMPOSER_SUBDIRS may pick up directories that override core recipies ('docs' and 'test')
-#				warning: overriding recipe for target 'pandoc'
-#				warning: ignoring old recipe for target 'pandoc'
-#			COMPOSER_IGNORES removes from both targets and subdirs
-#			also, there is *-$(CLEANER) target stripping
-#			DEFAULT_GOAL does not work = this is what COMPOSER_TARGETS is for
-#		document "*-clean"
-#			if COMPOSER_TARGETS is only *-clean entries, it is empty
-#			edge case: the '.null' file will never be deleted, even if it is a target
-#		somewhere: per-target variables = book-testing.html: export override TOC := 1
-#			$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
-#				README.%: override c_css := css_alt
-#				README.%: override c_toc := 6
-#				README.revealjs.html: override c_css :=
-#				README.revealjs.html: override c_toc :=
-#		COMPOSER_INCLUDE + orders of precedence
-#			variable aliases, order of precedence (now that it is fixed)
-#			global to local = COMPOSER_DIR + COMPOSER_SETTINGS
-#			COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
-#			COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
-#			using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
-#			using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_IGNORES is a commitment...
-#		COMPOSER_DEPENDS
-#			disables MAKEJOBS and is single-threaded
-#			ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
-#			dependencies using "parent: child" targets
-#		revealjs = artifacts/logo.img for logo
-#		requirements
-#			darwin also needs gmake, and the /opt/local/libexec/gnubin needs to be higher in $PATH
-#		custom targets
-#			do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
-#			do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
-#				meta: $(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
-#				individual: $(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
-#		COMPOSER_TARGETS / SUBDIRS = .null marker
-#		PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
-#			COMPOSER_SETTINGS only
-#			system version is a gamble, and version must match repository (_update)
-#		a brief note about filenames with spaces and symlinks...?
-#			symlink (e.g.../) in dependencies...?  if so, document!
-#	code
-#		document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
-#			COMPOSER_EXPORTED! = need to make a note for me?
+#	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
+#		COMPOSER_EXPORTED! = need to make a note for me?
+#		do this right here, along with other notes about how to work with the source...
+#	maybe a TODO list right here...?
+#		pull up the TODO items in PANDOC_OPTIONS...?
+#		yeah, move all remaining #WORK markers up here...
 #WORKING : site
 #	site
 #		post = comments ability through *-comments-$(date) files
@@ -1533,6 +1488,9 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+#WORKING:NOW
+		$(RUNMAKE) $(HELPOUT)-OPERATION
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
@@ -1684,9 +1642,71 @@ validate your system.
 endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
+#WORKING:NOW
+#	darwin also needs gmake, and the /opt/local/libexec/gnubin needs to be higher in $PATH
+
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appropriate
 `$(_M)manifest.$(_N)*$(_M).json$(_D)` file for your browser to install.
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-OPERATION
+
+override define $(HELPOUT)-$(DOITALL)-OPERATION =
+
+@$(call TITLE_LN,2,#WORKING:NOW,0)
+#WORKING:NOW
+#	dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
+#		and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
+#		also, random note that extensions must match to get picked up
+#WORKING:NOW
+#	document effects of $TOC and $LVL = test this first...
+#WORKING:NOW
+#	a brief note about filenames with spaces and symlinks...?
+#		symlink (e.g.../) in dependencies...?  if so, document!
+
+@$(call TITLE_LN,2, Reveal.js Presentations ,0)
+#WORKING:NOW
+#	revealjs = artifacts/logo.img for logo
+
+@$(call TITLE_LN,2,#WORKING:NOW $(COMPOSER_SETTINGS) ,0)
+#WORKING:NOW
+#	somewhere: per-target variables = book-testing.html: export override TOC := 1
+#		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
+#			README.%: override c_css := css_alt
+#			README.%: override c_toc := 6
+#			README.revealjs.html: override c_css :=
+#			README.revealjs.html: override c_toc :=
+
+@$(call TITLE_LN,2,#WORKING:NOW Precedence Orders ,0)
+#WORKING:NOW
+#	COMPOSER_INCLUDE + orders of precedence
+#		variable aliases, order of precedence (now that it is fixed)
+#		global to local = COMPOSER_DIR + COMPOSER_SETTINGS
+#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
+#		COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
+#		using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
+#		using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_IGNORES is a commitment...
+#	dependencies using "parent: child" targets... here or somewhere else...?
+
+@$(call TITLE_LN,2,#WORKING:NOW Custom Targets ,0)
+#WORKING:NOW
+#	custom targets
+#		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
+#		do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
+#			meta: $(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
+#			individual: $(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
+#	document "*-clean"
+#		if COMPOSER_TARGETS is only *-clean entries, it is empty
+#		edge case: the '.null' file will never be deleted, even if it is a target
+
+@$(call TITLE_LN,2,#WORKING:NOW Repository Versions ,0)
+#WORKING:NOW
+#	PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
+#		COMPOSER_SETTINGS only
+#		system version is a gamble, and version must match repository (_update)
+#	add a note in $(_C)[Requirements]$(_D)
 endef
 
 ########################################
@@ -1797,6 +1817,11 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
     will support that by doing them in reverse order, processing them from
     bottom to top.
 
+#WORKING:NOW
+#	COMPOSER_DEPENDS
+#		disables MAKEJOBS and is single-threaded
+#		ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
 
   * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
@@ -1830,6 +1855,13 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
   * Setting this manually disables auto-detection.  It can also include non-file
     targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file.
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
+
+#WORKING:NOW
+#	COMPOSER_TARGETS / COMPOSER_SUBDIRS / COMPOSER_IGNORES auto-detection behavior
+#		will always auto-detect unless they are defined or COMPOSER_IGNORES or $(NOTHING)
+#		also, there is *-$(CLEANER) target stripping
+#		DEFAULT_GOAL does not work = this is what COMPOSER_TARGETS is for
+#	COMPOSER_TARGETS / SUBDIRS = .null marker
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
