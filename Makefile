@@ -1082,19 +1082,23 @@ override COMPOSER_EXPORTED_NOT := \
 	COMPOSER_IGNORES \
 	c_base \
 	c_list \
+
+override COMPOSER_EXPORTED_NULL := \
 	c_css_use \
 
 #> update: $(MAKE) / @+
 #>override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
 #>override RUNMAKE			:= $(RUNMAKE) $(MAKE_OPTIONS)
-$(foreach FILE,$(COMPOSER_EXPORTED),$(eval export $(FILE)))
-$(foreach FILE,$(COMPOSER_EXPORTED_NOT),$(eval unexport $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED)		,$(eval export $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED_NOT)		,$(eval unexport $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED_NULL)	,$(eval unexport $(FILE)))
 
 override COMPOSER_OPTIONS		:= $(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER))
 $(foreach FILE,$(COMPOSER_OPTIONS),\
 	$(if $(or \
 		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
-		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) \
+		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) ,\
+		$(filter $(FILE),$(COMPOSER_EXPORTED_NULL)) \
 		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE)) \
 	) \
 )
