@@ -26,6 +26,18 @@ override VIM_FOLDING := {{{1
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
+#WORKING:NOW $(INSTALL) test case?
+#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
+#	make -f ../Makefile install-force	= Creating.+$(call $(TESTING)-pwd)/$(MAKEFILE)
+#	make -f ../Makefile install-all		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	make -f ../Makefile install		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
+#	make install-force			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
+#WORKING:NOW
+#	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
+#	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
 #WORKING:NOW
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
@@ -33,7 +45,40 @@ override VIM_FOLDING := {{{1
 #	maybe a TODO list right here...?
 #		pull up the TODO items in PANDOC_OPTIONS...?
 #		yeah, move all remaining #WORK markers up here...
-#WORKING : site
+#WORK TODO
+#	--defaults = switch to this, in a heredoc that goes to artifacts
+#		maybe add additional ones, like COMPOSER_INCLUDE
+#	turn "lang" into a LANG variable, just above TYPE
+#WORK TODO
+#	--title-prefix="$(TTL)" = replace with full title option...?
+#	--resource-path = something like COMPOSER_CSS?
+#	--strip-comments
+#	--eol=lf
+#	site:
+#		--include-before-body
+#		--include-after-body
+#WORK TODO
+#	man pandoc = pandoc -o custom-reference.docx --print-default-data-file reference.docx
+#	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
+#	--from "docx" --track-changes="all"
+#	--from "docx|epub" --extract-media="[...]"
+#WORK TODO
+#	--default-image-extension="png"?
+#	--highlight-style="kate"?
+#	--incremental?
+#WORK TODO
+#	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
+#	--email-obfuscation="[...]"
+#	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
+#WORK TODO
+#	add a way to add additional arguments, like: --variable=fontsize=28pt
+#		--variable="fontsize=[...]"
+#		--variable="theme=[...]"
+#		--variable="transition=[...]"
+#		--variable="links-as-notes=[...]"
+#		--variable="lof=[...]"
+#		--variable="lot=[...]"
+#WORK : site
 #	site
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
@@ -56,7 +101,6 @@ override VIM_FOLDING := {{{1
 #		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
 #		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
 #		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
-#WORK
 ################################################################################
 # }}}1
 ################################################################################
@@ -137,6 +181,11 @@ override COMPOSER_INCLUDES_LIST		:=
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 override define READ_ALIASES =
+	$(if $(COMPOSER_DEBUGIT_ALL),\
+		$(info #> ALIAS				[$(1)|$($(1))|$(origin $($(1)))]); \
+		$(info #> ALIAS				[$(2)|$($(2))|$(origin $($(2)))]); \
+		$(info #> ALIAS				[$(3)|$($(3))|$(origin $($(3)))]); \
+	)
 	$(if $(filter undefined,$(origin $(3))),\
 		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1))); $(eval override undefine $(1))); \
 		$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2))); $(eval override undefine $(2))); \
@@ -163,14 +212,14 @@ override TOKEN				:= ~
 ########################################
 
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE			[$(CURDIR)/$(COMPOSER_SETTINGS)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE				[$(CURDIR)/$(COMPOSER_SETTINGS)]))
 #>include $(CURDIR)/$(COMPOSER_SETTINGS)
 $(foreach FILE,\
 	$(shell \
 		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
 		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
 	),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE			[$(subst $(TOKEN), ,$(FILE))])) \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE				[$(subst $(TOKEN), ,$(FILE))])) \
 	$(eval $(subst $(TOKEN), ,$(FILE))) \
 )
 endif
@@ -189,7 +238,7 @@ else
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST			[$(MAKEFILE_LIST)]))
 $(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
 	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)); \
 )
@@ -198,9 +247,9 @@ override COMPOSER_INCLUDES		:=
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUDES_LIST)]))
 
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD			[$(FILE)])); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD				[$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE			[$(FILE)])); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE				[$(FILE)])); \
 		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))); \
 		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)); \
 		$(eval include $(FILE)); \
@@ -218,14 +267,14 @@ override c_css_use			:= $(c_css)
 endif
 ifeq ($(c_css_use),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS			[$(FILE)])); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS				[$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS			[$(FILE)])); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS				[$(FILE)])); \
 		$(eval override c_css_use := $(FILE)); \
 	) \
 )
 endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE			[$(c_css_use)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE				[$(c_css_use)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
@@ -356,6 +405,10 @@ $(call READ_ALIASES,c,c,c_toc)
 $(call READ_ALIASES,l,l,c_level)
 $(call READ_ALIASES,f,f,c_font)
 $(call READ_ALIASES,m,m,c_margin)
+$(call READ_ALIASES,mt,mt,c_margin_top)
+$(call READ_ALIASES,mb,mb,c_margin_bottom)
+$(call READ_ALIASES,ml,ml,c_margin_left)
+$(call READ_ALIASES,mr,mr,c_margin_right)
 $(call READ_ALIASES,o,o,c_options)
 
 #> update: $(HEADERS)-vars
@@ -370,6 +423,10 @@ override c_toc				?=
 override c_level			?= 2
 override c_font				?= 10pt
 override c_margin			?= 0.8in
+override c_margin_top			?=
+override c_margin_bottom		?=
+override c_margin_left			?=
+override c_margin_right			?=
 override c_options			?=
 
 ################################################################################
@@ -751,41 +808,6 @@ endif
 ########################################
 # {{{2 Command -------------------------
 
-#WORK TODO
-#	--defaults = switch to this, in a heredoc that goes to artifacts
-#		maybe add additional ones, like COMPOSER_INCLUDE
-#	turn "lang" into a LANG variable, just above TYPE
-#WORK TODO
-#	--title-prefix="$(TTL)" = replace with full title option...?
-#	--resource-path = something like COMPOSER_CSS?
-#	--strip-comments
-#	--eol=lf
-#	site:
-#		--include-before-body
-#		--include-after-body
-#WORK TODO
-#	man pandoc = pandoc -o custom-reference.docx --print-default-data-file reference.docx
-#	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
-#	--from "docx" --track-changes="all"
-#	--from "docx|epub" --extract-media="[...]"
-#WORK TODO
-#	--default-image-extension="png"?
-#	--highlight-style="kate"?
-#	--incremental?
-#WORK TODO
-#	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
-#	--email-obfuscation="[...]"
-#	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
-#WORK TODO
-#	add a way to add additional arguments, like: --variable=fontsize=28pt
-#		--variable="fontsize=[...]"
-#		--variable="theme=[...]"
-#		--variable="transition=[...]"
-#		--variable="links-as-notes=[...]"
-#		--variable="lof=[...]"
-#		--variable="lot=[...]"
-#WORK TODO
-
 override PANDOC_EXTENSIONS		:= +smart
 override PANDOC_OPTIONS			:= $(strip \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
@@ -801,11 +823,13 @@ override PANDOC_OPTIONS			:= $(strip \
 	\
 	--pdf-engine="$(PANDOC_TEX_PDF)" \
 	--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
+	--variable="header-includes=\\usepackage{longtable}\\setlength{\\LTleft}{1.5em}" \
+	--variable="header-includes=\\usepackage{listings}\\lstset{xleftmargin=1.5em}" \
 	--listings \
 	\
 	--variable="revealjs-url=$(REVEALJS_DIR)" \
 	\
-	--title-prefix="$(c_title)" \
+	$(if $(c_title),--title-prefix="$(c_title)") \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
 	--from="$(INPUT)$(PANDOC_EXTENSIONS)" \
 	--to="$(OUTPUT)" \
@@ -819,18 +843,18 @@ override PANDOC_OPTIONS			:= $(strip \
 	$(if $(c_level),--epub-chapter-level="$(c_level)") \
 	$(if $(c_level),--slide-level="$(c_level)") \
 	\
-	--variable="fontsize=$(c_font)" \
-	--variable="geometry=margin=$(c_margin)" \
+	$(if $(c_font),--variable="fontsize=$(c_font)") \
 	\
-	$(c_options) \
+	$(if $(c_margin)		,--variable="geometry=margin=$(c_margin)",\
+		$(if $(c_margin_top)	,--variable="geometry=top=$(c_margin_top)") \
+		$(if $(c_margin_bottom)	,--variable="geometry=bottom=$(c_margin_bottom)") \
+		$(if $(c_margin_left)	,--variable="geometry=left=$(c_margin_left)") \
+		$(if $(c_margin_right)	,--variable="geometry=right=$(c_margin_right)") \
+	) \
+	\
+	$(if $(c_options),$(c_options)) \
 	$(c_list) \
 )
-
-#WORK TODO
-#>	--variable="geometry=top=$(c_margin)" \
-#>	--variable="geometry=bottom=$(c_margin)" \
-#>	--variable="geometry=left=$(c_margin)" \
-#>	--variable="geometry=right=$(c_margin)" \
 
 ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
 override PANDOC_OPTIONS			:= --template="$(COMPOSER_ART)/reference.$(EXTENSION)" $(PANDOC_OPTIONS)
@@ -983,6 +1007,10 @@ override COMPOSER_EXPORTED := \
 	c_level \
 	c_font \
 	c_margin \
+	c_margin_top \
+	c_margin_bottom \
+	c_margin_left \
+	c_margin_right \
 	c_options \
 
 override COMPOSER_EXPORTED_NOT := \
@@ -1002,7 +1030,10 @@ $(foreach FILE,$(COMPOSER_EXPORTED)		,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_EXPORTED_NOT)		,$(eval unexport $(FILE)))
 $(foreach FILE,$(COMPOSER_EXPORTED_NULL)	,$(eval unexport $(FILE)))
 
-override COMPOSER_OPTIONS		:= $(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER))
+override COMPOSER_OPTIONS		:= \
+	$(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER) \
+	| $(SED) $(if $(c_margin),"/^c_margin_.+$$/d","/^c_margin$$/d") \
+)
 $(foreach FILE,$(COMPOSER_OPTIONS),\
 	$(if $(or \
 		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
@@ -1010,6 +1041,13 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(filter $(FILE),$(COMPOSER_EXPORTED_NULL)) \
 		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE)) \
 	) \
+)
+
+$(if $(COMPOSER_DEBUGIT_ALL),\
+	$(info #> COMPOSER_EXPORTED		[$(strip $(COMPOSER_EXPORTED))]); \
+	$(info #> COMPOSER_EXPORTED_NOT	[$(strip $(COMPOSER_EXPORTED_NOT))]); \
+	$(info #> COMPOSER_EXPORTED_NULL	[$(strip $(COMPOSER_EXPORTED_NULL))]); \
+	$(info #> COMPOSER_OPTIONS		[$(strip $(COMPOSER_OPTIONS))]); \
 )
 
 ########################################
@@ -1358,7 +1396,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_E)(default)"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output $(_E)(identical, only colorized)$(_D)"
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation $(_E)(see $(_C)[Formatting Variables]$(_E) in \`$(_C)$(HELPOUT)$(_E)\`)"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation engine $(_E)(see $(_C)[Formatting Variables]$(_E))"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"Recursively create $(_C)[Bootstrap]$(_D) website"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"Remove all \`$(_C)$(PUBLISH)$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
@@ -1488,9 +1526,9 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
 #WORKING:NOW
-		$(RUNMAKE) $(HELPOUT)-OPERATION
+#	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+#		@$(RUNMAKE) $(HELPOUT)-OPERATION
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
@@ -1695,8 +1733,8 @@ override define $(HELPOUT)-$(DOITALL)-OPERATION =
 #	custom targets
 #		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
 #		do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
-#			meta: $(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
-#			individual: $(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
+#			meta: \$(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
+#			individual: \$(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
 #	document "*-clean"
 #		if COMPOSER_TARGETS is only *-clean entries, it is empty
 #		edge case: the '.null' file will never be deleted, even if it is a target
@@ -1732,6 +1770,12 @@ $(CODEBLOCK)$(CODEBLOCK)$(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_R
 
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
+
+#WORKING:NOW
+#>	--variable="geometry=top=$(c_margin)"
+#>	--variable="geometry=bottom=$(c_margin)"
+#>	--variable="geometry=left=$(c_margin)"
+#>	--variable="geometry=right=$(c_margin)"
 endef
 
 ########################################
@@ -3034,7 +3078,21 @@ override $(HEADERS)-vars := \
 	c_toc \
 	c_level \
 	c_font \
-	c_margin \
+	$(if $(c_margin),c_margin,\
+		$(if $(or \
+			$(c_margin_top), \
+			$(c_margin_bottom), \
+			$(c_margin_left), \
+			$(c_margin_right) \
+		),\
+			c_margin_top \
+			c_margin_bottom \
+			c_margin_left \
+			c_margin_right \
+		,\
+			c_margin \
+		) \
+	) \
 	c_options
 endif
 
@@ -4315,16 +4373,6 @@ $(PUBLISH)-$(CLEANER):
 ########################################
 # {{{2 $(INSTALL) ----------------------
 
-#WORKING:NOW test case?
-#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
-#	make -f ../Makefile install-force	= Creating.+$(call $(TESTING)-pwd)/$(MAKEFILE)
-#	make -f ../Makefile install-all		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	make -f ../Makefile install		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
-#	make install-force			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-
 #> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)
@@ -4605,10 +4653,6 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 ########################################
 # {{{2 SPECIALS ------------------------
-
-#WORKING:NOW
-#	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
-#	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
 
 #> update: TYPE_TARGETS
 
