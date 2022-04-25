@@ -42,14 +42,11 @@ override VIM_FOLDING := {{{1
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
 #		do this right here, along with other notes about how to work with the source...
-#	maybe a TODO list right here...?
-#		pull up the TODO items in PANDOC_OPTIONS...?
-#		yeah, move all remaining #WORK markers up here...
-#WORK TODO
+#TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
 #		maybe add additional ones, like COMPOSER_INCLUDE
 #	turn "lang" into a LANG variable, just above TYPE
-#WORK TODO
+#TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
 #	--strip-comments
@@ -57,20 +54,20 @@ override VIM_FOLDING := {{{1
 #	site:
 #		--include-before-body
 #		--include-after-body
-#WORK TODO
+#TODO
 #	man pandoc = pandoc -o custom-reference.docx --print-default-data-file reference.docx
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
-#WORK TODO
+#TODO
 #	--default-image-extension="png"?
 #	--highlight-style="kate"?
 #	--incremental?
-#WORK TODO
+#TODO
 #	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
 #	--email-obfuscation="[...]"
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
-#WORK TODO
+#TODO
 #	add a way to add additional arguments, like: --variable=fontsize=28pt
 #		--variable="fontsize=[...]"
 #		--variable="theme=[...]"
@@ -78,7 +75,7 @@ override VIM_FOLDING := {{{1
 #		--variable="links-as-notes=[...]"
 #		--variable="lof=[...]"
 #		--variable="lot=[...]"
-#WORK : site
+#TODO : bootstrap!
 #	site
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
@@ -114,6 +111,9 @@ override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
 override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
+
+override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME) Content Make System
+override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
 
 ########################################
 
@@ -867,7 +867,7 @@ override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
 # {{{1 Bootstrap Options -------------------------------------------------------
 ################################################################################
 
-#WORK bootstrap!
+#TODO : bootstrap!
 
 # override SITE_SOURCE			?= $(COMPOSER_ROOT)
 # override SITE_OUTPUT			?= $(COMPOSER_ROOT)/_site
@@ -1562,7 +1562,7 @@ $(HELPOUT)-%:
 # {{{3 $(HELPOUT)-$(DOITALL)-TITLE -----
 
 override define $(HELPOUT)-$(DOITALL)-TITLE =
-$(_M)% $(COMPOSER_TECHNAME): Content Make System$(_D)
+$(_M)% $(COMPOSER_HEADLINE)$(_D)
 $(_M)% $(COMPOSER_COMPOSER)$(_D)
 $(_M)% $(COMPOSER_VERSION) ($(DATEMARK))$(_D)
 endef
@@ -2254,7 +2254,7 @@ endef
 ################################################################################
 
 override define HEREDOC_DISTRIB_LICENSE =
-# $(COMPOSER_TECHNAME) License
+# $(COMPOSER_LICENSE)
 
 --------------------------------------------------------------------------------
 
@@ -3643,8 +3643,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
-#WORKING turn these into variables with the readme/license work... also fix *-count checks below
-	@$(SED) -n "/$(COMPOSER_TECHNAME) License/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+	@$(SED) -n "/$(COMPOSER_LICENSE)/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
@@ -3653,7 +3652,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME) License)
+	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -4030,12 +4029,11 @@ $(TESTING)-other-init:
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
-#WORKING turn these into variables with the readme/license work... also fix *-count checks below
 ifeq ($(OS_TYPE),Linux)
 	@$(LESS_BIN) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
 		| $(SED) -n \
-			-e "/$(COMPOSER_TECHNAME): Content Make System/p" \
-			-e "/$(COMPOSER_TECHNAME) License/p" \
+			-e "/$(COMPOSER_HEADLINE)/p" \
+			-e "/$(COMPOSER_LICENSE)/p" \
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
@@ -4069,8 +4067,8 @@ $(TESTING)-other-done:
 	fi
 	#> book
 ifeq ($(OS_TYPE),Linux)
-	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME): Content Make System)
-	$(call $(TESTING)-count,1,$(COMPOSER_TECHNAME) License)
+	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
+	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
@@ -4270,7 +4268,7 @@ endef
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORKING override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+#WORKING:NOW override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
 override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
 
 #> update: PHONY.*$(DOITALL)
