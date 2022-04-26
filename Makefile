@@ -1178,11 +1178,19 @@ override COMPOSER_TARGETS		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSI
 endif
 endif
 
-#> update: $(CLEANER)-$(TARGETS)
+#> update: $(TARGETS)-$(CLEANER)
 ifneq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(CLEANER)-$(TARGETS)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
+endif
+endif
+
+#> update: $(TARGETS)-$(DOITALL)
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(DOITALL)
 endif
 endif
 
@@ -1413,7 +1421,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)$(HELPOUT)"				"Basic $(HELPOUT) overview $(_E)(default)"
 	@$(TABLE_M2) "$(_C)$(HELPOUT)-$(DOITALL)"		"Complete \`$(_M)$(OUT_README)$(_D)\` output $(_E)(identical, only colorized)$(_D)"
 	@$(TABLE_M2) "$(_C)$(EXAMPLE)"				"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation engine $(_E)(see $(_C)[Formatting Variables]$(_E))"
+	@$(TABLE_M2) "$(_C)$(COMPOSER_CREATE)"			"Document creation engine $(_E)(see [Formatting Variables])"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)"				"Recursively create $(_C)[Bootstrap]$(_D) website"
 	@$(TABLE_M2) "$(_C)$(PUBLISH)-$(CLEANER)"		"Remove all \`$(_C)$(PUBLISH)$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)$(INSTALL)"				"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
@@ -1456,7 +1464,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"Export \`$(_C)$(DEBUGIT)$(_D)\` results to a plain text file"
 	@$(TABLE_M2) "$(_C)$(TESTING)"				"Test suite, validates all supported features"
 	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"Export \`$(_C)$(TESTING)$(_D)\` results to a plain text file"
-	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"List system packages and versions $(_E)(see $(_C)[Requirements]$(_E))"
+	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"List system packages and versions $(_E)(see [Requirements])"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"Complete \`$(_C)$(CHECKIT)$(_D)\` package list, and system information"
 	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"Show values of all $(_C)[Composer Variables]$(_D)"
 	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"Complete \`$(_C)$(CONFIGS)$(_D)\`, including environment variables"
@@ -1464,7 +1472,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(CONVICT)"				"Time-stamped $(_M)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"Automatic \`$(_C)$(CONVICT)$(_D)\`, without \`$(_C)"'$$EDITOR'"$(_D)\` step"
 	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"Full upgrade to current release: \`$(_C)$(UPGRADE)-$(DOITALL)$(_D)\`, \`$(_C)$(CREATOR)$(_D)\`"
-	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Update all included components $(_E)(see $(_C)[Requirements]$(_E))"
+	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Update all included components $(_E)(see [Requirements])"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"Complete \`$(_C)$(UPGRADE)$(_D)\`, including binaries: $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
@@ -1472,8 +1480,8 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by \`$(_C)$(INSTALL)$(_D)\` $(_E)(see $(_C)[Templates]$(_E))"
-	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by \`$(_C)$(EXAMPLE)$(_D)\` $(_E)(see $(_C)[Templates]$(_E))"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)-$(INSTALL)"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by \`$(_C)$(INSTALL)$(_D)\` $(_E)(see [Templates])"
+	@$(TABLE_M2) "$(_C).$(EXAMPLE)"				"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by \`$(_C)$(EXAMPLE)$(_D)\` $(_E)(see [Templates])"
 	@$(TABLE_M2) "$(_C)$(CREATOR)"				"#WORKING:NOW"
 	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"Document creation engine $(_E)(backend to \`$(_C)$(COMPOSER_CREATE)$(_E)\`)"
 	@$(ENDOLINE)
@@ -1524,7 +1532,7 @@ $(HELPOUT)-EXAMPLES_%:
 # {{{2 $(HELPOUT)-$(DOITALL) -----------
 
 #> update: PHONY.*$(DOITALL)
-#>$(eval override COMPOSER_DOITALL_$(HELPOUT) ?=)
+#>$(eval export override COMPOSER_DOITALL_$(HELPOUT) ?=)
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
 #>	@$(RUNMAKE) COMPOSER_DOITALL_$(HELPOUT)="$(*)" $(HELPOUT)
@@ -1550,14 +1558,14 @@ $(HELPOUT)-%:
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
-	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
-	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
+#WORK	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+#WORK	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+#WORK	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+#WORK	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+#WORK	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
+#WORK	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
+#WORK	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+#	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
 #	@$(call TITLE_LN,1,Templates)
 #	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
@@ -1785,7 +1793,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
     unless `$(_C)MAKEJOBS$(_D)` is set to default.
   * Full tracing also displays $(_C)[GNU Make]$(_D) debugging output.
   * *When doing `$(_C)$(DEBUGIT)$(_D)`, this is used to pass a list of targets to test $(_E)(see
-    $(_C)[Additional Targets]$(_E))$(_D).*
+    [Additional Targets])$(_D).*
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
 
@@ -1803,7 +1811,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     level for each directory tree.  Not only does it allow for strict version
     control of $(_C)[Composer]$(_D) per-directory, it provides a mechanism for setting
     $(_C)[Control Variables]$(_D) globally.
-  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(_C)$(EXAMPLE)$(_E)`)$(_D) when using
+  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
     this option.  In that case, they will be propagated down the tree.  This may
     be desired in some cases, but it will require that each directory set these
     manually, which could require a lot of maintenance.
@@ -1831,11 +1839,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
     directories have dependencies on the sub-directories being run first, this
     will support that by doing them in reverse order, processing them from
     bottom to top.
-
-#WORKING:NOW -------------------------------------------------------------------
-#	COMPOSER_DEPENDS
-#		disables MAKEJOBS and is single-threaded
-#		ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
+  * It should be noted that enabling this disables `$(_C)MAKEJOBS$(_D)`, to ensure linear
+    processing, and that it has no effect on `$(_C)$(INSTALL)$(_D)` or `$(_C)$(CLEANER)$(_D)`.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
 
@@ -1863,32 +1868,30 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
-  * The list of output files to create or delete with `$(_C)$(DOITALL)$(_D)` and `$(_C)$(CLEANER)$(_D)`.
-    $(_C)[Composer]$(_D) does auto-detection and output using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`,
-    so this does not usually need to be set.  Hidden files that start with `$(_M).$(_D)`
-    are skipped.
+  * The list of output files to create or delete with `$(_C)$(CLEANER)$(_D)` and `$(_C)$(DOITALL)$(_D)`.
+    $(_C)[Composer]$(_D) does auto-detection using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`, so this
+    does not usually need to be set.  Hidden files that start with `$(_M).$(_D)` are
+    skipped.
   * Setting this manually disables auto-detection.  It can also include non-file
-    targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file.
+    targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see [Custom Targets])$(_D).
+  * The `$(_C)$(NOTHING)$(_D)` target is special, and when used as a value for
+    `$(_C)COMPOSER_TARGETS$(_D)` or `$(_C)COMPOSER_SUBDIRS$(_D)` it will display a message and
+    do nothing.  A side-effect of this target is that an actual file or directory
+    named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[Composer]$(_D).
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
-
-#WORKING:NOW -------------------------------------------------------------------
-#	COMPOSER_TARGETS / COMPOSER_SUBDIRS / COMPOSER_IGNORES auto-detection behavior
-#		will always auto-detect unless they are defined or COMPOSER_IGNORES or $(NOTHING)
-#		also, there is *-$(CLEANER) target stripping
-#		DEFAULT_GOAL does not work = this is what COMPOSER_TARGETS is for
-#	COMPOSER_TARGETS / SUBDIRS = .null marker
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
-  * The list of sub-directories to recurse into with `$(_C)$(DOITALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
-    `$(_C)$(INSTALL)$(_D)`, similar to `$(_C)COMPOSER_TARGETS$(_D)` above.  $(_C)[Composer]$(_D) does full
-    auto-detection.  Hidden directories that start with `$(_M).$(_D)` are skipped.
+  * The list of sub-directories to recurse into with `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
+    `$(_C)$(DOITALL)$(_D)`.  The behavior and configuration is identical to `$(_C)COMPOSER_TARGETS$(_D)`
+    above, including full auto-detection.  Hidden directories that start with `$(_M).$(_D)`
+    are skipped.
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
-  * The list of `$(_C)COMPOSER_TARGETS$(_D)` and `$(_C)COMPOSER_SUBDIRS$(_D)` to skip with `$(_C)$(DOITALL)$(_D)`,
-    `$(_C)$(CLEANER)$(_D)`, and `$(_C)$(INSTALL)$(_D)`.  This allows for selective auto-detection, when the
+  * The list of `$(_C)COMPOSER_TARGETS$(_D)` and `$(_C)COMPOSER_SUBDIRS$(_D)` to skip with `$(_C)$(INSTALL)$(_D)`,
+    `$(_C)$(CLEANER)$(_D)`, and `$(_C)$(DOITALL)$(_D)`.  This allows for selective auto-detection, when the
     list of items to process is larger than those to leave alone.
   * Use `$(_C)$(CONFIGS)$(_D)` to check the current value.
 endef
@@ -1897,6 +1900,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
+#WORKING:NOW : this section needs some work... ---------------------------------
 The ideal workflow is to put $(_C)[Composer]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory you want to manage, creating a tree similar to this:
 
@@ -1912,16 +1916,18 @@ Start]$(_E) example)$(_D):
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
 
+#WORKING:NOW merge/move these to $(_C)[Configuration Settings]$(_D) or $(_C)[Custom Targets]$(_D)
 If specific settings need to be used, either globally or per-directory,
-`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see `$(_C)COMPOSER_INCLUDE$(_E)` in $(_C)[Control
-Variables]$(_E) for details)$(_D):
+`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see `COMPOSER_INCLUDE` in [Control
+Variables] for details)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
 
+#WORKING:NOW : this is in $(_C)[Custom Targets]$(_D) below... ------------------
 Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax.  Naming
 them as `$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective
-targets.
+targets $(_E)(see [Custom Targets])$(_D).
 
 Another best practice is to do `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[Composer]$(_D) upgrade.
 endef
@@ -1963,7 +1969,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
     * `$(_C)$(CONFIGS)$(_D)`
   * If issues are occuring when running a particular set of targets, list them
     in `$(_C)COMPOSER_DEBUGIT$(_D)`.
-  * For general issues, run in the top-level directory $(_E)(see `$(_C)$(CONVICT)$(_E)` below)$(_D).
+  * For general issues, run in the top-level directory $(_E)(see `$(CONVICT)` below)$(_D).
     For specific issues, run in the directory where the issue is occurring.
 
 For example:
@@ -2056,22 +2062,22 @@ override define $(HELPOUT)-$(DOITALL)-ORDER =
 #		using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
 #		using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_IGNORES is a commitment...
 #	dependencies using "parent: child" targets... here or somewhere else...?
+#		$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates
 endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM ----
 
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
-#WORKING:NOW -------------------------------------------------------------------
-custom targets
+If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
+[Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
+`$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective targets.
 
-do not start with (these are special/hidden and skipped by detection):
+There are a few limitations when naming custom targets.  Targets starting with
+the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
 
-$(CODEBLOCK)$(COMPOSER_REGEX_PREFIX)
-
-do not to use (or as prefixes [:-]):
-
-reserved:
+Additionally, the following are reserved, including anything that has a suffix
+`$(_C)-$(_N)*$(_D)` to them:
 
 $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter .%,$(sort $(COMPOSER_RESERVED))))
 $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter _%,$(sort $(COMPOSER_RESERVED))))
@@ -2085,9 +2091,13 @@ $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),10,\
 	) \
 )))
 
-document "*-clean"
-	if COMPOSER_TARGETS is only *-clean entries, it is empty
-	edge case: the '.null' file will never be deleted, even if it is a target
+Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main $(_C)[Composer]$(_D)
+`$(_M)$(MAKEFILE)$(_D)`, so matching targets will be overridden.  In those cases, $(_C)[GNU Make]$(_D)
+will produce warning messages.
+
+A final note is that `$(_N)*$(_C)-$(CLEANER)$(_D)` and `$(_N)*$(_C)-$(DOITALL)$(_D)` targets are stripped from
+`$(_C)COMPOSER_TARGETS$(_D)`.  In those cases, there will be a message and no actions will
+be taken.
 endef
 
 ########################################
@@ -2164,7 +2174,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#WORKING:NOW
+#WORKING
 #	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_PRES)
@@ -3201,9 +3211,9 @@ override $(HEADERS)-release = $(1)
 endif
 
 .PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): override export COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): override export $(HEADERS)-list := $(COMPOSER_OPTIONS)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): override export $(HEADERS)-vars := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-vars := $(COMPOSER_OPTIONS)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): $(HEADERS)-$(EXAMPLE)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL):
 	@$(ECHO) ""
@@ -3357,7 +3367,8 @@ $(LISTING):
 
 
 #> grep -E "[$][(]NOTHING[)][-]" Makefile
-#> update: $(CLEANER)-$(TARGETS)
+#> update: $(TARGETS)-$(CLEANER)
+#> update: $(TARGETS)-$(DOITALL)
 override NOTHING_IGNORES := \
 	$(INSTALL)-$(SUBDIRS) \
 	$(CLEANER)-$(SUBDIRS) \
@@ -3366,7 +3377,8 @@ override NOTHING_IGNORES := \
 
 #>	COMPOSER_STAMP \
 #>	COMPOSER_EXT \
-#>	$(CLEANER)-$(TARGETS) \
+#>	$(TARGETS)-$(CLEANER) \
+#>	$(TARGETS)-$(DOITALL) \
 #>	$(HEADERS) \
 #>	$(NOTHING)-$(INSTALL)-$(SUBDIRS) \
 #>	$(NOTHING)-$(CLEANER)-$(SUBDIRS) \
@@ -3403,7 +3415,7 @@ endif
 #	$(TARGETS)
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(DEBUGIT) ?=)
+$(eval export override COMPOSER_DOITALL_$(DEBUGIT) ?=)
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 $(DEBUGIT)-file: export override COMPOSER_DOITALL_$(DEBUGIT) := file
@@ -3490,7 +3502,7 @@ $(DEBUGIT)-%:
 # {{{2 $(TESTING) ----------------------
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(TESTING) ?=)
+$(eval export override COMPOSER_DOITALL_$(TESTING) ?=)
 .PHONY: $(TESTING)-file
 $(TESTING)-file: export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 $(TESTING)-file: export override COMPOSER_DOITALL_$(TESTING) := file
@@ -3538,6 +3550,7 @@ $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
+$(TESTING): $(TESTING)-COMPOSER_IGNORES
 $(TESTING): $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING): $(TESTING)-CSS
 $(TESTING): $(TESTING)-other
@@ -3894,7 +3907,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
 		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' behavior ,\
 		\n\t * Creation and deletion of files \
 		\n\t * Missing '$(_C)$(MAKEFILE)$(_D)' detection \
-		\n\t * Proper execution of '$(_N)*$(_C)-$(CLEANER)$(_D)' targets \
+		\n\t * Proper execution of '$(_N)*$(_C)-$(DOITALL)$(_D)' and '$(_N)*$(_C)-$(CLEANER)$(_D)' targets \
 	)
 	@$(call $(TESTING)-load)
 	@$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
@@ -3904,14 +3917,19 @@ $(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(DOITALL)\n$(TESTING)-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(DOITALL)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(DOITALL)" $(DOITALL)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 
-#> update: $(CLEANER)-$(TARGETS)
+#> update: $(TARGETS)-$(CLEANER)
+#> update: $(TARGETS)-$(DOITALL)
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Creating.+changelog.html)
@@ -3921,7 +3939,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))[^\/].+$(COMPOSER_STAMP_DEFAULT))
 	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))\/doc[^\/].+$(COMPOSER_STAMP_DEFAULT))
 	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
-	$(call $(TESTING)-count,1,$(CLEANER)-$(TARGETS))
+	$(call $(TESTING)-count,1,$(TARGETS)-$(CLEANER))
+	$(call $(TESTING)-count,1,$(TARGETS)-$(DOITALL))
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 
 ########################################
@@ -3987,8 +4006,7 @@ $(TESTING)-COMPOSER_DEPENDS: $(TESTING)-Think
 		\n\t * Disable '$(_C)MAKEJOBS$(_D)' threading \
 		\n\t * Reverse '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' processing \
 		\n\t * Manual '$(_C)$(DOITALL)-$(DOITALL)$(_D)' dependencies $(_E)('templates' before 'docx')$(_D) \
-		\n\t * Manual '$(_C)$(DOITALL)$(_D)' dependencies $(_E)('$(OUT_LICENSE).$(EXTN_DEFAULT)' before '$(OUT_README).$(EXTN_DEFAULT)')$(_D) \
-		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' \
+		\n\t * Manual '$(_C)$(DOITALL)$(_D)' dependencies $(_E)('$(OUT_README).$(EXTN_DEFAULT)' before '$(OUT_LICENSE).$(EXTN_DEFAULT)')$(_D) \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -3996,33 +4014,51 @@ $(TESTING)-COMPOSER_DEPENDS: $(TESTING)-Think
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-init
 $(TESTING)-COMPOSER_DEPENDS-init:
-	@$(RM) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_EXT_DEFAULT)
 	@$(RM) $(call $(TESTING)-pwd)/data/*.$(EXTN_DEFAULT)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data MAKEJOBS="0" $(CONFIGS) | $(SED) -n "/MAKEJOBS/p"
-	@$(ECHO) "docx: templates\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_MANUAL).$(EXTN_DEFAULT) artifacts\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_TARGETS/p"
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS) | $(SED) -n "/COMPOSER_SUBDIRS/p"
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data MAKEJOBS="0" $(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="0" --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
+	@$(call $(TESTING)-run) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
-	$(call $(TESTING)-count,1,MAKEJOBS.+1)
-	$(call $(TESTING)-find,Directory.+$(notdir $(call $(TESTING)-pwd))\/data)
-	$(call $(TESTING)-find,Creating.+$(notdir $(call $(TESTING)-pwd))\/data)
+	$(call $(TESTING)-count,1,MAKEJOBS.+ 1 )
+	$(call $(TESTING)-find,$(notdir $(call $(TESTING)-pwd))\/data)
+	@$(call $(TESTING)-hold)
+
+########################################
+# {{{3 $(TESTING)-COMPOSER_IGNORES -----
+
+.PHONY: $(TESTING)-COMPOSER_IGNORES
+$(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
+	@$(call $(TESTING)-$(HEADERS),\
+		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
+		\n\t * Verify selected '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D) are skipped \
+	)
+	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+.PHONY: $(TESTING)-COMPOSER_IGNORES-init
+$(TESTING)-COMPOSER_IGNORES-init:
+	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_EXT_DEFAULT)
+	@$(RM) $(call $(TESTING)-pwd)/data/*.$(EXTN_DEFAULT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_MANUAL).$(EXTN_DEFAULT) artifacts\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(DOITALL)
+
+.PHONY: $(TESTING)-COMPOSER_IGNORES-done
+$(TESTING)-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT),,1)
 	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_MANUAL).$(EXTN_DEFAULT),,1)
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts,,1)
-	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_STAMP)$(COMPOSER_EXT)
@@ -4215,7 +4251,7 @@ endif
 
 #> update: PHONY.*$(DOITALL)
 #> update: PHONY.*$(DOFORCE)
-$(eval override COMPOSER_DOITALL_$(CHECKIT) ?=)
+$(eval export override COMPOSER_DOITALL_$(CHECKIT) ?=)
 .PHONY: $(CHECKIT)-%
 $(CHECKIT)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CHECKIT)="$(*)" $(CHECKIT)
@@ -4301,7 +4337,7 @@ endif
 #> update: COMPOSER_OPTIONS
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(CONFIGS) ?=)
+$(eval export override COMPOSER_DOITALL_$(CONFIGS) ?=)
 .PHONY: $(CONFIGS)-%
 $(CONFIGS)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CONFIGS)="$(*)" $(CONFIGS)
@@ -4366,11 +4402,11 @@ endef
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORKING:NOW override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+#WORKING override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
 override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(CONVICT) ?=)
+$(eval export override COMPOSER_DOITALL_$(CONVICT) ?=)
 .PHONY: $(CONVICT)-%
 $(CONVICT)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CONVICT)="$(*)" $(CONVICT)
@@ -4408,7 +4444,7 @@ $(DISTRIB): .set_title-$(DISTRIB)
 #> update: PHONY.*(UPGRADE)
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(UPGRADE) ?=)
+$(eval export override COMPOSER_DOITALL_$(UPGRADE) ?=)
 .PHONY: $(UPGRADE)-%
 $(UPGRADE)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(UPGRADE)="$(*)" $(UPGRADE)
@@ -4473,7 +4509,7 @@ $(PUBLISH)-$(CLEANER):
 
 #> update: PHONY.*$(DOITALL)
 #> update: PHONY.*$(DOFORCE)
-$(eval override COMPOSER_DOITALL_$(INSTALL) ?=)
+$(eval export override COMPOSER_DOITALL_$(INSTALL) ?=)
 .PHONY: $(INSTALL)-%
 $(INSTALL)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(INSTALL)="$(*)" $(INSTALL)
@@ -4542,7 +4578,7 @@ endef
 #> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(CLEANER) ?=)
+$(eval export override COMPOSER_DOITALL_$(CLEANER) ?=)
 .PHONY: $(CLEANER)-%
 $(CLEANER)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CLEANER)="$(*)" $(CLEANER)
@@ -4577,7 +4613,7 @@ endif
 #> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)
-$(eval override COMPOSER_DOITALL_$(DOITALL) ?=)
+$(eval export override COMPOSER_DOITALL_$(DOITALL) ?=)
 .PHONY: $(DOITALL)-%
 $(DOITALL)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(DOITALL)="$(*)" $(DOITALL)
