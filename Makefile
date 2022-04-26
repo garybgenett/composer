@@ -119,6 +119,8 @@ override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
 override COLUMNS			:= 80
 override HEAD_MAIN			:= 1
 
+########################################
+
 override COMPOSER_SETTINGS		:= .composer.mk
 override COMPOSER_CSS			:= .composer.css
 override COMPOSER_STAMP_DEFAULT		:= .composed
@@ -147,6 +149,10 @@ endif
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
+
+override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
+override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
+override REVEALJS_LOGO			:= $(COMPOSER_ART)/logo.img
 
 ########################################
 
@@ -543,7 +549,6 @@ override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
 #>override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
-override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
 ########################################
 
@@ -833,8 +838,7 @@ override PANDOC_OPTIONS			:= $(strip \
 	$(if $(filter $(TYPE_LPDF),$(c_type)),\
 		--pdf-engine="$(PANDOC_TEX_PDF)" \
 		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
-		--variable="header-includes=\\usepackage{longtable}\\setlength{\\LTleft}{1.5em}" \
-		--variable="header-includes=\\usepackage{listings}\\lstset{xleftmargin=1.5em}" \
+		--include-in-header="$(TEX_PDF_TEMPLATE)" \
 		--listings \
 	) \
 	$(if $(filter $(TYPE_PRES),$(c_type)),\
@@ -1531,44 +1535,44 @@ $(HELPOUT)-%:
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
-	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-	@$(call TITLE_LN,2,Quick Start,0)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
-		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
-		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-	@$(call TITLE_LN,2,Principles,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+#WORKING:NOW -------------------------------------------------------------------
+#	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+#	@$(call TITLE_LN,2,Quick Start,0)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+#		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
+#		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
+#	@$(call TITLE_LN,2,Principles,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-#WORKING:NOW
-#	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
-#		@$(RUNMAKE) $(HELPOUT)-OPERATION
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
+#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-	@$(call TITLE_LN,1,Templates)
-	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
-#WORKING:NOW
+	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
+	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
+	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
+#	@$(call TITLE_LN,1,Templates)
+#	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
 #			-e "s|^|\t|g" \
 #		)
-#WORK
-	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
-#WORK
+#	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
 #			-e "s|^|\t|g" \
 #		)
-#WORK
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
 
 ########################################
@@ -1622,6 +1626,19 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-SECTION =
 **$(_C)$(shell $(ECHO) "$(1)" | $(SED) -e "s|^([_])|\\\\\1|g" -e "s|([[:space:]])([_])|\1\\\\\2|g" | $(TR) 'a-z' 'A-Z')$(_D)**
+endef
+
+override define $(HELPOUT)-SPLIT-LINE =
+$(1)$(subst $(TOKEN), ,$(subst $(NULL) ,$(NEWLINE)$(1),$(strip \
+	$(eval LINE :=) \
+	$(foreach FILE,$(3),\
+		$(eval LINE += $(FILE)) \
+		$(if $(word $(2),$(LINE)),$(subst $(NULL) ,$(TOKEN),$(strip $(LINE))) \
+			$(eval LINE :=) \
+		) \
+	)
+	$(if $(LINE),$(subst $(NULL) ,$(TOKEN),$(strip $(LINE)))) \
+)))
 endef
 
 ########################################
@@ -1693,71 +1710,12 @@ validate your system.
 endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
-#WORKING:NOW
+#WORKING:NOW -------------------------------------------------------------------
 #	darwin also needs gmake, and the /opt/local/libexec/gnubin needs to be higher in $PATH
 
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appropriate
 `$(_M)manifest.$(_N)*$(_M).json$(_D)` file for your browser to install.
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-OPERATION
-
-override define $(HELPOUT)-$(DOITALL)-OPERATION =
-
-@$(call TITLE_LN,2,#WORKING:NOW,0)
-#WORKING:NOW
-#	dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
-#		and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
-#		also, random note that extensions must match to get picked up
-#WORKING:NOW
-#	document effects of $TOC and $LVL = test this first...
-#WORKING:NOW
-#	a brief note about filenames with spaces and symlinks...?
-#		symlink (e.g.../) in dependencies...?  if so, document!
-
-@$(call TITLE_LN,2, Reveal.js Presentations ,0)
-#WORKING:NOW
-#	revealjs = artifacts/logo.img for logo
-
-@$(call TITLE_LN,2,#WORKING:NOW $(COMPOSER_SETTINGS) ,0)
-#WORKING:NOW
-#	somewhere: per-target variables = book-testing.html: export override TOC := 1
-#		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
-#			README.%: override c_css := css_alt
-#			README.%: override c_toc := 6
-#			README.revealjs.html: override c_css :=
-#			README.revealjs.html: override c_toc :=
-
-@$(call TITLE_LN,2,#WORKING:NOW Precedence Orders ,0)
-#WORKING:NOW
-#	COMPOSER_INCLUDE + orders of precedence
-#		variable aliases, order of precedence (now that it is fixed)
-#		global to local = COMPOSER_DIR + COMPOSER_SETTINGS
-#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
-#		COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
-#		using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
-#		using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_IGNORES is a commitment...
-#	dependencies using "parent: child" targets... here or somewhere else...?
-
-@$(call TITLE_LN,2,#WORKING:NOW Custom Targets ,0)
-#WORKING:NOW
-#	custom targets
-#		do not start with $(COMPOSER_REGEX_PREFIX) = these are special/hidden and skipped by detection
-#		do not to use $(COMPOSER_RESERVED) or $(COMPOSER_RESERVED_SPECIAL) names (or as prefixes [:-])
-#			meta: \$(info $(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)))
-#			individual: \$(info $(addsuffix -,$(COMPOSER_RESERVED_SPECIAL)))
-#	document "*-clean"
-#		if COMPOSER_TARGETS is only *-clean entries, it is empty
-#		edge case: the '.null' file will never be deleted, even if it is a target
-
-@$(call TITLE_LN,2,#WORKING:NOW Repository Versions ,0)
-#WORKING:NOW
-#	PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
-#		COMPOSER_SETTINGS only
-#		system version is a gamble, and version must match repository (_update)
-#	add a note in $(_C)[Requirements]$(_D)
 endef
 
 ########################################
@@ -1784,7 +1742,7 @@ $(CODEBLOCK)$(CODEBLOCK)$(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_R
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
 
-#WORKING:NOW
+#WORKING:NOW -------------------------------------------------------------------
 #>	--variable="geometry=top=$(c_margin)"
 #>	--variable="geometry=bottom=$(c_margin)"
 #>	--variable="geometry=left=$(c_margin)"
@@ -1874,7 +1832,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
     will support that by doing them in reverse order, processing them from
     bottom to top.
 
-#WORKING:NOW
+#WORKING:NOW -------------------------------------------------------------------
 #	COMPOSER_DEPENDS
 #		disables MAKEJOBS and is single-threaded
 #		ordering only applies to $DOITALL = $INSTALL and $CLEANER always go top-down
@@ -1913,7 +1871,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
     targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file.
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
-#WORKING:NOW
+#WORKING:NOW -------------------------------------------------------------------
 #	COMPOSER_TARGETS / COMPOSER_SUBDIRS / COMPOSER_IGNORES auto-detection behavior
 #		will always auto-detect unless they are defined or COMPOSER_IGNORES or $(NOTHING)
 #		also, there is *-$(CLEANER) target stripping
@@ -2058,6 +2016,110 @@ documented for completeness.)$(_D)*
 endef
 
 ########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-OPERATION -
+
+override define $(HELPOUT)-$(DOITALL)-OPERATION =
+#WORKING:NOW -------------------------------------------------------------------
+#	dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
+#		and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
+#		also, random note that extensions must match to get picked up
+#WORKING:NOW -------------------------------------------------------------------
+#	document effects of $TOC and $LVL = test this first...
+#WORKING:NOW -------------------------------------------------------------------
+#	a brief note about filenames with spaces and symlinks...?
+#		symlink (e.g.../) in dependencies...?  if so, document!
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS --
+
+override define $(HELPOUT)-$(DOITALL)-SETTINGS =
+#WORKING:NOW -------------------------------------------------------------------
+#	somewhere: per-target variables = book-testing.html: export override TOC := 1
+#		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
+#			README.%: override c_css := css_alt
+#			README.%: override c_toc := 6
+#			README.revealjs.html: override c_css :=
+#			README.revealjs.html: override c_toc :=
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-ORDER -----
+
+override define $(HELPOUT)-$(DOITALL)-ORDER =
+#WORKING:NOW -------------------------------------------------------------------
+#	COMPOSER_INCLUDE + orders of precedence
+#		variable aliases, order of precedence (now that it is fixed)
+#		global to local = COMPOSER_DIR + COMPOSER_SETTINGS
+#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
+#		COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
+#		using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
+#		using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_IGNORES is a commitment...
+#	dependencies using "parent: child" targets... here or somewhere else...?
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM ----
+
+override define $(HELPOUT)-$(DOITALL)-CUSTOM =
+#WORKING:NOW -------------------------------------------------------------------
+custom targets
+
+do not start with (these are special/hidden and skipped by detection):
+
+$(CODEBLOCK)$(COMPOSER_REGEX_PREFIX)
+
+do not to use (or as prefixes [:-]):
+
+reserved:
+
+$(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter .%,$(sort $(COMPOSER_RESERVED))))
+$(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter _%,$(sort $(COMPOSER_RESERVED))))
+$(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),10,\
+	$(filter-out .%,\
+	$(filter-out _%,\
+	$(sort \
+		$(COMPOSER_RESERVED) \
+		$(COMPOSER_RESERVED_SPECIAL) \
+		$(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)) \
+	) \
+)))
+
+document "*-clean"
+	if COMPOSER_TARGETS is only *-clean entries, it is empty
+	edge case: the '.null' file will never be deleted, even if it is a target
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-VERSIONS --
+
+override define $(HELPOUT)-$(DOITALL)-VERSIONS =
+#WORKING:NOW -------------------------------------------------------------------
+#	PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
+#		COMPOSER_SETTINGS only
+#		system version is a gamble, and version must match repository (_update)
+#	add a note in $(_C)[Requirements]$(_D)
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-PRESENT ---
+
+override define $(HELPOUT)-$(DOITALL)-PRESENT =
+The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to create a more useful
+and visually appealing end result.  The customized template is at:
+
+	$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_CSS))$(_D)
+
+It is set up so that a logo can be placed in the upper right hand corner on each
+slide, for presentations that need to be branded.  Simply place an image file in
+the logo location:
+
+	$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
+
+This will apply to all presentations created with that instance of $(_C)[Composer]$(_D).
+endef
+
+########################################
 # {{{2 $(CREATOR) ----------------------
 
 .PHONY: $(CREATOR)
@@ -2076,7 +2138,9 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
-	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
+	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))))
+	@$(call DO_HEREDOC,HEREDOC_DISTRIB_TEX_PDF_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 	@$(LS) \
@@ -2098,13 +2162,13 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
-	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORKING:NOW
 #	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_PRES)
-	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/logo.img
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_CSS) \
@@ -2210,6 +2274,26 @@ $(subst $(COMPOSER_DIR),,$(COMPOSER_PKG))/
 endef
 
 ################################################################################
+# {{{1 Heredoc: pdf_latex ------------------------------------------------------
+################################################################################
+
+override define HEREDOC_DISTRIB_TEX_PDF_TEMPLATE =
+% ##############################################################################
+% $(COMPOSER_TECHNAME)
+% ##############################################################################
+
+\usepackage{longtable}
+\setlength{\LTleft}{1.5em}
+
+\usepackage{listings}
+\lstset{xleftmargin=1.5em}
+
+% ##############################################################################
+% End Of File
+% ##############################################################################
+endef
+
+################################################################################
 # {{{1 Heredoc: revealjs_css ---------------------------------------------------
 ################################################################################
 
@@ -2223,7 +2307,7 @@ override define HEREDOC_DISTRIB_REVEALJS_CSS =
 /* ########################################################################## */
 
 .reveal .slides {
-	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_ART)/logo.img)");
+	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_LOGO))");
 	background-repeat:		no-repeat;
 	background-position:		100% 0%;
 	background-size:		auto 20%;
@@ -4481,7 +4565,7 @@ endif
 			$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
 			$(RM) $(CURDIR)/$(FILE) >/dev/null; \
 		fi; \
-		$(NEWLINE) \
+		$(call NEWLINE) \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@+$(MAKE) $(MAKE_OPTIONS) $(CLEANER)-$(SUBDIRS)
