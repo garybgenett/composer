@@ -1554,9 +1554,9 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
 #	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
 #	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
@@ -1892,7 +1892,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
-#WORKING:NOW -------------------------------------------------------------------
+See $(_C)[Quick Start]$(_D) and $(_C)[Composer Operation]$(_D) for usage and typical workflow.
 endef
 
 ########################################
@@ -1972,8 +1972,19 @@ $(CODEBLOCK)[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
 
-#WORKING:NOW -------------------------------------------------------------------
+  * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
+    and install all external components.
+  * In addition to doing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, `$(_C)$(DISTRIB)$(_D)` performs the steps necessary
+    steps to turn the current directory into a complete clone of $(_C)[Composer]$(_D).
+  * If `$(_C)rsync$(_D)` is installed, `$(_C)$(DISTRIB)$(_D)` can be used to rapidly replicate
+    $(_C)[Composer]$(_D), like below.
+  * One of the unique features of $(_C)[Composer]$(_D) is that everything needed to
+    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
 
+Rapid cloning $(_E)(requires `rsync`)$(_D):
+
+$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../$(MAKEFILE)$(_D) $(_M)$(DISTRIB)
 endef
 
 ########################################
@@ -3770,16 +3781,13 @@ $(TESTING)-$(DISTRIB): $(TESTING)-Think
 		Install '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' using '$(_C)$(DISTRIB)$(_D)' ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 	)
-	@if [ -d "$(COMPOSER_PKG)" ]; then \
-		$(MKDIR) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(notdir $(COMPOSER_PKG)); \
-		$(RSYNC) $(COMPOSER_PKG)/ $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(notdir $(COMPOSER_PKG)); \
-	fi
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
-	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
+#>	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
+	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) --makefile $(COMPOSER) $(DISTRIB)
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
@@ -4425,10 +4433,17 @@ $(DISTRIB): .set_title-$(DISTRIB)
 	@$(call $(HEADERS))
 	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
 		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
+		if [ -d "$(COMPOSER_PKG)" ]; then \
+			$(MKDIR) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_PKG)); \
+			$(RSYNC) $(COMPOSER_PKG)/ $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_PKG)); \
+		fi; \
 	fi
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
-	@$(RUNMAKE) $(UPGRADE)-$(DOITALL)
-	@$(RUNMAKE) $(CREATOR)
+#>	@$(RUNMAKE) $(UPGRADE)-$(DOITALL)
+#>	@$(RUNMAKE) $(CREATOR)
+	@$(REALMAKE) --directory $(CURDIR) $(UPGRADE)-$(DOITALL)
+	@$(REALMAKE) --directory $(CURDIR) $(CREATOR)
+	@$(LS) $(CURDIR)
 
 ########################################
 # {{{2 $(UPGRADE) ----------------------
