@@ -1557,9 +1557,9 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
-#	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-#	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
+#WORK	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+#WORK	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
 #	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 #	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 #	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
@@ -1705,9 +1705,9 @@ minimal command-line environment based on $(_M)[GNU]$(_D) tools, which is standa
 $(_M)[GNU/Linux]$(_D) systems.  The $(_M)[Windows Subsystem for Linux]$(_D) for Windows and
 $(_M)[MacPorts]$(_D) for macOS both provide suitable environments.
 
-$(_E)([MacPorts] does not install [GNU Make] by default.  The package name is
+*$(_E)([MacPorts] does not install [GNU Make] by default.  The package name is
 `gmake`, and it requires a modification to the `$$PATH` in order to be called as
-just `$(DOMAKE)`.)$(_D)
+just `$(DOMAKE)`.)*$(_D)
 
 The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
@@ -1722,6 +1722,9 @@ override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appropriate
 `$(_M)manifest.$(_N)*$(_M).json$(_D)` file for your browser to install.
+
+The versions of the integrated repositories can be changed as desired $(_E)(see
+[Repository Versions])$(_D).
 endef
 
 ########################################
@@ -1921,6 +1924,8 @@ endef
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
 
+#> update: $(DEBUGIT): targets list
+
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
 
@@ -1929,7 +1934,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
   * Internally, it also runs:
     * `$(_C)$(TESTING)$(_D)`
     * `$(_C)$(CHECKIT)-$(DOITALL)$(_D)`
-    * `$(_C)$(CONFIGS)$(_D)`
+    * `$(_C)$(CONFIGS)-$(DOITALL)$(_D)`
+    * `$(_C)$(TARGETS)$(_D)`
   * If issues are occuring when running a particular set of targets, list them
     in `$(_C)COMPOSER_DEBUGIT$(_D)`.
   * For general issues, run in the top-level directory $(_E)(see `$(CONVICT)` below)$(_D).
@@ -2106,12 +2112,30 @@ endef
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-VERSIONS --
 
+#> update: PHONY.*(UPGRADE)
+
 override define $(HELPOUT)-$(DOITALL)-VERSIONS =
-#WORKING:NOW -------------------------------------------------------------------
-#	PANDOC_CMT / REVEALJS_CMT / MDVIEWER_CMT
-#		COMPOSER_SETTINGS only
-#		system version is a gamble, and version must match repository (_update)
-#	add a note in $(_C)[Requirements]$(_D)
+There are a few internal variables used by `$(_C)$(UPGRADE)$(_D)` to select the repository
+and binary versions of integrated components $(_E)(see [Requirements])$(_D).  These are
+exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
+
+  * `$(_C)PANDOC_VER$(_D)` $(_E)(must be a binary version number)$(_D)
+  * `$(_C)PANDOC_CMT$(_D)` $(_E)(defaults to `PANDOC_VER`)$(_D)
+  * `$(_C)YQ_VER$(_D)` $(_E)(must be a binary version number)$(_D)
+  * `$(_C)YQ_CMT$(_D)` $(_E)(defaults to `YQ_VER`)$(_D)
+  * `$(_C)BOOTSTRAP_CMT$(_D)`
+  * `$(_C)MDVIEWER_CMT$(_D)`
+  * `$(_C)REVEALJS_CMT$(_D)`
+
+Binaries for `$(_C)[Pandoc]$(_D)` and `$(_C)[YQ]$(_D)` are installed in their respective
+directories.  By moving or removing them, or changing the version number and
+foregoing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, the system version will be used instead.  This will
+work as long the commit versions match, so that `$(_C)[Pandoc]$(_D)` supporting files are
+in alignment.
+
+It is possible that changing the versions will introduce incompatibilities with
+$(_C)[Composer]$(_D), which are usually impacts to the prettification of output files
+when they do occur.
 endef
 
 ########################################
@@ -2141,9 +2165,6 @@ ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 endif
 $(CREATOR): .set_title-$(CREATOR)
 	@$(call $(HEADERS))
-ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
-endif
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)					>$(CURDIR)/.gitignore
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)					>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
@@ -2156,12 +2177,12 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_TEX_PDF_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
-	@$(LS) \
-		$(CURDIR)/.gitignore \
-		$(CURDIR)/*$(COMPOSER_EXT_DEFAULT) \
-		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART)) \
-		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(LS) $(CURDIR)
+	@$(ENDOLINE)
+	@$(LS) --recursive $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 ifneq ($(COMPOSER_RELEASE),)
+	@$(ENDOLINE)
+	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_css := css_alt\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_toc := 6\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
