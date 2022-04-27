@@ -18,7 +18,7 @@ override VIM_FOLDING := {{{1
 #		* `mv Composer-*.log artifacts/`
 #	* Publish
 #		* Update: README.md (#WORKING release notes?)
-#			#WORKING
+#			#WORKING $(HELPOUT)-$(DOITALL) output review
 #				output should be reviewed during testing... maybe output some notes in $(TESTING)...? == release checklist
 #				ensure all output fits within 80 characters
 #				do a mouse-select of all text, to ensure proper color handling
@@ -35,10 +35,10 @@ override VIM_FOLDING := {{{1
 #	make install-force			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 #	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 #	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#WORKING:NOW
+#WORKING:NOW COMPOSER_EXT and SPECIALS test cases
 #	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
 #	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
-#WORKING:NOW
+#WORKING:NOW document COMPOSER_DOITALL_* and +$(MAKE)
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
 #		do this right here, along with other notes about how to work with the source...
@@ -1540,7 +1540,7 @@ $(HELPOUT)-%:
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
-#WORKING:NOW -------------------------------------------------------------------
+#WORKING:NOW
 	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
 	@$(call TITLE_LN,2,Quick Start,0)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
@@ -1549,8 +1549,8 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
-	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+#	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+#	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
 #	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
 #	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 #	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
@@ -1560,7 +1560,7 @@ $(HELPOUT)-%:
 #	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 #	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
-#WORK	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
@@ -1732,9 +1732,8 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-OPERATION -
 
 override define $(HELPOUT)-$(DOITALL)-OPERATION =
-#WORKING:NOW : this section needs some work... ---------------------------------
 The ideal workflow is to put $(_C)[Composer]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
-directory you want to manage, creating a tree similar to this:
+directory tree you want to manage, creating a structure similar to this:
 
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_N)*$(_D)
@@ -1742,34 +1741,34 @@ $(CODEBLOCK).../
 $(CODEBLOCK).../tld/
 $(CODEBLOCK).../tld/sub/
 
-Then, it can be converted to a $(_C)[Composer]$(_D) working directory $(_E)(same as the $(_C)[Quick
-Start]$(_E) example)$(_D):
+Then, it can be converted to a $(_C)[Composer]$(_D) documentation archive $(_E)(same as the
+[Quick Start] example)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
 
-#WORKING:NOW merge/move these to $(_C)[Configuration Settings]$(_D) or $(_C)[Custom Targets]$(_D)
 If specific settings need to be used, either globally or per-directory,
-`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see `COMPOSER_INCLUDE` in [Control
-Variables])$(_D):
+`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see [Configuration Settings])$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
 
-#WORKING:NOW : this is in $(_C)[Custom Targets]$(_D) below... ------------------
-Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax.  Naming
-them as `$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective
-targets $(_E)(see [Custom Targets])$(_D).
+Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax $(_E)(see
+[Custom Targets])$(_D).
 
-Another best practice is to do `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[Composer]$(_D) upgrade.
-#WORKING:NOW -------------------------------------------------------------------
-#	dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
-#		and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
-#WORKING:NOW -------------------------------------------------------------------
-#	document effects of $TOC and $LVL = test this first...
-#WORKING:NOW -------------------------------------------------------------------
-#	a brief note about filenames with spaces and symlinks...?
-#		symlink (e.g.../) in dependencies...?  if so, document!
+$(_C)[GNU Make]$(_D) does not support file and directory names with spaces in them, and
+neither does $(_C)[Composer]$(_D).  Documentation archives which have such files or
+directories will produce unexpected results.
+
+It is fully supported for input files to be symbolic links to files that reside
+outside the documentation archive.  Using the directory structure example above:
+
+$(CODEBLOCK)$(_C)cd$(_D) $(_M).../tld$(_D)
+$(CODEBLOCK)$(_C)ln$(_D) $(_N)-s ../../$(c_base)$(COMPOSER_EXT) $(_M)./$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
+
+Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[Composer]$(_D) upgrade,
+in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template.
 endef
 
 ########################################
@@ -1780,6 +1779,11 @@ $(_C)[Composer]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent 
 $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
 `COMPOSER_INCLUDE` in [Control Variables])$(_D).  This means that the values in the
 most local file override all others.
+
+The easiest way to create a new `$(_M)$(COMPOSER_SETTINGS)$(_D)` is with the `$(_C)$(EXAMPLE)$(_D)` target:
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
 
 All variable definitions must be in the `$(_N)override [variable] := [value]$(_D)` format
 from `$(_C)$(EXAMPLE)$(_D)`.  Doing otherwise will result in unexpected behavior, and is not
@@ -2094,6 +2098,11 @@ endef
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
 #WORKING:NOW : more...? --------------------------------------------------------
 See $(_C)[Quick Start]$(_D) and $(_C)[Composer Operation]$(_D) for usage and typical workflow.
+#WORKING:NOW -------------------------------------------------------------------
+#	dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
+#		and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
+#WORKING:NOW -------------------------------------------------------------------
+#	document effects of $TOC and $LVL = test this first...
 endef
 
 ########################################
@@ -2241,8 +2250,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#WORKING
-#	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+#WORK	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_PRES)
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
@@ -4466,7 +4474,7 @@ endef
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORKING override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+#WORK override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
 override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
 
 #> update: PHONY.*$(DOITALL)
