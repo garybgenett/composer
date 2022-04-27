@@ -47,7 +47,7 @@ override VIM_FOLDING := {{{1
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
 #		do this right here, along with other notes about how to work with the source...
-#WORKING:NOW epub and css!?  make a good decision...
+#WORKING:NOW epub and css!?  make a good decision...  update c_css documentation...
 #TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
 #		maybe add additional ones, like COMPOSER_INCLUDE
@@ -1879,8 +1879,8 @@ Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main 
 will produce warning messages.
 
 A final note is that `$(_N)*$(_C)-$(CLEANER)$(_D)` and `$(_N)*$(_C)-$(DOITALL)$(_D)` targets are stripped from
-`$(_C)COMPOSER_TARGETS$(_D)`.  In those cases, there will be a message and no actions will
-be taken.
+`$(_C)COMPOSER_TARGETS$(_D)`.  In cases where this results in an empty `$(_C)COMPOSER_TARGETS$(_D)`,
+there will be a message and no actions will be taken.
 endef
 
 ########################################
@@ -1901,11 +1901,11 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)MDVIEWER_CMT$(_D)`
   * `$(_C)REVEALJS_CMT$(_D)`
 
-Binaries for `$(_C)[Pandoc]$(_D)` and `$(_C)[YQ]$(_D)` are installed in their respective
-directories.  By moving or removing them, or changing the version number and
-foregoing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, the system version will be used instead.  This will
-work as long the commit versions match, so that `$(_C)[Pandoc]$(_D)` supporting files are
-in alignment.
+Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
+By moving or removing them, or changing the version number and foregoing
+`$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, the system version will be used instead.  This will work as long
+as the commit versions match, so that $(_C)[Pandoc]$(_D) supporting files are in
+alignment.
 
 It is possible that changing the versions will introduce incompatibilities with
 $(_C)[Composer]$(_D), which are usually impacts to the prettification of output files
@@ -1967,9 +1967,9 @@ chapter headings will use.
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
 
 By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for `$(_C)$(TYPE_HTML)$(_D)`, and one
-of the [Reveal.js] themes is used for presentations.  This variable allows for
-selection of a different file in both cases.  The special value `$(_C)$(CSS_ALT)$(_D)` selects
-the alternate default stylesheet.
+of the $(_C)[Reveal.js]$(_D) themes is used for `$(_C)$(TYPE_PRES)$(_D)`.  This variable allows for
+selection of a different file in both cases.  The special value `$(_C)$(CSS_ALT)$(_D)`
+selects the alternate default stylesheet.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
 
