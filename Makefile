@@ -22,6 +22,7 @@ override VIM_FOLDING := {{{1
 #				output should be reviewed during testing... maybe output some notes in $(TESTING)...? == release checklist
 #				ensure all output fits within 80 characters
 #				do a mouse-select of all text, to ensure proper color handling
+#				spell check!
 #		* Review: `make docs`
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
@@ -119,6 +120,8 @@ override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
 override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
+
+override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
 ########################################
 
@@ -1395,16 +1398,16 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)COMPOSER_DEPENDS"	"Sub-directories first: \`$(_C)$(DOITALL)\`"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_N)(boolean)"
 	@$(TABLE_M3) "$(_C)COMPOSER_STAMP"	"Timestamp file"				"$(if $(COMPOSER_STAMP),$(_M)$(COMPOSER_STAMP))"
 	@$(TABLE_M3) "$(_C)COMPOSER_EXT"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
-	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Targets:   \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)\`"				"(\`$(_C)$(CONFIGS)$(_D)\` or \`$(_C)$(TARGETS)$(_D)\`)"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Recursion: \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_E)/$(_C)$(INSTALL)\`"	"(\`$(_C)$(CONFIGS)$(_D)\` or \`$(_C)$(TARGETS)$(_D)\`)"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
-	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore:    \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_E)/$(_C)$(INSTALL)\`"	"(\`$(_C)$(CONFIGS)$(_D)\`)"					#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
+	@$(TABLE_M3) "$(_C)COMPOSER_TARGETS"	"Targets:   \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_D)\`"			"(\`$(_C)$(CONFIGS)$(_D)\` or \`$(_C)$(TARGETS)$(_D)\`)"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Recursion: \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_E)/$(_C)$(INSTALL)$(_D)\`"	"(\`$(_C)$(CONFIGS)$(_D)\` or \`$(_C)$(TARGETS)$(_D)\`)"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
+	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore:    \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_E)/$(_C)$(INSTALL)$(_D)\`"	"(\`$(_C)$(CONFIGS)$(_D)\`)"					#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *\`$(_C)MAKEJOBS$(_D)\`         ~ \`$(_E)c_jobs$(_D)\`  ~ \`$(_E)J$(_D)\`*"
 	@$(PRINT) "  * *\`$(_C)COMPOSER_DOCOLOR$(_D)\` ~ \`$(_E)c_color$(_D)\` ~ \`$(_E)C$(_D)\`*"
 	@$(PRINT) "  * *\`$(_C)COMPOSER_DEBUGIT$(_D)\` ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
-	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
-	@$(PRINT) "  * *$(_N)(debugit)$(_D)  = empty value disables / any value enables / ! is full tracing*"
-	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty value disables / any value enables*"
+	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty is disabled / number of threads / \`$(_N)0$(_D)\` is no limit*"
+	@$(PRINT) "  * *$(_N)(debugit)$(_D)  = empty is disabled / any value enables / \`$(_N)!$(_D)\` is full tracing*"
+	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty is disabled / any value enables*"
 
 ########################################
 # {{{3 $(HELPOUT)-TARGETS --------------
@@ -1466,8 +1469,6 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)"				"Diagnostics, tests targets list in \`$(_C)COMPOSER_DEBUGIT$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"Export \`$(_C)$(DEBUGIT)$(_D)\` results to a plain text file"
-	@$(TABLE_M2) "$(_C)$(TESTING)"				"Test suite, validates all supported features"
-	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"Export \`$(_C)$(TESTING)$(_D)\` results to a plain text file"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"List system packages and versions $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"Complete \`$(_C)$(CHECKIT)$(_D)\` package list, and system information"
 	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"Show values of all $(_C)[Composer Variables]$(_D)"
@@ -1475,7 +1476,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(TARGETS)"				"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)$(CONVICT)"				"Time-stamped $(_M)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)$(CONVICT)-$(DOITALL)"		"Automatic \`$(_C)$(CONVICT)$(_D)\`, without \`$(_C)"'$$EDITOR'"$(_D)\` step"
-	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"Full upgrade to current release: \`$(_C)$(UPGRADE)-$(DOITALL)$(_D)\`, \`$(_C)$(CREATOR)$(_D)\`"
+	@$(TABLE_M2) "$(_C)$(DISTRIB)"				"Full upgrade to current release, repository preparation"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)"				"Update all included components $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)$(UPGRADE)-$(DOITALL)"		"Complete \`$(_C)$(UPGRADE)$(_D)\`, including binaries: $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D)"
 
@@ -1496,6 +1497,8 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)$(MAKE_DB)"				"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)$(LISTING)"				"Extracted list of all targets from \`$(_C)$(MAKE_DB)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(NOTHING)"				"Placeholder to specify or detect empty values"
+	@$(TABLE_M2) "$(_C)$(TESTING)"				"Test suite, validates all supported features"
+	@$(TABLE_M2) "$(_C)$(TESTING)-file"			"Export \`$(_C)$(TESTING)$(_D)\` results to a plain text file"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOFORCE)"		"Minimized \`$(_C)$(CHECKIT)$(_D)\` output $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)$(SUBDIRS)"				"Expands \`$(_C)COMPOSER_SUBDIRS$(_D)\` into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
 
@@ -1505,12 +1508,14 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
-	@$(PRINT) "Create documents from source $(INPUT) files:"
+	@$(PRINT) "Create documents from source $(INPUT) files"
+	@$(PRINT) "$(_E)(more in [Formatting Variables])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list=\"$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)\"$(_D)"
 	@$(ENDOLINE)
-	@$(PRINT) "Save a persistent configuration:"
+	@$(PRINT) "Save a persistent configuration"
+	@$(PRINT) "$(_E)(more in [Composer Operation], [Configuration Settings] and [Special Targets])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
@@ -1518,7 +1523,8 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
 	@$(ENDOLINE)
-	@$(PRINT) "Recursively install and build an entire directory tree:"
+	@$(PRINT) "Recursively install and build an entire directory tree"
+	@$(PRINT) "$(_E)(more in [Composer Operation])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)cd$(_D) $(_M).../documents"
 	@$(PRINT) "$(CODEBLOCK)$(_C)mv$(_D) $(_M)$(call $(HEADERS)-release,$(COMPOSER_DIR)) .$(COMPOSER_BASENAME)"
@@ -1560,27 +1566,27 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-#	@$(call TITLE_LN,1,Templates)
-#	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
-#	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
-#		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
-#			-e "/^[#]{6}/d" \
-#			-e "/^$$/d" \
-#			-e "s|^|$(CODEBLOCK)|g" \
-#		)
-#	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
-#	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
-#		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
-#			-e "/^[#]{6}/d" \
-#			-e "/^$$/d" \
-#			-e "s|^|$(CODEBLOCK)|g" \
-#		)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+	@$(call TITLE_LN,1,Templates)
+	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
+	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
+		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
+			-e "/^[#]{6}/d" \
+			-e "/^$$/d" \
+			-e "s|^|$(CODEBLOCK)|g" \
+		)
+	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
+	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
+		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
+			-e "/^[#]{6}/d" \
+			-e "/^$$/d" \
+			-e "s|^|$(CODEBLOCK)|g" \
+		)
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
 
 ########################################
@@ -1743,14 +1749,15 @@ $(CODEBLOCK).../
 $(CODEBLOCK).../tld/
 $(CODEBLOCK).../tld/sub/
 
-Then, it can be converted to a $(_C)[Composer]$(_D) documentation archive $(_E)(same as the
-[Quick Start] example)$(_D):
+Then, it can be converted to a $(_C)[Composer]$(_D) documentation archive $(_E)([Quick Start]
+example)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
 
 If specific settings need to be used, either globally or per-directory,
-`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see [Configuration Settings])$(_D):
+`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see [Configuration Settings], [Quick Start]
+example)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
@@ -1766,7 +1773,7 @@ It is fully supported for input files to be symbolic links to files that reside
 outside the documentation archive.  Using the directory structure example above:
 
 $(CODEBLOCK)$(_C)cd$(_D) $(_M).../tld$(_D)
-$(CODEBLOCK)$(_C)ln$(_D) $(_N)-s ../../$(c_base)$(COMPOSER_EXT) $(_M)./$(_D)
+$(CODEBLOCK)$(_C)ln$(_D) $(_N)-s ../../$(c_base)$(COMPOSER_EXT)$(_D) $(_M)./$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
 
 Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[Composer]$(_D) upgrade,
@@ -1782,7 +1789,8 @@ $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they a
 `COMPOSER_INCLUDE` in [Control Variables])$(_D).  This means that the values in the
 most local file override all others.
 
-The easiest way to create a new `$(_M)$(COMPOSER_SETTINGS)$(_D)` is with the `$(_C)$(EXAMPLE)$(_D)` target:
+The easiest way to create a new `$(_M)$(COMPOSER_SETTINGS)$(_D)` is with the `$(_C)$(EXAMPLE)$(_D)` target
+$(_E)([Quick Start] example)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
@@ -1835,10 +1843,10 @@ directories being created first, this can be done simply using $(_C)[GNU Make]$(
 in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
 $(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTENSION)$(_D): $(_E)$(OUT_README).$(EXTENSION)$(_D)
-$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D)
+$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)
 
 This would require `$(_E)$(OUT_README).$(EXTENSION)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTENSION)$(_D)`, and for
-`$(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D)` to be processed before `$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)`.
+`$(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)` to be processed before `$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D)`.
 Directories need to be specified with this syntax in order to avoid conflicts
 with target names $(_E)(see [Custom Targets])$(_D).  Good examples of this are the `$(_C)$(CREATOR)$(_D)`
 and `$(_C)$(TESTING)$(_D)` targets, which are common directory names.
@@ -1858,7 +1866,6 @@ If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
-
 Additionally, the following are reserved, including anything that has a suffix
 `$(_C)-$(_N)*$(_D)` to them:
 $(_E)
@@ -1903,7 +1910,7 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
-`$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, the system version will be used instead.  This will work as long
+`$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, the system versions will be used instead.  This will work as long
 as the commit versions match, so that $(_C)[Pandoc]$(_D) supporting files are in
 alignment.
 
@@ -1943,9 +1950,10 @@ Generally, it is not required to use the `$(_C)$(COMPOSER_CREATE)$(_D)` target d
 `$(_C)c_type$(_D)` files, since it is run automatically based on what output file
 `$(_M)extension$(_D)` is specified.
 
-The automatic input file detection works by matching one of the following:
+The automatic input file detection works by matching one of the following
+$(_E)([Quick Start] example)$(_D):
 
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base) $(_N)(empty \`COMPOSER_EXT\`)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(_D) $(_N)(empty \`COMPOSER_EXT\`)$(_D)")
 $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)")
 $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base)$(COMPOSER_EXT).$(EXTENSION)$(_D)"	"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)")
 $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)"		"~ $(_E)c_list=\"...\"$(_D)")
@@ -1953,8 +1961,8 @@ $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENS
 Other values for `$(_C)c_type$(_D)`, such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
 through to $(_C)[Pandoc]$(_D) manually:
 
-$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_C)$(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_C)$(COMPOSER_CREATE)$(_D) $(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
 
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
@@ -1973,38 +1981,38 @@ selects the alternate default stylesheet.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
 
-Setting this to value of $(_N)[1-6]$(_D) creates a table of contents at the beginning of
+Setting this to value of `$(_N)[1-6]$(_D)` creates a table of contents at the beginning of
 the document.  The numerical value is how many header levels deep the table
-should go.  A value of $(_N)6$(_D) shows all header levels.
+should go.  A value of `$(_N)6$(_D)` shows all header levels.
 
-Using a value of $(_N)0$(_D) shows all header levels, and additionally numbers all the
+Using a value of `$(_N)0$(_D)` shows all header levels, and additionally numbers all the
 sections, for reference.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
 
 #WORKING:NOW -------------------------------------------------------------------
 
-#	--section-divs
-#	Wrap sections in <section> tags (or <div> tags for html4), and attach identifiers to the  enclosing <section> (or <div>) rather than the heading itself.  See Heading identifiers, below.
-#
-#	--top-level-division=chapter
-#	Treat top-level headings as the given division type in LaTeX, ConTeXt, DocBook, and TEI  output.   The hierarchy order is part, chapter, then section; all headings are shifted such that the top-level heading becomes the specified type.  The default behavior is to  determine  the best  division  type  via heuristics: unless other conditions apply, section is chosen.  When the documentclass variable is set to report, book, or memoir (unless the  article  option  is specified),  chapter is implied as the setting for this option.  If beamer is the output format, specifying either chapter or part will cause top-level  headings  to  become  \part{..}, while second-level headings remain as their default type.
-#
-#	--epub-chapter-level="$(c_level)"
-#	Specify the heading level at which to split the EPUB into separate "chapter" files.  The  default  is  to split into chapters at level-1 headings.  This option only affects the internal composition of the EPUB, not the way chapters and sections  are  displayed  to  users.   Some readers  may be slow if the chapter files are too large, so for large documents with few level-1 headings, one might want to use a chapter level of 2 or 3.
-#
-#	--slide-level="$(c_level)"
-#	#WORKING:NOW hard-set to 2 for reveal.js
-#	Specifies  that  headings  with  the  specified  level  create slides (for beamer, s5, slidy, slideous, dzslides).  Headings above this level in the hierarchy are used to divide the slide show into sections; headings below this level create subheads within a slide.  Note that content that is not contained under slide-level headings will not appear in the slide show.  The default  is to set the slide level based on the contents of the document; see Structuring the slide show.
-#
-#		--section-divs \
-#		(if (filter 0,(c_level)),\
-#			--top-level-division="part" \
-#		,\
-#			--top-level-division="chapter" \
-#			--epub-chapter-level="(c_level)" \
-#			--slide-level="(c_level)" \
-#		) \
+ #	--section-divs
+ #	Wrap sections in <section> tags (or <div> tags for html4), and attach identifiers to the  enclosing <section> (or <div>) rather than the heading itself.  See Heading identifiers, below.
+ #
+ #	--top-level-division=chapter
+ #	Treat top-level headings as the given division type in LaTeX, ConTeXt, DocBook, and TEI  output.   The hierarchy order is part, chapter, then section; all headings are shifted such that the top-level heading becomes the specified type.  The default behavior is to  determine  the best  division  type  via heuristics: unless other conditions apply, section is chosen.  When the documentclass variable is set to report, book, or memoir (unless the  article  option  is specified),  chapter is implied as the setting for this option.  If beamer is the output format, specifying either chapter or part will cause top-level  headings  to  become  \part{..}, while second-level headings remain as their default type.
+ #
+ #	--epub-chapter-level="$(c_level)"
+ #	Specify the heading level at which to split the EPUB into separate "chapter" files.  The  default  is  to split into chapters at level-1 headings.  This option only affects the internal composition of the EPUB, not the way chapters and sections  are  displayed  to  users.   Some readers  may be slow if the chapter files are too large, so for large documents with few level-1 headings, one might want to use a chapter level of 2 or 3.
+ #
+ #	--slide-level="$(c_level)"
+ #	#WORKING:NOW hard-set to 2 for reveal.js
+ #	Specifies  that  headings  with  the  specified  level  create slides (for beamer, s5, slidy, slideous, dzslides).  Headings above this level in the hierarchy are used to divide the slide show into sections; headings below this level create subheads within a slide.  Note that content that is not contained under slide-level headings will not appear in the slide show.  The default  is to set the slide level based on the contents of the document; see Structuring the slide show.
+ #
+ #		--section-divs \
+ #		(if (filter 0,(c_level)),\
+ #			--top-level-division="part" \
+ #		,\
+ #			--top-level-division="chapter" \
+ #			--epub-chapter-level="(c_level)" \
+ #			--slide-level="(c_level)" \
+ #		) \
 
 # pdf = 0 changes the top level division from chapter to part...
 # epub = doesn't affect presentation, only internal "chunking"?  should just default to 2...
@@ -2016,7 +2024,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_margin)
 
 The default margins for `$(_C)$(TYPE_LPDF)$(_D)` are formatted for typesetting of printed books,
-where there is a large amount of open space around the margins, and the text on
+where there is a large amount of open space around the edges and the text on
 each page is shifted away from where the binding would be.  This is generally
 not what is desired in a purely digital $(_M)PDF$(_D) document.
 
@@ -2047,11 +2055,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
     first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
     instantiates into a subdirectory has it's own jobs server, so the total
     number of threads running can proliferate rapidly.
-  * Using `$(_C)$(TESTING)-speed$(_D)` to validate an archive with $(_M)~18k$(_D) directories and $(_M)~80k$(_D)
-    files, `$(_C)$(INSTALL)-$(DOITALL)$(_D)` time was reduced from $(_M)~15$(_D) minutes to less than $(_M)~2$(_D), and
-    `$(_C)$(DOITALL)-$(DOITALL)$(_D)` dropped from $(_M)~140$(_D) minutes to less than $(_M)~20$(_D).  This was using a
-    value of $(_M)6$(_D).  Higher values exhausted the system thread limit, multiplying to
-    upwards of $(_M)~5k$(_D) threads.  With great power comes great responsibility.
+  * This can drastically speed up execution, processing tens of thousands of
+    directories and files in minutes.  However, values that are too high can
+    exhaust system resources.  With great power comes great responsibility.
+  * A value of `$(_N)0$(_D)` does parallel execution with no thread limit.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
 
@@ -2059,33 +2066,32 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
     The escape sequences used to accomplish this can create mixed results when
     reading in an output file or using a pager like `$(_C)$(lastword $(subst /, ,$(firstword $(LESS_BIN))))$(_D)`.
   * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
-    where plain text is required or desired.
+    where plain text is required.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
 
   * Provides more explicit details about what is happening at each step.
     Produces a lot more output, and can be slower.  It will also be hard to read
     unless `$(_C)MAKEJOBS$(_D)` is set to default.
-  * Full tracing also displays $(_C)[GNU Make]$(_D) debugging output.
+  * Full tracing using `$(_N)!$(_D)` also displays $(_C)[GNU Make]$(_D) debugging output.
   * *When doing `$(_C)$(DEBUGIT)$(_D)`, this is used to pass a list of targets to test $(_E)(see
     [Additional Targets])$(_D).*
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
 
-  * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)` tree, all the way
-    back to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each
-    directory.  By default, it only reads the one in its main directory and the
-    current directory, in that order.  Enabling this causes all of them to be
-    read.
+  * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)`, all the way back
+    to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each directory.
+    By default, it only reads the one in its main directory and the current
+    directory, in that order.  Enabling this causes all of them to be read.
   * In the example directory tree below, normally the `$(_M)$(COMPOSER_SETTINGS)$(_D)` in
     `$(_M).$(COMPOSER_BASENAME)$(_D)` is read first, and then `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this
     enabled, it will read all of them in order from top to bottom:
     `$(_M).$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
     `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
   * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
-    level for each documentation archive.  Not only does it allow for strict
-    version control of $(_C)[Composer]$(_D) per-archive, it also provides a mechanism for
-    setting $(_C)[Control Variables]$(_D) globally.
+    level for each documentation archive $(_E)(see [Composer Operation])$(_D).  Not only
+    does it allow for strict version control of $(_C)[Composer]$(_D) per-archive, it also
+    provides a mechanism for setting $(_C)[Control Variables]$(_D) globally.
   * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
     this option.  In that case, they will be propagated down the tree.  This may
     be desired in some cases, but it will require that each directory set these
@@ -2093,7 +2099,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
   * This setting also causes `$(_M)$(COMPOSER_CSS)$(_D)` files to be processed in an
     identical manner.
 
-Example directory tree:
+Example directory tree $(_E)(see [Composer Operation])$(_D):
 
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(COMPOSER_SETTINGS)$(_D)
@@ -2120,9 +2126,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
 
   * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
-    whenever it converts a $(_C)[Markdown]$(_D) file.  This provides some accounting, and
-    is used by `$(_C)$(PRINTER)$(_D)` to determine which `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)` files have been updated since
-    the last run.
+    whenever it executes $(_C)[Pandoc]$(_D).  This provides some accounting, and is used
+    by `$(_C)$(PRINTER)$(_D)` to determine which `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)` files have been updated since the last
+    run.
   * This setting can change the name of the timestamp files, or disable them
     completely.
 
@@ -2138,8 +2144,6 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
     processed, because it becomes the wildcard `$(_N)*$(_D)`, so use with care.  It is
     likely best to use `$(_C)COMPOSER_TARGETS$(_D)` to explicitly set the targets list in
     these cases.
-  * All files must share the same extension per-directory, but this value can be
-    different between directories.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
@@ -2153,14 +2157,16 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
     `$(_C)COMPOSER_TARGETS$(_D)` or `$(_C)COMPOSER_SUBDIRS$(_D)` it will display a message and
     do nothing.  A side-effect of this target is that an actual file or
     directory named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[Composer]$(_D).
+  * An empty value triggers auto-detection
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
   * The list of sub-directories to recurse into with `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
     `$(_C)$(DOITALL)$(_D)`.  The behavior and configuration is identical to `$(_C)COMPOSER_TARGETS$(_D)`
-    above, including full auto-detection.  Hidden directories that start with
-    `$(_M).$(_D)` are skipped.
+    above, including auto-detection and the `$(_C)$(NOTHING)$(_D)` taret.  Hidden directories
+    that start with `$(_M).$(_D)` are skipped.
+  * An empty value triggers auto-detection
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
@@ -2185,8 +2191,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
 
-An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(same as the $(_C)[Quick Start]$(_E)
-example)$(_D):
+An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)([Quick Start] example)$(_D):
 
 $(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)
 
@@ -2219,18 +2224,13 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
     * `$(_C)$(TARGETS)$(_D)`
   * If issues are occuring when running a particular set of targets, list them
     in `$(_C)COMPOSER_DEBUGIT$(_D)`.
-  * For general issues, run in the top-level directory $(_E)(see `$(CONVICT)` below)$(_D).
-    For specific issues, run in the directory where the issue is occurring.
+  * For general issues, run in the top-level directory $(_E)(see [Composer
+    Operation])$(_D).  For specific issues, run in the directory where the issue is
+    occurring.
 
 For example:
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(TARGETS) $(OUT_README).$(EXTENSION)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(TESTING))
-
-  * This is primarily intended for development purposes, and not general use.
-  * It is run as part of `$(_C)$(DEBUGIT)-file$(_D)`, which is more comprehensive, so that
-    target should be used instead.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
 
@@ -2240,29 +2240,32 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
 
-  * Using the recommended directory structure in $(_C)[Primary Targets]$(_D), `$(_M).../$(_D)` is
+  * Using the recommended directory structure in $(_C)[Composer Operation]$(_D), `$(_M).../$(_D)` is
     considered the top-level directory.  Meaning, it is the last directory
     before linking to $(_C)[Composer]$(_D).
-  * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `$(_M)<directory>.git$(_E)`
-    or `$(_M)<directory>/.git`$(_E))$(_D), this target creates a commit of the current
+  * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `<directory>.git`
+    or `<directory>/.git`)$(_D), this target creates a commit of the current
     directory tree with the title format below.
-  * For example, if it is run in the `$(_M).../tld/sub$(_D)` directory, that entire tree
-    would be included in the commit.  The purpose of this is to create quick and
-    easy checkpoints when working on documentation that does not necessarily fit
-    in a process where there are specific atomic steps being accomplished.
+  * For example, if it is run in the `$(_M).../tld$(_D)` directory, that entire tree would
+    be in the commit, including `$(_M).../tld/sub$(_D)`.  The purpose of this is to create
+    quick and easy checkpoints when working on documentation that does not
+    necessarily fit in a process where there are specific atomic steps being
+    accomplished.
   * When this target is run in a $(_C)[Composer]$(_D) directory, it uses itself as the
-    top-level repository.
+    top-level directory.
 
 Commit title format:
 
-$(CODEBLOCK)[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
+$(CODEBLOCK)$(_N)$(COMPOSER_TIMESTAMP)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
 
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and install all external components.
+  * The `$(_C)$(UPGRADE)-$(DOITALL)$(_D)` target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
+    whereas `$(_C)$(UPGRADE)$(_D)` only fetches the repositories.
   * In addition to doing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, `$(_C)$(DISTRIB)$(_D)` performs the steps necessary
-    steps to turn the current directory into a complete clone of $(_C)[Composer]$(_D).
+    to turn the current directory into a complete clone of $(_C)[Composer]$(_D).
   * If `$(_C)rsync$(_D)` is installed, `$(_C)$(DISTRIB)$(_D)` can be used to rapidly replicate
     $(_C)[Composer]$(_D), like below.
   * One of the unique features of $(_C)[Composer]$(_D) is that everything needed to
@@ -2270,8 +2273,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
 
 Rapid cloning $(_E)(requires `rsync`)$(_D):
 
-$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../$(MAKEFILE)$(_D) $(_M)$(DISTRIB)
+$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
 endef
 
 ########################################
@@ -2346,14 +2349,14 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global)
 	@$(foreach FILE,$(COMPOSER_EXPORTED),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
@@ -4563,7 +4566,7 @@ $(CONVICT): .set_title-$(CONVICT)
 	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	$(call GIT_RUN_COMPOSER,commit \
 		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
-		--message="[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]" \
+		--message="$(COMPOSER_TIMESTAMP)" \
 		$(GIT_OPTS_CONVICT) \
 	)
 
@@ -4886,7 +4889,7 @@ $(COMPOSER_PANDOC): $(c_list)
 	@$(PANDOC) $(PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_STAMP),)
-	@$(ECHO) "$(DATESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
+	@$(ECHO) "$(COMPOSER_TIMESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
 endif
 
 .PHONY: $(COMPOSER_CREATE)
