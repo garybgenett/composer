@@ -1549,21 +1549,21 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
 	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
+#	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
+#	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 #	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 #	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 #	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
+#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
+#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
+#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
+#WORK	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 #	@$(call TITLE_LN,1,Templates)
 #	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
@@ -1726,280 +1726,6 @@ rendering of $(_C)[Markdown]$(_D) files as they are being written.  Use the appr
 
 The versions of the integrated repositories can be changed as desired $(_E)(see
 [Repository Versions])$(_D).
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
-
-override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
-The `$(_C)$(COMPOSER_CREATE)$(_D)` target uses these variables to decide what to build and how.  The
-output file is `$(_M)c_base$(_D).$(_M)extension$(_D)`, and is constructed from the `$(_C)c_list$(_D)` input
-files, in order.  The `$(_M)extension$(_D)` is selected based on the `$(_C)c_type$(_D)` table above.
-Generally, it is not required to use the `$(_C)$(COMPOSER_CREATE)$(_D)` target directly for supported
-`$(_C)c_type$(_D)` files, since it is run automatically based on what output file
-`$(_M)extension$(_D)` is specified $(_E)(see [Quick Start])$(_D):
-
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list="$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"$(_D)
-
-Other values for `$(_C)c_type$(_D)`, such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
-through to $(_C)[Pandoc]$(_D) manually:
-
-$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) \\
-$(CODEBLOCK)$(CODEBLOCK)$(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
-
-Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
-limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
-
-override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
-
-  * By default, $(_C)[Composer]$(_D) progresses linearly, doing one task at a time.  If
-    there are dependencies between items, this can be beneficial, since it
-    ensures things will happen in a particular order.  The downside, however, is
-    that it is very slow.
-  * $(_C)[Composer]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
-    can be working through tasks independently.  Experiment with lower values
-    first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
-    instantiates into a subdirectory has it's own jobs server, so the total
-    number of threads running can proliferate rapidly.
-  * Using `$(_C)$(TESTING)-speed$(_D)` to validate an archive with $(_M)~18k$(_D) directories and $(_M)~80k$(_D)
-    files, `$(_C)$(INSTALL)-$(DOITALL)$(_D)` time was reduced from $(_M)~15$(_D) minutes to less than $(_M)~2$(_D), and
-    `$(_C)$(DOITALL)-$(DOITALL)$(_D)` dropped from $(_M)~140$(_D) minutes to less than $(_M)~20$(_D).  This was using a
-    value of $(_M)6$(_D).  Higher values exhausted the system thread limit, multiplying to
-    upwards of $(_M)~5k$(_D) threads.  With great power comes great responsibility.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
-
-  * $(_C)[Composer]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
-    The escape sequences used to accomplish this can create mixed results when
-    reading in an output file or using a pager like `$(_C)$(lastword $(subst /, ,$(firstword $(LESS_BIN))))$(_D)`.
-  * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
-    where plain text is required or desired.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
-
-  * Provides more explicit details about what is happening at each step.
-    Produces a lot more output, and can be slower.  It will also be hard to read
-    unless `$(_C)MAKEJOBS$(_D)` is set to default.
-  * Full tracing also displays $(_C)[GNU Make]$(_D) debugging output.
-  * *When doing `$(_C)$(DEBUGIT)$(_D)`, this is used to pass a list of targets to test $(_E)(see
-    [Additional Targets])$(_D).*
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
-
-  * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)` tree, all the way
-    back to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each
-    directory.  By default, it only reads the one in its main directory and the
-    current directory, in that order.  Enabling this causes all of them to be
-    read.
-  * In the example directory tree below, normally the `$(_M)$(COMPOSER_SETTINGS)$(_D)` in
-    `$(_M).$(COMPOSER_BASENAME)$(_D)` is read first, and then `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this
-    enabled, it will read all of them in order from top to bottom:
-    `$(_M).$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
-    `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
-  * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
-    level for each documentation archive.  Not only does it allow for strict
-    version control of $(_C)[Composer]$(_D) per-archive, it also provides a mechanism for
-    setting $(_C)[Control Variables]$(_D) globally.
-  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
-    this option.  In that case, they will be propagated down the tree.  This may
-    be desired in some cases, but it will require that each directory set these
-    manually, which could require a lot of maintenance.
-  * This setting also causes `$(_M)$(COMPOSER_CSS)$(_D)` files to be processed in an
-    identical manner.
-
-Example directory tree:
-
-$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
-$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(COMPOSER_SETTINGS)$(_D)
-$(CODEBLOCK).../$(_M)$(MAKEFILE)$(_D)
-$(CODEBLOCK).../$(_M)$(COMPOSER_SETTINGS)$(_D)
-$(CODEBLOCK).../tld/$(_M)$(MAKEFILE)$(_D)
-$(CODEBLOCK).../tld/$(_M)$(COMPOSER_SETTINGS)$(_D)
-$(CODEBLOCK).../tld/sub/$(_M)$(MAKEFILE)$(_D)
-$(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
-
-  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[Composer]$(_D) will process the current diretory before
-    recursing into sub-directories.  This reverses that, and sub-directories
-    will be processed first.
-  * In the example directory tree in `$(_C)COMPOSER_INCLUDE$(_D)` above, the default would
-    be: `$(_M).../$(_D)`, `$(_M).../tld$(_D)`, and then `$(_M).../tld/sub$(_D)`.  If the higher-level
-    directories have dependencies on the sub-directories being run first, this
-    will support that by doing them in reverse order, processing them from
-    bottom to top.
-  * It should be noted that enabling this disables `$(_C)MAKEJOBS$(_D)`, to ensure linear
-    processing, and that it has no effect on `$(_C)$(INSTALL)$(_D)` or `$(_C)$(CLEANER)$(_D)`.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
-
-  * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
-    whenever it converts a $(_C)[Markdown]$(_D) file.  This provides some accounting, and
-    is used by `$(_C)$(PRINTER)$(_D)` to determine which `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)` files have been updated since
-    the last run.
-  * This setting can change the name of the timestamp files, or disable them
-    completely.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
-
-  * The $(_C)[Markdown]$(_D) file extension $(_C)[Composer]$(_D) uses: `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)`.  This is for
-    auto-detection of files to add to `$(_C)COMPOSER_TARGETS$(_D)`, files to output for
-    `$(_C)$(PRINTER)$(_D)`, and other tasks.  This is a widely used standard, including
-    $(_C)[GitHub]$(_D).  Another commonly used extension is: `$(_N)*$(_M).$(INPUT)$(_D)`.
-  * In some cases, they do not have any extension, such as `$(_M)$(OUT_README)$(_D)` and
-    `$(_M)$(OUT_LICENSE)$(_D)` in source code directories.  Setting this to an empty value causes
-    these to be detected and output.  It also causes all other files to be
-    processed, because it becomes the wildcard `$(_N)*$(_D)`, so use with care.  It is
-    likely best to use `$(_C)COMPOSER_TARGETS$(_D)` to explicitly set the targets list in
-    these cases.
-  * All files must share the same extension per-directory, but this value can be
-    different between directories.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
-
-  * The list of output files to create or delete with `$(_C)$(CLEANER)$(_D)` and `$(_C)$(DOITALL)$(_D)`.
-    $(_C)[Composer]$(_D) does auto-detection using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`, so this
-    does not usually need to be set.  Hidden files that start with `$(_M).$(_D)` are
-    skipped.
-  * Setting this manually disables auto-detection.  It can also include non-file
-    targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see [Custom Targets])$(_D).
-  * The `$(_C)$(NOTHING)$(_D)` target is special, and when used as a value for
-    `$(_C)COMPOSER_TARGETS$(_D)` or `$(_C)COMPOSER_SUBDIRS$(_D)` it will display a message and
-    do nothing.  A side-effect of this target is that an actual file or
-    directory named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[Composer]$(_D).
-  * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
-
-  * The list of sub-directories to recurse into with `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
-    `$(_C)$(DOITALL)$(_D)`.  The behavior and configuration is identical to `$(_C)COMPOSER_TARGETS$(_D)`
-    above, including full auto-detection.  Hidden directories that start with
-    `$(_M).$(_D)` are skipped.
-  * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
-
-  * The list of `$(_C)COMPOSER_TARGETS$(_D)` and `$(_C)COMPOSER_SUBDIRS$(_D)` to skip with
-    `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and `$(_C)$(DOITALL)$(_D)`.  This allows for selective auto-detection,
-    when the list of items to process is larger than those to leave alone.
-  * Use `$(_C)$(CONFIGS)$(_D)` to check the current value.
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
-
-override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
-See $(_C)[Quick Start]$(_D) and $(_C)[Composer Operation]$(_D) for usage and typical workflow.
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
-
-override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
-
-An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(same as the $(_C)[Quick Start]$(_E)
-example)$(_D):
-
-$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)
-
-This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)` from
-`$(_M)$(OUT_README)$(COMPOSER_EXT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT)$(_D)`, concatenated together in order.  The primary
-purpose of this $(_C)[Special]$(_D) is to gather multiple source files in this manner, so
-that larger works can be comprised of multple files, such as a $(DO_BOOK) with each
-chapter in a separate file.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
-
-*$(_N)(Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
-build website pages using $(_C)[Bootstrap]$(_N).)$(_D)*
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
-
-#> update: $(DEBUGIT): targets list
-
-override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
-
-  * This is the tool to use for any support issues.  Submit the output file to:
-    $(_E)[composer@garybgenett.net]$(_D)
-  * Internally, it also runs:
-    * `$(_C)$(TESTING)$(_D)`
-    * `$(_C)$(CHECKIT)-$(DOITALL)$(_D)`
-    * `$(_C)$(CONFIGS)-$(DOITALL)$(_D)`
-    * `$(_C)$(TARGETS)$(_D)`
-  * If issues are occuring when running a particular set of targets, list them
-    in `$(_C)COMPOSER_DEBUGIT$(_D)`.
-  * For general issues, run in the top-level directory $(_E)(see `$(CONVICT)` below)$(_D).
-    For specific issues, run in the directory where the issue is occurring.
-
-For example:
-
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(TARGETS) $(OUT_README).$(EXTENSION)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(TESTING))
-
-  * This is primarily intended for development purposes, and not general use.
-  * It is run as part of `$(_C)$(DEBUGIT)-file$(_D)`, which is more comprehensive, so that
-    target should be used instead.
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
-
-  * Useful targets for validating tooling and configurations.
-  * Together, `$(_C)$(CONFIGS)$(_D)` and `$(_C)$(TARGETS)$(_D)` reveal the entire internal state of
-    $(_C)[Composer]$(_D).
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
-
-  * Using the recommended directory structure in $(_C)[Primary Targets]$(_D), `$(_M).../$(_D)` is
-    considered the top-level directory.  Meaning, it is the last directory
-    before linking to $(_C)[Composer]$(_D).
-  * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `$(_M)<directory>.git$(_E)`
-    or `$(_M)<directory>/.git`$(_E))$(_D), this target creates a commit of the current
-    directory tree with the title format below.
-  * For example, if it is run in the `$(_M).../tld/sub$(_D)` directory, that entire tree
-    would be included in the commit.  The purpose of this is to create quick and
-    easy checkpoints when working on documentation that does not necessarily fit
-    in a process where there are specific atomic steps being accomplished.
-  * When this target is run in a $(_C)[Composer]$(_D) directory, it uses itself as the
-    top-level repository.
-
-Commit title format:
-
-$(CODEBLOCK)[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
-
-  * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
-    and install all external components.
-  * In addition to doing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, `$(_C)$(DISTRIB)$(_D)` performs the steps necessary
-    steps to turn the current directory into a complete clone of $(_C)[Composer]$(_D).
-  * If `$(_C)rsync$(_D)` is installed, `$(_C)$(DISTRIB)$(_D)` can be used to rapidly replicate
-    $(_C)[Composer]$(_D), like below.
-  * One of the unique features of $(_C)[Composer]$(_D) is that everything needed to
-    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
-
-Rapid cloning $(_E)(requires `rsync`)$(_D):
-
-$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../$(MAKEFILE)$(_D) $(_M)$(DISTRIB)
-endef
-
-########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
-
-override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
-*$(_N)(None of these are intented to be run directly during normal use, and are only
-documented for completeness.)$(_D)*
 endef
 
 ########################################
@@ -2190,6 +1916,281 @@ the logo location:
 	$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
 
 This will apply to all presentations created with that instance of $(_C)[Composer]$(_D).
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
+
+override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
+The `$(_C)$(COMPOSER_CREATE)$(_D)` target uses these variables to decide what to build and how.  The
+output file is `$(_M)c_base$(_D).$(_M)extension$(_D)`, and is constructed from the `$(_C)c_list$(_D)` input
+files, in order.  The `$(_M)extension$(_D)` is selected based on the `$(_C)c_type$(_D)` table above.
+Generally, it is not required to use the `$(_C)$(COMPOSER_CREATE)$(_D)` target directly for supported
+`$(_C)c_type$(_D)` files, since it is run automatically based on what output file
+`$(_M)extension$(_D)` is specified $(_E)(see [Quick Start])$(_D):
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list="$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"$(_D)
+
+Other values for `$(_C)c_type$(_D)`, such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
+through to $(_C)[Pandoc]$(_D) manually:
+
+$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) \\
+$(CODEBLOCK)$(CODEBLOCK)$(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+
+Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
+limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
+
+override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
+
+  * By default, $(_C)[Composer]$(_D) progresses linearly, doing one task at a time.  If
+    there are dependencies between items, this can be beneficial, since it
+    ensures things will happen in a particular order.  The downside, however, is
+    that it is very slow.
+  * $(_C)[Composer]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
+    can be working through tasks independently.  Experiment with lower values
+    first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
+    instantiates into a subdirectory has it's own jobs server, so the total
+    number of threads running can proliferate rapidly.
+  * Using `$(_C)$(TESTING)-speed$(_D)` to validate an archive with $(_M)~18k$(_D) directories and $(_M)~80k$(_D)
+    files, `$(_C)$(INSTALL)-$(DOITALL)$(_D)` time was reduced from $(_M)~15$(_D) minutes to less than $(_M)~2$(_D), and
+    `$(_C)$(DOITALL)-$(DOITALL)$(_D)` dropped from $(_M)~140$(_D) minutes to less than $(_M)~20$(_D).  This was using a
+    value of $(_M)6$(_D).  Higher values exhausted the system thread limit, multiplying to
+    upwards of $(_M)~5k$(_D) threads.  With great power comes great responsibility.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
+
+  * $(_C)[Composer]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
+    The escape sequences used to accomplish this can create mixed results when
+    reading in an output file or using a pager like `$(_C)$(lastword $(subst /, ,$(firstword $(LESS_BIN))))$(_D)`.
+  * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
+    where plain text is required or desired.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
+
+  * Provides more explicit details about what is happening at each step.
+    Produces a lot more output, and can be slower.  It will also be hard to read
+    unless `$(_C)MAKEJOBS$(_D)` is set to default.
+  * Full tracing also displays $(_C)[GNU Make]$(_D) debugging output.
+  * *When doing `$(_C)$(DEBUGIT)$(_D)`, this is used to pass a list of targets to test $(_E)(see
+    [Additional Targets])$(_D).*
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
+
+  * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)` tree, all the way
+    back to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each
+    directory.  By default, it only reads the one in its main directory and the
+    current directory, in that order.  Enabling this causes all of them to be
+    read.
+  * In the example directory tree below, normally the `$(_M)$(COMPOSER_SETTINGS)$(_D)` in
+    `$(_M).$(COMPOSER_BASENAME)$(_D)` is read first, and then `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this
+    enabled, it will read all of them in order from top to bottom:
+    `$(_M).$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
+    `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
+  * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
+    level for each documentation archive.  Not only does it allow for strict
+    version control of $(_C)[Composer]$(_D) per-archive, it also provides a mechanism for
+    setting $(_C)[Control Variables]$(_D) globally.
+  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
+    this option.  In that case, they will be propagated down the tree.  This may
+    be desired in some cases, but it will require that each directory set these
+    manually, which could require a lot of maintenance.
+  * This setting also causes `$(_M)$(COMPOSER_CSS)$(_D)` files to be processed in an
+    identical manner.
+
+Example directory tree:
+
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK).../$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK).../tld/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../tld/$(_M)$(COMPOSER_SETTINGS)$(_D)
+$(CODEBLOCK).../tld/sub/$(_M)$(MAKEFILE)$(_D)
+$(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
+
+  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[Composer]$(_D) will process the current diretory before
+    recursing into sub-directories.  This reverses that, and sub-directories
+    will be processed first.
+  * In the example directory tree in `$(_C)COMPOSER_INCLUDE$(_D)` above, the default would
+    be: `$(_M).../$(_D)`, `$(_M).../tld$(_D)`, and then `$(_M).../tld/sub$(_D)`.  If the higher-level
+    directories have dependencies on the sub-directories being run first, this
+    will support that by doing them in reverse order, processing them from
+    bottom to top.
+  * It should be noted that enabling this disables `$(_C)MAKEJOBS$(_D)`, to ensure linear
+    processing, and that it has no effect on `$(_C)$(INSTALL)$(_D)` or `$(_C)$(CLEANER)$(_D)`.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
+
+  * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
+    whenever it converts a $(_C)[Markdown]$(_D) file.  This provides some accounting, and
+    is used by `$(_C)$(PRINTER)$(_D)` to determine which `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)` files have been updated since
+    the last run.
+  * This setting can change the name of the timestamp files, or disable them
+    completely.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
+
+  * The $(_C)[Markdown]$(_D) file extension $(_C)[Composer]$(_D) uses: `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)`.  This is for
+    auto-detection of files to add to `$(_C)COMPOSER_TARGETS$(_D)`, files to output for
+    `$(_C)$(PRINTER)$(_D)`, and other tasks.  This is a widely used standard, including
+    $(_C)[GitHub]$(_D).  Another commonly used extension is: `$(_N)*$(_M).$(INPUT)$(_D)`.
+  * In some cases, they do not have any extension, such as `$(_M)$(OUT_README)$(_D)` and
+    `$(_M)$(OUT_LICENSE)$(_D)` in source code directories.  Setting this to an empty value causes
+    these to be detected and output.  It also causes all other files to be
+    processed, because it becomes the wildcard `$(_N)*$(_D)`, so use with care.  It is
+    likely best to use `$(_C)COMPOSER_TARGETS$(_D)` to explicitly set the targets list in
+    these cases.
+  * All files must share the same extension per-directory, but this value can be
+    different between directories.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
+
+  * The list of output files to create or delete with `$(_C)$(CLEANER)$(_D)` and `$(_C)$(DOITALL)$(_D)`.
+    $(_C)[Composer]$(_D) does auto-detection using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`, so this
+    does not usually need to be set.  Hidden files that start with `$(_M).$(_D)` are
+    skipped.
+  * Setting this manually disables auto-detection.  It can also include non-file
+    targets added into a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see [Custom Targets])$(_D).
+  * The `$(_C)$(NOTHING)$(_D)` target is special, and when used as a value for
+    `$(_C)COMPOSER_TARGETS$(_D)` or `$(_C)COMPOSER_SUBDIRS$(_D)` it will display a message and
+    do nothing.  A side-effect of this target is that an actual file or
+    directory named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[Composer]$(_D).
+  * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
+
+  * The list of sub-directories to recurse into with `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
+    `$(_C)$(DOITALL)$(_D)`.  The behavior and configuration is identical to `$(_C)COMPOSER_TARGETS$(_D)`
+    above, including full auto-detection.  Hidden directories that start with
+    `$(_M).$(_D)` are skipped.
+  * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
+
+  * The list of `$(_C)COMPOSER_TARGETS$(_D)` and `$(_C)COMPOSER_SUBDIRS$(_D)` to skip with
+    `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and `$(_C)$(DOITALL)$(_D)`.  This allows for selective auto-detection,
+    when the list of items to process is larger than those to leave alone.
+  * Use `$(_C)$(CONFIGS)$(_D)` to check the current value.
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
+#WORKING:NOW : more...? --------------------------------------------------------
+See $(_C)[Quick Start]$(_D) and $(_C)[Composer Operation]$(_D) for usage and typical workflow.
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
+
+An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(same as the $(_C)[Quick Start]$(_E)
+example)$(_D):
+
+$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)
+
+This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)` from
+`$(_M)$(OUT_README)$(COMPOSER_EXT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT)$(_D)`, concatenated together in order.  The primary
+purpose of this $(_C)[Special]$(_D) is to gather multiple source files in this manner, so
+that larger works can be comprised of multple files, such as a $(DO_BOOK) with each
+chapter in a separate file.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
+
+*$(_N)(Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
+build website pages using $(_C)[Bootstrap]$(_N).)$(_D)*
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
+
+#> update: $(DEBUGIT): targets list
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
+
+  * This is the tool to use for any support issues.  Submit the output file to:
+    $(_E)[composer@garybgenett.net]$(_D)
+  * Internally, it also runs:
+    * `$(_C)$(TESTING)$(_D)`
+    * `$(_C)$(CHECKIT)-$(DOITALL)$(_D)`
+    * `$(_C)$(CONFIGS)-$(DOITALL)$(_D)`
+    * `$(_C)$(TARGETS)$(_D)`
+  * If issues are occuring when running a particular set of targets, list them
+    in `$(_C)COMPOSER_DEBUGIT$(_D)`.
+  * For general issues, run in the top-level directory $(_E)(see `$(CONVICT)` below)$(_D).
+    For specific issues, run in the directory where the issue is occurring.
+
+For example:
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(TARGETS) $(OUT_README).$(EXTENSION)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(TESTING))
+
+  * This is primarily intended for development purposes, and not general use.
+  * It is run as part of `$(_C)$(DEBUGIT)-file$(_D)`, which is more comprehensive, so that
+    target should be used instead.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
+
+  * Useful targets for validating tooling and configurations.
+  * Together, `$(_C)$(CONFIGS)$(_D)` and `$(_C)$(TARGETS)$(_D)` reveal the entire internal state of
+    $(_C)[Composer]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
+
+  * Using the recommended directory structure in $(_C)[Primary Targets]$(_D), `$(_M).../$(_D)` is
+    considered the top-level directory.  Meaning, it is the last directory
+    before linking to $(_C)[Composer]$(_D).
+  * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `$(_M)<directory>.git$(_E)`
+    or `$(_M)<directory>/.git`$(_E))$(_D), this target creates a commit of the current
+    directory tree with the title format below.
+  * For example, if it is run in the `$(_M).../tld/sub$(_D)` directory, that entire tree
+    would be included in the commit.  The purpose of this is to create quick and
+    easy checkpoints when working on documentation that does not necessarily fit
+    in a process where there are specific atomic steps being accomplished.
+  * When this target is run in a $(_C)[Composer]$(_D) directory, it uses itself as the
+    top-level repository.
+
+Commit title format:
+
+$(CODEBLOCK)[$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
+
+  * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
+    and install all external components.
+  * In addition to doing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, `$(_C)$(DISTRIB)$(_D)` performs the steps necessary
+    steps to turn the current directory into a complete clone of $(_C)[Composer]$(_D).
+  * If `$(_C)rsync$(_D)` is installed, `$(_C)$(DISTRIB)$(_D)` can be used to rapidly replicate
+    $(_C)[Composer]$(_D), like below.
+  * One of the unique features of $(_C)[Composer]$(_D) is that everything needed to
+    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
+
+Rapid cloning $(_E)(requires `rsync`)$(_D):
+
+$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../$(MAKEFILE)$(_D) $(_M)$(DISTRIB)
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
+
+override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
+*$(_N)(None of these are intented to be run directly during normal use, and are only
+documented for completeness.)$(_D)*
 endef
 
 ########################################
