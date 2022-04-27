@@ -412,10 +412,8 @@ $(call READ_ALIASES,B,B,c_base)
 $(call READ_ALIASES,L,L,c_list)
 $(call READ_ALIASES,g,g,c_lang)
 $(call READ_ALIASES,s,s,c_css)
-$(call READ_ALIASES,t,t,c_title)
 $(call READ_ALIASES,c,c,c_toc)
 $(call READ_ALIASES,l,l,c_level)
-$(call READ_ALIASES,f,f,c_font)
 $(call READ_ALIASES,m,m,c_margin)
 $(call READ_ALIASES,mt,mt,c_margin_top)
 $(call READ_ALIASES,mb,mb,c_margin_bottom)
@@ -431,10 +429,8 @@ override c_lang				?= en-US
 override c_css_use			?= #> update: includes duplicates / COMPOSER_OPTIONS
 #>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override c_css				?=
-override c_title			?=
 override c_toc				?=
 override c_level			?= 2
-override c_font				?= 10pt
 override c_margin			?= 0.8in
 override c_margin_top			?=
 override c_margin_bottom		?=
@@ -850,22 +846,24 @@ override PANDOC_OPTIONS			:= $(strip \
 	$(if $(filter $(TYPE_PRES),$(c_type)),\
 		--variable="revealjs-url=$(REVEALJS_DIR)" \
 	) \
-	$(if $(c_title),\
-		--title-prefix="$(c_title)" \
-	) \
 	$(if $(c_toc),\
 		--table-of-contents \
-		--number-sections \
-		--toc-depth="$(c_toc)" \
+		$(if $(filter 0,$(c_toc)),\
+			--toc-depth="6" \
+			--number-sections \
+		,\
+			--toc-depth="$(c_toc)" \
+		) \
 	) \
 	$(if $(c_level),\
 		--section-divs \
-		--top-level-division=chapter \
-		--epub-chapter-level="$(c_level)" \
-		--slide-level="$(c_level)" \
-	) \
-	$(if $(c_font),\
-		--variable="fontsize=$(c_font)" \
+		$(if $(filter 0,$(c_level)),\
+			--top-level-division="part" \
+		,\
+			--top-level-division="chapter" \
+			--epub-chapter-level="$(c_level)" \
+			--slide-level="$(c_level)" \
+		) \
 	) \
 	$(if $(c_margin)		,--variable="geometry=margin=$(c_margin)",\
 		$(if $(c_margin_top)	,--variable="geometry=top=$(c_margin_top)") \
@@ -1024,10 +1022,8 @@ override COMPOSER_EXPORTED := \
 	c_type \
 	c_lang \
 	c_css \
-	c_title \
 	c_toc \
 	c_level \
-	c_font \
 	c_margin \
 	c_margin_top \
 	c_margin_bottom \
@@ -1353,7 +1349,6 @@ $(HELPOUT)-VARIABLES_TITLE_%:
 #> update: TYPE_TARGETS
 #> update: READ_ALIASES
 .PHONY: $(HELPOUT)-VARIABLES_FORMAT_%
-$(HELPOUT)-VARIABLES_FORMAT_%: override FONT_LIST	= $(_C)$(TYPE_HTML)$(_D), $(_C)$(TYPE_LPDF)$(_D)
 $(HELPOUT)-VARIABLES_FORMAT_%: override MARGIN_LIST	= $(_C)$(TYPE_LPDF)$(_D)
 $(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
@@ -1364,10 +1359,8 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)c_list$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(c_list)"
 	@$(TABLE_M3) "$(_C)c_lang$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
 	@$(TABLE_M3) "$(_C)c_css$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(c_css)$(_D) )$(_N)($(COMPOSER_CSS))"
-	@$(TABLE_M3) "$(_C)c_title$(_D)   ~ $(_E)t"	"Document title prefix"			"$(_M)$(c_title)"
 	@$(TABLE_M3) "$(_C)c_toc$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)c_level$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
-	@$(TABLE_M3) "$(_C)c_font$(_D)    ~ $(_E)f"	"Font size [$(call FONT_LIST)]"		"$(_M)$(c_font)"
 	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Margin size [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
 	@$(TABLE_M3) "$(_C)c_options$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
@@ -1803,7 +1796,7 @@ $(CODEBLOCK)$(_N)$(COMPOSER_INCLUDE_REGEX)$(_D)
 Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := $(CSS_ALT)$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := 6$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := 0$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
 
@@ -1978,20 +1971,65 @@ of the [Reveal.js] themes is used for presentations.  This variable allows for
 selection of a different file in both cases.  The special value `$(_C)$(CSS_ALT)$(_D)` selects
 the alternate default stylesheet.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,c_title)
-#WORKING:NOW -------------------------------------------------------------------
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
-#WORKING:NOW -------------------------------------------------------------------
-#	document effects of $TOC and $LVL = test this first...
+
+Setting this to value of $(_N)[1-6]$(_D) creates a table of contents at the beginning of
+the document.  The numerical value is how many header levels deep the table
+should go.  A value of $(_N)6$(_D) shows all header levels.
+
+Using a value of $(_N)0$(_D) shows all header levels, and additionally numbers all the
+sections, for reference.
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
+
 #WORKING:NOW -------------------------------------------------------------------
-#	document effects of $TOC and $LVL = test this first...
-$(call $(HELPOUT)-$(DOITALL)-SECTION,c_font)
+
+#	--section-divs
+#	Wrap sections in <section> tags (or <div> tags for html4), and attach identifiers to the  enclosing <section> (or <div>) rather than the heading itself.  See Heading identifiers, below.
+#
+#	--top-level-division=chapter
+#	Treat top-level headings as the given division type in LaTeX, ConTeXt, DocBook, and TEI  output.   The hierarchy order is part, chapter, then section; all headings are shifted such that the top-level heading becomes the specified type.  The default behavior is to  determine  the best  division  type  via heuristics: unless other conditions apply, section is chosen.  When the documentclass variable is set to report, book, or memoir (unless the  article  option  is specified),  chapter is implied as the setting for this option.  If beamer is the output format, specifying either chapter or part will cause top-level  headings  to  become  \part{..}, while second-level headings remain as their default type.
+#
+#	--epub-chapter-level="$(c_level)"
+#	Specify the heading level at which to split the EPUB into separate "chapter" files.  The  default  is  to split into chapters at level-1 headings.  This option only affects the internal composition of the EPUB, not the way chapters and sections  are  displayed  to  users.   Some readers  may be slow if the chapter files are too large, so for large documents with few level-1 headings, one might want to use a chapter level of 2 or 3.
+#
+#	--slide-level="$(c_level)"
+#	#WORKING:NOW hard-set to 2 for reveal.js
+#	Specifies  that  headings  with  the  specified  level  create slides (for beamer, s5, slidy, slideous, dzslides).  Headings above this level in the hierarchy are used to divide the slide show into sections; headings below this level create subheads within a slide.  Note that content that is not contained under slide-level headings will not appear in the slide show.  The default  is to set the slide level based on the contents of the document; see Structuring the slide show.
+#
+#		--section-divs \
+#		(if (filter 0,(c_level)),\
+#			--top-level-division="part" \
+#		,\
+#			--top-level-division="chapter" \
+#			--epub-chapter-level="(c_level)" \
+#			--slide-level="(c_level)" \
+#		) \
+
+# pdf = 0 changes the top level division from chapter to part...
+# epub = doesn't affect presentation, only internal "chunking"?  should just default to 2...
+# revealjs = 1 or 2, with neat 1 effect... should default to 2, with 0 being the 1 equivalent...
+# based on this, make it a boolean... empty is default, and does original "2" behavior... enabled does html=divs / pdf=part / revealjs=1... epub is always 2...
+
 #WORKING:NOW -------------------------------------------------------------------
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_margin)
-#WORKING:NOW -------------------------------------------------------------------
+
+The default margins for `$(_C)$(TYPE_LPDF)$(_D)` are formatted for typesetting of printed books,
+where there is a large amount of open space around the margins, and the text on
+each page is shifted away from where the binding would be.  This is generally
+not what is desired in a purely digital $(_M)PDF$(_D) document.
+
+This is one value for all the margins.  Setting it to an empty value exposes
+variables for each of the individual margins: `$(_C)c_margin_top$(_D)`, `$(_C)c_margin_bottom$(_D)`,
+`$(_C)c_margin_left$(_D)` and `$(_C)c_margin_right$(_D)`.
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_options)
-#WORKING:NOW -------------------------------------------------------------------
+
+In some cases, it may be desirable to override the $(_C)[Composer]$(_D) options used for
+$(_C)[Pandoc]$(_D), or to provide other options in addition.  Anything put in this
+variable will be passed directly to $(_C)[Pandoc]$(_D) as additional command-line
+arguments.
 endef
 
 ########################################
@@ -2273,7 +2311,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_toc := 6\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_toc := 0\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
@@ -3295,10 +3333,8 @@ override $(HEADERS)-vars := \
 	c_lang \
 	c_css_use \
 	c_css \
-	c_title \
 	c_toc \
 	c_level \
-	c_font \
 	$(if $(c_margin),c_margin,\
 		$(if $(or \
 			$(c_margin_top), \
