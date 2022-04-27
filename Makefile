@@ -1397,9 +1397,9 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)COMPOSER_SUBDIRS"	"Recursion: \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_E)/$(_C)$(INSTALL)\`"	"(\`$(_C)$(CONFIGS)$(_D)\` or \`$(_C)$(TARGETS)$(_D)\`)"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
 	@$(TABLE_M3) "$(_C)COMPOSER_IGNORES"	"Ignore:    \`$(_C)$(DOITALL)$(_E)/$(_C)$(CLEANER)$(_E)/$(_C)$(INSTALL)\`"	"(\`$(_C)$(CONFIGS)$(_D)\`)"					#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *$(_C)MAKEJOBS$(_D)         ~ $(_E)c_jobs$(_D)  ~ $(_E)J$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DOCOLOR$(_D) ~ $(_E)c_color$(_D) ~ $(_E)C$(_D)*"
-	@$(PRINT) "  * *$(_C)COMPOSER_DEBUGIT$(_D) ~ $(_E)c_debug$(_D) ~ $(_E)V$(_D)*"
+	@$(PRINT) "  * *\`$(_C)MAKEJOBS$(_D)\`         ~ \`$(_E)c_jobs$(_D)\`  ~ \`$(_E)J$(_D)\`*"
+	@$(PRINT) "  * *\`$(_C)COMPOSER_DOCOLOR$(_D)\` ~ \`$(_E)c_color$(_D)\` ~ \`$(_E)C$(_D)\`*"
+	@$(PRINT) "  * *\`$(_C)COMPOSER_DEBUGIT$(_D)\` ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
 	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty value disables / number of threads / 0 is no limit*"
 	@$(PRINT) "  * *$(_N)(debugit)$(_D)  = empty value disables / any value enables / ! is full tracing*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty value disables / any value enables*"
@@ -1557,9 +1557,10 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-#WORK	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
-#WORK	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-	@$(call TITLE_LN,2,Precedence & Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDER)
+	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
+	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 #	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 #	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 #	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
@@ -1803,9 +1804,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     `$(_M).$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
     `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
   * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
-    level for each directory tree.  Not only does it allow for strict version
-    control of $(_C)[Composer]$(_D) per-directory, it provides a mechanism for setting
-    $(_C)[Control Variables]$(_D) globally.
+    level for each documentation archive.  Not only does it allow for strict
+    version control of $(_C)[Composer]$(_D) per-archive, it also provides a mechanism for
+    setting $(_C)[Control Variables]$(_D) globally.
   * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
     this option.  In that case, they will be propagated down the tree.  This may
     be desired in some cases, but it will require that each directory set these
@@ -2050,6 +2051,14 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 #WORKING:NOW -------------------------------------------------------------------
+
+Using anything but the `$(_N)override [variable] := [value]$(_D)` format in `$(_C)$(EXAMPLE)$(_D)`
+will result in unexpected behavior, and is not supported.  The regular
+expression that is used to detect them:
+
+$(CODEBLOCK)$(_N)$(COMPOSER_INCLUDE_REGEX)$(_D)
+
+#WORKING:NOW -------------------------------------------------------------------
 #	somewhere: per-target variables = book-testing.html: export override TOC := 1
 #		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
 #			README.%: override c_css := css_alt
@@ -2059,19 +2068,46 @@ override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-ORDER -----
+# {{{3 $(HELPOUT)-$(DOITALL)-ORDERS ----
 
-override define $(HELPOUT)-$(DOITALL)-ORDER =
-#WORKING:NOW -------------------------------------------------------------------
-#	COMPOSER_INCLUDE + orders of precedence
-#		variable aliases, order of precedence (now that it is fixed)
-#		global to local = COMPOSER_DIR + COMPOSER_SETTINGS
-#		COMPOSER_CSS wins over everything but COMPOSER_SETTINGS, and follows same rules for finding it
-#		COMPOSER_INCLUDE includes all the intermediary COMPOSER_SETTINGS files
-#		using := is the only thing supported = variable definitions must match COMPOSER_INCLUDE_REGEX
-#		using COMPOSER_TARGETS and COMPOSER_SUBDIRS and COMPOSER_IGNORES is a commitment...
-#	dependencies using "parent: child" targets... here or somewhere else...?
-#		$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates
+override define $(HELPOUT)-$(DOITALL)-ORDERS =
+The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is global-to-local $(_E)(see
+`COMPOSER_INCLUDE` in [Control Variables] for details)$(_D).  This means that the
+values in the most local file override all others.
+
+Variable aliases, such as `$(_C)COMPOSER_DEBUGIT$(_D)`/`$(_E)c_debug$(_D)`/`$(_E)V$(_D)` are prioritized in
+the order shown, with `$(_C)COMPOSER_*$(_D)` taking precedence over `$(_E)c_*$(_D)`, over the short
+alias.
+
+Selection of the $(_M)CSS$(_D) file can be done by `$(_M)$(COMPOSER_CSS)$(_D)` or the `$(_C)c_css$(_D)`
+variable, with `$(_M)$(COMPOSER_CSS)$(_D)` taking precedence $(_E)(unless `c_css` comes from
+`$(COMPOSER_SETTINGS)`)$(_D).  The process for `$(_M)$(COMPOSER_CSS)$(_D)` files is identical to
+`$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see `COMPOSER_INCLUDE` in [Control Variables])$(_D).
+
+All values in `$(_M)$(COMPOSER_SETTINGS)$(_D)` take precedence over everything else, including
+`$(_M)$(COMPOSER_CSS)$(_D)` and environment variables.
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-DEPENDS ---
+
+override define $(HELPOUT)-$(DOITALL)-DEPENDS =
+If there are files or directories that have dependencies on other files or
+directories being created first, this can be done simply using $(_C)[GNU Make]$(_D) syntax
+in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
+
+$(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTENSION)$(_D): $(_E)$(OUT_README).$(EXTENSION)$(_D)
+$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D)
+
+This would require `$(_E)$(OUT_README).$(EXTENSION)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTENSION)$(_D)`, and for
+`$(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D)` to be processed before `$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)`.
+Directories need to be specified with this syntax in order to avoid conflicts
+with target names $(_E)(see [Custom Targets])$(_D).  Good examples of this are the `$(_C)$(CREATOR)$(_D)`
+and `$(_C)$(TESTING)$(_D)` targets, which are common directory names.
+
+Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
+support.  Note that if a file or directory is set to depend on a target, that
+target will be run whenever the file or directory is called.
 endef
 
 ########################################
