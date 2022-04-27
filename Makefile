@@ -1570,14 +1570,14 @@ $(HELPOUT)-%:
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
-#			-e "s|^|\t|g" \
+#			-e "s|^|$(CODEBLOCK)|g" \
 #		)
 #	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 #	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
 #		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
 #			-e "/^[#]{6}/d" \
 #			-e "/^$$/d" \
-#			-e "s|^|\t|g" \
+#			-e "s|^|$(CODEBLOCK)|g" \
 #		)
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
 
@@ -1751,7 +1751,7 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
 #WORKING:NOW merge/move these to $(_C)[Configuration Settings]$(_D) or $(_C)[Custom Targets]$(_D)
 If specific settings need to be used, either globally or per-directory,
 `$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see `COMPOSER_INCLUDE` in [Control
-Variables] for details)$(_D):
+Variables])$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
@@ -1776,21 +1776,27 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS --
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
-#WORKING:NOW -------------------------------------------------------------------
+$(_C)[Composer]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
+$(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
+`COMPOSER_INCLUDE` in [Control Variables])$(_D).  This means that the values in the
+most local file override all others.
 
-Using anything but the `$(_N)override [variable] := [value]$(_D)` format in `$(_C)$(EXAMPLE)$(_D)`
-will result in unexpected behavior, and is not supported.  The regular
-expression that is used to detect them:
+All variable definitions must be in the `$(_N)override [variable] := [value]$(_D)` format
+from `$(_C)$(EXAMPLE)$(_D)`.  Doing otherwise will result in unexpected behavior, and is not
+supported.  The regular expression that is used to detect them:
 
 $(CODEBLOCK)$(_N)$(COMPOSER_INCLUDE_REGEX)$(_D)
 
-#WORKING:NOW -------------------------------------------------------------------
-#	somewhere: per-target variables = book-testing.html: export override TOC := 1
-#		$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): export override c_toc := 6
-#			README.%: override c_css := css_alt
-#			README.%: override c_toc := 6
-#			README.revealjs.html: override c_css :=
-#			README.revealjs.html: override c_toc :=
+Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
+
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := css_alt$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := 6$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_css :=$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
+
+In this case, there are multiple definitions that could apply to
+`$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most spedific target
+match is used, the final value for `$(_C)c_toc$(_D)` would be empty.
 endef
 
 ########################################
@@ -1798,8 +1804,8 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
 The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is global-to-local $(_E)(see
-`COMPOSER_INCLUDE` in [Control Variables] for details)$(_D).  This means that the
-values in the most local file override all others.
+`COMPOSER_INCLUDE` in [Control Variables])$(_D).  This means that the values in the
+most local file override all others.
 
 Variable aliases, such as `$(_C)COMPOSER_DEBUGIT$(_D)`/`$(_E)c_debug$(_D)`/`$(_E)V$(_D)` are prioritized in
 the order shown, with `$(_C)COMPOSER_*$(_D)` taking precedence over `$(_E)c_*$(_D)`, over the short
@@ -1849,7 +1855,7 @@ the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are 
 
 Additionally, the following are reserved, including anything that has a suffix
 `$(_C)-$(_N)*$(_D)` to them:
-
+$(_E)
 $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter .%,$(sort $(COMPOSER_RESERVED))))
 $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter _%,$(sort $(COMPOSER_RESERVED))))
 $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),10,\
@@ -1861,7 +1867,7 @@ $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),10,\
 		$(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)) \
 	) \
 )))
-
+$(_D)
 Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main $(_C)[Composer]$(_D)
 `$(_M)$(MAKEFILE)$(_D)`, so matching targets will be overridden.  In those cases, $(_C)[GNU Make]$(_D)
 will produce warning messages.
