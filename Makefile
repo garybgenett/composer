@@ -38,10 +38,16 @@ override VIM_FOLDING := {{{1
 #WORKING:NOW COMPOSER_EXT and SPECIALS test cases
 #	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
 #	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
+#	automatic input file detection
+#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base) $(_N)(empty \`COMPOSER_EXT\`)$(_D)"
+#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)"
+#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base)$(COMPOSER_EXT).$(EXTENSION)$(_D)"	"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)"
+#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)"			"~ $(_E)c_list=...$(_D)"
 #WORKING:NOW document COMPOSER_DOITALL_* and +$(MAKE)
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
 #		do this right here, along with other notes about how to work with the source...
+#WORKING:NOW epub and css!?  make a good decision...
 #TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
 #		maybe add additional ones, like COMPOSER_INCLUDE
@@ -111,7 +117,7 @@ override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
 override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
-override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME) Content Make System
+override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
 override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
 
 ########################################
@@ -1378,8 +1384,11 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other \`$(_C)c_type$(_D)\` values will be passed directly to $(_C)[Pandoc]$(_D)*"
 	@$(PRINT) "  * *Using \`$(_C)$(CSS_ALT)$(_D)\` as the value for \`$(_C)c_css$(_D)\` will select the secondary theme*"
-	@$(PRINT) "  * *An empty \`$(_C)c_margin$(_D)\` value enables individual margins:"
-	@$(PRINT) "    * *\`$(_C)c_margin_top$(_D)\`, \`$(_C)c_margin_bottom$(_D)\`, \`$(_C)c_margin_left$(_D)\`, \`$(_C)c_margin_right$(_D)\`*"
+	@$(PRINT) "  * *An empty \`$(_C)c_margin$(_D)\` value enables individual margins:*"
+	@$(PRINT) "    * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
+	@$(PRINT) "    * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
+	@$(PRINT) "    * *\`$(_C)c_margin_left$(_D)\`   ~ \`$(_E)ml$(_D)\`*"
+	@$(PRINT) "    * *\`$(_C)c_margin_right$(_D)\`  ~ \`$(_E)mr$(_D)\`*"
 
 .PHONY: $(HELPOUT)-VARIABLES_CONTROL_%
 $(HELPOUT)-VARIABLES_CONTROL_%:
@@ -1549,15 +1558,15 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-#	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
-#	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-#	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-#	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-#	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-#	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-#	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
-#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
-#	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
+	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
+	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
+	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
+	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 #	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 #	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
@@ -1708,7 +1717,7 @@ $(_M)[MacPorts]$(_D) for macOS both provide suitable environments.
 
 *$(_E)([MacPorts] does not install [GNU Make] by default.  The package name is
 `gmake`, and it requires a modification to the `$$PATH` in order to be called as
-just `$(DOMAKE)`.)*$(_D)
+just `$(DOMAKE)`.)$(_D)*
 
 The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
@@ -1793,7 +1802,7 @@ $(CODEBLOCK)$(_N)$(COMPOSER_INCLUDE_REGEX)$(_D)
 
 Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
-$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := css_alt$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := $(CSS_ALT)$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := 6$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
@@ -1917,13 +1926,13 @@ override define $(HELPOUT)-$(DOITALL)-PRESENT =
 The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to create a more useful
 and visually appealing end result.  The customized template is at:
 
-	$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_CSS))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_CSS))$(_D)
 
 It is set up so that a logo can be placed in the upper right hand corner on each
 slide, for presentations that need to be branded.  Simply place an image file in
 the logo location:
 
-	$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
 
 This will apply to all presentations created with that instance of $(_C)[Composer]$(_D).
 endef
@@ -1932,25 +1941,57 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_type / c_base / c_list)
+
 The `$(_C)$(COMPOSER_CREATE)$(_D)` target uses these variables to decide what to build and how.  The
-output file is `$(_M)c_base$(_D).$(_M)extension$(_D)`, and is constructed from the `$(_C)c_list$(_D)` input
+output file is `$(_C)c_base$(_D).$(_M)extension$(_D)`, and is constructed from the `$(_C)c_list$(_D)` input
 files, in order.  The `$(_M)extension$(_D)` is selected based on the `$(_C)c_type$(_D)` table above.
 Generally, it is not required to use the `$(_C)$(COMPOSER_CREATE)$(_D)` target directly for supported
 `$(_C)c_type$(_D)` files, since it is run automatically based on what output file
-`$(_M)extension$(_D)` is specified $(_E)(see [Quick Start])$(_D):
+`$(_M)extension$(_D)` is specified.
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list="$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)"$(_D)
+The automatic input file detection works by matching one of the following:
+
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base) $(_N)(empty \`COMPOSER_EXT\`)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base)$(COMPOSER_EXT).$(EXTENSION)$(_D)"	"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)"		"~ $(_E)c_list=\"...\"$(_D)")
 
 Other values for `$(_C)c_type$(_D)`, such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
 through to $(_C)[Pandoc]$(_D) manually:
 
 $(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) \\
-$(CODEBLOCK)$(CODEBLOCK)$(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE) $(COMPOSER_CREATE)$(_D) $(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
 
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_lang)
+
+Primarily for `$(_C)$(TYPE_LPDF)$(_D)`, this specifies the language that the table of contents and
+chapter headings will use.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
+
+By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for `$(_C)$(TYPE_HTML)$(_D)`, and one
+of the [Reveal.js] themes is used for presentations.  This variable allows for
+selection of a different file in both cases.  The special value `$(_C)$(CSS_ALT)$(_D)` selects
+the alternate default stylesheet.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_title)
+#WORKING:NOW -------------------------------------------------------------------
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
+#WORKING:NOW -------------------------------------------------------------------
+#	document effects of $TOC and $LVL = test this first...
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
+#WORKING:NOW -------------------------------------------------------------------
+#	document effects of $TOC and $LVL = test this first...
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_font)
+#WORKING:NOW -------------------------------------------------------------------
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_margin)
+#WORKING:NOW -------------------------------------------------------------------
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_options)
+#WORKING:NOW -------------------------------------------------------------------
 endef
 
 ########################################
@@ -2098,11 +2139,6 @@ endef
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
 #WORKING:NOW : more...? --------------------------------------------------------
 See $(_C)[Quick Start]$(_D) and $(_C)[Composer Operation]$(_D) for usage and typical workflow.
-#WORKING:NOW -------------------------------------------------------------------
-#	dual source targets (and empty COMPOSER_EXT) = readme/readme.html readme.md/readme.html readme.md/readme.md.html
-#		and now a third option! = make MANUAL.hml LIST="README.md LICENSE.md"
-#WORKING:NOW -------------------------------------------------------------------
-#	document effects of $TOC and $LVL = test this first...
 endef
 
 ########################################
@@ -2236,7 +2272,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_css := css_alt\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_toc := 6\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
@@ -3178,7 +3214,7 @@ endef
 ########################################
 
 override COMMENTED			:= $(_S)\#$(_D) $(NULL)
-override CODEBLOCK			:= $(NULL)	$(NULL)
+override CODEBLOCK			:= $(NULL)    $(NULL)
 override ENDOLINE			:= $(ECHO) "$(_D)\n"
 override LINERULE			:= $(ECHO) "$(_H)";	$(PRINTF)  "-%.0s" {1..$(COLUMNS)}	; $(ENDOLINE)
 override HEADER_L			:= $(ECHO) "$(_S)";	$(PRINTF) "\#%.0s" {1..$(COLUMNS)}	; $(ENDOLINE)
@@ -3188,11 +3224,13 @@ ifneq ($(COMPOSER_DOCOLOR),)
 override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%b$(_D)\e[128D\e[22C%b$(_D)\n"
 override TABLE_M2			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\n"
 override TABLE_M3			:= $(PRINTF) "| %b$(_D)\e[128D\e[22C| %b$(_D)\e[128D\e[54C| %b$(_D)\n"
+override COLUMN_2			:= $(PRINTF) "%b$(_D)\e[128D\e[39C %b$(_D)\n"
 override PRINT				:= $(PRINTF) "%b$(_D)\n"
 else
 override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%-20s%s\n"
 override TABLE_M2			:= $(PRINTF) "| %-20s| %s\n"
 override TABLE_M3			:= $(PRINTF) "| %-20s| %-30s| %s\n"
+override COLUMN_2			:= $(PRINTF) "%-39s %s\n"
 override PRINT				:= $(PRINTF) "%s\n"
 endif
 
