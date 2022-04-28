@@ -48,7 +48,6 @@ override VIM_FOLDING := {{{1
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
 #		do this right here, along with other notes about how to work with the source...
-#WORKING:NOW epub and css!?  make a good decision...  update c_css documentation...
 #TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
 #		maybe add additional ones, like COMPOSER_INCLUDE
@@ -127,6 +126,12 @@ override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
 override COLUMNS			:= 80
 override HEAD_MAIN			:= 1
+
+override SPECIAL_VAL			:= 0
+override DEPTH_DEFAULT			:= 2
+override DEPTH_MAX			:= 6
+
+override CSS_ALT			:= css_alt
 
 ########################################
 
@@ -273,7 +278,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 ########################################
 
 #> update: includes duplicates
-$(call READ_ALIASES,s,s,c_css)
+#>$(call READ_ALIASES,s,s,c_css)
 
 override c_css_use			:=
 ifneq ($(filter override,$(origin c_css)),)
@@ -330,7 +335,7 @@ else
 #>override MAKEJOBS_OPTS		:= --jobs=$(MAKEJOBS) --output-sync=line
 override MAKEJOBS_OPTS			:= --jobs=$(MAKEJOBS) --output-sync=none
 endif
-ifeq ($(MAKEJOBS),0)
+ifeq ($(MAKEJOBS),$(SPECIAL_VAL))
 override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
 endif
 
@@ -433,7 +438,7 @@ override c_css_use			?= #> update: includes duplicates / COMPOSER_OPTIONS
 #>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override c_css				?=
 override c_toc				?=
-override c_level			?= 2
+override c_level			?= $(DEPTH_DEFAULT)
 override c_margin			?= 0.8in
 override c_margin_top			?=
 override c_margin_bottom		?=
@@ -789,18 +794,22 @@ override COMPOSER_TARGETS		:= $(strip \
 	$(OUT_README).$(EXTN_EPUB) \
 	$(OUT_README).$(EXTN_PRES) \
 	$(OUT_README).$(EXTN_DOCX) \
-	$(OUT_README).$(EXTN_PPTX) \
-	$(OUT_README).$(EXTN_TEXT) \
-	$(OUT_README).$(EXTN_LINT) \
 )
+#>	$(OUT_README).$(EXTN_PPTX) \
+#>	$(OUT_README).$(EXTN_TEXT) \
+#>	$(OUT_README).$(EXTN_LINT) \
+#>)
 endif
 
 ########################################
 # {{{2 CSS -----------------------------
 
-override CSS_ALT			:= css_alt
-
 ifeq ($(c_css_use),)
+
+ifeq ($(c_css),$(SPECIAL_VAL))
+override c_css_use			:=
+else
+
 ifeq ($(c_css),)
 ifeq ($(OUTPUT),$(TYPE_PRES))
 override c_css_use			:= $(REVEALJS_CSS)
@@ -814,13 +823,29 @@ else
 override c_css_use			:= $(abspath $(c_css))
 endif
 endif
+
+endif
 endif
 
 ########################################
 # {{{2 Command -------------------------
 
+override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)"
+
+ifneq ($(wildcard $(COMPOSER_ART)/template.$(EXTENSION)),)
+override PANDOC_OPTIONS			:= $(PANDOC_OPTIONS) --template="$(COMPOSER_ART)/template.$(EXTENSION)"
+else ifneq ($(wildcard $(PANDOC_DIR)/data/templates/default.$(OUTPUT)),)
+override PANDOC_OPTIONS			:= $(PANDOC_OPTIONS) --template="$(PANDOC_DIR)/data/templates/default.$(OUTPUT)"
+endif
+
+ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
+override PANDOC_OPTIONS			:= $(PANDOC_OPTIONS) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
+endif
+
+########################################
+
 override PANDOC_EXTENSIONS		:= +smart
-override PANDOC_OPTIONS			:= $(strip \
+override PANDOC_OPTIONS			:= $(strip $(PANDOC_OPTIONS) \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
 	\
 	--standalone \
@@ -834,56 +859,69 @@ override PANDOC_OPTIONS			:= $(strip \
 	$(if $(c_lang),\
 		--variable="lang=$(c_lang)" \
 	) \
-	$(if $(c_site),\
-		--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js" \
-		--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css" \
-	) \
-		--css="$(c_css_use)" \
-	\
-	$(if $(filter $(TYPE_LPDF),$(c_type)),\
+	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PANDOC_TEX_PDF)" \
 		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
 		--include-in-header="$(TEX_PDF_TEMPLATE)" \
 		--listings \
 	) \
-	$(if $(filter $(TYPE_PRES),$(c_type)),\
+	$(if $(filter $(c_type),$(TYPE_PRES)),\
 		--variable="revealjs-url=$(REVEALJS_DIR)" \
+	) \
+	$(if $(c_site),\
+		--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js" \
+		--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css" \
+	) \
+	$(if $(c_css_use),\
+		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(c_css_use)") \
+		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(c_css_use)") \
+		$(if $(filter $(c_type),$(TYPE_PRES)),	--css="$(c_css_use)") \
 	) \
 	$(if $(c_toc),\
 		--table-of-contents \
-		$(if $(filter 0,$(c_toc)),\
-			--toc-depth="6" \
-			--number-sections \
-		,\
-			--toc-depth="$(c_toc)" \
+		$(if $(filter $(SPECIAL_VAL),$(c_toc)),	--toc-depth="$(DEPTH_MAX)" --number-sections, \
+							--toc-depth="$(c_toc)" \
 		) \
 	) \
 	$(if $(c_level),\
-		--section-divs \
-		$(if $(filter 0,$(c_level)),\
-			--top-level-division="part" \
-		,\
-			--top-level-division="chapter" \
-			--epub-chapter-level="$(c_level)" \
-			--slide-level="$(c_level)" \
-		) \
+		$(if $(filter $(c_type),$(TYPE_HTML)),			--section-divs) \
+		$(if $(filter $(c_type),$(TYPE_LPDF)),\
+			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--top-level-division="part", \
+			$(if $(filter $(DEPTH_DEFAULT),$(c_level)),	--top-level-division="chapter", \
+									--top-level-division="section" \
+		))) \
+		$(if $(filter $(c_type),$(TYPE_EPUB)),\
+			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--epub-chapter-level="$(DEPTH_DEFAULT)", \
+									--epub-chapter-level="$(c_level)" \
+		)) \
+		$(if $(filter $(c_type),$(TYPE_PRES)),\
+			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--section-divs --slide-level="1", \
+									--section-divs --slide-level="$(DEPTH_DEFAULT)" \
+		)) \
 	) \
-	$(if $(c_margin)		,--variable="geometry=margin=$(c_margin)",\
-		$(if $(c_margin_top)	,--variable="geometry=top=$(c_margin_top)") \
-		$(if $(c_margin_bottom)	,--variable="geometry=bottom=$(c_margin_bottom)") \
-		$(if $(c_margin_left)	,--variable="geometry=left=$(c_margin_left)") \
-		$(if $(c_margin_right)	,--variable="geometry=right=$(c_margin_right)") \
-	) \
+	$(if $(filter $(c_type),$(TYPE_LPDF)),\
+		$(if $(c_margin),		--variable="geometry=margin=$(c_margin)", \
+		$(if $(c_margin_top),		--variable="geometry=top=$(c_margin_top)") \
+		$(if $(c_margin_bottom),	--variable="geometry=bottom=$(c_margin_bottom)") \
+		$(if $(c_margin_left),		--variable="geometry=left=$(c_margin_left)") \
+		$(if $(c_margin_right),		--variable="geometry=right=$(c_margin_right)") \
+	)) \
 	$(if $(c_options),$(c_options)) \
 	$(c_list) \
 )
 
-ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
-override PANDOC_OPTIONS			:= --template="$(COMPOSER_ART)/reference.$(EXTENSION)" $(PANDOC_OPTIONS)
-else ifneq ($(wildcard $(PANDOC_DIR)/data/templates/default.$(OUTPUT)),)
-override PANDOC_OPTIONS			:= --template="$(PANDOC_DIR)/data/templates/default.$(OUTPUT)" $(PANDOC_OPTIONS)
+########################################
+
+override PANDOC_OPTIONS_ERROR		:=
+ifeq ($(c_type),$(TYPE_LPDF))
+ifneq ($(c_toc),)
+ifneq ($(c_level),$(SPECIAL_VAL))
+ifneq ($(c_level),$(DEPTH_DEFAULT))
+override PANDOC_OPTIONS_ERROR		= The '$(_C)c_toc$(_N)' option must be empty when '$(_C)c_level$(_N) != $(_E)[$(SPECIAL_VAL)|$(DEPTH_DEFAULT)]$(_N)' for '$(_C)$(TYPE_LPDF)$(_N)'
 endif
-override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)" $(PANDOC_OPTIONS)
+endif
+endif
+endif
 
 ################################################################################
 # {{{1 Bootstrap Options -------------------------------------------------------
@@ -1364,7 +1402,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)c_css$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(c_css)$(_D) )$(_N)($(COMPOSER_CSS))"
 	@$(TABLE_M3) "$(_C)c_toc$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)c_level$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
-	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Margin size [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
+	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Size of margins [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
 	@$(TABLE_M3) "$(_C)c_options$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Values: \`$(_C)c_type\`"	"$(_H)Format"				"$(_H)Extension"
@@ -1379,7 +1417,11 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)$(TYPE_LINT)"		"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other \`$(_C)c_type$(_D)\` values will be passed directly to $(_C)[Pandoc]$(_D)*"
-	@$(PRINT) "  * *Using \`$(_C)$(CSS_ALT)$(_D)\` as the value for \`$(_C)c_css$(_D)\` will select the secondary theme*"
+	@$(PRINT) "  * *Special values for \`$(_C)c_css$(_D)\`:*"
+	@$(COLUMN_2) "    * *\`$(_N)$(CSS_ALT)$(_D)\`"		"~ Use the alternate default stylesheet*"
+	@$(COLUMN_2) "    * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"~ Revert to the $(_C)[Pandoc]$(_D) default*"
+	@$(COLUMN_2) "  * *Special value \`$(_N)$(SPECIAL_VAL)$(_D)\` for \`$(_C)c_toc$(_D)\`"	"~ List all headers, and number sections*"
+	@$(COLUMN_2) "  * *Special value \`$(_N)$(SPECIAL_VAL)$(_D)\` for \`$(_C)c_level$(_D)\`"	"~ Varies by \`$(_C)c_type$(_D)\` $(_E)(see \`$(HELPOUT)-$(DOITALL)\`)$(_D)*"
 	@$(PRINT) "  * *An empty \`$(_C)c_margin$(_D)\` value enables individual margins:*"
 	@$(PRINT) "    * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
 	@$(PRINT) "    * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
@@ -1515,7 +1557,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list=\"$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)\"$(_D)"
 	@$(ENDOLINE)
 	@$(PRINT) "Save a persistent configuration"
-	@$(PRINT) "$(_E)(more in [Composer Operation], [Configuration Settings] and [Special Targets])$(_D):"
+	@$(PRINT) "$(_E)(more in [Typical Workflow], [Configuration Settings] and [Special Targets])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
@@ -1524,7 +1566,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
 	@$(ENDOLINE)
 	@$(PRINT) "Recursively install and build an entire directory tree"
-	@$(PRINT) "$(_E)(more in [Composer Operation])$(_D):"
+	@$(PRINT) "$(_E)(more in [Typical Workflow])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)cd$(_D) $(_M).../documents"
 	@$(PRINT) "$(CODEBLOCK)$(_C)mv$(_D) $(_M)$(call $(HEADERS)-release,$(COMPOSER_DIR)) .$(COMPOSER_BASENAME)"
@@ -1548,7 +1590,6 @@ $(HELPOUT)-%:
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
-#WORKING:NOW
 	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
 	@$(call TITLE_LN,2,Quick Start,0)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
@@ -1557,7 +1598,8 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-	@$(call TITLE_LN,1,Composer Operation)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OPERATION)
+	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
+	@$(call TITLE_LN,2,Typical Workflow)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
 	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
 	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
@@ -1576,14 +1618,14 @@ $(HELPOUT)-%:
 	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
 		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
-			-e "/^[#]{6}/d" \
+			-e "/^[#]{$(DEPTH_MAX)}/d" \
 			-e "/^$$/d" \
 			-e "s|^|$(CODEBLOCK)|g" \
 		)
 	@$(ENDOLINE); $(PRINT) "Use the \`$(_C)$(EXAMPLE)$(_D)\` target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE) \
 		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
-			-e "/^[#]{6}/d" \
+			-e "/^[#]{$(DEPTH_MAX)}/d" \
 			-e "/^$$/d" \
 			-e "s|^|$(CODEBLOCK)|g" \
 		)
@@ -1737,9 +1779,9 @@ The versions of the integrated repositories can be changed as desired $(_E)(see
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-OPERATION -
+# {{{3 $(HELPOUT)-$(DOITALL)-WORKFLOW --
 
-override define $(HELPOUT)-$(DOITALL)-OPERATION =
+override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
 The ideal workflow is to put $(_C)[Composer]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory tree you want to manage, creating a structure similar to this:
 
@@ -1804,7 +1846,7 @@ $(CODEBLOCK)$(_N)$(COMPOSER_INCLUDE_REGEX)$(_D)
 Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := $(CSS_ALT)$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := 0$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := $(SPECIAL_VAL)$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
 
@@ -1974,52 +2016,53 @@ chapter headings will use.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
 
-By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for `$(_C)$(TYPE_HTML)$(_D)`, and one
-of the $(_C)[Reveal.js]$(_D) themes is used for `$(_C)$(TYPE_PRES)$(_D)`.  This variable allows for
-selection of a different file in both cases.  The special value `$(_C)$(CSS_ALT)$(_D)`
-selects the alternate default stylesheet.
+By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for `$(_C)$(TYPE_HTML)$(_D)` and
+`$(_C)$(TYPE_EPUB)$(_D)`, and one of the $(_C)[Reveal.js]$(_D) themes is used for `$(_C)$(TYPE_PRES)$(_D)`.  This variable
+allows for selection of a different file in all cases.
+
+The special value `$(_N)$(CSS_ALT)$(_D)` selects the alternate default stylesheet.  Using `$(_N)$(SPECIAL_VAL)$(_D)`
+reverts to the $(_C)[Pandoc]$(_D) default.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
 
-Setting this to value of `$(_N)[1-6]$(_D)` creates a table of contents at the beginning of
+Setting this to value of `$(_N)[1-$(DEPTH_MAX)]$(_D)` creates a table of contents at the beginning of
 the document.  The numerical value is how many header levels deep the table
-should go.  A value of `$(_N)6$(_D)` shows all header levels.
+should go.  A value of `$(_N)$(DEPTH_MAX)$(_D)` lists all header levels.
 
-Using a value of `$(_N)0$(_D)` shows all header levels, and additionally numbers all the
+Using a value of `$(_N)$(SPECIAL_VAL)$(_D)` lists all header levels, and additionally numbers all the
 sections, for reference.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
 
-#WORKING:NOW -------------------------------------------------------------------
+This value has different effects, depending on the `$(_C)c_type$(_D)` of the output
+document.
 
- #	--section-divs
- #	Wrap sections in <section> tags (or <div> tags for html4), and attach identifiers to the  enclosing <section> (or <div>) rather than the heading itself.  See Heading identifiers, below.
- #
- #	--top-level-division=chapter
- #	Treat top-level headings as the given division type in LaTeX, ConTeXt, DocBook, and TEI  output.   The hierarchy order is part, chapter, then section; all headings are shifted such that the top-level heading becomes the specified type.  The default behavior is to  determine  the best  division  type  via heuristics: unless other conditions apply, section is chosen.  When the documentclass variable is set to report, book, or memoir (unless the  article  option  is specified),  chapter is implied as the setting for this option.  If beamer is the output format, specifying either chapter or part will cause top-level  headings  to  become  \part{..}, while second-level headings remain as their default type.
- #
- #	--epub-chapter-level="$(c_level)"
- #	Specify the heading level at which to split the EPUB into separate "chapter" files.  The  default  is  to split into chapters at level-1 headings.  This option only affects the internal composition of the EPUB, not the way chapters and sections  are  displayed  to  users.   Some readers  may be slow if the chapter files are too large, so for large documents with few level-1 headings, one might want to use a chapter level of 2 or 3.
- #
- #	--slide-level="$(c_level)"
- #	#WORKING:NOW hard-set to 2 for reveal.js
- #	Specifies  that  headings  with  the  specified  level  create slides (for beamer, s5, slidy, slideous, dzslides).  Headings above this level in the hierarchy are used to divide the slide show into sections; headings below this level create subheads within a slide.  Note that content that is not contained under slide-level headings will not appear in the slide show.  The default  is to set the slide level based on the contents of the document; see Structuring the slide show.
- #
- #		--section-divs \
- #		(if (filter 0,(c_level)),\
- #			--top-level-division="part" \
- #		,\
- #			--top-level-division="chapter" \
- #			--epub-chapter-level="(c_level)" \
- #			--slide-level="(c_level)" \
- #		) \
+For `$(_C)$(TYPE_HTML)$(_D)`, any value enables `$(_E)section-divs$(_D)`, which wrap headings and their
+section content in `$(_N)<section>$(_D)` tags and attach identifiers to them instead of
+the headings themselves.  This is for $(_M)CSS$(_D) styling, and is generally desired.
 
-# pdf = 0 changes the top level division from chapter to part...
-# epub = doesn't affect presentation, only internal "chunking"?  should just default to 2...
-# revealjs = 1 or 2, with neat 1 effect... should default to 2, with 0 being the 1 equivalent...
-# based on this, make it a boolean... empty is default, and does original "2" behavior... enabled does html=divs / pdf=part / revealjs=1... epub is always 2...
+For `$(_C)$(TYPE_LPDF)$(_D)`, there are 3 top-level division types: `$(_M)part$(_D)`, `$(_M)chapter$(_D)`, and
+`$(_M)section$(_D)`.  This sets the top-level header to the specified type, which changes
+the way the document is presented.  Using `$(_M)part$(_D)` divides the document into
+"$(_M)Parts$(_D)", each starting with a stand-alone title page.  A `$(_M)chapter$(_D)` simply starts
+a new section, preceded by a blank page.  Finally, `$(_M)section$(_D)` creates one long
+running document with no blank pages or section breaks $(_E)(like a `$(TYPE_HTML)` page)$(_D).  To
+set the desired value:
 
-#WORKING:NOW -------------------------------------------------------------------
+    * `$(_M)part$(_D)` ~ `$(_N)$(SPECIAL_VAL)$(_D)`
+    * `$(_M)chapter$(_D)` ~ `$(_N)$(DEPTH_DEFAULT)$(_D)`
+    * `$(_M)section$(_D)` ~ Any other value
+
+For `$(_C)$(TYPE_EPUB)$(_D)`, this creates chapter breaks at the specified level, inserting a
+blank page and starting a new section.  The special `$(_N)$(SPECIAL_VAL)$(_D)` simply sets it to the
+default value of `$(_N)$(DEPTH_DEFAULT)$(_D)`.
+
+For `$(_C)$(TYPE_PRES)$(_D)`, the top-level headings can persist on the screen when moving
+through slides in their sections, or they can rotate out as their own individual
+slides.  Setting to `$(_N)$(SPECIAL_VAL)$(_D)` enables persistent headings, and all other values use
+the default.
+
+An empty value defers to the $(_C)[Pandoc]$(_D) defaults in all cases.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_margin)
 
@@ -2058,7 +2101,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
   * This can drastically speed up execution, processing tens of thousands of
     directories and files in minutes.  However, values that are too high can
     exhaust system resources.  With great power comes great responsibility.
-  * A value of `$(_N)0$(_D)` does parallel execution with no thread limit.
+  * A value of `$(_N)$(SPECIAL_VAL)$(_D)` does parallel execution with no thread limit.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
 
@@ -2089,7 +2132,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     `$(_M).$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
     `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
   * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
-    level for each documentation archive $(_E)(see [Composer Operation])$(_D).  Not only
+    level for each documentation archive $(_E)(see [Typical Workflow])$(_D).  Not only
     does it allow for strict version control of $(_C)[Composer]$(_D) per-archive, it also
     provides a mechanism for setting $(_C)[Control Variables]$(_D) globally.
   * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
@@ -2099,7 +2142,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
   * This setting also causes `$(_M)$(COMPOSER_CSS)$(_D)` files to be processed in an
     identical manner.
 
-Example directory tree $(_E)(see [Composer Operation])$(_D):
+Example directory tree $(_E)(see [Typical Workflow])$(_D):
 
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(COMPOSER_SETTINGS)$(_D)
@@ -2181,8 +2224,8 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
-#WORKING:NOW : more...? --------------------------------------------------------
-See $(_C)[Quick Start]$(_D) and $(_C)[Composer Operation]$(_D) for usage and typical workflow.
+#WORKING:NOW -------------------------------------------------------------------
+See $(_C)[Quick Start]$(_D) and $(_C)[Typical Workflow]$(_D) for usage and typical workflow.
 endef
 
 ########################################
@@ -2240,7 +2283,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
 
-  * Using the recommended directory structure in $(_C)[Composer Operation]$(_D), `$(_M).../$(_D)` is
+  * Using the recommended directory structure in $(_C)[Typical Workflow]$(_D), `$(_M).../$(_D)` is
     considered the top-level directory.  Meaning, it is the last directory
     before linking to $(_C)[Composer]$(_D).
   * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `<directory>.git`
@@ -2288,6 +2331,8 @@ endef
 ########################################
 # {{{2 $(CREATOR) ----------------------
 
+#> update: TYPE_TARGETS
+
 .PHONY: $(CREATOR)
 ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 .NOTPARALLEL:
@@ -2306,6 +2351,15 @@ $(CREATOR): .set_title-$(CREATOR)
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_TEX_PDF_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(foreach FILE,\
+		$(TYPE_DOCX):$(EXTN_DOCX) \
+		$(TYPE_PPTX):$(EXTN_PPTX) \
+		,\
+		$(PANDOC) --verbose \
+			--output="$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/reference.$(word 2,$(subst :, ,$(FILE)))" \
+			--print-default-data-file="reference.$(word 1,$(subst :, ,$(FILE)))" \
+			$(NEWLINE) \
+	)
 	@$(LS) $(CURDIR)
 	@$(ENDOLINE)
 	@$(LS) --recursive $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
@@ -2314,7 +2368,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_toc := 0\n"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
@@ -2329,7 +2383,6 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORK	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_HTML)
-#	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_PRES)
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
@@ -2349,14 +2402,14 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_TIMESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,6,$(_H)$(COMPOSER_TIMESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global)
 	@$(foreach FILE,$(COMPOSER_EXPORTED),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
@@ -3698,6 +3751,7 @@ $(TESTING): $(TESTING)-$(DISTRIB)
 #>endif
 #>$(TESTING): $(TESTING)-speed
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
+$(TESTING): $(TESTING)-$(TARGETS)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
@@ -3785,7 +3839,7 @@ override define $(TESTING)-load =
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
 	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
-	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) MAKEJOBS="0" $(INSTALL)-$(DOFORCE)
+	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) MAKEJOBS="$(SPECIAL_VAL)" $(INSTALL)-$(DOFORCE)
 endef
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
@@ -3880,42 +3934,6 @@ $(TESTING)-Think-init:
 .PHONY: $(TESTING)-Think-done
 $(TESTING)-Think-done:
 	$(call $(TESTING)-find,override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE))
-
-########################################
-# {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
-
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
-$(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
-	@$(call $(TESTING)-$(HEADERS),\
-		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
-		\n\t * Command-line '$(_C)c_list$(_D)' shortcut \
-		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' \
-		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
-	)
-	@$(call $(TESTING)-mark)
-	@$(call $(TESTING)-init)
-	@$(call $(TESTING)-done)
-
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
-$(TESTING)-$(COMPOSER_BASENAME)-init:
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CONFIGS)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
-	@$(SED) -n "/$(COMPOSER_LICENSE)/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
-
-.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
-$(TESTING)-$(COMPOSER_BASENAME)-done:
-	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS))
-	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS))
-	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
-	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -4015,6 +4033,90 @@ $(TESTING)-speed-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
+# {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
+
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)
+$(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
+	@$(call $(TESTING)-$(HEADERS),\
+		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
+		\n\t * Command-line '$(_C)c_list$(_D)' shortcut \
+		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' \
+		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
+	)
+	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
+$(TESTING)-$(COMPOSER_BASENAME)-init:
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
+	@$(SED) -n "/$(COMPOSER_LICENSE)/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+
+.PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
+$(TESTING)-$(COMPOSER_BASENAME)-done:
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS))
+	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
+
+########################################
+# {{{3 $(TESTING)-$(TARGETS) -----------
+
+.PHONY: $(TESTING)-$(TARGETS)
+$(TESTING)-$(TARGETS): $(TESTING)-Think
+	@$(call $(TESTING)-$(HEADERS),\
+		Test every combination of formats and formatting variables ,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+	)
+	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+#> update: TYPE_TARGETS
+.PHONY: $(TESTING)-$(TARGETS)-init
+$(TESTING)-$(TARGETS)-init:
+#>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).[x0-9].*
+	@$(foreach EXTN,\
+		$(EXTN_HTML) \
+		$(EXTN_LPDF) \
+		$(EXTN_EPUB) \
+		$(EXTN_PRES) \
+		$(EXTN_DOCX) \
+		$(EXTN_PPTX) \
+		$(EXTN_TEXT) \
+		$(EXTN_LINT) \
+		,\
+		$(foreach TOC,x 0 1 2 3 4 5 6,\
+			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
+				$(call $(TESTING)-run) c_toc="$(subst x,,$(TOC))" c_level="$(subst x,,$(LEVEL))" $(OUT_README).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
+				$(NEWLINE) \
+			) \
+		) \
+	)
+	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).[x0-9].*
+
+.PHONY: $(TESTING)-$(TARGETS)-done
+$(TESTING)-$(TARGETS)-done:
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_HTML))
+	$(call $(TESTING)-count,22,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_LPDF))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_EPUB))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_PRES))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_DOCX))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_PPTX))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_TEXT))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_LINT))
+	@$(call $(TESTING)-hold)
+
+########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
 
 .PHONY: $(TESTING)-$(INSTALL)
@@ -4040,8 +4142,8 @@ $(TESTING)-$(INSTALL): $(TESTING)-Think
 $(TESTING)-$(INSTALL)-init:
 	@$(call $(TESTING)-run) MAKEJOBS= $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) MAKEJOBS= $(CLEANER)-$(DOITALL)
-	@$(call $(TESTING)-run) MAKEJOBS="0" $(INSTALL)-$(DOITALL)
-	@$(call $(TESTING)-run) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="$(SPECIAL_VAL)" $(INSTALL)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="$(SPECIAL_VAL)" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
@@ -4171,8 +4273,8 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) MAKEJOBS="0" --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
-	@$(call $(TESTING)-run) MAKEJOBS="0" $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run) MAKEJOBS="$(SPECIAL_VAL)" --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
+	@$(call $(TESTING)-run) MAKEJOBS="$(SPECIAL_VAL)" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
@@ -4256,6 +4358,7 @@ $(TESTING)-CSS: $(TESTING)-Think
 		\n\t * Default for '$(_C)$(TYPE_PRES)$(_D)' \
 		\n\t * From the environment \
 		\n\t * From '$(_C)$(CSS_ALT)$(_D)' alias \
+		\n\t * Using '$(_C)$(SPECIAL_VAL)$(_D)' Pandoc default \
 		\n\t * A '$(_C)$(COMPOSER_CSS)$(_D)' file $(_E)(precedence over environment)$(_D) \
 		\n\t * A '$(_C)$(COMPOSER_SETTINGS)$(_D)' file $(_E)(precedence over everything)$(_D) \
 	)
@@ -4271,6 +4374,7 @@ $(TESTING)-CSS-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="$(TYPE_PRES)" c_css= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(ECHO) "override c_css := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -4282,6 +4386,7 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS_ALT)))
+	$(call $(TESTING)-count,6,c_css_use.+$(notdir $(COMPOSER_DIR)))
 	$(call $(TESTING)-count,2,\/$(COMPOSER_CSS))
 	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
 
@@ -4884,8 +4989,16 @@ $(COMPOSER_STAMP): $(if \
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(c_list)
+ifneq ($(PANDOC_OPTIONS_ERROR),)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_N)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
+	@$(ENDOLINE)
+	@exit 1
+endif
 	@$(ECHO) "$(_N)"
+ifeq ($(c_type),$(TYPE_LPDF))
 	@$(MKDIR) $(COMPOSER_TMP)
+endif
 	@$(PANDOC) $(PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_STAMP),)
