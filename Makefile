@@ -2013,76 +2013,68 @@ limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_lang)
 
-Primarily for `$(_C)$(TYPE_LPDF)$(_D)`, this specifies the language that the table of contents and
-chapter headings will use.
+  * Primarily for `$(_C)$(TYPE_LPDF)$(_D)`, this specifies the language that the table of contents
+    and chapter headings will use.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
 
-By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for `$(_C)$(TYPE_HTML)$(_D)` and
-`$(_C)$(TYPE_EPUB)$(_D)`, and one of the $(_C)[Reveal.js]$(_D) themes is used for `$(_C)$(TYPE_PRES)$(_D)`.  This variable
-allows for selection of a different file in all cases.
-
-The special value `$(_N)$(CSS_ALT)$(_D)` selects the alternate default stylesheet.  Using `$(_N)$(SPECIAL_VAL)$(_D)`
-reverts to the $(_C)[Pandoc]$(_D) default.
+  * By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for `$(_C)$(TYPE_HTML)$(_D)` and
+    `$(_C)$(TYPE_EPUB)$(_D)`, and one of the $(_C)[Reveal.js]$(_D) themes is used for `$(_C)$(TYPE_PRES)$(_D)`.  This
+    variable allows for selection of a different file in all cases.
+  * The special value `$(_N)$(CSS_ALT)$(_D)` selects the alternate default stylesheet.  Using
+    `$(_N)$(SPECIAL_VAL)$(_D)` reverts to the $(_C)[Pandoc]$(_D) default.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
 
-Setting this to value of `$(_N)[1-$(DEPTH_MAX)]$(_D)` creates a table of contents at the beginning of
-the document.  The numerical value is how many header levels deep the table
-should go.  A value of `$(_N)$(DEPTH_MAX)$(_D)` lists all header levels.
-
-Using a value of `$(_N)$(SPECIAL_VAL)$(_D)` lists all header levels, and additionally numbers all the
-sections, for reference.
+  * Setting this to value of `$(_N)[1-$(DEPTH_MAX)]$(_D)` creates a table of contents at the
+    beginning of the document.  The numerical value is how many header levels
+    deep the table should go.  A value of `$(_N)$(DEPTH_MAX)$(_D)` lists all header levels.
+  * Using a value of `$(_N)$(SPECIAL_VAL)$(_D)` lists all header levels, and additionally numbers all
+    the sections, for reference.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
 
-This value has different effects, depending on the `$(_C)c_type$(_D)` of the output
-document.
-
-For `$(_C)$(TYPE_HTML)$(_D)`, any value enables `$(_E)section-divs$(_D)`, which wrap headings and their
-section content in `$(_N)<section>$(_D)` tags and attach identifiers to them instead of
-the headings themselves.  This is for $(_M)CSS$(_D) styling, and is generally desired.
-
-For `$(_C)$(TYPE_LPDF)$(_D)`, there are 3 top-level division types: `$(_M)part$(_D)`, `$(_M)chapter$(_D)`, and
-`$(_M)section$(_D)`.  This sets the top-level header to the specified type, which changes
-the way the document is presented.  Using `$(_M)part$(_D)` divides the document into
-"$(_M)Parts$(_D)", each starting with a stand-alone title page.  A `$(_M)chapter$(_D)` simply starts
-a new section, preceded by a blank page.  Finally, `$(_M)section$(_D)` creates one long
-running document with no blank pages or section breaks $(_E)(like a `$(TYPE_HTML)` page)$(_D).  To
-set the desired value:
-
-    * `$(_M)part$(_D)` ~ `$(_N)$(SPECIAL_VAL)$(_D)`
-    * `$(_M)chapter$(_D)` ~ `$(_N)$(DEPTH_DEFAULT)$(_D)`
-    * `$(_M)section$(_D)` ~ Any other value
-
-For `$(_C)$(TYPE_EPUB)$(_D)`, this creates chapter breaks at the specified level, inserting a
-blank page and starting a new section.  The special `$(_N)$(SPECIAL_VAL)$(_D)` simply sets it to the
-default value of `$(_N)$(DEPTH_DEFAULT)$(_D)`.
-
-For `$(_C)$(TYPE_PRES)$(_D)`, the top-level headings can persist on the screen when moving
-through slides in their sections, or they can rotate out as their own individual
-slides.  Setting to `$(_N)$(SPECIAL_VAL)$(_D)` enables persistent headings, and all other values use
-the default.
-
-An empty value defers to the $(_C)[Pandoc]$(_D) defaults in all cases.
+  * This value has different effects, depending on the `$(_C)c_type$(_D)` of the output
+    document.
+  * For `$(_C)$(TYPE_HTML)$(_D)`, any value enables `$(_E)section-divs$(_D)`, which wrap headings and their
+    section content in `$(_N)<section>$(_D)` tags and attach identifiers to them instead
+    of the headings themselves.  This is for $(_M)CSS$(_D) styling, and is generally
+    desired.
+  * For `$(_C)$(TYPE_LPDF)$(_D)`, there are 3 top-level division types: `$(_M)part$(_D)`, `$(_M)chapter$(_D)`, and
+    `$(_M)section$(_D)`.  This sets the top-level header to the specified type, which
+    changes the way the document is presented.  Using `$(_M)part$(_D)` divides the
+    document into "$(_M)Parts$(_D)", each starting with a stand-alone title page.  A
+    `$(_M)chapter$(_D)` simply starts a new section, preceded by a blank page.  Finally,
+    `$(_M)section$(_D)` creates one long running document with no blank pages or section
+    breaks $(_E)(like a `$(TYPE_HTML)` page)$(_D).  To set the desired value:
+      * `$(_M)part$(_D)` ~ `$(_N)$(SPECIAL_VAL)$(_D)`
+      * `$(_M)chapter$(_D)` ~ `$(_N)$(DEPTH_DEFAULT)$(_D)`
+      * `$(_M)section$(_D)` ~ Any other value
+  * For `$(_C)$(TYPE_EPUB)$(_D)`, this creates chapter breaks at the specified level, inserting a
+    blank page and starting a new section.  The special `$(_N)$(SPECIAL_VAL)$(_D)` simply sets it to
+    the default value of `$(_N)$(DEPTH_DEFAULT)$(_D)`.
+  * For `$(_C)$(TYPE_PRES)$(_D)`, the top-level headings can persist on the screen when moving
+    through slides in their sections, or they can rotate out as their own
+    individual slides.  Setting to `$(_N)$(SPECIAL_VAL)$(_D)` enables persistent headings, and all
+    other values use the default.
+  * An empty value defers to the $(_C)[Pandoc]$(_D) defaults in all cases.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_margin)
 
-The default margins for `$(_C)$(TYPE_LPDF)$(_D)` are formatted for typesetting of printed books,
-where there is a large amount of open space around the edges and the text on
-each page is shifted away from where the binding would be.  This is generally
-not what is desired in a purely digital $(_M)PDF$(_D) document.
-
-This is one value for all the margins.  Setting it to an empty value exposes
-variables for each of the individual margins: `$(_C)c_margin_top$(_D)`, `$(_C)c_margin_bottom$(_D)`,
-`$(_C)c_margin_left$(_D)` and `$(_C)c_margin_right$(_D)`.
+  * The default margins for `$(_C)$(TYPE_LPDF)$(_D)` are formatted for typesetting of printed
+    books, where there is a large amount of open space around the edges and the
+    text on each page is shifted away from where the binding would be.  This is
+    generally not what is desired in a purely digital $(_M)PDF$(_D) document.
+  * This is one value for all the margins.  Setting it to an empty value exposes
+    variables for each of the individual margins: `$(_C)c_margin_top$(_D)`,
+    `$(_C)c_margin_bottom$(_D)`, `$(_C)c_margin_left$(_D)` and `$(_C)c_margin_right$(_D)`.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_options)
 
-In some cases, it may be desirable to override the $(_C)[$(COMPOSER_BASENAME)]$(_D) options used for
-$(_C)[Pandoc]$(_D), or to provide other options in addition.  Anything put in this
-variable will be passed directly to $(_C)[Pandoc]$(_D) as additional command-line
-arguments.
+  * In some cases, it may be desirable to override the $(_C)[$(COMPOSER_BASENAME)]$(_D) options used
+    for $(_C)[Pandoc]$(_D), or to provide other options in addition.  Anything put in this
+    variable will be passed directly to $(_C)[Pandoc]$(_D) as additional command-line
+    arguments.
 endef
 
 ########################################
