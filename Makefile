@@ -2044,8 +2044,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
   * For `$(_C)$(TYPE_LPDF)$(_D)`, there are 3 top-level division types: `$(_M)part$(_D)`, `$(_M)chapter$(_D)`, and
     `$(_M)section$(_D)`.  This sets the top-level header to the specified type, which
     changes the way the document is presented.  Using `$(_M)part$(_D)` divides the
-    document into "$(_M)Parts$(_D)", each starting with a stand-alone title page.  A
-    `$(_M)chapter$(_D)` simply starts a new section, preceded by a blank page.  Finally,
+    document into "$(_M)Parts$(_D)", each starting with a stand-alone title page.  With
+    this division type, each second-level heading starts a new "$(_M)Chapter$(_D)".  A
+    `$(_M)chapter$(_D)` simply starts a new section, preceded by a blank page, and
+    lower-level headings continue as running portions within it.  Finally,
     `$(_M)section$(_D)` creates one long running document with no blank pages or section
     breaks $(_E)(like a `$(TYPE_HTML)` page)$(_D).  To set the desired value:
       * `$(_M)part$(_D)` ~ `$(_N)$(SPECIAL_VAL)$(_D)`
