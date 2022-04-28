@@ -27,7 +27,7 @@ override VIM_FOLDING := {{{1
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
-#WORKING:NOW $(INSTALL) test case?
+#WORKING $(INSTALL) test case?
 #	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
 #	make -f ../Makefile install-force	= Creating.+$(call $(TESTING)-pwd)/$(MAKEFILE)
 #	make -f ../Makefile install-all		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
@@ -36,7 +36,7 @@ override VIM_FOLDING := {{{1
 #	make install-force			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 #	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
 #	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#WORKING:NOW COMPOSER_EXT and SPECIALS test cases
+#WORKING COMPOSER_EXT and SPECIALS test cases
 #	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
 #	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
 #	automatic input file detection
@@ -44,7 +44,7 @@ override VIM_FOLDING := {{{1
 #		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)"
 #		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base)$(COMPOSER_EXT).$(EXTENSION)$(_D)"	"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)"
 #		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)"			"~ $(_E)c_list=...$(_D)"
-#WORKING:NOW document COMPOSER_DOITALL_* and +$(MAKE)
+#WORKING document COMPOSER_DOITALL_* and +$(MAKE)
 #	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
 #		COMPOSER_EXPORTED! = need to make a note for me?
 #		do this right here, along with other notes about how to work with the source...
@@ -1513,7 +1513,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)$(DEBUGIT)-file"			"Export \`$(_C)$(DEBUGIT)$(_D)\` results to a plain text file"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)"				"List system packages and versions $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)$(CHECKIT)-$(DOITALL)"		"Complete \`$(_C)$(CHECKIT)$(_D)\` package list, and system information"
-	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"Show values of all $(_C)[Composer Variables]$(_D)"
+	@$(TABLE_M2) "$(_C)$(CONFIGS)"				"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
 	@$(TABLE_M2) "$(_C)$(CONFIGS)-$(DOITALL)"		"Complete \`$(_C)$(CONFIGS)$(_D)\`, including environment variables"
 	@$(TABLE_M2) "$(_C)$(TARGETS)"				"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)$(CONVICT)"				"Time-stamped $(_M)[Git]$(_D) commit of the current directory tree"
@@ -1642,10 +1642,10 @@ endef
 
 .PHONY: $(HELPOUT)-$(DOITALL)-HEADER
 $(HELPOUT)-$(DOITALL)-HEADER:
-	@$(TABLE_M2) "$(_H)![Composer Icon]"		"$(_H)\"Creating Made Simple.\""
-	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"	"$(_C)[License: GPL]"
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"	"$(_C)[composer@garybgenett.net]"
+	@$(TABLE_M2) "$(_H)![$(COMPOSER_BASENAME) Icon]"	"$(_H)\"Creating Made Simple.\""
+	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[License: GPL]"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
 override define $(HELPOUT)-$(DOITALL)-LINKS =
 $(_E)[$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer$(_D)
@@ -1654,8 +1654,8 @@ $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
 $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
 $(_S)[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)$(_D)
-$(_S)[Composer Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png$(_D)
-$(_S)[Composer Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
 
 $(_S)[Specials]: #special-targets
 $(_S)[Special]: #special-targets
@@ -1701,11 +1701,11 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW --
 
 override define $(HELPOUT)-$(DOITALL)-OVERVIEW =
-**$(_C)[Composer]$(_D) is a simple but powerful CMS based on $(_C)[Pandoc]$(_D) and $(_C)[GNU Make]$(_D).**
+**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[Pandoc]$(_D) and $(_C)[GNU Make]$(_D).**
 It is a document and website build system that processes directories or
 individual files in $(_C)[Markdown]$(_D) format.
 
-Traditionally, CMS stands for $(_M)Content Management System$(_D).  $(_C)[Composer]$(_D) is designed
+Traditionally, CMS stands for $(_M)Content Management System$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) is designed
 to be a $(_M)Content **Make** System$(_D).  Written content is vastly easier to manage as
 plain text, which can be crafted with simple editors and tracked with revision
 control.  However, professional documentation, publications and websites require
@@ -1714,21 +1714,21 @@ formatting that is dynamic and feature-rich.
 $(_C)[Pandoc]$(_D) is a veritable swiss-army knife of document conversion, and is a
 widely used standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has
 reasonable defaults, there are a large number of options, and additional tools
-are required for some formats and features.  $(_C)[Composer]$(_D) consoldiates all the
+are required for some formats and features.  $(_C)[$(COMPOSER_BASENAME)]$(_D) consoldiates all the
 necessary components, streamlines the options, and prettifies the output
 formats, all in one place.  It also serves as a build system, so that large
 repositories can be managed as documentation archives or published as
 $(_C)[Bootstrap]$(_D) websites.
 
-$(_S)![Composer Icon]$(_D)
-$(_S)![Composer Screenshot]$(_D)
+$(_S)![$(COMPOSER_BASENAME) Icon]$(_D)
+$(_S)![$(COMPOSER_BASENAME) Screenshot]$(_D)
 endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-GOALS -----
 
 override define $(HELPOUT)-$(DOITALL)-GOALS =
-The guiding principles of $(_C)[Composer]$(_D):
+The guiding principles of $(_C)[$(COMPOSER_BASENAME)]$(_D):
 
   * All source files in readable plain text
   * Professional output, suitable for publication
@@ -1750,7 +1750,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-REQUIRE ---
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
-$(_C)[Composer]$(_D) has almost no external dependencies.  All needed components are
+$(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
 integrated directly into the repository, including $(_C)[Pandoc]$(_D).  It does require a
 minimal command-line environment based on $(_M)[GNU]$(_D) tools, which is standard for all
 $(_M)[GNU/Linux]$(_D) systems.  The $(_M)[Windows Subsystem for Linux]$(_D) for Windows and
@@ -1765,7 +1765,7 @@ the package managers of each of the above systems.  It is only necessary for
 creating $(_M)PDF$(_D) files.
 
 Below are the versions of the components in the repository, and the tested
-versions of external tools for this iteration of $(_C)[Composer]$(_D).  Use `$(_C)$(CHECKIT)$(_D)` to
+versions of external tools for this iteration of $(_C)[$(COMPOSER_BASENAME)]$(_D).  Use `$(_C)$(CHECKIT)$(_D)` to
 validate your system.
 endef
 
@@ -1782,7 +1782,9 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-WORKFLOW --
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
-The ideal workflow is to put $(_C)[Composer]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
+#WORKING:NOW -------------------------------------------------------------------
+
+The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory tree you want to manage, creating a structure similar to this:
 
 $(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
@@ -1791,7 +1793,7 @@ $(CODEBLOCK).../
 $(CODEBLOCK).../tld/
 $(CODEBLOCK).../tld/sub/
 
-Then, it can be converted to a $(_C)[Composer]$(_D) documentation archive $(_E)([Quick Start]
+Then, it can be converted to a $(_C)[$(COMPOSER_BASENAME)]$(_D) documentation archive $(_E)([Quick Start]
 example)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
@@ -1808,7 +1810,7 @@ Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax $
 [Custom Targets])$(_D).
 
 $(_C)[GNU Make]$(_D) does not support file and directory names with spaces in them, and
-neither does $(_C)[Composer]$(_D).  Documentation archives which have such files or
+neither does $(_C)[$(COMPOSER_BASENAME)]$(_D).  Documentation archives which have such files or
 directories will produce unexpected results.
 
 It is fully supported for input files to be symbolic links to files that reside
@@ -1818,7 +1820,7 @@ $(CODEBLOCK)$(_C)cd$(_D) $(_M).../tld$(_D)
 $(CODEBLOCK)$(_C)ln$(_D) $(_N)-s ../../$(c_base)$(COMPOSER_EXT)$(_D) $(_M)./$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
 
-Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[Composer]$(_D) upgrade,
+Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade,
 in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template.
 endef
 
@@ -1826,7 +1828,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS --
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
-$(_C)[Composer]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
+$(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
 $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
 `COMPOSER_INCLUDE` in [Control Variables])$(_D).  This means that the values in the
 most local file override all others.
@@ -1923,7 +1925,7 @@ $(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),10,\
 	) \
 )))
 $(_D)
-Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main $(_C)[Composer]$(_D)
+Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
 `$(_M)$(MAKEFILE)$(_D)`, so matching targets will be overridden.  In those cases, $(_C)[GNU Make]$(_D)
 will produce warning messages.
 
@@ -1957,7 +1959,7 @@ as the commit versions match, so that $(_C)[Pandoc]$(_D) supporting files are in
 alignment.
 
 It is possible that changing the versions will introduce incompatibilities with
-$(_C)[Composer]$(_D), which are usually impacts to the prettification of output files
+$(_C)[$(COMPOSER_BASENAME)]$(_D), which are usually impacts to the prettification of output files
 when they do occur.
 endef
 
@@ -1976,7 +1978,7 @@ the logo location:
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
 
-This will apply to all presentations created with that instance of $(_C)[Composer]$(_D).
+This will apply to all presentations created with that instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
 endef
 
 ########################################
@@ -2077,7 +2079,7 @@ variables for each of the individual margins: `$(_C)c_margin_top$(_D)`, `$(_C)c_
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_options)
 
-In some cases, it may be desirable to override the $(_C)[Composer]$(_D) options used for
+In some cases, it may be desirable to override the $(_C)[$(COMPOSER_BASENAME)]$(_D) options used for
 $(_C)[Pandoc]$(_D), or to provide other options in addition.  Anything put in this
 variable will be passed directly to $(_C)[Pandoc]$(_D) as additional command-line
 arguments.
@@ -2089,11 +2091,11 @@ endef
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
 
-  * By default, $(_C)[Composer]$(_D) progresses linearly, doing one task at a time.  If
+  * By default, $(_C)[$(COMPOSER_BASENAME)]$(_D) progresses linearly, doing one task at a time.  If
     there are dependencies between items, this can be beneficial, since it
     ensures things will happen in a particular order.  The downside, however, is
     that it is very slow.
-  * $(_C)[Composer]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
+  * $(_C)[$(COMPOSER_BASENAME)]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
     can be working through tasks independently.  Experiment with lower values
     first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
     instantiates into a subdirectory has it's own jobs server, so the total
@@ -2105,7 +2107,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
 
-  * $(_C)[Composer]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
+  * $(_C)[$(COMPOSER_BASENAME)]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
     The escape sequences used to accomplish this can create mixed results when
     reading in an output file or using a pager like `$(_C)$(lastword $(subst /, ,$(firstword $(LESS_BIN))))$(_D)`.
   * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
@@ -2122,7 +2124,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
 
-  * On every run, $(_C)[Composer]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)`, all the way back
+  * On every run, $(_C)[$(COMPOSER_BASENAME)]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)`, all the way back
     to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each directory.
     By default, it only reads the one in its main directory and the current
     directory, in that order.  Enabling this causes all of them to be read.
@@ -2133,7 +2135,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
   * This is why it is best practice to have a `$(_M).$(COMPOSER_BASENAME)$(_D)` directory at the top
     level for each documentation archive $(_E)(see [Typical Workflow])$(_D).  Not only
-    does it allow for strict version control of $(_C)[Composer]$(_D) per-archive, it also
+    does it allow for strict version control of $(_C)[$(COMPOSER_BASENAME)]$(_D) per-archive, it also
     provides a mechanism for setting $(_C)[Control Variables]$(_D) globally.
   * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
     this option.  In that case, they will be propagated down the tree.  This may
@@ -2155,7 +2157,7 @@ $(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 
-  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[Composer]$(_D) will process the current diretory before
+  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[$(COMPOSER_BASENAME)]$(_D) will process the current diretory before
     recursing into sub-directories.  This reverses that, and sub-directories
     will be processed first.
   * In the example directory tree in `$(_C)COMPOSER_INCLUDE$(_D)` above, the default would
@@ -2168,7 +2170,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
 
-  * $(_C)[Composer]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
+  * $(_C)[$(COMPOSER_BASENAME)]$(_D) creates a `$(_M)$(COMPOSER_STAMP_DEFAULT)$(_D)` timestamp file in the current directory
     whenever it executes $(_C)[Pandoc]$(_D).  This provides some accounting, and is used
     by `$(_C)$(PRINTER)$(_D)` to determine which `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)` files have been updated since the last
     run.
@@ -2177,7 +2179,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_STAMP)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
 
-  * The $(_C)[Markdown]$(_D) file extension $(_C)[Composer]$(_D) uses: `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)`.  This is for
+  * The $(_C)[Markdown]$(_D) file extension $(_C)[$(COMPOSER_BASENAME)]$(_D) uses: `$(_N)*$(_M)$(COMPOSER_EXT_DEFAULT)$(_D)`.  This is for
     auto-detection of files to add to `$(_C)COMPOSER_TARGETS$(_D)`, files to output for
     `$(_C)$(PRINTER)$(_D)`, and other tasks.  This is a widely used standard, including
     $(_C)[GitHub]$(_D).  Another commonly used extension is: `$(_N)*$(_M).$(INPUT)$(_D)`.
@@ -2191,7 +2193,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
   * The list of output files to create or delete with `$(_C)$(CLEANER)$(_D)` and `$(_C)$(DOITALL)$(_D)`.
-    $(_C)[Composer]$(_D) does auto-detection using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`, so this
+    $(_C)[$(COMPOSER_BASENAME)]$(_D) does auto-detection using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`, so this
     does not usually need to be set.  Hidden files that start with `$(_M).$(_D)` are
     skipped.
   * Setting this manually disables auto-detection.  It can also include non-file
@@ -2199,7 +2201,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
   * The `$(_C)$(NOTHING)$(_D)` target is special, and when used as a value for
     `$(_C)COMPOSER_TARGETS$(_D)` or `$(_C)COMPOSER_SUBDIRS$(_D)` it will display a message and
     do nothing.  A side-effect of this target is that an actual file or
-    directory named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[Composer]$(_D).
+    directory named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[$(COMPOSER_BASENAME)]$(_D).
   * An empty value triggers auto-detection
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
 
@@ -2225,7 +2227,10 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
 #WORKING:NOW -------------------------------------------------------------------
-See $(_C)[Quick Start]$(_D) and $(_C)[Typical Workflow]$(_D) for usage and typical workflow.
+
+In addition to $(_C)[Formatting Variables]$(_D), these targets are the very core of
+$(_C)[$(COMPOSER_BASENAME)]$(_D).  Their usage is better documented elsewhere in this document.  See
+$(_C)[Quick Start]$(_D) and $(_C)[Typical Workflow]$(_D) to get started.
 endef
 
 ########################################
@@ -2267,9 +2272,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
     * `$(_C)$(TARGETS)$(_D)`
   * If issues are occuring when running a particular set of targets, list them
     in `$(_C)COMPOSER_DEBUGIT$(_D)`.
-  * For general issues, run in the top-level directory $(_E)(see [Composer
-    Operation])$(_D).  For specific issues, run in the directory where the issue is
-    occurring.
+  * For general issues, run in the top-level directory $(_E)(see [Typical Workflow])$(_D).
+    For specific issues, run in the directory where the issue is occurring.
 
 For example:
 
@@ -2279,13 +2283,13 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
 
   * Useful targets for validating tooling and configurations.
   * Together, `$(_C)$(CONFIGS)$(_D)` and `$(_C)$(TARGETS)$(_D)` reveal the entire internal state of
-    $(_C)[Composer]$(_D).
+    $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
 
   * Using the recommended directory structure in $(_C)[Typical Workflow]$(_D), `$(_M).../$(_D)` is
     considered the top-level directory.  Meaning, it is the last directory
-    before linking to $(_C)[Composer]$(_D).
+    before linking to $(_C)[$(COMPOSER_BASENAME)]$(_D).
   * If the top-level directory is a $(_M)[Git]$(_D) repository $(_E)(it has `<directory>.git`
     or `<directory>/.git`)$(_D), this target creates a commit of the current
     directory tree with the title format below.
@@ -2294,7 +2298,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
     quick and easy checkpoints when working on documentation that does not
     necessarily fit in a process where there are specific atomic steps being
     accomplished.
-  * When this target is run in a $(_C)[Composer]$(_D) directory, it uses itself as the
+  * When this target is run in a $(_C)[$(COMPOSER_BASENAME)]$(_D) directory, it uses itself as the
     top-level directory.
 
 Commit title format:
@@ -2308,10 +2312,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
   * The `$(_C)$(UPGRADE)-$(DOITALL)$(_D)` target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
     whereas `$(_C)$(UPGRADE)$(_D)` only fetches the repositories.
   * In addition to doing `$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, `$(_C)$(DISTRIB)$(_D)` performs the steps necessary
-    to turn the current directory into a complete clone of $(_C)[Composer]$(_D).
+    to turn the current directory into a complete clone of $(_C)[$(COMPOSER_BASENAME)]$(_D).
   * If `$(_C)rsync$(_D)` is installed, `$(_C)$(DISTRIB)$(_D)` can be used to rapidly replicate
-    $(_C)[Composer]$(_D), like below.
-  * One of the unique features of $(_C)[Composer]$(_D) is that everything needed to
+    $(_C)[$(COMPOSER_BASENAME)]$(_D), like below.
+  * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
     compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
 
 Rapid cloning $(_E)(requires `rsync`)$(_D):
