@@ -1849,6 +1849,7 @@ Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := $(CSS_ALT)$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := $(SPECIAL_VAL)$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_EPUB)$(_D): $(_N)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
 
@@ -2365,6 +2366,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
