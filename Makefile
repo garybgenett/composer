@@ -201,15 +201,15 @@ override COMPOSER_INCLUDES_LIST		:=
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 override define READ_ALIASES =
 	$(if $(COMPOSER_DEBUGIT_ALL),\
-		$(info #> ALIAS				[$(1)|$($(1))|$(origin $(1))]); \
-		$(info #> ALIAS				[$(2)|$($(2))|$(origin $(2))]); \
-		$(info #> ALIAS				[$(3)|$($(3))|$(origin $(3))]); \
+		$(info #> ALIAS				[$(1)|$($(1))|$(origin $(1))]) \
+		$(info #> ALIAS				[$(2)|$($(2))|$(origin $(2))]) \
+		$(info #> ALIAS				[$(3)|$($(3))|$(origin $(3))]) \
 	)
 	$(if $(filter undefined,$(origin $(3))),\
-		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1))); $(eval override undefine $(1))); \
-		$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2))); $(eval override undefine $(2))); \
-	); \
-	$(eval override undefine $(1)); \
+		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1)))) \
+		$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2)))) \
+	) \
+	$(eval override undefine $(1)) \
 	$(eval override undefine $(2))
 endef
 
@@ -265,19 +265,19 @@ endif
 
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST			[$(MAKEFILE_LIST)]))
 $(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
-	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)); \
+	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)) \
 )
 override COMPOSER_INCLUDES_LIST		:= $(strip $(COMPOSER_INCLUDES))
 override COMPOSER_INCLUDES		:=
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUDES_LIST)]))
 
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD				[$(FILE)])); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD				[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE				[$(FILE)])); \
-		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))); \
-		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)); \
-		$(eval include $(FILE)); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE				[$(FILE)])) \
+		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))) \
+		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)) \
+		$(eval include $(FILE)) \
 	) \
 )
 
@@ -286,6 +286,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 #> update: includes duplicates
 #>$(call READ_ALIASES,s,s,c_css)
 
+#WORKING:FIX:CSS
 override c_css_use_override		:=
 override c_css_use			:=
 
@@ -297,10 +298,10 @@ endif
 
 ifeq ($(c_css_use_override),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS				[$(FILE)])); \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS				[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS				[$(FILE)])); \
-		$(eval override c_css_use := $(FILE)); \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS				[$(FILE)])) \
+		$(eval override c_css_use := $(FILE)) \
 	) \
 )
 endif
@@ -1091,6 +1092,7 @@ override COMPOSER_EXPORTED_NOT := \
 	c_base \
 	c_list \
 
+#WORKING:FIX:CSS
 override COMPOSER_EXPORTED_NULL := \
 	c_css_use \
 
@@ -1115,10 +1117,10 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 )
 
 $(if $(COMPOSER_DEBUGIT_ALL),\
-	$(info #> COMPOSER_EXPORTED		[$(strip $(COMPOSER_EXPORTED))]); \
-	$(info #> COMPOSER_EXPORTED_NOT	[$(strip $(COMPOSER_EXPORTED_NOT))]); \
-	$(info #> COMPOSER_EXPORTED_NULL	[$(strip $(COMPOSER_EXPORTED_NULL))]); \
-	$(info #> COMPOSER_OPTIONS		[$(strip $(COMPOSER_OPTIONS))]); \
+	$(info #> COMPOSER_EXPORTED		[$(strip $(COMPOSER_EXPORTED))]) \
+	$(info #> COMPOSER_EXPORTED_NOT	[$(strip $(COMPOSER_EXPORTED_NOT))]) \
+	$(info #> COMPOSER_EXPORTED_NULL	[$(strip $(COMPOSER_EXPORTED_NULL))]) \
+	$(info #> COMPOSER_OPTIONS		[$(strip $(COMPOSER_OPTIONS))]) \
 )
 
 ########################################
@@ -1332,7 +1334,7 @@ endif
 endef
 
 $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))); \
+	$(eval $(call COMPOSER_RESERVED_SPECIAL_TARGETS,$(FILE))) \
 )
 
 ################################################################################
@@ -2385,11 +2387,11 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+#	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+#	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+#	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+#	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+#	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
@@ -2401,13 +2403,15 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORK	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+#WORKING:FIX:CSS
+	touch $(CURDIR)/$(COMPOSER_CSS)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
-	@$(RM) \
-		$(CURDIR)/$(COMPOSER_SETTINGS) \
-		$(CURDIR)/$(COMPOSER_CSS) \
-		$(CURDIR)/$(COMPOSER_STAMP_DEFAULT) \
-		>/dev/null
+#	@$(RM) \
+#		$(CURDIR)/$(COMPOSER_SETTINGS) \
+#		$(CURDIR)/$(COMPOSER_CSS) \
+#		$(CURDIR)/$(COMPOSER_STAMP_DEFAULT) \
+#		>/dev/null
 endif
 
 ########################################
