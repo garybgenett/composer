@@ -2,7 +2,7 @@
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
-override VIM_OPTIONS := vim: foldmethod=marker foldtext=foldtext() foldlevel=0 filetype=make
+override VIM_OPTIONS := vim: filetype=make foldmethod=marker foldlevel=0 foldtext=foldtext()
 override VIM_FOLDING := {{{1
 ################################################################################
 # Release Checklist:
@@ -201,9 +201,9 @@ override COMPOSER_INCLUDES_LIST		:=
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 override define READ_ALIASES =
 	$(if $(COMPOSER_DEBUGIT_ALL),\
-		$(info #> ALIAS				[$(1)|$($(1))|$(origin $($(1)))]); \
-		$(info #> ALIAS				[$(2)|$($(2))|$(origin $($(2)))]); \
-		$(info #> ALIAS				[$(3)|$($(3))|$(origin $($(3)))]); \
+		$(info #> ALIAS				[$(1)|$($(1))|$(origin $(1))]); \
+		$(info #> ALIAS				[$(2)|$($(2))|$(origin $(2))]); \
+		$(info #> ALIAS				[$(3)|$($(3))|$(origin $(3))]); \
 	)
 	$(if $(filter undefined,$(origin $(3))),\
 		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1))); $(eval override undefine $(1))); \
@@ -219,7 +219,7 @@ endef
 
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 override COMPOSER_DEBUGIT_ALL		:=
-ifeq ($(COMPOSER_DEBUGIT),!)
+ifeq ($(COMPOSER_DEBUGIT),$(SPECIAL_VAL))
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
 
@@ -230,18 +230,24 @@ override TOKEN				:= ~
 
 ########################################
 
-ifneq ($(wildcard $(CURDIR)/$(COMPOSER_SETTINGS)),)
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE				[$(CURDIR)/$(COMPOSER_SETTINGS)]))
-#>include $(CURDIR)/$(COMPOSER_SETTINGS)
-$(foreach FILE,\
-	$(shell \
-		$(SED) -n "/^$(call COMPOSER_INCLUDE_REGEX).*$$/p" $(CURDIR)/$(COMPOSER_SETTINGS) \
-		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
+override define SOURCE_INCLUDES =
+ifneq ($$(wildcard $(1)/$$(COMPOSER_SETTINGS)),)
+$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> SOURCE				[$(1)/$$(COMPOSER_SETTINGS)]))
+#>include $(1)/$$(COMPOSER_SETTINGS)
+$$(foreach FILE,\
+	$$(shell \
+		$$(SED) -n "/^$$(call COMPOSER_INCLUDE_REGEX).*$$$$/p" $(1)/$$(COMPOSER_SETTINGS) \
+		| $$(SED) -e "s|[[:space:]]+|$$(TOKEN)|g" -e "s|$$$$| |g" \
 	),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE				[$(subst $(TOKEN), ,$(FILE))])) \
-	$(eval $(subst $(TOKEN), ,$(FILE))) \
+	$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> OVERRIDE				[$$(subst $$(TOKEN), ,$$(FILE))])) \
+	$$(eval $$(subst $$(TOKEN), ,$$(FILE))) \
 )
 endif
+endef
+
+$(eval $(call SOURCE_INCLUDES,$(COMPOSER_DIR)))
+$(eval $(call SOURCE_INCLUDES,$(CURDIR)))
+
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDE		[$(COMPOSER_INCLUDE)]))
 
 ########################################
@@ -280,11 +286,16 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 #> update: includes duplicates
 #>$(call READ_ALIASES,s,s,c_css)
 
+override c_css_use_override		:=
 override c_css_use			:=
-ifneq ($(filter override,$(origin c_css)),)
-override c_css_use			:= $(c_css)
+
+ifneq ($(origin c_css),undefined)
+ifneq ($(origin c_css),command line)
+override c_css_use_override		:= 1
 endif
-ifeq ($(c_css_use),)
+endif
+
+ifeq ($(c_css_use_override),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS				[$(FILE)])); \
 	$(if $(wildcard $(FILE)),\
@@ -293,6 +304,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	) \
 )
 endif
+
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE				[$(c_css_use)]))
 
 ################################################################################
@@ -382,7 +394,7 @@ override COMPOSER_INCLUDE		?=
 override COMPOSER_DEPENDS		?=
 
 override COMPOSER_DEBUGIT_ALL		:=
-ifeq ($(COMPOSER_DEBUGIT),!)
+ifeq ($(COMPOSER_DEBUGIT),$(SPECIAL_VAL))
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
 
@@ -457,10 +469,10 @@ override c_options			?=
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
 #>override PANDOC_VER			:= 2.13
-ifeq ($(filter override,$(origin PANDOC_VER)),)
+ifneq ($(origin PANDOC_VER),override)
 override PANDOC_VER			:= 2.18
 endif
-ifeq ($(filter override,$(origin PANDOC_CMT)),)
+ifneq ($(origin PANDOC_CMT),override)
 override PANDOC_CMT			:= $(PANDOC_VER)
 endif
 override PANDOC_LIC			:= GPL
@@ -491,10 +503,10 @@ endif
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
 #>override YQ_VER			:= 2.7.2
-ifeq ($(filter override,$(origin YQ_VER)),)
+ifneq ($(origin YQ_VER),override)
 override YQ_VER				:= 4.24.2
 endif
-ifeq ($(filter override,$(origin YQ_CMT)),)
+ifneq ($(origin YQ_CMT),override)
 override YQ_CMT				:= v$(YQ_VER)
 endif
 override YQ_LIC				:= MIT
@@ -524,7 +536,7 @@ endif
 # https://getbootstrap.com
 # https://github.com/twbs/bootstrap
 # https://github.com/twbs/bootstrap/blob/main/LICENSE
-ifeq ($(filter override,$(origin BOOTSTRAP_CMT)),)
+ifneq ($(origin BOOTSTRAP_CMT),override)
 override BOOTSTRAP_CMT			:= v5.1.3
 endif
 override BOOTSTRAP_LIC			:= MIT
@@ -535,7 +547,7 @@ override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
 
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
-ifeq ($(filter override,$(origin MDVIEWER_CMT)),)
+ifneq ($(origin MDVIEWER_CMT),override)
 #>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
 override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
 endif
@@ -551,7 +563,7 @@ override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
 
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
-ifeq ($(filter override,$(origin REVEALJS_CMT)),)
+ifneq ($(origin REVEALJS_CMT),override)
 override REVEALJS_CMT			:= 4.3.1
 endif
 override REVEALJS_LIC			:= MIT
@@ -1447,8 +1459,8 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *\`$(_C)MAKEJOBS$(_D)\`         ~ \`$(_E)c_jobs$(_D)\`  ~ \`$(_E)J$(_D)\`*"
 	@$(PRINT) "  * *\`$(_C)COMPOSER_DOCOLOR$(_D)\` ~ \`$(_E)c_color$(_D)\` ~ \`$(_E)C$(_D)\`*"
 	@$(PRINT) "  * *\`$(_C)COMPOSER_DEBUGIT$(_D)\` ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
-	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty is disabled / number of threads / \`$(_N)0$(_D)\` is no limit*"
-	@$(PRINT) "  * *$(_N)(debugit)$(_D)  = empty is disabled / any value enables / \`$(_N)!$(_D)\` is full tracing*"
+	@$(PRINT) "  * *$(_N)(makejobs)$(_D) = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
+	@$(PRINT) "  * *$(_N)(debugit)$(_D)  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
 	@$(PRINT) "  * *$(_N)(boolean)$(_D)  = empty is disabled / any value enables*"
 
 ########################################
@@ -1605,6 +1617,7 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+#WORKING:NOW : add pdf.latx... and reference.docx? actually, reference.custom --
 	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
@@ -1856,6 +1869,12 @@ $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
 In this case, there are multiple definitions that could apply to
 `$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most spedific target
 match is used, the final value for `$(_C)c_toc$(_D)` would be empty.
+
+#WORKING:NOW -------------------------------------------------------------------
+#	random note to regex search all "override" statements, to get a list of internal variables that should not be used...
+#	can do COMPOSER_*, and then filter for the rest, too...
+#	is this getting to be too much... do we care?
+#	maybe just say to define new variables sparingly (or not at all), to avoid conflicts... simple.
 endef
 
 ########################################
@@ -2113,7 +2132,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEBUGIT)
   * Provides more explicit details about what is happening at each step.
     Produces a lot more output, and can be slower.  It will also be hard to read
     unless `$(_C)MAKEJOBS$(_D)` is set to default.
-  * Full tracing using `$(_N)!$(_D)` also displays $(_C)[GNU Make]$(_D) debugging output.
+  * Full tracing using `$(_N)$(SPECIAL_VAL)$(_D)` also displays $(_C)[GNU Make]$(_D) debugging output.
   * *When doing `$(_C)$(DEBUGIT)$(_D)`, this is used to pass a list of targets to test $(_E)(see
     [Additional Targets])$(_D).*
 
@@ -2132,7 +2151,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     level for each documentation archive $(_E)(see [Typical Workflow])$(_D).  Not only
     does it allow for strict version control of $(_C)[$(COMPOSER_BASENAME)]$(_D) per-archive, it also
     provides a mechanism for setting $(_C)[Control Variables]$(_D) globally.
-  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see `$(EXAMPLE)`)$(_D) when using
+  * Care should be taken setting "$(_M)Local$(_D)" variables $(_E)(see [Templates])$(_D) when using
     this option.  In that case, they will be propagated down the tree.  This may
     be desired in some cases, but it will require that each directory set these
     manually, which could require a lot of maintenance.
@@ -2382,7 +2401,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORK	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
-	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(OUT_README).$(EXTN_HTML)
+	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
@@ -3693,7 +3712,7 @@ $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
 		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
 		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
-			$(RUNMAKE) --just-print COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="!" $(FILE) 2>&1; \
+			$(RUNMAKE) --just-print COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(FILE) 2>&1; \
 		elif [ -d "$(FILE)" ]; then \
 			$(LS) --recursive $(FILE); \
 		elif [ -f "$(FILE)" ]; then \
@@ -4350,6 +4369,19 @@ $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 ########################################
 # {{{3 $(TESTING)-CSS ------------------
 
+#WORKING:NOW
+#	verify all of the following, order of precedence is at the top...
+#		probably best to just layer them, like COMPOSER_INCLUDES...?
+#		precedence
+#			composer.mk per-target
+#			composer.mk override
+#			composer.css
+#			environment
+#		values
+#			$(SPECIAL_VAL)
+#			$(CSS_ALT)
+#			actual file
+
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
 	@$(call $(TESTING)-$(HEADERS),\
@@ -4371,7 +4403,7 @@ $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="$(TYPE_PRES)" c_css= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css= c_type="$(TYPE_PRES)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
@@ -4499,7 +4531,7 @@ override YQ_CMT_DISPLAY := $(YQ_CMT)
 ifneq ($(PANDOC_CMT),$(PANDOC_VER))
 override PANDOC_CMT_DISPLAY := $(PANDOC_CMT)$(_D) ($(_N)$(PANDOC_VER)$(_D))
 endif
-ifneq ($(subst v,,$(YQ_CMT)),$(YQ_VER))
+ifneq ($(patsubst v%,%,$(YQ_CMT)),$(YQ_VER))
 override YQ_CMT_DISPLAY := $(YQ_CMT)$(_D) ($(_N)$(YQ_VER)$(_D))
 endif
 
