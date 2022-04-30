@@ -200,9 +200,9 @@ override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(
 
 override define READ_ALIASES =
 	$(if $(COMPOSER_DEBUGIT_ALL),\
-		$(info #> ALIAS				[$(1)|$($(1))|$(origin $(1))]) \
-		$(info #> ALIAS				[$(2)|$($(2))|$(origin $(2))]) \
-		$(info #> ALIAS				[$(3)|$($(3))|$(origin $(3))]) \
+		$(info #> ALIAS			[$(1)|$($(1))|$(origin $(1))]) \
+		$(info #> ALIAS			[$(2)|$($(2))|$(origin $(2))]) \
+		$(info #> ALIAS			[$(3)|$($(3))|$(origin $(3))]) \
 	)
 	$(if $(filter undefined,$(origin $(3))),\
 		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1)))) \
@@ -231,14 +231,14 @@ override TOKEN				:= ~
 
 override define SOURCE_INCLUDES =
 ifneq ($$(wildcard $(1)/$$(COMPOSER_SETTINGS)),)
-$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> SOURCE				[$(1)/$$(COMPOSER_SETTINGS)]))
+$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> SOURCE			[$(1)/$$(COMPOSER_SETTINGS)]))
 #>include $(1)/$$(COMPOSER_SETTINGS)
 $$(foreach FILE,\
 	$$(shell \
 		$$(SED) -n "/^$$(call COMPOSER_REGEX_OVERRIDE).*$$$$/p" $(1)/$$(COMPOSER_SETTINGS) \
 		| $$(SED) -e "s|[[:space:]]+|$$(TOKEN)|g" -e "s|$$$$| |g" \
 	),\
-	$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> OVERRIDE				[$$(subst $$(TOKEN), ,$$(FILE))])) \
+	$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> OVERRIDE			[$$(subst $$(TOKEN), ,$$(FILE))])) \
 	$$(eval $$(subst $$(TOKEN), ,$$(FILE))) \
 )
 endif
@@ -265,7 +265,7 @@ else
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST			[$(MAKEFILE_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
 $(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
 	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)) \
 )
@@ -274,9 +274,9 @@ override COMPOSER_INCLUDES		:=
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUDES_LIST)]))
 
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD				[$(FILE)])) \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD			[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE				[$(FILE)])) \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE			[$(FILE)])) \
 		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))) \
 		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)) \
 		$(eval include $(FILE)) \
@@ -296,15 +296,15 @@ endif
 
 ifneq ($(origin c_css),override)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS				[$(FILE)])) \
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS			[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS				[$(FILE)])) \
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS			[$(FILE)])) \
 		$(eval override c_css := $(FILE)) \
 	) \
 )
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS					[$(c_css)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS				[$(c_css)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
