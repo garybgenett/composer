@@ -192,7 +192,10 @@ endif
 # {{{1 Include Files -----------------------------------------------------------
 ################################################################################
 
-override COMPOSER_OVERRIDE_REGEX	= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
+override COMPOSER_REGEX_OVERRIDE	= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
+override COMPOSER_REGEX_DEFINE		= override[[:space:]]+(define[[:space:]]+)?($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[=]
+override COMPOSER_REGEX_EVAL		= [$$][(]eval[[:space:]]+(export[[:space:]]+)?$(call COMPOSER_REGEX_OVERRIDE,$(1),$(2))
+
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 
 override define READ_ALIASES =
@@ -232,7 +235,7 @@ $$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> SOURCE				[$(1)/$$(COMPOSER_SETTINGS)]
 #>include $(1)/$$(COMPOSER_SETTINGS)
 $$(foreach FILE,\
 	$$(shell \
-		$$(SED) -n "/^$$(call COMPOSER_OVERRIDE_REGEX).*$$$$/p" $(1)/$$(COMPOSER_SETTINGS) \
+		$$(SED) -n "/^$$(call COMPOSER_REGEX_OVERRIDE).*$$$$/p" $(1)/$$(COMPOSER_SETTINGS) \
 		| $$(SED) -e "s|[[:space:]]+|$$(TOKEN)|g" -e "s|$$$$| |g" \
 	),\
 	$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> OVERRIDE				[$$(subst $$(TOKEN), ,$$(FILE))])) \
@@ -1090,7 +1093,7 @@ $(foreach FILE,$(COMPOSER_EXPORTED)		,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_EXPORTED_NOT)		,$(eval unexport $(FILE)))
 
 override COMPOSER_OPTIONS		:= \
-	$(shell $(SED) -n "s|^$(call COMPOSER_OVERRIDE_REGEX,,1).*$$|\1|gp" $(COMPOSER) \
+	$(shell $(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" $(COMPOSER) \
 	| $(SED) $(if $(c_margin),"/^c_margin_.+$$/d","/^c_margin$$/d") \
 )
 $(foreach FILE,$(COMPOSER_OPTIONS),\
@@ -1612,8 +1615,17 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-	@$(call TITLE_LN,1,Templates)
+#>	$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+	@if [ "$(*)" = "$(DOFORCE)" ]; then \
+	$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL); \
+	$(RUNMAKE) --silent $(HELPOUT)-$(DOITALL)-$(DOFORCE); \
+	fi
+	@$(RUNMAKE) $(HELPOUT)-FOOTER
+
+.PHONY: $(HELPOUT)-$(DOITALL)-$(DOFORCE)
+$(HELPOUT)-$(DOITALL)-$(DOFORCE):
+	@$(call TITLE_LN,1,Reference,$(HEAD_MAIN))
+	@$(call TITLE_LN,2,Templates)
 	@$(PRINT) "The \`$(_C)$(INSTALL)$(_D)\` target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
 		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
@@ -1628,7 +1640,36 @@ $(HELPOUT)-%:
 			-e "/^$$/d" \
 			-e "s|^|$(CODEBLOCK)|g" \
 		)
-	@$(RUNMAKE) $(HELPOUT)-FOOTER
+	@$(call TITLE_LN,2,Reserved)
+	@$(PRINT) "Reserved target names, including use as prefixes:"
+	@$(ENDOLINE)
+	@$(eval LIST := $(shell \
+			$(ECHO) " \
+				$(COMPOSER_RESERVED) \
+				$(COMPOSER_RESERVED_SPECIAL) \
+				$(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)) \
+			" \
+			| $(TR) ' ' '\n' \
+			| $(SORT) \
+		))$(foreach FILE,$(LIST),\
+			$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
+			$(call NEWLINE) \
+		)
+	@$(ENDOLINE)
+	@$(PRINT) "Reserved variable names:"
+	@$(ENDOLINE)
+	@$(eval LIST := $(shell \
+			$(SED) -n \
+				-e "s|^$(call COMPOSER_REGEX_OVERRIDE).*$$|\1|gp" \
+				-e "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" \
+				-e "s|^$(call COMPOSER_REGEX_DEFINE).*$$|\2|gp" \
+				-e "s|^$(call COMPOSER_REGEX_EVAL,,1).*$$|\2|gp" \
+				$(COMPOSER) \
+			| $(SORT) \
+		))$(foreach FILE,$(LIST),\
+			$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
+			$(call NEWLINE) \
+		)
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-TITLE -----
@@ -1681,19 +1722,6 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-SECTION =
 **$(_C)$(shell $(ECHO) "$(1)" | $(SED) -e "s|^([_])|\\\\\1|g" -e "s|([[:space:]])([_])|\1\\\\\2|g" | $(TR) 'a-z' 'A-Z')$(_D)**
-endef
-
-override define $(HELPOUT)-SPLIT-LINE =
-$(1)$(subst $(TOKEN), ,$(subst $(NULL) ,$(call NEWLINE)$(1),$(strip \
-	$(eval LINE :=) \
-	$(foreach FILE,$(3),\
-		$(eval LINE += $(FILE)) \
-		$(if $(word $(2),$(LINE)),$(subst $(NULL) ,$(TOKEN),$(strip $(LINE))) \
-			$(eval LINE :=) \
-		) \
-	)
-	$(if $(LINE),$(subst $(NULL) ,$(TOKEN),$(strip $(LINE)))) \
-)))
 endef
 
 ########################################
@@ -1839,7 +1867,7 @@ given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
 Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
 and '$(_E)Heredoc$(_D)' sections of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the
-`$(_C)$(DISTRIB)$(_D)`/`$(_C)$(CREATOR)$(_D)` targets, and will be overwritten whenever they are run.
+`$(_C)$(DISTRIB)$(_D)` target, and will be overwritten whenever it is run.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
 
@@ -1923,25 +1951,19 @@ All variable definitions must be in the `$(_N)override [variable] := [value]$(_D
 from `$(_C)$(EXAMPLE)$(_D)`.  Doing otherwise will result in unexpected behavior, and is not
 supported.  The regular expression that is used to detect them:
 
-$(CODEBLOCK)$(_N)$(COMPOSER_OVERRIDE_REGEX)$(_D)
+$(CODEBLOCK)$(_N)$(COMPOSER_REGEX_OVERRIDE)$(_D)
 
 Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
-$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_css := $(CSS_ALT)$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_N)override c_toc := $(SPECIAL_VAL)$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_EPUB)$(_D): $(_N)override c_css :=$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_css :=$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_N)override c_toc :=$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_css := $(CSS_ALT)$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc := $(SPECIAL_VAL)$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_EPUB)$(_D): $(_E)override c_css :=$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_css :=$(_D)
+$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc :=$(_D)
 
 In this case, there are multiple definitions that could apply to
 `$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most spedific target
-match is used, the final value for `$(_C)c_toc$(_D)` would be empty.
-
-#WORKING:NOW -------------------------------------------------------------------
-#	random note to regex search all "override" statements, to get a list of internal variables that should not be used...
-#	can do COMPOSER_*, and then filter for the rest, too...
-#	is this getting to be too much... do we care?
-#	maybe just say to define new variables sparingly (or not at all), to avoid conflicts... simple.
+match is used, the final values for both `$(_C)c_css$(_D)` and `$(_C)c_toc$(_D)` would be empty.
 endef
 
 ########################################
@@ -1991,27 +2013,17 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM ----
 
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
+#WORKING:NOW -------------------------------------------------------------------
+#WORKING:NOW reserved variables, also... ---------------------------------------
+
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
 [Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
 `$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective targets.
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
-Additionally, the following are reserved, including anything that has a suffix
-`$(_C)-$(_N)*$(_D)` to them:
-$(_E)
-$(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter .%,$(sort $(COMPOSER_RESERVED))))
-$(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),8,$(filter _%,$(sort $(COMPOSER_RESERVED))))
-$(call $(HELPOUT)-SPLIT-LINE,$(CODEBLOCK),10,\
-	$(filter-out .%,\
-	$(filter-out _%,\
-	$(sort \
-		$(COMPOSER_RESERVED) \
-		$(COMPOSER_RESERVED_SPECIAL) \
-		$(addsuffix s,$(COMPOSER_RESERVED_SPECIAL)) \
-	) \
-)))
-$(_D)
+Additionally, there is a list of reserved targets in $(_C)[Reserved]$(_D).
+
 Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
 `$(_M)$(MAKEFILE)$(_D)`, so matching targets will be overridden.  In those cases, $(_C)[GNU Make]$(_D)
 will produce warning messages.
@@ -2106,7 +2118,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
   * This value has different effects, depending on the `$(_C)c_type$(_D)` of the output
     document.
   * For `$(_C)$(TYPE_HTML)$(_D)`, any value enables `$(_E)section-divs$(_D)`, which wrap headings and their
-    section content in `$(_N)<section>$(_D)` tags and attach identifiers to them instead
+    section content in `$(_E)<section>$(_D)` tags and attach identifiers to them instead
     of the headings themselves.  This is for $(_M)CSS$(_D) styling, and is generally
     desired.
   * For `$(_C)$(TYPE_LPDF)$(_D)`, there are 3 top-level division types: `$(_M)part$(_D)`, `$(_M)chapter$(_D)`, and
@@ -2366,7 +2378,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
 
 Commit title format:
 
-$(CODEBLOCK)$(_N)$(COMPOSER_TIMESTAMP)$(_D)
+$(CODEBLOCK)$(_E)$(COMPOSER_TIMESTAMP)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
 
@@ -2406,18 +2418,19 @@ ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 endif
 $(CREATOR): .set_title-$(CREATOR)
 	@$(call $(HEADERS))
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_GITIGNORE)					>$(CURDIR)/.gitignore
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_LICENSE)					>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
+#>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))))
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_TEX_PDF_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
+	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
-	@$(call DO_HEREDOC,HEREDOC_DISTRIB_REVEALJS_CSS)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 	@$(foreach FILE,\
 		$(TYPE_DOCX):$(EXTN_DOCX) \
 		$(TYPE_PPTX):$(EXTN_PPTX) \
@@ -2531,7 +2544,7 @@ endef
 # {{{1 Heredoc: gitignore ------------------------------------------------------
 ################################################################################
 
-override define HEREDOC_DISTRIB_GITIGNORE =
+override define HEREDOC_GITIGNORE =
 ################################################################################
 # $(COMPOSER_TECHNAME)
 ################################################################################
@@ -2565,7 +2578,7 @@ endef
 # {{{1 Heredoc: pdf_latex ------------------------------------------------------
 ################################################################################
 
-override define HEREDOC_DISTRIB_TEX_PDF_TEMPLATE =
+override define HEREDOC_TEX_PDF_TEMPLATE =
 % ##############################################################################
 % $(COMPOSER_TECHNAME)
 % ##############################################################################
@@ -2585,7 +2598,7 @@ endef
 # {{{1 Heredoc: revealjs_css ---------------------------------------------------
 ################################################################################
 
-override define HEREDOC_DISTRIB_REVEALJS_CSS =
+override define HEREDOC_REVEALJS_CSS =
 /* #############################################################################
 # $(COMPOSER_TECHNAME)
 ############################################################################# */
@@ -2638,7 +2651,7 @@ endef
 # {{{1 Heredoc: license --------------------------------------------------------
 ################################################################################
 
-override define HEREDOC_DISTRIB_LICENSE =
+override define HEREDOC_LICENSE =
 # $(COMPOSER_LICENSE)
 
 --------------------------------------------------------------------------------
@@ -3673,7 +3686,7 @@ override NOTHING_IGNORES := \
 #>	$(SUBDIRS) \
 #>	$(MAKEFILE) \
 
-$(eval override COMPOSER_NOTHING ?=)
+$(eval export override COMPOSER_NOTHING ?=)
 .PHONY: $(NOTHING)-%
 $(NOTHING)-%:
 	@$(RUNMAKE) --silent COMPOSER_NOTHING="$(*)" $(NOTHING)
@@ -4919,7 +4932,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 	fi; \
 	if [ -n "$(3)" ]; then \
 		$(SED) -i \
-			"s|^($(call COMPOSER_OVERRIDE_REGEX,COMPOSER_TEACHER)).*$$|\1 $(~)(abspath $(~)(COMPOSER_MY_PATH)/`$(REALPATH) $(abspath $(dir $(1))) $(3)`)|g" \
+			"s|^($(call COMPOSER_REGEX_OVERRIDE,COMPOSER_TEACHER)).*$$|\1 $(~)(abspath $(~)(COMPOSER_MY_PATH)/`$(REALPATH) $(abspath $(dir $(1))) $(3)`)|g" \
 			$(1); \
 	fi
 endef
