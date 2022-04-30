@@ -1125,7 +1125,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 #	$(TESTING)-file + COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)"
 #> update: PHONY.*$(DOITALL)
 #	$(HELPOUT)-$(DOITALL)
-#	$(HEADERS)-$(TESTING)-$(DOITALL)
+#	$(HEADERS)-$(EXAMPLE)-$(DOITALL)
 #	$(CHECKIT)-$(DOITALL)
 #	$(CONFIGS)-$(DOITALL)
 #	$(CONVICT)-$(DOITALL)
@@ -1134,6 +1134,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
 #> update: PHONY.*$(DOFORCE)
+#	$(HELPOUT)-$(DOFORCE)
 #	$(CHECKIT)-$(DOFORCE)
 #	$(INSTALL)-$(DOFORCE)
 
@@ -1534,8 +1535,8 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)$(CREATOR)"				"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does \`$(_C)$(DOITALL)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"Document creation engine $(_E)(backend to \`$(COMPOSER_CREATE)\`)$(_D)"
 	@$(TABLE_M2) "$(_C)$(HEADERS)"				"Series of targets that handle all informational output"
-	@$(TABLE_M2) "$(_C)$(HEADERS)-$(TESTING)"		"For testing default \`$(_C)$(HEADERS)$(_D)\` output"
-	@$(TABLE_M2) "$(_C)$(HEADERS)-$(TESTING)-$(DOITALL)"	"For testing complete \`$(_C)$(HEADERS)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"For testing default \`$(_C)$(HEADERS)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"For testing complete \`$(_C)$(HEADERS)$(_D)\` output"
 	@$(TABLE_M2) "$(_C)$(WHOWHAT)"				"Wrapper to \`$(_C)$(HEADERS)$(_D)\` when processing directories"
 	@$(TABLE_M2) "$(_C)$(SETTING)"				"Wrapper to \`$(_C)$(HEADERS)$(_D)\` when processing files"
 	@$(TABLE_M2) "$(_C)$(MAKE_DB)"				"Complete contents of $(_C)[GNU Make]$(_D) internal state"
@@ -1581,6 +1582,7 @@ $(HELPOUT)-EXAMPLES_%:
 # {{{2 $(HELPOUT)-$(DOITALL) -----------
 
 #> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
 #>$(eval export override COMPOSER_DOITALL_$(HELPOUT) ?=)
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
@@ -3500,16 +3502,16 @@ else
 override $(HEADERS)-release = $(1)
 endif
 
-.PHONY: $(HEADERS)-$(TESTING)-$(DOITALL)
-$(HEADERS)-$(TESTING)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(TESTING) := $(DOITALL)
-$(HEADERS)-$(TESTING)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
-$(HEADERS)-$(TESTING)-$(DOITALL): export override $(HEADERS)-vars := $(COMPOSER_OPTIONS)
-$(HEADERS)-$(TESTING)-$(DOITALL): $(HEADERS)-$(TESTING)
-$(HEADERS)-$(TESTING)-$(DOITALL):
+.PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-vars := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): $(HEADERS)-$(EXAMPLE)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL):
 	@$(ECHO) ""
 
-.PHONY: $(HEADERS)-$(TESTING)
-$(HEADERS)-$(TESTING):
+.PHONY: $(HEADERS)-$(EXAMPLE)
+$(HEADERS)-$(EXAMPLE):
 	@$(call $(HEADERS))
 	@$(call $(HEADERS),1)
 	@$(call $(HEADERS)-run)
