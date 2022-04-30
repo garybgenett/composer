@@ -1404,7 +1404,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Size of margins [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
 	@$(TABLE_M3) "$(_C)c_options$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Values: \`$(_C)c_type\`"	"$(_H)Format"				"$(_H)Extension"
+	@$(TABLE_M3) "$(_H)Values:$(_D) $(_C)c_type"	"$(_H)Format"				"$(_H)Extension"
 	@$(TABLE_M3) ":---"				":---"					":---"
 	@$(TABLE_M3) "$(_C)$(TYPE_HTML)"		"$(DESC_HTML)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
 	@$(TABLE_M3) "$(_C)$(TYPE_LPDF)"		"$(DESC_LPDF)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
@@ -1491,8 +1491,8 @@ $(HELPOUT)-TARGETS_SPECIALS_%:
 	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)$(DO_BOOK)"				"Concatenate a source list into a single output file"
-	@$(TABLE_M2) "$(_C)$(DO_PAGE)"				"*$(_N)(Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature)$(_D)*"
-	@$(TABLE_M2) "$(_C)$(DO_POST)"				"*$(_N)(Reserved for the future \`$(_C)$(PUBLISH)$(_N)\` feature)$(_D)*"
+	@$(TABLE_M2) "$(_C)$(DO_PAGE)"				"*$(_N)(Reserved for the future \`$(PUBLISH)\` feature)$(_D)*"
+	@$(TABLE_M2) "$(_C)$(DO_POST)"				"*$(_N)(Reserved for the future \`$(PUBLISH)\` feature)$(_D)*"
 	@$(ENDOLINE)
 	@$(PRINT) "For each of these base names, there are a standard set of actual targets:"
 	@$(ENDOLINE)
@@ -1599,13 +1599,12 @@ $(HELPOUT)-%:
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
 	@$(call TITLE_LN,2,Typical Workflow)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
+	@$(call TITLE_LN,2,Document Formatting,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
 	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
 	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
 	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-#WORKING:NOW : add pdf.latx... and reference.docx? actually, reference.custom --
-	@$(call TITLE_LN,2,Reveal.js Presentations,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-PRESENT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
@@ -1685,7 +1684,7 @@ override define $(HELPOUT)-$(DOITALL)-SECTION =
 endef
 
 override define $(HELPOUT)-SPLIT-LINE =
-$(1)$(subst $(TOKEN), ,$(subst $(NULL) ,$(NEWLINE)$(1),$(strip \
+$(1)$(subst $(TOKEN), ,$(subst $(NULL) ,$(call NEWLINE)$(1),$(strip \
 	$(eval LINE :=) \
 	$(foreach FILE,$(3),\
 		$(eval LINE += $(FILE)) \
@@ -1737,7 +1736,7 @@ The guiding principles of $(_C)[$(COMPOSER_BASENAME)]$(_D):
   * Inheritance and dependencies; global, tree, directory and file overrides
   * Fast; both to initiate commands and for processing to complete
 
-Direct support for key document types:
+Direct support for key document types $(_E)(see [Document Formatting])$(_D):
 
   * $(_M)HTML$(_D) $(_E)(standalone and [Bootstrap] websites)$(_D)
   * $(_M)PDF$(_D)
@@ -1756,9 +1755,9 @@ minimal command-line environment based on $(_M)[GNU]$(_D) tools, which is standa
 $(_M)[GNU/Linux]$(_D) systems.  The $(_M)[Windows Subsystem for Linux]$(_D) for Windows and
 $(_M)[MacPorts]$(_D) for macOS both provide suitable environments.
 
-*$(_E)([MacPorts] does not install [GNU Make] by default.  The package name is
+$(_E)*([MacPorts] does not install [GNU Make] by default.  The package name is
 `gmake`, and it requires a modification to the `$$PATH` in order to be called as
-just `$(DOMAKE)`.)$(_D)*
+just `$(DOMAKE)`.)*$(_D)
 
 The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
@@ -1822,6 +1821,87 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
 
 Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade,
 in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template.
+endef
+
+########################################
+# {{{3 $(HELPOUT)-$(DOITALL)-FORMAT ----
+
+override define $(HELPOUT)-$(DOITALL)-FORMAT =
+As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
+produce beautiful and professional output.  $(_C)[Pandoc]$(_D) does reasonably well at
+this, and yet its primary focus is document conversion, not document formatting.
+$(_C)[$(COMPOSER_BASENAME)]$(_D) fills this gap by specifically tuning a select list of the most
+commonly used document formats.
+
+Further options for each document type are in $(_C)[Formatting Variables]$(_D).  All
+improvements not exposed as variables will apply to all documents created with a
+given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
+and '$(_E)Heredoc$(_D)' sections of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the
+`$(_C)$(DISTRIB)$(_D)`/`$(_C)$(CREATOR)$(_D)` targets, and will be overwritten whenever they are run.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
+
+In addition to being a helpful real-time rendering tool, $(_C)[Markdown Viewer]$(_D)
+includes several $(_M)CSS$(_D) stylesheets that are much more visually appealing than the
+$(_C)[Pandoc]$(_D) default, and which behave like normal webpages, so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses them
+for all $(_M)HTML$(_D)-based document types, including $(_M)EPUB$(_D).
+
+Information on installing $(_C)[Markdown Viewer]$(_D) for use as a $(_C)[Markdown]$(_D) rendering
+tool is in $(_C)[Requirements]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Bootstrap)
+
+$(_C)[Bootstrap]$(_D) is a leading web development framework, capable of building static
+webpages that behave dynamically.  Static sites are very easy and inexpensive to
+host, and are extremely responsive compared to truly dynamic webpages.
+
+$(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of simple text files into
+a modern website, with the appearance and behavior of dynamically indexed pages.
+
+$(_N)*(This feature is reserved for a future release as the `$(PUBLISH)` target, along with
+`$(DO_PAGE)` and `$(DO_POST)` in [Specials].)*$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,PDF)
+
+The default formatting for $(_M)PDF$(_D) is geared towards academic papers and the
+typesetting of printed books, instead of documents that are intended to be
+purely digital.
+
+Internally, $(_C)[Pandoc]$(_D) first converts to $(_M)LaTeX$(_D), and then uses $(_C)[TeX Live]$(_D) to
+convert into the final $(_M)PDF$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) inserts customized $(_M)LaTeX$(_D) to modify the
+final output:
+
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(TEX_PDF_TEMPLATE))$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,EPUB)
+
+The $(_M)EPUB$(_D) format is essentially packaged $(_M)HTML$(_D), so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses the same
+$(_C)[Markdown Viewer]$(_D) $(_M)CSS$(_D) stylesheets for it.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Reveal.js Presentations)
+
+The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to create a more
+traditional and readable end result.  The customized template is at:
+
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_CSS))$(_D)
+
+It is set up so that a logo can be placed in the upper right hand corner on each
+slide, for presentations that need to be branded.  Simply place an image file in
+the logo location:
+
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Microsoft Word & PowerPoint)
+
+The internal $(_C)[Pandoc]$(_D) templates for these are exported by $(_C)[$(COMPOSER_BASENAME)]$(_D), so they
+are available for customization:
+
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_ART))/reference.$(EXTN_DOCX)$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_ART))/reference.$(EXTN_PPTX)$(_D)
+
+They are not currently modified by $(_C)[$(COMPOSER_BASENAME)]$(_D).
 endef
 
 ########################################
@@ -1971,24 +2051,6 @@ when they do occur.
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-PRESENT ---
-
-override define $(HELPOUT)-$(DOITALL)-PRESENT =
-The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to create a more useful
-and visually appealing end result.  The customized template is at:
-
-$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_CSS))$(_D)
-
-It is set up so that a logo can be placed in the upper right hand corner on each
-slide, for presentations that need to be branded.  Simply place an image file in
-the logo location:
-
-$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
-
-This will apply to all presentations created with that instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
-endef
-
-########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
@@ -2110,7 +2172,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DOCOLOR)
 
   * $(_C)[$(COMPOSER_BASENAME)]$(_D) uses colors to make all output and `$(_C)$(HELPOUT)$(_D)` text easier to read.
     The escape sequences used to accomplish this can create mixed results when
-    reading in an output file or using a pager like `$(_C)$(lastword $(subst /, ,$(firstword $(LESS_BIN))))$(_D)`.
+    reading in an output file or a `$(_C)$$PAGER$(_D)`.
   * This is also used internally for targets like `$(_C)$(DEBUGIT)-file$(_D)` and `$(_C)$(EXAMPLE)$(_D)`,
     where plain text is required.
 
@@ -2252,8 +2314,8 @@ chapter in a separate file.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
 
-*$(_N)(Both `$(_C)$(DO_PAGE)$(_N)` and `$(_C)$(DO_POST)$(_N)` are reserved for the future `$(_C)$(PUBLISH)$(_N)` feature, which will
-build website pages using $(_C)[Bootstrap]$(_N).)$(_D)*
+$(_N)*(Both `$(DO_PAGE)` and `$(DO_POST)` are reserved for the future `$(PUBLISH)` feature, which will
+build website pages using [Bootstrap].)*$(_D)
 endef
 
 ########################################
@@ -2361,10 +2423,14 @@ $(CREATOR): .set_title-$(CREATOR)
 		$(TYPE_PPTX):$(EXTN_PPTX) \
 		,\
 		$(PANDOC) --verbose \
-			--output="$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/reference.$(word 2,$(subst :, ,$(FILE)))" \
-			--print-default-data-file="reference.$(word 1,$(subst :, ,$(FILE)))" \
-			$(NEWLINE) \
+			--output="$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/reference.$(EXAMPLE).$(word 2,$(subst :, ,$(FILE)))" \
+			--print-default-data-file="reference.$(word 1,$(subst :, ,$(FILE)))"; \
+		$(LN) \
+			$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/reference.$(EXAMPLE).$(word 2,$(subst :, ,$(FILE))) \
+			$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/reference.$(word 2,$(subst :, ,$(FILE))); \
+		$(call NEWLINE) \
 	)
+	@$(ENDOLINE)
 	@$(LS) $(CURDIR)
 	@$(ENDOLINE)
 	@$(LS) --recursive $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
@@ -4113,7 +4179,7 @@ $(TESTING)-$(TARGETS)-init:
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
 				$(call $(TESTING)-run) c_toc="$(subst x,,$(TOC))" c_level="$(subst x,,$(LEVEL))" $(OUT_README).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
-				$(NEWLINE) \
+				$(call $(NEWLINE)) \
 			) \
 		) \
 	)
@@ -4710,7 +4776,9 @@ $(DISTRIB): .set_title-$(DISTRIB)
 	@$(call $(HEADERS))
 	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
 		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
-		if [ -d "$(COMPOSER_PKG)" ]; then \
+		if	[ -n "$(call COMPOSER_FIND,$(PATH_LIST),rsync)" ] && \
+			[ -d "$(COMPOSER_PKG)" ]; \
+		then \
 			$(MKDIR) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_PKG)); \
 			$(RSYNC) $(COMPOSER_PKG)/ $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_PKG)); \
 		fi; \
