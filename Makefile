@@ -192,13 +192,9 @@ endif
 # {{{1 Include Files -----------------------------------------------------------
 ################################################################################
 
-override COMPOSER_INCLUDE_REGEX		= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
-override COMPOSER_INCLUDES		:=
-override COMPOSER_INCLUDES_LIST		:=
-
-########################################
-
+override COMPOSER_OVERRIDE_REGEX	= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
+
 override define READ_ALIASES =
 	$(if $(COMPOSER_DEBUGIT_ALL),\
 		$(info #> ALIAS				[$(1)|$($(1))|$(origin $(1))]) \
@@ -236,7 +232,7 @@ $$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> SOURCE				[$(1)/$$(COMPOSER_SETTINGS)]
 #>include $(1)/$$(COMPOSER_SETTINGS)
 $$(foreach FILE,\
 	$$(shell \
-		$$(SED) -n "/^$$(call COMPOSER_INCLUDE_REGEX).*$$$$/p" $(1)/$$(COMPOSER_SETTINGS) \
+		$$(SED) -n "/^$$(call COMPOSER_OVERRIDE_REGEX).*$$$$/p" $(1)/$$(COMPOSER_SETTINGS) \
 		| $$(SED) -e "s|[[:space:]]+|$$(TOKEN)|g" -e "s|$$$$| |g" \
 	),\
 	$$(if $$(COMPOSER_DEBUGIT_ALL),$$(info #> OVERRIDE				[$$(subst $$(TOKEN), ,$$(FILE))])) \
@@ -251,6 +247,9 @@ $(eval $(call SOURCE_INCLUDES,$(CURDIR)))
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDE		[$(COMPOSER_INCLUDE)]))
 
 ########################################
+
+override COMPOSER_INCLUDES		:=
+override COMPOSER_INCLUDES_LIST		:=
 
 ifneq ($(COMPOSER_INCLUDE),)
 override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
@@ -284,29 +283,25 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 ########################################
 
 #> update: includes duplicates
-#>$(call READ_ALIASES,s,s,c_css)
 
-#WORKING:FIX:CSS
-override c_css_use_override		:=
-override c_css_use			:=
-
-ifneq ($(origin c_css),undefined)
-ifneq ($(origin c_css),command line)
-override c_css_use_override		:= 1
+ifneq ($(origin c_css),override)
+ifeq ($(origin s),override)
+undefine				c_css
+$(call READ_ALIASES,s,s,c_css)
 endif
 endif
 
-ifeq ($(c_css_use_override),)
+ifneq ($(origin c_css),override)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS				[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
 		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS				[$(FILE)])) \
-		$(eval override c_css_use := $(FILE)) \
+		$(eval override c_css := $(FILE)) \
 	) \
 )
 endif
 
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE				[$(c_css_use)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS					[$(c_css)]))
 
 ################################################################################
 # {{{1 Make Settings -----------------------------------------------------------
@@ -321,6 +316,18 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS_USE				[$(c_css_use)]))
 unexport
 
 export MAKEFLAGS
+
+########################################
+
+#>override MAKEFILE			:= $(notdir $(firstword $(MAKEFILE_LIST)))
+override MAKEFILE			:= Makefile
+override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory
+
+ifneq ($(COMPOSER_DEBUGIT_ALL),)
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
+else
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
+endif
 
 ########################################
 
@@ -352,17 +359,7 @@ ifeq ($(MAKEJOBS),$(SPECIAL_VAL))
 override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
 endif
 
-########################################
-
-#>override MAKEFILE			:= $(notdir $(firstword $(MAKEFILE_LIST)))
-override MAKEFILE			:= Makefile
-override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory $(MAKEJOBS_OPTS)
-
-ifneq ($(COMPOSER_DEBUGIT_ALL),)
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
-else
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
-endif
+override MAKEFLAGS			:= $(MAKEFLAGS) $(MAKEJOBS_OPTS)
 
 ########################################
 
@@ -447,7 +444,6 @@ override c_type				?= $(TYPE_DEFAULT)
 override c_base				?= $(OUT_README)
 override c_list				?= $(c_base)$(COMPOSER_EXT)
 override c_lang				?= en-US
-override c_css_use			?= #> update: includes duplicates / COMPOSER_OPTIONS
 #>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
 override c_css				?=
 override c_toc				?=
@@ -817,57 +813,52 @@ endif
 ########################################
 # {{{2 CSS -----------------------------
 
-ifeq ($(c_css_use),)
+override define c_css_select =
+$(strip $(if $(c_css),\
+	$(if $(filter $(SPECIAL_VAL),$(c_css)),,\
+	$(if $(filter $(CSS_ALT),$(c_css)),$(MDVIEWER_CSS_ALT) ,\
+	$(abspath $(c_css)) \
+	)) \
+,\
+	$(if $(filter $(TYPE_PRES),$(c_type)),$(REVEALJS_CSS) ,\
+	$(MDVIEWER_CSS) \
+	) \
+))
+endef
 
-ifeq ($(c_css),$(SPECIAL_VAL))
-override c_css_use			:=
-else
-
-ifeq ($(c_css),)
-ifeq ($(OUTPUT),$(TYPE_PRES))
-override c_css_use			:= $(REVEALJS_CSS)
-else
-override c_css_use			:= $(MDVIEWER_CSS)
-endif
-else
-ifeq ($(c_css),$(CSS_ALT))
-override c_css_use			:= $(MDVIEWER_CSS_ALT)
-else
-override c_css_use			:= $(abspath $(c_css))
-endif
-endif
-
-endif
-endif
+#>$(eval override c_css			:= $(call c_css_select))
 
 ########################################
 # {{{2 Command -------------------------
 
-override PANDOC_OPTIONS			:= --data-dir="$(PANDOC_DIR)"
+override PANDOC_OPTIONS_DATA		:=
+ifneq ($(COMPOSER_DEBUGIT_ALL),)
+override PANDOC_OPTIONS_DATA		:= --verbose
+endif
+
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --data-dir="$(PANDOC_DIR)"
 
 ifneq ($(wildcard $(COMPOSER_ART)/template.$(EXTENSION)),)
-override PANDOC_OPTIONS			:= $(PANDOC_OPTIONS) --template="$(COMPOSER_ART)/template.$(EXTENSION)"
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --template="$(COMPOSER_ART)/template.$(EXTENSION)"
 else ifneq ($(wildcard $(PANDOC_DIR)/data/templates/default.$(OUTPUT)),)
-override PANDOC_OPTIONS			:= $(PANDOC_OPTIONS) --template="$(PANDOC_DIR)/data/templates/default.$(OUTPUT)"
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --template="$(PANDOC_DIR)/data/templates/default.$(OUTPUT)"
 endif
 
 ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
-override PANDOC_OPTIONS			:= $(PANDOC_OPTIONS) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
 endif
 
 ########################################
 
 override PANDOC_EXTENSIONS		:= +smart
-override PANDOC_OPTIONS			:= $(strip $(PANDOC_OPTIONS) \
-	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
+override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
+	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
+	--from="$(INPUT)$(PANDOC_EXTENSIONS)" \
+	--to="$(OUTPUT)" \
 	\
 	--standalone \
 	--self-contained \
 	--columns="$(COLUMNS)" \
-	\
-	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
-	--from="$(INPUT)$(PANDOC_EXTENSIONS)" \
-	--to="$(OUTPUT)" \
 	\
 	$(if $(c_lang),\
 		--variable="lang=$(c_lang)" \
@@ -885,35 +876,35 @@ override PANDOC_OPTIONS			:= $(strip $(PANDOC_OPTIONS) \
 		--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js" \
 		--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css" \
 	) \
-	$(if $(c_css_use),\
-		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(c_css_use)") \
-		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(c_css_use)") \
-		$(if $(filter $(c_type),$(TYPE_PRES)),	--css="$(c_css_use)") \
+	$(if $(call c_css_select),\
+		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(call c_css_select)") \
+		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
+		$(if $(filter $(c_type),$(TYPE_PRES)),	--css="$(call c_css_select)") \
 	) \
 	$(if $(c_toc),\
 		--table-of-contents \
-		$(if $(filter $(SPECIAL_VAL),$(c_toc)),	--toc-depth="$(DEPTH_MAX)" --number-sections, \
+		$(if $(filter $(SPECIAL_VAL),$(c_toc)),	--toc-depth="$(DEPTH_MAX)" --number-sections ,\
 							--toc-depth="$(c_toc)" \
 		) \
 	) \
 	$(if $(c_level),\
 		$(if $(filter $(c_type),$(TYPE_HTML)),			--section-divs) \
 		$(if $(filter $(c_type),$(TYPE_LPDF)),\
-			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--top-level-division="part", \
-			$(if $(filter $(DEPTH_DEFAULT),$(c_level)),	--top-level-division="chapter", \
+			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--top-level-division="part" ,\
+			$(if $(filter $(DEPTH_DEFAULT),$(c_level)),	--top-level-division="chapter" ,\
 									--top-level-division="section" \
 		))) \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),\
-			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--epub-chapter-level="$(DEPTH_DEFAULT)", \
+			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--epub-chapter-level="$(DEPTH_DEFAULT)" ,\
 									--epub-chapter-level="$(c_level)" \
 		)) \
 		$(if $(filter $(c_type),$(TYPE_PRES)),\
-			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--section-divs --slide-level="1", \
+			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--section-divs --slide-level="1" ,\
 									--section-divs --slide-level="$(DEPTH_DEFAULT)" \
 		)) \
 	) \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
-		$(if $(c_margin),		--variable="geometry=margin=$(c_margin)", \
+		$(if $(c_margin),		--variable="geometry=margin=$(c_margin)" ,\
 		$(if $(c_margin_top),		--variable="geometry=top=$(c_margin_top)") \
 		$(if $(c_margin_bottom),	--variable="geometry=bottom=$(c_margin_bottom)") \
 		$(if $(c_margin_left),		--variable="geometry=left=$(c_margin_left)") \
@@ -1092,26 +1083,20 @@ override COMPOSER_EXPORTED_NOT := \
 	c_base \
 	c_list \
 
-#WORKING:FIX:CSS
-override COMPOSER_EXPORTED_NULL := \
-	c_css_use \
-
 #> update: $(MAKE) / @+
 #>override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
 #>override RUNMAKE			:= $(RUNMAKE) $(MAKE_OPTIONS)
 $(foreach FILE,$(COMPOSER_EXPORTED)		,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_EXPORTED_NOT)		,$(eval unexport $(FILE)))
-$(foreach FILE,$(COMPOSER_EXPORTED_NULL)	,$(eval unexport $(FILE)))
 
 override COMPOSER_OPTIONS		:= \
-	$(shell $(SED) -n "s|^$(call COMPOSER_INCLUDE_REGEX,,1).*$$|\1|gp" $(COMPOSER) \
+	$(shell $(SED) -n "s|^$(call COMPOSER_OVERRIDE_REGEX,,1).*$$|\1|gp" $(COMPOSER) \
 	| $(SED) $(if $(c_margin),"/^c_margin_.+$$/d","/^c_margin$$/d") \
 )
 $(foreach FILE,$(COMPOSER_OPTIONS),\
 	$(if $(or \
 		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
 		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) ,\
-		$(filter $(FILE),$(COMPOSER_EXPORTED_NULL)) \
 		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE)) \
 	) \
 )
@@ -1119,12 +1104,13 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 $(if $(COMPOSER_DEBUGIT_ALL),\
 	$(info #> COMPOSER_EXPORTED		[$(strip $(COMPOSER_EXPORTED))]) \
 	$(info #> COMPOSER_EXPORTED_NOT	[$(strip $(COMPOSER_EXPORTED_NOT))]) \
-	$(info #> COMPOSER_EXPORTED_NULL	[$(strip $(COMPOSER_EXPORTED_NULL))]) \
 	$(info #> COMPOSER_OPTIONS		[$(strip $(COMPOSER_OPTIONS))]) \
 )
 
 ########################################
 # {{{2 Targets -------------------------
+
+#> update: includes duplicates
 
 #> update: $(DEBUGIT): targets list
 #> update: $(TESTING): targets list
@@ -1136,7 +1122,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 #	$(TESTING)-file + COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)"
 #> update: PHONY.*$(DOITALL)
 #	$(HELPOUT)-$(DOITALL)
-#	$(HEADERS)-$(EXAMPLE)-$(DOITALL)
+#	$(HEADERS)-$(TESTING)-$(DOITALL)
 #	$(CHECKIT)-$(DOITALL)
 #	$(CONFIGS)-$(DOITALL)
 #	$(CONVICT)-$(DOITALL)
@@ -1148,7 +1134,6 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 #	$(CHECKIT)-$(DOFORCE)
 #	$(INSTALL)-$(DOFORCE)
 
-#> update: includes duplicates
 override HELPOUT			:= help
 override CREATOR			:= docs
 override EXAMPLE			:= template
@@ -1413,7 +1398,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)c_base$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
 	@$(TABLE_M3) "$(_C)c_list$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(c_list)"
 	@$(TABLE_M3) "$(_C)c_lang$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
-	@$(TABLE_M3) "$(_C)c_css$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(c_css)$(_D) )$(_N)($(COMPOSER_CSS))"
+	@$(TABLE_M3) "$(_C)c_css$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(notdir $(c_css))$(_D) )$(_N)($(COMPOSER_CSS))"
 	@$(TABLE_M3) "$(_C)c_toc$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)c_level$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
 	@$(TABLE_M3) "$(_C)c_margin$(_D)  ~ $(_E)m"	"Size of margins [$(call MARGIN_LIST)]"	"$(_M)$(c_margin)"
@@ -1546,8 +1531,8 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)$(CREATOR)"				"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does \`$(_C)$(DOITALL)$(_D)\`"
 	@$(TABLE_M2) "$(_C)$(COMPOSER_PANDOC)"			"Document creation engine $(_E)(backend to \`$(COMPOSER_CREATE)\`)$(_D)"
 	@$(TABLE_M2) "$(_C)$(HEADERS)"				"Series of targets that handle all informational output"
-	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)"		"For testing default \`$(_C)$(HEADERS)$(_D)\` output"
-	@$(TABLE_M2) "$(_C)$(HEADERS)-$(EXAMPLE)-$(DOITALL)"	"For testing complete \`$(_C)$(HEADERS)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(TESTING)"		"For testing default \`$(_C)$(HEADERS)$(_D)\` output"
+	@$(TABLE_M2) "$(_C)$(HEADERS)-$(TESTING)-$(DOITALL)"	"For testing complete \`$(_C)$(HEADERS)$(_D)\` output"
 	@$(TABLE_M2) "$(_C)$(WHOWHAT)"				"Wrapper to \`$(_C)$(HEADERS)$(_D)\` when processing directories"
 	@$(TABLE_M2) "$(_C)$(SETTING)"				"Wrapper to \`$(_C)$(HEADERS)$(_D)\` when processing files"
 	@$(TABLE_M2) "$(_C)$(MAKE_DB)"				"Complete contents of $(_C)[GNU Make]$(_D) internal state"
@@ -1858,7 +1843,7 @@ All variable definitions must be in the `$(_N)override [variable] := [value]$(_D
 from `$(_C)$(EXAMPLE)$(_D)`.  Doing otherwise will result in unexpected behavior, and is not
 supported.  The regular expression that is used to detect them:
 
-$(CODEBLOCK)$(_N)$(COMPOSER_INCLUDE_REGEX)$(_D)
+$(CODEBLOCK)$(_N)$(COMPOSER_OVERRIDE_REGEX)$(_D)
 
 Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
@@ -2387,31 +2372,30 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
-#	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "\n"									>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(_C)"
-	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(_D)"
+#>	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_CSS)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
+	@$(ECHO) "$(_C)"; $(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(_M)"; $(LS) $(CURDIR)/$(COMPOSER_CSS) 2>/dev/null || $(TRUE)
+	@$(ECHO) "$(_D)"
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORK	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
-#WORKING:FIX:CSS
-	touch $(CURDIR)/$(COMPOSER_CSS)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
-#	@$(RM) \
-#		$(CURDIR)/$(COMPOSER_SETTINGS) \
-#		$(CURDIR)/$(COMPOSER_CSS) \
-#		$(CURDIR)/$(COMPOSER_STAMP_DEFAULT) \
-#		>/dev/null
+	@$(RM) \
+		$(CURDIR)/$(COMPOSER_SETTINGS) \
+		$(CURDIR)/$(COMPOSER_CSS) \
+		$(CURDIR)/$(COMPOSER_STAMP_DEFAULT) \
+		>/dev/null
 endif
 
 ########################################
@@ -3410,15 +3394,14 @@ override $(HEADERS)-vars := \
 	c_base \
 	c_list \
 	c_lang \
-	c_css_use \
 	c_css \
 	c_toc \
 	c_level \
 	$(if $(c_margin),c_margin,\
 		$(if $(or \
-			$(c_margin_top), \
-			$(c_margin_bottom), \
-			$(c_margin_left), \
+			$(c_margin_top) ,\
+			$(c_margin_bottom) ,\
+			$(c_margin_left) ,\
 			$(c_margin_right) \
 		),\
 			c_margin_top \
@@ -3438,21 +3421,21 @@ else
 override $(HEADERS)-release = $(1)
 endif
 
-.PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-vars := $(COMPOSER_OPTIONS)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL): $(HEADERS)-$(EXAMPLE)
-$(HEADERS)-$(EXAMPLE)-$(DOITALL):
+.PHONY: $(HEADERS)-$(TESTING)-$(DOITALL)
+$(HEADERS)-$(TESTING)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(TESTING) := $(DOITALL)
+$(HEADERS)-$(TESTING)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(TESTING)-$(DOITALL): export override $(HEADERS)-vars := $(COMPOSER_OPTIONS)
+$(HEADERS)-$(TESTING)-$(DOITALL): $(HEADERS)-$(TESTING)
+$(HEADERS)-$(TESTING)-$(DOITALL):
 	@$(ECHO) ""
 
-.PHONY: $(HEADERS)-$(EXAMPLE)
-$(HEADERS)-$(EXAMPLE):
+.PHONY: $(HEADERS)-$(TESTING)
+$(HEADERS)-$(TESTING):
 	@$(call $(HEADERS))
 	@$(call $(HEADERS),1)
 	@$(call $(HEADERS)-run)
 	@$(call $(HEADERS)-run,1)
-	@$(call $(HEADERS)-note,$(CURDIR),$(@))
+	@$(call $(HEADERS)-note,$(CURDIR),$(TESTING))
 	@$(call $(HEADERS)-dir,$(CURDIR),directory)
 	@$(call $(HEADERS)-file,$(CURDIR),creating)
 	@$(call $(HEADERS)-skip,$(CURDIR),skipping)
@@ -3480,7 +3463,10 @@ override define $(HEADERS) =
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
 	$(foreach FILE,$(if $(COMPOSER_DEBUGIT_ALL),$($(HEADERS)-list),$(if $(1),$($(HEADERS)-list))),\
-		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$($(FILE))$(_D)]$(if $(filter $(FILE),$(COMPOSER_EXPORTED)), $(_E)$(MARKER)$(_D))"; \
+		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$(strip $(if \
+			$(filter c_css,$(FILE)),$(call c_css_select),\
+			$($(FILE)) \
+		))$(_D)]$(if $(filter $(FILE),$(COMPOSER_EXPORTED)), $(_E)$(MARKER)$(_D))"; \
 	) \
 	$(HEADER_L)
 endef
@@ -3495,7 +3481,13 @@ override define $(HEADERS)-run =
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(if $(COMPOSER_DEBUGIT_ALL),$($(HEADERS)-vars),$(if $(1),$($(HEADERS)-vars))),\
-		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$($(FILE))$(_D)$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $($(FILE)), )$(_E)$(MARKER)$(_D))"; \
+		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(strip $(if \
+			$(filter c_css,$(FILE)),$(call c_css_select) ,\
+			$($(FILE)) \
+		))$(_D)$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $(strip $(if \
+			$(filter c_css,$(FILE)),$(call c_css_select) ,\
+			$($(FILE)) \
+		)), )$(_E)$(MARKER)$(_D))"; \
 	) \
 	$(LINERULE)
 endef
@@ -3536,7 +3528,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(c_base).$(EXTENSION))
 else
 	@$(call $(HEADERS)-run,1,$(*))
-	@$(PRINT) '$(_C)$(MARKER) $(PANDOC) $(PANDOC_OPTIONS)'
+	@$(PRINT) '$(_C)$(MARKER) $(PANDOC) $(call PANDOC_OPTIONS)'
 endif
 
 ################################################################################
@@ -3624,7 +3616,7 @@ $(NOTHING)-%:
 $(NOTHING):
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(if $(filter $(COMPOSER_NOTHING),$(NOTHING_IGNORES)),\
-		$(ECHO) "",\
+		$(ECHO) "" ,\
 		$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_NOTHING)) \
 	)
 else
@@ -4373,30 +4365,18 @@ $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 ########################################
 # {{{3 $(TESTING)-CSS ------------------
 
-#WORKING:NOW
-#	verify all of the following, order of precedence is at the top...
-#		probably best to just layer them, like COMPOSER_INCLUDES...?
-#		precedence
-#			composer.mk per-target
-#			composer.mk override
-#			composer.css
-#			environment
-#		values
-#			$(SPECIAL_VAL)
-#			$(CSS_ALT)
-#			actual file
-
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
 	@$(call $(TESTING)-$(HEADERS),\
 		Use '$(_C)c_css$(_D)' to verify each method of setting variables ,\
-		\n\t * Default value \
-		\n\t * Default for '$(_C)$(TYPE_PRES)$(_D)' \
-		\n\t * From the environment \
-		\n\t * From '$(_C)$(CSS_ALT)$(_D)' alias \
-		\n\t * Using '$(_C)$(SPECIAL_VAL)$(_D)' Pandoc default \
-		\n\t * A '$(_C)$(COMPOSER_CSS)$(_D)' file $(_E)(precedence over environment)$(_D) \
-		\n\t * A '$(_C)$(COMPOSER_SETTINGS)$(_D)' file $(_E)(precedence over everything)$(_D) \
+		\n\t * Default: '$(_C)$(TYPE_HTML)$(_D)' \
+		\n\t * Default: '$(_C)$(TYPE_PRES)$(_D)' \
+		\n\t * Environment: '$(_C)$(notdir $(REVEALJS_CSS))$(_D)' \
+		\n\t * Environment: '$(_C)$(CSS_ALT)$(_D)' alias \
+		\n\t * Environment: '$(_C)$(SPECIAL_VAL)$(_D)' Pandoc default \
+		\n\t * File: '$(_C)$(COMPOSER_CSS)$(_D)' $(_E)(precedence over environment)$(_D) \
+		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' $(_E)(precedence over everything)$(_D) \
+		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' per-target $(_E)(precedence over everything)$(_D) \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -4404,27 +4384,34 @@ $(TESTING)-CSS: $(TESTING)-Think
 
 .PHONY: $(TESTING)-CSS-init
 $(TESTING)-CSS-init:
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS) >/dev/null
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css= $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css= c_type="$(TYPE_PRES)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_HTML)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_PRES)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
-	@$(ECHO) "override c_css := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(SETTING)-$(notdir $(call $(TESTING)-pwd))
+	@$(LS) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override c_css := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(MDVIEWER_CSS_ALT))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
+	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css := $(subst $(COMPOSER_DIR),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)),$(REVEALJS_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS)))
-	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
-	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
-	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS_ALT)))
-	$(call $(TESTING)-count,6,c_css_use.+$(notdir $(COMPOSER_DIR)))
-	$(call $(TESTING)-count,2,\/$(COMPOSER_CSS))
-	$(call $(TESTING)-count,8,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,6,$(notdir $(MDVIEWER_CSS_ALT)))
+	$(call $(TESTING)-count,1,c_css[^/]+$$)
+	$(call $(TESTING)-count,3,$(notdir $(COMPOSER_CSS)))
+	$(call $(TESTING)-count,6,$(notdir $(MDVIEWER_CSS_ALT)))
+	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
 
 ########################################
 # {{{3 $(TESTING)-other ----------------
@@ -4864,7 +4851,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 	fi; \
 	if [ -n "$(3)" ]; then \
 		$(SED) -i \
-			"s|^($(call COMPOSER_INCLUDE_REGEX,COMPOSER_TEACHER)).*$$|\1 $(~)(abspath $(~)(COMPOSER_MY_PATH)/`$(REALPATH) $(abspath $(dir $(1))) $(3)`)|g" \
+			"s|^($(call COMPOSER_OVERRIDE_REGEX,COMPOSER_TEACHER)).*$$|\1 $(~)(abspath $(~)(COMPOSER_MY_PATH)/`$(REALPATH) $(abspath $(dir $(1))) $(3)`)|g" \
 			$(1); \
 	fi
 endef
@@ -5022,9 +5009,27 @@ $(COMPOSER_STAMP): $(if \
 ########################################
 # {{{2 $(COMPOSER_CREATE) $(COMPOSER_PANDOC)
 
+.PHONY: $(COMPOSER_CREATE)
+$(COMPOSER_CREATE): $(c_list)
+$(COMPOSER_CREATE): $(c_base).$(EXTENSION)
+$(COMPOSER_CREATE):
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := create)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(EXTENSION),$(c_list))
+endif
+	@$(ECHO) ""
+
+$(c_base).$(EXTENSION): $(c_list)
+$(c_base).$(EXTENSION): $(COMPOSER_PANDOC)
+$(c_base).$(EXTENSION):
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := base)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
+endif
+	@$(ECHO) ""
+
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(c_list)
+$(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
+$(COMPOSER_PANDOC):
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_N)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
@@ -5035,23 +5040,10 @@ endif
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(MKDIR) $(COMPOSER_TMP)
 endif
-	@$(PANDOC) $(PANDOC_OPTIONS)
+	@$(PANDOC) $(call PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_STAMP),)
 	@$(ECHO) "$(COMPOSER_TIMESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
-endif
-
-.PHONY: $(COMPOSER_CREATE)
-$(COMPOSER_CREATE): $(c_base).$(EXTENSION)
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := create)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(EXTENSION),$(c_list))
-endif
-	@$(ECHO) ""
-
-$(c_base).$(EXTENSION): $(c_list)
-	@$(RUNMAKE) $(COMPOSER_PANDOC) c_type="$(c_type)" c_base="$(c_base)" c_list="$(c_list)"
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := base)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
 endif
 
 ########################################
