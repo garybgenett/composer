@@ -119,6 +119,7 @@ override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
 override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
+override COMPOSER_TAGLINE		:= Happy Making!
 
 override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
@@ -1349,7 +1350,7 @@ $(HELPOUT)-FOOTER:
 	@$(ENDOLINE)
 	@$(LINERULE)
 	@$(ENDOLINE)
-	@$(PRINT) "*$(_H)Happy Making!$(_D)*"
+	@$(PRINT) "*$(_H)$(COMPOSER_TAGLINE)$(_D)*"
 
 ########################################
 
@@ -1615,8 +1616,9 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+#WORKING:NOW -------------------------------------------------------------------
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+#	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 #>	$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 	@if [ "$(*)" = "$(DOFORCE)" ]; then \
 	$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL); \
@@ -1811,8 +1813,6 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-WORKFLOW --
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
-#WORKING:NOW -------------------------------------------------------------------
-
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory tree you want to manage, creating a structure similar to this:
 
@@ -1851,6 +1851,13 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
 
 Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade,
 in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template.
+
+The archive is ready, and each directory is both a part of the collective and
+its own individual instance.  Targets can be run per-directory, or recursively
+through an entire directory tree.  The most commonly used targets are in
+$(_C)[Primary Targets]$(_D).
+
+**$(_H)Welcome to [$(COMPOSER_BASENAME)].  $(COMPOSER_TAGLINE)$(_D)**
 endef
 
 ########################################
@@ -1940,8 +1947,8 @@ endef
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
 $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
-`COMPOSER_INCLUDE` in [Control Variables])$(_D).  This means that the values in the
-most local file override all others.
+`COMPOSER_INCLUDE` in [Control Variables])$(_D).  The values in the most local file
+override all others $(_E)(see [Precedence Rules])$(_D).
 
 The easiest way to create a new `$(_M)$(COMPOSER_SETTINGS)$(_D)` is with the `$(_C)$(EXAMPLE)$(_D)` target
 $(_E)([Quick Start] example)$(_D):
@@ -1950,8 +1957,8 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$
 $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
 
 All variable definitions must be in the `$(_N)override [variable] := [value]$(_D)` format
-from `$(_C)$(EXAMPLE)$(_D)`.  Doing otherwise will result in unexpected behavior, and is not
-supported.  The regular expression that is used to detect them:
+from the `$(_C)$(EXAMPLE)$(_D)` target.  Doing otherwise will result in unexpected behavior,
+and is not supported.  The regular expression that is used to detect them:
 
 $(CODEBLOCK)$(_N)$(COMPOSER_REGEX_OVERRIDE)$(_D)
 
@@ -2015,20 +2022,22 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM ----
 
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
-#WORKING:NOW -------------------------------------------------------------------
-#WORKING:NOW reserved variables, also... ---------------------------------------
-
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
 [Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
 `$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective targets.
+Targets with any other names will need to be run manually, or included in
+`$(_C)COMPOSER_TARGETS$(_D)`.
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
-Additionally, there is a list of reserved targets in $(_C)[Reserved]$(_D).
+Additionally, there is a list of reserved targets in $(_C)[Reserved]$(_D), along with a
+list of reserved variables.
 
-Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced before the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
-`$(_M)$(MAKEFILE)$(_D)`, so matching targets will be overridden.  In those cases, $(_C)[GNU Make]$(_D)
-will produce warning messages.
+Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced early in the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
+`$(_M)$(MAKEFILE)$(_D)`, so matching targets and most variables will be overridden.  In the
+case of conflicting targets, $(_C)[GNU Make]$(_D) will produce warning messages.
+Variables will have their values changed silently.  Changing the values of
+internal $(_C)[$(COMPOSER_BASENAME)]$(_D) variables is not recommended.
 
 A final note is that `$(_N)*$(_C)-$(CLEANER)$(_D)` and `$(_N)*$(_C)-$(DOITALL)$(_D)` targets are stripped from
 `$(_C)COMPOSER_TARGETS$(_D)`.  In cases where this results in an empty `$(_C)COMPOSER_TARGETS$(_D)`,
@@ -2106,6 +2115,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
     variable allows for selection of a different file in all cases.
   * The special value `$(_N)$(CSS_ALT)$(_D)` selects the alternate default stylesheet.  Using
     `$(_N)$(SPECIAL_VAL)$(_D)` reverts to the $(_C)[Pandoc]$(_D) default.
+  * This value can be overridden by the precence of `$(_M)$(COMPOSER_CSS)$(_D)` files.  See
+    $(_C)[Precedence Rules]$(_D) for details.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
 
@@ -2303,6 +2314,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
+#WORKING:NOW cross-reference with [Formatting Variables] and [Typical Workflow]
 #WORKING:NOW -------------------------------------------------------------------
 
 In addition to $(_C)[Formatting Variables]$(_D), these targets are the very core of
@@ -2380,7 +2392,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
 
 Commit title format:
 
-$(CODEBLOCK)$(_E)$(COMPOSER_TIMESTAMP)$(_D)
+$(CODEBLOCK)$(_E)$(call COMPOSER_TIMESTAMP)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
 
@@ -2490,14 +2502,14 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(COMPOSER_TIMESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(COMPOSER_TIMESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global)
 	@$(foreach FILE,$(COMPOSER_EXPORTED),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
@@ -3609,7 +3621,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(c_base).$(EXTENSION))
 else
 	@$(call $(HEADERS)-run,1,$(*))
-	@$(PRINT) '$(_C)$(MARKER) $(PANDOC) $(call PANDOC_OPTIONS)'
+	@$(PRINT) '$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(call PANDOC_OPTIONS)'
 endif
 
 ################################################################################
@@ -4775,7 +4787,7 @@ $(CONVICT): .set_title-$(CONVICT)
 	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	$(call GIT_RUN_COMPOSER,commit \
 		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
-		--message="$(COMPOSER_TIMESTAMP)" \
+		--message="$(call COMPOSER_TIMESTAMP)" \
 		$(GIT_OPTS_CONVICT) \
 	)
 
@@ -5126,7 +5138,7 @@ endif
 	@$(PANDOC) $(call PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_STAMP),)
-	@$(ECHO) "$(COMPOSER_TIMESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)" >$(CURDIR)/$(COMPOSER_STAMP)
 endif
 
 ########################################
