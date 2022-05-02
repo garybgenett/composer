@@ -1491,6 +1491,9 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Special Targets); fi
+	@$(PRINT) "$(_S)[Specials]: #special-targets"
+	@$(PRINT) "$(_S)[Special]: #special-targets"
+	@$(ENDOLINE)
 	@$(PRINT) "There are a few targets considered $(_C)[Specials]$(_D), that have unique properties:"
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
@@ -1557,15 +1560,15 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(PRINT) "Create documents from source $(INPUT) files"
 	@$(PRINT) "$(_E)(see [Formatting Variables])$(_D):"
 	@$(ENDOLINE)
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)"
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D) $(_E)c_list=\"$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)\"$(_D)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D) $(_E)c_list=\"$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)\"$(_D)"
 	@$(ENDOLINE)
 	@$(PRINT) "Save a persistent configuration"
 	@$(PRINT) "$(_E)(see [Recommended Workflow], [Configuration Settings] and [Special Targets])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
-	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)"
+	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
 	@$(ENDOLINE)
@@ -1699,9 +1702,6 @@ $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst
 $(_S)[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)$(_D)
 $(_S)[$(COMPOSER_BASENAME) Icon]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/icon-v1.0.png$(_D)
 $(_S)[$(COMPOSER_BASENAME) Screenshot]: $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
-
-$(_S)[Specials]: #special-targets
-$(_S)[Special]: #special-targets
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
@@ -1734,9 +1734,9 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW --
 
 override define $(HELPOUT)-$(DOITALL)-OVERVIEW =
-**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[Pandoc]$(_D) and $(_C)[GNU Make]$(_D).**
-It is a document and website build system that processes directories or
-individual files in $(_C)[Markdown]$(_D) format.
+**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[Pandoc]$(_D), $(_C)[Bootstrap]$(_D) and
+$(_C)[GNU Make]$(_D).**  It is a document and website build system that processes
+directories or individual files in $(_C)[Markdown]$(_D) format.
 
 Traditionally, CMS stands for $(_M)Content Management System$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) is designed
 to be a $(_M)Content **Make** System$(_D).  Written content is vastly easier to manage as
@@ -1744,14 +1744,13 @@ plain text, which can be crafted with simple editors and tracked with revision
 control.  However, professional documentation, publications and websites require
 formatting that is dynamic and feature-rich.
 
-$(_C)[Pandoc]$(_D) is a veritable swiss-army knife of document conversion, and is a
-widely used standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has
-reasonable defaults, there are a large number of options, and additional tools
-are required for some formats and features.  $(_C)[$(COMPOSER_BASENAME)]$(_D) consoldiates all the
-necessary components, streamlines the options, and prettifies the output
-formats, all in one place.  It also serves as a build system, so that large
-repositories can be managed as documentation archives or published as
-$(_C)[Bootstrap]$(_D) websites.
+$(_C)[Pandoc]$(_D) is an extremely powerful document conversion tool, and is a widely used
+standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has reasonable
+defaults, there are a large number of options, and additional tools are required
+for some formats and features.  $(_C)[$(COMPOSER_BASENAME)]$(_D) consolidates all the necessary
+components, simplifies the options, and prettifies the output formats, all in
+one place.  It also serves as a build system, so that large repositories can be
+managed as documentation archives or published as $(_C)[Bootstrap]$(_D) websites.
 
 $(_S)![$(COMPOSER_BASENAME) Icon]$(_D)
 $(_S)![$(COMPOSER_BASENAME) Screenshot]$(_D)
@@ -1818,8 +1817,7 @@ override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory tree you want to manage, creating a structure similar to this:
 
-$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_M)$(MAKEFILE)$(_D)
-$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)/$(_N)*$(_D)
+$(CODEBLOCK).../$(_M).$(COMPOSER_BASENAME)$(_D)
 $(CODEBLOCK).../
 $(CODEBLOCK).../tld/
 $(CODEBLOCK).../tld/sub/
@@ -1848,11 +1846,12 @@ It is fully supported for input files to be symbolic links to files that reside
 outside the documentation archive.  Using the directory structure example above:
 
 $(CODEBLOCK)$(_C)cd$(_D) $(_M).../tld$(_D)
-$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs ../../$(c_base)$(COMPOSER_EXT)$(_D) $(_M)./$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)
+$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs ../../$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D) $(_M)./$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)$(_D)
 
 Finally, it is best practice to `$(_C)$(INSTALL)-$(DOFORCE)$(_D)` after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade,
-in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template.
+in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Primary
+Targets])$(_D).
 
 The archive is ready, and each directory is both a part of the collective and
 its own individual instance.  Targets can be run per-file, per-directory, or
@@ -1900,7 +1899,7 @@ $(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of 
 a modern website, with the appearance and behavior of dynamically indexed pages.
 
 $(_N)*(This feature is reserved for a future release as the `$(PUBLISH)` target, along with
-`$(DO_PAGE)` and `$(DO_POST)` in [Specials].)*$(_D)
+`$(DO_PAGE)` and `$(DO_POST)` in [Special Targets].)*$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,PDF)
 
@@ -1973,7 +1972,8 @@ and is not supported.  The regular expression that is used to detect them:
 
 $(CODEBLOCK)$(_N)$(COMPOSER_REGEX_OVERRIDE)$(_D)
 
-Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
+Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax $(_E)(these are
+the settings used to process the [$(COMPOSER_BASENAME)] $(OUT_README) files)$(_D):
 
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_css := $(CSS_ALT)$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc := $(SPECIAL_VAL)$(_D)
@@ -1982,7 +1982,7 @@ $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc :=$(_D)
 
 In this case, there are multiple definitions that could apply to
-`$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most spedific target
+`$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most specific target
 match is used, the final values for both `$(_C)c_css$(_D)` and `$(_C)c_toc$(_D)` would be empty.
 endef
 
@@ -2012,17 +2012,17 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-DEPENDS =
 If there are files or directories that have dependencies on other files or
-directories being created first, this can be done simply using $(_C)[GNU Make]$(_D) syntax
-in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
+directories being processed first, this can be done simply using $(_C)[GNU Make]$(_D)
+syntax in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
-$(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTENSION)$(_D): $(_E)$(OUT_README).$(EXTENSION)$(_D)
+$(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)
 $(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)
 
-This would require `$(_E)$(OUT_README).$(EXTENSION)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTENSION)$(_D)`, and for
+This would require `$(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)`, and for
 `$(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)` to be processed before `$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D)`.
-Directories need to be specified with this syntax in order to avoid conflicts
-with target names $(_E)(see [Custom Targets])$(_D).  Good examples of this are the `$(_C)$(CREATOR)$(_D)`
-and `$(_C)$(TESTING)$(_D)` targets, which are common directory names.
+Directories need to be specified with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_D)` syntax in order to
+avoid conflicts with target names $(_E)(see [Custom Targets])$(_D).  Good examples of this
+are the `$(_C)$(CREATOR)$(_D)` and `$(_C)$(TESTING)$(_D)` targets, which are common directory names.
 
 Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
 support.  Note that if a file or directory is set to depend on a target, that
@@ -2037,7 +2037,7 @@ If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D
 [Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
 `$(_N)*$(_C)-$(CLEANER)$(_D)` or `$(_N)*$(_C)-$(DOITALL)$(_D)` will include them in runs of the respective targets.
 Targets with any other names will need to be run manually, or included in
-`$(_C)COMPOSER_TARGETS$(_D)`.
+`$(_C)COMPOSER_TARGETS$(_D)` $(_E)(see [Control Variables])$(_D).
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
@@ -2048,7 +2048,7 @@ Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced early in the mai
 `$(_M)$(MAKEFILE)$(_D)`, so matching targets and most variables will be overridden.  In the
 case of conflicting targets, $(_C)[GNU Make]$(_D) will produce warning messages.
 Variables will have their values changed silently.  Changing the values of
-internal $(_C)[$(COMPOSER_BASENAME)]$(_D) variables is not recommended.
+internal $(_C)[$(COMPOSER_BASENAME)]$(_D) variables is not recommended or supported.
 
 A final note is that `$(_N)*$(_C)-$(CLEANER)$(_D)` and `$(_N)*$(_C)-$(DOITALL)$(_D)` targets are stripped from
 `$(_C)COMPOSER_TARGETS$(_D)`.  In cases where this results in an empty `$(_C)COMPOSER_TARGETS$(_D)`,
@@ -2075,9 +2075,9 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
-`$(_C)$(UPGRADE)-$(DOITALL)$(_D)`, the system versions will be used instead.  This will work as long
-as the commit versions match, so that $(_C)[Pandoc]$(_D) supporting files are in
-alignment.
+`$(_C)$(UPGRADE)-$(DOITALL)$(_D)` $(_E)(see [Additional Targets])$(_D), the system versions will be used
+instead.  This will work as long as the commit versions match, so that $(_C)[Pandoc]$(_D)
+supporting files are in alignment.
 
 It is possible that changing the versions will introduce incompatibilities with
 $(_C)[$(COMPOSER_BASENAME)]$(_D), which are usually impacts to the prettification of output files
@@ -2091,19 +2091,19 @@ override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_type / c_base / c_list)
 
 The `$(_C)$(COMPOSER_CREATE)$(_D)` target uses these variables to decide what to build and how.  The
-output file is `$(_C)c_base$(_D).$(_M)extension$(_D)`, and is constructed from the `$(_C)c_list$(_D)` input
-files, in order.  The `$(_M)extension$(_D)` is selected based on the `$(_C)c_type$(_D)` table above.
-Generally, it is not required to use the `$(_C)$(COMPOSER_CREATE)$(_D)` target directly for supported
-`$(_C)c_type$(_D)` files, since it is run automatically based on what output file
-`$(_M)extension$(_D)` is specified.
+output file is `$(_C)c_base$(_D).$(_M)<extension>$(_D)`, and is constructed from the `$(_C)c_list$(_D)` input
+files, in order.  The `$(_M)<extension>$(_D)` is selected based on the `$(_C)c_type$(_D)` table
+above.  Generally, it is not required to use the `$(_C)$(COMPOSER_CREATE)$(_D)` target directly for
+supported `$(_C)c_type$(_D)` files, since it is run automatically based on what output
+file `$(_M)<extension>$(_D)` is specified.
 
 The automatic input file detection works by matching one of the following
 $(_E)([Quick Start] example)$(_D):
 
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(_D) $(_N)(empty \`COMPOSER_EXT\`)$(_D)")
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)")
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base)$(COMPOSER_EXT).$(EXTENSION)$(_D)"	"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)")
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)"		"~ $(_E)c_list=\"...\"$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)$(_D)"				"~ $(_E)$(OUT_README)$(_D) $(_N)(empty \`COMPOSER_EXT\`)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)$(_D)"				"~ $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)$(_D)"	"~ $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D)"				"~ $(_E)c_list=\"$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)\"$(_D)")
 
 Other values for `$(_C)c_type$(_D)`, such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
 through to $(_C)[Pandoc]$(_D) manually:
@@ -2126,7 +2126,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
     variable allows for selection of a different file in all cases.
   * The special value `$(_N)$(CSS_ALT)$(_D)` selects the alternate default stylesheet.  Using
     `$(_N)$(SPECIAL_VAL)$(_D)` reverts to the $(_C)[Pandoc]$(_D) default.
-  * This value can be overridden by the precence of `$(_M)$(COMPOSER_CSS)$(_D)` files.  See
+  * This value can be overridden by the presence of `$(_M)$(COMPOSER_CSS)$(_D)` files.  See
     $(_C)[Precedence Rules]$(_D) for details.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
@@ -2141,8 +2141,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
 
   * This value has different effects, depending on the `$(_C)c_type$(_D)` of the output
     document.
-  * For `$(_C)$(TYPE_HTML)$(_D)`, any value enables `$(_E)section-divs$(_D)`, which wrap headings and their
-    section content in `$(_E)<section>$(_D)` tags and attach identifiers to them instead
+  * For `$(_C)$(TYPE_HTML)$(_D)`, any value enables `$(_E)section-divs$(_D)`, which wraps headings and their
+    section content in `$(_E)<section>$(_D)` tags and attaches identifiers to them instead
     of the headings themselves.  This is for $(_M)CSS$(_D) styling, and is generally
     desired.
   * For `$(_C)$(TYPE_LPDF)$(_D)`, there are 3 top-level division types: `$(_M)part$(_D)`, `$(_M)chapter$(_D)`, and
@@ -2197,7 +2197,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
   * $(_C)[$(COMPOSER_BASENAME)]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
     can be working through tasks independently.  Experiment with lower values
     first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
-    instantiates into a subdirectory has it's own jobs server, so the total
+    instantiates into a sub-directory has it's own jobs server, so the total
     number of threads running can proliferate rapidly.
   * This can drastically speed up execution, processing thousands of files and
     directories in minutes.  However, values that are too high can exhaust
@@ -2256,7 +2256,7 @@ $(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 
-  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[$(COMPOSER_BASENAME)]$(_D) will process the current diretory before
+  * When doing `$(_C)$(DOITALL)-$(DOITALL)$(_D)`, $(_C)[$(COMPOSER_BASENAME)]$(_D) will process the current directory before
     recursing into sub-directories.  This reverses that, and sub-directories
     will be processed first.
   * In the example directory tree in `$(_C)COMPOSER_INCLUDE$(_D)` above, the default would
@@ -2292,7 +2292,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
   * The list of output files to create or delete with `$(_C)$(CLEANER)$(_D)` and `$(_C)$(DOITALL)$(_D)`.
-    $(_C)[$(COMPOSER_BASENAME)]$(_D) does auto-detection using `$(_C)COMPOSER_EXT$(_D)` and `$(_C)c_type$(_D)`, so this
+    $(_C)[$(COMPOSER_BASENAME)]$(_D) does auto-detection using `$(_C)c_type$(_D)` and `$(_C)COMPOSER_EXT$(_D)`, so this
     does not usually need to be set.  Hidden files that start with `$(_M).$(_D)` are
     skipped.
   * Setting this manually disables auto-detection.  It can also include non-file
@@ -2308,7 +2308,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
   * The list of sub-directories to recurse into with `$(_C)$(INSTALL)$(_D)`, `$(_C)$(CLEANER)$(_D)`, and
     `$(_C)$(DOITALL)$(_D)`.  The behavior and configuration is identical to `$(_C)COMPOSER_TARGETS$(_D)`
-    above, including auto-detection and the `$(_C)$(NOTHING)$(_D)` taret.  Hidden directories
+    above, including auto-detection and the `$(_C)$(NOTHING)$(_D)` target.  Hidden directories
     that start with `$(_M).$(_D)` are skipped.
   * An empty value triggers auto-detection
   * Use `$(_C)$(CONFIGS)$(_D)` or `$(_C)$(TARGETS)$(_D)` to check the current value.
@@ -2341,7 +2341,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH) / $(PUBLISH)-$(CLEANER))
 
 #WORKING:NOW -------------------------------------------------------------------
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(INSTALL) / $(INSTALL)-$(DOITALL) $(INSTALL)-$(DOFORCE))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(INSTALL) / $(INSTALL)-$(DOITALL) / $(INSTALL)-$(DOFORCE))
 
 #WORKING:NOW -------------------------------------------------------------------
 
@@ -2366,12 +2366,12 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
 
 An example `$(_C)$(DO_BOOK)$(_D)` definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)([Quick Start] example)$(_D):
 
-$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTENSION)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)
+$(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 
-This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)` from
-`$(_M)$(OUT_README)$(COMPOSER_EXT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT)$(_D)`, concatenated together in order.  The primary
+This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D)` from
+`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)`, concatenated together in order.  The primary
 purpose of this $(_C)[Special]$(_D) is to gather multiple source files in this manner, so
-that larger works can be comprised of multple files, such as a $(DO_BOOK) with each
+that larger works can be comprised of multiple files, such as a $(DO_BOOK) with each
 chapter in a separate file.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
@@ -2386,7 +2386,7 @@ endef
 #> update: $(DEBUGIT): targets list
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT) / $(DEBUGIT)-file)
 
   * This is the tool to use for any support issues.  Submit the output file to:
     $(_E)[composer@garybgenett.net]$(_D)
@@ -2395,7 +2395,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
     * `$(_C)$(CHECKIT)-$(DOITALL)$(_D)`
     * `$(_C)$(CONFIGS)-$(DOITALL)$(_D)`
     * `$(_C)$(TARGETS)$(_D)`
-  * If issues are occuring when running a particular set of targets, list them
+  * If issues are occurring when running a particular set of targets, list them
     in `$(_C)COMPOSER_DEBUGIT$(_D)`.
   * For general issues, run in the top-level directory $(_E)(see [Recommended
     Workflow])$(_D).  For specific issues, run in the directory where the issue is
@@ -2403,15 +2403,15 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT))
 
 For example:
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(TARGETS) $(OUT_README).$(EXTENSION)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(UPGRADE) $(OUT_README).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CONFIGS) / $(TARGETS))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
 
   * Useful targets for validating tooling and configurations.
   * Together, `$(_C)$(CONFIGS)$(_D)` and `$(_C)$(TARGETS)$(_D)` reveal the entire internal state of
     $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(subst _,\_,$(CONVICT) / $(CONVICT)-$(DOITALL)))
 
   * Using the recommended directory structure in $(_C)[Recommended Workflow]$(_D), `$(_M).../$(_D)`
     is considered the top-level directory.  Meaning, it is the last directory
@@ -2431,7 +2431,7 @@ Commit title format:
 
 $(CODEBLOCK)$(_E)$(call COMPOSER_TIMESTAMP)$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(subst _,\_,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL)))
 
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and install all external components.
@@ -2454,7 +2454,7 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
-*$(_N)(None of these are intented to be run directly during normal use, and are only
+*$(_N)(None of these are intended to be run directly during normal use, and are only
 documented for completeness.)$(_D)*
 endef
 
@@ -2468,7 +2468,13 @@ ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
 $(CREATOR): .set_title-$(CREATOR)
+$(CREATOR):
 	@$(call $(HEADERS))
+ifneq ($(COMPOSER_RELEASE),)
+	@$(ENDOLINE)
+	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
+	@$(ENDOLINE)
+endif
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
@@ -2494,13 +2500,7 @@ $(CREATOR): .set_title-$(CREATOR)
 			$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/reference.$(word 2,$(subst :, ,$(FILE))); \
 		$(call NEWLINE) \
 	)
-	@$(ENDOLINE)
-	@$(LS) $(CURDIR)
-	@$(ENDOLINE)
-	@$(LS) --recursive $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 ifneq ($(COMPOSER_RELEASE),)
-	@$(ENDOLINE)
-	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
@@ -2511,21 +2511,29 @@ ifneq ($(COMPOSER_RELEASE),)
 #>	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 #>	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
 #>	@$(ECHO) "\n"									>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#>	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_CSS)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
-	@$(ECHO) "$(_C)"; $(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(_M)"; $(LS) $(CURDIR)/$(COMPOSER_CSS) 2>/dev/null || $(TRUE)
-	@$(ECHO) "$(_D)"
+#>	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS))			$(CURDIR)/$(COMPOSER_CSS)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
+endif
+	@$(ENDOLINE)
+	@$(LS) $(CURDIR)
+	@$(ENDOLINE)
+	@$(LS) --recursive $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
+ifneq ($(COMPOSER_RELEASE),)
+	@$(ENDOLINE)
+	@$(ECHO) "$(_C)"
+	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(_D)"
+	@$(ENDOLINE)
 	@$(RUNMAKE) COMPOSER_STAMP="$(COMPOSER_STAMP_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #WORK	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RUNMAKE) COMPOSER_STAMP=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_CSS) \
 		$(CURDIR)/$(COMPOSER_STAMP_DEFAULT) \
 		>/dev/null
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 endif
 
 ########################################
@@ -2559,7 +2567,7 @@ $(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Special)
 	@$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTENSION)$(_D): $(_M)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)); \
+		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTN_DEFAULT)$(_D): $(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)); \
 	)
 
 override define $(EXAMPLE)-print =
@@ -4089,6 +4097,7 @@ $(TESTING)-Think-done:
 
 .PHONY: $(TESTING)-$(DISTRIB)
 $(TESTING)-$(DISTRIB): $(TESTING)-Think
+$(TESTING)-$(DISTRIB):
 	@$(call $(TESTING)-$(HEADERS),\
 		Install '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' using '$(_C)$(DISTRIB)$(_D)' ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
@@ -4114,6 +4123,7 @@ $(TESTING)-$(DISTRIB)-done:
 
 .PHONY: $(TESTING)-$(DEBUGIT)
 $(TESTING)-$(DEBUGIT): $(TESTING)-Think
+$(TESTING)-$(DEBUGIT):
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)$(DEBUGIT)$(_D)' using '$(_C)COMPOSER_DEBUGIT$(_D)' ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
@@ -4135,6 +4145,7 @@ $(TESTING)-$(DEBUGIT)-done:
 
 .PHONY: $(TESTING)-speed
 $(TESTING)-speed: $(TESTING)-Think
+$(TESTING)-speed:
 	@$(call $(TESTING)-$(HEADERS),\
 		Performance test of the speed processing a large directory ,\
 		\n\t * $(_H)For general information and fun only$(_D) \
@@ -4164,7 +4175,6 @@ override define $(TESTING)-speed-init-load =
 endef
 
 .PHONY: $(TESTING)-speed-init
-$(TESTING)-speed-init: export override COMPOSER_DEBUGIT := $(CONFIGS) $(TARGETS)
 $(TESTING)-speed-init:
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(INSTALL)-$(DOFORCE)
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(DOITALL)-$(DOITALL)
@@ -4182,6 +4192,7 @@ $(TESTING)-speed-done:
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
+$(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
 		\n\t * Command-line '$(_C)c_list$(_D)' shortcut \
@@ -4218,6 +4229,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 
 .PHONY: $(TESTING)-$(TARGETS)
 $(TESTING)-$(TARGETS): $(TESTING)-Think
+$(TESTING)-$(TARGETS):
 	@$(call $(TESTING)-$(HEADERS),\
 		Test every combination of formats and formatting variables ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
@@ -4266,6 +4278,7 @@ $(TESTING)-$(TARGETS)-done:
 
 .PHONY: $(TESTING)-$(INSTALL)
 $(TESTING)-$(INSTALL): $(TESTING)-Think
+$(TESTING)-$(INSTALL):
 	@$(call $(TESTING)-$(HEADERS),\
 		Test '$(_C)$(INSTALL)$(_D)' in an existing directory ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
@@ -4299,6 +4312,7 @@ $(TESTING)-$(INSTALL)-done:
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
+$(TESTING)-$(CLEANER)-$(DOITALL):
 	@$(call $(TESTING)-$(HEADERS),\
 		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' behavior ,\
 		\n\t * Creation and deletion of files \
@@ -4344,6 +4358,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
+$(TESTING)-COMPOSER_INCLUDE:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_INCLUDE$(_D)' behavior ,\
 		\n\t * Use '$(_C)COMPOSER_DEPENDS$(_D)' in '$(_C)$(COMPOSER_SETTINGS)$(_D)' \
@@ -4396,6 +4411,7 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS
 $(TESTING)-COMPOSER_DEPENDS: $(TESTING)-Think
+$(TESTING)-COMPOSER_DEPENDS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_DEPENDS$(_D)' behavior ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
@@ -4432,6 +4448,7 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
+$(TESTING)-COMPOSER_IGNORES:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
 		\n\t * Verify selected '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D) are skipped \
@@ -4461,6 +4478,7 @@ $(TESTING)-COMPOSER_IGNORES-done:
 
 .PHONY: $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT): $(TESTING)-Think
+$(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT):
 	@$(call $(TESTING)-$(HEADERS),\
 		Proper operation of '$(_C)COMPOSER_STAMP$(_D)' and '$(_C)COMPOSER_EXT$(_D)' ,\
 		\n\t * Build '$(_C)$(DOITALL)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
@@ -4497,6 +4515,7 @@ $(TESTING)-$(COMPOSER_STAMP_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
+$(TESTING)-CSS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Use '$(_C)c_css$(_D)' to verify each method of setting variables ,\
 		\n\t * Default: '$(_C)$(TYPE_HTML)$(_D)' \
@@ -4548,6 +4567,7 @@ $(TESTING)-CSS-done:
 
 .PHONY: $(TESTING)-other
 $(TESTING)-other: $(TESTING)-Think
+$(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
 		Miscellaneous test cases ,\
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
@@ -4623,6 +4643,7 @@ endif
 
 .PHONY: $(TESTING)-$(EXAMPLE)
 $(TESTING)-$(EXAMPLE): $(TESTING)-Think
+$(TESTING)-$(EXAMPLE):
 	@$(call $(TESTING)-$(HEADERS),\
 		Template '$(_C)$(TESTING)$(_D)' test case ,\
 		\n\t * Empty '$(_C)COMPOSER_DOCOLOR$(_D)' \
@@ -4666,6 +4687,7 @@ $(CHECKIT)-%:
 #> update: Tooling Versions
 .PHONY: $(CHECKIT)
 $(CHECKIT): .set_title-$(CHECKIT)
+$(CHECKIT):
 	@$(call $(HEADERS))
 	@$(TABLE_M3) "$(_H)Repository"			"$(_H)Commit"				"$(_H)License"
 	@$(TABLE_M3) ":---"				":---"					":---"
@@ -4751,6 +4773,7 @@ $(CONFIGS)-%:
 
 .PHONY: $(CONFIGS)
 $(CONFIGS): .set_title-$(CONFIGS)
+$(CONFIGS):
 	@$(call $(HEADERS))
 	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
 	@$(TABLE_M2) ":---"			":---"
@@ -4767,6 +4790,7 @@ endif
 
 .PHONY: $(TARGETS)
 $(TARGETS): .set_title-$(TARGETS)
+$(TARGETS):
 	@$(call $(HEADERS))
 	@$(LINERULE)
 	@$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) \
@@ -4820,6 +4844,7 @@ $(CONVICT)-%:
 
 .PHONY: $(CONVICT)
 $(CONVICT): .set_title-$(CONVICT)
+$(CONVICT):
 	@$(call $(HEADERS))
 	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	$(call GIT_RUN_COMPOSER,commit \
@@ -4837,6 +4862,7 @@ $(CONVICT): .set_title-$(CONVICT)
 
 .PHONY: $(DISTRIB)
 $(DISTRIB): .set_title-$(DISTRIB)
+$(DISTRIB):
 	@$(call $(HEADERS))
 	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
 		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
@@ -4867,6 +4893,7 @@ $(UPGRADE)-%:
 
 .PHONY: $(UPGRADE)
 $(UPGRADE): .set_title-$(UPGRADE)
+$(UPGRADE):
 	@$(call $(HEADERS))
 	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
@@ -4910,13 +4937,14 @@ endif
 
 .PHONY: $(PUBLISH)
 $(PUBLISH): .set_title-$(PUBLISH)
+$(PUBLISH):
 	@$(call $(HEADERS))
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
 
 #> update: PHONY.*$(CLEANER)
 .PHONY: $(PUBLISH)-$(CLEANER)
 $(PUBLISH)-$(CLEANER):
-	@$(ECHO) ""
+	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-$(CLEANER)-FUTURE
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
@@ -4933,6 +4961,7 @@ $(INSTALL)-%:
 .PHONY: $(INSTALL)
 #>$(INSTALL): .set_title-$(INSTALL)
 $(INSTALL): $(INSTALL)-$(SUBDIRS)-$(HEADERS)
+$(INSTALL):
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 else
@@ -5002,6 +5031,7 @@ $(CLEANER)-%:
 .PHONY: $(CLEANER)
 #>$(CLEANER): .set_title-$(CLEANER)
 $(CLEANER): $(CLEANER)-$(SUBDIRS)-$(HEADERS)
+$(CLEANER):
 ifneq ($(COMPOSER_STAMP),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_STAMP)),)
 	@$(call $(HEADERS)-rm,$(CURDIR),$(COMPOSER_STAMP))
@@ -5055,6 +5085,8 @@ ifeq ($(COMPOSER_DEPENDS),)
 $(DOITALL): $(DOITALL)-$(SUBDIRS)
 endif
 endif
+$(DOITALL):
+	@$(ECHO) ""
 
 .PHONY: $(DOITALL)-specials
 $(DOITALL)-specials:
@@ -5066,6 +5098,7 @@ $(DOITALL)-specials:
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS): $(NOTHING)-$(SUBDIRS)
+$(SUBDIRS):
 	@$(ECHO) ""
 
 override define $(SUBDIRS)-$(EXAMPLE) =
@@ -5124,6 +5157,7 @@ $(PRINTER):
 
 .PHONY: $(PRINTER)-list
 $(PRINTER)-list: $(COMPOSER_STAMP)
+$(PRINTER)-list:
 	@$(ECHO) ""
 
 $(COMPOSER_STAMP): $(if \
@@ -5131,6 +5165,7 @@ $(COMPOSER_STAMP): $(if \
 		$(wildcard $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))),\
 		$(NOTHING)-COMPOSER_EXT \
 		)
+$(COMPOSER_STAMP):
 	@$(LS) --directory $(COMPOSER_STAMP) $(?) \
 		|| $(TRUE)
 
@@ -5185,18 +5220,21 @@ endif
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
+%.$(2):
 	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): %
+%.$(2):
 	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): $(c_list)
+%.$(2):
 	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
