@@ -1606,19 +1606,21 @@ $(HELPOUT)-EXAMPLES_%:
 ########################################
 # {{{2 $(HELPOUT)-$(DOITALL) -----------
 
-#> update: PHONY.*$(DOITALL)
-#> update: PHONY.*$(DOFORCE)
-#>$(eval export override COMPOSER_DOITALL_$(HELPOUT) ?=)
-.PHONY: $(HELPOUT)-%
-$(HELPOUT)-%:
-#>	@$(RUNMAKE) COMPOSER_DOITALL_$(HELPOUT)="$(*)" $(HELPOUT)
-#>
-#>.PHONY: $(HELPOUT)-$(DOITALL)
-#>$(HELPOUT)-$(DOITALL):
+.PHONY: $(HELPOUT)-$(TYPE_PRES)
+$(HELPOUT)-$(TYPE_PRES):
+	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(TYPE_PRES)
+	@$(ENDOLINE)
+	@$(LINERULE)
+	@$(RUNMAKE) $(HELPOUT)
+
+.PHONY: $(HELPOUT)-$(HEADERS)-%
+$(HELPOUT)-$(HEADERS)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ "$(*)" = "$(DOFORCE)" ]; then \
+		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
+		fi
+		@if [ "$(*)" = "$(DOFORCE)" ]; then \
 		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT); \
 		fi
 	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
@@ -1629,6 +1631,17 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+
+#> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
+#>$(eval export override COMPOSER_DOITALL_$(HELPOUT) ?=)
+.PHONY: $(HELPOUT)-%
+$(HELPOUT)-%:
+#>	@$(RUNMAKE) COMPOSER_DOITALL_$(HELPOUT)="$(*)" $(HELPOUT)
+#>
+#>.PHONY: $(HELPOUT)-$(DOITALL)
+#>$(HELPOUT)-$(DOITALL):
+	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 	@$(call TITLE_LN,2,Document Formatting,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
@@ -2594,6 +2607,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
@@ -2638,16 +2652,7 @@ endif
 		$(call NEWLINE) \
 	)
 ifneq ($(COMPOSER_RELEASE),)
-	@$(ECHO) ""									>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_css := $(CSS_ALT)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).%: override c_toc := $(SPECIAL_VAL)\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_css :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_README).$(EXTN_PRES): override c_toc :=\n"			>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#>	@$(ECHO) "$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF):"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#>	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#>	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"				>>$(CURDIR)/$(COMPOSER_SETTINGS)
-#>	@$(ECHO) "\n"									>>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS))			>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 #>	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS))			$(CURDIR)/$(COMPOSER_CSS)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
@@ -2662,9 +2667,13 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
-	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#WORK	@$(RUNMAKE) COMPOSER_LOG=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
-	@$(RUNMAKE) COMPOSER_LOG=							COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT=1 $(COMPOSER_CREATE) c_type="$(TYPE_PRES)" c_base="$(OUT_README)" c_list="$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)"
+#>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+	@$(RM) \
+		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
+		>/dev/null
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
 		$(CURDIR)/$(COMPOSER_CSS) \
@@ -2672,6 +2681,16 @@ ifneq ($(COMPOSER_RELEASE),)
 		>/dev/null
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 endif
+
+override define HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS) =
+$(OUT_README).%: override c_css := $(CSS_ALT)
+$(OUT_README).%: override c_toc := $(SPECIAL_VAL)
+$(OUT_README).$(EXTN_LPDF): $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+$(OUT_README).$(EXTN_EPUB): override c_css :=
+$(OUT_README).$(EXTN_PRES): override c_css :=
+$(OUT_README).$(EXTN_PRES): override c_toc :=
+#> $(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+endef
 
 ########################################
 # {{{2 $(EXAMPLE) ----------------------
@@ -2800,11 +2819,11 @@ override define HEREDOC_TEX_PDF_TEMPLATE =
 
 % ######################################
 
-\usepackage{longtable}
-\setlength{\LTleft}{1.5em}
+\\usepackage{longtable}
+\\setlength{\\LTleft}{1.5em}
 
-\usepackage{listings}
-\lstset{xleftmargin=1.5em}
+\\usepackage{listings}
+\\lstset{xleftmargin=1.5em}
 
 % ##############################################################################
 % End Of File
@@ -5329,6 +5348,8 @@ $(COMPOSER_LOG):
 
 ########################################
 # {{{2 $(COMPOSER_CREATE) $(COMPOSER_PANDOC)
+
+#WORKING:NOW
 
 .PHONY: $(COMPOSER_CREATE)
 #>$(COMPOSER_CREATE): $(SETTING)-$(COMPOSER_CREATE)
