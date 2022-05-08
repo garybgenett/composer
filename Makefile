@@ -1060,8 +1060,7 @@ endif
 # {{{1 Composer Operation ------------------------------------------------------
 ################################################################################
 
-override COMPOSER_CREATE		:= compose
-override COMPOSER_PANDOC		:= pandoc
+override COMPOSER_PANDOC		:= compose
 
 #> update: $(MAKE) / @+
 override MAKE_OPTIONS			:= $(MAKEFLAGS)
@@ -1190,7 +1189,6 @@ override PRINTER			:= list
 #> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> grep -E "[)]-[a-z]+" Makefile
 override COMPOSER_RESERVED := \
-	$(COMPOSER_CREATE) \
 	$(COMPOSER_PANDOC) \
 	\
 	$(HELPOUT) \
@@ -1493,7 +1491,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)]"			"Basic $(HELPOUT) overview $(_E)(default)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_CREATE)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Recursively create $(_C)[Bootstrap Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
@@ -1558,7 +1556,6 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)-$(INSTALL)]"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by $(_C)[$(INSTALL)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)]"			"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(backend to [$(COMPOSER_CREATE)])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)]"			"Series of targets that handle all informational output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)]"		"For testing default $(_C)[$(HEADERS)]$(_D) output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]"	"For testing complete $(_C)[$(HEADERS)]$(_D) output"
@@ -1662,6 +1659,9 @@ $(HELPOUT)-%:
 	$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
 	fi
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
+
+########################################
+# {{{3 $(HELPOUT)-$(DOFORCE) -----------
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
@@ -2163,10 +2163,10 @@ endef
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_type / c_base / c_list)
 
-The $(_C)[$(COMPOSER_CREATE)]$(_D) target uses these variables to decide what to build and how.  The
+The $(_C)[$(COMPOSER_PANDOC)]$(_D) target uses these variables to decide what to build and how.  The
 output file is `$(_C)[c_base]$(_D).$(_M)<extension>$(_D)`, and is constructed from the $(_C)[c_list]$(_D) input
 files, in order.  The `$(_M)<extension>$(_D)` is selected based on the $(_C)[c_type]$(_D) table
-above.  Generally, it is not required to use the $(_C)[$(COMPOSER_CREATE)]$(_D) target directly for
+above.  Generally, it is not required to use the $(_C)[$(COMPOSER_PANDOC)]$(_D) target directly for
 supported $(_C)[c_type]$(_D) files, since it is run automatically based on what output
 file `$(_M)<extension>$(_D)` is specified.
 
@@ -2181,8 +2181,8 @@ $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTN_D
 Other values for $(_C)[c_type]$(_D), such as `$(_M)json$(_D)` or `$(_M)man$(_D)`, for example, can be passed
 through to $(_C)[Pandoc]$(_D) manually:
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(COMPOSER_CREATE)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(COMPOSER_CREATE)$(_D) $(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(COMPOSER_PANDOC)$(_D) $(_E)c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(COMPOSER_PANDOC)$(_D) $(_E)c_type="man" c_base="$(OUT_MANUAL)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"$(_D)
 
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
@@ -2411,7 +2411,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE))
   * Prints a useful template for creating new `$(_M)$(COMPOSER_SETTINGS)$(_D)` files $(_E)(see
     [Configuration Settings] and [Templates])$(_D).
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_CREATE))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
 
   * This is the very core of $(_C)[$(COMPOSER_BASENAME)]$(_D), and does the actual work of the
     $(_C)[Pandoc]$(_D) conversion.  Details are in the $(_C)[c_type / c_base / c_list]$(_D) section
@@ -2569,7 +2569,6 @@ $(_S)[$(HELPOUT)-$(DOFORCE)-$(TARGETS)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)-$(INSTALL)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
-$(_S)[$(COMPOSER_PANDOC)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]: #internal-targets$(_D)
@@ -2668,9 +2667,9 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
 	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT=1 $(COMPOSER_CREATE) c_type="$(TYPE_PRES)" c_base="$(OUT_README)" c_list="$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)"
 #>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(COMPOSER_PANDOC) c_type="$(TYPE_PRES)" c_base="$(OUT_README)" c_list="$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)"
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(RM) \
 		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
 		>/dev/null
@@ -5347,32 +5346,20 @@ $(COMPOSER_LOG):
 ################################################################################
 
 ########################################
-# {{{2 $(COMPOSER_CREATE) $(COMPOSER_PANDOC)
-
-#WORKING:NOW
-
-.PHONY: $(COMPOSER_CREATE)
-#>$(COMPOSER_CREATE): $(SETTING)-$(COMPOSER_CREATE)
-$(COMPOSER_CREATE): $(c_list)
-$(COMPOSER_CREATE): $(c_base).$(EXTENSION)
-$(COMPOSER_CREATE):
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := create)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(EXTENSION),$(c_list))
-endif
-	@$(ECHO) ""
-
-$(c_base).$(EXTENSION): $(COMPOSER_PANDOC)
-$(c_base).$(EXTENSION): $(c_list)
-$(c_base).$(EXTENSION):
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := base)$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
-endif
-	@$(ECHO) ""
+# {{{2 $(COMPOSER_PANDOC) --------------
 
 .PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(SETTING)-$(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(c_list)
+$(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
 $(COMPOSER_PANDOC):
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := $(COMPOSER_PANDOC))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
+endif
+	@$(ECHO) ""
+
+#>$(c_base).$(EXTENSION): $(SETTING)-$(COMPOSER_PANDOC)
+$(c_base).$(EXTENSION): $(c_list)
+$(c_base).$(EXTENSION):
+	@$(RUNMAKE) c_type="$(c_type)" c_base="$(c_base)" c_list="$(c_list)" $(SETTING)-$(COMPOSER_PANDOC)
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_N)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
@@ -5389,6 +5376,9 @@ endif
 ifneq ($(COMPOSER_LOG),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP) $(subst ",\",$(call PANDOC_OPTIONS))\n" >>$(CURDIR)/$(COMPOSER_LOG)
 endif
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(eval override @ := $(c_base).$(EXTENSION))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
+endif
 
 ########################################
 # {{{2 $(COMPOSER_EXT) -----------------
@@ -5398,21 +5388,21 @@ endif
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
 #>%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): %
 #>%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 
 %.$(2): $(c_list)
 #>%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
@@ -5434,9 +5424,9 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 override define TYPE_DO_BOOK =
 $(DO_BOOK)-%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_CREATE) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := do_book)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(DO_BOOK))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 endef
 
@@ -5457,7 +5447,7 @@ override define TYPE_DO_PAGE =
 $(DO_PAGE)-%.$(2):
 	@$$(RUNMAKE) $$(NOTHING)-$$(DO_PAGE)-FUTURE
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := do_post)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(DO_PAGE))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 endef
 
@@ -5478,7 +5468,7 @@ override define TYPE_DO_POST =
 $(DO_POST)-%.$(2):
 	@$$(RUNMAKE) $$(NOTHING)-$$(DO_POST)-FUTURE
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := do_post)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(DO_POST))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
 endif
 endef
 
