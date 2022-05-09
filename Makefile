@@ -3803,6 +3803,22 @@ override define $(HEADERS)-run =
 	$(LINERULE)
 endef
 
+override define $(HEADERS)-$(SUBDIRS) =
+	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
+		$(call $(HEADERS)-dir,$(CURDIR)); \
+	else \
+		$(call $(HEADERS),1,$(1)); \
+	fi
+endef
+override define $(HEADERS)-$(COMPOSER_PANDOC) =
+	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
+		$(call $(HEADERS)-file,$(CURDIR),$(1)); \
+	else \
+		$(call $(HEADERS)-run,1,$(1)); \
+		$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"; \
+	fi
+endef
+
 override define $(HEADERS)-note =
 	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(2)"
 endef
@@ -5267,11 +5283,7 @@ $(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
 endif
 $(1)-$(SUBDIRS)-$(HEADERS):
 ifneq ($(COMPOSER_DOITALL_$(1)),)
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-dir,$$(CURDIR))
-else
-	@$$(call $$(HEADERS),1,$(1))
-endif
+	@$$(call $$(HEADERS)-$$(SUBDIRS),$(1))
 endif
 	@$$(ECHO) ""
 
@@ -5345,12 +5357,7 @@ endif
 
 $(c_base).$(EXTENSION): $(c_list)
 $(c_base).$(EXTENSION):
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-file,$(CURDIR),$(c_base).$(EXTENSION))
-else
-	@$(call $(HEADERS)-run,1,$(c_base).$(EXTENSION))
-	@$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"
-endif
+	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_N)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
