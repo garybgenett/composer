@@ -2558,8 +2558,6 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
 $(_S)[$(HELPOUT)-$(DOFORCE)]: #internal-targets$(_D)
-$(_S)[$(HELPOUT)-$(DOFORCE)-$(PRINTER)]: #internal-targets$(_D)
-$(_S)[$(HELPOUT)-$(DOFORCE)-$(TARGETS)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)-$(INSTALL)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
@@ -2714,7 +2712,7 @@ $(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(ENDOLINE))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Special)
 	@$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
-		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTN_DEFAULT)$(_D): $(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)); \
+		$(call $(EXAMPLE)-print,1,$(_C)$(FILE)-$(COMPOSER_BASENAME).$(FILE).$(EXTENSION)$(_D): $(_M)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)); \
 	)
 
 override define $(EXAMPLE)-print =
