@@ -1241,9 +1241,25 @@ else
 override COMPOSER_TARGETS		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
 endif
 endif
+ifeq ($(COMPOSER_SUBDIRS),)
+#>override COMPOSER_SUBDIRS		:= $(subst /$(MAKEFILE),,$(wildcard $(addsuffix /$(MAKEFILE),$(COMPOSER_CONTENTS_DIRS))))
+override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
+endif
 
-#> update: $(TARGETS)-$(CLEANER)
-#> update: $(TARGETS)-$(DOITALL)
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(CONFIGS)-$(TARGETS)
+endif
+endif
+ifneq ($(COMPOSER_SUBDIRS),)
+override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
+ifeq ($(COMPOSER_SUBDIRS),)
+override COMPOSER_SUBDIRS		:= $(NOTHING)-$(CONFIGS)-$(SUBDIRS)
+endif
+endif
+
+#> $(CLEANER) > $(DOITALL)
 ifneq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
@@ -1256,15 +1272,6 @@ ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
 endif
 endif
-
-ifeq ($(COMPOSER_SUBDIRS),)
-#>override COMPOSER_SUBDIRS		:= $(subst /$(MAKEFILE),,$(wildcard $(addsuffix /$(MAKEFILE),$(COMPOSER_CONTENTS_DIRS))))
-override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
-endif
-
-#WORKING if they end up empty here, there should be some sort of $(NOTHING) marker... then add a test for this...
-override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
-override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
 
 endif
 
@@ -2728,8 +2735,9 @@ $(EXAMPLE):
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
 endef
+#>	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$(subst ",\",$($(2)))))
 override define $(EXAMPLE)-var-static =
-	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$(subst ",\",$($(2)))))
+	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
 endef
 override define $(EXAMPLE)-var =
 	$(call $(EXAMPLE)-print,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$(subst ",\",$($(2)))))
@@ -3756,7 +3764,7 @@ $(HEADERS)-$(EXAMPLE):
 	@$(call $(HEADERS)-rm,$(CURDIR),removing)
 
 .PHONY: $(HEADERS)
-$(HEADERS): $(NOTHING)-$(HEADERS)
+$(HEADERS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(HEADERS)
 	@$(ECHO) ""
 
 .PHONY: $(HEADERS)-%
@@ -3899,27 +3907,24 @@ $(LISTING):
 ########################################
 # {{{2 $(NOTHING) ----------------------
 
-
 #> grep -E "[$][(]NOTHING[)][-]" Makefile
-#> update: $(TARGETS)-$(CLEANER)
-#> update: $(TARGETS)-$(DOITALL)
 override NOTHING_IGNORES := \
-	$(INSTALL)-$(SUBDIRS) \
-	$(CLEANER)-$(SUBDIRS) \
-	$(DOITALL)-$(TARGETS) \
-	$(DOITALL)-$(SUBDIRS) \
+	$(TARGETS) \
+	$(SUBDIRS) \
 
-#>	COMPOSER_LOG \
-#>	COMPOSER_EXT \
+#>	$(CONFIGS)-$(TARGETS) \
+#>	$(CONFIGS)-$(SUBDIRS) \
 #>	$(TARGETS)-$(CLEANER) \
 #>	$(TARGETS)-$(DOITALL) \
-#>	$(HEADERS) \
-#>	$(NOTHING)-$(INSTALL)-$(SUBDIRS) \
-#>	$(NOTHING)-$(CLEANER)-$(SUBDIRS) \
-#>	$(NOTHING)-$(DOITALL)-$(TARGETS) \
-#>	$(NOTHING)-$(DOITALL)-$(SUBDIRS) \
+#>	$(NOTHING)-$(TARGETS)-$(HEADERS) \
+#>	$(TARGETS) \
+#>	$(NOTHING)-$(TARGETS) \
+#>	$(NOTHING)-$(TARGETS)-$(SUBDIRS) \
 #>	$(SUBDIRS) \
+#>	$(NOTHING)-$(SUBDIRS) \
 #>	$(MAKEFILE) \
+#>	COMPOSER_LOG \
+#>	COMPOSER_EXT \
 
 $(eval export override COMPOSER_NOTHING ?=)
 .PHONY: $(NOTHING)-%
@@ -4393,8 +4398,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
-	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(TARGETS))
-	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(DOITALL)-$(SUBDIRS))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(TARGETS))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
 	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
@@ -4475,6 +4480,7 @@ $(TESTING)-$(INSTALL):
 
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
+	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
 	@$(call $(TESTING)-run) MAKEJOBS= $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) MAKEJOBS= $(CLEANER)-$(DOITALL)
 	@$(call $(TESTING)-run) MAKEJOBS="$(SPECIAL_VAL)" $(INSTALL)-$(DOITALL)
@@ -4482,6 +4488,7 @@ $(TESTING)-$(INSTALL)-init:
 
 .PHONY: $(TESTING)-$(INSTALL)-done
 $(TESTING)-$(INSTALL)-done:
+	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
 	@$(call $(TESTING)-hold)
 
 ########################################
@@ -4495,6 +4502,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 		\n\t * Creation and deletion of files \
 		\n\t * Missing '$(_C)$(MAKEFILE)$(_D)' detection \
 		\n\t * Proper execution of '$(_N)*$(_C)-$(DOITALL)$(_D)' and '$(_N)*$(_C)-$(CLEANER)$(_D)' targets \
+		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
 	)
 	@$(call $(TESTING)-load)
 	@$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
@@ -4503,7 +4511,6 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
-	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,9 8 7 6 5 4 3 2 1,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
@@ -4515,8 +4522,6 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 
-#> update: $(TARGETS)-$(CLEANER)
-#> update: $(TARGETS)-$(DOITALL)
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Creating.+changelog.html)
@@ -4525,9 +4530,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+getting-started.html)
 	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))[^\/].+$(COMPOSER_LOG_DEFAULT))
 	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))\/doc[^\/].+$(COMPOSER_LOG_DEFAULT))
-	$(call $(TESTING)-find,NOTICE.+$(NOTHING).+$(MAKEFILE))
-	$(call $(TESTING)-count,1,$(TARGETS)-$(CLEANER))
-	$(call $(TESTING)-count,1,$(TARGETS)-$(DOITALL))
+	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
+	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 
 ########################################
@@ -4629,6 +4633,7 @@ $(TESTING)-COMPOSER_IGNORES:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
 		\n\t * Verify selected '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D) are skipped \
+		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -4637,18 +4642,19 @@ $(TESTING)-COMPOSER_IGNORES:
 .PHONY: $(TESTING)-COMPOSER_IGNORES-init
 $(TESTING)-COMPOSER_IGNORES-init:
 	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_EXT_DEFAULT)
-	@$(RM) $(call $(TESTING)-pwd)/data/*.$(EXTN_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_MANUAL).$(EXTN_DEFAULT) artifacts\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) $(notdir $(wildcard $(call $(TESTING)-pwd)/data/*))\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(DOITALL)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(INSTALL)-$(DOITALL)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
-	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT),,1)
-	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_MANUAL).$(EXTN_DEFAULT),,1)
-	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts,,1)
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
+	$(call $(TESTING)-count,2,$(NOTHING).+$(CONFIGS)-$(TARGETS))
+	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
 
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
@@ -5164,7 +5170,7 @@ else
 	fi
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
-	@$(foreach FILE,$(COMPOSER_SUBDIRS),\
+	@$(foreach FILE,$(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
 	@+$(MAKE) $(MAKE_OPTIONS) $(INSTALL)-$(SUBDIRS)
@@ -5246,9 +5252,11 @@ $(DOITALL): $(DOITALL)-$(SUBDIRS)
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
-$(DOITALL): $(NOTHING)-$(DOITALL)-$(TARGETS)
+$(DOITALL): $(NOTHING)-$(TARGETS)
 else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
-$(DOITALL): $(NOTHING)-$(NOTHING)-$(DOITALL)-$(TARGETS)
+$(DOITALL): $(NOTHING)-$(NOTHING)-$(TARGETS)
+else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
+$(DOITALL): $(COMPOSER_TARGETS)
 else
 $(DOITALL): $(COMPOSER_TARGETS)
 endif
@@ -5269,7 +5277,7 @@ $(DOITALL)-specials:
 # {{{2 $(SUBDIRS) ----------------------
 
 .PHONY: $(SUBDIRS)
-$(SUBDIRS): $(NOTHING)-$(SUBDIRS)
+$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
 $(SUBDIRS):
 	@$(ECHO) ""
 
@@ -5292,9 +5300,11 @@ endif
 
 .PHONY: $(1)-$(SUBDIRS)
 ifeq ($(COMPOSER_SUBDIRS),)
-$(1)-$(SUBDIRS): $(NOTHING)-$(1)-$(SUBDIRS)
+$(1)-$(SUBDIRS): $(NOTHING)-$(SUBDIRS)
 else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
-$(1)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(1)-$(SUBDIRS)
+$(1)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(SUBDIRS)
+else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),)
+$(1)-$(SUBDIRS): $(COMPOSER_SUBDIRS)
 else
 $(1)-$(SUBDIRS): $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 endif
@@ -5355,6 +5365,8 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(COMPOSER_PANDOC))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
 endif
 	@$(ECHO) ""
+
+#WORKING:NOW try to pull c_list into an eval override, to see if book can be replaced with simple make syntax...
 
 #>$(c_base).$(EXTENSION): $(SETTING)-$(COMPOSER_PANDOC)
 $(c_base).$(EXTENSION): $(c_list)
