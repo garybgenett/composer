@@ -890,7 +890,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	) \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PANDOC_TEX_PDF)" \
-		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)" \
+		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)" \
 		--include-in-header="$(TEX_PDF_TEMPLATE)" \
 		--listings \
 	) \
@@ -5186,6 +5186,14 @@ ifneq ($(wildcard $(CURDIR)/$(COMPOSER_LOG)),)
 	@$(RM) $(CURDIR)/$(COMPOSER_LOG) >/dev/null
 endif
 endif
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(wildcard $(COMPOSER_TMP)),)
+	@$(call $(HEADERS)-rm,$(CURDIR),$(notdir $(COMPOSER_TMP)))
+	@$(ECHO) "$(_S)"
+	@$(RM) --recursive $(COMPOSER_TMP)
+	@$(ECHO) "$(_D)"
+endif
+endif
 	@+$(strip $(call $(TARGETS)-list,$(CLEANER))) \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 	@+$(foreach FILE,$(COMPOSER_TARGETS),\
@@ -5357,7 +5365,7 @@ ifneq ($(PANDOC_OPTIONS_ERROR),)
 endif
 	@$(ECHO) "$(_N)"
 ifeq ($(c_type),$(TYPE_LPDF))
-	@$(MKDIR) $(COMPOSER_TMP)
+	@$(MKDIR) $(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)
 endif
 #>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
 	@$(PANDOC) $(call PANDOC_OPTIONS)
