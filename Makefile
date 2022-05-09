@@ -1107,11 +1107,8 @@ override COMPOSER_EXPORTED_NOT := \
 	c_base \
 	c_list \
 
-#> update: $(MAKE) / @+
-#>override MAKE_OPTIONS			:= $(MAKE_OPTIONS) $(foreach FILE,$(COMPOSER_EXPORTED), $(FILE)="$($(FILE))")
-#>override RUNMAKE			:= $(RUNMAKE) $(MAKE_OPTIONS)
-$(foreach FILE,$(COMPOSER_EXPORTED)		,$(eval export $(FILE)))
-$(foreach FILE,$(COMPOSER_EXPORTED_NOT)		,$(eval unexport $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED)	,$(eval export $(FILE)))
+$(foreach FILE,$(COMPOSER_EXPORTED_NOT)	,$(eval unexport $(FILE)))
 
 override COMPOSER_OPTIONS		:= \
 	$(shell $(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" $(COMPOSER) \
@@ -1162,8 +1159,6 @@ override CREATOR			:= docs
 override EXAMPLE			:= template
 
 override HEADERS			:= headers
-override WHOWHAT			:= whoami
-override SETTING			:= settings
 
 override MAKE_DB			:= .make_database
 override LISTING			:= .all_targets
@@ -1196,8 +1191,6 @@ override COMPOSER_RESERVED := \
 	$(EXAMPLE) \
 	\
 	$(HEADERS) \
-	$(WHOWHAT) \
-	$(SETTING) \
 	\
 	$(MAKE_DB) \
 	$(LISTING) \
@@ -1558,16 +1551,12 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOFORCE)]"		"Complete \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` content $(_E)(similar to [$(HELPOUT)-$(DOITALL)])$(_D)"
-	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOFORCE)-$(PRINTER)]"	"Creates \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_C)[Reference]$(_D) section"
-	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOFORCE)-$(TARGETS)]"	"Linking for \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(test with [COMPOSER_DEBUGIT])$(_D)"
 	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)-$(INSTALL)]"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by $(_C)[$(INSTALL)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)]"			"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)]"			"Series of targets that handle all informational output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)]"		"For testing default $(_C)[$(HEADERS)]$(_D) output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]"	"For testing complete $(_C)[$(HEADERS)]$(_D) output"
-	@$(TABLE_M2) "$(_C)[$(WHOWHAT)]"			"Wrapper to $(_C)[$(HEADERS)]$(_D) when processing directories"
-	@$(TABLE_M2) "$(_C)[$(SETTING)]"			"Wrapper to $(_C)[$(HEADERS)]$(_D) when processing files"
 	@$(TABLE_M2) "$(_C)[$(MAKE_DB)]"			"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
@@ -2579,8 +2568,6 @@ $(_S)[$(CREATOR)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]: #internal-targets$(_D)
-$(_S)[$(WHOWHAT)]: #internal-targets$(_D)
-$(_S)[$(SETTING)]: #internal-targets$(_D)
 $(_S)[$(MAKE_DB)]: #internal-targets$(_D)
 $(_S)[$(LISTING)]: #internal-targets$(_D)
 $(_S)[$(NOTHING)]: #internal-targets$(_D)
@@ -3743,6 +3730,9 @@ else
 override $(HEADERS)-release = $(1)
 endif
 
+########################################
+# {{{3 $(HEADERS)-$(EXAMPLE) -----------
+
 .PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
@@ -3762,6 +3752,9 @@ $(HEADERS)-$(EXAMPLE):
 	@$(call $(HEADERS)-file,$(CURDIR),creating)
 	@$(call $(HEADERS)-skip,$(CURDIR),skipping)
 	@$(call $(HEADERS)-rm,$(CURDIR),removing)
+
+########################################
+# {{{3 $(HEADERS)-% --------------------
 
 .PHONY: $(HEADERS)
 $(HEADERS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(HEADERS)
@@ -3829,29 +3822,6 @@ endef
 override define $(HEADERS)-rm =
 	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
 endef
-
-########################################
-# {{{2 $(WHOWHAT) ----------------------
-
-.PHONY: $(WHOWHAT)-%
-$(WHOWHAT)-%:
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-dir,$(CURDIR))
-else
-	@$(call $(HEADERS),1,$(*))
-endif
-
-########################################
-# {{{2 $(SETTING) ----------------------
-
-.PHONY: $(SETTING)-%
-$(SETTING)-%:
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-file,$(CURDIR),$(c_base).$(EXTENSION))
-else
-	@$(call $(HEADERS)-run,1,$(*))
-	@$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"
-endif
 
 ################################################################################
 # {{{1 Global Targets ----------------------------------------------------------
@@ -5293,8 +5263,11 @@ $(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
 endif
 $(1)-$(SUBDIRS)-$(HEADERS):
 ifneq ($(COMPOSER_DOITALL_$(1)),)
-#>$(1)-$(SUBDIRS)-$(HEADERS): $(WHOWHAT)-$(1)
-	@$$(RUNMAKE) $$(WHOWHAT)-$(1)
+ifeq ($(COMPOSER_DEBUGIT),)
+	@$$(call $$(HEADERS)-dir,$$(CURDIR))
+else
+	@$$(call $$(HEADERS),1,$(1))
+endif
 endif
 	@$$(ECHO) ""
 
@@ -5368,10 +5341,14 @@ endif
 
 #WORKING:NOW try to pull c_list into an eval override, to see if book can be replaced with simple make syntax...
 
-#>$(c_base).$(EXTENSION): $(SETTING)-$(COMPOSER_PANDOC)
 $(c_base).$(EXTENSION): $(c_list)
 $(c_base).$(EXTENSION):
-	@$(RUNMAKE) c_type="$(c_type)" c_base="$(c_base)" c_list="$(c_list)" $(SETTING)-$(COMPOSER_PANDOC)
+ifeq ($(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-file,$(CURDIR),$(c_base).$(EXTENSION))
+else
+	@$(call $(HEADERS)-run,1,$(c_base).$(EXTENSION))
+	@$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"
+endif
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_N)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
