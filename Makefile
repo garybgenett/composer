@@ -5347,8 +5347,6 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 	@$(ECHO) ""
 
-#WORKING:NOW try to pull c_list into an eval override, to see if book can be replaced with simple make syntax...
-
 $(c_base).$(EXTENSION): $(c_list)
 $(c_base).$(EXTENSION):
 ifeq ($(COMPOSER_DEBUGIT),)
@@ -5385,23 +5383,23 @@ endif
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_EXT)
 #>%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
 endif
 
 %.$(2): %
 #>%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
 endif
 
 %.$(2): $(c_list)
 #>%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
 endif
 endef
 
@@ -5421,9 +5419,9 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 override define TYPE_DO_BOOK =
 $(DO_BOOK)-%.$(2):
-	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(^)"
+	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(DO_BOOK))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(DO_BOOK))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
 endif
 endef
 
@@ -5444,7 +5442,7 @@ override define TYPE_DO_PAGE =
 $(DO_PAGE)-%.$(2):
 	@$$(RUNMAKE) $$(NOTHING)-$$(DO_PAGE)-FUTURE
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(DO_PAGE))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(DO_PAGE))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
 endif
 endef
 
@@ -5465,7 +5463,7 @@ override define TYPE_DO_POST =
 $(DO_POST)-%.$(2):
 	@$$(RUNMAKE) $$(NOTHING)-$$(DO_POST)-FUTURE
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(DO_POST))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(^))
+	@$(eval override @ := $(DO_POST))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
 endif
 endef
 
