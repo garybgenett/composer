@@ -798,8 +798,6 @@ override EXTN_PPTX			:= $(TYPE_PPTX)
 override EXTN_TEXT			:= txt
 override EXTN_LINT			:= $(subst $(TOKEN),,$(subst $(TOKEN).,,$(addprefix $(TOKEN),$(COMPOSER_EXT_DEFAULT)))).$(EXTN_TEXT)
 
-override OUTPUT				:=
-override EXTENSION			:=
 $(foreach FILE,\
 	HTML \
 	LPDF \
@@ -4752,7 +4750,7 @@ ifeq ($(OS_TYPE),Linux)
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
 	#> pandoc
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_type="json" $(OUT_README).json
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
 	#> git
 	@$(call $(TESTING)-make,,$(TESTING_COMPOSER_MAKEFILE))
@@ -4782,8 +4780,8 @@ $(TESTING)-other-done:
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
-	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
-	$(call $(TESTING)-count,1,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
+	$(call $(TESTING)-count,10,$(COMPOSER_LICENSE))
+	$(call $(TESTING)-count,2,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
 	#> pandoc
