@@ -6,25 +6,23 @@ override VIM_OPTIONS := vim: filetype=make foldmethod=marker foldlevel=0 foldtex
 override VIM_FOLDING := {{{1
 ################################################################################
 # Release Checklist:
-#	* Upgrade
-#		* Update: Tooling Versions
-#		* Update: Pandoc Options
-#		* Update: TYPE_TARGETS
+#	* Update
+#		* Tooling Versions
+#		* Pandoc Options
+#		* TYPE_TARGETS
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
-#		* `make all` (examine)
-#		* `make debug-all` && `make debug-file` (review)
-#		* `make test-all` && `make test-file` (review)
-#		* `mv Composer-*.log artifacts/`
+#		* `make debug-all`
+#			* `make debug-file`
+#			* `mv Composer-*.log artifacts/`
+#		* Update: README.md
+#			* `make COMPOSER_DEBUGIT="1" help-force | less -rX`
+#				* `override INPUT := markdown_strict`
+#				* Fits in $(COLUMNS) characters
+#				* Mouse select color handling
+#			* Spell check
 #	* Publish
-#		* Update: README.md (#WORKING release notes?)
-#			#WORKING $(HELPOUT)-$(DOITALL) output review
-#				output should be reviewed during testing... maybe output some notes in $(TESTING)...? == release checklist
-#				ensure all output fits within 80 characters
-#				do a mouse-select of all text, to ensure proper color handling
-#				spell check!
-#				override INPUT := markdown_strict
-#		* Review: `make docs`
+#		* Release: `rm rm -frv {.[^.],}*; make _release`
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
