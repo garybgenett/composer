@@ -15,6 +15,26 @@ override VIM_FOLDING := {{{1
 #		* `make debug-all`
 #			* `make debug-file`
 #			* `mv Composer-*.log artifacts/`
+#		* `make test-targets`
+#			#> update: TYPE_TARGETS
+#			* README.html.0.0.html
+#			* README.html.1.1.html
+#			* README.html.x.x.html
+#			* README.pdf.0.0.pdf
+#			* README.pdf.2.2.pdf
+#			* README.pdf.x.1.pdf
+#			* README.pdf.x.x.pdf
+#			* README.epub.0.0.epub
+#			* README.epub.x.1.epub
+#			* README.epub.x.2.epub
+#			* README.epub.x.3.epub
+#			* README.epub.x.x.epub
+#			* README.revealjs.html.0.0.revealjs.html
+#			* README.revealjs.html.1.1.revealjs.html
+#			* README.revealjs.html.x.x.revealjs.html
+#			* README.docx.0.0.docx
+#			* README.docx.1.1.docx
+#			* README.docx.x.x.docx
 #		* Update: README.md
 #			* `make COMPOSER_DEBUGIT="1" help-force | less -rX`
 #				* `override INPUT := markdown_strict`
@@ -26,36 +46,6 @@ override VIM_FOLDING := {{{1
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
-#WORKING test for \" in c_options?  or, all good now...?
-#WORKING match up all features in help-all with a test case...
-#WORKING test case for SOURCE of .Composer/.composer.mk and CURDIR/.composer.mk
-#WORKING does the empty COMPOSER_EXT test verify that *.html.html does not happen?
-#WORKING $(INSTALL) test case?
-#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
-#	make -f ../Makefile install-force	= Creating.+$(call $(TESTING)-pwd)/$(MAKEFILE)
-#	make -f ../Makefile install-all		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	make -f ../Makefile install		= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	$(RM) $(call $(TESTING)-pwd)/$(MAKEFILE)
-#	make install-force			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	make install-all			= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#	make install				= $(NOTHING).+$(INSTALL)-$(MAKEFILE)
-#WORKING COMPOSER_EXT and SPECIALS test cases
-#	create test cases for COMPOSER_EXT and SPECIALS... catch all 4 possibilities
-#	cd .Composer-v*/test-Composer ; while :; do inotifywait ../../Makefile ; rm *.md *.html ; for file in {1..9} ; do echo ${FILE} >book-${file}.md ; echo "book-MANUAL.html: README.md LICENSE.md" >.composer.mk ; done ; make docs books targets ; ll ; done
-#	automatic input file detection
-#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base) $(_N)(empty \`COMPOSER_EXT\`)$(_D)"
-#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base).$(EXTENSION)$(_D)"			"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)"
-#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(c_base)$(COMPOSER_EXT).$(EXTENSION)$(_D)"	"~ $(_E)$(c_base)$(COMPOSER_EXT)$(_D)"
-#		"$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_MANUAL).$(EXTENSION)$(_D)"			"~ $(_E)c_list=...$(_D)"
-#WORKING variable / aliases tests?
-#	c_margins...?
-#WORKING test case where targets/subdirs are both in ignores, so results are empty = composer operation
-#WORKING manual review of output documents... should have a list, definitely including the 0/2 for revealjs, pdf 0/1/2, etc...
-#	epub and margins...?
-#WORKING document COMPOSER_DOITALL_* and +$(MAKE)
-#	document that COMPOSER_DOITALL_* and +$(MAKE) go hand-in-hand, and are how recursion is handled
-#		COMPOSER_EXPORTED! = need to make a note for me?
-#		do this right here, along with other notes about how to work with the source...
 #TODO
 #	--defaults = switch to this, in a heredoc that goes to artifacts
 #		maybe add additional ones, like COMPOSER_INCLUDE
@@ -390,12 +380,15 @@ override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 
 override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
 override OS_TYPE			:=
-ifneq ($(filter Linux,$(OS_UNAME)),)
-override OS_TYPE			:= Linux
-else ifneq ($(filter Windows,$(OS_UNAME)),)
+#>ifneq ($(filter Linux,$(OS_UNAME)),)
+#>override OS_TYPE			:= Linux
+#>else ifneq ($(filter Windows,$(OS_UNAME)),)
+ifneq ($(filter Windows,$(OS_UNAME)),)
 override OS_TYPE			:= Windows
 else ifneq ($(filter Darwin,$(OS_UNAME)),)
 override OS_TYPE			:= Darwin
+else ifneq ($(filter Linux,$(OS_UNAME)),)
+override OS_TYPE			:= Linux
 endif
 
 ################################################################################
@@ -1648,6 +1641,7 @@ $(HELPOUT)-%:
 #>.PHONY: $(HELPOUT)-$(DOITALL)
 #>$(HELPOUT)-$(DOITALL):
 	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(*)
+	@$(PRINT) "#WORKING:NOW FEATURES = TEST CASES #############################################"
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 	@$(call TITLE_LN,2,Document Formatting,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
@@ -4169,7 +4163,7 @@ override define $(TESTING)-mark =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
-	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --makefile $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE) $(CREATOR); \
+	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) --makefile $(TESTING_COMPOSER_MAKEFILE) $(CREATOR); \
 	if [ -n "$(2)" ]; then \
 		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_README); \
 		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_LICENSE); \
@@ -4260,6 +4254,7 @@ endef
 $(TESTING)-Think:
 	@$(call $(TESTING)-$(HEADERS),\
 		Install the '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' directory ,\
+		\n\t * Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
 		\n\t * Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory ready for direct use \
 	)
 	@$(call $(TESTING)-init)
@@ -4268,24 +4263,28 @@ $(TESTING)-Think:
 #> update: $(TESTING)-Think
 .PHONY: $(TESTING)-Think-init
 $(TESTING)-Think-init:
-	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS),,,1)
-	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS),,,1)
 	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(MAKEFILE),-$(INSTALL),$(TESTING_COMPOSER_MAKEFILE),1)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS),,,1)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS),,,1)
+	@$(call $(TESTING)-run) --makefile $(TESTING_COMPOSER_MAKEFILE) $(INSTALL)
+	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(ENDOLINE)
 	@$(LS) \
 		$(COMPOSER) \
 		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)) \
 		$(call $(TESTING)-pwd,/) \
 		$(call $(TESTING)-pwd)
+	@$(CAT) \
+		$(call $(TESTING)-pwd,/)/$(MAKEFILE) \
+		$(call $(TESTING)-pwd)/$(MAKEFILE)
 #>	@$(CAT) \
 #>		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS) \
 #>		$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
-	@$(CAT) \
-		$(call $(TESTING)-pwd,/)/$(MAKEFILE)
 
 .PHONY: $(TESTING)-Think-done
 $(TESTING)-Think-done:
-	$(call $(TESTING)-find,override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE))
+	$(call $(TESTING)-find,COMPOSER_TARGETS)
+	$(call $(TESTING)-count,2,override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE))
 
 ########################################
 # {{{3 $(TESTING)-$(DISTRIB) -----------
@@ -4307,7 +4306,7 @@ $(TESTING)-$(DISTRIB):
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
 #>	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
-	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) --makefile $(COMPOSER) $(DISTRIB)
+	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) --makefile $(TESTING_COMPOSER_MAKEFILE) $(DISTRIB)
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
@@ -4394,6 +4393,7 @@ $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
+		\n\t * Automatic input file detection \
 		\n\t * Command-line '$(_C)c_list$(_D)' shortcut \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' \
 		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
@@ -4410,6 +4410,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
+	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
 	@$(SED) -n "/$(COMPOSER_LICENSE)/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
@@ -4420,6 +4421,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
 	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 
@@ -4453,7 +4455,7 @@ $(TESTING)-$(TARGETS)-init:
 		,\
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
-				$(call $(TESTING)-run) c_toc="$(subst x,,$(TOC))" c_level="$(subst x,,$(LEVEL))" $(OUT_README).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
+				$(call $(TESTING)-run) c_toc="$(subst x,,$(TOC))" c_level="$(subst x,,$(LEVEL))" $(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
 				$(call NEWLINE) \
 			) \
 		) \
@@ -4462,14 +4464,14 @@ $(TESTING)-$(TARGETS)-init:
 
 .PHONY: $(TESTING)-$(TARGETS)-done
 $(TESTING)-$(TARGETS)-done:
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_HTML))
-	$(call $(TESTING)-count,22,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_LPDF))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_EPUB))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_PRES))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_DOCX))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_PPTX))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_TEXT))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.][x0-9][.][x0-9][.]$(EXTN_LINT))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_HTML)[.][x0-9][.][x0-9][.]$(EXTN_HTML))
+	$(call $(TESTING)-count,22,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_LPDF)[.][x0-9][.][x0-9][.]$(EXTN_LPDF))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_EPUB)[.][x0-9][.][x0-9][.]$(EXTN_EPUB))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_PRES)[.][x0-9][.][x0-9][.]$(EXTN_PRES))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_DOCX)[.][x0-9][.][x0-9][.]$(EXTN_DOCX))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_PPTX)[.][x0-9][.][x0-9][.]$(EXTN_PPTX))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_TEXT)[.][x0-9][.][x0-9][.]$(EXTN_TEXT))
+	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_LINT)[.][x0-9][.][x0-9][.]$(EXTN_LINT))
 	@$(call $(TESTING)-hold)
 
 ########################################
@@ -4481,7 +4483,6 @@ $(TESTING)-$(INSTALL):
 	@$(call $(TESTING)-$(HEADERS),\
 		Test '$(_C)$(INSTALL)$(_D)' in an existing directory ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
-		\n\t * Verify '$(_C)$(TESTING_COMPOSER_DIR)$(_D)' configuration \
 		\n\t * Examine output to validate '$(_C)$(NOTHING)$(_D)' markers \
 		\n\t * Ensure threading is working properly \
 		\n\t * Test runs: \
@@ -4770,7 +4771,9 @@ $(TESTING)-other: $(TESTING)-Think
 $(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
 		Miscellaneous test cases ,\
+		\n\t * Binary files \
 		\n\t * Verify lock files \
+		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
 		\n\t\t * Verify '$(_C)$(TYPE_LPDF)$(_D)' format $(_E)(TeX Live)$(_D) \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
@@ -4787,6 +4790,8 @@ $(TESTING)-other-init:
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
+	#> margins
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> book
 	@$(ECHO) "$(DO_BOOK)-$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF):" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -4795,6 +4800,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(OUT_MANUAL)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "# $(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)" >$(call $(TESTING)-pwd)/$(DO_BOOK)-$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 ifeq ($(OS_TYPE),Linux)
 	@$(LESS_BIN) $(call $(TESTING)-pwd)/$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF) \
@@ -4821,7 +4827,7 @@ endif
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
-	#> pandoc
+	#> binaries
 	@$(PRINT) "$(_C)Pandoc: $(PANDOC_BIN) = $(PANDOC)"
 	@$(PRINT) "$(_C)YQ: $(YQ_BIN) = $(YQ)"
 	@if	[ "$(PANDOC)" != "$(PANDOC_BIN)" ] || \
@@ -4834,11 +4840,17 @@ $(TESTING)-other-done:
 	fi
 	#> lock
 	$(call $(TESTING)-find,lock file exists)
+	#> margins
+	$(call $(TESTING)-count,11,c_margin)
+	$(call $(TESTING)-find,c_margin_top.+1in)
+	$(call $(TESTING)-find,c_margin_bottom.+2in)
+	$(call $(TESTING)-find,c_margin_left.+3in)
+	$(call $(TESTING)-find,c_margin_right.+4in)
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
 	$(call $(TESTING)-count,10,$(COMPOSER_LICENSE))
-	$(call $(TESTING)-count,2,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
+	$(call $(TESTING)-count,7,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
 	#> pandoc
