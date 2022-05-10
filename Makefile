@@ -40,6 +40,8 @@ override VIM_FOLDING := {{{1
 #				* `override INPUT := markdown_strict`
 #				* Fits in $(COLUMNS) characters
 #				* Mouse select color handling
+#			* `make docs`
+#				* Screenshot
 #			* Spell check
 #	* Publish
 #		* Release: `rm rm -frv {.[^.],}*; make _release`
@@ -4382,7 +4384,7 @@ $(TESTING)-speed-done:
 	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type d | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+[.]$(EXTN_DEFAULT)$$/p" | $(WC))"
-	@$(call $(TESTING)-find,[0-9]s$$)		| $(SED) "s|^(real)|\n\1|g"
+	@$(call $(TESTING)-find,[0-9]s$$)
 	@$(call $(TESTING)-hold)
 
 ########################################
@@ -4442,7 +4444,8 @@ $(TESTING)-$(TARGETS):
 #> update: TYPE_TARGETS
 .PHONY: $(TESTING)-$(TARGETS)-init
 $(TESTING)-$(TARGETS)-init:
-#>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).[x0-9].*
+#>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
+	@$(ECHO) "override COMPOSER_TARGETS :=\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(foreach EXTN,\
 		$(EXTN_HTML) \
 		$(EXTN_LPDF) \
@@ -4455,12 +4458,17 @@ $(TESTING)-$(TARGETS)-init:
 		,\
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
-				$(call $(TESTING)-run) c_toc="$(subst x,,$(TOC))" c_level="$(subst x,,$(LEVEL))" $(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
+				$(ECHO) "override COMPOSER_TARGETS += $(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(ECHO) "$(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN): override c_toc := $(subst x,,$(TOC))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(ECHO) "$(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN): override c_level := $(subst x,,$(LEVEL))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(ECHO) "$(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN): $(OUT_README)$(COMPOSER_EXT_DEFAULT)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(call $(TESTING)-run) $(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
 				$(call NEWLINE) \
 			) \
 		) \
 	)
-	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).[x0-9].*
+#>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 
 .PHONY: $(TESTING)-$(TARGETS)-done
 $(TESTING)-$(TARGETS)-done:
@@ -4472,6 +4480,7 @@ $(TESTING)-$(TARGETS)-done:
 	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_PPTX)[.][x0-9][.][x0-9][.]$(EXTN_PPTX))
 	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_TEXT)[.][x0-9][.][x0-9][.]$(EXTN_TEXT))
 	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_LINT)[.][x0-9][.][x0-9][.]$(EXTN_LINT))
+	$(call $(TESTING)-count,42,ERROR)
 	@$(call $(TESTING)-hold)
 
 ########################################
@@ -4771,11 +4780,11 @@ $(TESTING)-other: $(TESTING)-Think
 $(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
 		Miscellaneous test cases ,\
-		\n\t * Binary files \
+		\n\t * Check binary files \
 		\n\t * Verify lock files \
-		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
 		\n\t\t * Verify '$(_C)$(TYPE_LPDF)$(_D)' format $(_E)(TeX Live)$(_D) \
+		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -4790,8 +4799,6 @@ $(TESTING)-other-init:
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
-	#> margins
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> book
 	@$(ECHO) "$(DO_BOOK)-$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF):" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -4810,6 +4817,8 @@ ifeq ($(OS_TYPE),Linux)
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
+	#> margins
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
@@ -4840,12 +4849,6 @@ $(TESTING)-other-done:
 	fi
 	#> lock
 	$(call $(TESTING)-find,lock file exists)
-	#> margins
-	$(call $(TESTING)-count,11,c_margin)
-	$(call $(TESTING)-find,c_margin_top.+1in)
-	$(call $(TESTING)-find,c_margin_bottom.+2in)
-	$(call $(TESTING)-find,c_margin_left.+3in)
-	$(call $(TESTING)-find,c_margin_right.+4in)
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
@@ -4853,6 +4856,12 @@ ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,7,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
+	#> margins
+	$(call $(TESTING)-count,11,c_margin)
+	$(call $(TESTING)-find,c_margin_top.+1in)
+	$(call $(TESTING)-find,c_margin_bottom.+2in)
+	$(call $(TESTING)-find,c_margin_left.+3in)
+	$(call $(TESTING)-find,c_margin_right.+4in)
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -5416,13 +5425,13 @@ $(c_base).$(EXTENSION):
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
-	@$(PRINT) "$(_F)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
+	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION): $(call PANDOC_OPTIONS_ERROR)"
 	@$(ENDOLINE)
 	@exit 1
 endif
 ifneq ($(wildcard $(CURDIR)/$(c_base).$(EXTENSION).lock),)
 	@$(ENDOLINE)
-	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION).lock file exists"
+	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION): lock file exists"
 	@$(ENDOLINE)
 	@exit 1
 endif
