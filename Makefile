@@ -2623,7 +2623,9 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+ifneq ($(COMPOSER_RELEASE),)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+endif
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
@@ -5080,6 +5082,7 @@ $(DISTRIB):
 #>	@$(RUNMAKE) $(CREATOR)
 	@$(REALMAKE) --directory $(CURDIR) $(UPGRADE)-$(DOITALL)
 	@$(REALMAKE) --directory $(CURDIR) $(CREATOR)
+	@$(ENDOLINE)
 	@$(LS) $(CURDIR)
 
 ########################################
