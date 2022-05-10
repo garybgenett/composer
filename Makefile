@@ -968,7 +968,7 @@ ifeq ($(c_type),$(TYPE_LPDF))
 ifneq ($(c_toc),)
 ifneq ($(c_level),$(SPECIAL_VAL))
 ifneq ($(c_level),$(DEPTH_DEFAULT))
-override PANDOC_OPTIONS_ERROR		= The '$(_C)c_toc$(_N)' option must be empty when '$(_C)c_level$(_N) != $(_E)[$(SPECIAL_VAL)|$(DEPTH_DEFAULT)]$(_N)' for '$(_C)$(TYPE_LPDF)$(_N)'
+override PANDOC_OPTIONS_ERROR		= The 'c_toc' option must be empty when 'c_level != [$(SPECIAL_VAL)|$(DEPTH_DEFAULT)]' for '$(TYPE_LPDF)'
 endif
 endif
 endif
@@ -1354,12 +1354,6 @@ $(1)s-$(CLEANER):
 				$$(RM) $$(CURDIR)/{} >/dev/null; \
 			fi; \
 		'
-
-ifneq ($(COMPOSER_RELEASE),)
-$(1)-$(COMPOSER_BASENAME)-$(1).$(EXTENSION): \
-	$(OUT_README)$(COMPOSER_EXT_DEFAULT) \
-	$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-endif
 endef
 
 $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
@@ -2691,8 +2685,9 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(COMPOSER_PANDOC) c_type="$(TYPE_PRES)" c_base="$(OUT_README)" c_list="$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)"
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
+		| $(SED) "/install[:][[:space:]]/d"
+#>		| $(SED) "s|$(abspath $(dir $(COMPOSER_DIR)))|...|g"
 	@$(RM) \
 		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
 		>/dev/null
@@ -2709,10 +2704,17 @@ $(OUT_README).%: override c_css := $(CSS_ALT)
 $(OUT_README).%: override c_toc := $(SPECIAL_VAL)
 $(OUT_README).$(EXTN_LPDF): $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 $(OUT_README).$(EXTN_EPUB): override c_css :=
+$(OUT_README).$(EXTN_PRES): override c_list := $(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 $(OUT_README).$(EXTN_PRES): override c_css :=
 $(OUT_README).$(EXTN_PRES): override c_toc :=
-#> $(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 endef
+
+ifneq ($(COMPOSER_RELEASE),)
+$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): override c_toc := $(SPECIAL_VAL)
+$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): \
+	$(OUT_README)$(COMPOSER_EXT_DEFAULT) \
+	$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+endif
 
 ########################################
 # {{{2 $(EXAMPLE) ----------------------
@@ -3626,6 +3628,7 @@ override _M				:= \e[0;33m
 override _N				:= \e[0;31m
 override _E				:= \e[0;35m
 override _S				:= \e[0;34m
+override _F				:= \e[41;37m
 else
 override _D				:=
 override _H				:=
@@ -3634,6 +3637,7 @@ override _M				:=
 override _N				:=
 override _E				:=
 override _S				:=
+override _F				:=
 endif
 
 ########################################
@@ -5393,14 +5397,16 @@ $(c_base).$(EXTENSION):
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
-	@$(PRINT) "$(_N)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
+	@$(PRINT) "$(_F)$(MARKER) ERROR: $(call PANDOC_OPTIONS_ERROR)"
 	@$(ENDOLINE)
 	@exit 1
 endif
-	@$(ECHO) "$(_N)"
 ifeq ($(c_type),$(TYPE_LPDF))
+	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)
+	@$(ECHO) "$(_D)"
 endif
+	@$(ECHO) "$(_F)"
 #>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
 	@$(PANDOC) $(call PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
