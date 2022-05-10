@@ -26,7 +26,6 @@ override VIM_FOLDING := {{{1
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
-#WORKING add a .lock file... document where?
 #WORKING test for \" in c_options?  or, all good now...?
 #WORKING match up all features in help-all with a test case...
 #WORKING test case for SOURCE of .Composer/.composer.mk and CURDIR/.composer.mk
@@ -4442,7 +4441,6 @@ $(TESTING)-$(TARGETS):
 .PHONY: $(TESTING)-$(TARGETS)-init
 $(TESTING)-$(TARGETS)-init:
 #>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).[x0-9].*
-#>				$(call $(NEWLINE))
 	@$(foreach EXTN,\
 		$(EXTN_HTML) \
 		$(EXTN_LPDF) \
@@ -4456,7 +4454,7 @@ $(TESTING)-$(TARGETS)-init:
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
 				$(call $(TESTING)-run) c_toc="$(subst x,,$(TOC))" c_level="$(subst x,,$(LEVEL))" $(OUT_README).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
-				$(NEWLINE) \
+				$(call NEWLINE) \
 			) \
 		) \
 	)
@@ -4772,6 +4770,7 @@ $(TESTING)-other: $(TESTING)-Think
 $(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
 		Miscellaneous test cases ,\
+		\n\t * Verify lock files \
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
 		\n\t\t * Verify '$(_C)$(TYPE_LPDF)$(_D)' format $(_E)(TeX Live)$(_D) \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
@@ -4783,6 +4782,11 @@ $(TESTING)-other:
 
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
+	#> lock
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	#> book
 	@$(ECHO) "$(DO_BOOK)-$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF):" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -4828,6 +4832,8 @@ $(TESTING)-other-done:
 			exit 1; \
 		fi; \
 	fi
+	#> lock
+	$(call $(TESTING)-find,lock file exists)
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
@@ -5402,18 +5408,26 @@ ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@exit 1
 endif
+ifneq ($(wildcard $(CURDIR)/$(c_base).$(EXTENSION).lock),)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION).lock file exists"
+	@$(ENDOLINE)
+	@exit 1
+endif
+	@$(ECHO) "$(_F)"
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(CURDIR)/$(c_base).$(EXTENSION).lock
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)
-	@$(ECHO) "$(_D)"
-endif
 	@$(ECHO) "$(_F)"
+endif
 #>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
 	@$(PANDOC) $(call PANDOC_OPTIONS)
-	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_LOG),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP) $(subst ",\",$(call PANDOC_OPTIONS))\n" >>$(CURDIR)/$(COMPOSER_LOG)
 endif
+	@$(RM) $(c_base).$(EXTENSION).lock >/dev/null
+	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(c_base).$(EXTENSION))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
 endif
