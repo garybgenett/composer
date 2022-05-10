@@ -23,6 +23,7 @@ override VIM_FOLDING := {{{1
 #				ensure all output fits within 80 characters
 #				do a mouse-select of all text, to ensure proper color handling
 #				spell check!
+#				override INPUT := markdown_strict
 #		* Review: `make docs`
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
@@ -79,6 +80,10 @@ override VIM_FOLDING := {{{1
 #	--highlight-style="kate"?
 #	--incremental?
 #TODO
+#	https://github.com/alexeygumirov/pandoc-for-pdf-how-to
+#		https://github.com/Wandmalfarbe/pandoc-latex-template
+#		https://learnbyexample.github.io/customizing-pandoc
+#			https://dev.to/learnbyexample/customizing-pandoc-to-generate-beautiful-pdfs-from-markdown-3lbj
 #	http://distrib-coffee.ipsl.jussieu.fr/pub/mirrors/ctan/macros/latex/contrib/fancyhdr/fancyhdr.pdf
 #		https://en.wikibooks.org/wiki/LaTeX/Page_Layout
 #		\\usepackage{showframe}
@@ -870,9 +875,28 @@ endif
 ########################################
 
 override PANDOC_EXTENSIONS		:=
+override PANDOC_EXTENSIONS		+= +ascii_identifiers
 override PANDOC_EXTENSIONS		+= +auto_identifiers
+override PANDOC_EXTENSIONS		+= +emoji
+override PANDOC_EXTENSIONS		+= +fancy_lists
+override PANDOC_EXTENSIONS		+= +fenced_divs
+override PANDOC_EXTENSIONS		+= +footnotes
+override PANDOC_EXTENSIONS		+= +gfm_auto_identifiers
+override PANDOC_EXTENSIONS		+= +header_attributes
+override PANDOC_EXTENSIONS		+= +implicit_figures
+override PANDOC_EXTENSIONS		+= +implicit_header_references
+override PANDOC_EXTENSIONS		+= +inline_notes
+override PANDOC_EXTENSIONS		+= +intraword_underscores
+override PANDOC_EXTENSIONS		+= +line_blocks
+override PANDOC_EXTENSIONS		+= +pandoc_title_block
+override PANDOC_EXTENSIONS		+= +pipe_tables
+override PANDOC_EXTENSIONS		+= +shortcut_reference_links
 override PANDOC_EXTENSIONS		+= +smart
+override PANDOC_EXTENSIONS		+= +strikeout
+override PANDOC_EXTENSIONS		+= +superscript
+override PANDOC_EXTENSIONS		+= +task_lists
 override PANDOC_EXTENSIONS		+= +yaml_metadata_block
+override PANDOC_EXTENSIONS		+= -spaced_reference_links
 
 override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
@@ -1717,14 +1741,23 @@ $(HELPOUT)-$(DOFORCE)-$(TARGETS):
 			| $(SED) \
 				-e "s|^[[:space:]]+||g" \
 				-e "s|[[:space:]]+$$||g" \
-				-e "s|[[:space:]]+||g" \
+				-e "s|[[:space:]]|$(TOKEN)|g" \
 				-e "s|\\\\||g" \
 		))$(foreach FILE,$(LIST),\
 			$(foreach HEAD,$(subst /, ,$(FILE)),\
-				$(PRINT) "$(_S)[$(HEAD)]: #$(patsubst	_%,%,\
-							$(subst		/,-,\
-							$(subst		*,,\
-							$(FILE))))"; \
+				$(PRINT) "$(_C)[$(subst $(TOKEN),,$(HEAD))]: #$(shell \
+					$(ECHO) "$(subst $(TOKEN), ,$(FILE))" \
+					| $(TR) 'A-Z' 'a-z' \
+					| $(SED) \
+						-e "s|-|DASH|g" \
+						-e "s|_|UNDER|g" \
+					| $(SED) \
+						-e "s|[[:punct:]]||g" \
+						-e "s|[[:space:]]|-|g" \
+					| $(SED) \
+						-e "s|DASH|-|g" \
+						-e "s|UNDER|_|g" \
+				)"; \
 				$(call NEWLINE) \
 			) \
 		)
@@ -1737,7 +1770,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 			| $(SED) \
 				-e "s|^[[:space:]]+||g" \
 				-e "s|[[:space:]]+$$||g" \
-				-e "s|[[:space:]]+|$(TOKEN)|g" \
+				-e "s|[[:space:]]|$(TOKEN)|g" \
 				-e "s|\\\\||g" \
 		))$(foreach FILE,$(LIST),\
 			$(PRINT) "$(_N)[$(subst $(TOKEN), ,$(FILE))]"; \
@@ -2218,10 +2251,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_level)
     changes the way the document is presented.  Using `$(_M)part$(_D)` divides the
     document into "$(_N)Parts$(_D)", each starting with a stand-alone title page.  With
     this division type, each second-level heading starts a new "$(_N)Chapter$(_D)".  A
-    `$(_M)chapter$(_D)` simply starts a new section, preceded by a blank page, and
-    lower-level headings continue as running portions within it.  Finally,
-    `$(_M)section$(_D)` creates one long running document with no blank pages or section
-    breaks $(_E)(like a [HTML] page)$(_D).  To set the desired value:
+    `$(_M)chapter$(_D)` simply starts a new section on a new page, and lower-level
+    headings continue as running portions within it.  Finally, `$(_M)section$(_D)` creates
+    one long running document with no blank pages or section breaks $(_E)(like a
+    [HTML] page)$(_D).  To set the desired value:
       * `$(_M)part$(_D)` ~ `$(_N)$(SPECIAL_VAL)$(_D)`
       * `$(_M)chapter$(_D)` ~ `$(_N)$(DEPTH_DEFAULT)$(_D)`
       * `$(_M)section$(_D)` ~ Any other value
@@ -2444,7 +2477,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DOITALL) / $(DOITALL)-$(DOITALL) / \*-$(D
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PRINTER))
 
-  * Outputs all the $(_C)[COMPOSER_EXT]$(_D) files that have been updated since
+  * Outputs all the $(_C)[COMPOSER_EXT]$(_D) files that have been modified since
     $(_C)[COMPOSER_LOG]$(_D) was last updated $(_E)(see both in [Control Variables])$(_D).  Acts as
     a quick reference to see if anything has changed.
   * Since the $(_C)[COMPOSER_LOG]$(_D) file is updated whenever $(_C)[Pandoc]$(_D) is executed, this
@@ -2497,7 +2530,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT) / $(DEBUGIT)-file)
 
 For example:
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(UPGRADE) $(OUT_README).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(DO_BOOK)s $(OUT_README).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
 
@@ -2550,7 +2583,7 @@ Rapid cloning $(_E)(requires `rsync`)$(_D):
 
 $(CODEBLOCK)$(_C)mkdir$(_D) $(_M).../clone$(_D)
 $(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../.$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
 endef
 
 ########################################
