@@ -56,7 +56,7 @@ override VIM_FOLDING := {{{1
 ################################################################################
 
 override COMPOSER_COMPOSER		:= Gary B. Genett
-override COMPOSER_VERSION		:= v3.0
+override COMPOSER_VERSION		:= v3.x
 
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
