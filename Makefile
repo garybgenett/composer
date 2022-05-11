@@ -4394,10 +4394,14 @@ $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
+		\n\t * Verify lock files \
+		\n\t * Variable alias precedence \
 		\n\t * Automatic input file detection \
-		\n\t * Command-line '$(_C)c_list$(_D)' shortcut \
-		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' \
-		\n\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
+		\n\t\t * Command-line '$(_C)c_list$(_D)' shortcut \
+		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
+		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
+		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
+		\n\t\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -4406,25 +4410,65 @@ $(TESTING)-$(COMPOSER_BASENAME):
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CONFIGS)
+	#> lock
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
+	#> precedence
+	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) COMPOSER_DEBUGIT="order-COMPOSER_DEBUGIT" c_debug="order-c_debug" V="order-V" $(CONFIGS)
+	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) c_debug="order-c_debug" V="order-V" $(CONFIGS)
+	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) V="order-V" $(CONFIGS)
+	@$(RUNMAKE) COMPOSER_DEBUGIT=0 C="order-C" $(CONFIGS)
+	#> input
 	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
 	@$(SED) -n "/$(COMPOSER_LICENSE)/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+	#> margins
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
+	#> options
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	#> values
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
-	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(TARGETS))
-	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
+	#> lock
+	$(call $(TESTING)-find,lock file exists)
+	#> precedence
+	$(call $(TESTING)-count,1,order-COMPOSER_DEBUGIT)
+	$(call $(TESTING)-count,1,order-c_debug)
+	$(call $(TESTING)-count,1,order-V)
+	#> input
+	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
+	#> margins
+	$(call $(TESTING)-count,26,c_margin)
+	$(call $(TESTING)-find,c_margin_top.+1in)
+	$(call $(TESTING)-find,c_margin_bottom.+2in)
+	$(call $(TESTING)-find,c_margin_left.+3in)
+	$(call $(TESTING)-find,c_margin_right.+4in)
+	#> options
+	$(call $(TESTING)-count,6,[\"]$(TESTING)=$(DEBUGIT)[\"])
+	$(call $(TESTING)-count,6,[']$(TESTING)=$(DEBUGIT)['])
+	#> values
 	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
-	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(TARGETS))
+	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
 
 ########################################
 # {{{3 $(TESTING)-$(TARGETS) -----------
@@ -4574,6 +4618,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))$(_D)' \
+		\n\t * Verify '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
 	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -4587,8 +4632,11 @@ $(TESTING)-COMPOSER_INCLUDE-init:
 
 override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_CSS); \
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,/)\n" >$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,/)\n" >$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS); \
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS); \
 	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"; \
 	$(CAT) \
@@ -4599,19 +4647,29 @@ endef
 
 override define $(TESTING)-COMPOSER_INCLUDE-done =
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/c_css/p"; \
 	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS) >/dev/null; \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/c_css/p"; \
 	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(RM) $(call $(TESTING)-pwd,/)/$(COMPOSER_CSS) >/dev/null; \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/c_css/p"; \
 	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"
+	$(RM) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_CSS) >/dev/null; \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_DEPENDS/p"; \
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/c_css/p"
 endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-	$(call $(TESTING)-count,2,\|.+$(subst /,.,$(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,\|.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],[ $$]))
-	$(call $(TESTING)-count,3,\|.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))))
+	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd)))
+	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd)/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],[ $$]))
+	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))))
+	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS))))
 
 ########################################
 # {{{3 $(TESTING)-COMPOSER_DEPENDS -----
@@ -4658,7 +4716,7 @@ $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
 $(TESTING)-COMPOSER_IGNORES:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
-		\n\t * Verify selected '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D) are skipped \
+		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
 	)
 	@$(call $(TESTING)-load)
@@ -4781,12 +4839,8 @@ $(TESTING)-other:
 		Miscellaneous test cases ,\
 		\n\t * Check binary files \
 		\n\t * Repository versions variables \
-		\n\t * Verify lock files \
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
 		\n\t\t * Verify '$(_C)$(TYPE_LPDF)$(_D)' format $(_E)(TeX Live)$(_D) \
-		\n\t * Variable alias precedence \
-		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
-		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -4809,11 +4863,6 @@ $(TESTING)-other-init:
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 #>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
-	#> lock
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT)
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	#> book
 	@$(ECHO) "$(DO_BOOK)-$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF):" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -4832,22 +4881,6 @@ ifeq ($(OS_TYPE),Linux)
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
-	#> precedence
-	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) COMPOSER_DEBUGIT="order-COMPOSER_DEBUGIT" c_debug="order-c_debug" V="order-V" $(CONFIGS)
-	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) c_debug="order-c_debug" V="order-V" $(CONFIGS)
-	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) V="order-V" $(CONFIGS)
-	@$(RUNMAKE) COMPOSER_DEBUGIT=0 C="order-C" $(CONFIGS)
-	#> margins
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
-	#> options
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
@@ -4882,8 +4915,6 @@ $(TESTING)-other-done:
 	$(call $(TESTING)-count,12,$(NOTHING))
 	$(call $(TESTING)-count,9,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
-	#> lock
-	$(call $(TESTING)-find,lock file exists)
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
@@ -4891,19 +4922,6 @@ ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,7,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
-	#> precedence
-	$(call $(TESTING)-count,1,order-COMPOSER_DEBUGIT)
-	$(call $(TESTING)-count,1,order-c_debug)
-	$(call $(TESTING)-count,1,order-V)
-	#> margins
-	$(call $(TESTING)-count,11,c_margin)
-	$(call $(TESTING)-find,c_margin_top.+1in)
-	$(call $(TESTING)-find,c_margin_bottom.+2in)
-	$(call $(TESTING)-find,c_margin_left.+3in)
-	$(call $(TESTING)-find,c_margin_right.+4in)
-	#> options
-	$(call $(TESTING)-count,6,[\"]$(TESTING)=$(DEBUGIT)[\"])
-	$(call $(TESTING)-count,6,[']$(TESTING)=$(DEBUGIT)['])
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
