@@ -1,6 +1,6 @@
 % Composer CMS: Content Make System
 % Gary B. Genett
-% v3.0 (2022-05-10)
+% v3.0 (2022-05-11)
 
 # Composer CMS #################################################################
 
@@ -892,7 +892,7 @@ For example:
 
 Commit title format:
 
-    [Composer CMS v3.0 :: 2022-05-10T21:58:07-07:00]
+    [Composer CMS v3.0 :: 2022-05-11T10:49:51-07:00]
 
 ### \_release / \_update / \_update-all ###
 
@@ -953,6 +953,60 @@ documented for completeness.)*
 --------------------------------------------------------------------------------
 
 # Reference ####################################################################
+
+[Composer Variables]: #composer-variables
+[Formatting Variables]: #formatting-variables
+[Control Variables]: #control-variables
+[Composer Targets]: #composer-targets
+[Primary Targets]: #primary-targets
+[Special Targets]: #special-targets
+[Additional Targets]: #additional-targets
+[Internal Targets]: #internal-targets
+[Command Examples]: #command-examples
+[Composer CMS]: #composer-cms
+[Overview]: #overview
+[Quick Start]: #quick-start
+[Principles]: #principles
+[Requirements]: #requirements
+[Composer Operation]: #composer-operation
+[Recommended Workflow]: #recommended-workflow
+[Document Formatting]: #document-formatting
+[Configuration Settings]: #configuration-settings
+[Precedence Rules]: #precedence-rules
+[Specifying Dependencies]: #specifying-dependencies
+[Custom Targets]: #custom-targets
+[Repository Versions]: #repository-versions
+[Reference]: #reference
+[Templates]: #templates
+[Reserved]: #reserved
+
+[HTML]: #html
+[Bootstrap Websites]: #bootstrap-websites
+[PDF]: #pdf
+[EPUB]: #epub
+[Reveal.js Presentations]: #revealjs-presentations
+[Microsoft Word & PowerPoint]: #microsoft-word--powerpoint
+[c_lang]: #c_lang
+[c_css]: #c_css
+[c_toc]: #c_toc
+[c_level]: #c_level
+[c_margin]: #c_margin
+[c_options]: #c_options
+[MAKEJOBS]: #makejobs
+[COMPOSER_DOCOLOR]: #composer_docolor
+[COMPOSER_DEBUGIT]: #composer_debugit
+[COMPOSER_INCLUDE]: #composer_include
+[COMPOSER_DEPENDS]: #composer_depends
+[COMPOSER_LOG]: #composer_log
+[COMPOSER_EXT]: #composer_ext
+[COMPOSER_TARGETS]: #composer_targets
+[COMPOSER_SUBDIRS]: #composer_subdirs
+[COMPOSER_IGNORES]: #composer_ignores
+[template]: #template
+[compose]: #compose
+[site]: #site
+[list]: #list
+[book]: #book
 
 [c_type]: #c_type--c_base--c_list
 [c_base]: #c_type--c_base--c_list
@@ -1394,6 +1448,9 @@ Reserved variable names:
     headers-vars
     headers-compose
     headers-subdirs
+    help-force-targets-FORMAT
+    help-force-targets-SECTIONS
+    help-force-targets-TITLES
     help-all-CUSTOM
     help-all-DEPENDS
     help-all-FORMAT

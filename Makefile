@@ -56,7 +56,7 @@ override VIM_FOLDING := {{{1
 ################################################################################
 
 override COMPOSER_COMPOSER		:= Gary B. Genett
-override COMPOSER_VERSION		:= v3.x
+override COMPOSER_VERSION		:= v3.0
 
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
@@ -1557,12 +1557,12 @@ $(HELPOUT)-$(HEADERS)-%:
 		@if [ "$(*)" = "$(DOFORCE)" ]; then \
 		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT); \
 		fi
-	@$(call TITLE_LN,2,Overview,0)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-	@$(call TITLE_LN,2,Quick Start,0)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+	@$(call TITLE_LN,2,Overview)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+	@$(call TITLE_LN,2,Quick Start)			; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-	@$(call TITLE_LN,2,Principles,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-	@$(call TITLE_LN,2,Requirements,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+	@$(call TITLE_LN,2,Principles)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+	@$(call TITLE_LN,2,Requirements)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 
@@ -1578,12 +1578,12 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-	@$(call TITLE_LN,2,Document Formatting,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
-	@$(call TITLE_LN,2,Configuration Settings,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-	@$(call TITLE_LN,2,Precedence Rules,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-	@$(call TITLE_LN,2,Specifying Dependencies,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-	@$(call TITLE_LN,2,Custom Targets,0)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-	@$(call TITLE_LN,2,Repository Versions,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
+	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
+	@$(call TITLE_LN,2,Specifying Dependencies)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
+	@$(call TITLE_LN,2,Custom Targets)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
+	@$(call TITLE_LN,2,Repository Versions)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
@@ -1653,49 +1653,83 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 $(HELPOUT)-$(DOFORCE)-$(TARGETS):
-	@$(eval LIST := $(shell \
-			$(SED) -n "s|^.+[-]SECTION[,]||gp" $(COMPOSER) \
-			| $(SED) -e "s|.$$||g" \
+	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES) \
+		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
+			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
+				$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(FILE)) \
+			)"; \
+			$(call NEWLINE) \
+		)
+	@$(ENDOLINE)
+	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+			| $(SED) "/[/]/d" \
+		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
+			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
+				$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(FILE)) \
+			)"; \
+			$(call NEWLINE) \
+		)
+	@$(ENDOLINE)
+	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
 			| $(SED) -n "/[/]/p" \
-			| $(SED) \
-				-e "s|^[[:space:]]+||g" \
-				-e "s|[[:space:]]+$$||g" \
-				-e "s|[[:space:]]|$(TOKEN)|g" \
-				-e "s|\\\\||g" \
-		))$(foreach FILE,$(LIST),\
+		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(foreach HEAD,$(subst /, ,$(FILE)),\
-				$(PRINT) "$(_C)[$(subst $(TOKEN),,$(HEAD))]: #$(shell \
-					$(ECHO) "$(subst $(TOKEN), ,$(FILE))" \
-					| $(TR) 'A-Z' 'a-z' \
-					| $(SED) \
-						-e "s|-|DASH|g" \
-						-e "s|_|UNDER|g" \
-					| $(SED) \
-						-e "s|[[:punct:]]||g" \
-						-e "s|[[:space:]]|-|g" \
-					| $(SED) \
-						-e "s|DASH|-|g" \
-						-e "s|UNDER|_|g" \
+				$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(HEAD)))]: #$(shell \
+					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(FILE)) \
 				)"; \
 				$(call NEWLINE) \
 			) \
 		)
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(ENDOLINE)
-	@$(eval LIST := $(shell \
-			$(SED) -n "s|^.+[-]SECTION[,]||gp" $(COMPOSER) \
-			| $(SED) -e "s|.$$||g" \
-			| $(TR) '/' '\n' \
-			| $(SED) \
-				-e "s|^[[:space:]]+||g" \
-				-e "s|[[:space:]]+$$||g" \
-				-e "s|[[:space:]]|$(TOKEN)|g" \
-				-e "s|\\\\||g" \
-		))$(foreach FILE,$(LIST),\
-			$(PRINT) "$(_N)[$(subst $(TOKEN), ,$(FILE))]"; \
+	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES) \
+		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
+			$(PRINT) "$(_N)[$(strip $(subst $(TOKEN), ,$(FILE)))]"; \
+			$(call NEWLINE) \
+		)
+	@$(ENDOLINE)
+	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+			| $(TR) '/' '|' \
+		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
+			$(PRINT) "$(_N)[$(strip $(subst $(TOKEN), ,$(FILE)))]"; \
 			$(call NEWLINE) \
 		)
 endif
+
+override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES =
+	$(SED) -n -e "s|^.+TITLE_LN[,][^,]*[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
+	| $(SED) \
+		-e "s|.[[:space:]]+;.+$$||g" \
+		-e "s|.;[[:space:]]+f$$||g" \
+		-e "/MARKER/d" \
+		-e "/DIVIDE/d" \
+		-e "/TIMESTAMP/d" \
+		-e "s|\\\\||g" \
+		-e "s|$$|\||g"
+endef
+
+override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS =
+	$(SED) -n "s|^.+[-]SECTION[,](.+).$$|\1|gp" $(COMPOSER) \
+	| $(SED) \
+		-e "s|^[[:space:]]+||g" \
+		-e "s|[[:space:]]+$$||g" \
+		-e "s|\\\\||g" \
+		-e "s|$$|\||g"
+endef
+
+override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT =
+	$(ECHO) "$(strip $(subst $(TOKEN), ,$(1)))" \
+	| $(TR) 'A-Z' 'a-z' \
+	| $(SED) \
+		-e "s|-|DASH|g" \
+		-e "s|_|UNDER|g" \
+	| $(SED) \
+		-e "s|[[:punct:]]||g" \
+		-e "s|[[:space:]]|-|g" \
+	| $(SED) \
+		-e "s|DASH|-|g" \
+		-e "s|UNDER|_|g"
+endef
 
 ########################################
 # {{{3 $(HELPOUT)-$(DOITALL)-TITLE -----
