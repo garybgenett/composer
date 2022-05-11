@@ -1,12 +1,12 @@
 % Composer CMS: Content Make System
 % Gary B. Genett
-% v3.0 (2022-05-11)
+% v3.1 (2022-05-11)
 
 # Composer CMS #################################################################
 
 | ![Composer Icon]    | "Creating Made Simple."
 | :---                | :---
-| [Composer CMS v3.0] | [License: GPL]
+| [Composer CMS v3.1] | [License: GPL]
 | [Gary B. Genett]    | [composer@garybgenett.net]
 
 [Composer]: https://github.com/garybgenett/composer
@@ -14,7 +14,7 @@
 [Gary B. Genett]: http://www.garybgenett.net/projects/composer
 [composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=Composer%20CMS%20Submission&body=Thank%20you%20for%20sending%20a%20message%21
 
-[Composer CMS v3.0]: https://github.com/garybgenett/composer/tree/v3.0
+[Composer CMS v3.1]: https://github.com/garybgenett/composer/tree/v3.1
 [Composer Icon]: artifacts/icon-v1.0.png
 [Composer Screenshot]: artifacts/screenshot-v3.0.png
 
@@ -76,14 +76,14 @@ Create documents from source [Markdown] files
 (see [Formatting Variables]):
 
     make README.html
-    make Composer-v3.0.Manual.html c_list="README.md LICENSE.md"
+    make Composer-v3.1.Manual.html c_list="README.md LICENSE.md"
 
 Save a persistent configuration
 (see [Recommended Workflow], [Configuration Settings] and [Special Targets]):
 
     make template >.composer.mk
     $EDITOR .composer.mk
-        book-Composer-v3.0.Manual.html: README.md LICENSE.md
+        book-Composer-v3.1.Manual.html: README.md LICENSE.md
     make clean
     make all
 
@@ -477,13 +477,13 @@ The automatic input file detection works by matching one of the following
     make README.html                    ~ README (empty [COMPOSER_EXT])
     make README.html                    ~ README.md
     make README.md.html                 ~ README.md
-    make Composer-v3.0.Manual.html      c_list="README.md LICENSE.md"
+    make Composer-v3.1.Manual.html      c_list="README.md LICENSE.md"
 
 Other values for [c_type], such as `json` or `man`, for example, can be passed
 through to [Pandoc] manually:
 
     make compose c_type="json" c_base="README" c_list="README.md"
-    make compose c_type="man" c_base="Composer-v3.0.Manual" c_list="README.md"
+    make compose c_type="man" c_base="Composer-v3.1.Manual" c_list="README.md"
 
 Any of the file types supported by [Pandoc] can be created this way.  The only
 limitation is that the input files must be in [Markdown] format.
@@ -820,9 +820,9 @@ For each of these base names, there are a standard set of actual targets:
 
 An example [book] definition in a `.composer.mk` file ([Quick Start] example):
 
-    book-Composer-v3.0.Manual.html: README.md LICENSE.md
+    book-Composer-v3.1.Manual.html: README.md LICENSE.md
 
-This configures it so that `books` will create `Composer-v3.0.Manual.html` from
+This configures it so that `books` will create `Composer-v3.1.Manual.html` from
 `README.md` and `LICENSE.md`, concatenated together in order.  The primary
 purpose of this [Special] is to gather multiple source files in this manner, so
 that larger works can be comprised of multiple files, such as a book with each
@@ -901,7 +901,7 @@ For example:
 
 Commit title format:
 
-    [Composer CMS v3.0 :: 2022-05-11T13:03:24-07:00]
+    [Composer CMS v3.1 :: 2022-05-11T13:15:53-07:00]
 
 ### \_release / \_update / \_update-all ###
 

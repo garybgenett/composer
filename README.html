@@ -24,7 +24,7 @@
 <header id="title-block-header">
 <h1 class="title">Composer CMS: Content Make System</h1>
 <p class="author">Gary B. Genett</p>
-<p class="date">v3.0 (2022-05-11)</p>
+<p class="date">v3.1 (2022-05-11)</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -134,8 +134,8 @@ CMS</h1>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;"><a href="https://github.com/garybgenett/composer/tree/v3.0">Composer CMS
-v3.0</a></td>
+<td style="text-align: left;"><a href="https://github.com/garybgenett/composer/tree/v3.1">Composer CMS
+v3.1</a></td>
 <td style="text-align: left;"><a href="https://github.com/garybgenett/composer/blob/master/LICENSE.md">License:
 GPL</a></td>
 </tr>
@@ -177,11 +177,11 @@ make [-f .../Makefile] [variables] &lt;target&gt;</code></pre>
 <pre><code>make _update-all</code></pre>
 <p>Create documents from source <a href="http://daringfireball.net/projects/markdown">Markdown</a> files (see <a href="#formatting-variables">Formatting Variables</a>):</p>
 <pre><code>make README.html
-make Composer-v3.0.Manual.html c_list=&quot;README.md LICENSE.md&quot;</code></pre>
+make Composer-v3.1.Manual.html c_list=&quot;README.md LICENSE.md&quot;</code></pre>
 <p>Save a persistent configuration (see <a href="#recommended-workflow">Recommended Workflow</a>, <a href="#configuration-settings">Configuration Settings</a> and <a href="#special-targets">Special Targets</a>):</p>
 <pre><code>make template &gt;.composer.mk
 $EDITOR .composer.mk
-    book-Composer-v3.0.Manual.html: README.md LICENSE.md
+    book-Composer-v3.1.Manual.html: README.md LICENSE.md
 make clean
 make all</code></pre>
 <p>Recursively install and build an entire directory tree (see <a href="#recommended-workflow">Recommended Workflow</a>):</p>
@@ -719,11 +719,11 @@ specified.</p>
 <pre><code>make README.html                    ~ README (empty [COMPOSER_EXT])
 make README.html                    ~ README.md
 make README.md.html                 ~ README.md
-make Composer-v3.0.Manual.html      c_list=&quot;README.md LICENSE.md&quot;</code></pre>
+make Composer-v3.1.Manual.html      c_list=&quot;README.md LICENSE.md&quot;</code></pre>
 <p>Other values for <a href="#c_type--c_base--c_list">c_type</a>, such as
 <code>json</code> or <code>man</code>, for example, can be passed through to <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> manually:</p>
 <pre><code>make compose c_type=&quot;json&quot; c_base=&quot;README&quot; c_list=&quot;README.md&quot;
-make compose c_type=&quot;man&quot; c_base=&quot;Composer-v3.0.Manual&quot; c_list=&quot;README.md&quot;</code></pre>
+make compose c_type=&quot;man&quot; c_base=&quot;Composer-v3.1.Manual&quot; c_list=&quot;README.md&quot;</code></pre>
 <p>Any of the file types supported by <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> can be created this way.
 The only limitation is that the input files must be in <a href="http://daringfireball.net/projects/markdown">Markdown</a> format.</p>
 </section>
@@ -1307,9 +1307,9 @@ base</td>
 book</h3>
 <p>An example <a href="#book">book</a> definition in a <code>.composer.mk</code>
 file (<a href="#quick-start">Quick Start</a> example):</p>
-<pre><code>book-Composer-v3.0.Manual.html: README.md LICENSE.md</code></pre>
+<pre><code>book-Composer-v3.1.Manual.html: README.md LICENSE.md</code></pre>
 <p>This configures it so that <code>books</code> will create
-<code>Composer-v3.0.Manual.html</code> from <code>README.md</code> and
+<code>Composer-v3.1.Manual.html</code> from <code>README.md</code> and
 <code>LICENSE.md</code>, concatenated together in order. The primary purpose of
 this <a href="#special-targets">Special</a> is to gather multiple source files
 in this manner, so that larger works can be comprised of multiple files, such as
@@ -1448,7 +1448,7 @@ being accomplished.</li>
 itself as the top-level directory.</li>
 </ul>
 <p>Commit title format:</p>
-<pre><code>[Composer CMS v3.0 :: 2022-05-11T13:03:24-07:00]</code></pre>
+<pre><code>[Composer CMS v3.1 :: 2022-05-11T13:15:53-07:00]</code></pre>
 </section>
 <section id="_release--_update--_update-all" class="level3" data-number="4.3.4">
 <h3 data-number="4.3.4"><span class="header-section-number">4.3.4</span>
