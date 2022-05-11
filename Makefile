@@ -12,7 +12,8 @@ override VIM_FOLDING := {{{1
 #		* TYPE_TARGETS
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
-#		* `make COMPOSER_DEBUGIT="config targets" debug-all`
+#			* `make test`
+#		* `make COMPOSER_DEBUGIT="config targets" debug | less -rX`
 #			* `make debug-file`
 #			* `mv Composer-*.log artifacts/`
 #		* `make test-targets`
@@ -316,15 +317,12 @@ override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 
 override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
 override OS_TYPE			:=
-#>ifneq ($(filter Linux,$(OS_UNAME)),)
-#>override OS_TYPE			:= Linux
-#>else ifneq ($(filter Windows,$(OS_UNAME)),)
-ifneq ($(filter Windows,$(OS_UNAME)),)
+ifneq ($(filter Linux,$(OS_UNAME)),)
+override OS_TYPE			:= Linux
+else ifneq ($(filter Windows,$(OS_UNAME)),)
 override OS_TYPE			:= Windows
 else ifneq ($(filter Darwin,$(OS_UNAME)),)
 override OS_TYPE			:= Darwin
-else ifneq ($(filter Linux,$(OS_UNAME)),)
-override OS_TYPE			:= Linux
 endif
 
 ################################################################################
@@ -4350,10 +4348,9 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	#> precedence
-	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) COMPOSER_DEBUGIT="order-COMPOSER_DEBUGIT" c_debug="order-c_debug" V="order-V" $(CONFIGS)
-	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) c_debug="order-c_debug" V="order-V" $(CONFIGS)
-	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) V="order-V" $(CONFIGS)
-	@$(RUNMAKE) COMPOSER_DEBUGIT=0 C="order-C" $(CONFIGS)
+	@unset COMPOSER_DOCOLOR c_color C && $(RUNMAKE) COMPOSER_DOCOLOR="order-COMPOSER_DOCOLOR" c_color="order-c_color" C="order-C" $(CONFIGS)
+	@unset COMPOSER_DOCOLOR c_color C && $(RUNMAKE) c_color="order-c_color" C="order-C" $(CONFIGS)
+	@unset COMPOSER_DOCOLOR c_color C && $(RUNMAKE) C="order-C" $(CONFIGS)
 	#> input
 	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
@@ -4382,15 +4379,15 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	#> lock
 	$(call $(TESTING)-find,lock file exists)
 	#> precedence
-	$(call $(TESTING)-count,1,order-COMPOSER_DEBUGIT)
-	$(call $(TESTING)-count,1,order-c_debug)
-	$(call $(TESTING)-count,1,order-V)
+	$(call $(TESTING)-count,1,order-COMPOSER_DOCOLOR)
+	$(call $(TESTING)-count,1,order-c_color)
+	$(call $(TESTING)-count,1,order-C[^O])
 	#> input
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 	#> margins
-	$(call $(TESTING)-count,26,c_margin)
+	$(call $(TESTING)-count,17,c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
