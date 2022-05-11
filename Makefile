@@ -1534,7 +1534,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
-	@$(PRINT) "Fetch the necessary binary components:"
+	@$(PRINT) "Fetch the necessary binary components"
 	@$(PRINT) "$(_E)(see [Repository Versions])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(UPGRADE)-$(DOITALL)$(_D)"
@@ -1690,6 +1690,15 @@ $(HELPOUT)-$(DOFORCE)-$(TARGETS):
 	@$(ENDOLINE)
 	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
 			| $(SED) "/[/]/d" \
+		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
+			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
+				$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(FILE)) \
+			)"; \
+			$(call NEWLINE) \
+		)
+	@$(ENDOLINE)
+	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+			| $(SED) -n "/[/]/p" \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
 				$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(FILE)) \

@@ -67,7 +67,7 @@ Use `make help` to get started:
     make [-f .../Makefile] [variables] <filename>.<extension>
     make [-f .../Makefile] [variables] <target>
 
-Fetch the necessary binary components:
+Fetch the necessary binary components
 (see [Repository Versions]):
 
     make _update-all
@@ -897,7 +897,7 @@ For example:
 
 Commit title format:
 
-    [Composer CMS v3.0 :: 2022-05-11T12:03:56-07:00]
+    [Composer CMS v3.0 :: 2022-05-11T12:26:31-07:00]
 
 ### \_release / \_update / \_update-all ###
 
@@ -1012,6 +1012,17 @@ documented for completeness.)*
 [site]: #site
 [list]: #list
 [book]: #book
+
+[c_type / c_base / c_list]: #c_type--c_base--c_list
+[help / help-all]: #help--help-all
+[install / install-all / install-force]: #install--install-all--install-force
+[clean / clean-all / *-clean]: #clean--clean-all---clean
+[all / all-all / *-all]: #all--all-all---all
+[page / post]: #page--post
+[debug / debug-file]: #debug--debug-file
+[check / check-all / config / config-all / targets]: #check--check-all--config--config-all--targets
+[_commit / _commit-all]: #_commit--_commit-all
+[_release / _update / _update-all]: #_release--_update--_update-all
 
 [c_type]: #c_type--c_base--c_list
 [c_base]: #c_type--c_base--c_list
