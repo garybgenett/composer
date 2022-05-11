@@ -5128,6 +5128,8 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!pandoc-*\n" >>$(PANDOC_DIR)/.gitignore
+	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!yq_*\n" >>$(YQ_DIR)/.gitignore
 endif
 	@$(ENDOLINE)
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json

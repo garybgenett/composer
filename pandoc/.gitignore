@@ -56,3 +56,6 @@
 *.dyn_hi
 *~
 .DS_Store
+
+# Composer
+!pandoc-*

@@ -53,3 +53,6 @@ yq.1
 # debian pkg
 _build
 debian/files
+
+# Composer
+!yq_*
