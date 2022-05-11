@@ -12,6 +12,7 @@ override VIM_FOLDING := {{{1
 #		* TYPE_TARGETS
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
+#			* `make $(make .all_targets | sed -nr "s|[:][ ]test-Think||gp" | sed "/test-speed/d" | sort -u)`
 #			* `make test`
 #		* `make COMPOSER_DEBUGIT="config targets" debug | less -rX`
 #			* `make debug-file`
@@ -3928,6 +3929,8 @@ $(DEBUGIT)-file:
 ifneq ($(MAKECMDGOALS),$(filter-out $(DEBUGIT),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
+$(DEBUGIT): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
+$(DEBUGIT): export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(DEBUGIT): .set_title-$(DEBUGIT)
 $(DEBUGIT): $(HEADERS)-$(DEBUGIT)
 $(DEBUGIT): $(DEBUGIT)-$(HEADERS)
@@ -3966,8 +3969,6 @@ $(DEBUGIT)-$(HEADERS):
 	@$(LINERULE)
 
 .PHONY: $(DEBUGIT)-%
-$(DEBUGIT)-%: export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
-$(DEBUGIT)-%: export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
 		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
@@ -4014,6 +4015,8 @@ $(TESTING)-file:
 ifneq ($(MAKECMDGOALS),$(filter-out $(TESTING),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
+$(TESTING): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
+$(TESTING): export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(TESTING): .set_title-$(TESTING)
 $(TESTING): $(HEADERS)-$(TESTING)
 $(TESTING): $(TESTING)-$(HEADERS)
@@ -4058,8 +4061,6 @@ $(TESTING)-$(HEADERS):
 	@$(LINERULE)
 
 .PHONY: $(TESTING)-$(HEADERS)-%
-$(TESTING)-$(HEADERS)-%: export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
-$(TESTING)-$(HEADERS)-%: export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(TESTING)-$(HEADERS)-%:
 	@$(call TITLE_LN,1,$(MARKER)[ $($(subst $(TESTING)-$(HEADERS)-,,$(@))) ]$(MARKER) $(VIM_FOLDING))
 	@$(RUNMAKE) $($(subst $(TESTING)-$(HEADERS)-,,$(@))) 2>&1
@@ -4387,11 +4388,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 	#> margins
-ifeq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
-	$(call $(TESTING)-count,32,c_margin)
-else
-	$(call $(TESTING)-count,17,c_margin)
-endif
+	$(call $(TESTING)-count,17,\|.+c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
