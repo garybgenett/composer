@@ -892,7 +892,7 @@ For example:
 
 Commit title format:
 
-    [Composer CMS v3.0 :: 2022-05-11T10:49:51-07:00]
+    [Composer CMS v3.0 :: 2022-05-11T11:30:44-07:00]
 
 ### \_release / \_update / \_update-all ###
 
@@ -1258,6 +1258,7 @@ Reserved variable names:
     HEADER_L
     HEAD_MAIN
     HELPOUT
+    HEREDOC_GITATTRIBUTES
     HEREDOC_GITIGNORE
     HEREDOC_LICENSE
     HEREDOC_REVEALJS_CSS

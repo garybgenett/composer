@@ -2,28 +2,15 @@
 # Composer CMS
 ################################################################################
 
-########################################
-# Composer
+# https://github.com/github/linguist/blob/master/docs/overrides.md
 
-#>/.composer.mk
-#>/.composer.css
-#>/.composed
+artifacts				linquist-vendored
 
-/.tmp/
-
-########################################
-# _update
-
-/.sources/
-
-/pandoc/pandoc-*
-/yq/yq_*
-
-########################################
-# debug / test
-
-/.Composer**
-/Composer**
+bootstrap				linquist-vendored
+markdown-viewer				linquist-vendored
+pandoc					linquist-vendored
+revealjs				linquist-vendored
+yq					linquist-vendored
 
 ################################################################################
 # End Of File

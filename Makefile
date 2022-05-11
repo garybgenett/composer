@@ -2579,6 +2579,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ENDOLINE)
 endif
+	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
@@ -2742,6 +2743,30 @@ override define DO_HEREDOC =
 endef
 
 ################################################################################
+# {{{1 Heredoc: gitattributes --------------------------------------------------
+################################################################################
+
+override define HEREDOC_GITATTRIBUTES =
+################################################################################
+# $(COMPOSER_TECHNAME)
+################################################################################
+
+# https://github.com/github/linguist/blob/master/docs/overrides.md
+
+artifacts				linquist-vendored
+
+bootstrap				linquist-vendored
+markdown-viewer				linquist-vendored
+pandoc					linquist-vendored
+revealjs				linquist-vendored
+yq					linquist-vendored
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+################################################################################
 # {{{1 Heredoc: gitignore ------------------------------------------------------
 ################################################################################
 
@@ -2763,6 +2788,9 @@ $(subst $(COMPOSER_DIR),,$(COMPOSER_TMP))/
 # $(UPGRADE)
 
 $(subst $(COMPOSER_DIR),,$(COMPOSER_PKG))/
+
+$(subst $(COMPOSER_DIR),,$(PANDOC_DIR))/pandoc-*
+$(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 
 ########################################
 # $(DEBUGIT) / $(TESTING)
@@ -5162,8 +5190,8 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
-	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!pandoc-*\n" >>$(PANDOC_DIR)/.gitignore
-	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!yq_*\n" >>$(YQ_DIR)/.gitignore
+#>	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!pandoc-*\n" >>$(PANDOC_DIR)/.gitignore
+#>	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!yq_*\n" >>$(YQ_DIR)/.gitignore
 endif
 	@$(ENDOLINE)
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
