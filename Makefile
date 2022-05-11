@@ -5122,8 +5122,7 @@ endef
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORK override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
-override GIT_OPTS_CONVICT		:= --verbose $(MAKEFILE)
+override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
 
 #> update: PHONY.*$(DOITALL)
 $(eval export override COMPOSER_DOITALL_$(CONVICT) ?=)
