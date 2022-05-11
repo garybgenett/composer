@@ -4387,7 +4387,11 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 	#> margins
+ifeq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
+	$(call $(TESTING)-count,32,c_margin)
+else
 	$(call $(TESTING)-count,17,c_margin)
+endif
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
