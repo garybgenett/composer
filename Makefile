@@ -2793,13 +2793,13 @@ override define HEREDOC_GITATTRIBUTES =
 
 # https://github.com/github/linguist/blob/master/docs/overrides.md
 
-artifacts				linquist-vendored
+/artifacts/**				linquist-vendored
 
-bootstrap				linquist-vendored
-markdown-viewer				linquist-vendored
-pandoc					linquist-vendored
-revealjs				linquist-vendored
-yq					linquist-vendored
+/bootstrap/**				linquist-vendored
+/markdown-viewer/**			linquist-vendored
+/pandoc/**				linquist-vendored
+/revealjs/**				linquist-vendored
+/yq/**					linquist-vendored
 
 ################################################################################
 # End Of File
