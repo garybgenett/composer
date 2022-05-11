@@ -12,7 +12,7 @@ override VIM_FOLDING := {{{1
 #		* TYPE_TARGETS
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
-#		* `make debug-all`
+#		* `make COMPOSER_DEBUGIT="config targets" debug-all`
 #			* `make debug-file`
 #			* `mv Composer-*.log artifacts/`
 #		* `make test-targets`
@@ -1643,7 +1643,6 @@ $(HELPOUT)-%:
 #>.PHONY: $(HELPOUT)-$(DOITALL)
 #>$(HELPOUT)-$(DOITALL):
 	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(*)
-	@$(PRINT) "#WORKING:NOW FEATURES = TEST CASES #############################################"
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 	@$(call TITLE_LN,2,Document Formatting,0)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
@@ -4308,7 +4307,7 @@ $(TESTING)-$(DISTRIB):
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
 #>	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
-	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) --makefile $(TESTING_COMPOSER_MAKEFILE) $(DISTRIB)
+	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) --makefile $(COMPOSER) $(DISTRIB)
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
@@ -4781,10 +4780,13 @@ $(TESTING)-other:
 	@$(call $(TESTING)-$(HEADERS),\
 		Miscellaneous test cases ,\
 		\n\t * Check binary files \
+		\n\t * Repository versions variables \
 		\n\t * Verify lock files \
 		\n\t * Use '$(_C)$(DO_BOOK)s$(_D)' special \
 		\n\t\t * Verify '$(_C)$(TYPE_LPDF)$(_D)' format $(_E)(TeX Live)$(_D) \
+		\n\t * Variable alias precedence \
 		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
+		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -4794,6 +4796,19 @@ $(TESTING)-other:
 
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
+	#> versions
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override PANDOC_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override YQ_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override BOOTSTRAP_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+#>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CHECKIT)
+	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+#>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CHECKIT)
 	#> lock
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
@@ -4817,8 +4832,22 @@ ifeq ($(OS_TYPE),Linux)
 			-e "/$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT)/p"
 endif
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CLEANER)
+	#> precedence
+	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) COMPOSER_DEBUGIT="order-COMPOSER_DEBUGIT" c_debug="order-c_debug" V="order-V" $(CONFIGS)
+	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) c_debug="order-c_debug" V="order-V" $(CONFIGS)
+	@unset COMPOSER_DEBUGIT c_debug V && $(RUNMAKE) V="order-V" $(CONFIGS)
+	@$(RUNMAKE) COMPOSER_DEBUGIT=0 C="order-C" $(CONFIGS)
 	#> margins
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
+	#> options
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
@@ -4847,6 +4876,12 @@ $(TESTING)-other-done:
 			exit 1; \
 		fi; \
 	fi
+	#> versions
+	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
+	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
+	$(call $(TESTING)-count,12,$(NOTHING))
+	$(call $(TESTING)-count,9,$(notdir $(PANDOC_BIN)))
+	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> lock
 	$(call $(TESTING)-find,lock file exists)
 	#> book
@@ -4856,12 +4891,19 @@ ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,7,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
+	#> precedence
+	$(call $(TESTING)-count,1,order-COMPOSER_DEBUGIT)
+	$(call $(TESTING)-count,1,order-c_debug)
+	$(call $(TESTING)-count,1,order-V)
 	#> margins
 	$(call $(TESTING)-count,11,c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
 	$(call $(TESTING)-find,c_margin_right.+4in)
+	#> options
+	$(call $(TESTING)-count,6,[\"]$(TESTING)=$(DEBUGIT)[\"])
+	$(call $(TESTING)-count,6,[']$(TESTING)=$(DEBUGIT)['])
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
