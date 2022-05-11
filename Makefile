@@ -45,7 +45,7 @@ override VIM_FOLDING := {{{1
 #				* Screenshot
 #			* Spell check
 #	* Publish
-#		* Release: `rm rm -frv {.[^.],}*; make _release`
+#		* Release: `rm -frv {.[^.],}*; make _release`
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
@@ -3928,8 +3928,6 @@ $(DEBUGIT)-file:
 ifneq ($(MAKECMDGOALS),$(filter-out $(DEBUGIT),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
-$(DEBUGIT): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
-$(DEBUGIT): export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(DEBUGIT): .set_title-$(DEBUGIT)
 $(DEBUGIT): $(HEADERS)-$(DEBUGIT)
 $(DEBUGIT): $(DEBUGIT)-$(HEADERS)
@@ -3968,6 +3966,8 @@ $(DEBUGIT)-$(HEADERS):
 	@$(LINERULE)
 
 .PHONY: $(DEBUGIT)-%
+$(DEBUGIT)-%: export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
+$(DEBUGIT)-%: export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
 		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
@@ -4014,8 +4014,6 @@ $(TESTING)-file:
 ifneq ($(MAKECMDGOALS),$(filter-out $(TESTING),$(MAKECMDGOALS)))
 .NOTPARALLEL:
 endif
-$(TESTING): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
-$(TESTING): export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(TESTING): .set_title-$(TESTING)
 $(TESTING): $(HEADERS)-$(TESTING)
 $(TESTING): $(TESTING)-$(HEADERS)
@@ -4060,6 +4058,8 @@ $(TESTING)-$(HEADERS):
 	@$(LINERULE)
 
 .PHONY: $(TESTING)-$(HEADERS)-%
+$(TESTING)-$(HEADERS)-%: export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
+$(TESTING)-$(HEADERS)-%: export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(TESTING)-$(HEADERS)-%:
 	@$(call TITLE_LN,1,$(MARKER)[ $($(subst $(TESTING)-$(HEADERS)-,,$(@))) ]$(MARKER) $(VIM_FOLDING))
 	@$(RUNMAKE) $($(subst $(TESTING)-$(HEADERS)-,,$(@))) 2>&1
@@ -4348,9 +4348,9 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	#> precedence
-	@unset COMPOSER_DOCOLOR c_color C && $(RUNMAKE) COMPOSER_DOCOLOR="order-COMPOSER_DOCOLOR" c_color="order-c_color" C="order-C" $(CONFIGS)
-	@unset COMPOSER_DOCOLOR c_color C && $(RUNMAKE) c_color="order-c_color" C="order-C" $(CONFIGS)
-	@unset COMPOSER_DOCOLOR c_color C && $(RUNMAKE) C="order-C" $(CONFIGS)
+	@unset MAKEJOBS c_jobs J && $(RUNMAKE) MAKEJOBS="1000" c_jobs="100" J="10" $(CONFIGS)
+	@unset MAKEJOBS c_jobs J && $(RUNMAKE) c_jobs="100" J="10" $(CONFIGS)
+	@unset MAKEJOBS c_jobs J && $(RUNMAKE) J="10" $(CONFIGS)
 	#> input
 	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
@@ -4379,9 +4379,9 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	#> lock
 	$(call $(TESTING)-find,lock file exists)
 	#> precedence
-	$(call $(TESTING)-count,1,order-COMPOSER_DOCOLOR)
-	$(call $(TESTING)-count,1,order-c_color)
-	$(call $(TESTING)-count,1,order-C[^O])
+	$(call $(TESTING)-count,1,MAKEJOBS.+ 1000 )
+	$(call $(TESTING)-count,1,MAKEJOBS.+ 100 )
+	$(call $(TESTING)-count,1,MAKEJOBS.+ 10 )
 	#> input
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
@@ -4844,13 +4844,13 @@ $(TESTING)-other-done:
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
 	$(call $(TESTING)-count,12,$(NOTHING))
-	$(call $(TESTING)-count,9,$(notdir $(PANDOC_BIN)))
+	$(call $(TESTING)-count,8,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> book
 ifeq ($(OS_TYPE),Linux)
 	$(call $(TESTING)-count,1,$(COMPOSER_HEADLINE))
 	$(call $(TESTING)-count,10,$(COMPOSER_LICENSE))
-	$(call $(TESTING)-count,7,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
+	$(call $(TESTING)-count,9,$(notdir $(call $(TESTING)-pwd))$(COMPOSER_EXT_DEFAULT))
 endif
 	$(call $(TESTING)-find,Removing.+$(notdir $(call $(TESTING)-pwd)).$(EXTN_LPDF))
 	#> pandoc
