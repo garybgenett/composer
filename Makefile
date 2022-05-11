@@ -128,10 +128,14 @@ ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_RELEASE		:= 1
 ifeq ($(MAKELEVEL),0)
 #> update: includes duplicates
+override DOMAKE				:= $(notdir $(MAKE))
 override HELPOUT			:= help
+$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
 $(info #> $(COMPOSER_FULLNAME))
 $(info #>	Because this is the main directory, some features are disabled)
-$(info #>	Please set up as '.$(COMPOSER_BASENAME)', or use '-f' (see '$(notdir $(MAKE)) $(HELPOUT)'))
+$(info #>	Please use '$(DOMAKE) -f' or install as '.$(COMPOSER_BASENAME)')
+$(info #>	(See 'Recommended Workflow' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
+$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
 endif
 endif
 
@@ -602,16 +606,34 @@ override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 override LESS_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),less) --force --raw-control-chars
 
+#> update: includes duplicates
 override DOMAKE				:= $(notdir $(MAKE))
 export GZIP				:=
 export LESS				:=
 
 ########################################
 
-ifneq ($(wildcard $(PANDOC_BIN)),)
+#> update: includes duplicates
+override UPGRADE			:= _update
+override DOITALL			:= all
+ifeq ($(wildcard $(PANDOC_BIN)),)
+$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+$(info #> $(COMPOSER_FULLNAME))
+$(info #>	Expecting Pandoc binary: $(subst $(COMPOSER_DIR)/,,$(PANDOC_BIN)))
+$(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
+$(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
+$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+else
 override PANDOC				:= $(PANDOC_BIN)
 endif
-ifneq ($(wildcard $(YQ_BIN)),)
+ifeq ($(wildcard $(YQ_BIN)),)
+$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+$(info #> $(COMPOSER_FULLNAME))
+$(info #>	Expecting YQ binary: $(subst $(COMPOSER_DIR)/,,$(YQ_BIN)))
+$(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
+$(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
+$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+else
 override YQ				:= $(YQ_BIN)
 endif
 
@@ -1512,6 +1534,11 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
+	@$(PRINT) "Fetch the necessary binary components:"
+	@$(PRINT) "$(_E)(see [Repository Versions])$(_D):"
+	@$(ENDOLINE)
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(UPGRADE)-$(DOITALL)$(_D)"
+	@$(ENDOLINE)
 	@$(PRINT) "Create documents from source $(_C)[Markdown]$(_D) files"
 	@$(PRINT) "$(_E)(see [Formatting Variables])$(_D):"
 	@$(ENDOLINE)

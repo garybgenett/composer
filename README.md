@@ -67,6 +67,11 @@ Use `make help` to get started:
     make [-f .../Makefile] [variables] <filename>.<extension>
     make [-f .../Makefile] [variables] <target>
 
+Fetch the necessary binary components:
+(see [Repository Versions]):
+
+    make _update-all
+
 Create documents from source [Markdown] files
 (see [Formatting Variables]):
 
@@ -892,7 +897,7 @@ For example:
 
 Commit title format:
 
-    [Composer CMS v3.0 :: 2022-05-11T11:30:44-07:00]
+    [Composer CMS v3.0 :: 2022-05-11T12:03:56-07:00]
 
 ### \_release / \_update / \_update-all ###
 
