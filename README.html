@@ -173,7 +173,7 @@ Start</h2>
 <p>Use <code>make help</code> to get started:</p>
 <pre><code>make [-f .../Makefile] [variables] &lt;filename&gt;.&lt;extension&gt;
 make [-f .../Makefile] [variables] &lt;target&gt;</code></pre>
-<p>Fetch the necessary binary components (see <a href="#repository-versions">Repository Versions</a>):</p>
+<p>Fetch the necessary binary components (see <a href="#requirements">Requirements</a>):</p>
 <pre><code>make _update-all</code></pre>
 <p>Create documents from source <a href="http://daringfireball.net/projects/markdown">Markdown</a> files (see <a href="#formatting-variables">Formatting Variables</a>):</p>
 <pre><code>make README.html
@@ -219,9 +219,13 @@ PowerPoint</a></li>
 <h2 data-number="1.4"><span class="header-section-number">1.4</span>
 Requirements</h2>
 <p><a href="https://github.com/garybgenett/composer">Composer</a> has almost no
-external dependencies. All needed components are integrated directly into the
-repository, including <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>.
-It does require a minimal command-line environment based on <a href="http://www.gnu.org">GNU</a> tools, which is standard for all <a href="https://gnu.org/gnu/linux-and-gnu.html">GNU/Linux</a> systems. The <a href="https://docs.microsoft.com/en-us/windows/wsl">Windows Subsystem for
+external dependencies. All needed components are integrated, including <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>. The repository needs to
+be initialized with <a href="#_release--_update--_update-all">_update-all</a> to
+fetch the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> and <a href="https://mikefarah.gitbook.io/yq">YQ</a> binaries (see <a href="#repository-versions">Repository Versions</a>).</p>
+<p><a href="https://github.com/garybgenett/composer">Composer</a> does require a
+minimal command-line environment based on <a href="http://www.gnu.org">GNU</a>
+tools, particularly <a href="http://www.gnu.org/software/make">GNU Make</a>,
+which is standard for all <a href="https://gnu.org/gnu/linux-and-gnu.html">GNU/Linux</a> systems. The <a href="https://docs.microsoft.com/en-us/windows/wsl">Windows Subsystem for
 Linux</a> for Windows and <a href="https://www.macports.org">MacPorts</a> for
 macOS both provide suitable environments.</p>
 <p>The one large external requirement is <a href="https://tug.org/texlive">TeX
@@ -1444,7 +1448,7 @@ being accomplished.</li>
 itself as the top-level directory.</li>
 </ul>
 <p>Commit title format:</p>
-<pre><code>[Composer CMS v3.0 :: 2022-05-11T12:26:31-07:00]</code></pre>
+<pre><code>[Composer CMS v3.0 :: 2022-05-11T13:03:24-07:00]</code></pre>
 </section>
 <section id="_release--_update--_update-all" class="level3" data-number="4.3.4">
 <h3 data-number="4.3.4"><span class="header-section-number">4.3.4</span>

@@ -68,7 +68,7 @@ Use `make help` to get started:
     make [-f .../Makefile] [variables] <target>
 
 Fetch the necessary binary components
-(see [Repository Versions]):
+(see [Requirements]):
 
     make _update-all
 
@@ -119,10 +119,14 @@ Direct support for key document types (see [Document Formatting]):
 ## Requirements ################################################################
 
 [Composer] has almost no external dependencies.  All needed components are
-integrated directly into the repository, including [Pandoc].  It does require a
-minimal command-line environment based on [GNU] tools, which is standard for all
-[GNU/Linux] systems.  The [Windows Subsystem for Linux] for Windows and
-[MacPorts] for macOS both provide suitable environments.
+integrated, including [Pandoc].  The repository needs to be initialized with
+[_update-all] to fetch the [Pandoc] and [YQ] binaries (see [Repository
+Versions]).
+
+[Composer] does require a minimal command-line environment based on [GNU] tools,
+particularly [GNU Make], which is standard for all [GNU/Linux] systems.  The
+[Windows Subsystem for Linux] for Windows and [MacPorts] for macOS both provide
+suitable environments.
 
 The one large external requirement is [TeX Live], and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
@@ -897,7 +901,7 @@ For example:
 
 Commit title format:
 
-    [Composer CMS v3.0 :: 2022-05-11T12:26:31-07:00]
+    [Composer CMS v3.0 :: 2022-05-11T13:03:24-07:00]
 
 ### \_release / \_update / \_update-all ###
 

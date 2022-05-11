@@ -1535,7 +1535,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 $(HELPOUT)-EXAMPLES_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
 	@$(PRINT) "Fetch the necessary binary components"
-	@$(PRINT) "$(_E)(see [Repository Versions])$(_D):"
+	@$(PRINT) "$(_E)(see [Requirements])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(UPGRADE)-$(DOITALL)$(_D)"
 	@$(ENDOLINE)
@@ -1872,10 +1872,14 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
-integrated directly into the repository, including $(_C)[Pandoc]$(_D).  It does require a
-minimal command-line environment based on $(_N)[GNU]$(_D) tools, which is standard for all
-$(_N)[GNU/Linux]$(_D) systems.  The $(_N)[Windows Subsystem for Linux]$(_D) for Windows and
-$(_N)[MacPorts]$(_D) for macOS both provide suitable environments.
+integrated, including $(_C)[Pandoc]$(_D).  The repository needs to be initialized with
+$(_C)[$(UPGRADE)-$(DOITALL)]$(_D) to fetch the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries $(_E)(see [Repository
+Versions])$(_D).
+
+$(_C)[$(COMPOSER_BASENAME)]$(_D) does require a minimal command-line environment based on $(_N)[GNU]$(_D) tools,
+particularly $(_C)[GNU Make]$(_D), which is standard for all $(_N)[GNU/Linux]$(_D) systems.  The
+$(_N)[Windows Subsystem for Linux]$(_D) for Windows and $(_N)[MacPorts]$(_D) for macOS both provide
+suitable environments.
 
 The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
