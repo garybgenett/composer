@@ -1,0 +1,144 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+\usepackage[bidi=basic]{babel}
+\else
+\usepackage[bidi=default]{babel}
+\fi
+\babelprovide[main,import]{english}
+\babelprovide[import]{ngerman}
+\babelprovide[import]{british}
+\babelprovide[import]{nswissgerman}
+\babelprovide[import]{spanish}
+\babelprovide[import]{french}
+% get rid of language-specific shorthands (see #6817):
+\let\LanguageShortHands\languageshorthands
+\def\languageshorthands#1{}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\ifPDFTeX
+  \TeXXeTstate=1
+  \newcommand{\RL}[1]{\beginR #1\endR}
+  \newcommand{\LR}[1]{\beginL #1\endL}
+  \newenvironment{RTL}{\beginR}{\endR}
+  \newenvironment{LTR}{\beginL}{\endL}
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdflang={en},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+\hypertarget{empty-divs-and-spans}{%
+\section{Empty Divs and Spans}\label{empty-divs-and-spans}}
+
+Some text and
+
+div contents
+
+and more text.
+
+Next paragraph with a {span} and a word-thatincludesa{span}right?
+
+\hypertarget{directionality}{%
+\section{Directionality}\label{directionality}}
+
+Some text and
+
+\begin{RTL}
+rtl div contents
+\end{RTL}
+
+and more text.
+
+\begin{LTR}
+and a ltr div. with a \RL{rtl span}.
+\end{LTR}
+
+Next paragraph with a \RL{rtl span} and a
+word-that-includesa\LR{ltrspan}right?
+
+\hypertarget{languages}{%
+\section{Languages}\label{languages}}
+
+Some text and
+
+\begin{otherlanguage}{ngerman}
+
+German div contents
+
+\end{otherlanguage}
+
+and more text.
+
+Next paragraph with a \foreignlanguage{british}{British span} and a
+word-that-includesa\foreignlanguage{nswissgerman}{Swiss German
+span}right?
+
+Some \foreignlanguage{spanish}{Spanish text}.
+
+\hypertarget{combined}{%
+\section{Combined}\label{combined}}
+
+Some text and
+
+\begin{RTL}
+\begin{otherlanguage}{french}
+
+French rtl div contents
+
+\end{otherlanguage}
+\end{RTL}
+
+and more text.
+
+Next paragraph with a \LR{\foreignlanguage{british}{British ltr span}}
+and a word-that-includesa\LR{\foreignlanguage{nswissgerman}{Swiss German
+ltr span}}right?
+
+\end{document}

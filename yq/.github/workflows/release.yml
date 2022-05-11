@@ -1,0 +1,110 @@
+name: Release YQ
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publishGitRelease:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.18'
+      - name: Compile man page markup
+        id: gen-man-page-md
+        run: |
+          ./scripts/generate-man-page-md.sh
+          echo "::set-output name=man-page-md::man.md"
+
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF##*/}
+
+      - name: Generate man page
+        uses: docker://pandoc/core:2.14.2
+        id: gen-man-page
+        with:
+          args: >-
+            --standalone
+            --to man
+            --variable=title:"YQ"
+            --variable=section:"1"
+            --variable=header:"yq (https://github.com/mikefarah/yq/) version ${{ steps.get_version.outputs.VERSION }}"
+            --variable=author:"Mike Farah"
+            --output=yq.1
+            ${{ steps.gen-man-page-md.outputs.man-page-md }}
+
+      - name: Cross compile
+        run: |
+          sudo apt-get install rhash -y
+          go install github.com/mitchellh/gox@v1.0.1
+          mkdir -p build
+          cp yq.1 build/yq.1
+          ./scripts/xcompile.sh
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/*
+
+  publishDocker:
+    environment: dockerhub
+    env:
+      IMAGE_NAME: mikefarah/yq
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }} && docker version
+
+      - name: Build and push image
+        run: |
+          IMAGE_V_VERSION="$(git describe --tags --abbrev=0)"
+          IMAGE_VERSION=${IMAGE_V_VERSION:1}
+          PLATFORMS="linux/amd64,linux/ppc64le,linux/arm64"
+
+          echo "Building and pushing version ${IMAGE_VERSION} of image ${IMAGE_NAME}"
+          echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}' --password-stdin
+          docker buildx build \
+            --label "org.opencontainers.image.authors=https://github.com/mikefarah/yq/graphs/contributors" \
+            --label "org.opencontainers.image.created=$(date --rfc-3339=seconds)" \
+            --label "org.opencontainers.image.description=yq is a portable command-line YAML processor" \
+            --label "org.opencontainers.image.documentation=https://mikefarah.gitbook.io/yq/" \
+            --label "org.opencontainers.image.licenses=MIT" \
+            --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+            --label "org.opencontainers.image.source=https://github.com/mikefarah/yq" \
+            --label "org.opencontainers.image.title=yq" \
+            --label "org.opencontainers.image.url=https://mikefarah.gitbook.io/yq/" \
+            --label "org.opencontainers.image.version=${IMAGE_VERSION}" \
+            --platform "${PLATFORMS}" \
+            --pull \
+            --push \
+            -t "${IMAGE_NAME}:${IMAGE_VERSION}" \
+            -t "${IMAGE_NAME}:4" \
+            -t "${IMAGE_NAME}:latest" \
+            .

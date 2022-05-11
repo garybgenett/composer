@@ -1,0 +1,46 @@
+/* #############################################################################
+# Composer CMS
+############################################################################# */
+
+@import url("../revealjs/dist/theme/black.css");
+
+/* ########################################################################## */
+
+.reveal .slides {
+	background:			url("logo.img");
+	background-repeat:		no-repeat;
+	background-position:		100% 0%;
+	background-size:		auto 20%;
+}
+
+/* ################################## */
+
+:root {
+	--r-heading-text-transform:	none;
+	--r-heading1-size:		140%;
+	--r-heading2-size:		120%;
+	--r-heading3-size:		100%;
+	--r-heading4-size:		100%;
+	--r-heading5-size:		100%;
+	--r-heading6-size:		100%;
+}
+
+.reveal * {
+	font-size:			90%;
+	text-transform:			none;
+	vertical-align:			text-top;
+	text-align:			left;
+	block-align:			left;
+}
+
+.reveal dl,
+.reveal ol,
+.reveal ul,
+.reveal table {
+	display:			block;
+	margin-left:			2em;
+}
+
+/* #############################################################################
+# End Of File
+############################################################################# */

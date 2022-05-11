@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Gary B. Genett" />
+  <title>Composer CMS: Content Make System</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <style type="text/css">h1,p{padding:0}h2,h3,h4,h5,h6{margin:0;padding:0}body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;line-height:18px;color:#fff;background-color:#110f14;margin:10px 13px}table{margin:10px 0 15px;border-collapse:collapse}td,th{border:1px solid #ddd;padding:3px 10px}th{padding:5px 10px}a{color:#59acf3}a:hover{color:#a7d8ff;text-decoration:none}a img,hr{border:0}p{margin:0 0 9px}h1,h2,h3,h4,h5,h6{color:#fff;line-height:36px}blockquote,h1{margin:0 0 18px}h1{font-size:30px}h2{font-size:24px}h3{font-size:18px}h4{font-size:16px}blockquote p,h5{font-size:14px}body,h6{font-size:13px}hr{margin:0 0 19px;border-bottom:1px solid #ccc}blockquote{padding:13px 13px 21px 15px;font-family:georgia,serif;font-style:italic}blockquote:before{content:"\201C";font-size:40px;margin-left:-10px;font-family:georgia,serif;color:#eee}blockquote p{font-weight:300;line-height:18px;margin-bottom:0;font-style:italic}code,pre{font-family:Menlo,Monaco,Andale Mono,Courier New,monospace}code{padding:1px 3px;font-size:12px;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background:#334}pre,pre code{font-size:11px}pre{display:block;margin:0 0 18px;line-height:16px;border:1px solid #334;white-space:pre-wrap;word-wrap:break-word;background-color:#282a36;border-radius:6px;padding:14px}pre code{padding:0;background:0 0}sup{font-size:.83em;vertical-align:super;line-height:0}*{-webkit-print-color-adjust:exact}@media screen and (min-width:914px){body{width:854px;margin:10px auto}}@media print{body,code,h1,h2,h3,h4,h5,h6,pre code{color:#000}pre,table{page-break-inside:avoid}}</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Composer CMS: Content Make System</h1>
+<p class="author">Gary B. Genett</p>
+<p class="date">v3.0 (2022-05-10)</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#composer-cms" id="toc-composer-cms"><span class="toc-section-number">1</span> Composer CMS</a>
+<ul>
+<li><a href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
+<li><a href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
+<li><a href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
+<li><a href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
+</ul></li>
+<li><a href="#composer-operation" id="toc-composer-operation"><span class="toc-section-number">2</span> Composer Operation</a>
+<ul>
+<li><a href="#recommended-workflow" id="toc-recommended-workflow"><span class="toc-section-number">2.1</span> Recommended Workflow</a></li>
+<li><a href="#document-formatting" id="toc-document-formatting"><span class="toc-section-number">2.2</span> Document Formatting</a>
+<ul>
+<li><a href="#html" id="toc-html"><span class="toc-section-number">2.2.1</span>
+HTML</a></li>
+<li><a href="#bootstrap-websites" id="toc-bootstrap-websites"><span class="toc-section-number">2.2.2</span> Bootstrap Websites</a></li>
+<li><a href="#pdf" id="toc-pdf"><span class="toc-section-number">2.2.3</span>
+PDF</a></li>
+<li><a href="#epub" id="toc-epub"><span class="toc-section-number">2.2.4</span>
+EPUB</a></li>
+<li><a href="#revealjs-presentations" id="toc-revealjs-presentations"><span class="toc-section-number">2.2.5</span> Reveal.js Presentations</a></li>
+<li><a href="#microsoft-word--powerpoint" id="toc-microsoft-word--powerpoint"><span class="toc-section-number">2.2.6</span> Microsoft Word &amp; PowerPoint</a></li>
+</ul></li>
+<li><a href="#configuration-settings" id="toc-configuration-settings"><span class="toc-section-number">2.3</span> Configuration Settings</a></li>
+<li><a href="#precedence-rules" id="toc-precedence-rules"><span class="toc-section-number">2.4</span> Precedence Rules</a></li>
+<li><a href="#specifying-dependencies" id="toc-specifying-dependencies"><span class="toc-section-number">2.5</span> Specifying Dependencies</a></li>
+<li><a href="#custom-targets" id="toc-custom-targets"><span class="toc-section-number">2.6</span> Custom Targets</a></li>
+<li><a href="#repository-versions" id="toc-repository-versions"><span class="toc-section-number">2.7</span> Repository Versions</a></li>
+</ul></li>
+<li><a href="#composer-variables" id="toc-composer-variables"><span class="toc-section-number">3</span> Composer Variables</a>
+<ul>
+<li><a href="#formatting-variables" id="toc-formatting-variables"><span class="toc-section-number">3.1</span> Formatting Variables</a>
+<ul>
+<li><a href="#c_type--c_base--c_list" id="toc-c_type--c_base--c_list"><span class="toc-section-number">3.1.1</span> c_type / c_base / c_list</a></li>
+<li><a href="#c_lang" id="toc-c_lang"><span class="toc-section-number">3.1.2</span> c_lang</a></li>
+<li><a href="#c_css" id="toc-c_css"><span class="toc-section-number">3.1.3</span> c_css</a></li>
+<li><a href="#c_toc" id="toc-c_toc"><span class="toc-section-number">3.1.4</span> c_toc</a></li>
+<li><a href="#c_level" id="toc-c_level"><span class="toc-section-number">3.1.5</span> c_level</a></li>
+<li><a href="#c_margin" id="toc-c_margin"><span class="toc-section-number">3.1.6</span> c_margin</a></li>
+<li><a href="#c_options" id="toc-c_options"><span class="toc-section-number">3.1.7</span> c_options</a></li>
+</ul></li>
+<li><a href="#control-variables" id="toc-control-variables"><span class="toc-section-number">3.2</span> Control Variables</a>
+<ul>
+<li><a href="#makejobs" id="toc-makejobs"><span class="toc-section-number">3.2.1</span> MAKEJOBS</a></li>
+<li><a href="#composer_docolor" id="toc-composer_docolor"><span class="toc-section-number">3.2.2</span> COMPOSER_DOCOLOR</a></li>
+<li><a href="#composer_debugit" id="toc-composer_debugit"><span class="toc-section-number">3.2.3</span> COMPOSER_DEBUGIT</a></li>
+<li><a href="#composer_include" id="toc-composer_include"><span class="toc-section-number">3.2.4</span> COMPOSER_INCLUDE</a></li>
+<li><a href="#composer_depends" id="toc-composer_depends"><span class="toc-section-number">3.2.5</span> COMPOSER_DEPENDS</a></li>
+<li><a href="#composer_log" id="toc-composer_log"><span class="toc-section-number">3.2.6</span> COMPOSER_LOG</a></li>
+<li><a href="#composer_ext" id="toc-composer_ext"><span class="toc-section-number">3.2.7</span> COMPOSER_EXT</a></li>
+<li><a href="#composer_targets" id="toc-composer_targets"><span class="toc-section-number">3.2.8</span> COMPOSER_TARGETS</a></li>
+<li><a href="#composer_subdirs" id="toc-composer_subdirs"><span class="toc-section-number">3.2.9</span> COMPOSER_SUBDIRS</a></li>
+<li><a href="#composer_ignores" id="toc-composer_ignores"><span class="toc-section-number">3.2.10</span> COMPOSER_IGNORES</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#composer-targets" id="toc-composer-targets"><span class="toc-section-number">4</span> Composer Targets</a>
+<ul>
+<li><a href="#primary-targets" id="toc-primary-targets"><span class="toc-section-number">4.1</span> Primary Targets</a>
+<ul>
+<li><a href="#help--help-all" id="toc-help--help-all"><span class="toc-section-number">4.1.1</span> help / help-all</a></li>
+<li><a href="#template" id="toc-template"><span class="toc-section-number">4.1.2</span> template</a></li>
+<li><a href="#compose" id="toc-compose"><span class="toc-section-number">4.1.3</span> compose</a></li>
+<li><a href="#site" id="toc-site"><span class="toc-section-number">4.1.4</span>
+site</a></li>
+<li><a href="#install--install-all--install-force" id="toc-install--install-all--install-force"><span class="toc-section-number">4.1.5</span> install / install-all /
+install-force</a></li>
+<li><a href="#clean--clean-all---clean" id="toc-clean--clean-all---clean"><span class="toc-section-number">4.1.6</span> clean / clean-all / *-clean</a></li>
+<li><a href="#all--all-all---all" id="toc-all--all-all---all"><span class="toc-section-number">4.1.7</span> all / all-all / *-all</a></li>
+<li><a href="#list" id="toc-list"><span class="toc-section-number">4.1.8</span>
+list</a></li>
+</ul></li>
+<li><a href="#special-targets" id="toc-special-targets"><span class="toc-section-number">4.2</span> Special Targets</a>
+<ul>
+<li><a href="#book" id="toc-book"><span class="toc-section-number">4.2.1</span>
+book</a></li>
+<li><a href="#page--post" id="toc-page--post"><span class="toc-section-number">4.2.2</span> page / post</a></li>
+</ul></li>
+<li><a href="#additional-targets" id="toc-additional-targets"><span class="toc-section-number">4.3</span> Additional Targets</a>
+<ul>
+<li><a href="#debug--debug-file" id="toc-debug--debug-file"><span class="toc-section-number">4.3.1</span> debug / debug-file</a></li>
+<li><a href="#check--check-all--config--config-all--targets" id="toc-check--check-all--config--config-all--targets"><span class="toc-section-number">4.3.2</span> check / check-all / config / config-all
+/ targets</a></li>
+<li><a href="#_commit--_commit-all" id="toc-_commit--_commit-all"><span class="toc-section-number">4.3.3</span> _commit / _commit-all</a></li>
+<li><a href="#_release--_update--_update-all" id="toc-_release--_update--_update-all"><span class="toc-section-number">4.3.4</span> _release / _update /
+_update-all</a></li>
+</ul></li>
+<li><a href="#internal-targets" id="toc-internal-targets"><span class="toc-section-number">4.4</span> Internal Targets</a></li>
+</ul></li>
+<li><a href="#reference" id="toc-reference"><span class="toc-section-number">5</span> Reference</a>
+<ul>
+<li><a href="#templates" id="toc-templates"><span class="toc-section-number">5.1</span> Templates</a></li>
+<li><a href="#reserved" id="toc-reserved"><span class="toc-section-number">5.2</span> Reserved</a></li>
+</ul></li>
+</ul>
+</nav>
+<section id="composer-cms" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Composer
+CMS</h1>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==" alt="Composer Icon" /></th>
+<th style="text-align: left;">“Creating Made Simple.”</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="https://github.com/garybgenett/composer/tree/v3.0">Composer CMS
+v3.0</a></td>
+<td style="text-align: left;"><a href="https://github.com/garybgenett/composer/blob/master/LICENSE.md">License:
+GPL</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="http://www.garybgenett.net/projects/composer">Gary B. Genett</a></td>
+<td style="text-align: left;"><a href="mailto:composer@garybgenett.net?subject=Composer%20CMS%20Submission&amp;body=Thank%20you%20for%20sending%20a%20message%21">composer@garybgenett.net</a></td>
+</tr>
+</tbody>
+</table>
+<section id="overview" class="level2" data-number="1.1">
+<h2 data-number="1.1"><span class="header-section-number">1.1</span>
+Overview</h2>
+<p><strong><a href="https://github.com/garybgenett/composer">Composer</a> is a
+simple but powerful CMS based on <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>, <a href="https://getbootstrap.com">Bootstrap</a> and <a href="http://www.gnu.org/software/make">GNU Make</a>.</strong> It is a document
+and website build system that processes directories or individual files in <a href="http://daringfireball.net/projects/markdown">Markdown</a> format.</p>
+<p>Traditionally, CMS stands for Content Management System. <a href="https://github.com/garybgenett/composer">Composer</a> is designed to be a
+Content <strong>Make</strong> System. Written content is vastly easier to manage
+as plain text, which can be crafted with simple editors and tracked with
+revision control. However, professional documentation, publications, and
+websites require formatting that is dynamic and feature-rich.</p>
+<p><a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> is an extremely
+powerful document conversion tool, and is a widely used standard for processing
+<a href="http://daringfireball.net/projects/markdown">Markdown</a> into other
+formats. While it has reasonable defaults, there are a large number of options,
+and additional tools are required for some formats and features.</p>
+<p><a href="https://github.com/garybgenett/composer">Composer</a> consolidates
+all the necessary components, simplifies the options, and prettifies the output
+formats, all in one place. It also serves as a build system, so that large
+repositories can be managed as documentation archives or published as <a href="#bootstrap-websites">Bootstrap Websites</a>.</p>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==" alt="Composer Icon" /> <img src="data:image/png;base64,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" alt="Composer Screenshot" /></p>
+</section>
+<section id="quick-start" class="level2" data-number="1.2">
+<h2 data-number="1.2"><span class="header-section-number">1.2</span> Quick
+Start</h2>
+<p>Use <code>make help</code> to get started:</p>
+<pre><code>make [-f .../Makefile] [variables] &lt;filename&gt;.&lt;extension&gt;
+make [-f .../Makefile] [variables] &lt;target&gt;</code></pre>
+<p>Create documents from source <a href="http://daringfireball.net/projects/markdown">Markdown</a> files (see <a href="#formatting-variables">Formatting Variables</a>):</p>
+<pre><code>make README.html
+make Composer-v3.0.Manual.html c_list=&quot;README.md LICENSE.md&quot;</code></pre>
+<p>Save a persistent configuration (see <a href="#recommended-workflow">Recommended Workflow</a>, <a href="#configuration-settings">Configuration Settings</a> and <a href="#special-targets">Special Targets</a>):</p>
+<pre><code>make template &gt;.composer.mk
+$EDITOR .composer.mk
+    book-Composer-v3.0.Manual.html: README.md LICENSE.md
+make clean
+make all</code></pre>
+<p>Recursively install and build an entire directory tree (see <a href="#recommended-workflow">Recommended Workflow</a>):</p>
+<pre><code>cd .../documents
+mv .../composer .Composer
+make -f .Composer/Makefile install-all
+make all-all</code></pre>
+<p>See <code>help-all</code> for full details and additional targets.</p>
+</section>
+<section id="principles" class="level2" data-number="1.3">
+<h2 data-number="1.3"><span class="header-section-number">1.3</span>
+Principles</h2>
+<p>The guiding principles of <a href="https://github.com/garybgenett/composer">Composer</a>:</p>
+<ul>
+<li>All source files in readable plain text</li>
+<li>Professional output, suitable for publication</li>
+<li>Minimal dependencies, and entirely command-line driven</li>
+<li>Separate content and formatting; writing and publishing are independent</li>
+<li>Inheritance and dependencies; global, tree, directory and file
+overrides</li>
+<li>Fast; both to initiate commands and for processing to complete</li>
+</ul>
+<p>Direct support for key document types (see <a href="#document-formatting">Document Formatting</a>):</p>
+<ul>
+<li><a href="#html">HTML</a> &amp; <a href="#bootstrap-websites">Bootstrap
+Websites</a></li>
+<li><a href="#pdf">PDF</a></li>
+<li><a href="#epub">EPUB</a></li>
+<li><a href="#revealjs-presentations">Reveal.js Presentations</a></li>
+<li><a href="#microsoft-word--powerpoint">Microsoft Word &amp;
+PowerPoint</a></li>
+</ul>
+</section>
+<section id="requirements" class="level2" data-number="1.4">
+<h2 data-number="1.4"><span class="header-section-number">1.4</span>
+Requirements</h2>
+<p><a href="https://github.com/garybgenett/composer">Composer</a> has almost no
+external dependencies. All needed components are integrated directly into the
+repository, including <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>.
+It does require a minimal command-line environment based on <a href="http://www.gnu.org">GNU</a> tools, which is standard for all <a href="https://gnu.org/gnu/linux-and-gnu.html">GNU/Linux</a> systems. The <a href="https://docs.microsoft.com/en-us/windows/wsl">Windows Subsystem for
+Linux</a> for Windows and <a href="https://www.macports.org">MacPorts</a> for
+macOS both provide suitable environments.</p>
+<p>The one large external requirement is <a href="https://tug.org/texlive">TeX
+Live</a>, and it can be installed using the package managers of each of the
+above systems. It is only necessary for creating <a href="#pdf">PDF</a>
+files.</p>
+<p>Below are the versions of the components in the repository, and the tested
+versions of external tools for this iteration of <a href="https://github.com/garybgenett/composer">Composer</a>. Use <a href="#check--check-all--config--config-all--targets">check</a> to validate your
+system.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Repository</th>
+<th style="text-align: left;">Commit</th>
+<th style="text-align: left;">License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a></td>
+<td style="text-align: left;">2.18</td>
+<td style="text-align: left;">GPL</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="https://mikefarah.gitbook.io/yq">YQ</a></td>
+<td style="text-align: left;">v4.24.2</td>
+<td style="text-align: left;">MIT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="https://getbootstrap.com">Bootstrap</a></td>
+<td style="text-align: left;">v5.1.3</td>
+<td style="text-align: left;">MIT</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="https://github.com/Thiht/markdown-viewer">Markdown Viewer</a></td>
+<td style="text-align: left;">059f3192d4ebf5fa9776</td>
+<td style="text-align: left;">MIT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="https://revealjs.com">Reveal.js</a></td>
+<td style="text-align: left;">4.3.1</td>
+<td style="text-align: left;">MIT</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Project</th>
+<th style="text-align: left;">Composer Version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">GNU Bash</td>
+<td style="text-align: left;">5.0.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">- GNU Coreutils</td>
+<td style="text-align: left;">8.31</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">- GNU Findutils</td>
+<td style="text-align: left;">4.8.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">- GNU Sed</td>
+<td style="text-align: left;">4.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="http://www.gnu.org/software/make">GNU
+Make</a></td>
+<td style="text-align: left;">4.2.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">- <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a></td>
+<td style="text-align: left;">2.18</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">- <a href="https://mikefarah.gitbook.io/yq">YQ</a></td>
+<td style="text-align: left;">4.24.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">- <a href="https://tug.org/texlive">TeX Live</a>
+(pdf)</td>
+<td style="text-align: left;">2021 3.14159 2.6-1.40.22</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://github.com/Thiht/markdown-viewer">Markdown Viewer</a> is
+included both for its CSS stylesheets, and for real-time rendering of <a href="http://daringfireball.net/projects/markdown">Markdown</a> files as they
+are being written. To install, follow the instructions in the
+<code>README.md</code>, and select the appropriate <code>manifest.*.json</code>
+file for your browser.</p>
+<p>The versions of the integrated repositories can be changed, if desired (see
+<a href="#repository-versions">Repository Versions</a>).</p>
+<hr />
+</section>
+</section>
+<section id="composer-operation" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Composer
+Operation</h1>
+<section id="recommended-workflow" class="level2" data-number="2.1">
+<h2 data-number="2.1"><span class="header-section-number">2.1</span> Recommended
+Workflow</h2>
+<p>The ideal workflow is to put <a href="https://github.com/garybgenett/composer">Composer</a> in a top-level
+<code>.Composer</code> for each directory tree you want to manage, creating a
+structure similar to this:</p>
+<pre><code>.../.Composer
+.../
+.../tld/
+.../tld/sub/</code></pre>
+<p>Then, it can be converted to a <a href="https://github.com/garybgenett/composer">Composer</a> documentation
+archive (<a href="#quick-start">Quick Start</a> example):</p>
+<pre><code>make -f .Composer/Makefile install-all
+make all-all</code></pre>
+<p>If specific settings need to be used, either globally or per-directory,
+<code>.composer.mk</code> files can be created (see <a href="#configuration-settings">Configuration Settings</a>, <a href="#quick-start">Quick Start</a> example):</p>
+<pre><code>make template &gt;.composer.mk
+$EDITOR .composer.mk</code></pre>
+<p>Custom targets can also be defined, using standard <a href="http://www.gnu.org/software/make">GNU Make</a> syntax (see <a href="#custom-targets">Custom Targets</a>).</p>
+<p><a href="http://www.gnu.org/software/make">GNU Make</a> does not support file
+and directory names with spaces in them, and neither does <a href="https://github.com/garybgenett/composer">Composer</a>. Documentation
+archives which have such files or directories will produce unexpected
+results.</p>
+<p>It is fully supported for input files to be symbolic links to files that
+reside outside the documentation archive:</p>
+<pre><code>cd .../tld
+ln -rs .../README.md ./
+make README.html</code></pre>
+<p>Finally, it is best practice to <a href="#install--install-all--install-force">install-force</a> after every <a href="https://github.com/garybgenett/composer">Composer</a> upgrade, in case
+there are any changes to the <code>Makefile</code> template (see <a href="#primary-targets">Primary Targets</a>).</p>
+<p>The archive is ready, and each directory is both a part of the collective and
+its own individual instance. Targets can be run per-file, per-directory, or
+recursively through an entire directory tree. The most commonly used targets are
+in <a href="#primary-targets">Primary Targets</a>.</p>
+<p><strong>Welcome to <a href="https://github.com/garybgenett/composer">Composer</a>. Happy
+Making!</strong></p>
+</section>
+<section id="document-formatting" class="level2" data-number="2.2">
+<h2 data-number="2.2"><span class="header-section-number">2.2</span> Document
+Formatting</h2>
+<p>As outlined in <a href="#overview">Overview</a> and <a href="#principles">Principles</a>, a primary goal of <a href="https://github.com/garybgenett/composer">Composer</a> is to produce
+beautiful and professional output. <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> does reasonably well at
+this, and yet its primary focus is document conversion, not document formatting.
+<a href="https://github.com/garybgenett/composer">Composer</a> fills this gap by
+specifically tuning a select list of the most commonly used document
+formats.</p>
+<p>Further options for each document type are in <a href="#formatting-variables">Formatting Variables</a>. All improvements not
+exposed as variables will apply to all documents created with a given instance
+of <a href="https://github.com/garybgenett/composer">Composer</a>.</p>
+<p>Note that all the files referenced below are embedded in the ‘Embedded Files’
+and ‘Heredoc’ sections of the <code>Makefile</code>. They are exported by the <a href="#_release--_update--_update-all">_release</a> target, and will be
+overwritten whenever it is run.</p>
+<section id="html" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1"><span class="header-section-number">2.2.1</span>
+HTML</h3>
+<p>In addition to being a helpful real-time rendering tool, <a href="https://github.com/Thiht/markdown-viewer">Markdown Viewer</a> includes
+several CSS stylesheets that are much more visually appealing than the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> default, and which behave
+like normal webpages, so <a href="https://github.com/garybgenett/composer">Composer</a> uses them for all <a href="#html">HTML</a>-based document types, including <a href="#epub">EPUB</a>.</p>
+<p>Information on installing <a href="https://github.com/Thiht/markdown-viewer">Markdown Viewer</a> for use as a
+<a href="http://daringfireball.net/projects/markdown">Markdown</a> rendering
+tool is in <a href="#requirements">Requirements</a>.</p>
+</section>
+<section id="bootstrap-websites" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2"><span class="header-section-number">2.2.2</span>
+Bootstrap Websites</h3>
+<p><a href="https://getbootstrap.com">Bootstrap</a> is a leading web development
+framework, capable of building static webpages that behave dynamically. Static
+sites are very easy and inexpensive to host, and are extremely responsive
+compared to truly dynamic webpages.</p>
+<p><a href="https://github.com/garybgenett/composer">Composer</a> uses this
+framework to transform an archive of simple text files into a modern website,
+with the appearance and behavior of dynamically indexed pages.</p>
+<p><em>(This feature is reserved for a future release as the <a href="#site">site</a> target, along with <a href="#page--post">page</a> and <a href="#page--post">post</a> in <a href="#special-targets">Special
+Targets</a>.)</em></p>
+</section>
+<section id="pdf" class="level3" data-number="2.2.3">
+<h3 data-number="2.2.3"><span class="header-section-number">2.2.3</span>
+PDF</h3>
+<p>The default formatting for <a href="#pdf">PDF</a> is geared towards academic
+papers and the typesetting of printed books, instead of documents that are
+intended to be purely digital.</p>
+<p>Internally, <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> first
+converts to LaTeX, and then uses <a href="https://tug.org/texlive">TeX Live</a>
+to convert into the final <a href="#pdf">PDF</a>. <a href="https://github.com/garybgenett/composer">Composer</a> inserts customized
+LaTeX to modify the final output:</p>
+<pre><code>.../artifacts/pdf.latex</code></pre>
+</section>
+<section id="epub" class="level3" data-number="2.2.4">
+<h3 data-number="2.2.4"><span class="header-section-number">2.2.4</span>
+EPUB</h3>
+<p>The <a href="#epub">EPUB</a> format is essentially packaged <a href="#html">HTML</a>, so <a href="https://github.com/garybgenett/composer">Composer</a> uses the same <a href="https://github.com/Thiht/markdown-viewer">Markdown Viewer</a> CSS
+stylesheets for it.</p>
+</section>
+<section id="revealjs-presentations" class="level3" data-number="2.2.5">
+<h3 data-number="2.2.5"><span class="header-section-number">2.2.5</span>
+Reveal.js Presentations</h3>
+<p>The CSS for <a href="https://revealjs.com">Reveal.js</a> presentations has
+been modified to create a more traditional and readable end result. The
+customized version is at:</p>
+<pre><code>.../artifacts/revealjs.css</code></pre>
+<p>It links in a default theme from the <code>.../revealjs/dist/theme</code>
+directory. Edit the location in the file, or use <a href="#c_css">c_css</a> to
+select a different theme.</p>
+<p>It is set up so that a logo can be placed in the upper right hand corner on
+each slide, for presentations that need to be branded. Simply copy an image file
+to the logo location:</p>
+<pre><code>.../artifacts/logo.img</code></pre>
+<p>To have different logos for different directories (using <a href="#recommended-workflow">Recommended Workflow</a>, <a href="#configuration-settings">Configuration Settings</a> and <a href="#precedence-rules">Precedence Rules</a>):</p>
+<pre><code>cd .../presentations
+cp .../logo.img ./
+ln -rs .../.Composer/artifacts/revealjs.css ./.composer.css
+echo &#39;override c_type := revealjs&#39; &gt;&gt;./.composer.mk
+make all</code></pre>
+</section>
+<section id="microsoft-word--powerpoint" class="level3" data-number="2.2.6">
+<h3 data-number="2.2.6"><span class="header-section-number">2.2.6</span>
+Microsoft Word &amp; PowerPoint</h3>
+<p>The internal <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>
+templates for these are exported by <a href="https://github.com/garybgenett/composer">Composer</a>, so they are
+available for customization:</p>
+<pre><code>.../artifacts/reference.docx
+.../artifacts/reference.pptx</code></pre>
+<p>They are not currently modified by <a href="https://github.com/garybgenett/composer">Composer</a>.</p>
+</section>
+</section>
+<section id="configuration-settings" class="level2" data-number="2.3">
+<h2 data-number="2.3"><span class="header-section-number">2.3</span>
+Configuration Settings</h2>
+<p><a href="https://github.com/garybgenett/composer">Composer</a> uses
+<code>.composer.mk</code> files for persistent settings and definition of <a href="#custom-targets">Custom Targets</a>. By default, they only apply to the
+directory they are in (see <a href="#composer_include">COMPOSER_INCLUDE</a> in
+<a href="#control-variables">Control Variables</a>). The values in the most
+local file override all others (see <a href="#precedence-rules">Precedence
+Rules</a>).</p>
+<p>The easiest way to create a new <code>.composer.mk</code> is with the <a href="#template">template</a> target (<a href="#quick-start">Quick Start</a>
+example):</p>
+<pre><code>make template &gt;.composer.mk
+$EDITOR .composer.mk</code></pre>
+<p>All variable definitions must be in the
+<code>override [variable] := [value]</code> format from the <a href="#template">template</a> target. Doing otherwise will result in unexpected
+behavior, and is not supported. The regular expression that is used to detect
+them:</p>
+<pre><code>override[[:space:]]+([^[:space:]]+)[[:space:]]+[:][=]</code></pre>
+<p>Variables can also be specified per-target, using <a href="http://www.gnu.org/software/make">GNU Make</a> syntax (these are the
+settings used to process the <a href="https://github.com/garybgenett/composer">Composer</a>
+<code>README.*</code> files):</p>
+<pre><code>README.%: override c_css := css_alt
+README.%: override c_toc := 0
+README.epub: override c_css :=
+README.revealjs.html: override c_css :=
+README.revealjs.html: override c_toc :=</code></pre>
+<p>In this case, there are multiple definitions that could apply to
+<code>README.revealjs.html</code>, due to the <code>%</code> wildcard. Since the
+most specific target match is used, the final values for both <a href="#c_css">c_css</a> and <a href="#c_toc">c_toc</a> would be empty.</p>
+</section>
+<section id="precedence-rules" class="level2" data-number="2.4">
+<h2 data-number="2.4"><span class="header-section-number">2.4</span> Precedence
+Rules</h2>
+<p>The order of precedence for <code>.composer.mk</code> files is
+global-to-local (see <a href="#composer_include">COMPOSER_INCLUDE</a> in <a href="#control-variables">Control Variables</a>). This means that the values in
+the most local file override all others.</p>
+<p>Variable aliases, such as
+<code>COMPOSER_DEBUGIT</code>/<code>c_debug</code>/<code>V</code> are
+prioritized in the order shown, with <code>COMPOSER_*</code> taking precedence
+over <code>c_*</code>, over the short alias.</p>
+<p>Selection of the CSS file can be done using <code>.composer.css</code> or the
+<a href="#c_css">c_css</a> variable, with <code>.composer.css</code> taking
+precedence (unless <a href="#c_css">c_css</a> comes from
+<code>.composer.mk</code>). The process for <code>.composer.css</code> files is
+identical to <code>.composer.mk</code> (see <a href="#composer_include">COMPOSER_INCLUDE</a> in <a href="#control-variables">Control Variables</a>).</p>
+<p>All values in <code>.composer.mk</code> take precedence over everything else,
+including <code>.composer.css</code> and environment variables.</p>
+</section>
+<section id="specifying-dependencies" class="level2" data-number="2.5">
+<h2 data-number="2.5"><span class="header-section-number">2.5</span> Specifying
+Dependencies</h2>
+<p>If there are files or directories that have dependencies on other files or
+directories being processed first, this can be done simply using <a href="http://www.gnu.org/software/make">GNU Make</a> syntax in
+<code>.composer.mk</code>:</p>
+<pre><code>LICENSE.html: README.html
+all-subdirs-artifacts: all-subdirs-bootstrap</code></pre>
+<p>This would require <code>README.html</code> to be completed before
+<code>LICENSE.html</code>, and for <code>bootstrap</code> to be processed before
+<code>artifacts</code>. Directories need to be specified with the
+<code>all-subdirs-*</code> syntax in order to avoid conflicts with target names
+(see <a href="#custom-targets">Custom Targets</a>). Good examples of this are
+the internal <a href="#internal-targets">docs</a> and <a href="#internal-targets">test</a> targets, which are common directory names.</p>
+<p>Chaining of dependencies can be as complex and layered as <a href="http://www.gnu.org/software/make">GNU Make</a> will support. Note that if
+a file or directory is set to depend on a target, that target will be run
+whenever the file or directory is called.</p>
+</section>
+<section id="custom-targets" class="level2" data-number="2.6">
+<h2 data-number="2.6"><span class="header-section-number">2.6</span> Custom
+Targets</h2>
+<p>If needed, custom targets can be defined inside a <code>.composer.mk</code>
+file (see <a href="#configuration-settings">Configuration Settings</a>), using
+standard <a href="http://www.gnu.org/software/make">GNU Make</a> syntax. Naming
+them as <a href="#clean--clean-all---clean">*-clean</a> or <a href="#all--all-all---all">*-all</a> will include them in runs of the respective
+targets. Targets with any other names will need to be run manually, or included
+in <a href="#composer_targets">COMPOSER_TARGETS</a> (see <a href="#control-variables">Control Variables</a>).</p>
+<p>There are a few limitations when naming custom targets. Targets starting with
+the regular expression <code>[_.]</code> are hidden, and are skipped by
+auto-detection. Additionally, there is a list of reserved targets in <a href="#reserved">Reserved</a>, along with a list of reserved variables.</p>
+<p>Any included <code>.composer.mk</code> files are sourced early in the main <a href="https://github.com/garybgenett/composer">Composer</a>
+<code>Makefile</code>, so matching targets and most variables will be
+overridden. In the case of conflicting targets, <a href="http://www.gnu.org/software/make">GNU Make</a> will produce warning
+messages. Variables will have their values changed silently. Changing the values
+of internal <a href="https://github.com/garybgenett/composer">Composer</a>
+variables is not recommended or supported.</p>
+<p>A final note is that <a href="#clean--clean-all---clean">*-clean</a> and <a href="#all--all-all---all">*-all</a> targets are stripped from <a href="#composer_targets">COMPOSER_TARGETS</a>. In cases where this results in an
+empty <a href="#composer_targets">COMPOSER_TARGETS</a>, there will be a message
+and no actions will be taken.</p>
+</section>
+<section id="repository-versions" class="level2" data-number="2.7">
+<h2 data-number="2.7"><span class="header-section-number">2.7</span> Repository
+Versions</h2>
+<p>There are a few internal variables used by <a href="#_release--_update--_update-all">_update</a> to select the repository and
+binary versions of integrated components (see <a href="#requirements">Requirements</a>). These are exposed for configuration, but
+only within <code>.composer.mk</code>:</p>
+<ul>
+<li><code>PANDOC_VER</code> (must be a binary version number)</li>
+<li><code>PANDOC_CMT</code> (defaults to <code>PANDOC_VER</code>)</li>
+<li><code>YQ_VER</code> (must be a binary version number)</li>
+<li><code>YQ_CMT</code> (defaults to <code>YQ_VER</code>)</li>
+<li><code>BOOTSTRAP_CMT</code></li>
+<li><code>MDVIEWER_CMT</code></li>
+<li><code>REVEALJS_CMT</code></li>
+</ul>
+<p>Binaries for <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> and <a href="https://mikefarah.gitbook.io/yq">YQ</a> are installed in their respective
+directories. By moving or removing them, or changing the version number and
+foregoing <a href="#_release--_update--_update-all">_update-all</a> (see <a href="#additional-targets">Additional Targets</a>), the system versions will be
+used instead. This will work as long as the commit versions match, so that
+supporting files are in alignment.</p>
+<p>It is possible that changing the versions will introduce incompatibilities
+with <a href="https://github.com/garybgenett/composer">Composer</a>, which are
+usually impacts to the prettification of output files (see <a href="#document-formatting">Document Formatting</a>).</p>
+<hr />
+</section>
+</section>
+<section id="composer-variables" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Composer
+Variables</h1>
+<section id="formatting-variables" class="level2" data-number="3.1">
+<h2 data-number="3.1"><span class="header-section-number">3.1</span> Formatting
+Variables</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Purpose</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="#c_type--c_base--c_list">c_type</a> ~
+T</td>
+<td style="text-align: left;">Desired output format</td>
+<td style="text-align: left;">html</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#c_type--c_base--c_list">c_base</a> ~
+B</td>
+<td style="text-align: left;">Base of output file</td>
+<td style="text-align: left;">README</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#c_type--c_base--c_list">c_list</a> ~
+L</td>
+<td style="text-align: left;">List of input files(s)</td>
+<td style="text-align: left;">README.md</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#c_lang">c_lang</a> ~ g</td>
+<td style="text-align: left;">Language for document headers</td>
+<td style="text-align: left;">en-US</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#c_css">c_css</a> ~ s</td>
+<td style="text-align: left;">Location of CSS file</td>
+<td style="text-align: left;">(<code>.composer.css</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#c_toc">c_toc</a> ~ c</td>
+<td style="text-align: left;">Table of contents depth</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#c_level">c_level</a> ~ l</td>
+<td style="text-align: left;">Chapter/slide header level</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#c_margin">c_margin</a> ~ m</td>
+<td style="text-align: left;">Size of margins (<a href="#pdf">PDF</a>)</td>
+<td style="text-align: left;">0.8in</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#c_options">c_options</a> ~ o</td>
+<td style="text-align: left;">Custom Pandoc options</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Values: c_type</th>
+<th style="text-align: left;">Format</th>
+<th style="text-align: left;">Extension</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">html</td>
+<td style="text-align: left;">HyperText Markup Language</td>
+<td style="text-align: left;">*.html</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">pdf</td>
+<td style="text-align: left;">Portable Document Format</td>
+<td style="text-align: left;">*.pdf</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">epub</td>
+<td style="text-align: left;">Electronic Publication</td>
+<td style="text-align: left;">*.epub</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">revealjs</td>
+<td style="text-align: left;">Reveal.js Presentation</td>
+<td style="text-align: left;">*.revealjs.html</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">docx</td>
+<td style="text-align: left;">Microsoft Word</td>
+<td style="text-align: left;">*.docx</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">pptx</td>
+<td style="text-align: left;">Microsoft PowerPoint</td>
+<td style="text-align: left;">*.pptx</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">Plain Text (well-formatted)</td>
+<td style="text-align: left;">*.txt</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">markdown</td>
+<td style="text-align: left;">Pandoc Markdown (for testing)</td>
+<td style="text-align: left;">*.md.txt</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><em>Other <a href="#c_type--c_base--c_list">c_type</a> values will be passed
+directly to <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a></em></li>
+<li><em>Special values for <a href="#c_css">c_css</a>:</em>
+<ul>
+<li><em><code>css_alt</code> ~ Use the alternate default stylesheet</em></li>
+<li><em><code>0</code> ~ Revert to the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> default</em></li>
+</ul></li>
+<li><em>Special value <code>0</code> for <a href="#c_toc">c_toc</a> ~ List all
+headers, and number sections</em></li>
+<li><em>Special value <code>0</code> for <a href="#c_level">c_level</a> ~ Varies
+by <a href="#c_type--c_base--c_list">c_type</a> (see <a href="#help--help-all">help-all</a>)</em></li>
+<li><em>An empty <a href="#c_margin">c_margin</a> value enables individual
+margins:</em>
+<ul>
+<li><em><code>c_margin_top</code> ~ <code>mt</code></em></li>
+<li><em><code>c_margin_bottom</code> ~ <code>mb</code></em></li>
+<li><em><code>c_margin_left</code> ~ <code>ml</code></em></li>
+<li><em><code>c_margin_right</code> ~ <code>mr</code></em></li>
+</ul></li>
+</ul>
+<section id="c_type--c_base--c_list" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1"><span class="header-section-number">3.1.1</span> c_type
+/ c_base / c_list</h3>
+<p>The <a href="#compose">compose</a> target uses these variables to decide what
+to build and how. The output file is <code>[c_base].&lt;extension&gt;</code>,
+and is constructed from the <a href="#c_type--c_base--c_list">c_list</a> input
+files, in order. The <code>&lt;extension&gt;</code> is selected based on the <a href="#c_type--c_base--c_list">c_type</a> table above. Generally, it is not
+required to use the <a href="#compose">compose</a> target directly for supported
+<a href="#c_type--c_base--c_list">c_type</a> files, since it is run
+automatically based on what output file <code>&lt;extension&gt;</code> is
+specified.</p>
+<p>The automatic input file detection works by matching one of the following (<a href="#quick-start">Quick Start</a> example):</p>
+<pre><code>make README.html                    ~ README (empty [COMPOSER_EXT])
+make README.html                    ~ README.md
+make README.md.html                 ~ README.md
+make Composer-v3.0.Manual.html      c_list=&quot;README.md LICENSE.md&quot;</code></pre>
+<p>Other values for <a href="#c_type--c_base--c_list">c_type</a>, such as
+<code>json</code> or <code>man</code>, for example, can be passed through to <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> manually:</p>
+<pre><code>make compose c_type=&quot;json&quot; c_base=&quot;README&quot; c_list=&quot;README.md&quot;
+make compose c_type=&quot;man&quot; c_base=&quot;Composer-v3.0.Manual&quot; c_list=&quot;README.md&quot;</code></pre>
+<p>Any of the file types supported by <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> can be created this way.
+The only limitation is that the input files must be in <a href="http://daringfireball.net/projects/markdown">Markdown</a> format.</p>
+</section>
+<section id="c_lang" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2"><span class="header-section-number">3.1.2</span>
+c_lang</h3>
+<ul>
+<li>Primarily for <a href="#pdf">PDF</a>, this specifies the language that the
+table of contents (<a href="#c_toc">c_toc</a>) and chapter headings (<a href="#c_level">c_level</a>) will use.</li>
+</ul>
+</section>
+<section id="c_css" class="level3" data-number="3.1.3">
+<h3 data-number="3.1.3"><span class="header-section-number">3.1.3</span>
+c_css</h3>
+<ul>
+<li>By default, a CSS stylesheet from <a href="https://github.com/Thiht/markdown-viewer">Markdown Viewer</a> is used for
+<a href="#html">HTML</a> and <a href="#epub">EPUB</a>, and one of the <a href="https://revealjs.com">Reveal.js</a> themes is used for <a href="#revealjs-presentations">Reveal.js Presentations</a>. This variable allows
+for selection of a different file in all cases.</li>
+<li>The special value <code>css_alt</code> selects the alternate default
+stylesheet. Using <code>0</code> reverts to the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> default.</li>
+<li>This value can be overridden by the presence of <code>.composer.css</code>
+files. See <a href="#precedence-rules">Precedence Rules</a> for details.</li>
+</ul>
+</section>
+<section id="c_toc" class="level3" data-number="3.1.4">
+<h3 data-number="3.1.4"><span class="header-section-number">3.1.4</span>
+c_toc</h3>
+<ul>
+<li>Setting this to a value of <code>[1-6]</code> creates a table of contents at
+the beginning of the document. The numerical value is how many header levels
+deep the table should go. A value of <code>6</code> lists all header
+levels.</li>
+<li>Using a value of <code>0</code> lists all header levels, and additionally
+numbers all the sections, for reference.</li>
+</ul>
+</section>
+<section id="c_level" class="level3" data-number="3.1.5">
+<h3 data-number="3.1.5"><span class="header-section-number">3.1.5</span>
+c_level</h3>
+<ul>
+<li>This value has different effects, depending on the <a href="#c_type--c_base--c_list">c_type</a> of the output document.</li>
+<li>For <a href="#html">HTML</a>, any value enables <code>section-divs</code>,
+which wraps headings and their section content in <code>&lt;section&gt;</code>
+tags and attaches identifiers to them instead of the headings themselves. This
+is for CSS styling, and is generally desired.</li>
+<li>For <a href="#pdf">PDF</a>, there are 3 top-level division types:
+<code>part</code>, <code>chapter</code>, and <code>section</code>. This sets the
+top-level header to the specified type, which changes the way the document is
+presented. Using <code>part</code> divides the document into “Parts”, each
+starting with a stand-alone title page. With this division type, each
+second-level heading starts a new “Chapter”. A <code>chapter</code> simply
+starts a new section on a new page, and lower-level headings continue as running
+portions within it. Finally, <code>section</code> creates one long running
+document with no blank pages or section breaks (like a <a href="#html">HTML</a>
+page). To set the desired value:
+<ul>
+<li><code>part</code> ~ <code>0</code></li>
+<li><code>chapter</code> ~ <code>2</code></li>
+<li><code>section</code> ~ Any other value</li>
+</ul></li>
+<li>For <a href="#epub">EPUB</a>, this creates chapter breaks at the specified
+level, starting the section on a new page. The special <code>0</code> simply
+sets it to the default value of <code>2</code>.</li>
+<li>For <a href="#revealjs-presentations">Reveal.js Presentations</a>, the
+top-level headings can persist on the screen when moving through slides in their
+sections, or they can rotate out as their own individual slides. Setting to
+<code>0</code> enables persistent headings, and all other values use the
+default.</li>
+<li>An empty value defers to the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> defaults in all
+cases.</li>
+</ul>
+</section>
+<section id="c_margin" class="level3" data-number="3.1.6">
+<h3 data-number="3.1.6"><span class="header-section-number">3.1.6</span>
+c_margin</h3>
+<ul>
+<li>The default margins for <a href="#pdf">PDF</a> are formatted for typesetting
+of printed books, where there is a large amount of open space around the edges
+and the text on each page is shifted away from where the binding would be. This
+is generally not what is desired in a purely digital <a href="#pdf">PDF</a>
+document.</li>
+<li>This is one value for all the margins. Setting it to an empty value exposes
+variables for each of the individual margins: <code>c_margin_top</code>,
+<code>c_margin_bottom</code>, <code>c_margin_left</code> and
+<code>c_margin_right</code>.</li>
+</ul>
+</section>
+<section id="c_options" class="level3" data-number="3.1.7">
+<h3 data-number="3.1.7"><span class="header-section-number">3.1.7</span>
+c_options</h3>
+<ul>
+<li>In some cases, it may be desirable to add additional <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> options. Anything put in
+this variable will be passed directly to <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> as additional
+command-line arguments.</li>
+</ul>
+</section>
+</section>
+<section id="control-variables" class="level2" data-number="3.2">
+<h2 data-number="3.2"><span class="header-section-number">3.2</span> Control
+Variables</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Purpose</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="#makejobs">MAKEJOBS</a></td>
+<td style="text-align: left;">Parallel processing threads</td>
+<td style="text-align: left;">1 <code>(makejobs)</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#composer_docolor">COMPOSER_DOCOLOR</a></td>
+<td style="text-align: left;">Enable title/color sequences</td>
+<td style="text-align: left;"><code>(boolean)</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#composer_debugit">COMPOSER_DEBUGIT</a></td>
+<td style="text-align: left;">Use verbose output</td>
+<td style="text-align: left;"><code>(debugit)</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#composer_include">COMPOSER_INCLUDE</a></td>
+<td style="text-align: left;">Include all: <code>.composer.mk</code></td>
+<td style="text-align: left;"><code>(boolean)</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#composer_depends">COMPOSER_DEPENDS</a></td>
+<td style="text-align: left;">Sub-directories first: <a href="#all--all-all---all">all</a></td>
+<td style="text-align: left;"><code>(boolean)</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#composer_log">COMPOSER_LOG</a></td>
+<td style="text-align: left;">Timestamped command log</td>
+<td style="text-align: left;">.composed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#composer_ext">COMPOSER_EXT</a></td>
+<td style="text-align: left;">Markdown file extension</td>
+<td style="text-align: left;">.md</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#composer_targets">COMPOSER_TARGETS</a></td>
+<td style="text-align: left;">See: <a href="#all--all-all---all">all</a>/<a href="#clean--clean-all---clean">clean</a></td>
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">config</a>/<a href="#check--check-all--config--config-all--targets">targets</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#composer_subdirs">COMPOSER_SUBDIRS</a></td>
+<td style="text-align: left;">See: <a href="#all--all-all---all">all</a>/<a href="#clean--clean-all---clean">clean</a>/<a href="#install--install-all--install-force">install</a></td>
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">config</a>/<a href="#check--check-all--config--config-all--targets">targets</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#composer_ignores">COMPOSER_IGNORES</a></td>
+<td style="text-align: left;">See: <a href="#all--all-all---all">all</a>/<a href="#clean--clean-all---clean">clean</a>/<a href="#install--install-all--install-force">install</a></td>
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">config</a></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><em><a href="#makejobs">MAKEJOBS</a> ~ <code>c_jobs</code> ~
+<code>J</code></em></li>
+<li><em><a href="#composer_docolor">COMPOSER_DOCOLOR</a> ~ <code>c_color</code>
+~ <code>C</code></em></li>
+<li><em><a href="#composer_debugit">COMPOSER_DEBUGIT</a> ~ <code>c_debug</code>
+~ <code>V</code></em></li>
+<li><em><code>(makejobs)</code> = empty is disabled / number of threads /
+<code>0</code> is no limit</em></li>
+<li><em><code>(debugit)</code> = empty is disabled / any value enables /
+<code>0</code> is full tracing</em></li>
+<li><em><code>(boolean)</code> = empty is disabled / any value enables</em></li>
+</ul>
+<section id="makejobs" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1"><span class="header-section-number">3.2.1</span>
+MAKEJOBS</h3>
+<ul>
+<li>By default, <a href="https://github.com/garybgenett/composer">Composer</a>
+progresses linearly, doing one task at a time. If there are dependencies between
+items, this can be beneficial, since it ensures things will happen in a
+particular order. The downside, however, is that it is very slow.</li>
+<li><a href="https://github.com/garybgenett/composer">Composer</a> supports <a href="http://www.gnu.org/software/make">GNU Make</a> parallel execution, where
+multiple threads can be working through tasks independently. Experiment with
+lower values first. When recursing through large directories, each
+<code>make</code> that instantiates into a sub-directory has it’s own jobs
+server, so the total number of threads running can proliferate rapidly.</li>
+<li>This can drastically speed up execution, processing thousands of files and
+directories in minutes. However, values that are too high can exhaust system
+resources. With great power comes great responsibility.</li>
+<li>A value of <code>0</code> does parallel execution with no thread limit.</li>
+</ul>
+</section>
+<section id="composer_docolor" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2"><span class="header-section-number">3.2.2</span>
+COMPOSER_DOCOLOR</h3>
+<ul>
+<li><a href="https://github.com/garybgenett/composer">Composer</a> uses colors
+to make all output and <a href="#help--help-all">help</a> text easier to read.
+The escape sequences used to accomplish this can create mixed results when
+reading in an output file or a <code>$PAGER</code>, or just make it harder to
+read for some.</li>
+<li>This is also used internally for targets like <a href="#debug--debug-file">debug-file</a> and <a href="#template">template</a>,
+where plain text is required.</li>
+</ul>
+</section>
+<section id="composer_debugit" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3"><span class="header-section-number">3.2.3</span>
+COMPOSER_DEBUGIT</h3>
+<ul>
+<li>Provides more explicit details about what is happening at each step.
+Produces a lot more output, and can be slower. It will also be hard to read
+unless <a href="#makejobs">MAKEJOBS</a> is set to <code>1</code>.</li>
+<li>Full tracing using <code>0</code> also displays <a href="http://www.gnu.org/software/make">GNU Make</a> debugging output.</li>
+<li><em>When doing <a href="#debug--debug-file">debug</a>, this is used to pass
+a list of targets to test (see <a href="#additional-targets">Additional
+Targets</a>).</em></li>
+</ul>
+</section>
+<section id="composer_include" class="level3" data-number="3.2.4">
+<h3 data-number="3.2.4"><span class="header-section-number">3.2.4</span>
+COMPOSER_INCLUDE</h3>
+<ul>
+<li>On every run, <a href="https://github.com/garybgenett/composer">Composer</a>
+walks through the <code>MAKEFILE_LIST</code>, all the way back to the main
+<code>Makefile</code>, looking for <code>.composer.mk</code> files in each
+directory. By default, it only reads the one in its main directory and the
+current directory, in that order. Enabling this causes all of them to be
+read.</li>
+<li>In the example directory tree below, normally the <code>.composer.mk</code>
+in <code>.Composer</code> is read first, and then
+<code>tld/sub/.composer.mk</code>. With this enabled, it will read all of them
+in order from top to bottom: <code>.Composer/.composer.mk</code>,
+<code>.composer.mk</code>, <code>tld/.composer.mk</code>, and finally
+<code>tld/sub/.composer.mk</code>.</li>
+<li>This is why it is best practice to have a <code>.Composer</code> directory
+at the top level for each documentation archive (see <a href="#recommended-workflow">Recommended Workflow</a>). Not only does it allow
+for strict version control of <a href="https://github.com/garybgenett/composer">Composer</a> per-archive, it also
+provides a mechanism for setting <a href="#composer-variables">Composer
+Variables</a> globally.</li>
+<li>Care should be taken setting “Local” variables from <a href="#template">template</a> (see <a href="#templates">Templates</a>) when
+using this option. In that case, they will be propagated down the tree. This may
+be desired in some cases, but it will require that each directory set these
+manually, which could require a lot of maintenance.</li>
+<li>This setting also causes <code>.composer.css</code> files to be processed in
+an identical manner (see <a href="#precedence-rules">Precedence Rules</a>).</li>
+</ul>
+<p>Example directory tree (see <a href="#recommended-workflow">Recommended
+Workflow</a>):</p>
+<pre><code>.../.Composer/Makefile
+.../.Composer/.composer.mk
+.../Makefile
+.../.composer.mk
+.../tld/Makefile
+.../tld/.composer.mk
+.../tld/sub/Makefile
+.../tld/sub/.composer.mk</code></pre>
+</section>
+<section id="composer_depends" class="level3" data-number="3.2.5">
+<h3 data-number="3.2.5"><span class="header-section-number">3.2.5</span>
+COMPOSER_DEPENDS</h3>
+<ul>
+<li>When doing <a href="#all--all-all---all">all-all</a>, <a href="https://github.com/garybgenett/composer">Composer</a> will process the
+current directory before recursing into sub-directories. This reverses that, and
+sub-directories will be processed first.</li>
+<li>In the example directory tree in <a href="#composer_include">COMPOSER_INCLUDE</a> above, the default would be:
+<code>.../</code>, <code>.../tld</code>, and then <code>.../tld/sub</code>. If
+the higher-level directories have dependencies on the sub-directories being run
+first, this will support that by doing them in reverse order, processing them
+from bottom to top.</li>
+<li>It should be noted that enabling this disables <a href="#makejobs">MAKEJOBS</a>, to ensure linear processing, and that it has no
+effect on <a href="#install--install-all--install-force">install</a> or <a href="#clean--clean-all---clean">clean</a>.</li>
+</ul>
+</section>
+<section id="composer_log" class="level3" data-number="3.2.6">
+<h3 data-number="3.2.6"><span class="header-section-number">3.2.6</span>
+COMPOSER_LOG</h3>
+<ul>
+<li><a href="https://github.com/garybgenett/composer">Composer</a> appends to a
+<code>.composed</code> log file in the current directory whenever it executes <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>. This provides some
+accounting, and is used by <a href="#list">list</a> to determine which
+<code>*.md</code> files have been updated since the last time <a href="https://github.com/garybgenett/composer">Composer</a> was run.</li>
+<li>This setting can change the name of the log file, or disable it completely
+(empty value).</li>
+<li>It is removed each time <a href="#clean--clean-all---clean">clean</a> is
+run.</li>
+</ul>
+</section>
+<section id="composer_ext" class="level3" data-number="3.2.7">
+<h3 data-number="3.2.7"><span class="header-section-number">3.2.7</span>
+COMPOSER_EXT</h3>
+<ul>
+<li>The <a href="http://daringfireball.net/projects/markdown">Markdown</a> file
+extension <a href="https://github.com/garybgenett/composer">Composer</a> uses:
+<code>*.md</code>. This is for auto-detection of files to add to <a href="#composer_targets">COMPOSER_TARGETS</a>, files to output for <a href="#list">list</a>, and other tasks. This is a widely used standard,
+including <a href="https://github.com">GitHub</a>. Another commonly used
+extension is: <code>*.markdown</code>.</li>
+<li>In some cases, they do not have any extension, such as <code>README</code>
+and <code>LICENSE</code> in source code directories. Setting this to an empty
+value causes them to be detected and output. It also causes all other files to
+be processed, because it becomes the wildcard <code>*</code>, so use with care.
+It is likely best to use <a href="#composer_targets">COMPOSER_TARGETS</a> to
+explicitly set the targets list in these situations.</li>
+</ul>
+</section>
+<section id="composer_targets" class="level3" data-number="3.2.8">
+<h3 data-number="3.2.8"><span class="header-section-number">3.2.8</span>
+COMPOSER_TARGETS</h3>
+<ul>
+<li>The list of output files to create or delete with <a href="#clean--clean-all---clean">clean</a> and <a href="#all--all-all---all">all</a>. <a href="https://github.com/garybgenett/composer">Composer</a> does auto-detection
+using <a href="#c_type--c_base--c_list">c_type</a> and <a href="#composer_ext">COMPOSER_EXT</a>, so this does not usually need to be set.
+Hidden files that start with <code>.</code> are skipped.</li>
+<li>Setting this manually disables auto-detection. It can also include non-file
+targets added into a <code>.composer.mk</code> file (see <a href="#custom-targets">Custom Targets</a>).</li>
+<li>The <code>.null</code> target is special, and when used as a value for <a href="#composer_targets">COMPOSER_TARGETS</a> or <a href="#composer_subdirs">COMPOSER_SUBDIRS</a> it will display a message and do
+nothing. A side-effect of this target is that an actual file or directory named
+<code>.null</code> will never be created or removed by <a href="https://github.com/garybgenett/composer">Composer</a>.</li>
+<li>An empty value triggers auto-detection</li>
+<li>Use <a href="#check--check-all--config--config-all--targets">config</a> or
+<a href="#check--check-all--config--config-all--targets">targets</a> to check
+the current value.</li>
+</ul>
+</section>
+<section id="composer_subdirs" class="level3" data-number="3.2.9">
+<h3 data-number="3.2.9"><span class="header-section-number">3.2.9</span>
+COMPOSER_SUBDIRS</h3>
+<ul>
+<li>The list of sub-directories to recurse into with <a href="#install--install-all--install-force">install</a>, <a href="#clean--clean-all---clean">clean</a>, and <a href="#all--all-all---all">all</a>. The behavior and configuration is identical
+to <a href="#composer_targets">COMPOSER_TARGETS</a> above, including
+auto-detection and the <code>.null</code> target. Hidden directories that start
+with <code>.</code> are skipped.</li>
+<li>An empty value triggers auto-detection</li>
+<li>Use <a href="#check--check-all--config--config-all--targets">config</a> or
+<a href="#check--check-all--config--config-all--targets">targets</a> to check
+the current value.</li>
+</ul>
+</section>
+<section id="composer_ignores" class="level3" data-number="3.2.10">
+<h3 data-number="3.2.10"><span class="header-section-number">3.2.10</span>
+COMPOSER_IGNORES</h3>
+<ul>
+<li>The list of <a href="#composer_targets">COMPOSER_TARGETS</a> and <a href="#composer_subdirs">COMPOSER_SUBDIRS</a> to skip with <a href="#install--install-all--install-force">install</a>, <a href="#clean--clean-all---clean">clean</a>, and <a href="#all--all-all---all">all</a>. This allows for selective auto-detection,
+when the list of items to process is larger than those to leave alone.</li>
+<li>Use <a href="#check--check-all--config--config-all--targets">config</a> to
+check the current value.</li>
+</ul>
+<hr />
+</section>
+</section>
+</section>
+<section id="composer-targets" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Composer
+Targets</h1>
+<section id="primary-targets" class="level2" data-number="4.1">
+<h2 data-number="4.1"><span class="header-section-number">4.1</span> Primary
+Targets</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="#help--help-all">help</a></td>
+<td style="text-align: left;">Basic help overview (default)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#help--help-all">help-all</a></td>
+<td style="text-align: left;">Console version of <code>README.md</code> (mostly
+identical)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#template">template</a></td>
+<td style="text-align: left;">Print settings template:
+<code>.composer.mk</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#compose">compose</a></td>
+<td style="text-align: left;">Document creation engine (see <a href="#formatting-variables">Formatting Variables</a>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#site">site</a></td>
+<td style="text-align: left;">Recursively create <a href="#bootstrap-websites">Bootstrap Websites</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#install--install-all--install-force">install</a></td>
+<td style="text-align: left;">Current directory initialization:
+<code>Makefile</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#install--install-all--install-force">install-all</a></td>
+<td style="text-align: left;">Do <a href="#install--install-all--install-force">install</a> recursively (no
+overwrite)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#install--install-all--install-force">install-force</a></td>
+<td style="text-align: left;">Recursively force overwrite of
+<code>Makefile</code> files</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#clean--clean-all---clean">clean</a></td>
+<td style="text-align: left;">Remove output files: <a href="#composer_targets">COMPOSER_TARGETS</a> :: <a href="#clean--clean-all---clean">*-clean</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#clean--clean-all---clean">clean-all</a></td>
+<td style="text-align: left;">Do <a href="#clean--clean-all---clean">clean</a>
+recursively: <a href="#composer_subdirs">COMPOSER_SUBDIRS</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#clean--clean-all---clean">*-clean</a></td>
+<td style="text-align: left;">Any targets named this way will also be run by <a href="#clean--clean-all---clean">clean</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#all--all-all---all">all</a></td>
+<td style="text-align: left;">Create output files: <a href="#composer_targets">COMPOSER_TARGETS</a> :: <a href="#all--all-all---all">*-all</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#all--all-all---all">all-all</a></td>
+<td style="text-align: left;">Do <a href="#all--all-all---all">all</a>
+recursively: <a href="#composer_subdirs">COMPOSER_SUBDIRS</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#all--all-all---all">*-all</a></td>
+<td style="text-align: left;">Any targets named this way will also be run by <a href="#all--all-all---all">all</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#list">list</a></td>
+<td style="text-align: left;">Print updated files: <code>*.md</code> &gt;&gt;
+<code>.composed</code></td>
+</tr>
+</tbody>
+</table>
+<section id="help--help-all" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1"><span class="header-section-number">4.1.1</span> help /
+help-all</h3>
+<ul>
+<li>Outputs all of the documentation for <a href="https://github.com/garybgenett/composer">Composer</a>. The
+<code>README.md</code> has a few extra sections covering internal targets, along
+with reserved target and variable names, but is otherwise identical to the <a href="#help--help-all">help-all</a> output.</li>
+</ul>
+</section>
+<section id="template" class="level3" data-number="4.1.2">
+<h3 data-number="4.1.2"><span class="header-section-number">4.1.2</span>
+template</h3>
+<ul>
+<li>Prints a useful template for creating new <code>.composer.mk</code> files
+(see <a href="#configuration-settings">Configuration Settings</a> and <a href="#templates">Templates</a>).</li>
+</ul>
+</section>
+<section id="compose" class="level3" data-number="4.1.3">
+<h3 data-number="4.1.3"><span class="header-section-number">4.1.3</span>
+compose</h3>
+<ul>
+<li>This is the very core of <a href="https://github.com/garybgenett/composer">Composer</a>, and does the actual
+work of the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>
+conversion. Details are in the <a href="#c_type--c_base--c_list">c_type / c_base
+/ c_list</a> section of <a href="#formatting-variables">Formatting
+Variables</a>.</li>
+</ul>
+</section>
+<section id="site" class="level3" data-number="4.1.4">
+<h3 data-number="4.1.4"><span class="header-section-number">4.1.4</span>
+site</h3>
+<ul>
+<li><em>(This feature is reserved for a future release to create <a href="#bootstrap-websites">Bootstrap Websites</a>. It will also include <a href="#page--post">page</a> and <a href="#page--post">post</a> from <a href="#special-targets">Special Targets</a>.)</em></li>
+</ul>
+</section>
+<section id="install--install-all--install-force" class="level3" data-number="4.1.5">
+<h3 data-number="4.1.5"><span class="header-section-number">4.1.5</span> install
+/ install-all / install-force</h3>
+<ul>
+<li>Creates the necessary <code>Makefile</code> files to set up a directory or a
+directory tree as a <a href="https://github.com/garybgenett/composer">Composer</a> archive. By default,
+it will not overwrite any existing files.</li>
+<li>Doing a simple <a href="#install--install-all--install-force">install</a>
+will only create a file in the current directory, whereas <a href="#install--install-all--install-force">install-all</a> will recurse through
+the entire directory tree. A full <a href="#install--install-all--install-force">install-force</a> is the same as <a href="#install--install-all--install-force">install-all</a>, with the exception
+that it will overwrite all <code>Makefile</code> files.</li>
+<li>The topmost directory will have the <code>Makefile</code> created for it
+modified to point to <a href="https://github.com/garybgenett/composer">Composer</a>.</li>
+</ul>
+</section>
+<section id="clean--clean-all---clean" class="level3" data-number="4.1.6">
+<h3 data-number="4.1.6"><span class="header-section-number">4.1.6</span> clean /
+clean-all / *-clean</h3>
+<ul>
+<li>Deletes all <a href="#composer_targets">COMPOSER_TARGETS</a> output files in
+the current directory, after first running all <a href="#clean--clean-all---clean">*-clean</a> targets, including those for <a href="#special-targets">Specials</a>.</li>
+<li>Doing <a href="#clean--clean-all---clean">clean-all</a> does the same thing
+recursively, through all the <a href="#composer_subdirs">COMPOSER_SUBDIRS</a>.</li>
+</ul>
+</section>
+<section id="all--all-all---all" class="level3" data-number="4.1.7">
+<h3 data-number="4.1.7"><span class="header-section-number">4.1.7</span> all /
+all-all / *-all</h3>
+<ul>
+<li>Creates all <a href="#composer_targets">COMPOSER_TARGETS</a> output files in
+the current directory, after first running all <a href="#all--all-all---all">*-all</a> targets, including those for <a href="#special-targets">Specials</a>.</li>
+<li>Doing <a href="#all--all-all---all">all-all</a> does the same thing
+recursively, through all the <a href="#composer_subdirs">COMPOSER_SUBDIRS</a>.</li>
+</ul>
+</section>
+<section id="list" class="level3" data-number="4.1.8">
+<h3 data-number="4.1.8"><span class="header-section-number">4.1.8</span>
+list</h3>
+<ul>
+<li>Outputs all the <a href="#composer_ext">COMPOSER_EXT</a> files that have
+been modified since <a href="#composer_log">COMPOSER_LOG</a> was last updated
+(see both in <a href="#control-variables">Control Variables</a>). Acts as a
+quick reference to see if anything has changed.</li>
+<li>Since the <a href="#composer_log">COMPOSER_LOG</a> file is updated whenever
+<a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> is executed, this
+target will primarily be useful when <a href="#all--all-all---all">all</a> is
+the only target used to create files in the directory.</li>
+</ul>
+</section>
+</section>
+<section id="special-targets" class="level2" data-number="4.2">
+<h2 data-number="4.2"><span class="header-section-number">4.2</span> Special
+Targets</h2>
+<p>There are a few targets considered <a href="#special-targets">Specials</a>,
+that have unique properties:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Base Name</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="#book">book</a></td>
+<td style="text-align: left;">Concatenate a source list into a single output
+file</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#page--post">page</a></td>
+<td style="text-align: left;"><em>(Reserved for the future <a href="#site">site</a> feature)</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#page--post">post</a></td>
+<td style="text-align: left;"><em>(Reserved for the future <a href="#site">site</a> feature)</em></td>
+</tr>
+</tbody>
+</table>
+<p>For each of these base names, there are a standard set of actual targets:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">%s-clean</td>
+<td style="text-align: left;">Called by <a href="#clean--clean-all---clean">clean</a>, removes all <code>%-*</code>
+files</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">%s-all</td>
+<td style="text-align: left;">Called by <a href="#all--all-all---all">all</a>,
+creates all <code>%-*</code> files</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">%s</td>
+<td style="text-align: left;">Main target, which is a wrapper to
+<code>%s-all</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">%-*</td>
+<td style="text-align: left;">Target files will be processed according to the
+base</td>
+</tr>
+</tbody>
+</table>
+<section id="book" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1"><span class="header-section-number">4.2.1</span>
+book</h3>
+<p>An example <a href="#book">book</a> definition in a <code>.composer.mk</code>
+file (<a href="#quick-start">Quick Start</a> example):</p>
+<pre><code>book-Composer-v3.0.Manual.html: README.md LICENSE.md</code></pre>
+<p>This configures it so that <code>books</code> will create
+<code>Composer-v3.0.Manual.html</code> from <code>README.md</code> and
+<code>LICENSE.md</code>, concatenated together in order. The primary purpose of
+this <a href="#special-targets">Special</a> is to gather multiple source files
+in this manner, so that larger works can be comprised of multiple files, such as
+a book with each chapter in a separate file.</p>
+</section>
+<section id="page--post" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2"><span class="header-section-number">4.2.2</span> page /
+post</h3>
+<p><em>(Both <a href="#page--post">page</a> and <a href="#page--post">post</a>
+are reserved for the future <a href="#site">site</a> feature, which will build
+website pages using <a href="https://getbootstrap.com">Bootstrap</a>.)</em></p>
+</section>
+</section>
+<section id="additional-targets" class="level2" data-number="4.3">
+<h2 data-number="4.3"><span class="header-section-number">4.3</span> Additional
+Targets</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="#debug--debug-file">debug</a></td>
+<td style="text-align: left;">Diagnostics, tests targets list in <a href="#composer_debugit">COMPOSER_DEBUGIT</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#debug--debug-file">debug-file</a></td>
+<td style="text-align: left;">Export <a href="#debug--debug-file">debug</a>
+results to a plain text file</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">check</a></td>
+<td style="text-align: left;">List system packages and versions (see <a href="#requirements">Requirements</a>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">check-all</a></td>
+<td style="text-align: left;">Complete <a href="#check--check-all--config--config-all--targets">check</a> package list,
+and system information</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">config</a></td>
+<td style="text-align: left;">Show values of all <a href="#composer-variables">Composer Variables</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">config-all</a></td>
+<td style="text-align: left;">Complete <a href="#check--check-all--config--config-all--targets">config</a>, including
+environment variables</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#check--check-all--config--config-all--targets">targets</a></td>
+<td style="text-align: left;">List all available targets for the current
+directory</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#_commit--_commit-all">_commit</a></td>
+<td style="text-align: left;">Timestamped <a href="https://git-scm.com">Git</a>
+commit of the current directory tree</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#_commit--_commit-all">_commit-all</a></td>
+<td style="text-align: left;">Automatic <a href="#_commit--_commit-all">_commit</a>, without <code>$EDITOR</code> step</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#_release--_update--_update-all">_release</a></td>
+<td style="text-align: left;">Full upgrade to current release, repository
+preparation</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#_release--_update--_update-all">_update</a></td>
+<td style="text-align: left;">Update all included components (see <a href="#requirements">Requirements</a>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#_release--_update--_update-all">_update-all</a></td>
+<td style="text-align: left;">Complete <a href="#_release--_update--_update-all">_update</a>, including binaries: <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a>, <a href="https://mikefarah.gitbook.io/yq">YQ</a></td>
+</tr>
+</tbody>
+</table>
+<section id="debug--debug-file" class="level3" data-number="4.3.1">
+<h3 data-number="4.3.1"><span class="header-section-number">4.3.1</span> debug /
+debug-file</h3>
+<ul>
+<li>This is the tool to use for any support issues. Submit the output file to:
+<a href="mailto:composer@garybgenett.net?subject=Composer%20CMS%20Submission&amp;body=Thank%20you%20for%20sending%20a%20message%21">composer@garybgenett.net</a></li>
+<li>Internally, it also runs:
+<ul>
+<li><a href="#internal-targets">test</a></li>
+<li><a href="#check--check-all--config--config-all--targets">check-all</a></li>
+<li><a href="#check--check-all--config--config-all--targets">config-all</a></li>
+<li><a href="#check--check-all--config--config-all--targets">targets</a></li>
+</ul></li>
+<li>If issues are occurring when running a particular set of targets, list them
+in <a href="#composer_debugit">COMPOSER_DEBUGIT</a>.</li>
+<li>For general issues, run in the top-level directory (see <a href="#recommended-workflow">Recommended Workflow</a>). For specific issues, run
+in the directory where the issue is occurring.</li>
+</ul>
+<p>For example:</p>
+<pre><code>make COMPOSER_DEBUGIT=&quot;books README.html&quot; debug-file</code></pre>
+</section>
+<section id="check--check-all--config--config-all--targets" class="level3" data-number="4.3.2">
+<h3 data-number="4.3.2"><span class="header-section-number">4.3.2</span> check /
+check-all / config / config-all / targets</h3>
+<ul>
+<li>Useful targets for validating tooling and configurations.</li>
+<li>Use <a href="#check--check-all--config--config-all--targets">check</a> to
+see the list of components and their versions, in relation to the system
+installed versions. Doing <a href="#check--check-all--config--config-all--targets">check-all</a> will show
+the complete list of tools that are used by <a href="https://github.com/garybgenett/composer">Composer</a>.</li>
+<li>The current values of all <a href="#composer-variables">Composer
+Variables</a> is output by <a href="#check--check-all--config--config-all--targets">config</a>, and <a href="#check--check-all--config--config-all--targets">config-all</a> will
+additionally output all environment variables.</li>
+<li>A structured list of detected targets, available <a href="#special-targets">Specials</a>, <a href="#clean--clean-all---clean">*-clean</a> and <a href="#all--all-all---all">*-all</a> targets, <a href="#composer_targets">COMPOSER_TARGETS</a>, and <a href="#composer_subdirs">COMPOSER_SUBDIRS</a> is printed by <a href="#check--check-all--config--config-all--targets">targets</a>.</li>
+<li>Together, <a href="#check--check-all--config--config-all--targets">config</a> and <a href="#check--check-all--config--config-all--targets">targets</a> reveal the
+entire internal state of <a href="https://github.com/garybgenett/composer">Composer</a>.</li>
+</ul>
+</section>
+<section id="_commit--_commit-all" class="level3" data-number="4.3.3">
+<h3 data-number="4.3.3"><span class="header-section-number">4.3.3</span> _commit
+/ _commit-all</h3>
+<ul>
+<li>Using the directory structure in <a href="#recommended-workflow">Recommended
+Workflow</a>, <code>.../</code> is considered the top-level directory. Meaning,
+it is the last directory before linking to <a href="https://github.com/garybgenett/composer">Composer</a>.</li>
+<li>If the top-level directory is a <a href="https://git-scm.com">Git</a>
+repository (it has <code>&lt;directory&gt;.git</code> or
+<code>&lt;directory&gt;/.git</code>), this target creates a commit of the
+current directory tree with the title format below.</li>
+<li>For example, if it is run in the <code>.../tld</code> directory, that entire
+tree would be in the commit, including <code>.../tld/sub</code>. The purpose of
+this is to create quick and easy checkpoints when working on documentation that
+does not necessarily fit in a process where there are specific atomic steps
+being accomplished.</li>
+<li>When this target is run in a <a href="https://github.com/garybgenett/composer">Composer</a> directory, it uses
+itself as the top-level directory.</li>
+</ul>
+<p>Commit title format:</p>
+<pre><code>[Composer CMS v3.0 :: 2022-05-10T21:58:07-07:00]</code></pre>
+</section>
+<section id="_release--_update--_update-all" class="level3" data-number="4.3.4">
+<h3 data-number="4.3.4"><span class="header-section-number">4.3.4</span>
+_release / _update / _update-all</h3>
+<ul>
+<li>Using the repository configuration (see <a href="#repository-versions">Repository Versions</a>), these fetch and install
+all external components.</li>
+<li>The <a href="#_release--_update--_update-all">_update-all</a> target also
+fetches the <a href="http://www.johnmacfarlane.net/pandoc">Pandoc</a> and <a href="https://mikefarah.gitbook.io/yq">YQ</a> binaries, whereas <a href="#_release--_update--_update-all">_update</a> only fetches the
+repositories.</li>
+<li>In addition to doing <a href="#_release--_update--_update-all">_update-all</a>, <a href="#_release--_update--_update-all">_release</a> performs the steps necessary
+to turn the current directory into a complete clone of <a href="https://github.com/garybgenett/composer">Composer</a>.</li>
+<li>If <code>rsync</code> is installed, <a href="#_release--_update--_update-all">_release</a> can be used to rapidly
+replicate <a href="https://github.com/garybgenett/composer">Composer</a>, like
+below.</li>
+<li>One of the unique features of <a href="https://github.com/garybgenett/composer">Composer</a> is that everything
+needed to compose itself is embedded in the <code>Makefile</code>.</li>
+</ul>
+<p>Rapid cloning (requires <code>rsync</code>):</p>
+<pre><code>mkdir .../clone
+cd .../clone
+make -f .../.Composer/Makefile _release</code></pre>
+</section>
+</section>
+<section id="internal-targets" class="level2" data-number="4.4">
+<h2 data-number="4.4"><span class="header-section-number">4.4</span> Internal
+Targets</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">help-force</a></td>
+<td style="text-align: left;">Complete <code>README.md</code> content (similar
+to <a href="#help--help-all">help-all</a>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">.template-install</a></td>
+<td style="text-align: left;">The <code>Makefile</code> used by <a href="#install--install-all--install-force">install</a> (see <a href="#templates">Templates</a>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">.template</a></td>
+<td style="text-align: left;">The <code>.composer.mk</code> used by <a href="#template">template</a> (see <a href="#templates">Templates</a>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">docs</a></td>
+<td style="text-align: left;">Extracts embedded files from
+<code>Makefile</code>, and does <a href="#all--all-all---all">all</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">headers</a></td>
+<td style="text-align: left;">Series of targets that handle all informational
+output</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">headers-template</a></td>
+<td style="text-align: left;">For testing default <a href="#internal-targets">headers</a> output</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">headers-template-all</a></td>
+<td style="text-align: left;">For testing complete <a href="#internal-targets">headers</a> output</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">.make_database</a></td>
+<td style="text-align: left;">Complete contents of <a href="http://www.gnu.org/software/make">GNU Make</a> internal state</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">.all_targets</a></td>
+<td style="text-align: left;">Extracted list of all targets from <a href="#internal-targets">.make_database</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">.null</a></td>
+<td style="text-align: left;">Placeholder to specify or detect empty values</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">test</a></td>
+<td style="text-align: left;">Test suite, validates all supported features</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">test-file</a></td>
+<td style="text-align: left;">Export <a href="#internal-targets">test</a>
+results to a plain text file</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="#internal-targets">check-force</a></td>
+<td style="text-align: left;">Minimized <a href="#check--check-all--config--config-all--targets">check</a> output (used for
+<a href="#requirements">Requirements</a>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="#internal-targets">subdirs</a></td>
+<td style="text-align: left;">Expands <a href="#composer_subdirs">COMPOSER_SUBDIRS</a> into <code>*-subdirs-*</code>
+targets</td>
+</tr>
+</tbody>
+</table>
+<p><em>(None of these are intended to be run directly during normal use, and are
+only documented for completeness.)</em></p>
+<hr />
+</section>
+</section>
+<section id="reference" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Reference</h1>
+<section id="templates" class="level2" data-number="5.1">
+<h2 data-number="5.1"><span class="header-section-number">5.1</span>
+Templates</h2>
+<p>The <a href="#install--install-all--install-force">install</a> target
+<code>Makefile</code> template (for reference only):</p>
+<pre><code>override COMPOSER_MY_PATH := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+override COMPOSER_TEACHER := $(abspath $(dir $(COMPOSER_MY_PATH)))/Makefile
+include $(COMPOSER_TEACHER)</code></pre>
+<p>Use the <a href="#template">template</a> target to create
+<code>.composer.mk</code> files:</p>
+<pre><code># &gt;&gt; Global
+# override MAKEJOBS := 1
+# override COMPOSER_DOCOLOR :=
+# override COMPOSER_DEBUGIT :=
+# override COMPOSER_INCLUDE :=
+# override COMPOSER_DEPENDS :=
+# override COMPOSER_LOG := .composed
+# override COMPOSER_EXT := .md
+# override c_type := html
+# override c_lang := en-US
+# override c_css :=
+# override c_toc :=
+# override c_level := 2
+# override c_margin := 0.8in
+# override c_margin_top :=
+# override c_margin_bottom :=
+# override c_margin_left :=
+# override c_margin_right :=
+# override c_options :=
+# &gt;&gt; Local
+# override COMPOSER_TARGETS := README.html README.pdf README.epub README.revealjs.html README.docx
+# override COMPOSER_SUBDIRS :=
+# override COMPOSER_IGNORES :=
+# override c_base := README
+# override c_list := README.md
+# &gt;&gt; Special
+# book-Composer.book.html: README.md LICENSE.md
+# page-Composer.page.html: README.md LICENSE.md
+# post-Composer.post.html: README.md LICENSE.md</code></pre>
+</section>
+<section id="reserved" class="level2" data-number="5.2">
+<h2 data-number="5.2"><span class="header-section-number">5.2</span>
+Reserved</h2>
+<p>Reserved target names, including use as prefixes:</p>
+<pre><code>.all_targets
+.make_database
+.null
+all
+book
+books
+check
+clean
+compose
+config
+debug
+docs
+headers
+help
+install
+list
+page
+pages
+post
+posts
+site
+subdirs
+targets
+template
+test
+_commit
+_release
+_update</code></pre>
+<p>Reserved variable names:</p>
+<pre><code>~
+7Z
+7Z_VER
+BASE64
+BASH
+BASH_VER
+BOOTSTRAP_CMT
+BOOTSTRAP_DIR
+BOOTSTRAP_LIC
+BOOTSTRAP_SRC
+CAT
+CHECKIT
+CHMOD
+CLEANER
+CODEBLOCK
+COLUMNS
+COLUMN_2
+COMMENTED
+COMPOSER
+COMPOSER_ART
+COMPOSER_BASENAME
+COMPOSER_COMPOSER
+COMPOSER_CONTENTS
+COMPOSER_CONTENTS_DIRS
+COMPOSER_CONTENTS_FILES
+COMPOSER_CSS
+COMPOSER_DEBUGIT
+COMPOSER_DEBUGIT_ALL
+COMPOSER_DEPENDS
+COMPOSER_DIR
+COMPOSER_DOCOLOR
+COMPOSER_DOITALL_check
+COMPOSER_DOITALL_clean
+COMPOSER_DOITALL_config
+COMPOSER_DOITALL__commit
+COMPOSER_DOITALL_debug
+COMPOSER_DOITALL_all
+COMPOSER_DOITALL_install
+COMPOSER_DOITALL_test
+COMPOSER_DOITALL__update
+COMPOSER_EXPORTED
+COMPOSER_EXPORTED_NOT
+COMPOSER_EXT
+COMPOSER_EXT_DEFAULT
+COMPOSER_FILENAME
+COMPOSER_FIND
+COMPOSER_FULLNAME
+COMPOSER_HEADLINE
+COMPOSER_IGNORES
+COMPOSER_INCLUDE
+COMPOSER_INCLUDES
+COMPOSER_INCLUDES_LIST
+COMPOSER_LICENSE
+COMPOSER_LOG
+COMPOSER_LOG_DEFAULT
+COMPOSER_MY_PATH
+COMPOSER_NOTHING
+COMPOSER_OPTIONS
+COMPOSER_PANDOC
+COMPOSER_PKG
+COMPOSER_REGEX
+COMPOSER_REGEX_DEFINE
+COMPOSER_REGEX_EVAL
+COMPOSER_REGEX_OVERRIDE
+COMPOSER_REGEX_PREFIX
+COMPOSER_RELEASE
+COMPOSER_RESERVED
+COMPOSER_RESERVED_SPECIAL
+COMPOSER_RESERVED_SPECIAL_TARGETS
+COMPOSER_ROOT
+COMPOSER_SETTINGS
+COMPOSER_SRC
+COMPOSER_SUBDIRS
+COMPOSER_TAGLINE
+COMPOSER_TARGETS
+COMPOSER_TEACHER
+COMPOSER_TECHNAME
+COMPOSER_TIMESTAMP
+COMPOSER_TMP
+COMPOSER_VERSION
+CONFIGS
+CONVICT
+COREUTILS_VER
+CP
+CREATOR
+CSS_ALT
+DATE
+DATEMARK
+DATENAME
+DATESTAMP
+DEBUGIT
+DEPTH_DEFAULT
+DEPTH_MAX
+DESC_DOCX
+DESC_EPUB
+DESC_HTML
+DESC_LINT
+DESC_LPDF
+DESC_PPTX
+DESC_PRES
+DESC_TEXT
+DIFF
+DIFFUTILS_VER
+DISTRIB
+DIST_ICON_v1.0
+DIST_SCREENSHOT_v1.0
+DIST_SCREENSHOT_v3.0
+DIVIDE
+DOFORCE
+DOITALL
+DOMAKE
+DO_BOOK
+DO_HEREDOC
+DO_PAGE
+DO_POST
+ECHO
+ENDOLINE
+ENV
+EXAMPLE
+EXPR
+EXTENSION
+EXTN_DEFAULT
+EXTN_DOCX
+EXTN_EPUB
+EXTN_HTML
+EXTN_LINT
+EXTN_LPDF
+EXTN_PPTX
+EXTN_PRES
+EXTN_TEXT
+FIND
+FINDUTILS_VER
+GIT
+GIT_OPTS_CONVICT
+GIT_REPO
+GIT_REPO_DO
+GIT_RUN
+GIT_RUN_COMPOSER
+GIT_VER
+GZIP_BIN
+GZIP_VER
+HEAD
+HEADERS
+HEADER_L
+HEAD_MAIN
+HELPOUT
+HEREDOC_GITIGNORE
+HEREDOC_LICENSE
+HEREDOC_REVEALJS_CSS
+HEREDOC_TEX_PDF_TEMPLATE
+HEREDOC_docs_.composer.mk
+INPUT
+INSTALL
+LESS_BIN
+LESS_VER
+LINERULE
+LISTING
+LN
+LS
+MAKEFILE
+MAKEFILE_LIST
+MAKEFLAGS
+MAKEJOBS
+MAKEJOBS_DEFAULT
+MAKEJOBS_OPTS
+MAKE_DB
+MAKE_OPTIONS
+MAKE_VER
+MARKER
+MDVIEWER_CMT
+MDVIEWER_CSS
+MDVIEWER_CSS_ALT
+MDVIEWER_DIR
+MDVIEWER_LIC
+MDVIEWER_SRC
+MKDIR
+MV
+NEWLINE
+NOTHING
+NOTHING_IGNORES
+NULL
+OS_TYPE
+OS_UNAME
+OUTPUT
+OUTPUT_FILENAME
+OUT_LICENSE
+OUT_MANUAL
+OUT_README
+PANDOC
+PANDOC_BIN
+PANDOC_CMT
+PANDOC_CMT_DISPLAY
+PANDOC_DIR
+PANDOC_EXTENSIONS
+PANDOC_LIC
+PANDOC_LNX_BIN
+PANDOC_LNX_DST
+PANDOC_LNX_SRC
+PANDOC_MAC_BIN
+PANDOC_MAC_DST
+PANDOC_MAC_SRC
+PANDOC_OPTIONS
+PANDOC_OPTIONS_DATA
+PANDOC_OPTIONS_ERROR
+PANDOC_SRC
+PANDOC_TEX_PDF
+PANDOC_URL
+PANDOC_VER
+PANDOC_WIN_BIN
+PANDOC_WIN_DST
+PANDOC_WIN_SRC
+PATH_LIST
+PRINT
+PRINTER
+PRINTF
+PUBLISH
+READ_ALIASES
+REALMAKE
+REALPATH
+REVEALJS_CMT
+REVEALJS_CSS
+REVEALJS_CSS_THEME
+REVEALJS_DIR
+REVEALJS_LIC
+REVEALJS_LOGO
+REVEALJS_SRC
+RM
+RSYNC
+RSYNC_VER
+RUNMAKE
+SED
+SED_VER
+SHELL
+SORT
+SOURCE_INCLUDES
+SPECIAL_VAL
+SUBDIRS
+TABLE_C2
+TABLE_M2
+TABLE_M3
+TAIL
+TAR
+TARGETS
+TAR_VER
+TEE
+TESTING
+TESTING_COMPOSER_DIR
+TESTING_COMPOSER_MAKEFILE
+TESTING_DIR
+TESTING_ENV
+TESTING_LOGFILE
+TEX_PDF
+TEX_PDF_TEMPLATE
+TEX_PDF_VER
+TITLE_LN
+TMPL_DOCX
+TMPL_EPUB
+TMPL_HTML
+TMPL_LINT
+TMPL_LPDF
+TMPL_PPTX
+TMPL_PRES
+TMPL_TEXT
+TOKEN
+TR
+TRUE
+TYPE_DEFAULT
+TYPE_DOCX
+TYPE_DO_BOOK
+TYPE_DO_PAGE
+TYPE_DO_POST
+TYPE_EPUB
+TYPE_HTML
+TYPE_LINT
+TYPE_LPDF
+TYPE_PPTX
+TYPE_PRES
+TYPE_TARGETS
+TYPE_TEXT
+UNAME
+UPGRADE
+VIM_FOLDING
+VIM_OPTIONS
+WC
+WGET
+WGET_PACKAGE
+WGET_PACKAGE_DO
+WGET_VER
+XARGS
+YQ
+YQ_BIN
+YQ_CMT
+YQ_CMT_DISPLAY
+YQ_DIR
+YQ_LIC
+YQ_LNX_BIN
+YQ_LNX_DST
+YQ_LNX_SRC
+YQ_MAC_BIN
+YQ_MAC_DST
+YQ_MAC_SRC
+YQ_SRC
+YQ_URL
+YQ_VER
+YQ_WIN_BIN
+YQ_WIN_DST
+YQ_WIN_SRC
+c_base
+c_css
+c_css_select
+c_lang
+c_level
+c_list
+c_margin
+c_margin_bottom
+c_margin_left
+c_margin_right
+c_margin_top
+c_options
+c_toc
+c_type
+template-print
+template-var
+template-var-static
+headers
+headers-dir
+headers-file
+headers-list
+headers-note
+headers-release
+headers-rm
+headers-run
+headers-skip
+headers-vars
+headers-compose
+headers-subdirs
+help-all-CUSTOM
+help-all-DEPENDS
+help-all-FORMAT
+help-all-GOALS
+help-all-LINKS
+help-all-LINKS_EXT
+help-all-ORDERS
+help-all-OVERVIEW
+help-all-REQUIRE
+help-all-REQUIRE_POST
+help-all-SECTION
+help-all-SETTINGS
+help-all-TARGETS_ADDITIONAL
+help-all-TARGETS_INTERNAL
+help-all-TARGETS_PRIMARY
+help-all-TARGETS_SPECIALS
+help-all-TITLE
+help-all-VARIABLES_CONTROL
+help-all-VARIABLES_FORMAT
+help-all-VERSIONS
+help-all-WORKFLOW
+install-Makefile
+subdirs-template
+targets-list
+test-COMPOSER_INCLUDE-done
+test-COMPOSER_INCLUDE-init
+test-count
+test-done
+test-fail
+test-find
+test-hold
+test-init
+test-load
+test-log
+test-make
+test-mark
+test-pwd
+test-run
+test-speed-init
+test-speed-init-load
+test-headers
+_C
+_D
+_E
+_F
+_H
+_M
+_N
+_S</code></pre>
+<hr />
+<p><em>Happy Making!</em></p>
+</section>
+</section>
+</body>
+</html>

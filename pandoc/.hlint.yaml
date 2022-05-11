@@ -1,0 +1,113 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+##########################
+
+# Specify additional command line arguments
+#
+- arguments: [--color=auto, --cpp-ansi]
+
+# Ignore some builtin hints
+#
+- ignore: {name: "Avoid lambda"}
+- ignore: {name: "Use bimap"}
+- ignore: {name: "Use void"}
+- ignore: {name: "Eta reduce"}
+- ignore: {name: "Evaluate"}
+- ignore: {name: "Reduce duplication"} # TODO: could be more fine-grained
+- ignore: {name: "Use &&&"}
+- ignore: {name: "Use String"}
+- ignore: {name: "Use camelCase"}
+- ignore: {name: "Use fmap"}  # specific for GHC 7.8 compat
+- ignore: {name: "Use isDigit"}
+
+- ignore:
+    name: "Monad law, left identity"
+    within: Text.Pandoc.App.OutputSettings
+
+- ignore:
+    name: "Move brackets to avoid $"
+    within: Text.Pandoc.Writers.CslJson
+
+- ignore:
+    name: "Redundant <$>"
+    within:
+      - Text.Pandoc.Readers.Docx.Parse
+      - Text.Pandoc.Writers.MediaWiki
+      - Text.Pandoc.Writers.OpenDocument
+      - Text.Pandoc.Writers.Powerpoint.Output
+      - Text.Pandoc.Writers.Powerpoint.Presentation
+
+- ignore:
+    name: "Redundant return"
+    within: Text.Pandoc.Citeproc.BibTeX
+
+# With recent hlint this rule has given false positives on TH
+- ignore:
+    name: "Redundant bracket"
+
+
+- ignore:
+    name: "Use <$>"
+    within:
+      - Text.Pandoc.Readers.LaTeX
+      - Text.Pandoc.Readers.Markdown
+
+- ignore:
+    name: "Use camelCase"
+    within:
+      - Tests.Writers.Docbook
+      - Tests.Writers.Native
+      - Text.Pandoc.Citeproc
+      - Text.Pandoc.Extensions
+      - Text.Pandoc.Lua.Marshaling.Version
+      - Text.Pandoc.Lua.Module.Pandoc
+      - Text.Pandoc.Lua.Module.Utils
+      - Text.Pandoc.Readers.Odt.ContentReader
+      - Text.Pandoc.Readers.Odt.Namespaces
+
+- ignore:
+    name: "Use forM_"
+    within:
+      - Text.Pandoc.Readers.DocBook
+
+- ignore:
+    name: "Use Just"
+    within:
+      - Text.Pandoc.Citeproc.MetaValue
+      - Text.Pandoc.Readers.Odt.ContentReader
+      - Text.Pandoc.Writers.Roff
+
+- ignore:
+    name: "Use list comprehension"
+    within: Text.Pandoc.Citeproc.BibTeX
+
+- ignore:
+    name: "Use list literal pattern"
+    within: Text.Pandoc.Citeproc.MetaValue
+
+# TODO: check
+- ignore:
+    name: "Use second"
+    within:
+      - Text.Pandoc.Citeproc.BibTeX
+      - Text.Pandoc.Citeproc.Locator
+
+# TODO: check
+- ignore:
+    name: "Use sortOn"
+    within: Text.Pandoc.Writers.OpenDocument
+
+- ignore:
+    name: "Use tuple-section"
+    within:
+      - Text.Pandoc.Readers.EPUB
+      - Text.Pandoc.ImageSize
+      - Text.Pandoc.Readers.Markdown
+      - Text.Pandoc.Readers.RST
+
+# fromRight is only in base >= 4.10
+- ignore:
+    name: "Use fromRight"
+
+# Define some custom infix operators
+# - fixity: infixr 3 ~^#^~
