@@ -3120,53 +3120,34 @@ override define HEREDOC_BOOTSTRAP_CSS =
 
 /* ########################################################################## */
 
-.bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
+body {
+	padding-top:			50px;
+	padding-bottom:			50px;
+}
+
+/* ################################## */
+
+/* #WORKING:NOW
 .card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
-
+*/
+.bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
 .accordion-button			{ background-color: rgba(var(--bs-dark-rgb)); }
-.accordion-button:not(.collapsed)	{ background-color: rgba(var(--bs-dark-rgb)); }
-.accordion-button:hover			{ background-color: rgba(var(--bs-dark-rgb)); }
 
-.accordion-button:focus {
-					background-color: rgba(var(--bs-dark-rgb));
-					box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb));
-}
-.accordion-button:not(.collapsed):focus {
-					background-color: rgba(var(--bs-dark-rgb));
-					box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb));
-}
-.accordion-button::after {
-					background-color: rgba(var(--bs-danger-rgb));
-					background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-}
-.accordion-button:not(.collapsed)::after {
-					background-color: rgba(var(--bs-success-rgb));
-					background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230c63e4'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-}
+.accordion-item					{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
+.accordion-button::after			{ background-color: rgba(var(--bs-danger-rgb)); }
+.accordion-button:not(.collapsed)::after	{ background-color: rgba(var(--bs-success-rgb)); }
+.accordion-button:focus				{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
+.accordion-button:not(.collapsed):focus		{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
 
 /* #############################################################################
 # End Of File
 ############################################################################# */
 endef
 
-#WORKING:NOW
 override define HEREDOC_BOOTSTRAP_CSS_HACK =
 	$(SED) -i \
-		-e "/^[[:space:]]+--bs-body-color[:-]/d" \
-		-e "/^[[:space:]]+--bs-table-.+-color:/d" \
-		-e "/^[[:space:]]+-webkit-tap-highlight-color:/d" \
-		-e "/^[[:space:]]+background-color:/d" \
-		-e "/^[[:space:]]+border-bottom-color:/d" \
-		-e "/^[[:space:]]+border-color:/d" \
-		-e "/^[[:space:]]+border-left-color:/d" \
-		-e "/^[[:space:]]+border-right-color:/d" \
-		-e "/^[[:space:]]+border-top-color:/d" \
-		-e "/^[[:space:]]+color:/d" \
-		\
-		-e "/^[[:space:]]+background-image:/d" \
-		-e "s|(border:.+)rgba[(][^)]+[)]|\1|g" \
-		-e "s|(box-shadow:.+)rgba[(][^)]+[)]|\1|g" \
-		-e "s|(button-shadow:.+)rgba[(][^)]+[)]|\1|g"
+		-e "/^[[:space:]]+background-color[:]/d" \
+		-e "/^[[:space:]]+color[:]/d"
 endef
 
 ################################################################################
@@ -5539,6 +5520,7 @@ endif
 #WORKING c_title = pagetitle?
 #WORKING variables
 override SITE_MAIN_COL_SIZE		:= 6
+override SITE_SEARCH_NAME		:= Search
 #	cname
 #	favicon.ico
 #	copyright
@@ -5667,17 +5649,15 @@ $(_C)
 <input type="hidden" name="sites" value="tresobis.org"/>
 $(_S)
 <input class="form-control me-2" type="text" name="q"/>
-<button class="btn" type="submit">Search</button>
+<button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
 </form>
+</div>
 </div>
 </nav>
 $(_D)
 endef
 
 #WORKING:NOW
-# blank icons due to rgba stripping
-# top navbar overlap
-# bottom navbar squishing
 
 override define $(PUBLISH)-NAV_BOTTOM =
 $(_N)
@@ -5691,16 +5671,17 @@ $(_S)
 <div class="collapse navbar-collapse" id="navbar-fixed-bottom">
 <ul class="navbar-nav me-auto">
 $(_C)
-<li class="navbar-text">$(COPYRIGHT_SHORT)</li>
-<li class="navbar-text"><a href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
+<li class="nav-item pe-3">$(COPYRIGHT_SHORT)</li>
+<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
 $(_S)
-<li class="navbar-item">
-<ul class="navbar-nav breadcrumb">
+<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
+<ol class="breadcrumb">
 <li class="breadcrumb-item"><a href="./">Home</a></li>
 <li class="breadcrumb-item"><a href="./.sources">Source</a></li>
 <li class="breadcrumb-item"><a href="./artifacts">Artifacts</a></li>
 <li class="breadcrumb-item"><a href="./bootstrap">Bootstrap</a></li>
-</ul></li>
+</ol></li>
+</ul>
 </div>
 </div>
 </nav>
