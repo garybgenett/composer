@@ -5543,23 +5543,23 @@ $(PUBLISH)-$(EXAMPLE):
 override define $(PUBLISH)_NAV_TOP =
 
 <nav class="navbar navbar-expand fixed-top bg-dark">
-<div class="container-fluid text-uppercase">
-<a class="navbar-brand" href="#">Fixed navbar</a>
-<ul class="navbar-nav me-auto mb-2 mb-md-0">
-<li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
-<li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
-<li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
+<div class="container-fluid">
+<h2><a class="navbar-brand" href="#">$(COMPOSER_TECHNAME)</a></h2>
+<ol class="nav nav-pills nav-fill me-auto mb-2 mb-md-0">
+<li class="nav-item"><a class="nav-link" href="#">Tab One</a></li>
+<li class="nav-item"><a class="nav-link" href="#">Tab Two</a></li>
+<li class="nav-item"><a class="nav-link" href="#">Tab Three</a></li>
 <li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPDOWN</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Dropdown</a>
+<ol class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#overview">Overview</a></li>
 <li><hr class="dropdown-divider"></li>
-<li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
-<li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
-<li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
-</ul>
+<li><a class="dropdown-item" href="#quick-start">Quick Start</a></li>
+<li><a class="dropdown-item" href="#principles">Principles</a></li>
+<li><a class="dropdown-item" href="#requirements">Requirements</a></li>
+</ol>
 </li>
-</ul>
+</ol>
 <script type="text/javascript">function search() { var search = document.getElementById("search").value; window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+"+search; }</script>
 <form class="d-flex" action="https://duckduckgo.com/">
 <input type="hidden" name="kae" value="d"/>
@@ -5570,7 +5570,7 @@ override define $(PUBLISH)_NAV_TOP =
 <input type="hidden" name="ia" value="web"/>
 <input type="hidden" name="sites" value="tresobis.org"/>
 <input class="form-control me-2" type="text" name="q"/>
-<button class="btn btn-outline-success" type="submit">SEARCH</button>
+<button class="btn" type="submit">Search</button>
 </form>
 </div>
 </nav>
@@ -5579,23 +5579,18 @@ endef
 override define $(PUBLISH)_NAV_BOTTOM =
 
 <nav class="navbar navbar-expand fixed-bottom bg-dark">
-<div class="container-fluid text-uppercase">
-<a class="navbar-brand" href="#">Fixed navbar</a>
+<div class="container-fluid">
+<ol class="navbar-nav">
+<li class="navbar-item">Copyright (c) 2022, Gary B. Genett</li>
+<li class="navbar-item">&nbsp;</li>
+<li class="navbar-item">&nbsp;</li>
+<li class="navbar-item">&nbsp;</li>
+<li class="navbar-item"><a class="nav-item" href="https://github.com/garybgenett/composer">Created by $(COMPOSER_TECHNAME)</a></li>
+<li class="navbar-item">&nbsp;</li>
+<li class="navbar-item">&nbsp;</li>
+<li class="navbar-item">&nbsp;</li>
+<li class="navbar-item">
 <ol class="navbar-nav me-auto mb-2 mb-md-0 breadcrumb">
-<li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
-<li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
-<li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
-<li class="nav-item dropup">
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPUP</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
-<li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
-<li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
-<li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
-</ul>
-</li>
-<li class="nav-item">
-<ol class="breadcrumb">
 <li class="breadcrumb-item"><a href="#">Home</a></li>
 <li class="breadcrumb-item"><a href="#">Library</a></li>
 <li class="breadcrumb-item"><a href="#">Data</a></li>
