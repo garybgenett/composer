@@ -1051,7 +1051,7 @@ override SITE_SOURCE			:= $(COMPOSER_ROOT)
 override SITE_OUTPUT			:= $(COMPOSER_ROOT)/.public
 
 override SITE_MAIN_COL_SIZE		:= 6
-override SITE_STICKY			:= 1
+override SITE_MAIN_COL_STICKY		:= 1
 
 #WORKING document : if site name is empty, it disables it
 override SITE_SEARCH_NAME		:= Search
@@ -3116,7 +3116,7 @@ body {
 
 .col-sticky {
 	max-height:			100vh;
-	overflow-y:			auto;
+	overflow:			auto;
 }
 
 /* ################################## */
@@ -5594,7 +5594,7 @@ override define $(PUBLISH)-BODY_BEG =
 $(_N)<!-- $(PUBLISH)-BODY_BEG -->$(_S)
 $(_S)
 <body class="container-fluid">
-<div class="d-flex flex-row">
+<div class="d-flex flex-row flex-wrap">
 $(_D)
 endef
 
@@ -5610,7 +5610,7 @@ endef
 override define $(PUBLISH)-COLUMN_BEG =
 $(_N)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
 $(_S)
-<div class="d-flex flex-column col$(if $(1),-sm-$(1)) $(if $(SITE_STICKY),col-sticky) border-0 p-2">
+<div class="d-flex flex-column $(if $(1),col-sm-$(1) $(if $(SITE_MAIN_COL_STICKY),col-sticky)) border-0 p-2">
 $(_D)
 endef
 
