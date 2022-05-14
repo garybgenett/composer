@@ -51,9 +51,6 @@ override VIM_FOLDING := {{{1
 #		* Update: COMPOSER_VERSION
 ################################################################################
 #TODO
-#	--defaults = switch to this, in a heredoc that goes to artifacts
-#		maybe add additional ones, like COMPOSER_INCLUDE
-#TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
 #	--strip-comments
@@ -155,6 +152,7 @@ override CSS_ALT			:= css_alt
 ########################################
 
 override COMPOSER_SETTINGS		:= .composer.mk
+override COMPOSER_YML			:= .composer.yml
 override COMPOSER_CSS			:= .composer.css
 override COMPOSER_LOG_DEFAULT		:= .composed
 override COMPOSER_EXT_DEFAULT		:= .md
@@ -183,6 +181,7 @@ override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 
+override COMPOSER_YML_TEMPLATE		:= $(COMPOSER_ART)/composer.yml
 override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
 override BOOTSTRAP_CSS_CSS		:= $(COMPOSER_ART)/bootstrap.source.css
 override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
@@ -309,6 +308,18 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))) \
 		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)) \
 		$(eval include $(FILE)) \
+	) \
+)
+
+########################################
+
+override COMPOSER_YML_LIST		:=
+
+$(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(FILE)])) \
+	$(if $(wildcard $(FILE)),\
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_YML			[$(FILE)])) \
+		$(eval override COMPOSER_YML_LIST := $(COMPOSER_YML_LIST) $(FILE)) \
 	) \
 )
 
@@ -911,6 +922,7 @@ ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override PANDOC_OPTIONS_DATA		:= --verbose
 endif
 
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(if $(COMPOSER_YML_LIST),--defaults="$(lastword $(COMPOSER_YML_LIST))")
 override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --data-dir="$(PANDOC_DIR)"
 
 ifneq ($(wildcard $(COMPOSER_ART)/template.$(EXTENSION)),)
@@ -956,11 +968,14 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
 	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
 	--to="$(OUTPUT)" \
-	\
 	--standalone \
 	--self-contained \
 	--columns="$(COLUMNS)" \
-	\
+	$(if $(or \
+		$(filter $(c_type),$(TYPE_TEXT)) ,\
+		$(filter $(c_type),$(TYPE_LINT)) ,\
+		),--wrap="auto",--wrap="none" \
+	) \
 	$(if $(c_lang),\
 		--variable="lang=$(c_lang)" \
 	) \
@@ -987,7 +1002,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		$(if $(c_site),,\
 		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
-		$(if $(filter $(c_type),$(TYPE_PRES)), \
+		$(if $(filter $(c_type),$(TYPE_PRES)),\
 			$(if $(filter $(REVEALJS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
 			$(if $(wildcard $(REVEALJS_CSS)),--css="$(REVEALJS_CSS)") \
 		) \
@@ -2660,6 +2675,8 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(DO_BOOK)s $(OUT_README)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
 
+#WORKING break this up
+
   * Useful targets for validating tooling and configurations.
   * Use $(_C)[$(CHECKIT)]$(_D) to see the list of components and their versions, in relation to
     the system installed versions.  Doing $(_C)[$(CHECKIT)-$(DOITALL)]$(_D) will show the complete
@@ -2693,6 +2710,8 @@ Commit title format:
 $(CODEBLOCK)$(_E)$(call COMPOSER_TIMESTAMP)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL))
+
+#WORKING break this up
 
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and install all external components.
@@ -2764,6 +2783,7 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(ECHO) "</script>\n"								>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -2815,6 +2835,7 @@ endif
 	)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS))			>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(CURDIR)/$(COMPOSER_YML)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 #>	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS))			$(CURDIR)/$(COMPOSER_CSS)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
@@ -2842,6 +2863,7 @@ ifneq ($(COMPOSER_RELEASE),)
 		>/dev/null
 	@$(RM) \
 		$(CURDIR)/$(COMPOSER_SETTINGS) \
+		$(CURDIR)/$(COMPOSER_YML) \
 		$(CURDIR)/$(COMPOSER_CSS) \
 		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
 		>/dev/null
@@ -3002,6 +3024,83 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ################################################################################
+# {{{1 Heredoc: composer_yml ---------------------------------------------------
+################################################################################
+
+#WORKING:NOW
+override define HEREDOC_COMPOSER_YML_TEMPLATE =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML
+################################################################################
+
+variables:
+  pagetitle: "$(COMPOSER_HEADLINE)"
+  header-includes: <link rel="icon" type="image/x-icon" href="$(shell $(REALPATH) $(COMPOSER_DIR) $(COMPOSER_ICON))"/>
+
+########################################
+# $(COMPOSER_BASENAME)
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+################################################################################
+# {{{1 Heredoc: bootstrap_css --------------------------------------------------
+################################################################################
+
+override define HEREDOC_BOOTSTRAP_CSS =
+/* #############################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS
+############################################################################# */
+
+/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(BOOTSTRAP_CSS_THEME))"); */
+
+/* HEREDOC_BOOTSTRAP_CSS_HACK */
+
+/* ########################################################################## */
+
+body {
+	padding-top:			50px;
+	padding-bottom:			50px;
+}
+
+.col-sticky {
+	max-height:			100vh;
+	overflow:			auto;
+}
+
+/* ################################## */
+
+.accordion-button {
+	color:				inherit;
+	font-weight:			bold;
+}
+
+.bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
+.card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
+.accordion-button			{ background-color: rgba(var(--bs-dark-rgb)); }
+
+.card					{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
+.accordion-item				{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
+
+.accordion-button::after			{ background-color: rgba(var(--bs-danger-rgb)); }
+.accordion-button:not(.collapsed)::after	{ background-color: rgba(var(--bs-success-rgb)); }
+.accordion-button:focus				{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
+.accordion-button:not(.collapsed):focus		{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
+
+/* #############################################################################
+# End Of File
+############################################################################# */
+endef
+
+override define HEREDOC_BOOTSTRAP_CSS_HACK =
+	$(SED) -i \
+		-e "/^[[:space:]]+background-color[:]/d" \
+		-e "/^[[:space:]]+color[:]/d"
+endef
+
+################################################################################
 # {{{1 Heredoc: pdf_latex ------------------------------------------------------
 ################################################################################
 
@@ -3093,60 +3192,6 @@ override define HEREDOC_REVEALJS_CSS =
 /* #############################################################################
 # End Of File
 ############################################################################# */
-endef
-
-################################################################################
-# {{{1 Heredoc: bootstrap_css --------------------------------------------------
-################################################################################
-
-override define HEREDOC_BOOTSTRAP_CSS =
-/* #############################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS
-############################################################################# */
-
-/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(BOOTSTRAP_CSS_THEME))"); */
-
-/* HEREDOC_BOOTSTRAP_CSS_HACK */
-
-/* ########################################################################## */
-
-body {
-	padding-top:			50px;
-	padding-bottom:			50px;
-}
-
-.col-sticky {
-	max-height:			100vh;
-	overflow:			auto;
-}
-
-/* ################################## */
-
-.accordion-button {
-	color:				inherit;
-	font-weight:			bold;
-}
-
-.bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
-.card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
-.accordion-button			{ background-color: rgba(var(--bs-dark-rgb)); }
-
-.card						{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
-.accordion-item					{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
-.accordion-button::after			{ background-color: rgba(var(--bs-danger-rgb)); }
-.accordion-button:not(.collapsed)::after	{ background-color: rgba(var(--bs-success-rgb)); }
-.accordion-button:focus				{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
-.accordion-button:not(.collapsed):focus		{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
-
-/* #############################################################################
-# End Of File
-############################################################################# */
-endef
-
-override define HEREDOC_BOOTSTRAP_CSS_HACK =
-	$(SED) -i \
-		-e "/^[[:space:]]+background-color[:]/d" \
-		-e "/^[[:space:]]+color[:]/d"
 endef
 
 ################################################################################
@@ -4005,6 +4050,7 @@ endif
 $(eval export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) ?=)
 .PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
+$(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DEBUGIT := 1
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-vars := $(COMPOSER_OPTIONS)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): $(HEADERS)-$(EXAMPLE)
@@ -4028,6 +4074,9 @@ $(HEADERS)-$(EXAMPLE):
 	@$(call $(HEADERS)-file,$(CURDIR),creating)
 	@$(call $(HEADERS)-skip,$(CURDIR),skipping)
 	@$(call $(HEADERS)-rm,$(CURDIR),removing)
+	@if [ -n "$(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE))" ]; then \
+		$(call $(HEADERS)-$(COMPOSER_PANDOC)); \
+	fi
 
 ########################################
 # {{{3 $(HEADERS)-% --------------------
@@ -4050,6 +4099,7 @@ override define $(HEADERS) =
 	$(HEADER_L); \
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(call $(HEADERS)-release,$(MAKEFILE_LIST))$(_D)]"; \
 	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_INCLUDES))$(_D)]"; \
+	$(TABLE_C2) "$(_E)COMPOSER_YML_LIST"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_YML_LIST))$(_D)]"; \
 	$(TABLE_C2) "$(_E)CURDIR"		"[$(_N)$(call $(HEADERS)-release,$(CURDIR))$(_D)]"; \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
@@ -4068,6 +4118,7 @@ override define $(HEADERS)-run =
 	$(TABLE_M2) ":---"			":---"; \
 	$(TABLE_M2) "$(_E)MAKEFILE_LIST"	"$(_N)$(call $(HEADERS)-release,$(MAKEFILE_LIST))"; \
 	$(TABLE_M2) "$(_E)COMPOSER_INCLUDES"	"$(_N)$(call $(HEADERS)-release,$(COMPOSER_INCLUDES))"; \
+	$(TABLE_M2) "$(_E)COMPOSER_YML_LIST"	"$(_N)$(call $(HEADERS)-release,$(COMPOSER_YML_LIST))"; \
 	$(TABLE_M2) "$(_E)CURDIR"		"$(_N)$(call $(HEADERS)-release,$(CURDIR))"; \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
@@ -4261,6 +4312,7 @@ endif
 endif
 $(DEBUGIT): $(DEBUGIT)-MAKEFILE_LIST
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_INCLUDES
+$(DEBUGIT): $(DEBUGIT)-COMPOSER_YML_LIST
 $(DEBUGIT): $(DEBUGIT)-LISTING
 $(DEBUGIT): $(DEBUGIT)-MAKE_DB
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DIR
@@ -4881,6 +4933,9 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 
 ########################################
 # {{{3 $(TESTING)-COMPOSER_INCLUDE -----
+
+#WORKING COMPOSER_YML?
+#	also, document, because it can now be used as an override/addition for everything...
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
@@ -5515,7 +5570,6 @@ endif
 # {{{3 $(PUBLISH)-% --------------------
 
 #WORKING:NOW
-# favicon needs to be in the <head>, somehow
 # finish separating templating from content
 # figure out a commit strategy, and sort out all the makefile backups...
 #	and the bootstrap.html prototypes, too!
@@ -5535,7 +5589,7 @@ override define $(PUBLISH)-BRAND =
 $(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
 $(_C)
 <h1 class="navbar-brand">
-$(if $(wildcard $(COMPOSER_LOGO)),<a href="#"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
+$(if $(wildcard $(COMPOSER_LOGO)),<a href="#WORKING"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
 $(SITE_BRAND)
 </h1>
 $(_D)
@@ -5546,7 +5600,7 @@ $(_N)<!-- $(PUBLISH)-SEARCH -->$(_D)
 $(_C)
 <form class="d-flex" action="$(word 1,$(subst |, ,$(SITE_SEARCH_SITE)))">
 $(foreach FILE,$(SITE_SEARCH_FORM),<input type="hidden" name="$(word 1,$(subst |, ,$(FILE)))" value="$(word 2,$(subst |, ,$(FILE)))"/>$(call NEWLINE))
-<input class="form-control me-1" type="text" name="$(word 2,$(subst |, ,$(SITE_SEARCH_SITE)))"/>
+<input class="form-control me-2" type="text" name="$(word 2,$(subst |, ,$(SITE_SEARCH_SITE)))"/>
 <button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
 </form>
 $(_D)
@@ -5617,7 +5671,7 @@ $(_S)
 <div class="d-flex flex-column $(if $(1),\
 	col-sm-$(1) $(if $(SITE_MAIN_COL_STICKY),col-sticky) ,\
 	$(if $(SITE_MENU_COL_HIDE),d-none d-sm-block) \
-	) border-0 p-1">
+	) border-0 p-2">
 $(_D)
 endef
 
@@ -5691,17 +5745,6 @@ $(PUBLISH)-$(EXAMPLE):
 		c_type="html" \
 		c_base="$(OUT_README).$(PUBLISH)" \
 		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)"
-
-override define $(PUBLISH)-METADATA =
-$(_M)
----
-pagetitle: "$(COMPOSER_HEADLINE)"
-header-includes: |
-  <link rel="icon" type="image/x-icon" href="$(COMPOSER_ICON)"/>
----
-<link rel="icon" type="image/x-icon" href="$(COMPOSER_ICON)"/>
-$(_D)
-endef
 
 override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
@@ -5947,7 +5990,6 @@ endef
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_ICON) >/dev/null
-	@$(call DO_HEREDOC,$(PUBLISH)-METADATA)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
