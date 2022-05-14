@@ -5658,18 +5658,17 @@ override define $(PUBLISH)-SEARCH =
 $(_N)
 <!-- $(PUBLISH)-SEARCH -->
 $(_S)
-<script type="text/javascript">function search() { var search = document.getElementById("search").value; window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2F$(SITE_CNAME)+"+search; }</script>
 <form class="d-flex" action="https://duckduckgo.com/">
-<input type="hidden" name="kae" value="d"/>
-<input type="hidden" name="kp" value="-1"/>
-<input type="hidden" name="ko" value="1"/>
-<input type="hidden" name="kz" value="-1"/>
-<input type="hidden" name="kv" value="1"/>
 <input type="hidden" name="ia" value="web"/>
+<input type="hidden" name="kae" value="d"/>
+<input type="hidden" name="ko" value="1"/>
+<input type="hidden" name="kp" value="-1"/>
+<input type="hidden" name="kv" value="1"/>
+<input type="hidden" name="kz" value="-1"/>
 $(_C)
-<input type="hidden" name="sites" value="$(SITE_CNAME)"/>
+<input type="hidden" name="sites" value="$(patsubst www.%,%,$(SITE_CNAME))"/>
 $(_S)
-<input class="form-control me-2" type="text" name="q"/>
+<input class="form-control me-1" type="text" name="q"/>
 <button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
 </form>
 $(_D)
