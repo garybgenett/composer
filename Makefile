@@ -1052,6 +1052,7 @@ override SITE_OUTPUT			:= $(COMPOSER_ROOT)/.public
 
 override SITE_MAIN_COL_SIZE		:= 6
 override SITE_MAIN_COL_STICKY		:= 1
+override SITE_MENU_COL_HIDE		:= 1
 
 #WORKING document : if site name is empty, it disables it
 override SITE_SEARCH_NAME		:= Search
@@ -5520,6 +5521,9 @@ endif
 #	and the bootstrap.html prototypes, too!
 # commit!
 # start working on yaml templating; none of it is going to work if that doesn't
+# need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
+#	maybe some type of automatic utility with a variable threshold?
+#	non-single-user use is not recommended
 
 #WORKING
 # https://github.com/bewuethr/pandoc-bash-blog
@@ -5610,7 +5614,10 @@ endef
 override define $(PUBLISH)-COLUMN_BEG =
 $(_N)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
 $(_S)
-<div class="d-flex flex-column $(if $(1),col-sm-$(1) $(if $(SITE_MAIN_COL_STICKY),col-sticky)) border-0 p-2">
+<div class="d-flex flex-column $(if $(1),\
+	col-sm-$(1) $(if $(SITE_MAIN_COL_STICKY),col-sticky) ,\
+	$(if $(SITE_MENU_COL_HIDE),d-none d-sm-block) \
+	) border-0 p-2">
 $(_D)
 endef
 
