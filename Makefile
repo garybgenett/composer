@@ -133,6 +133,10 @@ override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
 override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
 override COMPOSER_TAGLINE		:= Happy Making!
 
+COPYRIGHT_FULL				:= Copyright (c) 2014, 2015, 2022, $(COMPOSER_COMPOSER)
+COPYRIGHT_SHORT				:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
+CREATED_TAGLINE				:= Created by $(COMPOSER_TECHNAME)
+
 override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
 ########################################
@@ -183,7 +187,8 @@ override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
 
 override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
-override REVEALJS_LOGO			:= $(COMPOSER_ART)/logo.img
+
+override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 
 ########################################
 
@@ -953,7 +958,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--include-in-header="$(BOOTSTRAP_CSS_JS)" \
 		$(if $(call c_css_select),\
 			--css="$(BOOTSTRAP_CSS_CSS)" \
-			--css="$(BOOTSTRAP_CSS)" \
+			$(if $(wildcard $(BOOTSTRAP_CSS)),--css="$(BOOTSTRAP_CSS)") \
 			$(if $(filter $(BOOTSTRAP_CSS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
 			,\
 			--css="$(BOOTSTRAP_CSS_CSS_SRC)" \
@@ -965,7 +970,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_PRES)), \
 			$(if $(filter $(REVEALJS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
-			--css="$(REVEALJS_CSS)" \
+			$(if $(wildcard $(REVEALJS_CSS)),--css="$(REVEALJS_CSS)") \
 		) \
 	)) \
 	$(if $(c_toc),\
@@ -2091,6 +2096,7 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #	note that they are intentionally reversed
 #		bootstrap is just supporting where the markdown-viewer themes fall through
 #		revealjs is usually using a theme, which we are refining
+#	these can now be removed to be disabled
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2132,13 +2138,13 @@ It is set up so that a logo can be placed in the upper right hand corner on each
 slide, for presentations that need to be branded.  Simply copy an image file to
 the logo location:
 
-$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(REVEALJS_LOGO))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_LOGO))$(_D)
 
 To have different logos for different directories $(_E)(using [Recommended Workflow],
 [Configuration Settings] and [Precedence Rules])$(_D):
 
 $(CODEBLOCK)$(_C)cd$(_D) $(_M).../presentations$(_D)
-$(CODEBLOCK)$(_C)cp$(_D) $(_N).../$(notdir $(REVEALJS_LOGO))$(_D) $(_M)./$(_D)
+$(CODEBLOCK)$(_C)cp$(_D) $(_N).../$(notdir $(COMPOSER_LOGO))$(_D) $(_M)./$(_D)
 $(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs .../$(subst $(COMPOSER_DIR),.$(COMPOSER_BASENAME),$(REVEALJS_CSS))$(_D) $(_M)./$(COMPOSER_CSS)$(_D)
 $(CODEBLOCK)$(_C)echo$(_D) $(_N)'$(_E)override c_type := $(TYPE_PRES)'$(_D) >>$(_M)./$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)$(_D)
@@ -2763,7 +2769,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
-	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 	@$(foreach FILE,\
 		$(TMPL_HTML):$(EXTN_HTML) \
 		$(TMPL_LPDF):$(EXTN_LPDF) \
@@ -2801,7 +2807,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS))			>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 #>	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS))			$(CURDIR)/$(COMPOSER_CSS)
-	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 endif
 	@$(ENDOLINE)
 	@$(LS) $(CURDIR)
@@ -2826,7 +2832,7 @@ ifneq ($(COMPOSER_RELEASE),)
 		$(CURDIR)/$(COMPOSER_CSS) \
 		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
 		>/dev/null
-	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 endif
 
 override define HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS) =
@@ -3033,7 +3039,7 @@ override define HEREDOC_REVEALJS_CSS =
 /* ########################################################################## */
 
 .reveal .slides {
-	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_LOGO))");
+	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_LOGO))");
 	background-repeat:		no-repeat;
 	background-position:		100% 0%;
 	background-size:		auto 20%;
@@ -3146,7 +3152,7 @@ override define HEREDOC_LICENSE =
 
 ## Copyright
 
-	Copyright (c) 2014, 2015, 2022, Gary B. Genett
+	$(COPYRIGHT_FULL)
 	All rights reserved.
 
 --------------------------------------------------------------------------------
@@ -5507,10 +5513,21 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 
 #WORKING new target... document!
+#WORKING favicon.ico
+#WORKING https://github.com/bewuethr/pandoc-bash-blog
 #WORKING:NOW
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE):
+#WORKING
+	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_LOGO) >/dev/null
+#WORKING
+	@$(ECHO) "$(_S)"
+	@$(PRINT) "---"
+	@$(PRINT) "header-includes: |"
+	@$(PRINT) '  <link rel="icon" type="image/x-icon" href="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_LOGO))"/>'
+	@$(PRINT) "---"
+	@$(ECHO) "$(_D)"
 	@$(call DO_HEREDOC,$(PUBLISH)_NAV_TOP)
 	@$(call DO_HEREDOC,$(PUBLISH)_BODY_BEG)
 	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_1)
@@ -5540,6 +5557,7 @@ $(PUBLISH)-$(EXAMPLE):
 	@$(call DO_HEREDOC,$(PUBLISH)_NAV_BOTTOM)
 	@$(call DO_HEREDOC,$(PUBLISH)_BODY_END)
 
+#WORKING:NOW
 override define $(PUBLISH)_NAV_TOP =
 
 <nav class="navbar navbar-expand fixed-top bg-dark">
@@ -5581,11 +5599,11 @@ override define $(PUBLISH)_NAV_BOTTOM =
 <nav class="navbar navbar-expand fixed-bottom bg-dark">
 <div class="container-fluid">
 <ol class="nav nav-pills nav-fill me-auto mb-2 mb-md-0">
-<li class="navbar-item">Copyright (c) 2022, Gary B. Genett</li>
+<li class="navbar-item">$(COPYRIGHT_SHORT)</li>
 <li class="navbar-item">&nbsp;</li>
 <li class="navbar-item">&nbsp;</li>
 <li class="navbar-item">&nbsp;</li>
-<li class="navbar-item"><a class="nav-item" href="https://github.com/garybgenett/composer">Created by $(COMPOSER_TECHNAME)</a></li>
+<li class="navbar-item"><a class="nav-item" href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
 <li class="navbar-item">&nbsp;</li>
 <li class="navbar-item">&nbsp;</li>
 <li class="navbar-item">&nbsp;</li>
