@@ -598,6 +598,16 @@ override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
 
 ########################################
 
+#WORKING
+# expose these as $(CSS_ALT)-type variables...?
+# it's probably time to make each of them a tested part of the team...
+# four options, including for revealjs, which has each of these
+#	light (default)
+#	dark (css_alt)
+#	solarized-light
+#	solarized-dark
+# document
+
 override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
 override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
 override MDVIEWER_CSS_SOLAR		:= $(MDVIEWER_DIR)/themes/solarized-light.css
@@ -908,8 +918,6 @@ endif
 ########################################
 
 override PANDOC_EXTENSIONS		:=
-override PANDOC_EXTENSIONS		+= $(if $(c_site),+markdown_in_html_blocks)
-override PANDOC_EXTENSIONS		+= $(if $(c_site),+raw_html)
 override PANDOC_EXTENSIONS		+= +ascii_identifiers
 override PANDOC_EXTENSIONS		+= +auto_identifiers
 override PANDOC_EXTENSIONS		+= +emoji
@@ -923,8 +931,11 @@ override PANDOC_EXTENSIONS		+= +implicit_header_references
 override PANDOC_EXTENSIONS		+= +inline_notes
 override PANDOC_EXTENSIONS		+= +intraword_underscores
 override PANDOC_EXTENSIONS		+= +line_blocks
+override PANDOC_EXTENSIONS		+= +markdown_in_html_blocks
 override PANDOC_EXTENSIONS		+= +pandoc_title_block
 override PANDOC_EXTENSIONS		+= +pipe_tables
+override PANDOC_EXTENSIONS		+= +raw_html
+override PANDOC_EXTENSIONS		+= +raw_tex
 override PANDOC_EXTENSIONS		+= +shortcut_reference_links
 override PANDOC_EXTENSIONS		+= +smart
 override PANDOC_EXTENSIONS		+= +strikeout
@@ -1417,8 +1428,7 @@ $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
 
 .PHONY: $(HELPOUT)-TITLE_%
 $(HELPOUT)-TITLE_%:
-#>	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
-	@$(call TITLE_LN,1,$(COMPOSER_FULLNAME) $(DIVIDE) $(*),0)
+	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
 
 .PHONY: $(HELPOUT)-USAGE
 $(HELPOUT)-USAGE:
@@ -1469,7 +1479,7 @@ $(HELPOUT):
 
 .PHONY: $(HELPOUT)-VARIABLES_TITLE_%
 $(HELPOUT)-VARIABLES_TITLE_%:
-	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,$(HEAD_MAIN))
+	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,1)
 
 #> update: TYPE_TARGETS
 #> update: READ_ALIASES
@@ -1544,7 +1554,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 
 .PHONY: $(HELPOUT)-TARGETS_TITLE_%
 $(HELPOUT)-TARGETS_TITLE_%:
-	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,$(HEAD_MAIN))
+	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,1)
 
 .PHONY: $(HELPOUT)-TARGETS_PRIMARY_%
 $(HELPOUT)-TARGETS_PRIMARY_%:
@@ -1678,7 +1688,7 @@ $(HELPOUT)-$(TYPE_PRES):
 
 .PHONY: $(HELPOUT)-$(HEADERS)-%
 $(HELPOUT)-$(HEADERS)-%:
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,1,$(COMPOSER_TECHNAME),0)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
@@ -1705,7 +1715,7 @@ $(HELPOUT)-%:
 #>.PHONY: $(HELPOUT)-$(DOITALL)
 #>$(HELPOUT)-$(DOITALL):
 	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(*)
-	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,$(HEAD_MAIN))
+	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
@@ -1731,10 +1741,11 @@ $(HELPOUT)-%:
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
-	@$(call TITLE_LN,1,Reference,$(HEAD_MAIN))
+	@$(call TITLE_LN,1,Reference,1)
 	@$(ENDOLINE)
 	@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(TARGETS)
-	@$(call TITLE_LN,2,Templates)
+	@$(call TITLE_LN,2,Configuration,1)
+	@$(call TITLE_LN,3,Templates: $(INSTALL))
 	@$(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
 		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
@@ -1749,10 +1760,17 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 			-e "/^$$/d" \
 			-e "s|^|$(CODEBLOCK)|g" \
 		)
-	@$(call TITLE_LN,2,Reserved)
-	@$(PRINT) "Reserved target names, including use as prefixes:"
-	@$(ENDOLINE)
-	@$(eval LIST := $(shell \
+#WORKING reference this somewhere...
+	@$(call TITLE_LN,3,Pandoc Extensions)
+	@$(PRINT) "$(_C)[$(COMPOSER_BASENAME)]$(_D) uses the \`$(_C)$(INPUT)$(_D)\` input format, with these extensions:"
+	@$(ENDOLINE); $(foreach FILE,$(sort $(subst +,,$(PANDOC_EXTENSIONS))),\
+		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
+	)
+#WORKING also update references to these two...
+	@$(call TITLE_LN,2,Reserved,$(HEAD_MAIN))
+	@$(call TITLE_LN,3,Target Names)
+	@$(PRINT) "Do not create targets which match these, or use them as prefixes:"
+	@$(ENDOLINE); $(eval LIST := $(shell \
 			$(ECHO) " \
 				$(COMPOSER_RESERVED) \
 				$(COMPOSER_RESERVED_SPECIAL) \
@@ -1764,10 +1782,9 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 			$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 			$(call NEWLINE) \
 		)
-	@$(ENDOLINE)
-	@$(PRINT) "Reserved variable names:"
-	@$(ENDOLINE)
-	@$(eval LIST := $(shell \
+	@$(call TITLE_LN,3,Variable Names)
+	@$(PRINT) "Do not create variables which match these, and avoid similar names:"
+	@$(ENDOLINE); $(eval LIST := $(shell \
 			$(SED) -n \
 				-e "s|^$(call COMPOSER_REGEX_OVERRIDE).*$$|\1|gp" \
 				-e "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" \
@@ -2820,6 +2837,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
 	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(PUBLISH)
 #>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
 		| $(SED) "/install[:][[:space:]]/d"
@@ -2929,9 +2947,10 @@ endef
 
 override define HEREDOC_GITATTRIBUTES =
 ################################################################################
-# $(COMPOSER_TECHNAME)
+# $(COMPOSER_TECHNAME) $(DIVIDE) Git Attributes
 ################################################################################
 
+########################################
 # https://github.com/github/linguist/blob/master/docs/overrides.md
 
 /artifacts/**				linquist-vendored
@@ -2953,7 +2972,7 @@ endef
 
 override define HEREDOC_GITIGNORE =
 ################################################################################
-# $(COMPOSER_TECHNAME)
+# $(COMPOSER_TECHNAME) $(DIVIDE) Git Exclusions
 ################################################################################
 
 ########################################
@@ -2990,7 +3009,7 @@ endef
 
 override define HEREDOC_TEX_PDF_TEMPLATE =
 % ##############################################################################
-% $(COMPOSER_TECHNAME)
+% $(COMPOSER_TECHNAME) $(DIVIDE) TeX Live (PDF)
 % ##############################################################################
 
 \\usepackage{extramarks}
@@ -3031,7 +3050,7 @@ endef
 
 override define HEREDOC_REVEALJS_CSS =
 /* #############################################################################
-# $(COMPOSER_TECHNAME)
+# $(COMPOSER_TECHNAME) $(DIVIDE) Reveal.js CSS
 ############################################################################# */
 
 /* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME))"); */
@@ -3084,7 +3103,7 @@ endef
 
 override define HEREDOC_BOOTSTRAP_CSS =
 /* #############################################################################
-# $(COMPOSER_TECHNAME)
+# $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS
 ############################################################################# */
 
 /* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(BOOTSTRAP_CSS_THEME))"); */
@@ -3910,13 +3929,12 @@ override COLUMN_2			:= $(PRINTF) "%-39s %s\n"
 override PRINT				:= $(PRINTF) "%s\n"
 endif
 
+########################################
+
 override define TITLE_LN =
 	ttl_len="`$(EXPR) length '$(2)'`"; \
 	ttl_len="`$(EXPR) $(COLUMNS) - 2 - $(1) - $${ttl_len}`"; \
-	$(if $(filter 0,$(3)),\
-		$(ECHO) "" \
-		,if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi \
-	); \
+	if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
 	$(ENDOLINE); \
 	$(ECHO) "$(_S)"; \
 	if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
@@ -3924,14 +3942,8 @@ override define TITLE_LN =
 	$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
 	eval $(PRINTF) \"#%.0s\" {1..$${ttl_len}}; \
 	$(ENDOLINE); \
-	$(if $(filter 0,$(3)),\
-		$(ENDOLINE) \
-		,$(if $(3),\
-			if [ "$(1)" -gt "$(HEAD_MAIN)" ]; then $(ENDOLINE); fi \
-			,$(ENDOLINE) \
-		) \
-	); \
-	if [ "$(1)" -le "0" ]; then $(LINERULE); $(ENDOLINE); fi
+	if [ "$(1)" -le "0" ]; then $(ENDOLINE); $(LINERULE); fi; \
+	if [ -z "$(3)" ]; then $(ENDOLINE); fi
 endef
 
 ################################################################################
@@ -4000,6 +4012,8 @@ endif
 ########################################
 # {{{3 $(HEADERS)-$(EXAMPLE) -----------
 
+#> update: PHONY.*$(DOITALL)
+$(eval export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) ?=)
 .PHONY: $(HEADERS)-$(EXAMPLE)-$(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) := $(DOITALL)
 $(HEADERS)-$(EXAMPLE)-$(DOITALL): export override $(HEADERS)-list := $(COMPOSER_OPTIONS)
@@ -4010,6 +4024,12 @@ $(HEADERS)-$(EXAMPLE)-$(DOITALL):
 
 .PHONY: $(HEADERS)-$(EXAMPLE)
 $(HEADERS)-$(EXAMPLE):
+	@$(foreach FILE,0 1 2 3,\
+		if [ -n "$(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE))" ]; then \
+			$(call TITLE_LN,$(FILE),TITLE: $(FILE) / x)	; $(PRINT) "$(EXAMPLE)"; \
+			$(call TITLE_LN,$(FILE),TITLE: $(FILE) / 1,1)	; $(PRINT) "$(EXAMPLE)"; \
+		fi; \
+	)
 	@$(call $(HEADERS))
 	@$(call $(HEADERS),1)
 	@$(call $(HEADERS)-run)
@@ -5493,91 +5513,155 @@ endif
 ########################################
 # {{{2 $(PUBLISH) ----------------------
 
-#WORKING c_title = pagetitle?
-
 .PHONY: $(PUBLISH)
 $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
 ifneq ($(COMPOSER_RELEASE),)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(PUBLISH)-$(EXAMPLE) | $(SED) "/^[#][>]/d" >$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(RUNMAKE) $(COMPOSER_PANDOC) \
-		COMPOSER_DEBUGIT="1" \
-		c_site="1" \
-		c_type="html" \
-		c_base="$(OUT_README).$(PUBLISH)" \
-		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)" \
-		c_css="$(MDVIEWER_CSS_SOLAR_ALT)" \
-		c_options="--metadata=\"pagetitle=$(COMPOSER_HEADLINE)\""
+	@$(RUNMAKE) $(PUBLISH)-$(EXAMPLE)
 endif
 
-#WORKING new target... document!
-#WORKING favicon.ico
+########################################
+# {{{3 $(PUBLISH)-% --------------------
+
 #WORKING https://github.com/bewuethr/pandoc-bash-blog
-#WORKING:NOW
-
-.PHONY: $(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE):
-#WORKING
-	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_LOGO) >/dev/null
-#WORKING
-	@$(ECHO) "$(_S)"
-	@$(PRINT) "---"
-	@$(PRINT) "header-includes: |"
-	@$(PRINT) '  <link rel="icon" type="image/x-icon" href="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_LOGO))"/>'
-	@$(PRINT) "---"
-	@$(ECHO) "$(_D)"
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_TOP)
-	@$(call DO_HEREDOC,$(PUBLISH)_BODY_BEG)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_1)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_BEG,8))
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,$(COMPOSER_TECHNAME)))
-			@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
-			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Overview))
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Quick Start))
-			@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
-			@$(RUNMAKE) $(HELPOUT)-USAGE
-			@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Principles))
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Requirements))
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
-			@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
-	@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_END)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_2)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_BOTTOM)
-	@$(call DO_HEREDOC,$(PUBLISH)_BODY_END)
+#WORKING new target(s)... document!
+#WORKING c_title = pagetitle?
+#WORKING variables
+override SITE_MAIN_COL_SIZE		:= 6
+#	cname
+#	favicon.ico
+#	copyright
+#	search string
+#	header-includes?  leave it to c_options?  maybe c_header?
 
 #WORKING:NOW
-override define $(PUBLISH)_NAV_TOP =
+#metadata:
+#  pagetitle: "$(COMPOSER_HEADLINE)"
+#$(_M)
+#$(_D)
 
-<nav class="navbar navbar-expand fixed-top bg-dark">
+override define $(PUBLISH)-METADATA =
+---
+
+title: "$(COMPOSER_HEADLINE)"
+
+header-includes: |
+  <link rel="icon" type="image/x-icon" href="$(COMPOSER_LOGO)"/>
+---
+endef
+
+override define $(PUBLISH)-NAV_TOP =
+$(_N)
+<!-- $(PUBLISH)-NAV_TOP -->
+$(_S)
+<nav class="navbar navbar-expand-sm fixed-top bg-dark">
 <div class="container-fluid">
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-top">
+<span class="navbar-toggler-icon"></span>
+</button>
+$(_C)
 <h1 class="navbar-brand">$(COMPOSER_TECHNAME)</h1>
-<ol class="nav nav-pills nav-fill me-auto mb-2 mb-md-0">
-<li class="nav-item"><a class="nav-link" href="#">Tab One</a></li>
-<li class="nav-item"><a class="nav-link" href="#">Tab Two</a></li>
-<li class="nav-item"><a class="nav-link" href="#">Tab Three</a></li>
+$(_S)
+<div class="collapse navbar-collapse" id="navbar-fixed-top">
+<ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="#">Top</a></li>
 <li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Dropdown</a>
-<ol class="dropdown-menu bg-dark">
+<a class="nav-link dropdown-toggle" href="#composer-cms" data-bs-toggle="dropdown">CMS</a>
+<ul class="dropdown-menu bg-dark">
 <li><a class="dropdown-item" href="#overview">Overview</a></li>
-<li><hr class="dropdown-divider"></li>
 <li><a class="dropdown-item" href="#quick-start">Quick Start</a></li>
 <li><a class="dropdown-item" href="#principles">Principles</a></li>
 <li><a class="dropdown-item" href="#requirements">Requirements</a></li>
-</ol>
+</ul>
 </li>
-</ol>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#composer-operation" data-bs-toggle="dropdown">Operation</a>
+<ul class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#recommended-workflow">Recommended Workflow</a></li>
+<li><a class="dropdown-item" href="#document-formatting">Document Formatting</a></li>
+<li><a class="dropdown-item" href="#configuration-settings">Configuration Settings</a></li>
+<li><a class="dropdown-item" href="#precedence-rules">Precedence Rules</a></li>
+<li><a class="dropdown-item" href="#specifying-dependencies">Specifying Dependencies</a></li>
+<li><a class="dropdown-item" href="#custom-targets">Custom Targets</a></li>
+<li><a class="dropdown-item" href="#repository-versions">Repository Versions</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#composer-variables" data-bs-toggle="dropdown">Variables</a>
+<ul class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#formatting-variables">Formatting Variables</a>
+<ul>
+<li><a class="dropdown-item" href="#c_site">c_site</a></li>
+<li><a class="dropdown-item" href="#c_type--c_base--c_list">c_type / c_base / c_list</a></li>
+<li><a class="dropdown-item" href="#c_lang">c_lang</a></li>
+<li><a class="dropdown-item" href="#c_css">c_css</a></li>
+<li><a class="dropdown-item" href="#c_toc">c_toc</a></li>
+<li><a class="dropdown-item" href="#c_level">c_level</a></li>
+<li><a class="dropdown-item" href="#c_margin">c_margin</a></li>
+<li><a class="dropdown-item" href="#c_options">c_options</a></li>
+</ul></li>
+<li><a class="dropdown-item" href="#control-variables">Control Variables</a>
+<ul>
+<li><a class="dropdown-item" href="#makejobs">MAKEJOBS</a></li>
+<li><a class="dropdown-item" href="#composer_docolor">COMPOSER_DOCOLOR</a></li>
+<li><a class="dropdown-item" href="#composer_debugit">COMPOSER_DEBUGIT</a></li>
+<li><a class="dropdown-item" href="#composer_include">COMPOSER_INCLUDE</a></li>
+<li><a class="dropdown-item" href="#composer_depends">COMPOSER_DEPENDS</a></li>
+<li><a class="dropdown-item" href="#composer_log">COMPOSER_LOG</a></li>
+<li><a class="dropdown-item" href="#composer_ext">COMPOSER_EXT</a></li>
+<li><a class="dropdown-item" href="#composer_targets">COMPOSER_TARGETS</a></li>
+<li><a class="dropdown-item" href="#composer_subdirs">COMPOSER_SUBDIRS</a></li>
+<li><a class="dropdown-item" href="#composer_ignores">COMPOSER_IGNORES</a></li>
+</ul></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#composer-targets" data-bs-toggle="dropdown">Targets</a>
+<ul class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#primary-targets">Primary Targets</a>
+<ul>
+<li><a class="dropdown-item" href="#help--help-all">help / help-all</a></li>
+<li><a class="dropdown-item" href="#template">template</a></li>
+<li><a class="dropdown-item" href="#compose">compose</a></li>
+<li><a class="dropdown-item" href="#site">site</a></li>
+<li><a class="dropdown-item" href="#install--install-all--install-force">install / install-all / install-force</a></li>
+<li><a class="dropdown-item" href="#clean--clean-all---clean">clean / clean-all / *-clean</a></li>
+<li><a class="dropdown-item" href="#all--all-all---all">all / all-all / *-all</a></li>
+<li><a class="dropdown-item" href="#list">list</a></li>
+</ul></li>
+<li><a class="dropdown-item" href="#special-targets">Special Targets</a>
+<ul>
+<li><a class="dropdown-item" href="#book">book</a></li>
+<li><a class="dropdown-item" href="#page--post">page / post</a></li>
+</ul></li>
+<li><a class="dropdown-item" href="#additional-targets">Additional Targets</a>
+<ul>
+<li><a class="dropdown-item" href="#debug--debug-file">debug / debug-file</a></li>
+<li><a class="dropdown-item" href="#check--check-all--config--config-all--targets">check / check-all / config / config-all / targets</a></li>
+<li><a class="dropdown-item" href="#_commit--_commit-all">_commit / _commit-all</a></li>
+<li><a class="dropdown-item" href="#_release--_update--_update-all">_release / _update / _update-all</a></li>
+</ul></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#reference" data-bs-toggle="dropdown">Reference</a>
+<ul class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#internal-targets">Internal Targets</a></li>
+<li><a class="dropdown-item" href="#configuration">Configuration</a>
+<ul>
+<li><a class="dropdown-item" href="#templates-install">Templates: install</a></li>
+<li><a class="dropdown-item" href="#pandoc-extensions">Pandoc Extensions</a></li>
+</ul></li>
+<li><a class="dropdown-item" href="#reserved">Reserved</a>
+<ul>
+<li><a class="dropdown-item" href="#target-names">Target Names</a></li>
+<li><a class="dropdown-item" href="#variable-names">Variable Names</a></li>
+</ul></li>
+</ul>
+</li>
+</ul>
 <script type="text/javascript">function search() { var search = document.getElementById("search").value; window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+"+search; }</script>
 <form class="d-flex" action="https://duckduckgo.com/">
 <input type="hidden" name="kae" value="d"/>
@@ -5586,135 +5670,319 @@ override define $(PUBLISH)_NAV_TOP =
 <input type="hidden" name="kz" value="-1"/>
 <input type="hidden" name="kv" value="1"/>
 <input type="hidden" name="ia" value="web"/>
+$(_C)
 <input type="hidden" name="sites" value="tresobis.org"/>
+$(_S)
 <input class="form-control me-2" type="text" name="q"/>
 <button class="btn" type="submit">Search</button>
 </form>
 </div>
 </nav>
-
+$(_D)
 endef
-override define $(PUBLISH)_NAV_BOTTOM =
 
-<nav class="navbar navbar-expand fixed-bottom bg-dark">
+override define $(PUBLISH)-NAV_BOTTOM =
+$(_N)
+<!-- $(PUBLISH)-NAV_BOTTOM -->
+$(_S)
+<nav class="navbar navbar-expand-sm fixed-bottom bg-dark">
 <div class="container-fluid">
-<ol class="nav nav-pills nav-fill me-auto mb-2 mb-md-0">
-<li class="navbar-item">$(COPYRIGHT_SHORT)</li>
-<li class="navbar-item">&nbsp;</li>
-<li class="navbar-item">&nbsp;</li>
-<li class="navbar-item">&nbsp;</li>
-<li class="navbar-item"><a class="nav-item" href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
-<li class="navbar-item">&nbsp;</li>
-<li class="navbar-item">&nbsp;</li>
-<li class="navbar-item">&nbsp;</li>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-bottom">
+<span class="navbar-toggler-icon"></span>
+</button>
+<div class="collapse navbar-collapse" id="navbar-fixed-bottom">
+<ul class="navbar-nav me-auto">
+$(_C)
+<li class="navbar-text">$(COPYRIGHT_SHORT)</li>
+<li class="navbar-text"><a href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
+$(_S)
 <li class="navbar-item">
-<ol class="navbar-nav me-auto mb-2 mb-md-0 breadcrumb">
-<li class="breadcrumb-item"><a href="#">Home</a></li>
-<li class="breadcrumb-item"><a href="#">Library</a></li>
-<li class="breadcrumb-item"><a href="#">Data</a></li>
-</ol>
-</li>
-</ol>
+<ul class="navbar-nav breadcrumb">
+<li class="breadcrumb-item"><a href="./">Home</a></li>
+<li class="breadcrumb-item"><a href="./.sources">Source</a></li>
+<li class="breadcrumb-item"><a href="./artifacts">Artifacts</a></li>
+<li class="breadcrumb-item"><a href="./bootstrap">Bootstrap</a></li>
+</ul></li>
+</div>
 </div>
 </nav>
-
+$(_D)
 endef
 
-override define $(PUBLISH)_BODY_BEG =
-
+override define $(PUBLISH)-BODY_BEG =
+$(_N)
+<!-- $(PUBLISH)-BODY_BEG -->
+$(_S)
 <body class="container-fluid">
-<div class="p-5 mt-3">
 <div class="row">
-
+$(_D)
 endef
-override define $(PUBLISH)_BODY_END =
 
-</div>
+override define $(PUBLISH)-BODY_END =
+$(_N)
+<!-- $(PUBLISH)-BODY_END -->
+$(_S)
 </div>
 </body>
 </html>
-
+$(_D)
 endef
 
-override define $(PUBLISH)_CONTENT_BEG =
-
+override define $(PUBLISH)-CONTENT_BEG =
+$(_N)
+<!-- $(PUBLISH)-CONTENT_BEG -->
+$(_S)
 <div class="col$(if $(1),-sm-$(1))">
-
+$(_D)
 endef
-override define $(PUBLISH)_CONTENT_END =
 
+override define $(PUBLISH)-CONTENT_END =
+$(_N)
+<!-- $(PUBLISH)-CONTENT_END -->
+$(_S)
 </div>
-
+$(_D)
 endef
 
-override define $(PUBLISH)_NAV_COLUMN_1 =
-$(call $(PUBLISH)_CONTENT_BEG)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header One)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Two)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Three)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_END)
-endef
-override define $(PUBLISH)_NAV_COLUMN_2 =
-$(call $(PUBLISH)_CONTENT_BEG)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Four)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Five)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Six)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_END)
-endef
-
-override define $(PUBLISH)_CONTENT_UNIT_BEG =
-
+override define $(PUBLISH)-CONTENT_UNIT_BEG =
+$(_N)
+<!-- $(PUBLISH)-CONTENT_UNIT_BEG -->
+$(_S)
 <div class="accordion">
 <div class="accordion-item">
 <div class="accordion-header">
 <button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(3))">
-
+$(_H)
 $(shell for file in {1..$(1)}; do $(ECHO) "#"; done; $(ECHO) " $(3)")
-
+$(_S)
 </button>
 </div>
 <div id="$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
 <div class="accordion-body">
-
+$(_D)
 endef
-override define $(PUBLISH)_CONTENT_UNIT_END =
 
+override define $(PUBLISH)-CONTENT_UNIT_END =
+$(_N)
+<!-- $(PUBLISH)-CONTENT_UNIT_END -->
+$(_S)
 </div>
 </div>
 </div>
 </div>
 <p></p>
+$(_D)
+endef
 
+########################################
+# {{{3 $(PUBLISH)-$(EXAMPLE) -----------
+
+.PHONY: $(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE):
+	@$(MKDIR) $(COMPOSER_TMP)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) | \
+		$(SED) "/^[#][>]/d" \
+		>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) $(COMPOSER_PANDOC) \
+		COMPOSER_DEBUGIT="$(SPECIAL_VAL)" \
+		c_site="1" \
+		c_type="html" \
+		c_base="$(OUT_README).$(PUBLISH)" \
+		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)" \
+		c_css="$(MDVIEWER_CSS_SOLAR_ALT)" \
+
+#		c_options="--metadata=\"pagetitle=$(COMPOSER_HEADLINE)\""
+
+.PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
+$(PUBLISH)-$(EXAMPLE)-$(PRINTER):
+	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_LOGO) >/dev/null
+	@$(call DO_HEREDOC,$(PUBLISH)-METADATA)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
+	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_BEG,$(SITE_MAIN_COL_SIZE)))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_TECHNAME)))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Overview))
+				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
+				@$(ENDOLINE); $(LINERULE)
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Quick Start))
+				@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
+				@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Principles))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Requirements))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+				@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Recommended Workflow))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Document Formatting))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Configuration Settings))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Precedence Rules))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Specifying Dependencies))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Custom Targets))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Repository Versions))
+				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Formatting Variables))
+				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Control Variables))
+				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_0
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Primary Targets))
+				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Special Targets))
+				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_0
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Additional Targets))
+				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_0
+				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Reference))
+			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
+			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
+			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
+			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
+	@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_END)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_2)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_BOTTOM)
+	@$(RUNMAKE) $(HELPOUT)-FOOTER
+	@$(call DO_HEREDOC,$(PUBLISH)-BODY_END)
+
+override define $(PUBLISH)-NAV_COLUMN_1 =
+$(_N)
+<!-- $(PUBLISH)-NAV_COLUMN_1 -->
+$(_S)
+$(call $(PUBLISH)-CONTENT_BEG)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_TECHNAME))
+$(_D)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
+$(_D)
+  * [Recommended Workflow]
+  * [Document Formatting]
+  * [Configuration Settings]
+  * [Precedence Rules]
+  * [Specifying Dependencies]
+  * [Custom Targets]
+  * [Repository Versions]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_END)
+$(_D)
+endef
+
+override define $(PUBLISH)-NAV_COLUMN_2 =
+$(_N)
+<!-- $(PUBLISH)-NAV_COLUMN_2 -->
+$(_S)
+$(call $(PUBLISH)-CONTENT_BEG)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Formatting Variables)
+$(_D)
+  * [c_site]
+  * [c_type / c_base / c_list]
+  * [c_lang]
+  * [c_css]
+  * [c_toc]
+  * [c_level]
+  * [c_margin]
+  * [c_options]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Control Variables)
+$(_D)
+  * [MAKEJOBS]
+  * [COMPOSER_DOCOLOR]
+  * [COMPOSER_DEBUGIT]
+  * [COMPOSER_INCLUDE]
+  * [COMPOSER_DEPENDS]
+  * [COMPOSER_LOG]
+  * [COMPOSER_EXT]
+  * [COMPOSER_TARGETS]
+  * [COMPOSER_SUBDIRS]
+  * [COMPOSER_IGNORES]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Primary Targets)
+$(_D)
+  * [help / help-all]
+  * [template]
+  * [compose]
+  * [site]
+  * [install / install-all / install-force]
+  * [clean / clean-all / *-clean]
+  * [all / all-all / *-all]
+  * [list]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Special Targets)
+$(_D)
+  * [book]
+  * [page / post]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Additional Targets)
+$(_D)
+  * [debug / debug-file]
+  * [check / check-all / config / config-all / targets]
+  * [_commit / _commit-all]
+  * [_release / _update / _update-all]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Reference)
+$(_D)
+  * [Internal Targets]
+  * [Configuration]
+    * [Templates: install]
+    * [Pandoc Extensions]
+  * [Reserved]
+    * [Target Names]
+    * [Variable Names]
+$(_S)
+$(call $(PUBLISH)-CONTENT_UNIT_END)
+$(call $(PUBLISH)-CONTENT_END)
+$(_D)
 endef
 
 ########################################
