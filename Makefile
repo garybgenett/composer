@@ -1051,6 +1051,7 @@ override SITE_SOURCE			:= $(COMPOSER_ROOT)
 override SITE_OUTPUT			:= $(COMPOSER_ROOT)/.public
 
 override SITE_MAIN_COL_SIZE		:= 6
+override SITE_STICKY			:= 1
 
 #WORKING document : if site name is empty, it disables it
 override SITE_SEARCH_NAME		:= Search
@@ -3111,6 +3112,11 @@ override define HEREDOC_BOOTSTRAP_CSS =
 body {
 	padding-top:			50px;
 	padding-bottom:			50px;
+}
+
+.col-sticky {
+	max-height:			100vh;
+	overflow-y:			auto;
 }
 
 /* ################################## */
@@ -5511,6 +5517,7 @@ endif
 # favicon needs to be in the <head>, somehow
 # finish separating templating from content
 # figure out a commit strategy, and sort out all the makefile backups...
+#	and the bootstrap.html prototypes, too!
 # commit!
 # start working on yaml templating; none of it is going to work if that doesn't
 
@@ -5524,7 +5531,7 @@ override define $(PUBLISH)-BRAND =
 $(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
 $(_C)
 <h1 class="navbar-brand">
-$(if $(wildcard $(COMPOSER_LOGO)),<a href="#"><img src="$(COMPOSER_LOGO)"/></a>)
+$(if $(wildcard $(COMPOSER_LOGO)),<a href="#"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
 $(SITE_BRAND)
 </h1>
 $(_D)
@@ -5587,7 +5594,7 @@ override define $(PUBLISH)-BODY_BEG =
 $(_N)<!-- $(PUBLISH)-BODY_BEG -->$(_S)
 $(_S)
 <body class="container-fluid">
-<div class="row">
+<div class="d-flex flex-row">
 $(_D)
 endef
 
@@ -5603,7 +5610,7 @@ endef
 override define $(PUBLISH)-COLUMN_BEG =
 $(_N)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
 $(_S)
-<div class="col$(if $(1),-sm-$(1))">
+<div class="d-flex flex-column col$(if $(1),-sm-$(1)) $(if $(SITE_STICKY),col-sticky) border-0 p-2">
 $(_D)
 endef
 
@@ -5688,26 +5695,25 @@ header-includes: |
 $(_D)
 endef
 
-#WORKING:NOW
 override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
 $(call $(PUBLISH)-UNIT_BEG,6,,Overview)
 $(_M)
-<!--  * [Overview] -->
+  * [Overview]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)
 $(_M)
-<!--  * [Quick Start] -->
+  * [Quick Start]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Principles)
 $(_M)
-<!--  * [Principles] -->
+  * [Principles]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)
 $(_M)
-<!--  * [Requirements] -->
+  * [Requirements]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
 $(_E)<hr/>
@@ -6016,6 +6022,8 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(call DO_HEREDOC,$(PUBLISH)-COLUMN_END)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_2)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_BOTTOM)
+	@$(PRINT) '$(_E)</div>$(_D)'
+	@$(PRINT) '$(_E)<div class="d-flex flex-row">$(_D)'
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_END)
 
