@@ -1751,6 +1751,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(ENDOLINE)
 	@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
+#WORKING this got renamed, so update the references...
 	@$(call TITLE_LN,3,Templates: $(INSTALL))
 	@$(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(ENDOLINE); $(RUNMAKE) .$(EXAMPLE)-$(INSTALL) \
@@ -5518,6 +5519,14 @@ endif
 
 ########################################
 # {{{3 $(PUBLISH)-% --------------------
+
+#WORKING:NOW
+# make all site manuals little flippies
+# favicon needs to be in the <head>, somehow
+# finish separating templating from content
+# figure out a commit strategy, and sort out all the makefile backups...
+# commit!
+# start working on yaml templating; none of it is going to work if that doesn't
 
 #WORKING https://github.com/bewuethr/pandoc-bash-blog
 #WORKING new target(s)... document!
