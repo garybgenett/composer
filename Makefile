@@ -5554,7 +5554,7 @@ endef
 
 override define $(PUBLISH)-NAV_BOTTOM =
 $(_N)<!-- $(PUBLISH)-NAV_BOTTOM -->$(_D)
-$(call $(PUBLISH)-NAV_BEG,1)
+$(call $(PUBLISH)-NAV_BEG,1,1)
 $(_C)
 <li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
 <li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
@@ -5564,7 +5564,7 @@ $(if $(SITE_BREADCRUMBS),\
 $(foreach FILE,$(SITE_BREADCRUMBS),<li class="breadcrumb-item"><a href="$(word 1,$(subst |, ,$(FILE)))">$(word 2,$(subst |, ,$(FILE)))</a></li>$(call NEWLINE))\
 </ol></li>)
 $(_D)
-$(call $(PUBLISH)-NAV_END)
+$(call $(PUBLISH)-NAV_END,1)
 endef
 
 override define $(PUBLISH)-NAV_BEG =
@@ -5575,7 +5575,7 @@ $(_S)
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$(if $(1),bottom,top)">
 <span class="navbar-toggler-icon"></span>
 </button>
-$(if $(2),$(call $(PUBLISH)-BRAND),$(_C)<!-- brand -->$(_D))
+$(if $(2),$(_C)<!-- brand -->$(_D),$(call $(PUBLISH)-BRAND))
 $(_S)
 <div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
 <ul class="navbar-nav navbar-nav-scroll me-auto">
@@ -5586,7 +5586,7 @@ override define $(PUBLISH)-NAV_END =
 $(_N)<!-- $(PUBLISH)-NAV_END -->$(_D)
 $(_S)
 </ul>
-$(if $(and $(1),$(SITE_SEARCH_NAME)),$(_C)$(call $(PUBLISH)-SEARCH)$(_D),$(_C)<!-- search -->$(_D))
+$(if $(1),$(_C)<!-- search -->$(_D),$(if $(SITE_SEARCH_NAME),$(_C)$(call $(PUBLISH)-SEARCH)$(_D)))
 $(_S)
 </div>
 </div>
@@ -5617,7 +5617,7 @@ $(_S)
 <div class="d-flex flex-column $(if $(1),\
 	col-sm-$(1) $(if $(SITE_MAIN_COL_STICKY),col-sticky) ,\
 	$(if $(SITE_MENU_COL_HIDE),d-none d-sm-block) \
-	) border-0 p-2">
+	) border-0 p-1">
 $(_D)
 endef
 
@@ -5634,13 +5634,13 @@ $(_S)
 <div class="accordion">
 <div class="accordion-item">
 <h$(1) class="accordion-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
-<button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(3))">
+<button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$(subst $(NULL) ,,$(3))">
 $(_H)
 $(3)
 $(_S)
 </button>
 </h$(1)>
-<div id="$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
+<div id="toggle-$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
 <div class="accordion-body">
 $(_D)
 endef
@@ -5658,10 +5658,11 @@ endef
 override define $(PUBLISH)-BOX_BEG =
 $(_N)<!-- $(PUBLISH)-BOX_BEG -->$(_D)
 $(_S)
+$(if $(2),,<br/>)
 <div class="card">
-<h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(2)))">
+<h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
 $(_H)
-$(2)
+$(3)
 $(_S)
 </h$(1)>
 <div class="card-body">
@@ -5706,7 +5707,7 @@ override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
-$(call $(PUBLISH)-UNIT_BEG,6,,Overview)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Overview)
 $(_M)
   * [Overview]
 $(call $(PUBLISH)-UNIT_END)
@@ -5723,8 +5724,7 @@ $(_M)
   * [Requirements]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
-$(_E)<hr/>
-$(call $(PUBLISH)-BOX_BEG,6,Formats)
+$(call $(PUBLISH)-BOX_BEG,6,,Formats)
 $(_M)
 $(foreach FILE,$(COMPOSER_TARGETS), * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE)))$(call NEWLINE))
 $(call $(PUBLISH)-BOX_END)
@@ -5734,7 +5734,7 @@ endef
 override define $(PUBLISH)-NAV_COLUMN_2 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Operation)
+$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)
 $(_M)
   * [Recommended Workflow]
@@ -5769,7 +5769,7 @@ $(_M)
   * [Repository Versions]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
+$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Variables)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)
 $(_M)
   * [c_site]
@@ -5795,7 +5795,7 @@ $(_M)
   * [COMPOSER_IGNORES]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets)
+$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Targets)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)
 $(_M)
   * [help / help-all]
@@ -5835,7 +5835,7 @@ endef
 
 override define $(PUBLISH)-NAV_TOP =
 $(_E)<!-- $(PUBLISH)-NAV_TOP -->$(_D)
-$(call $(PUBLISH)-NAV_BEG,,1)
+$(call $(PUBLISH)-NAV_BEG)
 $(_E)<!-- $(PUBLISH)-NAV_TOP_MENU -->$(_D)
 $(_E)
 <li class="nav-item"><a class="nav-link" href="#">Top</a></li>
@@ -5941,7 +5941,7 @@ $(_E)
 </ul></li>
 </ul>
 </li>
-$(call $(PUBLISH)-NAV_END,1)
+$(call $(PUBLISH)-NAV_END)
 endef
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
@@ -5953,7 +5953,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
 	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
 		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_TECHNAME)))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Overview))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Overview))
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 				@$(ENDOLINE); $(LINERULE)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
@@ -5974,7 +5974,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_BASENAME) Operation))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Operation))
 			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Recommended Workflow))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
@@ -5997,7 +5997,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_BASENAME) Variables))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Variables))
 			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Formatting Variables))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
@@ -6007,7 +6007,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_BASENAME) Targets))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Targets))
 			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Primary Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
