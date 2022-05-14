@@ -50,6 +50,72 @@ override VIM_FOLDING := {{{1
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
 ################################################################################
+#TODO
+#	--defaults = switch to this, in a heredoc that goes to artifacts
+#		maybe add additional ones, like COMPOSER_INCLUDE
+#TODO
+#	--title-prefix="$(TTL)" = replace with full title option...?
+#	--resource-path = something like COMPOSER_CSS?
+#	--strip-comments
+#	--eol=lf
+#	site:
+#		--include-before-body
+#		--include-after-body
+#TODO
+#	man pandoc = pandoc -o custom-reference.docx --print-default-data-file reference.docx
+#	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
+#	--from "docx" --track-changes="all"
+#	--from "docx|epub" --extract-media="[...]"
+#TODO
+#	--default-image-extension="png"?
+#	--highlight-style="kate"?
+#	--incremental?
+#TODO
+#	https://github.com/alexeygumirov/pandoc-for-pdf-how-to
+#		https://github.com/Wandmalfarbe/pandoc-latex-template
+#		https://learnbyexample.github.io/customizing-pandoc
+#			https://dev.to/learnbyexample/customizing-pandoc-to-generate-beautiful-pdfs-from-markdown-3lbj
+#	http://distrib-coffee.ipsl.jussieu.fr/pub/mirrors/ctan/macros/latex/contrib/fancyhdr/fancyhdr.pdf
+#		https://en.wikibooks.org/wiki/LaTeX/Page_Layout
+#		\\usepackage{showframe}
+#		--variable="documentclass=book" \
+#		--variable="classoption=twosides" \
+#		--variable="classoption=draft"
+#	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
+#	--email-obfuscation="[...]"
+#	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
+#TODO
+#	add a way to add additional arguments, like: --variable=fontsize=28pt
+#		--variable="fontsize=[...]"
+#		--variable="theme=[...]"
+#		--variable="transition=[...]"
+#		--variable="links-as-notes=[...]"
+#		--variable="lof=[...]"
+#		--variable="lot=[...]"
+#TODO : bootstrap!
+#	site
+#		post = comments ability through *-comments-$(date) files
+#		index = yq crawl of directory to create a central file to build "search" pages out of
+#	site is a special...?
+#		actually, need something better for site, which will probably remain singular...
+#			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
+#				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
+#				verify that pandoc ignores leading yaml/json, and that yq can be used to just grab the headers?
+#			a page-* of post-*s will be <variable> post-*s truncated to <variable> length (and then [...])
+#			this way, manual page-*s can be created that stay static (like gary-os and composer readmes on "project" pages)
+#			also, the dynamic "index" pages, which pull in all post-*s that match
+#				this can look like index: entries that use the dependencies to know which index to build?
+#	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
+#		will need to do something with "targets" output, which will get super crowded (maybe only if there are dependencies? affirmative.)
+#			they will show up in composer_targets, anyway, right? yes, ugly, parse them out and let *-all handle it
+#			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
+#			test case this instead... it should be identical for all of book/page/post...
+#		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
+#	add findutils back in... we're going to need it later, which is probably why we had it in there in the first place...
+#		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
+#		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
+#		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
+################################################################################
 # }}}1
 ################################################################################
 # {{{1 Composer Globals --------------------------------------------------------
@@ -110,6 +176,8 @@ endif
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
+
+override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
 
 override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
@@ -379,6 +447,7 @@ endif
 
 #> update: includes duplicates
 
+$(call READ_ALIASES,S,S,c_site)
 $(call READ_ALIASES,T,T,c_type)
 $(call READ_ALIASES,B,B,c_base)
 $(call READ_ALIASES,L,L,c_list)
@@ -394,6 +463,7 @@ $(call READ_ALIASES,mr,mr,c_margin_right)
 $(call READ_ALIASES,o,o,c_options)
 
 #> update: $(HEADERS)-vars
+override c_site				?=
 override c_type				?= $(TYPE_DEFAULT)
 override c_base				?= $(OUT_README)
 override c_list				?= $(c_base)$(COMPOSER_EXT)
@@ -493,6 +563,8 @@ endif
 override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
+override BOOTSTRAP_CSS_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
+override BOOTSTRAP_CSS_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
 ########################################
 
@@ -506,9 +578,9 @@ override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
-#>override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
-#>override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/solarized-light.css
 override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
+override MDVIEWER_CSS_SOLAR		:= $(MDVIEWER_DIR)/themes/solarized-light.css
+override MDVIEWER_CSS_SOLAR_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 
 ########################################
 
@@ -520,8 +592,8 @@ endif
 override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
-#>override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
+override REVEALJS_CSS_THEME_SOLAR	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 
 ########################################
 
@@ -791,9 +863,10 @@ $(strip $(if $(c_css),\
 	$(abspath $(c_css)) \
 	)) \
 ,\
+	$(if $(c_site),$(BOOTSTRAP_CSS) ,\
 	$(if $(filter $(TYPE_PRES),$(c_type)),$(REVEALJS_CSS) ,\
 	$(MDVIEWER_CSS) \
-	) \
+	)) \
 ))
 endef
 
@@ -867,10 +940,11 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--variable="revealjs-url=$(REVEALJS_DIR)" \
 	) \
 	$(if $(c_site),\
-		--include-in-header="$(BOOTSTRAP_DIR)/dist/js/bootstrap.js" \
-		--include-in-header="$(BOOTSTRAP_DIR)/dist/css/bootstrap.css" \
+		--include-in-header="$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))" \
+		--css="$(BOOTSTRAP_CSS_CSS)" \
 	) \
 	$(if $(call c_css_select),\
+		$(if $(c_site),				--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_PRES)),	--css="$(call c_css_select)") \
@@ -1057,6 +1131,7 @@ override COMPOSER_EXPORTED := \
 	COMPOSER_DEPENDS \
 	COMPOSER_LOG \
 	COMPOSER_EXT \
+	c_site \
 	c_type \
 	c_lang \
 	c_css \
@@ -1379,6 +1454,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
 	@$(TABLE_M3) ":---"				":---"					":---"
+	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Build as Bootstrap page"		"$(_M)$(c_site)"
 	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
 	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
 	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(c_list)"
@@ -2181,6 +2257,10 @@ endef
 # {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_site)
+
+#WORKING:NOW
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_type / c_base / c_list)
 
 The $(_C)[$(COMPOSER_PANDOC)]$(_D) target uses these variables to decide what to build and how.  The
@@ -2631,11 +2711,20 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
-	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
+	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))))
+	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
+	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
+		$(call HEREDOC_BOOTSTRAP_CSS_HACK) \
+		)) $(subst $(COMPOSER_DIR),...,$(BOOTSTRAP_CSS_CSS))&g'			$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
+	@$(ECHO) "<script>\n"								>$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))
+	@$(CAT) $(BOOTSTRAP_CSS_JS)							>>$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))
+	@$(ECHO) "</script>\n"								>>$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))
+	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(BOOTSTRAP_CSS_CSS)
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_LOGO))
 	@$(foreach FILE,\
 		$(TMPL_HTML):$(EXTN_HTML) \
 		$(TMPL_LPDF):$(EXTN_LPDF) \
@@ -2777,6 +2866,13 @@ override DIST_SCREENSHOT_v3.0		:= iVBORw0KGgoAAAANSUhEUgAAAeMAAADICAIAAABUCR4uAA
 
 override define DO_HEREDOC =
 	$(ECHO) '$(subst ',[Q],$(subst $(call NEWLINE),[N],$(call $(1))))[N]' \
+		| $(SED) \
+			-e "s|[[]Q[]]|\'|g" \
+			-e "s|[[]N[]]|\\n|g"
+endef
+
+override define DO_HEREDOC_FULL =
+	$(ECHO) '$(subst ',[Q],$(subst $(call NEWLINE),[N],$(1)))[N]' \
 		| $(SED) \
 			-e "s|[[]Q[]]|\'|g" \
 			-e "s|[[]N[]]|\\n|g"
@@ -2935,6 +3031,69 @@ override define HEREDOC_REVEALJS_CSS =
 /* #############################################################################
 # End Of File
 ############################################################################# */
+endef
+
+################################################################################
+# {{{1 Heredoc: bootstrap_css --------------------------------------------------
+################################################################################
+
+override define HEREDOC_BOOTSTRAP_CSS =
+/* #############################################################################
+# $(COMPOSER_TECHNAME)
+############################################################################# */
+
+/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(MDVIEWER_CSS_SOLAR_ALT))"); */
+
+/* HEREDOC_BOOTSTRAP_CSS_HACK */
+
+/* ########################################################################## */
+
+.bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
+.card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
+
+.accordion-button			{ background-color: rgba(var(--bs-dark-rgb)); }
+.accordion-button:not(.collapsed)	{ background-color: rgba(var(--bs-dark-rgb)); }
+.accordion-button:hover			{ background-color: rgba(var(--bs-dark-rgb)); }
+
+.accordion-button:focus {
+					background-color: rgba(var(--bs-dark-rgb));
+					box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb));
+}
+.accordion-button:not(.collapsed):focus {
+					background-color: rgba(var(--bs-dark-rgb));
+					box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb));
+}
+.accordion-button::after {
+					background-color: rgba(var(--bs-danger-rgb));
+					background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+.accordion-button:not(.collapsed)::after {
+					background-color: rgba(var(--bs-success-rgb));
+					background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230c63e4'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+/* #############################################################################
+# End Of File
+############################################################################# */
+endef
+
+override define HEREDOC_BOOTSTRAP_CSS_HACK =
+	$(SED) -i \
+		-e "/^[[:space:]]+--bs-body-color[:-]/d" \
+		-e "/^[[:space:]]+--bs-table-.+-color:/d" \
+		-e "/^[[:space:]]+-webkit-tap-highlight-color:/d" \
+		-e "/^[[:space:]]+background-color:/d" \
+		-e "/^[[:space:]]+border-bottom-color:/d" \
+		-e "/^[[:space:]]+border-color:/d" \
+		-e "/^[[:space:]]+border-left-color:/d" \
+		-e "/^[[:space:]]+border-right-color:/d" \
+		-e "/^[[:space:]]+border-top-color:/d" \
+		-e "/^[[:space:]]+color:/d" \
+		\
+		-e "/^[[:space:]]+background-image:/d" \
+		-e "s|(border:.+)rgba[(][^)]+[)]|\1|g" \
+		-e "s|(box-shadow:.+)rgba[(][^)]+[)]|\1|g" \
+		-e "s|(button-shadow:.+)rgba[(][^)]+[)]|\1|g"
 endef
 
 ################################################################################
@@ -3761,6 +3920,7 @@ override $(HEADERS)-list := \
 	COMPOSER_IGNORES
 #> update: $(HEADERS)-vars
 override $(HEADERS)-vars := \
+	c_site \
 	c_type \
 	c_base \
 	c_list \
@@ -4134,6 +4294,7 @@ $(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-speed
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
+$(TESTING): $(TESTING)-$(PUBLISH)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
@@ -4559,6 +4720,33 @@ $(TESTING)-$(TARGETS)-done:
 	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_LINT)[.][x0-9][.][x0-9][.]$(EXTN_LINT))
 	$(call $(TESTING)-count,42,ERROR)
 	@$(call $(TESTING)-hold)
+
+########################################
+# {{{3 $(TESTING)-$(PUBLISH) -----------
+
+.PHONY: $(TESTING)-$(PUBLISH)
+$(TESTING)-$(PUBLISH): $(TESTING)-Think
+$(TESTING)-$(PUBLISH):
+	@$(call $(TESTING)-$(HEADERS),\
+		Test every combination of formats and formatting variables ,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+	)
+#WORKING:NOW
+#	@$(call $(TESTING)-mark)
+#	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+#> update: TYPE_PUBLISH
+.PHONY: $(TESTING)-$(PUBLISH)-init
+$(TESTING)-$(PUBLISH)-init:
+#WORKING:NOW
+
+.PHONY: $(TESTING)-$(PUBLISH)-done
+$(TESTING)-$(PUBLISH)-done:
+#WORKING:NOW
+	@$(call $(TESTING)-hold)
+
 
 ########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
@@ -5265,6 +5453,230 @@ $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
+	@$(ECHO) ""							>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+#WORKING:NOW
+	@$(call DO_HEREDOC,$(PUBLISH)_HEAD)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_TOP)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_BODY_BEG)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_1)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_BEG,8))	>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
+		Overview ,\
+			$(call $(HELPOUT)-$(DOITALL)-OVERVIEW) \
+		))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
+		Quick Start ,\
+			Use `$(_C)$(DOMAKE) $(HELPOUT)$(_D)` to get started: \
+			<br/> $(shell $(RUNMAKE) $(HELPOUT)-USAGE) \
+			<br/> $(shell $(RUNMAKE) $(HELPOUT)-EXAMPLES_0) \
+		))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
+		Principles ,\
+			$(call $(HELPOUT)-$(DOITALL)-GOALS) \
+		,1))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
+		Requirements ,\
+			$(call $(HELPOUT)-$(DOITALL)-REQUIRE) \
+			<br/> $(shell $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d") \
+			<br/> $(call $(HELPOUT)-$(DOITALL)-REQUIRE_POST) \
+		,1))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_END)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_2)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_BOTTOM)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)_BODY_END)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+#WORKING:NOW
+	@$(CP) $(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT) $(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML)
+#	@$(RUNMAKE) $(COMPOSER_PANDOC) \
+#		COMPOSER_DEBUGIT="1" \
+#		c_site="1" \
+#		c_type="html" \
+#		c_base="$(OUT_README).$(PUBLISH)" \
+#		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)" \
+#		c_options="--metadata=\"title=$(COMPOSER_HEADLINE)\""
+
+override define $(PUBLISH)_HEAD =
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+<meta name="author" content="Gary B. Genett" />
+<title>Composer CMS: Content Make System</title>
+
+<link href="bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+<script src="bootstrap/dist/js/bootstrap.bundle.js"></script>
+<link href="artifacts/bootstrap.css" rel="stylesheet">
+endef
+
+override define $(PUBLISH)_NAV_TOP =
+<nav class="navbar navbar-expand fixed-top bg-dark">
+  <div class="container-fluid text-uppercase">
+    <a class="navbar-brand" href="#">Fixed navbar</a>
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPDOWN</a>
+          <ul class="dropdown-menu bg-dark">
+            <li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
+            <li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
+            <li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
+          </ul>
+        </li>
+      </ul>
+      <script type="text/javascript">
+        function search(){
+          var search = document.getElementById("search").value;
+          window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+"+search;
+        }
+      </script>
+      <form class="d-flex" action="https://duckduckgo.com/">
+        <input type="hidden" name="kae" value="d"/>
+        <input type="hidden" name="kp" value="-1"/>
+        <input type="hidden" name="ko" value="1"/>
+        <input type="hidden" name="kz" value="-1"/>
+        <input type="hidden" name="kv" value="1"/>
+        <input type="hidden" name="ia" value="web"/>
+        <input type="hidden" name="sites" value="tresobis.org"/>
+        <input class="form-control me-2" type="text" name="q"/>
+        <button class="btn btn-outline-success" type="submit">SEARCH</button>
+      </form>
+  </div>
+</nav>
+endef
+
+override define $(PUBLISH)_NAV_BOTTOM =
+<!-- bootstrap : bottom navbar -->
+<nav class="navbar navbar-expand fixed-bottom bg-dark">
+  <div class="container-fluid text-uppercase">
+    <a class="navbar-brand" href="#">Fixed navbar</a>
+      <ol class="navbar-nav me-auto mb-2 mb-md-0 breadcrumb">
+        <li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
+        <li class="nav-item dropup">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPUP</a>
+          <ul class="dropdown-menu bg-dark">
+            <li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
+            <li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
+            <li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
+            <li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Library</a></li>
+            <li class="breadcrumb-item"><a href="#">Data</a></li>
+          </ol>
+        </li>
+      </ol>
+  </div>
+</nav>
+endef
+
+override define $(PUBLISH)_BODY_BEG =
+<body class="container-fluid">
+<div class="p-5 mt-3">
+<h1>THIS IS THE TOP</h1>
+<div class="container-fluid">
+<div class="row">
+endef
+override define $(PUBLISH)_BODY_END =
+</div>
+</div>
+<h1>THIS IS THE BOTTOM</h1>
+</div>
+</body>
+</html>
+endef
+
+override define $(PUBLISH)_CONTENT_BEG =
+<div class="col$(if $(1),-sm-$(1))">
+endef
+override define $(PUBLISH)_CONTENT_END =
+</div>
+endef
+
+override define $(PUBLISH)_NAV_COLUMN_1 =
+$(call $(PUBLISH)_CONTENT_BEG)
+$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 1,\
+  <ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#principles">Principles</a></li>
+  <li><a href="#requirements">Requirements</a></li>
+  </ul>
+)
+$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 1,\
+  <ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#principles">Principles</a></li>
+  <li><a href="#requirements">Requirements</a></li>
+  </ul>
+)
+$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 1,\
+  <ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#principles">Principles</a></li>
+  <li><a href="#requirements">Requirements</a></li>
+  </ul>
+)
+$(call $(PUBLISH)_CONTENT_END)
+endef
+
+override define $(PUBLISH)_NAV_COLUMN_2 =
+$(call $(PUBLISH)_CONTENT_BEG)
+$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 2,\
+  <ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#principles">Principles</a></li>
+  <li><a href="#requirements">Requirements</a></li>
+  </ul>
+)
+$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 2,\
+  <ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#principles">Principles</a></li>
+  <li><a href="#requirements">Requirements</a></li>
+  </ul>
+)
+$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 2,\
+  <ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#principles">Principles</a></li>
+  <li><a href="#requirements">Requirements</a></li>
+  </ul>
+)
+$(call $(PUBLISH)_CONTENT_END)
+endef
+
+override define $(PUBLISH)_CONTENT_UNIT =
+<div class="accordion">
+  <div class="accordion-item">
+    <div class="accordion-header">
+      <button class="accordion-button$(if $(4), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(2))">
+        <h$(1)>$(2)</h$(1)>
+      </button>
+    </div>
+    <div id="$(subst $(NULL) ,,$(2))" class="accordion-collapse collapse$(if $(4),, show)">
+      <div class="accordion-body">
+        $(3)
+      </div>
+    </div>
+  </div>
+</div>
+<p></p>
+endef
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
