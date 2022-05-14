@@ -579,10 +579,6 @@ endif
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
-override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
-override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
-override MDVIEWER_CSS_SOLAR		:= $(MDVIEWER_DIR)/themes/solarized-light.css
-override MDVIEWER_CSS_SOLAR_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 
 ########################################
 
@@ -594,6 +590,16 @@ endif
 override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
+
+########################################
+
+override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
+override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
+override MDVIEWER_CSS_SOLAR		:= $(MDVIEWER_DIR)/themes/solarized-light.css
+override MDVIEWER_CSS_SOLAR_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
+
+override BOOTSTRAP_CSS_THEME		:= $(MDVIEWER_CSS_SOLAR)
+
 override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
 override REVEALJS_CSS_THEME_SOLAR	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 
@@ -865,8 +871,8 @@ $(strip $(if $(c_css),\
 	$(abspath $(c_css)) \
 	)) \
 ,\
-	$(if $(c_site),$(BOOTSTRAP_CSS) ,\
-	$(if $(filter $(TYPE_PRES),$(c_type)),$(REVEALJS_CSS) ,\
+	$(if $(c_site),$(BOOTSTRAP_CSS_THEME) ,\
+	$(if $(filter $(TYPE_PRES),$(c_type)),$(REVEALJS_CSS_THEME) ,\
 	$(MDVIEWER_CSS) \
 	)) \
 ))
@@ -944,19 +950,23 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--variable="revealjs-url=$(REVEALJS_DIR)" \
 	) \
 	$(if $(c_site),\
+		--include-in-header="$(BOOTSTRAP_CSS_JS)" \
 		$(if $(call c_css_select),\
-			--include-in-header="$(BOOTSTRAP_CSS_JS)" \
 			--css="$(BOOTSTRAP_CSS_CSS)" \
+			--css="$(BOOTSTRAP_CSS)" \
+			$(if $(filter $(BOOTSTRAP_CSS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
 			,\
-			--include-in-header="$(BOOTSTRAP_CSS_JS_SRC)" \
 			--css="$(BOOTSTRAP_CSS_CSS_SRC)" \
 		) \
 	) \
 	$(if $(call c_css_select),\
-		$(if $(c_site),				--css="$(call c_css_select)" ,\
+		$(if $(c_site),,\
 		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
-		$(if $(filter $(c_type),$(TYPE_PRES)),	--css="$(call c_css_select)") \
+		$(if $(filter $(c_type),$(TYPE_PRES)), \
+			$(if $(filter $(REVEALJS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
+			--css="$(REVEALJS_CSS)" \
+		) \
 	)) \
 	$(if $(c_toc),\
 		--table-of-contents \
@@ -2076,6 +2086,11 @@ $(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of 
 a modern website, with the appearance and behavior of dynamically indexed pages.
 
 #WORKING
+#	also update revealjs documentation, based on behavior change
+#		need to update tests...?  yes!
+#	note that they are intentionally reversed
+#		bootstrap is just supporting where the markdown-viewer themes fall through
+#		revealjs is usually using a theme, which we are refining
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2734,21 +2749,16 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
-
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(ECHO) "</script>\n"								>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
-
 	@$(CP) $(BOOTSTRAP_CSS_CSS_SRC)							$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
 	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
-
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
 	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
 		$(call HEREDOC_BOOTSTRAP_CSS_HACK))) $(subst \
 		$(COMPOSER_DIR),...,$(BOOTSTRAP_CSS_CSS_SRC))&g'			$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
-	exit 1
-
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
@@ -3018,7 +3028,7 @@ override define HEREDOC_REVEALJS_CSS =
 # $(COMPOSER_TECHNAME)
 ############################################################################# */
 
-@import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME))");
+/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME))"); */
 
 /* ########################################################################## */
 
@@ -3071,7 +3081,7 @@ override define HEREDOC_BOOTSTRAP_CSS =
 # $(COMPOSER_TECHNAME)
 ############################################################################# */
 
-/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(MDVIEWER_CSS_SOLAR_ALT))"); */
+/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(BOOTSTRAP_CSS_THEME))"); */
 
 /* HEREDOC_BOOTSTRAP_CSS_HACK */
 
@@ -5466,6 +5476,7 @@ endif
 		$(MDVIEWER_DIR)/manifest.edge.json \
 		$(MDVIEWER_CSS) \
 		$(MDVIEWER_CSS_ALT) \
+		$(BOOTSTRAP_CSS_THEME) \
 		$(REVEALJS_CSS_THEME)
 	@$(ECHO) "$(_D)"
 
@@ -5491,6 +5502,7 @@ ifneq ($(COMPOSER_RELEASE),)
 		c_type="html" \
 		c_base="$(OUT_README).$(PUBLISH)" \
 		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)" \
+		c_css="$(MDVIEWER_CSS_SOLAR_ALT)" \
 		c_options="--metadata=\"pagetitle=$(COMPOSER_HEADLINE)\""
 endif
 
@@ -5520,8 +5532,8 @@ $(PUBLISH)-$(EXAMPLE):
 			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
 		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Requirements))
 			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
-			@$(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+			@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
 	@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_END)
 	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_2)
