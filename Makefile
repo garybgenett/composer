@@ -5564,7 +5564,7 @@ $(_S)
 $(if $(2),$(call $(PUBLISH)-BRAND),$(_C)<!-- brand -->$(_D))
 $(_S)
 <div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
-<ul class="navbar-nav me-auto">
+<ul class="navbar-nav navbar-nav-scroll me-auto">
 $(_D)
 endef
 
@@ -5690,15 +5690,19 @@ $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
 $(call $(PUBLISH)-UNIT_BEG,6,,Overview)
+$(_M)
   * [Overview]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)
+$(_M)
   * [Quick Start]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Principles)
+$(_M)
   * [Principles]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)
+$(_M)
   * [Requirements]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
@@ -5715,6 +5719,7 @@ $(_E)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Operation)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)
+$(_M)
   * [Recommended Workflow]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Document Formatting)
@@ -5727,18 +5732,23 @@ $(_M)
   * [Microsoft Word & PowerPoint]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Configuration Settings)
+$(_M)
   * [Configuration Settings]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Precedence Rules)
+$(_M)
   * [Precedence Rules]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Specifying Dependencies)
+$(_M)
   * [Specifying Dependencies]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Custom Targets)
+$(_M)
   * [Custom Targets]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Repository Versions)
+$(_M)
   * [Repository Versions]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
@@ -5827,12 +5837,12 @@ $(_E)
 <li><a class="dropdown-item" href="#recommended-workflow">Recommended Workflow</a></li>
 <li><a class="dropdown-item" href="#document-formatting">Document Formatting</a></li>
 <ul>
-<li><a class="dropdown-item" href="#configuration-settings">HTML</a></li>
-<li><a class="dropdown-item" href="#configuration-settings">Bootstrap Websites</a></li>
-<li><a class="dropdown-item" href="#configuration-settings">PDF</a></li>
-<li><a class="dropdown-item" href="#configuration-settings">EPUB</a></li>
-<li><a class="dropdown-item" href="#configuration-settings">Reveal.js Presentations</a></li>
-<li><a class="dropdown-item" href="#configuration-settings">Microsoft Word & PowerPoint</a></li>
+<li><a class="dropdown-item" href="#html">HTML</a></li>
+<li><a class="dropdown-item" href="#bootstrap-websites">Bootstrap Websites</a></li>
+<li><a class="dropdown-item" href="#pdf">PDF</a></li>
+<li><a class="dropdown-item" href="#epub">EPUB</a></li>
+<li><a class="dropdown-item" href="#revealjs-presentations">Reveal.js Presentations</a></li>
+<li><a class="dropdown-item" href="#microsoft-word--powerpoint">Microsoft Word & PowerPoint</a></li>
 </ul></li>
 <li><a class="dropdown-item" href="#configuration-settings">Configuration Settings</a></li>
 <li><a class="dropdown-item" href="#precedence-rules">Precedence Rules</a></li>
