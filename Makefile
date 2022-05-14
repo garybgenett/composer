@@ -1581,7 +1581,8 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(DOITALL)]"			"Create output files: $(_C)[COMPOSER_TARGETS]$(_D) $(_E)$(DIVIDE)$(_D) $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DOITALL)-$(DOITALL)]"		"Do $(_C)[$(DOITALL)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_N)[*$(_C)-$(DOITALL)]"			"Any targets named this way will also be run by $(_C)[$(DOITALL)]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Print updated files: \`$(_N)*$(_M)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_M)$(COMPOSER_LOG)$(_D)\`"
+#>	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Print updated files: \`$(_N)*$(_M)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_M)$(COMPOSER_LOG)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Show updated files: \`$(_N)*\`$(_C)[COMPOSER_EXT]$(_D) $(_E)$(MARKER)$(_D) $(_C)[COMPOSER_LOG]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
@@ -5519,28 +5520,39 @@ endif
 #WORKING new target(s)... document!
 #WORKING c_title = pagetitle?
 #WORKING variables
-override SITE_MAIN_COL_SIZE		:= 6
+override SITE_CNAME			:= www.garybgenett.net
 override SITE_SEARCH_NAME		:= Search
+override SITE_MAIN_COL_SIZE		:= 6
 #	cname
 #	favicon.ico
 #	copyright
 #	search string
 #	header-includes?  leave it to c_options?  maybe c_header?
 
-override define $(PUBLISH)-NAV_TOP =
+override define $(PUBLISH)-NAV_BEG =
 $(_N)
-<!-- $(PUBLISH)-NAV_TOP -->
+<!-- $(PUBLISH)-NAV_BEG $(DIVIDE) $(if $(1),bottom,top) -->
 $(_S)
-<nav class="navbar navbar-expand-sm fixed-top bg-dark">
+<nav class="navbar navbar-expand-sm fixed-$(if $(1),bottom,top) bg-dark">
 <div class="container-fluid">
-<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-top">
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$(if $(1),bottom,top)">
 <span class="navbar-toggler-icon"></span>
 </button>
+$(if $(2),$(call $(PUBLISH)-BRAND),$(_N)<!-- brand -->$(_D))
+<div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
+<ul class="navbar-nav me-auto">
+endef
+
+override define $(PUBLISH)-BRAND =
+$(_N)
+<!-- $(PUBLISH)-BRAND -->
 $(_C)
 <h1 class="navbar-brand">$(COMPOSER_TECHNAME)</h1>
-$(_S)
-<div class="collapse navbar-collapse" id="navbar-fixed-top">
-<ul class="navbar-nav me-auto">
+$(_D)
+endef
+
+override define $(PUBLISH)-NAV_TOP =
+$(call $(PUBLISH)-NAV_BEG,,1)
 <li class="nav-item"><a class="nav-link" href="#">Top</a></li>
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="#composer-cms" data-bs-toggle="dropdown">CMS</a>
@@ -5636,8 +5648,14 @@ $(_S)
 </ul></li>
 </ul>
 </li>
-</ul>
-<script type="text/javascript">function search() { var search = document.getElementById("search").value; window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+"+search; }</script>
+$(call $(PUBLISH)-NAV_END,1)
+endef
+
+override define $(PUBLISH)-SEARCH =
+$(_N)
+<!-- $(PUBLISH)-SEARCH -->
+$(_S)
+<script type="text/javascript">function search() { var search = document.getElementById("search").value; window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2F$(SITE_CNAME)+"+search; }</script>
 <form class="d-flex" action="https://duckduckgo.com/">
 <input type="hidden" name="kae" value="d"/>
 <input type="hidden" name="kp" value="-1"/>
@@ -5646,30 +5664,18 @@ $(_S)
 <input type="hidden" name="kv" value="1"/>
 <input type="hidden" name="ia" value="web"/>
 $(_C)
-<input type="hidden" name="sites" value="tresobis.org"/>
+<input type="hidden" name="sites" value="$(SITE_CNAME)"/>
 $(_S)
 <input class="form-control me-2" type="text" name="q"/>
 <button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
 </form>
-</div>
-</div>
-</nav>
 $(_D)
 endef
-
-#WORKING:NOW
 
 override define $(PUBLISH)-NAV_BOTTOM =
 $(_N)
 <!-- $(PUBLISH)-NAV_BOTTOM -->
-$(_S)
-<nav class="navbar navbar-expand-sm fixed-bottom bg-dark">
-<div class="container-fluid">
-<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-bottom">
-<span class="navbar-toggler-icon"></span>
-</button>
-<div class="collapse navbar-collapse" id="navbar-fixed-bottom">
-<ul class="navbar-nav me-auto">
+$(call $(PUBLISH)-NAV_BEG,1)
 $(_C)
 <li class="nav-item pe-3">$(COPYRIGHT_SHORT)</li>
 <li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
@@ -5681,7 +5687,15 @@ $(_S)
 <li class="breadcrumb-item"><a href="./artifacts">Artifacts</a></li>
 <li class="breadcrumb-item"><a href="./bootstrap">Bootstrap</a></li>
 </ol></li>
+$(call $(PUBLISH)-NAV_END)
+endef
+
+override define $(PUBLISH)-NAV_END =
+$(_N)
+<!-- $(PUBLISH)-NAV_END -->
+$(_S)
 </ul>
+$(if $(1),$(call $(PUBLISH)-SEARCH),$(_N)<!-- search -->$(_D))
 </div>
 </div>
 </nav>
@@ -5707,25 +5721,25 @@ $(_S)
 $(_D)
 endef
 
-override define $(PUBLISH)-CONTENT_BEG =
+override define $(PUBLISH)-COLUMN_BEG =
 $(_N)
-<!-- $(PUBLISH)-CONTENT_BEG -->
+<!-- $(PUBLISH)-COLUMN_BEG -->
 $(_S)
 <div class="col$(if $(1),-sm-$(1))">
 $(_D)
 endef
 
-override define $(PUBLISH)-CONTENT_END =
+override define $(PUBLISH)-COLUMN_END =
 $(_N)
-<!-- $(PUBLISH)-CONTENT_END -->
+<!-- $(PUBLISH)-COLUMN_END -->
 $(_S)
 </div>
 $(_D)
 endef
 
-override define $(PUBLISH)-CONTENT_UNIT_BEG =
+override define $(PUBLISH)-UNIT_BEG =
 $(_N)
-<!-- $(PUBLISH)-CONTENT_UNIT_BEG -->
+<!-- $(PUBLISH)-UNIT_BEG -->
 $(_S)
 <div class="accordion">
 <div class="accordion-item">
@@ -5741,9 +5755,9 @@ $(_S)
 $(_D)
 endef
 
-override define $(PUBLISH)-CONTENT_UNIT_END =
+override define $(PUBLISH)-UNIT_END =
 $(_N)
-<!-- $(PUBLISH)-CONTENT_UNIT_END -->
+<!-- $(PUBLISH)-UNIT_END -->
 $(_S)
 </div>
 </div>
@@ -5752,6 +5766,8 @@ $(_S)
 <p></p>
 $(_D)
 endef
+
+#WORKING:NOW
 
 ########################################
 # {{{3 $(PUBLISH)-$(EXAMPLE) -----------
@@ -5783,16 +5799,16 @@ override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_N)
 <!-- $(PUBLISH)-NAV_COLUMN_1 -->
 $(_S)
-$(call $(PUBLISH)-CONTENT_BEG)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_TECHNAME))
+$(call $(PUBLISH)-COLUMN_BEG)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
 $(_D)
   * [Overview]
   * [Quick Start]
   * [Principles]
   * [Requirements]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
 $(_D)
   * [Recommended Workflow]
   * [Document Formatting]
@@ -5802,8 +5818,8 @@ $(_D)
   * [Custom Targets]
   * [Repository Versions]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_END)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-COLUMN_END)
 $(_D)
 endef
 
@@ -5811,9 +5827,9 @@ override define $(PUBLISH)-NAV_COLUMN_2 =
 $(_N)
 <!-- $(PUBLISH)-NAV_COLUMN_2 -->
 $(_S)
-$(call $(PUBLISH)-CONTENT_BEG)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Formatting Variables)
+$(call $(PUBLISH)-COLUMN_BEG)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)
 $(_D)
   * [c_site]
   * [c_type / c_base / c_list]
@@ -5824,8 +5840,8 @@ $(_D)
   * [c_margin]
   * [c_options]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Control Variables)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables)
 $(_D)
   * [MAKEJOBS]
   * [COMPOSER_DOCOLOR]
@@ -5838,10 +5854,10 @@ $(_D)
   * [COMPOSER_SUBDIRS]
   * [COMPOSER_IGNORES]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Primary Targets)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)
 $(_D)
   * [help / help-all]
   * [template]
@@ -5852,23 +5868,23 @@ $(_D)
   * [all / all-all / *-all]
   * [list]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Special Targets)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets)
 $(_D)
   * [book]
   * [page / post]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Additional Targets)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets)
 $(_D)
   * [debug / debug-file]
   * [check / check-all / config / config-all / targets]
   * [_commit / _commit-all]
   * [_release / _update / _update-all]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Reference)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Reference)
 $(_D)
   * [Internal Targets]
   * [Configuration]
@@ -5878,10 +5894,12 @@ $(_D)
     * [Target Names]
     * [Variable Names]
 $(_S)
-$(call $(PUBLISH)-CONTENT_UNIT_END)
-$(call $(PUBLISH)-CONTENT_END)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-COLUMN_END)
 $(_D)
 endef
+
+#WORKING:NOW do one last "less" of this...
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
@@ -5890,82 +5908,82 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_BEG,$(SITE_MAIN_COL_SIZE)))
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_TECHNAME)))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Overview))
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME)))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Overview))
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 				@$(ENDOLINE); $(LINERULE)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Quick Start))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start))
 				@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 				@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Principles))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Principles))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Requirements))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Requirements))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 				@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Recommended Workflow))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Recommended Workflow))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Document Formatting))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Document Formatting))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Configuration Settings))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Configuration Settings))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Precedence Rules))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Precedence Rules))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Specifying Dependencies))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Specifying Dependencies))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Custom Targets))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Custom Targets))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,Repository Versions))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Repository Versions))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Formatting Variables))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Control Variables))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Primary Targets))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Special Targets))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Additional Targets))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-				@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-CONTENT_UNIT_BEG,6,1,Reference))
+				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Reference))
 			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
 			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
-			@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_UNIT_END)
-	@$(call DO_HEREDOC,$(PUBLISH)-CONTENT_END)
+			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
+	@$(call DO_HEREDOC,$(PUBLISH)-COLUMN_END)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_2)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_BOTTOM)
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
