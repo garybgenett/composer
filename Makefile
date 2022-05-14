@@ -1042,6 +1042,7 @@ endif
 # {{{1 Bootstrap Options -------------------------------------------------------
 ################################################################################
 
+#WORKING document : if brand is empty or logo.img don't exist, they will be skipped
 override SITE_CNAME			:= www.garybgenett.net
 override SITE_BRAND			:= $(COMPOSER_TECHNAME)
 override SITE_COPYRIGHT			:= $(COPYRIGHT_SHORT)
@@ -5507,7 +5508,6 @@ endif
 # {{{3 $(PUBLISH)-% --------------------
 
 #WORKING:NOW
-# make all site manuals little flippies
 # favicon needs to be in the <head>, somehow
 # finish separating templating from content
 # figure out a commit strategy, and sort out all the makefile backups...
@@ -5523,7 +5523,10 @@ endif
 override define $(PUBLISH)-BRAND =
 $(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
 $(_C)
-<h1 class="navbar-brand">$(SITE_BRAND)</h1>
+<h1 class="navbar-brand">
+$(if $(wildcard $(COMPOSER_LOGO)),<a href="#"><img src="$(COMPOSER_LOGO)"/></a>)
+$(SITE_BRAND)
+</h1>
 $(_D)
 endef
 
@@ -5685,25 +5688,26 @@ header-includes: |
 $(_D)
 endef
 
+#WORKING:NOW
 override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
 $(call $(PUBLISH)-UNIT_BEG,6,,Overview)
 $(_M)
-  * [Overview]
+<!--  * [Overview] -->
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)
 $(_M)
-  * [Quick Start]
+<!--  * [Quick Start] -->
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Principles)
 $(_M)
-  * [Principles]
+<!--  * [Principles] -->
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)
 $(_M)
-  * [Requirements]
+<!--  * [Requirements] -->
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
 $(_E)<hr/>
