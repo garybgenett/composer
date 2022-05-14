@@ -5636,19 +5636,19 @@ endef
 
 override define $(PUBLISH)_NAV_COLUMN_1 =
 $(call $(PUBLISH)_CONTENT_BEG)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 1)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header One)
   * [Overview]
   * [Quick Start]
   * [Principles]
   * [Requirements]
 $(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 1)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Two)
   * [Overview]
   * [Quick Start]
   * [Principles]
   * [Requirements]
 $(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 1)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Three)
   * [Overview]
   * [Quick Start]
   * [Principles]
@@ -5658,19 +5658,19 @@ $(call $(PUBLISH)_CONTENT_END)
 endef
 override define $(PUBLISH)_NAV_COLUMN_2 =
 $(call $(PUBLISH)_CONTENT_BEG)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 2)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Four)
   * [Overview]
   * [Quick Start]
   * [Principles]
   * [Requirements]
 $(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 2)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Five)
   * [Overview]
   * [Quick Start]
   * [Principles]
   * [Requirements]
 $(call $(PUBLISH)_CONTENT_UNIT_END)
-$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 2)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Header Six)
   * [Overview]
   * [Quick Start]
   * [Principles]
