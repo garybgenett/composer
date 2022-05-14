@@ -1070,7 +1070,7 @@ override SITE_BREADCRUMBS		:= \
 	./artifacts|Artifacts \
 	./bootstrap|Bootstrap \
 
-#WORKING:NOW
+#WORKING
 
 # override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
 # override SITE_DESCRIPTION		?= a brief summary
@@ -2830,7 +2830,7 @@ ifneq ($(COMPOSER_RELEASE),)
 #WORKING
 #	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+#	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
 #		| $(SED) "/install[:][[:space:]]/d"
 #>		| $(SED) "s|$(abspath $(dir $(COMPOSER_DIR)))|...|g"
@@ -5514,10 +5514,11 @@ endif
 # commit!
 # start working on yaml templating; none of it is going to work if that doesn't
 
-#WORKING https://github.com/bewuethr/pandoc-bash-blog
-#WORKING new target(s)... document!
-#WORKING c_title = pagetitle?
-#WORKING header-includes?  leave it to c_options?  maybe c_header?
+#WORKING
+# https://github.com/bewuethr/pandoc-bash-blog
+# new target(s)... document!
+# c_title = pagetitle?
+# header-includes?  leave it to c_options?  maybe c_header?
 
 override define $(PUBLISH)-BRAND =
 $(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
@@ -5688,21 +5689,18 @@ override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,,Overview)
   * [Overview]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)
   * [Quick Start]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Principles)
   * [Principles]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)
   * [Requirements]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
-$(_M)
-  * [Recommended Workflow]
-  * [Document Formatting]
-  * [Configuration Settings]
-  * [Precedence Rules]
-  * [Specifying Dependencies]
-  * [Custom Targets]
-  * [Repository Versions]
 $(call $(PUBLISH)-UNIT_END)
 $(_E)<hr/>
 $(call $(PUBLISH)-BOX_BEG,6,Formats)
@@ -5715,6 +5713,35 @@ endef
 override define $(PUBLISH)-NAV_COLUMN_2 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Operation)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)
+  * [Recommended Workflow]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Document Formatting)
+$(_M)
+  * [HTML]
+  * [Bootstrap Websites]
+  * [PDF]
+  * [EPUB]
+  * [Reveal.js Presentations]
+  * [Microsoft Word & PowerPoint]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Configuration Settings)
+  * [Configuration Settings]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Precedence Rules)
+  * [Precedence Rules]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Specifying Dependencies)
+  * [Specifying Dependencies]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Custom Targets)
+  * [Custom Targets]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Repository Versions)
+  * [Repository Versions]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)
 $(_M)
@@ -5799,6 +5826,14 @@ $(_E)
 <ul class="dropdown-menu bg-dark">
 <li><a class="dropdown-item" href="#recommended-workflow">Recommended Workflow</a></li>
 <li><a class="dropdown-item" href="#document-formatting">Document Formatting</a></li>
+<ul>
+<li><a class="dropdown-item" href="#configuration-settings">HTML</a></li>
+<li><a class="dropdown-item" href="#configuration-settings">Bootstrap Websites</a></li>
+<li><a class="dropdown-item" href="#configuration-settings">PDF</a></li>
+<li><a class="dropdown-item" href="#configuration-settings">EPUB</a></li>
+<li><a class="dropdown-item" href="#configuration-settings">Reveal.js Presentations</a></li>
+<li><a class="dropdown-item" href="#configuration-settings">Microsoft Word & PowerPoint</a></li>
+</ul></li>
 <li><a class="dropdown-item" href="#configuration-settings">Configuration Settings</a></li>
 <li><a class="dropdown-item" href="#precedence-rules">Precedence Rules</a></li>
 <li><a class="dropdown-item" href="#specifying-dependencies">Specifying Dependencies</a></li>
@@ -5912,26 +5947,26 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Operation))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Recommended Workflow))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_BASENAME) Operation))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Recommended Workflow))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Document Formatting))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Document Formatting))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Configuration Settings))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Configuration Settings))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Precedence Rules))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Precedence Rules))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Specifying Dependencies))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Specifying Dependencies))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Custom Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Custom Targets))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Repository Versions))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Repository Versions))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
