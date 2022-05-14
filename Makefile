@@ -5544,7 +5544,7 @@ override define $(PUBLISH)_NAV_TOP =
 
 <nav class="navbar navbar-expand fixed-top bg-dark">
 <div class="container-fluid">
-<h2><a class="navbar-brand" href="#">$(COMPOSER_TECHNAME)</a></h2>
+<h1 class="navbar-brand">$(COMPOSER_TECHNAME)</h1>
 <ol class="nav nav-pills nav-fill me-auto mb-2 mb-md-0">
 <li class="nav-item"><a class="nav-link" href="#">Tab One</a></li>
 <li class="nav-item"><a class="nav-link" href="#">Tab Two</a></li>
@@ -5580,7 +5580,7 @@ override define $(PUBLISH)_NAV_BOTTOM =
 
 <nav class="navbar navbar-expand fixed-bottom bg-dark">
 <div class="container-fluid">
-<ol class="navbar-nav">
+<ol class="nav nav-pills nav-fill me-auto mb-2 mb-md-0">
 <li class="navbar-item">Copyright (c) 2022, Gary B. Genett</li>
 <li class="navbar-item">&nbsp;</li>
 <li class="navbar-item">&nbsp;</li>
