@@ -133,9 +133,11 @@ override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
 override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
 override COMPOSER_TAGLINE		:= Happy Making!
 
-COPYRIGHT_FULL				:= Copyright (c) 2014, 2015, 2022, $(COMPOSER_COMPOSER)
-COPYRIGHT_SHORT				:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
-CREATED_TAGLINE				:= Created by $(COMPOSER_TECHNAME)
+override COPYRIGHT_FULL			:= Copyright (c) 2014, 2015, 2022, $(COMPOSER_COMPOSER)
+override COPYRIGHT_SHORT		:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
+override CREATED_TAGLINE		:= Created by $(COMPOSER_TECHNAME)
+
+override COMPOSER_HOMEPAGE		:= https://github.com/garybgenett/composer
 
 override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
@@ -188,6 +190,7 @@ override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
 override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
+override COMPOSER_ICON			:= $(COMPOSER_ART)/icon.img
 override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 
 ########################################
@@ -1039,19 +1042,38 @@ endif
 # {{{1 Bootstrap Options -------------------------------------------------------
 ################################################################################
 
-#TODO : bootstrap!
+override SITE_CNAME			:= www.garybgenett.net
+override SITE_BRAND			:= $(COMPOSER_TECHNAME)
+override SITE_COPYRIGHT			:= $(COPYRIGHT_SHORT)
 
-# override SITE_SOURCE			?= $(COMPOSER_ROOT)
-# override SITE_OUTPUT			?= $(COMPOSER_ROOT)/_site
-# override SITE_SEARCH			?= 1
+override SITE_SOURCE			:= $(COMPOSER_ROOT)
+override SITE_OUTPUT			:= $(COMPOSER_ROOT)/.public
+
+override SITE_MAIN_COL_SIZE		:= 6
+
+#WORKING document : if site name is empty, it disables it
+override SITE_SEARCH_NAME		:= Search
+override SITE_SEARCH_SITE		:= https://duckduckgo.com/|q
+override SITE_SEARCH_FORM		:= \
+	ia|web \
+	kae|d \
+	ko|1 \
+	kp|-1 \
+	kv|1 \
+	kz|-1 \
+	sites|$(patsubst www.%,%,$(SITE_CNAME)) \
+
+#WORKING yaml instead
+override SITE_BREADCRUMBS		:= \
+	./|Home \
+	./.sources|Source \
+	./artifacts|Artifacts \
+	./bootstrap|Bootstrap \
+
+#WORKING:NOW
 
 # override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
-# override SITE_SUBTITLE			?= a simple proof of concept
 # override SITE_DESCRIPTION		?= a brief summary
-# override SITE_EXCERPT			?= Please expand on that...
-# override SITE_AUTHOR			?= $(COMPOSER_COMPOSER)
-# override SITE_LANGUAGE			?= en
-# override SITE_TIMEZONE			?= US/Pacific
 
 # override SITE_GOOGLEPLUS		?= https://plus.google.com/$(COMPOSER_BASENAME)
 # override SITE_FACEBOOK			?= https://www.facebook.com/$(COMPOSER_BASENAME)
@@ -1061,50 +1083,10 @@ endif
 
 # override SITE_GIT_REPO			?= git@github.com:garybgenett/garybgenett.net.git
 # override SITE_ANALYTICS_ID		?=
-# override SITE_URL			?= http://0.0.0.0:4000
-# override SITE_ROOT			?=
-# override SITE_SIDEBAR			?= right
 # override SITE_PERMALINK			?= :year/:month/:day/:title/
 # override SITE_DATE_FORMAT		?= YYYY-MM-DD
 # override SITE_TIME_FORMAT		?= HH:mm:ss
-# override SITE_FEED_TYPE			?= atom
 # override SITE_PER_PAGE			?= 10
-
-# override SITE_SIZE_BANNER		?= 128px
-# override SITE_SIZE_LOGO			?= 32px
-# override SITE_SIZE_SUBTITLE		?= 16px
-# override SITE_SIZE_MOBLE_NAV		?= 256px
-
-# override SITE_COLOR_BACKGROUND		?= \#202020
-# override SITE_COLOR_BACKGROUND_BLOCK	?= \#404040
-# override SITE_COLOR_BACKGROUND_FOOTER	?= \#000000
-# override SITE_COLOR_BACKGROUND_MOBILE	?= \#000000
-# override SITE_COLOR_BACKGROUND_WIDGET	?= \#404040
-# override SITE_COLOR_BORDER		?= \#808080
-# override SITE_COLOR_BORDER_WIDGET	?= \#808080
-# override SITE_COLOR_SHADOW_BLOCK	?= \#004000
-# override SITE_COLOR_SHADOW_TEXT		?= \#004000
-# override SITE_COLOR_TEXT_DEFAULT	?= \#f0f0f0
-# override SITE_COLOR_TEXT_GREY		?= \#808080
-# override SITE_COLOR_TEXT_LINK		?= \#00f000
-# override SITE_COLOR_TEXT_SIDEBAR	?= \#000000
-
-# override SITE_WIDGETS_ARCHIVES		?= Archives
-# override SITE_WIDGETS_CATEGORIES	?= Categories
-# override SITE_WIDGETS_RECENTS		?= Recents
-# override SITE_WIDGETS_TAGS		?= Tags
-# override SITE_WIDGETS_TAGS_CLOUD	?= Tag Cloud
-# override SITE_WIDGETS			?= \
-	recent_posts \
-	tagcloud \
-	tag \
-	category \
-	archive \
-
-# override SITE_MENU			?= \
-	Home| \
-	Testing|Test-page \
-	$(SITE_WIDGETS_ARCHIVES)|archives \
 
 # override SITE_SKIPS			?= \
 	CNAME \
@@ -1119,9 +1101,6 @@ endif
 	<a href=\"https://github.com/garybgenett/composer\">					<img src=\"https://raw.githubusercontent.com/garybgenett/composer/devel/icon.png\"	alt=\"Composer\"	style=\"border:0; width:31px; height:31px;\"/></a> \
 	<a href=\"http://www.vim.org\">								<img src=\"http://www.vim.org/images/vim_small.gif\"					alt=\"Vim\"		style=\"border:0; width:31px; height:31px;\"/></a> \
 	<a href=\"http://git-scm.com\">								<img src=\"https://git.wiki.kernel.org/images-git/d/df/FrontPage%24git-logo.png\"	alt=\"Git\"		style=\"border:0; width:72px; height:27px;\"/></a>
-
-# override SITE_SEARCH_SCRIPT		:= <script>function search_submit() { window.location.href = \"https://duckduckgo.com?kp=-1\&kz=-1\&kv=1\&kae=d\&ko=1\&q=site:\1 + config.url + \1 \" + document.search_form.q.value; }</script>
-# override SITE_SEARCH_FORM		:= action=\"javascript:search_submit();\" name=\"search_form\"
 
 # http://navaneeth.me/font-awesome-icons-css-content-values
 #>override SITE_SOCIAL_ICON_googleplus	:= f0d5
@@ -1909,8 +1888,9 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[License: GPL]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
+#WORKING these links need to be variables
 override define $(HELPOUT)-$(DOITALL)-LINKS =
-$(_E)[$(COMPOSER_BASENAME)]: https://github.com/garybgenett/composer$(_D)
+$(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[License: GPL]: https://github.com/garybgenett/composer/blob/master/LICENSE.md$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
 $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
@@ -2121,10 +2101,12 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #		bootstrap is just supporting where the markdown-viewer themes fall through
 #		revealjs is usually using a theme, which we are refining
 #	these can now be removed to be disabled
+#	favicon.ico = idendical to $(_C)[Reveal.js Presentations]$(_D)
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_ICON))$(_D)
 
 #WORKING
 
@@ -2793,6 +2775,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 	@$(foreach FILE,\
 		$(TMPL_HTML):$(EXTN_HTML) \
@@ -2831,6 +2814,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS))			>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 #>	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS))			$(CURDIR)/$(COMPOSER_CSS)
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 endif
 	@$(ENDOLINE)
@@ -2843,11 +2827,12 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
-	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
-#>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
-		| $(SED) "/install[:][[:space:]]/d"
+#WORKING
+#	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+#	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
+#		| $(SED) "/install[:][[:space:]]/d"
 #>		| $(SED) "s|$(abspath $(dir $(COMPOSER_DIR)))|...|g"
 	@$(RM) \
 		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
@@ -2857,6 +2842,7 @@ ifneq ($(COMPOSER_RELEASE),)
 		$(CURDIR)/$(COMPOSER_CSS) \
 		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
 		>/dev/null
+	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 endif
 
@@ -5531,40 +5517,273 @@ endif
 #WORKING https://github.com/bewuethr/pandoc-bash-blog
 #WORKING new target(s)... document!
 #WORKING c_title = pagetitle?
-#WORKING variables
-override SITE_CNAME			:= www.garybgenett.net
-override SITE_SEARCH_NAME		:= Search
-override SITE_MAIN_COL_SIZE		:= 6
-#	cname
-#	favicon.ico
-#	copyright
-#	search string
-#	header-includes?  leave it to c_options?  maybe c_header?
+#WORKING header-includes?  leave it to c_options?  maybe c_header?
+
+override define $(PUBLISH)-BRAND =
+$(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
+$(_C)
+<h1 class="navbar-brand">$(SITE_BRAND)</h1>
+$(_D)
+endef
+
+override define $(PUBLISH)-SEARCH =
+$(_N)<!-- $(PUBLISH)-SEARCH -->$(_D)
+$(_C)
+<form class="d-flex" action="$(word 1,$(subst |, ,$(SITE_SEARCH_SITE)))">
+$(foreach FILE,$(SITE_SEARCH_FORM),<input type="hidden" name="$(word 1,$(subst |, ,$(FILE)))" value="$(word 2,$(subst |, ,$(FILE)))"/>$(call NEWLINE))
+<input class="form-control me-1" type="text" name="$(word 2,$(subst |, ,$(SITE_SEARCH_SITE)))"/>
+<button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
+</form>
+$(_D)
+endef
+
+override define $(PUBLISH)-NAV_BOTTOM =
+$(_N)<!-- $(PUBLISH)-NAV_BOTTOM -->$(_D)
+$(call $(PUBLISH)-NAV_BEG,1)
+$(_C)
+<li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
+<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
+$(if $(SITE_BREADCRUMBS),\
+<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;$(call NEWLINE)\
+<ol class="breadcrumb">$(call NEWLINE)\
+$(foreach FILE,$(SITE_BREADCRUMBS),<li class="breadcrumb-item"><a href="$(word 1,$(subst |, ,$(FILE)))">$(word 2,$(subst |, ,$(FILE)))</a></li>$(call NEWLINE))\
+</ol></li>)
+$(_D)
+$(call $(PUBLISH)-NAV_END)
+endef
 
 override define $(PUBLISH)-NAV_BEG =
-$(_N)
-<!-- $(PUBLISH)-NAV_BEG $(DIVIDE) $(if $(1),bottom,top) -->
+$(_N)<!-- $(PUBLISH)-NAV_BEG $(DIVIDE) $(if $(1),bottom,top) -->$(_D)
 $(_S)
 <nav class="navbar navbar-expand-sm fixed-$(if $(1),bottom,top) bg-dark">
 <div class="container-fluid">
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$(if $(1),bottom,top)">
 <span class="navbar-toggler-icon"></span>
 </button>
-$(if $(2),$(call $(PUBLISH)-BRAND),$(_N)<!-- brand -->$(_D))
+$(if $(2),$(call $(PUBLISH)-BRAND),$(_C)<!-- brand -->$(_D))
+$(_S)
 <div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
 <ul class="navbar-nav me-auto">
-endef
-
-override define $(PUBLISH)-BRAND =
-$(_N)
-<!-- $(PUBLISH)-BRAND -->
-$(_C)
-<h1 class="navbar-brand">$(COMPOSER_TECHNAME)</h1>
 $(_D)
 endef
 
+override define $(PUBLISH)-NAV_END =
+$(_N)<!-- $(PUBLISH)-NAV_END -->$(_D)
+$(_S)
+</ul>
+$(if $(and $(1),$(SITE_SEARCH_NAME)),$(_C)$(call $(PUBLISH)-SEARCH)$(_D),$(_C)<!-- search -->$(_D))
+$(_S)
+</div>
+</div>
+</nav>
+$(_D)
+endef
+
+override define $(PUBLISH)-BODY_BEG =
+$(_N)<!-- $(PUBLISH)-BODY_BEG -->$(_S)
+$(_S)
+<body class="container-fluid">
+<div class="row">
+$(_D)
+endef
+
+override define $(PUBLISH)-BODY_END =
+$(_N)<!-- $(PUBLISH)-BODY_END -->$(_D)
+$(_S)
+</div>
+</body>
+</html>
+$(_D)
+endef
+
+override define $(PUBLISH)-COLUMN_BEG =
+$(_N)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
+$(_S)
+<div class="col$(if $(1),-sm-$(1))">
+$(_D)
+endef
+
+override define $(PUBLISH)-COLUMN_END =
+$(_N)<!-- $(PUBLISH)-COLUMN_END -->$(_D)
+$(_S)
+</div>
+$(_D)
+endef
+
+override define $(PUBLISH)-UNIT_BEG =
+$(_N)<!-- $(PUBLISH)-UNIT_BEG -->$(_D)
+$(_S)
+<div class="accordion">
+<div class="accordion-item">
+<h$(1) class="accordion-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
+<button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(3))">
+$(_H)
+$(3)
+$(_S)
+</button>
+</h$(1)>
+<div id="$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
+<div class="accordion-body">
+$(_D)
+endef
+
+override define $(PUBLISH)-UNIT_END =
+$(_N)<!-- $(PUBLISH)-UNIT_END -->$(_D)
+$(_S)
+</div>
+</div>
+</div>
+</div>
+$(_D)
+endef
+
+override define $(PUBLISH)-BOX_BEG =
+$(_N)<!-- $(PUBLISH)-BOX_BEG -->$(_D)
+$(_S)
+<div class="card">
+<h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(2)))">
+$(_H)
+$(2)
+$(_S)
+</h$(1)>
+<div class="card-body">
+$(_D)
+endef
+
+override define $(PUBLISH)-BOX_END =
+$(_N)<!-- $(PUBLISH)-BOX_END -->$(_D)
+$(_S)
+</div>
+</div>
+$(_D)
+endef
+
+########################################
+# {{{3 $(PUBLISH)-$(EXAMPLE) -----------
+
+.PHONY: $(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE):
+	@$(MKDIR) $(COMPOSER_TMP)
+	@$(RUNMAKE) --silent --debug=none COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) | \
+		$(SED) "/^[#][>]/d" \
+		>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) $(COMPOSER_PANDOC) \
+		c_site="1" \
+		c_type="html" \
+		c_base="$(OUT_README).$(PUBLISH)" \
+		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)"
+
+override define $(PUBLISH)-METADATA =
+$(_M)
+---
+pagetitle: "$(COMPOSER_HEADLINE)"
+header-includes: |
+  <link rel="icon" type="image/x-icon" href="$(COMPOSER_ICON)"/>
+---
+<link rel="icon" type="image/x-icon" href="$(COMPOSER_ICON)"/>
+$(_D)
+endef
+
+override define $(PUBLISH)-NAV_COLUMN_1 =
+$(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
+$(call $(PUBLISH)-COLUMN_BEG)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
+$(_M)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
+$(_M)
+  * [Recommended Workflow]
+  * [Document Formatting]
+  * [Configuration Settings]
+  * [Precedence Rules]
+  * [Specifying Dependencies]
+  * [Custom Targets]
+  * [Repository Versions]
+$(call $(PUBLISH)-UNIT_END)
+$(_E)<hr/>
+$(call $(PUBLISH)-BOX_BEG,6,Formats)
+$(_M)
+$(foreach FILE,$(COMPOSER_TARGETS), * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE)))$(call NEWLINE))
+$(call $(PUBLISH)-BOX_END)
+$(call $(PUBLISH)-COLUMN_END)
+endef
+
+override define $(PUBLISH)-NAV_COLUMN_2 =
+$(_E)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
+$(call $(PUBLISH)-COLUMN_BEG)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)
+$(_M)
+  * [c_site]
+  * [c_type / c_base / c_list]
+  * [c_lang]
+  * [c_css]
+  * [c_toc]
+  * [c_level]
+  * [c_margin]
+  * [c_options]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables)
+$(_M)
+  * [MAKEJOBS]
+  * [COMPOSER_DOCOLOR]
+  * [COMPOSER_DEBUGIT]
+  * [COMPOSER_INCLUDE]
+  * [COMPOSER_DEPENDS]
+  * [COMPOSER_LOG]
+  * [COMPOSER_EXT]
+  * [COMPOSER_TARGETS]
+  * [COMPOSER_SUBDIRS]
+  * [COMPOSER_IGNORES]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)
+$(_M)
+  * [help / help-all]
+  * [template]
+  * [compose]
+  * [site]
+  * [install / install-all / install-force]
+  * [clean / clean-all / *-clean]
+  * [all / all-all / *-all]
+  * [list]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets)
+$(_M)
+  * [book]
+  * [page / post]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets)
+$(_M)
+  * [debug / debug-file]
+  * [check / check-all / config / config-all / targets]
+  * [_commit / _commit-all]
+  * [_release / _update / _update-all]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Reference)
+$(_M)
+  * [Internal Targets]
+  * [Configuration]
+    * [Templates: install]
+    * [Pandoc Extensions]
+  * [Reserved]
+    * [Target Names]
+    * [Variable Names]
+$(call $(PUBLISH)-UNIT_END)
+$(call $(PUBLISH)-COLUMN_END)
+endef
+
 override define $(PUBLISH)-NAV_TOP =
+$(_E)<!-- $(PUBLISH)-NAV_TOP -->$(_D)
 $(call $(PUBLISH)-NAV_BEG,,1)
+$(_E)<!-- $(PUBLISH)-NAV_TOP_MENU -->$(_D)
+$(_E)
 <li class="nav-item"><a class="nav-link" href="#">Top</a></li>
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="#composer-cms" data-bs-toggle="dropdown">CMS</a>
@@ -5663,276 +5882,9 @@ $(call $(PUBLISH)-NAV_BEG,,1)
 $(call $(PUBLISH)-NAV_END,1)
 endef
 
-override define $(PUBLISH)-SEARCH =
-$(_N)
-<!-- $(PUBLISH)-SEARCH -->
-$(_S)
-<form class="d-flex" action="https://duckduckgo.com/">
-<input type="hidden" name="ia" value="web"/>
-<input type="hidden" name="kae" value="d"/>
-<input type="hidden" name="ko" value="1"/>
-<input type="hidden" name="kp" value="-1"/>
-<input type="hidden" name="kv" value="1"/>
-<input type="hidden" name="kz" value="-1"/>
-$(_C)
-<input type="hidden" name="sites" value="$(patsubst www.%,%,$(SITE_CNAME))"/>
-$(_S)
-<input class="form-control me-1" type="text" name="q"/>
-<button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
-</form>
-$(_D)
-endef
-
-override define $(PUBLISH)-NAV_BOTTOM =
-$(_N)
-<!-- $(PUBLISH)-NAV_BOTTOM -->
-$(call $(PUBLISH)-NAV_BEG,1)
-$(_C)
-<li class="nav-item pe-3">$(COPYRIGHT_SHORT)</li>
-<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="https://github.com/garybgenett/composer">$(CREATED_TAGLINE)</a></li>
-$(_S)
-<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
-<ol class="breadcrumb">
-<li class="breadcrumb-item"><a href="./">Home</a></li>
-<li class="breadcrumb-item"><a href="./.sources">Source</a></li>
-<li class="breadcrumb-item"><a href="./artifacts">Artifacts</a></li>
-<li class="breadcrumb-item"><a href="./bootstrap">Bootstrap</a></li>
-</ol></li>
-$(call $(PUBLISH)-NAV_END)
-endef
-
-override define $(PUBLISH)-NAV_END =
-$(_N)
-<!-- $(PUBLISH)-NAV_END -->
-$(_S)
-</ul>
-$(if $(1),$(call $(PUBLISH)-SEARCH),$(_N)<!-- search -->$(_D))
-</div>
-</div>
-</nav>
-$(_D)
-endef
-
-override define $(PUBLISH)-BODY_BEG =
-$(_N)
-<!-- $(PUBLISH)-BODY_BEG -->
-$(_S)
-<body class="container-fluid">
-<div class="row">
-$(_D)
-endef
-
-override define $(PUBLISH)-BODY_END =
-$(_N)
-<!-- $(PUBLISH)-BODY_END -->
-$(_S)
-</div>
-</body>
-</html>
-$(_D)
-endef
-
-override define $(PUBLISH)-COLUMN_BEG =
-$(_N)
-<!-- $(PUBLISH)-COLUMN_BEG -->
-$(_S)
-<div class="col$(if $(1),-sm-$(1))">
-$(_D)
-endef
-
-override define $(PUBLISH)-COLUMN_END =
-$(_N)
-<!-- $(PUBLISH)-COLUMN_END -->
-$(_S)
-</div>
-$(_D)
-endef
-
-override define $(PUBLISH)-UNIT_BEG =
-$(_N)
-<!-- $(PUBLISH)-UNIT_BEG -->
-$(_S)
-<div class="accordion">
-<div class="accordion-item">
-<h$(1) class="accordion-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
-<button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(3))">
-$(_H)$(3)$(_S)
-</button>
-</h$(1)>
-<div id="$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
-<div class="accordion-body">
-$(_D)
-endef
-
-override define $(PUBLISH)-UNIT_END =
-$(_N)
-<!-- $(PUBLISH)-UNIT_END -->
-$(_S)
-</div>
-</div>
-</div>
-</div>
-$(_D)
-endef
-
-override define $(PUBLISH)-BOX_BEG =
-$(_N)
-<!-- $(PUBLISH)-BOX_BEG -->
-$(_S)
-<div class="card">
-<h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(2)))">
-$(_H)$(2)$(_S)
-</h$(1)>
-<div class="card-body">
-endef
-
-override define $(PUBLISH)-BOX_END =
-$(_N)
-<!-- $(PUBLISH)-BOX_END -->
-$(_S)
-</div>
-</div>
-endef
-
-########################################
-# {{{3 $(PUBLISH)-$(EXAMPLE) -----------
-
-.PHONY: $(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE):
-	@$(MKDIR) $(COMPOSER_TMP)
-	@$(RUNMAKE) --silent --debug=none COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) | \
-		$(SED) "/^[#][>]/d" \
-		>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(RUNMAKE) $(COMPOSER_PANDOC) \
-		c_site="1" \
-		c_type="html" \
-		c_base="$(OUT_README).$(PUBLISH)" \
-		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)"
-
-override define $(PUBLISH)-METADATA =
-$(_M)
----
-pagetitle: "$(COMPOSER_HEADLINE)"
-header-includes: |
-  <link rel="icon" type="image/x-icon" href="$(COMPOSER_LOGO)"/>
----
-<link rel="icon" type="image/x-icon" href="$(COMPOSER_LOGO)"/>
-$(_D)
-endef
-
-override define $(PUBLISH)-NAV_COLUMN_1 =
-$(_N)
-<!-- $(PUBLISH)-NAV_COLUMN_1 -->
-$(_S)
-$(call $(PUBLISH)-COLUMN_BEG)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
-$(_D)
-  * [Overview]
-  * [Quick Start]
-  * [Principles]
-  * [Requirements]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
-$(_D)
-  * [Recommended Workflow]
-  * [Document Formatting]
-  * [Configuration Settings]
-  * [Precedence Rules]
-  * [Specifying Dependencies]
-  * [Custom Targets]
-  * [Repository Versions]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-<hr/>
-$(call $(PUBLISH)-BOX_BEG,6,Formats)
-$(_E)
-$(foreach FILE,$(COMPOSER_TARGETS), * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE)))$(call NEWLINE))
-$(_D)
-$(call $(PUBLISH)-BOX_END)
-$(call $(PUBLISH)-COLUMN_END)
-$(_D)
-endef
-
-override define $(PUBLISH)-NAV_COLUMN_2 =
-$(_N)
-<!-- $(PUBLISH)-NAV_COLUMN_2 -->
-$(_S)
-$(call $(PUBLISH)-COLUMN_BEG)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)
-$(_D)
-  * [c_site]
-  * [c_type / c_base / c_list]
-  * [c_lang]
-  * [c_css]
-  * [c_toc]
-  * [c_level]
-  * [c_margin]
-  * [c_options]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables)
-$(_D)
-  * [MAKEJOBS]
-  * [COMPOSER_DOCOLOR]
-  * [COMPOSER_DEBUGIT]
-  * [COMPOSER_INCLUDE]
-  * [COMPOSER_DEPENDS]
-  * [COMPOSER_LOG]
-  * [COMPOSER_EXT]
-  * [COMPOSER_TARGETS]
-  * [COMPOSER_SUBDIRS]
-  * [COMPOSER_IGNORES]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)
-$(_D)
-  * [help / help-all]
-  * [template]
-  * [compose]
-  * [site]
-  * [install / install-all / install-force]
-  * [clean / clean-all / *-clean]
-  * [all / all-all / *-all]
-  * [list]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets)
-$(_D)
-  * [book]
-  * [page / post]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets)
-$(_D)
-  * [debug / debug-file]
-  * [check / check-all / config / config-all / targets]
-  * [_commit / _commit-all]
-  * [_release / _update / _update-all]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Reference)
-$(_D)
-  * [Internal Targets]
-  * [Configuration]
-    * [Templates: install]
-    * [Pandoc Extensions]
-  * [Reserved]
-    * [Target Names]
-    * [Variable Names]
-$(_S)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-COLUMN_END)
-$(_D)
-endef
-
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_LOGO) >/dev/null
+	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_ICON) >/dev/null
 	@$(call DO_HEREDOC,$(PUBLISH)-METADATA)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
