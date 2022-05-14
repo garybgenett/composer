@@ -895,6 +895,8 @@ endif
 ########################################
 
 override PANDOC_EXTENSIONS		:=
+override PANDOC_EXTENSIONS		+= $(if $(c_site),+markdown_in_html_blocks)
+override PANDOC_EXTENSIONS		+= $(if $(c_site),+raw_html)
 override PANDOC_EXTENSIONS		+= +ascii_identifiers
 override PANDOC_EXTENSIONS		+= +auto_identifiers
 override PANDOC_EXTENSIONS		+= +emoji
@@ -944,11 +946,11 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--css="$(BOOTSTRAP_CSS_CSS)" \
 	) \
 	$(if $(call c_css_select),\
-		$(if $(c_site),				--css="$(call c_css_select)") \
+		$(if $(c_site),				--css="$(call c_css_select)" ,\
 		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
 		$(if $(filter $(c_type),$(TYPE_PRES)),	--css="$(call c_css_select)") \
-	) \
+	)) \
 	$(if $(c_toc),\
 		--table-of-contents \
 		$(if $(filter $(SPECIAL_VAL),$(c_toc)),	--toc-depth="$(DEPTH_MAX)" --number-sections ,\
@@ -2259,7 +2261,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_site)
 
-#WORKING:NOW
+#WORKING
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_type / c_base / c_list)
 
@@ -4731,7 +4733,7 @@ $(TESTING)-$(PUBLISH):
 		Test every combination of formats and formatting variables ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 	)
-#WORKING:NOW
+#WORKING
 #	@$(call $(TESTING)-mark)
 #	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -4740,11 +4742,11 @@ $(TESTING)-$(PUBLISH):
 #> update: TYPE_PUBLISH
 .PHONY: $(TESTING)-$(PUBLISH)-init
 $(TESTING)-$(PUBLISH)-init:
-#WORKING:NOW
+#WORKING
 
 .PHONY: $(TESTING)-$(PUBLISH)-done
 $(TESTING)-$(PUBLISH)-done:
-#WORKING:NOW
+#WORKING
 	@$(call $(TESTING)-hold)
 
 
@@ -5448,234 +5450,224 @@ endif
 ########################################
 # {{{2 $(PUBLISH) ----------------------
 
+#WORKING c_title = pagetitle?
+
 .PHONY: $(PUBLISH)
 $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
-	@$(ECHO) ""							>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-#WORKING:NOW
-	@$(call DO_HEREDOC,$(PUBLISH)_HEAD)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_TOP)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_BODY_BEG)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_1)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_BEG,8))	>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
-		Overview ,\
-			$(call $(HELPOUT)-$(DOITALL)-OVERVIEW) \
-		))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
-		Quick Start ,\
-			Use `$(_C)$(DOMAKE) $(HELPOUT)$(_D)` to get started: \
-			<br/> $(shell $(RUNMAKE) $(HELPOUT)-USAGE) \
-			<br/> $(shell $(RUNMAKE) $(HELPOUT)-EXAMPLES_0) \
-		))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
-		Principles ,\
-			$(call $(HELPOUT)-$(DOITALL)-GOALS) \
-		,1))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT,6,\
-		Requirements ,\
-			$(call $(HELPOUT)-$(DOITALL)-REQUIRE) \
-			<br/> $(shell $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d") \
-			<br/> $(call $(HELPOUT)-$(DOITALL)-REQUIRE_POST) \
-		,1))							>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_END)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_2)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_NAV_BOTTOM)			>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)_BODY_END)				>>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-#WORKING:NOW
-	@$(CP) $(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT) $(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML)
-#	@$(RUNMAKE) $(COMPOSER_PANDOC) \
-#		COMPOSER_DEBUGIT="1" \
-#		c_site="1" \
-#		c_type="html" \
-#		c_base="$(OUT_README).$(PUBLISH)" \
-#		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)" \
-#		c_options="--metadata=\"title=$(COMPOSER_HEADLINE)\""
+ifneq ($(COMPOSER_RELEASE),)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(PUBLISH)-$(EXAMPLE) | $(SED) "/^[#][>]/d" >$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) $(COMPOSER_PANDOC) \
+		COMPOSER_DEBUGIT="1" \
+		c_site="1" \
+		c_type="html" \
+		c_base="$(OUT_README).$(PUBLISH)" \
+		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)" \
+		c_options="--metadata=\"pagetitle=$(COMPOSER_HEADLINE)\""
+endif
 
-override define $(PUBLISH)_HEAD =
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
-<head>
-<meta charset="utf-8" />
-<meta name="generator" content="pandoc" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-<meta name="author" content="Gary B. Genett" />
-<title>Composer CMS: Content Make System</title>
+#WORKING new target... document!
+#WORKING:NOW
 
-<link href="bootstrap/dist/css/bootstrap.css" rel="stylesheet">
-<script src="bootstrap/dist/js/bootstrap.bundle.js"></script>
-<link href="artifacts/bootstrap.css" rel="stylesheet">
-endef
+.PHONY: $(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE):
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_TOP)
+	@$(call DO_HEREDOC,$(PUBLISH)_BODY_BEG)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_1)
+	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_BEG,8))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,$(COMPOSER_TECHNAME)))
+			@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
+			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
+			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,Overview))
+			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Quick Start))
+			@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+			@$(RUNMAKE) $(HELPOUT)-USAGE
+			@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
+			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Principles))
+			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,1,Requirements))
+			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+			@$(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+			@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_UNIT_END)
+	@$(call DO_HEREDOC,$(PUBLISH)_CONTENT_END)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_COLUMN_2)
+	@$(call DO_HEREDOC,$(PUBLISH)_NAV_BOTTOM)
+	@$(call DO_HEREDOC,$(PUBLISH)_BODY_END)
 
 override define $(PUBLISH)_NAV_TOP =
-<nav class="navbar navbar-expand fixed-top bg-dark">
-  <div class="container-fluid text-uppercase">
-    <a class="navbar-brand" href="#">Fixed navbar</a>
-      <ul class="navbar-nav me-auto mb-2 mb-md-0">
-        <li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPDOWN</a>
-          <ul class="dropdown-menu bg-dark">
-            <li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
-            <li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
-            <li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
-          </ul>
-        </li>
-      </ul>
-      <script type="text/javascript">
-        function search(){
-          var search = document.getElementById("search").value;
-          window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+"+search;
-        }
-      </script>
-      <form class="d-flex" action="https://duckduckgo.com/">
-        <input type="hidden" name="kae" value="d"/>
-        <input type="hidden" name="kp" value="-1"/>
-        <input type="hidden" name="ko" value="1"/>
-        <input type="hidden" name="kz" value="-1"/>
-        <input type="hidden" name="kv" value="1"/>
-        <input type="hidden" name="ia" value="web"/>
-        <input type="hidden" name="sites" value="tresobis.org"/>
-        <input class="form-control me-2" type="text" name="q"/>
-        <button class="btn btn-outline-success" type="submit">SEARCH</button>
-      </form>
-  </div>
-</nav>
-endef
 
-override define $(PUBLISH)_NAV_BOTTOM =
-<!-- bootstrap : bottom navbar -->
-<nav class="navbar navbar-expand fixed-bottom bg-dark">
-  <div class="container-fluid text-uppercase">
-    <a class="navbar-brand" href="#">Fixed navbar</a>
-      <ol class="navbar-nav me-auto mb-2 mb-md-0 breadcrumb">
-        <li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
-        <li class="nav-item dropup">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPUP</a>
-          <ul class="dropdown-menu bg-dark">
-            <li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
-            <li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
-            <li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
-            <li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
-            <li class="breadcrumb-item"><a href="#">Library</a></li>
-            <li class="breadcrumb-item"><a href="#">Data</a></li>
-          </ol>
-        </li>
-      </ol>
-  </div>
+<nav class="navbar navbar-expand fixed-top bg-dark">
+<div class="container-fluid text-uppercase">
+<a class="navbar-brand" href="#">Fixed navbar</a>
+<ul class="navbar-nav me-auto mb-2 mb-md-0">
+<li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
+<li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
+<li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPDOWN</a>
+<ul class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
+<li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
+<li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
+<li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
+</ul>
+</li>
+</ul>
+<script type="text/javascript">function search() { var search = document.getElementById("search").value; window.location.href = "https://duckduckgo.com/?kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web&q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+"+search; }</script>
+<form class="d-flex" action="https://duckduckgo.com/">
+<input type="hidden" name="kae" value="d"/>
+<input type="hidden" name="kp" value="-1"/>
+<input type="hidden" name="ko" value="1"/>
+<input type="hidden" name="kz" value="-1"/>
+<input type="hidden" name="kv" value="1"/>
+<input type="hidden" name="ia" value="web"/>
+<input type="hidden" name="sites" value="tresobis.org"/>
+<input class="form-control me-2" type="text" name="q"/>
+<button class="btn btn-outline-success" type="submit">SEARCH</button>
+</form>
+</div>
 </nav>
+
+endef
+override define $(PUBLISH)_NAV_BOTTOM =
+
+<nav class="navbar navbar-expand fixed-bottom bg-dark">
+<div class="container-fluid text-uppercase">
+<a class="navbar-brand" href="#">Fixed navbar</a>
+<ol class="navbar-nav me-auto mb-2 mb-md-0 breadcrumb">
+<li class="nav-item"><a class="nav-link" href="#">ACTIVE</a></li>
+<li class="nav-item"><a class="nav-link" href="#">LINK</a></li>
+<li class="nav-item"><a class="nav-link" href="#">DISABLED</a></li>
+<li class="nav-item dropup">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">DROPUP</a>
+<ul class="dropdown-menu bg-dark">
+<li><a class="dropdown-item" href="#overview" id="toc-overview"><span class="toc-section-number">1.1</span> Overview</a></li>
+<li><a class="dropdown-item" href="#quick-start" id="toc-quick-start"><span class="toc-section-number">1.2</span> Quick Start</a></li>
+<li><a class="dropdown-item" href="#principles" id="toc-principles"><span class="toc-section-number">1.3</span> Principles</a></li>
+<li><a class="dropdown-item" href="#requirements" id="toc-requirements"><span class="toc-section-number">1.4</span> Requirements</a></li>
+</ul>
+</li>
+<li class="nav-item">
+<ol class="breadcrumb">
+<li class="breadcrumb-item"><a href="#">Home</a></li>
+<li class="breadcrumb-item"><a href="#">Library</a></li>
+<li class="breadcrumb-item"><a href="#">Data</a></li>
+</ol>
+</li>
+</ol>
+</div>
+</nav>
+
 endef
 
 override define $(PUBLISH)_BODY_BEG =
+
 <body class="container-fluid">
 <div class="p-5 mt-3">
 <h1>THIS IS THE TOP</h1>
 <div class="container-fluid">
 <div class="row">
+
 endef
 override define $(PUBLISH)_BODY_END =
+
 </div>
 </div>
 <h1>THIS IS THE BOTTOM</h1>
 </div>
 </body>
 </html>
+
 endef
 
 override define $(PUBLISH)_CONTENT_BEG =
+
 <div class="col$(if $(1),-sm-$(1))">
+
 endef
 override define $(PUBLISH)_CONTENT_END =
+
 </div>
+
 endef
 
 override define $(PUBLISH)_NAV_COLUMN_1 =
 $(call $(PUBLISH)_CONTENT_BEG)
-$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 1,\
-  <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#principles">Principles</a></li>
-  <li><a href="#requirements">Requirements</a></li>
-  </ul>
-)
-$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 1,\
-  <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#principles">Principles</a></li>
-  <li><a href="#requirements">Requirements</a></li>
-  </ul>
-)
-$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 1,\
-  <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#principles">Principles</a></li>
-  <li><a href="#requirements">Requirements</a></li>
-  </ul>
-)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 1)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)_CONTENT_UNIT_END)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 1)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)_CONTENT_UNIT_END)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 1)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)_CONTENT_UNIT_END)
 $(call $(PUBLISH)_CONTENT_END)
 endef
-
 override define $(PUBLISH)_NAV_COLUMN_2 =
 $(call $(PUBLISH)_CONTENT_BEG)
-$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 2,\
-  <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#principles">Principles</a></li>
-  <li><a href="#requirements">Requirements</a></li>
-  </ul>
-)
-$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 2,\
-  <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#principles">Principles</a></li>
-  <li><a href="#requirements">Requirements</a></li>
-  </ul>
-)
-$(call $(PUBLISH)_CONTENT_UNIT,6,HEADER 2,\
-  <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#principles">Principles</a></li>
-  <li><a href="#requirements">Requirements</a></li>
-  </ul>
-)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 2)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)_CONTENT_UNIT_END)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 2)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)_CONTENT_UNIT_END)
+$(call $(PUBLISH)_CONTENT_UNIT_BEG,6,,HEADER 2)
+  * [Overview]
+  * [Quick Start]
+  * [Principles]
+  * [Requirements]
+$(call $(PUBLISH)_CONTENT_UNIT_END)
 $(call $(PUBLISH)_CONTENT_END)
 endef
 
-override define $(PUBLISH)_CONTENT_UNIT =
+override define $(PUBLISH)_CONTENT_UNIT_BEG =
+
 <div class="accordion">
-  <div class="accordion-item">
-    <div class="accordion-header">
-      <button class="accordion-button$(if $(4), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(2))">
-        <h$(1)>$(2)</h$(1)>
-      </button>
-    </div>
-    <div id="$(subst $(NULL) ,,$(2))" class="accordion-collapse collapse$(if $(4),, show)">
-      <div class="accordion-body">
-        $(3)
-      </div>
-    </div>
-  </div>
+<div class="accordion-item">
+<div class="accordion-header">
+<button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(3))">
+
+$(shell for file in {1..$(1)}; do $(ECHO) "#"; done; $(ECHO) " $(3)")
+
+</button>
+</div>
+<div id="$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
+<div class="accordion-body">
+
+endef
+override define $(PUBLISH)_CONTENT_UNIT_END =
+
+</div>
+</div>
+</div>
 </div>
 <p></p>
+
 endef
 
 ########################################
