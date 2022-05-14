@@ -2843,11 +2843,10 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
 	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#WORKING:NOW
-	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
+#>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
 #>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-#	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
-#		| $(SED) "/install[:][[:space:]]/d"
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
+		| $(SED) "/install[:][[:space:]]/d"
 #>		| $(SED) "s|$(abspath $(dir $(COMPOSER_DIR)))|...|g"
 	@$(RM) \
 		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
@@ -3128,12 +3127,16 @@ body {
 
 /* ################################## */
 
-/* #WORKING:NOW
-.card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
-*/
+.accordion-button {
+	color:				inherit;
+	font-weight:			bold;
+}
+
 .bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
+.card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
 .accordion-button			{ background-color: rgba(var(--bs-dark-rgb)); }
 
+.card						{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
 .accordion-item					{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
 .accordion-button::after			{ background-color: rgba(var(--bs-danger-rgb)); }
 .accordion-button:not(.collapsed)::after	{ background-color: rgba(var(--bs-success-rgb)); }
@@ -5743,13 +5746,11 @@ $(_N)
 $(_S)
 <div class="accordion">
 <div class="accordion-item">
-<div class="accordion-header">
+<h$(1) class="accordion-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
 <button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#$(subst $(NULL) ,,$(3))">
-$(_H)
-$(shell for file in {1..$(1)}; do $(ECHO) "#"; done; $(ECHO) " $(3)")
-$(_S)
+$(_H)$(3)$(_S)
 </button>
-</div>
+</h$(1)>
 <div id="$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
 <div class="accordion-body">
 $(_D)
@@ -5763,11 +5764,27 @@ $(_S)
 </div>
 </div>
 </div>
-<p></p>
 $(_D)
 endef
 
-#WORKING:NOW
+override define $(PUBLISH)-BOX_BEG =
+$(_N)
+<!-- $(PUBLISH)-BOX_BEG -->
+$(_S)
+<div class="card">
+<h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(2)))">
+$(_H)$(2)$(_S)
+</h$(1)>
+<div class="card-body">
+endef
+
+override define $(PUBLISH)-BOX_END =
+$(_N)
+<!-- $(PUBLISH)-BOX_END -->
+$(_S)
+</div>
+</div>
+endef
 
 ########################################
 # {{{3 $(PUBLISH)-$(EXAMPLE) -----------
@@ -5819,6 +5836,12 @@ $(_D)
   * [Repository Versions]
 $(_S)
 $(call $(PUBLISH)-UNIT_END)
+<hr/>
+$(call $(PUBLISH)-BOX_BEG,6,Formats)
+$(_E)
+$(foreach FILE,$(COMPOSER_TARGETS), * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE)))$(call NEWLINE))
+$(_D)
+$(call $(PUBLISH)-BOX_END)
 $(call $(PUBLISH)-COLUMN_END)
 $(_D)
 endef
@@ -5899,8 +5922,6 @@ $(call $(PUBLISH)-COLUMN_END)
 $(_D)
 endef
 
-#WORKING:NOW do one last "less" of this...
-
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_LOGO) >/dev/null
@@ -5909,76 +5930,76 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
 	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME)))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Overview))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_TECHNAME)))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Overview))
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 				@$(ENDOLINE); $(LINERULE)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Quick Start))
 				@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 				@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Principles))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Principles))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Requirements))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Requirements))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 				@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Recommended Workflow))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Operation))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Recommended Workflow))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Document Formatting))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Document Formatting))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Configuration Settings))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Configuration Settings))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Precedence Rules))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Precedence Rules))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Specifying Dependencies))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Specifying Dependencies))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Custom Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Custom Targets))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,Repository Versions))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,,Repository Versions))
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Variables))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_BASENAME) Variables))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Formatting Variables))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Control Variables))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_BASENAME) Targets))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_BASENAME) Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Primary Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Special Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets))
+			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Additional Targets))
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,6,1,Reference))
+		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,Reference))
 			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
 			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
