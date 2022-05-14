@@ -177,6 +177,8 @@ override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 
+override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
+override BOOTSTRAP_CSS_CSS		:= $(COMPOSER_ART)/bootstrap.source.css
 override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
 
 override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
@@ -563,8 +565,8 @@ endif
 override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
-override BOOTSTRAP_CSS_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
-override BOOTSTRAP_CSS_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
+override BOOTSTRAP_CSS_JS_SRC		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
+override BOOTSTRAP_CSS_CSS_SRC		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
 ########################################
 
@@ -942,8 +944,13 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--variable="revealjs-url=$(REVEALJS_DIR)" \
 	) \
 	$(if $(c_site),\
-		--include-in-header="$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))" \
-		--css="$(BOOTSTRAP_CSS_CSS)" \
+		$(if $(call c_css_select),\
+			--include-in-header="$(BOOTSTRAP_CSS_JS)" \
+			--css="$(BOOTSTRAP_CSS_CSS)" \
+			,\
+			--include-in-header="$(BOOTSTRAP_CSS_JS_SRC)" \
+			--css="$(BOOTSTRAP_CSS_CSS_SRC)" \
+		) \
 	) \
 	$(if $(call c_css_select),\
 		$(if $(c_site),				--css="$(call c_css_select)" ,\
@@ -1533,6 +1540,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
+#WORKING
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Recursively create $(_C)[Bootstrap Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
@@ -1556,6 +1564,7 @@ $(HELPOUT)-TARGETS_SPECIALS_%:
 	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(DO_BOOK)]"			"Concatenate a source list into a single output file"
+#WORKING
 	@$(TABLE_M2) "$(_C)[$(DO_PAGE)]"			"$(_N)*(Reserved for the future [$(PUBLISH)] feature)*$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DO_POST)]"			"$(_N)*(Reserved for the future [$(PUBLISH)] feature)*$(_D)"
 	@$(ENDOLINE)
@@ -2066,6 +2075,14 @@ host, and are extremely responsive compared to truly dynamic webpages.
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of simple text files into
 a modern website, with the appearance and behavior of dynamically indexed pages.
 
+#WORKING
+
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS))$(_D)
+
+#WORKING
+
 $(_N)*(This feature is reserved for a future release as the [$(PUBLISH)] target, along with
 [$(DO_PAGE)] and [$(DO_POST)] in [Special Targets].)*$(_D)
 
@@ -2521,6 +2538,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH))
 
+#WORKING
+
   * $(_N)*(This feature is reserved for a future release to create [Bootstrap
     Websites].  It will also include [$(DO_PAGE)] and [$(DO_POST)] from [Special Targets].)*$(_D)
 
@@ -2577,6 +2596,8 @@ that larger works can be comprised of multiple files, such as a book with each
 chapter in a separate file.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
+
+#WORKING
 
 $(_N)*(Both [$(DO_PAGE)] and [$(DO_POST)] are reserved for the future [$(PUBLISH)] feature, which will
 build website pages using [Bootstrap].)*$(_D)
@@ -2713,15 +2734,21 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
+
+	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
+	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
+	@$(ECHO) "</script>\n"								>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
+
+	@$(CP) $(BOOTSTRAP_CSS_CSS_SRC)							$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
+	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
+
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
 	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
-		$(call HEREDOC_BOOTSTRAP_CSS_HACK) \
-		)) $(subst $(COMPOSER_DIR),...,$(BOOTSTRAP_CSS_CSS))&g'			$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
-	@$(ECHO) "<script>\n"								>$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))
-	@$(CAT) $(BOOTSTRAP_CSS_JS)							>>$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))
-	@$(ECHO) "</script>\n"								>>$(patsubst %.js,%.$(PUBLISH).js,$(BOOTSTRAP_CSS_JS))
-	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(BOOTSTRAP_CSS_CSS)
+		$(call HEREDOC_BOOTSTRAP_CSS_HACK))) $(subst \
+		$(COMPOSER_DIR),...,$(BOOTSTRAP_CSS_CSS_SRC))&g'			$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
+	exit 1
+
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
 	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
@@ -4749,7 +4776,6 @@ $(TESTING)-$(PUBLISH)-done:
 #WORKING
 	@$(call $(TESTING)-hold)
 
-
 ########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
 
@@ -5573,16 +5599,12 @@ override define $(PUBLISH)_BODY_BEG =
 
 <body class="container-fluid">
 <div class="p-5 mt-3">
-<h1>THIS IS THE TOP</h1>
-<div class="container-fluid">
 <div class="row">
 
 endef
 override define $(PUBLISH)_BODY_END =
 
 </div>
-</div>
-<h1>THIS IS THE BOTTOM</h1>
 </div>
 </body>
 </html>
