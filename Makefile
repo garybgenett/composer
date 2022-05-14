@@ -5452,13 +5452,21 @@ endef
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-override GIT_OPTS_CONVICT		:= --verbose .$(subst $(COMPOSER_ROOT),,$(CURDIR))
+#WORKING document new $(PRINTER)/c_list hack...?
+
+override GIT_OPTS_CONVICT		:= --verbose $(if \
+	$(filter $(PRINTER),$(COMPOSER_DOITALL_$(CONVICT))) ,\
+	$(addprefix .$(subst $(COMPOSER_ROOT),,$(CURDIR))/,$(c_list)) ,\
+	$(addprefix .,$(subst $(COMPOSER_ROOT),,$(CURDIR))/) \
+)
 
 #> update: PHONY.*$(DOITALL)
 $(eval export override COMPOSER_DOITALL_$(CONVICT) ?=)
 .PHONY: $(CONVICT)-%
 $(CONVICT)-%:
-	@$(RUNMAKE) COMPOSER_DOITALL_$(CONVICT)="$(*)" $(CONVICT)
+	@$(RUNMAKE) COMPOSER_DOITALL_$(CONVICT)="$(*)" \
+		c_list="$(c_list)" \
+		$(CONVICT)
 
 .PHONY: $(CONVICT)
 $(CONVICT): .set_title-$(CONVICT)
@@ -5466,7 +5474,7 @@ $(CONVICT):
 	@$(call $(HEADERS))
 	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	$(call GIT_RUN_COMPOSER,commit \
-		$(if $(COMPOSER_DOITALL_$(CONVICT)),,--edit) \
+		$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(CONVICT))),,--edit) \
 		--message="$(call COMPOSER_TIMESTAMP)" \
 		$(GIT_OPTS_CONVICT) \
 	)
