@@ -253,7 +253,7 @@ endif
 override PATH_LIST			:= $(subst :, ,$(PATH))
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
-override TOKEN				:= ~
+override TOKEN				:= ~^~
 
 ########################################
 
@@ -726,25 +726,34 @@ export LESS				:=
 override UPGRADE			:= _update
 override DOITALL			:= all
 ifeq ($(wildcard $(PANDOC_BIN)),)
+ifeq ($(MAKELEVEL),0)
 $(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
 $(info #> $(COMPOSER_FULLNAME))
 $(info #>	Expecting Pandoc binary: $(subst $(COMPOSER_DIR)/,,$(PANDOC_BIN)))
 $(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
 $(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
 $(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+endif
 else
 override PANDOC				:= $(PANDOC_BIN)
 endif
 ifeq ($(wildcard $(YQ_BIN)),)
+ifeq ($(MAKELEVEL),0)
 $(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
 $(info #> $(COMPOSER_FULLNAME))
 $(info #>	Expecting YQ binary: $(subst $(COMPOSER_DIR)/,,$(YQ_BIN)))
 $(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
 $(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
 $(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+endif
 else
 override YQ				:= $(YQ_BIN)
 endif
+
+override YQ_READ			:= $(YQ) --prettyPrint --no-colors --no-doc --header-preprocess --input-format "yaml" --output-format "json"
+override YQ_WRITE			:= $(YQ_READ) --colors --input-format "yaml" --output-format "yaml"
+override YQ_EXTRACT			:= $(YQ_READ) --front-matter="extract"
+override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' $(COMPOSER_YML_LIST)
 
 ########################################
 # {{{2 Wrappers ------------------------
@@ -922,7 +931,6 @@ ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override PANDOC_OPTIONS_DATA		:= --verbose
 endif
 
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(if $(COMPOSER_YML_LIST),--defaults="$(lastword $(COMPOSER_YML_LIST))")
 override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --data-dir="$(PANDOC_DIR)"
 
 ifneq ($(wildcard $(COMPOSER_ART)/template.$(EXTENSION)),)
@@ -934,6 +942,9 @@ endif
 ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
 override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
 endif
+
+#WORK what do we want to do with this...?
+#>override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(if $(COMPOSER_YML_LIST),--defaults="$(lastword $(COMPOSER_YML_LIST))")
 
 ########################################
 
@@ -1057,8 +1068,9 @@ endif
 # {{{1 Bootstrap Options -------------------------------------------------------
 ################################################################################
 
-#WORKING document : if brand is empty or logo.img don't exist, they will be skipped
+#WORK document : if brand is empty or logo.img don't exist, they will be skipped
 override SITE_CNAME			:= www.garybgenett.net
+override SITE_HOMEPAGE			:= $(COMPOSER_HOMEPAGE)
 override SITE_BRAND			:= $(COMPOSER_TECHNAME)
 override SITE_COPYRIGHT			:= $(COPYRIGHT_SHORT)
 
@@ -1069,7 +1081,7 @@ override SITE_MAIN_COL_SIZE		:= 6
 override SITE_MAIN_COL_STICKY		:= 1
 override SITE_MENU_COL_HIDE		:= 1
 
-#WORKING document : if site name is empty, it disables it
+#WORK document : if site name is empty, it disables it
 override SITE_SEARCH_NAME		:= Search
 override SITE_SEARCH_SITE		:= https://duckduckgo.com/|q
 override SITE_SEARCH_FORM		:= \
@@ -1567,7 +1579,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
-#WORKING
+#WORK
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Recursively create $(_C)[Bootstrap Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
@@ -1592,7 +1604,7 @@ $(HELPOUT)-TARGETS_SPECIALS_%:
 	@$(TABLE_M2) "$(_H)Base Name"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(DO_BOOK)]"			"Concatenate a source list into a single output file"
-#WORKING
+#WORK
 	@$(TABLE_M2) "$(_C)[$(DO_PAGE)]"			"$(_N)*(Reserved for the future [$(PUBLISH)] feature)*$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DO_POST)]"			"$(_N)*(Reserved for the future [$(PUBLISH)] feature)*$(_D)"
 	@$(ENDOLINE)
@@ -1774,6 +1786,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(call TITLE_LN,2,Reserved,$(HEAD_MAIN))
 	@$(call TITLE_LN,3,Target Names)
 	@$(PRINT) "Do not create targets which match these, or use them as prefixes:"
+#WORKING maybe just do: $(RUNMAKE) --silent $(LISTING) | $(SED) -e "/^[#]/d" -e "s|^([^:]+).*$|\1|g" | $(SORT)
 	@$(ENDOLINE); $(eval LIST := $(shell \
 			$(ECHO) " \
 				$(COMPOSER_RESERVED) \
@@ -2126,7 +2139,7 @@ $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_ICON))$(_D)
 
-#WORKING
+#WORK
 
 $(_N)*(This feature is reserved for a future release as the [$(PUBLISH)] target, along with
 [$(DO_PAGE)] and [$(DO_POST)] in [Special Targets].)*$(_D)
@@ -2323,7 +2336,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_site)
 
-#WORKING
+#WORK
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_type / c_base / c_list)
 
@@ -2583,7 +2596,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH))
 
-#WORKING
+#WORK
 
   * $(_N)*(This feature is reserved for a future release to create [Bootstrap
     Websites].  It will also include [$(DO_PAGE)] and [$(DO_POST)] from [Special Targets].)*$(_D)
@@ -2642,7 +2655,7 @@ chapter in a separate file.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
 
-#WORKING
+#WORK
 
 $(_N)*(Both [$(DO_PAGE)] and [$(DO_POST)] are reserved for the future [$(PUBLISH)] feature, which will
 build website pages using [Bootstrap].)*$(_D)
@@ -2771,8 +2784,6 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
 	@$(ENDOLINE)
 endif
-	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
@@ -2783,20 +2794,20 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
+	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_NAV-TOP-SH)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).nav-top.sh
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(ECHO) "</script>\n"								>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CP) $(BOOTSTRAP_CSS_CSS_SRC)							$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
 	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
-	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
 	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
 		$(call HEREDOC_BOOTSTRAP_CSS_HACK))) $(subst \
 		$(COMPOSER_DIR),...,$(BOOTSTRAP_CSS_CSS_SRC))&g'			$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
-	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(TEX_PDF_TEMPLATE))
-	@$(MKDIR)									$(abspath $(dir $(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
@@ -2861,12 +2872,12 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM) \
 		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
 		>/dev/null
-	@$(RM) \
-		$(CURDIR)/$(COMPOSER_SETTINGS) \
-		$(CURDIR)/$(COMPOSER_YML) \
-		$(CURDIR)/$(COMPOSER_CSS) \
-		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
-		>/dev/null
+#	@$(RM) \
+#		$(CURDIR)/$(COMPOSER_SETTINGS) \
+#		$(CURDIR)/$(COMPOSER_YML) \
+#		$(CURDIR)/$(COMPOSER_CSS) \
+#		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
+#		>/dev/null
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 endif
@@ -2973,13 +2984,13 @@ override define HEREDOC_GITATTRIBUTES =
 ########################################
 # https://github.com/github/linguist/blob/master/docs/overrides.md
 
-/artifacts/**				linquist-vendored
+/artifacts/**				linguist-vendored
 
-/bootstrap/**				linquist-vendored
-/markdown-viewer/**			linquist-vendored
-/pandoc/**				linquist-vendored
-/revealjs/**				linquist-vendored
-/yq/**					linquist-vendored
+/bootstrap/**				linguist-vendored
+/markdown-viewer/**			linguist-vendored
+/pandoc/**				linguist-vendored
+/revealjs/**				linguist-vendored
+/yq/**					linguist-vendored
 
 ################################################################################
 # End Of File
@@ -3024,14 +3035,85 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ################################################################################
+# {{{1 Heredoc: $(PUBLISH).nav-top.sh ------------------------------------------
+################################################################################
+
+override define HEREDOC_NAV-TOP-SH =
+#!$(BASH)
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).nav-top.sh
+################################################################################
+
+function $(PUBLISH)-nav-top {
+	$(ECHO) "<!-- $${1} -->\\n"
+	$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1} | keys | .[]" \\
+		| while read -r FILE; do
+			MENU="$$(
+				$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+				| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1}[\"$${FILE}\"].menu" \\
+				2>/dev/null
+			)"
+			if [ -n "$${MENU}" ]; then
+				LINK="$$(
+					$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1}[\"$${FILE}\"].link" \\
+					2>/dev/null
+				)"
+				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
+					$(ECHO) "<li class=\"nav-item dropdown\">\\n"
+					$(ECHO) "<a class=\"nav-link dropdown-toggle\" href=\"$${LINK}\" data-bs-toggle=\"dropdown\">$${FILE}</a>\\n"
+					$(ECHO) "<ul class=\"dropdown-menu bg-dark\">\\n"
+				else
+					$(ECHO) "<li><a class=\"dropdown-item\" href=\"$${LINK}\">$${FILE}</a>\\n"
+					$(ECHO) "<ul>\\n"
+				fi
+				$(PUBLISH)-nav-top "$${1}[\"$${FILE}\"].menu"
+				$(ECHO) "</ul></li>\\n"
+			else
+				VAL="$$(
+					$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1}[\"$${FILE}\"]" \\
+					2>/dev/null
+				)"
+				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
+					$(ECHO) "<li class=\"nav-item\"><a class=\"nav-link\" href=\"$${VAL}\">$${FILE}</a></li>\\n"
+				else
+					$(ECHO) "<li><a class=\"dropdown-item\" href=\"$${VAL}\">$${FILE}</a></li>\\n"
+				fi
+			fi
+		done
+	return 0
+}
+
+########################################
+
+$(PUBLISH)-nav-top "$${1}"
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+################################################################################
 # {{{1 Heredoc: composer_yml ---------------------------------------------------
 ################################################################################
 
-#WORKING:NOW
+#WORKING
+# need to replace header-includes with something more generally applicable...
+# can't use yaml files for any base configuration...
+# likely need to create a html file fragment...
+# this is where the full, final composer configuration should go...
+#WORK
+# expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
+
 override define HEREDOC_COMPOSER_YML_TEMPLATE =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML
 ################################################################################
+
+########################################
+# Pandoc
 
 variables:
   pagetitle: "$(COMPOSER_HEADLINE)"
@@ -3039,6 +3121,101 @@ variables:
 
 ########################################
 # $(COMPOSER_BASENAME)
+
+$(PUBLISH)-nav-top:
+  Top: "#"
+  CMS:
+    link: "#composer-cms"
+    menu:
+      Overview: "#overview"
+      Quick Start: "#quick-start"
+      Principles: "#principles"
+      Requirements: "#requirements"
+  Operation:
+    link: "#composer-operation"
+    menu:
+      Recommended Workflow: "#recommended-workflow"
+      Document Formatting:
+        link: "#document-formatting"
+        menu:
+          HTML: "#html"
+          Bootstrap Websites: "#bootstrap-websites"
+          PDF: "#pdf"
+          EPUB: "#epub"
+          Reveal.js Presentations: "#revealjs-presentations"
+          Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
+      Configuration Settings: "#configuration-settings"
+      Precedence Rules: "#precedence-rules"
+      Specifying Dependencies: "#specifying-dependencies"
+      Custom Targets: "#custom-targets"
+      Repository Versions: "#repository-versions"
+  Variables:
+    link: "#composer-variables"
+    menu:
+      Formatting Variables:
+        link: "#formatting-variables"
+        menu:
+          c_site: "#c_site"
+          c_type / c_base / c_list: "#c_type--c_base--c_list"
+          c_lang: "#c_lang"
+          c_css: "#c_css"
+          c_toc: "#c_toc"
+          c_level: "#c_level"
+          c_margin: "#c_margin"
+          c_options: "#c_options"
+      Control Variables:
+        link: "#control-variables"
+        menu:
+          MAKEJOBS: "#makejobs"
+          COMPOSER_DOCOLOR: "#composer_docolor"
+          COMPOSER_DEBUGIT: "#composer_debugit"
+          COMPOSER_INCLUDE: "#composer_include"
+          COMPOSER_DEPENDS: "#composer_depends"
+          COMPOSER_LOG: "#composer_log"
+          COMPOSER_EXT: "#composer_ext"
+          COMPOSER_TARGETS: "#composer_targets"
+          COMPOSER_SUBDIRS: "#composer_subdirs"
+          COMPOSER_IGNORES: "#composer_ignores"
+  Targets:
+    link: "#composer-targets"
+    menu:
+      Primary Targets:
+        link: "#primary-targets"
+        menu:
+          help / help-all: "#help--help-all"
+          template: "#template"
+          compose: "#compose"
+          site: "#site"
+          install / install-all / install-force: "#install--install-all--install-force"
+          clean / clean-all / *-clean: "#clean--clean-all---clean"
+          all / all-all / *-all: "#all--all-all---all"
+          list: "#list"
+      Special Targets:
+        link: "#special-targets"
+        menu:
+          book: "#book"
+          page / post: "#page--post"
+      Additional Targets:
+        link: "#additional-targets"
+        menu:
+          debug / debug-file: "#debug--debug-file"
+          check / check-all / config / config-all / targets: "#check--check-all--config--config-all--targets"
+          _commit / _commit-all: "#_commit--_commit-all"
+          _release / _update / _update-all: "#_release--_update--_update-all"
+  Reference:
+    link: "#reference"
+    menu:
+      Internal Targets: "#internal-targets"
+      Configuration:
+        link: "#configuration"
+        menu:
+          "Templates: install": "#templates-install"
+          Pandoc Extensions: "#pandoc-extensions"
+      Reserved:
+        link: "#reserved"
+        menu:
+          Target Names: "#target-names"
+          Variable Names: "#variable-names"
 
 ################################################################################
 # End Of File
@@ -3066,7 +3243,7 @@ body {
 }
 
 .col-sticky {
-	max-height:			100vh;
+	max-height:			90vh;
 	overflow:			auto;
 }
 
@@ -3931,7 +4108,7 @@ endif
 #> update: includes duplicates
 override MARKER				:= >>
 override DIVIDE				:= ::
-override TOKEN				:= ~
+override TOKEN				:= ~^~
 override NULL				:=
 
 # https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
@@ -4837,7 +5014,7 @@ $(TESTING)-$(PUBLISH):
 		Test every combination of formats and formatting variables ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 	)
-#WORKING
+#WORK
 #	@$(call $(TESTING)-mark)
 #	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -4846,12 +5023,12 @@ $(TESTING)-$(PUBLISH):
 #> update: TYPE_PUBLISH
 .PHONY: $(TESTING)-$(PUBLISH)-init
 $(TESTING)-$(PUBLISH)-init:
-#WORKING
+#WORK
 
 .PHONY: $(TESTING)-$(PUBLISH)-done
 $(TESTING)-$(PUBLISH)-done:
-#WORKING
-	@$(call $(TESTING)-hold)
+#WORK
+#	@$(call $(TESTING)-hold)
 
 ########################################
 # {{{3 $(TESTING)-$(INSTALL) -----------
@@ -4934,8 +5111,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 ########################################
 # {{{3 $(TESTING)-COMPOSER_INCLUDE -----
 
-#WORKING COMPOSER_YML?
-#	also, document, because it can now be used as an override/addition for everything...
+#WORK COMPOSER_YML?
+#	also, document, if we are allowing it to be an override for everything...?
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
@@ -5399,6 +5576,10 @@ $(CONFIGS):
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(TABLE_M2) "$(_C)$(FILE)"	"$(subst ",\",$($(FILE)))$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $($(FILE)), )$(_E)$(MARKER)$(_D))"; \
 	)
+ifneq ($(COMPOSER_YML_LIST),)
+	@$(LINERULE)
+	@$(COMPOSER_YML_DATA) | $(YQ_WRITE)
+endif
 ifneq ($(COMPOSER_DOITALL_$(CONFIGS)),)
 	@$(LINERULE)
 	@$(subst $(NULL) -,,$(ENV)) | $(SORT)
@@ -5579,25 +5760,25 @@ endif
 
 #WORKING:NOW
 # finish separating templating from content
-# figure out a commit strategy, and sort out all the makefile backups...
-#	and the bootstrap.html prototypes, too!
-# commit!
-# start working on yaml templating; none of it is going to work if that doesn't
+#	start working on yaml templating; none of it is going to work if that doesn't
 # need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #	maybe some type of automatic utility with a variable threshold?
 #	non-single-user use is not recommended
+# toggle option to put left/top nav below main on mobile
 
 #WORKING
 # https://github.com/bewuethr/pandoc-bash-blog
 # new target(s)... document!
 # c_title = pagetitle?
 # header-includes?  leave it to c_options?  maybe c_header?
+# will need error-handling for missing or empty composer.yml file
+#	also echo notes for missing/empty fields?
 
 override define $(PUBLISH)-BRAND =
 $(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
 $(_C)
 <h1 class="navbar-brand">
-$(if $(wildcard $(COMPOSER_LOGO)),<a href="#WORKING"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
+$(if $(wildcard $(COMPOSER_LOGO)),<a href="$(SITE_HOMEPAGE)"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
 $(SITE_BRAND)
 </h1>
 $(_D)
@@ -5677,9 +5858,11 @@ override define $(PUBLISH)-COLUMN_BEG =
 $(_N)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
 $(_S)
 <div class="d-flex flex-column $(if $(1),\
-	col-sm-$(1) $(if $(SITE_MAIN_COL_STICKY),col-sticky) ,\
+	col-sm-$(1) ,\
 	$(if $(SITE_MENU_COL_HIDE),d-none d-sm-block) \
-	) border-0 p-2">
+	) \
+	$(if $(SITE_MAIN_COL_STICKY),col-sticky) \
+	border-0 p-2">
 $(_D)
 endef
 
@@ -5754,6 +5937,8 @@ $(PUBLISH)-$(EXAMPLE):
 		c_base="$(OUT_README).$(PUBLISH)" \
 		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)"
 
+#WORKING:NOW
+
 override define $(PUBLISH)-NAV_COLUMN_1 =
 $(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
@@ -5779,6 +5964,8 @@ $(call $(PUBLISH)-BOX_BEG,6,,Formats)
 $(_M)
 $(foreach FILE,$(COMPOSER_TARGETS), * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE)))$(call NEWLINE))
 $(call $(PUBLISH)-BOX_END)
+$(_H)
+$(COMPOSER_TAGLINE)
 $(call $(PUBLISH)-COLUMN_END)
 endef
 
@@ -5889,116 +6076,17 @@ $(_E)<!-- $(PUBLISH)-NAV_TOP -->$(_D)
 $(call $(PUBLISH)-NAV_BEG)
 $(_E)<!-- $(PUBLISH)-NAV_TOP_MENU -->$(_D)
 $(_E)
-<li class="nav-item"><a class="nav-link" href="#">Top</a></li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#composer-cms" data-bs-toggle="dropdown">CMS</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#overview">Overview</a></li>
-<li><a class="dropdown-item" href="#quick-start">Quick Start</a></li>
-<li><a class="dropdown-item" href="#principles">Principles</a></li>
-<li><a class="dropdown-item" href="#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#composer-operation" data-bs-toggle="dropdown">Operation</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#recommended-workflow">Recommended Workflow</a></li>
-<li><a class="dropdown-item" href="#document-formatting">Document Formatting</a></li>
-<ul>
-<li><a class="dropdown-item" href="#html">HTML</a></li>
-<li><a class="dropdown-item" href="#bootstrap-websites">Bootstrap Websites</a></li>
-<li><a class="dropdown-item" href="#pdf">PDF</a></li>
-<li><a class="dropdown-item" href="#epub">EPUB</a></li>
-<li><a class="dropdown-item" href="#revealjs-presentations">Reveal.js Presentations</a></li>
-<li><a class="dropdown-item" href="#microsoft-word--powerpoint">Microsoft Word & PowerPoint</a></li>
-</ul></li>
-<li><a class="dropdown-item" href="#configuration-settings">Configuration Settings</a></li>
-<li><a class="dropdown-item" href="#precedence-rules">Precedence Rules</a></li>
-<li><a class="dropdown-item" href="#specifying-dependencies">Specifying Dependencies</a></li>
-<li><a class="dropdown-item" href="#custom-targets">Custom Targets</a></li>
-<li><a class="dropdown-item" href="#repository-versions">Repository Versions</a></li>
-</ul>
-</li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#composer-variables" data-bs-toggle="dropdown">Variables</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#formatting-variables">Formatting Variables</a>
-<ul>
-<li><a class="dropdown-item" href="#c_site">c_site</a></li>
-<li><a class="dropdown-item" href="#c_type--c_base--c_list">c_type / c_base / c_list</a></li>
-<li><a class="dropdown-item" href="#c_lang">c_lang</a></li>
-<li><a class="dropdown-item" href="#c_css">c_css</a></li>
-<li><a class="dropdown-item" href="#c_toc">c_toc</a></li>
-<li><a class="dropdown-item" href="#c_level">c_level</a></li>
-<li><a class="dropdown-item" href="#c_margin">c_margin</a></li>
-<li><a class="dropdown-item" href="#c_options">c_options</a></li>
-</ul></li>
-<li><a class="dropdown-item" href="#control-variables">Control Variables</a>
-<ul>
-<li><a class="dropdown-item" href="#makejobs">MAKEJOBS</a></li>
-<li><a class="dropdown-item" href="#composer_docolor">COMPOSER_DOCOLOR</a></li>
-<li><a class="dropdown-item" href="#composer_debugit">COMPOSER_DEBUGIT</a></li>
-<li><a class="dropdown-item" href="#composer_include">COMPOSER_INCLUDE</a></li>
-<li><a class="dropdown-item" href="#composer_depends">COMPOSER_DEPENDS</a></li>
-<li><a class="dropdown-item" href="#composer_log">COMPOSER_LOG</a></li>
-<li><a class="dropdown-item" href="#composer_ext">COMPOSER_EXT</a></li>
-<li><a class="dropdown-item" href="#composer_targets">COMPOSER_TARGETS</a></li>
-<li><a class="dropdown-item" href="#composer_subdirs">COMPOSER_SUBDIRS</a></li>
-<li><a class="dropdown-item" href="#composer_ignores">COMPOSER_IGNORES</a></li>
-</ul></li>
-</ul>
-</li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#composer-targets" data-bs-toggle="dropdown">Targets</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#primary-targets">Primary Targets</a>
-<ul>
-<li><a class="dropdown-item" href="#help--help-all">help / help-all</a></li>
-<li><a class="dropdown-item" href="#template">template</a></li>
-<li><a class="dropdown-item" href="#compose">compose</a></li>
-<li><a class="dropdown-item" href="#site">site</a></li>
-<li><a class="dropdown-item" href="#install--install-all--install-force">install / install-all / install-force</a></li>
-<li><a class="dropdown-item" href="#clean--clean-all---clean">clean / clean-all / *-clean</a></li>
-<li><a class="dropdown-item" href="#all--all-all---all">all / all-all / *-all</a></li>
-<li><a class="dropdown-item" href="#list">list</a></li>
-</ul></li>
-<li><a class="dropdown-item" href="#special-targets">Special Targets</a>
-<ul>
-<li><a class="dropdown-item" href="#book">book</a></li>
-<li><a class="dropdown-item" href="#page--post">page / post</a></li>
-</ul></li>
-<li><a class="dropdown-item" href="#additional-targets">Additional Targets</a>
-<ul>
-<li><a class="dropdown-item" href="#debug--debug-file">debug / debug-file</a></li>
-<li><a class="dropdown-item" href="#check--check-all--config--config-all--targets">check / check-all / config / config-all / targets</a></li>
-<li><a class="dropdown-item" href="#_commit--_commit-all">_commit / _commit-all</a></li>
-<li><a class="dropdown-item" href="#_release--_update--_update-all">_release / _update / _update-all</a></li>
-</ul></li>
-</ul>
-</li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="#reference" data-bs-toggle="dropdown">Reference</a>
-<ul class="dropdown-menu bg-dark">
-<li><a class="dropdown-item" href="#internal-targets">Internal Targets</a></li>
-<li><a class="dropdown-item" href="#configuration">Configuration</a>
-<ul>
-<li><a class="dropdown-item" href="#templates-install">Templates: install</a></li>
-<li><a class="dropdown-item" href="#pandoc-extensions">Pandoc Extensions</a></li>
-</ul></li>
-<li><a class="dropdown-item" href="#reserved">Reserved</a>
-<ul>
-<li><a class="dropdown-item" href="#target-names">Target Names</a></li>
-<li><a class="dropdown-item" href="#variable-names">Variable Names</a></li>
-</ul></li>
-</ul>
-</li>
-$(call $(PUBLISH)-NAV_END)
 endef
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_ICON) >/dev/null
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
+	@ \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-top.sh ".$(PUBLISH)-nav-top"
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_END)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
 	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
@@ -6079,9 +6167,6 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(call DO_HEREDOC,$(PUBLISH)-COLUMN_END)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_2)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_BOTTOM)
-	@$(PRINT) '$(_E)</div>$(_D)'
-	@$(PRINT) '$(_E)<div class="d-flex flex-row">$(_D)'
-	@$(RUNMAKE) $(HELPOUT)-FOOTER
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_END)
 
 ########################################
