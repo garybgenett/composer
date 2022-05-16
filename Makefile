@@ -3278,7 +3278,6 @@ $(PUBLISH)-nav-left:
   -
     name: $(COMPOSER_TECHNAME)
     type: nav-unit
-    text:
     data:
       -
         name: Overview
@@ -3312,7 +3311,7 @@ $(PUBLISH)-nav-left:
       $(foreach FILE,$(COMPOSER_TARGETS),$(NEWLINE)      * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
 
       $(COMPOSER_TAGLINE)
-    data:
+      <!-- -->
 
 $(PUBLISH)-nav-right:
   -
@@ -6042,7 +6041,7 @@ $(_N)<!-- $(PUBLISH)-NAV_BOTTOM_BEG -->$(_S)
 $(call $(PUBLISH)-NAV_BEG,1,1)
 $(_C)<li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
 <li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
-$(_S)<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
+$(_S)$(if $(shell $(COMPOSER_YML_DATA) | $(YQ_WRITE) ".nav-bottom" 2>/dev/null),<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
 <ol class="breadcrumb">
 $(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_M)$(foreach FILE,\
 	$(shell \
@@ -6051,7 +6050,7 @@ $(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_M)$(foreach FILE,\
 		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
 		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
 	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
-$(_S)</ol></li>
+$(_S)</ol></li>)
 $(call $(PUBLISH)-NAV_END,1)
 $(_N)<!-- $(PUBLISH)-NAV_BOTTOM_END -->$(_D)
 endef
