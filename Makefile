@@ -1117,13 +1117,6 @@ override SITE_SEARCH_FORM		:= \
 	kz|-1 \
 	sites|$(patsubst www.%,%,$(SITE_CNAME)) \
 
-#WORKING yaml instead
-override SITE_BREADCRUMBS		:= \
-	./|Home \
-	./.sources|Source \
-	./artifacts|Artifacts \
-	./bootstrap|Bootstrap \
-
 #WORKING
 
 # override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
@@ -2809,10 +2802,11 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-ifneq ($(COMPOSER_RELEASE),)
-	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-endif
+#WORKING:NOW
+#	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+#ifneq ($(COMPOSER_RELEASE),)
+#	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+#endif
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
@@ -2820,7 +2814,7 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_NAV-TOP-SH)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).nav-top.sh
+	@$(call DO_HEREDOC,HEREDOC_NAV-BUILD-SH)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).nav-build.sh
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -3059,29 +3053,38 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ################################################################################
-# {{{1 Heredoc: $(PUBLISH).nav-top.sh ------------------------------------------
+# {{{1 Heredoc: $(PUBLISH).nav-build.sh ----------------------------------------
 ################################################################################
 
-override define HEREDOC_NAV-TOP-SH =
+override define HEREDOC_NAV-BUILD-SH =
 #!$(BASH)
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).nav-top.sh
+# $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).nav-build.sh
+################################################################################
+
+set -e
+
+########################################
+
+YQ_READ="$(subst ",,$(subst $(YQ),$${YQ},$(YQ_READ)))"
+YQ_WRITE="$(subst ",,$(subst $(YQ_READ),$${YQ_READ},$(YQ_WRITE)))"
+
 ################################################################################
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${1} -->\\n"
-	$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-		| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1} | keys | .[]" \\
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} "$${1} | keys | .[]" \\
 		| while read -r FILE; do
 			MENU="$$(
-				$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-				| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1}[\"$${FILE}\"].menu" \\
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].menu" \\
 				2>/dev/null
 			)"
 			if [ -n "$${MENU}" ]; then
 				LINK="$$(
-					$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-					| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1}[\"$${FILE}\"].link" \\
+					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].link" \\
 					2>/dev/null
 				)"
 				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
@@ -3096,8 +3099,8 @@ function $(PUBLISH)-nav-top {
 				$(ECHO) "</ul></li>\\n"
 			else
 				VAL="$$(
-					$(subst $(YQ),$${YQ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-					| $(subst $(YQ),$${YQ},$(YQ_WRITE)) "$${1}[\"$${FILE}\"]" \\
+					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"]" \\
 					2>/dev/null
 				)"
 				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
@@ -3112,7 +3115,37 @@ function $(PUBLISH)-nav-top {
 
 ########################################
 
-$(PUBLISH)-nav-top "$${1}"
+function $(PUBLISH)-nav-side {
+	$(ECHO) "<!-- $${1} -->\\n"
+	shift
+#WORKING:NOW
+#WORKING
+	return 0
+}
+
+function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${@}"; return 0; }
+function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${@}"; return 0; }
+
+########################################
+
+function $(PUBLISH)-nav-bottom {
+	$(ECHO) "<!-- $${1} -->\\n"
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} "$${1} | keys | .[]" \\
+		| while read -r FILE; do
+			VAL="$$(
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+				| $${YQ_WRITE} "$${1}[\"$${FILE}\"]" \\
+				2>/dev/null
+			)"
+			$(ECHO) "<li class=\"breadcrumb-item\"><a href=\"$${VAL}\">$${FILE}</a></li>\\n"
+		done
+	return 0
+}
+
+################################################################################
+
+$(PUBLISH)-nav-$${1} "$${2}"
 
 ################################################################################
 # End Of File
@@ -3240,6 +3273,182 @@ $(PUBLISH)-nav-top:
         menu:
           Target Names: "#target-names"
           Variable Names: "#variable-names"
+
+$(PUBLISH)-nav-left:
+  -
+    name: $(COMPOSER_TECHNAME)
+    type: nav-unit
+    text:
+    data:
+      -
+        name: Overview
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Overview]
+      -
+        name: Quick Start
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Quick Start]
+      -
+        name: Principles
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Principles]
+      -
+        name: Requirements
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Requirements]
+  -
+    name: Formats
+    type: nav-box
+    text:
+      <!-- -->
+      $(foreach FILE,$(COMPOSER_TARGETS),$(NEWLINE)      * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
+
+      $(COMPOSER_TAGLINE)
+    data:
+
+$(PUBLISH)-nav-right:
+  -
+    name: $(COMPOSER_BASENAME) Operation
+    type: nav-unit
+    data:
+      -
+        name: Recommended Workflow
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Recommended Workflow]
+      -
+        name: Document Formatting
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [HTML]
+            * [Bootstrap Websites]
+            * [PDF]
+            * [EPUB]
+            * [Reveal.js Presentations]
+            * [Microsoft Word & PowerPoint]
+      -
+        name: Configuration Settings
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Configuration Settings]
+      -
+        name: Precedence Rules
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Precedence Rules]
+      -
+        name: Specifying Dependencies
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Specifying Dependencies]
+      -
+        name: Custom Targets
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Custom Targets]
+      -
+        name: Repository Versions
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [Repository Versions]
+  -
+    name: $(COMPOSER_BASENAME) Variables
+    type: nav-unit
+    data:
+      -
+        name: Formatting Variables
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [c_site]
+            * [c_type / c_base / c_list]
+            * [c_lang]
+            * [c_css]
+            * [c_toc]
+            * [c_level]
+            * [c_margin]
+            * [c_options]
+      -
+        name: Control Variables
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [MAKEJOBS]
+            * [COMPOSER_DOCOLOR]
+            * [COMPOSER_DEBUGIT]
+            * [COMPOSER_INCLUDE]
+            * [COMPOSER_DEPENDS]
+            * [COMPOSER_LOG]
+            * [COMPOSER_EXT]
+            * [COMPOSER_TARGETS]
+            * [COMPOSER_SUBDIRS]
+            * [COMPOSER_IGNORES]
+  -
+    name: $(COMPOSER_BASENAME) Targets
+    type: nav-unit
+    data:
+      -
+        name: Primary Targets
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [help / help-all]
+            * [template]
+            * [compose]
+            * [site]
+            * [install / install-all / install-force]
+            * [clean / clean-all / *-clean]
+            * [all / all-all / *-all]
+            * [list]
+      -
+        name: Special Targets
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [book]
+            * [page / post]
+      -
+        name: Additional Targets
+        type: nav-unit
+        text: |
+          <!-- -->
+            * [debug / debug-file]
+            * [check / check-all / config / config-all / targets]
+            * [_commit / _commit-all]
+            * [_release / _update / _update-all]
+  -
+    name: Reference
+    type: nav-unit
+    text: |
+      <!-- -->
+        * [Internal Targets]
+        * [Configuration]
+          * [Templates: install]
+          * [Pandoc Extensions]
+        * [Reserved]
+          * [Target Names]
+          * [Variable Names]
+
+$(PUBLISH)-nav-bottom:
+  Home: ./
+  Source: ./.sources
+  Artifacts: ./artifacts
+  Bootstrap: ./bootstrap
 
 ################################################################################
 # End Of File
@@ -5797,17 +6006,19 @@ endif
 #	also echo notes for missing/empty fields?
 
 override define $(PUBLISH)-BRAND =
-$(_N)<!-- $(PUBLISH)-BRAND -->$(_D)
-$(_C)
+$(_E)<!-- $(PUBLISH)-BRAND -->$(_D)
+$(_S)
 <h1 class="navbar-brand">
+$(_C)
 $(if $(wildcard $(COMPOSER_LOGO)),<a href="$(SITE_HOMEPAGE)"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
 $(SITE_BRAND)
+$(_S)
 </h1>
 $(_D)
 endef
 
 override define $(PUBLISH)-SEARCH =
-$(_N)<!-- $(PUBLISH)-SEARCH -->$(_D)
+$(_E)<!-- $(PUBLISH)-SEARCH -->$(_D)
 $(_C)
 <form class="d-flex" action="$(word 1,$(subst |, ,$(SITE_SEARCH_SITE)))">
 $(foreach FILE,$(SITE_SEARCH_FORM),<input type="hidden" name="$(word 1,$(subst |, ,$(FILE)))" value="$(word 2,$(subst |, ,$(FILE)))"/>$(call NEWLINE))
@@ -5817,23 +6028,44 @@ $(foreach FILE,$(SITE_SEARCH_FORM),<input type="hidden" name="$(word 1,$(subst |
 $(_D)
 endef
 
+override define $(PUBLISH)-NAV_TOP =
+$(_N)<!-- $(PUBLISH)-NAV_TOP -->$(_D)
+$(call $(PUBLISH)-NAV_BEG)
+$(_N)<!-- $(PUBLISH)-NAV_TOP_YML -->$(_D)
+$(_M)
+$(foreach FILE,$(shell \
+	YQ="$(YQ)" \
+	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+	$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "top" ".$(PUBLISH)-nav-top" \
+	| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+),$(subst $(TOKEN), ,$(FILE))$(call NEWLINE))
+$(call $(PUBLISH)-NAV_END)
+endef
+
 override define $(PUBLISH)-NAV_BOTTOM =
 $(_N)<!-- $(PUBLISH)-NAV_BOTTOM -->$(_D)
 $(call $(PUBLISH)-NAV_BEG,1,1)
 $(_C)
 <li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
 <li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
-$(if $(SITE_BREADCRUMBS),\
-<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;$(call NEWLINE)\
-<ol class="breadcrumb">$(call NEWLINE)\
-$(foreach FILE,$(SITE_BREADCRUMBS),<li class="breadcrumb-item"><a href="$(word 1,$(subst |, ,$(FILE)))">$(word 2,$(subst |, ,$(FILE)))</a></li>$(call NEWLINE))\
-</ol></li>)
-$(_D)
+$(_S)
+<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
+<ol class="breadcrumb">
+$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_D)
+$(_M)
+$(foreach FILE,$(shell \
+	YQ="$(YQ)" \
+	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+	$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
+	| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+),$(subst $(TOKEN), ,$(FILE))$(call NEWLINE))
+$(_S)
+</ol></li>
 $(call $(PUBLISH)-NAV_END,1)
 endef
 
 override define $(PUBLISH)-NAV_BEG =
-$(_N)<!-- $(PUBLISH)-NAV_BEG $(DIVIDE) $(if $(1),bottom,top) -->$(_D)
+$(_E)<!-- $(PUBLISH)-NAV_BEG $(DIVIDE) $(if $(1),bottom,top) -->$(_D)
 $(_S)
 <nav class="navbar navbar-expand-sm fixed-$(if $(1),bottom,top) bg-dark">
 <div class="container-fluid">
@@ -5848,7 +6080,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-NAV_END =
-$(_N)<!-- $(PUBLISH)-NAV_END -->$(_D)
+$(_E)<!-- $(PUBLISH)-NAV_END -->$(_D)
 $(_S)
 </ul>
 $(if $(1),$(_C)<!-- search -->$(_D),$(if $(SITE_SEARCH_NAME),$(_C)$(call $(PUBLISH)-SEARCH)$(_D)))
@@ -5860,7 +6092,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-BODY_BEG =
-$(_N)<!-- $(PUBLISH)-BODY_BEG -->$(_S)
+$(_E)<!-- $(PUBLISH)-BODY_BEG -->$(_S)
 $(_S)
 <body class="container-fluid">
 <div class="d-flex flex-row flex-wrap">
@@ -5868,7 +6100,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-BODY_END =
-$(_N)<!-- $(PUBLISH)-BODY_END -->$(_D)
+$(_E)<!-- $(PUBLISH)-BODY_END -->$(_D)
 $(_S)
 </div>
 </body>
@@ -5877,7 +6109,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-COLUMN_BEG =
-$(_N)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
+$(_E)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
 $(_S)
 <div class="d-flex flex-column $(if $(1),\
 	col-sm-$(1) ,\
@@ -5889,14 +6121,14 @@ $(_D)
 endef
 
 override define $(PUBLISH)-COLUMN_END =
-$(_N)<!-- $(PUBLISH)-COLUMN_END -->$(_D)
+$(_E)<!-- $(PUBLISH)-COLUMN_END -->$(_D)
 $(_S)
 </div>
 $(_D)
 endef
 
 override define $(PUBLISH)-UNIT_BEG =
-$(_N)<!-- $(PUBLISH)-UNIT_BEG -->$(_D)
+$(_E)<!-- $(PUBLISH)-UNIT_BEG -->$(_D)
 $(_S)
 <div class="accordion">
 <div class="accordion-item">
@@ -5913,7 +6145,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-UNIT_END =
-$(_N)<!-- $(PUBLISH)-UNIT_END -->$(_D)
+$(_E)<!-- $(PUBLISH)-UNIT_END -->$(_D)
 $(_S)
 </div>
 </div>
@@ -5923,7 +6155,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-BOX_BEG =
-$(_N)<!-- $(PUBLISH)-BOX_BEG -->$(_D)
+$(_E)<!-- $(PUBLISH)-BOX_BEG -->$(_D)
 $(_S)
 $(if $(2),,<br/>)
 <div class="card">
@@ -5937,7 +6169,7 @@ $(_D)
 endef
 
 override define $(PUBLISH)-BOX_END =
-$(_N)<!-- $(PUBLISH)-BOX_END -->$(_D)
+$(_E)<!-- $(PUBLISH)-BOX_END -->$(_D)
 $(_S)
 </div>
 </div>
@@ -5962,7 +6194,7 @@ $(PUBLISH)-$(EXAMPLE):
 #WORKING:NOW
 
 override define $(PUBLISH)-NAV_COLUMN_1 =
-$(_E)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
+$(_N)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
 $(call $(PUBLISH)-UNIT_BEG,6,1,Overview)
@@ -5992,7 +6224,7 @@ $(call $(PUBLISH)-COLUMN_END)
 endef
 
 override define $(PUBLISH)-NAV_COLUMN_2 =
-$(_E)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
+$(_N)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
 $(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)
@@ -6093,22 +6325,10 @@ $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-COLUMN_END)
 endef
 
-override define $(PUBLISH)-NAV_TOP =
-$(_E)<!-- $(PUBLISH)-NAV_TOP -->$(_D)
-$(call $(PUBLISH)-NAV_BEG)
-$(_E)<!-- $(PUBLISH)-NAV_TOP_MENU -->$(_D)
-$(_E)
-endef
-
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_ICON) >/dev/null
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
-	@ \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-top.sh ".$(PUBLISH)-nav-top"
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_END)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
 	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
