@@ -3117,14 +3117,29 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-side {
 	$(ECHO) "<!-- $${1} -->\\n"
-	shift
-#WORKING:NOW
-#WORKING
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} "$${1} | keys | .[]" \\
+		| while read -r FILE; do
+			TYPE="$$(
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].type" \\
+				2>/dev/null
+			)"
+			if	[ "$${TYPE}" = "nav-unit" ] ||
+				[ "$${TYPE}" = "nav-box" ];
+			then
+				$(ECHO) "$${TYPE}-BEG$(DIVIDE)$${1}[\"$${FILE}\"]\\n"
+				$(PUBLISH)-nav-side "$${1}[\"$${FILE}\"].data"
+				$(ECHO) "$${TYPE}-END$(DIVIDE)$${1}[\"$${FILE}\"]\\n"
+			elif [ "$${TYPE}" = "text" ]; then
+				$(ECHO) "$${TYPE}$(DIVIDE)$${1}[\"$${FILE}\"]\\n"
+			fi
+		done
 	return 0
 }
 
-function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${@}"; return 0; }
 function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${@}"; return 0; }
+function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${@}"; return 0; }
 
 ########################################
 
@@ -3275,173 +3290,210 @@ $(PUBLISH)-nav-top:
           Variable Names: "#variable-names"
 
 $(PUBLISH)-nav-left:
-  -
-    name: $(COMPOSER_TECHNAME)
+  - name: $(COMPOSER_TECHNAME)
     type: nav-unit
     data:
-      -
-        name: Overview
+      - name: Overview
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Overview]
-      -
-        name: Quick Start
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Overview]
+      - name: Quick Start
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Quick Start]
-      -
-        name: Principles
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Quick Start]
+      - name: Principles
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Principles]
-      -
-        name: Requirements
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Principles]
+      - name: Requirements
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Requirements]
-  -
-    name: Formats
+        flag: 1
+        data:
+          -
+            type: text
+            data: |
+              <!-- -->
+                * [Requirements]
+  - name: Formats
     type: nav-box
-    text:
-      <!-- -->
-      $(foreach FILE,$(COMPOSER_TARGETS),$(NEWLINE)      * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
-
+    flag: 1
+    data:
+      - type: text
+        data: |
+          <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
+  - type: text
+    data: |
       $(COMPOSER_TAGLINE)
-      <!-- -->
+      \\n
+      "THIS IS GOING TO #WORKING:NOW!"
 
 $(PUBLISH)-nav-right:
-  -
-    name: $(COMPOSER_BASENAME) Operation
+  - name: $(COMPOSER_BASENAME) Operation
     type: nav-unit
+    flag: 1
     data:
-      -
-        name: Recommended Workflow
+      - name: Recommended Workflow
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Recommended Workflow]
-      -
-        name: Document Formatting
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Recommended Workflow]
+      - name: Document Formatting
         type: nav-unit
-        text: |
-          <!-- -->
-            * [HTML]
-            * [Bootstrap Websites]
-            * [PDF]
-            * [EPUB]
-            * [Reveal.js Presentations]
-            * [Microsoft Word & PowerPoint]
-      -
-        name: Configuration Settings
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [HTML]
+                * [Bootstrap Websites]
+                * [PDF]
+                * [EPUB]
+                * [Reveal.js Presentations]
+                * [Microsoft Word & PowerPoint]
+      - name: Configuration Settings
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Configuration Settings]
-      -
-        name: Precedence Rules
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Configuration Settings]
+      - name: Precedence Rules
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Precedence Rules]
-      -
-        name: Specifying Dependencies
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Precedence Rules]
+      - name: Specifying Dependencies
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Specifying Dependencies]
-      -
-        name: Custom Targets
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Specifying Dependencies]
+      - name: Custom Targets
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Custom Targets]
-      -
-        name: Repository Versions
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Custom Targets]
+      - name: Repository Versions
         type: nav-unit
-        text: |
-          <!-- -->
-            * [Repository Versions]
-  -
-    name: $(COMPOSER_BASENAME) Variables
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [Repository Versions]
+  - name: $(COMPOSER_BASENAME) Variables
     type: nav-unit
+    flag: 1
     data:
-      -
-        name: Formatting Variables
+      - name: Formatting Variables
         type: nav-unit
-        text: |
-          <!-- -->
-            * [c_site]
-            * [c_type / c_base / c_list]
-            * [c_lang]
-            * [c_css]
-            * [c_toc]
-            * [c_level]
-            * [c_margin]
-            * [c_options]
-      -
-        name: Control Variables
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [c_site]
+                * [c_type / c_base / c_list]
+                * [c_lang]
+                * [c_css]
+                * [c_toc]
+                * [c_level]
+                * [c_margin]
+                * [c_options]
+      - name: Control Variables
         type: nav-unit
-        text: |
-          <!-- -->
-            * [MAKEJOBS]
-            * [COMPOSER_DOCOLOR]
-            * [COMPOSER_DEBUGIT]
-            * [COMPOSER_INCLUDE]
-            * [COMPOSER_DEPENDS]
-            * [COMPOSER_LOG]
-            * [COMPOSER_EXT]
-            * [COMPOSER_TARGETS]
-            * [COMPOSER_SUBDIRS]
-            * [COMPOSER_IGNORES]
-  -
-    name: $(COMPOSER_BASENAME) Targets
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [MAKEJOBS]
+                * [COMPOSER_DOCOLOR]
+                * [COMPOSER_DEBUGIT]
+                * [COMPOSER_INCLUDE]
+                * [COMPOSER_DEPENDS]
+                * [COMPOSER_LOG]
+                * [COMPOSER_EXT]
+                * [COMPOSER_TARGETS]
+                * [COMPOSER_SUBDIRS]
+                * [COMPOSER_IGNORES]
+  - name: $(COMPOSER_BASENAME) Targets
     type: nav-unit
+    flag: 1
     data:
-      -
-        name: Primary Targets
+      - name: Primary Targets
         type: nav-unit
-        text: |
-          <!-- -->
-            * [help / help-all]
-            * [template]
-            * [compose]
-            * [site]
-            * [install / install-all / install-force]
-            * [clean / clean-all / *-clean]
-            * [all / all-all / *-all]
-            * [list]
-      -
-        name: Special Targets
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [help / help-all]
+                * [template]
+                * [compose]
+                * [site]
+                * [install / install-all / install-force]
+                * [clean / clean-all / *-clean]
+                * [all / all-all / *-all]
+                * [list]
+      - name: Special Targets
         type: nav-unit
-        text: |
-          <!-- -->
-            * [book]
-            * [page / post]
-      -
-        name: Additional Targets
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [book]
+                * [page / post]
+      - name: Additional Targets
         type: nav-unit
-        text: |
-          <!-- -->
-            * [debug / debug-file]
-            * [check / check-all / config / config-all / targets]
-            * [_commit / _commit-all]
-            * [_release / _update / _update-all]
-  -
-    name: Reference
+        flag: 1
+        data:
+          - type: text
+            data: |
+              <!-- -->
+                * [debug / debug-file]
+                * [check / check-all / config / config-all / targets]
+                * [_commit / _commit-all]
+                * [_release / _update / _update-all]
+  - name: Reference
     type: nav-unit
-    text: |
-      <!-- -->
-        * [Internal Targets]
-        * [Configuration]
-          * [Templates: install]
-          * [Pandoc Extensions]
-        * [Reserved]
-          * [Target Names]
-          * [Variable Names]
+    flag: 1
+    data:
+      - type: text
+        data: |
+          <!-- -->
+            * [Internal Targets]
+            * [Configuration]
+              * [Templates: install]
+              * [Pandoc Extensions]
+            * [Reserved]
+              * [Target Names]
+              * [Variable Names]
 
 $(PUBLISH)-nav-bottom:
   Home: ./
@@ -6078,20 +6130,6 @@ $(_S)</div>
 $(_E)<!-- $(PUBLISH)-NAV_END_END -->$(_D)
 endef
 
-override define $(PUBLISH)-BODY_BEG =
-$(_E)<!-- $(PUBLISH)-BODY_BEG_BEG -->$(_S)
-<div class="container-fluid">
-<div class="d-flex flex-row flex-wrap">
-$(_E)<!-- $(PUBLISH)-BODY_BEG_END -->$(_D)
-endef
-
-override define $(PUBLISH)-BODY_END =
-$(_E)<!-- $(PUBLISH)-BODY_END_BEG -->$(_S)
-</div>
-</div>
-$(_E)<!-- $(PUBLISH)-BODY_END_END -->$(_D)
-endef
-
 override define $(PUBLISH)-COLUMN_BEG =
 $(_E)<!-- $(PUBLISH)-COLUMN_BEG_BEG -->$(_S)
 <div class="d-flex flex-column $(if $(1),\
@@ -6150,6 +6188,20 @@ $(_E)<!-- $(PUBLISH)-BOX_END_BEG -->$(_S)
 $(_E)<!-- $(PUBLISH)-BOX_END_END -->$(_D)
 endef
 
+override define $(PUBLISH)-BODY_BEG =
+$(_E)<!-- $(PUBLISH)-BODY_BEG_BEG -->$(_S)
+<div class="container-fluid">
+<div class="d-flex flex-row flex-wrap">
+$(_E)<!-- $(PUBLISH)-BODY_BEG_END -->$(_D)
+endef
+
+override define $(PUBLISH)-BODY_END =
+$(_E)<!-- $(PUBLISH)-BODY_END_BEG -->$(_S)
+</div>
+</div>
+$(_E)<!-- $(PUBLISH)-BODY_END_END -->$(_D)
+endef
+
 ########################################
 # {{{3 $(PUBLISH)-$(EXAMPLE) -----------
 
@@ -6170,25 +6222,19 @@ $(PUBLISH)-$(EXAMPLE):
 override define $(PUBLISH)-NAV_COL_1 =
 $(_N)<!-- $(PUBLISH)-NAV_COL_1_BEG -->$(_S)
 $(call $(PUBLISH)-COLUMN_BEG)
-$(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
-$(call $(PUBLISH)-UNIT_BEG,6,1,Overview)$(_M)
-  * [Overview]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)$(_M)
-  * [Quick Start]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Principles)$(_M)
-  * [Principles]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)$(_M)
-  * [Requirements]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-BOX_BEG,6,,Formats)$(_M)$(foreach FILE,\
-	$(COMPOSER_TARGETS),$(call NEWLINE)  * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
-$(call $(PUBLISH)-BOX_END)
-$(_H)$(COMPOSER_TAGLINE)
-
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
+	$(shell \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "left" ".$(PUBLISH)-nav-left" \
+		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+),$(if \
+$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
+$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
+$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
+													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
 $(call $(PUBLISH)-COLUMN_END)
 $(_N)<!-- $(PUBLISH)-NAV_COL_1_END -->$(_D)
 endef
@@ -6201,89 +6247,19 @@ endef
 override define $(PUBLISH)-NAV_COL_3 =
 $(_N)<!-- $(PUBLISH)-NAV_COL_3_BEG -->$(_S)
 $(call $(PUBLISH)-COLUMN_BEG)
-$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)$(_M)
-  * [Recommended Workflow]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Document Formatting)$(_M)
-  * [HTML]
-  * [Bootstrap Websites]
-  * [PDF]
-  * [EPUB]
-  * [Reveal.js Presentations]
-  * [Microsoft Word & PowerPoint]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Configuration Settings)$(_M)
-  * [Configuration Settings]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Precedence Rules)$(_M)
-  * [Precedence Rules]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Specifying Dependencies)$(_M)
-  * [Specifying Dependencies]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Custom Targets)$(_M)
-  * [Custom Targets]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Repository Versions)$(_M)
-  * [Repository Versions]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Variables)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)$(_M)
-  * [c_site]
-  * [c_type / c_base / c_list]
-  * [c_lang]
-  * [c_css]
-  * [c_toc]
-  * [c_level]
-  * [c_margin]
-  * [c_options]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables)$(_M)
-  * [MAKEJOBS]
-  * [COMPOSER_DOCOLOR]
-  * [COMPOSER_DEBUGIT]
-  * [COMPOSER_INCLUDE]
-  * [COMPOSER_DEPENDS]
-  * [COMPOSER_LOG]
-  * [COMPOSER_EXT]
-  * [COMPOSER_TARGETS]
-  * [COMPOSER_SUBDIRS]
-  * [COMPOSER_IGNORES]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Targets)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)$(_M)
-  * [help / help-all]
-  * [template]
-  * [compose]
-  * [site]
-  * [install / install-all / install-force]
-  * [clean / clean-all / *-clean]
-  * [all / all-all / *-all]
-  * [list]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets)$(_M)
-  * [book]
-  * [page / post]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets)$(_M)
-  * [debug / debug-file]
-  * [check / check-all / config / config-all / targets]
-  * [_commit / _commit-all]
-  * [_release / _update / _update-all]
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Reference)$(_M)
-  * [Internal Targets]
-  * [Configuration]
-    * [Templates: install]
-    * [Pandoc Extensions]
-  * [Reserved]
-    * [Target Names]
-    * [Variable Names]
-$(call $(PUBLISH)-UNIT_END)
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
+	$(shell \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "right" ".$(PUBLISH)-nav-right" \
+		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+),$(if \
+$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
+$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
+$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
+													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
 $(call $(PUBLISH)-COLUMN_END)
 $(_N)<!-- $(PUBLISH)-NAV_COL_3_END -->$(_D)
 endef
