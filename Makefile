@@ -2814,7 +2814,7 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_NAV-BUILD-SH)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).nav-build.sh
+	@$(call DO_HEREDOC,HEREDOC_BUILD-SH)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).build.sh
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -3053,13 +3053,13 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ################################################################################
-# {{{1 Heredoc: $(PUBLISH).nav-build.sh ----------------------------------------
+# {{{1 Heredoc: $(PUBLISH).build.sh --------------------------------------------
 ################################################################################
 
-override define HEREDOC_NAV-BUILD-SH =
+override define HEREDOC_BUILD-SH =
 #!$(BASH)
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).nav-build.sh
+# $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).build.sh
 ################################################################################
 
 set -e
@@ -6081,7 +6081,7 @@ $(_N)<!-- $(PUBLISH)-NAV_TOP_YML -->$(_M)$(foreach FILE,\
 	$(shell \
 		YQ="$(YQ)" \
 		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "top" ".$(PUBLISH)-nav-top" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "top" ".$(PUBLISH)-nav-top" \
 		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
 	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
 $(call $(PUBLISH)-NAV_END)
@@ -6099,12 +6099,59 @@ $(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_M)$(foreach FILE,\
 	$(shell \
 		YQ="$(YQ)" \
 		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
 		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
 	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
 $(_S)</ol></li>)
 $(call $(PUBLISH)-NAV_END,1)
 $(_N)<!-- $(PUBLISH)-NAV_BOTTOM_END -->$(_D)
+endef
+
+#WORKING:NOW
+
+override define $(PUBLISH)-NAV_COL_1 =
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_BEG -->$(_S)
+$(call $(PUBLISH)-COLUMN_BEG)
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
+	$(shell \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "left" ".$(PUBLISH)-nav-left" \
+		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+),$(if \
+$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
+$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
+$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
+													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
+$(call $(PUBLISH)-COLUMN_END)
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_END -->$(_D)
+endef
+
+override define $(PUBLISH)-NAV_COL_2 =
+$(_N)<!-- $(PUBLISH)-NAV_COL_2_BEG -->$(_S)
+$(_N)<!-- $(PUBLISH)-NAV_COL_2_END -->$(_D)
+endef
+
+override define $(PUBLISH)-NAV_COL_3 =
+$(_N)<!-- $(PUBLISH)-NAV_COL_3_BEG -->$(_S)
+$(call $(PUBLISH)-COLUMN_BEG)
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
+	$(shell \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "right" ".$(PUBLISH)-nav-right" \
+		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+),$(if \
+$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
+$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
+$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
+$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
+													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
+$(call $(PUBLISH)-COLUMN_END)
+$(_N)<!-- $(PUBLISH)-NAV_COL_3_END -->$(_D)
 endef
 
 override define $(PUBLISH)-NAV_BEG =
@@ -6216,53 +6263,6 @@ $(PUBLISH)-$(EXAMPLE):
 		c_type="html" \
 		c_base="$(OUT_README).$(PUBLISH)" \
 		c_list="$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)"
-
-#WORKING:NOW
-
-override define $(PUBLISH)-NAV_COL_1 =
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_BEG -->$(_S)
-$(call $(PUBLISH)-COLUMN_BEG)
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
-	$(shell \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "left" ".$(PUBLISH)-nav-left" \
-		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-),$(if \
-$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
-$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
-$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
-													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
-$(call $(PUBLISH)-COLUMN_END)
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_COL_2 =
-$(_N)<!-- $(PUBLISH)-NAV_COL_2_BEG -->$(_S)
-$(_N)<!-- $(PUBLISH)-NAV_COL_2_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_COL_3 =
-$(_N)<!-- $(PUBLISH)-NAV_COL_3_BEG -->$(_S)
-$(call $(PUBLISH)-COLUMN_BEG)
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
-	$(shell \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "right" ".$(PUBLISH)-nav-right" \
-		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-),$(if \
-$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
-$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
-$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
-													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
-$(call $(PUBLISH)-COLUMN_END)
-$(_N)<!-- $(PUBLISH)-NAV_COL_3_END -->$(_D)
-endef
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
