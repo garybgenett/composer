@@ -6006,174 +6006,149 @@ endif
 #	also echo notes for missing/empty fields?
 
 override define $(PUBLISH)-BRAND =
-$(_E)<!-- $(PUBLISH)-BRAND -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-BRAND_BEG -->$(_S)
 <h1 class="navbar-brand">
-$(_C)
-$(if $(wildcard $(COMPOSER_LOGO)),<a href="$(SITE_HOMEPAGE)"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)
-$(SITE_BRAND)
-$(_S)
-</h1>
-$(_D)
+$(_C)$(if $(wildcard $(COMPOSER_LOGO)),<a href="$(SITE_HOMEPAGE)"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)$(SITE_BRAND)
+$(_S)</h1>
+$(_E)<!-- $(PUBLISH)-BRAND_END -->$(_D)
 endef
 
 override define $(PUBLISH)-SEARCH =
-$(_E)<!-- $(PUBLISH)-SEARCH -->$(_D)
-$(_C)
-<form class="d-flex" action="$(word 1,$(subst |, ,$(SITE_SEARCH_SITE)))">
-$(foreach FILE,$(SITE_SEARCH_FORM),<input type="hidden" name="$(word 1,$(subst |, ,$(FILE)))" value="$(word 2,$(subst |, ,$(FILE)))"/>$(call NEWLINE))
+$(_E)<!-- $(PUBLISH)-SEARCH_BEG -->$(_S)
+$(_C)<form class="d-flex" action="$(word 1,$(subst |, ,$(SITE_SEARCH_SITE)))">$(foreach FILE,\
+	$(SITE_SEARCH_FORM),$(call NEWLINE)<input type="hidden" name="$(word 1,$(subst |, ,$(FILE)))" value="$(word 2,$(subst |, ,$(FILE)))"/>)
 <input class="form-control me-2" type="text" name="$(word 2,$(subst |, ,$(SITE_SEARCH_SITE)))"/>
 <button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
 </form>
-$(_D)
+$(_E)<!-- $(PUBLISH)-SEARCH_END -->$(_D)
 endef
 
 override define $(PUBLISH)-NAV_TOP =
-$(_N)<!-- $(PUBLISH)-NAV_TOP -->$(_D)
+$(_N)<!-- $(PUBLISH)-NAV_TOP_BEG -->$(_S)
 $(call $(PUBLISH)-NAV_BEG)
-$(_N)<!-- $(PUBLISH)-NAV_TOP_YML -->$(_D)
-$(_M)
-$(foreach FILE,$(shell \
-	YQ="$(YQ)" \
-	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-	$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "top" ".$(PUBLISH)-nav-top" \
-	| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-),$(subst $(TOKEN), ,$(FILE))$(call NEWLINE))
+$(_N)<!-- $(PUBLISH)-NAV_TOP_YML -->$(_M)$(foreach FILE,\
+	$(shell \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "top" ".$(PUBLISH)-nav-top" \
+		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
 $(call $(PUBLISH)-NAV_END)
+$(_N)<!-- $(PUBLISH)-NAV_TOP_END -->$(_D)
 endef
 
 override define $(PUBLISH)-NAV_BOTTOM =
-$(_N)<!-- $(PUBLISH)-NAV_BOTTOM -->$(_D)
+$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_BEG -->$(_S)
 $(call $(PUBLISH)-NAV_BEG,1,1)
-$(_C)
-<li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
+$(_C)<li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
 <li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
-$(_S)
-<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
+$(_S)<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
 <ol class="breadcrumb">
-$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_D)
-$(_M)
-$(foreach FILE,$(shell \
-	YQ="$(YQ)" \
-	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-	$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
-	| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-),$(subst $(TOKEN), ,$(FILE))$(call NEWLINE))
-$(_S)
-</ol></li>
+$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_M)$(foreach FILE,\
+	$(shell \
+		YQ="$(YQ)" \
+		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+		$(BASH) $(COMPOSER_ART)/$(PUBLISH).nav-build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
+		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
+	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
+$(_S)</ol></li>
 $(call $(PUBLISH)-NAV_END,1)
+$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_END -->$(_D)
 endef
 
 override define $(PUBLISH)-NAV_BEG =
-$(_E)<!-- $(PUBLISH)-NAV_BEG $(DIVIDE) $(if $(1),bottom,top) -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-NAV_BEG_BEG $(DIVIDE) $(if $(1),bottom,top) -->$(_S)
 <nav class="navbar navbar-expand-sm fixed-$(if $(1),bottom,top) bg-dark">
 <div class="container-fluid">
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$(if $(1),bottom,top)">
 <span class="navbar-toggler-icon"></span>
 </button>
-$(if $(2),$(_C)<!-- brand -->$(_D),$(call $(PUBLISH)-BRAND))
-$(_S)
-<div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
+$(_C)$(if $(2),<!-- brand -->,$(call $(PUBLISH)-BRAND))
+$(_S)<div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
 <ul class="navbar-nav navbar-nav-scroll me-auto">
-$(_D)
+$(_E)<!-- $(PUBLISH)-NAV_BEG_END $(DIVIDE) $(if $(1),bottom,top) -->$(_D)
 endef
 
 override define $(PUBLISH)-NAV_END =
-$(_E)<!-- $(PUBLISH)-NAV_END -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-NAV_END_BEG -->$(_S)
 </ul>
-$(if $(1),$(_C)<!-- search -->$(_D),$(if $(SITE_SEARCH_NAME),$(_C)$(call $(PUBLISH)-SEARCH)$(_D)))
-$(_S)
-</div>
+$(_C)$(if $(1),<!-- search -->,$(if $(SITE_SEARCH_NAME),$(call $(PUBLISH)-SEARCH)))
+$(_S)</div>
 </div>
 </nav>
-$(_D)
+$(_E)<!-- $(PUBLISH)-NAV_END_END -->$(_D)
 endef
 
 override define $(PUBLISH)-BODY_BEG =
-$(_E)<!-- $(PUBLISH)-BODY_BEG -->$(_S)
-$(_S)
-<body class="container-fluid">
+$(_E)<!-- $(PUBLISH)-BODY_BEG_BEG -->$(_S)
+<div class="container-fluid">
 <div class="d-flex flex-row flex-wrap">
-$(_D)
+$(_E)<!-- $(PUBLISH)-BODY_BEG_END -->$(_D)
 endef
 
 override define $(PUBLISH)-BODY_END =
-$(_E)<!-- $(PUBLISH)-BODY_END -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-BODY_END_BEG -->$(_S)
 </div>
-</body>
-</html>
-$(_D)
+</div>
+$(_E)<!-- $(PUBLISH)-BODY_END_END -->$(_D)
 endef
 
 override define $(PUBLISH)-COLUMN_BEG =
-$(_E)<!-- $(PUBLISH)-COLUMN_BEG -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-COLUMN_BEG_BEG -->$(_S)
 <div class="d-flex flex-column $(if $(1),\
 	col-sm-$(1) ,\
 	$(if $(SITE_MENU_COL_HIDE),d-none d-sm-block) \
 	) \
 	$(if $(SITE_MAIN_COL_STICKY),col-sticky) \
 	border-0 p-2">
-$(_D)
+$(_E)<!-- $(PUBLISH)-COLUMN_BEG_END -->$(_D)
 endef
 
 override define $(PUBLISH)-COLUMN_END =
-$(_E)<!-- $(PUBLISH)-COLUMN_END -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-COLUMN_END_BEG -->$(_S)
 </div>
-$(_D)
+$(_E)<!-- $(PUBLISH)-COLUMN_END_END -->$(_D)
 endef
 
 override define $(PUBLISH)-UNIT_BEG =
-$(_E)<!-- $(PUBLISH)-UNIT_BEG -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-UNIT_BEG_BEG -->$(_S)
 <div class="accordion">
 <div class="accordion-item">
 <h$(1) class="accordion-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
 <button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$(subst $(NULL) ,,$(3))">
-$(_H)
-$(3)
-$(_S)
+$(_H)$(3)$(_S)
 </button>
 </h$(1)>
 <div id="toggle-$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
 <div class="accordion-body">
-$(_D)
+$(_E)<!-- $(PUBLISH)-UNIT_BEG_END -->$(_D)
 endef
 
 override define $(PUBLISH)-UNIT_END =
-$(_E)<!-- $(PUBLISH)-UNIT_END -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-UNIT_END_BEG -->$(_S)
 </div>
 </div>
 </div>
 </div>
-$(_D)
+$(_E)<!-- $(PUBLISH)-UNIT_END_END -->$(_D)
 endef
 
 override define $(PUBLISH)-BOX_BEG =
-$(_E)<!-- $(PUBLISH)-BOX_BEG -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-BOX_BEG_BEG -->$(_S)
 $(if $(2),,<br/>)
 <div class="card">
 <h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
-$(_H)
-$(3)
-$(_S)
+$(_H)$(3)$(_S)
 </h$(1)>
 <div class="card-body">
-$(_D)
+$(_E)<!-- $(PUBLISH)-BOX_BEG_END -->$(_D)
 endef
 
 override define $(PUBLISH)-BOX_END =
-$(_E)<!-- $(PUBLISH)-BOX_END -->$(_D)
-$(_S)
+$(_E)<!-- $(PUBLISH)-BOX_END_BEG -->$(_S)
 </div>
 </div>
-$(_D)
+$(_E)<!-- $(PUBLISH)-BOX_END_END -->$(_D)
 endef
 
 ########################################
@@ -6193,46 +6168,45 @@ $(PUBLISH)-$(EXAMPLE):
 
 #WORKING:NOW
 
-override define $(PUBLISH)-NAV_COLUMN_1 =
-$(_N)<!-- $(PUBLISH)-NAV_COLUMN_1 -->$(_D)
+override define $(PUBLISH)-NAV_COL_1 =
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_BEG -->$(_S)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,,$(COMPOSER_TECHNAME))
-$(call $(PUBLISH)-UNIT_BEG,6,1,Overview)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Overview)$(_M)
   * [Overview]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Quick Start)$(_M)
   * [Quick Start]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Principles)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Principles)$(_M)
   * [Principles]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Requirements)$(_M)
   * [Requirements]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-BOX_BEG,6,,Formats)
-$(_M)
-$(foreach FILE,$(COMPOSER_TARGETS), * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE)))$(call NEWLINE))
+$(call $(PUBLISH)-BOX_BEG,6,,Formats)$(_M)$(foreach FILE,\
+	$(COMPOSER_TARGETS),$(call NEWLINE)  * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
 $(call $(PUBLISH)-BOX_END)
-$(_H)
-$(COMPOSER_TAGLINE)
+$(_H)$(COMPOSER_TAGLINE)
+
 $(call $(PUBLISH)-COLUMN_END)
+$(_N)<!-- $(PUBLISH)-NAV_COL_1_END -->$(_D)
 endef
 
-override define $(PUBLISH)-NAV_COLUMN_2 =
-$(_N)<!-- $(PUBLISH)-NAV_COLUMN_2 -->$(_D)
+override define $(PUBLISH)-NAV_COL_2 =
+$(_N)<!-- $(PUBLISH)-NAV_COL_2_BEG -->$(_S)
+$(_N)<!-- $(PUBLISH)-NAV_COL_2_END -->$(_D)
+endef
+
+override define $(PUBLISH)-NAV_COL_3 =
+$(_N)<!-- $(PUBLISH)-NAV_COL_3_BEG -->$(_S)
 $(call $(PUBLISH)-COLUMN_BEG)
 $(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Operation)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Recommended Workflow)$(_M)
   * [Recommended Workflow]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Document Formatting)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Document Formatting)$(_M)
   * [HTML]
   * [Bootstrap Websites]
   * [PDF]
@@ -6240,30 +6214,24 @@ $(_M)
   * [Reveal.js Presentations]
   * [Microsoft Word & PowerPoint]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Configuration Settings)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Configuration Settings)$(_M)
   * [Configuration Settings]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Precedence Rules)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Precedence Rules)$(_M)
   * [Precedence Rules]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Specifying Dependencies)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Specifying Dependencies)$(_M)
   * [Specifying Dependencies]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Custom Targets)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Custom Targets)$(_M)
   * [Custom Targets]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Repository Versions)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Repository Versions)$(_M)
   * [Repository Versions]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Variables)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Formatting Variables)$(_M)
   * [c_site]
   * [c_type / c_base / c_list]
   * [c_lang]
@@ -6273,8 +6241,7 @@ $(_M)
   * [c_margin]
   * [c_options]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Control Variables)$(_M)
   * [MAKEJOBS]
   * [COMPOSER_DOCOLOR]
   * [COMPOSER_DEBUGIT]
@@ -6288,8 +6255,7 @@ $(_M)
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_BEG,6,1,$(COMPOSER_BASENAME) Targets)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Primary Targets)$(_M)
   * [help / help-all]
   * [template]
   * [compose]
@@ -6299,21 +6265,18 @@ $(_M)
   * [all / all-all / *-all]
   * [list]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Special Targets)$(_M)
   * [book]
   * [page / post]
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Additional Targets)$(_M)
   * [debug / debug-file]
   * [check / check-all / config / config-all / targets]
   * [_commit / _commit-all]
   * [_release / _update / _update-all]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-UNIT_END)
-$(call $(PUBLISH)-UNIT_BEG,6,1,Reference)
-$(_M)
+$(call $(PUBLISH)-UNIT_BEG,6,1,Reference)$(_M)
   * [Internal Targets]
   * [Configuration]
     * [Templates: install]
@@ -6323,14 +6286,15 @@ $(_M)
     * [Variable Names]
 $(call $(PUBLISH)-UNIT_END)
 $(call $(PUBLISH)-COLUMN_END)
+$(_N)<!-- $(PUBLISH)-NAV_COL_3_END -->$(_D)
 endef
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(CP) $(COMPOSER_ART)/icon-v1.0.png $(COMPOSER_ICON) >/dev/null
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_1)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_1)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_2)
 	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
 		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_TECHNAME)))
 			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Overview))
@@ -6407,7 +6371,8 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
 	@$(call DO_HEREDOC,$(PUBLISH)-COLUMN_END)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COLUMN_2)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_2)
+	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_3)
 	@$(call DO_HEREDOC,$(PUBLISH)-NAV_BOTTOM)
 	@$(call DO_HEREDOC,$(PUBLISH)-BODY_END)
 
