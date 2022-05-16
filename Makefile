@@ -180,6 +180,7 @@ endif
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
+override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
 
 override COMPOSER_YML_TEMPLATE		:= $(COMPOSER_ART)/composer.yml
 override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
@@ -692,6 +693,7 @@ override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --relative-to
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
+override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
@@ -721,6 +723,25 @@ export GZIP				:=
 export LESS				:=
 
 ########################################
+
+ifeq ($(wildcard $(PANDOC_BIN)),)
+ifneq ($(wildcard $(COMPOSER_BIN)/$(notdir $(PANDOC_BIN)).*),)
+$(shell \
+	$(CAT) $(COMPOSER_BIN)/$(notdir $(PANDOC_BIN)).* >>$(PANDOC_BIN); \
+	$(CHMOD) $(PANDOC_BIN) >/dev/null \
+)
+override PANDOC				:= $(PANDOC_BIN)
+endif
+endif
+ifeq ($(wildcard $(YQ_BIN)),)
+ifneq ($(wildcard $(COMPOSER_BIN)/$(notdir $(YQ_BIN)).*),)
+$(shell \
+	$(CAT) $(COMPOSER_BIN)/$(notdir $(YQ_BIN)).* >>$(YQ_BIN); \
+	$(CHMOD) $(YQ_BIN) >/dev/null \
+)
+override YQ				:= $(YQ_BIN)
+endif
+endif
 
 #> update: includes duplicates
 override UPGRADE			:= _update
@@ -816,7 +837,10 @@ override define WGET_PACKAGE_DO =
 	fi; \
 	$(MKDIR) $(1); \
 	$(CP) $(8)/$(4) $(1)/$(5); \
-	$(CHMOD) $(1)/$(5)
+	$(CHMOD) $(1)/$(5); \
+	$(MKDIR) $(COMPOSER_BIN); \
+	$(RM) $(COMPOSER_BIN)/$(notdir $(5)).*; \
+	$(SPLIT) $(1)/$(5) $(COMPOSER_BIN)/$(notdir $(5)).
 endef
 
 ################################################################################
@@ -5715,8 +5739,6 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
-#>	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!pandoc-*\n" >>$(PANDOC_DIR)/.gitignore
-#>	@$(ECHO) "\n# $(COMPOSER_BASENAME)\n!yq_*\n" >>$(YQ_DIR)/.gitignore
 endif
 	@$(ENDOLINE)
 	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
