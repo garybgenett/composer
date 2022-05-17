@@ -121,7 +121,9 @@ override VIM_FOLDING := {{{1
 override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_VERSION		:= v3.1
+
 override COMPOSER_HOMEPAGE		:= https://github.com/garybgenett/composer
+override COMPOSER_SITE_CNAME		:= www.garybgenett.net
 
 override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
 override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
@@ -1085,83 +1087,6 @@ endif
 endif
 endif
 endif
-
-################################################################################
-# {{{1 Bootstrap Options -------------------------------------------------------
-################################################################################
-
-override SITE_CNAME			:= www.garybgenett.net
-override SITE_HOMEPAGE			:= $(COMPOSER_HOMEPAGE)
-override SITE_BRAND			:= $(COMPOSER_TECHNAME)
-override SITE_COPYRIGHT			:= $(COPYRIGHT_SHORT)
-
-override SITE_SOURCE			:= $(COMPOSER_ROOT)
-override SITE_OUTPUT			:= $(COMPOSER_ROOT)/.public
-
-override SITE_SIZE			:= 6
-override SITE_STICKY			:= 1
-override SITE_HIDE			:= 1
-
-override SITE_SEARCH_NAME		:= Search
-override SITE_SEARCH_SITE		:= https://duckduckgo.com
-override SITE_SEARCH_TEXT		:= q
-override define SITE_SEARCH_FORM =
-<input type="hidden" name="ia" value="web"/>
-<input type="hidden" name="kae" value="d"/>
-<input type="hidden" name="ko" value="1"/>
-<input type="hidden" name="kp" value="-1"/>
-<input type="hidden" name="kv" value="1"/>
-<input type="hidden" name="kz" value="-1"/>
-<input type="hidden" name="sites" value="$(patsubst www.%,%,$(SITE_CNAME))"/>
-endef
-
-#WORKING
-
-# override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
-# override SITE_DESCRIPTION		?= a brief summary
-
-# override SITE_GOOGLEPLUS		?= https://plus.google.com/$(COMPOSER_BASENAME)
-# override SITE_FACEBOOK			?= https://www.facebook.com/$(COMPOSER_BASENAME)
-# override SITE_LINKEDIN			?= https://www.linkedin.com/$(COMPOSER_BASENAME)
-# override SITE_TWITTER			?= https://twitter.com/$(COMPOSER_BASENAME)
-# override SITE_GITHUB			?= https://github.com/$(COMPOSER_BASENAME)
-
-# override SITE_GIT_REPO			?= git@github.com:garybgenett/garybgenett.net.git
-# override SITE_ANALYTICS_ID		?=
-# override SITE_PERMALINK			?= :year/:month/:day/:title/
-# override SITE_DATE_FORMAT		?= YYYY-MM-DD
-# override SITE_TIME_FORMAT		?= HH:mm:ss
-# override SITE_PER_PAGE			?= 10
-
-# override SITE_SKIPS			?= \
-	CNAME \
-
-# override SITE_FOOTER_APPEND		?= \
-	<br /><br /> \
-	<a rel=\"author\" href=\"http://www.garybgenett.net\">					<img src=\"http://www.garybgenett.net/favicon.png\"					alt=\"Gary B. Genett\"	style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-nd/3.0/us/\">	<img src=\"http://i.creativecommons.org/l/by-nc-nd/3.0/us/88x31.png\"			alt=\"CC License\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<a href=\"http://validator.w3.org/check/referer\">					<img src=\"http://www.w3.org/Icons/valid-xhtml11-blue\"					alt=\"Valid HTML\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<a href=\"http://jigsaw.w3.org/css-validator/check/referer\">				<img src=\"http://www.w3.org/Icons/valid-css2-blue\"					alt=\"Valid CSS\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<br /> \
-	<a href=\"https://github.com/garybgenett/composer\">					<img src=\"https://raw.githubusercontent.com/garybgenett/composer/devel/icon.png\"	alt=\"Composer\"	style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a href=\"http://www.vim.org\">								<img src=\"http://www.vim.org/images/vim_small.gif\"					alt=\"Vim\"		style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a href=\"http://git-scm.com\">								<img src=\"https://git.wiki.kernel.org/images-git/d/df/FrontPage%24git-logo.png\"	alt=\"Git\"		style=\"border:0; width:72px; height:27px;\"/></a>
-
-# http://navaneeth.me/font-awesome-icons-css-content-values
-#>override SITE_SOCIAL_ICON_googleplus	:= f0d5
-#>override SITE_SOCIAL_ICON_facebook	:= f09a
-#>override SITE_SOCIAL_ICON_linkedin	:= f0e1
-#>override SITE_SOCIAL_ICON_twitter	:= f099
-#>override SITE_SOCIAL_ICON_github	:= f09b
-#>override SITE_SOCIAL_ICON_rss		:= f09e
-# override SITE_SOCIAL_ICON_googleplus	:= f0d4
-# override SITE_SOCIAL_ICON_facebook	:= f082
-# override SITE_SOCIAL_ICON_linkedin	:= f08c
-# override SITE_SOCIAL_ICON_twitter	:= f081
-# override SITE_SOCIAL_ICON_github	:= f092
-# override SITE_SOCIAL_ICON_rss		:= f143
-# override SITE_SOCIAL_ICON		:= $(foreach FILE,googleplus facebook linkedin twitter github,\n\#nav-$(FILE)-link\n\t\&:before\n\t\tcontent: \"\\\\$(call SITE_SOCIAL_ICON_$(FILE))\"\n\n)
-# override SITE_SOCIAL_LINK		:= $(foreach FILE,googleplus facebook linkedin twitter github,<% if (theme.url_$(FILE)){ %><a id=\"nav-$(FILE)-link\" class=\"nav-icon\" href=\"<%- theme.url_$(FILE) %>\" target=\"_blank\"></a><% } %>)
 
 ################################################################################
 # {{{1 Composer Operation ------------------------------------------------------
@@ -3092,15 +3017,29 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 
 ################################################################################
 
-# 1 = COMPOSER_LOGO
-# 2 = SITE_HOMEPAGE
-# 3 = SITE_BRAND
+#WORKING:NOW 1 = COMPOSER_LOGO
 
 function $(PUBLISH)-brand {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 <h1 class="navbar-brand">
-$$(if [ -f "$${1}" ]; then $(ECHO) "<a href=\"$${2}\"><img class=\"img-fluid\" src=\"$${1}\"/></a>"; fi)$${3}
+$$(
+	if [ -f "$${1}" ]; then
+		$(ECHO) "<a href=\"$$(
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"homepage\"]" \\
+			| $(SED) "/^null$$/d" \\
+			2>/dev/null
+		)\"><img class=\"img-fluid\" src=\"$${1}\"/></a>\\n"
+	else
+		$(ECHO) "<!-- icon -->\\n"
+	fi
+)$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"brand\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)
 </h1>
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -3109,17 +3048,33 @@ _EOF_
 
 ########################################
 
-# 1 = SITE_SEARCH_NAME
-# 2 = SITE_SEARCH_SITE
-# 3 = SITE_SEARCH_TEXT
-# 4 = SITE_SEARCH_FORM
-
 function $(PUBLISH)-search {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
-<form class="d-flex" action="$${2}">$${4//\"/\\"}
-<input class="form-control me-2" type="text" name="$${3}"/>
-<button class="btn" type="submit">$${1}</button>
+<form class="d-flex" action="$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_site\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)">
+$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_form\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)
+<input class="form-control me-2" type="text" name="$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_text\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)"/>
+<button class="btn" type="submit">$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_name\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)</button>
 </form>
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -3128,32 +3083,22 @@ _EOF_
 
 ########################################
 
-# 1 = $(PUBLISH)-nav-top-list = .variables["$(PUBLISH)-nav-top"]
+# .variables["$(PUBLISH)-nav-top"]
 
-# x = $(PUBLISH)-nav-begin = true = bottom
-# x = $(PUBLISH)-nav-begin = true = no brand
-# 2 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = COMPOSER_LOGO
-# 3 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_HOMEPAGE
-# 4 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_BRAND
-
-# x = $(PUBLISH)-nav-end = true = no search
-# 5 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_NAME
-# 5 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_SITE
-# 7 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_TEXT
-# 8 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_FORM
+# $(PUBLISH)-nav-begin 1	true = bottom
+# $(PUBLISH)-nav-begin 2	true = no brand
+# $(PUBLISH)-nav-end 1		true = no search
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-	$(PUBLISH)-nav-begin "" "" "$${2}" "$${3}" "$${4}" "$${5}" "$${6}"
+	$(PUBLISH)-nav-begin "" ""
 	$(PUBLISH)-nav-top-list "$${1}"
-	$(PUBLISH)-nav-end "" "$${5}" "$${6}" "$${7}" "$${8//\"/\\"}"
+	$(PUBLISH)-nav-end ""
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
 
 ########################################
-
-# 1 = .variables["$(PUBLISH)-nav-top"]
 
 function $(PUBLISH)-nav-top-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -3213,40 +3158,31 @@ _EOF_
 
 ########################################
 
-# 1 = $(PUBLISH)-nav-bottom-list = .variables["$(PUBLISH)-nav-bottom"]
+# .variables["$(PUBLISH)-nav-bottom"]
 
-# 2 = COMPOSER_HOMEPAGE
-# 3 = CREATED_TAGLINE
-# 4 = SITE_COPYRIGHT
-
-# x = $(PUBLISH)-nav-begin = true = bottom
-# x = $(PUBLISH)-nav-begin = true = no brand
-# 5 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = COMPOSER_LOGO
-# 6 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_HOMEPAGE
-# 7 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_BRAND
-
-# x = $(PUBLISH)-nav-end = true = no search
-# 8 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_NAME
-# 9 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_SITE
-# 10 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_TEXT
-# 11 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_FORM
+# $(PUBLISH)-nav-begin 1	true = bottom
+# $(PUBLISH)-nav-begin 2	true = no brand
+# $(PUBLISH)-nav-end 1		true = no search
 
 function $(PUBLISH)-nav-bottom {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-	$(PUBLISH)-nav-begin "1" "1" "$${5}" "$${6}" "$${7}"
+	$(PUBLISH)-nav-begin "1" "1"
 $(CAT) <<_EOF_
-<li class="nav-item pe-3">$${4}</li>
-<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$${2}">$${3}</a></li>
+<li class="nav-item pe-3">$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"copyright\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)</li>
+<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
 _EOF_
 	$(PUBLISH)-nav-bottom-list "$${1}"
-	$(PUBLISH)-nav-end "1" "$${8}" "$${9}" "$${10}" "$${11//\"/\\"}"
+	$(PUBLISH)-nav-end "1"
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
 
 ########################################
-
-# 1 = .variables["$(PUBLISH)-nav-bottom"]
 
 function $(PUBLISH)-nav-bottom-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -3279,29 +3215,35 @@ _EOF_
 
 ########################################
 
-# 1 = true = bottom
-# 2 = true = no brand
-
-# 3 = $(PUBLISH)-brand = COMPOSER_LOGO
-# 4 = $(PUBLISH)-brand = SITE_HOMEPAGE
-# 5 = $(PUBLISH)-brand = SITE_BRAND
+# 1 true = bottom
+# 2 true = no brand
 
 function $(PUBLISH)-nav-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 <nav class="navbar navbar-expand-sm fixed-$$(
-	if [ -n "$${1}" ]; then $(ECHO) "bottom"; else $(ECHO) "top"; fi
-	) bg-dark">
+	if [ -n "$${1}" ]; then	$(ECHO) "bottom"
+	else			$(ECHO) "top"
+	fi
+) bg-dark">
 <div class="container-fluid">
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$$(
-	if [ -n "$${1}" ]; then $(ECHO) "bottom"; else $(ECHO) "top"; fi
-	)">
+	if [ -n "$${1}" ]; then	$(ECHO) "bottom"
+	else			$(ECHO) "top"
+	fi
+)">
 <span class="navbar-toggler-icon"></span>
 </button>
-$$(if [ -n "$${2}" ]; then $(ECHO) "<!-- brand -->"; else $(PUBLISH)-brand "$${3}" "$${4}" "$${5}"; fi)
+$$(
+	if [ -n "$${2}" ]; then	$(ECHO) "<!-- brand -->\\n"
+	else			$(PUBLISH)-brand
+	fi
+)
 <div class="collapse navbar-collapse" id="navbar-fixed-$$(
-	if [ -n "$${1}" ]; then $(ECHO) "bottom"; else $(ECHO) "top"; fi
-	)">
+	if [ -n "$${1}" ]; then	$(ECHO) "bottom"
+	else			$(ECHO) "top"
+	fi
+)">
 <ul class="navbar-nav navbar-nav-scroll me-auto">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -3310,18 +3252,20 @@ _EOF_
 
 ########################################
 
-# 1 = true = no search
-
-# 2 = $(PUBLISH)-search = SITE_SEARCH_NAME
-# 3 = $(PUBLISH)-search = SITE_SEARCH_SITE
-# 4 = $(PUBLISH)-search = SITE_SEARCH_TEXT
-# 5 = $(PUBLISH)-search = SITE_SEARCH_FORM
+# 1 true = no search
 
 function $(PUBLISH)-nav-end {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 </ul>
-$$(if [ -n "$${1}" ] || [ -z "$${2}" ]; then $(ECHO) "<!-- search -->\\n"; else $(PUBLISH)-search "$${2}" "$${3}" "$${4}" "$${5//\"/\\"}"; fi)
+$$(if [ -n "$${1}" ] || [ -z "$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_name\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)" ]; then	$(ECHO) "<!-- search -->\\n"
+else		$(PUBLISH)-search
+fi)
 </div>
 </div>
 </nav>
@@ -3332,19 +3276,16 @@ _EOF_
 
 ########################################
 
-# 1 = $(PUBLISH)-nav-side-list = .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
+# .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
 
-# 2 = $(PUBLISH)-column-begin = SITE_SIZE
-# 3 = $(PUBLISH)-column-begin = SITE_STICKY
-# 4 = $(PUBLISH)-column-begin = SITE_HIDE
+# $(PUBLISH)-column-begin 1	true = main
 
 function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${1}" "$${2}" "$${3}" "$${4}"; return 0; }
 function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${1}" "$${2}" "$${3}" "$${4}"; return 0; }
 
 function $(PUBLISH)-nav-side {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
-#>	$(PUBLISH)-column-begin "$${2}" "$${3}" "$${4}"
-	$(PUBLISH)-column-begin "" "$${3}" "$${4}"
+	$(PUBLISH)-column-begin ""
 	$(PUBLISH)-nav-side-list "$${1}"
 	$(PUBLISH)-column-end
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
@@ -3352,8 +3293,6 @@ function $(PUBLISH)-nav-side {
 }
 
 ########################################
-
-# 1 = .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
 
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -3411,9 +3350,9 @@ function $(PUBLISH)-nav-side-list {
 
 ########################################
 
-# 1 = header level
-# 2 = true = collapsed
-# 3 = title
+# 1 header level
+# 2 true = collapsed
+# 3 title
 
 function $(PUBLISH)-nav-unit-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
@@ -3452,9 +3391,9 @@ _EOF_
 
 ########################################
 
-# 1 = header level
-# 2 = true = top spacer
-# 3 = title
+# 1 header level
+# 2 true = top spacer
+# 3 title
 
 function $(PUBLISH)-nav-box-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
@@ -3483,18 +3422,35 @@ _EOF_
 
 ########################################
 
-# 1 = SITE_SIZE
-# 2 = SITE_STICKY
-# 3 = SITE_HIDE
+# 1 true = main
 
 function $(PUBLISH)-column-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
-<div class="d-flex flex-column $$(
-	if [ -n "$${1}" ]; then $(ECHO) "col-sm-$${1}"; elif [ -n "$${3}" ]; then $(ECHO) "d-none d-sm-block"; fi
-	) $$(
-	if [ -n "$${2}" ]; then $(ECHO) "col-sticky"; fi
-	) border-0 p-2">
+<div class="d-flex flex-column$$(
+	if [ -n "$${1}" ]; then
+		$(ECHO) " col-sm-$$(
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"main_col_size\"]" \\
+			| $(SED) "/^null$$/d" \\
+			2>/dev/null
+		)"
+	elif [ -n "$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"hide_cols\"]" \\
+		| $(SED) "/^null$$/d" \\
+		2>/dev/null
+	)" ]; then
+		$(ECHO) " d-none d-sm-block"
+	fi
+)$$(
+	if [ -n "$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"sticky_cols\"]" \\
+		| $(SED) "/^null$$/d" \\
+		2>/dev/null
+	)" ]; then $(ECHO) " col-sticky"; fi
+) border-0 p-2">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
@@ -3538,6 +3494,7 @@ _EOF_
 ################################################################################
 
 FUNCTION="$${1}"; shift
+
 $(PUBLISH)-$${FUNCTION} "$${@}"
 
 ################################################################################
@@ -3548,6 +3505,54 @@ endef
 ################################################################################
 # {{{1 Heredoc: composer_yml ---------------------------------------------------
 ################################################################################
+
+#WORKING
+
+# override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
+# override SITE_DESCRIPTION		?= a brief summary
+
+# override SITE_GOOGLEPLUS		?= https://plus.google.com/$(COMPOSER_BASENAME)
+# override SITE_FACEBOOK		?= https://www.facebook.com/$(COMPOSER_BASENAME)
+# override SITE_LINKEDIN		?= https://www.linkedin.com/$(COMPOSER_BASENAME)
+# override SITE_TWITTER			?= https://twitter.com/$(COMPOSER_BASENAME)
+# override SITE_GITHUB			?= https://github.com/$(COMPOSER_BASENAME)
+
+# override SITE_GIT_REPO		?= git@github.com:garybgenett/garybgenett.net.git
+# override SITE_ANALYTICS_ID		?=
+# override SITE_PERMALINK		?= :year/:month/:day/:title/
+# override SITE_DATE_FORMAT		?= YYYY-MM-DD
+# override SITE_TIME_FORMAT		?= HH:mm:ss
+# override SITE_PER_PAGE		?= 10
+
+# override SITE_SKIPS			?= \
+	CNAME \
+
+# override SITE_FOOTER_APPEND		?= \
+	<br /><br /> \
+	<a rel=\"author\" href=\"http://www.garybgenett.net\">					<img src=\"http://www.garybgenett.net/favicon.png\"					alt=\"Gary B. Genett\"	style=\"border:0; width:31px; height:31px;\"/></a> \
+	<a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-nd/3.0/us/\">	<img src=\"http://i.creativecommons.org/l/by-nc-nd/3.0/us/88x31.png\"			alt=\"CC License\"	style=\"border:0; width:88px; height:31px;\"/></a> \
+	<a href=\"http://validator.w3.org/check/referer\">					<img src=\"http://www.w3.org/Icons/valid-xhtml11-blue\"					alt=\"Valid HTML\"	style=\"border:0; width:88px; height:31px;\"/></a> \
+	<a href=\"http://jigsaw.w3.org/css-validator/check/referer\">				<img src=\"http://www.w3.org/Icons/valid-css2-blue\"					alt=\"Valid CSS\"	style=\"border:0; width:88px; height:31px;\"/></a> \
+	<br /> \
+	<a href=\"https://github.com/garybgenett/composer\">					<img src=\"https://raw.githubusercontent.com/garybgenett/composer/devel/icon.png\"	alt=\"Composer\"	style=\"border:0; width:31px; height:31px;\"/></a> \
+	<a href=\"http://www.vim.org\">								<img src=\"http://www.vim.org/images/vim_small.gif\"					alt=\"Vim\"		style=\"border:0; width:31px; height:31px;\"/></a> \
+	<a href=\"http://git-scm.com\">								<img src=\"https://git.wiki.kernel.org/images-git/d/df/FrontPage%24git-logo.png\"	alt=\"Git\"		style=\"border:0; width:72px; height:27px;\"/></a>
+
+# http://navaneeth.me/font-awesome-icons-css-content-values
+#>override SITE_SOCIAL_ICON_googleplus	:= f0d5
+#>override SITE_SOCIAL_ICON_facebook	:= f09a
+#>override SITE_SOCIAL_ICON_linkedin	:= f0e1
+#>override SITE_SOCIAL_ICON_twitter	:= f099
+#>override SITE_SOCIAL_ICON_github	:= f09b
+#>override SITE_SOCIAL_ICON_rss		:= f09e
+# override SITE_SOCIAL_ICON_googleplus	:= f0d4
+# override SITE_SOCIAL_ICON_facebook	:= f082
+# override SITE_SOCIAL_ICON_linkedin	:= f08c
+# override SITE_SOCIAL_ICON_twitter	:= f081
+# override SITE_SOCIAL_ICON_github	:= f092
+# override SITE_SOCIAL_ICON_rss		:= f143
+# override SITE_SOCIAL_ICON		:= $(foreach FILE,googleplus facebook linkedin twitter github,\n\#nav-$(FILE)-link\n\t\&:before\n\t\tcontent: \"\\\\$(call SITE_SOCIAL_ICON_$(FILE))\"\n\n)
+# override SITE_SOCIAL_LINK		:= $(foreach FILE,googleplus facebook linkedin twitter github,<% if (theme.url_$(FILE)){ %><a id=\"nav-$(FILE)-link\" class=\"nav-icon\" href=\"<%- theme.url_$(FILE) %>\" target=\"_blank\"></a><% } %>)
 
 override define HEREDOC_COMPOSER_YML_TEMPLATE =
 ################################################################################
@@ -3561,8 +3566,36 @@ variables:
   pagetitle: "$(COMPOSER_HEADLINE)"
   header-includes: <link rel="icon" type="image/x-icon" href="$(shell $(REALPATH) $(COMPOSER_DIR) $(COMPOSER_ICON))"/>
 
+################################################################################
+# $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
+
+  $(PUBLISH)-config:
+
+    cname:			$(COMPOSER_SITE_CNAME)
+    homepage:			$(COMPOSER_HOMEPAGE)
+    brand:			$(COMPOSER_TECHNAME)
+    copyright:			$(COPYRIGHT_SHORT)
+
+    source:			$(COMPOSER_ROOT)
+    output:			$(COMPOSER_ROOT)/.public
+
+    main_col_size:		6
+    sticky_cols:		1
+    hide_cols:			1
+
+    search_name:		Search
+    search_site:		https://duckduckgo.com
+    search_text:		q
+    search_form: |
+      <input type="hidden" name="ia" value="web"/>
+      <input type="hidden" name="kae" value="d"/>
+      <input type="hidden" name="ko" value="1"/>
+      <input type="hidden" name="kp" value="-1"/>
+      <input type="hidden" name="kv" value="1"/>
+      <input type="hidden" name="kz" value="-1"/>
+      <input type="hidden" name="sites" value="$(patsubst www.%,%,$(COMPOSER_SITE_CNAME))"/>
+
 ########################################
-# $(COMPOSER_BASENAME)
 
   $(PUBLISH)-nav-top:
     Top: "#"
@@ -3659,11 +3692,15 @@ variables:
             Target Names: "#target-names"
             Variable Names: "#variable-names"
 
+########################################
+
   $(PUBLISH)-nav-bottom:
     Home: ./
     Source: ./.sources
     Artifacts: ./artifacts
     Bootstrap: ./bootstrap
+
+########################################
 
   $(PUBLISH)-nav-left:
     - name: $(COMPOSER_TECHNAME)
@@ -3712,6 +3749,8 @@ variables:
     - type: text
       data: |
         $(COMPOSER_TAGLINE)
+
+########################################
 
   $(PUBLISH)-nav-right:
     - name: $(COMPOSER_BASENAME) Operation
@@ -6448,23 +6487,10 @@ $(PUBLISH)-$(EXAMPLE):
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(BUILD_SH) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]" \
-		"$(COMPOSER_LOGO)" \
-		"$(SITE_HOMEPAGE)" \
-		"$(SITE_BRAND)" \
-		"$(SITE_SEARCH_NAME)" \
-		"$(SITE_SEARCH_SITE)" \
-		"$(SITE_SEARCH_TEXT)" \
-		"$(strip $(subst ",\",$(call SITE_SEARCH_FORM)))"
+	@$(BUILD_SH) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]"
 	@$(BUILD_SH) "row-begin"
-	@$(BUILD_SH) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]" \
-		"$(SITE_SIZE)" \
-		"$(SITE_STICKY)" \
-		"$(SITE_HIDE)"
-	@$(BUILD_SH) "column-begin" \
-			"$(SITE_SIZE)" \
-			"$(SITE_STICKY)" \
-			"$(SITE_HIDE)"
+	@$(BUILD_SH) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]"
+	@$(BUILD_SH) "column-begin" "1"
 		@$(BUILD_SH) "nav-unit-begin" "1" "" "$(COMPOSER_TECHNAME)"
 			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Overview"
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
@@ -6540,22 +6566,9 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 			@$(BUILD_SH) "nav-unit-end"
 	@$(BUILD_SH) "column-end"
-	@$(BUILD_SH) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]" \
-		"$(SITE_SIZE)" \
-		"$(SITE_STICKY)" \
-		"$(SITE_HIDE)"
+	@$(BUILD_SH) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
 	@$(BUILD_SH) "row-end"
-	@$(BUILD_SH) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]" \
-		"$(COMPOSER_HOMEPAGE)" \
-		"$(CREATED_TAGLINE)" \
-		"$(SITE_COPYRIGHT)" \
-		"$(COMPOSER_LOGO)" \
-		"$(SITE_HOMEPAGE)" \
-		"$(SITE_BRAND)" \
-		"$(SITE_SEARCH_NAME)" \
-		"$(SITE_SEARCH_SITE)" \
-		"$(SITE_SEARCH_TEXT)" \
-		"$(strip $(subst ",\",$(call SITE_SEARCH_FORM)))"
+	@$(BUILD_SH) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]"
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
