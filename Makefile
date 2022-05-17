@@ -18,7 +18,12 @@ override VIM_FOLDING := {{{1
 #			* `make debug-file`
 #			* `mv Composer-*.log artifacts/`
 #		* `make test-targets`
-#			#> update: TYPE_TARGETS
+#			* README.site.html (+mobile)
+#				#WORK
+#				cols_main_size
+#				cols_main_first
+#				cols_mobile_hide
+#				cols_sticky
 #			* README.html.0.0.html
 #			* README.html.1.1.html
 #			* README.html.x.x.html
@@ -46,6 +51,7 @@ override VIM_FOLDING := {{{1
 #				* Screenshot
 #			* Spell check
 #	* Publish
+#		* Check: `git diff master Makefile`
 #		* Release: `rm -frv {.[^.],}*; make _release`
 #		* Git commit and tag
 #		* Update: COMPOSER_VERSION
@@ -1827,6 +1833,7 @@ endif
 
 override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES =
 	$(SED) -n -e "s|^.+TITLE_LN[,][^,]*[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
+	| $(SED) "/TITLE[:][[:space:]]+[$$]/d" \
 	| $(SED) \
 		-e "s|.[[:space:]]+;.+$$||g" \
 		-e "s|.;[[:space:]]+f$$||g" \
@@ -2744,7 +2751,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-#WORKING:NOW
+#WORKING
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
@@ -2822,7 +2829,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
-#WORKING:NOW
+#WORKING
 #	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
@@ -3448,22 +3455,32 @@ $(CAT) <<_EOF_
 	if [ -n "$${1}" ]; then
 		$(ECHO) " col-sm-$$(
 			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"main_col_size\"]" \\
+			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"cols_main_size\"]" \\
 			| $(SED) "/^null$$/d" \\
 			2>/dev/null
 		)"
-	elif [ -n "$$(
-		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"hide_cols\"]" \\
-		| $(SED) "/^null$$/d" \\
-		2>/dev/null
-	)" ]; then
-		$(ECHO) " d-none d-sm-block"
+	else
+		if [ -n "$$(
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"cols_main_first\"]" \\
+			| $(SED) "/^null$$/d" \\
+			2>/dev/null
+		)" ]; then
+			$(ECHO) " order-1"
+		fi
+		if [ -n "$$(
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"cols_mobile_hide\"]" \\
+			| $(SED) "/^null$$/d" \\
+			2>/dev/null
+		)" ]; then
+			$(ECHO) " d-none d-sm-block"
+		fi
 	fi
 )$$(
 	if [ -n "$$(
 		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"sticky_cols\"]" \\
+		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"cols_sticky\"]" \\
 		| $(SED) "/^null$$/d" \\
 		2>/dev/null
 	)" ]; then $(ECHO) " col-sticky"; fi
@@ -3593,9 +3610,10 @@ variables:
     source:				$(COMPOSER_ROOT)
     output:				$(COMPOSER_ROOT)/.public
 
-    main_col_size:			6
-    sticky_cols:			1
-    hide_cols:				1
+    cols_main_size:			6
+    cols_main_first:
+    cols_mobile_hide:			1
+    cols_sticky:			1
 
     search_name:			Search
     search_site:			https://duckduckgo.com
@@ -6470,7 +6488,6 @@ endif
 # need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #	maybe some type of automatic utility with a variable threshold?
 #	non-single-user use is not recommended
-# toggle option to put left/top nav below main on mobile
 # html fragments in $(PUBLISH)-index
 #	move header-includes favicon handling
 
@@ -6498,7 +6515,6 @@ $(PUBLISH)-$(EXAMPLE):
 	@$(RUNMAKE) --silent --debug=none COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
 		| $(SED) "/^[#][>]/d" \
 		>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	touch $(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) $(COMPOSER_PANDOC) \
 		c_site="1" \
 		c_type="html" \
