@@ -119,9 +119,10 @@ override VIM_FOLDING := {{{1
 ################################################################################
 
 override COMPOSER_COMPOSER		:= Gary B. Genett
-override COMPOSER_VERSION		:= v3.1
-
 override COMPOSER_BASENAME		:= Composer
+override COMPOSER_VERSION		:= v3.1
+override COMPOSER_HOMEPAGE		:= https://github.com/garybgenett/composer
+
 override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
 override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
@@ -133,8 +134,6 @@ override COMPOSER_TAGLINE		:= Happy Making!
 override COPYRIGHT_FULL			:= Copyright (c) 2014, 2015, 2022, $(COMPOSER_COMPOSER)
 override COPYRIGHT_SHORT		:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
 override CREATED_TAGLINE		:= Created by $(COMPOSER_TECHNAME)
-
-override COMPOSER_HOMEPAGE		:= https://github.com/garybgenett/composer
 
 override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
@@ -1094,7 +1093,7 @@ endif
 
 #WORK document : if brand is empty or logo.img don't exist, they will be skipped
 override SITE_CNAME			:= www.garybgenett.net
-override SITE_HOMEPAGE			:= $(COMPOSER_HOMEPAGE)
+override SITE_HOMEPAGE			:= $(COMPOSER_HOMEPAGE)#WORKING_NAV_TOP_BOTTOM_VERSUS
 override SITE_BRAND			:= $(COMPOSER_TECHNAME)
 override SITE_COPYRIGHT			:= $(COPYRIGHT_SHORT)
 
@@ -1107,15 +1106,17 @@ override SITE_MENU_COL_HIDE		:= 1
 
 #WORK document : if site name is empty, it disables it
 override SITE_SEARCH_NAME		:= Search
-override SITE_SEARCH_SITE		:= https://duckduckgo.com/|q
-override SITE_SEARCH_FORM		:= \
-	ia|web \
-	kae|d \
-	ko|1 \
-	kp|-1 \
-	kv|1 \
-	kz|-1 \
-	sites|$(patsubst www.%,%,$(SITE_CNAME)) \
+override SITE_SEARCH_SITE		:= https://duckduckgo.com
+override SITE_SEARCH_TEXT		:= q
+override define SITE_SEARCH_FORM =
+<input type="hidden" name="ia" value="web"/>
+<input type="hidden" name="kae" value="d"/>
+<input type="hidden" name="ko" value="1"/>
+<input type="hidden" name="kp" value="-1"/>
+<input type="hidden" name="kv" value="1"/>
+<input type="hidden" name="kz" value="-1"/>
+<input type="hidden" name="sites" value="$(patsubst www.%,%,$(SITE_CNAME))"/>
+endef
 
 #WORKING
 
@@ -1174,6 +1175,10 @@ override COMPOSER_PANDOC		:= compose
 #> update: $(MAKE) / @+
 override MAKE_OPTIONS			:= $(MAKEFLAGS)
 override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC) $(MAKE_OPTIONS)
+
+#> update: includes duplicates
+override PUBLISH			:= site
+override BUILD_SH			:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh
 
 ########################################
 
@@ -2814,7 +2819,7 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_BUILD-SH)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).build.sh
+	@$(call DO_HEREDOC,HEREDOC_BUILD_SH)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).build.sh
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -3056,13 +3061,15 @@ endef
 # {{{1 Heredoc: $(PUBLISH).build.sh --------------------------------------------
 ################################################################################
 
-override define HEREDOC_BUILD-SH =
+override define HEREDOC_BUILD_SH =
 #!$(BASH)
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).build.sh
 ################################################################################
 
 set -e
+
+HEAD_LVL="6"
 
 ########################################
 
@@ -3071,96 +3078,471 @@ YQ_WRITE="$(subst ",,$(subst $(YQ_READ),$${YQ_READ},$(YQ_WRITE)))"
 
 ################################################################################
 
+function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
+	$(ECHO) "$${1}" \\
+	| $(TR) 'A-Z' 'a-z' \\
+	| $(SED) \\
+		-e "s|-|DASH|g" \\
+		-e "s|_|UNDER|g" \\
+	| $(SED) \\
+		-e "s|[[:punct:]]||g" \\
+		-e "s|[[:space:]]|-|g" \\
+	| $(SED) \\
+		-e "s|DASH|-|g" \\
+		-e "s|UNDER|_|g"
+	return 0
+}
+
+################################################################################
+
+#WORKING:NOW logo handling?
+
+# 1 = COMPOSER_LOGO
+# 2 = SITE_HOMEPAGE
+# 3 = SITE_BRAND
+
+function $(PUBLISH)-brand {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<h1 class="navbar-brand">
+$$(if [ -f "$${1}" ]; then $(ECHO) "<a href=\"$${2}\"><img class=\"img-fluid\" src=\"$${1}\"/></a>"; fi)$${3}
+</h1>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = SITE_SEARCH_NAME
+# 2 = SITE_SEARCH_SITE
+# 3 = SITE_SEARCH_TEXT
+# 4 = SITE_SEARCH_FORM
+
+function $(PUBLISH)-search {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<form class="d-flex" action="$${2}">$${4//\"/\\"}
+<input class="form-control me-2" type="text" name="$${3}"/>
+<button class="btn" type="submit">$${1}</button>
+</form>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = $(PUBLISH)-nav-top-list = .$(PUBLISH)-nav-top
+
+# x = $(PUBLISH)-nav-begin = true = bottom
+# x = $(PUBLISH)-nav-begin = true = no brand
+# 2 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = COMPOSER_LOGO
+# 3 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_HOMEPAGE
+# 4 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_BRAND
+
+# x = $(PUBLISH)-nav-end = true = no search
+# 5 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_NAME
+# 5 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_SITE
+# 7 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_TEXT
+# 8 = $(PUBLISH)-nav-end = $(PUBLISH)-search = SITE_SEARCH_FORM
+
 function $(PUBLISH)-nav-top {
-	$(ECHO) "<!-- $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(PUBLISH)-nav-begin "" "" "$${2}" "$${3}" "$${4}" "$${5}" "$${6}"
+	$(PUBLISH)-nav-top-list "$${1}"
+	$(PUBLISH)-nav-end "" "$${5}" "$${6}" "$${7}" "$${8//\"/\\"}"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = .$(PUBLISH)-nav-top
+
+function $(PUBLISH)-nav-top-list {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" \\
 		| while read -r FILE; do
 			MENU="$$(
 				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].menu" \\
+				| $(SED) "/^null$$/d" \\
 				2>/dev/null
 			)"
 			if [ -n "$${MENU}" ]; then
 				LINK="$$(
 					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].link" \\
+					| $(SED) "/^null$$/d" \\
 					2>/dev/null
 				)"
 				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
-					$(ECHO) "<li class=\"nav-item dropdown\">\\n"
-					$(ECHO) "<a class=\"nav-link dropdown-toggle\" href=\"$${LINK}\" data-bs-toggle=\"dropdown\">$${FILE}</a>\\n"
-					$(ECHO) "<ul class=\"dropdown-menu bg-dark\">\\n"
+$(CAT) <<_EOF_
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="$${LINK}" data-bs-toggle="dropdown">$${FILE}</a>
+<ul class="dropdown-menu bg-dark">
+_EOF_
 				else
-					$(ECHO) "<li><a class=\"dropdown-item\" href=\"$${LINK}\">$${FILE}</a>\\n"
-					$(ECHO) "<ul>\\n"
+$(CAT) <<_EOF_
+<li><a class="dropdown-item" href="$${LINK}">$${FILE}</a>
+<ul>
+_EOF_
 				fi
-				$(PUBLISH)-nav-top "$${1}[\"$${FILE}\"].menu"
-				$(ECHO) "</ul></li>\\n"
+				$(PUBLISH)-nav-top-list "$${1}[\"$${FILE}\"].menu"
+$(CAT) <<_EOF_
+</ul></li>
+_EOF_
 			else
 				VAL="$$(
 					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"]" \\
+					| $(SED) "/^null$$/d" \\
 					2>/dev/null
 				)"
 				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
-					$(ECHO) "<li class=\"nav-item\"><a class=\"nav-link\" href=\"$${VAL}\">$${FILE}</a></li>\\n"
+$(CAT) <<_EOF_
+<li class="nav-item"><a class="nav-link" href="$${VAL}">$${FILE}</a></li>
+_EOF_
 				else
-					$(ECHO) "<li><a class=\"dropdown-item\" href=\"$${VAL}\">$${FILE}</a></li>\\n"
+$(CAT) <<_EOF_
+<li><a class="dropdown-item" href="$${VAL}">$${FILE}</a></li>
+_EOF_
 				fi
 			fi
 		done
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
 	return 0
 }
 
 ########################################
 
-function $(PUBLISH)-nav-side {
-	$(ECHO) "<!-- $${1} -->\\n"
-	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-		| $${YQ_WRITE} "$${1} | keys | .[]" \\
-		| while read -r FILE; do
-			TYPE="$$(
-				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].type" \\
-				2>/dev/null
-			)"
-			if	[ "$${TYPE}" = "nav-unit" ] ||
-				[ "$${TYPE}" = "nav-box" ];
-			then
-				$(ECHO) "$${TYPE}-BEG$(DIVIDE)$${1}[\"$${FILE}\"]\\n"
-				$(PUBLISH)-nav-side "$${1}[\"$${FILE}\"].data"
-				$(ECHO) "$${TYPE}-END$(DIVIDE)$${1}[\"$${FILE}\"]\\n"
-			elif [ "$${TYPE}" = "text" ]; then
-				$(ECHO) "$${TYPE}$(DIVIDE)$${1}[\"$${FILE}\"]\\n"
-			fi
-		done
-	return 0
-}
+# 1 = $(PUBLISH)-nav-bottom-list = .$(PUBLISH)-nav-bottom
 
-function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${@}"; return 0; }
-function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${@}"; return 0; }
+# 2 = COMPOSER_HOMEPAGE
+# 3 = CREATED_TAGLINE
+# 4 = SITE_COPYRIGHT
 
-########################################
+# x = $(PUBLISH)-nav-begin = true = bottom
+# x = $(PUBLISH)-nav-begin = true = no brand
+# 5 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = COMPOSER_LOGO
+# 6 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_HOMEPAGE
+# 7 = $(PUBLISH)-nav-begin = $(PUBLISH)-brand = SITE_BRAND
+
+# x = $(PUBLISH)-nav-end = true = no search
+# 8 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_NAME
+# 9 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_SITE
+# 10 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_TEXT
+# 11 = $(PUBLISH)-nav-end $(PUBLISH)-search = SITE_SEARCH_FORM
 
 function $(PUBLISH)-nav-bottom {
-	$(ECHO) "<!-- $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(PUBLISH)-nav-begin "1" "1" "$${5}" "$${6}" "$${7}"
+$(CAT) <<_EOF_
+<li class="nav-item pe-3">$${4}</li>
+<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$${2}">$${3}</a></li>
+_EOF_
+	$(PUBLISH)-nav-bottom-list "$${1}"
+	$(PUBLISH)-nav-end "1" "$${8}" "$${9}" "$${10}" "$${11//\"/\\"}"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = .$(PUBLISH)-nav-bottom
+
+function $(PUBLISH)-nav-bottom-list {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	if [ -z "$$($${COMPOSER_YML_DATA} | $${YQ_WRITE} ".nav-bottom" 2>/dev/null)" ]; then
+		return 0
+	fi
+$(CAT) <<_EOF_
+<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
+<ol class="breadcrumb">
+_EOF_
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" \\
 		| while read -r FILE; do
 			VAL="$$(
 				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 				| $${YQ_WRITE} "$${1}[\"$${FILE}\"]" \\
+				| $(SED) "/^null$$/d" \\
 				2>/dev/null
 			)"
-			$(ECHO) "<li class=\"breadcrumb-item\"><a href=\"$${VAL}\">$${FILE}</a></li>\\n"
+$(CAT) <<_EOF_
+<li class="breadcrumb-item"><a href="$${VAL}">$${FILE}</a></li>
+_EOF_
 		done
+$(CAT) <<_EOF_
+</ol></li>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = true = bottom
+# 2 = true = no brand
+
+# 3 = $(PUBLISH)-brand = COMPOSER_LOGO
+# 4 = $(PUBLISH)-brand = SITE_HOMEPAGE
+# 5 = $(PUBLISH)-brand = SITE_BRAND
+
+function $(PUBLISH)-nav-begin {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<nav class="navbar navbar-expand-sm fixed-$$(
+	if [ -n "$${1}" ]; then $(ECHO) "bottom"; else $(ECHO) "top"; fi
+	) bg-dark">
+<div class="container-fluid">
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$$(
+	if [ -n "$${1}" ]; then $(ECHO) "bottom"; else $(ECHO) "top"; fi
+	)">
+<span class="navbar-toggler-icon"></span>
+</button>
+$$(if [ -n "$${2}" ]; then $(ECHO) "<!-- brand -->"; else $(PUBLISH)-brand "$${3}" "$${4}" "$${5}"; fi)
+<div class="collapse navbar-collapse" id="navbar-fixed-$$(
+	if [ -n "$${1}" ]; then $(ECHO) "bottom"; else $(ECHO) "top"; fi
+	)">
+<ul class="navbar-nav navbar-nav-scroll me-auto">
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = true = no search
+
+# 2 = $(PUBLISH)-search = SITE_SEARCH_NAME
+# 3 = $(PUBLISH)-search = SITE_SEARCH_SITE
+# 4 = $(PUBLISH)-search = SITE_SEARCH_TEXT
+# 5 = $(PUBLISH)-search = SITE_SEARCH_FORM
+
+function $(PUBLISH)-nav-end {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+</ul>
+$$(if [ -n "$${1}" ] || [ -z "$${2}" ]; then $(ECHO) "<!-- search -->\\n"; else $(PUBLISH)-search "$${2}" "$${3}" "$${4}" "$${5//\"/\\"}"; fi)
+</div>
+</div>
+</nav>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = $(PUBLISH)-nav-side-list = .$(PUBLISH)-nav-left || .$(PUBLISH)-nav-left
+
+# x = $(PUBLISH)-column-begin = SITE_MAIN_COL_SIZE
+# x = $(PUBLISH)-column-begin = SITE_MENU_COL_HIDE
+# 2 = $(PUBLISH)-column-begin = SITE_MAIN_COL_STICKY
+
+function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${1}" "$${2}"; return 0; }
+function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${1}" "$${2}"; return 0; }
+
+function $(PUBLISH)-nav-side {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(PUBLISH)-column-begin "" "1" "$${2}"
+	$(PUBLISH)-nav-side-list "$${1}"
+	$(PUBLISH)-column-end
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = .$(PUBLISH)-nav-left || .$(PUBLISH)-nav-left
+
+function $(PUBLISH)-nav-side-list {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} "$${1} | keys | .[]" \\
+		| while read -r FILE; do
+			TYPE="$$(
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].type" \\
+				| $(SED) "/^null$$/d" \\
+				2>/dev/null
+			)"
+			if [ "$${TYPE}" = "nav-unit" ]; then
+				NAME="$$(
+					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].name" \\
+					| $(SED) "/^null$$/d" \\
+					2>/dev/null
+				)"
+				FLAG="$$(
+					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].flag" \\
+					| $(SED) "/^null$$/d" \\
+					2>/dev/null
+				)"
+				$(PUBLISH)-nav-unit-begin "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
+				$(PUBLISH)-nav-unit-end "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+			elif [ "$${TYPE}" = "nav-box" ]; then
+				NAME="$$(
+					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].name" \\
+					| $(SED) "/^null$$/d" \\
+					2>/dev/null
+				)"
+				FLAG="$$(
+					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].flag" \\
+					| $(SED) "/^null$$/d" \\
+					2>/dev/null
+				)"
+				$(PUBLISH)-nav-box-begin "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
+				$(PUBLISH)-nav-box-end "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+			elif [ "$${TYPE}" = "text" ]; then
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].data" \\
+					| $(SED) "/^null$$/d" \\
+					2>/dev/null
+			fi
+		done
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = header level
+# 2 = true = collapsed
+# 3 = title
+
+function $(PUBLISH)-nav-unit-begin {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<div class="accordion">
+<div class="accordion-item">
+<h$${1} class="accordion-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${3}")">
+<button class="accordion-button$$(
+	if [ -n "$${2}" ]; then $(ECHO) " collapsed"; fi
+	)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$${3//\ }">
+$${3}
+</button>
+</h$${1}>
+<div id="toggle-$${3//\ }" class="accordion-collapse collapse$$(
+	if [ -z "$${2}" ]; then $(ECHO) " show"; fi
+	)">
+<div class="accordion-body">
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+function $(PUBLISH)-nav-unit-end {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+</div>
+</div>
+</div>
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = header level
+# 1 = true = top spacer
+# 3 = title
+
+function $(PUBLISH)-nav-box-begin {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+$$(if [ -n "$${2}" ]; then $(ECHO) "<br/>\\n"; fi)<div class="card">
+<h$${1} class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${3}")">
+$${3}
+</h$${1}>
+<div class="card-body">
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+function $(PUBLISH)-nav-box-end {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+</div>
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 = SITE_MAIN_COL_SIZE
+# 2 = SITE_MENU_COL_HIDE
+# 3 = SITE_MAIN_COL_STICKY
+
+function $(PUBLISH)-column-begin {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<div class="d-flex flex-column $$(
+	if [ -n "$${1}" ]; then $(ECHO) "col-sm-$${1}"; elif [ -n "$${2}" ]; then $(ECHO) "d-none d-sm-block"; fi
+	) $$(
+	if [ -n "$${3}" ]; then $(ECHO) "col-sticky"; fi
+	) border-0 p-2">
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+function $(PUBLISH)-column-end {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+function $(PUBLISH)-row-begin {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<div class="container-fluid">
+<div class="d-flex flex-row flex-wrap">
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+
+function $(PUBLISH)-row-end {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+</div>
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
 
 ################################################################################
 
-$(PUBLISH)-nav-$${1} "$${2}"
+FUNCTION="$${1}"; shift
+$(PUBLISH)-$${FUNCTION} "$${@}"
 
 ################################################################################
 # End Of File
@@ -3289,6 +3671,12 @@ $(PUBLISH)-nav-top:
           Target Names: "#target-names"
           Variable Names: "#variable-names"
 
+$(PUBLISH)-nav-bottom:
+  Home: ./
+  Source: ./.sources
+  Artifacts: ./artifacts
+  Bootstrap: ./bootstrap
+
 $(PUBLISH)-nav-left:
   - name: $(COMPOSER_TECHNAME)
     type: nav-unit
@@ -3332,12 +3720,10 @@ $(PUBLISH)-nav-left:
     data:
       - type: text
         data: |
-          <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
+          <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
   - type: text
     data: |
       $(COMPOSER_TAGLINE)
-      \\n
-      "THIS IS GOING TO #WORKING:NOW!"
 
 $(PUBLISH)-nav-right:
   - name: $(COMPOSER_BASENAME) Operation
@@ -3494,12 +3880,6 @@ $(PUBLISH)-nav-right:
             * [Reserved]
               * [Target Names]
               * [Variable Names]
-
-$(PUBLISH)-nav-bottom:
-  Home: ./
-  Source: ./.sources
-  Artifacts: ./artifacts
-  Bootstrap: ./bootstrap
 
 ################################################################################
 # End Of File
@@ -6042,7 +6422,6 @@ endif
 
 #WORKING:NOW
 # finish separating templating from content
-#	start working on yaml templating; none of it is going to work if that doesn't
 # need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #	maybe some type of automatic utility with a variable threshold?
 #	non-single-user use is not recommended
@@ -6056,207 +6435,14 @@ endif
 # will need error-handling for missing or empty composer.yml file
 #	also echo notes for missing/empty fields?
 
-override define $(PUBLISH)-BRAND =
-$(_E)<!-- $(PUBLISH)-BRAND_BEG -->$(_S)
-<h1 class="navbar-brand">
-$(_C)$(if $(wildcard $(COMPOSER_LOGO)),<a href="$(SITE_HOMEPAGE)"><img class="img-fluid" src="$(COMPOSER_LOGO)"/></a>)$(SITE_BRAND)
-$(_S)</h1>
-$(_E)<!-- $(PUBLISH)-BRAND_END -->$(_D)
-endef
-
-override define $(PUBLISH)-SEARCH =
-$(_E)<!-- $(PUBLISH)-SEARCH_BEG -->$(_S)
-$(_C)<form class="d-flex" action="$(word 1,$(subst |, ,$(SITE_SEARCH_SITE)))">$(foreach FILE,\
-	$(SITE_SEARCH_FORM),$(call NEWLINE)<input type="hidden" name="$(word 1,$(subst |, ,$(FILE)))" value="$(word 2,$(subst |, ,$(FILE)))"/>)
-<input class="form-control me-2" type="text" name="$(word 2,$(subst |, ,$(SITE_SEARCH_SITE)))"/>
-<button class="btn" type="submit">$(SITE_SEARCH_NAME)</button>
-</form>
-$(_E)<!-- $(PUBLISH)-SEARCH_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_TOP =
-$(_N)<!-- $(PUBLISH)-NAV_TOP_BEG -->$(_S)
-$(call $(PUBLISH)-NAV_BEG)
-$(_N)<!-- $(PUBLISH)-NAV_TOP_YML -->$(_M)$(foreach FILE,\
-	$(shell \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "top" ".$(PUBLISH)-nav-top" \
-		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
-$(call $(PUBLISH)-NAV_END)
-$(_N)<!-- $(PUBLISH)-NAV_TOP_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_BOTTOM =
-$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_BEG -->$(_S)
-$(call $(PUBLISH)-NAV_BEG,1,1)
-$(_C)<li class="nav-item pe-3">$(SITE_COPYRIGHT)</li>
-<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
-$(_S)$(if $(shell $(COMPOSER_YML_DATA) | $(YQ_WRITE) ".nav-bottom" 2>/dev/null),<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
-<ol class="breadcrumb">
-$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_YML -->$(_M)$(foreach FILE,\
-	$(shell \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "bottom" ".$(PUBLISH)-nav-bottom" \
-		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-	),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))
-$(_S)</ol></li>)
-$(call $(PUBLISH)-NAV_END,1)
-$(_N)<!-- $(PUBLISH)-NAV_BOTTOM_END -->$(_D)
-endef
-
-#WORKING:NOW
-
-override define $(PUBLISH)-NAV_COL_1 =
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_BEG -->$(_S)
-$(call $(PUBLISH)-COLUMN_BEG)
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
-	$(shell \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "left" ".$(PUBLISH)-nav-left" \
-		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-),$(if \
-$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
-$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
-$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
-													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
-$(call $(PUBLISH)-COLUMN_END)
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_COL_2 =
-$(_N)<!-- $(PUBLISH)-NAV_COL_2_BEG -->$(_S)
-$(_N)<!-- $(PUBLISH)-NAV_COL_2_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_COL_3 =
-$(_N)<!-- $(PUBLISH)-NAV_COL_3_BEG -->$(_S)
-$(call $(PUBLISH)-COLUMN_BEG)
-$(_N)<!-- $(PUBLISH)-NAV_COL_1_YML -->$(_M)$(foreach FILE,\
-	$(shell \
-		YQ="$(YQ)" \
-		COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-		$(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh "right" ".$(PUBLISH)-nav-right" \
-		| $(SED) "s|[[:space:]]+|$(TOKEN)|g" \
-),$(if \
-$(filter nav-unit-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-unit-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-UNIT_END),$(if \
-$(filter nav-box-BEG$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_BEG,6,$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-unit-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).flag' 2>/dev/null | $(SED) "/^null$$/d"),$(shell	$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst nav-box-BEG$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).name')),$(if \
-$(filter nav-box-END$(DIVIDE)%,$(FILE)),$(call NEWLINE)$(call $(PUBLISH)-BOX_END),$(if \
-$(filter text$(DIVIDE)%,$(FILE)),$(foreach FILE,$(shell						$(COMPOSER_YML_DATA) | $(YQ_WRITE) '$(subst text$(DIVIDE),,$(subst $(TOKEN), ,$(FILE))).data' \
-													| $(SED) -e "s|[[:space:]]+$$||g" -e "s|[[:space:]]|$(TOKEN)|g"),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE)))$(call NEWLINE),$(call NEWLINE)$(subst $(TOKEN), ,$(FILE))))))))
-$(call $(PUBLISH)-COLUMN_END)
-$(_N)<!-- $(PUBLISH)-NAV_COL_3_END -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_BEG =
-$(_E)<!-- $(PUBLISH)-NAV_BEG_BEG $(DIVIDE) $(if $(1),bottom,top) -->$(_S)
-<nav class="navbar navbar-expand-sm fixed-$(if $(1),bottom,top) bg-dark">
-<div class="container-fluid">
-<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$(if $(1),bottom,top)">
-<span class="navbar-toggler-icon"></span>
-</button>
-$(_C)$(if $(2),<!-- brand -->,$(call $(PUBLISH)-BRAND))
-$(_S)<div class="collapse navbar-collapse" id="navbar-fixed-$(if $(1),bottom,top)">
-<ul class="navbar-nav navbar-nav-scroll me-auto">
-$(_E)<!-- $(PUBLISH)-NAV_BEG_END $(DIVIDE) $(if $(1),bottom,top) -->$(_D)
-endef
-
-override define $(PUBLISH)-NAV_END =
-$(_E)<!-- $(PUBLISH)-NAV_END_BEG -->$(_S)
-</ul>
-$(_C)$(if $(1),<!-- search -->,$(if $(SITE_SEARCH_NAME),$(call $(PUBLISH)-SEARCH)))
-$(_S)</div>
-</div>
-</nav>
-$(_E)<!-- $(PUBLISH)-NAV_END_END -->$(_D)
-endef
-
-override define $(PUBLISH)-COLUMN_BEG =
-$(_E)<!-- $(PUBLISH)-COLUMN_BEG_BEG -->$(_S)
-<div class="d-flex flex-column $(if $(1),\
-	col-sm-$(1) ,\
-	$(if $(SITE_MENU_COL_HIDE),d-none d-sm-block) \
-	) \
-	$(if $(SITE_MAIN_COL_STICKY),col-sticky) \
-	border-0 p-2">
-$(_E)<!-- $(PUBLISH)-COLUMN_BEG_END -->$(_D)
-endef
-
-override define $(PUBLISH)-COLUMN_END =
-$(_E)<!-- $(PUBLISH)-COLUMN_END_BEG -->$(_S)
-</div>
-$(_E)<!-- $(PUBLISH)-COLUMN_END_END -->$(_D)
-endef
-
-override define $(PUBLISH)-UNIT_BEG =
-$(_E)<!-- $(PUBLISH)-UNIT_BEG_BEG -->$(_S)
-<div class="accordion">
-<div class="accordion-item">
-<h$(1) class="accordion-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
-<button class="accordion-button$(if $(2), collapsed)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$(subst $(NULL) ,,$(3))">
-$(_H)$(3)$(_S)
-</button>
-</h$(1)>
-<div id="toggle-$(subst $(NULL) ,,$(3))" class="accordion-collapse collapse$(if $(2),, show)">
-<div class="accordion-body">
-$(_E)<!-- $(PUBLISH)-UNIT_BEG_END -->$(_D)
-endef
-
-override define $(PUBLISH)-UNIT_END =
-$(_E)<!-- $(PUBLISH)-UNIT_END_BEG -->$(_S)
-</div>
-</div>
-</div>
-</div>
-$(_E)<!-- $(PUBLISH)-UNIT_END_END -->$(_D)
-endef
-
-override define $(PUBLISH)-BOX_BEG =
-$(_E)<!-- $(PUBLISH)-BOX_BEG_BEG -->$(_S)
-$(if $(2),,<br/>)
-<div class="card">
-<h$(1) class="card-header" id="$(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(3)))">
-$(_H)$(3)$(_S)
-</h$(1)>
-<div class="card-body">
-$(_E)<!-- $(PUBLISH)-BOX_BEG_END -->$(_D)
-endef
-
-override define $(PUBLISH)-BOX_END =
-$(_E)<!-- $(PUBLISH)-BOX_END_BEG -->$(_S)
-</div>
-</div>
-$(_E)<!-- $(PUBLISH)-BOX_END_END -->$(_D)
-endef
-
-override define $(PUBLISH)-BODY_BEG =
-$(_E)<!-- $(PUBLISH)-BODY_BEG_BEG -->$(_S)
-<div class="container-fluid">
-<div class="d-flex flex-row flex-wrap">
-$(_E)<!-- $(PUBLISH)-BODY_BEG_END -->$(_D)
-endef
-
-override define $(PUBLISH)-BODY_END =
-$(_E)<!-- $(PUBLISH)-BODY_END_BEG -->$(_S)
-</div>
-</div>
-$(_E)<!-- $(PUBLISH)-BODY_END_END -->$(_D)
-endef
-
 ########################################
 # {{{3 $(PUBLISH)-$(EXAMPLE) -----------
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE):
 	@$(MKDIR) $(COMPOSER_TMP)
-	@$(RUNMAKE) --silent --debug=none COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) | \
-		$(SED) "/^[#][>]/d" \
+	@$(RUNMAKE) --silent --debug=none COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
+		| $(SED) "/^[#][>]/d" \
 		>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) $(COMPOSER_PANDOC) \
 		c_site="1" \
@@ -6266,90 +6452,110 @@ $(PUBLISH)-$(EXAMPLE):
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_TOP)
-	@$(call DO_HEREDOC,$(PUBLISH)-BODY_BEG)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_1)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_2)
-	@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-COLUMN_BEG,$(SITE_MAIN_COL_SIZE)))
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,,$(COMPOSER_TECHNAME)))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Overview))
+	@$(BUILD_SH) "nav-top" ".$(PUBLISH)-nav-top" \
+		"$(COMPOSER_LOGO)" \
+		"$(SITE_HOMEPAGE)" \
+		"$(SITE_BRAND)" \
+		"$(SITE_SEARCH_NAME)" \
+		"$(SITE_SEARCH_SITE)" \
+		"$(SITE_SEARCH_TEXT)" \
+		"$(strip $(subst ",\",$(call SITE_SEARCH_FORM)))"
+	@$(BUILD_SH) "row-begin"
+	@$(BUILD_SH) "nav-left" ".$(PUBLISH)-nav-left" \
+		"$(SITE_MAIN_COL_STICKY)"
+	@$(BUILD_SH) "column-begin" \
+			"$(SITE_MAIN_COL_SIZE)" \
+			"" \
+			"$(SITE_MAIN_COL_STICKY)"
+		@$(BUILD_SH) "nav-unit-begin" "1" "" "$(COMPOSER_TECHNAME)"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Overview"
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 				@$(ENDOLINE); $(LINERULE)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Quick Start))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Quick Start"
 				@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 				@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Principles))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Principles"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Requirements))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Requirements"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 				@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Operation))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Recommended Workflow))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-end"
+		@$(BUILD_SH) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Operation"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Recommended Workflow"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Document Formatting))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Document Formatting"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Configuration Settings))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Configuration Settings"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Precedence Rules))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Precedence Rules"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Specifying Dependencies))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Specifying Dependencies"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Custom Targets))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Custom Targets"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Repository Versions))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Repository Versions"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Variables))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Formatting Variables))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-end"
+		@$(BUILD_SH) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Variables"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Formatting Variables"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Control Variables))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Control Variables"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,$(COMPOSER_BASENAME) Targets))
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Primary Targets))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-end"
+		@$(BUILD_SH) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Targets"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Primary Targets"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Special Targets))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Special Targets"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,2,1,Additional Targets))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Additional Targets"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-				@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-		@$(call DO_HEREDOC_FULL,$(call $(PUBLISH)-UNIT_BEG,1,1,Reference))
+				@$(BUILD_SH) "nav-unit-end"
+			@$(BUILD_SH) "nav-unit-end"
+		@$(BUILD_SH) "nav-unit-begin" "1" "1" "Reference"
 			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
 			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
-			@$(call DO_HEREDOC,$(PUBLISH)-UNIT_END)
-	@$(call DO_HEREDOC,$(PUBLISH)-COLUMN_END)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_2)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_COL_3)
-	@$(call DO_HEREDOC,$(PUBLISH)-NAV_BOTTOM)
-	@$(call DO_HEREDOC,$(PUBLISH)-BODY_END)
+			@$(BUILD_SH) "nav-unit-end"
+	@$(BUILD_SH) "column-end"
+	@$(BUILD_SH) "nav-right" ".$(PUBLISH)-nav-right" \
+		"$(SITE_MAIN_COL_STICKY)"
+	@$(BUILD_SH) "row-end"
+	@$(BUILD_SH) "nav-bottom" ".$(PUBLISH)-nav-bottom" \
+		"$(COMPOSER_HOMEPAGE)" \
+		"$(CREATED_TAGLINE)" \
+		"$(SITE_COPYRIGHT)" \
+		"$(COMPOSER_LOGO)" \
+		"$(SITE_HOMEPAGE)" \
+		"$(SITE_BRAND)" \
+		"$(SITE_SEARCH_NAME)" \
+		"$(SITE_SEARCH_SITE)" \
+		"$(SITE_SEARCH_TEXT)" \
+		"$(strip $(subst ",\",$(call SITE_SEARCH_FORM)))"
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
