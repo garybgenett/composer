@@ -1090,20 +1090,18 @@ endif
 # {{{1 Bootstrap Options -------------------------------------------------------
 ################################################################################
 
-#WORK document : if brand is empty or logo.img don't exist, they will be skipped
 override SITE_CNAME			:= www.garybgenett.net
-override SITE_HOMEPAGE			:= $(COMPOSER_HOMEPAGE)#WORKING_NAV_TOP_BOTTOM_VERSUS
+override SITE_HOMEPAGE			:= $(COMPOSER_HOMEPAGE)
 override SITE_BRAND			:= $(COMPOSER_TECHNAME)
 override SITE_COPYRIGHT			:= $(COPYRIGHT_SHORT)
 
 override SITE_SOURCE			:= $(COMPOSER_ROOT)
 override SITE_OUTPUT			:= $(COMPOSER_ROOT)/.public
 
-override SITE_MAIN_COL_SIZE		:= 6
-override SITE_MAIN_COL_STICKY		:= 1
-override SITE_MENU_COL_HIDE		:= 1
+override SITE_SIZE			:= 6
+override SITE_STICKY			:= 1
+override SITE_HIDE			:= 1
 
-#WORK document : if site name is empty, it disables it
 override SITE_SEARCH_NAME		:= Search
 override SITE_SEARCH_SITE		:= https://duckduckgo.com
 override SITE_SEARCH_TEXT		:= q
@@ -2806,7 +2804,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-#WORKING:NOW
+#WORKING
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
@@ -3094,8 +3092,6 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 
 ################################################################################
 
-#WORKING:NOW logo handling?
-
 # 1 = COMPOSER_LOGO
 # 2 = SITE_HOMEPAGE
 # 3 = SITE_BRAND
@@ -3338,16 +3334,17 @@ _EOF_
 
 # 1 = $(PUBLISH)-nav-side-list = .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
 
-# x = $(PUBLISH)-column-begin = SITE_MAIN_COL_SIZE
-# x = $(PUBLISH)-column-begin = SITE_MENU_COL_HIDE
-# 2 = $(PUBLISH)-column-begin = SITE_MAIN_COL_STICKY
+# 2 = $(PUBLISH)-column-begin = SITE_SIZE
+# 3 = $(PUBLISH)-column-begin = SITE_STICKY
+# 4 = $(PUBLISH)-column-begin = SITE_HIDE
 
-function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${1}" "$${2}"; return 0; }
-function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${1}" "$${2}"; return 0; }
+function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${1}" "$${2}" "$${3}" "$${4}"; return 0; }
+function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${1}" "$${2}" "$${3}" "$${4}"; return 0; }
 
 function $(PUBLISH)-nav-side {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
-	$(PUBLISH)-column-begin "" "1" "$${2}"
+#>	$(PUBLISH)-column-begin "$${2}" "$${3}" "$${4}"
+	$(PUBLISH)-column-begin "" "$${3}" "$${4}"
 	$(PUBLISH)-nav-side-list "$${1}"
 	$(PUBLISH)-column-end
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
@@ -3456,7 +3453,7 @@ _EOF_
 ########################################
 
 # 1 = header level
-# 1 = true = top spacer
+# 2 = true = top spacer
 # 3 = title
 
 function $(PUBLISH)-nav-box-begin {
@@ -3486,17 +3483,17 @@ _EOF_
 
 ########################################
 
-# 1 = SITE_MAIN_COL_SIZE
-# 2 = SITE_MENU_COL_HIDE
-# 3 = SITE_MAIN_COL_STICKY
+# 1 = SITE_SIZE
+# 2 = SITE_STICKY
+# 3 = SITE_HIDE
 
 function $(PUBLISH)-column-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 <div class="d-flex flex-column $$(
-	if [ -n "$${1}" ]; then $(ECHO) "col-sm-$${1}"; elif [ -n "$${2}" ]; then $(ECHO) "d-none d-sm-block"; fi
+	if [ -n "$${1}" ]; then $(ECHO) "col-sm-$${1}"; elif [ -n "$${3}" ]; then $(ECHO) "d-none d-sm-block"; fi
 	) $$(
-	if [ -n "$${3}" ]; then $(ECHO) "col-sticky"; fi
+	if [ -n "$${2}" ]; then $(ECHO) "col-sticky"; fi
 	) border-0 p-2">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -3551,14 +3548,6 @@ endef
 ################################################################################
 # {{{1 Heredoc: composer_yml ---------------------------------------------------
 ################################################################################
-
-#WORKING
-# need to replace header-includes with something more generally applicable...
-# can't use yaml files for any base configuration...
-# likely need to create a html file fragment...
-# this is where the full, final composer configuration should go...
-#WORK
-# expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
 
 override define HEREDOC_COMPOSER_YML_TEMPLATE =
 ################################################################################
@@ -5531,6 +5520,8 @@ $(TESTING)-speed-done:
 ########################################
 # {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
 
+#WORK COMPOSER_YML
+
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 $(TESTING)-$(COMPOSER_BASENAME):
@@ -5774,8 +5765,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 ########################################
 # {{{3 $(TESTING)-COMPOSER_INCLUDE -----
 
-#WORK COMPOSER_YML?
-#	also, document, if we are allowing it to be an override for everything...?
+#WORK COMPOSER_YML
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
@@ -6296,8 +6286,6 @@ endef
 ########################################
 # {{{2 $(CONVICT) ----------------------
 
-#WORKING document new $(PRINTER)/c_list hack...?
-
 override GIT_OPTS_CONVICT		:= --verbose $(if \
 	$(filter $(PRINTER),$(COMPOSER_DOITALL_$(CONVICT))) ,\
 	$(addprefix .$(subst $(COMPOSER_ROOT),,$(CURDIR))/,$(c_list)) ,\
@@ -6425,14 +6413,23 @@ endif
 #	maybe some type of automatic utility with a variable threshold?
 #	non-single-user use is not recommended
 # toggle option to put left/top nav below main on mobile
+# html fragments in $(PUBLISH)-index
+#	move header-includes favicon handling
 
-#WORKING
-# https://github.com/bewuethr/pandoc-bash-blog
-# new target(s)... document!
+# document
+#	COMPOSER_YML, and note that it is now an override for everything
+#		expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
+#	if brand is empty or logo.img don't exist, they will be skipped
+#	if site_search_name is empty, it disables it
+#	new $(PRINTER)/c_list hack...?
+#	new $(PUBLISH) target(s)...
+
+# error-handling for missing, empty or incomplete composer.yml file?
+# what happens if a page/post file variable conflicts with a composer.yml?
 # c_title = pagetitle?
 # header-includes?  leave it to c_options?  maybe c_header?
-# will need error-handling for missing or empty composer.yml file
-#	also echo notes for missing/empty fields?
+
+# https://github.com/bewuethr/pandoc-bash-blog
 
 ########################################
 # {{{3 $(PUBLISH)-$(EXAMPLE) -----------
@@ -6461,11 +6458,13 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 		"$(strip $(subst ",\",$(call SITE_SEARCH_FORM)))"
 	@$(BUILD_SH) "row-begin"
 	@$(BUILD_SH) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]" \
-		"$(SITE_MAIN_COL_STICKY)"
+		"$(SITE_SIZE)" \
+		"$(SITE_STICKY)" \
+		"$(SITE_HIDE)"
 	@$(BUILD_SH) "column-begin" \
-			"$(SITE_MAIN_COL_SIZE)" \
-			"" \
-			"$(SITE_MAIN_COL_STICKY)"
+			"$(SITE_SIZE)" \
+			"$(SITE_STICKY)" \
+			"$(SITE_HIDE)"
 		@$(BUILD_SH) "nav-unit-begin" "1" "" "$(COMPOSER_TECHNAME)"
 			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Overview"
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
@@ -6542,7 +6541,9 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 			@$(BUILD_SH) "nav-unit-end"
 	@$(BUILD_SH) "column-end"
 	@$(BUILD_SH) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]" \
-		"$(SITE_MAIN_COL_STICKY)"
+		"$(SITE_SIZE)" \
+		"$(SITE_STICKY)" \
+		"$(SITE_HIDE)"
 	@$(BUILD_SH) "row-end"
 	@$(BUILD_SH) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]" \
 		"$(COMPOSER_HOMEPAGE)" \
