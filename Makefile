@@ -2090,7 +2090,7 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #		revealjs is usually using a theme, which we are refining
 #	these can now be removed to be disabled
 #	favicon.ico = idendical to $(_C)[Reveal.js Presentations]$(_D)
-#		works on all html, including revealjs = test this
+#		works on all html, including revealjs
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -3379,11 +3379,11 @@ $(CAT) <<_EOF_
 <h$${1} class="accordion-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${3}")">
 <button class="accordion-button$$(
 	if [ -n "$${2}" ]; then $(ECHO) " collapsed"; fi
-	)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$${3//\ }">
+	)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($(ECHO) "$${3}" | $(SED) "s|[^[:alnum:]_-]||g")">
 $${3}
 </button>
 </h$${1}>
-<div id="toggle-$${3//\ }" class="accordion-collapse collapse$$(
+<div id="toggle-$$($(ECHO) "$${3}" | $(SED) "s|[^[:alnum:]_-]||g")" class="accordion-collapse collapse$$(
 	if [ -z "$${2}" ]; then $(ECHO) " show"; fi
 	)">
 <div class="accordion-body">
@@ -3911,7 +3911,7 @@ variables:
                   * [check / check-all / config / config-all / targets]
                   * [_commit / _commit-all]
                   * [_release / _update / _update-all]
-    - name: Reference
+    - name: $(DATEMARK) -- Reference<br/>$(COMPOSER_COMPOSER)
       type: nav-unit
       flag: 1
       data:
@@ -6579,7 +6579,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
 				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
 			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
-		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "1" "Reference"
+		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "1" "$(DATEMARK) -- Reference<br/>$(COMPOSER_COMPOSER)"
 			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
 			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
