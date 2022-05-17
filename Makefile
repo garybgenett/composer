@@ -6484,6 +6484,24 @@ endif
 # {{{3 $(PUBLISH)-% --------------------
 
 #WORKING:NOW
+# make
+#	sort through COMPOSER_RELEASE, and move as much as possible into $(CREATOR)
+#	comment COMPOSER_RELEASE notice, along with PANDOC_BIN and YQ_BIN
+#		no more notices, or things being per-directory (should be usable right away [note this in recommended workflow])
+# site
+#	add menu_bar_top(?) and menu_bar_bottop(?), right-justified html/markdown
+#		insert social-media icons as examples
+#	break README into pages, add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
+#	examples of description/etc. metadata in composer.yml
+# page
+#	just like book
+#	add frame(?) option, as default unit/box/text wrapper to each file
+#	use date -- title \n author format, optional frame(?) option
+#		configurable format?
+#	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
+#		do sort based on yaml dates instead?  configurable?
+
+#WORKING:NOW
 # finish separating templating from content
 # need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #	maybe some type of automatic utility with a variable threshold?
