@@ -1024,6 +1024,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--variable="revealjs-url=$(REVEALJS_DIR)" \
 	) \
 	$(if $(c_site),\
+		--include-in-header="$(PUBLISH_HEADERS_HTML)" \
 		--include-in-header="$(BOOTSTRAP_CSS_JS)" \
 		$(if $(call c_css_select),\
 			--css="$(BOOTSTRAP_CSS_CSS)" \
@@ -1098,10 +1099,6 @@ override COMPOSER_PANDOC		:= compose
 override MAKE_OPTIONS			:= $(MAKEFLAGS)
 override RUNMAKE			:= $(REALMAKE) --makefile $(COMPOSER_SRC) $(MAKE_OPTIONS)
 
-#> update: includes duplicates
-override PUBLISH			:= site
-override BUILD_SH			:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(COMPOSER_ART)/$(PUBLISH).build.sh
-
 ########################################
 
 override ~				:= "'$$'"
@@ -1110,6 +1107,14 @@ override COMPOSER_TEACHER		:= $(~)(abspath $(~)(dir $(~)(COMPOSER_MY_PATH)))/$(M
 
 override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
 override COMPOSER_REGEX_PREFIX		:= [_.]
+
+########################################
+
+#> update: includes duplicates
+override PUBLISH			:= site
+override PUBLISH_HEADERS_HTML		:= $(COMPOSER_ART)/$(PUBLISH).headers.html
+override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
+override PUBLISH_BUILD_SH_RUN		:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(PUBLISH_BUILD_SH)
 
 ########################################
 # {{{2 Options -------------------------
@@ -2741,7 +2746,8 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_BUILD_SH)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(PUBLISH).build.sh
+	@$(call DO_HEREDOC,HEREDOC_PUBLISH_HEADERS_HTML)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_HEADERS_HTML))
+	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_BUILD_SH))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -2980,10 +2986,29 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ################################################################################
+# {{{1 Heredoc: $(PUBLISH).html ------------------------------------------------
+################################################################################
+
+#WORKING:NOW COMPOSER_ICON
+
+override define HEREDOC_PUBLISH_HEADERS_HTML =
+<!-- ###########################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) HTML
+############################################################################ -->
+
+<link rel="icon" type="image/x-icon" href="$(shell $(REALPATH) $(abspath $(dir $(PUBLISH_HEADERS_HTML))) $(COMPOSER_ICON))"/>
+<link rel="icon" type="image/x-icon" href="$(COMPOSER_ICON)"/>
+
+<!-- ###########################################################################
+# End Of File
+############################################################################ -->
+endef
+
+################################################################################
 # {{{1 Heredoc: $(PUBLISH).build.sh --------------------------------------------
 ################################################################################
 
-override define HEREDOC_BUILD_SH =
+override define HEREDOC_PUBLISH_BUILD_SH =
 #!$(BASH)
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).build.sh
@@ -3032,7 +3057,7 @@ $$(
 			2>/dev/null
 		)\"><img class=\"img-fluid\" src=\"$${1}\"/></a>\\n"
 	else
-		$(ECHO) "<!-- icon -->\\n"
+		$(ECHO) "<!-- logo -->\\n"
 	fi
 )$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
@@ -3559,33 +3584,30 @@ override define HEREDOC_COMPOSER_YML_TEMPLATE =
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML
 ################################################################################
 
-########################################
-# Pandoc
-
 variables:
-  pagetitle: "$(COMPOSER_HEADLINE)"
-  header-includes: <link rel="icon" type="image/x-icon" href="$(shell $(REALPATH) $(COMPOSER_DIR) $(COMPOSER_ICON))"/>
+
+  pagetitle:				"$(COMPOSER_HEADLINE)"
 
 ################################################################################
 # $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
 
   $(PUBLISH)-config:
 
-    cname:			$(COMPOSER_SITE_CNAME)
-    homepage:			$(COMPOSER_HOMEPAGE)
-    brand:			$(COMPOSER_TECHNAME)
-    copyright:			$(COPYRIGHT_SHORT)
+    cname:				$(COMPOSER_SITE_CNAME)
+    homepage:				$(COMPOSER_HOMEPAGE)
+    brand:				$(COMPOSER_TECHNAME)
+    copyright:				$(COPYRIGHT_SHORT)
 
-    source:			$(COMPOSER_ROOT)
-    output:			$(COMPOSER_ROOT)/.public
+    source:				$(COMPOSER_ROOT)
+    output:				$(COMPOSER_ROOT)/.public
 
-    main_col_size:		6
-    sticky_cols:		1
-    hide_cols:			1
+    main_col_size:			6
+    sticky_cols:			1
+    hide_cols:				1
 
-    search_name:		Search
-    search_site:		https://duckduckgo.com
-    search_text:		q
+    search_name:			Search
+    search_site:			https://duckduckgo.com
+    search_text:			q
     search_form: |
       <input type="hidden" name="ia" value="web"/>
       <input type="hidden" name="kae" value="d"/>
@@ -3598,6 +3620,7 @@ variables:
 ########################################
 
   $(PUBLISH)-nav-top:
+
     Top: "#"
     CMS:
       link: "#composer-cms"
@@ -3695,6 +3718,7 @@ variables:
 ########################################
 
   $(PUBLISH)-nav-bottom:
+
     Home: ./
     Source: ./.sources
     Artifacts: ./artifacts
@@ -3703,6 +3727,7 @@ variables:
 ########################################
 
   $(PUBLISH)-nav-left:
+
     - name: $(COMPOSER_TECHNAME)
       type: nav-unit
       data:
@@ -3753,6 +3778,7 @@ variables:
 ########################################
 
   $(PUBLISH)-nav-right:
+
     - name: $(COMPOSER_BASENAME) Operation
       type: nav-unit
       flag: 1
@@ -6487,88 +6513,88 @@ $(PUBLISH)-$(EXAMPLE):
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(BUILD_SH) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]"
-	@$(BUILD_SH) "row-begin"
-	@$(BUILD_SH) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]"
-	@$(BUILD_SH) "column-begin" "1"
-		@$(BUILD_SH) "nav-unit-begin" "1" "" "$(COMPOSER_TECHNAME)"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Overview"
+	@$(PUBLISH_BUILD_SH_RUN) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]"
+	@$(PUBLISH_BUILD_SH_RUN) "row-begin"
+	@$(PUBLISH_BUILD_SH_RUN) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]"
+	@$(PUBLISH_BUILD_SH_RUN) "column-begin" "1"
+		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "" "$(COMPOSER_TECHNAME)"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Overview"
 				@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 				@$(ENDOLINE); $(LINERULE)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Quick Start"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Quick Start"
 				@$(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 				@$(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Principles"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Principles"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Requirements"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Requirements"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 				@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-end"
-		@$(BUILD_SH) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Operation"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Recommended Workflow"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Operation"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Recommended Workflow"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Document Formatting"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Document Formatting"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Configuration Settings"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Configuration Settings"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Precedence Rules"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Precedence Rules"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Specifying Dependencies"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Specifying Dependencies"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Custom Targets"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Custom Targets"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Repository Versions"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Repository Versions"
 				@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-end"
-		@$(BUILD_SH) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Variables"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Formatting Variables"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Variables"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Formatting Variables"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Control Variables"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Control Variables"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-end"
-		@$(BUILD_SH) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Targets"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Primary Targets"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "1" "$(COMPOSER_BASENAME) Targets"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Primary Targets"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Special Targets"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Special Targets"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-begin" "2" "1" "Additional Targets"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "2" "1" "Additional Targets"
 				@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_0
 				@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-				@$(BUILD_SH) "nav-unit-end"
-			@$(BUILD_SH) "nav-unit-end"
-		@$(BUILD_SH) "nav-unit-begin" "1" "1" "Reference"
+				@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+		@$(PUBLISH_BUILD_SH_RUN) "nav-unit-begin" "1" "1" "Reference"
 			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
 			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
-			@$(BUILD_SH) "nav-unit-end"
-	@$(BUILD_SH) "column-end"
-	@$(BUILD_SH) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
-	@$(BUILD_SH) "row-end"
-	@$(BUILD_SH) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]"
+			@$(PUBLISH_BUILD_SH_RUN) "nav-unit-end"
+	@$(PUBLISH_BUILD_SH_RUN) "column-end"
+	@$(PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
+	@$(PUBLISH_BUILD_SH_RUN) "row-end"
+	@$(PUBLISH_BUILD_SH_RUN) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]"
 
 ########################################
 # {{{2 $(INSTALL) ----------------------
