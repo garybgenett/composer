@@ -966,8 +966,7 @@ ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
 override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
 endif
 
-#WORK what do we want to do with this...?
-#>override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(if $(COMPOSER_YML_LIST),--defaults="$(lastword $(COMPOSER_YML_LIST))")
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(if $(COMPOSER_YML_LIST),--defaults="$(lastword $(COMPOSER_YML_LIST))")
 
 ########################################
 
@@ -3133,7 +3132,7 @@ _EOF_
 
 ########################################
 
-# 1 = $(PUBLISH)-nav-top-list = .$(PUBLISH)-nav-top
+# 1 = $(PUBLISH)-nav-top-list = .variables["$(PUBLISH)-nav-top"]
 
 # x = $(PUBLISH)-nav-begin = true = bottom
 # x = $(PUBLISH)-nav-begin = true = no brand
@@ -3158,7 +3157,7 @@ function $(PUBLISH)-nav-top {
 
 ########################################
 
-# 1 = .$(PUBLISH)-nav-top
+# 1 = .variables["$(PUBLISH)-nav-top"]
 
 function $(PUBLISH)-nav-top-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -3178,7 +3177,7 @@ function $(PUBLISH)-nav-top-list {
 					| $(SED) "/^null$$/d" \\
 					2>/dev/null
 				)"
-				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
+				if [ "$${1}" = ".variables[\"$(PUBLISH)-nav-top\"]" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$${LINK}" data-bs-toggle="dropdown">$${FILE}</a>
@@ -3201,7 +3200,7 @@ _EOF_
 					| $(SED) "/^null$$/d" \\
 					2>/dev/null
 				)"
-				if [ "$${1}" = ".$(PUBLISH)-nav-top" ]; then
+				if [ "$${1}" = ".variables[\"$(PUBLISH)-nav-top\"]" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$${VAL}">$${FILE}</a></li>
 _EOF_
@@ -3218,7 +3217,7 @@ _EOF_
 
 ########################################
 
-# 1 = $(PUBLISH)-nav-bottom-list = .$(PUBLISH)-nav-bottom
+# 1 = $(PUBLISH)-nav-bottom-list = .variables["$(PUBLISH)-nav-bottom"]
 
 # 2 = COMPOSER_HOMEPAGE
 # 3 = CREATED_TAGLINE
@@ -3251,7 +3250,7 @@ _EOF_
 
 ########################################
 
-# 1 = .$(PUBLISH)-nav-bottom
+# 1 = .variables["$(PUBLISH)-nav-bottom"]
 
 function $(PUBLISH)-nav-bottom-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -3337,7 +3336,7 @@ _EOF_
 
 ########################################
 
-# 1 = $(PUBLISH)-nav-side-list = .$(PUBLISH)-nav-left || .$(PUBLISH)-nav-left
+# 1 = $(PUBLISH)-nav-side-list = .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
 
 # x = $(PUBLISH)-column-begin = SITE_MAIN_COL_SIZE
 # x = $(PUBLISH)-column-begin = SITE_MENU_COL_HIDE
@@ -3357,7 +3356,7 @@ function $(PUBLISH)-nav-side {
 
 ########################################
 
-# 1 = .$(PUBLISH)-nav-left || .$(PUBLISH)-nav-left
+# 1 = .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
 
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -3576,310 +3575,310 @@ variables:
 ########################################
 # $(COMPOSER_BASENAME)
 
-$(PUBLISH)-nav-top:
-  Top: "#"
-  CMS:
-    link: "#composer-cms"
-    menu:
-      Overview: "#overview"
-      Quick Start: "#quick-start"
-      Principles: "#principles"
-      Requirements: "#requirements"
-  Operation:
-    link: "#composer-operation"
-    menu:
-      Recommended Workflow: "#recommended-workflow"
-      Document Formatting:
-        link: "#document-formatting"
-        menu:
-          HTML: "#html"
-          Bootstrap Websites: "#bootstrap-websites"
-          PDF: "#pdf"
-          EPUB: "#epub"
-          Reveal.js Presentations: "#revealjs-presentations"
-          Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
-      Configuration Settings: "#configuration-settings"
-      Precedence Rules: "#precedence-rules"
-      Specifying Dependencies: "#specifying-dependencies"
-      Custom Targets: "#custom-targets"
-      Repository Versions: "#repository-versions"
-  Variables:
-    link: "#composer-variables"
-    menu:
-      Formatting Variables:
-        link: "#formatting-variables"
-        menu:
-          c_site: "#c_site"
-          c_type / c_base / c_list: "#c_type--c_base--c_list"
-          c_lang: "#c_lang"
-          c_css: "#c_css"
-          c_toc: "#c_toc"
-          c_level: "#c_level"
-          c_margin: "#c_margin"
-          c_options: "#c_options"
-      Control Variables:
-        link: "#control-variables"
-        menu:
-          MAKEJOBS: "#makejobs"
-          COMPOSER_DOCOLOR: "#composer_docolor"
-          COMPOSER_DEBUGIT: "#composer_debugit"
-          COMPOSER_INCLUDE: "#composer_include"
-          COMPOSER_DEPENDS: "#composer_depends"
-          COMPOSER_LOG: "#composer_log"
-          COMPOSER_EXT: "#composer_ext"
-          COMPOSER_TARGETS: "#composer_targets"
-          COMPOSER_SUBDIRS: "#composer_subdirs"
-          COMPOSER_IGNORES: "#composer_ignores"
-  Targets:
-    link: "#composer-targets"
-    menu:
-      Primary Targets:
-        link: "#primary-targets"
-        menu:
-          help / help-all: "#help--help-all"
-          template: "#template"
-          compose: "#compose"
-          site: "#site"
-          install / install-all / install-force: "#install--install-all--install-force"
-          clean / clean-all / *-clean: "#clean--clean-all---clean"
-          all / all-all / *-all: "#all--all-all---all"
-          list: "#list"
-      Special Targets:
-        link: "#special-targets"
-        menu:
-          book: "#book"
-          page / post: "#page--post"
-      Additional Targets:
-        link: "#additional-targets"
-        menu:
-          debug / debug-file: "#debug--debug-file"
-          check / check-all / config / config-all / targets: "#check--check-all--config--config-all--targets"
-          _commit / _commit-all: "#_commit--_commit-all"
-          _release / _update / _update-all: "#_release--_update--_update-all"
-  Reference:
-    link: "#reference"
-    menu:
-      Internal Targets: "#internal-targets"
-      Configuration:
-        link: "#configuration"
-        menu:
-          "Templates: install": "#templates-install"
-          Pandoc Extensions: "#pandoc-extensions"
-      Reserved:
-        link: "#reserved"
-        menu:
-          Target Names: "#target-names"
-          Variable Names: "#variable-names"
+  $(PUBLISH)-nav-top:
+    Top: "#"
+    CMS:
+      link: "#composer-cms"
+      menu:
+        Overview: "#overview"
+        Quick Start: "#quick-start"
+        Principles: "#principles"
+        Requirements: "#requirements"
+    Operation:
+      link: "#composer-operation"
+      menu:
+        Recommended Workflow: "#recommended-workflow"
+        Document Formatting:
+          link: "#document-formatting"
+          menu:
+            HTML: "#html"
+            Bootstrap Websites: "#bootstrap-websites"
+            PDF: "#pdf"
+            EPUB: "#epub"
+            Reveal.js Presentations: "#revealjs-presentations"
+            Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
+        Configuration Settings: "#configuration-settings"
+        Precedence Rules: "#precedence-rules"
+        Specifying Dependencies: "#specifying-dependencies"
+        Custom Targets: "#custom-targets"
+        Repository Versions: "#repository-versions"
+    Variables:
+      link: "#composer-variables"
+      menu:
+        Formatting Variables:
+          link: "#formatting-variables"
+          menu:
+            c_site: "#c_site"
+            c_type / c_base / c_list: "#c_type--c_base--c_list"
+            c_lang: "#c_lang"
+            c_css: "#c_css"
+            c_toc: "#c_toc"
+            c_level: "#c_level"
+            c_margin: "#c_margin"
+            c_options: "#c_options"
+        Control Variables:
+          link: "#control-variables"
+          menu:
+            MAKEJOBS: "#makejobs"
+            COMPOSER_DOCOLOR: "#composer_docolor"
+            COMPOSER_DEBUGIT: "#composer_debugit"
+            COMPOSER_INCLUDE: "#composer_include"
+            COMPOSER_DEPENDS: "#composer_depends"
+            COMPOSER_LOG: "#composer_log"
+            COMPOSER_EXT: "#composer_ext"
+            COMPOSER_TARGETS: "#composer_targets"
+            COMPOSER_SUBDIRS: "#composer_subdirs"
+            COMPOSER_IGNORES: "#composer_ignores"
+    Targets:
+      link: "#composer-targets"
+      menu:
+        Primary Targets:
+          link: "#primary-targets"
+          menu:
+            help / help-all: "#help--help-all"
+            template: "#template"
+            compose: "#compose"
+            site: "#site"
+            install / install-all / install-force: "#install--install-all--install-force"
+            clean / clean-all / *-clean: "#clean--clean-all---clean"
+            all / all-all / *-all: "#all--all-all---all"
+            list: "#list"
+        Special Targets:
+          link: "#special-targets"
+          menu:
+            book: "#book"
+            page / post: "#page--post"
+        Additional Targets:
+          link: "#additional-targets"
+          menu:
+            debug / debug-file: "#debug--debug-file"
+            check / check-all / config / config-all / targets: "#check--check-all--config--config-all--targets"
+            _commit / _commit-all: "#_commit--_commit-all"
+            _release / _update / _update-all: "#_release--_update--_update-all"
+    Reference:
+      link: "#reference"
+      menu:
+        Internal Targets: "#internal-targets"
+        Configuration:
+          link: "#configuration"
+          menu:
+            "Templates: install": "#templates-install"
+            Pandoc Extensions: "#pandoc-extensions"
+        Reserved:
+          link: "#reserved"
+          menu:
+            Target Names: "#target-names"
+            Variable Names: "#variable-names"
 
-$(PUBLISH)-nav-bottom:
-  Home: ./
-  Source: ./.sources
-  Artifacts: ./artifacts
-  Bootstrap: ./bootstrap
+  $(PUBLISH)-nav-bottom:
+    Home: ./
+    Source: ./.sources
+    Artifacts: ./artifacts
+    Bootstrap: ./bootstrap
 
-$(PUBLISH)-nav-left:
-  - name: $(COMPOSER_TECHNAME)
-    type: nav-unit
-    data:
-      - name: Overview
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Overview]
-      - name: Quick Start
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Quick Start]
-      - name: Principles
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Principles]
-      - name: Requirements
-        type: nav-unit
-        flag: 1
-        data:
-          -
-            type: text
-            data: |
-              <!-- -->
-                * [Requirements]
-  - name: Formats
-    type: nav-box
-    flag: 1
-    data:
-      - type: text
-        data: |
-          <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
-  - type: text
-    data: |
-      $(COMPOSER_TAGLINE)
+  $(PUBLISH)-nav-left:
+    - name: $(COMPOSER_TECHNAME)
+      type: nav-unit
+      data:
+        - name: Overview
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Overview]
+        - name: Quick Start
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Quick Start]
+        - name: Principles
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Principles]
+        - name: Requirements
+          type: nav-unit
+          flag: 1
+          data:
+            -
+              type: text
+              data: |
+                <!-- -->
+                  * [Requirements]
+    - name: Formats
+      type: nav-box
+      flag: 1
+      data:
+        - type: text
+          data: |
+            <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
+    - type: text
+      data: |
+        $(COMPOSER_TAGLINE)
 
-$(PUBLISH)-nav-right:
-  - name: $(COMPOSER_BASENAME) Operation
-    type: nav-unit
-    flag: 1
-    data:
-      - name: Recommended Workflow
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Recommended Workflow]
-      - name: Document Formatting
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [HTML]
-                * [Bootstrap Websites]
-                * [PDF]
-                * [EPUB]
-                * [Reveal.js Presentations]
-                * [Microsoft Word & PowerPoint]
-      - name: Configuration Settings
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Configuration Settings]
-      - name: Precedence Rules
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Precedence Rules]
-      - name: Specifying Dependencies
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Specifying Dependencies]
-      - name: Custom Targets
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Custom Targets]
-      - name: Repository Versions
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [Repository Versions]
-  - name: $(COMPOSER_BASENAME) Variables
-    type: nav-unit
-    flag: 1
-    data:
-      - name: Formatting Variables
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [c_site]
-                * [c_type / c_base / c_list]
-                * [c_lang]
-                * [c_css]
-                * [c_toc]
-                * [c_level]
-                * [c_margin]
-                * [c_options]
-      - name: Control Variables
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [MAKEJOBS]
-                * [COMPOSER_DOCOLOR]
-                * [COMPOSER_DEBUGIT]
-                * [COMPOSER_INCLUDE]
-                * [COMPOSER_DEPENDS]
-                * [COMPOSER_LOG]
-                * [COMPOSER_EXT]
-                * [COMPOSER_TARGETS]
-                * [COMPOSER_SUBDIRS]
-                * [COMPOSER_IGNORES]
-  - name: $(COMPOSER_BASENAME) Targets
-    type: nav-unit
-    flag: 1
-    data:
-      - name: Primary Targets
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [help / help-all]
-                * [template]
-                * [compose]
-                * [site]
-                * [install / install-all / install-force]
-                * [clean / clean-all / *-clean]
-                * [all / all-all / *-all]
-                * [list]
-      - name: Special Targets
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [book]
-                * [page / post]
-      - name: Additional Targets
-        type: nav-unit
-        flag: 1
-        data:
-          - type: text
-            data: |
-              <!-- -->
-                * [debug / debug-file]
-                * [check / check-all / config / config-all / targets]
-                * [_commit / _commit-all]
-                * [_release / _update / _update-all]
-  - name: Reference
-    type: nav-unit
-    flag: 1
-    data:
-      - type: text
-        data: |
-          <!-- -->
-            * [Internal Targets]
-            * [Configuration]
-              * [Templates: install]
-              * [Pandoc Extensions]
-            * [Reserved]
-              * [Target Names]
-              * [Variable Names]
+  $(PUBLISH)-nav-right:
+    - name: $(COMPOSER_BASENAME) Operation
+      type: nav-unit
+      flag: 1
+      data:
+        - name: Recommended Workflow
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Recommended Workflow]
+        - name: Document Formatting
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [HTML]
+                  * [Bootstrap Websites]
+                  * [PDF]
+                  * [EPUB]
+                  * [Reveal.js Presentations]
+                  * [Microsoft Word & PowerPoint]
+        - name: Configuration Settings
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Configuration Settings]
+        - name: Precedence Rules
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Precedence Rules]
+        - name: Specifying Dependencies
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Specifying Dependencies]
+        - name: Custom Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Custom Targets]
+        - name: Repository Versions
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Repository Versions]
+    - name: $(COMPOSER_BASENAME) Variables
+      type: nav-unit
+      flag: 1
+      data:
+        - name: Formatting Variables
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [c_site]
+                  * [c_type / c_base / c_list]
+                  * [c_lang]
+                  * [c_css]
+                  * [c_toc]
+                  * [c_level]
+                  * [c_margin]
+                  * [c_options]
+        - name: Control Variables
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [MAKEJOBS]
+                  * [COMPOSER_DOCOLOR]
+                  * [COMPOSER_DEBUGIT]
+                  * [COMPOSER_INCLUDE]
+                  * [COMPOSER_DEPENDS]
+                  * [COMPOSER_LOG]
+                  * [COMPOSER_EXT]
+                  * [COMPOSER_TARGETS]
+                  * [COMPOSER_SUBDIRS]
+                  * [COMPOSER_IGNORES]
+    - name: $(COMPOSER_BASENAME) Targets
+      type: nav-unit
+      flag: 1
+      data:
+        - name: Primary Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [help / help-all]
+                  * [template]
+                  * [compose]
+                  * [site]
+                  * [install / install-all / install-force]
+                  * [clean / clean-all / *-clean]
+                  * [all / all-all / *-all]
+                  * [list]
+        - name: Special Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [book]
+                  * [page / post]
+        - name: Additional Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [debug / debug-file]
+                  * [check / check-all / config / config-all / targets]
+                  * [_commit / _commit-all]
+                  * [_release / _update / _update-all]
+    - name: Reference
+      type: nav-unit
+      flag: 1
+      data:
+        - type: text
+          data: |
+            <!-- -->
+              * [Internal Targets]
+              * [Configuration]
+                * [Templates: install]
+                * [Pandoc Extensions]
+              * [Reserved]
+                * [Target Names]
+                * [Variable Names]
 
 ################################################################################
 # End Of File
@@ -6452,7 +6451,7 @@ $(PUBLISH)-$(EXAMPLE):
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(BUILD_SH) "nav-top" ".$(PUBLISH)-nav-top" \
+	@$(BUILD_SH) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]" \
 		"$(COMPOSER_LOGO)" \
 		"$(SITE_HOMEPAGE)" \
 		"$(SITE_BRAND)" \
@@ -6461,7 +6460,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 		"$(SITE_SEARCH_TEXT)" \
 		"$(strip $(subst ",\",$(call SITE_SEARCH_FORM)))"
 	@$(BUILD_SH) "row-begin"
-	@$(BUILD_SH) "nav-left" ".$(PUBLISH)-nav-left" \
+	@$(BUILD_SH) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]" \
 		"$(SITE_MAIN_COL_STICKY)"
 	@$(BUILD_SH) "column-begin" \
 			"$(SITE_MAIN_COL_SIZE)" \
@@ -6542,10 +6541,10 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 			@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 			@$(BUILD_SH) "nav-unit-end"
 	@$(BUILD_SH) "column-end"
-	@$(BUILD_SH) "nav-right" ".$(PUBLISH)-nav-right" \
+	@$(BUILD_SH) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]" \
 		"$(SITE_MAIN_COL_STICKY)"
 	@$(BUILD_SH) "row-end"
-	@$(BUILD_SH) "nav-bottom" ".$(PUBLISH)-nav-bottom" \
+	@$(BUILD_SH) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]" \
 		"$(COMPOSER_HOMEPAGE)" \
 		"$(CREATED_TAGLINE)" \
 		"$(SITE_COPYRIGHT)" \
