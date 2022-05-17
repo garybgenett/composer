@@ -1660,7 +1660,7 @@ $(HELPOUT)-$(TYPE_PRES):
 
 .PHONY: $(HELPOUT)-$(HEADERS)-%
 $(HELPOUT)-$(HEADERS)-%:
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,1,$(COMPOSER_TECHNAME))
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
@@ -2744,7 +2744,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-#WORKING
+#WORKING:NOW
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
@@ -2822,7 +2822,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 	@$(ENDOLINE)
-#WORKING
+#WORKING:NOW
 #	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
@@ -4854,6 +4854,7 @@ endif
 override define TITLE_LN =
 	ttl_len="`$(EXPR) length '$(2)'`"; \
 	ttl_len="`$(EXPR) $(COLUMNS) - 2 - $(1) - $${ttl_len}`"; \
+	if [ "$(1)" -le "0" ]; then ttl_len="`$(EXPR) $${ttl_len} - 1 + $(1)`"; fi; \
 	if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
 	$(ENDOLINE); \
 	$(ECHO) "$(_S)"; \
@@ -4862,7 +4863,7 @@ override define TITLE_LN =
 	$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
 	eval $(PRINTF) \"#%.0s\" {1..$${ttl_len}}; \
 	$(ENDOLINE); \
-	if [ "$(1)" -le "0" ]; then $(ENDOLINE); $(LINERULE); fi; \
+	if [ "$(1)" -eq "0" ]; then $(ENDOLINE); $(LINERULE); fi; \
 	if [ -z "$(3)" ]; then $(ENDOLINE); fi
 endef
 
@@ -4945,7 +4946,7 @@ $(HEADERS)-$(EXAMPLE)-$(DOITALL):
 
 .PHONY: $(HEADERS)-$(EXAMPLE)
 $(HEADERS)-$(EXAMPLE):
-	@$(foreach FILE,0 1 2 3,\
+	@$(foreach FILE,-1 0 1 2 3,\
 		if [ -n "$(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE))" ]; then \
 			$(call TITLE_LN,$(FILE),TITLE: $(FILE) / x)	; $(PRINT) "$(EXAMPLE)"; \
 			$(call TITLE_LN,$(FILE),TITLE: $(FILE) / 1,1)	; $(PRINT) "$(EXAMPLE)"; \
