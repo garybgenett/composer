@@ -1012,7 +1012,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		),--wrap="auto",--wrap="none" \
 	) \
 	$(if $(c_lang),\
-		--variable="lang=$(c_lang)" \
+		--variable=lang="$(c_lang)" \
 	) \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PANDOC_TEX_PDF)" \
@@ -1021,10 +1021,19 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		--listings \
 	) \
 	$(if $(filter $(c_type),$(TYPE_PRES)),\
-		--variable="revealjs-url=$(REVEALJS_DIR)" \
+		--variable=revealjs-url="$(REVEALJS_DIR)" \
+	) \
+	$(if $(wildcard $(COMPOSER_ICON)),\
+		$(if $(or \
+			$(c_site) ,\
+			$(filter $(c_type),$(TYPE_HTML)) \
+			$(filter $(c_type),$(TYPE_EPUB)) \
+			$(filter $(c_type),$(TYPE_PRES)) \
+		),\
+			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(COMPOSER_ICON)\"/>" \
+		) \
 	) \
 	$(if $(c_site),\
-		--include-in-header="$(PUBLISH_HEADERS_HTML)" \
 		--include-in-header="$(BOOTSTRAP_CSS_JS)" \
 		$(if $(call c_css_select),\
 			--css="$(BOOTSTRAP_CSS_CSS)" \
@@ -1066,11 +1075,11 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 		)) \
 	) \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
-		$(if $(c_margin),		--variable="geometry=margin=$(c_margin)" ,\
-		$(if $(c_margin_top),		--variable="geometry=top=$(c_margin_top)") \
-		$(if $(c_margin_bottom),	--variable="geometry=bottom=$(c_margin_bottom)") \
-		$(if $(c_margin_left),		--variable="geometry=left=$(c_margin_left)") \
-		$(if $(c_margin_right),		--variable="geometry=right=$(c_margin_right)") \
+		$(if $(c_margin),		--variable=geometry="margin=$(c_margin)" ,\
+		$(if $(c_margin_top),		--variable=geometry="top=$(c_margin_top)") \
+		$(if $(c_margin_bottom),	--variable=geometry="bottom=$(c_margin_bottom)") \
+		$(if $(c_margin_left),		--variable=geometry="left=$(c_margin_left)") \
+		$(if $(c_margin_right),		--variable=geometry="right=$(c_margin_right)") \
 	)) \
 	$(if $(c_options),$(c_options)) \
 	$(c_list) \
@@ -1112,7 +1121,6 @@ override COMPOSER_REGEX_PREFIX		:= [_.]
 
 #> update: includes duplicates
 override PUBLISH			:= site
-override PUBLISH_HEADERS_HTML		:= $(COMPOSER_ART)/$(PUBLISH).headers.html
 override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
 override PUBLISH_BUILD_SH_RUN		:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(PUBLISH_BUILD_SH)
 
@@ -2075,18 +2083,20 @@ $(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of 
 a modern website, with the appearance and behavior of dynamically indexed pages.
 
 #WORKING
-#	also update revealjs documentation, based on behavior change
+#	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
 #	note that they are intentionally reversed
 #		bootstrap is just supporting where the markdown-viewer themes fall through
 #		revealjs is usually using a theme, which we are refining
 #	these can now be removed to be disabled
 #	favicon.ico = idendical to $(_C)[Reveal.js Presentations]$(_D)
+#		works on all html, including revealjs = test this
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_ICON))$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_LOGO))$(_D)
 
 #WORK
 
@@ -2746,7 +2756,6 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_PUBLISH_HEADERS_HTML)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_HEADERS_HTML))
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_BUILD_SH))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -2986,25 +2995,6 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ################################################################################
-# {{{1 Heredoc: $(PUBLISH).html ------------------------------------------------
-################################################################################
-
-#WORKING:NOW COMPOSER_ICON
-
-override define HEREDOC_PUBLISH_HEADERS_HTML =
-<!-- ###########################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) HTML
-############################################################################ -->
-
-<link rel="icon" type="image/x-icon" href="$(shell $(REALPATH) $(abspath $(dir $(PUBLISH_HEADERS_HTML))) $(COMPOSER_ICON))"/>
-<link rel="icon" type="image/x-icon" href="$(COMPOSER_ICON)"/>
-
-<!-- ###########################################################################
-# End Of File
-############################################################################ -->
-endef
-
-################################################################################
 # {{{1 Heredoc: $(PUBLISH).build.sh --------------------------------------------
 ################################################################################
 
@@ -3042,7 +3032,7 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 
 ################################################################################
 
-#WORKING:NOW 1 = COMPOSER_LOGO
+# 1 COMPOSER_LOGO
 
 function $(PUBLISH)-brand {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
@@ -3108,15 +3098,16 @@ _EOF_
 
 ########################################
 
-# .variables["$(PUBLISH)-nav-top"]
+# 1 .variables["$(PUBLISH)-nav-top"]
 
-# $(PUBLISH)-nav-begin 1	true = bottom
-# $(PUBLISH)-nav-begin 2	true = no brand
-# $(PUBLISH)-nav-end 1		true = no search
+# x $(PUBLISH)-nav-begin 1		true = bottom
+# x $(PUBLISH)-nav-begin 2		true = no brand
+# 2 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
+# x $(PUBLISH)-nav-end 1		true = no search
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-	$(PUBLISH)-nav-begin "" ""
+	$(PUBLISH)-nav-begin "" "" "$${2}"
 	$(PUBLISH)-nav-top-list "$${1}"
 	$(PUBLISH)-nav-end ""
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -3183,11 +3174,11 @@ _EOF_
 
 ########################################
 
-# .variables["$(PUBLISH)-nav-bottom"]
+# 1 .variables["$(PUBLISH)-nav-bottom"]
 
-# $(PUBLISH)-nav-begin 1	true = bottom
-# $(PUBLISH)-nav-begin 2	true = no brand
-# $(PUBLISH)-nav-end 1		true = no search
+# x $(PUBLISH)-nav-begin 1		true = bottom
+# x $(PUBLISH)-nav-begin 2		true = no brand
+# x $(PUBLISH)-nav-end 1		true = no search
 
 function $(PUBLISH)-nav-bottom {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
@@ -3242,6 +3233,7 @@ _EOF_
 
 # 1 true = bottom
 # 2 true = no brand
+# 3 $(PUBLISH)-brand 1			COMPOSER_LOGO
 
 function $(PUBLISH)-nav-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
@@ -3261,7 +3253,7 @@ $(CAT) <<_EOF_
 </button>
 $$(
 	if [ -n "$${2}" ]; then	$(ECHO) "<!-- brand -->\\n"
-	else			$(PUBLISH)-brand
+	else			$(PUBLISH)-brand "$${3}"
 	fi
 )
 <div class="collapse navbar-collapse" id="navbar-fixed-$$(
@@ -3301,9 +3293,9 @@ _EOF_
 
 ########################################
 
-# .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
+# 1 .variables["$(PUBLISH)-nav-left"] || .variables["$(PUBLISH)-nav-left"]
 
-# $(PUBLISH)-column-begin 1	true = main
+# x $(PUBLISH)-column-begin 1		true = main
 
 function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${1}" "$${2}" "$${3}" "$${4}"; return 0; }
 function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${1}" "$${2}" "$${3}" "$${4}"; return 0; }
@@ -6505,6 +6497,7 @@ $(PUBLISH)-$(EXAMPLE):
 	@$(RUNMAKE) --silent --debug=none COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
 		| $(SED) "/^[#][>]/d" \
 		>$(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	touch $(COMPOSER_TMP)/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) $(COMPOSER_PANDOC) \
 		c_site="1" \
 		c_type="html" \
@@ -6513,7 +6506,7 @@ $(PUBLISH)-$(EXAMPLE):
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
-	@$(PUBLISH_BUILD_SH_RUN) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]"
+	@$(PUBLISH_BUILD_SH_RUN) "nav-top" ".variables[\"$(PUBLISH)-nav-top\"]" "$(COMPOSER_LOGO)"
 	@$(PUBLISH_BUILD_SH_RUN) "row-begin"
 	@$(PUBLISH_BUILD_SH_RUN) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]"
 	@$(PUBLISH_BUILD_SH_RUN) "column-begin" "1"
