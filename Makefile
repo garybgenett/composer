@@ -2701,12 +2701,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOIT
     whereas $(_C)[$(UPGRADE)]$(_D) only fetches the repositories.
   * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) performs the steps necessary
     to turn the current directory into a complete clone of $(_C)[$(COMPOSER_BASENAME)]$(_D).
-  * If `$(_N)rsync$(_D)` is installed, $(_C)[$(DISTRIB)]$(_D) can be used to rapidly replicate
-    $(_C)[$(COMPOSER_BASENAME)]$(_D), like below.
   * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
     compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
 
-Rapid cloning $(_E)(requires `rsync`)$(_D):
+Rapid cloning:
 
 $(CODEBLOCK)$(_C)mkdir$(_D) $(_M).../clone$(_D)
 $(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone$(_D)
@@ -2740,8 +2738,6 @@ endef
 ## {{{2 $(CREATOR) ---------------------
 
 #> update: TYPE_TARGETS
-
-#WORKING:NOW make _release use composer source instead of rsyncing (update docs)
 
 .PHONY: $(CREATOR)
 ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
@@ -3023,24 +3019,15 @@ endef
 
 #WORKING
 
-# override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
+# override SITE_GIT_REPO		?= git@github.com:garybgenett/garybgenett.net.git
 # override SITE_DESCRIPTION		?= a brief summary
+# override SITE_PER_PAGE		?= 10
 
 # override SITE_GOOGLEPLUS		?= https://plus.google.com/$(COMPOSER_BASENAME)
 # override SITE_FACEBOOK		?= https://www.facebook.com/$(COMPOSER_BASENAME)
 # override SITE_LINKEDIN		?= https://www.linkedin.com/$(COMPOSER_BASENAME)
 # override SITE_TWITTER			?= https://twitter.com/$(COMPOSER_BASENAME)
 # override SITE_GITHUB			?= https://github.com/$(COMPOSER_BASENAME)
-
-# override SITE_GIT_REPO		?= git@github.com:garybgenett/garybgenett.net.git
-# override SITE_ANALYTICS_ID		?=
-# override SITE_PERMALINK		?= :year/:month/:day/:title/
-# override SITE_DATE_FORMAT		?= YYYY-MM-DD
-# override SITE_TIME_FORMAT		?= HH:mm:ss
-# override SITE_PER_PAGE		?= 10
-
-# override SITE_SKIPS			?= \
-	CNAME \
 
 # override SITE_FOOTER_APPEND		?= \
 	<br /><br /> \
@@ -3087,9 +3074,6 @@ variables:
     homepage:				$(COMPOSER_HOMEPAGE)
     brand:				$(COMPOSER_TECHNAME)
     copyright:				$(COPYRIGHT_SHORT)
-
-    source:				$(COMPOSER_ROOT)
-    output:				$(COMPOSER_ROOT)/.public
 
     cols_main_size:			6
     cols_main_first:
@@ -6411,18 +6395,10 @@ $(DISTRIB):
 	@$(call $(HEADERS))
 	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
 		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
-		if	[ -n "$(call COMPOSER_FIND,$(PATH_LIST),rsync)" ] && \
-			[ -d "$(COMPOSER_PKG)" ]; \
-		then \
-			$(MKDIR) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_PKG)); \
-			$(RSYNC) $(COMPOSER_PKG)/ $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_PKG)); \
-		fi; \
 	fi
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
-#>	@$(RUNMAKE) $(UPGRADE)-$(DOITALL)
-#>	@$(RUNMAKE) $(CREATOR)
-	@$(REALMAKE) --directory $(CURDIR) $(UPGRADE)-$(DOITALL)
-	@$(REALMAKE) --directory $(CURDIR) $(CREATOR)
+	@$(RUNMAKE) $(UPGRADE)-$(DOITALL)
+	@$(RUNMAKE) $(CREATOR)
 	@$(ENDOLINE)
 	@$(LS) $(CURDIR)
 
@@ -6441,38 +6417,42 @@ $(UPGRADE)-%:
 $(UPGRADE): .set_title-$(UPGRADE)
 $(UPGRADE):
 	@$(call $(HEADERS))
-	@$(call GIT_REPO,$(PANDOC_DIR),$(PANDOC_SRC),$(PANDOC_CMT))
-	@$(call GIT_REPO,$(YQ_DIR),$(YQ_SRC),$(YQ_CMT))
-	@$(call GIT_REPO,$(BOOTSTRAP_DIR),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
-	@$(call GIT_REPO,$(MDVIEWER_DIR),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
-	@$(call GIT_REPO,$(REVEALJS_DIR),$(REVEALJS_SRC),$(REVEALJS_CMT))
+	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
+	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
+	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
+	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
-	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
-	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(PANDOC_DIR),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
-	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
-	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(YQ_DIR),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+	@$(call WGET_PACKAGE,$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
+	@$(call WGET_PACKAGE,$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
+	@$(call WGET_PACKAGE,$(subst $(COMPOSER_DIR),$(CURDIR),$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
+	@$(call WGET_PACKAGE,$(subst $(COMPOSER_DIR),$(CURDIR),$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(subst $(COMPOSER_DIR),$(CURDIR),$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
 	@$(ENDOLINE)
-	@$(LN) $(MDVIEWER_DIR)/manifest.json	$(MDVIEWER_DIR)/manifest.chrome.json
+	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.json \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.chrome.json
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(ECHO) "$(_M)"
 	@$(LS) --color=never --directory \
-		$(PANDOC_BIN) \
-		$(YQ_BIN)
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_BIN)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(YQ_BIN))
 endif
 	@$(ECHO) "$(_C)"
 	@$(LS) --color=never --directory \
-		$(PANDOC_DIR)/data/templates \
-		$(BOOTSTRAP_DIR)/dist \
-		$(MDVIEWER_DIR)/manifest.firefox.json \
-		$(MDVIEWER_DIR)/manifest.chrome.json \
-		$(MDVIEWER_DIR)/manifest.edge.json \
-		$(MDVIEWER_CSS) \
-		$(MDVIEWER_CSS_ALT) \
-		$(BOOTSTRAP_CSS_THEME) \
-		$(REVEALJS_CSS_THEME)
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR))/data/templates \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_DIR))/dist \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.firefox.json \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.chrome.json \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.edge.json \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS_ALT)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS_SOLAR)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS_SOLAR_ALT)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_THEME)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS_THEME)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS_THEME_SOLAR))
 	@$(ECHO) "$(_D)"
 
 ################################################################################
