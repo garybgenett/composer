@@ -18,7 +18,7 @@ override VIM_FOLDING := {{{1
 #			* `make debug-file`
 #			* `mv Composer-*.log artifacts/`
 #		* `make test-targets`
-#			* README.site.html (+mobile)
+#			* README.site.html (+text-based +mobile)
 #				#WORK add to $(TESTING)-$(TARGETS)
 #				cols_main_size
 #				cols_main_first
@@ -120,6 +120,8 @@ override VIM_FOLDING := {{{1
 #		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
 #		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
 #		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
+#	add aria information back in, because we are good people...
+#		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 ################################################################################
 # }}}1
 ################################################################################
@@ -191,7 +193,6 @@ override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
 override COMPOSER_TMP			:= $(CURDIR)/.composer.tmp
 
-override COMPOSER_YML_TEMPLATE		:= $(COMPOSER_ART)/composer.yml
 override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
 override BOOTSTRAP_CSS_CSS		:= $(COMPOSER_ART)/bootstrap.source.css
 override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
@@ -213,17 +214,17 @@ override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
 override COMPOSER_RELEASE		:=
 ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_RELEASE		:= 1
-ifeq ($(MAKELEVEL),0)
-#> update: includes duplicates
-override DOMAKE				:= $(notdir $(MAKE))
-override HELPOUT			:= help
-$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
-$(info #> $(COMPOSER_FULLNAME))
-$(info #>	Because this is the main directory, some features are disabled)
-$(info #>	Please use '$(DOMAKE) -f' or install as '.$(COMPOSER_BASENAME)')
-$(info #>	(See 'Recommended Workflow' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
-$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
-endif
+#>ifeq ($(MAKELEVEL),0)
+#>#> update: includes duplicates
+#>override DOMAKE			:= $(notdir $(MAKE))
+#>override HELPOUT			:= help
+#>$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+#>$(info #> $(COMPOSER_FULLNAME))
+#>$(info #>	Because this is the main directory, some features are disabled)
+#>$(info #>	Please use '$(DOMAKE) -f' or install as '.$(COMPOSER_BASENAME)')
+#>$(info #>	(See 'Recommended Workflow' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
+#>$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+#>endif
 endif
 
 ################################################################################
@@ -468,11 +469,11 @@ override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_IGNORES		?=
 
-ifneq ($(COMPOSER_RELEASE),)
-override COMPOSER_TARGETS		:=
-override COMPOSER_SUBDIRS		:=
-override COMPOSER_IGNORES		:=
-endif
+#>ifneq ($(COMPOSER_RELEASE),)
+#>override COMPOSER_TARGETS		:=
+#>override COMPOSER_SUBDIRS		:=
+#>override COMPOSER_IGNORES		:=
+#>endif
 
 ########################################
 
@@ -752,30 +753,30 @@ override YQ				:= $(YQ_BIN)
 endif
 endif
 
-#> update: includes duplicates
-override UPGRADE			:= _update
-override DOITALL			:= all
+#>#> update: includes duplicates
+#>override UPGRADE			:= _update
+#>override DOITALL			:= all
 ifeq ($(wildcard $(PANDOC_BIN)),)
-ifeq ($(MAKELEVEL),0)
-$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
-$(info #> $(COMPOSER_FULLNAME))
-$(info #>	Expecting Pandoc binary: $(subst $(COMPOSER_DIR)/,,$(PANDOC_BIN)))
-$(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
-$(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
-$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
-endif
+#>ifeq ($(MAKELEVEL),0)
+#>$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+#>$(info #> $(COMPOSER_FULLNAME))
+#>$(info #>	Expecting Pandoc binary: $(subst $(COMPOSER_DIR)/,,$(PANDOC_BIN)))
+#>$(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
+#>$(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
+#>$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+#>endif
 else
 override PANDOC				:= $(PANDOC_BIN)
 endif
 ifeq ($(wildcard $(YQ_BIN)),)
-ifeq ($(MAKELEVEL),0)
-$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
-$(info #> $(COMPOSER_FULLNAME))
-$(info #>	Expecting YQ binary: $(subst $(COMPOSER_DIR)/,,$(YQ_BIN)))
-$(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
-$(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
-$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
-endif
+#>ifeq ($(MAKELEVEL),0)
+#>$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+#>$(info #> $(COMPOSER_FULLNAME))
+#>$(info #>	Expecting YQ binary: $(subst $(COMPOSER_DIR)/,,$(YQ_BIN)))
+#>$(info #>	Please run '$(DOMAKE) $(UPGRADE)-$(DOITALL)' to fetch)
+#>$(info #>	(See 'Repository Versions' in '$(OUT_README)$(COMPOSER_EXT_DEFAULT)'))
+#>$(info #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>)
+#>endif
 else
 override YQ				:= $(YQ_BIN)
 endif
@@ -923,6 +924,7 @@ override EXAMPLE			:= template
 
 #> update: COMPOSER_TARGETS.*=
 ifneq ($(COMPOSER_RELEASE),)
+ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(strip \
 	$(PUBLISH)-$(EXAMPLE) \
 	$(OUT_README).$(EXTN_HTML) \
@@ -935,6 +937,7 @@ override COMPOSER_TARGETS		:= $(strip \
 #>	$(OUT_README).$(EXTN_TEXT) \
 #>	$(OUT_README).$(EXTN_LINT) \
 #>)
+endif
 endif
 
 ########################################
@@ -1283,8 +1286,6 @@ override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
 override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
 override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
 
-ifeq ($(COMPOSER_RELEASE),)
-
 ifeq ($(COMPOSER_TARGETS),)
 ifneq ($(COMPOSER_EXT),)
 override COMPOSER_TARGETS		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES)))
@@ -1322,8 +1323,6 @@ override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
 endif
-endif
-
 endif
 
 ########################################
@@ -2051,7 +2050,10 @@ its own individual instance.  Targets can be run per-file, per-directory, or
 recursively through an entire directory tree.  The most commonly used targets
 are in $(_C)[Primary Targets]$(_D).
 
-#WORK non-single-user use is not recommended
+#WORK
+# note that main directory is usable right away, without $(INSTALL)
+#	see config files for examples (some will override documents created from this instance)
+# non-single-user use is not recommended
 
 $(_H)**Welcome to [$(COMPOSER_BASENAME)].  $(COMPOSER_TAGLINE)**$(_D)
 endef
@@ -2102,6 +2104,7 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #	these can now be removed to be disabled
 #	favicon.ico = idendical to $(_C)[Reveal.js Presentations]$(_D)
 #		works on all html, including revealjs
+#	order of nav presentation in plain-text: top, left, middle, right, bottom
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2188,18 +2191,14 @@ and is not supported.  The regular expression that is used to detect them:
 
 $(CODEBLOCK)$(_N)$(COMPOSER_REGEX_OVERRIDE)$(_D)
 
-Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax $(_E)(these are
-the settings used to process the [$(COMPOSER_BASENAME)] `$(OUT_README).*` files)$(_D):
+Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
-$(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_css := $(CSS_ALT)$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc := $(SPECIAL_VAL)$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_EPUB)$(_D): $(_E)override c_css :=$(_D)
-$(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_css :=$(_D)
 $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc :=$(_D)
 
 In this case, there are multiple definitions that could apply to
 `$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most specific target
-match is used, the final values for both $(_C)[c_css]$(_D) and $(_C)[c_toc]$(_D) would be empty.
+match is used, the final value for $(_C)[c_toc]$(_D) would be empty.
 endef
 
 ########################################
@@ -2742,6 +2741,8 @@ endef
 
 #> update: TYPE_TARGETS
 
+#WORKING:NOW make _release use composer source instead of rsyncing (update docs)
+
 .PHONY: $(CREATOR)
 ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
 .NOTPARALLEL:
@@ -2765,14 +2766,18 @@ endif
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/screenshot-v3.0.png
+ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK)						>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
+	@$(subst --relative,,$(LN)) $(subst $(COMPOSER_DIR),.,$(MDVIEWER_CSS))		$(CURDIR)/$(COMPOSER_CSS) >/dev/null
+endif
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_BUILD_SH))
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_YML_TEMPLATE))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
 	@$(ECHO) "</script>\n"								>>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
-	@$(CP) $(BOOTSTRAP_CSS_CSS_SRC)							$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
+	@$(CAT) $(BOOTSTRAP_CSS_CSS_SRC)						>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
 	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_CSS))
 	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS))
 	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
@@ -2815,61 +2820,32 @@ endif
 		fi; \
 		$(call NEWLINE) \
 	)
-ifneq ($(COMPOSER_RELEASE),)
-	@$(call DO_HEREDOC,HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS))			>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_TEMPLATE)				>$(CURDIR)/$(COMPOSER_YML)
-	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
-#>	@$(LN) $(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS))			$(CURDIR)/$(COMPOSER_CSS)
-	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
-	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
-endif
-	@$(ENDOLINE)
+#>	@$(ENDOLINE)
 	@$(LS) $(CURDIR)
 	@$(ENDOLINE)
 	@$(LS) --recursive $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
-	@$(ECHO) "$(_C)"
-	@$(CAT) $(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(_D)"
-	@$(ENDOLINE)
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
+	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 #WORKING
 #	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(PUBLISH)-$(EXAMPLE)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
 #		| $(SED) "/install[:][[:space:]]/d"
-#>		| $(SED) "s|$(abspath $(dir $(COMPOSER_DIR)))|...|g"
-	@$(RM) \
-		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
-		>/dev/null
-#	@$(RM) \
-#		$(CURDIR)/$(COMPOSER_SETTINGS) \
-#		$(CURDIR)/$(COMPOSER_YML) \
-#		$(CURDIR)/$(COMPOSER_CSS) \
-#		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
-#		>/dev/null
+#WORKING
+#>	@$(RM) \
+#>		$(CURDIR)/$(COMPOSER_SETTINGS) \
+#>		$(CURDIR)/$(COMPOSER_YML) \
+#>		$(CURDIR)/$(COMPOSER_CSS) \
+#>		$(CURDIR)/$(COMPOSER_LOG_DEFAULT) \
+#>		>/dev/null
+#>	@$(RM) \
+#>		$(CURDIR)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
+#>		>/dev/null
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
-endif
-
-override define HEREDOC_$(CREATOR)_$(COMPOSER_SETTINGS) =
-$(OUT_README).%: override c_css := $(CSS_ALT)
-$(OUT_README).%: override c_toc := $(SPECIAL_VAL)
-$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_css := $(MDVIEWER_CSS_SOLAR_ALT)
-$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_toc :=
-$(OUT_README).$(EXTN_LPDF): $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-$(OUT_README).$(EXTN_EPUB): override c_css :=
-$(OUT_README).$(EXTN_PRES): override c_list := $(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-$(OUT_README).$(EXTN_PRES): override c_css :=
-$(OUT_README).$(EXTN_PRES): override c_toc :=
-endef
-
-ifneq ($(COMPOSER_RELEASE),)
-$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): override c_toc := $(SPECIAL_VAL)
-$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): \
-	$(OUT_README)$(COMPOSER_EXT_DEFAULT) \
-	$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 endif
 
 ########################################
@@ -3538,6 +3514,45 @@ $(PUBLISH)-$${FUNCTION} "$${@}"
 endef
 
 ########################################
+## {{{2 Heredoc: composer_mk -----------
+
+override define HEREDOC_COMPOSER_MK =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration
+################################################################################
+
+########################################
+# wildcards
+
+$(OUT_README).%: override c_css		:= $(CSS_ALT)
+$(OUT_README).%: override c_toc		:= $(SPECIAL_VAL)
+
+########################################
+# settings
+
+$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_css	:= $(subst $(COMPOSER_DIR),.,$(MDVIEWER_CSS_SOLAR_ALT))
+$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_toc	:=
+
+$(OUT_README).$(EXTN_LPDF): override c_list		:= $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+
+$(OUT_README).$(EXTN_EPUB): override c_css		:=
+
+$(OUT_README).$(EXTN_PRES): override c_list	:= $(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+$(OUT_README).$(EXTN_PRES): override c_css	:=
+$(OUT_README).$(EXTN_PRES): override c_toc	:=
+
+########################################
+# specials
+
+$(DO_BOOK)-$(COMPOSER_BASENAME)-%.$(EXTN_LPDF): override c_toc	:= $(SPECIAL_VAL)
+$(DO_BOOK)-$(subst $(COMPOSER_VERSION),%,$(OUT_MANUAL)).$(EXTN_LPDF):		$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
 ## {{{2 Heredoc: composer_yml ----------
 
 #WORKING
@@ -3588,9 +3603,9 @@ endef
 # override SITE_SOCIAL_ICON		:= $(foreach FILE,googleplus facebook linkedin twitter github,\n\#nav-$(FILE)-link\n\t\&:before\n\t\tcontent: \"\\\\$(call SITE_SOCIAL_ICON_$(FILE))\"\n\n)
 # override SITE_SOCIAL_LINK		:= $(foreach FILE,googleplus facebook linkedin twitter github,<% if (theme.url_$(FILE)){ %><a id=\"nav-$(FILE)-link\" class=\"nav-icon\" href=\"<%- theme.url_$(FILE) %>\" target=\"_blank\"></a><% } %>)
 
-override define HEREDOC_COMPOSER_YML_TEMPLATE =
+override define HEREDOC_COMPOSER_YML =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration
 ################################################################################
 
 variables:
@@ -6471,19 +6486,14 @@ endif
 $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
+#WORK
 	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
-ifneq ($(COMPOSER_RELEASE),)
-	@$(RUNMAKE) $(PUBLISH)-$(EXAMPLE)
-endif
 
 ########################################
 ### {{{3 $(PUBLISH)-% ------------------
 
 #WORKING:NOW
 # make
-#	sort through COMPOSER_RELEASE, and move as much as possible into $(CREATOR)
-#	comment COMPOSER_RELEASE notice, along with PANDOC_BIN and YQ_BIN
-#		no more notices, or things being per-directory (should be usable right away [note this in recommended workflow])
 #	need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #		maybe some type of automatic utility with a variable threshold?
 #		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
@@ -6686,13 +6696,13 @@ else
 			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL)); \
 		fi; \
 	fi
+endif
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
 	@$(foreach FILE,$(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
 	@+$(MAKE) $(MAKE_OPTIONS) $(INSTALL)-$(SUBDIRS)
-endif
 endif
 endif
 
