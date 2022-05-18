@@ -2980,6 +2980,457 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 endef
 
 ########################################
+## {{{2 Heredoc: composer_mk -----------
+
+override define HEREDOC_COMPOSER_MK =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration
+################################################################################
+
+########################################
+# wildcards
+
+$(OUT_README).%: override c_css		:= $(CSS_ALT)
+$(OUT_README).%: override c_toc		:= $(SPECIAL_VAL)
+
+########################################
+# settings
+
+$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_css	:= $(subst $(COMPOSER_DIR),.,$(MDVIEWER_CSS_SOLAR_ALT))
+$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_toc	:=
+
+$(OUT_README).$(EXTN_LPDF): override c_list		:= $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+
+$(OUT_README).$(EXTN_EPUB): override c_css		:=
+
+$(OUT_README).$(EXTN_PRES): override c_list	:= $(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+$(OUT_README).$(EXTN_PRES): override c_css	:=
+$(OUT_README).$(EXTN_PRES): override c_toc	:=
+
+########################################
+# specials
+
+$(DO_BOOK)-$(COMPOSER_BASENAME)-%.$(EXTN_LPDF): override c_toc	:= $(SPECIAL_VAL)
+$(DO_BOOK)-$(subst $(COMPOSER_VERSION),%,$(OUT_MANUAL)).$(EXTN_LPDF):		$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ----------
+
+#WORKING
+
+# override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
+# override SITE_DESCRIPTION		?= a brief summary
+
+# override SITE_GOOGLEPLUS		?= https://plus.google.com/$(COMPOSER_BASENAME)
+# override SITE_FACEBOOK		?= https://www.facebook.com/$(COMPOSER_BASENAME)
+# override SITE_LINKEDIN		?= https://www.linkedin.com/$(COMPOSER_BASENAME)
+# override SITE_TWITTER			?= https://twitter.com/$(COMPOSER_BASENAME)
+# override SITE_GITHUB			?= https://github.com/$(COMPOSER_BASENAME)
+
+# override SITE_GIT_REPO		?= git@github.com:garybgenett/garybgenett.net.git
+# override SITE_ANALYTICS_ID		?=
+# override SITE_PERMALINK		?= :year/:month/:day/:title/
+# override SITE_DATE_FORMAT		?= YYYY-MM-DD
+# override SITE_TIME_FORMAT		?= HH:mm:ss
+# override SITE_PER_PAGE		?= 10
+
+# override SITE_SKIPS			?= \
+	CNAME \
+
+# override SITE_FOOTER_APPEND		?= \
+	<br /><br /> \
+	<a rel=\"author\" href=\"http://www.garybgenett.net\">					<img src=\"http://www.garybgenett.net/favicon.png\"					alt=\"Gary B. Genett\"	style=\"border:0; width:31px; height:31px;\"/></a> \
+	<a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-nd/3.0/us/\">	<img src=\"http://i.creativecommons.org/l/by-nc-nd/3.0/us/88x31.png\"			alt=\"CC License\"	style=\"border:0; width:88px; height:31px;\"/></a> \
+	<a href=\"http://validator.w3.org/check/referer\">					<img src=\"http://www.w3.org/Icons/valid-xhtml11-blue\"					alt=\"Valid HTML\"	style=\"border:0; width:88px; height:31px;\"/></a> \
+	<a href=\"http://jigsaw.w3.org/css-validator/check/referer\">				<img src=\"http://www.w3.org/Icons/valid-css2-blue\"					alt=\"Valid CSS\"	style=\"border:0; width:88px; height:31px;\"/></a> \
+	<br /> \
+	<a href=\"https://github.com/garybgenett/composer\">					<img src=\"https://raw.githubusercontent.com/garybgenett/composer/devel/icon.png\"	alt=\"Composer\"	style=\"border:0; width:31px; height:31px;\"/></a> \
+	<a href=\"http://www.vim.org\">								<img src=\"http://www.vim.org/images/vim_small.gif\"					alt=\"Vim\"		style=\"border:0; width:31px; height:31px;\"/></a> \
+	<a href=\"http://git-scm.com\">								<img src=\"https://git.wiki.kernel.org/images-git/d/df/FrontPage%24git-logo.png\"	alt=\"Git\"		style=\"border:0; width:72px; height:27px;\"/></a>
+
+# http://navaneeth.me/font-awesome-icons-css-content-values
+#>override SITE_SOCIAL_ICON_googleplus	:= f0d5
+#>override SITE_SOCIAL_ICON_facebook	:= f09a
+#>override SITE_SOCIAL_ICON_linkedin	:= f0e1
+#>override SITE_SOCIAL_ICON_twitter	:= f099
+#>override SITE_SOCIAL_ICON_github	:= f09b
+#>override SITE_SOCIAL_ICON_rss		:= f09e
+# override SITE_SOCIAL_ICON_googleplus	:= f0d4
+# override SITE_SOCIAL_ICON_facebook	:= f082
+# override SITE_SOCIAL_ICON_linkedin	:= f08c
+# override SITE_SOCIAL_ICON_twitter	:= f081
+# override SITE_SOCIAL_ICON_github	:= f092
+# override SITE_SOCIAL_ICON_rss		:= f143
+# override SITE_SOCIAL_ICON		:= $(foreach FILE,googleplus facebook linkedin twitter github,\n\#nav-$(FILE)-link\n\t\&:before\n\t\tcontent: \"\\\\$(call SITE_SOCIAL_ICON_$(FILE))\"\n\n)
+# override SITE_SOCIAL_LINK		:= $(foreach FILE,googleplus facebook linkedin twitter github,<% if (theme.url_$(FILE)){ %><a id=\"nav-$(FILE)-link\" class=\"nav-icon\" href=\"<%- theme.url_$(FILE) %>\" target=\"_blank\"></a><% } %>)
+
+override define HEREDOC_COMPOSER_YML =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration
+################################################################################
+
+variables:
+
+  pagetitle:				"$(COMPOSER_HEADLINE)"
+
+################################################################################
+# $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
+
+  $(PUBLISH)-config:
+
+    cname:				$(COMPOSER_SITE_CNAME)
+    homepage:				$(COMPOSER_HOMEPAGE)
+    brand:				$(COMPOSER_TECHNAME)
+    copyright:				$(COPYRIGHT_SHORT)
+
+    source:				$(COMPOSER_ROOT)
+    output:				$(COMPOSER_ROOT)/.public
+
+    cols_main_size:			6
+    cols_main_first:
+    cols_mobile_hide:			1
+    cols_sticky:			1
+
+    search_name:			Search
+    search_site:			https://duckduckgo.com
+    search_text:			q
+    search_form: |
+      <input type="hidden" name="ia" value="web"/>
+      <input type="hidden" name="kae" value="d"/>
+      <input type="hidden" name="ko" value="1"/>
+      <input type="hidden" name="kp" value="-1"/>
+      <input type="hidden" name="kv" value="1"/>
+      <input type="hidden" name="kz" value="-1"/>
+      <input type="hidden" name="sites" value="$(patsubst www.%,%,$(COMPOSER_SITE_CNAME))"/>
+
+########################################
+
+  $(PUBLISH)-nav-top:
+
+    Top: "#"
+    CMS:
+      link: "#composer-cms"
+      menu:
+        Overview: "#overview"
+        Quick Start: "#quick-start"
+        Principles: "#principles"
+        Requirements: "#requirements"
+    Operation:
+      link: "#composer-operation"
+      menu:
+        Recommended Workflow: "#recommended-workflow"
+        Document Formatting:
+          link: "#document-formatting"
+          menu:
+            HTML: "#html"
+            Bootstrap Websites: "#bootstrap-websites"
+            PDF: "#pdf"
+            EPUB: "#epub"
+            Reveal.js Presentations: "#revealjs-presentations"
+            Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
+        Configuration Settings: "#configuration-settings"
+        Precedence Rules: "#precedence-rules"
+        Specifying Dependencies: "#specifying-dependencies"
+        Custom Targets: "#custom-targets"
+        Repository Versions: "#repository-versions"
+    Variables:
+      link: "#composer-variables"
+      menu:
+        Formatting Variables:
+          link: "#formatting-variables"
+          menu:
+            c_site: "#c_site"
+            c_type / c_base / c_list: "#c_type--c_base--c_list"
+            c_lang: "#c_lang"
+            c_css: "#c_css"
+            c_toc: "#c_toc"
+            c_level: "#c_level"
+            c_margin: "#c_margin"
+            c_options: "#c_options"
+        Control Variables:
+          link: "#control-variables"
+          menu:
+            MAKEJOBS: "#makejobs"
+            COMPOSER_DOCOLOR: "#composer_docolor"
+            COMPOSER_DEBUGIT: "#composer_debugit"
+            COMPOSER_INCLUDE: "#composer_include"
+            COMPOSER_DEPENDS: "#composer_depends"
+            COMPOSER_LOG: "#composer_log"
+            COMPOSER_EXT: "#composer_ext"
+            COMPOSER_TARGETS: "#composer_targets"
+            COMPOSER_SUBDIRS: "#composer_subdirs"
+            COMPOSER_IGNORES: "#composer_ignores"
+    Targets:
+      link: "#composer-targets"
+      menu:
+        Primary Targets:
+          link: "#primary-targets"
+          menu:
+            help / help-all: "#help--help-all"
+            template: "#template"
+            compose: "#compose"
+            site: "#site"
+            install / install-all / install-force: "#install--install-all--install-force"
+            clean / clean-all / *-clean: "#clean--clean-all---clean"
+            all / all-all / *-all: "#all--all-all---all"
+            list: "#list"
+        Special Targets:
+          link: "#special-targets"
+          menu:
+            book: "#book"
+            page / post: "#page--post"
+        Additional Targets:
+          link: "#additional-targets"
+          menu:
+            debug / debug-file: "#debug--debug-file"
+            check / check-all / config / config-all / targets: "#check--check-all--config--config-all--targets"
+            _commit / _commit-all: "#_commit--_commit-all"
+            _release / _update / _update-all: "#_release--_update--_update-all"
+    Reference:
+      link: "#reference"
+      menu:
+        Internal Targets: "#internal-targets"
+        Configuration:
+          link: "#configuration"
+          menu:
+            "Templates: install": "#templates-install"
+            Pandoc Extensions: "#pandoc-extensions"
+        Reserved:
+          link: "#reserved"
+          menu:
+            Target Names: "#target-names"
+            Variable Names: "#variable-names"
+
+########################################
+
+  $(PUBLISH)-nav-bottom:
+
+    Home: ./
+    Source: ./.sources
+    Artifacts: ./artifacts
+    Bootstrap: ./bootstrap
+
+########################################
+
+  $(PUBLISH)-nav-left:
+
+    - name: $(COMPOSER_TECHNAME)
+      type: nav-unit
+      data:
+        - name: Overview
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Overview]
+        - name: Quick Start
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Quick Start]
+        - name: Principles
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Principles]
+        - name: Requirements
+          type: nav-unit
+          flag: 1
+          data:
+            -
+              type: text
+              data: |
+                <!-- -->
+                  * [Requirements]
+    - name: Formats
+      type: nav-box
+      flag: 1
+      data:
+        - type: text
+          data: |
+            <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
+    - type: text
+      data: |
+        $(COMPOSER_TAGLINE)
+
+########################################
+
+  $(PUBLISH)-nav-right:
+
+    - name: $(COMPOSER_BASENAME) Operation
+      type: nav-unit
+      flag: 1
+      data:
+        - name: Recommended Workflow
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Recommended Workflow]
+        - name: Document Formatting
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [HTML]
+                  * [Bootstrap Websites]
+                  * [PDF]
+                  * [EPUB]
+                  * [Reveal.js Presentations]
+                  * [Microsoft Word & PowerPoint]
+        - name: Configuration Settings
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Configuration Settings]
+        - name: Precedence Rules
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Precedence Rules]
+        - name: Specifying Dependencies
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Specifying Dependencies]
+        - name: Custom Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Custom Targets]
+        - name: Repository Versions
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Repository Versions]
+    - name: $(COMPOSER_BASENAME) Variables
+      type: nav-unit
+      flag: 1
+      data:
+        - name: Formatting Variables
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [c_site]
+                  * [c_type / c_base / c_list]
+                  * [c_lang]
+                  * [c_css]
+                  * [c_toc]
+                  * [c_level]
+                  * [c_margin]
+                  * [c_options]
+        - name: Control Variables
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [MAKEJOBS]
+                  * [COMPOSER_DOCOLOR]
+                  * [COMPOSER_DEBUGIT]
+                  * [COMPOSER_INCLUDE]
+                  * [COMPOSER_DEPENDS]
+                  * [COMPOSER_LOG]
+                  * [COMPOSER_EXT]
+                  * [COMPOSER_TARGETS]
+                  * [COMPOSER_SUBDIRS]
+                  * [COMPOSER_IGNORES]
+    - name: $(COMPOSER_BASENAME) Targets
+      type: nav-unit
+      flag: 1
+      data:
+        - name: Primary Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [help / help-all]
+                  * [template]
+                  * [compose]
+                  * [site]
+                  * [install / install-all / install-force]
+                  * [clean / clean-all / *-clean]
+                  * [all / all-all / *-all]
+                  * [list]
+        - name: Special Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [book]
+                  * [page / post]
+        - name: Additional Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [debug / debug-file]
+                  * [check / check-all / config / config-all / targets]
+                  * [_commit / _commit-all]
+                  * [_release / _update / _update-all]
+    - name: $(DATEMARK) -- Reference<br/>$(COMPOSER_COMPOSER)
+      type: nav-unit
+      flag: 1
+      data:
+        - type: text
+          data: |
+            <!-- -->
+              * [Internal Targets]
+              * [Configuration]
+                * [Templates: install]
+                * [Pandoc Extensions]
+              * [Reserved]
+                * [Target Names]
+                * [Variable Names]
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
 ## {{{2 Heredoc: $(PUBLISH).build.sh ---
 
 override define HEREDOC_PUBLISH_BUILD_SH =
@@ -3507,457 +3958,6 @@ _EOF_
 FUNCTION="$${1}"; shift
 
 $(PUBLISH)-$${FUNCTION} "$${@}"
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-## {{{2 Heredoc: composer_mk -----------
-
-override define HEREDOC_COMPOSER_MK =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration
-################################################################################
-
-########################################
-# wildcards
-
-$(OUT_README).%: override c_css		:= $(CSS_ALT)
-$(OUT_README).%: override c_toc		:= $(SPECIAL_VAL)
-
-########################################
-# settings
-
-$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_css	:= $(subst $(COMPOSER_DIR),.,$(MDVIEWER_CSS_SOLAR_ALT))
-$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_toc	:=
-
-$(OUT_README).$(EXTN_LPDF): override c_list		:= $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-
-$(OUT_README).$(EXTN_EPUB): override c_css		:=
-
-$(OUT_README).$(EXTN_PRES): override c_list	:= $(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-$(OUT_README).$(EXTN_PRES): override c_css	:=
-$(OUT_README).$(EXTN_PRES): override c_toc	:=
-
-########################################
-# specials
-
-$(DO_BOOK)-$(COMPOSER_BASENAME)-%.$(EXTN_LPDF): override c_toc	:= $(SPECIAL_VAL)
-$(DO_BOOK)-$(subst $(COMPOSER_VERSION),%,$(OUT_MANUAL)).$(EXTN_LPDF):		$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-## {{{2 Heredoc: composer_yml ----------
-
-#WORKING
-
-# override SITE_TITLE			?= $(COMPOSER_FULLNAME): Hexo
-# override SITE_DESCRIPTION		?= a brief summary
-
-# override SITE_GOOGLEPLUS		?= https://plus.google.com/$(COMPOSER_BASENAME)
-# override SITE_FACEBOOK		?= https://www.facebook.com/$(COMPOSER_BASENAME)
-# override SITE_LINKEDIN		?= https://www.linkedin.com/$(COMPOSER_BASENAME)
-# override SITE_TWITTER			?= https://twitter.com/$(COMPOSER_BASENAME)
-# override SITE_GITHUB			?= https://github.com/$(COMPOSER_BASENAME)
-
-# override SITE_GIT_REPO		?= git@github.com:garybgenett/garybgenett.net.git
-# override SITE_ANALYTICS_ID		?=
-# override SITE_PERMALINK		?= :year/:month/:day/:title/
-# override SITE_DATE_FORMAT		?= YYYY-MM-DD
-# override SITE_TIME_FORMAT		?= HH:mm:ss
-# override SITE_PER_PAGE		?= 10
-
-# override SITE_SKIPS			?= \
-	CNAME \
-
-# override SITE_FOOTER_APPEND		?= \
-	<br /><br /> \
-	<a rel=\"author\" href=\"http://www.garybgenett.net\">					<img src=\"http://www.garybgenett.net/favicon.png\"					alt=\"Gary B. Genett\"	style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-nd/3.0/us/\">	<img src=\"http://i.creativecommons.org/l/by-nc-nd/3.0/us/88x31.png\"			alt=\"CC License\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<a href=\"http://validator.w3.org/check/referer\">					<img src=\"http://www.w3.org/Icons/valid-xhtml11-blue\"					alt=\"Valid HTML\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<a href=\"http://jigsaw.w3.org/css-validator/check/referer\">				<img src=\"http://www.w3.org/Icons/valid-css2-blue\"					alt=\"Valid CSS\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<br /> \
-	<a href=\"https://github.com/garybgenett/composer\">					<img src=\"https://raw.githubusercontent.com/garybgenett/composer/devel/icon.png\"	alt=\"Composer\"	style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a href=\"http://www.vim.org\">								<img src=\"http://www.vim.org/images/vim_small.gif\"					alt=\"Vim\"		style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a href=\"http://git-scm.com\">								<img src=\"https://git.wiki.kernel.org/images-git/d/df/FrontPage%24git-logo.png\"	alt=\"Git\"		style=\"border:0; width:72px; height:27px;\"/></a>
-
-# http://navaneeth.me/font-awesome-icons-css-content-values
-#>override SITE_SOCIAL_ICON_googleplus	:= f0d5
-#>override SITE_SOCIAL_ICON_facebook	:= f09a
-#>override SITE_SOCIAL_ICON_linkedin	:= f0e1
-#>override SITE_SOCIAL_ICON_twitter	:= f099
-#>override SITE_SOCIAL_ICON_github	:= f09b
-#>override SITE_SOCIAL_ICON_rss		:= f09e
-# override SITE_SOCIAL_ICON_googleplus	:= f0d4
-# override SITE_SOCIAL_ICON_facebook	:= f082
-# override SITE_SOCIAL_ICON_linkedin	:= f08c
-# override SITE_SOCIAL_ICON_twitter	:= f081
-# override SITE_SOCIAL_ICON_github	:= f092
-# override SITE_SOCIAL_ICON_rss		:= f143
-# override SITE_SOCIAL_ICON		:= $(foreach FILE,googleplus facebook linkedin twitter github,\n\#nav-$(FILE)-link\n\t\&:before\n\t\tcontent: \"\\\\$(call SITE_SOCIAL_ICON_$(FILE))\"\n\n)
-# override SITE_SOCIAL_LINK		:= $(foreach FILE,googleplus facebook linkedin twitter github,<% if (theme.url_$(FILE)){ %><a id=\"nav-$(FILE)-link\" class=\"nav-icon\" href=\"<%- theme.url_$(FILE) %>\" target=\"_blank\"></a><% } %>)
-
-override define HEREDOC_COMPOSER_YML =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration
-################################################################################
-
-variables:
-
-  pagetitle:				"$(COMPOSER_HEADLINE)"
-
-################################################################################
-# $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
-
-  $(PUBLISH)-config:
-
-    cname:				$(COMPOSER_SITE_CNAME)
-    homepage:				$(COMPOSER_HOMEPAGE)
-    brand:				$(COMPOSER_TECHNAME)
-    copyright:				$(COPYRIGHT_SHORT)
-
-    source:				$(COMPOSER_ROOT)
-    output:				$(COMPOSER_ROOT)/.public
-
-    cols_main_size:			6
-    cols_main_first:
-    cols_mobile_hide:			1
-    cols_sticky:			1
-
-    search_name:			Search
-    search_site:			https://duckduckgo.com
-    search_text:			q
-    search_form: |
-      <input type="hidden" name="ia" value="web"/>
-      <input type="hidden" name="kae" value="d"/>
-      <input type="hidden" name="ko" value="1"/>
-      <input type="hidden" name="kp" value="-1"/>
-      <input type="hidden" name="kv" value="1"/>
-      <input type="hidden" name="kz" value="-1"/>
-      <input type="hidden" name="sites" value="$(patsubst www.%,%,$(COMPOSER_SITE_CNAME))"/>
-
-########################################
-
-  $(PUBLISH)-nav-top:
-
-    Top: "#"
-    CMS:
-      link: "#composer-cms"
-      menu:
-        Overview: "#overview"
-        Quick Start: "#quick-start"
-        Principles: "#principles"
-        Requirements: "#requirements"
-    Operation:
-      link: "#composer-operation"
-      menu:
-        Recommended Workflow: "#recommended-workflow"
-        Document Formatting:
-          link: "#document-formatting"
-          menu:
-            HTML: "#html"
-            Bootstrap Websites: "#bootstrap-websites"
-            PDF: "#pdf"
-            EPUB: "#epub"
-            Reveal.js Presentations: "#revealjs-presentations"
-            Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
-        Configuration Settings: "#configuration-settings"
-        Precedence Rules: "#precedence-rules"
-        Specifying Dependencies: "#specifying-dependencies"
-        Custom Targets: "#custom-targets"
-        Repository Versions: "#repository-versions"
-    Variables:
-      link: "#composer-variables"
-      menu:
-        Formatting Variables:
-          link: "#formatting-variables"
-          menu:
-            c_site: "#c_site"
-            c_type / c_base / c_list: "#c_type--c_base--c_list"
-            c_lang: "#c_lang"
-            c_css: "#c_css"
-            c_toc: "#c_toc"
-            c_level: "#c_level"
-            c_margin: "#c_margin"
-            c_options: "#c_options"
-        Control Variables:
-          link: "#control-variables"
-          menu:
-            MAKEJOBS: "#makejobs"
-            COMPOSER_DOCOLOR: "#composer_docolor"
-            COMPOSER_DEBUGIT: "#composer_debugit"
-            COMPOSER_INCLUDE: "#composer_include"
-            COMPOSER_DEPENDS: "#composer_depends"
-            COMPOSER_LOG: "#composer_log"
-            COMPOSER_EXT: "#composer_ext"
-            COMPOSER_TARGETS: "#composer_targets"
-            COMPOSER_SUBDIRS: "#composer_subdirs"
-            COMPOSER_IGNORES: "#composer_ignores"
-    Targets:
-      link: "#composer-targets"
-      menu:
-        Primary Targets:
-          link: "#primary-targets"
-          menu:
-            help / help-all: "#help--help-all"
-            template: "#template"
-            compose: "#compose"
-            site: "#site"
-            install / install-all / install-force: "#install--install-all--install-force"
-            clean / clean-all / *-clean: "#clean--clean-all---clean"
-            all / all-all / *-all: "#all--all-all---all"
-            list: "#list"
-        Special Targets:
-          link: "#special-targets"
-          menu:
-            book: "#book"
-            page / post: "#page--post"
-        Additional Targets:
-          link: "#additional-targets"
-          menu:
-            debug / debug-file: "#debug--debug-file"
-            check / check-all / config / config-all / targets: "#check--check-all--config--config-all--targets"
-            _commit / _commit-all: "#_commit--_commit-all"
-            _release / _update / _update-all: "#_release--_update--_update-all"
-    Reference:
-      link: "#reference"
-      menu:
-        Internal Targets: "#internal-targets"
-        Configuration:
-          link: "#configuration"
-          menu:
-            "Templates: install": "#templates-install"
-            Pandoc Extensions: "#pandoc-extensions"
-        Reserved:
-          link: "#reserved"
-          menu:
-            Target Names: "#target-names"
-            Variable Names: "#variable-names"
-
-########################################
-
-  $(PUBLISH)-nav-bottom:
-
-    Home: ./
-    Source: ./.sources
-    Artifacts: ./artifacts
-    Bootstrap: ./bootstrap
-
-########################################
-
-  $(PUBLISH)-nav-left:
-
-    - name: $(COMPOSER_TECHNAME)
-      type: nav-unit
-      data:
-        - name: Overview
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Overview]
-        - name: Quick Start
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Quick Start]
-        - name: Principles
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Principles]
-        - name: Requirements
-          type: nav-unit
-          flag: 1
-          data:
-            -
-              type: text
-              data: |
-                <!-- -->
-                  * [Requirements]
-    - name: Formats
-      type: nav-box
-      flag: 1
-      data:
-        - type: text
-          data: |
-            <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)            * [$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))](./$(subst $(PUBLISH)-$(EXAMPLE),$(OUT_README).$(PUBLISH).$(EXTN_HTML),$(FILE))))
-    - type: text
-      data: |
-        $(COMPOSER_TAGLINE)
-
-########################################
-
-  $(PUBLISH)-nav-right:
-
-    - name: $(COMPOSER_BASENAME) Operation
-      type: nav-unit
-      flag: 1
-      data:
-        - name: Recommended Workflow
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Recommended Workflow]
-        - name: Document Formatting
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [HTML]
-                  * [Bootstrap Websites]
-                  * [PDF]
-                  * [EPUB]
-                  * [Reveal.js Presentations]
-                  * [Microsoft Word & PowerPoint]
-        - name: Configuration Settings
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Configuration Settings]
-        - name: Precedence Rules
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Precedence Rules]
-        - name: Specifying Dependencies
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Specifying Dependencies]
-        - name: Custom Targets
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Custom Targets]
-        - name: Repository Versions
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [Repository Versions]
-    - name: $(COMPOSER_BASENAME) Variables
-      type: nav-unit
-      flag: 1
-      data:
-        - name: Formatting Variables
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [c_site]
-                  * [c_type / c_base / c_list]
-                  * [c_lang]
-                  * [c_css]
-                  * [c_toc]
-                  * [c_level]
-                  * [c_margin]
-                  * [c_options]
-        - name: Control Variables
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [MAKEJOBS]
-                  * [COMPOSER_DOCOLOR]
-                  * [COMPOSER_DEBUGIT]
-                  * [COMPOSER_INCLUDE]
-                  * [COMPOSER_DEPENDS]
-                  * [COMPOSER_LOG]
-                  * [COMPOSER_EXT]
-                  * [COMPOSER_TARGETS]
-                  * [COMPOSER_SUBDIRS]
-                  * [COMPOSER_IGNORES]
-    - name: $(COMPOSER_BASENAME) Targets
-      type: nav-unit
-      flag: 1
-      data:
-        - name: Primary Targets
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [help / help-all]
-                  * [template]
-                  * [compose]
-                  * [site]
-                  * [install / install-all / install-force]
-                  * [clean / clean-all / *-clean]
-                  * [all / all-all / *-all]
-                  * [list]
-        - name: Special Targets
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [book]
-                  * [page / post]
-        - name: Additional Targets
-          type: nav-unit
-          flag: 1
-          data:
-            - type: text
-              data: |
-                <!-- -->
-                  * [debug / debug-file]
-                  * [check / check-all / config / config-all / targets]
-                  * [_commit / _commit-all]
-                  * [_release / _update / _update-all]
-    - name: $(DATEMARK) -- Reference<br/>$(COMPOSER_COMPOSER)
-      type: nav-unit
-      flag: 1
-      data:
-        - type: text
-          data: |
-            <!-- -->
-              * [Internal Targets]
-              * [Configuration]
-                * [Templates: install]
-                * [Pandoc Extensions]
-              * [Reserved]
-                * [Target Names]
-                * [Variable Names]
 
 ################################################################################
 # End Of File
