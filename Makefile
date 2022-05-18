@@ -187,9 +187,9 @@ override COMPOSER_ROOT			:= $(CURDIR)
 endif
 
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
-override COMPOSER_TMP			:= $(COMPOSER_DIR)/.tmp
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
+override COMPOSER_TMP			:= $(CURDIR)/.composer.tmp
 
 override COMPOSER_YML_TEMPLATE		:= $(COMPOSER_ART)/composer.yml
 override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
@@ -976,7 +976,7 @@ ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
 override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
 endif
 
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(if $(COMPOSER_YML_LIST),--defaults="$(lastword $(COMPOSER_YML_LIST))")
+override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)")
 
 ########################################
 
@@ -2051,6 +2051,8 @@ its own individual instance.  Targets can be run per-file, per-directory, or
 recursively through an entire directory tree.  The most commonly used targets
 are in $(_C)[Primary Targets]$(_D).
 
+#WORK non-single-user use is not recommended
+
 $(_H)**Welcome to [$(COMPOSER_BASENAME)].  $(COMPOSER_TAGLINE)**$(_D)
 endef
 
@@ -2975,11 +2977,12 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(COMPOSER_BASENAME)
 
-#>/$(COMPOSER_SETTINGS)
-#>/$(COMPOSER_CSS)
-#>/$(COMPOSER_LOG_DEFAULT)
+#>**/$(COMPOSER_SETTINGS)
+#>**/$(COMPOSER_YML)
+#>**/$(COMPOSER_CSS)
+#>**/$(COMPOSER_LOG_DEFAULT)
 
-$(subst $(COMPOSER_DIR),,$(COMPOSER_TMP))/
+**$(subst $(COMPOSER_DIR),,$(COMPOSER_TMP))/
 
 ########################################
 # $(UPGRADE)
@@ -5596,7 +5599,6 @@ $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
-		\n\t * Verify lock files \
 		\n\t * Variable alias precedence \
 		\n\t * Automatic input file detection \
 		\n\t\t * Command-line '$(_C)c_list$(_D)' shortcut \
@@ -5612,11 +5614,12 @@ $(TESTING)-$(COMPOSER_BASENAME):
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	#> lock
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT)
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
+#>	#> lock
+#>		\n\t * Verify lock files \
+#>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT)
+#>	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
+#>	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DEFAULT) || $(TRUE)
+#>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT).lock
 	#> precedence
 	@$(call $(TESTING)-run) MAKEJOBS="1000" c_jobs="100" J="10" $(CONFIGS)
 	@$(call $(TESTING)-run) c_jobs="100" J="10" $(CONFIGS)
@@ -5646,8 +5649,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
-	#> lock
-	$(call $(TESTING)-find,lock file exists)
+#>	#> lock
+#>	$(call $(TESTING)-find,lock file exists)
 	#> precedence
 	$(call $(TESTING)-count,1,MAKEJOBS.+ 1000 )
 	$(call $(TESTING)-count,1,MAKEJOBS.+ 100 )
@@ -6485,11 +6488,6 @@ endif
 #		maybe some type of automatic utility with a variable threshold?
 #		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
 #			add at beginning of $(DOITALL)
-#		add $(COMPOSER_TMP) to $(CLEANER)?  probably best.
-#			time to consider making $(COMPOSER_TMP) per-directory, alongside $(COMPOSER_LOG)
-#		non-single-user use is not recommended (still need lock files?) [note this in recommended workflow]
-#			if no more lock files, comment instead of remove
-#	add lock files to $(CLEANER), regardless if keeping them or not [document]
 # site
 #	add menu_bar_top(?) and menu_bar_bottop(?), right-justified html/markdown
 #		identical use of nav-top-list, preferrably right in the same <ul>
@@ -6736,14 +6734,17 @@ ifneq ($(wildcard $(CURDIR)/$(COMPOSER_LOG)),)
 	@$(RM) $(CURDIR)/$(COMPOSER_LOG) >/dev/null
 endif
 endif
-ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(wildcard $(COMPOSER_TMP)),)
 	@$(call $(HEADERS)-rm,$(CURDIR),$(notdir $(COMPOSER_TMP)))
 	@$(ECHO) "$(_S)"
 	@$(RM) --recursive $(COMPOSER_TMP)
 	@$(ECHO) "$(_D)"
 endif
-endif
+#>	@+$(foreach FILE,$(notdir $(wildcard $(CURDIR)/*.lock)),\
+#>		$(call $(HEADERS)-rm,$(CURDIR),$(FILE)); \
+#>		$(RM) $(CURDIR)/$(FILE) >/dev/null; \
+#>		$(call NEWLINE) \
+#>	)
 	@+$(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER))) \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 	@+$(foreach FILE,$(COMPOSER_TARGETS),\
@@ -6902,25 +6903,26 @@ ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@exit 1
 endif
-ifneq ($(wildcard $(CURDIR)/$(c_base).$(EXTENSION).lock),)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION): lock file exists"
-	@$(ENDOLINE)
-	@exit 1
-endif
-	@$(ECHO) "$(_F)"
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(CURDIR)/$(c_base).$(EXTENSION).lock
+#>ifneq ($(wildcard $(CURDIR)/$(c_base).$(EXTENSION).lock),)
+#>	@$(ENDOLINE)
+#>	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION): lock file exists"
+#>	@$(ENDOLINE)
+#>	@exit 1
+#>else
+#>	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >>$(CURDIR)/$(c_base).$(EXTENSION).lock
+#>endif
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)
-	@$(ECHO) "$(_F)"
+	@$(ECHO) "$(_D)"
 endif
+	@$(ECHO) "$(_F)"
 #>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
 	@$(PANDOC) $(call PANDOC_OPTIONS)
 ifneq ($(COMPOSER_LOG),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP) $(subst ",\",$(call PANDOC_OPTIONS))\n" >>$(CURDIR)/$(COMPOSER_LOG)
 endif
-	@$(RM) $(c_base).$(EXTENSION).lock >/dev/null
+#>	@$(RM) $(c_base).$(EXTENSION).lock >/dev/null
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(eval override @ := $(c_base).$(EXTENSION))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
