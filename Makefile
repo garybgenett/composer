@@ -20,6 +20,7 @@ override VIM_FOLDING := {{{1
 #		* `make test-targets`
 #			* README.site.html (+text-based +mobile)
 #				#WORK add to $(TESTING)-$(TARGETS)
+#				[empty composer.yml]
 #				cols_main_size
 #				cols_main_first
 #				cols_mobile_hide
@@ -122,6 +123,7 @@ override VIM_FOLDING := {{{1
 #		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
+#	https://github.com/bewuethr/pandoc-bash-blog
 ################################################################################
 # }}}1
 ################################################################################
@@ -2767,7 +2769,8 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK)						>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
-	@$(subst --relative,,$(LN)) $(subst $(COMPOSER_DIR),.,$(MDVIEWER_CSS))		$(CURDIR)/$(COMPOSER_CSS) >/dev/null
+#>	@$(subst --relative,,$(LN)) $(subst $(COMPOSER_DIR),.,$(MDVIEWER_CSS))		$(CURDIR)/$(COMPOSER_CSS) >/dev/null
+	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) >/dev/null
 endif
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_BUILD_SH))
 	@$(ECHO) "<script>\n"								>$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_JS))
@@ -3028,17 +3031,6 @@ endef
 # override SITE_LINKEDIN		?= https://www.linkedin.com/$(COMPOSER_BASENAME)
 # override SITE_TWITTER			?= https://twitter.com/$(COMPOSER_BASENAME)
 # override SITE_GITHUB			?= https://github.com/$(COMPOSER_BASENAME)
-
-# override SITE_FOOTER_APPEND		?= \
-	<br /><br /> \
-	<a rel=\"author\" href=\"http://www.garybgenett.net\">					<img src=\"http://www.garybgenett.net/favicon.png\"					alt=\"Gary B. Genett\"	style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-nd/3.0/us/\">	<img src=\"http://i.creativecommons.org/l/by-nc-nd/3.0/us/88x31.png\"			alt=\"CC License\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<a href=\"http://validator.w3.org/check/referer\">					<img src=\"http://www.w3.org/Icons/valid-xhtml11-blue\"					alt=\"Valid HTML\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<a href=\"http://jigsaw.w3.org/css-validator/check/referer\">				<img src=\"http://www.w3.org/Icons/valid-css2-blue\"					alt=\"Valid CSS\"	style=\"border:0; width:88px; height:31px;\"/></a> \
-	<br /> \
-	<a href=\"https://github.com/garybgenett/composer\">					<img src=\"https://raw.githubusercontent.com/garybgenett/composer/devel/icon.png\"	alt=\"Composer\"	style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a href=\"http://www.vim.org\">								<img src=\"http://www.vim.org/images/vim_small.gif\"					alt=\"Vim\"		style=\"border:0; width:31px; height:31px;\"/></a> \
-	<a href=\"http://git-scm.com\">								<img src=\"https://git.wiki.kernel.org/images-git/d/df/FrontPage%24git-logo.png\"	alt=\"Git\"		style=\"border:0; width:72px; height:27px;\"/></a>
 
 # http://navaneeth.me/font-awesome-icons-css-content-values
 #>override SITE_SOCIAL_ICON_googleplus	:= f0d5
@@ -3409,6 +3401,16 @@ variables:
                 * [Target Names]
                 * [Variable Names]
 
+########################################
+
+  $(PUBLISH)-info-top: |
+    <a rel="author"	href="https://github.com/garybgenett"><img			alt="Gary B. Genett"		style="border:0; width:auto; max-height:16px;" class="img-fluid" src="data:application/octet-stream;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpFNTE3OEEyQTk5QTAxMUUyOUExNUJDMTA0NkE4OTA0RCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpFNTE3OEEyQjk5QTAxMUUyOUExNUJDMTA0NkE4OTA0RCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkU1MTc4QTI4OTlBMDExRTI5QTE1QkMxMDQ2QTg5MDREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkU1MTc4QTI5OTlBMDExRTI5QTE1QkMxMDQ2QTg5MDREIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+m4QGuQAAAyRJREFUeNrEl21ojWEYx895TDPbMNlBK46IUiNmPvHBSUjaqc0H8pF5+aDUKPEBqU2NhRQpX5Rv5jWlDIWlMCv7MMSWsWwmb3tpXub4XXWdPHvc9/Gc41nu+nedc7/8r/99PffLdYdDPsvkwsgkTBwsA/PADJCnzX2gHTwBt8Hl7p537/3whn04XoDZDcpBlk+9P8AFcAghzRkJwPF4zGGw0Y9QS0mAM2AnQj77FqCzrtcwB1Hk81SYojHK4DyGuQ6mhIIrBWB9Xm7ug/6B/nZrBHBegrkFxoVGpnwBMSLR9EcEcC4qb8pP14BWcBcUgewMnF3T34VqhWMFkThLJAalwnENOAKiHpJq1FZgI2AT6HZtuxZwR9GidSHtI30jOrbawxlVX78/AbNfhHlomEUJJI89O2MqeE79T8/nk8nMBm/dK576hZgmA3cp/R4l9/UeSxiHLVIlNm4nFfT0bxyuIj7LHRTKai+zdJobwMKzcZSJb0ePV5PKN+BqAAKE47UlMnERELMM3EdYP/yrd+XYb2mOiYBiQ8OQnoRBlXrl9JZix7D1pHTazu4MoyBcnYamqAjIMTR8G4FT8LuhLsexXYYjICBiqhQBvYb6fLZIJCjPypVvaOoVAW2WcasCnL2Nq82xHJNSqlCeFcDshaPK0twkAhosjZL31QYw+1rlMpWGMArl23SBsZZO58F2tlJXmjOXS+s4WGvpMiBJT/I2PInZ6lIs9/hBsNS1hS6BG0DSqmYEDRlCXQrmy50P1oDRKTSegmNbUsA0zDMwRhPJXeCE3vWLPQMvan6X8AgIa1vcR4AkGZkDR4ejJ1UHpsaVI0g2LInpOsNFUud1rhxSV+fzC9Woz2EZkWQuja7/B+jUrgtIMpy9YCW4n4K41YfzRneW5E1KJTe4B2Zq1Q5EHEtj4U3AfEzR5SVY4l7QYQPJdN2as7RKBF0BPZqqH4VgMAMBL8Byxr7y8zCZiDlnOcEKIPmUpgB5Z2ww5RdOiiRiNajUmWda5IG6WbhsyY2fx6m8gLcoJDJFkH219M3We1+cnda93pfycZpIJEL/s/wSYADmOAwAQgdpBAAAAABJRU5ErkJggg=="/></a>
+
+  $(PUBLISH)-info-bottom: |
+    <a rel="license"	href="https://www.gnu.org/licenses/gpl-3.0.html"><img		alt="GPL License"		style="border:0; width:auto; max-height:16px;" class="img-fluid" src="data:application/octet-stream;base64,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"/></a>
+    <a rel="license"	href="https://creativecommons.org/licenses/by-nc-nd/4.0"><img	alt="CC License"		style="border:0; width:auto; max-height:16px;" class="img-fluid" src="data:application/octet-stream;base64,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"/></a>
+    <a rel="license"	href="https://wikipedia.org/wiki/All_rights_reserved"><img	alt="All Rights Reserved"	style="border:0; width:auto; max-height:16px;" class="img-fluid" src="data:application/octet-stream;base64,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"/></a>
+
 ################################################################################
 # End Of File
 ################################################################################
@@ -3466,9 +3468,9 @@ $$(
 			2>/dev/null
 		)\"><img class=\"img-fluid\" src=\"$${1}\"/></a>\\n"
 	else
-		$(ECHO) "<!-- logo -->\\n"
+		$(ECHO) "<!-- $${FUNCNAME} $(MARKER) logo -->\\n"
 	fi
-)$$(
+)&nbsp;$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"brand\"]" \\
 	| $(SED) "/^null$$/d" \\
@@ -3497,13 +3499,13 @@ $$(
 	| $(SED) "/^null$$/d" \\
 	2>/dev/null
 )
-<input class="form-control me-2" type="text" name="$$(
+<input class="form-control form-control-sm me-1" type="text" name="$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_text\"]" \\
 	| $(SED) "/^null$$/d" \\
 	2>/dev/null
 )"/>
-<button class="btn" type="submit">$$(
+<button class="btn btn-sm" type="submit">$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_name\"]" \\
 	| $(SED) "/^null$$/d" \\
@@ -3517,18 +3519,48 @@ _EOF_
 
 ########################################
 
+# 1 top || bottom = .variables["$(PUBLISH)-info-$${1}"]
+
+function $(PUBLISH)-info-data {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	if [ -z "$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-info-$${1}\"]" \\
+		| $(SED) "/^null$$/d" \\
+		2>/dev/null
+	)" ]; then
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
+		return 0
+	fi
+$(CAT) <<_EOF_
+<div class="d-flex me-3">
+$$(
+	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-info-$${1}\"]" \\
+	| $(SED) "/^null$$/d" \\
+	2>/dev/null
+)
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	return 0
+}
+
+########################################
+
 # 1 .variables["$(PUBLISH)-nav-top"]
 
 # x $(PUBLISH)-nav-begin 1		true = bottom
 # x $(PUBLISH)-nav-begin 2		true = no brand
 # 2 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
-# x $(PUBLISH)-nav-end 1		true = no search
+# x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
+# x $(PUBLISH)-nav-end 2		true = no search
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 	$(PUBLISH)-nav-begin "" "" "$${2}"
 	$(PUBLISH)-nav-top-list "$${1}"
-	$(PUBLISH)-nav-end ""
+	$(PUBLISH)-nav-end "top" ""
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
@@ -3597,22 +3629,23 @@ _EOF_
 
 # x $(PUBLISH)-nav-begin 1		true = bottom
 # x $(PUBLISH)-nav-begin 2		true = no brand
-# x $(PUBLISH)-nav-end 1		true = no search
+# x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
+# x $(PUBLISH)-nav-end 2		true = no search
 
 function $(PUBLISH)-nav-bottom {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 	$(PUBLISH)-nav-begin "1" "1"
 $(CAT) <<_EOF_
-<li class="nav-item pe-3">$$(
+<li class="nav-item me-3">$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"copyright\"]" \\
 	| $(SED) "/^null$$/d" \\
 	2>/dev/null
 )</li>
-<li class="nav-item pe-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
+<li class="nav-item me-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
 _EOF_
 	$(PUBLISH)-nav-bottom-list "$${1}"
-	$(PUBLISH)-nav-end "1"
+	$(PUBLISH)-nav-end "bottom" "1"
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
@@ -3621,11 +3654,17 @@ _EOF_
 
 function $(PUBLISH)-nav-bottom-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
-	if [ -z "$$($${COMPOSER_YML_DATA} | $${YQ_WRITE} ".nav-bottom" 2>/dev/null)" ]; then
+	if [ -z "$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} "$${1}" \\
+		| $(SED) "/^null$$/d" \\
+		2>/dev/null
+	)" ]; then
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
 		return 0
 	fi
 $(CAT) <<_EOF_
-<li class="nav-item pe-3 breadcrumb">$(DIVIDE)&nbsp;
+<li class="nav-item me-3 breadcrumb">$(DIVIDE)&nbsp;
 <ol class="breadcrumb">
 _EOF_
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
@@ -3671,7 +3710,7 @@ $(CAT) <<_EOF_
 <span class="navbar-toggler-icon"></span>
 </button>
 $$(
-	if [ -n "$${2}" ]; then	$(ECHO) "<!-- brand -->\\n"
+	if [ -n "$${2}" ]; then	$(ECHO) "<!-- $${FUNCNAME} $(MARKER) brand -->\\n"
 	else			$(PUBLISH)-brand "$${3}"
 	fi
 )
@@ -3688,18 +3727,20 @@ _EOF_
 
 ########################################
 
-# 1 true = no search
+# 1 $(PUBLISH)-info-data 1		top || bottom
+# 2 true = no search
 
 function $(PUBLISH)-nav-end {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 </ul>
-$$(if [ -n "$${1}" ] || [ -z "$$(
+$$($(PUBLISH)-info-data "$${1}")
+$$(if [ -n "$${2}" ] || [ -z "$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_name\"]" \\
 	| $(SED) "/^null$$/d" \\
 	2>/dev/null
-)" ]; then	$(ECHO) "<!-- search -->\\n"
+)" ]; then	$(ECHO) "<!-- $${FUNCNAME} $(MARKER) search -->\\n"
 else		$(PUBLISH)-search
 fi)
 </div>
@@ -6479,9 +6520,6 @@ $(PUBLISH):
 #		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
 #			add at beginning of $(DOITALL)
 # site
-#	add menu_bar_top(?) and menu_bar_bottop(?), right-justified html/markdown
-#		identical use of nav-top-list, preferrably right in the same <ul>
-#		insert social-media icons as examples, on the bottom
 #	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
 #	examples of description/etc. metadata in $(COMPOSER_YML)
 #	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
