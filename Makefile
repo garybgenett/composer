@@ -1471,9 +1471,9 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Build as Bootstrap page"		"$(_M)$(c_site)"
 	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
 	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
-	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(c_list)"
+	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
 	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
-	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(if $(c_css),$(_M)$(notdir $(c_css))$(_D) )$(_N)(\`$(COMPOSER_CSS)\`)"
+	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(_M)$(notdir $(call c_css_select))$(_D)"
 	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
 	@$(TABLE_M3) "$(_C)[c_margin]$(_D)  ~ $(_E)m"	"Size of margins ($(_C)[PDF]$(_D))"	"$(_M)$(c_margin)"
@@ -1496,6 +1496,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(COLUMN_2) "    * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"~ Revert to the $(_C)[Pandoc]$(_D) default*"
 	@$(COLUMN_2) "  * *Special value \`$(_N)$(SPECIAL_VAL)$(_D)\` for $(_C)[c_toc]$(_D)"	"~ List all headers, and number sections*"
 	@$(COLUMN_2) "  * *Special value \`$(_N)$(SPECIAL_VAL)$(_D)\` for $(_C)[c_level]$(_D)"	"~ Varies by $(_C)[c_type]$(_D) $(_E)(see [$(HELPOUT)-$(DOITALL)])$(_D)*"
+#WORKING reference to composer.css documentation
 	@$(PRINT) "  * *An empty $(_C)[c_margin]$(_D) value enables individual margins:*"
 	@$(PRINT) "    * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
 	@$(PRINT) "    * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
@@ -3417,6 +3418,8 @@ variables:
 ################################################################################
 endef
 
+#WORKING:NOW
+
 ########################################
 ## {{{2 Heredoc: $(PUBLISH).build.sh ---
 
@@ -5054,6 +5057,7 @@ override define $(HEADERS) =
 	$(HEADER_L)
 endef
 
+#> update: $(HEADERS)-run
 override define $(HEADERS)-run =
 	$(LINERULE); \
 	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))"; \
@@ -6333,6 +6337,7 @@ $(eval export override COMPOSER_DOITALL_$(CONFIGS) ?=)
 $(CONFIGS)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(CONFIGS)="$(*)" $(CONFIGS)
 
+#> update: $(HEADERS)-run
 .PHONY: $(CONFIGS)
 $(CONFIGS): .set_title-$(CONFIGS)
 $(CONFIGS):
@@ -6340,7 +6345,13 @@ $(CONFIGS):
 	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
 	@$(TABLE_M2) ":---"			":---"
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
-		$(TABLE_M2) "$(_C)$(FILE)"	"$(subst ",\",$($(FILE)))$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $($(FILE)), )$(_E)$(MARKER)$(_D))"; \
+		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(strip $(if \
+			$(filter c_css,$(FILE)),$(call c_css_select) ,\
+			$(subst ",\",$($(FILE))) \
+		))$(_D)$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $(strip $(if \
+			$(filter c_css,$(FILE)),$(call c_css_select) ,\
+			$(subst ",\",$($(FILE))) \
+		)), )$(_E)$(MARKER)$(_D))"; \
 	)
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
@@ -6521,6 +6532,17 @@ $(PUBLISH):
 #		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
 #			add at beginning of $(DOITALL)
 # site
+#	fix config, so there is a config-site, and config-all does both...
+#		ugh, the top/bottom icons are uh-gly... hmmm
+#		documentation note somewhere about the coments hack to indent markdown lists
+#	test composer.yml stomping...
+#		need a way to empty or overlap on demand...?
+#		if it is a hash = ++ and array == 0, then decide which should be immutable
+#		right now, top and bottom navs are hashes, and sides are arrays, so the behavior will be different.
+#		ideally, it would be the top that would be consistent, and the other navs can change
+#		ultimately, just allowing an overlap may be the way to go... at least it is consistent
+#		meh, yeah... side navs are the only arrays in the config... convert them... hopefully this is a minor change, programmatically...
+#		documentation for this is going to be a big of work...
 #	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
 #	examples of description/etc. metadata in $(COMPOSER_YML)
 #	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
@@ -6546,6 +6568,11 @@ $(PUBLISH):
 #		$(DOITALL)-$(DOITALL) essentially does the same thing, now...
 #		it's still good for naming things?  maybe just a $(CLEANER)-$(DOITALL), $(PUBLISH)-index and $(DOITALL)-$(DOITALL) wrapper?
 #		it's a nice shortcut
+#	turn README.site.html into page-README.site.html...?  yes...
+#		manual sub-target in composer.mk, and create a side directory for the readme fragments
+#			readme.pdf is already a template for this
+#		add revealjs readme fragment to it, too, and update composer.mk
+#		give it a better name, and add manual to list of formats
 #	remove $(DO_POST)
 # page
 #	just like book
