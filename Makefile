@@ -19,7 +19,7 @@ override VIM_FOLDING := {{{1
 #			* `mv Composer-*.log artifacts/`
 #		* `make test-targets`
 #			* README.site.html (+mobile)
-#				#WORK
+#				#WORK add to $(TESTING)-$(TARGETS)
 #				cols_main_size
 #				cols_main_first
 #				cols_mobile_hide
@@ -52,9 +52,11 @@ override VIM_FOLDING := {{{1
 #			* Spell check
 #	* Publish
 #		* Check: `git diff master Makefile`
-#		* Release: `rm -frv {.[^.],}*; make _release`
-#		* Git commit and tag
 #		* Update: COMPOSER_VERSION
+#		* Release: `rm -frv {.[^.],}*; make _release`
+#		* Verify: `git diff master`
+#		* Commit: `git commit`, `git tag`
+#		* Branch: `git branch -D master`, `git checkout -B master`, `git checkout devel`
 ################################################################################
 #TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
@@ -674,7 +676,7 @@ override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 export SHELL
 
 ########################################
-# {{{2 Paths ---------------------------
+## {{{2 Paths --------------------------
 
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
@@ -784,7 +786,7 @@ override YQ_EXTRACT			:= $(YQ_READ) --front-matter="extract"
 override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' $(COMPOSER_YML_LIST)
 
 ########################################
-# {{{2 Wrappers ------------------------
+## {{{2 Wrappers -----------------------
 
 override DATESTAMP			:= $(shell $(DATE))
 override DATENAME			:= $(shell $(DATE) | $(SED) \
@@ -859,7 +861,7 @@ override OUTPUT				:= $(c_type)
 override EXTENSION			:= $(c_type)
 
 ########################################
-# {{{2 Types ---------------------------
+## {{{2 Types --------------------------
 
 #> update: TYPE_TARGETS
 
@@ -936,7 +938,7 @@ override COMPOSER_TARGETS		:= $(strip \
 endif
 
 ########################################
-# {{{2 CSS -----------------------------
+## {{{2 CSS ----------------------------
 
 override define c_css_select =
 $(strip $(if $(c_css),\
@@ -955,7 +957,7 @@ endef
 #>$(eval override c_css			:= $(call c_css_select))
 
 ########################################
-# {{{2 Command -------------------------
+## {{{2 Command ------------------------
 
 override PANDOC_OPTIONS_DATA		:=
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
@@ -1032,9 +1034,9 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	$(if $(wildcard $(COMPOSER_ICON)),\
 		$(if $(or \
 			$(c_site) ,\
-			$(filter $(c_type),$(TYPE_HTML)) \
-			$(filter $(c_type),$(TYPE_EPUB)) \
-			$(filter $(c_type),$(TYPE_PRES)) \
+			$(filter $(c_type),$(TYPE_HTML)) ,\
+			$(filter $(c_type),$(TYPE_EPUB)) ,\
+			$(filter $(c_type),$(TYPE_PRES)) ,\
 		),\
 			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(COMPOSER_ICON)\"/>" \
 		) \
@@ -1131,7 +1133,7 @@ override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
 override PUBLISH_BUILD_SH_RUN		:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(PUBLISH_BUILD_SH)
 
 ########################################
-# {{{2 Options -------------------------
+## {{{2 Options ------------------------
 
 #> update: COMPOSER_OPTIONS
 
@@ -1185,7 +1187,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 )
 
 ########################################
-# {{{2 Targets -------------------------
+## {{{2 Targets ------------------------
 
 #> update: includes duplicates
 
@@ -1272,7 +1274,7 @@ override COMPOSER_RESERVED := \
 override DOFORCE			:= force
 
 ########################################
-# {{{2 Filesystem ----------------------
+## {{{2 Filesystem ---------------------
 
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
@@ -1345,7 +1347,7 @@ endif
 endif
 
 ########################################
-# {{{2 Specials ------------------------
+## {{{2 Specials -----------------------
 
 override DO_BOOK			:= book
 override DO_PAGE			:= page
@@ -1374,13 +1376,13 @@ $(1)s:
 
 .PHONY: $(1)s-$(DOITALL)
 $(1)s-$(DOITALL):
-	@+$$(strip $$(call $$(TARGETS)-list)) \
+	@+$$(strip $$(call $$(TARGETS)-$$(PRINTER))) \
 		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
 		| $$(XARGS) $$(MAKE) $$(MAKE_OPTIONS) --silent {}
 
 .PHONY: $(1)s-$(CLEANER)
 $(1)s-$(CLEANER):
-	@+$$(strip $$(call $$(TARGETS)-list)) \
+	@+$$(strip $$(call $$(TARGETS)-$$(PRINTER))) \
 		| $$(SED) -n "s|^$(1)[-]([^:]+).*$$$$|\1|gp" \
 		| $$(XARGS) $$(BASH) -ec '\
 			if [ -f "$$(CURDIR)/{}" ]; then \
@@ -1401,7 +1403,7 @@ $(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
 ################################################################################
 
 ########################################
-# {{{2 $(HELPOUT) ----------------------
+## {{{2 $(HELPOUT) ---------------------
 
 .PHONY: $(HELPOUT)-TITLE_%
 $(HELPOUT)-TITLE_%:
@@ -1452,7 +1454,7 @@ $(HELPOUT):
 	@$(ECHO) ""
 
 ########################################
-# {{{3 $(HELPOUT)-VARIABLES ------------
+### {{{3 $(HELPOUT)-VARIABLES ----------
 
 .PHONY: $(HELPOUT)-VARIABLES_TITLE_%
 $(HELPOUT)-VARIABLES_TITLE_%:
@@ -1523,7 +1525,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *\`$(_N)(boolean)$(_D)\`  = empty is disabled / any value enables*"
 
 ########################################
-# {{{3 $(HELPOUT)-TARGETS --------------
+### {{{3 $(HELPOUT)-TARGETS ------------
 
 #> update: PHONY.*$(CLEANER)
 #> update: PHONY.*$(DOITALL)
@@ -1619,7 +1621,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
 
 ########################################
-# {{{3 $(HELPOUT)-EXAMPLES -------------
+### {{{3 $(HELPOUT)-EXAMPLES -----------
 
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
@@ -1655,7 +1657,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(PRINT) "See \`$(_C)$(HELPOUT)-$(DOITALL)$(_D)\` for full details and additional targets."
 
 ########################################
-# {{{2 $(HELPOUT)-$(DOITALL) -----------
+## {{{2 $(HELPOUT)-$(DOITALL) ----------
 
 .PHONY: $(HELPOUT)-$(TYPE_PRES)
 $(HELPOUT)-$(TYPE_PRES):
@@ -1715,7 +1717,7 @@ $(HELPOUT)-%:
 	@$(RUNMAKE) $(HELPOUT)-FOOTER
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOFORCE) -----------
+### {{{3 $(HELPOUT)-$(DOFORCE) ---------
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
@@ -1868,7 +1870,7 @@ override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT =
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TITLE -----
+### {{{3 $(HELPOUT)-$(DOITALL)-TITLE ---
 
 override define $(HELPOUT)-$(DOITALL)-TITLE =
 $(_M)% $(COMPOSER_HEADLINE)$(_D)
@@ -1919,7 +1921,7 @@ $(_S)###$(_D) $(_H)$(patsubst _%,\_%,$(1))$(_D) $(_S)###$(_D)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW --
+### {{{3 $(HELPOUT)-$(DOITALL)-OVERVIEW
 
 override define $(HELPOUT)-$(DOITALL)-OVERVIEW =
 **$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[Pandoc]$(_D), $(_C)[Bootstrap]$(_D) and
@@ -1947,7 +1949,7 @@ $(_S)![$(COMPOSER_BASENAME) Screenshot]$(_D)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-GOALS -----
+### {{{3 $(HELPOUT)-$(DOITALL)-GOALS ---
 
 override define $(HELPOUT)-$(DOITALL)-GOALS =
 The guiding principles of $(_C)[$(COMPOSER_BASENAME)]$(_D):
@@ -1969,7 +1971,7 @@ Direct support for key document types $(_E)(see [Document Formatting])$(_D):
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-REQUIRE ---
+### {{{3 $(HELPOUT)-$(DOITALL)-REQUIRE -
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
@@ -2002,7 +2004,7 @@ The versions of the integrated repositories can be changed, if desired $(_E)(see
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-WORKFLOW --
+### {{{3 $(HELPOUT)-$(DOITALL)-WORKFLOW
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
@@ -2053,7 +2055,7 @@ $(_H)**Welcome to [$(COMPOSER_BASENAME)].  $(COMPOSER_TAGLINE)**$(_D)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-FORMAT ----
+### {{{3 $(HELPOUT)-$(DOITALL)-FORMAT --
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -2164,7 +2166,7 @@ They are not currently modified by $(_C)[$(COMPOSER_BASENAME)]$(_D).
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS --
+### {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
@@ -2199,7 +2201,7 @@ match is used, the final values for both $(_C)[c_css]$(_D) and $(_C)[c_toc]$(_D)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-ORDERS ----
+### {{{3 $(HELPOUT)-$(DOITALL)-ORDERS --
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
 The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is global-to-local $(_E)(see
@@ -2220,7 +2222,7 @@ All values in `$(_M)$(COMPOSER_SETTINGS)$(_D)` take precedence over everything e
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-DEPENDS ---
+### {{{3 $(HELPOUT)-$(DOITALL)-DEPENDS -
 
 override define $(HELPOUT)-$(DOITALL)-DEPENDS =
 If there are files or directories that have dependencies on other files or
@@ -2242,7 +2244,7 @@ target will be run whenever the file or directory is called.
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM ----
+### {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM --
 
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
@@ -2268,7 +2270,7 @@ there will be a message and no actions will be taken.
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-VERSIONS --
+### {{{3 $(HELPOUT)-$(DOITALL)-VERSIONS
 
 #> update: PHONY.*(UPGRADE)
 
@@ -2297,7 +2299,7 @@ $(_E)(see [Document Formatting])$(_D).
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
+### {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_site)
@@ -2401,7 +2403,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_options)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
+### {{{3 $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
@@ -2540,7 +2542,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
+### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(HELPOUT) / $(HELPOUT)-$(DOITALL))
@@ -2604,7 +2606,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PRINTER))
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
+### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
@@ -2628,7 +2630,7 @@ build website pages using [Bootstrap].)*$(_D)
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
+### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL
 
 #> update: $(DEBUGIT): targets list
 
@@ -2711,7 +2713,7 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../.$(COMPOSER_BASENAME)/$(MAKEFILE)$(_
 endef
 
 ########################################
-# {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
+### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
 $(_S)[$(HELPOUT)-$(DOFORCE)]: #internal-targets$(_D)
@@ -2734,7 +2736,7 @@ documented for completeness.)*$(_D)
 endef
 
 ########################################
-# {{{2 $(CREATOR) ----------------------
+## {{{2 $(CREATOR) ---------------------
 
 #> update: TYPE_TARGETS
 
@@ -2869,7 +2871,7 @@ $(DO_BOOK)-$(OUT_MANUAL).$(EXTN_LPDF): \
 endif
 
 ########################################
-# {{{2 $(EXAMPLE) ----------------------
+## {{{2 $(EXAMPLE) ---------------------
 
 #> update: COMPOSER_OPTIONS
 
@@ -2921,9 +2923,8 @@ override DIST_ICON_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJ
 override DIST_SCREENSHOT_v1.0		:= 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
 override DIST_SCREENSHOT_v3.0		:= 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
 
-################################################################################
-# {{{1 Heredoc Function --------------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc Function ---------------
 
 override define DO_HEREDOC =
 	$(ECHO) '$(subst ',[Q],$(subst $(call NEWLINE),[N],$(call $(1))))[N]' \
@@ -2939,9 +2940,8 @@ override define DO_HEREDOC_FULL =
 			-e "s|[[]N[]]|\\n|g"
 endef
 
-################################################################################
-# {{{1 Heredoc: gitattributes --------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: gitattributes ---------
 
 override define HEREDOC_GITATTRIBUTES =
 ################################################################################
@@ -2964,9 +2964,8 @@ override define HEREDOC_GITATTRIBUTES =
 ################################################################################
 endef
 
-################################################################################
-# {{{1 Heredoc: gitignore ------------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: gitignore -------------
 
 override define HEREDOC_GITIGNORE =
 ################################################################################
@@ -3001,9 +3000,8 @@ $(subst $(COMPOSER_DIR),,$(YQ_DIR))/yq_*
 ################################################################################
 endef
 
-################################################################################
-# {{{1 Heredoc: $(PUBLISH).build.sh --------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: $(PUBLISH).build.sh ---
 
 override define HEREDOC_PUBLISH_BUILD_SH =
 #!$(BASH)
@@ -3536,9 +3534,8 @@ $(PUBLISH)-$${FUNCTION} "$${@}"
 ################################################################################
 endef
 
-################################################################################
-# {{{1 Heredoc: composer_yml ---------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: composer_yml ----------
 
 #WORKING
 
@@ -3949,9 +3946,8 @@ variables:
 ################################################################################
 endef
 
-################################################################################
-# {{{1 Heredoc: bootstrap_css --------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: bootstrap_css ---------
 
 override define HEREDOC_BOOTSTRAP_CSS =
 /* #############################################################################
@@ -4004,9 +4000,8 @@ override define HEREDOC_BOOTSTRAP_CSS_HACK =
 		-e "/^[[:space:]]+color[:]/d"
 endef
 
-################################################################################
-# {{{1 Heredoc: pdf_latex ------------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: pdf_latex -------------
 
 override define HEREDOC_TEX_PDF_TEMPLATE =
 % ##############################################################################
@@ -4045,9 +4040,8 @@ override define HEREDOC_TEX_PDF_TEMPLATE =
 % ##############################################################################
 endef
 
-################################################################################
-# {{{1 Heredoc: revealjs_css ---------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: revealjs_css ----------
 
 override define HEREDOC_REVEALJS_CSS =
 /* #############################################################################
@@ -4098,9 +4092,8 @@ override define HEREDOC_REVEALJS_CSS =
 ############################################################################# */
 endef
 
-################################################################################
-# {{{1 Heredoc: license --------------------------------------------------------
-################################################################################
+########################################
+## {{{2 Heredoc: license ---------------
 
 override define HEREDOC_LICENSE =
 # $(COMPOSER_LICENSE)
@@ -4890,7 +4883,7 @@ endef
 ################################################################################
 
 ########################################
-# {{{2 .set_title ----------------------
+## {{{2 .set_title ---------------------
 
 #> grep -E "[.]set_title" Makefile
 .PHONY: .set_title-%
@@ -4902,7 +4895,7 @@ else
 endif
 
 ########################################
-# {{{2 $(HEADERS) ----------------------
+## {{{2 $(HEADERS) ---------------------
 
 #> update: COMPOSER_OPTIONS
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
@@ -4949,7 +4942,7 @@ override $(HEADERS)-release = $(1)
 endif
 
 ########################################
-# {{{3 $(HEADERS)-$(EXAMPLE) -----------
+### {{{3 $(HEADERS)-$(EXAMPLE) ---------
 
 #> update: PHONY.*$(DOITALL)
 $(eval export override COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE) ?=)
@@ -4984,7 +4977,7 @@ $(HEADERS)-$(EXAMPLE):
 	fi
 
 ########################################
-# {{{3 $(HEADERS)-% --------------------
+### {{{3 $(HEADERS)-% ------------------
 
 .PHONY: $(HEADERS)
 $(HEADERS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(HEADERS)
@@ -5076,7 +5069,7 @@ endef
 ################################################################################
 
 ########################################
-# {{{2 .DEFAULT ------------------------
+## {{{2 .DEFAULT -----------------------
 
 .DEFAULT_GOAL := $(HELPOUT)
 ifneq ($(COMPOSER_SRC),$(COMPOSER))
@@ -5100,7 +5093,7 @@ endif
 	@exit 1
 
 ########################################
-# {{{2 $(MAKE_DB) ----------------------
+## {{{2 $(MAKE_DB) ---------------------
 
 .PHONY: $(MAKE_DB)
 $(MAKE_DB):
@@ -5113,7 +5106,7 @@ $(MAKE_DB):
 	|| $(TRUE)
 
 ########################################
-# {{{2 $(LISTING) ----------------------
+## {{{2 $(LISTING) ---------------------
 
 .PHONY: $(LISTING)
 $(LISTING):
@@ -5123,7 +5116,7 @@ $(LISTING):
 		| $(SORT)
 
 ########################################
-# {{{2 $(NOTHING) ----------------------
+## {{{2 $(NOTHING) ---------------------
 
 #> grep -E "[$][(]NOTHING[)][-]" Makefile
 override NOTHING_IGNORES := \
@@ -5165,7 +5158,7 @@ endif
 ################################################################################
 
 ########################################
-# {{{2 $(DEBUGIT) ----------------------
+## {{{2 $(DEBUGIT) ---------------------
 
 #> update: PHONY.*$(DEBUGIT)
 #	$(CONFIGS)
@@ -5257,7 +5250,7 @@ $(DEBUGIT)-%:
 	)
 
 ########################################
-# {{{2 $(TESTING) ----------------------
+## {{{2 $(TESTING) ---------------------
 
 #> update: PHONY.*$(DOITALL)
 $(eval export override COMPOSER_DOITALL_$(TESTING) ?=)
@@ -5340,7 +5333,7 @@ $(TESTING)-$(HEADERS)-%:
 	@$(RUNMAKE) $($(subst $(TESTING)-$(HEADERS)-,,$(@))) 2>&1
 
 ########################################
-# {{{3 $(TESTING)-functions ------------
+### {{{3 $(TESTING)-functions ----------
 
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
@@ -5456,7 +5449,7 @@ override define $(TESTING)-hold =
 endef
 
 ########################################
-# {{{3 $(TESTING)-Think ----------------
+### {{{3 $(TESTING)-Think --------------
 
 .PHONY: $(TESTING)-Think
 $(TESTING)-Think:
@@ -5495,7 +5488,7 @@ $(TESTING)-Think-done:
 	$(call $(TESTING)-count,2,override COMPOSER_TEACHER := .+$(TESTING_COMPOSER_DIR)\/$(MAKEFILE))
 
 ########################################
-# {{{3 $(TESTING)-$(DISTRIB) -----------
+### {{{3 $(TESTING)-$(DISTRIB) ---------
 
 #> update: PHONY.*$(DISTRIB)
 #	$(UPGRADE)
@@ -5521,7 +5514,7 @@ $(TESTING)-$(DISTRIB)-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-$(DEBUGIT) -----------
+### {{{3 $(TESTING)-$(DEBUGIT) ---------
 
 #> update: PHONY.*$(DEBUGIT)
 #	$(CONFIGS)
@@ -5547,7 +5540,7 @@ $(TESTING)-$(DEBUGIT)-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-speed ----------------
+### {{{3 $(TESTING)-speed --------------
 
 .PHONY: $(TESTING)-speed
 $(TESTING)-speed: $(TESTING)-Think
@@ -5594,7 +5587,7 @@ $(TESTING)-speed-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-$(COMPOSER_BASENAME) -
+### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 
 #WORK COMPOSER_YML
 
@@ -5679,7 +5672,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,1,NOTICE.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
 
 ########################################
-# {{{3 $(TESTING)-$(TARGETS) -----------
+### {{{3 $(TESTING)-$(TARGETS) ---------
 
 .PHONY: $(TESTING)-$(TARGETS)
 $(TESTING)-$(TARGETS): $(TESTING)-Think
@@ -5735,7 +5728,7 @@ $(TESTING)-$(TARGETS)-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-$(PUBLISH) -----------
+### {{{3 $(TESTING)-$(PUBLISH) ---------
 
 .PHONY: $(TESTING)-$(PUBLISH)
 $(TESTING)-$(PUBLISH): $(TESTING)-Think
@@ -5761,7 +5754,7 @@ $(TESTING)-$(PUBLISH)-done:
 #	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-$(INSTALL) -----------
+### {{{3 $(TESTING)-$(INSTALL) ---------
 
 .PHONY: $(TESTING)-$(INSTALL)
 $(TESTING)-$(INSTALL): $(TESTING)-Think
@@ -5796,7 +5789,7 @@ $(TESTING)-$(INSTALL)-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
+### {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
@@ -5839,7 +5832,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-count,3,$(TESTING)-1-$(CLEANER))
 
 ########################################
-# {{{3 $(TESTING)-COMPOSER_INCLUDE -----
+### {{{3 $(TESTING)-COMPOSER_INCLUDE ---
 
 #WORK COMPOSER_YML
 
@@ -5908,7 +5901,7 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS))))
 
 ########################################
-# {{{3 $(TESTING)-COMPOSER_DEPENDS -----
+### {{{3 $(TESTING)-COMPOSER_DEPENDS ---
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS
 $(TESTING)-COMPOSER_DEPENDS: $(TESTING)-Think
@@ -5945,7 +5938,7 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{3 $(TESTING)-COMPOSER_IGNORES -----
+### {{{3 $(TESTING)-COMPOSER_IGNORES ---
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
@@ -5977,7 +5970,7 @@ $(TESTING)-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
 
 ########################################
-# {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
+### {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
 
 .PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT): $(TESTING)-Think
@@ -6014,7 +6007,7 @@ $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 	$(call $(TESTING)-find, $(COMPOSER_LOG_DEFAULT))
 
 ########################################
-# {{{3 $(TESTING)-CSS ------------------
+### {{{3 $(TESTING)-CSS ----------------
 
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
@@ -6066,7 +6059,7 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
 
 ########################################
-# {{{3 $(TESTING)-other ----------------
+### {{{3 $(TESTING)-other --------------
 
 .PHONY: $(TESTING)-other
 $(TESTING)-other: $(TESTING)-Think
@@ -6164,7 +6157,7 @@ endif
 	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
 
 ########################################
-# {{{3 $(TESTING)-$(EXAMPLE) -----------
+### {{{3 $(TESTING)-$(EXAMPLE) ---------
 
 .PHONY: $(TESTING)-$(EXAMPLE)
 $(TESTING)-$(EXAMPLE): $(TESTING)-Think
@@ -6191,7 +6184,7 @@ $(TESTING)-$(EXAMPLE)-done:
 #>	@$(call $(TESTING)-hold)
 
 ########################################
-# {{{2 $(CHECKIT) ----------------------
+## {{{2 $(CHECKIT) ---------------------
 
 override PANDOC_CMT_DISPLAY := $(PANDOC_CMT)
 override YQ_CMT_DISPLAY := $(YQ_CMT)
@@ -6286,7 +6279,7 @@ endif
 endif
 
 ########################################
-# {{{2 $(CONFIGS) ----------------------
+## {{{2 $(CONFIGS) ---------------------
 
 #> update: COMPOSER_OPTIONS
 
@@ -6315,14 +6308,14 @@ ifneq ($(COMPOSER_DOITALL_$(CONFIGS)),)
 endif
 
 ########################################
-# {{{2 $(TARGETS) ----------------------
+## {{{2 $(TARGETS) ---------------------
 
 .PHONY: $(TARGETS)
 $(TARGETS): .set_title-$(TARGETS)
 $(TARGETS):
 	@$(call $(HEADERS))
 	@$(LINERULE)
-	@$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) \
+	@$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER)) | $(SED) \
 		$(foreach FILE,$(COMPOSER_RESERVED_SPECIAL),\
 			-e "/^$(FILE)[s-]/d" \
 		)),\
@@ -6331,19 +6324,19 @@ $(TARGETS):
 	@$(LINERULE)
 	@$(foreach SPECIAL,$(COMPOSER_RESERVED_SPECIAL),\
 		$(PRINT) "$(_H)$(MARKER) $(SPECIAL)s"; \
-		$(foreach FILE,$(shell $(call $(TARGETS)-list) | $(SED) -n "s|^$(SPECIAL)[-]||gp"),\
+		$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER)) | $(SED) -n "s|^$(SPECIAL)[-]||gp"),\
 			$(PRINT) "$(_E)$(subst : ,$(_D) $(DIVIDE) $(_N),$(subst $(TOKEN), ,$(FILE)))$(_D)"; \
 		) \
 	)
 	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(strip $(call $(TARGETS)-list,$(CLEANER)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(strip $(call $(TARGETS)-list,$(DOITALL)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(TARGETS)"; $(ECHO) "$(COMPOSER_TARGETS)"			| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"			| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(TARGETS)"; $(ECHO) "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]+|\n|g" | $(SORT)
+	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
-	@$(RUNMAKE) --silent $(PRINTER)-list
+	@$(RUNMAKE) --silent $(PRINTER)-$(PRINTER)
 
-override define $(TARGETS)-list =
+override define $(TARGETS)-$(PRINTER) =
 	$(RUNMAKE) --silent $(LISTING) | $(SED) \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
@@ -6360,7 +6353,7 @@ endef
 ################################################################################
 
 ########################################
-# {{{2 $(CONVICT) ----------------------
+## {{{2 $(CONVICT) ---------------------
 
 override GIT_OPTS_CONVICT		:= --verbose $(if \
 	$(filter $(PRINTER),$(COMPOSER_DOITALL_$(CONVICT))) ,\
@@ -6388,7 +6381,7 @@ $(CONVICT):
 	)
 
 ########################################
-# {{{2 $(DISTRIB) ----------------------
+## {{{2 $(DISTRIB) ---------------------
 
 #> update: PHONY.*$(DISTRIB)
 #	$(UPGRADE)
@@ -6416,7 +6409,7 @@ $(DISTRIB):
 	@$(LS) $(CURDIR)
 
 ########################################
-# {{{2 $(UPGRADE) ----------------------
+## {{{2 $(UPGRADE) ---------------------
 
 #> update: PHONY.*(UPGRADE)
 
@@ -6469,7 +6462,7 @@ endif
 ################################################################################
 
 ########################################
-# {{{2 $(PUBLISH) ----------------------
+## {{{2 $(PUBLISH) ---------------------
 
 .PHONY: $(PUBLISH)
 $(PUBLISH): .set_title-$(PUBLISH)
@@ -6481,51 +6474,78 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 
 ########################################
-# {{{3 $(PUBLISH)-% --------------------
+### {{{3 $(PUBLISH)-% ------------------
 
 #WORKING:NOW
 # make
 #	sort through COMPOSER_RELEASE, and move as much as possible into $(CREATOR)
 #	comment COMPOSER_RELEASE notice, along with PANDOC_BIN and YQ_BIN
 #		no more notices, or things being per-directory (should be usable right away [note this in recommended workflow])
+#	need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
+#		maybe some type of automatic utility with a variable threshold?
+#		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
+#			add at beginning of $(DOITALL)
+#		add $(COMPOSER_TMP) to $(CLEANER)?  probably best.
+#			time to consider making $(COMPOSER_TMP) per-directory, alongside $(COMPOSER_LOG)
+#		non-single-user use is not recommended (still need lock files?) [note this in recommended workflow]
+#			if no more lock files, comment instead of remove
+#	add lock files to $(CLEANER), regardless if keeping them or not [document]
 # site
 #	add menu_bar_top(?) and menu_bar_bottop(?), right-justified html/markdown
-#		insert social-media icons as examples
-#	break README into pages, add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
-#	examples of description/etc. metadata in composer.yml
+#		identical use of nav-top-list, preferrably right in the same <ul>
+#		insert social-media icons as examples, on the bottom
+#	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
+#	examples of description/etc. metadata in $(COMPOSER_YML)
+#	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
+#		this can be in place of the dir-(?) stuff below
+#		tags?  still need a date/author/tag index, with a pre-configured "widget" that can be a unit/box, with sub units/boxes
+#			can potentially use bootstrap "selected", and a list group (would break the look-and-feel, though)
+#			best to somehow integrate this with "need for speed" index...
+#			use $(TESTING)-speed formula to create a tree of files with 1111-11-11, 2222-22-22, etc. dates
+#				any date format can be used, but only iso format will sort properly [document]
+#			this can be tested against pandoc directory?  interesting to see what it would come out like...
+#	need for speed
+#		html fragments in $(PUBLISH)-index target, as $(COMPOSER_INDEX)=.composer.index, per $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))
+#			re-add $(PUBLISH)-$(CLEANER), and add this directory to it
+#				or, just directly into $(CLEANER) like below
+#			index per navigation frame (top/bottom/left/right), force $(COMPOSER_LOG_DEFAULT)
+#			dependency $(PUBLISH)-index against $(COMPOSER_LOG_DEFAULT), and each $(DO_PAGE) against $(PUBLISH)-index
+#				how do we make this target the first dependency?
+#				maybe just make $(COMPOSER_LOG_DEFAULT) the dependency?
+#					then $(RUNMAKE) as first step in $(DO_PAGE) and $(COMPOSER_LOG_DEFAULT)
+#		add $(COMPOSER_INDEX) to $(CLEANER)
+#	what does this target actually do, anymore, after all the above?
+#		$(CLEANER)-$(DOITALL) is thorough, at this point
+#		$(DOITALL)-$(DOITALL) essentially does the same thing, now...
+#		it's still good for naming things?  maybe just a $(CLEANER)-$(DOITALL), $(PUBLISH)-index and $(DOITALL)-$(DOITALL) wrapper?
+#		it's a nice shortcut
+#	remove $(DO_POST)
 # page
 #	just like book
 #	add frame(?) option, as default unit/box/text wrapper to each file
-#	use date -- title \n author format, optional frame(?) option
-#		configurable format?
+#	use date -- title \n author format, optional frame(?) option (unit is default)
+#		configurable heading format?
+#		automatic navigation pane/text placeholder?
 #	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
 #		do sort based on yaml dates instead?  configurable?
-
-#WORKING:NOW
-# finish separating templating from content
-# need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
-#	maybe some type of automatic utility with a variable threshold?
-#	non-single-user use is not recommended
-# html fragments in $(PUBLISH)-index
-#	move header-includes favicon handling
-
+#	how do we decide header level and collapse or not?
+#		this should be per-unit, like in sidebar
 # document
-#	COMPOSER_YML, and note that it is now an override for everything
+#	$(COMPOSER_YML) and note that it is now an override for everything
 #		expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
-#	if brand is empty or logo.img don't exist, they will be skipped
+#	if brand is empty or logo.img doesn't exist, they will be skipped
+#		side note to remove revealjs per-directory hack...
 #	if site_search_name is empty, it disables it
-#	new $(PRINTER)/c_list hack...?
-#	new $(PUBLISH) target(s)...
-
-# error-handling for missing, empty or incomplete composer.yml file?
-# what happens if a page/post file variable conflicts with a composer.yml?
-# c_title = pagetitle?
-# header-includes?  leave it to c_options?  maybe c_header?
-
-# https://github.com/bewuethr/pandoc-bash-blog
+#	new $(PRINTER)/c_list hack
+# other
+#	error-handling for missing, empty or incomplete $(COMPOSER_YML) file?
+#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?
+#	c_title = pagetitle?  naw, there are tons of other places to put this
+#	header-includes?  leave it to c_options?  maybe c_header?
+#		only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
 
 ########################################
-# {{{3 $(PUBLISH)-$(EXAMPLE) -----------
+### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE):
@@ -6625,7 +6645,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@$(PUBLISH_BUILD_SH_RUN) "nav-bottom" ".variables[\"$(PUBLISH)-nav-bottom\"]"
 
 ########################################
-# {{{2 $(INSTALL) ----------------------
+## {{{2 $(INSTALL) ---------------------
 
 #> update: $(MAKE) / @+
 
@@ -6696,7 +6716,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 endef
 
 ########################################
-# {{{2 $(CLEANER) ----------------------
+## {{{2 $(CLEANER) ---------------------
 
 #> update: $(MAKE) / @+
 
@@ -6724,7 +6744,7 @@ ifneq ($(wildcard $(COMPOSER_TMP)),)
 	@$(ECHO) "$(_D)"
 endif
 endif
-	@+$(strip $(call $(TARGETS)-list,$(CLEANER))) \
+	@+$(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER))) \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 	@+$(foreach FILE,$(COMPOSER_TARGETS),\
 		if	[ "$(FILE)" != "$(NOTHING)" ] && \
@@ -6740,7 +6760,7 @@ ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 endif
 
 ########################################
-# {{{2 $(DOITALL) ----------------------
+## {{{2 $(DOITALL) ---------------------
 
 #> update: $(MAKE) / @+
 
@@ -6778,11 +6798,11 @@ $(DOITALL):
 
 .PHONY: $(DOITALL)-specials
 $(DOITALL)-specials:
-	@+$(strip $(call $(TARGETS)-list,$(DOITALL))) \
+	@+$(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL))) \
 		| $(XARGS) $(MAKE) $(MAKE_OPTIONS) {}
 
 ########################################
-# {{{2 $(SUBDIRS) ----------------------
+## {{{2 $(SUBDIRS) ---------------------
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
@@ -6832,7 +6852,7 @@ $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 
 ########################################
-# {{{2 $(PRINTER) ----------------------
+## {{{2 $(PRINTER) ---------------------
 
 .PHONY: $(PRINTER)
 $(PRINTER): .set_title-$(PRINTER)
@@ -6840,13 +6860,13 @@ $(PRINTER): $(HEADERS)-$(PRINTER)
 ifeq ($(COMPOSER_LOG),)
 $(PRINTER): $(NOTHING)-COMPOSER_LOG
 endif
-$(PRINTER): $(PRINTER)-list
+$(PRINTER): $(PRINTER)-$(PRINTER)
 $(PRINTER):
 	@$(ECHO) ""
 
-.PHONY: $(PRINTER)-list
-$(PRINTER)-list: $(COMPOSER_LOG)
-$(PRINTER)-list:
+.PHONY: $(PRINTER)-$(PRINTER)
+$(PRINTER)-$(PRINTER): $(COMPOSER_LOG)
+$(PRINTER)-$(PRINTER):
 	@$(ECHO) ""
 
 $(COMPOSER_LOG): $(if \
@@ -6863,7 +6883,7 @@ $(COMPOSER_LOG):
 ################################################################################
 
 ########################################
-# {{{2 $(COMPOSER_PANDOC) --------------
+## {{{2 $(COMPOSER_PANDOC) -------------
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
@@ -6907,7 +6927,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 ########################################
-# {{{2 $(COMPOSER_EXT) -----------------
+## {{{2 $(COMPOSER_EXT) ----------------
 
 #> update: TYPE_TARGETS
 
@@ -6944,7 +6964,7 @@ $(eval $(call TYPE_TARGETS,$(TYPE_TEXT),$(EXTN_TEXT)))
 $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 
 ########################################
-# {{{2 SPECIALS ------------------------
+## {{{2 SPECIALS -----------------------
 
 #> update: TYPE_TARGETS
 
