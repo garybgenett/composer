@@ -1013,6 +1013,12 @@ override PANDOC_EXTENSIONS		+= +task_lists
 override PANDOC_EXTENSIONS		+= +yaml_metadata_block
 override PANDOC_EXTENSIONS		+= -spaced_reference_links
 
+#>	$(if $(or \
+#>		$(filter $(c_type),$(TYPE_TEXT)) ,\
+#>		$(filter $(c_type),$(TYPE_LINT)) ,\
+#>		),--wrap="auto",--wrap="none" \
+#>	) \
+
 override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
 	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
@@ -1020,11 +1026,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	--standalone \
 	--self-contained \
 	--columns="$(COLUMNS)" \
-	$(if $(or \
-		$(filter $(c_type),$(TYPE_TEXT)) ,\
-		$(filter $(c_type),$(TYPE_LINT)) ,\
-		),--wrap="auto",--wrap="none" \
-	) \
+	--wrap="preserve" \
 	$(if $(c_lang),\
 		--variable=lang="$(c_lang)" \
 	) \
@@ -1999,8 +2001,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, follow the
-instructions in the `$(_M)README.md$(_D)`, and select the appropriate `$(_M)manifest.$(_N)*$(_M).json$(_D)`
-file for your browser.
+instructions in the `$(_M)README.md$(_D)`.
 
 The versions of the integrated repositories can be changed, if desired $(_E)(see
 [Repository Versions])$(_D).
@@ -6570,11 +6571,22 @@ $(PUBLISH):
 
 #WORKING:NOW
 # make
+#	broken :: resume
+#		pagetitle
+#		icon
+#		latex formatting
+#			composer/pandoc override of header-include
+#			without ifthen
+#		gitignore = composer.tmp in resume directory
+#		wrap=preserve && go back to wrapping (easier diffs, without making coding/debugging harder [might be easier, actually])
+#		need to verify order of command-line option precedence
+#			consolidate default switches and composer.* configuration files, so they don't take over...
 #	need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #		maybe some type of automatic utility with a variable threshold?
 #		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
 #			add at beginning of $(DOITALL)
 # site
+#	why do the overview links not work?  because of where they are, or some other use of their # value?
 #	fix config, so there is a config-site, and config-all does both...
 #		ugh, the top/bottom icons are uh-gly... hmmm
 #		documentation note somewhere about the coments hack to indent markdown lists
@@ -6653,6 +6665,7 @@ $(PUBLISH):
 #	error-handling for missing, empty or incomplete $(COMPOSER_YML) file?
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?
 #	c_title = pagetitle?  naw, there are tons of other places to put this
+#		pull this from the page metadata, turning title into pagetitle (remove pagetitle from composer.yml)
 #	header-includes?  leave it to c_options?  maybe c_header?
 #		only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
 #WORKING:NOW 2021-12-06
