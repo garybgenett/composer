@@ -148,7 +148,7 @@ override COMPOSER_TAGLINE		:= Happy Making!
 
 override COPYRIGHT_FULL			:= Copyright (c) 2014, 2015, 2022, $(COMPOSER_COMPOSER)
 override COPYRIGHT_SHORT		:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
-override CREATED_TAGLINE		:= Created by $(COMPOSER_TECHNAME)
+override CREATED_TAGLINE		:= Composed with $(COMPOSER_TECHNAME)
 
 override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
