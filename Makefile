@@ -518,7 +518,8 @@ override COMPOSER_DOCOLOR		?= 1
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_INCLUDE		?=
 override COMPOSER_DEPENDS		?=
-override COMPOSER_KEEPLOG		?= 100
+#WORK test
+override COMPOSER_KEEPING		?= 100
 
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),$(SPECIAL_VAL))
@@ -1240,7 +1241,7 @@ override COMPOSER_EXPORTED := \
 	COMPOSER_DEBUGIT \
 	COMPOSER_INCLUDE \
 	COMPOSER_DEPENDS \
-	COMPOSER_KEEPLOG \
+	COMPOSER_KEEPING \
 	COMPOSER_LOG \
 	COMPOSER_EXT \
 	c_site \
@@ -1606,7 +1607,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_DEBUGIT]"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )\`$(_N)(debugit)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_INCLUDE]"	"Include all: \`$(_M)$(COMPOSER_SETTINGS)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )\`$(_N)(boolean)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DEPENDS]"	"Sub-directories first: $(_C)[$(DOITALL)]"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )\`$(_N)(boolean)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_KEEPLOG]"	"#WORK"						"$(if $(COMPOSER_KEEPLOG),$(_M)$(COMPOSER_KEEPLOG)$(_D) )\`$(_N)(keeplog)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_KEEPING]"	"#WORK"						"$(if $(COMPOSER_KEEPING),$(_M)$(COMPOSER_KEEPING)$(_D) )\`$(_N)(keeping)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_LOG]"	"Timestamped command log"			"$(if $(COMPOSER_LOG),$(_M)$(COMPOSER_LOG))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXT]"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_TARGETS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_D)"				"$(_C)[$(CONFIGS)]$(_E)/$(_C)[$(TARGETS)]"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
@@ -1618,7 +1619,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
-	@$(PRINT) "  * *\`$(_N)(keeplog)$(_D)\`  = empty is no limit / number of logs to keep / \`$(_N)0$(_D)\` is none*"
+	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number of logs to keep / \`$(_N)0$(_D)\` is none*"
 	@$(PRINT) "  * *\`$(_N)(boolean)$(_D)\`  = empty is disabled / any value enables*"
 
 ########################################
@@ -2597,7 +2598,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
   * It should be noted that enabling this disables $(_C)[MAKEJOBS]$(_D), to ensure linear
     processing, and that it has no effect on $(_C)[$(INSTALL)]$(_D) or $(_C)[$(CLEANER)]$(_D).
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_KEEPLOG)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_KEEPING)
 
 #WORK
 
@@ -3260,7 +3261,7 @@ variables:
             COMPOSER_DEBUGIT: "#composer_debugit"
             COMPOSER_INCLUDE: "#composer_include"
             COMPOSER_DEPENDS: "#composer_depends"
-            COMPOSER_KEEPLOG: "#composer_keeplog"
+            COMPOSER_KEEPING: "#composer_keeping"
             COMPOSER_LOG: "#composer_log"
             COMPOSER_EXT: "#composer_ext"
             COMPOSER_TARGETS: "#composer_targets"
@@ -3466,7 +3467,7 @@ variables:
                   * [COMPOSER_DEBUGIT]
                   * [COMPOSER_INCLUDE]
                   * [COMPOSER_DEPENDS]
-                  * [COMPOSER_KEEPLOG]
+                  * [COMPOSER_KEEPING]
                   * [COMPOSER_LOG]
                   * [COMPOSER_EXT]
                   * [COMPOSER_TARGETS]
@@ -6884,20 +6885,20 @@ endif
 #WORK test & document
 .PHONY: $(CLEANER)-logs
 $(CLEANER)-logs:
-ifneq ($(COMPOSER_KEEPLOG),)
+ifneq ($(COMPOSER_KEEPING),)
 #WORK make this prettier...
 	@$(PRINT) "$(_M)$(MARKER) Rotating logs and temporary files..."
 	@$(ECHO) "$(_S)"
 ifneq ($(COMPOSER_LOG),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_LOG)),)
 	@$(MV) $(CURDIR)/$(COMPOSER_LOG) $(CURDIR)/$(COMPOSER_LOG).$(@)
-	@$(TAIL) -n$(COMPOSER_KEEPLOG) $(CURDIR)/$(COMPOSER_LOG).$(@) >$(CURDIR)/$(COMPOSER_LOG)
+	@$(TAIL) -n$(COMPOSER_KEEPING) $(CURDIR)/$(COMPOSER_LOG).$(@) >$(CURDIR)/$(COMPOSER_LOG)
 	@$(RM) $(CURDIR)/$(COMPOSER_LOG).$(@)
 endif
 endif
 ifneq ($(wildcard $(COMPOSER_TMP)),)
-#>	@$(RM) --recursive $$($(FIND) $(COMPOSER_TMP) -mindepth 1 -maxdepth 1 | $(SORT) | $(TAIL) -n+$(COMPOSER_KEEPLOG))
-	@$(RM) --recursive $$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(TAIL) -n+$(COMPOSER_KEEPLOG))
+#>	@$(RM) --recursive $$($(FIND) $(COMPOSER_TMP) -mindepth 1 -maxdepth 1 | $(SORT) | $(TAIL) -n+$(COMPOSER_KEEPING))
+	@$(RM) --recursive $$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(TAIL) -n+$(COMPOSER_KEEPING))
 endif
 	@$(ECHO) "$(_D)"
 endif
