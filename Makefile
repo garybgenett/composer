@@ -118,14 +118,6 @@ override VIM_FOLDING := {{{1
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
 #WORKING:NOW
 # site
-#	test composer.yml stomping...
-#		need a way to empty or overlap on demand...?
-#		if it is a hash = ++ and array == 0, then decide which should be immutable
-#		right now, top and bottom navs are hashes, and sides are arrays, so the behavior will be different.
-#		ideally, it would be the top that would be consistent, and the other navs can change
-#		ultimately, just allowing an overlap may be the way to go... at least it is consistent
-#		meh, yeah... side navs are the only arrays in the config... convert them... hopefully this is a minor change, programmatically...
-#		documentation for this is going to be a big of work...
 #	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
 #	examples of description/etc. metadata in $(COMPOSER_YML)
 #	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
@@ -190,7 +182,9 @@ override VIM_FOLDING := {{{1
 #		this should be per-unit, like in sidebar
 # document
 #	$(COMPOSER_YML) and note that it is now an override for everything
-#		expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
+#		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
+#		hashes will overlap, and arrays will append
+#		best practice is to put permanent site menus at the top, and maybe a sidebar or two, and then use sidebars and bottom nav for per-* use
 #	if brand is empty or logo.img doesn't exist, they will be skipped
 #		side note to remove revealjs per-directory hack...
 #	if site_search_name is empty, it disables it
@@ -885,7 +879,7 @@ endif
 override YQ_READ			:= $(YQ) --prettyPrint --no-colors --no-doc --header-preprocess --input-format "yaml" --output-format "json"
 override YQ_WRITE			:= $(YQ_READ) --colors --input-format "yaml" --output-format "yaml"
 override YQ_EXTRACT			:= $(YQ_READ) --front-matter="extract"
-override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' $(COMPOSER_YML_LIST)
+override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
 
 ########################################
 ## {{{2 Wrappers -----------------------
@@ -3358,8 +3352,7 @@ variables:
           type: nav-unit
           flag: 1
           data:
-            -
-              type: text
+            - type: text
               data: |
                 <!-- -->
                   * [Requirements]
@@ -6918,6 +6911,7 @@ endif
 .PHONY: $(CLEANER)-logs
 $(CLEANER)-logs:
 ifneq ($(COMPOSER_KEEPLOG),)
+#WORK make this prettier...
 	@$(PRINT) "$(_M)$(MARKER) Rotating logs and temporary files..."
 	@$(ECHO) "$(_S)"
 ifneq ($(COMPOSER_LOG),)
