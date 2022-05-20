@@ -603,6 +603,18 @@ override BOOTSTRAP_CSS_CSS_SRC		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
 ########################################
 
+# https://bootswatch.com
+# https://github.com/thomaspark/bootswatch
+# https://github.com/thomaspark/bootswatch/blob/master/LICENSE
+ifneq ($(origin BOOTSWATCH_CMT),override)
+override BOOTSWATCH_CMT			:= v5.1.3
+endif
+override BOOTSWATCH_LIC			:= MIT
+override BOOTSWATCH_SRC			:= https://github.com/thomaspark/bootswatch.git
+override BOOTSWATCH_DIR			:= $(COMPOSER_DIR)/bootswatch
+
+########################################
+
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 ifneq ($(origin MDVIEWER_CMT),override)
@@ -642,6 +654,12 @@ override MDVIEWER_CSS_SOLAR		:= $(MDVIEWER_DIR)/themes/solarized-light.css
 override MDVIEWER_CSS_SOLAR_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 
 override BOOTSTRAP_CSS_THEME		:= $(MDVIEWER_CSS_SOLAR)
+
+override BOOTSWATCH_CSS_LIGHT		:= $(COMPOSER_DIR)/bootswatch/dist/flatly/bootstrap.css
+#>override BOOTSWATCH_CSS_DARK		:= $(COMPOSER_DIR)/bootswatch/dist/cyborg/bootstrap.css
+override BOOTSWATCH_CSS_DARK		:= $(COMPOSER_DIR)/bootswatch/dist/darkly/bootstrap.css
+override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_CSS_LIGHT)
+override BOOTSWATCH_CSS_SOLAR_DARK	:= $(COMPOSER_DIR)/bootswatch/dist/solar/bootstrap.css
 
 override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
 override REVEALJS_CSS_THEME_SOLAR	:= $(REVEALJS_DIR)/dist/theme/solarized.css
@@ -1910,6 +1928,7 @@ $(_E)[GitHub]: https://github.com$(_D)
 $(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
 $(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
 $(_E)[Bootstrap]: https://getbootstrap.com$(_D)
+$(_E)[Bootswatch]: https://bootswatch.com$(_D)
 $(_E)[Markdown Viewer]: https://github.com/Thiht/markdown-viewer$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
@@ -2122,6 +2141,9 @@ $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_ICON))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(COMPOSER_LOGO))$(_D)
+
+$(_E)[Bootswatch]: https://bootswatch.com$(_D)
+$(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSWATCH))docs/index.html$(_D)
 
 #WORK
 
@@ -2763,8 +2785,8 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #WORKING:NOW
-#	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 #endif
@@ -2951,6 +2973,7 @@ override define HEREDOC_GITATTRIBUTES =
 /artifacts/**				linguist-vendored
 
 /bootstrap/**				linguist-vendored
+/bootswatch/**				linguist-vendored
 /markdown-viewer/**			linguist-vendored
 /pandoc/**				linguist-vendored
 /revealjs/**				linguist-vendored
@@ -5741,15 +5764,15 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 #>	#> lock
 #>	$(call $(TESTING)-find,lock file exists)
 	#> precedence
-	$(call $(TESTING)-count,1,MAKEJOBS.+ 1000 )
-	$(call $(TESTING)-count,1,MAKEJOBS.+ 100 )
-	$(call $(TESTING)-count,1,MAKEJOBS.+ 10 )
+	$(call $(TESTING)-count,1,MAKEJOBS.+1000)
+	$(call $(TESTING)-count,1,MAKEJOBS.+100[^0])
+	$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
 	#> input
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 	#> margins
-	$(call $(TESTING)-count,17,\|.+c_margin)
+	$(call $(TESTING)-count,16,\|.+c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
@@ -6176,6 +6199,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "override PANDOC_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override BOOTSTRAP_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override BOOTSWATCH_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 #>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -6233,7 +6257,7 @@ $(TESTING)-other-done:
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,12,$(NOTHING))
+	$(call $(TESTING)-count,14,$(NOTHING))
 	$(call $(TESTING)-count,8,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> book
@@ -6304,6 +6328,7 @@ $(CHECKIT):
 	@$(TABLE_M3) "$(_E)[Pandoc]"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
 	@$(TABLE_M3) "$(_E)[YQ]"			"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
 	@$(TABLE_M3) "$(_E)[Bootstrap]"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
+	@$(TABLE_M3) "$(_E)[Bootswatch]"		"$(_E)$(BOOTSWATCH_CMT)"		"$(_N)$(BOOTSWATCH_LIC)"
 	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(TABLE_M3) "$(_E)[Reveal.js]"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
@@ -6517,6 +6542,7 @@ $(UPGRADE):
 	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
 	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
+	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
 	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
 	@$(call GIT_REPO,$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
@@ -6540,6 +6566,7 @@ endif
 	@$(LS) --color=never --directory \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(PANDOC_DIR))/data/templates \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_DIR))/dist \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSWATCH_DIR))/dist \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.firefox.json \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.chrome.json \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_DIR))/manifest.edge.json \
@@ -6548,6 +6575,10 @@ endif
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS_SOLAR)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(MDVIEWER_CSS_SOLAR_ALT)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSTRAP_CSS_THEME)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSWATCH_CSS_LIGHT)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSWATCH_CSS_DARK)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSWATCH_CSS_SOLAR_LIGHT)) \
+		$(subst $(COMPOSER_DIR),$(CURDIR),$(BOOTSWATCH_CSS_SOLAR_DARK)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS_THEME)) \
 		$(subst $(COMPOSER_DIR),$(CURDIR),$(REVEALJS_CSS_THEME_SOLAR))
 	@$(ECHO) "$(_D)"
@@ -6619,6 +6650,12 @@ $(PUBLISH):
 #				keep these indexes in separate "library" (configurable) directory from main indexes, which are per-directory and time-tracked against pages
 #				index should be composer_root bound
 #				somehow time-bound with main index, unless index-force
+#			indexes "library" cross sections = ~estimate = (130x5x3x20 = 39,000) = (10x5x3x20 = 3,000) = (10x(5+3+20) = 280 ) = (130+5+3+20 = 158)
+#				year/all = ~10
+#				year/month = ~120
+#				author = ~5
+#				type = ~3 (book, article, post, etc.)
+#				tag = ~20
 #	need for speed
 #		html fragments in $(PUBLISH)-index target, as $(COMPOSER_INDEX)=.composer.index, per $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))
 #			re-add $(PUBLISH)-$(CLEANER), and add this directory to it
@@ -6668,456 +6705,6 @@ $(PUBLISH):
 #		pull this from the page metadata, turning title into pagetitle (remove pagetitle from composer.yml)
 #	header-includes?  leave it to c_options?  maybe c_header?
 #		only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
-#WORKING:NOW 2021-12-06
-#```
-#	cd coding/composer ; view +/WORK Makefile ; vdiff -g Makefile
-#		chown -R root:plastic . ; chmod 755 $(find . -type d) ; chmod 644 $(find . -type f) ; chmod 755 Makefile
-#		cd coding/composer ; vdiff ../_f5_codeshare/npi/docs/.composer/revealjs.css revealjs.css
-#	cd writing/tresobis/template ; view *
-#		cd coding/composer_js ; vi index.js ; ./index.js
-#		cd coding/composer ; rm hexo test.dir ; rsync -L ../composer_hexo/source/ test.dir ; make HEXO_WORK_INIT && make HEXO_WORK_DONE && diff -qr test.public test.dir/.public | grep "^Only"
-#			make HEXO_WORK_DONE && make HEXO_WORK_serve
-#	msys: cd /c/.composer ; rsync root@me.garybgenett.net:/.g/_data/zactive/coding/composer/Makefile ./ ; rsync root@me.garybgenett.net:/.g/_data/_builds/composer/Msys/.composer.mk ./ ; make build-msys
-#	darwin: cd /.composer ; rsync root@me.garybgenett.net:/.g/_data/zactive/coding/composer/Makefile ./ ; rsync root@me.garybgenett.net:/.g/_data/_builds/composer/Darwin/.composer.mk ./ ; gmake world
-#		cd /.composer ; vi Makefile Makefile.Darwin ; rsync Makefile root@me.garybgenett.net:/.g/_data/zactive/coding/composer/Makefile.Darwin ; vdiff Makefile.Darwin Makefile
-#		nm /.composer/.home/lib/libiconv.2.dylib | grep iconv ; echo ; nm /_ports/lib/libiconv.2.dylib | grep iconv ; echo ; nm /usr/lib/libiconv.2.dylib | grep iconv
-#```
-#
-#---
-#
-#  * features
-#    * kind of like "gitbook", but more flexible
-#        * formal directory structure
-#            * entry/post = year/month/file directories
-#            * site = index.html (bootstrap) and navigation, tags, social icons, ads panel (google? other?)
-#            * symlinks to outside the repository supported
-#            * export/import as recommended method
-#        * book directories
-#            * commit = current directory only (use of "-C" supported = document?)
-#            * .chapters file
-#            * books list on posts that are pulled in
-#    * indexes "library" cross sections = ~estimate = (130x5x3x20 = 39,000) = (10x5x3x20 = 3,000) = (10x(5+3+20) = 280 ) = (130+5+3+20 = 158)
-#        * year/all = ~10
-#        * year/month = ~120
-#        * author = ~5
-#        * type = ~3 (book, article, post, etc.)
-#        * tag = ~20
-#    * remove variables, targets only
-#        * use ".composer.mk/.composer.config?" for settings = what are they?
-#        * all variables = \_C\_\* = or just "[+-]option" or "option = (true/false/value)" list and turn into "\_C\_*" variables?
-#            * how to do this on a per-directory basis?
-#        * environment variables = probably not?
-#    * update = components, repository? (+install)
-#        * install = recursive "Makefile" (re)install
-#        * check = compare versions (if no "pandoc" executable, print red messages with fetching instructions = simply link to pandoc install? the rest?)
-#    * all = \*.{html,pdf,docx,epub,txt} = replace docx with odg, or add?
-#        * \*.composer = list of child files, in order
-#        * \*.composer = only \*.md files are supported for source
-#        * if no list of files (targets list in composer.mk/connfig? or .composer.list?), all \*.md, pdf default
-#        * may need to only do some options per file (use "\_C\_FILETYPE_OPS" or something, then "PANDOC_CMD+=[...]" in target?)
-#        * which "subdirs" behavior?  parents or children first?  (probably children?)  (alphabetical order?) = keep "subdirs" target as "\_subdirs?" (document "\_\*" targets? maybe just as a global comment?)
-#    * site = recursive website build
-#        * forces from top directory, only sources from there
-#        * how is this special, and not just a "make all"?
-#        * index.html for every directory, handles entries/+articles? specially
-#        * similar behavior as "all" (maybe reuse that target, with a \_C\_\* option?)
-#        * bootstrap = options below (make some configurable? colors only? = keep it very simple)
-#    * entry/+article? = entries directory
-#        * rename to "(date)-##-(title/[^a-zA-Z0-9._-]/[-])" or "(date)-##-untitled" when done
-#            * articles = purely based on title (title/[^...]/[-])
-#        * each can have "updated:" entries, used as subtext to each entry
-#        * use "type:" to format
-#            * chapter
-#            * article
-#            * post
-#            * poem = better name? = pre formatting, block quote?, but pretty
-#            * all but "chapter" get tags
-#        * yaml?  how to parse? (yq!) == need global ".composer.tags?" file
-#    * .composer.type? = "book (+site/+journal?)" or "[+-]option"? = entire directory
-#        * _cover.img -> _images/_cover.{jpg,png,svg}
-#        * _contributors? = (_contributors = list) = contributor per-directory
-#        * _images = recommended?
-#        * _composer = list of chapters
-#        * _versions = plac
-#    * workflow(s)
-#        * (is it easist to just include ".bashrc" somehow?)
-#            * would need to make "$EDITOR/$PAGER" pass-through, at a minimum
-#        * version = current directory, if book = create docx, version
-#            * commit = current directory, message template (--edit --message=[...]")
-#            * how to support individual files?  use a tag in commit messages? how to check if published or not?  symlinks are probably easiest?
-#            * diff? = vdiff equivalent, use ".composer.mk/config" option for diff directory (again, personal sites as example?)
-#            * preview = vdiff -g equivalent
-#            * history = vdiff -l equivalent
-#        * export = git-logdir equivalent, compressed single patch since last
-#        * import = git-am equivalent
-#        * publish = github pages upload
-#        * demonstrate chained import directories, such as "tresobis.git/writing?.git" using export/import/publish
-#        * personal sites as an example
-#    * books list and advertisements along the right side of the pages
-#  * update
-#    * close out
-#        * snap a final commit (\*-final), with a note
-#        * backup all the makefiles (just like gary-os.BAK readme files)
-#        * merge the branches
-#    * restart
-#        * strip it down
-#        * update "pandoc" options
-#        * finish architecture/scoping, and break down into tw features list, with proper dependencies
-#        * begin porting existing sites, current writing, old writing (turn into posts+books, etc.)
-#            * list of targets
-#            * list of options (probably best/easist to keep everything in ".composer.mk/config"?)
-#            * most complex will be "all/site", with bootstrap, so do that last (also, probably save desiging that until last?)
-#  * better pdf/latex template: <https://github.com/Wandmalfarbe/pandoc-latex-template>
-#  * migrate from hexo to bootstrap
-#    * themes: <https://bootswatch.com>
-#    * navigation bar: <https://getbootstrap.com/docs/4.5/components/navbar>
-#        * breadcrumb: <https://getbootstrap.com/docs/4.5/components/breadcrumb>
-#        * tabs: <https://getbootstrap.com/docs/4.5/components/navs/#tabs>
-#        * scrolling: <https://getbootstrap.com/docs/4.5/components/scrollspy>
-#        * shadows: <https://getbootstrap.com/docs/4.5/utilities/shadows>
-#    * monospace: <https://getbootstrap.com/docs/4.5/utilities/text/#monospace>
-#        * stretched links: <https://getbootstrap.com/docs/4.5/utilities/stretched-link>
-#        * disable selection: <https://getbootstrap.com/docs/4.5/utilities/interactions>
-#        * font weight: <https://getbootstrap.com/docs/4.5/utilities/text/#font-weight-and-italics>
-#        * alignment: <https://getbootstrap.com/docs/4.5/utilities/text/#text-alignment>
-#        * work break: <https://getbootstrap.com/docs/4.5/utilities/text/#word-break>
-#        * wrapping: <https://getbootstrap.com/docs/4.5/utilities/text/#text-wrapping-and-overflow>
-#        * screen reader: <https://getbootstrap.com/docs/4.5/utilities/screen-readers>
-#    * search: <https://duckduckgo.com/?q=site%3Ahttp%3A%2F%2Fwww.tresobis.org+search&kae=d&kp=-1&ko=1&kz=-1&kv=1&ia=web>
-#        * pagination: <https://getbootstrap.com/docs/4.5/components/pagination>
-#        * tooltips: <https://getbootstrap.com/docs/4.5/components/tooltips>
-#
-#---
-#
-#  * <https://stackoverflow.com/questions/26395374/what-can-i-control-with-yaml-header-options-in-pandoc>
-#  * <https://pandoc.org/MANUAL.html#extension-yaml_metadata_block>
-#  * <https://github.com/mb21/panrun>
-#  * <https://github.com/jgm/pandoc-templates/blob/master/default.html5>
-#
-#### chosen (all)
-#
-#$author$
-#$date$
-#$header-includes$
-#$include-after$
-#$include-before$
-#$keywords$
-#$pagetitle$
-#$subtitle$
-#$table-of-contents$
-#$title$
-#$title-prefix$
-#$toc-title$
-#
-#### chosen (epub)
-#
-#$cover-image$
-#$cover-image-height$
-#$cover-image-width$
-#$coverpage$
-#$pagetitle$
-#$publisher$
-#$rights$
-#$title.text$
-#$title.type$
-#$titlepage$
-#? $creator.role$
-#? $creator.text$
-#
-#### chosen (pdf)
-#
-#$abstract$
-#$body$
-#$documentclass$
-#$fontenc$
-#$fontfamilies.font$
-#$fontfamilies.name$
-#$fontfamilies.options$
-#$fontfamily$
-#$fontfamilyoptions$
-#$fontsize$
-#$fonttheme$
-#$for(geometry)$
-#$linkcolor$
-#$logo$
-#$pagestyle$
-#$papersize$
-#$subject$
-#$subtitle$
-#$titlegraphic$
-#$toc-depth$
-#? $fontfamilies$
-#? $fontfamilies.options$
-#? $fontfamilyoptions$
-#? $navigation$
-#
-#### pandoc -D html5 | grep -o "[$][^$]+[$]" | sort -u >> _metadata
-#$author$
-#$author-meta$
-#$body$
-#$css$
-#$date$
-#$date-meta$
-#$description-meta$
-#$dir$
-#$endfor$
-#$endif$
-#$for(author)$
-#$for(author-meta)$
-#$for(css)$
-#$for(header-includes)$
-#$for(include-after)$
-#$for(include-before)$
-#$for(keywords)$
-#$header-includes$
-#$idprefix$
-#$if(date)$
-#$if(date-meta)$
-#$if(description-meta)$
-#$if(dir)$
-#$if(keywords)$
-#$if(math)$
-#$if(subtitle)$
-#$if(title)$
-#$if(title-prefix)$
-#$if(toc)$
-#$if(toc-title)$
-#$include-after$
-#$include-before$
-#$keywords$
-#$lang$
-#$math$
-#$pagetitle$
-#$sep$
-#$styles.html()$
-#$subtitle$
-#$table-of-contents$
-#$title$
-#$title-prefix$
-#$toc-title$
-#
-#### pandoc -D epub | grep -o "[$][^$]+[$]" | sort -u >> _metadata
-#$author$
-#$body$
-#$body-type$
-#$cover-image$
-#$cover-image-height$
-#$cover-image-width$
-#$creator.role$
-#$creator.text$
-#$css$
-#$date$
-#$else$
-#$endfor$
-#$endif$
-#$for(author)$
-#$for(creator)$
-#$for(css)$
-#$for(header-includes)$
-#$for(include-after)$
-#$for(include-before)$
-#$for(title)$
-#$header-includes$
-#$highlighting-css$
-#$if(body-type)$
-#$if(coverpage)$
-#$if(date)$
-#$if(highlighting-css)$
-#$if(lang)$
-#$if(publisher)$
-#$if(rights)$
-#$if(subtitle)$
-#$if(title.type)$
-#$if(titlepage)$
-#$include-after$
-#$include-before$
-#$lang$
-#$pagetitle$
-#$publisher$
-#$rights$
-#$subtitle$
-#$title$
-#$title.text$
-#$title.type$
-#
-#### pandoc -D latex | grep -o "[$][^$]+[$]" | sort -u >> _metadata
-#$CJKmainfont$
-#$CJKoptions$
-#$abstract$
-#$aspectratio$
-#$author$
-#$author-meta$
-#$babel-lang$
-#$babel-newcommands$
-#$babel-otherlangs$
-#$background-image$
-#$beameroption$
-#$biblatexoptions$
-#$biblio-style$
-#$biblio-title$
-#$bibliography$
-#$body$
-#$citecolor$
-#$classoption$
-#$colortheme$
-#$date$
-#$documentclass$
-#$else$
-#$endfor$
-#$endif$
-#$filecolor$
-#$fontenc$
-#$fontfamilies.font$
-#$fontfamilies.name$
-#$fontfamilies.options$
-#$fontfamily$
-#$fontfamilyoptions$
-#$fontsize$
-#$fonttheme$
-#$for(CJKoptions)$
-#$for(author)$
-#$for(babel-otherlangs)$
-#$for(beameroption)$
-#$for(biblatexoptions)$
-#$for(bibliography)$
-#$for(classoption)$
-#$for(fontfamilies)$
-#$for(fontfamilies.options)$
-#$for(fontfamilyoptions)$
-#$for(geometry)$
-#$for(header-includes)$
-#$for(hyperrefoptions)$
-#$for(include-after)$
-#$for(include-before)$
-#$for(institute)$
-#$for(keywords)$
-#$for(luatexjafontspecoptions)$
-#$for(luatexjapresetoptions)$
-#$for(mainfontoptions)$
-#$for(mathfontoptions)$
-#$for(microtypeoptions)$
-#$for(monofontoptions)$
-#$for(nocite-ids)$
-#$for(polyglossia-lang.options)$
-#$for(polyglossia-otherlangs)$
-#$for(polyglossia-otherlangs.options)$
-#$for(sansfontoptions)$
-#$for(themeoptions)$
-#$geometry$
-#$header-includes$
-#$highlighting-macros$
-#$hyperrefoptions$
-#$if(CJKmainfont)$
-#$if(abstract)$
-#$if(aspectratio)$
-#$if(author-meta)$
-#$if(babel-newcommands)$
-#$if(background-image)$
-#$if(beamer)$
-#$if(beamerarticle)$
-#$if(biblatex)$
-#$if(biblio-style)$
-#$if(biblio-title)$
-#$if(bibliography)$
-#$if(block-headings)$
-#$if(citecolor)$
-#$if(colorlinks)$
-#$if(colortheme)$
-#$if(csl-refs)$
-#$if(csquotes)$
-#$if(dir)$
-#$if(filecolor)$
-#$if(fontenc)$
-#$if(fontfamily)$
-#$if(fontsize)$
-#$if(fonttheme)$
-#$if(geometry)$
-#$if(graphics)$
-#$if(handout)$
-#$if(has-chapters)$
-#$if(has-frontmatter)$
-#$if(highlighting-macros)$
-#$if(indent)$
-#$if(innertheme)$
-#$if(institute)$
-#$if(keywords)$
-#$if(lang)$
-#$if(latex-dir-rtl)$
-#$if(lhs)$
-#$if(linestretch)$
-#$if(linkcolor)$
-#$if(links-as-notes)$
-#$if(listings)$
-#$if(lof)$
-#$if(logo)$
-#$if(lot)$
-#$if(luatexjapresetoptions)$
-#$if(mainfont)$
-#$if(mathfont)$
-#$if(mathspec)$
-#$if(monofont)$
-#$if(multirow)$
-#$if(natbib)$
-#$if(navigation)$
-#$if(nocite-ids)$
-#$if(numbersections)$
-#$if(outertheme)$
-#$if(pagestyle)$
-#$if(papersize)$
-#$if(sansfont)$
-#$if(secnumdepth)$
-#$if(section-titles)$
-#$if(strikeout)$
-#$if(subject)$
-#$if(subtitle)$
-#$if(tables)$
-#$if(thanks)$
-#$if(theme)$
-#$if(title)$
-#$if(title-meta)$
-#$if(titlegraphic)$
-#$if(toc)$
-#$if(toc-title)$
-#$if(toccolor)$
-#$if(urlcolor)$
-#$if(verbatim-in-note)$
-#$include-after$
-#$include-before$
-#$innertheme$
-#$institute$
-#$it$
-#$keywords$
-#$lang$
-#$linestretch$
-#$luatexjafontspecoptions$
-#$luatexjapresetoptions$
-#$mainfont$
-#$mainfontoptions$
-#$mathfont$
-#$mathfontoptions$
-#$microtypeoptions$
-#$monofont$
-#$monofontoptions$
-#$natbiboptions$
-#$outertheme$
-#$polyglossia-lang.name$
-#$polyglossia-lang.options$
-#$polyglossia-otherlangs.name$
-#$polyglossia-otherlangs.options$
-#$sansfont$
-#$sansfontoptions$
-#$secnumdepth$
-#$sep$
-#$thanks$
-#$theme$
-#$themeoptions$
-#$title$
-#$title-meta$
-#$titlegraphic$
-#$toc-depth$
-#$toc-title$
-#$toccolor$
-#$urlcolor$
 
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
