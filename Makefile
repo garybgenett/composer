@@ -125,6 +125,111 @@ override VIM_FOLDING := {{{1
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
 #	https://github.com/bewuethr/pandoc-bash-blog
+#WORKING:NOW
+# make
+#	broken :: resume
+#		pagetitle
+#		icon
+#		latex formatting
+#			composer/pandoc override of header-include
+#			without ifthen
+#		gitignore = composer.tmp in resume directory
+#		wrap=preserve && go back to wrapping (easier diffs, without making coding/debugging harder [might be easier, actually])
+#		need to verify order of command-line option precedence
+#			consolidate default switches and composer.* configuration files, so they don't take over...
+#	need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
+#		maybe some type of automatic utility with a variable threshold?
+#		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
+#			add at beginning of $(DOITALL)
+# site
+#	why do the overview links not work?  because of where they are, or some other use of their # value?
+#	fix config, so there is a config-site, and config-all does both...
+#		ugh, the top/bottom icons are uh-gly... hmmm
+#		documentation note somewhere about the coments hack to indent markdown lists
+#	test composer.yml stomping...
+#		need a way to empty or overlap on demand...?
+#		if it is a hash = ++ and array == 0, then decide which should be immutable
+#		right now, top and bottom navs are hashes, and sides are arrays, so the behavior will be different.
+#		ideally, it would be the top that would be consistent, and the other navs can change
+#		ultimately, just allowing an overlap may be the way to go... at least it is consistent
+#		meh, yeah... side navs are the only arrays in the config... convert them... hopefully this is a minor change, programmatically...
+#		documentation for this is going to be a big of work...
+#	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
+#	examples of description/etc. metadata in $(COMPOSER_YML)
+#	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
+#		this can be in place of the dir-(?) stuff below
+#		tags?  still need a date/author/tag index, with a pre-configured "widget" that can be a unit/box, with sub units/boxes
+#			can potentially use bootstrap "selected", and a list group (would break the look-and-feel, though)
+#			best to somehow integrate this with "need for speed" index...
+#			use $(TESTING)-speed formula to create a tree of files with 1111-11-11, 2222-22-22, etc. dates
+#				any date format can be used, but only iso format will sort properly [document]
+#			this can be tested against pandoc directory?  interesting to see what it would come out like...
+#			item counts
+#				total items
+#				selected items
+#				badges: https://getbootstrap.com/docs/4.0/components/badge
+#				pagination?: https://getbootstrap.com/docs/4.0/components/pagination
+#				refer to taskwarrior notes about page counts... it gets big fast
+#				make J=4 test-speed = ~8k pages in ~2min = need to keep the indexing *way* down... probably just year-month[count]/author[count]/[type|tags][count] = ~240 * ~5 * ~10 = ~12k
+#				remember, this will likely be slower, because of all the navigation includes size and site.build.sh forks
+#				keep these indexes in separate "library" (configurable) directory from main indexes, which are per-directory and time-tracked against pages
+#				index should be composer_root bound
+#				somehow time-bound with main index, unless index-force
+#			indexes "library" cross sections = ~estimate = (130x5x3x20 = 39,000) = (10x5x3x20 = 3,000) = (10x(5+3+20) = 280 ) = (130+5+3+20 = 158)
+#				year/all = ~10
+#				year/month = ~120
+#				author = ~5
+#				type = ~3 (book, article, post, etc.)
+#				tag = ~20
+#	need for speed
+#		html fragments in $(PUBLISH)-index target, as $(COMPOSER_INDEX)=.composer.index, per $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))
+#			re-add $(PUBLISH)-$(CLEANER), and add this directory to it
+#				or, just directly into $(CLEANER) like below
+#			index per navigation frame (top/bottom/left/right), force $(COMPOSER_LOG_DEFAULT)
+#			dependency $(PUBLISH)-index against $(COMPOSER_LOG_DEFAULT), and each $(DO_PAGE) against $(PUBLISH)-index
+#				how do we make this target the first dependency?
+#				maybe just make $(COMPOSER_LOG_DEFAULT) the dependency?
+#					then $(RUNMAKE) as first step in $(DO_PAGE) and $(COMPOSER_LOG_DEFAULT)
+#		add $(COMPOSER_INDEX) to $(CLEANER)
+#	what does this target actually do, anymore, after all the above?
+#		$(CLEANER)-$(DOITALL) is thorough, at this point
+#		$(DOITALL)-$(DOITALL) essentially does the same thing, now...
+#		it's still good for naming things?  maybe just a $(CLEANER)-$(DOITALL), $(PUBLISH)-index and $(DOITALL)-$(DOITALL) wrapper?
+#		it's a nice shortcut
+#	turn README.site.html into page-README.site.html...?  yes...
+#		manual sub-target in composer.mk, and create a side directory for the readme fragments
+#			readme.pdf is already a template for this
+#		add revealjs readme fragment to it, too, and update composer.mk
+#		give it a better name, and add manual to list of formats
+#	disable copy/paste
+#		https://getbootstrap.com/docs/5.2/utilities/interactions/#text-selection
+#	make box unit headings opaque
+#		https://getbootstrap.com/docs/5.2/utilities/background/#opacity
+#	remove $(DO_POST)
+# page
+#	just like book
+#	add frame(?) option, as default unit/box/text wrapper to each file
+#	use date -- title \n author format, optional frame(?) option (unit is default)
+#		configurable heading format?
+#		automatic navigation pane/text placeholder?
+#	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
+#		do sort based on yaml dates instead?  configurable?
+#	how do we decide header level and collapse or not?
+#		this should be per-unit, like in sidebar
+# document
+#	$(COMPOSER_YML) and note that it is now an override for everything
+#		expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
+#	if brand is empty or logo.img doesn't exist, they will be skipped
+#		side note to remove revealjs per-directory hack...
+#	if site_search_name is empty, it disables it
+#	new $(PRINTER)/c_list hack
+# other
+#	error-handling for missing, empty or incomplete $(COMPOSER_YML) file?
+#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?
+#	c_title = pagetitle?  naw, there are tons of other places to put this
+#		pull this from the page metadata, turning title into pagetitle (remove pagetitle from composer.yml)
+#	header-includes?  leave it to c_options?  maybe c_header?
+#		only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
 ################################################################################
 # }}}1
 ################################################################################
@@ -6601,110 +6706,6 @@ $(PUBLISH):
 ### {{{3 $(PUBLISH)-% ------------------
 
 #WORKING:NOW
-# make
-#	broken :: resume
-#		pagetitle
-#		icon
-#		latex formatting
-#			composer/pandoc override of header-include
-#			without ifthen
-#		gitignore = composer.tmp in resume directory
-#		wrap=preserve && go back to wrapping (easier diffs, without making coding/debugging harder [might be easier, actually])
-#		need to verify order of command-line option precedence
-#			consolidate default switches and composer.* configuration files, so they don't take over...
-#	need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
-#		maybe some type of automatic utility with a variable threshold?
-#		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
-#			add at beginning of $(DOITALL)
-# site
-#	why do the overview links not work?  because of where they are, or some other use of their # value?
-#	fix config, so there is a config-site, and config-all does both...
-#		ugh, the top/bottom icons are uh-gly... hmmm
-#		documentation note somewhere about the coments hack to indent markdown lists
-#	test composer.yml stomping...
-#		need a way to empty or overlap on demand...?
-#		if it is a hash = ++ and array == 0, then decide which should be immutable
-#		right now, top and bottom navs are hashes, and sides are arrays, so the behavior will be different.
-#		ideally, it would be the top that would be consistent, and the other navs can change
-#		ultimately, just allowing an overlap may be the way to go... at least it is consistent
-#		meh, yeah... side navs are the only arrays in the config... convert them... hopefully this is a minor change, programmatically...
-#		documentation for this is going to be a big of work...
-#	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
-#	examples of description/etc. metadata in $(COMPOSER_YML)
-#	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
-#		this can be in place of the dir-(?) stuff below
-#		tags?  still need a date/author/tag index, with a pre-configured "widget" that can be a unit/box, with sub units/boxes
-#			can potentially use bootstrap "selected", and a list group (would break the look-and-feel, though)
-#			best to somehow integrate this with "need for speed" index...
-#			use $(TESTING)-speed formula to create a tree of files with 1111-11-11, 2222-22-22, etc. dates
-#				any date format can be used, but only iso format will sort properly [document]
-#			this can be tested against pandoc directory?  interesting to see what it would come out like...
-#			item counts
-#				total items
-#				selected items
-#				badges: https://getbootstrap.com/docs/4.0/components/badge
-#				pagination?: https://getbootstrap.com/docs/4.0/components/pagination
-#				refer to taskwarrior notes about page counts... it gets big fast
-#				make J=4 test-speed = ~8k pages in ~2min = need to keep the indexing *way* down... probably just year-month[count]/author[count]/[type|tags][count] = ~240 * ~5 * ~10 = ~12k
-#				remember, this will likely be slower, because of all the navigation includes size and site.build.sh forks
-#				keep these indexes in separate "library" (configurable) directory from main indexes, which are per-directory and time-tracked against pages
-#				index should be composer_root bound
-#				somehow time-bound with main index, unless index-force
-#			indexes "library" cross sections = ~estimate = (130x5x3x20 = 39,000) = (10x5x3x20 = 3,000) = (10x(5+3+20) = 280 ) = (130+5+3+20 = 158)
-#				year/all = ~10
-#				year/month = ~120
-#				author = ~5
-#				type = ~3 (book, article, post, etc.)
-#				tag = ~20
-#	need for speed
-#		html fragments in $(PUBLISH)-index target, as $(COMPOSER_INDEX)=.composer.index, per $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))
-#			re-add $(PUBLISH)-$(CLEANER), and add this directory to it
-#				or, just directly into $(CLEANER) like below
-#			index per navigation frame (top/bottom/left/right), force $(COMPOSER_LOG_DEFAULT)
-#			dependency $(PUBLISH)-index against $(COMPOSER_LOG_DEFAULT), and each $(DO_PAGE) against $(PUBLISH)-index
-#				how do we make this target the first dependency?
-#				maybe just make $(COMPOSER_LOG_DEFAULT) the dependency?
-#					then $(RUNMAKE) as first step in $(DO_PAGE) and $(COMPOSER_LOG_DEFAULT)
-#		add $(COMPOSER_INDEX) to $(CLEANER)
-#	what does this target actually do, anymore, after all the above?
-#		$(CLEANER)-$(DOITALL) is thorough, at this point
-#		$(DOITALL)-$(DOITALL) essentially does the same thing, now...
-#		it's still good for naming things?  maybe just a $(CLEANER)-$(DOITALL), $(PUBLISH)-index and $(DOITALL)-$(DOITALL) wrapper?
-#		it's a nice shortcut
-#	turn README.site.html into page-README.site.html...?  yes...
-#		manual sub-target in composer.mk, and create a side directory for the readme fragments
-#			readme.pdf is already a template for this
-#		add revealjs readme fragment to it, too, and update composer.mk
-#		give it a better name, and add manual to list of formats
-#	disable copy/paste
-#		https://getbootstrap.com/docs/5.2/utilities/interactions/#text-selection
-#	make box unit headings opaque
-#		https://getbootstrap.com/docs/5.2/utilities/background/#opacity
-#	remove $(DO_POST)
-# page
-#	just like book
-#	add frame(?) option, as default unit/box/text wrapper to each file
-#	use date -- title \n author format, optional frame(?) option (unit is default)
-#		configurable heading format?
-#		automatic navigation pane/text placeholder?
-#	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
-#		do sort based on yaml dates instead?  configurable?
-#	how do we decide header level and collapse or not?
-#		this should be per-unit, like in sidebar
-# document
-#	$(COMPOSER_YML) and note that it is now an override for everything
-#		expected behavior = https://mikefarah.gitbook.io/yq/operators/multiply-merge
-#	if brand is empty or logo.img doesn't exist, they will be skipped
-#		side note to remove revealjs per-directory hack...
-#	if site_search_name is empty, it disables it
-#	new $(PRINTER)/c_list hack
-# other
-#	error-handling for missing, empty or incomplete $(COMPOSER_YML) file?
-#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?
-#	c_title = pagetitle?  naw, there are tons of other places to put this
-#		pull this from the page metadata, turning title into pagetitle (remove pagetitle from composer.yml)
-#	header-includes?  leave it to c_options?  maybe c_header?
-#		only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
 
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
