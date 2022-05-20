@@ -169,7 +169,6 @@ override VIM_FOLDING := {{{1
 #		https://getbootstrap.com/docs/5.2/utilities/interactions/#text-selection
 #	make box unit headings opaque
 #		https://getbootstrap.com/docs/5.2/utilities/background/#opacity
-#	remove $(DO_POST)
 # page
 #	just like book
 #	add frame(?) option, as default unit/box/text wrapper to each file
@@ -1446,12 +1445,10 @@ endif
 
 override DO_BOOK			:= book
 override DO_PAGE			:= page
-override DO_POST			:= post
 
 override COMPOSER_RESERVED_SPECIAL := \
 	$(DO_BOOK) \
 	$(DO_PAGE) \
-	$(DO_POST) \
 
 ########################################
 
@@ -1669,7 +1666,6 @@ $(HELPOUT)-TARGETS_SPECIALS_%:
 	@$(TABLE_M2) "$(_C)[$(DO_BOOK)]"			"Concatenate a source list into a single output file"
 #WORK
 	@$(TABLE_M2) "$(_C)[$(DO_PAGE)]"			"$(_N)*(Reserved for the future [$(PUBLISH)] feature)*$(_D)"
-	@$(TABLE_M2) "$(_C)[$(DO_POST)]"			"$(_N)*(Reserved for the future [$(PUBLISH)] feature)*$(_D)"
 	@$(ENDOLINE)
 	@$(PRINT) "For each of these base names, there are a standard set of actual targets:"
 	@$(ENDOLINE)
@@ -2226,7 +2222,7 @@ $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSWATCH))docs/index.html$(_D
 #WORK
 
 $(_N)*(This feature is reserved for a future release as the [$(PUBLISH)] target, along with
-[$(DO_PAGE)] and [$(DO_POST)] in [Special Targets].)*$(_D)
+[$(DO_PAGE)] in [Special Targets].)*$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,PDF)
 
@@ -2683,7 +2679,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH))
 #WORK
 
   * $(_N)*(This feature is reserved for a future release to create [Bootstrap
-    Websites].  It will also include [$(DO_PAGE)] and [$(DO_POST)] from [Special Targets].)*$(_D)
+    Websites].  It will also include [$(DO_PAGE)] from [Special Targets].)*$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(INSTALL) / $(INSTALL)-$(DOITALL) / $(INSTALL)-$(DOFORCE))
 
@@ -2737,12 +2733,13 @@ purpose of this $(_C)[Special]$(_D) is to gather multiple source files in this m
 that larger works can be comprised of multiple files, such as a book with each
 chapter in a separate file.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_POST))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE))
 
 #WORK
 
-$(_N)*(Both [$(DO_PAGE)] and [$(DO_POST)] are reserved for the future [$(PUBLISH)] feature, which will
-build website pages using [Bootstrap].)*$(_D)
+################################################################################
+$(_N)*(Both [$(DO_PAGE)] are reserved for the future [$(PUBLISH)] feature, which will build
+website pages using [Bootstrap].)*$(_D)
 endef
 
 ########################################
@@ -7153,27 +7150,6 @@ $(eval $(call TYPE_DO_PAGE,$(TYPE_DOCX),$(EXTN_DOCX)))
 $(eval $(call TYPE_DO_PAGE,$(TYPE_PPTX),$(EXTN_PPTX)))
 $(eval $(call TYPE_DO_PAGE,$(TYPE_TEXT),$(EXTN_TEXT)))
 $(eval $(call TYPE_DO_PAGE,$(TYPE_LINT),$(EXTN_LINT)))
-
-########################################
-
-#> update: TYPE_TARGETS
-
-override define TYPE_DO_POST =
-$(DO_POST)-%.$(2):
-	@$$(RUNMAKE) $$(NOTHING)-$$(DO_POST)-FUTURE
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(DO_POST))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
-endif
-endef
-
-$(eval $(call TYPE_DO_POST,$(TYPE_HTML),$(EXTN_HTML)))
-$(eval $(call TYPE_DO_POST,$(TYPE_LPDF),$(EXTN_LPDF)))
-$(eval $(call TYPE_DO_POST,$(TYPE_EPUB),$(EXTN_EPUB)))
-$(eval $(call TYPE_DO_POST,$(TYPE_PRES),$(EXTN_PRES)))
-$(eval $(call TYPE_DO_POST,$(TYPE_DOCX),$(EXTN_DOCX)))
-$(eval $(call TYPE_DO_POST,$(TYPE_PPTX),$(EXTN_PPTX)))
-$(eval $(call TYPE_DO_POST,$(TYPE_TEXT),$(EXTN_TEXT)))
-$(eval $(call TYPE_DO_POST,$(TYPE_LINT),$(EXTN_LINT)))
 
 ################################################################################
 # }}}1
