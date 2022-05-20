@@ -90,15 +90,7 @@ override VIM_FOLDING := {{{1
 #	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
 #	--email-obfuscation="[...]"
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
-#TODO
-#	add a way to add additional arguments, like: --variable=fontsize=28pt
-#		--variable="fontsize=[...]"
-#		--variable="theme=[...]"
-#		--variable="transition=[...]"
-#		--variable="links-as-notes=[...]"
-#		--variable="lof=[...]"
-#		--variable="lot=[...]"
-#TODO : bootstrap!
+#WORKING
 #	site
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
@@ -124,13 +116,8 @@ override VIM_FOLDING := {{{1
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
-#	https://github.com/bewuethr/pandoc-bash-blog
 #WORKING:NOW
 # site
-#	why do the overview links not work?  because of where they are, or some other use of their # value?
-#	fix config, so there is a config-site, and config-all does both...
-#		ugh, the top/bottom icons are uh-gly... hmmm
-#		documentation note somewhere about the coments hack to indent markdown lists
 #	test composer.yml stomping...
 #		need a way to empty or overlap on demand...?
 #		if it is a hash = ++ and array == 0, then decide which should be immutable
@@ -1709,6 +1696,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)]"			"List system packages and versions $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOITALL)]"		"Complete $(_C)[$(CHECKIT)]$(_D) package list, and system information"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)]"			"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(PUBLISH)]"		"#WORK"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(DOITALL)]"		"Complete $(_C)[$(CONFIGS)]$(_D), including environment variables"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
@@ -2229,6 +2217,8 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #		https://getbootstrap.com/docs/5.2/utilities/flex
 #	any simple css should do...
 #		https://getbootstrap.com/docs/5.2/utilities/colors
+#	$(CONFIGS)-$(PUBLISH)
+#		documentation note somewhere about the coments hack to indent markdown lists
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2786,8 +2776,9 @@ For example:
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(DO_BOOK)s $(OUT_README).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(PUBLISH) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
 
+#WORK $(CONFIGS)-$(PUBLISH)
 #WORKING break this up
 
   * Useful targets for validating tooling and configurations.
@@ -6521,13 +6512,17 @@ $(CONFIGS):
 			$(subst ",\",$($(FILE))) \
 		)), )$(_E)$(MARKER)$(_D))"; \
 	)
+ifneq ($(COMPOSER_DOITALL_$(CONFIGS)),)
+#>ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(PUBLISH))
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
 	@$(COMPOSER_YML_DATA) | $(YQ_WRITE)
 endif
-ifneq ($(COMPOSER_DOITALL_$(CONFIGS)),)
+#>endif
+ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
 	@$(LINERULE)
 	@$(subst $(NULL) -,,$(ENV)) | $(SORT)
+endif
 endif
 
 ########################################
