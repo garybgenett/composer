@@ -127,16 +127,6 @@ override VIM_FOLDING := {{{1
 #	https://github.com/bewuethr/pandoc-bash-blog
 #WORKING:NOW
 # make
-#	broken :: resume
-#		pagetitle
-#		icon
-#		latex formatting
-#			composer/pandoc override of header-include
-#			without ifthen
-#		gitignore = composer.tmp in resume directory
-#		wrap=preserve && go back to wrapping (easier diffs, without making coding/debugging harder [might be easier, actually])
-#		need to verify order of command-line option precedence
-#			consolidate default switches and composer.* configuration files, so they don't take over...
 #	need to empty out the $(COMPOSER_TMP) directory periodically, along with $(COMPOSER_LOG) files...
 #		maybe some type of automatic utility with a variable threshold?
 #		add a phony dependency that does this, with a COMPOSER_(KEEP)? value (that does both, or one for each?)
@@ -228,6 +218,7 @@ override VIM_FOLDING := {{{1
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?
 #	c_title = pagetitle?  naw, there are tons of other places to put this
 #		pull this from the page metadata, turning title into pagetitle (remove pagetitle from composer.yml)
+#		title-prefix is a really good pick here, but save it for example website(s)
 #	header-includes?  leave it to c_options?  maybe c_header?
 #		only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
 ################################################################################
@@ -1136,12 +1127,6 @@ override PANDOC_EXTENSIONS		+= +task_lists
 override PANDOC_EXTENSIONS		+= +yaml_metadata_block
 override PANDOC_EXTENSIONS		+= -spaced_reference_links
 
-#>	$(if $(or \
-#>		$(filter $(c_type),$(TYPE_TEXT)) ,\
-#>		$(filter $(c_type),$(TYPE_LINT)) ,\
-#>		),--wrap="auto",--wrap="none" \
-#>	) \
-
 override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
 	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
@@ -1149,7 +1134,11 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	--standalone \
 	--self-contained \
 	--columns="$(COLUMNS)" \
-	--wrap="preserve" \
+	$(if $(or \
+		$(filter $(c_type),$(TYPE_HTML)) ,\
+		$(filter $(c_type),$(TYPE_PRES)) ,\
+		),--wrap="none",--wrap="auto" \
+	) \
 	$(if $(c_lang),\
 		--variable=lang="$(c_lang)" \
 	) \
@@ -3145,6 +3134,7 @@ $(OUT_README).%: override c_toc		:= $(SPECIAL_VAL)
 
 $(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_css	:= $(subst $(COMPOSER_DIR)/,,$(MDVIEWER_CSS_SOLAR_ALT))
 $(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_toc	:=
+$(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_options	:= --variable=pagetitle="$(COMPOSER_HEADLINE)"
 
 $(OUT_README).$(EXTN_LPDF): override c_list		:= $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 
@@ -3202,8 +3192,6 @@ override define HEREDOC_COMPOSER_YML =
 ################################################################################
 
 variables:
-
-  pagetitle:				"$(COMPOSER_HEADLINE)"
 
 ################################################################################
 # $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
@@ -6705,10 +6693,10 @@ $(PUBLISH):
 ########################################
 ### {{{3 $(PUBLISH)-% ------------------
 
-#WORKING:NOW
-
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
+
+#WORKING:NOW
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE):
