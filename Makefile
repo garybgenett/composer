@@ -1768,7 +1768,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@if [ -z "$(c_site)" ]; then $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE); fi
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)<br/>"; fi
+		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)<p></p>"; fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -2912,6 +2912,8 @@ endif
 #ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(PUBLISH)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH))				>>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH)-include)			>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).include$(COMPOSER_EXT_DEFAULT)
 #endif
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
@@ -3005,6 +3007,20 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 endif
+
+override define $(CREATOR)-$(OUT_README)-$(PUBLISH) =
+$(PUBLISH_BUILD_CMD_BEG) $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).include$(COMPOSER_EXT_DEFAULT) $(PUBLISH_BUILD_CMD_END)
+endef
+
+override define $(CREATOR)-$(OUT_README)-$(PUBLISH)-include =
+<p></p>
+
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) $(COMPOSER_HEADLINE)<br />$(COMPOSER_COMPOSER) $(PUBLISH_BUILD_CMD_END)
+
+$(COMPOSER_TAGLINE)
+
+$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+endef
 
 ########################################
 ## {{{2 $(EXAMPLE) ---------------------
@@ -3364,10 +3380,10 @@ variables:
 
     - name: $(COMPOSER_TECHNAME)
       type: nav-unit
+      open: 1
       data:
         - name: Overview
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3375,7 +3391,6 @@ variables:
                   * [Overview]
         - name: Quick Start
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3383,7 +3398,6 @@ variables:
                   * [Quick Start]
         - name: Principles
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3391,15 +3405,16 @@ variables:
                   * [Principles]
         - name: Requirements
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
                 <!-- -->
                   * [Requirements]
+    - type: text
+      data: |
+        <p></p>
     - name: Formats
       type: nav-box
-      flag: 1
       data:
         - type: text
           data: |
@@ -3414,11 +3429,9 @@ variables:
 
     - name: $(COMPOSER_BASENAME) Operation
       type: nav-unit
-      flag: 1
       data:
         - name: Recommended Workflow
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3426,7 +3439,6 @@ variables:
                   * [Recommended Workflow]
         - name: Document Formatting
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3439,7 +3451,6 @@ variables:
                   * [Microsoft Word & PowerPoint]
         - name: Configuration Settings
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3447,7 +3458,6 @@ variables:
                   * [Configuration Settings]
         - name: Precedence Rules
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3455,7 +3465,6 @@ variables:
                   * [Precedence Rules]
         - name: Specifying Dependencies
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3463,7 +3472,6 @@ variables:
                   * [Specifying Dependencies]
         - name: Custom Targets
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3471,7 +3479,6 @@ variables:
                   * [Custom Targets]
         - name: Repository Versions
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3479,11 +3486,9 @@ variables:
                   * [Repository Versions]
     - name: $(COMPOSER_BASENAME) Variables
       type: nav-unit
-      flag: 1
       data:
         - name: Formatting Variables
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3498,7 +3503,6 @@ variables:
                   * [c_options]
         - name: Control Variables
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3516,11 +3520,9 @@ variables:
                   * [COMPOSER_IGNORES]
     - name: $(COMPOSER_BASENAME) Targets
       type: nav-unit
-      flag: 1
       data:
         - name: Primary Targets
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3535,7 +3537,6 @@ variables:
                   * [list]
         - name: Special Targets
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3544,7 +3545,6 @@ variables:
                   * [page]
         - name: Additional Targets
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3555,7 +3555,6 @@ variables:
                   * [_release / _update / _update-all]
         - name: Internal Targets
           type: nav-unit
-          flag: 1
           data:
             - type: text
               data: |
@@ -3563,15 +3562,12 @@ variables:
                   * [Internal Targets]
     - name: Reference
       type: nav-unit
-      flag: 1
       data:
         - name: Configuration
           type: nav-unit
-          flag: 1
           data:
             - name: "Templates: install"
               type: nav-unit
-              flag: 1
               data:
                 - type: text
                   data: |
@@ -3579,7 +3575,6 @@ variables:
                       * [Templates: install]
             - name: Pandoc Extensions
               type: nav-unit
-              flag: 1
               data:
                 - type: text
                   data: |
@@ -3587,11 +3582,9 @@ variables:
                       * [Pandoc Extensions]
         - name: Reserved
           type: nav-unit
-          flag: 1
           data:
             - name: Target Names
               type: nav-unit
-              flag: 1
               data:
                 - type: text
                   data: |
@@ -3599,7 +3592,6 @@ variables:
                       * [Target Names]
             - name: Variable Names
               type: nav-unit
-              flag: 1
               data:
                 - type: text
                   data: |
@@ -3648,7 +3640,7 @@ override define HEREDOC_PUBLISH_BUILD_SH =
 
 set -e
 
-HEAD_LVL="6"
+HEAD_LVL="$(DEPTH_MAX)"
 
 ########################################
 
@@ -3993,28 +3985,23 @@ function $(PUBLISH)-nav-side-list {
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].name" 2>/dev/null \\
 					| $(SED) "/^null$$/d"
 				)"
-				FLAG="$$(
+				OPEN="$$(
 					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].flag" 2>/dev/null \\
+					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].open" 2>/dev/null \\
 					| $(SED) "/^null$$/d"
 				)"
-				$(PUBLISH)-nav-unit-begin "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+				$(PUBLISH)-nav-unit-begin "$${HEAD_LVL}" "$${OPEN}" "$${NAME}"
 				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
-				$(PUBLISH)-nav-unit-end "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+				$(PUBLISH)-nav-unit-end
 			elif [ "$${TYPE}" = "nav-box" ]; then
 				NAME="$$(
 					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].name" 2>/dev/null \\
 					| $(SED) "/^null$$/d"
 				)"
-				FLAG="$$(
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].flag" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				)"
-				$(PUBLISH)-nav-box-begin "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+				$(PUBLISH)-nav-box-begin "$${HEAD_LVL}" "$${NAME}"
 				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
-				$(PUBLISH)-nav-box-end "$${HEAD_LVL}" "$${FLAG}" "$${NAME}"
+				$(PUBLISH)-nav-box-end
 			elif [ "$${TYPE}" = "text" ]; then
 				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].data" 2>/dev/null \\
@@ -4028,7 +4015,7 @@ function $(PUBLISH)-nav-side-list {
 ########################################
 
 # 1 header level
-# 2 true = collapsed
+# 2 true = expanded
 # 3 title
 
 # $${@:3} = $${3}
@@ -4040,13 +4027,13 @@ $(CAT) <<_EOF_
 <div class="accordion-item">
 <h$${1} class="accordion-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:3}")">
 <button class="accordion-button$$(
-	if [ -n "$${2//\'}" ]; then $(ECHO) " collapsed"; fi
+	if [ -z "$${2//\'}" ]; then $(ECHO) " collapsed"; fi
 	)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($(ECHO) "$${@:3}" | $(SED) "s|[^[:alnum:]_-]||g")">
 $${@:3}
 </button>
 </h$${1}>
 <div id="toggle-$$($(ECHO) "$${@:3}" | $(SED) "s|[^[:alnum:]_-]||g")" class="accordion-collapse collapse$$(
-	if [ -z "$${2//\'}" ]; then $(ECHO) " show"; fi
+	if [ -n "$${2//\'}" ]; then $(ECHO) " show"; fi
 	)">
 <div class="accordion-body">
 _EOF_
@@ -4071,17 +4058,16 @@ _EOF_
 ########################################
 
 # 1 header level
-# 2 true = top spacer
-# 3 title
+# 2 title
 
 # $${@:3} = $${3}
 
 function $(PUBLISH)-nav-box-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
-$$(if [ -n "$${2//\'}" ]; then $(ECHO) "<br/>\\n"; fi)<div class="card">
-<h$${1} class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:3}")">
-$${@:3}
+<div class="card">
+<h$${1} class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
+$${@:2}
 </h$${1}>
 <div class="card-body">
 _EOF_
@@ -4180,10 +4166,37 @@ _EOF_
 
 ################################################################################
 
-FUNCTION="$${1}"; shift
+function $(PUBLISH)-file {
+	$(CAT) $${@} | while IFS= read -r FILE; do
+		BUILD_CMD="$${FILE}"
+		BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_BUILD_CMD_BEG)}"
+		BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_BUILD_CMD_END)}"
+		if [ "$${FILE}" != "$${BUILD_CMD}" ]; then
+			$(PUBLISH)-select $${BUILD_CMD}
+		else
+			$(PRINTF) "%s\\n" "$${FILE}"
+		fi
+	done
+	return 0
+}
 
-$(PUBLISH)-$${FUNCTION} "$${@}"
+########################################
 
+function $(PUBLISH)-select {
+	ACTION="$${1}"; shift
+	if [ -f "$${ACTION}" ]; then
+		$(PUBLISH)-file $${ACTION} $${@}
+	else
+		$(PUBLISH)-$${ACTION} $${@}
+	fi
+	return 0
+}
+
+########################################
+
+$(PUBLISH)-select $${@}
+
+exit 0
 ################################################################################
 # End Of File
 ################################################################################
@@ -5118,9 +5131,9 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "6" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 ' $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		else \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(1) 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(1) ' $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		fi; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
@@ -7149,16 +7162,7 @@ $(PUBLISH)-$(DO_PAGE):
 	@$(PUBLISH_BUILD_SH_RUN) "row-begin"
 	@$(PUBLISH_BUILD_SH_RUN) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]"
 	@$(PUBLISH_BUILD_SH_RUN) "column-begin" "1"
-	@$(CAT) $(c_list) | while IFS= read -r FILE; do \
-		BUILD_CMD="$${FILE}"; \
-		BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_BUILD_CMD_BEG)}"; \
-		BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_BUILD_CMD_END)}"; \
-		if [ "$${FILE}" != "$${BUILD_CMD}" ]; then \
-			$(PUBLISH_BUILD_SH_RUN) $${BUILD_CMD}; \
-		else \
-			$(PRINTF) "%s\n" "$${FILE}"; \
-		fi; \
-	done
+	$(foreach FILE,$(c_list),$(PUBLISH_BUILD_SH_RUN) $(FILE);$(call NEWLINE))
 	@$(PUBLISH_BUILD_SH_RUN) "column-end"
 	@$(PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
 	@$(PUBLISH_BUILD_SH_RUN) "row-end"
