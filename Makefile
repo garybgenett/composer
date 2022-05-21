@@ -1761,22 +1761,29 @@ $(HELPOUT)-EXAMPLES_%:
 
 .PHONY: $(HELPOUT)-$(HEADERS)-%
 $(HELPOUT)-$(HEADERS)-%:
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)	; $(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
+	@if [ -z "$(c_site)" ]; then $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE); fi
+	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
+		@if [ -n "$(c_site)" ]; then $(PRINT) "$(_S)<br/>"; fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
-		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
+			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
 		@if [ "$(*)" = "$(DOFORCE)" ]; then \
-		$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT); \
+			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT); \
 		fi
 	@$(call TITLE_LN,2,Overview)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+		@$(call TITLE_END)
 	@$(call TITLE_LN,2,Quick Start)			; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
 		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
 		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
+		@$(call TITLE_END)
 	@$(call TITLE_LN,2,Principles)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+		@$(call TITLE_END)
 	@$(call TITLE_LN,2,Requirements)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
 		@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
+		@$(call TITLE_END)
+	@$(call TITLE_END)
 
 #> update: PHONY.*$(DOITALL)
 #> update: PHONY.*$(DOFORCE)
@@ -1789,25 +1796,32 @@ $(HELPOUT)-%:
 #>$(HELPOUT)-$(DOITALL):
 	@$(RUNMAKE) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
-	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
-	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-	@$(call TITLE_LN,2,Specifying Dependencies)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-	@$(call TITLE_LN,2,Custom Targets)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-	@$(call TITLE_LN,2,Repository Versions)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
+	@$(call TITLE_LN,2,Recommended Workflow)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Document Formatting)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Configuration Settings)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Precedence Rules)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Specifying Dependencies)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Custom Targets)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Repository Versions)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)	; $(call TITLE_END)
+	@$(call TITLE_END)
 	@$(RUNMAKE) $(HELPOUT)-VARIABLES_TITLE_1
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)	; $(call TITLE_END)
+	@$(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)	; $(call TITLE_END)
+	@$(call TITLE_END)
 	@$(RUNMAKE) $(HELPOUT)-TARGETS_TITLE_1
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)		; $(call TITLE_END)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)	; $(call TITLE_END)
+	@$(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)	; $(call TITLE_END)
 	@if [ "$(*)" = "$(DOFORCE)" ]; then \
-	$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL); \
-	$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
+		$(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)	; $(call TITLE_END); \
+		$(call TITLE_END); \
+		$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
+	else \
+		$(call TITLE_END); \
 	fi
-	@$(RUNMAKE) $(HELPOUT)-FOOTER
+	@if [ -z "$(c_site)" ]; then \
+		$(RUNMAKE) $(HELPOUT)-FOOTER; \
+	fi
 
 ########################################
 ### {{{3 $(HELPOUT)-$(TYPE_PRES) -------
@@ -1824,80 +1838,7 @@ $(HELPOUT)-$(TYPE_PRES):
 
 .PHONY: $(HELPOUT)-$(PUBLISH)
 $(HELPOUT)-$(PUBLISH):
-	@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 ' $(COMPOSER_TECHNAME)$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Overview$(_D)\n\n"
-			@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-			@$(ENDOLINE); $(LINERULE)
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS)
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT)
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Quick Start$(_D)\n\n"
-			@$(ECHO) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:\n"
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-USAGE
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-EXAMPLES_0
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Principles$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Requirements$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
-			@$(ENDOLINE); $(RUNMAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-	@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 1 $(COMPOSER_BASENAME) Operation$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Recommended Workflow$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Document Formatting$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Configuration Settings$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Precedence Rules$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Specifying Dependencies$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Custom Targets$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Repository Versions$(_D)\n\n"
-			@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-	@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 1 $(COMPOSER_BASENAME) Variables$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Formatting Variables$(_D)\n\n"
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_FORMAT_0
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Control Variables$(_D)\n\n"
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-VARIABLES_CONTROL_0
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-	@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 1 $(COMPOSER_BASENAME) Targets$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Primary Targets$(_D)\n\n"
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_PRIMARY_0
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Special Targets$(_D)\n\n"
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_SPECIALS_0
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 2 1 Additional Targets$(_D)\n\n"
-			@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_ADDITIONAL_0
-			@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)
-			@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
-	@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 1 $(DATEMARK) -- Reference<br/>$(COMPOSER_COMPOSER)$(_D)\n\n"
-		@$(ENDOLINE); $(RUNMAKE) $(HELPOUT)-TARGETS_INTERNAL_1
-		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)
-		@$(RUNMAKE) --silent $(HELPOUT)-$(DOFORCE)-$(PRINTER)
-		@$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end$(_D)\n\n"
+	@$(RUNMAKE) c_site="1" $(HELPOUT)-$(DOFORCE)
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOFORCE) ---------
@@ -1924,6 +1865,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 			-e "/^$$/d" \
 			-e "s|^|$(CODEBLOCK)|g" \
 		)
+	@$(call TITLE_END)
 #WORKING reference this somewhere...
 	@$(call TITLE_LN,3,Pandoc Extensions)
 	@$(PRINT) "$(_C)[$(COMPOSER_BASENAME)]$(_D) uses the \`$(_C)$(INPUT)$(_D)\` input format, with these extensions:"
@@ -1931,6 +1873,8 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 	)
 #WORKING also update references to these two...
+	@$(call TITLE_END)
+	@$(call TITLE_END)
 	@$(call TITLE_LN,2,Reserved,$(HEAD_MAIN))
 	@$(call TITLE_LN,3,Target Names)
 	@$(PRINT) "Do not create targets which match these, or use them as prefixes:"
@@ -1947,6 +1891,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 			$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 			$(call NEWLINE) \
 		)
+	@$(call TITLE_END)
 	@$(call TITLE_LN,3,Variable Names)
 	@$(PRINT) "Do not create variables which match these, and avoid similar names:"
 	@$(ENDOLINE); $(eval LIST := $(shell \
@@ -1961,6 +1906,9 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 			$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 			$(call NEWLINE) \
 		)
+	@$(call TITLE_END)
+	@$(call TITLE_END)
+	@$(call TITLE_END)
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 $(HELPOUT)-$(DOFORCE)-$(TARGETS):
@@ -3378,13 +3326,13 @@ variables:
           link: "#additional-targets"
           menu:
             debug / debug-file: "#debug--debug-file"
-            check / check-all / config / config-all / targets: "#check--check-all--config--config-all--targets"
+            check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
             _commit / _commit-all: "#_commit--_commit-all"
             _release / _update / _update-all: "#_release--_update--_update-all"
+        Internal Targets: "#internal-targets"
     Reference:
       link: "#reference"
       menu:
-        Internal Targets: "#internal-targets"
         Configuration:
           link: "#configuration"
           menu:
@@ -3450,7 +3398,7 @@ variables:
       data:
         - type: text
           data: |
-            <!-- -->$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)            * [$(FILE)]($(FILE)))
+            <!-- -->$(foreach FILE,$(OUT_README).$(PUBLISH).$(EXTN_HTML) $(COMPOSER_TARGETS),$(call NEWLINE)            * [$(FILE)]($(FILE)))
     - type: text
       data: |
         $(COMPOSER_TAGLINE)
@@ -3597,23 +3545,61 @@ variables:
               data: |
                 <!-- -->
                   * [debug / debug-file]
-                  * [check / check-all / config / config-all / targets]
+                  * [check / check-all / config / config-site / config-all / targets]
                   * [_commit / _commit-all]
                   * [_release / _update / _update-all]
-    - name: $(DATEMARK) -- Reference<br/>$(COMPOSER_COMPOSER)
+        - name: Internal Targets
+          type: nav-unit
+          flag: 1
+          data:
+            - type: text
+              data: |
+                <!-- -->
+                  * [Internal Targets]
+    - name: Reference
       type: nav-unit
       flag: 1
       data:
-        - type: text
-          data: |
-            <!-- -->
-              * [Internal Targets]
-              * [Configuration]
-                * [Templates: install]
-                * [Pandoc Extensions]
-              * [Reserved]
-                * [Target Names]
-                * [Variable Names]
+        - name: Configuration
+          type: nav-unit
+          flag: 1
+          data:
+            - name: "Templates: install"
+              type: nav-unit
+              flag: 1
+              data:
+                - type: text
+                  data: |
+                    <!-- -->
+                      * [Templates: install]
+            - name: Pandoc Extensions
+              type: nav-unit
+              flag: 1
+              data:
+                - type: text
+                  data: |
+                    <!-- -->
+                      * [Pandoc Extensions]
+        - name: Reserved
+          type: nav-unit
+          flag: 1
+          data:
+            - name: Target Names
+              type: nav-unit
+              flag: 1
+              data:
+                - type: text
+                  data: |
+                    <!-- -->
+                      * [Target Names]
+            - name: Variable Names
+              type: nav-unit
+              flag: 1
+              data:
+                - type: text
+                  data: |
+                    <!-- -->
+                      * [Variable Names]
 
 ########################################
 
@@ -5125,19 +5111,33 @@ endif
 ########################################
 
 override define TITLE_LN =
-	ttl_len="`$(EXPR) length '$(2)'`"; \
-	ttl_len="`$(EXPR) $(COLUMNS) - 2 - $(1) - $${ttl_len}`"; \
-	if [ "$(1)" -le "0" ]; then ttl_len="`$(EXPR) $${ttl_len} - 1 + $(1)`"; fi; \
-	if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
-	$(ENDOLINE); \
-	$(ECHO) "$(_S)"; \
-	if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
-	if [ "$(1)" -gt "0" ]; then $(PRINTF) "#%.0s" {1..$(1)}; fi; \
-	$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
-	eval $(PRINTF) \"#%.0s\" {1..$${ttl_len}}; \
-	$(ENDOLINE); \
-	if [ "$(1)" -eq "0" ]; then $(ENDOLINE); $(LINERULE); fi; \
-	if [ -z "$(3)" ]; then $(ENDOLINE); fi
+	if [ -n "$(c_site)" ] && [ "$(1)" != "6" ]; then \
+		if [ "$(1)" = "-1" ]; then \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 ' $(2)$(_D)\n\n"; \
+		else \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin $(1) 1 $(2)$(_D)\n\n"; \
+		fi; \
+	else \
+		ttl_len="`$(EXPR) length '$(2)'`"; \
+		ttl_len="`$(EXPR) $(COLUMNS) - 2 - $(1) - $${ttl_len}`"; \
+		if [ "$(1)" -le "0" ]; then ttl_len="`$(EXPR) $${ttl_len} - 1 + $(1)`"; fi; \
+		if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
+		$(ENDOLINE); \
+		$(ECHO) "$(_S)"; \
+		if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
+		if [ "$(1)" -gt "0" ]; then $(PRINTF) "#%.0s" {1..$(1)}; fi; \
+		$(ECHO) "$(_D) $(_H)$(2)$(_D) $(_S)"; \
+		eval $(PRINTF) \"#%.0s\" {1..$${ttl_len}}; \
+		$(ENDOLINE); \
+		if [ "$(1)" -eq "0" ]; then $(ENDOLINE); $(LINERULE); fi; \
+		if [ -z "$(3)" ]; then $(ENDOLINE); fi; \
+	fi
+endef
+
+override define TITLE_END =
+	if [ -n "$(c_site)" ]; then \
+		$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end\n\n"; \
+	fi
 endef
 
 ################################################################################
