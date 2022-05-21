@@ -3156,11 +3156,11 @@ $(OUT_README).%: override c_toc		:= $(SPECIAL_VAL)
 ########################################
 # settings
 
-$(OUT_README).$(EXTN_LPDF):				$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+$(OUT_README).$(EXTN_LPDF): override c_list		:= $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 
 $(OUT_README).$(EXTN_EPUB): override c_css		:=
 
-$(OUT_README).$(EXTN_PRES):			$(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+$(OUT_README).$(EXTN_PRES): override c_list	:= $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 $(OUT_README).$(EXTN_PRES): override c_css	:=
 $(OUT_README).$(EXTN_PRES): override c_toc	:=
 
@@ -7125,6 +7125,7 @@ $(eval $(call TYPE_DO_BOOK,$(TYPE_LINT),$(EXTN_LINT)))
 
 #WORKING:NOW
 # need to rearrange things so that there is a dependency link between the source(s) and output files, for timestamp skipping
+# fix and finish publish_build_cmd = <!- compooser :: .* -->
 
 override PUBLISH_BUILD_CMD		:= [$(COMPOSER_TINYNAME)]:
 
