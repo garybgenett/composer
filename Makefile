@@ -1231,6 +1231,10 @@ override COMPOSER_REGEX_PREFIX		:= [_.]
 
 #> update: includes duplicates
 override PUBLISH			:= site
+
+override PUBLISH_BUILD_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(DIVIDE)
+override PUBLISH_BUILD_CMD_END		= $(MARKER) -->
+
 override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
 override PUBLISH_BUILD_SH_RUN		:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(PUBLISH_BUILD_SH)
 
@@ -1764,7 +1768,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@if [ -z "$(c_site)" ]; then $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE); fi
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ -n "$(c_site)" ]; then $(PRINT) "$(_S)<br/>"; fi
+		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)<br/>"; fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -2245,7 +2249,8 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #		https://getbootstrap.com/docs/5.2/utilities/colors
 #	$(CONFIGS)-$(PUBLISH)
 #		documentation note somewhere about the coments hack to indent markdown lists
-#	$(PUBLISH_BUILD_CMD) nav-unit-begin 1 ' $(COMPOSER_TECHNAME) (the ' as a blank placeholder)
+#	$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 ' $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
+#		(the ' as a blank placeholder)
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -5113,9 +5118,9 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "6" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin 1 ' $(2)$(_D)\n\n"; \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 ' $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		else \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-begin $(1) 1 $(2)$(_D)\n\n"; \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(1) 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		fi; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
@@ -5136,7 +5141,7 @@ endef
 
 override define TITLE_END =
 	if [ -n "$(c_site)" ]; then \
-		$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD) nav-unit-end\n\n"; \
+		$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n\n"; \
 	fi
 endef
 
@@ -7125,9 +7130,6 @@ $(eval $(call TYPE_DO_BOOK,$(TYPE_LINT),$(EXTN_LINT)))
 
 #WORKING:NOW
 # need to rearrange things so that there is a dependency link between the source(s) and output files, for timestamp skipping
-# fix and finish publish_build_cmd = <!- compooser :: .* -->
-
-override PUBLISH_BUILD_CMD		:= [$(COMPOSER_TINYNAME)]:
 
 $(DO_PAGE)-%:
 	@$(ECHO) "$(_E)"
@@ -7148,8 +7150,11 @@ $(PUBLISH)-$(DO_PAGE):
 	@$(PUBLISH_BUILD_SH_RUN) "nav-left" ".variables[\"$(PUBLISH)-nav-left\"]"
 	@$(PUBLISH_BUILD_SH_RUN) "column-begin" "1"
 	@$(CAT) $(c_list) | while IFS= read -r FILE; do \
-		if [ "$${FILE}" != "$${FILE/#$(subst [,\[,$(subst ],\],$(PUBLISH_BUILD_CMD)))}" ]; then \
-			$(PUBLISH_BUILD_SH_RUN) $${FILE/#$(subst [,\[,$(subst ],\],$(PUBLISH_BUILD_CMD)))}; \
+		BUILD_CMD="$${FILE}"; \
+		BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_BUILD_CMD_BEG)}"; \
+		BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_BUILD_CMD_END)}"; \
+		if [ "$${FILE}" != "$${BUILD_CMD}" ]; then \
+			$(PUBLISH_BUILD_SH_RUN) $${BUILD_CMD}; \
 		else \
 			$(PRINTF) "%s\n" "$${FILE}"; \
 		fi; \
