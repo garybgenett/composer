@@ -203,6 +203,7 @@ override VIM_FOLDING := {{{1
 
 override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_BASENAME		:= Composer
+override COMPOSER_TINYNAME		:= composer
 override COMPOSER_VERSION		:= v3.1
 
 override COMPOSER_HOMEPAGE		:= https://github.com/garybgenett/composer
@@ -3212,14 +3213,14 @@ variables:
 
     Top: "#"
     CMS:
-      link: "#composer-cms"
+      link: "#$(COMPOSER_TINYNAME)-cms"
       menu:
         Overview: "#overview"
         Quick Start: "#quick-start"
         Principles: "#principles"
         Requirements: "#requirements"
     Operation:
-      link: "#composer-operation"
+      link: "#$(COMPOSER_TINYNAME)-operation"
       menu:
         Recommended Workflow: "#recommended-workflow"
         Document Formatting:
@@ -3237,7 +3238,7 @@ variables:
         Custom Targets: "#custom-targets"
         Repository Versions: "#repository-versions"
     Variables:
-      link: "#composer-variables"
+      link: "#$(COMPOSER_TINYNAME)-variables"
       menu:
         Formatting Variables:
           link: "#formatting-variables"
@@ -3265,7 +3266,7 @@ variables:
             COMPOSER_SUBDIRS: "#composer_subdirs"
             COMPOSER_IGNORES: "#composer_ignores"
     Targets:
-      link: "#composer-targets"
+      link: "#$(COMPOSER_TINYNAME)-targets"
       menu:
         Primary Targets:
           link: "#primary-targets"
@@ -3529,25 +3530,25 @@ variables:
   $(PUBLISH)-info-top: |
     <a rel="author" href="$(COMPOSER_HOMEPAGE)">
       <img alt="$(COMPOSER_TECHNAME)"
-      class="composer-icon"
+      class="$(COMPOSER_TINYNAME)-icon"
       src="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART)/icon-github.jpg)"/></a>
 
   $(PUBLISH)-info-bottom: |
     <a rel="author" href="http://www.garybgenett.net/projects/composer">
       <img alt="Gary B. Genett"
-      class="composer-icon"
+      class="$(COMPOSER_TINYNAME)-icon"
       src="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART)/icon-author.jpg)"/></a>
     <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
       <img alt="GPL License"
-      class="composer-icon"
+      class="$(COMPOSER_TINYNAME)-icon"
       src="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART)/icon-gpl.jpg)"/></a>
     <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
       <img alt="CC License"
-      class="composer-icon"
+      class="$(COMPOSER_TINYNAME)-icon"
       src="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART)/icon-cc.jpg)"/></a>
     <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
       <img alt="All Rights Reserved"
-      class="composer-icon"
+      class="$(COMPOSER_TINYNAME)-icon"
       src="$(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART)/icon-reserved.jpg)"/></a>
 
 ################################################################################
@@ -3606,7 +3607,7 @@ $$(
 			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 			| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"homepage\"]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
-		)\"><img class=\"composer-logo\" src=\"$${1}\"/></a>\\n"
+		)\"><img class=\"$(COMPOSER_TINYNAME)-logo\" src=\"$${1}\"/></a>\\n"
 	else
 		$(ECHO) "<!-- $${FUNCNAME} $(MARKER) logo -->\\n"
 	fi
@@ -4052,7 +4053,7 @@ $(CAT) <<_EOF_
 		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
 		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"cols_sticky\"]" 2>/dev/null \\
 		| $(SED) "/^null$$/d"
-	)" ]; then $(ECHO) " composer-sticky"; fi
+	)" ]; then $(ECHO) " $(COMPOSER_TINYNAME)-sticky"; fi
 ) border-0 p-2">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -4124,17 +4125,17 @@ body {
 	padding-bottom:			50px;
 }
 
-.composer-sticky {
+.$(COMPOSER_TINYNAME)-sticky {
 	max-height:			90vh;
 	overflow:			auto;
 }
 
-.composer-logo {
+.$(COMPOSER_TINYNAME)-logo {
 	height:				24px;
 	width:				auto;
 }
 
-.composer-icon {
+.$(COMPOSER_TINYNAME)-icon {
 	height:				24px;
 	width:				auto;
 }
