@@ -2910,6 +2910,7 @@ endif
 #WORKING:NOW
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #ifneq ($(COMPOSER_RELEASE),)
+	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(PUBLISH)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH))				>>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
@@ -5330,7 +5331,7 @@ override define $(HEADERS)-$(COMPOSER_PANDOC) =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(@)$(_D)] $(_C)$(2)"
+	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
 endef
 override define $(HEADERS)-dir =
 	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
@@ -7041,13 +7042,21 @@ $(COMPOSER_LOG):
 $(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
 $(COMPOSER_PANDOC):
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(COMPOSER_PANDOC))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
+	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
 endif
 	@$(ECHO) ""
 
-#WORKING now that c_base/c_list are empty by default, need a warning/exit if either is still empty...
-$(c_base).$(EXTENSION): $(c_list)
+$(c_base).$(EXTENSION): $(if $(c_type),,$(NOTHING)-c_type)
+$(c_base).$(EXTENSION): $(if $(c_base),,$(NOTHING)-c_base)
+$(c_base).$(EXTENSION): $(if $(c_list),$(c_list),$(NOTHING)-c_list)
 $(c_base).$(EXTENSION):
+	@if	[ -z "$(c_type)" ] || \
+		[ -z "$(c_base)" ] || \
+		[ -z "$(c_list)" ]; \
+	then \
+		$(call $(HEADERS)-note,$(CURDIR),c_type='$(c_type)' c_base='$(c_base)' c_list='$(c_list)',$(COMPOSER_PANDOC)); \
+		exit 1; \
+	fi
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
@@ -7077,7 +7086,7 @@ endif
 #>	@$(RM) $(c_base).$(EXTENSION).lock >/dev/null
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(c_base).$(EXTENSION))$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
+	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),$(c_list))
 endif
 
 ########################################
@@ -7090,21 +7099,25 @@ override define TYPE_TARGETS =
 #>%.$(2):
 	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(INPUT))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
+	@$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+),$(INPUT))
 endif
 
 %.$(2): %
 #>%.$(2):
 	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := wildcard)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
+	@$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+),wildcard)
 endif
 
-%.$(2): $(if $(c_list),$(c_list),$(NOTHING)-$(NOTHING))
+%.$(2): $(if $(c_list),$(c_list),$(NOTHING)-c_list)
 #>%.$(2):
+	@if [ -z "$(c_list)" ]; then \
+		$(call $(HEADERS)-note,$(CURDIR),$$(@),$(COMPOSER_PANDOC)); \
+		exit 1; \
+	fi
 	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := list)$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
+	@$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+),list)
 endif
 endef
 
@@ -7123,10 +7136,11 @@ $(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
 #> update: TYPE_TARGETS
 
 override define TYPE_DO_BOOK =
+.PHONY: $(DO_BOOK)-%.$(2)
 $(DO_BOOK)-%.$(2):
 	@$$(RUNMAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(+)"
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(eval override @ := $(DO_BOOK))$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+))
+	@$(call $(HEADERS)-note,$$(*) $(MARKER) $(1),$$(+),$(DO_BOOK))
 endif
 endef
 
@@ -7144,6 +7158,7 @@ $(eval $(call TYPE_DO_BOOK,$(TYPE_LINT),$(EXTN_LINT)))
 #WORKING:NOW
 # need to rearrange things so that there is a dependency link between the source(s) and output files, for timestamp skipping
 
+.PHONY: $(DO_PAGE)-%
 $(DO_PAGE)-%:
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP)
