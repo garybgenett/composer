@@ -794,7 +794,7 @@ override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
 override HEAD				:= $(call COMPOSER_FIND,$(PATH_LIST),head)
 override LN				:= $(call COMPOSER_FIND,$(PATH_LIST),ln) -fsv --relative
 override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) --color=auto --time-style=long-iso -asF -l
-override LS_TIME			:= $(call COMPOSER_FIND,$(PATH_LIST),ls) -dt
+override LS_TIME			:= $(call COMPOSER_FIND,$(PATH_LIST),ls) -tA
 override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
 override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
@@ -2909,10 +2909,10 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #WORKING:NOW
-#	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
-#	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(PUBLISH)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH))				>>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH)-include)			>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).include$(COMPOSER_EXT_DEFAULT)
@@ -3015,13 +3015,11 @@ $(PUBLISH_BUILD_CMD_BEG) $(subst $(COMPOSER_DIR)/,,$(COMPOSER_ART))/$(OUT_README
 endef
 
 override define $(CREATOR)-$(OUT_README)-$(PUBLISH)-include =
-<p></p>
-
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) $(COMPOSER_HEADLINE)<br />$(COMPOSER_COMPOSER) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 ' $(COMPOSER_HEADLINE)<br />$(COMPOSER_COMPOSER) $(PUBLISH_BUILD_CMD_END)
 
 $(COMPOSER_TAGLINE)
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)
 endef
 
 ########################################
@@ -6902,8 +6900,6 @@ endif
 .PHONY: $(CLEANER)-logs
 $(CLEANER)-logs:
 ifneq ($(COMPOSER_KEEPING),)
-#WORK make this prettier...
-	@$(PRINT) "$(_M)$(MARKER) Rotating logs and temporary files..."
 	@$(ECHO) "$(_S)"
 ifneq ($(COMPOSER_LOG),)
 ifneq ($(wildcard $(CURDIR)/$(COMPOSER_LOG)),)
@@ -6913,8 +6909,7 @@ ifneq ($(wildcard $(CURDIR)/$(COMPOSER_LOG)),)
 endif
 endif
 ifneq ($(wildcard $(COMPOSER_TMP)),)
-#>	@$(RM) --recursive $$($(FIND) $(COMPOSER_TMP) -mindepth 1 -maxdepth 1 | $(SORT) | $(TAIL) -n+$(COMPOSER_KEEPING))
-	@$(RM) --recursive $$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(TAIL) -n+$(COMPOSER_KEEPING))
+	@$(RM) --recursive $$($(LS_TIME) $(COMPOSER_TMP) 2>/dev/null | $(TAIL) -n+$(COMPOSER_KEEPING))
 endif
 	@$(ECHO) "$(_D)"
 endif
@@ -7109,7 +7104,7 @@ ifneq ($(c_site),)
 		$(if $(COMPOSER_DEBUGIT),| $(SED) -n "/^<!--[[:space:]]/p",>/dev/null)
 	@$(eval override c_list := $(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT))
 ifneq ($(COMPOSER_DEBUGIT),)
-	#> update: MARKER.*PANDOC
+#> update: MARKER.*PANDOC
 	@$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"
 endif
 	@$(ECHO) "$(_D)"
