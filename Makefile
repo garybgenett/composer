@@ -133,10 +133,6 @@ override VIM_FOLDING := {{{1
 #				author = ~5
 #				type = ~3 (book, article, post, etc.)
 #				tag = ~20
-#	disable copy/paste
-#		https://getbootstrap.com/docs/5.2/utilities/interactions/#text-selection
-#	make box unit headings opaque
-#		https://getbootstrap.com/docs/5.2/utilities/background/#opacity
 # page
 #	just like book
 #	add frame(?) option, as default unit/box/text wrapper to each file
@@ -3222,6 +3218,7 @@ variables:
     cols_main_first:
     cols_mobile_hide:			1
     cols_sticky:			1
+    copy_safe:				1
 
     search_name:			Search
     search_site:			https://duckduckgo.com
@@ -4092,6 +4089,12 @@ $(CAT) <<_EOF_
 		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"cols_sticky\"]" 2>/dev/null \\
 		| $(SED) "/^null$$/d"
 	)" ]; then $(ECHO) " $(COMPOSER_TINYNAME)-sticky"; fi
+)$$(
+	if [ -n "$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) \\
+		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"copy_safe\"]" 2>/dev/null \\
+		| $(SED) "/^null$$/d"
+	)" ]; then $(ECHO) " user-select-none"; fi
 ) border-0 p-2">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
