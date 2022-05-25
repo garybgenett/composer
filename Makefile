@@ -94,13 +94,8 @@ override VIM_FOLDING := {{{1
 #	site
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
-#	site is a special...?
-#		actually, need something better for site, which will probably remain singular...
-#			a-ha!  create page-*, which we can later use to dynamically "dependency" in post-* files (page-index.html)
-#				this will also allow for interesting things, like dynamic *.md files which get built first... or manual pages of posts (index!)
 #				verify that pandoc ignores leading yaml/json, and that yq can be used to just grab the headers?
 #			a page-* of post-*s will be <variable> post-*s truncated to <variable> length (and then [...])
-#			this way, manual page-*s can be created that stay static (like gary-os and composer readmes on "project" pages)
 #			also, the dynamic "index" pages, which pull in all post-*s that match
 #				this can look like index: entries that use the dependencies to know which index to build?
 #	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
@@ -109,22 +104,15 @@ override VIM_FOLDING := {{{1
 #			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
 #			test case this instead... it should be identical for all of book/page/post...
 #		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
-#	add findutils back in... we're going to need it later, which is probably why we had it in there in the first place...
-#		got it... best practice is to keep the site in <variable=.site>, and ln ../ in the desired files
-#		this way, there is a prestine source directory, things can be pulled in selectively, and we can pull .site into gh-pages
-#		actually, no, .site=./; if keeping them separate is desired, a separate directory should be used...
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
 #WORKING:NOW
 # site
-#	break README into pages, in $(COMPOSER_TMP), add to composer.mk, and use that instead of $(PUBLISH)-$(EXAMPLE) [finally gone!]
 #	examples of description/etc. metadata in $(COMPOSER_YML)
-#	think about a $(COMPOSER_YML) $(PUBLISH)-index[*] option, which can be used as a $(PUBLISH)-index target
-#		this can be in place of the dir-(?) stuff below
 #		tags?  still need a date/author/tag index, with a pre-configured "widget" that can be a unit/box, with sub units/boxes
 #			can potentially use bootstrap "selected", and a list group (would break the look-and-feel, though)
-#			best to somehow integrate this with "need for speed" index...
+#			integrate this with index...
 #			use $(TESTING)-speed formula to create a tree of files with 1111-11-11, 2222-22-22, etc. dates
 #				any date format can be used, but only iso format will sort properly [document]
 #			this can be tested against pandoc directory?  interesting to see what it would come out like...
@@ -145,26 +133,6 @@ override VIM_FOLDING := {{{1
 #				author = ~5
 #				type = ~3 (book, article, post, etc.)
 #				tag = ~20
-#	need for speed
-#		html fragments in $(PUBLISH)-index target, as $(COMPOSER_INDEX)=.composer.index, per $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))
-#			re-add $(PUBLISH)-$(CLEANER), and add this directory to it
-#				or, just directly into $(CLEANER) like below
-#			index per navigation frame (top/bottom/left/right), force $(COMPOSER_LOG_DEFAULT)
-#			dependency $(PUBLISH)-index against $(COMPOSER_LOG_DEFAULT), and each $(DO_PAGE) against $(PUBLISH)-index
-#				how do we make this target the first dependency?
-#				maybe just make $(COMPOSER_LOG_DEFAULT) the dependency?
-#					then $(RUNMAKE) as first step in $(DO_PAGE) and $(COMPOSER_LOG_DEFAULT)
-#		add $(COMPOSER_INDEX) to $(CLEANER)
-#	what does this target actually do, anymore, after all the above?
-#		$(CLEANER)-$(DOITALL) is thorough, at this point
-#		$(DOITALL)-$(DOITALL) essentially does the same thing, now...
-#		it's still good for naming things?  maybe just a $(CLEANER)-$(DOITALL), $(PUBLISH)-index and $(DOITALL)-$(DOITALL) wrapper?
-#		it's a nice shortcut
-#	turn README.site.html into page-README.site.html...?  yes...
-#		manual sub-target in composer.mk, and create a side directory for the readme fragments
-#			readme.pdf is already a template for this
-#		add revealjs readme fragment to it, too, and update composer.mk
-#		give it a better name, and add manual to list of formats
 #	disable copy/paste
 #		https://getbootstrap.com/docs/5.2/utilities/interactions/#text-selection
 #	make box unit headings opaque
@@ -177,8 +145,6 @@ override VIM_FOLDING := {{{1
 #		automatic navigation pane/text placeholder?
 #	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
 #		do sort based on yaml dates instead?  configurable?
-#	how do we decide header level and collapse or not?
-#		this should be per-unit, like in sidebar
 # document
 #	$(COMPOSER_YML) and note that it is now an override for everything
 #		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
@@ -262,11 +228,13 @@ ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
 
+#WORK this needs a documentation mention, at this point...
+override COMPOSER_TMP			:= $(CURDIR)/.composer.tmp
+override COMPOSER_TMP_INDEX		:= $(COMPOSER_TMP)
+
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
-#WORK this needs a documentation mention, at this point...
-override COMPOSER_TMP			:= $(CURDIR)/.composer.tmp
 
 override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
 override BOOTSTRAP_CSS_CSS		:= $(COMPOSER_ART)/bootstrap.source.css
@@ -408,6 +376,8 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
 		$(eval override COMPOSER_YML_LIST := $(COMPOSER_YML_LIST) $(FILE)) \
 	) \
 )
+
+override COMPOSER_TMP_INDEX		:= $(subst $(CURDIR),$(abspath $(dir $(lastword $(COMPOSER_YML_LIST)))),$(COMPOSER_TMP))
 
 ########################################
 
@@ -590,8 +560,10 @@ override c_margin_left			?=
 override c_margin_right			?=
 override c_options			?=
 
-#>override c_base				?= $(OUT_README)
-#>override c_list				?= $(c_base)$(COMPOSER_EXT)
+#>override c_base			?= $(OUT_README)
+#>override c_list			?= $(c_base)$(COMPOSER_EXT)
+
+override c_list_plus			:=
 
 ################################################################################
 # }}}1
@@ -806,7 +778,7 @@ override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
-override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee) -a
+override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee)
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
@@ -1314,12 +1286,14 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 #	$(CONFIGS)-$(DOITALL)
 #	$(CONVICT)-$(DOITALL)
 #	$(UPGRADE)-$(DOITALL)
+#	$(PUBLISH)
 #	$(INSTALL)-$(DOITALL)
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
 #> update: PHONY.*$(DOFORCE)
 #	$(HELPOUT)-$(DOFORCE)
 #	$(CHECKIT)-$(DOFORCE)
+#	$(PUBLISH)
 #	$(INSTALL)-$(DOFORCE)
 
 override HELPOUT			:= help
@@ -1651,7 +1625,8 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
-#WORK
+#WORK : rebuilds indexes, does not build the sites... this is done with $(DOITALL)[-$(DOITALL)]
+#		$(PUBLISH) rebuilds indexes, force recursively
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Recursively create $(_C)[Bootstrap Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
@@ -2255,6 +2230,7 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #	$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 ' $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
 #		(the ' as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
+#	$(PUBLISH) rebuilds indexes, force recursively
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2724,6 +2700,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH))
 
 #WORK
+#	$(PUBLISH) rebuilds indexes, force recursively
 
   * $(_N)*(This feature is reserved for a future release to create [Bootstrap
     Websites].  It will also include [$(DO_PAGE)] from [Special Targets].)*$(_D)
@@ -2844,7 +2821,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT) / $(CONVICT)-$(DOITALL))
     necessarily fit in a process where there are specific atomic steps being
     accomplished.
   * When this target is run in a $(_C)[$(COMPOSER_BASENAME)]$(_D) directory, it uses itself as the
-    top-level directory.
+    top-level directory.  When calling $(_C)[$(COMPOSER_BASENAME)]$(_D) directly using `$(_N)-f$(_D)`, the
+    current directory is used.
 
 Commit title format:
 
@@ -2913,7 +2891,6 @@ endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 #WORKING:NOW
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-	@touch $(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(MKDIR)									$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
@@ -3000,11 +2977,11 @@ ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(DO_PAGE)s
 #>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
-
-	@$(RUNMAKE) COMPOSER_KEEPING="20" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
-		| $(SED) \
-			-e "s|$(COMPOSER_DIR)|...|g" \
-			-e "/install[:][[:space:]]/d"
+#		| $(SED) \
+#			-e "s|$(COMPOSER_DIR)|...|g" \
+#			-e "/install[:][[:space:]]/d"
+#WORKING:NOW
+	@$(RUNMAKE) COMPOSER_KEEPING="10" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 #WORKING
 #>	@$(RM) \
 #>		$(CURDIR)/$(COMPOSER_SETTINGS) \
@@ -3179,6 +3156,8 @@ override define HEREDOC_COMPOSER_MK =
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration
 ################################################################################
 
+ifneq ($$(COMPOSER_RELEASE),)
+
 ########################################
 # wildcards
 
@@ -3206,6 +3185,10 @@ $(DO_PAGE)-$(OUT_README).$(PUBLISH).$(EXTN_HTML):			$(subst $(COMPOSER_DIR)/,,$(
 $(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_css	:= $(subst $(COMPOSER_DIR)/,,$(MDVIEWER_CSS_SOLAR_ALT))
 $(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_toc	:=
 $(OUT_README).$(PUBLISH).$(EXTN_HTML): override c_options	:= --variable=pagetitle="$(COMPOSER_HEADLINE)"
+
+########################################
+
+endif
 
 ################################################################################
 # End Of File
@@ -6758,12 +6741,29 @@ endif
 
 #WORKING:NOW
 
+#> update: $(MAKE) / @+
+
+#> update: PHONY.*$(DOITALL)
+#> update: PHONY.*$(DOFORCE)
+$(eval export override COMPOSER_DOITALL_$(PUBLISH) ?=)
 .PHONY: $(PUBLISH)
+$(PUBLISH): export override COMPOSER_DOITALL_$(PUBLISH) := $(DOFORCE)
+$(PUBLISH): export override COMPOSER_DOITALL_$(DOITALL) := $(DOITALL)
 $(PUBLISH): .set_title-$(PUBLISH)
+$(PUBLISH): $(PUBLISH)-$(SUBDIRS)-$(HEADERS)
 $(PUBLISH):
-	@$(call $(HEADERS))
-	@$(RUNMAKE) $(NOTHING)-$(PUBLISH)-FUTURE
-	@$(RUNMAKE) $(PUBLISH)-index
+ifneq ($(wildcard $(COMPOSER_TMP)/$(PUBLISH)-index*),)
+	@$(call $(HEADERS)-rm,$(COMPOSER_TMP),$(PUBLISH)-index)
+	@$(ECHO) "$(_S)"
+	@$(RM) $(COMPOSER_TMP)/$(PUBLISH)-index*
+	@$(ECHO) "$(_D)"
+endif
+	@$(RUNMAKE) $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index
+	@+$(MAKE) $(MAKE_OPTIONS) $(PUBLISH)-$(SUBDIRS)
+ifeq ($(MAKELEVEL),0)
+#>	@+$(MAKE) $(MAKE_OPTIONS) $(DOITALL)-$(DOITALL)
+	@+$(MAKE) $(MAKE_OPTIONS) $(DOITALL)
+endif
 
 ########################################
 ### {{{3 $(PUBLISH)-$(PRINTER) ---------
@@ -6785,7 +6785,7 @@ override $(PUBLISH)-$(PRINTER) := $(foreach FILE,\
 	$($(PUBLISH)-$(PRINTER)-begin) \
 	$($(PUBLISH)-$(PRINTER)-end) \
 	,\
-	$(COMPOSER_TMP)/$(PUBLISH)-index.$(FILE).$(EXTN_HTML) \
+	$(COMPOSER_TMP_INDEX)/$(PUBLISH)-index.$(FILE).$(EXTN_HTML) \
 )
 
 ########################################
@@ -6793,10 +6793,10 @@ override $(PUBLISH)-$(PRINTER) := $(foreach FILE,\
 
 #WORK document?
 .PHONY: $(PUBLISH)-$(DO_PAGE)
-$(PUBLISH)-$(DO_PAGE): $(PUBLISH)-index
+$(PUBLISH)-$(DO_PAGE): $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index
 $(PUBLISH)-$(DO_PAGE):
 	@$(foreach FILE,$($(PUBLISH)-$(PRINTER)-begin),\
-		$(CAT) $(COMPOSER_TMP)/$(PUBLISH)-index.$(FILE).$(EXTN_HTML); \
+		$(CAT) $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index.$(FILE).$(EXTN_HTML); \
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$(c_list),\
@@ -6804,7 +6804,7 @@ $(PUBLISH)-$(DO_PAGE):
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$($(PUBLISH)-$(PRINTER)-end),\
-		$(CAT) $(COMPOSER_TMP)/$(PUBLISH)-index.$(FILE).$(EXTN_HTML); \
+		$(CAT) $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index.$(FILE).$(EXTN_HTML); \
 		$(call NEWLINE) \
 	)
 
@@ -6814,20 +6814,19 @@ $(PUBLISH)-$(DO_PAGE):
 #WORK aw, jeez... all kinds of testing here... keeplog/yml/etc.
 #WORK document?
 
-.PHONY: $(PUBLISH)-index
-$(PUBLISH)-index: $($(PUBLISH)-$(PRINTER))
-$(PUBLISH)-index:
-	@$(ECHO) ""
-
 $(COMPOSER_YML_LIST):
 	@$(ECHO) ""
 
+$(COMPOSER_TMP_INDEX)/$(PUBLISH)-index: $($(PUBLISH)-$(PRINTER))
+$(COMPOSER_TMP_INDEX)/$(PUBLISH)-index:
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(COMPOSER_TMP_INDEX)/$(PUBLISH)-index
+
 $($(PUBLISH)-$(PRINTER)): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-$(PRINTER)):
-	@$(call $(HEADERS)-note,$(CURDIR),$(notdir $(@)),$(PUBLISH)-index)
-	@$(eval $(@) := $(patsubst $(COMPOSER_TMP)/$(PUBLISH)-index.%.$(EXTN_HTML),%,$(@)))
+	@$(call $(HEADERS)-note,$(COMPOSER_TMP_INDEX),$(notdir $(@)),$(PUBLISH)-index)
+	@$(eval $(@) := $(patsubst $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index.%.$(EXTN_HTML),%,$(@)))
 	@$(ECHO) "$(_E)"
-	@$(MKDIR) $(COMPOSER_TMP)
+	@$(MKDIR) $(COMPOSER_TMP_INDEX)
 	@if [ "$($(@))" = "nav-top" ]; then \
 		$(PUBLISH_BUILD_SH_RUN) "$($(@))" ".variables[\"$(PUBLISH)-$($(@))\"]" "$(COMPOSER_LOGO)"; \
 	elif [ "$($(@))" != "$(patsubst nav-%,%,$($(@)))" ]; then \
@@ -7077,6 +7076,7 @@ $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
 	)
 endef
 
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(PUBLISH)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
@@ -7120,6 +7120,8 @@ $(COMPOSER_LOG):
 #	3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
 # documentation can be as simple as "+ > c_list" in precedence...?  probably...
 # release notes, now...?  meh...
+# test that touch of composer.yml triggers a full rebuild
+#	somehow test $(PUBLISH) target
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
@@ -7130,9 +7132,15 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
 endif
 
+#WORKING:NOW
+
+ifneq ($(c_site),)
+$(c_base).$(EXTENSION): $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index
+endif
 $(c_base).$(EXTENSION): $(c_list)
 $(c_base).$(EXTENSION):
 	@$(eval override c_list_plus := $(filter-out $(c_list),$(filter-out .set_title-%,$(+))))
+	@$(eval override c_list_plus := $(filter-out $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index,$(c_list_plus)))
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
@@ -7261,7 +7269,6 @@ endif
 #> update: MARKER.*PANDOC
 override define $(PUBLISH)-$(DO_PAGE)-call =
 	$(call $(HEADERS)-note,$(@),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(PUBLISH)); \
-	$(RUNMAKE) $(PUBLISH)-index; \
 	$(ECHO) "$(_E)"; \
 	$(MKDIR) $(COMPOSER_TMP); \
 	$(RUNMAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(DO_PAGE) \
