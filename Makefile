@@ -59,6 +59,8 @@ override VIM_FOLDING := {{{1
 #		* Commit: `git commit`, `git tag`
 #		* Branch: `git branch -D master`, `git checkout -B master`, `git checkout devel`
 ################################################################################
+# {{{1 #WORK
+################################################################################
 #TODO
 #	--title-prefix="$(TTL)" = replace with full title option...?
 #	--resource-path = something like COMPOSER_CSS?
@@ -90,7 +92,7 @@ override VIM_FOLDING := {{{1
 #	--include-in-header="[...]" --include-before-body="[...]" --include-after-body="[...]"
 #	--email-obfuscation="[...]"
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
-#WORKING
+#WORKING:NOW
 #	site
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
@@ -98,18 +100,6 @@ override VIM_FOLDING := {{{1
 #			a page-* of post-*s will be <variable> post-*s truncated to <variable> length (and then [...])
 #			also, the dynamic "index" pages, which pull in all post-*s that match
 #				this can look like index: entries that use the dependencies to know which index to build?
-#	long term, physical post-* files should automatically get pulled in (so should book-* [redundant]; add test case)
-#		will need to do something with "targets" output, which will get super crowded (maybe only if there are dependencies? affirmative.)
-#			they will show up in composer_targets, anyway, right? yes, ugly, parse them out and let *-all handle it
-#			as they are parsed out of composer_targets, $(eval *-all: *) and $(eval $(subst post-,,*): *) them
-#			test case this instead... it should be identical for all of book/page/post...
-#		does the file take precedence over the target, or will both happen?  probably just the target, which is a better match
-#	add aria information back in, because we are good people...
-#		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
-#		https://getbootstrap.com/docs/4.5/utilities/screen-readers
-#WORKING:NOW
-# site
-#	examples of description/etc. metadata in $(COMPOSER_YML)
 #		tags?  still need a date/author/tag index, with a pre-configured "widget" that can be a unit/box, with sub units/boxes
 #			can potentially use bootstrap "selected", and a list group (would break the look-and-feel, though)
 #			integrate this with index...
@@ -133,12 +123,6 @@ override VIM_FOLDING := {{{1
 #				author = ~5
 #				type = ~3 (book, article, post, etc.)
 #				tag = ~20
-# page
-#	just like book
-#	add frame(?) option, as default unit/box/text wrapper to each file
-#	use date -- title \n author format, optional frame(?) option (unit is default)
-#		configurable heading format?
-#		automatic navigation pane/text placeholder?
 #	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
 #		do sort based on yaml dates instead?  configurable?
 # document
@@ -151,12 +135,16 @@ override VIM_FOLDING := {{{1
 #	if site_search_name is empty, it disables it
 #	new $(CONVICT) -> $(PRINTER)/c_list hack
 # other
+#	add test case for physical book/page-* files
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins.
 #		c_title = pagetitle?  naw, there are tons of other places to put this
 #			pull this from the page metadata, turning title into pagetitle (remove pagetitle from composer.yml)
 #			title-prefix is a really good pick here, but save it for example website(s)
 #		header-includes?  leave it to c_options?  maybe c_header?
 #			only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
+#	add aria information back in, because we are good people...
+#		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
+#		https://getbootstrap.com/docs/4.5/utilities/screen-readers
 ################################################################################
 # }}}1
 ################################################################################
@@ -775,6 +763,7 @@ override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee)
+override TOUCH				:= $(call COMPOSER_FIND,$(PATH_LIST),touch) --date="@0"
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
@@ -850,9 +839,10 @@ else
 override YQ				:= $(YQ_BIN)
 endif
 
-override YQ_READ			:= $(YQ) --prettyPrint --no-colors --no-doc --header-preprocess --input-format "yaml" --output-format "json"
-override YQ_WRITE			:= $(YQ_READ) --colors --input-format "yaml" --output-format "yaml"
-override YQ_EXTRACT			:= $(YQ_READ) --front-matter="extract"
+override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-matter "extract" --input-format "yaml" --output-format "json"
+override YQ_WRITE			:= $(subst --front-matter "extract",,$(YQ_READ)) --output-format "yaml"
+override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
+override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) --colors
 override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
 
 ########################################
@@ -1742,7 +1732,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@if [ -z "$(c_site)" ]; then $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE); fi
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)<p></p>"; fi
+		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)$(HTML_BREAK)"; fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -1943,7 +1933,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES =
-	$(SED) -n -e "s|^.+TITLE_LN[,][^,]*[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
+	$(SED) -n -e "s|^.+TITLE_LN[,][^,]+[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
 	| $(SED) "/TITLE[:][[:space:]]+[$$]/d" \
 	| $(SED) \
 		-e "s|.[[:space:]]+;.+$$||g" \
@@ -2227,6 +2217,7 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #		(the ' as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #	$(PUBLISH) rebuilds indexes, force recursively
+#	examples of description/etc. metadata in $(COMPOSER_YML)
 
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(subst $(COMPOSER_DIR)/,.../$(_M),$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2881,7 +2872,7 @@ $(CREATOR):
 	@$(call $(HEADERS))
 ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
-	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 	@$(ENDOLINE)
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
@@ -2892,7 +2883,6 @@ ifneq ($(COMPOSER_RELEASE),)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 #	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(PUBLISH)	| $(SED) "/^[#][>]/d"	>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 #	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH))				>>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@touch $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 #	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH)-include)			>$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).include$(COMPOSER_EXT_DEFAULT)
 endif
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
@@ -2970,14 +2960,12 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CP) $(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_ART))/icon-v1.0.png		$(subst $(COMPOSER_DIR),$(CURDIR),$(COMPOSER_LOGO))
 #WORKING
 #	@$(RUNMAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"	COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(DO_PAGE)s
+	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(DO_PAGE)s
 #>	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 #	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) \
 #		| $(SED) \
 #			-e "s|$(COMPOSER_DIR)|...|g" \
 #			-e "/install[:][[:space:]]/d"
-#WORKING:NOW
-	@$(RUNMAKE) COMPOSER_KEEPING="10" COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 #WORKING
 #>	@$(RM) \
 #>		$(CURDIR)/$(COMPOSER_SETTINGS) \
@@ -3017,14 +3005,14 @@ $(EXAMPLE):
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
 
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global)
 	@$(foreach FILE,$(COMPOSER_EXPORTED),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
@@ -3378,7 +3366,7 @@ variables:
                   * [Requirements]
     - type: text
       data: |
-        <p></p>
+        $(HTML_BREAK)
     - name: Formats
       type: nav-box
       data:
@@ -5214,8 +5202,8 @@ $(HEADERS)-$(EXAMPLE): .set_title-$(HEADERS)-$(EXAMPLE)
 $(HEADERS)-$(EXAMPLE):
 	@$(foreach FILE,-1 0 1 2 3,\
 		if [ -n "$(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE))" ]; then \
-			$(call TITLE_LN,$(FILE),TITLE: $(FILE) / x)	; $(PRINT) "$(EXAMPLE)"; \
-			$(call TITLE_LN,$(FILE),TITLE: $(FILE) / 1,1)	; $(PRINT) "$(EXAMPLE)"; \
+			$(call TITLE_LN ,$(FILE),TITLE: $(FILE) / x)	; $(PRINT) "$(EXAMPLE)"; \
+			$(call TITLE_LN ,$(FILE),TITLE: $(FILE) / 1,1)	; $(PRINT) "$(EXAMPLE)"; \
 		fi; \
 	)
 	@$(call $(HEADERS))
@@ -5498,7 +5486,7 @@ $(DEBUGIT)-$(HEADERS):
 .PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
 	@$(foreach FILE,$($(*)),\
-		$(call TITLE_LN,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
+		$(call TITLE_LN ,1,$(MARKER)[ $(*) $(DIVIDE) $(FILE) ]$(MARKER) $(VIM_FOLDING)); \
 		if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
 			$(RUNMAKE) --just-print COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(FILE) 2>&1; \
 		elif [ -d "$(FILE)" ]; then \
@@ -5590,7 +5578,7 @@ $(TESTING)-$(HEADERS):
 
 .PHONY: $(TESTING)-$(HEADERS)-%
 $(TESTING)-$(HEADERS)-%:
-	@$(call TITLE_LN,1,$(MARKER)[ $($(subst $(TESTING)-$(HEADERS)-,,$(@))) ]$(MARKER) $(VIM_FOLDING))
+	@$(call TITLE_LN ,1,$(MARKER)[ $($(subst $(TESTING)-$(HEADERS)-,,$(@))) ]$(MARKER) $(VIM_FOLDING))
 	@$(RUNMAKE) $($(subst $(TESTING)-$(HEADERS)-,,$(@))) 2>&1
 
 ########################################
@@ -5610,7 +5598,7 @@ override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,
 override $(TESTING)-run			= $(TESTING_ENV) $(REALMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
-	$(call TITLE_LN,1,$(MARKER)[ $(subst $(TESTING)-,,$(@)) ]$(MARKER) $(VIM_FOLDING));
+	$(call TITLE_LN ,1,$(MARKER)[ $(subst $(TESTING)-,,$(@)) ]$(MARKER) $(VIM_FOLDING));
 	$(ECHO) "$(_M)$(MARKER) PURPOSE:$(_D) $(strip $(1))$(_D)\n"; \
 	$(ECHO) "$(_M)$(MARKER) RESULTS:$(_D) $(strip $(2))$(_D)\n"; \
 	if [ -z "$(1)" ]; then exit 1; fi; \
@@ -6574,7 +6562,7 @@ ifneq ($(COMPOSER_DOITALL_$(CONFIGS)),)
 #>ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(PUBLISH))
 	@$(LINERULE)
 ifneq ($(COMPOSER_YML_LIST),)
-	@$(COMPOSER_YML_DATA) | $(YQ_WRITE)
+	@$(COMPOSER_YML_DATA) | $(YQ_WRITE_OUT)
 endif
 #>endif
 ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
@@ -6742,8 +6730,6 @@ endif
 ########################################
 ## {{{2 $(PUBLISH) ---------------------
 
-#WORKING:NOW
-
 #> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)
@@ -6767,6 +6753,173 @@ ifeq ($(MAKELEVEL),0)
 #>	@+$(MAKE) $(MAKE_OPTIONS) $(DOITALL)-$(DOITALL)
 	@+$(MAKE) $(MAKE_OPTIONS) $(DOITALL)
 endif
+
+#WORKING:NOW
+# make it alway use the index in composer_root/.composer.tmp, with realpath
+# move configuration to composer.yml
+# consolidate and migrate to build.sh
+# document "chars max" hard-limit
+# what to do with html_break? maybe just make it the default at this point? or, add back in the <br> flag...
+# make all indexing parallel using +/xargs
+# note: removed fields will not update in the index = make site-force
+# a href = .md -> .html
+
+override PUBLISH_METADATA		:= $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index.metadata.yml
+override PUBLISH_SUMMARY_CHARS		:= 512
+override PUBLISH_ITEM_COUNT		:= 20
+override PUBLISH_ITEM_OPEN		:= 5
+override PUBLISH_ITEM_CONTINUE		:= [...]
+override PUBLISH_ITEM_TEXT		:= (permalink to full text)
+override PUBLISH_DATE_FORMAT		:= 0000-00-00
+override HTML_BREAK			:= <p></p>
+
+.PHONY: $(PUBLISH)-$(TESTING)
+$(PUBLISH)-$(TESTING):
+	@$(RUNMAKE) $(PUBLISH)-$(TESTING)-extract
+	@$(RUNMAKE) $(PUBLISH)-$(TESTING)-assemble \
+		| $(TEE) $(CURDIR)/$(DO_PAGE)-$(TESTING)$(COMPOSER_EXT_DEFAULT)
+	@$(RUNMAKE) COMPOSER_DEBUGIT="1" $(DO_PAGE)s
+
+.PHONY: $(PUBLISH)-$(TESTING)-assemble
+$(PUBLISH)-$(TESTING)-assemble:
+	@NUM="0"; for FILE in $$( \
+		$(CAT) $(PUBLISH_METADATA) \
+			| $(YQ_WRITE) " \
+				map(select(.title != null)) \
+				| sort_by(.file) \
+				| sort_by(.title) \
+				| (sort_by(.date) | reverse) \
+				| .[].file \
+			" \
+			| $(HEAD) -n$(PUBLISH_ITEM_COUNT); \
+	); do \
+		if [ "$${NUM}" -gt "0" ]; then \
+			$(ECHO) "\n$(HTML_BREAK)\n"; \
+		fi; \
+		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(DEPTH_MAX) $$( \
+				if [ "$${NUM}" -lt "$(PUBLISH_ITEM_OPEN)" ]; then \
+					$(ECHO) "1"; \
+				else \
+					$(ECHO) "'"; \
+				fi; \
+			) "; \
+			TITL="$$( \
+				$(CAT) $(PUBLISH_METADATA) \
+				| $(YQ_WRITE) ".\"$${FILE}\".title" 2>/dev/null \
+				| $(SED) "/^null$$/d"; \
+			)"; \
+			NAME="$$( \
+				$(CAT) $(PUBLISH_METADATA) \
+				| $(YQ_WRITE) ".\"$${FILE}\".author" 2>/dev/null \
+				| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
+				| $(SED) "/^null$$/d"; \
+			)"; \
+			DATE="$$( \
+				$(CAT) $(PUBLISH_METADATA) \
+				| $(YQ_WRITE) ".\"$${FILE}\".date" 2>/dev/null \
+				| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
+				| $(SED) "/^null$$/d"; \
+			)"; \
+			if [ -n "$${DATE}" ]; then \
+				$(ECHO) "$${DATE}"; \
+			fi; \
+			if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then \
+				$(ECHO) " $(DIVIDE) "; \
+			fi; \
+			if [ -n "$${TITL}" ]; then \
+				$(ECHO) "$${TITL}"; \
+			fi; \
+			if [ -n "$${NAME}" ]; then \
+				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
+					$(ECHO) " </br> "; \
+				fi; \
+				$(ECHO) "$${NAME}"; \
+			fi; \
+			$(ECHO) " $(PUBLISH_BUILD_CMD_END)\n\n"; \
+		$(CAT) "$${FILE}" \
+			| $(PANDOC) --from="$(INPUT)" --to="$(TMPL_LINT)" \
+			| $(TR) '\n' '$(TOKEN)' \
+			| $(SED) "s|^(.{$(PUBLISH_SUMMARY_CHARS)}).+$$|\1 $(PUBLISH_ITEM_CONTINUE)|g" \
+			| $(TR) '$(TOKEN)' '\n'; \
+		$(ECHO) "\n\n<a href=\"$${FILE}\">$(PUBLISH_ITEM_TEXT)</a>\n"; \
+		$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n"; \
+		NUM="$$($(EXPR) $${NUM} + 1)"; \
+	done
+
+.PHONY: $(PUBLISH)-$(TESTING)-extract
+$(PUBLISH)-$(TESTING)-extract: export override COMPOSER_DOCOLOR :=
+$(PUBLISH)-$(TESTING)-extract:
+	@$(foreach NUM,0 1 2,\
+		$(MKDIR) $(CURDIR)/$(TESTING)/dir$(NUM); \
+		$(eval override DATE := $(NUM)$(NUM)$(NUM)$(NUM)-$(NUM)$(NUM)-$(NUM)$(NUM)) \
+		$(eval override FILE := $(CURDIR)/$(TESTING)/dir$(NUM)/$(DATE)$(COMPOSER_EXT_DEFAULT)) \
+		$(ECHO) "---\n" >$(FILE); \
+		$(ECHO) "title: Date of $(DATE)\n" >>$(FILE); \
+		$(ECHO) "author: $(COMPOSER_COMPOSER)\n" >>$(FILE); \
+		$(ECHO) "date: $(DATE)\n" >>$(FILE); \
+		$(ECHO) "tags: [1, 2, 3]\n" >>$(FILE); \
+		$(ECHO) "---\n" >>$(FILE); \
+		$(call TITLE_LN ,3,Overview) >>$(FILE); \
+		$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW) >>$(FILE); \
+	)
+	@$(call $(HEADERS)-note,$(PUBLISH_METADATA),$(_H)Indexing,$(PUBLISH)-index)
+#WORKING:NOW
+#	@$(RM) $(PUBLISH_METADATA)*
+	@if [ ! -s $(PUBLISH_METADATA) ]; then \
+		$(ECHO) "{}" >$(PUBLISH_METADATA); \
+		$(TOUCH) $(PUBLISH_METADATA); \
+	fi
+	@$(ECHO) "{" >$(PUBLISH_METADATA).$(PRINTER)
+	@$(FIND) $(CURDIR) \
+			\( -path "*/$(notdir $(COMPOSER_TMP))/*" -prune \) \
+			-o \( -path "*/bootswatch/*" -prune \) \
+			-o \( -path "*/markdown-viewer/*" -prune \) \
+			-o \( -path "*/pandoc/test/*" -prune \) \
+			-o \( -path "*/revealjs/*" -prune \) \
+			-o \( -path "*/yq/*" -prune \) \
+			\
+			-o \( -path "*page-test.md" -prune \) \
+			\
+			-o \( -type f -newer $(PUBLISH_METADATA) -name "*$(COMPOSER_EXT)" -print \) \
+		| while read -r FILE; do \
+			$(call $(HEADERS)-note,$(PUBLISH_METADATA),$${FILE},$(PUBLISH)-index); \
+			$(ECHO) "\"$${FILE}\": " \
+				| $(SED) "s|$(CURDIR)/||g" \
+				>>$(PUBLISH_METADATA).$(PRINTER); \
+			if [ -n "$$( \
+				$(YQ_READ) $${FILE} \
+					| $(YQ_WRITE) ".title" \
+					| $(SED) "/^null$$/d" \
+			)" ]; then \
+				$(YQ_READ) $${FILE} \
+					| $(YQ_WRITE) ". += { \"$(COMPOSER_BASENAME)\": true }"; \
+			else \
+				$(ECHO) "{ \"$(COMPOSER_BASENAME)\": false }"; \
+			fi \
+				| $(YQ_WRITE) ". += { \"file\": \"$${FILE}\" }" \
+				| $(YQ_WRITE) ". += { \"updated\": \"$(DATESTAMP)\" }" \
+				| $(SED) "s|$(CURDIR)/||g" \
+				>>$(PUBLISH_METADATA).$(PRINTER); \
+			$(ECHO) "," >>$(PUBLISH_METADATA).$(PRINTER); \
+		done
+	@$(ECHO) "\"$(COMPOSER_BASENAME)\": { \"updated\": \"$(DATESTAMP)\" } }" \
+		>>$(PUBLISH_METADATA).$(PRINTER)
+	@$(call $(HEADERS)-note,$(PUBLISH_METADATA),$(_H)Complete,$(PUBLISH)-index)
+	@$(ECHO) "$(_E)"
+	@$(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' \
+			$(PUBLISH_METADATA) \
+			$(PUBLISH_METADATA).$(PRINTER) \
+		| $(YQ_WRITE_FILE) "sort_keys(..)" \
+		>$(PUBLISH_METADATA).$(PUBLISH); \
+			if [ "$${PIPESTATUS[0]}" != "0" ]; then \
+				exit 1; \
+			fi
+	if [ -s "$(PUBLISH_METADATA).$(PUBLISH)" ]; then \
+		$(RM) $(PUBLISH_METADATA).$(PRINTER); \
+		$(MV) $(PUBLISH_METADATA).$(PUBLISH) \
+			$(PUBLISH_METADATA); \
+	fi
+	@$(ECHO) "$(_D)"
 
 ########################################
 ### {{{3 $(PUBLISH)-$(PRINTER) ---------
@@ -6860,14 +7013,14 @@ $(INSTALL)-%:
 $(INSTALL): $(INSTALL)-$(SUBDIRS)-$(HEADERS)
 $(INSTALL):
 ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_BASENAME)_Directory)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 else
 	@if	[ "$(COMPOSER_ROOT)" = "$(CURDIR)" ]; \
 	then \
 		if	[ -f "$(CURDIR)/$(MAKEFILE)" ] && \
 			[ "$(COMPOSER_DOITALL_$(INSTALL))" != "$(DOFORCE)" ]; \
 		then \
-			$(call $(HEADERS)-note,$(CURDIR),Main_$(MAKEFILE)); \
+			$(call $(HEADERS)-note,$(CURDIR),$(_H)Main_$(MAKEFILE)); \
 		fi; \
 		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
 		then \
