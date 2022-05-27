@@ -176,13 +176,15 @@ override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 ########################################
 
 override COLUMNS			:= 80
-override HEAD_MAIN			:= 1
-
 override SPECIAL_VAL			:= 0
+
+override HEAD_MAIN			:= 1
 override DEPTH_DEFAULT			:= 2
 override DEPTH_MAX			:= 6
 
 override CSS_ALT			:= css_alt
+
+override HTML_BREAK			:= <p></p>
 
 ########################################
 
@@ -3222,6 +3224,20 @@ variables:
 
 ########################################
 
+  $(PUBLISH)-library:
+
+#WORKING:NOW
+
+    digest_count:			20
+    digest_expanded:			5
+    digest_chars:			512
+
+    digest_spacer:			1
+    digest_continue:			[...]
+    digest_permalink:			(permalink to full text)
+
+########################################
+
   $(PUBLISH)-nav-top:
 
     Top: "#"
@@ -3599,7 +3615,7 @@ HEAD_LVL="$(DEPTH_MAX)"
 ########################################
 
 YQ_READ="$(subst ",,$(subst $(YQ),$${YQ},$(YQ_READ)))"
-YQ_WRITE="$(subst ",,$(subst $(YQ_READ),$${YQ_READ},$(YQ_WRITE)))"
+YQ_WRITE="$(subst ",,$(subst $(YQ),$${YQ},$(YQ_WRITE)))"
 
 ################################################################################
 
@@ -6764,24 +6780,74 @@ endif
 # note: removed fields will not update in the index = make site-force
 # a href = .md -> .html
 
+#WORKING:NOW
 override PUBLISH_METADATA		:= $(COMPOSER_TMP_INDEX)/$(PUBLISH)-index.metadata.yml
-override PUBLISH_SUMMARY_CHARS		:= 512
-override PUBLISH_ITEM_COUNT		:= 20
-override PUBLISH_ITEM_OPEN		:= 5
-override PUBLISH_ITEM_CONTINUE		:= [...]
-override PUBLISH_ITEM_TEXT		:= (permalink to full text)
-override PUBLISH_DATE_FORMAT		:= 0000-00-00
-override HTML_BREAK			:= <p></p>
 
 .PHONY: $(PUBLISH)-$(TESTING)
+$(PUBLISH)-$(TESTING): $(PUBLISH)-library
 $(PUBLISH)-$(TESTING):
-	@$(RUNMAKE) $(PUBLISH)-$(TESTING)-extract
-	@$(RUNMAKE) $(PUBLISH)-$(TESTING)-assemble \
-		| $(TEE) $(CURDIR)/$(DO_PAGE)-$(TESTING)$(COMPOSER_EXT_DEFAULT)
-	@$(RUNMAKE) COMPOSER_DEBUGIT="1" $(DO_PAGE)s
+	@$(ECHO) ""
 
-.PHONY: $(PUBLISH)-$(TESTING)-assemble
-$(PUBLISH)-$(TESTING)-assemble:
+.PHONY: $(PUBLISH)-library
+$(PUBLISH)-library:
+#WORKING:NOW
+	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH) >$(subst $(COMPOSER_DIR),$(CURDIR),$(PUBLISH_BUILD_SH))
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
+#WORK
+	@$(foreach NUM,0 1 2,\
+		$(MKDIR) $(CURDIR)/$(TESTING)/dir$(NUM); \
+		$(eval override DATE := $(NUM)$(NUM)$(NUM)$(NUM)-$(NUM)$(NUM)-$(NUM)$(NUM)) \
+		$(eval override FILE := $(CURDIR)/$(TESTING)/dir$(NUM)/$(DATE)$(COMPOSER_EXT_DEFAULT)) \
+		$(ECHO) "---\n" >$(FILE); \
+		$(ECHO) "title: Date of $(DATE)\n" >>$(FILE); \
+		$(ECHO) "author: $(COMPOSER_COMPOSER)\n" >>$(FILE); \
+		$(ECHO) "date: $(DATE)\n" >>$(FILE); \
+		$(ECHO) "tags: [1, 2, 3]\n" >>$(FILE); \
+		$(ECHO) "---\n" >>$(FILE); \
+		$(call TITLE_LN ,3,Overview) >>$(FILE); \
+		$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW) >>$(FILE); \
+	)
+#WORKING
+#	@$(RUNMAKE) $(PUBLISH)-library-metadata
+	@$(RUNMAKE) $(PUBLISH)-library-digest \
+		| $(TEE) $(CURDIR)/$(DO_PAGE)-$(TESTING)$(COMPOSER_EXT_DEFAULT)
+#	@$(RUNMAKE) COMPOSER_DEBUGIT="1" $(DO_PAGE)s
+
+########################################
+### {{{3 $(PUBLISH)-library-digest -----
+
+.PHONY: $(PUBLISH)-library-digest
+$(PUBLISH)-library-digest: export override $(PUBLISH)-library-digest_count := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_count\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+$(PUBLISH)-library-digest: export override $(PUBLISH)-library-digest_expanded := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_expanded\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+$(PUBLISH)-library-digest: export override $(PUBLISH)-library-digest_chars := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_chars\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+$(PUBLISH)-library-digest: export override $(PUBLISH)-library-digest_spacer := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_spacer\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+$(PUBLISH)-library-digest: export override $(PUBLISH)-library-digest_continue := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_continue\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+$(PUBLISH)-library-digest: export override $(PUBLISH)-library-digest_permalink := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_permalink\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+$(PUBLISH)-library-digest:
 	@NUM="0"; for FILE in $$( \
 		$(CAT) $(PUBLISH_METADATA) \
 			| $(YQ_WRITE) " \
@@ -6791,13 +6857,13 @@ $(PUBLISH)-$(TESTING)-assemble:
 				| (sort_by(.date) | reverse) \
 				| .[].file \
 			" \
-			| $(HEAD) -n$(PUBLISH_ITEM_COUNT); \
+			| $(HEAD) -n$($(PUBLISH)-library-digest_count); \
 	); do \
-		if [ "$${NUM}" -gt "0" ]; then \
+		if [ "$${NUM}" -gt "0" ] && [ -n "$($(PUBLISH)-library-digest_spacer)" ]; then \
 			$(ECHO) "\n$(HTML_BREAK)\n"; \
 		fi; \
 		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(DEPTH_MAX) $$( \
-				if [ "$${NUM}" -lt "$(PUBLISH_ITEM_OPEN)" ]; then \
+				if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
 					$(ECHO) "1"; \
 				else \
 					$(ECHO) "'"; \
@@ -6839,29 +6905,18 @@ $(PUBLISH)-$(TESTING)-assemble:
 		$(CAT) "$${FILE}" \
 			| $(PANDOC) --from="$(INPUT)" --to="$(TMPL_LINT)" \
 			| $(TR) '\n' '$(TOKEN)' \
-			| $(SED) "s|^(.{$(PUBLISH_SUMMARY_CHARS)}).+$$|\1 $(PUBLISH_ITEM_CONTINUE)|g" \
+			| $(SED) "s|^(.{$($(PUBLISH)-library-digest_chars)}).+$$|\1 $($(PUBLISH)-library-digest_continue)|g" \
 			| $(TR) '$(TOKEN)' '\n'; \
-		$(ECHO) "\n\n<a href=\"$${FILE}\">$(PUBLISH_ITEM_TEXT)</a>\n"; \
+		$(ECHO) "\n\n<a href=\"$${FILE}\">$($(PUBLISH)-library-digest_permalink)</a>\n"; \
 		$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n"; \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done
 
-.PHONY: $(PUBLISH)-$(TESTING)-extract
-$(PUBLISH)-$(TESTING)-extract: export override COMPOSER_DOCOLOR :=
-$(PUBLISH)-$(TESTING)-extract:
-	@$(foreach NUM,0 1 2,\
-		$(MKDIR) $(CURDIR)/$(TESTING)/dir$(NUM); \
-		$(eval override DATE := $(NUM)$(NUM)$(NUM)$(NUM)-$(NUM)$(NUM)-$(NUM)$(NUM)) \
-		$(eval override FILE := $(CURDIR)/$(TESTING)/dir$(NUM)/$(DATE)$(COMPOSER_EXT_DEFAULT)) \
-		$(ECHO) "---\n" >$(FILE); \
-		$(ECHO) "title: Date of $(DATE)\n" >>$(FILE); \
-		$(ECHO) "author: $(COMPOSER_COMPOSER)\n" >>$(FILE); \
-		$(ECHO) "date: $(DATE)\n" >>$(FILE); \
-		$(ECHO) "tags: [1, 2, 3]\n" >>$(FILE); \
-		$(ECHO) "---\n" >>$(FILE); \
-		$(call TITLE_LN ,3,Overview) >>$(FILE); \
-		$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW) >>$(FILE); \
-	)
+########################################
+### {{{3 $(PUBLISH)-library-metadata ---
+
+.PHONY: $(PUBLISH)-library-metadata
+$(PUBLISH)-library-metadata:
 	@$(call $(HEADERS)-note,$(PUBLISH_METADATA),$(_H)Indexing,$(PUBLISH)-index)
 #WORKING:NOW
 #	@$(RM) $(PUBLISH_METADATA)*
@@ -6924,7 +6979,6 @@ $(PUBLISH)-$(TESTING)-extract:
 ########################################
 ### {{{3 $(PUBLISH)-$(PRINTER) ---------
 
-#WORK document?
 override $(PUBLISH)-$(PRINTER)-begin := \
 	nav-top \
 	row-begin \
