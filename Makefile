@@ -94,6 +94,8 @@ override VIM_FOLDING := {{{1
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
 #WORKING:NOW
 #	site
+#		make it alway use the index in composer_root/.composer.tmp, with realpath
+#			a href = .md -> .html
 #		post = comments ability through *-comments-$(date) files
 #		index = yq crawl of directory to create a central file to build "search" pages out of
 #				verify that pandoc ignores leading yaml/json, and that yq can be used to just grab the headers?
@@ -125,6 +127,7 @@ override VIM_FOLDING := {{{1
 #				tag = ~20
 #	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
 #		do sort based on yaml dates instead?  configurable?
+#	SITE_GIT_REPO ?= git@github.com:garybgenett/garybgenett.net.git
 # document
 #	$(COMPOSER_YML) and note that it is now an override for everything
 #		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
@@ -134,7 +137,14 @@ override VIM_FOLDING := {{{1
 #		side note to remove revealjs per-directory hack...
 #	if site_search_name is empty, it disables it
 #	new $(CONVICT) -> $(PRINTER)/c_list hack
+#	COMPOSER_TMP needs a mention, at this point...
 # other
+#	so many c_list/+ tests... really...?  probably...
+#			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
+#		documentation can be as simple as "+ > c_list" in precedence...?  probably...
+#		release notes, now...?  meh...
+#		test that touch of composer.yml triggers a full rebuild
+#			somehow test $(PUBLISH) target
 #	add test case for physical book/page-* files
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins.
 #		c_title = pagetitle?  naw, there are tons of other places to put this
@@ -142,6 +152,8 @@ override VIM_FOLDING := {{{1
 #			title-prefix is a really good pick here, but save it for example website(s)
 #		header-includes?  leave it to c_options?  maybe c_header?
 #			only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
+#	COMPOSER_KEEPING test & document
+#	$(CLEANER)-logs test & document
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
@@ -214,7 +226,6 @@ ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
 
-#WORK this needs a documentation mention, at this point...
 override COMPOSER_TMP			:= $(CURDIR)/.composer.tmp
 override COMPOSER_TMP_INDEX		:= $(COMPOSER_TMP)
 override COMPOSER_TMP_LIBRARY		:= $(COMPOSER_TMP)
@@ -476,7 +487,6 @@ override COMPOSER_DOCOLOR		?= 1
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_INCLUDE		?=
 override COMPOSER_DEPENDS		?=
-#WORK test
 override COMPOSER_KEEPING		?= 100
 
 override COMPOSER_DEBUGIT_ALL		:=
@@ -674,7 +684,7 @@ override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
 
 ########################################
 
-#WORKING
+#WORKING:NOW
 # expose these as $(CSS_ALT)-type variables...?
 # it's probably time to make each of them a tested part of the team...
 # four options, including for revealjs, which has each of these
@@ -2219,6 +2229,12 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #	$(PUBLISH) rebuilds indexes, force recursively
 #	examples of description/etc. metadata in $(COMPOSER_YML)
+#	how to do an include of the digest file
+#	$(PUBLISH)-$(CLEANER)[reset] / $(PUBLISH)-$(DO_PAGE) / $(PUBLISH)-index / $(PUBLISH)-library ...?
+#	$(PUBLISH)-* targets can reach up the tree, back to the closest COMPOSER_YML_LIST directory...
+#	note: removed yaml fields will not update in the index = make site
+#	note: pretty much everything is linked to COMPOSER_YML_LIST, so when those get updated...
+#	COMPOSER_EXT="" and c_site="1" do not mix very well!
 
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS_CSS))$(_D)
@@ -2875,6 +2891,12 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ENDOLINE)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 	@$(ENDOLINE)
+	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK)						>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
+#>	$(subst --relative,,$(LN)) $(patsubst $(COMPOSER_DIR)/%,%,$(MDVIEWER_CSS))	$(CURDIR)/$(COMPOSER_CSS) >/dev/null
+	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) >/dev/null
 endif
 #>	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(RUNMAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
@@ -2895,14 +2917,6 @@ endif
 	@$(ECHO) "$(ICON_GPL)"					| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-gpl.jpg
 	@$(ECHO) "$(ICON_CC)"					| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-cc.jpg
 	@$(ECHO) "$(ICON_RESERVED)"				| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-reserved.jpg
-ifneq ($(COMPOSER_RELEASE),)
-	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK)						>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
-#>	$(subst --relative,,$(LN)) $(patsubst $(COMPOSER_DIR)/%,%,$(MDVIEWER_CSS))	$(CURDIR)/$(COMPOSER_CSS) >/dev/null
-	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) >/dev/null
-endif
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
 	@$(ECHO) "<script>\n"								>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_JS))
 	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_JS))
@@ -3198,9 +3212,6 @@ variables:
     homepage:				$(COMPOSER_HOMEPAGE)
     brand:				$(COMPOSER_TECHNAME)
     copyright:				$(COPYRIGHT_SHORT)
-
-#WORKING SITE_GIT_REPO ?= git@github.com:garybgenett/garybgenett.net.git
-#WORKING SITE_PER_PAGE ?= 10
 
     cols_main_size:			6
     cols_main_first:
@@ -6777,24 +6788,10 @@ $(PUBLISH)-reset:
 $(COMPOSER_YML_LIST):
 	@$(ECHO) ""
 
-#WORKING:NOW
-# make it alway use the index in composer_root/.composer.tmp, with realpath
-# move configuration to composer.yml
-# consolidate and migrate to build.sh
-# document "chars max" hard-limit
-# what to do with html_break? maybe just make it the default at this point? or, add back in the <br> flag...
-# make all indexing parallel using +/xargs
-# note: removed fields will not update in the index = make site-force
-# a href = .md -> .html
-# COMPOSER_EXT="" and c_site="1" do not mix!  maybe catch this with an ERROR message...?
-# document: include of digest file
-# document: $(PUBLISH)-$(CLEANER)[reset] / $(PUBLISH)-$(DO_PAGE) / $(PUBLISH)-index / $(PUBLISH)-library ...?
-# document: $(PUBLISH)-* targets can reach up the tree, back to the closest COMPOSER_YML_LIST directory...
-
 .PHONY: $(PUBLISH)-$(TESTING)
 $(PUBLISH)-$(TESTING):
-#	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH) >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
 #	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
+#	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
 #	@$(foreach NUM,0 1 2,\
 #		$(MKDIR) $(CURDIR)/$(TESTING)/dir$(NUM); \
 #		$(eval override DATE := $(NUM)$(NUM)$(NUM)$(NUM)-$(NUM)$(NUM)-$(NUM)$(NUM)) \
@@ -6809,11 +6806,9 @@ $(PUBLISH)-$(TESTING):
 #		$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW) >>$(FILE); \
 #	)
 #WORKING:NOW
-#	@$(RUNMAKE) $($(PUBLISH)-library-metadata)
 #	@$(RUNMAKE) c_site="1" COMPOSER_DEBUGIT=1 $($(PUBLISH)-library-metadata)
-#	@$(RM) $($(PUBLISH)-library-digest)
 #	@$(RUNMAKE) c_site="1" COMPOSER_DEBUGIT=1 $($(PUBLISH)-library-digest)
-#	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $(COMPOSER_TMP_LIBRARY)/_library/$(PUBLISH)-library-digest$(COMPOSER_EXT_DEFAULT) $(PUBLISH_BUILD_CMD_END)\n" >$(CURDIR)/$(DO_PAGE)-$(TESTING).md
+#	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $(CURDIR)/_library/$(PUBLISH)-library-digest.md $(PUBLISH_BUILD_CMD_END)\n" >$(CURDIR)/$(DO_PAGE)-$(TESTING).md
 #	@$(RUNMAKE) COMPOSER_DEBUGIT="1" $(DO_PAGE)s
 	@$(RUNMAKE) $(DO_PAGE)s
 
@@ -6845,21 +6840,25 @@ override $(PUBLISH)-indexes := \
 
 override $(PUBLISH)-library-folder	:=
 ifneq ($(c_site),)
+ifneq ($(COMPOSER_YML_LIST),)
 override $(PUBLISH)-library-folder	:= $(shell \
 	$(COMPOSER_YML_DATA) \
 	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"folder\"]" 2>/dev/null \
 	| $(SED) "/^null$$/d" \
 )
 endif
+endif
 
 override $(PUBLISH)-library-auto_update	:=
 ifneq ($(c_site),)
+ifneq ($(COMPOSER_YML_LIST),)
 ifneq ($($(PUBLISH)-library-folder),)
 override $(PUBLISH)-library-auto_update	:= $(shell \
 	$(COMPOSER_YML_DATA) \
 	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"auto_update\"]" 2>/dev/null \
 	| $(SED) "/^null$$/d" \
 )
+endif
 endif
 endif
 
@@ -7022,6 +7021,7 @@ $($(PUBLISH)-library-metadata):
 ### {{{3 $(PUBLISH)-library-digest -----
 
 ifneq ($(c_site),)
+ifneq ($(COMPOSER_YML_LIST),)
 $($(PUBLISH)-library-digest): export override $(PUBLISH)-library-digest_count := $(shell \
 	$(COMPOSER_YML_DATA) \
 	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_count\"]" 2>/dev/null \
@@ -7052,6 +7052,7 @@ $($(PUBLISH)-library-digest): export override $(PUBLISH)-library-digest_permalin
 	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"digest_permalink\"]" 2>/dev/null \
 	| $(SED) "/^null$$/d" \
 )
+endif
 endif
 
 $($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
@@ -7247,7 +7248,6 @@ ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@+$(MAKE) $(MAKE_OPTIONS) $(CLEANER)-$(SUBDIRS)
 endif
 
-#WORK test & document
 .PHONY: $(CLEANER)-logs
 $(CLEANER)-logs:
 ifneq ($(COMPOSER_KEEPING),)
@@ -7402,14 +7402,6 @@ $(COMPOSER_LOG):
 
 ########################################
 ## {{{2 $(COMPOSER_PANDOC) -------------
-
-#WORKING
-# so many c_list/+ tests... really...?  probably...
-#	3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
-# documentation can be as simple as "+ > c_list" in precedence...?  probably...
-# release notes, now...?  meh...
-# test that touch of composer.yml triggers a full rebuild
-#	somehow test $(PUBLISH) target
 
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
