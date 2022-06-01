@@ -3346,8 +3346,19 @@ variables:
       data:
         - type: text
           data: RIGHT TEXT
-    - type: text
-      data: #WORKING:NOW library
+    - name: LIBRARY
+      type: nav-box
+      data:
+        - type: text
+          data: #WORKING:NOW .library-authors
+        - type: text
+          data: .spacer
+        - type: text
+          data: #WORKING:NOW .library-dates
+        - type: text
+          data: .spacer
+        - type: text
+          data: #WORKING:NOW .library-tags
 
 ########################################
 
@@ -6259,32 +6270,6 @@ $(TESTING)-$(TARGETS)-done:
 	@$(call $(TESTING)-hold)
 
 ########################################
-### {{{3 $(TESTING)-$(PUBLISH) ---------
-
-.PHONY: $(TESTING)-$(PUBLISH)
-$(TESTING)-$(PUBLISH): $(TESTING)-Think
-$(TESTING)-$(PUBLISH):
-	@$(call $(TESTING)-$(HEADERS),\
-		Test every combination of formats and formatting variables ,\
-		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
-	)
-#WORK
-#	@$(call $(TESTING)-mark)
-#	@$(call $(TESTING)-load)
-	@$(call $(TESTING)-init)
-	@$(call $(TESTING)-done)
-
-#> update: TYPE_PUBLISH
-.PHONY: $(TESTING)-$(PUBLISH)-init
-$(TESTING)-$(PUBLISH)-init:
-#WORK
-
-.PHONY: $(TESTING)-$(PUBLISH)-done
-$(TESTING)-$(PUBLISH)-done:
-#WORK
-#	@$(call $(TESTING)-hold)
-
-########################################
 ### {{{3 $(TESTING)-$(INSTALL) ---------
 
 .PHONY: $(TESTING)-$(INSTALL)
@@ -7030,20 +7015,20 @@ $(PUBLISH):
 else
 #>$(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH): $(PUBLISH)-$(SUBDIRS)-$(HEADERS)
-$(PUBLISH): $(PUBLISH)-$(CLEANER)
-$(PUBLISH): $(PUBLISH)-index
-$(PUBLISH): $(PUBLISH)-library
-#>$(PUBLISH): $(DO_PAGE)s-$(CLEANER)
-$(PUBLISH): $(DO_PAGE)s-$(DOITALL)
+$(PUBLISH):
+	@+$(MAKE) $(MAKE_OPTIONS) $(PUBLISH)-$(CLEANER)
+	@+$(MAKE) $(MAKE_OPTIONS) \
+		$($(PUBLISH)-index) \
+		$($(PUBLISH)-library)
+#>	@+$(MAKE) $(MAKE_OPTIONS) $(DO_PAGE)s-$(CLEANER)
+	@+$(MAKE) $(MAKE_OPTIONS) $(DO_PAGE)s-$(DOITALL)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)),$(DOFORCE))
-#>$(PUBLISH): $(CLEANER)
-$(PUBLISH): $(DOITALL)
+#>	@+$(MAKE) $(MAKE_OPTIONS) $(CLEANER)
+	@+$(MAKE) $(MAKE_OPTIONS) $(DOITALL)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
-$(PUBLISH): $(PUBLISH)-$(SUBDIRS)
+	@+$(MAKE) $(MAKE_OPTIONS) $(PUBLISH)-$(SUBDIRS)
 endif
-$(PUBLISH):
-	@$(ECHO) ""
 endif
 
 .PHONY: $(PUBLISH)-$(CLEANER)
@@ -7208,18 +7193,15 @@ $($(PUBLISH)-indexes):
 	else \
 		$(PUBLISH_BUILD_SH_RUN) "$($(@))"; \
 	fi \
-		| $(TEE) $(@) \
+		| $(TEE) $(@).$(COMPOSER_BASENAME) \
 		$(if $(COMPOSER_DEBUGIT),| $(SED) -n "/^<!--[[:space:]]/p",>/dev/null); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
+	@$(ECHO) "$(_S)"
+	@$(MV) $(@).$(COMPOSER_BASENAME) $(@) $(if $(COMPOSER_DEBUGIT),,>/dev/null)
 	@$(ECHO) "$(_D)"
 
 ########################################
 ### {{{3 $(PUBLISH)-library ------------
-
-.PHONY: $(PUBLISH)-library
-$(PUBLISH)-library: $($(PUBLISH)-library)
-$(PUBLISH)-library:
-	@$(ECHO) ""
 
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 $($(PUBLISH)-library): $(COMPOSER_YML_LIST)
@@ -7248,15 +7230,11 @@ endif
 
 $($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-metadata):
-	@$(call $(HEADERS)-note,$($(PUBLISH)-library-metadata),$(_H)Indexing,$(PUBLISH)-library)
+	@$(call $(HEADERS)-note,$(@),$(_H)Indexing,$(PUBLISH)-library)
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_N)"
-	@if [ ! -s $($(PUBLISH)-library-metadata) ]; then \
-		$(ECHO) "{}" >$($(PUBLISH)-library-metadata); \
-		$(TOUCH) $($(PUBLISH)-library-metadata); \
-	fi
-	@$(ECHO) "{" >$($(PUBLISH)-library-metadata).$(PRINTER)
+	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
 	@$(FIND) $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) \
 		\( -path $(COMPOSER_TMP) -prune \) \
 		-o \( -path $(COMPOSER_TMP_INDEX) -prune \) \
@@ -7264,16 +7242,16 @@ $($(PUBLISH)-library-metadata):
 		-o \( -path \*/$(notdir $(COMPOSER_TMP))/\* -prune \) \
 		-o \( -path \*/$(notdir $(COMPOSER_TMP_INDEX))/\* -prune \) \
 		-o \( -path \*/$(notdir $(COMPOSER_TMP_LIBRARY))/\* -prune \) \
-		-o \( -type f -newer $($(PUBLISH)-library-metadata) -name "*$(COMPOSER_EXT)" -print \) \
+		-o \( -type f $$(if [ -f "$(@)" ]; then $(ECHO) "-newer $(@)"; fi) -name "*$(COMPOSER_EXT)" -print \) \
 	| while read -r FILE; do \
 		$(ECHO) "$(_D)"; \
-		$(call $(HEADERS)-note,$($(PUBLISH)-library-metadata),$${FILE},$(PUBLISH)-library) >&2; \
+		$(call $(HEADERS)-note,$(@),$${FILE},$(PUBLISH)-library) >&2; \
 		if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 			else				$(ECHO) "$(_N)"; \
 			fi; \
 		$(ECHO) "\"$${FILE}\": " \
 			| $(SED) "s|^([\"])$(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/|\1|g" \
-			| $(TEE) --append $($(PUBLISH)-library-metadata).$(PRINTER) \
+			| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 		if [ -n "$$( \
 			$(YQ_READ) $${FILE} \
@@ -7294,32 +7272,37 @@ $($(PUBLISH)-library-metadata):
 					| $(SED) "s|^$(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/||g" \
 				)\" }" \
 			| $(YQ_WRITE) ". += { \"updated\": \"$(DATESTAMP)\" }" \
-			| $(TEE) --append $($(PUBLISH)-library-metadata).$(PRINTER) \
+			| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-		$(ECHO) "," >>$($(PUBLISH)-library-metadata).$(PRINTER); \
+		$(ECHO) "," >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "$(_D)"; \
 	done
 	@$(ECHO) "$(_E)"
 	@$(ECHO) "\"$(COMPOSER_BASENAME)\": { \"updated\": \"$(DATESTAMP)\" } }\n" \
-		| $(TEE) --append $($(PUBLISH)-library-metadata).$(PRINTER) \
+		| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 		$(if $(COMPOSER_DEBUGIT),,>/dev/null)
 	@$(ECHO) "$(_N)"
+	@if [ ! -s "$(@)" ]; then \
+		$(ECHO) "{}" >$(@).$(PRINTER); \
+	else \
+		$(CP) $(@) $(@).$(PRINTER); \
+	fi
 	@$(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' \
-			$($(PUBLISH)-library-metadata) \
-			$($(PUBLISH)-library-metadata).$(PRINTER) \
+			$(@).$(PRINTER) \
+			$(@).$(COMPOSER_BASENAME) \
 		| $(YQ_WRITE_FILE) "sort_keys(..)" \
-		>$($(PUBLISH)-library-metadata).$(PUBLISH); \
+		>$(@).$(PUBLISH); \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then \
 				exit 1; \
 			fi
 	@$(ECHO) "$(_S)"
-	@if [ -s "$($(PUBLISH)-library-metadata).$(PUBLISH)" ]; then \
-		$(RM) $($(PUBLISH)-library-metadata).$(PRINTER); \
-		$(MV) $($(PUBLISH)-library-metadata).$(PUBLISH) \
-			$($(PUBLISH)-library-metadata); \
+	@if [ -s "$(@).$(PUBLISH)" ]; then \
+		$(RM) $(@).$(PRINTER); \
+		$(RM) $(@).$(COMPOSER_BASENAME); \
+		$(MV) $(@).$(PUBLISH) $(@); \
 	fi
 	@$(ECHO) "$(_D)"
-	@$(call $(HEADERS)-note,$($(PUBLISH)-library-metadata),$(_H)Complete,$(PUBLISH)-library)
+	@$(call $(HEADERS)-note,$(@),$(_H)Complete,$(PUBLISH)-library)
 
 ########################################
 ### {{{3 $(PUBLISH)-library-digest -----
@@ -7461,9 +7444,6 @@ $(eval export override COMPOSER_DOITALL_$(PUBLISH)-$(TESTING) ?=)
 $(PUBLISH)-$(TESTING)-%:
 	@$(RUNMAKE) COMPOSER_DOITALL_$(PUBLISH)-$(TESTING)="$(*)" $(PUBLISH)-$(TESTING)
 
-#WORKING:NOW override $(PUBLISH)-$(TESTING)-MAKEJOBS := $(SPECIAL_VAL)
-override $(PUBLISH)-$(TESTING)-MAKEJOBS := $(MAKEJOBS_DEFAULT)
-
 .PHONY: $(PUBLISH)-$(TESTING)
 $(PUBLISH)-$(TESTING): .set_title-$(PUBLISH)-$(TESTING)
 $(PUBLISH)-$(TESTING):
@@ -7524,6 +7504,17 @@ $(PUBLISH)-$(TESTING)-$(SUBDIRS):
 	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-page-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-page-$(NOTHING))	>$(CURDIR)/$(patsubst .%,%,$(NOTHING))/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-comments)		>$(CURDIR)/$(DO_PAGE)-index.comments.$(EXTN_TEXT)
+#WORKING:NOW
+#	@$(CAT) $($(PUBLISH)-library-metadata) | $(YQ_WRITE) ".[].author" | $(SED) "/^null$$/d" | $(SED) "s|^[-][ ]||g" | $(SED) "s|^|- |g" | $(SORT) | $(YQ_WRITE_OUT)
+#	@$(CAT) $($(PUBLISH)-library-metadata) | $(YQ_WRITE) ".[].date" | $(SED) "/^null$$/d" | $(SED) "s|^[-][ ]||g" | $(SED) "s|^|- |g" | $(SORT) | $(YQ_WRITE_OUT)
+#	@$(CAT) $($(PUBLISH)-library-metadata) | $(YQ_WRITE) ".[].tags" | $(SED) "/^null$$/d" | $(SED) "s|^[-][ ]||g" | $(SED) "s|^|- |g" | $(SORT) | $(YQ_WRITE_OUT)
+#	@$(PRINT) "#WORKING:NOW"
+#	@$(CAT) $($(PUBLISH)-library-metadata) | $(YQ_WRITE) "map(select(.author == \"Gary B. Genett\")) | .[].path"
+#	@$(PRINT) "#WORKING:NOW"
+#	@$(CAT) $($(PUBLISH)-library-metadata) | $(YQ_WRITE) "map(select(.date == \"2030-01-01T00:00:00Z\")) | .[].path"
+#	@$(PRINT) "#WORKING:NOW"
+#	@$(CAT) $($(PUBLISH)-library-metadata) | $(YQ_WRITE) "map(select(.tags != null)) | .[].path"
+#	exit 1
 	@$(ECHO) "$(_M)"
 	@$(ECHO) "$(DO_PAGE)-$(DO_PAGE)-$(TESTING).$(EXTN_HTML):"	>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " .box-begin .box-end"					>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS)
@@ -7543,9 +7534,10 @@ $(PUBLISH)-$(TESTING)-$(SUBDIRS):
 	@$(ECHO) "\n"							>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(TESTING)),)
-	@+$(MAKE) $(MAKE_OPTIONS) MAKEJOBS="$($(PUBLISH)-$(TESTING)-MAKEJOBS)" $(PUBLISH)-$(DOFORCE)
+	@+$(MAKE) $(MAKE_OPTIONS) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOFORCE)
 else
-	@+$(MAKE) $(MAKE_OPTIONS) MAKEJOBS="$($(PUBLISH)-$(TESTING)-MAKEJOBS)" $(DOITALL)-$(DOITALL)
+#>	@+$(MAKE) $(MAKE_OPTIONS) MAKEJOBS="$(SPECIAL_VAL)" $(DOITALL)-$(DOITALL)
+	@+$(MAKE) $(MAKE_OPTIONS) $(DOITALL)-$(DOITALL)
 endif
 
 #WORKING:NOW
