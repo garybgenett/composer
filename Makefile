@@ -1308,7 +1308,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),\
 #	$(CONVICT)-$(DOITALL)
 #	$(UPGRADE)-$(DOITALL)
 #	$(PUBLISH)-$(DOITALL)
-#	$(PUBLISH)-$(TESTING)-$(DOITALL)
+#	$(PUBLISH)-$(EXAMPLE)-$(DOITALL)
 #	$(INSTALL)-$(DOITALL)
 #	$(CLEANER)-$(DOITALL)
 #	$(DOITALL)-$(DOITALL)
@@ -7070,7 +7070,7 @@ $(COMPOSER_YML_LIST):
 ifneq ($(COMPOSER_YML_LIST),)
 override COMPOSER_TMP_CACHE		:= $(patsubst $(CURDIR)%,$(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))%,$(COMPOSER_TMP))
 endif
-override $(PUBLISH)-cache		:= $(COMPOSER_TMP_CACHE)/$(PUBLISH)-cach
+override $(PUBLISH)-cache		:= $(COMPOSER_TMP_CACHE)/$(PUBLISH)-cache
 
 override $(PUBLISH)-caches-begin := \
 	nav-top \
@@ -7595,21 +7595,21 @@ $($(PUBLISH)-library-digest):
 	@$(call $(HEADERS)-note,$(@),$(_H)Complete,$(PUBLISH)-library)
 
 ########################################
-### {{{3 $(PUBLISH)-$(TESTING) ---------
+### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
 
 #> update: $(MAKE) / @+
 
 #> update: PHONY.*$(DOITALL)
-$(eval export override COMPOSER_DOITALL_$(PUBLISH)-$(TESTING) ?=)
-.PHONY: $(PUBLISH)-$(TESTING)-%
-$(PUBLISH)-$(TESTING)-%:
-	@$(RUNMAKE) COMPOSER_DOITALL_$(PUBLISH)-$(TESTING)="$(*)" $(PUBLISH)-$(TESTING)
+$(eval export override COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE) ?=)
+.PHONY: $(PUBLISH)-$(EXAMPLE)-%
+$(PUBLISH)-$(EXAMPLE)-%:
+	@$(RUNMAKE) COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)="$(*)" $(PUBLISH)-$(EXAMPLE)
 
-.PHONY: $(PUBLISH)-$(TESTING)
-$(PUBLISH)-$(TESTING): .set_title-$(PUBLISH)-$(TESTING)
-$(PUBLISH)-$(TESTING):
+.PHONY: $(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE):
 	@$(call $(HEADERS))
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(TESTING)),)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(MKDIR) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)
 	@$(MKDIR) $(CURDIR)/_$(PUBLISH)/$(patsubst .%,%,$(NOTHING))
 	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$(CURDIR)/_$(PUBLISH)/$(CONFIGS)%,$(BOOTSTRAP_DIR))
@@ -7640,7 +7640,7 @@ endif
 #WORKING
 # document this test case, empty configuration versus hard-defaults
 #	they should match, and $(NOTHING) directory should not have a _library
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(TESTING)),)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)				>$(CURDIR)/$(COMPOSER_YML)
 endif
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
@@ -7649,22 +7649,22 @@ endif
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $(CURDIR)/_$(PUBLISH)/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
 #WORKING:NOW need to add the "local" ability to COMPOSER_INCLUDE, to mask out the $(DO_PAGE) in $(CONFIGS)...
 #	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-$(COMPOSER_YML))		| $(TEE) $(CURDIR)/_$(PUBLISH)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-$(COMPOSER_YML)-$(CONFIGS))	| $(TEE) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-$(COMPOSER_YML)-$(NOTHING))	| $(TEE) $(CURDIR)/_$(PUBLISH)/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-$(COMPOSER_YML)-pandoc)	| $(TEE) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)/pandoc/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))		| $(TEE) $(CURDIR)/_$(PUBLISH)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS))	| $(TEE) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(NOTHING))	| $(TEE) $(CURDIR)/_$(PUBLISH)/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-pandoc)	| $(TEE) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)/pandoc/$(COMPOSER_YML)
 	@$(ECHO) "$(_D)"
-#>	@+$(MAKE) $(MAKE_OPTIONS) --directory $(CURDIR)/_$(PUBLISH) c_site="1" $(PUBLISH)-$(TESTING)-$(SUBDIRS)
-	@$(MAKE) $(MAKE_OPTIONS) --directory $(CURDIR)/_$(PUBLISH) c_site="1" $(PUBLISH)-$(TESTING)-$(SUBDIRS)
+#>	@+$(MAKE) $(MAKE_OPTIONS) --directory $(CURDIR)/_$(PUBLISH) c_site="1" $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS)
+	@$(MAKE) $(MAKE_OPTIONS) --directory $(CURDIR)/_$(PUBLISH) c_site="1" $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS)
 
-.PHONY: $(PUBLISH)-$(TESTING)-$(SUBDIRS)
-$(PUBLISH)-$(TESTING)-$(SUBDIRS):
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-digest)		>$(CURDIR)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-digest-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-page)			>$(CURDIR)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-page-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-page-$(NOTHING))	>$(CURDIR)/$(patsubst .%,%,$(NOTHING))/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(TESTING)-comments)		>$(CURDIR)/$(DO_PAGE)-index.comments.$(EXTN_TEXT)
+.PHONY: $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS)
+$(PUBLISH)-$(EXAMPLE)-$(SUBDIRS):
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)		>$(CURDIR)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)			>$(CURDIR)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(NOTHING))	>$(CURDIR)/$(patsubst .%,%,$(NOTHING))/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)		>$(CURDIR)/$(DO_PAGE)-index.comments.$(EXTN_TEXT)
 	@$(ECHO) "$(_M)"
 	@$(ECHO) "$(DO_PAGE)-$(DO_PAGE)-$(TESTING).$(EXTN_HTML):"	>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " .box-begin .box-end"					>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS)
@@ -7678,12 +7678,12 @@ $(PUBLISH)-$(TESTING)-$(SUBDIRS):
 		$(ECHO) "tags: [$(TESTING)1, $(TESTING)2, $(TESTING)3, $(TESTING)$(NUM)]\n"			| $(TEE) --append $(FILE); \
 		$(ECHO) "---\n"											| $(TEE) --append $(FILE); \
 		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) title-block nav-box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)\n"	| $(TEE) --append $(FILE); \
-		$(RUNMAKE) COMPOSER_DOCOLOR= $(PUBLISH)-$(TESTING)-$(EXAMPLE)					>>$(FILE); \
+		$(RUNMAKE) COMPOSER_DOCOLOR= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)					>>$(FILE); \
 		$(ECHO) " .spacer $(notdir $(FILE))"			>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS); \
 	)
 	@$(ECHO) "\n"							>>$(CURDIR)/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(TESTING)),)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@+$(MAKE) $(MAKE_OPTIONS) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOFORCE)
 else
 #>	@+$(MAKE) $(MAKE_OPTIONS) MAKEJOBS="$(SPECIAL_VAL)" $(DOITALL)-$(DOITALL)
@@ -7707,26 +7707,26 @@ endif
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
 
-.PHONY: $(PUBLISH)-$(TESTING)-$(EXAMPLE)
-$(PUBLISH)-$(TESTING)-$(EXAMPLE):
+.PHONY: $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
 	@$(call TITLE_LN ,$(DEPTH_MAX),Recommended Workflow)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 
-override define $(PUBLISH)-$(TESTING)-digest =
+override define $(PUBLISH)-$(EXAMPLE)-digest =
 ---
 pagetitle: Default Digest Page
 ---
 $(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
 endef
 
-override define $(PUBLISH)-$(TESTING)-digest-$(CONFIGS) =
+override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
 pagetitle: Configured Digest Page
 ---
 $(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
 endef
 
-override define $(PUBLISH)-$(TESTING)-comments =
+override define $(PUBLISH)-$(EXAMPLE)-comments =
 $(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 COMMENT $(PUBLISH_BUILD_CMD_END)
 COMMENT
 $(HTML_BREAK)
@@ -7736,7 +7736,7 @@ $(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
 endef
 
-override define $(PUBLISH)-$(TESTING)-$(COMPOSER_YML)-pandoc =
+override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-pandoc =
 variables:
   $(PUBLISH)-nav-top:
     MAIN:
@@ -7748,7 +7748,7 @@ endef
 ########################################
 #### {{{4 Heredoc: Page: Main ----------
 
-override define $(PUBLISH)-$(TESTING)-page =
+override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 pagetitle: Main Page
 ---
@@ -7825,7 +7825,7 @@ endef
 ########################################
 #### {{{4 Heredoc: Page: Config --------
 
-override define $(PUBLISH)-$(TESTING)-page-$(CONFIGS) =
+override define $(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS) =
 ---
 pagetitle: Configuration Testing
 date: 2040-01-01
@@ -7863,7 +7863,7 @@ endef
 ########################################
 #### {{{4 Heredoc: Page: Nothing -------
 
-override define $(PUBLISH)-$(TESTING)-page-$(NOTHING) =
+override define $(PUBLISH)-$(EXAMPLE)-page-$(NOTHING) =
 ---
 title: Empty Configuration
 author: $(COMPOSER_COMPOSER)
@@ -7880,9 +7880,9 @@ endef
 ########################################
 #### {{{4 Heredoc: Config: Main --------
 
-override define $(PUBLISH)-$(TESTING)-$(COMPOSER_YML) =
+override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML) =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(TESTING))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(EXAMPLE))
 ################################################################################
 
 variables:
@@ -7928,9 +7928,9 @@ endef
 ########################################
 #### {{{4 Heredoc: Config: Config ------
 
-override define $(PUBLISH)-$(TESTING)-$(COMPOSER_YML)-$(CONFIGS) =
+override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS) =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(TESTING) = $(CONFIGS))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(EXAMPLE) = $(CONFIGS))
 ################################################################################
 
 variables:
@@ -7965,9 +7965,9 @@ endef
 ########################################
 #### {{{4 Heredoc: Config: Nothing -----
 
-override define $(PUBLISH)-$(TESTING)-$(COMPOSER_YML)-$(NOTHING) =
+override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(NOTHING) =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(TESTING) = $(NOTHING))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(EXAMPLE) = $(NOTHING))
 ################################################################################
 
 variables:
