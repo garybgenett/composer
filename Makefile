@@ -117,6 +117,7 @@ override VIM_FOLDING := {{{1
 #	new $(CONVICT) -> $(PRINTER)/c_list hack
 #	COMPOSER_TMP needs a mention, at this point...
 #	everything stems from the Makefile, so that is the only place to check for changes...
+#	only one build at a time...
 # other
 #	so many c_list/+ tests... really...?  probably...
 #			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
@@ -1527,7 +1528,7 @@ $(HELPOUT)-FOOTER:
 ifeq ($(MAKECMDGOALS),)
 .NOTPARALLEL:
 endif
-ifneq ($(MAKECMDGOALS),$(filter-out $(HELPOUT),$(MAKECMDGOALS)))
+ifneq ($(filter $(HELPOUT),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 #>$(HELPOUT): \
@@ -2090,6 +2091,9 @@ endef
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-GOALS ---
+
+#WORK the file beats the directory, which beats the tree
+#WORK the file beats the command line, which beats the environment
 
 override define $(HELPOUT)-$(DOITALL)-GOALS =
 The guiding principles of $(_C)[$(COMPOSER_BASENAME)]$(_D):
@@ -2934,7 +2938,7 @@ endef
 #> update: TYPE_TARGETS
 
 .PHONY: $(CREATOR)
-ifneq ($(MAKECMDGOALS),$(filter-out $(CREATOR),$(MAKECMDGOALS)))
+ifneq ($(filter $(CREATOR),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 $(CREATOR): .set_title-$(CREATOR)
@@ -3842,7 +3846,8 @@ $$(
 	else
 		$(ECHO) "<!-- $${FUNCNAME} $(MARKER) logo -->\\n"
 	fi
-)&nbsp;$$(
+)
+&nbsp;$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 	| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"brand\"]" 2>/dev/null \\
 	| $(SED) "/^null$$/d"
@@ -5748,7 +5753,7 @@ $(DEBUGIT)-file:
 
 #> update: $(DEBUGIT): targets list
 .PHONY: $(DEBUGIT)
-ifneq ($(MAKECMDGOALS),$(filter-out $(DEBUGIT),$(MAKECMDGOALS)))
+ifneq ($(filter $(DEBUGIT),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 $(DEBUGIT): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
@@ -5835,7 +5840,7 @@ $(TESTING)-file:
 
 #> update: $(TESTING): targets list
 .PHONY: $(TESTING)
-ifneq ($(MAKECMDGOALS),$(filter-out $(TESTING),$(MAKECMDGOALS)))
+ifneq ($(filter $(TESTING),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 $(TESTING): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
@@ -6111,8 +6116,10 @@ $(TESTING)-speed:
 	@$(call $(TESTING)-done)
 
 override define $(TESTING)-speed-init =
+	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	for TLD in {1..3}; do \
 		$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
+		$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))	>$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		for SUB in {1..3}; do \
 			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
 		done; \
@@ -6132,7 +6139,10 @@ endef
 
 .PHONY: $(TESTING)-speed-init
 $(TESTING)-speed-init:
+	$(ECHO) "override COMPOSER_INCLUDE := 1\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(INSTALL)-$(DOFORCE)
+	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(PUBLISH)-$(DOFORCE)
+	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(CLEANER)-$(DOITALL)
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-speed-done
@@ -7068,7 +7078,7 @@ $(COMPOSER_YML_LIST):
 ### {{{3 $(PUBLISH)-$(CONFIGS) ---------
 
 ifneq ($(COMPOSER_YML_LIST),)
-override COMPOSER_TMP_CACHE		:= $(patsubst $(CURDIR)%,$(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))%,$(COMPOSER_TMP))
+override COMPOSER_TMP_CACHE		:= $(patsubst $(CURDIR)%,$(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))%,$(COMPOSER_TMP_CACHE))
 endif
 override $(PUBLISH)-cache		:= $(COMPOSER_TMP_CACHE)/$(PUBLISH)-cache
 
@@ -7144,14 +7154,17 @@ $(PUBLISH)-$(DO_PAGE): $($(PUBLISH)-cache)
 $(PUBLISH)-$(DO_PAGE):
 	@$(PUBLISH_BUILD_SH_RUN) $(word 1,$(c_list)) title-block
 	@$(foreach FILE,$($(PUBLISH)-caches-begin),\
+		$(ECHO) "<!-- $(PUBLISH)-$(DO_PAGE) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)) -->\n"; \
 		$(CAT) $($(PUBLISH)-cache).$(FILE).$(EXTN_HTML); \
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$(c_list),\
+		$(ECHO) "<!-- $(PUBLISH)-$(DO_PAGE) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$(FILE)) -->\n"; \
 		$(PUBLISH_BUILD_SH_RUN) $(FILE); \
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$($(PUBLISH)-caches-end),\
+		$(ECHO) "<!-- $(PUBLISH)-$(DO_PAGE) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)) -->\n"; \
 		$(CAT) $($(PUBLISH)-cache).$(FILE).$(EXTN_HTML); \
 		$(call NEWLINE) \
 	)
