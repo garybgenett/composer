@@ -3261,7 +3261,7 @@ variables:
 ################################################################################
 # $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
 
-  title-prefix:				EXAMPLE SITE
+#> title-prefix:			EXAMPLE SITE
 
 ########################################
 
@@ -3364,15 +3364,15 @@ variables:
       type: nav-box
       data:
         - type: text
-          data: .authors
+          data: .library-authors
         - type: text
           data: .spacer
         - type: text
-          data: .dates
+          data: .library-dates
         - type: text
           data: .spacer
         - type: text
-          data: .tags
+          data: .library-tags
 
 ########################################
 
@@ -4107,18 +4107,57 @@ function $(PUBLISH)-nav-side-list {
 				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
 				$(PUBLISH)-nav-box-end
 			elif [ "$${TYPE}" = "text" ]; then
+#WORKING:NOW:LIB
 #WORKING:NOW authors/dates/tags
-				TEXT="$(
+#WORKING:NOW move all this to a separate function, with dedicated command markers in addition to helpers
+#WORKING:NOW need curdir and site-library dir, to do realpath
+				TEXT="$$(
 					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].data" 2>/dev/null \\
 					| $(SED) "/^null$$/d"
 				)"
-				if [ "$${TEXT}" = ".authors" ]; then
-					$(ECHO) "$(HTML_BREAK)\\n"
-				elif [ "$${TEXT}" = ".dates" ]; then
-					$(ECHO) "$(HTML_BREAK)\\n"
-				elif [ "$${TEXT}" = ".tags" ]; then
-					$(ECHO) "$(HTML_BREAK)\\n"
+				if [ "$${TEXT}" = ".library-authors" ]; then
+					$(ECHO) "<ul>\\n"
+					$(CAT) $($(PUBLISH)-library-index) \\
+						| $${YQ_WRITE} ".library-authors | keys | .[]" 2>/dev/null \\
+						| $(SED) "/^null$$/d" \\
+					| while read -r FILE; do
+						$(CAT) $($(PUBLISH)-library-index) \\
+							| $${YQ_WRITE} ".library-authors.[\"$${FILE}\"] | .[]" 2>/dev/null \\
+							| $(SED) "/^null$$/d" \\
+						| while read -r DEST; do
+							$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
+						done
+					done
+					$(ECHO) "</ul>\\n"
+				elif [ "$${TEXT}" = ".library-dates" ]; then
+					$(ECHO) "<ul>\\n"
+					$(CAT) $($(PUBLISH)-library-index) \\
+						| $${YQ_WRITE} ".library-dates | keys | .[]" 2>/dev/null \\
+						| $(SED) "/^null$$/d" \\
+					| while read -r FILE; do
+						$(CAT) $($(PUBLISH)-library-index) \\
+							| $${YQ_WRITE} ".library-dates.[\"$${FILE}\"] | .[]" 2>/dev/null \\
+							| $(SED) "/^null$$/d" \\
+						| while read -r DEST; do
+							$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
+						done
+					done
+					$(ECHO) "</ul>\\n"
+				elif [ "$${TEXT}" = ".library-tags" ]; then
+					$(ECHO) "<ul>\\n"
+					$(CAT) $($(PUBLISH)-library-index) \\
+						| $${YQ_WRITE} ".library-tags | keys | .[]" 2>/dev/null \\
+						| $(SED) "/^null$$/d" \\
+					| while read -r FILE; do
+						$(CAT) $($(PUBLISH)-library-index) \\
+							| $${YQ_WRITE} ".library-tags.[\"$${FILE}\"] | .[]" 2>/dev/null \\
+							| $(SED) "/^null$$/d" \\
+						| while read -r DEST; do
+							$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
+						done
+					done
+					$(ECHO) "</ul>\\n"
 				elif [ "$${TEXT}" = ".spacer" ]; then
 					$(ECHO) "$(HTML_BREAK)\\n"
 				else
@@ -7177,13 +7216,13 @@ $(foreach FILE,\
 	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,library,$(FILE))) \
 )
 
-$(.authors):
+$(.library-authors):
 	@$(ECHO) "#WORKING:AUTHORS\n" >$(@)
 
-$(.dates):
+$(.library-dates):
 	@$(ECHO) "#WORKING:DATES\n" >$(@)
 
-$(.tags):
+$(.library-tags):
 	@$(ECHO) "#WORKING:TAGS\n" >$(@)
 
 $(foreach FILE,\
@@ -7424,7 +7463,6 @@ $($(PUBLISH)-library-index):
 		$(CAT) $($(PUBLISH)-library-metadata) \
 			| $(YQ_WRITE) ".[].date" \
 			| $(SED) "/^null$$/d" \
-			| $(SED) "s|^[-][ ]||g" \
 			| $(SED) -n \
 				-e "s|^([0-9]{4}).*$$|\1|gp" \
 				-e "s|^.*([0-9]{4})$$|\1|gp" \
@@ -7456,9 +7494,8 @@ $($(PUBLISH)-library-index):
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "tags: {\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".[].tags" \
+			| $(YQ_WRITE) ".[].tags | .[]" \
 			| $(SED) "/^null$$/d" \
-			| $(SED) "s|^[-][ ]||g" \
 			| $(SORT) \
 			| while read -r FILE; do \
 				$(ECHO) "$(_D)"; \
@@ -7684,9 +7721,9 @@ endif
 #WORKING
 # document this test case, empty configuration versus hard-defaults
 #	they should match, and $(NOTHING) directory should not have a _library
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+#WORKING:NOW:LIB ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)				>$(CURDIR)/$(COMPOSER_YML)
-endif
+#WORKING:NOW:LIB endif
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $(CURDIR)/_$(PUBLISH)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $(CURDIR)/_$(PUBLISH)/$(CONFIGS)/$(COMPOSER_SETTINGS)
@@ -7703,6 +7740,14 @@ endif
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS)
 $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS):
+#WORKING:NOW:LIB
+#	@+$(MAKE) $(MAKE_OPTIONS) $($(PUBLISH)-cache)
+#	@$(PUBLISH_BUILD_SH_RUN) $($(PUBLISH)-cache).nav-right.$(EXTN_HTML)
+	@$(RUNMAKE) $(CONFIGS)-$(PUBLISH)
+	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH) >$(PUBLISH_BUILD_SH)
+	@$(PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"; \
+	exit 1
+#WORKING:NOW
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)		>$(CURDIR)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)			>$(CURDIR)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
@@ -7930,6 +7975,8 @@ override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML) =
 ################################################################################
 
 variables:
+
+  title-prefix:				EXAMPLE SITE
 
   $(PUBLISH)-config:				{}
 
