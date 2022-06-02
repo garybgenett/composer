@@ -2248,6 +2248,7 @@ endef
 #		this is essentially what site-force does, is c_site=1 all, recursively
 #	booleans are true with 1, disabled with any other value (0 recommended), and otherwise default
 #	library folder can not be "null", and will be shortened to basename
+#	COMPOSER_INCLUDE + c_site = for the win?
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -2598,6 +2599,8 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
+
+#WORK a small number of large directories will process faster than a large number of small ones, especially with $(PUBLISH)
 
   * By default, $(_C)[$(COMPOSER_BASENAME)]$(_D) progresses linearly, doing one task at a time.  If
     there are dependencies between items, this can be beneficial, since it
@@ -3361,15 +3364,15 @@ variables:
       type: nav-box
       data:
         - type: text
-          data: #WORKING:NOW .library-authors
+          data: .authors
         - type: text
           data: .spacer
         - type: text
-          data: #WORKING:NOW .library-dates
+          data: .dates
         - type: text
           data: .spacer
         - type: text
-          data: #WORKING:NOW .library-tags
+          data: .tags
 
 ########################################
 
@@ -4104,11 +4107,19 @@ function $(PUBLISH)-nav-side-list {
 				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
 				$(PUBLISH)-nav-box-end
 			elif [ "$${TYPE}" = "text" ]; then
-				if [ "$$(
+#WORKING:NOW authors/dates/tags
+				TEXT="$(
 					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].data" 2>/dev/null \\
 					| $(SED) "/^null$$/d"
-				)" = ".spacer" ]; then
+				)"
+				if [ "$${TEXT}" = ".authors" ]; then
+					$(ECHO) "$(HTML_BREAK)\\n"
+				elif [ "$${TEXT}" = ".dates" ]; then
+					$(ECHO) "$(HTML_BREAK)\\n"
+				elif [ "$${TEXT}" = ".tags" ]; then
+					$(ECHO) "$(HTML_BREAK)\\n"
+				elif [ "$${TEXT}" = ".spacer" ]; then
 					$(ECHO) "$(HTML_BREAK)\\n"
 				else
 					$(ECHO) "\\n"
@@ -6115,6 +6126,8 @@ $(TESTING)-speed:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
+#WORKING:NOW redo this to look more like $(PUBLISH)-$(EXAMPLE), but keep the test directory
+
 override define $(TESTING)-speed-init =
 	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	for TLD in {1..3}; do \
@@ -7086,14 +7099,12 @@ override $(PUBLISH)-caches-begin := \
 	nav-top \
 	row-begin \
 	nav-left \
-	column-begin \
-
+	column-begin
 override $(PUBLISH)-caches-end := \
 	column-end \
 	nav-right \
 	row-end \
-	nav-bottom \
-
+	nav-bottom
 override $(PUBLISH)-caches := \
 	$(foreach FILE,\
 		$($(PUBLISH)-caches-begin) \
@@ -7147,6 +7158,52 @@ override COMPOSER_IGNORES		:= $(sort \
 )
 
 ########################################
+### {{{3 $(PUBLISH)-$(DO_PAGE)-helpers -
+
+override define $(PUBLISH)-$(DO_PAGE)-helpers =
+$(eval override .$(2) := $($(PUBLISH)-$(1))-$(2))
+$(eval override c_list := $(patsubst .$(2),$(.$(2)),$(c_list)))
+.PHONY: .$(2)
+.$(2): $(.$(2))
+.$(2):
+	@$(ECHO) ""
+endef
+
+$(foreach FILE,\
+	authors \
+	dates \
+	tags \
+	,\
+	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,library,$(FILE))) \
+)
+
+$(.authors):
+	@$(ECHO) "#WORKING:AUTHORS\n" >$(@)
+
+$(.dates):
+	@$(ECHO) "#WORKING:DATES\n" >$(@)
+
+$(.tags):
+	@$(ECHO) "#WORKING:TAGS\n" >$(@)
+
+$(foreach FILE,\
+	box-begin \
+	box-end \
+	spacer \
+	,\
+	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,cache,$(FILE))) \
+)
+
+$(.box-begin):
+	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 $(PUBLISH_BUILD_CMD_END)\n" >$(@)
+
+$(.box-end):
+	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)\n" >$(@)
+
+$(.spacer):
+	@$(ECHO) "$(HTML_BREAK)\n" >$(@)
+
+########################################
 ### {{{3 $(PUBLISH)-$(DO_PAGE) ---------
 
 .PHONY: $(PUBLISH)-$(DO_PAGE)
@@ -7168,32 +7225,6 @@ $(PUBLISH)-$(DO_PAGE):
 		$(CAT) $($(PUBLISH)-cache).$(FILE).$(EXTN_HTML); \
 		$(call NEWLINE) \
 	)
-
-override define $(PUBLISH)-$(DO_PAGE)-helpers =
-$(eval override .$(1) := $($(PUBLISH)-cache)-$(1))
-$(eval override c_list := $(patsubst .$(1),$(.$(1)),$(c_list)))
-.PHONY: .$(1)
-.$(1): $(.$(1))
-.$(1):
-	@$(ECHO) ""
-endef
-
-$(foreach FILE,\
-	box-begin \
-	box-end \
-	spacer \
-	,\
-	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,$(FILE))) \
-)
-
-$(.box-begin):
-	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 $(PUBLISH_BUILD_CMD_END)\n" >$(.box-begin)
-
-$(.box-end):
-	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)\n" >$(.box-end)
-
-$(.spacer):
-	@$(ECHO) "$(HTML_BREAK)\n" >$(.spacer)
 
 ########################################
 ### {{{3 $(PUBLISH)-cache --------------
