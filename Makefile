@@ -3360,6 +3360,8 @@ variables:
       data:
         - type: text
           data: RIGHT TEXT
+    - type: text
+      data: .spacer
     - name: LIBRARY
       type: nav-box
       data:
@@ -4401,6 +4403,24 @@ _EOF_
 ################################################################################
 
 #> update: YQ_WRITE.*title
+
+#WORKING:NOW:LIB
+#	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
+#		code in the function as a replacement here, and test
+#	replace the YQ_WRITE.*title code in library-digest with a call to title-block
+#		test
+#	convert most of the rest of library-digest into a generified override define
+#		test
+#	use the library-digest define to create the authors/dates/tags library pages
+#	finally, need to have code behind the helpers that creates the lists which link to the library pages
+#		(side note to do a review -- it's settled = yq is in make and html is in build.sh)
+#		doing it in build.sh means the libary location needs to be passed in
+#			use TARGETS-FORMAT to name the pages: foreach = author-format.html, date-format.html, tag-format.html
+#		it would be cool to make these definition lists with badges
+#	add code to digest/page generation that adds author/date/tags links at the bottom?
+#		this would be totally cool, but realpath needs make it complicated
+#	turn site back into an all-all, with all dependencies and no recipe
+#		chain subdirs off of index and library, so things don't go down the directory chain until they are ready
 
 function $(PUBLISH)-file {
 	TITL="$$(
