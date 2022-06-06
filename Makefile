@@ -770,6 +770,7 @@ override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
 override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
+override DIRNAME			:= $(call COMPOSER_FIND,$(PATH_LIST),dirname)
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
 override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - PATH="$(PATH)"
 override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
@@ -1228,7 +1229,7 @@ override PUBLISH_BUILD_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(MARKER)
 override PUBLISH_BUILD_CMD_END		= $(MARKER) -->
 
 override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
-override PUBLISH_BUILD_SH_RUN		:= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" $(BASH) $(PUBLISH_BUILD_SH)
+override PUBLISH_BUILD_SH_RUN		= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" CURDIR="$(CURDIR)" PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" $(BASH) $(PUBLISH_BUILD_SH)
 
 ########################################
 ## {{{2 Options ------------------------
@@ -3348,11 +3349,16 @@ variables:
         RIGHT TEXT
     - nav-box-end
     - .spacer
-    - nav-box-begin $(DEPTH_MAX) LIBRARY
+#WORKING:NOW:LIB
+    - "nav-box-begin $(DEPTH_MAX) LIBRARY: AUTHORS"
     - .library-authors
+    - nav-box-end
     - .spacer
+    - "nav-box-begin $(DEPTH_MAX) LIBRARY: DATES"
     - .library-dates
+    - nav-box-end
     - .spacer
+    - "nav-box-begin $(DEPTH_MAX) LIBRARY: TAGS"
     - .library-tags
     - nav-box-end
 
@@ -3663,7 +3669,7 @@ variables:
     - nav-unit-end
     - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reference
     - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration
-    - "nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) \"Templates: install\""
+    - "nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Templates: install"
     - text: |
         * [Templates: install]
     - nav-unit-end
@@ -3740,6 +3746,11 @@ PUBLISH_COPY_SAFE="$(PUBLISH_COPY_SAFE)"
 
 YQ_READ="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_READ)))"
 YQ_WRITE="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_WRITE)))"
+
+CURDIR="$${CURDIR}"
+PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
+
+PUBLISH_LIBRARY_INDEX_PATH="$$($(REALPATH) $${CURDIR} $$($(DIRNAME) $${PUBLISH_LIBRARY_INDEX}))"
 
 ########################################
 
@@ -4020,47 +4031,11 @@ function $(PUBLISH)-nav-side-list {
 #WORKING:NOW move all this to a separate function, with dedicated command markers in addition to helpers
 #WORKING:NOW need curdir and site-library dir, to do realpath
 		if [ "$${TEXT}" = ".library-authors" ]; then
-			$(ECHO) "<ul>\\n"
-			$(CAT) $($(PUBLISH)-library-index) \\
-				| $${YQ_WRITE} ".library-authors | keys | .[]" 2>/dev/null \\
-				| $(SED) "/^null$$/d" \\
-			| while read -r FILE; do
-				$(CAT) $($(PUBLISH)-library-index) \\
-					| $${YQ_WRITE} ".library-authors.[\"$${NUM}\"] | .[]" 2>/dev/null \\
-					| $(SED) "/^null$$/d" \\
-				| while read -r DEST; do
-					$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
-				done
-			done
-			$(ECHO) "</ul>\\n"
+			$(PUBLISH)-nav-side-list-library authors
 		elif [ "$${TEXT}" = ".library-dates" ]; then
-			$(ECHO) "<ul>\\n"
-			$(CAT) $($(PUBLISH)-library-index) \\
-				| $${YQ_WRITE} ".library-dates | keys | .[]" 2>/dev/null \\
-				| $(SED) "/^null$$/d" \\
-			| while read -r FILE; do
-				$(CAT) $($(PUBLISH)-library-index) \\
-					| $${YQ_WRITE} ".library-dates.[\"$${NUM}\"] | .[]" 2>/dev/null \\
-					| $(SED) "/^null$$/d" \\
-				| while read -r DEST; do
-					$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
-				done
-			done
-			$(ECHO) "</ul>\\n"
+			$(PUBLISH)-nav-side-list-library dates
 		elif [ "$${TEXT}" = ".library-tags" ]; then
-			$(ECHO) "<ul>\\n"
-			$(CAT) $($(PUBLISH)-library-index) \\
-				| $${YQ_WRITE} ".library-tags | keys | .[]" 2>/dev/null \\
-				| $(SED) "/^null$$/d" \\
-			| while read -r FILE; do
-				$(CAT) $($(PUBLISH)-library-index) \\
-					| $${YQ_WRITE} ".library-tags.[\"$${NUM}\"] | .[]" 2>/dev/null \\
-					| $(SED) "/^null$$/d" \\
-				| while read -r DEST; do
-					$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
-				done
-			done
-			$(ECHO) "</ul>\\n"
+			$(PUBLISH)-nav-side-list-library tags
 		elif [ "$${TEXT}" = ".spacer" ]; then
 			$(ECHO) "$(HTML_BREAK)\\n"
 		elif [ "$$(
@@ -4083,6 +4058,36 @@ function $(PUBLISH)-nav-side-list {
 		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[\"$${NUM}\"] -->\\n"
 	done
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	return 0
+}
+
+function $(PUBLISH)-nav-side-list-library {
+	$(ECHO) "<ul class=\"list-group\">\\n"
+	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+	| while read -r FILE; do
+		$(ECHO) "<li class=\"list-group-item\"><a href=\"$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+				$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
+			).$(EXTN_HTML)\">$${FILE}</a><span class=\"badge bg-secondary\">$$(
+				$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
+					| $(SED) "/^null$$/d" \\
+			)</span></li>\\n"
+		$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+			| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | .[]" 2>/dev/null \\
+			| $(SED) "/^null$$/d" \\
+		| while read -r DEST; do
+			$(ECHO) "<li class=\"list-group-item\"><a href=\"../$$(
+				$(ECHO) "$${DEST}" | $(SED) "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g"
+			)\">$${FILE}</a><span class=\"badge bg-secondary\">$$(
+				$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
+					| $(SED) "/^null$$/d" \\
+			)</span></li>\\n"
+		done
+	done
+	$(ECHO) "</ul>\\n"
 	return 0
 }
 
@@ -7180,7 +7185,7 @@ $(.spacer):
 .PHONY: $(PUBLISH)-$(DO_PAGE)
 $(PUBLISH)-$(DO_PAGE): $($(PUBLISH)-cache)
 $(PUBLISH)-$(DO_PAGE):
-	@$(PUBLISH_BUILD_SH_RUN) $(word 1,$(c_list)) title-block
+	@$(call PUBLISH_BUILD_SH_RUN) $(word 1,$(c_list)) title-block
 	@$(foreach FILE,$($(PUBLISH)-caches-begin),\
 		$(ECHO) "<!-- $(PUBLISH)-$(DO_PAGE) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)) -->\n"; \
 		$(CAT) $($(PUBLISH)-cache).$(FILE).$(EXTN_HTML); \
@@ -7188,7 +7193,7 @@ $(PUBLISH)-$(DO_PAGE):
 	)
 	@$(foreach FILE,$(c_list),\
 		$(ECHO) "<!-- $(PUBLISH)-$(DO_PAGE) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$(FILE)) -->\n"; \
-		$(PUBLISH_BUILD_SH_RUN) $(FILE); \
+		$(call PUBLISH_BUILD_SH_RUN) $(FILE); \
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$($(PUBLISH)-caches-end),\
@@ -7212,13 +7217,13 @@ $($(PUBLISH)-caches):
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP_CACHE)
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(PUBLISH_BUILD_SH_RUN) "$($(@))" ".variables[\"$(PUBLISH)-$($(@))\"]" "$(COMPOSER_LOGO)"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" ".variables[\"$(PUBLISH)-$($(@))\"]" "$(COMPOSER_LOGO)"; \
 	elif [ "$($(@))" != "$(patsubst nav-%,%,$($(@)))" ]; then \
-		$(PUBLISH_BUILD_SH_RUN) "$($(@))" ".variables[\"$(PUBLISH)-$($(@))\"]"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" ".variables[\"$(PUBLISH)-$($(@))\"]"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
-		$(PUBLISH_BUILD_SH_RUN) "$($(@))" "1"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "1"; \
 	else \
-		$(PUBLISH_BUILD_SH_RUN) "$($(@))"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))"; \
 	fi \
 		| $(TEE) $(@).$(COMPOSER_BASENAME) \
 		$(if $(COMPOSER_DEBUGIT),| $(SED) -n "/^<!--[[:space:]]/p",>/dev/null); \
@@ -7674,12 +7679,12 @@ endif
 $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS):
 #WORKING:NOW:LIB
 #	@+$(MAKE) $(MAKE_OPTIONS) $($(PUBLISH)-cache)
-#	@$(PUBLISH_BUILD_SH_RUN) $($(PUBLISH)-cache).nav-right.$(EXTN_HTML)
-	@$(RUNMAKE) $(CONFIGS)-$(PUBLISH)
+#	@$(call PUBLISH_BUILD_SH_RUN) $($(PUBLISH)-cache).nav-right.$(EXTN_HTML)
+#	@$(RUNMAKE) $(CONFIGS)-$(PUBLISH)
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH) >$(PUBLISH_BUILD_SH)
-	@$(PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
-	@$(PRINT) "$(_C)SUCCESS!"
-	exit 1
+#	@$(call PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
+#	@$(PRINT) "$(_C)SUCCESS!"
+#	exit 1
 #WORKING:NOW
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)		>$(CURDIR)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))	>$(CURDIR)/$(CONFIGS)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
