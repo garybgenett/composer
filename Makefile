@@ -3037,10 +3037,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RUNMAKE) COMPOSER_LOG=				COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) 2>&1 \
 		| $(SED) \
 			-e "s|$(COMPOSER_DIR)|...|g" \
-			-e "/Error[:][[:space:]]/d" \
 			-e "/install[:][[:space:]]/d" \
-			-e "/removed[[:space:]]/d" \
-			-e "/renamed[[:space:]]/d"
 #>	@$(RM) \
 #>		$(CURDIR)/$(COMPOSER_SETTINGS) \
 #>		$(CURDIR)/$(COMPOSER_YML) \
@@ -3321,60 +3318,43 @@ variables:
 
   $(PUBLISH)-nav-left:
 
-    - name: LEFT 1
-      type: nav-unit
-      open: 1
-      data:
-        - type: text
-          data: |
-            * ITEM 1
-            * ITEM 2
-            * ITEM 3
-    - type: text
-      data: .spacer
-    - name: LEFT 2
-      type: nav-box
-      data:
-        - type: text
-          data: LEFT TEXT
-    - type: text
-      data: EXAMPLE TEXT
+    - nav-unit-begin $(DEPTH_MAX) 1 LEFT 1
+    - text: |
+        * ITEM 1
+        * ITEM 2
+        * ITEM 3
+    - nav-unit-end
+    - .spacer
+    - nav-box-begin $(DEPTH_MAX) LEFT 2
+    - text: |
+        LEFT TEXT
+    - nav-box-end
+    - text: |
+        EXAMPLE TEXT
 
 ########################################
 
   $(PUBLISH)-nav-right:
 
-    - name: RIGHT 1
-      type: nav-unit
-      open: 1
-      data:
-        - type: text
-          data: |
-            * ITEM 1
-            * ITEM 2
-            * ITEM 3
-    - type: text
-      data: .spacer
-    - name: RIGHT 2
-      type: nav-box
-      data:
-        - type: text
-          data: RIGHT TEXT
-    - type: text
-      data: .spacer
-    - name: LIBRARY
-      type: nav-box
-      data:
-        - type: text
-          data: .library-authors
-        - type: text
-          data: .spacer
-        - type: text
-          data: .library-dates
-        - type: text
-          data: .spacer
-        - type: text
-          data: .library-tags
+    - nav-unit-begin $(DEPTH_MAX) 1 RIGHT 1
+    - text: |
+        * ITEM 1
+        * ITEM 2
+        * ITEM 3
+    - nav-unit-end
+    - .spacer
+    - nav-box-begin $(DEPTH_MAX) RIGHT 2
+    - text: |
+        RIGHT TEXT
+    - nav-box-end
+    - .spacer
+    - nav-box-begin $(DEPTH_MAX) LIBRARY
+    - .library-authors
+    - .spacer
+    - .library-dates
+    - .spacer
+    - .library-tags
+    - nav-box-end
 
 ########################################
 
@@ -3558,206 +3538,151 @@ variables:
 
   $(PUBLISH)-nav-left:
 
-    - name: $(COMPOSER_TECHNAME)
-      type: nav-unit
-      open: 1
-      data:
-        - name: Overview
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Overview]
-        - name: Quick Start
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Quick Start]
-        - name: Principles
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Principles]
-        - name: Requirements
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Requirements]
-    - type: text
-      data: .spacer
-    - name: Formats
-      type: nav-box
-      data:
-        - type: text
-          data: |
-            * [Example Website](_$(PUBLISH)/index.$(EXTN_HTML))
-        - type: text
-          data: .spacer
-        - type: text
-          data: |$(foreach FILE,$(OUT_README).$(PUBLISH).$(EXTN_HTML) $(COMPOSER_TARGETS),$(call NEWLINE)            * [$(FILE)]($(FILE)))
-    - type: text
-      data: $(COMPOSER_TAGLINE)
+    - nav-unit-begin $(DEPTH_MAX) 1 $(COMPOSER_TECHNAME)
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Overview
+    - text: |
+        * [Overview]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Quick Start
+    - text: |
+        * [Quick Start]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Principles
+    - text: |
+        * [Principles]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Requirements
+    - text: |
+        * [Requirements]
+    - nav-unit-end
+    - nav-unit-end
+    - .spacer
+    - nav-box-begin $(DEPTH_MAX) Formats
+    - text: |
+        * [Example Website](_$(PUBLISH)/index.$(EXTN_HTML))
+    - .spacer
+    - text: |$(foreach FILE,$(OUT_README).$(PUBLISH).$(EXTN_HTML) $(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
+    - nav-box-end
+    - text: |
+        $(COMPOSER_TAGLINE)
 
 ########################################
 
   $(PUBLISH)-nav-right:
 
-    - name: $(COMPOSER_BASENAME) Operation
-      type: nav-unit
-      data:
-        - name: Recommended Workflow
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Recommended Workflow]
-        - name: Document Formatting
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [HTML]
-                * [Bootstrap Websites]
-                * [PDF]
-                * [EPUB]
-                * [Reveal.js Presentations]
-                * [Microsoft Word & PowerPoint]
-        - name: Configuration Settings
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Configuration Settings]
-        - name: Precedence Rules
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Precedence Rules]
-        - name: Specifying Dependencies
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Specifying Dependencies]
-        - name: Custom Targets
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Custom Targets]
-        - name: Repository Versions
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Repository Versions]
-    - name: $(COMPOSER_BASENAME) Variables
-      type: nav-unit
-      data:
-        - name: Formatting Variables
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [c_site]
-                * [c_type / c_base / c_list]
-                * [c_lang]
-                * [c_css]
-                * [c_toc]
-                * [c_level]
-                * [c_margin]
-                * [c_options]
-        - name: Control Variables
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [MAKEJOBS]
-                * [COMPOSER_DOCOLOR]
-                * [COMPOSER_DEBUGIT]
-                * [COMPOSER_INCLUDE]
-                * [COMPOSER_DEPENDS]
-                * [COMPOSER_KEEPING]
-                * [COMPOSER_LOG]
-                * [COMPOSER_EXT]
-                * [COMPOSER_TARGETS]
-                * [COMPOSER_SUBDIRS]
-                * [COMPOSER_IGNORES]
-    - name: $(COMPOSER_BASENAME) Targets
-      type: nav-unit
-      data:
-        - name: Primary Targets
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [help / help-all]
-                * [template]
-                * [compose]
-                * [site]
-                * [install / install-all / install-force]
-                * [clean / clean-all / *-clean]
-                * [all / all-all / *-all]
-                * [list]
-        - name: Special Targets
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [book]
-                * [page]
-        - name: Additional Targets
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [debug / debug-file]
-                * [check / check-all / config / config-site / config-all / targets]
-                * [_commit / _commit-all]
-                * [_release / _update / _update-all]
-        - name: Internal Targets
-          type: nav-unit
-          data:
-            - type: text
-              data: |
-                * [Internal Targets]
-    - name: Reference
-      type: nav-unit
-      data:
-        - name: Configuration
-          type: nav-unit
-          data:
-            - name: "Templates: install"
-              type: nav-unit
-              data:
-                - type: text
-                  data: |
-                    * [Templates: install]
-            - name: Pandoc Extensions
-              type: nav-unit
-              data:
-                - type: text
-                  data: |
-                    * [Pandoc Extensions]
-        - name: Reserved
-          type: nav-unit
-          data:
-            - name: Target Names
-              type: nav-unit
-              data:
-                - type: text
-                  data: |
-                    * [Target Names]
-            - name: Variable Names
-              type: nav-unit
-              data:
-                - type: text
-                  data: |
-                    * [Variable Names]
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Operation
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Recommended Workflow
+    - text: |
+        * [Recommended Workflow]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Document Formatting
+    - text: |
+        * [HTML]
+        * [Bootstrap Websites]
+        * [PDF]
+        * [EPUB]
+        * [Reveal.js Presentations]
+        * [Microsoft Word & PowerPoint]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration Settings
+    - text: |
+        * [Configuration Settings]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Precedence Rules
+    - text: |
+        * [Precedence Rules]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Specifying Dependencies
+    - text: |
+        * [Specifying Dependencies]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Custom Targets
+    - text: |
+        * [Custom Targets]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Repository Versions
+    - text: |
+        * [Repository Versions]
+    - nav-unit-end
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Variables
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Formatting Variables
+    - text: |
+        * [c_site]
+        * [c_type / c_base / c_list]
+        * [c_lang]
+        * [c_css]
+        * [c_toc]
+        * [c_level]
+        * [c_margin]
+        * [c_options]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Control Variables
+    - text: |
+        * [MAKEJOBS]
+        * [COMPOSER_DOCOLOR]
+        * [COMPOSER_DEBUGIT]
+        * [COMPOSER_INCLUDE]
+        * [COMPOSER_DEPENDS]
+        * [COMPOSER_KEEPING]
+        * [COMPOSER_LOG]
+        * [COMPOSER_EXT]
+        * [COMPOSER_TARGETS]
+        * [COMPOSER_SUBDIRS]
+        * [COMPOSER_IGNORES]
+    - nav-unit-end
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Targets
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Primary Targets
+    - text: |
+        * [help / help-all]
+        * [template]
+        * [compose]
+        * [site]
+        * [install / install-all / install-force]
+        * [clean / clean-all / *-clean]
+        * [all / all-all / *-all]
+        * [list]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Special Targets
+    - text: |
+        * [book]
+        * [page]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Additional Targets
+    - text: |
+        * [debug / debug-file]
+        * [check / check-all / config / config-site / config-all / targets]
+        * [_commit / _commit-all]
+        * [_release / _update / _update-all]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Internal Targets
+    - text: |
+        * [Internal Targets]
+    - nav-unit-end
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reference
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration
+    - "nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) \"Templates: install\""
+    - text: |
+        * [Templates: install]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Pandoc Extensions
+    - text: |
+        * [Pandoc Extensions]
+    - nav-unit-end
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reserved
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Target Names
+    - text: |
+        * [Target Names]
+    - nav-unit-end
+    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Variable Names
+    - text: |
+        * [Variable Names]
+    - nav-unit-end
+    - nav-unit-end
+    - nav-unit-end
 
 ########################################
 
@@ -4077,99 +4002,86 @@ function $(PUBLISH)-nav-side {
 
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
-	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-		| $${YQ_WRITE} "$${1} | keys | .[]" 2>/dev/null \\
-		| while read -r FILE; do
-			TYPE="$$(
-				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].type" 2>/dev/null \\
-				| $(SED) "/^null$$/d"
-			)"
-			if [ "$${TYPE}" = "nav-unit" ]; then
-				NAME="$$(
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].name" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				)"
-				OPEN="$$(
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].open" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				)"
-				$(PUBLISH)-nav-unit-begin "$${DEPTH_MAX}" "$${OPEN}" "$${NAME}"
-				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
-				$(PUBLISH)-nav-unit-end
-			elif [ "$${TYPE}" = "nav-box" ]; then
-				NAME="$$(
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].name" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				)"
-				$(PUBLISH)-nav-box-begin "$${DEPTH_MAX}" "$${NAME}"
-				$(PUBLISH)-nav-side-list "$${1}[\"$${FILE}\"].data"
-				$(PUBLISH)-nav-box-end
-			elif [ "$${TYPE}" = "text" ]; then
+	SIZE="$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+		| $${YQ_WRITE} "$${1} | length" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+	)"
+	NUM="0"
+	while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[\"$${NUM}\"] -->\\n"
+		TEXT="$$(
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+			| $${YQ_WRITE} "$${1}[\"$${NUM}\"]" 2>/dev/null \\
+			| $(SED) "/^null$$/d"
+		)"
 #WORKING:NOW:LIB
 #WORKING:NOW authors/dates/tags
 #WORKING:NOW move all this to a separate function, with dedicated command markers in addition to helpers
 #WORKING:NOW need curdir and site-library dir, to do realpath
-				TEXT="$$(
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].data" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				)"
-				if [ "$${TEXT}" = ".library-authors" ]; then
-					$(ECHO) "<ul>\\n"
-					$(CAT) $($(PUBLISH)-library-index) \\
-						| $${YQ_WRITE} ".library-authors | keys | .[]" 2>/dev/null \\
-						| $(SED) "/^null$$/d" \\
-					| while read -r FILE; do
-						$(CAT) $($(PUBLISH)-library-index) \\
-							| $${YQ_WRITE} ".library-authors.[\"$${FILE}\"] | .[]" 2>/dev/null \\
-							| $(SED) "/^null$$/d" \\
-						| while read -r DEST; do
-							$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
-						done
-					done
-					$(ECHO) "</ul>\\n"
-				elif [ "$${TEXT}" = ".library-dates" ]; then
-					$(ECHO) "<ul>\\n"
-					$(CAT) $($(PUBLISH)-library-index) \\
-						| $${YQ_WRITE} ".library-dates | keys | .[]" 2>/dev/null \\
-						| $(SED) "/^null$$/d" \\
-					| while read -r FILE; do
-						$(CAT) $($(PUBLISH)-library-index) \\
-							| $${YQ_WRITE} ".library-dates.[\"$${FILE}\"] | .[]" 2>/dev/null \\
-							| $(SED) "/^null$$/d" \\
-						| while read -r DEST; do
-							$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
-						done
-					done
-					$(ECHO) "</ul>\\n"
-				elif [ "$${TEXT}" = ".library-tags" ]; then
-					$(ECHO) "<ul>\\n"
-					$(CAT) $($(PUBLISH)-library-index) \\
-						| $${YQ_WRITE} ".library-tags | keys | .[]" 2>/dev/null \\
-						| $(SED) "/^null$$/d" \\
-					| while read -r FILE; do
-						$(CAT) $($(PUBLISH)-library-index) \\
-							| $${YQ_WRITE} ".library-tags.[\"$${FILE}\"] | .[]" 2>/dev/null \\
-							| $(SED) "/^null$$/d" \\
-						| while read -r DEST; do
-							$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
-						done
-					done
-					$(ECHO) "</ul>\\n"
-				elif [ "$${TEXT}" = ".spacer" ]; then
-					$(ECHO) "$(HTML_BREAK)\\n"
-				else
-					$(ECHO) "\\n"
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].data" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				fi
-			fi
-		done
+		if [ "$${TEXT}" = ".library-authors" ]; then
+			$(ECHO) "<ul>\\n"
+			$(CAT) $($(PUBLISH)-library-index) \\
+				| $${YQ_WRITE} ".library-authors | keys | .[]" 2>/dev/null \\
+				| $(SED) "/^null$$/d" \\
+			| while read -r FILE; do
+				$(CAT) $($(PUBLISH)-library-index) \\
+					| $${YQ_WRITE} ".library-authors.[\"$${NUM}\"] | .[]" 2>/dev/null \\
+					| $(SED) "/^null$$/d" \\
+				| while read -r DEST; do
+					$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
+				done
+			done
+			$(ECHO) "</ul>\\n"
+		elif [ "$${TEXT}" = ".library-dates" ]; then
+			$(ECHO) "<ul>\\n"
+			$(CAT) $($(PUBLISH)-library-index) \\
+				| $${YQ_WRITE} ".library-dates | keys | .[]" 2>/dev/null \\
+				| $(SED) "/^null$$/d" \\
+			| while read -r FILE; do
+				$(CAT) $($(PUBLISH)-library-index) \\
+					| $${YQ_WRITE} ".library-dates.[\"$${NUM}\"] | .[]" 2>/dev/null \\
+					| $(SED) "/^null$$/d" \\
+				| while read -r DEST; do
+					$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
+				done
+			done
+			$(ECHO) "</ul>\\n"
+		elif [ "$${TEXT}" = ".library-tags" ]; then
+			$(ECHO) "<ul>\\n"
+			$(CAT) $($(PUBLISH)-library-index) \\
+				| $${YQ_WRITE} ".library-tags | keys | .[]" 2>/dev/null \\
+				| $(SED) "/^null$$/d" \\
+			| while read -r FILE; do
+				$(CAT) $($(PUBLISH)-library-index) \\
+					| $${YQ_WRITE} ".library-tags.[\"$${NUM}\"] | .[]" 2>/dev/null \\
+					| $(SED) "/^null$$/d" \\
+				| while read -r DEST; do
+					$(ECHO) "<li><a href=\"$${DEST}\">$${FILE}</a></li>\\n"
+				done
+			done
+			$(ECHO) "</ul>\\n"
+		elif [ "$${TEXT}" = ".spacer" ]; then
+			$(ECHO) "$(HTML_BREAK)\\n"
+		elif [ "$$(
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+				| $${YQ_WRITE} "$${1}[\"$${NUM}\"] | keys | .[]" 2>/dev/null \\
+				| $(SED) "/^null$$/d"
+		)" = "text" ]; then
+			$(ECHO) "\\n"
+			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+				| $${YQ_WRITE} "$${1}[\"$${NUM}\"].text" 2>/dev/null \\
+				| $(SED) "/^null$$/d"
+		else
+			$(PUBLISH)-select $$(
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+				| $${YQ_WRITE} "$${1}[\"$${NUM}\"]" 2>/dev/null \\
+				| $(SED) "/^null$$/d"
+			) || return 1
+		fi
+		NUM="$$($(EXPR) $${NUM} + 1)"
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[\"$${NUM}\"] -->\\n"
+	done
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
 	return 0
 }
@@ -7254,7 +7166,7 @@ $(foreach FILE,\
 )
 
 $(.box-begin):
-	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 $(PUBLISH_BUILD_CMD_END)\n" >$(@)
+	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)\n" >$(@)
 
 $(.box-end):
 	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)\n" >$(@)
@@ -7765,7 +7677,8 @@ $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS):
 #	@$(PUBLISH_BUILD_SH_RUN) $($(PUBLISH)-cache).nav-right.$(EXTN_HTML)
 	@$(RUNMAKE) $(CONFIGS)-$(PUBLISH)
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH) >$(PUBLISH_BUILD_SH)
-	@$(PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"; \
+	@$(PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
+	@$(PRINT) "$(_C)SUCCESS!"
 	exit 1
 #WORKING:NOW
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)		>$(CURDIR)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
@@ -7836,10 +7749,10 @@ $(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLI
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-comments =
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 COMMENT $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) COMMENT $(PUBLISH_BUILD_CMD_END)
 COMMENT
 $(HTML_BREAK)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 REPLY $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) REPLY $(PUBLISH_BUILD_CMD_END)
 REPLY
 $(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
@@ -7862,7 +7775,7 @@ override define $(PUBLISH)-$(EXAMPLE)-page =
 pagetitle: Main Page
 ---
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 Example Pages $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW introduction
 # MAIN returns to main page
@@ -7901,7 +7814,7 @@ At the very bottom of the page is an example of including a file to emulate a co
 
 $(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
 $(HTML_BREAK)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 Default Configuration $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Default Configuration $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW default css
 #WORKING:NOW integrate this (and as much of the rest as makes sense) into $(HELPOUT), and back-port as $(RUNMAKE) / DO_HEREDOC
@@ -7940,13 +7853,13 @@ pagetitle: Configuration Testing
 date: 2040-01-01
 ---
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 #WORKING:NOW $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) #WORKING:NOW $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW
 
 $(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
 $(HTML_BREAK)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin 6 Configuration Settings $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Configuration Settings $(PUBLISH_BUILD_CMD_END)
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
@@ -8017,19 +7930,16 @@ variables:
     CHAINED: "#"
 
   $(PUBLISH)-nav-left:
-    - type: text
-      data: .spacer
-    - type: text
-      data: CHAINED TEXT
+    - .spacer
+    - text: |
+        CHAINED TEXT
 
   $(PUBLISH)-nav-right:
-    - type: text
-      data: .spacer
-    - name: CHAINED
-      type: nav-box
-      data:
-        - type: text
-          data: CHAINED TEXT
+    - .spacer
+    - nav-box-begin $(DEPTH_MAX) CHAINED
+    - text: |
+        CHAINED TEXT
+    - nav-box-end
 
 ################################################################################
 # End Of File
