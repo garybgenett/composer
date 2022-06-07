@@ -3349,28 +3349,27 @@ variables:
         RIGHT TEXT
     - nav-box-end
     - .spacer
-#WORKING:NOW:LIB
-    - "nav-box-begin $(DEPTH_MAX) LIBRARY: AUTHORS"
+    - "nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS"
     - .library-authors
-    - nav-box-end
+    - nav-unit-end
     - .spacer
-    - "nav-box-begin $(DEPTH_MAX) LIBRARY: DATES"
+    - "nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) DATES"
     - .library-dates
-    - nav-box-end
+    - nav-unit-end
     - .spacer
-    - "nav-box-begin $(DEPTH_MAX) LIBRARY: TAGS"
+    - "nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) TAGS"
     - .library-tags
-    - nav-box-end
+    - nav-unit-end
 
 ########################################
 
   $(PUBLISH)-info-top: |
-    <p>TOP</p>
+    TOP
 
 ########################################
 
   $(PUBLISH)-info-bottom: |
-    <p>BOTTOM</p>
+    BOTTOM
 
 ################################################################################
 # End Of File
@@ -3749,7 +3748,6 @@ YQ_WRITE="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_WRITE)))"
 
 CURDIR="$${CURDIR}"
 PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
-
 PUBLISH_LIBRARY_INDEX_PATH="$$($(REALPATH) $${CURDIR} $$($(DIRNAME) $${PUBLISH_LIBRARY_INDEX}))"
 
 ########################################
@@ -4011,6 +4009,8 @@ function $(PUBLISH)-nav-side {
 
 ########################################
 
+# x $(PUBLISH)-nav-side-list-library 1	authors || dates || tags
+
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
 	SIZE="$$(
@@ -4026,10 +4026,6 @@ function $(PUBLISH)-nav-side-list {
 			| $${YQ_WRITE} "$${1}[\"$${NUM}\"]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-#WORKING:NOW:LIB
-#WORKING:NOW authors/dates/tags
-#WORKING:NOW move all this to a separate function, with dedicated command markers in addition to helpers
-#WORKING:NOW need curdir and site-library dir, to do realpath
 		if [ "$${TEXT}" = ".library-authors" ]; then
 			$(PUBLISH)-nav-side-list-library authors
 		elif [ "$${TEXT}" = ".library-dates" ]; then
@@ -4061,33 +4057,25 @@ function $(PUBLISH)-nav-side-list {
 	return 0
 }
 
+# 1 authors || dates || tags
+
 function $(PUBLISH)-nav-side-list-library {
-	$(ECHO) "<ul class=\"list-group\">\\n"
+	$(ECHO) "<div class=\"text-nowrap\">\\n"
+	$(ECHO) "<table class=\"table table-sm table-borderless\">\\n"
 	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 	| while read -r FILE; do
-		$(ECHO) "<li class=\"list-group-item\"><a href=\"$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+		$(ECHO) "<tr><td><a href=\"$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 				$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
-			).$(EXTN_HTML)\">$${FILE}</a><span class=\"badge bg-secondary\">$$(
+			).$(EXTN_HTML)\">$${FILE}</a></td><td class=\"text-end\">$$(
 				$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
 					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
 					| $(SED) "/^null$$/d" \\
-			)</span></li>\\n"
-		$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
-			| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | .[]" 2>/dev/null \\
-			| $(SED) "/^null$$/d" \\
-		| while read -r DEST; do
-			$(ECHO) "<li class=\"list-group-item\"><a href=\"../$$(
-				$(ECHO) "$${DEST}" | $(SED) "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g"
-			)\">$${FILE}</a><span class=\"badge bg-secondary\">$$(
-				$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
-					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
-					| $(SED) "/^null$$/d" \\
-			)</span></li>\\n"
-		done
+			)</td></td></tr>\\n"
 	done
-	$(ECHO) "</ul>\\n"
+	$(ECHO) "</table>\\n"
+	$(ECHO) "</div>\\n"
 	return 0
 }
 
@@ -7678,12 +7666,11 @@ endif
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS)
 $(PUBLISH)-$(EXAMPLE)-$(SUBDIRS):
 #WORKING:NOW:LIB
-#	@+$(MAKE) $(MAKE_OPTIONS) $($(PUBLISH)-cache)
+	@$(RM) --recursive $($(PUBLISH)-cache)*
+	@+$(MAKE) $(MAKE_OPTIONS) $($(PUBLISH)-cache)
 #	@$(call PUBLISH_BUILD_SH_RUN) $($(PUBLISH)-cache).nav-right.$(EXTN_HTML)
-#	@$(RUNMAKE) $(CONFIGS)-$(PUBLISH)
-	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH) >$(PUBLISH_BUILD_SH)
 #	@$(call PUBLISH_BUILD_SH_RUN) "nav-right" ".variables[\"$(PUBLISH)-nav-right\"]"
-#	@$(PRINT) "$(_C)SUCCESS!"
+	@$(PRINT) "$(_C)SUCCESS!"
 #	exit 1
 #WORKING:NOW
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)		>$(CURDIR)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
