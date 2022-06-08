@@ -4396,7 +4396,9 @@ _EOF_
 
 #> update: YQ_WRITE.*title
 
-#WORKING:NOW:LIB
+#WORKING:NOW:NOW
+#	add <composer_root> token, and $(REALPATH) to it
+#		this means every directory will be back to having its own cache
 #	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
 #		code in the function as a replacement here, and test
 #	replace the YQ_WRITE.*title code in library-digest with a call to title-block
@@ -7656,37 +7658,44 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(PANDOC_DIR)/			$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
 	@$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))/MANUAL.md
 	@$(RUNMAKE) --directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
+endif
+	@$(ECHO) "$(_C)"
 #WORKING
 # document this test case, empty configuration versus hard-defaults
-#	they should match, and $(NOTHING) directory should not have a _library
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)				>$(CURDIR)/$(COMPOSER_YML)
+#	they should match, and $(NOTHING) and pandoc directories should not have _library
+#	incorporate the COMPOSER_DEPENDS and other testing happening here, now
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)				| $(TEE) $(CURDIR)/$(COMPOSER_YML)
 else
 	@$(RM)									$(CURDIR)/$(COMPOSER_YML)
 endif
-	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
-	@$(ECHO) "$(_C)"
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
+#WORKING:NOW:NOW need to add the "local" ability to COMPOSER_INCLUDE, to mask out the $(DO_PAGE) in $(CONFIGS)...
+	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
 endif
-#WORKING:NOW need to add the "local" ability to COMPOSER_INCLUDE, to mask out the $(DO_PAGE) in $(CONFIGS)...
-#	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))		| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS))	| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(NOTHING))	| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-pandoc)	| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_YML)
-	@$(ECHO) "$(_D)"
+else
+	@$(RM)									$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_YML)
+endif
+	@$(ECHO) "$(_M)"
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)		>$($(PUBLISH)-$(EXAMPLE))/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))	>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(DO_PAGE)-index-digest$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)			>$($(PUBLISH)-$(EXAMPLE))/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS))	>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(NOTHING))	>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(DO_PAGE)-index$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)		>$($(PUBLISH)-$(EXAMPLE))/$(DO_PAGE)-index.comments.$(EXTN_TEXT)
-	@$(ECHO) "$(_M)"
 	@$(ECHO) "$(DO_PAGE)-$(DO_PAGE)-$(TESTING).$(EXTN_HTML):"	>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " .box-begin .box-end"					>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
@@ -7707,9 +7716,9 @@ endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
-#WORKING:NOW:LIB
-	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" c_site= $(DOITALL)-$(DOITALL)
-#	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) c_site= $(DOITALL)-$(DOITALL)
+#WORKING:NOW:NOW
+	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
+#	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= c_site= $(DOITALL)-$(DOITALL)
 endif
 
 #WORKING:NOW
