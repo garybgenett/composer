@@ -5922,7 +5922,6 @@ $(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-speed
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
-$(TESTING): $(TESTING)-$(PUBLISH)
 $(TESTING): $(TESTING)-$(INSTALL)
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
@@ -6180,6 +6179,7 @@ $(TESTING)-speed:
 #WORKING:NOW redo this to look more like $(PUBLISH)-$(EXAMPLE), but keep the test directory
 
 override define $(TESTING)-speed-init =
+	$(MKDIR) $(call $(TESTING)-pwd); \
 	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML)					>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	for TLD in {1..3}; do \
 		$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
@@ -6205,7 +6205,7 @@ endef
 $(TESTING)-speed-init:
 	$(ECHO) "override COMPOSER_INCLUDE := 1\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(INSTALL)-$(DOFORCE)
-	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(PUBLISH)
+	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(PUBLISH)-$(DOITALL)
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(CLEANER)-$(DOITALL)
 	@time $(call $(TESTING)-run) MAKEJOBS="$(MAKEJOBS)" $(DOITALL)-$(DOITALL)
 
@@ -7295,15 +7295,15 @@ $($(PUBLISH)-library-metadata):
 			| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 		if [ -n "$$( \
-			$(YQ_READ) $${FILE} \
+			$(YQ_READ) $${FILE} 2>/dev/null \
 				| $(YQ_WRITE) ".title" \
 				| $(SED) "/^null$$/d" \
 		)" ] || [ -n "$$( \
-			$(YQ_READ) $${FILE} \
+			$(YQ_READ) $${FILE} 2>/dev/null \
 				| $(YQ_WRITE) ".pagetitle" \
 				| $(SED) "/^null$$/d" \
 		)" ]; then \
-			$(YQ_READ) $${FILE} \
+			$(YQ_READ) $${FILE} 2>/dev/null \
 				| $(YQ_WRITE) ". += { \"$(COMPOSER_BASENAME)\": true }"; \
 		else \
 			$(ECHO) "{ \"$(COMPOSER_BASENAME)\": false }"; \
@@ -7699,7 +7699,7 @@ endif
 	@$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)
+	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
 #WORKING:NOW:LIB
 	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" c_site= $(DOITALL)-$(DOITALL)
