@@ -1364,7 +1364,7 @@ override COMPOSER_RESERVED := \
 override DOFORCE			:= force
 
 ########################################
-## {{{2 $(PUBLISH) ---------------------
+## {{{2 Publish ------------------------
 
 override PUBLISH_BUILD_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(MARKER)
 override PUBLISH_BUILD_CMD_END		= $(MARKER) -->
@@ -1562,7 +1562,7 @@ ifeq ($(1),$$(DO_PAGE))
 		$$(strip $$(call $$(TARGETS)-$$(PRINTER))) \
 		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
 	)" ]; then \
-		$$(MAKE) $$(MAKE_OPTIONS) c_site="1" $$(PUBLISH)-$$(CONFIGS); \
+		$$(MAKE) $$(MAKE_OPTIONS) $$(PUBLISH)-$$(CONFIGS); \
 	fi
 endif
 	@+$$(strip $$(call $$(TARGETS)-$$(PRINTER))) \
@@ -6744,7 +6744,7 @@ $(TESTING)-other-done:
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,14,$(NOTHING))
+	$(call $(TESTING)-count,16,$(NOTHING))
 	$(call $(TESTING)-count,8,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> book
@@ -7127,12 +7127,13 @@ endif
 ########################################
 ### {{{3 $(PUBLISH)-$(CONFIGS) ---------
 
+#> update: $(MAKE) / @+
+
 .PHONY: $(PUBLISH)-$(CONFIGS)
-$(PUBLISH)-$(CONFIGS): \
-	$($(PUBLISH)-cache) \
-	$($(PUBLISH)-library)
 $(PUBLISH)-$(CONFIGS):
-	@$(ECHO) ""
+	@+$(MAKE) $(MAKE_OPTIONS) c_site="1" \
+		$($(PUBLISH)-cache) \
+		$($(PUBLISH)-library)
 
 ########################################
 ### {{{3 $(PUBLISH)-$(DO_PAGE)-helpers -
@@ -7184,7 +7185,7 @@ $(.spacer):
 ### {{{3 $(PUBLISH)-$(DO_PAGE) ---------
 
 .PHONY: $(PUBLISH)-$(DO_PAGE)
-#>$(PUBLISH)-$(DO_PAGE): $($(PUBLISH)-cache)
+$(PUBLISH)-$(DO_PAGE): $($(PUBLISH)-cache)
 $(PUBLISH)-$(DO_PAGE):
 	@$(call PUBLISH_BUILD_SH_RUN) $(word 1,$(c_list)) title-block
 	@$(foreach FILE,$($(PUBLISH)-caches-begin),\
@@ -7242,28 +7243,28 @@ $($(PUBLISH)-caches):
 ### {{{3 $(PUBLISH)-library ------------
 
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
-$($(PUBLISH)-library): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
-$($(PUBLISH)-library): $($(PUBLISH)-library-index)
-$($(PUBLISH)-library): $($(PUBLISH)-library-digest)
-$($(PUBLISH)-library):
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
-else
-$($(PUBLISH)-library):
-	@$(ECHO) ""
-endif
 
-ifneq ($(c_site),)
-ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 ifneq ($(filter 1,$($(PUBLISH)-library-auto_update)),)
 $($(PUBLISH)-library) \
 	$($(PUBLISH)-library-metadata) \
 	$($(PUBLISH)-library-index) \
 	$($(PUBLISH)-library-digest) \
 	: \
+	$(COMPOSER_YML_LIST) \
 	$(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))
 endif
-endif
+
+$($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
+$($(PUBLISH)-library): $($(PUBLISH)-library-index)
+$($(PUBLISH)-library): $($(PUBLISH)-library-digest)
+$($(PUBLISH)-library):
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
+
+else
+
+$($(PUBLISH)-library):
+	@$(ECHO) ""
+
 endif
 
 ########################################
@@ -7667,6 +7668,11 @@ endif
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
+endif
 #WORKING:NOW need to add the "local" ability to COMPOSER_INCLUDE, to mask out the $(DO_PAGE) in $(CONFIGS)...
 #	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))		| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML)
@@ -8283,11 +8289,7 @@ $(c_base).$(EXTENSION): $(COMPOSER_YML_LIST)
 endif
 ifneq ($(c_site),)
 $(c_base).$(EXTN_HTML): $($(PUBLISH)-cache)
-ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
-ifneq ($(filter 1,$($(PUBLISH)-library-auto_update)),)
 $(c_base).$(EXTN_HTML): $($(PUBLISH)-library)
-endif
-endif
 endif
 
 $(c_base).$(EXTENSION): $(c_list)
@@ -8351,7 +8353,7 @@ endef
 
 override define TYPE_TARGETS =
 %.$(2): %$$(COMPOSER_EXT) \
-	$$(if $$(and $$(filter $$(EXTN_HTML),$(2)),$$(c_site)),\
+	$$(if $$(and $$(c_site),$$(filter $$(EXTN_HTML),$(2))),\
 		$$($$(PUBLISH)-cache) \
 		$$($$(PUBLISH)-library) \
 	)
@@ -8363,7 +8365,7 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 endif
 
 %.$(2): % \
-	$$(if $$(and $$(filter $$(EXTN_HTML),$(2)),$$(c_site)),\
+	$$(if $$(and $$(c_site),$$(filter $$(EXTN_HTML),$(2))),\
 		$$($$(PUBLISH)-cache) \
 		$$($$(PUBLISH)-library) \
 	)
@@ -8375,7 +8377,7 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 endif
 
 %.$(2): $$(c_list) \
-	$$(if $$(and $$(filter $$(EXTN_HTML),$(2)),$$(c_site)),\
+	$$(if $$(and $$(c_site),$$(filter $$(EXTN_HTML),$(2))),\
 		$$($$(PUBLISH)-cache) \
 		$$($$(PUBLISH)-library) \
 	)
