@@ -81,30 +81,9 @@ override VIM_FOLDING := {{{1
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
-#WORKING:NOW
 # SITE
-#		post = comments ability through *-comments-$(date) files
-#		tags?  still need a date/author/tag index, with a pre-configured "widget" that can be a unit/box, with sub units/boxes
-#			item counts
-#				total items
-#				selected items
-#				badges: https://getbootstrap.com/docs/4.0/components/badge
-#				pagination?: https://getbootstrap.com/docs/4.0/components/pagination
-#				refer to taskwarrior notes about page counts... it gets big fast
-#				make J=4 test-speed = ~8k pages in ~2min = need to keep the indexing *way* down... probably just year-month[count]/author[count]/[type|tags][count] = ~240 * ~5 * ~10 = ~12k
-#				remember, this will likely be slower, because of all the navigation includes size and site.build.sh forks
-#				keep these indexes in separate "library" (configurable) directory from main indexes, which are per-directory and time-tracked against pages
-#				index should be composer_root bound
-#				somehow time-bound with main index, unless index-force
-#			indexes "library" cross sections = ~estimate = (130x5x3x20 = 39,000) = (10x5x3x20 = 3,000) = (10x(5+3+20) = 280 ) = (130+5+3+20 = 158)
-#				year/all = ~10
-#				year/month = ~120
-#				author = ~5
-#				type = ~3 (book, article, post, etc.)
-#				tag = ~20
-#	if dir(?)-*(s) as file(s), do $(FIND) *(s) | $(SED) -n "/*$(COMPOSER_EXT)$$/p" | $(SORT) | $(TAIL) -n[posts_per_page(?)]
-#		do sort based on yaml dates instead?  configurable?
 #	SITE_GIT_REPO ?= git@github.com:garybgenett/garybgenett.net.git
+#WORKING:NOW
 # document
 #	$(COMPOSER_YML) and note that it is now an override for everything
 #		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
@@ -123,9 +102,6 @@ override VIM_FOLDING := {{{1
 #			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
 #		documentation can be as simple as "+ > c_list" in precedence...?  probably...
 #		release notes, now...?  meh...
-#		test that touch of composer.yml triggers a full rebuild
-#			somehow test $(PUBLISH) target
-#	add test case for physical book/page-* files
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins.
 #		header-includes?  leave it to c_options?  maybe c_header?
 #			only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
@@ -6225,8 +6201,6 @@ $(TESTING)-speed:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING:NOW redo this to look more like $(PUBLISH)-$(EXAMPLE), but keep the test directory
-
 override define $(TESTING)-speed-init =
 	$(MKDIR) $(call $(TESTING)-pwd); \
 	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)				>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
@@ -7739,7 +7713,7 @@ endif
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
@@ -7781,12 +7755,10 @@ endif
 	@$(ECHO) "endif\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 #WORKING:NOW:NOW
-# for testing site, need to drop a few more .composer.mk files
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
-	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
-#	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= c_site= $(DOITALL)-$(DOITALL)
+	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= c_site= $(DOITALL)-$(DOITALL)
 endif
 
 #WORKING:NOW
