@@ -98,6 +98,7 @@ override VIM_FOLDING := {{{1
 #	everything stems from the Makefile, so that is the only place to check for changes...
 #	only one build at a time...
 # other
+#	a non-auto_update site test
 #	so many c_list/+ tests... really...?  probably...
 #			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
 #		documentation can be as simple as "+ > c_list" in precedence...?  probably...
@@ -3247,14 +3248,10 @@ override define HEREDOC_GITATTRIBUTES =
 ########################################
 # https://github.com/github/linguist/blob/master/docs/overrides.md
 
-/artifacts/**				linguist-vendored
+/**					linguist-vendored
 
-/bootstrap/**				linguist-vendored
-/bootswatch/**				linguist-vendored
-/markdown-viewer/**			linguist-vendored
-/pandoc/**				linguist-vendored
-/revealjs/**				linguist-vendored
-/yq/**					linguist-vendored
+/$(MAKEFILE)				!linguist-vendored
+$(patsubst $(COMPOSER_DIR)%,%,$(COMPOSER_ART))/				!linguist-vendored
 
 ################################################################################
 # End Of File
@@ -7704,10 +7701,12 @@ endif
 # document this test case, empty configuration versus hard-defaults
 #	they should match, and $(NOTHING) and pandoc directories should not have _library
 #	incorporate the COMPOSER_DEPENDS and other testing happening here, now
+ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)				| $(TEE) $(CURDIR)/$(COMPOSER_YML)
 else
 	@$(RM)									$(CURDIR)/$(COMPOSER_YML)
+endif
 endif
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
