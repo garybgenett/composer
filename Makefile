@@ -85,6 +85,8 @@ override VIM_FOLDING := {{{1
 #	SITE_GIT_REPO ?= git@github.com:garybgenett/garybgenett.net.git
 #WORKING:NOW
 # document
+#	change in behavior... particularly yml files...
+#		$(c_base).$(EXTENSION): $(COMPOSER_YML_LIST) $($(PUBLISH)-cache) $($(PUBLISH)-library)
 #	$(COMPOSER_YML) and note that it is now an override for everything
 #		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
 #		hashes will overlap, and arrays will append
@@ -8103,13 +8105,10 @@ else
 	fi
 endif
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
-ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
-#WORKING what is this filter-out for?  and, the nothing check should not apply to subdirs (i.e. bring one endif up by one line)
-	@$(foreach FILE,$(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),\
+	@$(foreach FILE,$(filter-out $(NOTHING),$(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS))),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
 	@+$(MAKE) $(MAKE_OPTIONS) $(INSTALL)-$(SUBDIRS)
-endif
 endif
 
 override define $(INSTALL)-$(MAKEFILE) =
@@ -8331,7 +8330,6 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
 endif
 
-#WORK document this change in behavior...
 ifneq ($(COMPOSER_YML_LIST),)
 $(c_base).$(EXTENSION): $(COMPOSER_YML_LIST)
 endif
