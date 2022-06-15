@@ -8218,6 +8218,7 @@ else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(RUNMAKE) $(COMPOSER_TARGETS)
 else
 #>	@+$(MAKE) $(MAKE_OPTIONS) $(COMPOSER_TARGETS)
+#WORKING:NOW:SILENT this can not be silent, or COMPOSER_DEBUGIT SPECIAL_VAL will not work...?
 	@+$(MAKE) $(SILENT) $(MAKE_OPTIONS) $(COMPOSER_TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
@@ -8474,6 +8475,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 #> update: MARKER.*PANDOC
+#WORKING:NOW:SILENT this can not be silent, or COMPOSER_DEBUGIT SPECIAL_VAL will not work...?
 override define $(PUBLISH)-$(DO_PAGE)-call =
 	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(DO_PAGE)); \
 	$(ECHO) "$(_E)"; \
