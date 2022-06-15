@@ -202,6 +202,7 @@ override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 ########################################
 
 override HTML_BREAK			:= <p></p>
+override MENU_SELF			:= _
 
 override PUBLISH_COLS_MAIN_SIZE		:= 8
 override PUBLISH_COLS_MOBILE_HIDE	:= 0
@@ -1042,7 +1043,6 @@ override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(foreach FILE,$(COMPOSE
 
 ########################################
 
-#WORKING add a way to extend or subtract these...
 override PANDOC_EXTENSIONS		:=
 override PANDOC_EXTENSIONS		+= +ascii_identifiers
 override PANDOC_EXTENSIONS		+= +emoji
@@ -1655,11 +1655,11 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other $(_C)[c_type]$(_D) values will be passed directly to $(_C)[Pandoc]$(_D)*"
 	@$(PRINT) "  * *Special $(_C)[c_css]$(_D) values:*"
-	@$(COLUMN_2) "    * *\`$(_N)$(CSS_ALT)$(_D)\`"		"~ Use the alternate default stylesheet*"
-	@$(COLUMN_2) "    * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"~ Revert to the $(_C)[Pandoc]$(_D) default*"
-	@$(COLUMN_2) "  * *Special $(_C)[c_toc]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"~ List all headers, and number sections*"
-	@$(COLUMN_2) "  * *Special $(_C)[c_level]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"~ Varies by $(_C)[c_type]$(_D) $(_E)(see [$(HELPOUT)-$(DOITALL)])$(_D)*"
-#WORKING reference to composer.css documentation
+	@$(COLUMN_2) "    * *\`$(_M)$(COMPOSER_CSS)$(_D)\`"		"= Filesystem override of variable value*"
+	@$(COLUMN_2) "    * *\`$(_N)$(CSS_ALT)$(_D)\`"		"= Use the alternate default stylesheet*"
+	@$(COLUMN_2) "    * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"= Revert to the $(_C)[Pandoc]$(_D) default*"
+	@$(COLUMN_2) "  * *Special $(_C)[c_toc]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= List all headers, and number sections*"
+	@$(COLUMN_2) "  * *Special $(_C)[c_level]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= Varies by $(_C)[c_type]$(_D) $(_E)(see [$(HELPOUT)-$(DOITALL)])$(_D)*"
 	@$(PRINT) "  * *An empty $(_C)[c_margin]$(_D) value enables individual margins:*"
 	@$(PRINT) "    * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
 	@$(PRINT) "    * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
@@ -1676,7 +1676,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_DEBUGIT]"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )\`$(_N)(debugit)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_INCLUDE]"	"Include all: \`$(_M)$(COMPOSER_SETTINGS)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )\`$(_N)(boolean)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DEPENDS]"	"Sub-directories first: $(_C)[$(DOITALL)]"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )\`$(_N)(boolean)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_KEEPING]"	"#WORK"						"$(if $(COMPOSER_KEEPING),$(_M)$(COMPOSER_KEEPING)$(_D) )\`$(_N)(keeping)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_KEEPING]"	"Log entries / cache files"			"$(if $(COMPOSER_KEEPING),$(_M)$(COMPOSER_KEEPING)$(_D) )\`$(_N)(keeping)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_LOG]"	"Timestamped command log"			"$(if $(COMPOSER_LOG),$(_M)$(COMPOSER_LOG))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXT]"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_TARGETS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_D)"				"$(_C)[$(CONFIGS)]$(_E)/$(_C)[$(TARGETS)]"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
@@ -1688,7 +1688,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
-	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number of logs to keep / \`$(_N)0$(_D)\` is none*"
+	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number to keep / \`$(_N)0$(_D)\` is last run only*"
 	@$(PRINT) "  * *\`$(_N)(boolean)$(_D)\`  = empty is disabled / any value enables*"
 
 ########################################
@@ -1711,9 +1711,12 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
-#WORK : rebuilds indexes, does not build the sites... this is done with $(DOITALL)[-$(DOITALL)]
-#		$(PUBLISH) rebuilds indexes, force recursively
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Recursively create $(_C)[Bootstrap Websites]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"$(_C)[Bootstrap Websites]$(_D) $(_C)[$(DO_PAGE)s]$(_D) from all $(_C)[Markdown]$(_D) files"
+#WORK
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CONFIGS)]"		"Recursively create $(_C)[Bootstrap Websites]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CLEANER)]"		"Recursively create $(_C)[Bootstrap Websites]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Recursively create $(_C)[Bootstrap Websites]$(_D)"
+#WORK
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOFORCE)]"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
@@ -1724,7 +1727,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(DOITALL)-$(DOITALL)]"		"Do $(_C)[$(DOITALL)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_N)[*$(_C)-$(DOITALL)]"			"Any targets named this way will also be run by $(_C)[$(DOITALL)]$(_D)"
 #>	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Print updated files: \`$(_N)*$(_M)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_M)$(COMPOSER_LOG)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Show updated files: \`$(_N)*\`$(_C)[COMPOSER_EXT]$(_D) $(_E)$(MARKER)$(_D) $(_C)[COMPOSER_LOG]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Show updated files: \`$(_N)*$(_D)\`$(_C)[COMPOSER_EXT]$(_D) $(_E)$(MARKER)$(_D) $(_C)[COMPOSER_LOG]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_SPECIALS_%
 $(HELPOUT)-TARGETS_SPECIALS_%:
@@ -1832,7 +1835,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@if [ -z "$(c_site)" ]; then $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE); fi
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(RUNMAKE) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)$(HTML_BREAK)"; fi
+		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)$(HTML_BREAK)$(_D)"; fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -2115,7 +2118,8 @@ endef
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
 $(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
 $(_S)#>[Markdown]: http://daringfireball.net/projects/markdown$(_D)
-$(_E)[Markdown]: https://commonmark.org$(_D)
+$(_S)#>[Markdown]: https://commonmark.org$(_D)
+$(_E)[Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown$(_D)
 $(_E)[GitHub]: https://github.com$(_D)
 
 $(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
@@ -2898,19 +2902,19 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_SPECIALS =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_BOOK) / $(DO_BOOK)s)
 
 An example $(_C)[$(DO_BOOK)]$(_D) definition in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)([Quick Start] example)$(_D):
 
 $(CODEBLOCK)$(_M)$(DO_BOOK)-$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 
-This configures it so that `$(_C)$(DO_BOOK)s$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D)` from
-`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)`, concatenated together in order.  The primary
+This configures it so that `$(_C)[$(DO_BOOK)s]$(_D)` will create `$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D)`
+from `$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)` and `$(_M)$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)`, concatenated together in order.  The primary
 purpose of this $(_C)[Special]$(_D) is to gather multiple source files in this manner, so
 that larger works can be comprised of multiple files, such as a book with each
 chapter in a separate file.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DO_PAGE) / $(DO_PAGE)s)
 
 #WORK
 
@@ -2945,8 +2949,11 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(DO_BOOK)s $(OUT_README)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(PUBLISH) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
 
-#WORK $(CONFIGS)-$(PUBLISH)
 #WORKING break this up
+#WORK $(PUBLISH)
+#WORK $(PUBLISH)-$(CONFIGS)
+#WORK $(PUBLISH)-$(CLEANER)
+#WORK $(PUBLISH)-$(DOITALL)
 
   * Useful targets for validating tooling and configurations.
   * Use $(_C)[$(CHECKIT)]$(_D) to see the list of components and their versions, in relation to
@@ -3398,11 +3405,10 @@ $(_S)########################################$(_D)
 
     $(_M)MAIN$(_D): $(_E)"#"$(_D)
     $(_M)DROPDOWN$(_D):
-      $(_C)link$(_D): $(_E)"#"$(_D)
-      $(_C)menu$(_D):
-        $(_M)ITEM 1$(_D): $(_E)"#"$(_D)
-        $(_M)ITEM 2$(_D): $(_E)"#"$(_D)
-        $(_M)ITEM 3$(_D): $(_E)"#"$(_D)
+      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
+      $(_M)ITEM 1$(_D): $(_E)"#"$(_D)
+      $(_M)ITEM 2$(_D): $(_E)"#"$(_D)
+      $(_M)ITEM 3$(_D): $(_E)"#"$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3534,99 +3540,86 @@ variables:
 
     Top: "#"
     CMS:
-      link: "#$(COMPOSER_TINYNAME)-cms"
-      menu:
-        Overview: "#overview"
-        Quick Start: "#quick-start"
-        Principles: "#principles"
-        Requirements: "#requirements"
+      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-cms"
+      Overview: "#overview"
+      Quick Start: "#quick-start"
+      Principles: "#principles"
+      Requirements: "#requirements"
     Operation:
-      link: "#$(COMPOSER_TINYNAME)-operation"
-      menu:
-        Recommended Workflow: "#recommended-workflow"
-        Document Formatting:
-          link: "#document-formatting"
-          menu:
-            HTML: "#html"
-            Bootstrap Websites: "#bootstrap-websites"
-            PDF: "#pdf"
-            EPUB: "#epub"
-            Reveal.js Presentations: "#revealjs-presentations"
-            Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
-        Configuration Settings: "#configuration-settings"
-        Precedence Rules: "#precedence-rules"
-        Specifying Dependencies: "#specifying-dependencies"
-        Custom Targets: "#custom-targets"
-        Repository Versions: "#repository-versions"
+      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-operation"
+      Recommended Workflow: "#recommended-workflow"
+      Document Formatting:
+        $(MENU_SELF): "#document-formatting"
+        HTML: "#html"
+        Bootstrap Websites: "#bootstrap-websites"
+        PDF: "#pdf"
+        EPUB: "#epub"
+        Reveal.js Presentations: "#revealjs-presentations"
+        Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
+      Configuration Settings: "#configuration-settings"
+      Precedence Rules: "#precedence-rules"
+      Specifying Dependencies: "#specifying-dependencies"
+      Custom Targets: "#custom-targets"
+      Repository Versions: "#repository-versions"
     Variables:
-      link: "#$(COMPOSER_TINYNAME)-variables"
-      menu:
-        Formatting Variables:
-          link: "#formatting-variables"
-          menu:
-            c_site: "#c_site"
-            c_type / c_base / c_list: "#c_type--c_base--c_list"
-            c_lang: "#c_lang"
-            c_css: "#c_css"
-            c_toc: "#c_toc"
-            c_level: "#c_level"
-            c_margin: "#c_margin"
-            c_options: "#c_options"
-        Control Variables:
-          link: "#control-variables"
-          menu:
-            MAKEJOBS: "#makejobs"
-            COMPOSER_DOCOLOR: "#composer_docolor"
-            COMPOSER_DEBUGIT: "#composer_debugit"
-            COMPOSER_INCLUDE: "#composer_include"
-            COMPOSER_DEPENDS: "#composer_depends"
-            COMPOSER_KEEPING: "#composer_keeping"
-            COMPOSER_LOG: "#composer_log"
-            COMPOSER_EXT: "#composer_ext"
-            COMPOSER_TARGETS: "#composer_targets"
-            COMPOSER_SUBDIRS: "#composer_subdirs"
-            COMPOSER_IGNORES: "#composer_ignores"
+      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-variables"
+      Formatting Variables:
+        $(MENU_SELF): "#formatting-variables"
+        c_site: "#c_site"
+        c_type / c_base / c_list: "#c_type--c_base--c_list"
+        c_lang: "#c_lang"
+        c_css: "#c_css"
+        c_toc: "#c_toc"
+        c_level: "#c_level"
+        c_margin: "#c_margin"
+        c_options: "#c_options"
+      Control Variables:
+        $(MENU_SELF): "#control-variables"
+        MAKEJOBS: "#makejobs"
+        COMPOSER_DOCOLOR: "#composer_docolor"
+        COMPOSER_DEBUGIT: "#composer_debugit"
+        COMPOSER_INCLUDE: "#composer_include"
+        COMPOSER_DEPENDS: "#composer_depends"
+        COMPOSER_KEEPING: "#composer_keeping"
+        COMPOSER_LOG: "#composer_log"
+        COMPOSER_EXT: "#composer_ext"
+        COMPOSER_TARGETS: "#composer_targets"
+        COMPOSER_SUBDIRS: "#composer_subdirs"
+        COMPOSER_IGNORES: "#composer_ignores"
     Targets:
-      link: "#$(COMPOSER_TINYNAME)-targets"
-      menu:
-        Primary Targets:
-          link: "#primary-targets"
-          menu:
-            help / help-all: "#help--help-all"
-            template: "#template"
-            compose: "#compose"
-            site: "#site"
-            install / install-all / install-force: "#install--install-all--install-force"
-            clean / clean-all / *-clean: "#clean--clean-all---clean"
-            all / all-all / *-all: "#all--all-all---all"
-            list: "#list"
-        Special Targets:
-          link: "#special-targets"
-          menu:
-            book: "#book"
-            page: "#page"
-        Additional Targets:
-          link: "#additional-targets"
-          menu:
-            debug / debug-file: "#debug--debug-file"
-            check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
-            _commit / _commit-all: "#_commit--_commit-all"
-            _release / _update / _update-all: "#_release--_update--_update-all"
-        Internal Targets: "#internal-targets"
+      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-targets"
+      Primary Targets:
+        $(MENU_SELF): "#primary-targets"
+        help / help-all: "#help--help-all"
+        template: "#template"
+        compose: "#compose"
+        site: "#site"
+        install / install-all / install-force: "#install--install-all--install-force"
+        clean / clean-all / *-clean: "#clean--clean-all---clean"
+        all / all-all / *-all: "#all--all-all---all"
+        list: "#list"
+      Special Targets:
+        $(MENU_SELF): "#special-targets"
+        book / books: "#book--books"
+        page / pages: "#page--pages"
+      Additional Targets:
+        $(MENU_SELF): "#additional-targets"
+        debug / debug-file: "#debug--debug-file"
+        check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
+        _commit / _commit-all: "#_commit--_commit-all"
+        _release / _update / _update-all: "#_release--_update--_update-all"
+      Internal Targets: "#internal-targets"
     Reference:
-      link: "#reference"
-      menu:
-        Configuration:
-          link: "#configuration"
-          menu:
-            Pandoc Extensions: "#pandoc-extensions"
-            Templates: "#templates"
-            Defaults: "#defaults"
-        Reserved:
-          link: "#reserved"
-          menu:
-            Target Names: "#target-names"
-            Variable Names: "#variable-names"
+      $(MENU_SELF): "#reference"
+      Configuration:
+        $(MENU_SELF): "#configuration"
+        Pandoc Extensions: "#pandoc-extensions"
+        Templates: "#templates"
+        Defaults: "#defaults"
+      Reserved:
+        $(MENU_SELF): "#reserved"
+        Target Names: "#target-names"
+        Variable Names: "#variable-names"
 
 ########################################
 
@@ -3749,8 +3742,8 @@ variables:
     - nav-unit-end
     - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Special Targets
     - text: |
-        * [book]
-        * [page]
+        * [book / books]
+        * [page / pages]
     - nav-unit-end
     - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Additional Targets
     - text: |
@@ -3969,17 +3962,15 @@ function $(PUBLISH)-nav-top-list {
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" 2>/dev/null \\
 		| while read -r FILE; do
-			MENU="$$(
+			if [ "$${FILE}" = "$(MENU_SELF)" ]; then
+				continue
+			fi
+			LINK="$$(
 				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].menu" 2>/dev/null \\
+				| $${YQ_WRITE} "$${1}[\"$${FILE}\"].$(MENU_SELF)" 2>/dev/null \\
 				| $(SED) "/^null$$/d"
 			)"
-			if [ -n "$${MENU}" ]; then
-				LINK="$$(
-					$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-					| $${YQ_WRITE} "$${1}[\"$${FILE}\"].link" 2>/dev/null \\
-					| $(SED) "/^null$$/d"
-				)"
+			if [ -n "$${LINK}" ]; then
 				if [ "$${1}" = ".variables[\"$(PUBLISH)-nav-top\"]" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item dropdown">
@@ -3992,7 +3983,7 @@ $(CAT) <<_EOF_
 <ul>
 _EOF_
 				fi
-				$(PUBLISH)-nav-top-list "$${1}[\"$${FILE}\"].menu"
+				$(PUBLISH)-nav-top-list "$${1}[\"$${FILE}\"]"
 $(CAT) <<_EOF_
 </ul></li>
 _EOF_
@@ -4145,6 +4136,8 @@ function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
 	return 0
 }
+
+########################################
 
 # 1 authors || dates || tags
 
@@ -7189,23 +7182,6 @@ $(eval override c_list := $(patsubst .$(2),$(.$(2)),$(c_list)))
 endef
 
 $(foreach FILE,\
-	authors \
-	dates \
-	tags \
-	,\
-	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,library,$(FILE))) \
-)
-
-$(.library-authors):
-	@$(ECHO) "#WORKING:AUTHORS\n" >$(@)
-
-$(.library-dates):
-	@$(ECHO) "#WORKING:DATES\n" >$(@)
-
-$(.library-tags):
-	@$(ECHO) "#WORKING:TAGS\n" >$(@)
-
-$(foreach FILE,\
 	box-begin \
 	box-end \
 	spacer \
@@ -7221,6 +7197,23 @@ $(.box-end):
 
 $(.spacer):
 	@$(ECHO) "$(HTML_BREAK)\n" >$(@)
+
+$(foreach FILE,\
+	authors \
+	dates \
+	tags \
+	,\
+	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,library,$(FILE))) \
+)
+
+$(.library-authors):
+	@$(ECHO) "#WORKING:AUTHORS\n" >$(@)
+
+$(.library-dates):
+	@$(ECHO) "#WORKING:DATES\n" >$(@)
+
+$(.library-tags):
+	@$(ECHO) "#WORKING:TAGS\n" >$(@)
 
 ########################################
 ### {{{3 $(PUBLISH)-$(DO_PAGE) ---------
@@ -7812,9 +7805,8 @@ override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-pandoc =
 variables:
   $(PUBLISH)-nav-top:
     MAIN:
-      link: "#"
-      menu:
-        CHAINED: ../../index.html
+      $(MENU_SELF): "#"
+      CHAINED: ../../index.html
 endef
 
 ########################################
@@ -7970,11 +7962,10 @@ variables:
   $(PUBLISH)-nav-top:
     MAIN: index.html
     CHAINED:
-      link: "#"
-      menu:
-        ITEM 1: "#"
-        ITEM 2: "#"
-        ITEM 3: "#"
+      $(MENU_SELF): "#"
+      ITEM 1: "#"
+      ITEM 2: "#"
+      ITEM 3: "#"
 
   $(PUBLISH)-nav-bottom:
     CHAINED: "#"
@@ -8024,9 +8015,8 @@ variables:
 
   $(PUBLISH)-nav-top:
     MAIN:
-      link: "#"
-      menu:
-        CHAINED: ../index.html
+      $(MENU_SELF): "#"
+      CHAINED: ../index.html
 
 ################################################################################
 # End Of File
