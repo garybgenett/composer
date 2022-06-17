@@ -4141,7 +4141,7 @@ function $(PUBLISH)-nav-side-list {
 
 # 1 authors || dates || tags
 
-#WORKING:NOW:FIX site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
+#WORKING:NOW:NOW site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
 function $(PUBLISH)-nav-side-list-library {
 	$(ECHO) "<div class=\"text-nowrap\">\\n"
 	$(ECHO) "<table class=\"table table-sm table-borderless\">\\n"
@@ -7293,12 +7293,18 @@ $($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library): $($(PUBLISH)-library-digest)
 $($(PUBLISH)-library):
+	@$(ECHO) "$(_E)"
+	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
+	@$(ECHO) "$(_D)"
 
 else
 
 $($(PUBLISH)-library):
+	@$(ECHO) "$(_E)"
+	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(TOUCH) $($(PUBLISH)-library)
+	@$(ECHO) "$(_D)"
 
 endif
 
@@ -7714,6 +7720,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				| $(TEE) --append $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
 endif
+#WORKING:NOW:NOW
 	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))		| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS))	| $(TEE) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML)
@@ -7749,7 +7756,6 @@ endif
 	@$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
-#WORKING:NOW:NOW
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@+$(MAKE) $(MAKE_OPTIONS) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
@@ -8342,7 +8348,7 @@ ifneq ($(PANDOC_OPTIONS_ERROR),)
 endif
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(ECHO) "$(_E)"
-	@$(MKDIR) $(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)
+	@$(MKDIR) $(COMPOSER_TMP)/$(@).$(DATENAME)
 	@$(ECHO) "$(_D)"
 endif
 ifneq ($(c_site),)
