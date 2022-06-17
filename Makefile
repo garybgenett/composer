@@ -4141,6 +4141,7 @@ function $(PUBLISH)-nav-side-list {
 
 # 1 authors || dates || tags
 
+#WORKING:NOW:FIX site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
 function $(PUBLISH)-nav-side-list-library {
 	$(ECHO) "<div class=\"text-nowrap\">\\n"
 	$(ECHO) "<table class=\"table table-sm table-borderless\">\\n"
@@ -7165,7 +7166,7 @@ endif
 
 .PHONY: $(PUBLISH)-$(CONFIGS)
 $(PUBLISH)-$(CONFIGS):
-	@+$(MAKE) $(MAKE_OPTIONS) c_site="1" \
+	@+$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(MAKE_OPTIONS) c_site="1" \
 		$($(PUBLISH)-cache) \
 		$($(PUBLISH)-library)
 
@@ -7297,7 +7298,7 @@ $($(PUBLISH)-library):
 else
 
 $($(PUBLISH)-library):
-	@$(ECHO) ""
+	@$(TOUCH) $($(PUBLISH)-library)
 
 endif
 
@@ -8218,8 +8219,7 @@ else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(RUNMAKE) $(COMPOSER_TARGETS)
 else
 #>	@+$(MAKE) $(MAKE_OPTIONS) $(COMPOSER_TARGETS)
-#WORKING:NOW:SILENT this can not be silent, or COMPOSER_DEBUGIT SPECIAL_VAL will not work...?
-	@+$(MAKE) $(SILENT) $(MAKE_OPTIONS) $(COMPOSER_TARGETS)
+	@+$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(MAKE_OPTIONS) $(COMPOSER_TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
@@ -8475,12 +8475,11 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 #> update: MARKER.*PANDOC
-#WORKING:NOW:SILENT this can not be silent, or COMPOSER_DEBUGIT SPECIAL_VAL will not work...?
 override define $(PUBLISH)-$(DO_PAGE)-call =
 	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(DO_PAGE)); \
 	$(ECHO) "$(_E)"; \
 	$(MKDIR) $(COMPOSER_TMP); \
-	$(RUNMAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(DO_PAGE) \
+	$(RUNMAKE) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(DO_PAGE) \
 		c_site="1" \
 		c_list="$(if $(c_list_plus),$(c_list_plus),$(c_list))" \
 		| $(TEE) $(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT) \
