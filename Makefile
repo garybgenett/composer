@@ -475,10 +475,10 @@ override COMPOSER_IGNORES		?=
 #>override COMPOSER_IGNORES		:=
 #>endif
 
-override COMPOSER_IGNORES		:= $(sort \
-	$(COMPOSER_IGNORES) \
-	$(notdir $(COMPOSER_TMP)) \
-)
+#>override COMPOSER_IGNORES		:= $(sort \
+#>	$(COMPOSER_IGNORES) \
+#>	$(notdir $(COMPOSER_TMP)) \
+#>)
 
 ########################################
 
@@ -1334,10 +1334,10 @@ endif
 
 override $(PUBLISH)-cache		:= $(COMPOSER_TMP_CACHE)/$(PUBLISH)-cache
 
-override COMPOSER_IGNORES		:= $(sort \
-	$(COMPOSER_IGNORES) \
-	$(notdir $(COMPOSER_TMP_CACHE)) \
-)
+#>override COMPOSER_IGNORES		:= $(sort \
+#>	$(COMPOSER_IGNORES) \
+#>	$(notdir $(COMPOSER_TMP_CACHE)) \
+#>)
 
 ########################################
 
@@ -1416,10 +1416,10 @@ override $(PUBLISH)-library-metadata	:= $($(PUBLISH)-library).yml
 override $(PUBLISH)-library-index	:= $($(PUBLISH)-library)-index.yml
 override $(PUBLISH)-library-digest	:= $($(PUBLISH)-library)-digest$(COMPOSER_EXT_DEFAULT)
 
-override COMPOSER_IGNORES		:= $(sort \
-	$(COMPOSER_IGNORES) \
-	$(notdir $(COMPOSER_TMP_LIBRARY)) \
-)
+#>override COMPOSER_IGNORES		:= $(sort \
+#>	$(COMPOSER_IGNORES) \
+#>	$(notdir $(COMPOSER_TMP_LIBRARY)) \
+#>)
 
 ########################################
 ## {{{2 Filesystem ---------------------
@@ -4366,9 +4366,6 @@ _EOF_
 
 #> update: YQ_WRITE.*title
 
-#WORKING:NOW:NOW
-#	make COMPOSER_SUBDIRS=.null COMPOSER_TARGETS=.null install-all (export/unexport)
-#	time to retire $runmake...
 #WORKING:NOW:NOW
 #	add <composer_root> token, and $(REALPATH) to it
 #		this means every directory will be back to having its own cache
@@ -8001,7 +7998,7 @@ ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 	@$(foreach FILE,$(filter-out $(NOTHING),$(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS))),\
 		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(FILE)/$(MAKEFILE),-$(INSTALL)); \
 	)
-	@$(MAKE) $(INSTALL)-$(SUBDIRS)
+	@$(MAKE) COMPOSER_SUBDIRS="$(COMPOSER_SUBDIRS)" $(INSTALL)-$(SUBDIRS)
 endif
 
 override define $(INSTALL)-$(MAKEFILE) =
@@ -8053,7 +8050,7 @@ endif
 		$(call NEWLINE) \
 	)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@$(MAKE) $(CLEANER)-$(SUBDIRS)
+	@$(MAKE) COMPOSER_SUBDIRS="$(COMPOSER_SUBDIRS)" $(CLEANER)-$(SUBDIRS)
 endif
 
 .PHONY: $(CLEANER)-logs
@@ -8092,7 +8089,7 @@ $(DOITALL):
 	@$(MAKE) $(CLEANER)-logs
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(DOITALL)-$(SUBDIRS)
+	@$(MAKE) COMPOSER_SUBDIRS="$(COMPOSER_SUBDIRS)" $(DOITALL)-$(SUBDIRS)
 endif
 endif
 	@$(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL))) \
@@ -8109,7 +8106,7 @@ else
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(DOITALL)-$(SUBDIRS)
+	@$(MAKE) COMPOSER_SUBDIRS="$(COMPOSER_SUBDIRS)" $(DOITALL)-$(SUBDIRS)
 endif
 endif
 
