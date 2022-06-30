@@ -475,10 +475,10 @@ override COMPOSER_IGNORES		?=
 #>override COMPOSER_IGNORES		:=
 #>endif
 
-#>override COMPOSER_IGNORES		:= $(sort \
-#>	$(COMPOSER_IGNORES) \
-#>	$(notdir $(COMPOSER_TMP)) \
-#>)
+override COMPOSER_IGNORES		:= $(sort \
+	$(COMPOSER_IGNORES) \
+	$(notdir $(COMPOSER_TMP)) \
+)
 
 ########################################
 
@@ -1334,10 +1334,10 @@ endif
 
 override $(PUBLISH)-cache		:= $(COMPOSER_TMP_CACHE)/$(PUBLISH)-cache
 
-#>override COMPOSER_IGNORES		:= $(sort \
-#>	$(COMPOSER_IGNORES) \
-#>	$(notdir $(COMPOSER_TMP_CACHE)) \
-#>)
+override COMPOSER_IGNORES		:= $(sort \
+	$(COMPOSER_IGNORES) \
+	$(notdir $(COMPOSER_TMP_CACHE)) \
+)
 
 ########################################
 
@@ -1416,10 +1416,10 @@ override $(PUBLISH)-library-metadata	:= $($(PUBLISH)-library).yml
 override $(PUBLISH)-library-index	:= $($(PUBLISH)-library)-index.yml
 override $(PUBLISH)-library-digest	:= $($(PUBLISH)-library)-digest$(COMPOSER_EXT_DEFAULT)
 
-#>override COMPOSER_IGNORES		:= $(sort \
-#>	$(COMPOSER_IGNORES) \
-#>	$(notdir $(COMPOSER_TMP_LIBRARY)) \
-#>)
+override COMPOSER_IGNORES		:= $(sort \
+	$(COMPOSER_IGNORES) \
+	$(notdir $(COMPOSER_TMP_LIBRARY)) \
+)
 
 ########################################
 ## {{{2 Filesystem ---------------------
@@ -3426,6 +3426,10 @@ $(_S)########################################$(_D)
         $(_M)RIGHT TEXT$(_D)
     - $(_C)nav-box-end$(_D)
     - $(_N).spacer$(_D)
+    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
+    - $(_N).library-titles$(_D)
+    - $(_C)nav-unit-end$(_D)
+    - $(_N).spacer$(_D)
     - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS$(_D)
     - $(_N).library-authors$(_D)
     - $(_C)nav-unit-end$(_D)
@@ -4063,7 +4067,7 @@ function $(PUBLISH)-nav-side {
 
 ########################################
 
-# x $(PUBLISH)-nav-side-list-library 1	authors || dates || tags
+# x $(PUBLISH)-nav-side-list-library 1	authors || dates || tags || titles
 
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -4080,7 +4084,9 @@ function $(PUBLISH)-nav-side-list {
 			| $${YQ_WRITE} "$${1}[\"$${NUM}\"]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-		if [ "$${TEXT}" = ".library-authors" ]; then
+		if [ "$${TEXT}" = ".library-titles" ]; then
+			$(PUBLISH)-nav-side-list-library titles
+		elif [ "$${TEXT}" = ".library-authors" ]; then
 			$(PUBLISH)-nav-side-list-library authors
 		elif [ "$${TEXT}" = ".library-dates" ]; then
 			$(PUBLISH)-nav-side-list-library dates
@@ -4383,8 +4389,6 @@ _EOF_
 #		it would be cool to make these definition lists with badges
 #	add code to digest/page generation that adds author/date/tags links at the bottom?
 #		this would be totally cool, but realpath needs make it complicated
-#	turn site back into an all-all, with all dependencies and no recipe
-#		chain subdirs off of index and library, so things don't go down the directory chain until they are ready
 
 function $(PUBLISH)-file {
 	TITL="$$(
@@ -7118,6 +7122,9 @@ $(foreach FILE,\
 	$(eval $(call $(PUBLISH)-$(DO_PAGE)-helpers,library,$(FILE))) \
 )
 
+$(.library-titles):
+	@$(ECHO) "#WORKING:TITLES\n" >$(@)
+
 $(.library-authors):
 	@$(ECHO) "#WORKING:AUTHORS\n" >$(@)
 
@@ -7315,10 +7322,40 @@ $($(PUBLISH)-library-index):
 	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
 	@{ \
 		$(ECHO) "$(_E)"; \
+		$(ECHO) "titles: {\n" >>$(@).$(COMPOSER_BASENAME); \
+		$(CAT) $($(PUBLISH)-library-metadata) \
+			| $(YQ_WRITE) ".[].$(COMPOSER_BASENAME)" \
+			| $(SORT) \
+			| while read -r FILE; do \
+				$(ECHO) "$(_D)"; \
+				$(call $(HEADERS)-note,$(@),Title: $${FILE},$(PUBLISH)-library); \
+				if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
+					else				$(ECHO) "$(_N)"; \
+					fi; \
+				$(ECHO) "\"$${FILE}\": [\n" \
+					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
+					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+				$(CAT) $($(PUBLISH)-library-metadata) \
+					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.$(COMPOSER_BASENAME) == null)) | .[].path" | $(SED) "/^null$$/d"; \
+						else				$(YQ_WRITE) "map(select(.$(COMPOSER_BASENAME) == $${FILE})) | .[].path"; \
+						fi \
+					| $(SED) "s|$$|,|g" \
+					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
+					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+				$(ECHO) "],\n" \
+					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
+					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+				$(ECHO) "$(_D)"; \
+			done; \
+		$(ECHO) "$(_E)"; \
+		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
+		$(ECHO) "$(_D)"; \
+	}
+	@{ \
+		$(ECHO) "$(_E)"; \
 		$(ECHO) "authors: {\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(CAT) $($(PUBLISH)-library-metadata) \
 			| $(YQ_WRITE) ".[].author" \
-			| $(SED) "/^null$$/d" \
 			| $(SED) "s|^[-][ ]||g" \
 			| $(SORT) \
 			| while read -r FILE; do \
@@ -7331,7 +7368,9 @@ $($(PUBLISH)-library-index):
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 				$(CAT) $($(PUBLISH)-library-metadata) \
-					| $(YQ_WRITE) "map(select(.author == \"$${FILE}\")) | .[].path" \
+					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.author == null)) | .[].path" | $(SED) "/^null$$/d"; \
+						else				$(YQ_WRITE) "map(select(.author == \"$${FILE}\")) | .[].path"; \
+						fi \
 					| $(SED) "s|$$|,|g" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
@@ -7354,10 +7393,9 @@ $($(PUBLISH)-library-index):
 		$(ECHO) "dates: {\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(CAT) $($(PUBLISH)-library-metadata) \
 			| $(YQ_WRITE) ".[].date" \
-			| $(SED) "/^null$$/d" \
-			| $(SED) -n \
-				-e "s|^([0-9]{4}).*$$|\1|gp" \
-				-e "s|^.*([0-9]{4})$$|\1|gp" \
+			| $(SED) \
+				-e "s|^([0-9]{4}).*$$|\1|g" \
+				-e "s|^.*([0-9]{4})$$|\1|g" \
 			| $(SORT) \
 			| while read -r FILE; do \
 				$(ECHO) "$(_D)"; \
@@ -7369,7 +7407,9 @@ $($(PUBLISH)-library-index):
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 				$(CAT) $($(PUBLISH)-library-metadata) \
-					| $(YQ_WRITE) "map(select(.date == \"$${FILE}*\" or .date == \"*$${FILE}\")) | .[].path" \
+					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.date == null)) | .[].path" | $(SED) "/^null$$/d"; \
+						else				$(YQ_WRITE) "map(select(.date == \"$${FILE}*\" or .date == \"*$${FILE}\")) | .[].path"; \
+						fi \
 					| $(SED) "s|$$|,|g" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
@@ -7386,8 +7426,8 @@ $($(PUBLISH)-library-index):
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "tags: {\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".[].tags | .[]" \
-			| $(SED) "/^null$$/d" \
+			| $(YQ_WRITE) ".[].tags" \
+			| $(SED) "s|^[-][ ]||g" \
 			| $(SORT) \
 			| while read -r FILE; do \
 				$(ECHO) "$(_D)"; \
@@ -7399,7 +7439,9 @@ $($(PUBLISH)-library-index):
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 				$(CAT) $($(PUBLISH)-library-metadata) \
-					| $(YQ_WRITE) "map(select(.tags | contains([\"$${FILE}\"]))) | .[].path" \
+					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.tags == null)) | .[].path" | $(SED) "/^null$$/d"; \
+						else				$(YQ_WRITE) "map(select(.tags | contains([\"$${FILE}\"]))) | .[].path"; \
+						fi \
 					| $(SED) "s|$$|,|g" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
