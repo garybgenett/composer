@@ -4131,7 +4131,7 @@ function $(PUBLISH)-nav-side-list-library {
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 	| while read -r FILE; do
-		$(ECHO) "<tr><td><a href=\"$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+		$(ECHO) "<tr><td><a href=\"$${PUBLISH_LIBRARY_INDEX_PATH}/$${1/%s}-$$(
 				$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 			).$(EXTN_HTML)\">$${FILE}</a></td><td class=\"text-end\">$$(
 				$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
@@ -4375,13 +4375,13 @@ _EOF_
 #> update: YQ_WRITE.*title
 
 #WORKING:NOW:NOW
-#	create digest files right off of existing index loop
-#		isolate and reuse digest loop
-#		yq the list from library index in build.sh
+#	md -> html conversion... where/when does this happen?
+#	replace "null" with "none" in final urls/pages
+#		also needs to show up in build.sh .library-* lists
 #	add .library-* placeholders to top nav
 #		add to yml configs
 #	does updated library trigger updated caches?
-#		i.e. do they have a dependency on it?
+#		i.e. do they have a dependency on it? = touch library.yml ; make site-config ?
 #WORKING:NOW
 #	add <composer_root> token, and $(REALPATH) to it
 #		this means every directory will be back to having its own cache
@@ -7358,13 +7358,15 @@ $($(PUBLISH)-library-index):
 				$(ECHO) "],\n" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_D)"; \
+				$(ECHO) "$(_N)"; \
+				OUTFILE="$(COMPOSER_TMP_LIBRARY)/title-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
+				$(ECHO) "" >$${OUTFILE}; \
 				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
 					| $(YQ_WRITE_OUT) ".titles.[\"$${FILE}\"] | .[]" \
 					| while read -r DIGEST; do \
-						OUTFILE="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))"; \
-						$(call $(PUBLISH)-library-digest-create,$(COMPOSER_TMP_LIBRARY)/title-$${OUTFILE}.md,$${DIGEST},$(SPECIAL_VAL)); \
+						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
 					done; \
+				$(ECHO) "$(_D)"; \
 			done; \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
@@ -7396,13 +7398,15 @@ $($(PUBLISH)-library-index):
 				$(ECHO) "],\n" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_D)"; \
+				$(ECHO) "$(_N)"; \
+				OUTFILE="$(COMPOSER_TMP_LIBRARY)/author-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
+				$(ECHO) "" >$${OUTFILE}; \
 				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
 					| $(YQ_WRITE_OUT) ".authors.[\"$${FILE}\"] | .[]" \
 					| while read -r DIGEST; do \
-						OUTFILE="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))"; \
-						$(call $(PUBLISH)-library-digest-create,$(COMPOSER_TMP_LIBRARY)/author-$${OUTFILE}.md,$${DIGEST},$(SPECIAL_VAL)); \
+						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
 					done; \
+				$(ECHO) "$(_D)"; \
 			done; \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
@@ -7436,13 +7440,15 @@ $($(PUBLISH)-library-index):
 				$(ECHO) "],\n" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_D)"; \
+				$(ECHO) "$(_N)"; \
+				OUTFILE="$(COMPOSER_TMP_LIBRARY)/date-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
+				$(ECHO) "" >$${OUTFILE}; \
 				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
 					| $(YQ_WRITE_OUT) ".dates.[\"$${FILE}\"] | .[]" \
 					| while read -r DIGEST; do \
-						OUTFILE="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))"; \
-						$(call $(PUBLISH)-library-digest-create,$(COMPOSER_TMP_LIBRARY)/date-$${OUTFILE}.md,$${DIGEST},$(SPECIAL_VAL)); \
+						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
 					done; \
+				$(ECHO) "$(_D)"; \
 			done; \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
@@ -7474,13 +7480,15 @@ $($(PUBLISH)-library-index):
 				$(ECHO) "],\n" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_D)"; \
+				$(ECHO) "$(_N)"; \
+				OUTFILE="$(COMPOSER_TMP_LIBRARY)/tag-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
+				$(ECHO) "" >$${OUTFILE}; \
 				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
 					| $(YQ_WRITE_OUT) ".tags.[\"$${FILE}\"] | .[]" \
 					| while read -r DIGEST; do \
-						OUTFILE="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))"; \
-						$(call $(PUBLISH)-library-digest-create,$(COMPOSER_TMP_LIBRARY)/tag-$${OUTFILE}.md,$${DIGEST},$(SPECIAL_VAL)); \
+						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
 					done; \
+				$(ECHO) "$(_D)"; \
 			done; \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
@@ -7527,7 +7535,7 @@ $($(PUBLISH)-library-digest):
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_N)"
-	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
+	@$(ECHO) "" >$(@)
 	@NUM="0"; for FILE in $$( \
 		$(CAT) $($(PUBLISH)-library-metadata) \
 			| $(YQ_WRITE) " \
@@ -7537,7 +7545,7 @@ $($(PUBLISH)-library-digest):
 			| $(HEAD) -n$($(PUBLISH)-library-digest_count); \
 	); do \
 		if [ "$${NUM}" -gt "0" ] && [ "$($(PUBLISH)-library-digest_spacer)" = "1" ]; then \
-			$(ECHO) "\n$(HTML_BREAK)\n" >>$(@).$(COMPOSER_BASENAME); \
+			$(ECHO) "\n$(HTML_BREAK)\n" >>$(@); \
 		fi; \
 		$(ECHO) "$(_D)"; \
 		EXPAND="$(SPECIAL_VAL)"; \
