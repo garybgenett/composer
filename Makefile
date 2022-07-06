@@ -4110,8 +4110,8 @@ function $(PUBLISH)-nav-side-list {
 				| $(SED) "/^null$$/d"
 			) || return 1
 		fi
-		NUM="$$($(EXPR) $${NUM} + 1)"
 		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[\"$${NUM}\"] -->\\n"
+		NUM="$$($(EXPR) $${NUM} + 1)"
 	done
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
 	return 0
@@ -4373,6 +4373,14 @@ _EOF_
 #> update: YQ_WRITE.*title
 
 #WORKING:NOW:NOW
+#	create digest files right off of existing index loop
+#		isolate and reuse digest loop
+#		yq the list from library index in build.sh
+#	add .library-* placeholders to top nav
+#		add to yml configs
+#	does updated library trigger updated caches?
+#		i.e. do they have a dependency on it?
+#WORKING:NOW
 #	add <composer_root> token, and $(REALPATH) to it
 #		this means every directory will be back to having its own cache
 #	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
@@ -4414,6 +4422,7 @@ function $(PUBLISH)-file {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	HEAD="$$($(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) title-block (.+) $(PUBLISH_BUILD_CMD_END)$$|\\1|gp" $${1})"
 	if [ -n "$${HEAD}" ]; then
+#WORKING:NOW:NOW
 		$(ECHO) "<!-- title-block $(DIVIDE) begin $(MARKER) $${HEAD} -->\\n"
 		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^(nav-[^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
 			NAME="$$(
@@ -7161,11 +7170,13 @@ $(PUBLISH)-$(DO_PAGE):
 ### {{{3 $(PUBLISH)-cache --------------
 
 $($(PUBLISH)-cache): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-cache): $($(PUBLISH)-library)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-cache)
 
 $($(PUBLISH)-caches): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-caches): $($(PUBLISH)-library)
 $($(PUBLISH)-caches):
 	@$(call $(HEADERS)-note,$($(PUBLISH)-cache),$(notdir $(@)),$(PUBLISH)-cache)
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
@@ -7489,6 +7500,7 @@ $($(PUBLISH)-library-digest):
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_N)"
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
+#WORKING:NOW:NOW
 	@NUM="0"; for FILE in $$( \
 		$(CAT) $($(PUBLISH)-library-metadata) \
 			| $(YQ_WRITE) " \
@@ -7503,102 +7515,8 @@ $($(PUBLISH)-library-digest):
 		if [ "$${NUM}" -gt "0" ] && [ "$($(PUBLISH)-library-digest_spacer)" = "1" ]; then \
 			$(ECHO) "\n$(HTML_BREAK)\n" >>$(@).$(COMPOSER_BASENAME); \
 		fi; \
-		$(ECHO) "$(_D)"; \
-		$(call $(HEADERS)-note,$(@),$${FILE},$(PUBLISH)-library); \
-		if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
-			else				$(ECHO) "$(_N)"; \
-			fi; \
-		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(DEPTH_MAX) $$( \
-				if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
-					$(ECHO) "1"; \
-				else \
-					$(ECHO) "$(SPECIAL_VAL)"; \
-				fi; \
-			) " \
-				| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-			TITL="$$( \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-				| $(YQ_WRITE) ".\"$${FILE}\".title" 2>/dev/null \
-				| $(SED) "/^null$$/d"; \
-			)"; \
-			if [ -z "$${TITL}" ]; then \
-				TITL="$$( \
-					$(CAT) $($(PUBLISH)-library-metadata) \
-					| $(YQ_WRITE) ".\"$${FILE}\".pagetitle" 2>/dev/null \
-					| $(SED) "/^null$$/d"; \
-				)"; \
-			fi; \
-			NAME="$$( \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-				| $(YQ_WRITE) ".\"$${FILE}\".author" 2>/dev/null \
-				| $(SED) "/^null$$/d"; \
-			)"; \
-			if [ -n "$${NAME}" ]; then \
-				JOIN="$$( \
-					$(ECHO) "$${NAME}" \
-					| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
-					| $(SED) "/^null$$/d"; \
-				)"; \
-				if [ -n "$${JOIN}" ]; then \
-					NAME="$${JOIN}"; \
-				fi; \
-			fi; \
-			DATE="$$( \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-				| $(YQ_WRITE) ".\"$${FILE}\".date" 2>/dev/null \
-				| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
-				| $(SED) "/^null$$/d"; \
-			)"; \
-			if [ -n "$${DATE}" ]; then \
-				$(ECHO) "$${DATE}" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-			fi; \
-			if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then \
-				$(ECHO) " $(DIVIDE) " \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-			fi; \
-			if [ -n "$${TITL}" ]; then \
-				$(ECHO) "$${TITL}" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-			fi; \
-			if [ -n "$${NAME}" ]; then \
-				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
-					$(ECHO) " </br> " \
-						| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-						$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				fi; \
-				$(ECHO) "$${NAME}" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-			fi; \
-			$(ECHO) " $(PUBLISH_BUILD_CMD_END)\n\n" \
-				| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-		$(CAT) "$(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$${FILE}" \
-			| $(PANDOC) --strip-comments --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_LINT)" \
-			| $(SED) "/$(PUBLISH_BUILD_CMD_BEG) .+ $(PUBLISH_BUILD_CMD_END)/d" \
-			| $(TR) '\n' '$(TOKEN)' \
-			| $(SED) "s|^(.{$($(PUBLISH)-library-digest_chars)}).+$$|\1 $($(PUBLISH)-library-digest_continue)|g" \
-			| $(TR) '$(TOKEN)' '\n' \
-			| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-		$(ECHO) "\n\n<a href=\"$$( \
-				$(ECHO) "$${FILE}" \
-				| $(SED) \
-					-e "s|([/]?)$(DO_PAGE)[-]([^/]+)$$|\1\2|g" \
-					-e "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g" \
-			)\">$($(PUBLISH)-library-digest_permalink)</a>\n" \
-				| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-		$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n" \
-			| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		$(call $(PUBLISH)-library-digest-create,$(@)); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
-		$(ECHO) "$(_D)"; \
 	done
 	@if [ -s "$(@).$(COMPOSER_BASENAME)" ]; then \
 		$(ECHO) "$(_S)"; \
@@ -7608,6 +7526,105 @@ $($(PUBLISH)-library-digest):
 		exit 1; \
 	fi
 	@$(call $(HEADERS)-note,$(@),$(_H)Complete,$(PUBLISH)-library)
+
+#WORKING:NOW:NOW
+override define $(PUBLISH)-library-digest-create =
+	$(ECHO) "$(_D)"; \
+	$(call $(HEADERS)-note,$(1),$${FILE},$(PUBLISH)-library); \
+	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
+		else				$(ECHO) "$(_N)"; \
+		fi; \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(DEPTH_MAX) $$( \
+			if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
+				$(ECHO) "1"; \
+			else \
+				$(ECHO) "$(SPECIAL_VAL)"; \
+			fi; \
+		) " \
+			| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		TITL="$$( \
+			$(CAT) $($(PUBLISH)-library-metadata) \
+			| $(YQ_WRITE) ".\"$${FILE}\".title" 2>/dev/null \
+			| $(SED) "/^null$$/d"; \
+		)"; \
+		if [ -z "$${TITL}" ]; then \
+			TITL="$$( \
+				$(CAT) $($(PUBLISH)-library-metadata) \
+				| $(YQ_WRITE) ".\"$${FILE}\".pagetitle" 2>/dev/null \
+				| $(SED) "/^null$$/d"; \
+			)"; \
+		fi; \
+		NAME="$$( \
+			$(CAT) $($(PUBLISH)-library-metadata) \
+			| $(YQ_WRITE) ".\"$${FILE}\".author" 2>/dev/null \
+			| $(SED) "/^null$$/d"; \
+		)"; \
+		if [ -n "$${NAME}" ]; then \
+			JOIN="$$( \
+				$(ECHO) "$${NAME}" \
+				| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
+				| $(SED) "/^null$$/d"; \
+			)"; \
+			if [ -n "$${JOIN}" ]; then \
+				NAME="$${JOIN}"; \
+			fi; \
+		fi; \
+		DATE="$$( \
+			$(CAT) $($(PUBLISH)-library-metadata) \
+			| $(YQ_WRITE) ".\"$${FILE}\".date" 2>/dev/null \
+			| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
+			| $(SED) "/^null$$/d"; \
+		)"; \
+		if [ -n "$${DATE}" ]; then \
+			$(ECHO) "$${DATE}" \
+				| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		fi; \
+		if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then \
+			$(ECHO) " $(DIVIDE) " \
+				| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		fi; \
+		if [ -n "$${TITL}" ]; then \
+			$(ECHO) "$${TITL}" \
+				| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		fi; \
+		if [ -n "$${NAME}" ]; then \
+			if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
+				$(ECHO) " </br> " \
+					| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+			fi; \
+			$(ECHO) "$${NAME}" \
+				| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		fi; \
+		$(ECHO) " $(PUBLISH_BUILD_CMD_END)\n\n" \
+			| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+	$(CAT) "$(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$${FILE}" \
+		| $(PANDOC) --strip-comments --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_LINT)" \
+		| $(SED) "/$(PUBLISH_BUILD_CMD_BEG) .+ $(PUBLISH_BUILD_CMD_END)/d" \
+		| $(TR) '\n' '$(TOKEN)' \
+		| $(SED) "s|^(.{$($(PUBLISH)-library-digest_chars)}).+$$|\1 $($(PUBLISH)-library-digest_continue)|g" \
+		| $(TR) '$(TOKEN)' '\n' \
+		| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+		$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+	$(ECHO) "\n\n<a href=\"$$( \
+			$(ECHO) "$${FILE}" \
+			| $(SED) \
+				-e "s|([/]?)$(DO_PAGE)[-]([^/]+)$$|\1\2|g" \
+				-e "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g" \
+		)\">$($(PUBLISH)-library-digest_permalink)</a>\n" \
+			| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+	$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n" \
+		| $(TEE) --append $(1).$(COMPOSER_BASENAME) \
+		$(if $(COMPOSER_DEBUGIT),,>/dev/null)
+	$(ECHO) "$(_D)"; \
+endef
 
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
