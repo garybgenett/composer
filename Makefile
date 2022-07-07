@@ -4375,7 +4375,6 @@ _EOF_
 #> update: YQ_WRITE.*title
 
 #WORKING:NOW:NOW
-#	md -> html conversion... where/when does this happen?
 #	replace "null" with "none" in final urls/pages
 #		also needs to show up in build.sh .library-* lists
 #	add .library-* placeholders to top nav
@@ -7226,6 +7225,8 @@ $($(PUBLISH)-library): $($(PUBLISH)-library-digest)
 $($(PUBLISH)-library):
 	@$(ECHO) "$(_E)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
+	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_TMP_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
+	@$(MAKE) --directory $(COMPOSER_TMP_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
 	@$(ECHO) "$(_D)"
 
