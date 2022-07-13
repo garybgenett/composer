@@ -247,7 +247,7 @@ override define READ_ALIASES =
 		$(info #> ALIAS			[$(1)|$($(1))|$(origin $(1))]) \
 		$(info #> ALIAS			[$(2)|$($(2))|$(origin $(2))]) \
 		$(info #> ALIAS			[$(3)|$($(3))|$(origin $(3))]) \
-	)
+	) \
 	$(if $(filter undefined,$(origin $(3))),\
 		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1)))) \
 		$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2)))) \
@@ -1397,6 +1397,8 @@ endif
 
 ########################################
 
+#WORKING:NOW:NOW if composer_dir, then composer_root...
+
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 #>override COMPOSER_TMP_LIBRARY		:= $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))/$(notdir $($(PUBLISH)-library-folder))
 $(foreach FILE,$(COMPOSER_YML_LIST),$(if $(shell \
@@ -1517,14 +1519,6 @@ $(1)s:
 
 .PHONY: $(1)s-$$(DOITALL)
 $(1)s-$$(DOITALL):
-ifeq ($(1),$$(DO_PAGE))
-	@if [ -n "$$$$( \
-		$$(strip $$(call $$(TARGETS)-$$(PRINTER))) \
-		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
-	)" ]; then \
-		$$(MAKE) c_site="1" $$(PUBLISH)-$$(CONFIGS); \
-	fi
-endif
 	@$$(strip $$(call $$(TARGETS)-$$(PRINTER))) \
 		| $$(SED) -n "s|^($(1)[-][^:]+).*$$$$|\1|gp" \
 		| $$(XARGS) $$(MAKE) {}
@@ -3018,28 +3012,31 @@ endif
 $(CREATOR): .set_title-$(CREATOR)
 $(CREATOR):
 	@$(call $(HEADERS))
+	@$(ECHO) "$(_E)"
 ifneq ($(COMPOSER_RELEASE),)
-	@$(ENDOLINE)
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
-	@$(ENDOLINE)
+	@$(ECHO) "$(_D)"; $(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory); $(ECHO) "$(_E)"
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_README_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
-#>	$(subst --relative,,$(LN)) $(patsubst $(COMPOSER_DIR)/%,%,$(MDVIEWER_CSS))	$(CURDIR)/$(COMPOSER_CSS) >/dev/null
-	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) >/dev/null
+#>	@$(subst --relative,,$(LN)) $(patsubst $(COMPOSER_DIR)/%,%,$(MDVIEWER_CSS))	$(CURDIR)/$(COMPOSER_CSS)
+	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 endif
-#>	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-ifneq ($(COMPOSER_RELEASE),)
 	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
-	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(PUBLISH)	| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "$(_D)"; $(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT)); $(ECHO) "$(_E)"
+#>	@$(MAKE) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOITALL)	| $(SED) "/^[#][>]/d" >$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(MAKE) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= $(HELPOUT)-$(DOFORCE)	| $(SED) "/^[#][>]/d" >$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+ifneq ($(COMPOSER_RELEASE),)
+	@$(ECHO) "$(_D)"; $(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)); $(ECHO) "$(_E)"
+	@$(MAKE) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= $(HELPOUT)-$(TYPE_PRES)	| $(SED) "/^[#][>]/d" >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "$(_D)"; $(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)); $(ECHO) "$(_E)"
+	@$(MAKE) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= $(HELPOUT)-$(PUBLISH)	| $(SED) "/^[#][>]/d" >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH))				>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(CREATOR)-$(OUT_README)-$(PUBLISH)-include)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).include$(COMPOSER_EXT_DEFAULT)
 endif
+	@$(ECHO) "$(_D)"; $(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)); $(ECHO) "$(_E)"
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
+	@$(ECHO) "$(_D)"; $(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))); $(ECHO) "$(_E)"
 	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/screenshot-v3.0.png
@@ -3095,20 +3092,21 @@ endif
 		fi; \
 		$(call NEWLINE) \
 	)
-#>	@$(ENDOLINE)
+	@$(ECHO) "$(_D)"
 	@$(LS) $(CURDIR)
-	@$(ENDOLINE)
-	@$(LS) --recursive $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
+	@$(LS) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
 ifneq ($(COMPOSER_RELEASE),)
-	@$(ENDOLINE)
+	@$(ECHO) "$(_E)"
 	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(ECHO) "$(_D)"
 	@$(MAKE) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"		COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #>	@$(MAKE) COMPOSER_LOG=					COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 	@$(MAKE) COMPOSER_LOG=					COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL) 2>&1 \
 		| $(SED) \
 			-e "s|$(COMPOSER_DIR)|...|g" \
-			-e "/install[:][[:space:]]/d" \
+			-e "/install[:][[:space:]]/d"
+	@$(ECHO) "$(_E)"
 #>	@$(RM) \
 #>		$(CURDIR)/$(COMPOSER_SETTINGS) \
 #>		$(CURDIR)/$(COMPOSER_YML) \
@@ -3122,6 +3120,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(CURDIR)/$(COMPOSER_YML)
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(ECHO) "$(_D)"
 endif
 
 override define $(CREATOR)-$(OUT_README)-$(PUBLISH) =
@@ -4381,6 +4380,7 @@ _EOF_
 #		add to yml configs
 #	does updated library trigger updated caches?
 #		i.e. do they have a dependency on it? = touch library.yml ; make site-config ?
+#	ability to disable digest in library, and do flat links instead?
 #WORKING:NOW
 #	add <composer_root> token, and $(REALPATH) to it
 #		this means every directory will be back to having its own cache
@@ -7007,6 +7007,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
 	@$(ENDOLINE)
+	@$(ECHO) "$(_E)"
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.json \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.chrome.json
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
@@ -7015,8 +7016,8 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_BIN)) \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_BIN))
 endif
-	@$(ECHO) "$(_C)"
-	@$(LS) --color=never --directory \
+	@$(ECHO) "$(_D)"
+	@$(LS) --directory \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR))/data/templates \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR))/dist \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR))/dist \
@@ -7034,7 +7035,6 @@ endif
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_CSS_SOLAR_DARK)) \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS_THEME)) \
 		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS_THEME_SOLAR))
-	@$(ECHO) "$(_D)"
 
 ################################################################################
 # {{{1 Main Targets ------------------------------------------------------------
@@ -7084,6 +7084,10 @@ endif
 
 ########################################
 ### {{{3 $(PUBLISH)-$(CONFIGS) ---------
+
+#WORKING:NOW:NOW this is essentially to force a rebuild... so...
+#	how do we do that?
+#	different name?
 
 .PHONY: $(PUBLISH)-$(CONFIGS)
 $(PUBLISH)-$(CONFIGS):
