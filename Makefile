@@ -1414,9 +1414,9 @@ override COMPOSER_TMP_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP_LIBRA
 endif
 
 override $(PUBLISH)-library		:= $(COMPOSER_TMP_LIBRARY)/$(PUBLISH)-library
-override $(PUBLISH)-library-metadata	:= $($(PUBLISH)-library).yml
-override $(PUBLISH)-library-index	:= $($(PUBLISH)-library)-index.yml
-override $(PUBLISH)-library-digest	:= $($(PUBLISH)-library)-digest$(COMPOSER_EXT_DEFAULT)
+override $(PUBLISH)-library-metadata	:= $(COMPOSER_TMP_LIBRARY)/.metadata.yml
+override $(PUBLISH)-library-index	:= $(COMPOSER_TMP_LIBRARY)/.index.yml
+override $(PUBLISH)-library-digest	:= $(COMPOSER_TMP_LIBRARY)/digest$(COMPOSER_EXT_DEFAULT)
 
 override COMPOSER_IGNORES		:= $(sort \
 	$(COMPOSER_IGNORES) \
@@ -4112,7 +4112,6 @@ function $(PUBLISH)-nav-side-list {
 
 # 1 authors || dates || tags
 
-#WORKING:NOW:NOW site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
 function $(PUBLISH)-nav-side-list-library {
 	$(ECHO) "<div class=\"text-nowrap\">\\n"
 	$(ECHO) "<table class=\"table table-sm table-borderless\">\\n"
@@ -7223,6 +7222,8 @@ $($(PUBLISH)-library):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_D)"
+#WORKING:NOW:NOW site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
+#WORKING:NOW:NOW
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_TMP_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(MAKE) --directory $(COMPOSER_TMP_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
@@ -7240,6 +7241,8 @@ endif
 ########################################
 ### {{{3 $(PUBLISH)-library-metadata ---
 
+#> update: YQ_WRITE.*title
+
 $($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-metadata):
 	@$(call $(HEADERS)-note,$(@),$(_H)Indexing,$(PUBLISH)-library)
@@ -7247,6 +7250,7 @@ $($(PUBLISH)-library-metadata):
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_F)"
 	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
+#WORKING:NOW:NOW need to somehow skip *ALL* library folders...?
 	@$(FIND) $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) \
 		\( -path $(COMPOSER_TMP) -prune \) \
 		-o \( -path $(COMPOSER_TMP_CACHE) -prune \) \
@@ -7292,9 +7296,9 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "$(_E)"
 	@$(ECHO) "\"$(COMPOSER_BASENAME)\": { \"updated\": \"$(DATESTAMP)\" }" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-		$(if $(COMPOSER_DEBUGIT),,>/dev/null)
+		$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		$(if $(COMPOSER_DEBUGIT),$(ECHO) "\n")
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
-	@$(ECHO) "\n"
 	@if [ ! -s "$(@)" ]; then \
 		$(ECHO) "{}" >$(@).$(PRINTER); \
 	else \
@@ -7331,164 +7335,20 @@ $($(PUBLISH)-library-index):
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_E)"
 	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
-	@{ \
-		$(ECHO) "titles: {\n" >>$(@).$(COMPOSER_BASENAME); \
-		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".[].$(COMPOSER_BASENAME)" \
-			| $(SORT) \
-			| while read -r FILE; do \
-				$(ECHO) "$(_D)"; \
-				$(call $(HEADERS)-note,$(@),Title: $${FILE},$(PUBLISH)-library); \
-				if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
-					else				$(ECHO) "$(_N)"; \
-					fi; \
-				$(ECHO) "\"$${FILE}\": [\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.$(COMPOSER_BASENAME) == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
-						else				$(YQ_WRITE) "map(select(.$(COMPOSER_BASENAME) == $${FILE})) $(call $(PUBLISH)-library-digest-sort)"; \
-						fi \
-					| $(SED) "s|$$|,|g" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "],\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_N)"; \
-				OUTFILE="$(COMPOSER_TMP_LIBRARY)/title-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
-				$(ECHO) "" >$${OUTFILE}; \
-				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
-					| $(YQ_WRITE_OUT) ".titles.[\"$${FILE}\"] | .[]" \
-					| while read -r DIGEST; do \
-						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
-					done; \
-				$(ECHO) "$(_D)"; \
-			done; \
-		$(ECHO) "$(_E)"; \
-		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
-	}
-	@{ \
-		$(ECHO) "authors: {\n" >>$(@).$(COMPOSER_BASENAME); \
-		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".[].author" \
-			| $(SED) "s|^[-][ ]||g" \
-			| $(SORT) \
-			| while read -r FILE; do \
-				$(ECHO) "$(_D)"; \
-				$(call $(HEADERS)-note,$(@),Author: $${FILE},$(PUBLISH)-library); \
-				if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
-					else				$(ECHO) "$(_N)"; \
-					fi; \
-				$(ECHO) "\"$${FILE}\": [\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.author == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
-						else				$(YQ_WRITE) "map(select((.author == \"$${FILE}\") or (.author | .[] | contains(\"$${FILE}\")))) $(call $(PUBLISH)-library-digest-sort)"; \
-						fi \
-					| $(SED) "s|$$|,|g" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "],\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_N)"; \
-				OUTFILE="$(COMPOSER_TMP_LIBRARY)/author-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
-				$(ECHO) "" >$${OUTFILE}; \
-				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
-					| $(YQ_WRITE_OUT) ".authors.[\"$${FILE}\"] | .[]" \
-					| while read -r DIGEST; do \
-						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
-					done; \
-				$(ECHO) "$(_D)"; \
-			done; \
-		$(ECHO) "$(_E)"; \
-		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
-	}
-	@{ \
-		$(ECHO) "dates: {\n" >>$(@).$(COMPOSER_BASENAME); \
-		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".[].date" \
-			| $(SED) \
-				-e "s|^([0-9]{4}).*$$|\1|g" \
-				-e "s|^.*([0-9]{4})$$|\1|g" \
-			| $(SORT) \
-			| while read -r FILE; do \
-				$(ECHO) "$(_D)"; \
-				$(call $(HEADERS)-note,$(@),Date: $${FILE},$(PUBLISH)-library); \
-				if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
-					else				$(ECHO) "$(_N)"; \
-					fi; \
-				$(ECHO) "\"$${FILE}\": [\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.date == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
-						else				$(YQ_WRITE) "map(select(.date == \"$${FILE}*\" or .date == \"*$${FILE}\")) $(call $(PUBLISH)-library-digest-sort)"; \
-						fi \
-					| $(SED) "s|$$|,|g" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "],\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_N)"; \
-				OUTFILE="$(COMPOSER_TMP_LIBRARY)/date-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
-				$(ECHO) "" >$${OUTFILE}; \
-				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
-					| $(YQ_WRITE_OUT) ".dates.[\"$${FILE}\"] | .[]" \
-					| while read -r DIGEST; do \
-						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
-					done; \
-				$(ECHO) "$(_D)"; \
-			done; \
-		$(ECHO) "$(_E)"; \
-		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
-	}
-	@{ \
-		$(ECHO) "tags: {\n" >>$(@).$(COMPOSER_BASENAME); \
-		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".[].tags" \
-			| $(SED) "s|^[-][ ]||g" \
-			| $(SORT) \
-			| while read -r FILE; do \
-				$(ECHO) "$(_D)"; \
-				$(call $(HEADERS)-note,$(@),Tag: $${FILE},$(PUBLISH)-library); \
-				if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
-					else				$(ECHO) "$(_N)"; \
-					fi; \
-				$(ECHO) "\"$${FILE}\": [\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(CAT) $($(PUBLISH)-library-metadata) \
-					| if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.tags == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
-						else				$(YQ_WRITE) "map(select(.tags | contains([\"$${FILE}\"]))) $(call $(PUBLISH)-library-digest-sort)"; \
-						fi \
-					| $(SED) "s|$$|,|g" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "],\n" \
-					| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-					$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-				$(ECHO) "$(_N)"; \
-				OUTFILE="$(COMPOSER_TMP_LIBRARY)/tag-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
-				$(ECHO) "" >$${OUTFILE}; \
-				{ $(CAT) $(@).$(COMPOSER_BASENAME); $(ECHO) "}}\n"; } \
-					| $(YQ_WRITE_OUT) ".tags.[\"$${FILE}\"] | .[]" \
-					| while read -r DIGEST; do \
-						$(call $(PUBLISH)-library-digest-create,$${OUTFILE},$${DIGEST},$(SPECIAL_VAL)); \
-					done; \
-				$(ECHO) "$(_D)"; \
-			done; \
-		$(ECHO) "$(_E)"; \
-		$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
-	}
+	@$(foreach FILE,\
+		title \
+		author \
+		date \
+		tag \
+		,\
+		$(call $(PUBLISH)-library-indexer,$(FILE)); \
+		$(call NEWLINE) \
+	)
 	@$(ECHO) "\"$(COMPOSER_BASENAME)\": { \"updated\": \"$(DATESTAMP)\" }" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
-		$(if $(COMPOSER_DEBUGIT),,>/dev/null)
+		$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		$(if $(COMPOSER_DEBUGIT),$(ECHO) "\n")
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
-	@$(ECHO) "\n"
 	@$(ECHO) "$(_F)"
 	@$(CAT) $(@).$(COMPOSER_BASENAME) \
 		| $(YQ_WRITE_FILE) "sort_keys(..)" \
@@ -7505,10 +7365,73 @@ $($(PUBLISH)-library-index):
 	fi
 	@$(call $(HEADERS)-note,$(@),$(_H)Complete,$(PUBLISH)-library)
 
+override define $(PUBLISH)-library-indexer =
+	$(ECHO) "$(_E)"; \
+	$(ECHO) "$(1)s: {\n" >>$(@).$(COMPOSER_BASENAME); \
+	$(CAT) $($(PUBLISH)-library-metadata) \
+		|	if [ "$(1)" = "title" ]; then \
+				$(YQ_WRITE) ".[].$(COMPOSER_BASENAME)"; \
+			elif [ "$(1)" = "author" ]; then \
+				$(YQ_WRITE) ".[].author" \
+				| $(SED) "s|^[-][ ]||g"; \
+			elif [ "$(1)" = "date" ]; then \
+				$(YQ_WRITE) ".[].date" \
+				| $(SED) \
+					-e "s|^([0-9]{4}).*$$|\1|g" \
+					-e "s|^.*([0-9]{4})$$|\1|g"; \
+			elif [ "$(1)" = "tag" ]; then \
+				$(YQ_WRITE) ".[].tags" \
+				| $(SED) "s|^[-][ ]||g"; \
+			fi \
+		| $(SORT) \
+		| while read -r FILE; do \
+			$(ECHO) "$(_D)"; \
+			$(call $(HEADERS)-note,$(@),$$( \
+					if [ "$(1)" = "title" ]; then		$(ECHO) "Title"; \
+					elif [ "$(1)" = "author" ]; then	$(ECHO) "Author"; \
+					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date"; \
+					elif [ "$(1)" = "tag" ]; then		$(ECHO) "Tag"; \
+					fi \
+				): $${FILE},$(PUBLISH)-library); \
+			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
+				else				$(ECHO) "$(_N)"; \
+				fi; \
+			$(ECHO) "\"$${FILE}\": [\n" \
+				| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+			$(CAT) $($(PUBLISH)-library-metadata) \
+				|	if [ "$(1)" = "title" ]; then \
+						if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.$(COMPOSER_BASENAME) == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
+							else				$(YQ_WRITE) "map(select(.$(COMPOSER_BASENAME) == $${FILE})) $(call $(PUBLISH)-library-digest-sort)"; \
+							fi; \
+					elif [ "$(1)" = "author" ]; then \
+						if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.author == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
+							else				$(YQ_WRITE) "map(select((.author == \"$${FILE}\") or (.author | .[] | contains(\"$${FILE}\")))) $(call $(PUBLISH)-library-digest-sort)"; \
+							fi; \
+					elif [ "$(1)" = "date" ]; then \
+						if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.date == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
+							else				$(YQ_WRITE) "map(select(.date == \"$${FILE}*\" or .date == \"*$${FILE}\")) $(call $(PUBLISH)-library-digest-sort)"; \
+							fi; \
+					elif [ "$(1)" = "tag" ]; then \
+						if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.tags == null)) $(call $(PUBLISH)-library-digest-sort)" | $(SED) "/^null$$/d"; \
+							else				$(YQ_WRITE) "map(select(.tags | contains([\"$${FILE}\"]))) $(call $(PUBLISH)-library-digest-sort)"; \
+							fi; \
+					fi \
+				| $(SED) "s|$$|,|g" \
+				| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+			$(ECHO) "],\n" \
+				| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
+				$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+			$(ECHO) "$(_D)"; \
+		done; \
+	$(ECHO) "$(_E)"; \
+	$(ECHO) "},\n" >>$(@).$(COMPOSER_BASENAME); \
+	$(ECHO) "$(_D)"
+endef
+
 ########################################
 ### {{{3 $(PUBLISH)-library-digest -----
-
-#> update: YQ_WRITE.*title
 
 override define $(PUBLISH)-library-digest-sort =
 	| sort_by(.path) \
@@ -7517,9 +7440,35 @@ override define $(PUBLISH)-library-digest-sort =
 	| .[].path
 endef
 
+override define $(PUBLISH)-library-digest-list =
+	for TYPE in \
+		titles \
+		authors \
+		dates \
+		tags \
+	; do \
+		$(CAT) $($(PUBLISH)-library-index) \
+			| $(YQ_WRITE) ".$${TYPE} | keys | .[]" \
+			| while read -r FILE; do \
+				OUTFILE="$(COMPOSER_TMP_LIBRARY)/$${TYPE}-$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}))$(COMPOSER_EXT_DEFAULT)"; \
+				if [ -n "$(1)" ]; then \
+					if [ "$(1)" = "$${OUTFILE}" ]; then \
+						$(ECHO) "$${TYPE}$(TOKEN)$${FILE}\n"; \
+					fi; \
+				else \
+					$(ECHO) "$${OUTFILE}\n"; \
+				fi; \
+			done; \
+	done
+endef
+
 $($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
+$($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest):
+	@$(MAKE) c_site="1" \
+		COMPOSER_DOITALL_$(PUBLISH)-library-digest="1" \
+		$(shell $(call $(PUBLISH)-library-digest-list))
 	@$(call $(HEADERS)-note,$(@),$(_H)Building,$(PUBLISH)-library)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
@@ -7546,7 +7495,25 @@ $($(PUBLISH)-library-digest):
 	done
 	@$(call $(HEADERS)-note,$(@),$(_H)Complete,$(PUBLISH)-library)
 
-#> update: $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-library-digest),)
+override $(PUBLISH)-library-digest-files := $(shell $(call $(PUBLISH)-library-digest-list))
+$($(PUBLISH)-library-digest-files): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
+$($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
+$($(PUBLISH)-library-digest-files):
+	@$(call $(HEADERS)-note,$(@),$(_H)Building,$(PUBLISH)-library)
+	@TOKEN="$$($(ECHO) "$(TOKEN)" | $(SED) "s|(.)|\\\\\1|g")"; \
+		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\1|g")"; \
+		FILE="$$($(call $(PUBLISH)-library-digest-list,$(@)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\2|g")"; \
+		$(CAT) $($(PUBLISH)-library-index) \
+			| $(YQ_WRITE) ".$${TYPE}.[\"$${FILE}\"] | .[]" \
+			| while read -r DIGEST; do \
+				$(call $(PUBLISH)-library-digest-create,$(@),$${DIGEST},$(SPECIAL_VAL)); \
+			done
+	@$(call $(HEADERS)-note,$(@),$(_H)Complete,$(PUBLISH)-library)
+endif
+
+#> update: YQ_WRITE.*title
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
 	$(call $(HEADERS)-note,$(1),$(2),$(PUBLISH)-library); \
