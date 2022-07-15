@@ -7111,12 +7111,21 @@ $(foreach FILE,\
 )
 
 $(.box-begin):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)\n" >$(@)
 
 $(.box-end):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)\n" >$(@)
 
 $(.spacer):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "$(HTML_BREAK)\n" >$(@)
 
 $(foreach FILE,\
@@ -7129,15 +7138,27 @@ $(foreach FILE,\
 )
 
 $(.library-titles):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "#WORKING:TITLES\n" >$(@)
 
 $(.library-authors):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "#WORKING:AUTHORS\n" >$(@)
 
 $(.library-dates):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "#WORKING:DATES\n" >$(@)
 
 $(.library-tags):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(abspath $(dir $(@)))
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "#WORKING:TAGS\n" >$(@)
 
 ########################################
