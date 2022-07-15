@@ -3416,10 +3416,10 @@ $(_S)########################################$(_D)
         $(_M)RIGHT TEXT$(_D)
     - $(_C)nav-box-end$(_D)
     - $(_N).spacer$(_D)
-    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
-    - $(_N).library-titles$(_D)
-    - $(_C)nav-unit-end$(_D)
-    - $(_N).spacer$(_D)
+#>    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
+#>    - $(_N).library-titles$(_D)
+#>    - $(_C)nav-unit-end$(_D)
+#>    - $(_N).spacer$(_D)
     - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS$(_D)
     - $(_N).library-authors$(_D)
     - $(_C)nav-unit-end$(_D)
@@ -4058,7 +4058,7 @@ function $(PUBLISH)-nav-side {
 
 ########################################
 
-# x $(PUBLISH)-nav-side-list-library 1	authors || dates || tags || titles
+# x $(PUBLISH)-nav-side-list-library 1	titles || authors || dates || tags
 
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -4110,7 +4110,7 @@ function $(PUBLISH)-nav-side-list {
 
 ########################################
 
-# 1 authors || dates || tags
+# 1 titles || authors || dates || tags
 
 function $(PUBLISH)-nav-side-list-library {
 	$(ECHO) "<div class=\"text-nowrap\">\\n"
@@ -7120,6 +7120,7 @@ $(.spacer):
 	@$(ECHO) "$(HTML_BREAK)\n" >$(@)
 
 $(foreach FILE,\
+	titles \
 	authors \
 	dates \
 	tags \
@@ -7225,8 +7226,25 @@ $($(PUBLISH)-library):
 #WORKING:NOW:NOW site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
 #WORKING:NOW:NOW
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_TMP_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
+	@$(ECHO) "$(_E)"
+	@$(foreach FILE,\
+		$(COMPOSER_SETTINGS) \
+		$(COMPOSER_YML) \
+		,\
+		$(CP) $(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$(FILE) $(COMPOSER_TMP_LIBRARY)/$(FILE); \
+		$(call NEWLINE) \
+	)
+	@$(call DO_HEREDOC,$(PUBLISH)-library-config) >>$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML)
+	@$(ECHO) "$(_D)"
 	@$(MAKE) --directory $(COMPOSER_TMP_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
+
+override define $(PUBLISH)-library-config =
+variables:
+  site-library:
+    folder: null
+    auto_update: 0
+endef
 
 else
 
@@ -7327,6 +7345,10 @@ $($(PUBLISH)-library-metadata):
 ########################################
 ### {{{3 $(PUBLISH)-library-index ------
 
+#WROKING:NOW:NOW create a way to validate these, such as: $(MAKE) $(PUBLISH)-library / $(MAKE) $(PUBLISH)-validate / $(MAKE) $(PUBLISH)-$(CONFIGS)-$(DOITALL)
+#>		title \
+#>		| $(SED) "/^null$$/d" \
+
 $($(PUBLISH)-library-index): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
@@ -7336,7 +7358,6 @@ $($(PUBLISH)-library-index):
 	@$(ECHO) "$(_E)"
 	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
 	@$(foreach FILE,\
-		title \
 		author \
 		date \
 		tag \
@@ -7383,6 +7404,7 @@ override define $(PUBLISH)-library-indexer =
 				$(YQ_WRITE) ".[].tags" \
 				| $(SED) "s|^[-][ ]||g"; \
 			fi \
+		| $(SED) "/^null$$/d" \
 		| $(SORT) \
 		| while read -r FILE; do \
 			$(ECHO) "$(_D)"; \
@@ -7440,9 +7462,9 @@ override define $(PUBLISH)-library-digest-sort =
 	| .[].path
 endef
 
+#>		titles
 override define $(PUBLISH)-library-digest-list =
 	for TYPE in \
-		titles \
 		authors \
 		dates \
 		tags \
@@ -7467,8 +7489,9 @@ $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest):
 	@$(MAKE) c_site="1" \
+		$(if $(COMPOSER_DEBUGIT),,$(SILENT)) \
 		COMPOSER_DOITALL_$(PUBLISH)-library-digest="1" \
-		$(shell $(call $(PUBLISH)-library-digest-list))
+		$$($(call $(PUBLISH)-library-digest-list))
 	@$(call $(HEADERS)-note,$(@),$(_H)Building,$(PUBLISH)-library)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
