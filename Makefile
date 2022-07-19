@@ -6967,7 +6967,7 @@ $(PUBLISH)-$(TARGETS):
 
 #> update: MARKER.*PANDOC
 override define $(PUBLISH)-$(TARGETS)-call =
-	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(TARGETS)); \
+	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),c_site); \
 	$(ECHO) "$(_S)"; \
 	$(MKDIR) $(COMPOSER_TMP); \
 	$(ECHO) "$(_E)"; \
@@ -7170,14 +7170,25 @@ $($(PUBLISH)-library-metadata):
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY)
 	@$(ECHO) "$(_F)"
 	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
-#WORKING:NOW:NOW need to somehow skip *ALL* library folders...?
+#>		-o \( -path \*/$(notdir $(COMPOSER_TMP_LIBRARY))/\* -prune \)
 	@$(FIND) $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) \
 		\( -path $(COMPOSER_TMP) -prune \) \
 		-o \( -path $(COMPOSER_TMP_CACHE) -prune \) \
 		-o \( -path $(COMPOSER_TMP_LIBRARY) -prune \) \
 		-o \( -path \*/$(notdir $(COMPOSER_TMP))/\* -prune \) \
 		-o \( -path \*/$(notdir $(COMPOSER_TMP_CACHE))/\* -prune \) \
-		-o \( -path \*/$(notdir $(COMPOSER_TMP_LIBRARY))/\* -prune \) \
+		$(shell $(FIND) $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) -path \*/$(COMPOSER_YML) \
+			| while read -r FILE; do \
+				DIR="$$( \
+					$(CAT) $${FILE} 2>/dev/null \
+					| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"folder\"]" 2>/dev/null \
+					| $(SED) "/^null$$/d" \
+				)"; \
+				if [ -n "$${DIR}" ]; then \
+					$(ECHO) " -o \\( -path $$($(ECHO) "$${FILE}" | $(SED) "s|$(COMPOSER_YML)$$|$${DIR}|g") -prune \\)"; \
+				fi; \
+			done \
+		) \
 		-o \( -type f $$(if [ -f "$(@)" ]; then $(ECHO) "-newer $(@)"; fi) -name "*$(COMPOSER_EXT)" -print \) \
 	| while read -r FILE; do \
 		$(ECHO) "$(_D)"; \
@@ -7633,9 +7644,9 @@ endif
 	@$(ECHO) "endif\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
+	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
-	@$(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= c_site= $(DOITALL)-$(DOITALL)
+	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= c_site= $(DOITALL)-$(DOITALL)
 endif
 
 #WORKING:NOW
@@ -7671,7 +7682,7 @@ override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
 pagetitle: Configured Digest Page
 ---
-$(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) $(CONFIGS)_library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-comments =
@@ -7787,7 +7798,7 @@ $(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Configuration Settings $(PUB
 
 | $(PUBLISH)-library | defaults
 |:---|:---|:---|
-| folder           | $(LIBRARY_FOLDER) | _library
+| folder           | $(LIBRARY_FOLDER) | $(CONFIGS)_library
 | auto_update      | $(LIBRARY_AUTO_UPDATE) | 1
 | digest_count     | $(LIBRARY_DIGEST_COUNT) | 20
 | digest_expanded  | $(LIBRARY_DIGEST_EXPANDED) | 1
@@ -7879,7 +7890,7 @@ variables:
     copy_safe:				0
 
   $(PUBLISH)-library:
-    folder:				_library
+    folder:				$(CONFIGS)_library
     auto_update:			1
     digest_count:			20
     digest_expanded:			1
@@ -8142,7 +8153,6 @@ $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 .PHONY: $(PRINTER)
 $(PRINTER): .set_title-$(PRINTER)
 $(PRINTER): $(HEADERS)-$(PRINTER)
-#WORKING:NOW:NOW : what if COMPOSER_LOG is empty?  need to manage this escape, everywhere.
 ifeq ($(COMPOSER_LOG),)
 $(PRINTER): $(NOTHING)-COMPOSER_LOG
 endif
