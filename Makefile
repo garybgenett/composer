@@ -1398,8 +1398,6 @@ endif
 
 ########################################
 
-#WORKING:NOW:NOW if composer_dir, then composer_root...
-
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 #>override COMPOSER_TMP_LIBRARY		:= $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))/$(notdir $($(PUBLISH)-library-folder))
 $(foreach FILE,$(COMPOSER_YML_LIST),$(if $(shell \
@@ -3260,11 +3258,18 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
 
     $(_M)MAIN$(_D): $(_E)"#"$(_D)
-    $(_M)DROPDOWN$(_D):
+$(_E)#>  TITLES:$(_D)
+$(_E)#>    $(MENU_SELF): "#"$(_D)
+$(_E)#>    .library-titles: $(MENU_SELF)$(_D)
+    $(_M)AUTHORS$(_D):
       $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
-      $(_M)ITEM 1$(_D): $(_E)"#"$(_D)
-      $(_M)ITEM 2$(_D): $(_E)"#"$(_D)
-      $(_M)ITEM 3$(_D): $(_E)"#"$(_D)
+      $(_N).library-authors$(_D): $(_E)$(MENU_SELF)$(_D)
+    $(_M)DATES$(_D):
+      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
+      $(_N).library-dates$(_D): $(_E)$(MENU_SELF)$(_D)
+    $(_M)TAGS$(_D):
+      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
+      $(_N).library-tags$(_D): $(_E)$(MENU_SELF)$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3308,10 +3313,10 @@ $(_S)########################################$(_D)
         $(_M)RIGHT TEXT$(_D)
     - $(_C)nav-box-end$(_D)
     - $(_N).spacer$(_D)
-#>    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
-#>    - $(_N).library-titles$(_D)
-#>    - $(_C)nav-unit-end$(_D)
-#>    - $(_N).spacer$(_D)
+$(_E)#>  - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
+$(_E)#>  - .library-titles$(_D)
+$(_E)#>  - nav-unit-end$(_D)
+$(_E)#>  - .spacer$(_D)
     - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS$(_D)
     - $(_N).library-authors$(_D)
     - $(_C)nav-unit-end$(_D)
@@ -3809,12 +3814,26 @@ function $(PUBLISH)-nav-top {
 
 ########################################
 
+# x $(PUBLISH)-nav-top-list-library 1	titles || authors || dates || tags
+
 function $(PUBLISH)-nav-top-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" 2>/dev/null \\
 		| while read -r FILE; do
 			if [ "$${FILE}" = "$(MENU_SELF)" ]; then
+				continue
+			elif [ "$${FILE}" = ".library-titles" ]; then
+				$(PUBLISH)-nav-top-list-library titles
+				continue
+			elif [ "$${FILE}" = ".library-authors" ]; then
+				$(PUBLISH)-nav-top-list-library authors
+				continue
+			elif [ "$${FILE}" = ".library-dates" ]; then
+				$(PUBLISH)-nav-top-list-library dates
+				continue
+			elif [ "$${FILE}" = ".library-tags" ]; then
+				$(PUBLISH)-nav-top-list-library tags
 				continue
 			fi
 			LINK="$$(
@@ -3857,6 +3876,28 @@ _EOF_
 			fi
 		done
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	return 0
+}
+
+########################################
+
+# 1 titles || authors || dates || tags
+
+function $(PUBLISH)-nav-top-list-library {
+	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+	| while read -r FILE; do
+		$(CAT) <<_EOF_
+<li><a class="dropdown-item" href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
+).$(EXTN_HTML)">$${FILE} ($$(
+	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+		| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+))</a></li>
+_EOF_
+	done
 	return 0
 }
 
@@ -3996,22 +4037,28 @@ function $(PUBLISH)-nav-side-list {
 # 1 titles || authors || dates || tags
 
 function $(PUBLISH)-nav-side-list-library {
-	$(ECHO) "<div class=\"text-nowrap\">\\n"
-	$(ECHO) "<table class=\"table table-sm table-borderless\">\\n"
+$(CAT) <<_EOF_
+<div class="text-nowrap">
+<table class="table table-sm table-borderless">
+_EOF_
 	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 	| while read -r FILE; do
-		$(ECHO) "<tr><td><a href=\"$${PUBLISH_LIBRARY_INDEX_PATH}/$${1/%s}-$$(
-				$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
-			).$(EXTN_HTML)\">$${FILE}</a></td><td class=\"text-end\">$$(
-				$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
-					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
-					| $(SED) "/^null$$/d" \\
-			)</td></td></tr>\\n"
+		$(CAT) <<_EOF_
+<tr><td><a href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
+).$(EXTN_HTML)">$${FILE}</a></td><td class="text-end">$$(
+	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
+		| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+)</td></td></tr>
+_EOF_
 	done
-	$(ECHO) "</table>\\n"
-	$(ECHO) "</div>\\n"
+$(CAT) <<_EOF_
+</table>
+</div>
+_EOF_
 	return 0
 }
 
@@ -4246,12 +4293,8 @@ _EOF_
 #> update: YQ_WRITE.*title
 
 #WORKING:NOW:NOW
-#	replace "null" with "none" in final urls/pages
-#		also needs to show up in build.sh .library-* lists
-#	add .library-* placeholders to top nav
-#		add to yml configs
-#	does updated library trigger updated caches?
-#		i.e. do they have a dependency on it? = touch library.yml ; make site-config ?
+#	flatten nav-side-list-library to a generic, and use everywhere other than top-nav
+#		add placeholders to $(TESTING).$(EXTN_HTML)
 #	ability to disable digest in library, and do flat links instead?
 #WORKING:NOW
 #	add <composer_root> token, and $(REALPATH) to it
@@ -6967,7 +7010,7 @@ $(PUBLISH)-$(TARGETS):
 
 #> update: MARKER.*PANDOC
 override define $(PUBLISH)-$(TARGETS)-call =
-	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),c_site); \
+	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(PUBLISH)); \
 	$(ECHO) "$(_S)"; \
 	$(MKDIR) $(COMPOSER_TMP); \
 	$(ECHO) "$(_E)"; \
@@ -7682,7 +7725,7 @@ override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
 pagetitle: Configured Digest Page
 ---
-$(PUBLISH_BUILD_CMD_BEG) $(CONFIGS)_library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) _index/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-comments =
@@ -7798,7 +7841,7 @@ $(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Configuration Settings $(PUB
 
 | $(PUBLISH)-library | defaults
 |:---|:---|:---|
-| folder           | $(LIBRARY_FOLDER) | $(CONFIGS)_library
+| folder           | $(LIBRARY_FOLDER) | _index
 | auto_update      | $(LIBRARY_AUTO_UPDATE) | 1
 | digest_count     | $(LIBRARY_DIGEST_COUNT) | 20
 | digest_expanded  | $(LIBRARY_DIGEST_EXPANDED) | 1
@@ -7890,7 +7933,7 @@ variables:
     copy_safe:				0
 
   $(PUBLISH)-library:
-    folder:				$(CONFIGS)_library
+    folder:				_index
     auto_update:			1
     digest_count:			20
     digest_expanded:			1
