@@ -674,6 +674,13 @@ override MDVIEWER_CSS_SOLAR_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 
 override BOOTSTRAP_CSS_THEME		:= $(MDVIEWER_CSS_SOLAR)
 
+#WORKING:NOW
+#		journal
+#		quartz
+#		sketchy
+#		slate
+#		solar
+
 override BOOTSWATCH_CSS_LIGHT		:= $(COMPOSER_DIR)/bootswatch/dist/flatly/bootstrap.css
 #>override BOOTSWATCH_CSS_DARK		:= $(COMPOSER_DIR)/bootswatch/dist/cyborg/bootstrap.css
 override BOOTSWATCH_CSS_DARK		:= $(COMPOSER_DIR)/bootswatch/dist/darkly/bootstrap.css
@@ -730,7 +737,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
-override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv
+override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv --dereference
 override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
 override DIRNAME			:= $(call COMPOSER_FIND,$(PATH_LIST),dirname)
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
@@ -3977,8 +3984,7 @@ function $(PUBLISH)-nav-bottom-list {
 		return 0
 	fi
 $(CAT) <<_EOF_
-<li class="nav-item breadcrumb me-3">$(DIVIDE)&nbsp;
-<ol class="breadcrumb">
+<li class="nav-item me-3"><ol class="breadcrumb">
 _EOF_
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" 2>/dev/null \\
@@ -3989,8 +3995,11 @@ _EOF_
 				| $(SED) "/^null$$/d"
 			)"
 $(CAT) <<_EOF_
-<li class="breadcrumb-item"><a href="$${VAL}">$${FILE}</a></li>
+<li class="breadcrumb-item">$$(
+	if [ -z "$${NBSP}" ]; then $(ECHO) "$(DIVIDE)&nbsp;"; fi
+)<a href="$${VAL}">$${FILE}</a></li>
 _EOF_
+			NBSP="true"
 		done
 $(CAT) <<_EOF_
 </ol></li>
@@ -5675,7 +5684,7 @@ override define $(HEADERS)-$(COMPOSER_PANDOC) =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) NOTICE" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
+	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
 endef
 override define $(HEADERS)-dir =
 	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
@@ -7195,10 +7204,11 @@ $($(PUBLISH)-library):
 	@$(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_TMP_LIBRARY),$(COMPOSER_YML))
 	@$(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML)
-#WORKING:NOW:NOW add a test of this to site-template
 	@if [ -f "$(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_TMP_LIBRARY),$(COMPOSER_CSS)); \
+		$(ECHO) "$(_E)"; \
 		$(CP) $(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$(COMPOSER_CSS) $(COMPOSER_TMP_LIBRARY)/$(COMPOSER_CSS) $(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		$(ECHO) "$(_D)"; \
 	elif [ -f "$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-rm,$(COMPOSER_TMP_LIBRARY),$(COMPOSER_CSS)); \
 		$(ECHO) "$(_S)"; \
@@ -7308,17 +7318,19 @@ $($(PUBLISH)-library-metadata):
 		$(ECHO) "," >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "$(_D)"; \
 	done
-	@$(ECHO) "$(_E)"
+	@$(ECHO) "$(_N)"
 	@$(ECHO) "\"$(COMPOSER_BASENAME)\": { \"updated\": \"$(DATESTAMP)\" }" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 		$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 		$(if $(COMPOSER_DEBUGIT),$(ECHO) "\n")
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
 	@if [ ! -s "$(@)" ]; then \
 		$(ECHO) "{}" >$(@).$(PRINTER); \
 	else \
 		$(ECHO) "$(_S)"; \
 		$(CP) $(@) $(@).$(PRINTER) $(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+		$(ECHO) "$(_D)"; \
 	fi
 	@$(ECHO) "$(_F)"
 	@$(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' \
@@ -7350,7 +7362,7 @@ $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY) $(if $(COMPOSER_DEBUGIT),,>/dev/null)
-	@$(ECHO) "$(_E)"
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
 	@$(foreach FILE,\
 		author \
@@ -7360,10 +7372,12 @@ $($(PUBLISH)-library-index):
 		$(call $(PUBLISH)-library-indexer,$(FILE)); \
 		$(call NEWLINE) \
 	)
+	@$(ECHO) "$(_N)"
 	@$(ECHO) "\"$(COMPOSER_BASENAME)\": { \"updated\": \"$(DATESTAMP)\" }" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) \
 		$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 		$(if $(COMPOSER_DEBUGIT),$(ECHO) "\n")
+	@$(ECHO) "$(_D)"
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_F)"
 	@$(CAT) $(@).$(COMPOSER_BASENAME) \
@@ -7697,6 +7711,21 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 										$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
 										$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML) \
 										$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
+endif
+	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_CSS))
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(ECHO) "$(_S)"
+	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_CSS) $(if $(COMPOSER_DEBUGIT),,>/dev/null)
+	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/_index $(if $(COMPOSER_DEBUGIT),,>/dev/null)
+	@$(ECHO) "$(_E)"
+	@$(LN) $(BOOTSWATCH_CSS_SOLAR_LIGHT) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/_index/$(COMPOSER_CSS) $(if $(COMPOSER_DEBUGIT),,>/dev/null)
+	@$(ECHO) "$(_D)"
+else
+	@$(ECHO) "$(_S)"
+	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/_index/$(COMPOSER_CSS) $(if $(COMPOSER_DEBUGIT),,>/dev/null)
+	@$(ECHO) "$(_E)"
+	@$(LN) $(BOOTSWATCH_CSS_SOLAR_LIGHT) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_CSS) $(if $(COMPOSER_DEBUGIT),,>/dev/null)
+	@$(ECHO) "$(_D)"
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../*$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)			>$($(PUBLISH)-$(EXAMPLE))/index-digest$(COMPOSER_EXT_DEFAULT)
@@ -8051,7 +8080,9 @@ else
 		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
 		then \
 			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL),$(COMPOSER)); \
+			$(ECHO) "$(_S)"; \
 			$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) $(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+			$(ECHO) "$(_D)"; \
 		else \
 			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER)); \
 		fi; \
@@ -8060,7 +8091,9 @@ else
 		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
 		then \
 			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL)); \
+			$(ECHO) "$(_S)"; \
 			$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) $(if $(COMPOSER_DEBUGIT),,>/dev/null); \
+			$(ECHO) "$(_D)"; \
 		else \
 			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL)); \
 		fi; \
