@@ -101,7 +101,6 @@ override VIM_FOLDING := {{{1
 #	everything stems from the Makefile, so that is the only place to check for changes...
 #	only one build at a time...
 # other
-#	a non-auto_update site test
 #	so many c_list/+ tests... really...?  probably...
 #			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
 #		documentation can be as simple as "+ > c_list" in precedence...?  probably...
@@ -2245,7 +2244,6 @@ endef
 #	booleans are true with 1, disabled with any other value (0 recommended), and otherwise default
 #	library folder can not be "null", and will be shortened to basename
 #	COMPOSER_INCLUDE + c_site = for the win?
-#	random note... MAKEJOBS=x page-1 page-2 page-n with auto_update will break... need to catch or document this?
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -4182,7 +4180,16 @@ _EOF_
 function $(PUBLISH)-row-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
-<div class="container-fluid">
+<div class="container-fluid$$(
+	COPY_SAFE="$$(
+		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"copy_safe\"]" 2>/dev/null \\
+		| $(SED) "/^null$$/d"
+	)"
+	if [ -n "$${COPY_SAFE}" ]; then
+		if [ "$${COPY_SAFE}" = "1" ]; then	$(ECHO) " user-select-none"; fi
+	elif [ "$${PUBLISH_COPY_SAFE}" = "1" ]; then	$(ECHO) " user-select-none"; fi
+)">
 <div class="d-flex flex-row flex-wrap">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -4206,8 +4213,6 @@ _EOF_
 #### {{{4 $(PUBLISH)-column-begin ------
 
 # 1 true = main
-
-#WORKING:NOW:NOW COPY_SAFE should go on the whole page...
 
 function $(PUBLISH)-column-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
@@ -4243,15 +4248,6 @@ $(CAT) <<_EOF_
 	if [ -n "$${COLS_STICKY}" ]; then
 		if [ "$${COLS_STICKY}" = "1" ]; then	$(ECHO) " $(COMPOSER_TINYNAME)-sticky"; fi
 	elif [ "$${PUBLISH_COLS_STICKY}" = "1" ]; then	$(ECHO) " $(COMPOSER_TINYNAME)-sticky"; fi
-)$$(
-	COPY_SAFE="$$(
-		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"copy_safe\"]" 2>/dev/null \\
-		| $(SED) "/^null$$/d"
-	)"
-	if [ -n "$${COPY_SAFE}" ]; then
-		if [ "$${COPY_SAFE}" = "1" ]; then	$(ECHO) " user-select-none"; fi
-	elif [ "$${PUBLISH_COPY_SAFE}" = "1" ]; then	$(ECHO) " user-select-none"; fi
 ) p-2">
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
@@ -4423,7 +4419,7 @@ function $(PUBLISH)-file {
 	HEAD="$$($(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) title-block (.+) $(PUBLISH_BUILD_CMD_END)$$|\\1|gp" $${1})"
 	if [ -n "$${HEAD}" ]; then
 		$(ECHO) "<!-- title-block $(DIVIDE) begin $(MARKER) $${HEAD} -->\\n"
-		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^(nav-[^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
+		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^([^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
 			NAME="$$(
 				$(SED) "1,/$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
 				| $${YQ_WRITE} ".author" 2>/dev/null \\
@@ -4488,7 +4484,7 @@ function $(PUBLISH)-file {
 		done \\
 		|| return 1
 	if [ -n "$${HEAD}" ]; then
-		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^(nav-[^[:space:]]+)(.+)$$|\\1-end|g")
+		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^([^[:space:]]+)(.+)$$|\\1-end|g")
 	fi
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
@@ -5618,8 +5614,8 @@ $(HEADERS)-run-%:
 
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(MARKER) $(COMPOSER_FULLNAME)$(_D) $(DIVIDE) $(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))"; \
-	$(HEADER_L); \
+	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))$(_D)]"; \
+	$(TABLE_C2) "---"			"---"; \
 	$(TABLE_C2) "$(_E)MAKEFILE_LIST"	"[$(_N)$(call $(HEADERS)-release,$(MAKEFILE_LIST))$(_D)]"; \
 	$(TABLE_C2) "$(_E)COMPOSER_INCLUDES"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_INCLUDES))$(_D)]"; \
 	$(TABLE_C2) "$(_E)COMPOSER_YML_LIST"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_YML_LIST))$(_D)]"; \
@@ -6185,7 +6181,7 @@ $(TESTING)-speed-init:
 $(TESTING)-speed-done:
 	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type d | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+[.]$(EXTN_DEFAULT)$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(SED) -n "/Creating/p" $(call $(TESTING)-log) | $(WC))"
 	@$(call $(TESTING)-find,MAKECMDGOALS)
 	@$(call $(TESTING)-find,[0-9]s$$)
 	@$(call $(TESTING)-hold)
@@ -7169,7 +7165,7 @@ $($(PUBLISH)-caches):
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 
 ifneq ($(or \
-	$(filter-out null,$($(PUBLISH)-library-auto_update)) ,\
+	$(filter 1,$($(PUBLISH)-library-auto_update)) ,\
 	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) \
 ),)
 $($(PUBLISH)-cache) \
