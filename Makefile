@@ -2219,7 +2219,7 @@ endef
 #		https://getbootstrap.com/docs/5.2/utilities/colors
 #	$(CONFIGS)-$(PUBLISH)
 #		documentation note somewhere about the coments hack to indent markdown lists
-#	$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
+#	$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
 #		(the ' as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #	$(PUBLISH) rebuilds indexes, force recursively
@@ -3044,13 +3044,13 @@ $(PUBLISH_BUILD_CMD_BEG) $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_R
 endef
 
 override define $(CREATOR)-$(OUT_README)-$(PUBLISH)-include =
-$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 $(SPECIAL_VAL) Include $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 $(SPECIAL_VAL) Include $(PUBLISH_BUILD_CMD_END)
 
 Welcome to [$(COMPOSER_BASENAME)].  $(COMPOSER_TAGLINE)
 
 -- $(COMPOSER_COMPOSER)
 
-$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)
 endef
 
 ########################################
@@ -3308,17 +3308,17 @@ $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-nav-left$(_D):
 
-    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) 1 LEFT 1$(_D)
+    - $(_C)pane-begin$(_D) $(_M)$(DEPTH_MAX) 1 LEFT 1$(_D)
     - $(_C)text$(_D): $(_N)|$(_D)
         * $(_M)ITEM 1$(_D)
         * $(_M)ITEM 2$(_D)
         * $(_M)ITEM 3$(_D)
-    - $(_C)nav-unit-end$(_D)
+    - $(_C)pane-end$(_D)
     - $(_N).spacer$(_D)
-    - $(_C)nav-box-begin$(_D) $(_M)$(DEPTH_MAX) LEFT 2$(_D)
+    - $(_C)box-begin$(_D) $(_M)$(DEPTH_MAX) LEFT 2$(_D)
     - $(_C)text$(_D): $(_N)|$(_D)
         $(_M)LEFT TEXT$(_D)
-    - $(_C)nav-box-end$(_D)
+    - $(_C)box-end$(_D)
     - $(_C)text$(_D): $(_N)|$(_D)
         $(_M)EXAMPLE TEXT$(_D)
 
@@ -3326,33 +3326,33 @@ $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-nav-right$(_D):
 
-    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) 1 RIGHT 1$(_D)
+    - $(_C)pane-begin$(_D) $(_M)$(DEPTH_MAX) 1 RIGHT 1$(_D)
     - $(_C)text$(_D): $(_N)|$(_D)
         * $(_M)ITEM 1$(_D)
         * $(_M)ITEM 2$(_D)
         * $(_M)ITEM 3$(_D)
-    - $(_C)nav-unit-end$(_D)
+    - $(_C)pane-end$(_D)
     - $(_N).spacer$(_D)
-    - $(_C)nav-box-begin$(_D) $(_M)$(DEPTH_MAX) RIGHT 2$(_D)
+    - $(_C)box-begin$(_D) $(_M)$(DEPTH_MAX) RIGHT 2$(_D)
     - $(_C)text$(_D): $(_N)|$(_D)
         $(_M)RIGHT TEXT$(_D)
-    - $(_C)nav-box-end$(_D)
+    - $(_C)box-end$(_D)
     - $(_N).spacer$(_D)
-$(_E)#>  - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
+$(_E)#>  - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
 $(_E)#>  - .library-titles$(_D)
-$(_E)#>  - nav-unit-end$(_D)
+$(_E)#>  - pane-end$(_D)
 $(_E)#>  - .spacer$(_D)
-    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS$(_D)
+    - $(_C)pane-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS$(_D)
     - $(_N).library-authors$(_D)
-    - $(_C)nav-unit-end$(_D)
+    - $(_C)pane-end$(_D)
     - $(_N).spacer$(_D)
-    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) DATES$(_D)
+    - $(_C)pane-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) DATES$(_D)
     - $(_N).library-dates$(_D)
-    - $(_C)nav-unit-end$(_D)
+    - $(_C)pane-end$(_D)
     - $(_N).spacer$(_D)
-    - $(_C)nav-unit-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) TAGS$(_D)
+    - $(_C)pane-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) TAGS$(_D)
     - $(_N).library-tags$(_D)
-    - $(_C)nav-unit-end$(_D)
+    - $(_C)pane-end$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3519,31 +3519,31 @@ variables:
 
   $(PUBLISH)-nav-left:
 
-    - nav-unit-begin $(DEPTH_MAX) 1 $(COMPOSER_TECHNAME)
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Overview
+    - pane-begin $(DEPTH_MAX) 1 $(COMPOSER_TECHNAME)
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Overview
     - text: |
         * [Overview]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Quick Start
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Quick Start
     - text: |
         * [Quick Start]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Principles
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Principles
     - text: |
         * [Principles]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Requirements
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Requirements
     - text: |
         * [Requirements]
-    - nav-unit-end
-    - nav-unit-end
+    - pane-end
+    - pane-end
     - .spacer
-    - nav-box-begin $(DEPTH_MAX) Formats
+    - box-begin $(DEPTH_MAX) Formats
     - text: |
         * [Example Website](_$(PUBLISH)/index.$(EXTN_HTML))
     - .spacer
     - text: |$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
-    - nav-box-end
+    - box-end
     - text: |
         $(COMPOSER_TAGLINE)
 
@@ -3551,12 +3551,12 @@ variables:
 
   $(PUBLISH)-nav-right:
 
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Operation
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Recommended Workflow
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Operation
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Recommended Workflow
     - text: |
         * [Recommended Workflow]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Document Formatting
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Document Formatting
     - text: |
         * [HTML]
         * [Bootstrap Websites]
@@ -3564,30 +3564,30 @@ variables:
         * [EPUB]
         * [Reveal.js Presentations]
         * [Microsoft Word & PowerPoint]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration Settings
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration Settings
     - text: |
         * [Configuration Settings]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Precedence Rules
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Precedence Rules
     - text: |
         * [Precedence Rules]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Specifying Dependencies
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Specifying Dependencies
     - text: |
         * [Specifying Dependencies]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Custom Targets
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Custom Targets
     - text: |
         * [Custom Targets]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Repository Versions
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Repository Versions
     - text: |
         * [Repository Versions]
-    - nav-unit-end
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Variables
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Formatting Variables
+    - pane-end
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Variables
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Formatting Variables
     - text: |
         * [c_site]
         * [c_type / c_base / c_list]
@@ -3597,8 +3597,8 @@ variables:
         * [c_level]
         * [c_margin]
         * [c_options]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Control Variables
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Control Variables
     - text: |
         * [MAKEJOBS]
         * [COMPOSER_DOCOLOR]
@@ -3611,10 +3611,10 @@ variables:
         * [COMPOSER_TARGETS]
         * [COMPOSER_SUBDIRS]
         * [COMPOSER_IGNORES]
-    - nav-unit-end
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Targets
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Primary Targets
+    - pane-end
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Targets
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Primary Targets
     - text: |
         * [help / help-all]
         * [template]
@@ -3624,32 +3624,32 @@ variables:
         * [clean / clean-all / *-clean]
         * [all / all-all / *-all]
         * [list]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Additional Targets
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Additional Targets
     - text: |
         * [debug / debug-file]
         * [check / check-all / config / config-site / config-all / targets]
         * [_commit / _commit-all]
         * [_release / _update / _update-all]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Internal Targets
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Internal Targets
     - text: |
         * [Internal Targets]
-    - nav-unit-end
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reference
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration
+    - pane-end
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reference
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Configuration
     - text: |
         * [Pandoc Extensions]
         * [Templates]
         * [Defaults]
-    - nav-unit-end
-    - nav-unit-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reserved
+    - pane-end
+    - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Reserved
     - text: |
         * [Target Names]
         * [Variable Names]
-    - nav-unit-end
-    - nav-unit-end
+    - pane-end
+    - pane-end
 
 ########################################
 
@@ -3715,10 +3715,6 @@ PUBLISH_LIBRARY_INDEX_PATH="$$($(REALPATH) $${CURDIR} $$($(DIRNAME) $${PUBLISH_L
 
 ################################################################################
 ### {{{3 Functions ---------------------
-
-#WORKING:NOW:NOW re-order functions...
-#	nav-unit/box above row/column, below nav-begin/end
-#	row-* above column-*
 
 ########################################
 #### {{{4 $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT
@@ -4181,6 +4177,32 @@ _EOF_
 }
 
 ########################################
+#### {{{4 $(PUBLISH)-row-begin ---------
+
+function $(PUBLISH)-row-begin {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+<div class="container-fluid">
+<div class="d-flex flex-row flex-wrap">
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-row-end -----------
+
+function $(PUBLISH)-row-end {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+$(CAT) <<_EOF_
+</div>
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	return 0
+}
+
+########################################
 #### {{{4 $(PUBLISH)-column-begin ------
 
 # 1 true = main
@@ -4249,39 +4271,13 @@ _EOF_
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-row-begin ---------
-
-function $(PUBLISH)-row-begin {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-$(CAT) <<_EOF_
-<div class="container-fluid">
-<div class="d-flex flex-row flex-wrap">
-_EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-row-end -----------
-
-function $(PUBLISH)-row-end {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-$(CAT) <<_EOF_
-</div>
-</div>
-_EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-nav-unit-begin ----
+#### {{{4 $(PUBLISH)-pane-begin --------
 
 # 1 header level
 # 2 true = expanded
 # 3 title				$${@:3} = $${3}++
 
-function $(PUBLISH)-nav-unit-begin {
+function $(PUBLISH)-pane-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 <div class="accordion">
@@ -4303,9 +4299,9 @@ _EOF_
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-nav-unit-end ------
+#### {{{4 $(PUBLISH)-pane-end ----------
 
-function $(PUBLISH)-nav-unit-end {
+function $(PUBLISH)-pane-end {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 </div>
@@ -4318,12 +4314,12 @@ _EOF_
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-nav-box-begin -----
+#### {{{4 $(PUBLISH)-box-begin ---------
 
 # 1 header level
 # 2 title				$${@:2} = $${2}++
 
-function $(PUBLISH)-nav-box-begin {
+function $(PUBLISH)-box-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 <div class="card">
@@ -4337,9 +4333,9 @@ _EOF_
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-nav-box-end -------
+#### {{{4 $(PUBLISH)-box-end -----------
 
-function $(PUBLISH)-nav-box-end {
+function $(PUBLISH)-box-end {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
 $(CAT) <<_EOF_
 </div>
@@ -5482,9 +5478,9 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "$(DEPTH_MAX)" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		else \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) pane-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		fi; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
@@ -5505,7 +5501,7 @@ endef
 
 override define TITLE_END =
 	if [ -n "$(c_site)" ]; then \
-		$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n\n"; \
+		$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n\n"; \
 	fi
 endef
 
@@ -7543,7 +7539,7 @@ override define $(PUBLISH)-library-digest-create =
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 		else				$(ECHO) "$(_N)"; \
 		fi; \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) nav-unit-begin $(DEPTH_MAX) $(3) " \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin $(DEPTH_MAX) $(3) " \
 			| $(TEE) --append $(1) \
 			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 		TITL="$$( \
@@ -7628,7 +7624,7 @@ override define $(PUBLISH)-library-digest-create =
 		)\">$($(PUBLISH)-library-digest_permalink)</a>\n" \
 			| $(TEE) --append $(1) \
 			$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
-	$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) nav-unit-end $(PUBLISH_BUILD_CMD_END)\n" \
+	$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n" \
 		| $(TEE) --append $(1) \
 		$(if $(COMPOSER_DEBUGIT),,>/dev/null); \
 	$(ECHO) "$(_D)"
@@ -7730,7 +7726,7 @@ endif
 		$(ECHO) "date: $(MARK)\n"									>>$(FILE); \
 		$(ECHO) "tags: [$(TESTING)1, $(TESTING)2, $(TESTING)3, $(TESTING)$(NUM)]\n"			>>$(FILE); \
 		$(ECHO) "---\n"											>>$(FILE); \
-		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) title-block nav-box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)\n"	>>$(FILE); \
+		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) title-block box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)\n"	>>$(FILE); \
 		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)		>>$(FILE); \
 		$(ECHO) "\t$(notdir $(FILE))"					>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS); \
 		$(if $(filter-out 9,$(NUM)),$(ECHO) ' \\\n'			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS);) \
@@ -7768,20 +7764,20 @@ $(PUBLISH_BUILD_CMD_BEG) _index/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-comments =
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) COMMENT $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) COMMENT $(PUBLISH_BUILD_CMD_END)
 COMMENT
 $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) REPLY $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) REPLY $(PUBLISH_BUILD_CMD_END)
 REPLY
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 endef
 
 #><td>
 #>$(PUBLISH_BUILD_CMD_BEG) library titles $(PUBLISH_BUILD_CMD_END)
 #></td>
 override define $(PUBLISH)-$(EXAMPLE)-library =
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) LIBRARY $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) LIBRARY $(PUBLISH_BUILD_CMD_END)
 <div class="container-fluid">
 <div class="d-flex flex-row flex-wrap">
 <div class="d-flex flex-column border border-1 me-3 p-2">
@@ -7795,7 +7791,7 @@ $(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)
 </div>
 </div>
 </div>
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 endef
 
 ########################################
@@ -7806,7 +7802,7 @@ override define $(PUBLISH)-$(EXAMPLE)-page =
 pagetitle: Main Page
 ---
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW introduction
 # MAIN returns to main page
@@ -7843,9 +7839,9 @@ The rest below is an example "digest" page, created from the most recent pages, 
 
 At the very bottom of the page is an example of including a file to emulate a comments section.
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Default Configuration $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Default Configuration $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW default css
 #WORKING:NOW integrate this (and as much of the rest as makes sense) into $(HELPOUT), and back-port as $(MAKE) / DO_HEREDOC
@@ -7870,7 +7866,7 @@ $(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Default Configuration $(PUBL
 
 *(For this test site, the library has been enabled, along with automatic updating.)*
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) index.comments.$(EXTN_TEXT) $(PUBLISH_BUILD_CMD_END)
 endef
@@ -7884,13 +7880,13 @@ pagetitle: Configuration Testing
 date: 2040-01-01
 ---
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) #WORKING:NOW $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) #WORKING:NOW $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Configuration Settings $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Configuration Settings $(PUBLISH_BUILD_CMD_END)
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
@@ -7910,7 +7906,7 @@ $(PUBLISH_BUILD_CMD_BEG) nav-box-begin $(DEPTH_MAX) Configuration Settings $(PUB
 | digest_continue  | $(LIBRARY_DIGEST_CONTINUE) | \*(continued)\*
 | digest_permalink | $(LIBRARY_DIGEST_PERMALINK) | (permalink)
 
-$(PUBLISH_BUILD_CMD_BEG) nav-box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 endef
 
 ########################################
@@ -7922,7 +7918,7 @@ title: Empty Configuration
 author: $(COMPOSER_COMPOSER)
 date: 1970-01-01
 ---
-$(PUBLISH_BUILD_CMD_BEG) title-block nav-box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) title-block box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)
 
 All the settings and menus are empty for this page, except for this content.  This file was written for $(COMPOSER_BASENAME), so the page title and layout were done automatically.
 
@@ -7966,10 +7962,10 @@ variables:
 
   $(PUBLISH)-nav-right:
     - .spacer
-    - nav-box-begin $(DEPTH_MAX) CHAINED
+    - box-begin $(DEPTH_MAX) CHAINED
     - text: |
         CHAINED TEXT
-    - nav-box-end
+    - box-end
 
 ################################################################################
 # End Of File
