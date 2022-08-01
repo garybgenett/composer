@@ -814,12 +814,6 @@ ifneq ($(wildcard $(YQ_BIN)),)
 override YQ				:= $(YQ_BIN)
 endif
 
-override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-matter "extract" --input-format "yaml" --output-format "json"
-override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(YQ_READ)) --output-format "yaml"
-override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
-override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) --colors
-override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
-
 ########################################
 ## {{{2 Wrappers -----------------------
 
@@ -830,6 +824,14 @@ override DATENAME			:= $(shell $(DATE) | $(SED) \
 	-e "s|T|-|g" \
 )
 override DATEMARK			:= $(firstword $(subst T, ,$(DATESTAMP)))
+
+########################################
+
+override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-matter "extract" --input-format "yaml" --output-format "json"
+override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(YQ_READ)) --output-format "yaml"
+override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
+override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) --colors
+override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
 
 ########################################
 
@@ -4363,38 +4365,6 @@ function $(PUBLISH)-spacer {
 ########################################
 #### {{{4 $(PUBLISH)-file --------------
 
-#WORKING:NOW:NOW
-#	ability to disable digest in library, and do flat links instead?
-#	add <composer_root> token, and $(REALPATH) to it
-#		this means every directory will be back to having its own cache
-#	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
-#		code in the function as a replacement here, and test
-#	replace the YQ_WRITE.*title code in library-digest with a call to title-block
-#		test
-#	convert most of the rest of library-digest into a generified override define
-#		test
-#	use the library-digest define to create the authors/dates/tags library pages
-#	finally, need to have code behind the helpers that creates the lists which link to the library pages
-#		(side note to do a review -- it's settled = yq is in make and html is in build.sh)
-#		doing it in build.sh means the libary location needs to be passed in
-#			use TARGETS-FORMAT to name the pages: foreach = author-format.html, date-format.html, tag-format.html
-#		it would be cool to make these definition lists with badges
-#	add code to digest/page generation that adds author/date/tags links at the bottom?
-#		this would be totally cool, but realpath needs make it complicated
-#WORKING:NOW
-# subst = string / patsubst = words / double-check!
-# make targets = index.html :: .box-begin .box-end ?
-# note on example page about logo/icon
-# add processing to nav-* items, such as $(PUBLISH)-spacer[.spacer]
-#	going to use this to include files, like the library panel
-# --resource-path = something like COMPOSER_CSS?
-# h1/etc. sizes are *way* huge...
-# add index.html file that links to readme.site.html(?)
-# and, finally, on to building/testing the library index... eventually...
-#	place .composer.yml disabling library, to keep from recursive fail...?
-#	actually, maybe rename or symlink digest.html?  this would be in addition to the include?
-#	html links will need to be ../, somehow...
-
 #> update: YQ_WRITE.*title
 
 # 1 file path
@@ -7233,6 +7203,8 @@ $(PUBLISH)-$(COMPOSER_YML):
 				| .variables[\"$(PUBLISH)-library\"].[\"auto_update\"] = null \
 			"
 
+override COMPOSER_YML_DATA := $(subst $(COMPOSER_YML_LIST),$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML),$(COMPOSER_YML_LIST))
+
 else
 
 $($(PUBLISH)-library):
@@ -7758,13 +7730,44 @@ endif
 	)
 	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-#WORKING:NOW:NOW
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
 	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
 	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
 endif
+
+#WORKING:NOW:NOW
+#	ability to disable digest in library, and do flat links instead?
+#	add <composer_root> token, and $(REALPATH) to it
+#		this means every directory will be back to having its own cache
+#	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
+#		code in the function as a replacement here, and test
+#	replace the YQ_WRITE.*title code in library-digest with a call to title-block
+#		test
+#	convert most of the rest of library-digest into a generified override define
+#		test
+#	use the library-digest define to create the authors/dates/tags library pages
+#	finally, need to have code behind the helpers that creates the lists which link to the library pages
+#		(side note to do a review -- it's settled = yq is in make and html is in build.sh)
+#		doing it in build.sh means the libary location needs to be passed in
+#			use TARGETS-FORMAT to name the pages: foreach = author-format.html, date-format.html, tag-format.html
+#		it would be cool to make these definition lists with badges
+#	add code to digest/page generation that adds author/date/tags links at the bottom?
+#		this would be totally cool, but realpath needs make it complicated
+#WORKING:NOW
+# subst = string / patsubst = words / double-check!
+# make targets = index.html :: .box-begin .box-end ?
+# note on example page about logo/icon
+# add processing to nav-* items, such as $(PUBLISH)-spacer[.spacer]
+#	going to use this to include files, like the library panel
+# --resource-path = something like COMPOSER_CSS?
+# h1/etc. sizes are *way* huge...
+# add index.html file that links to readme.site.html(?)
+# and, finally, on to building/testing the library index... eventually...
+#	place .composer.yml disabling library, to keep from recursive fail...?
+#	actually, maybe rename or symlink digest.html?  this would be in addition to the include?
+#	html links will need to be ../, somehow...
 
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
