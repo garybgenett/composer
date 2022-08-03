@@ -289,34 +289,37 @@ $(foreach FILE,\
 endef
 
 $(call SOURCE_INCLUDES,$(COMPOSER_DIR))
+ifeq ($(COMPOSER_RELEASE),)
 $(call SOURCE_INCLUDES,$(CURDIR))
+endif
 
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDE		[$(COMPOSER_INCLUDE)]))
 
 ########################################
 
-override COMPOSER_INCLUDES		:=
-override COMPOSER_INCLUDES_LIST		:=
-
-ifneq ($(COMPOSER_INCLUDE),)
-override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
-else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(MAKEFILE_LIST)))
-override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
-else ifeq ($(firstword $(MAKEFILE_LIST)),$(lastword $(filter-out $(lastword $(MAKEFILE_LIST)),$(MAKEFILE_LIST))))
-override COMPOSER_INCLUDES_LIST		:= $(MAKEFILE_LIST)
-else
-#>override COMPOSER_INCLUDES_LIST	:= $(firstword $(MAKEFILE_LIST)) $(lastword $(filter-out $(lastword $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
-override COMPOSER_INCLUDES_LIST		:= $(firstword $(MAKEFILE_LIST)) $(lastword $(MAKEFILE_LIST))
-endif
-
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
-$(foreach FILE,$(abspath $(dir $(COMPOSER_INCLUDES_LIST))),\
-	$(eval override COMPOSER_INCLUDES := $(FILE) $(COMPOSER_INCLUDES)) \
+override COMPOSER_INCLUDES_TREE		:=
+$(foreach FILE,$(abspath $(dir $(MAKEFILE_LIST))),\
+	$(eval override COMPOSER_INCLUDES_TREE := $(FILE) $(COMPOSER_INCLUDES_TREE)) \
 )
-override COMPOSER_INCLUDES_LIST		:= $(strip $(COMPOSER_INCLUDES))
-override COMPOSER_INCLUDES		:=
+override COMPOSER_INCLUDES_TREE		:= $(strip $(COMPOSER_INCLUDES_TREE))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_TREE	[$(COMPOSER_INCLUDES_TREE)]))
+
+########################################
+
+override COMPOSER_INCLUDES_LIST		:= $(COMPOSER_INCLUDES_TREE)
+ifeq ($(COMPOSER_INCLUDE),)
+ifneq ($(CURDIR),$(COMPOSER_DIR))
+ifneq ($(CURDIR),$(COMPOSER_ROOT))
+override COMPOSER_INCLUDES_LIST		:= $(firstword $(COMPOSER_INCLUDES_TREE)) $(lastword $(COMPOSER_INCLUDES_TREE))
+endif
+endif
+endif
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUDES_LIST)]))
 
+########################################
+
+override COMPOSER_INCLUDES		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD			[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
@@ -327,11 +330,11 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 		$(eval include $(FILE)) \
 	) \
 )
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES		[$(COMPOSER_INCLUDES)]))
 
 ########################################
 
 override COMPOSER_YML_LIST		:=
-
 $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(FILE)])) \
 	$(if $(wildcard $(FILE)),\
@@ -339,18 +342,14 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
 		$(eval override COMPOSER_YML_LIST := $(COMPOSER_YML_LIST) $(FILE)) \
 	) \
 )
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]))
 
 ########################################
 
 #> update: includes duplicates
 
-ifneq ($(origin c_css),override)
-ifeq ($(origin s),override)
-undefine				c_css
-$(call READ_ALIASES,s,s,c_css)
-endif
-endif
-
+#>override c_css			?=
+#>$(call READ_ALIASES,s,s,c_css)
 ifneq ($(origin c_css),override)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS			[$(FILE)])) \
@@ -360,7 +359,6 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	) \
 )
 endif
-
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS				[$(c_css)]))
 
 ################################################################################
@@ -1425,15 +1423,17 @@ endif
 
 #WORKING:NOW:NOW site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
 
-ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
-#>override COMPOSER_TMP_LIBRARY		:= $(abspath $(dir $(lastword $(COMPOSER_YML_LIST))))/$(notdir $($(PUBLISH)-library-folder))
-$(foreach FILE,$(COMPOSER_YML_LIST),$(if $(shell \
-	$(CAT) $(FILE) 2>/dev/null \
-	| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"folder\"]" 2>/dev/null \
-	| $(SED) "/^null$$/d" \
-	),$(eval \
-	override COMPOSER_TMP_LIBRARY	:= $(abspath $(dir $(FILE)))/$(notdir $($(PUBLISH)-library-folder))) \
-))
+ifneq ($(c_site),)
+$(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
+	$(eval override COMPOSER_TMP_LIBRARY_NAME := $(shell \
+		$(CAT) $(FILE) 2>/dev/null \
+		| $(YQ_WRITE) ".variables[\"$(PUBLISH)-library\"].[\"folder\"]" 2>/dev/null \
+		| $(SED) "/^null$$/d" \
+	)) \
+	$(if $(COMPOSER_TMP_LIBRARY_NAME),\
+		$(eval override COMPOSER_TMP_LIBRARY := $(abspath $(dir $(FILE)))/$(COMPOSER_TMP_LIBRARY_NAME)) \
+	) \
+)
 endif
 ifeq ($(abspath $(dir $(COMPOSER_TMP_LIBRARY))),$(COMPOSER_DIR))
 override COMPOSER_TMP_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP_LIBRARY))
@@ -7841,6 +7841,9 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CM
   * [config/pandoc/MANUAL.$(EXTN_HTML)](config/pandoc/MANUAL.$(EXTN_HTML)) *([config/pandoc/MANUAL$(COMPOSER_EXT_DEFAULT)](config/pandoc/MANUAL$(COMPOSER_EXT_DEFAULT)))*
     * External file, written in default syntax, without $(COMPOSER_BASENAME) automatic formatting
     * Inherited settings and page elements, with changed configuration of top menu
+  * [config/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)](config/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)) *([config/bootstrap/site/content/docs/5.1/getting-started/introduction$(COMPOSER_EXT_DEFAULT)](config/bootstrap/site/content/docs/5.1/getting-started/introduction$(COMPOSER_EXT_DEFAULT)))*
+    * #WORKING:NOW
+    * #WORKING:NOW
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the .nav/.spacer tokens
 
