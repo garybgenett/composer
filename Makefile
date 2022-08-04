@@ -433,6 +433,9 @@ endif
 ################################################################################
 
 #> update: includes duplicates
+#> update: COMPOSER_OPTIONS
+
+########################################
 
 $(call READ_ALIASES,C,c_color,COMPOSER_DOCOLOR)
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
@@ -479,8 +482,6 @@ override COMPOSER_IGNORES		:= $(sort \
 )
 
 ########################################
-
-#> update: includes duplicates
 
 $(call READ_ALIASES,S,S,c_site)
 $(call READ_ALIASES,T,T,c_type)
@@ -1172,18 +1173,7 @@ override $(PUBLISH)-$(DEBUGIT)-output	:= $(if $(COMPOSER_DEBUGIT),$(if $(COMPOSE
 
 #> update: COMPOSER_OPTIONS
 
-override COMPOSER_ENVIRONMENT := \
-	MAKEJOBS \
-	COMPOSER_DOCOLOR \
-	COMPOSER_DEBUGIT \
-	\
-	COMPOSER_TARGETS \
-	COMPOSER_SUBDIRS \
-	COMPOSER_IGNORES \
-	c_base \
-	c_list \
-
-override COMPOSER_EXPORTED := \
+override COMPOSER_OPTIONS_GLOBAL := \
 	MAKEJOBS \
 	COMPOSER_DOCOLOR \
 	COMPOSER_DEBUGIT \
@@ -1193,6 +1183,15 @@ override COMPOSER_EXPORTED := \
 	c_site \
 	c_type \
 	c_lang \
+
+override COMPOSER_OPTIONS_LOCAL := \
+	COMPOSER_INCLUDE \
+	COMPOSER_DEPENDS \
+	COMPOSER_TARGETS \
+	COMPOSER_SUBDIRS \
+	COMPOSER_IGNORES \
+	c_base \
+	c_list \
 	c_css \
 	c_toc \
 	c_level \
@@ -1203,7 +1202,11 @@ override COMPOSER_EXPORTED := \
 	c_margin_right \
 	c_options \
 
-override COMPOSER_EXPORTED_NOT := \
+override COMPOSER_OPTIONS_PROTECT := \
+	MAKEJOBS \
+	COMPOSER_DOCOLOR \
+	COMPOSER_DEBUGIT \
+	\
 	COMPOSER_INCLUDE \
 	COMPOSER_DEPENDS \
 	COMPOSER_TARGETS \
@@ -1212,25 +1215,24 @@ override COMPOSER_EXPORTED_NOT := \
 	c_base \
 	c_list \
 
-$(foreach FILE,$(COMPOSER_EXPORTED)	,$(eval export $(FILE)))
-$(foreach FILE,$(COMPOSER_EXPORTED_NOT)	,$(eval unexport $(FILE)))
+$(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
+$(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
 
-override COMPOSER_OPTIONS		:= \
+override COMPOSER_OPTIONS := \
 	$(shell $(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" $(COMPOSER) \
 	| $(SED) $(if $(c_margin),"/^c_margin_.+$$/d","/^c_margin$$/d") \
 )
 $(foreach FILE,$(COMPOSER_OPTIONS),\
 	$(if $(or \
-		$(filter $(FILE),$(COMPOSER_EXPORTED)) ,\
-		$(filter $(FILE),$(COMPOSER_EXPORTED_NOT)) ,\
+		$(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)) ,\
+		$(filter $(FILE),$(COMPOSER_OPTIONS_LOCAL)) ,\
 		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS: $(FILE)) \
 	) \
 )
 
 $(if $(COMPOSER_DEBUGIT_ALL),\
-	$(info #> COMPOSER_EXPORTED		[$(strip $(COMPOSER_EXPORTED))]) \
-	$(info #> COMPOSER_EXPORTED_NOT	[$(strip $(COMPOSER_EXPORTED_NOT))]) \
-	$(info #> COMPOSER_OPTIONS		[$(strip $(COMPOSER_OPTIONS))]) \
+	$(info #> COMPOSER_OPTIONS_GLOBAL	[$(strip $(COMPOSER_OPTIONS_GLOBAL))]) \
+	$(info #> COMPOSER_OPTIONS_LOCAL	[$(strip $(COMPOSER_OPTIONS_LOCAL))]) \
 )
 
 ########################################
@@ -1420,8 +1422,6 @@ $(foreach FILE,$($(PUBLISH)-library-variables),$(eval $(call $(PUBLISH)-library-
 endif
 
 ########################################
-
-#WORKING:NOW:NOW site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
 
 ifneq ($(c_site),)
 $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
@@ -1687,7 +1687,6 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(DOITALL)]"			"Create output files: $(_C)[COMPOSER_TARGETS]$(_D) $(_E)$(DIVIDE)$(_D) $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DOITALL)-$(DOITALL)]"		"Do $(_C)[$(DOITALL)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_N)[*$(_C)-$(DOITALL)]"			"Any targets named this way will also be run by $(_C)[$(DOITALL)]$(_D)"
-#>	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Print updated files: \`$(_N)*$(_M)$(COMPOSER_EXT)$(_D)\` $(_E)$(MARKER)$(_D) \`$(_M)$(COMPOSER_LOG)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Show updated files: \`$(_N)*$(_D)\`$(_C)[COMPOSER_EXT]$(_D) $(_E)$(MARKER)$(_D) $(_C)[COMPOSER_LOG]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
@@ -1751,7 +1750,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)"'$$EDITOR'"$(_D) $(_M)$(COMPOSER_SETTINGS)"
-	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT) $(OUT_LICENSE)$(COMPOSER_EXT)$(_D)"
+	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
 	@$(ENDOLINE)
@@ -3069,7 +3068,7 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_H)Global)
 	@$(ENDOLINE)
-	@$(foreach FILE,$(COMPOSER_EXPORTED),\
+	@$(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
 	)
 	@$(ENDOLINE)
@@ -3079,7 +3078,7 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_H)Local)
 	@$(ENDOLINE)
-	@$(foreach FILE,$(COMPOSER_EXPORTED_NOT),\
+	@$(foreach FILE,$(COMPOSER_OPTIONS_LOCAL),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
 	)
 	@$(ENDOLINE)
@@ -3534,7 +3533,7 @@ variables:
     - .spacer
     - box-begin $(DEPTH_MAX) Formats
     - text: |
-        * [Example Website](_$(PUBLISH)/index.$(EXTN_HTML))
+        * [Bootstrap Website](_$(PUBLISH)/index.$(EXTN_HTML))
     - .spacer
     - text: |$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
     - box-end
@@ -5593,7 +5592,7 @@ override define $(HEADERS) =
 			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
 			$(filter c_css,$(FILE)),$(call c_css_select) ,\
 			$(subst ",\",$($(FILE))) \
-		)))$(_D)]$(if $(filter $(FILE),$(COMPOSER_EXPORTED)), $(_E)$(MARKER)$(_D))"; \
+		)))$(_D)]$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)), $(_E)$(MARKER)$(_D))"; \
 	) \
 	$(HEADER_L)
 endef
@@ -5614,7 +5613,7 @@ override define $(HEADERS)-run =
 			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
 			$(filter c_css,$(FILE)),$(call c_css_select) ,\
 			$(subst ",\",$($(FILE))) \
-		)))$(_D)$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $(strip $(if \
+		)))$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(strip $(if \
 			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
 			$(filter c_css,$(FILE)),$(call c_css_select) ,\
 			$(subst ",\",$($(FILE))) \
@@ -6843,7 +6842,7 @@ $(CONFIGS):
 			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
 			$(filter c_css,$(FILE)),$(call c_css_select) ,\
 			$(subst ",\",$($(FILE))) \
-		)))$(_D)$(if $(filter $(FILE),$(COMPOSER_EXPORTED)),$(if $(strip $(if \
+		)))$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(strip $(if \
 			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
 			$(filter c_css,$(FILE)),$(call c_css_select) ,\
 			$(subst ",\",$($(FILE))) \
@@ -7151,9 +7150,9 @@ $($(PUBLISH)-library):
 	@$(ECHO) "$(_D)"
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_TMP_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(call $(HEADERS)-file,$(COMPOSER_TMP_LIBRARY),$(COMPOSER_SETTINGS))
-	@$(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_SETTINGS)
+	@$(ENV) $(REALMAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_TMP_LIBRARY),$(COMPOSER_YML))
-	@$(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML)
+	@$(ENV) $(REALMAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML)
 	@if [ -f "$(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_TMP_LIBRARY),$(COMPOSER_CSS)); \
 		$(ECHO) "$(_E)"; \
@@ -7170,7 +7169,7 @@ $($(PUBLISH)-library):
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
 $(PUBLISH)-$(COMPOSER_SETTINGS):
-	@$(foreach FILE,$(filter-out $(COMPOSER_ENVIRONMENT),$(COMPOSER_OPTIONS)),\
+	@$(foreach FILE,$(filter-out $(COMPOSER_OPTIONS_PROTECT),$(COMPOSER_OPTIONS)),\
 		$(ECHO) "override $(FILE) := $($(FILE))\n"; \
 		$(call NEWLINE) \
 	)
@@ -7474,7 +7473,7 @@ $($(PUBLISH)-library-digest):
 		if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
 			EXPAND="1"; \
 		fi; \
-		$(call $(PUBLISH)-library-digest-create,$(@),$${FILE},$${EXPAND}); \
+		$(call $(PUBLISH)-library-digest-create,$(@),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done
 
@@ -7491,7 +7490,7 @@ $($(PUBLISH)-library-digest-files):
 		$(CAT) $($(PUBLISH)-library-index) \
 			| $(YQ_WRITE) ".$${TYPE}.[\"$${FILE}\"] | .[]" \
 			| while read -r DIGEST; do \
-				$(call $(PUBLISH)-library-digest-create,$(@),$${DIGEST},$(SPECIAL_VAL)); \
+				$(call $(PUBLISH)-library-digest-create,$(@),$${DIGEST},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
 			done
 endif
 
@@ -7502,7 +7501,7 @@ override define $(PUBLISH)-library-digest-create =
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 		else				$(ECHO) "$(_N)"; \
 		fi; \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin $(DEPTH_MAX) $(3) " \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin $(DEPTH_MAX) $(4) " \
 			| $(TEE) --append $(1) \
 			$($(DEBUGIT)-output); \
 		TITL="$$( \
@@ -7583,7 +7582,7 @@ override define $(PUBLISH)-library-digest-create =
 		$($(DEBUGIT)-output); \
 	$(ECHO) "\n\n<a href=\"$$( \
 			$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_TMP_LIBRARY)))/$(2) \
-			| $(SED) "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g" \
+			| $(SED) "s|$(3)$$|.$(EXTN_HTML)|g" \
 		)\">$($(PUBLISH)-library-digest_permalink)</a>\n" \
 			| $(TEE) --append $(1) \
 			$($(DEBUGIT)-output); \
@@ -7719,6 +7718,10 @@ else
 endif
 
 #WORKING:NOW:NOW
+#	site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
+#	c_site -> c_type = $(PUBLISH) ?
+#		would make documentation and other things much easier... no need to keep c_site/EXTN_HTML in sync...
+#		probably more future-proof, too...
 #	ability to disable digest in library, and do flat links instead?
 #	add <composer_root> token, and $(REALPATH) to it
 #		this means every directory will be back to having its own cache
@@ -7737,18 +7740,19 @@ endif
 #	add code to digest/page generation that adds author/date/tags links at the bottom?
 #		this would be totally cool, but realpath needs make it complicated
 #WORKING:NOW
-# subst = string / patsubst = words / double-check!
-# make targets = index.html :: .box-begin .box-end ?
-# note on example page about logo/icon
-# add processing to nav-* items, such as $(PUBLISH)-spacer[.spacer]
-#	going to use this to include files, like the library panel
-# --resource-path = something like COMPOSER_CSS?
-# h1/etc. sizes are *way* huge...
-# add index.html file that links to readme.site.html(?)
-# and, finally, on to building/testing the library index... eventually...
-#	place .composer.yml disabling library, to keep from recursive fail...?
-#	actually, maybe rename or symlink digest.html?  this would be in addition to the include?
-#	html links will need to be ../, somehow...
+#	subst = string / patsubst = words / double-check!
+#	make targets = index.html :: .box-begin .box-end ?
+#	note on example page about logo/icon
+#	add processing to nav-* items, such as $(PUBLISH)-spacer[.spacer]
+#		going to use this to include files, like the library panel
+#	--resource-path = something like COMPOSER_CSS?
+#	h1/etc. sizes are *way* huge...
+#	add index.html file that links to readme.site.html(?)
+#	and, finally, on to building/testing the library index... eventually...
+#		place .composer.yml disabling library, to keep from recursive fail...?
+#		actually, maybe rename or symlink digest.html?  this would be in addition to the include?
+#		html links will need to be ../, somehow...
+#	COMPOSER_EXT needs to be gloabal when library is enabled
 
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
@@ -7817,7 +7821,7 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CM
 # MAIN returns to main page
 # added date, pagetitle (not title) and no author to config/index.html
 
-  * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT)](../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT)))*
+  * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)](../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
     * An interactive '$(PUBLISH)' rendered version of the $(COMPOSER_BASENAME) $(OUT_README)$(COMPOSER_EXT_DEFAULT) file
     * All elements and the page layout were specifically tuned *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml](../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml))*
   * [index-digest.$(EXTN_HTML)](index-digest.$(EXTN_HTML)) *([index-digest$(COMPOSER_EXT_DEFAULT)](index-digest$(COMPOSER_EXT_DEFAULT)))*
