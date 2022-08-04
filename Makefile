@@ -101,6 +101,7 @@ override VIM_FOLDING := {{{1
 #	everything stems from the Makefile, so that is the only place to check for changes...
 #	only one build at a time...
 # other
+#	--resource-path = something like COMPOSER_CSS?
 #	so many c_list/+ tests... really...?  probably...
 #			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
 #		documentation can be as simple as "+ > c_list" in precedence...?  probably...
@@ -544,9 +545,9 @@ override PANDOC_URL			:= https://github.com/jgm/pandoc/releases/download/$(PANDO
 override PANDOC_LNX_SRC			:= pandoc-$(PANDOC_VER)-linux-amd64.tar.gz
 override PANDOC_WIN_SRC			:= pandoc-$(PANDOC_VER)-windows-x86_64.zip
 override PANDOC_MAC_SRC			:= pandoc-$(PANDOC_VER)-macOS.zip
-override PANDOC_LNX_DST			:= $(subst .tar.gz,,$(PANDOC_LNX_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
-override PANDOC_WIN_DST			:= $(subst .zip,,$(PANDOC_WIN_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/pandoc.exe
-override PANDOC_MAC_DST			:= $(subst .zip,,$(PANDOC_MAC_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
+override PANDOC_LNX_DST			:= $(patsubst %.tar.gz,%,$(PANDOC_LNX_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
+override PANDOC_WIN_DST			:= $(patsubst %.zip,%,$(PANDOC_WIN_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/pandoc.exe
+override PANDOC_MAC_DST			:= $(supatbst %.zip,%,$(PANDOC_MAC_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
 override PANDOC_LNX_BIN			:= $(firstword $(subst /, ,$(PANDOC_LNX_DST)))
 override PANDOC_WIN_BIN			:= $(firstword $(subst /, ,$(PANDOC_WIN_DST))).exe
 override PANDOC_MAC_BIN			:= $(firstword $(subst /, ,$(PANDOC_MAC_DST))).bin
@@ -577,9 +578,9 @@ override YQ_URL				:= https://github.com/mikefarah/yq/releases/download/v$(YQ_VE
 override YQ_LNX_SRC			:= yq_linux_amd64.tar.gz
 override YQ_WIN_SRC			:= yq_windows_amd64.zip
 override YQ_MAC_SRC			:= yq_darwin_amd64.tar.gz
-override YQ_LNX_DST			:= $(subst .tar.gz,,$(YQ_LNX_SRC))-$(YQ_VER)/$(subst .tar.gz,,$(YQ_LNX_SRC))
-override YQ_WIN_DST			:= $(subst .zip,,$(YQ_WIN_SRC))-$(YQ_VER)/$(subst .zip,,$(YQ_WIN_SRC)).exe
-override YQ_MAC_DST			:= $(subst .tar.gz,,$(YQ_MAC_SRC))-$(YQ_VER)/$(subst .tar.gz,,$(YQ_MAC_SRC))
+override YQ_LNX_DST			:= $(patsubst %.tar.gz,%,$(YQ_LNX_SRC))-$(YQ_VER)/$(patsubst %.tar.gz,%,$(YQ_LNX_SRC))
+override YQ_WIN_DST			:= $(patsubst %.zip,%,$(YQ_WIN_SRC))-$(YQ_VER)/$(patsubst %.zip,%,$(YQ_WIN_SRC)).exe
+override YQ_MAC_DST			:= $(patsubst %.tar.gz,%,$(YQ_MAC_SRC))-$(YQ_VER)/$(patsubst %.tar.gz,%,$(YQ_MAC_SRC))
 override YQ_LNX_BIN			:= $(firstword $(subst /, ,$(YQ_LNX_DST)))
 override YQ_WIN_BIN			:= $(firstword $(subst /, ,$(YQ_WIN_DST))).exe
 override YQ_MAC_BIN			:= $(firstword $(subst /, ,$(YQ_MAC_DST))).bin
@@ -2244,6 +2245,7 @@ endef
 #	note: removed yaml fields will not update in the index = make site
 #	note: pretty much everything is linked to COMPOSER_YML_LIST, so when those get updated...
 #	COMPOSER_EXT="" and c_site="1" do not mix very well!
+#		COMPOSER_EXT needs to be gloabal when library is enabled
 #	the library indexes as a merge for new files
 #		removed files and fields will remain
 #		rm _library/site-library.yml or do "make site" to rebuild
@@ -2987,8 +2989,8 @@ endif
 	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_CSS))
 	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
 	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
-		$(call HEREDOC_BOOTSTRAP_CSS_HACK))) $(subst \
-		$(COMPOSER_DIR),...,$(BOOTSTRAP_CSS_CSS_SRC))&g'			$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
+		$(call HEREDOC_BOOTSTRAP_CSS_HACK))) $(patsubst \
+		$(COMPOSER_DIR)%,...%,$(BOOTSTRAP_CSS_CSS_SRC))&g'			$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(TEX_PDF_TEMPLATE))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
@@ -7122,6 +7124,8 @@ $($(PUBLISH)-caches):
 
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 
+override COMPOSER_YML_DATA := $(subst $(COMPOSER_YML_LIST),$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML),$(COMPOSER_YML_LIST))
+
 ifneq ($(or \
 	$(filter 1,$($(PUBLISH)-library-auto_update)) ,\
 	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) \
@@ -7182,8 +7186,6 @@ $(PUBLISH)-$(COMPOSER_YML):
 				| .variables[\"$(PUBLISH)-library\"].[\"auto_update\"] = null \
 			"
 
-override COMPOSER_YML_DATA := $(subst $(COMPOSER_YML_LIST),$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML),$(COMPOSER_YML_LIST))
-
 else
 
 $($(PUBLISH)-library):
@@ -7205,7 +7207,6 @@ $($(PUBLISH)-library-metadata):
 	@$(MKDIR) $(COMPOSER_TMP_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_F)"
 	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
-#>		-o \( -path \*/$(notdir $(COMPOSER_TMP_LIBRARY))/\* -prune \)
 	@$(FIND) $(abspath $(dir $(COMPOSER_TMP_LIBRARY))) \
 		\( -path $(COMPOSER_TMP) -prune \) \
 		-o \( -path $(COMPOSER_TMP_CACHE) -prune \) \
@@ -7719,40 +7720,18 @@ endif
 
 #WORKING:NOW:NOW
 #	site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
+#	add <composer_root> token, and $(REALPATH) to it
+#	fixes
+#		pagetitle for digest pages...
+#		actually, maybe rename or symlink digest.html?  this would be in addition to the include?
+#		ability to disable digest in library, and do flat links instead?
+#		h1/etc. sizes are *way* huge...
 #	c_site -> c_type = $(PUBLISH) ?
 #		would make documentation and other things much easier... no need to keep c_site/EXTN_HTML in sync...
 #		probably more future-proof, too...
-#	ability to disable digest in library, and do flat links instead?
-#	add <composer_root> token, and $(REALPATH) to it
-#		this means every directory will be back to having its own cache
 #	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
-#		code in the function as a replacement here, and test
-#	replace the YQ_WRITE.*title code in library-digest with a call to title-block
+#		replace the YQ_WRITE.*title code in library-digest with a call to title-block
 #		test
-#	convert most of the rest of library-digest into a generified override define
-#		test
-#	use the library-digest define to create the authors/dates/tags library pages
-#	finally, need to have code behind the helpers that creates the lists which link to the library pages
-#		(side note to do a review -- it's settled = yq is in make and html is in build.sh)
-#		doing it in build.sh means the libary location needs to be passed in
-#			use TARGETS-FORMAT to name the pages: foreach = author-format.html, date-format.html, tag-format.html
-#		it would be cool to make these definition lists with badges
-#	add code to digest/page generation that adds author/date/tags links at the bottom?
-#		this would be totally cool, but realpath needs make it complicated
-#WORKING:NOW
-#	subst = string / patsubst = words / double-check!
-#	make targets = index.html :: .box-begin .box-end ?
-#	note on example page about logo/icon
-#	add processing to nav-* items, such as $(PUBLISH)-spacer[.spacer]
-#		going to use this to include files, like the library panel
-#	--resource-path = something like COMPOSER_CSS?
-#	h1/etc. sizes are *way* huge...
-#	add index.html file that links to readme.site.html(?)
-#	and, finally, on to building/testing the library index... eventually...
-#		place .composer.yml disabling library, to keep from recursive fail...?
-#		actually, maybe rename or symlink digest.html?  this would be in addition to the include?
-#		html links will need to be ../, somehow...
-#	COMPOSER_EXT needs to be gloabal when library is enabled
 
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
@@ -7820,6 +7799,7 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CM
 #WORKING:NOW introduction
 # MAIN returns to main page
 # added date, pagetitle (not title) and no author to config/index.html
+# note on example page about logo/icon
 
   * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)](../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
     * An interactive '$(PUBLISH)' rendered version of the $(COMPOSER_BASENAME) $(OUT_README)$(COMPOSER_EXT_DEFAULT) file
