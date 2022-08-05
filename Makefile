@@ -1348,7 +1348,13 @@ override PUBLISH_BUILD_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(MARKER)
 override PUBLISH_BUILD_CMD_END		= $(MARKER) -->
 
 override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
-override PUBLISH_BUILD_SH_RUN		= YQ="$(YQ)" COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" CURDIR="$(CURDIR)" PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" $(BASH) $(PUBLISH_BUILD_SH)
+override PUBLISH_BUILD_SH_RUN		= \
+	YQ="$(YQ)" \
+	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
+	CURDIR="$(CURDIR)" \
+	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
+	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
+	$(BASH) $(PUBLISH_BUILD_SH)
 
 ########################################
 
@@ -3705,6 +3711,8 @@ YQ_READ="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_READ)))"
 YQ_WRITE="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_WRITE)))"
 
 CURDIR="$${CURDIR}"
+COMPOSER_ROOT="$${COMPOSER_ROOT}"
+COMPOSER_ROOT_PATH="$$($(REALPATH) $${CURDIR} $${COMPOSER_ROOT})"
 PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
 PUBLISH_LIBRARY_INDEX_PATH="$$($(REALPATH) $${CURDIR} $$($(DIRNAME) $${PUBLISH_LIBRARY_INDEX}))"
 
@@ -3873,12 +3881,18 @@ function $(PUBLISH)-nav-top-list {
 				if [ "$${1}" = ".variables[\"$(PUBLISH)-nav-top\"]" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="$${LINK}" data-bs-toggle="dropdown">$${FILE}</a>
+<a class="nav-link dropdown-toggle" href="$$(
+	$(ECHO) "$${LINK}" \
+	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+)" data-bs-toggle="dropdown">$${FILE}</a>
 <ul class="dropdown-menu bg-dark">
 _EOF_
 				else
 $(CAT) <<_EOF_
-<li><a class="dropdown-item" href="$${LINK}">$${FILE}</a>
+<li><a class="dropdown-item" href="$$(
+	$(ECHO) "$${LINK}" \
+	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+)">$${FILE}</a>
 <ul>
 _EOF_
 				fi
@@ -3894,11 +3908,17 @@ _EOF_
 				)"
 				if [ "$${1}" = ".variables[\"$(PUBLISH)-nav-top\"]" ]; then
 $(CAT) <<_EOF_
-<li class="nav-item"><a class="nav-link" href="$${VAL}">$${FILE}</a></li>
+<li class="nav-item"><a class="nav-link" href="$$(
+	$(ECHO) "$${VAL}" \
+	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+)">$${FILE}</a></li>
 _EOF_
 				else
 $(CAT) <<_EOF_
-<li><a class="dropdown-item" href="$${VAL}">$${FILE}</a></li>
+<li><a class="dropdown-item" href="$$(
+	$(ECHO) "$${VAL}" \
+	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+)">$${FILE}</a></li>
 _EOF_
 				fi
 			fi
@@ -3987,7 +4007,10 @@ _EOF_
 $(CAT) <<_EOF_
 <li class="breadcrumb-item">$$(
 	if [ -z "$${NBSP}" ]; then $(ECHO) "$(DIVIDE)&nbsp;"; fi
-)<a href="$${VAL}">$${FILE}</a></li>
+)<a href="$$(
+	$(ECHO) "$${VAL}" \
+	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+)">$${FILE}</a></li>
 _EOF_
 			NBSP="true"
 		done
@@ -4447,7 +4470,8 @@ function $(PUBLISH)-file {
 				$(PUBLISH)-select $${BUILD_CMD} || return 1
 			else
 				$(PRINTF) "%s\\n" "$${FILE}"
-			fi
+			fi \\
+			| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 		done \\
 		|| return 1
 	if [ -n "$${HEAD}" ]; then
@@ -7124,8 +7148,6 @@ $($(PUBLISH)-caches):
 
 ifneq ($(filter-out null,$($(PUBLISH)-library-folder)),)
 
-override COMPOSER_YML_DATA := $(subst $(COMPOSER_YML_LIST),$(COMPOSER_TMP_LIBRARY)/$(COMPOSER_YML),$(COMPOSER_YML_LIST))
-
 ifneq ($(or \
 	$(filter 1,$($(PUBLISH)-library-auto_update)) ,\
 	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) \
@@ -7180,7 +7202,7 @@ $(PUBLISH)-$(COMPOSER_SETTINGS):
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
-	@$(COMPOSER_YML_DATA) \
+	@$(patsubst $(COMPOSER_DIR)/$(COMPOSER_YML),,$(COMPOSER_YML_DATA)) \
 		| $(YQ_WRITE_FILE) " \
 				.variables[\"$(PUBLISH)-library\"].[\"folder\"] = null \
 				| .variables[\"$(PUBLISH)-library\"].[\"auto_update\"] = null \
@@ -7720,7 +7742,10 @@ endif
 
 #WORKING:NOW:NOW
 #	site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
-#	add <composer_root> token, and $(REALPATH) to it
+#	build.sh
+#		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html
+#			which are default hashes?  make them so, and remove the need from the configuration files
+#		convert echo/cat/etc. to passed-in variables, because paths may be different between systems...
 #	fixes
 #		pagetitle for digest pages...
 #		actually, maybe rename or symlink digest.html?  this would be in addition to the include?
@@ -7801,9 +7826,9 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CM
 # added date, pagetitle (not title) and no author to config/index.html
 # note on example page about logo/icon
 
-  * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)](../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
+  * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)](<composer_root>/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
     * An interactive '$(PUBLISH)' rendered version of the $(COMPOSER_BASENAME) $(OUT_README)$(COMPOSER_EXT_DEFAULT) file
-    * All elements and the page layout were specifically tuned *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml](../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml))*
+    * All elements and the page layout were specifically tuned *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml](<composer_root>/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml))*
   * [index-digest.$(EXTN_HTML)](index-digest.$(EXTN_HTML)) *([index-digest$(COMPOSER_EXT_DEFAULT)](index-digest$(COMPOSER_EXT_DEFAULT)))*
     * Automatically generated digest page
     * Default settings, with example page elements
@@ -7919,7 +7944,7 @@ $(PUBLISH_BUILD_CMD_BEG) title-block box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)
 All the settings and menus are empty for this page, except for this content.  This file was written for $(COMPOSER_BASENAME), so the page title and layout were done automatically.
 
   * *Source file: [_$(PUBLISH)/$(patsubst .%,%,$(NOTHING))/index$(COMPOSER_EXT_DEFAULT)](index$(COMPOSER_EXT_DEFAULT))*
-  * *Main page: [_$(PUBLISH)/index.html](../index.html)*
+  * *Main page: [_$(PUBLISH)/index.html](<composer_root>/index.html)*
 endef
 
 ########################################
@@ -7941,7 +7966,7 @@ variables:
     auto_update:			1
 
   $(PUBLISH)-nav-top:
-    MAIN: index.html
+    MAIN: <composer_root>/index.html
     CHAINED:
       $(MENU_SELF): "#"
       ITEM 1: "#"
@@ -7949,7 +7974,7 @@ variables:
       ITEM 3: "#"
 
   $(PUBLISH)-nav-bottom:
-    CHAINED: "#"
+    CHAINED: <composer_root>/index.html
 
   $(PUBLISH)-nav-left:
     - .spacer
@@ -7997,7 +8022,7 @@ variables:
   $(PUBLISH)-nav-top:
     MAIN:
       $(MENU_SELF): "#"
-      CHAINED: ../index.html
+      CHAINED: <composer_root>/index.html
 
 ################################################################################
 # End Of File
