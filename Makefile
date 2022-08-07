@@ -2260,6 +2260,7 @@ endef
 #	COMPOSER_INCLUDE + c_site = for the win?
 #	COMPOSER_DEPENDS + library + auto_update = may need two-pass runs to make it work...
 #		changes to include files will always get missed...
+#		actually, fixed!... now it is just includes and markdown files that are built as targets
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -7148,15 +7149,20 @@ $($(PUBLISH)-caches):
 ########################################
 ### {{{3 $(PUBLISH)-library ------------
 
-#WORKING:NOW:NOW any way to parallelize this across directories?  any way at all...?
 ifneq ($(and \
 	$(c_site) ,\
-	$(filter $(CURDIR),$(abspath $(dir $(COMPOSER_LIBRARY)))) ,\
+	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) ,\
 	$(or \
 		$(filter 1,$($(PUBLISH)-library-auto_update)) ,\
 		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) \
 	) \
 ),)
+
+$(c_base).$(EXTN_HTML) \
+$(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
+$(DOITALL)-$(SUBDIRS) $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)) \
+	: \
+	$($(PUBLISH)-library)
 
 $($(PUBLISH)-cache) \
 $($(PUBLISH)-caches) \
@@ -7473,17 +7479,24 @@ override define $(PUBLISH)-library-digest-list =
 	done
 endef
 
+ifneq ($(and \
+	$(c_site) ,\
+	$(wildcard $($(PUBLISH)-library-index)) \
+),)
+override $(PUBLISH)-library-digest-files := $(shell $(call $(PUBLISH)-library-digest-list))
+endif
+
 $($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
+$($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest):
-	@$(MAKE) c_site="1" \
-		$(if $(COMPOSER_DEBUGIT),,$(SILENT)) \
-		COMPOSER_DOITALL_$(PUBLISH)-library-digest="1" \
-		$$($(call $(PUBLISH)-library-digest-list))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_F)"
+	@$(MAKE) c_site="1" \
+		$(if $(COMPOSER_DEBUGIT),,$(SILENT)) \
+		$$($(call $(PUBLISH)-library-digest-list))
 	@$(ECHO) "" >$(@)
 	@$(ECHO) "---\n" >>$(@)
 	@$(ECHO) "pagetitle: $($(PUBLISH)-library-digest_title)\n" >>$(@)
@@ -7510,12 +7523,13 @@ $($(PUBLISH)-library-digest):
 	done
 
 #> update: Title / Author / Date[Year] / Tag
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-library-digest),)
-override $(PUBLISH)-library-digest-files := $(shell $(call $(PUBLISH)-library-digest-list))
 $($(PUBLISH)-library-digest-files): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_F)"
 	@$(ECHO) "" >$(@)
 	@TOKEN="$$($(ECHO) "$(TOKEN)" | $(SED) "s|(.)|\\\\\1|g")"; \
 		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\1|g")"; \
@@ -7534,7 +7548,6 @@ $($(PUBLISH)-library-digest-files):
 			| while read -r FILE; do \
 				$(call $(PUBLISH)-library-digest-create,$(@),$${FILE},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
 			done
-endif
 
 #> update: YQ_WRITE.*title
 override define $(PUBLISH)-library-digest-create =
