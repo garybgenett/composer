@@ -5592,7 +5592,7 @@ endif
 	@$(call $(HEADERS)-run)
 	@$(call $(HEADERS)-run,1)
 ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
-	@$(call $(HEADERS)-$(COMPOSER_PANDOC))
+	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 	@$(LINERULE)
 endif
 	@$(call $(HEADERS)-note,$(CURDIR),$(TESTING))
@@ -5662,7 +5662,6 @@ override define $(HEADERS)-$(SUBDIRS) =
 		$(call $(HEADERS),1,$(1)); \
 	fi
 endef
-#> update: MARKER.*PANDOC
 override define $(HEADERS)-$(COMPOSER_PANDOC) =
 	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
 		$(call $(HEADERS)-file,$(CURDIR),$(1)); \
@@ -7072,38 +7071,32 @@ endef
 ########################################
 ### {{{3 $(PUBLISH)-$(TARGETS) ---------
 
-#> update: MARKER.*PANDOC
 override define $(PUBLISH)-$(TARGETS) =
-	$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(notdir $(COMPOSER_TMP))/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(PUBLISH)); \
-	$(eval override $(@)-output := $(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT)) \
-	$(ECHO) "$(_S)"; \
-	$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output); \
 	$(ECHO) "$(_E)"; \
-	$(ECHO) "" >$($(@)-output); \
+	$(ECHO) "" >$(1); \
 	$(call PUBLISH_BUILD_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
-		| $(TEE) --append $($(@)-output) $($(PUBLISH)-$(DEBUGIT)-output); \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $($(PUBLISH)-caches-begin); do \
 			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
 			$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 		done \
-		| $(TEE) --append $($(@)-output) $($(PUBLISH)-$(DEBUGIT)-output); \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
 			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$${FILE}) -->\n"; \
 			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
 		done \
-		| $(TEE) --append $($(@)-output) $($(PUBLISH)-$(DEBUGIT)-output); \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $($(PUBLISH)-caches-end); do \
 			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
 			$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 		done \
-		| $(TEE) --append $($(@)-output) $($(PUBLISH)-$(DEBUGIT)-output); \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"; \
-	$(eval override c_list := $($(@)-output)) \
-	if [ -n "$(COMPOSER_DEBUGIT)" ]; then \
-		$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"; \
-	fi
+	$(eval override c_list := $(1))
 endef
 
 ########################################
@@ -7764,17 +7757,13 @@ endif
 	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
+	@time $(ENV) $(REALMAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
-	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
-	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
+	@time $(ENV) $(REALMAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
+	@time $(ENV) $(REALMAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
 endif
 
 #WORKING:NOW:NOW
-#	site-template-all = cat: /.g/_data/zactive/coding/composer/_site/config/pandoc/doc/.composer.tmp/site-library-index.yml: No such file or directory
-#		get rid of all yq 2>/dev/null, so that errors are apparent...?
-#	why are *.html files being rebuilt on second pass of site-template?
-#		add a tmpfile note to $(TYPE_LPDF), exactly like $(PUBLISH)
 #	turn "library-digest_" variables into "$$(yq" commands, so that the variable lookups only happen for the folder name and auto_update
 #		remember to use COMPOSER_LIBRARY_YML...
 #	add library/index.md, and make digest.md "sourceable" again
@@ -8391,13 +8380,21 @@ ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(ENDOLINE)
 	@exit 1
 endif
+ifneq ($(c_site),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(notdir $(COMPOSER_TMP))/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(PUBLISH))
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call $(PUBLISH)-$(TARGETS),$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT))
+ifneq ($$(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
+endif
+endif
 ifeq ($(c_type),$(TYPE_LPDF))
+	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(notdir $(COMPOSER_TMP))/$(@).$(DATENAME),$(TYPE_LPDF))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP)/$(@).$(DATENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-endif
-ifneq ($(c_site),)
-	@$(call $(PUBLISH)-$(TARGETS))
 endif
 	@$(ECHO) "$(_F)"
 #>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
