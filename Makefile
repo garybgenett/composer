@@ -2213,7 +2213,7 @@ endef
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-FORMAT --
 
-#WORKING
+#WORKING:NOW:NOW
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
 #	note that they are intentionally reversed
@@ -2261,6 +2261,7 @@ endef
 #	COMPOSER_DEPENDS + library + auto_update = may need two-pass runs to make it work...
 #		changes to include files will always get missed...
 #		actually, fixed!... now it is just includes and markdown files that are built as targets
+#		note that only the lowest library will be updated...
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -2852,7 +2853,6 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(OUT_README).$(EXTN_DEFA
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
 
 #WORKING break this section up
-#WORKING $(CONFIGS)-$(DOITALL) parsing of null values from index, when in library directory...
 
 #WORK $(PUBLISH)
 #WORK $(PUBLISH)-$(DOITALL)
@@ -7706,12 +7706,13 @@ endif
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS))	>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(NOTHING))	>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-#WORKING:NOW:NOW										$(if $(COMPOSER_RELEASE),$(COMPOSER_DIR)/$(COMPOSER_YML))
 	@$(SED) -i "s|^(.+auto_update.+)1$$|\1null|g" \
+										$(if $(COMPOSER_RELEASE),$(COMPOSER_DIR)/$(COMPOSER_YML)) \
 										$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
 										$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML) \
 										$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
 	@$(TOUCH) \
+										$(if $(COMPOSER_RELEASE),$(COMPOSER_DIR)/$(COMPOSER_YML)) \
 										$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
 										$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML) \
 										$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
@@ -7765,7 +7766,6 @@ endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
-#WORKING:NOW:NOW why is pandoc now not automatically rebuilding...?
 	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
 	@time $(MAKE) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
 endif
@@ -7834,6 +7834,9 @@ endef
 #>$(PUBLISH_BUILD_CMD_BEG) library titles $(PUBLISH_BUILD_CMD_END)
 #></td>
 override define $(PUBLISH)-$(EXAMPLE)-library =
+---
+pagetitle: Site Features Page
+---
 $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) LIBRARY $(PUBLISH_BUILD_CMD_END)
 <div class="container-fluid">
 <div class="d-flex flex-row flex-wrap">
@@ -7858,7 +7861,6 @@ override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 pagetitle: Main Page
 ---
-
 $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW introduction
@@ -7941,7 +7943,6 @@ override define $(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS) =
 pagetitle: Configuration Testing
 date: 2040-01-01
 ---
-
 $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) #WORKING:NOW $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW
