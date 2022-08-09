@@ -2993,9 +2993,10 @@ endif
 	@$(CAT) $(BOOTSTRAP_CSS_CSS_SRC)						>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_CSS))
 	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_CSS))
 	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
-	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip $(subst \,\\,\
-		$(call HEREDOC_BOOTSTRAP_CSS_HACK))) $(patsubst \
-		$(COMPOSER_DIR)%,...%,$(BOOTSTRAP_CSS_CSS_SRC))&g'			$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
+	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip \
+		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_BOOTSTRAP_CSS_HACK)) \
+		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_CSS_CSS_SRC))&g' \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(TEX_PDF_TEMPLATE))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
@@ -4523,6 +4524,12 @@ endef
 ########################################
 ## {{{2 Heredoc: bootstrap_css ---------
 
+override define HEREDOC_BOOTSTRAP_CSS_HACK =
+	$(SED) -i \
+		-e "/^[[:space:]]+background-color[:]/d" \
+		-e "/^[[:space:]]+color[:]/d"
+endef
+
 override define HEREDOC_BOOTSTRAP_CSS =
 /* #############################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS
@@ -4576,12 +4583,6 @@ body {
 /* #############################################################################
 # End Of File
 ############################################################################# */
-endef
-
-override define HEREDOC_BOOTSTRAP_CSS_HACK =
-	$(SED) -i \
-		-e "/^[[:space:]]+background-color[:]/d" \
-		-e "/^[[:space:]]+color[:]/d"
 endef
 
 ########################################
@@ -7447,6 +7448,14 @@ endef
 ########################################
 ### {{{3 $(PUBLISH)-library-digest -----
 
+#WORKING:NOW:NOW
+#	just remove direct "_library/index.html" links, and do it from the "include" versions instead
+#	create a "site-library-digest" file, so that the main digest (index.md) can also be built in parallel?
+#		maybe just chain right off of "site-library"?  this is probably cleanest and most sensical...
+#		if so, then $(PUBLISH)-library-digest-list may need to go higher up, which is hacky...
+#		or, just move library down to the bottom, so that everything is linear...?
+#	if so, reverse processing, so it is index, index.include, and then digest files...?
+
 #>		titles
 #>			| $(SED) "/^null$$/d"
 override define $(PUBLISH)-library-digest-list =
@@ -7787,8 +7796,8 @@ endif
 
 #WORKING:NOW:NOW
 #	build.sh
-#		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html
-#			which are default hashes?  make them so, and remove the need from the configuration files
+#		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
+#		which are default "#" links/hashes?  make them so, and remove the need from the configuration files?
 #		convert echo/cat/etc. to passed-in variables, because paths may be different between systems...
 #	fixes
 #		pagetitle for digest pages...
