@@ -3244,7 +3244,7 @@ $(_H)variables$(_D):
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)$(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)$(_D)
 
-$(_E)#> title-prefix:			EXAMPLE SITE$(_D)
+$(_F)#>$(_C)title-prefix$(_D):				$(_M)EXAMPLE SITE$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3285,21 +3285,29 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
 
     $(_M)MAIN$(_D):				$(_E)<composer_root>/index.$(EXTN_HTML)$(_D)
+#WORKING:NOW:NOW
+#	better, more descriptive names for these...
+#	match up with actual pages and names on index.html and in {{{ markers
     $(_M)PAGES$(_D):
-      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
+      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
       $(_M)$(OUT_README) ($(PUBLISH))$(_D):			$(_E)<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
-$(_E)#>  TITLES:$(_D)
-$(_E)#>    $(MENU_SELF): "#"$(_D)
-$(_E)#>    .library-titles: $(MENU_SELF)$(_D)
+      $(_M)Main Page$(_D):			$(_E)<composer_root>/index.$(EXTN_HTML)$(_D)
+      $(_M)Main Page ($(CONFIGS))$(_D):		$(_E)<composer_root>/$(CONFIGS)/index.$(EXTN_HTML)$(_D)
+      $(_M)Main Page ($(CONFIGS)-$(TESTING))$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)$(_D)
+      $(_M)Main Page ($(patsubst .%,%,$(NOTHING)))$(_D):			$(_E)<composer_root>/$(patsubst .%,%,$(NOTHING))/index.$(EXTN_HTML)$(_D)
+      $(_M)External Page$(_D):			$(_E)<composer_root>/$(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)$(_D)
+      $(_M)External Page ($(CONFIGS))$(_D):		$(_E)<composer_root>/$(CONFIGS)/pandoc/MANUAL.$(EXTN_HTML)$(_D)
+      $(_M)Digest Page$(_D):			$(_E)<composer_root>/index-digest.$(EXTN_HTML)$(_D)
+      $(_M)Digest Page ($(CONFIGS))$(_D):		$(_E)<composer_root>/$(CONFIGS)/index-digest.$(EXTN_HTML)$(_D)
     $(_M)AUTHORS$(_D):
-      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
-      $(_N).library-authors$(_D): $(_E)$(MENU_SELF)$(_D)
+      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+      $(_N).library-authors$(_D): $(_N)$(MENU_SELF)$(_D)
     $(_M)DATES$(_D):
-      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
-      $(_N).library-dates$(_D): $(_E)$(MENU_SELF)$(_D)
+      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+      $(_N).library-dates$(_D): $(_N)$(MENU_SELF)$(_D)
     $(_M)TAGS$(_D):
-      $(_C)$(MENU_SELF)$(_D): $(_E)"#"$(_D)
-      $(_N).library-tags$(_D): $(_E)$(MENU_SELF)$(_D)
+      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+      $(_N).library-tags$(_D): $(_N)$(MENU_SELF)$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3343,10 +3351,6 @@ $(_S)########################################$(_D)
         $(_M)RIGHT TEXT$(_D)
     - $(_C)box-end$(_D)
     - $(_N).spacer$(_D)
-$(_E)#>  - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) TITLES$(_D)
-$(_E)#>  - .library-titles$(_D)
-$(_E)#>  - pane-end$(_D)
-$(_E)#>  - .spacer$(_D)
     - $(_C)pane-begin$(_D) $(_M)$(DEPTH_MAX) $(SPECIAL_VAL) AUTHORS$(_D)
     - $(_N).library-authors$(_D)
     - $(_C)pane-end$(_D)
@@ -7449,7 +7453,7 @@ endef
 ### {{{3 $(PUBLISH)-library-digest -----
 
 #WORKING:NOW:NOW
-#	just remove direct "_library/index.html" links, and do it from the "include" versions instead
+#	make "_library" and "_index" variables?
 #	create a "site-library-digest" file, so that the main digest (index.md) can also be built in parallel?
 #		maybe just chain right off of "site-library"?  this is probably cleanest and most sensical...
 #		if so, then $(PUBLISH)-library-digest-list may need to go higher up, which is hacky...
@@ -7824,10 +7828,11 @@ $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
 
 override define $(PUBLISH)-$(EXAMPLE)-digest =
 ---
-pagetitle: Latest Updates Include
+pagetitle: Latest Updates
 ---
 $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) #WORKING $(PUBLISH_BUILD_CMD_END)
 #WORKING
+Library Digest Page: [_library/index.$(EXTN_HTML)](<composer_root>/_library/index.$(EXTN_HTML))
 $(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
@@ -7835,10 +7840,11 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
-pagetitle: Digest Include
+pagetitle: Digest
 ---
 $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) #WORKING $(PUBLISH_BUILD_CMD_END)
 #WORKING
+Library Digest Page ($(CONFIGS)): [_index/index.$(EXTN_HTML)](<composer_root>/$(CONFIGS)/_index/index.$(EXTN_HTML))
 $(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) _index/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
@@ -8032,22 +8038,8 @@ variables:
     folder:				_library
     auto_update:			1
 
-#WORKING:NOW:NOW match up with actual pages and names on index.html and in {{{ markers
   $(PUBLISH)-nav-top:
     MAIN:				<composer_root>/index.$(EXTN_HTML)
-    PAGES:
-      $(MENU_SELF): "#"
-      $(OUT_README) ($(PUBLISH)):			<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)
-      Main Page:			<composer_root>/index.$(EXTN_HTML)
-      Main Page ($(CONFIGS)):		<composer_root>/$(CONFIGS)/index.$(EXTN_HTML)
-      Main Page ($(CONFIGS)-$(TESTING)):		<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)
-      Main Page ($(patsubst .%,%,$(NOTHING))):			<composer_root>/$(patsubst .%,%,$(NOTHING))/index.$(EXTN_HTML)
-      Default Page:			<composer_root>/$(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)
-      Default Page ($(CONFIGS)):		<composer_root>/$(CONFIGS)/pandoc/MANUAL.$(EXTN_HTML)
-      Digest Page:			<composer_root>/_library/index.$(EXTN_HTML)
-      Digest Page ($(CONFIGS)):		<composer_root>/$(CONFIGS)/_index/index.$(EXTN_HTML)
-      Digest Include:			<composer_root>/index-digest.$(EXTN_HTML)
-      Digest Include ($(CONFIGS)):		<composer_root>/$(CONFIGS)/index-digest.$(EXTN_HTML)
     CHAINED:
       $(MENU_SELF): "#"
       ITEM 1: "#"
@@ -8423,7 +8415,7 @@ ifneq ($(c_site),)
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(call $(PUBLISH)-$(TARGETS),$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT))
-ifneq ($$(COMPOSER_DEBUGIT),)
+ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 endif
 endif
