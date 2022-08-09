@@ -1443,7 +1443,8 @@ endif
 override $(PUBLISH)-library		:= $(COMPOSER_LIBRARY)/$(PUBLISH)-library
 override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
 override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
-override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/digest$(COMPOSER_EXT_DEFAULT)
+override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
+override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index.include$(COMPOSER_EXT_DEFAULT)
 
 ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
 override COMPOSER_IGNORES		:= $(sort \
@@ -7483,37 +7484,33 @@ $($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
+$($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
 $($(PUBLISH)-library-digest):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_F)"
+	@$(ECHO) "$(_D)"
 	@$(MAKE) c_site="1" \
 		$(if $(COMPOSER_DEBUGIT),,$(SILENT)) \
 		$$($(call $(PUBLISH)-library-digest-list))
+	@$(ECHO) "$(_F)"
 	@$(ECHO) "" >$(@)
 	@$(ECHO) "---\n" >>$(@)
 	@$(ECHO) "pagetitle: $($(PUBLISH)-library-digest_title)\n" >>$(@)
 	@$(ECHO) "---\n" >>$(@)
-	@NUM="0"; for FILE in $$( \
-		$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) " \
-				map(select(.title != null or .pagetitle != null)) \
-				| $(call $(PUBLISH)-library-sort-yq) \
-				| .[].path \
-			" \
-			| $(HEAD) -n$($(PUBLISH)-library-digest_count); \
-	); do \
-		if [ "$${NUM}" -gt "0" ] && [ "$($(PUBLISH)-library-digest_spacer)" = "1" ]; then \
-			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)\n" >>$(@); \
-		fi; \
-		$(ECHO) "$(_D)"; \
-		EXPAND="$(SPECIAL_VAL)"; \
-		if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
-			EXPAND="1"; \
-		fi; \
-		$(call $(PUBLISH)-library-digest-create,$(@),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
-		NUM="$$($(EXPR) $${NUM} + 1)"; \
-	done
+	@$(ECHO) "$(_D)"
+	@$(call $(PUBLISH)-library-digest-main,$(@))
+
+$($(PUBLISH)-library-digest-src): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-metadata)
+$($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-index)
+$($(PUBLISH)-library-digest-src):
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call $(PUBLISH)-library-digest-main,$(COMPOSER_LIBRARY).$(notdir $($(PUBLISH)-library-digest-src)))
+	@$(ECHO) "$(_S)"
+	@$(MV) $(COMPOSER_LIBRARY).$(notdir $($(PUBLISH)-library-digest-src)) $($(PUBLISH)-library-digest-src) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 
 #> update: Title / Author / Date[Year] / Tag
 $($(PUBLISH)-library-digest-files): $(COMPOSER_YML_LIST)
@@ -7541,6 +7538,31 @@ $($(PUBLISH)-library-digest-files):
 			| while read -r FILE; do \
 				$(call $(PUBLISH)-library-digest-create,$(@),$${FILE},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
 			done
+
+override define $(PUBLISH)-library-digest-main =
+	$(ECHO) "$(_F)"; \
+	NUM="0"; for FILE in $$( \
+		$(CAT) $($(PUBLISH)-library-metadata) \
+			| $(YQ_WRITE) " \
+				map(select(.title != null or .pagetitle != null)) \
+				| $(call $(PUBLISH)-library-sort-yq) \
+				| .[].path \
+			" \
+			| $(HEAD) -n$($(PUBLISH)-library-digest_count); \
+	); do \
+		if [ "$${NUM}" -gt "0" ] && [ "$($(PUBLISH)-library-digest_spacer)" = "1" ]; then \
+			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)\n" >>$(1); \
+		fi; \
+		$(ECHO) "$(_D)"; \
+		EXPAND="$(SPECIAL_VAL)"; \
+		if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
+			EXPAND="1"; \
+		fi; \
+		$(call $(PUBLISH)-library-digest-create,$(1),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
+		NUM="$$($(EXPR) $${NUM} + 1)"; \
+	done; \
+	$(ECHO) "$(_D)"
+endef
 
 #> update: YQ_WRITE.*title
 override define $(PUBLISH)-library-digest-create =
@@ -7764,10 +7786,6 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	turn "library-digest_" variables into "$$(yq" commands, so that the variable lookups only happen for the folder name and auto_update
-#		remember to use COMPOSER_LIBRARY_YML...
-#	add library/index.md, and make digest.md "sourceable" again
-#		add text to main "digest source" page, and remove the config one
 #	build.sh
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html
 #			which are default hashes?  make them so, and remove the need from the configuration files
@@ -7797,16 +7815,24 @@ $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
 
 override define $(PUBLISH)-$(EXAMPLE)-digest =
 ---
-pagetitle: Default Digest Page
+pagetitle: Latest Updates Include
 ---
-$(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) #WORKING $(PUBLISH_BUILD_CMD_END)
+#WORKING
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) _library/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
-pagetitle: Configured Digest Page
+pagetitle: Digest Include
 ---
-$(PUBLISH_BUILD_CMD_BEG) _index/$(notdir $($(PUBLISH)-library-digest)) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) #WORKING $(PUBLISH_BUILD_CMD_END)
+#WORKING
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) _index/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-comments =
@@ -8009,8 +8035,10 @@ variables:
       Main Page ($(patsubst .%,%,$(NOTHING))):			<composer_root>/$(patsubst .%,%,$(NOTHING))/index.$(EXTN_HTML)
       Default Page:			<composer_root>/$(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)
       Default Page ($(CONFIGS)):		<composer_root>/$(CONFIGS)/pandoc/MANUAL.$(EXTN_HTML)
-      Digest Page:			<composer_root>/_library/digest.$(EXTN_HTML)
-      Digest Page ($(CONFIGS)):		<composer_root>/$(CONFIGS)/_index/digest.$(EXTN_HTML)
+      Digest Page:			<composer_root>/_library/index.$(EXTN_HTML)
+      Digest Page ($(CONFIGS)):		<composer_root>/$(CONFIGS)/_index/index.$(EXTN_HTML)
+      Digest Include:			<composer_root>/index-digest.$(EXTN_HTML)
+      Digest Include ($(CONFIGS)):		<composer_root>/$(CONFIGS)/index-digest.$(EXTN_HTML)
     CHAINED:
       $(MENU_SELF): "#"
       ITEM 1: "#"
