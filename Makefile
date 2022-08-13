@@ -10,6 +10,7 @@ override VIM_FOLDING := {{{1
 #		* Tooling Versions
 #		* Pandoc Options
 #		* TYPE_TARGETS
+#		* PANDOC_OPTIONS_ERROR
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
 #			* `make test-_release`
@@ -166,6 +167,7 @@ override COMPOSER_YML			:= .composer.yml
 override COMPOSER_CSS			:= .composer.css
 override COMPOSER_LOG_DEFAULT		:= .composed
 override COMPOSER_EXT_DEFAULT		:= .md
+override COMPOSER_EXT_SPECIAL		:= $(COMPOSER_EXT_DEFAULT).cms
 
 #> update: TYPE_TARGETS
 override TYPE_DEFAULT			:= html
@@ -200,6 +202,11 @@ override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
 override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
 
+#WORKING:NOW:NOW
+#	make these somehow configurable...
+#	must be .composer.mk, for revealjs
+#	however, must also be <composer_root> enabled...
+#	document!
 override COMPOSER_ICON			:= $(COMPOSER_ART)/icon.img
 override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 
@@ -617,6 +624,7 @@ override COMMONMARK_DIR			:= $(COMPOSER_DIR)/commonmark
 ifneq ($(origin BOOTSTRAP_CMT),override)
 override BOOTSTRAP_CMT			:= v5.1.3
 endif
+override BOOTSTRAP_DOC_VER		:= 5.1
 override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
@@ -668,6 +676,7 @@ override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
 #	dark (css_alt)
 #	solarized-light
 #	solarized-dark
+# copy to, and reference from, $(COMPOSER_ART) ...?
 # document
 
 override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
@@ -722,9 +731,11 @@ override LESS_VER			:= 551
 #> update: includes duplicates
 
 override PATH_LIST			:= $(subst :, ,$(PATH))
-
 override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 export SHELL
+
+export LC_ALL				:=
+export LC_COLLATE			:= C
 
 ########################################
 ## {{{2 Paths --------------------------
@@ -1065,7 +1076,7 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	) \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PANDOC_TEX_PDF)" \
-		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)/$(c_base).$(EXTENSION).$(DATENAME)" \
+		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)" \
 		--include-in-header="$(TEX_PDF_TEMPLATE)" \
 		--listings \
 	) \
@@ -1160,6 +1171,8 @@ endif
 ################################################################################
 # {{{1 Composer Operation ------------------------------------------------------
 ################################################################################
+
+override ENV_MAKE			:= $(ENV) $(REALMAKE)
 
 override ~				:= "'$$'"
 override COMPOSER_MY_PATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
@@ -1444,7 +1457,7 @@ override $(PUBLISH)-library		:= $(COMPOSER_LIBRARY)/$(PUBLISH)-library
 override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
 override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
 override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
-override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index.include$(COMPOSER_EXT_DEFAULT)
+override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
 
 ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
 override COMPOSER_IGNORES		:= $(sort \
@@ -1826,6 +1839,13 @@ $(HELPOUT)-%:
 	fi
 
 ########################################
+### {{{3 $(HELPOUT)-$(PUBLISH) ---------
+
+.PHONY: $(HELPOUT)-$(PUBLISH)
+$(HELPOUT)-$(PUBLISH):
+	@$(MAKE) $(SILENT) c_site="1" $(HELPOUT)-$(DOFORCE)
+
+########################################
 ### {{{3 $(HELPOUT)-$(TYPE_PRES) -------
 
 .PHONY: $(HELPOUT)-$(TYPE_PRES)
@@ -1834,13 +1854,6 @@ $(HELPOUT)-$(TYPE_PRES):
 	@$(ENDOLINE)
 	@$(LINERULE)
 	@$(MAKE) $(SILENT) $(HELPOUT)
-
-########################################
-### {{{3 $(HELPOUT)-$(PUBLISH) ---------
-
-.PHONY: $(HELPOUT)-$(PUBLISH)
-$(HELPOUT)-$(PUBLISH):
-	@$(MAKE) $(SILENT) c_site="1" $(HELPOUT)-$(DOFORCE)
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOFORCE) ---------
@@ -2116,7 +2129,8 @@ The guiding principles of $(_C)[$(COMPOSER_BASENAME)]$(_D):
 
 Direct support for key document types $(_E)(see [Document Formatting])$(_D):
 
-  * $(_C)[HTML]$(_D) & $(_C)[Bootstrap Websites]$(_D)
+  * $(_C)[Bootstrap Websites]$(_D)
+  * $(_C)[HTML]$(_D)
   * $(_C)[PDF]$(_D)
   * $(_C)[EPUB]$(_D)
   * $(_C)[Reveal.js Presentations]$(_D)
@@ -2279,16 +2293,6 @@ Note that all the files referenced below are embedded in the '$(_E)Embedded File
 and '$(_E)Heredoc$(_D)' sections of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the
 $(_C)[$(DISTRIB)]$(_D) target, and will be overwritten whenever it is run.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
-
-In addition to being a helpful real-time rendering tool, $(_C)[Markdown Viewer]$(_D)
-includes several $(_M)CSS$(_D) stylesheets that are much more visually appealing than the
-$(_C)[Pandoc]$(_D) default, and which behave like normal webpages, so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses them
-for all $(_C)[HTML]$(_D)-based document types, including $(_C)[EPUB]$(_D).
-
-Information on installing $(_C)[Markdown Viewer]$(_D) for use as a $(_C)[Markdown]$(_D) rendering
-tool is in $(_C)[Requirements]$(_D).
-
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Bootstrap Websites)
 
 $(_C)[Bootstrap]$(_D) is a leading web development framework, capable of building static
@@ -2313,6 +2317,16 @@ $(_C)[Bootswatch]$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSWATCH_DIR))/docs/index.html$(_D)
 
 #WORK
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
+
+In addition to being a helpful real-time rendering tool, $(_C)[Markdown Viewer]$(_D)
+includes several $(_M)CSS$(_D) stylesheets that are much more visually appealing than the
+$(_C)[Pandoc]$(_D) default, and which behave like normal webpages, so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses them
+for all $(_C)[HTML]$(_D)-based document types, including $(_C)[EPUB]$(_D).
+
+Information on installing $(_C)[Markdown Viewer]$(_D) for use as a $(_C)[Markdown]$(_D) rendering
+tool is in $(_C)[Requirements]$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,PDF)
 
@@ -2956,24 +2970,24 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_README_COMPOSER_YML)					>$(CURDIR)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_README_COMPOSER_YML) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
 	@$(ECHO) "$(_D)"
 endif
 	@$(ECHO) "$(_S)"
-	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
+	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
 		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
-		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
 		$(HELPOUT)-$(PUBLISH)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
+		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
@@ -3043,9 +3057,9 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
 	@$(ECHO) "$(_D)"
-	@$(ENV) $(REALMAKE) $(SILENT) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"		COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
-#>	@$(ENV) $(REALMAKE) $(SILENT) COMPOSER_LOG=					COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-	@$(ENV) $(REALMAKE) $(SILENT) COMPOSER_LOG=					COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"			COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+#>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(ECHO) "$(_E)"
 	@$(MV) $(CURDIR)/$(COMPOSER_YML)						$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
 	@$(ECHO) "$(_D)"
@@ -3244,7 +3258,7 @@ $(_H)variables$(_D):
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)$(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)$(_D)
 
-$(_F)#>$(_C)title-prefix$(_D):				$(_M)EXAMPLE SITE$(_D)
+  $(_C)title-prefix$(_D):				$(_M)null$(_D) $(_S)#$(MARKER)$(_D) $(_N)EXAMPLE SITE$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3285,20 +3299,17 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
 
     $(_M)MAIN$(_D):				$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-#WORKING:NOW:NOW
-#	better, more descriptive names for these...
-#	match up with actual pages and names on index.html and in {{{ markers
     $(_M)PAGES$(_D):
       $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-      $(_M)$(OUT_README) ($(PUBLISH))$(_D):			$(_E)<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
-      $(_M)Main Page$(_D):			$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-      $(_M)Main Page ($(CONFIGS))$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-      $(_M)Main Page ($(CONFIGS)-$(TESTING))$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)$(_D)
-      $(_M)Main Page ($(patsubst .%,%,$(NOTHING)))$(_D):			$(_E)<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-      $(_M)External Page$(_D):			$(_E)<composer_root>/$(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)$(_D)
-      $(_M)External Page ($(CONFIGS))$(_D):		$(_E)<composer_root>/$(CONFIGS)/pandoc/MANUAL.$(EXTN_HTML)$(_D)
-      $(_M)Digest Page$(_D):			$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
-      $(_M)Digest Page ($(CONFIGS))$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+      $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):			$(_E)<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
+      $(_M)Introduction$(_D):			$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+      $(_M)Default Site$(_D):			$(_E)<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+      $(_M)Configured Site$(_D):			$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+      $(_M)Default Digest Page$(_D):		$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+      $(_M)Configured Digest Page$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+      $(_M)Default Markdown File$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)$(_D)
+      $(_M)Configured Markdown File$(_D):		$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)$(_D)
+      $(_M)Elements & Includes$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)$(_D)
     $(_M)AUTHORS$(_D):
       $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
       $(_N).library-authors$(_D): $(_N)$(MENU_SELF)$(_D)
@@ -3449,8 +3460,8 @@ variables:
       Recommended Workflow: "#recommended-workflow"
       Document Formatting:
         $(MENU_SELF): "#document-formatting"
-        HTML: "#html"
         Bootstrap Websites: "#bootstrap-websites"
+        HTML: "#html"
         PDF: "#pdf"
         EPUB: "#epub"
         Reveal.js Presentations: "#revealjs-presentations"
@@ -3520,10 +3531,11 @@ variables:
 
   $(PUBLISH)-nav-bottom:
 
-    Home: ./
-    Source: ./.sources
-    Artifacts: ./artifacts
-    Bootstrap: ./bootstrap
+    Home:				./
+    Source:				./$(notdir $(COMPOSER_PKG))
+    Artifacts:				./$(notdir $(COMPOSER_ART))
+    Pandoc:				./$(notdir $(PANDOC_DIR))
+    Bootstrap:				./$(notdir $(BOOTSTRAP_DIR))
 
 ########################################
 
@@ -3550,9 +3562,7 @@ variables:
     - .spacer
     - box-begin $(DEPTH_MAX) Formats
     - text: |
-        * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
-    - .spacer
-    - text: |$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
+        * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
     - box-end
     - text: |
         $(COMPOSER_TAGLINE)
@@ -3568,8 +3578,8 @@ variables:
     - pane-end
     - pane-begin $(DEPTH_MAX) $(SPECIAL_VAL) Document Formatting
     - text: |
-        * [HTML]
         * [Bootstrap Websites]
+        * [HTML]
         * [PDF]
         * [EPUB]
         * [Reveal.js Presentations]
@@ -3824,7 +3834,10 @@ function $(PUBLISH)-info-data {
 	if [ -n "$${INFO}" ]; then
 $(CAT) <<_EOF_
 <span class="me-3">
-$${INFO}
+$$(
+	$(ECHO) "$${INFO}" \
+	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+)
 </span>
 _EOF_
 	else
@@ -3847,9 +3860,9 @@ _EOF_
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-	$(PUBLISH)-nav-begin "1" "1" "$${2}"
-	$(PUBLISH)-nav-top-list "$${1}"
-	$(PUBLISH)-nav-end "top" "1"
+	$(PUBLISH)-nav-begin "1" "1" "$${2}"	|| return 1
+	$(PUBLISH)-nav-top-list "$${1}"		|| return 1
+	$(PUBLISH)-nav-end "top" "1"		|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
@@ -3866,20 +3879,11 @@ function $(PUBLISH)-nav-top-list {
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" 2>/dev/null \\
 		| while read -r FILE; do
-			if [ "$${FILE}" = "$(MENU_SELF)" ]; then
-				continue
-			elif [ "$${FILE}" = ".library-titles" ]; then
-				$(PUBLISH)-nav-top-library titles
-				continue
-			elif [ "$${FILE}" = ".library-authors" ]; then
-				$(PUBLISH)-nav-top-library authors
-				continue
-			elif [ "$${FILE}" = ".library-dates" ]; then
-				$(PUBLISH)-nav-top-library dates
-				continue
-			elif [ "$${FILE}" = ".library-tags" ]; then
-				$(PUBLISH)-nav-top-library tags
-				continue
+			if [ "$${FILE}" = "$(MENU_SELF)" ]; then	continue
+			elif [ "$${FILE}" = ".library-titles" ]; then	$(PUBLISH)-nav-top-library titles	|| return 1; continue
+			elif [ "$${FILE}" = ".library-authors" ]; then	$(PUBLISH)-nav-top-library authors	|| return 1; continue
+			elif [ "$${FILE}" = ".library-dates" ]; then	$(PUBLISH)-nav-top-library dates	|| return 1; continue
+			elif [ "$${FILE}" = ".library-tags" ]; then	$(PUBLISH)-nav-top-library tags		|| return 1; continue
 			fi
 			LINK="$$(
 				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
@@ -3905,7 +3909,7 @@ $(CAT) <<_EOF_
 <ul>
 _EOF_
 				fi
-				$(PUBLISH)-nav-top-list "$${1}[\"$${FILE}\"]"
+				$(PUBLISH)-nav-top-list "$${1}[\"$${FILE}\"]" || return 1
 $(CAT) <<_EOF_
 </ul></li>
 _EOF_
@@ -3972,7 +3976,7 @@ _EOF_
 
 function $(PUBLISH)-nav-bottom {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
-	$(PUBLISH)-nav-begin "" "" ""
+	$(PUBLISH)-nav-begin "" "" ""		|| return 1
 $(CAT) <<_EOF_
 <li class="nav-item me-3">$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
@@ -3981,8 +3985,8 @@ $(CAT) <<_EOF_
 )</li>
 <li class="nav-item me-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
 _EOF_
-	$(PUBLISH)-nav-bottom-list "$${1}"
-	$(PUBLISH)-nav-end "bottom" ""
+	$(PUBLISH)-nav-bottom-list "$${1}"	|| return 1
+	$(PUBLISH)-nav-end "bottom" ""		|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
 	return 0
 }
@@ -4038,14 +4042,14 @@ _EOF_
 # x $(PUBLISH)-column-begin 1		true = main
 # x $(PUBLISH)-column-end
 
-function $(PUBLISH)-nav-left { $(PUBLISH)-nav-side "$${@}"; return 0; }
-function $(PUBLISH)-nav-right { $(PUBLISH)-nav-side "$${@}"; return 0; }
+function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side "$${@}" || return 1; return 0; }
+function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
-	$(PUBLISH)-column-begin ""
-	$(PUBLISH)-nav-side-list "$${1}"
-	$(PUBLISH)-column-end
+	$(PUBLISH)-column-begin ""		|| return 1
+	$(PUBLISH)-nav-side-list "$${1}"	|| return 1
+	$(PUBLISH)-column-end			|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
 	return 0
 }
@@ -4074,25 +4078,24 @@ function $(PUBLISH)-nav-side-list {
 			| $${YQ_WRITE} "$${1}[\"$${NUM}\"]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-		if [ "$${TEXT}" = ".library-titles" ]; then
-			$(PUBLISH)-nav-side-library titles
-		elif [ "$${TEXT}" = ".library-authors" ]; then
-			$(PUBLISH)-nav-side-library authors
-		elif [ "$${TEXT}" = ".library-dates" ]; then
-			$(PUBLISH)-nav-side-library dates
-		elif [ "$${TEXT}" = ".library-tags" ]; then
-			$(PUBLISH)-nav-side-library tags
-		elif [ "$${TEXT}" = ".spacer" ]; then
-			$(PUBLISH)-spacer
+		if [ "$${TEXT}" = ".library-titles" ]; then	$(PUBLISH)-nav-side-library titles	|| return 1
+		elif [ "$${TEXT}" = ".library-authors" ]; then	$(PUBLISH)-nav-side-library authors	|| return 1
+		elif [ "$${TEXT}" = ".library-dates" ]; then	$(PUBLISH)-nav-side-library dates	|| return 1
+		elif [ "$${TEXT}" = ".library-tags" ]; then	$(PUBLISH)-nav-side-library tags	|| return 1
+		elif [ "$${TEXT}" = ".spacer" ]; then		$(PUBLISH)-spacer			|| return 1
 		elif [ "$$(
 			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 				| $${YQ_WRITE} "$${1}[\"$${NUM}\"] | keys | .[]" 2>/dev/null \\
 				| $(SED) "/^null$$/d"
 		)" = "text" ]; then
 			$(ECHO) "\\n"
-			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
-				| $${YQ_WRITE} "$${1}[\"$${NUM}\"].text" 2>/dev/null \\
-				| $(SED) "/^null$$/d"
+			TEXT="$$(
+				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+					| $${YQ_WRITE} "$${1}[\"$${NUM}\"].text" 2>/dev/null \\
+					| $(SED) "/^null$$/d"
+			)"
+			$(ECHO) "$${TEXT}" \\
+			| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 		else
 			$(PUBLISH)-select $${TEXT} || return 1
 		fi
@@ -4108,7 +4111,7 @@ function $(PUBLISH)-nav-side-list {
 
 # 1 titles || authors || dates || tags
 
-function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}"; return 0; }
+function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side-library {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
@@ -4160,7 +4163,7 @@ $(CAT) <<_EOF_
 <span class="navbar-toggler-icon"></span>
 </button>
 $$(
-	if [ -n "$${2}" ]; then	$(PUBLISH)-brand "$${3}"
+	if [ -n "$${2}" ]; then	$(PUBLISH)-brand "$${3}" || return 1
 	else			$(ECHO) "<!-- $${FUNCNAME} $(MARKER) brand -->\\n"
 	fi
 )
@@ -4186,13 +4189,13 @@ function $(PUBLISH)-nav-end {
 $(CAT) <<_EOF_
 </ul>
 $$(
-	$(PUBLISH)-info-data "$${1}"
+	$(PUBLISH)-info-data "$${1}" || return 1
 	if [ -n "$${2}" ] && [ -n "$$(
 		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-config\"].[\"search_name\"]" 2>/dev/null \\
 		| $(SED) "/^null$$/d"
 	)" ]; then
-		$(PUBLISH)-search
+		$(PUBLISH)-search || return 1
 	else
 		$(ECHO) "<!-- $${FUNCNAME} $(MARKER) search -->\\n"
 	fi
@@ -4455,7 +4458,7 @@ function $(PUBLISH)-file {
 				fi
 				$(ECHO) "$${NAME}"
 			fi
-		)
+		) || return 1
 		$(ECHO) "<!-- title-block $(DIVIDE) end -->\\n"
 	fi
 	$(ECHO) "\\n"
@@ -4471,7 +4474,7 @@ function $(PUBLISH)-file {
 			$(CAT) $${1}
 		fi
 	fi \\
-		| while IFS= read -r FILE; do
+		| while IFS=$$'\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
 			BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_BUILD_CMD_BEG)}"
 			BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_BUILD_CMD_END)}"
@@ -4481,10 +4484,11 @@ function $(PUBLISH)-file {
 				$(PRINTF) "%s\\n" "$${FILE}"
 			fi \\
 			| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+			if [ "$${PIPESTATUS[0]}" != "0" ]; then return 1; fi
 		done \\
 		|| return 1
 	if [ -n "$${HEAD}" ]; then
-		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^([^[:space:]]+)(.+)$$|\\1-end|g")
+		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^([^[:space:]]+)(.+)$$|\\1-end|g") || return 1
 	fi
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
@@ -5803,7 +5807,8 @@ $(DEBUGIT)-file: $(HEADERS)-$(DEBUGIT)
 $(DEBUGIT)-file: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-file:
 	@$(ENDOLINE)
-	@$(PRINT) "$(_M)$(MARKER) Printing to file $(DIVIDE) This may take a few minutes"
+	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
+	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(DEBUGIT_FILE)
 	@$(MAKE) \
@@ -5891,7 +5896,8 @@ $(TESTING)-file: $(HEADERS)-$(TESTING)
 $(TESTING)-file: $(TESTING)-$(HEADERS)
 $(TESTING)-file:
 	@$(ENDOLINE)
-	@$(PRINT) "$(_M)$(MARKER) Printing to file $(DIVIDE) This may take a few minutes"
+	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
+	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
 	@$(MAKE) \
@@ -5960,14 +5966,16 @@ $(TESTING)-$(HEADERS)-%:
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
-override TESTING_ENV			:= $(ENV) \
+override TESTING_ENV_MAKE		:= $(ENV) \
+	MAKEJOBS="$(MAKEJOBS)" \
 	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
 	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+	$(REALMAKE)
 
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE),-$(INSTALL),$(2),1)
-override $(TESTING)-run			= $(TESTING_ENV) $(REALMAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
+override $(TESTING)-run			= $(TESTING_ENV_MAKE) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
 	$(call TITLE_LN ,1,$(MARKER)[ $(patsubst $(TESTING)-%,%,$(@)) ]$(MARKER) $(VIM_FOLDING));
@@ -6023,14 +6031,14 @@ override define $(TESTING)-init =
 	else \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
-	$(MAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
+	$(TESTING_ENV_MAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
 override define $(TESTING)-done =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) DONE [$(@)]"; \
-	$(MAKE) $(@)-done 2>&1
+	$(TESTING_ENV_MAKE) $(@)-done 2>&1
 endef
 
 override define $(TESTING)-find =
@@ -6934,12 +6942,14 @@ override define $(TARGETS)-$(PRINTER) =
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
-		$(if $(1),,$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d")) \
+		$(if $(c_site),-e "s|$($(PUBLISH)-cache)||g") \
+		$(if $(c_site),-e "s|$($(PUBLISH)-library)||g") \
+		$(if $(1),-e "/^$(HEADERS)[-]$(1)[:]+.*$$/d",$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d")) \
 		$(if $(1),,-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d") \
 		$(if $(1),,-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d") \
-		-e "s|[:]$$||g" \
+		-e "s|[:]+[[:space:]]*$$||g" \
 		-e "s|[[:space:]]+|$(TOKEN)|g" \
-		$(if $(1),| $(SED) -n "s|^([^:]+[-]$(1))$$|\1|gp")
+		$(if $(1),| $(SED) -n "/^[^:]+[-]$(1)$$/p")
 endef
 
 ################################################################################
@@ -7057,7 +7067,8 @@ endif
 $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
-	@$(MAKE) c_site="1" $(DOITALL)
+	@$(eval export $(COMPOSER_OPTIONS)) \
+		$(MAKE) c_site="1" $(DOITALL)
 
 ########################################
 ### {{{3 $(PUBLISH)-$(CLEANER) ---------
@@ -7188,9 +7199,9 @@ $($(PUBLISH)-library):
 	@$(ECHO) "$(_D)"
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_SETTINGS))
-	@$(ENV) $(REALMAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
+	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
-	@$(ENV) $(REALMAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
+	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
 	@if [ -f "$(abspath $(dir $(COMPOSER_LIBRARY)))/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
 		$(ECHO) "$(_E)"; \
@@ -7202,7 +7213,8 @@ $($(PUBLISH)-library):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
-	@$(MAKE) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+#>	@$(ENV_MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -7252,7 +7264,8 @@ $($(PUBLISH)-library-metadata):
 		$(if $(COMPOSER_DEBUGIT),$(ECHO) "\n")
 	@$(ECHO) "$(_D)"
 	@$(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) \
-		\( -path $(COMPOSER_TMP) -prune \) \
+		\( -path $(COMPOSER_DIR) -prune \) \
+		-o \( -path $(COMPOSER_TMP) -prune \) \
 		-o \( -path $(COMPOSER_LIBRARY) -prune \) \
 		-o \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) \
 		$(shell $(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path \*/$(COMPOSER_YML) \
@@ -7451,13 +7464,6 @@ endef
 
 ########################################
 ### {{{3 $(PUBLISH)-library-digest -----
-
-#WORKING:NOW:NOW
-#	create a "site-library-digest" file, so that the main digest (index.md) can also be built in parallel?
-#		maybe just chain right off of "site-library"?  this is probably cleanest and most sensical...
-#		if so, then $(PUBLISH)-library-digest-list may need to go higher up, which is hacky...
-#		or, just move library down to the bottom, so that everything is linear...?
-#	if so, reverse processing, so it is index, index.include, and then digest files...?
 
 #>		titles
 #>			| $(SED) "/^null$$/d"
@@ -7682,6 +7688,7 @@ override $(PUBLISH)-$(EXAMPLE)-main			:= index
 override $(PUBLISH)-$(EXAMPLE)-include			:= index-digest
 override $(PUBLISH)-$(EXAMPLE)-folder			:= _library
 override $(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS)	:= _index
+override $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir		:= $(CONFIGS)/$(notdir $(BOOTSTRAP_DIR))/site/content/docs/$(BOOTSTRAP_DOC_VER)/getting-started
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
@@ -7691,9 +7698,17 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))
-	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(BOOTSTRAP_DIR))
 	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
+	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(BOOTSTRAP_DIR))
 	@$(ECHO) "$(_D)"
+	@$(RSYNC) \
+		--delete-excluded \
+		--prune-empty-dirs \
+		--filter="+_/**/" \
+		--filter="-_/test/**" \
+		--filter="+_/**$(COMPOSER_EXT_DEFAULT)" \
+		--filter="-_/**" \
+		$(PANDOC_DIR)/			$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
 	@$(RSYNC) \
 		--delete-excluded \
 		--prune-empty-dirs \
@@ -7704,16 +7719,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		--filter="-_/site/*" \
 		--filter="-_/*" \
 		$(BOOTSTRAP_DIR)/		$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(BOOTSTRAP_DIR))
-	@$(RSYNC) \
-		--delete-excluded \
-		--prune-empty-dirs \
-		--filter="+_/**/" \
-		--filter="-_/test/**" \
-		--filter="+_/**$(COMPOSER_EXT_DEFAULT)" \
-		--filter="-_/**" \
-		$(PANDOC_DIR)/			$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
 	@$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)
-	@$(MAKE) --makefile $(COMPOSER) --directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
+	@$(ENV_MAKE) $(SILENT) --makefile $(COMPOSER) --directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
 endif
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(PUBLISH_BUILD_SH))),$(notdir $(PUBLISH_BUILD_SH)))
@@ -7725,13 +7732,13 @@ endif
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_INCLUDE := 0\n"				>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_INCLUDE := 0\n"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/pandoc/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))		>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML)
@@ -7770,14 +7777,14 @@ endif
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS))		>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(NOTHING))		>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)			>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-main).comments.$(EXTN_TEXT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-library)			>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(PUBLISH)-$(TESTING).library$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-features)			>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(PUBLISH)-$(TESTING)-features$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)			>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL)
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS),$(COMPOSER_SETTINGS))
 	@$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(PUBLISH)-$(TESTING).$(EXTN_HTML)\n"			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(PUBLISH)-$(TESTING).$(EXTN_HTML): \\\n'			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) '\t$(PUBLISH)-$(TESTING).library$(COMPOSER_EXT_DEFAULT) \\\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
+	@$(ECHO) '\t$(PUBLISH)-$(TESTING)-features$(COMPOSER_EXT_SPECIAL) \\\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
 		$(eval override MARK := 203$(NUM)-01-01) \
 		$(eval override FILE := $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(MARK)-$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
@@ -7790,19 +7797,25 @@ endif
 		$(ECHO) "---\n"											>>$(FILE); \
 		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) title-block box $(DEPTH_MAX) $(PUBLISH_BUILD_CMD_END)\n"	>>$(FILE); \
 		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)		>>$(FILE); \
-		$(ECHO) "\t$(notdir $(FILE))"					>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS); \
-		$(if $(filter-out 9,$(NUM)),$(ECHO) ' \\\n'			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS);) \
+		$(ECHO) '\t$(notdir $(FILE)) \\\n'				>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS); \
 	)
-	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
+	@$(ECHO) '\t$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@time $(ENV) $(REALMAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
+	@time $(ENV_MAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
 else
-	@time $(ENV) $(REALMAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
-	@time $(ENV) $(REALMAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
+	@time $(ENV_MAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
+	@time $(ENV_MAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
 endif
 
 #WORKING:NOW:NOW
+#	verify: $(eval export $(COMPOSER_OPTIONS))
+#		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
+#	site
+#		steal automatic table of contents from garybgenett/projects, as ".contents", and replace...
+#		add banner and footer...?
+#			create "sections" for nav-*, so they can be dynamically reconfigured...
+#			these are going to be a pita to implement, and then change all the yml files...
 #	build.sh
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 #		which are default "#" links/hashes?  make them so, and remove the need from the configuration files?
@@ -7854,17 +7867,7 @@ $(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
 endef
 
-override define $(PUBLISH)-$(EXAMPLE)-comments =
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) COMMENT $(PUBLISH_BUILD_CMD_END)
-COMMENT
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) REPLY $(PUBLISH_BUILD_CMD_END)
-REPLY
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-endef
-
-override define $(PUBLISH)-$(EXAMPLE)-library =
+override define $(PUBLISH)-$(EXAMPLE)-features =
 ---
 pagetitle: Site Features Page
 ---
@@ -7882,6 +7885,16 @@ $(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)
 </div>
 </div>
 </div>
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+endef
+
+override define $(PUBLISH)-$(EXAMPLE)-comments =
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) COMMENT $(PUBLISH_BUILD_CMD_END)
+COMMENT
+$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) REPLY $(PUBLISH_BUILD_CMD_END)
+REPLY
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 $(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
 endef
 
@@ -7920,12 +7933,22 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Example Pages $(PUBLISH_BUILD_CM
   * [$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)]($(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)) *([$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)]($(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)))*
     * Written for $(COMPOSER_BASENAME), automatic titles and formatting
     * Default settings, with all page elements empty
-  * [$(CONFIGS)/pandoc/MANUAL.$(EXTN_HTML)]($(CONFIGS)/pandoc/MANUAL.$(EXTN_HTML)) *([$(CONFIGS)/pandoc/MANUAL$(COMPOSER_EXT_DEFAULT)]($(CONFIGS)/pandoc/MANUAL$(COMPOSER_EXT_DEFAULT)))*
+  * [$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)]($(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)) *([$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)]($(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)))*
     * External file, written in default syntax, without $(COMPOSER_BASENAME) automatic formatting
     * Inherited settings and page elements, with changed configuration of top menu
-  * [$(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)]($(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction.$(EXTN_HTML)) *([$(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction$(COMPOSER_EXT_DEFAULT)]($(CONFIGS)/bootstrap/site/content/docs/5.1/getting-started/introduction$(COMPOSER_EXT_DEFAULT)))*
+  * [$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)]($($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)) *([$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction$(COMPOSER_EXT_DEFAULT)]($($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction$(COMPOSER_EXT_DEFAULT)))*
     * #WORKING:NOW
     * #WORKING:NOW
+
+  * [$(COMPOSER_BASENAME) $(OUT_README)](<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
+  * [Introduction](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
+  * [Default Site](<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
+  * [Configured Site](<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
+  * [Default Digest Page](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML))
+  * [Configured Digest Page](<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML))
+  * [Default Markdown File](<composer_root>/$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML))
+  * [Configured Markdown File](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML))
+  * [Elements & Includes](<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the .nav/.spacer tokens
 
@@ -7962,8 +7985,6 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Default Configuration $(PUBLISH_
 *(For this test site, the library has been enabled as `$($(PUBLISH)-$(EXAMPLE)-folder)`, along with `auto_update`.)*
 
 $(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-main).comments.$(EXTN_TEXT) $(PUBLISH_BUILD_CMD_END)
 endef
 
 ########################################
@@ -8219,6 +8240,7 @@ ifneq ($(wildcard $(COMPOSER_TMP)),)
 endif
 	@$(call $(PUBLISH)-$(CLEANER))
 	@$(if $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))),\
+		$(eval export $(COMPOSER_OPTIONS)) \
 		$(MAKE) $$($(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))) \
 	)
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
@@ -8277,6 +8299,7 @@ ifneq ($(COMPOSER_DEPENDS),)
 endif
 endif
 	@$(if $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))),\
+		$(eval export $(COMPOSER_OPTIONS)) \
 		$(MAKE) $$($(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))) \
 	)
 ifeq ($(COMPOSER_TARGETS),)
@@ -8286,7 +8309,8 @@ else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(COMPOSER_TARGETS)
 else
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(DOITALL)-$(TARGETS)
+	@$(eval export $(COMPOSER_OPTIONS)) \
+		$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(DOITALL)-$(TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
@@ -8353,16 +8377,16 @@ $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 .PHONY: $(PRINTER)
 $(PRINTER): .set_title-$(PRINTER)
 $(PRINTER): $(HEADERS)-$(PRINTER)
-ifeq ($(COMPOSER_LOG),)
-$(PRINTER): $(NOTHING)-COMPOSER_LOG
-endif
 $(PRINTER): $(PRINTER)-$(PRINTER)
 $(PRINTER):
 	@$(ECHO) ""
 
 #WORK document?  do we really need to document every last target...?
 .PHONY: $(PRINTER)-$(PRINTER)
-$(PRINTER)-$(PRINTER): $(COMPOSER_LOG)
+$(PRINTER)-$(PRINTER): $(if $(COMPOSER_LOG),\
+	$(COMPOSER_LOG) ,\
+	$(NOTHING)-COMPOSER_LOG \
+)
 $(PRINTER)-$(PRINTER):
 	@$(ECHO) ""
 
@@ -8415,7 +8439,7 @@ ifneq ($(c_site),)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call $(PUBLISH)-$(TARGETS),$(COMPOSER_TMP)/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT))
+	@$(call $(PUBLISH)-$(TARGETS),$(COMPOSER_TMP)/$(notdir $(@)).$(DATENAME)$(COMPOSER_EXT_DEFAULT))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 endif
@@ -8423,7 +8447,7 @@ endif
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(notdir $(COMPOSER_TMP))/$(@).$(DATENAME),$(TYPE_LPDF))
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(COMPOSER_TMP)/$(@).$(DATENAME) $($(DEBUGIT)-output)
+	@$(MKDIR) $(COMPOSER_TMP)/$(notdir $(@)).$(DATENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
 	@$(ECHO) "$(_F)"
@@ -8475,7 +8499,8 @@ override define TYPE_TARGETS =
 	) \
 	%$$(COMPOSER_EXT)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+	@$$(eval export $$(COMPOSER_OPTIONS)) \
+		$$(MAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",extension)
 endif
@@ -8490,7 +8515,8 @@ endif
 	) \
 	%
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+	@$$(eval export $$(COMPOSER_OPTIONS)) \
+		$$(MAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",wildcard)
 endif
@@ -8505,7 +8531,8 @@ endif
 	) \
 	$$(c_list)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+	@$$(eval export $$(COMPOSER_OPTIONS)) \
+		$$(MAKE) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",list)
 endif
