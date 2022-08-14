@@ -764,7 +764,7 @@ override LS_TIME			:= $(call COMPOSER_FIND,$(PATH_LIST),ls) -dt
 override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
 override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
-override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --relative-to
+override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --no-symlinks --relative-to
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
 override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
@@ -2277,6 +2277,8 @@ endef
 #		changes to include files will always get missed...
 #		actually, fixed!... now it is just includes and markdown files that are built as targets
 #		note that only the lowest library will be updated...
+#	note: a first troubleshooting step is to do MAKEJOBS="1"
+#		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -3763,7 +3765,7 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 # 1 COMPOSER_LOGO
 
 function $(PUBLISH)-brand {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <h1 class="navbar-brand">
 $$(
@@ -3774,7 +3776,7 @@ $$(
 			| $(SED) "/^null$$/d"
 		)\"><img class=\"$(COMPOSER_TINYNAME)-logo\" src=\"$${1}\"/></a>\\n"
 	else
-		$(ECHO) "<!-- $${FUNCNAME} $(MARKER) logo -->\\n"
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) logo -->\\n"
 	fi
 )
 &nbsp;$$(
@@ -3784,7 +3786,7 @@ $$(
 )
 </h1>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3792,7 +3794,7 @@ _EOF_
 #### {{{4 $(PUBLISH)-search ------------
 
 function $(PUBLISH)-search {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <form class="d-flex" action="$$(
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
@@ -3815,7 +3817,7 @@ $$(
 	| $(SED) "/^null$$/d"
 )</form>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3825,7 +3827,7 @@ _EOF_
 # 1 .variables["$(PUBLISH)-info-$${1}"]	top || bottom
 
 function $(PUBLISH)-info-data {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	INFO="$$(
 		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} ".variables[\"$(PUBLISH)-info-$${1}\"]" 2>/dev/null \\
@@ -3841,9 +3843,10 @@ $$(
 </span>
 _EOF_
 	else
-		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${@} -->\\n"
+		return 0
 	fi
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3859,11 +3862,11 @@ _EOF_
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-top {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(PUBLISH)-nav-begin "1" "1" "$${2}"	|| return 1
 	$(PUBLISH)-nav-top-list "$${1}"		|| return 1
 	$(PUBLISH)-nav-end "top" "1"		|| return 1
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3875,7 +3878,7 @@ function $(PUBLISH)-nav-top {
 # x $(PUBLISH)-nav-top-library 1	titles || authors || dates || tags
 
 function $(PUBLISH)-nav-top-list {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1} | keys | .[]" 2>/dev/null \\
 		| while read -r FILE; do
@@ -3884,6 +3887,7 @@ function $(PUBLISH)-nav-top-list {
 			elif [ "$${FILE}" = ".library-authors" ]; then	$(PUBLISH)-nav-top-library authors	|| return 1; continue
 			elif [ "$${FILE}" = ".library-dates" ]; then	$(PUBLISH)-nav-top-library dates	|| return 1; continue
 			elif [ "$${FILE}" = ".library-tags" ]; then	$(PUBLISH)-nav-top-library tags		|| return 1; continue
+			elif [ "$${FILE}" = ".contents" ]; then		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)\\n"; continue
 			fi
 			LINK="$$(
 				$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
@@ -3936,7 +3940,7 @@ _EOF_
 				fi
 			fi
 		done
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3946,11 +3950,12 @@ _EOF_
 # 1 titles || authors || dates || tags
 
 function $(PUBLISH)-nav-top-library {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(CAT) $${PUBLISH_LIBRARY_INDEX} \\
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 	| while read -r FILE; do
-		$(CAT) <<_EOF_
+$(CAT) <<_EOF_
 <li><a class="dropdown-item" href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE} ($$(
@@ -3960,6 +3965,7 @@ function $(PUBLISH)-nav-top-library {
 ))</a></li>
 _EOF_
 	done
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3975,7 +3981,7 @@ _EOF_
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-bottom {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(PUBLISH)-nav-begin "" "" ""		|| return 1
 $(CAT) <<_EOF_
 <li class="nav-item me-3">$$(
@@ -3987,7 +3993,7 @@ $(CAT) <<_EOF_
 _EOF_
 	$(PUBLISH)-nav-bottom-list "$${1}"	|| return 1
 	$(PUBLISH)-nav-end "bottom" ""		|| return 1
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -3997,13 +4003,13 @@ _EOF_
 # 1 .variables["$(PUBLISH)-nav-bottom"]
 
 function $(PUBLISH)-nav-bottom-list {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	if [ -z "$$(
 		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1}" 2>/dev/null \\
 		| $(SED) "/^null$$/d"
 	)" ]; then
-		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${@} -->\\n"
 		return 0
 	fi
 $(CAT) <<_EOF_
@@ -4030,7 +4036,7 @@ _EOF_
 $(CAT) <<_EOF_
 </ol></li>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4046,11 +4052,11 @@ function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side "$${@}" || return 1; return 0
 function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(PUBLISH)-column-begin ""		|| return 1
 	$(PUBLISH)-nav-side-list "$${1}"	|| return 1
 	$(PUBLISH)-column-end			|| return 1
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4064,14 +4070,13 @@ function $(PUBLISH)-nav-side {
 # x $(PUBLISH)-spacer
 
 function $(PUBLISH)-nav-side-list {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	SIZE="$$(
 		$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
 		| $${YQ_WRITE} "$${1} | length" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 	)"
-	NUM="0"
-	while [ "$${NUM}" -lt "$${SIZE}" ]; do
+	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[\"$${NUM}\"] -->\\n"
 		TEXT="$$(
 			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
@@ -4082,6 +4087,7 @@ function $(PUBLISH)-nav-side-list {
 		elif [ "$${TEXT}" = ".library-authors" ]; then	$(PUBLISH)-nav-side-library authors	|| return 1
 		elif [ "$${TEXT}" = ".library-dates" ]; then	$(PUBLISH)-nav-side-library dates	|| return 1
 		elif [ "$${TEXT}" = ".library-tags" ]; then	$(PUBLISH)-nav-side-library tags	|| return 1
+		elif [ "$${TEXT}" = ".contents" ]; then		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)\\n"
 		elif [ "$${TEXT}" = ".spacer" ]; then		$(PUBLISH)-spacer			|| return 1
 		elif [ "$$(
 			$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
@@ -4102,7 +4108,7 @@ function $(PUBLISH)-nav-side-list {
 		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[\"$${NUM}\"] -->\\n"
 		NUM="$$($(EXPR) $${NUM} + 1)"
 	done
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4114,7 +4120,7 @@ function $(PUBLISH)-nav-side-list {
 function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side-library {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <table class="table table-sm table-borderless align-top text-nowrap">
 _EOF_
@@ -4122,7 +4128,7 @@ _EOF_
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 	| while read -r FILE; do
-		$(CAT) <<_EOF_
+$(CAT) <<_EOF_
 <tr><td><a href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE}</a></td><td class="text-end">$$(
@@ -4135,7 +4141,7 @@ _EOF_
 $(CAT) <<_EOF_
 </table>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1} -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4147,7 +4153,7 @@ _EOF_
 # 3 $(PUBLISH)-brand 1			COMPOSER_LOGO
 
 function $(PUBLISH)-nav-begin {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <nav class="navbar navbar-expand-sm fixed-$$(
 	if [ -n "$${1}" ]; then	$(ECHO) "top"
@@ -4164,7 +4170,7 @@ $(CAT) <<_EOF_
 </button>
 $$(
 	if [ -n "$${2}" ]; then	$(PUBLISH)-brand "$${3}" || return 1
-	else			$(ECHO) "<!-- $${FUNCNAME} $(MARKER) brand -->\\n"
+				$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) brand -->\\n"
 	fi
 )
 <div class="collapse navbar-collapse" id="navbar-fixed-$$(
@@ -4174,7 +4180,7 @@ $$(
 )">
 <ul class="navbar-nav navbar-nav-scroll me-auto">
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4185,7 +4191,7 @@ _EOF_
 # 2 $(PUBLISH)-search			true = search
 
 function $(PUBLISH)-nav-end {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </ul>
 $$(
@@ -4197,14 +4203,14 @@ $$(
 	)" ]; then
 		$(PUBLISH)-search || return 1
 	else
-		$(ECHO) "<!-- $${FUNCNAME} $(MARKER) search -->\\n"
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) search -->\\n"
 	fi
 )
 </div>
 </div>
 </nav>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4212,7 +4218,7 @@ _EOF_
 #### {{{4 $(PUBLISH)-row-begin ---------
 
 function $(PUBLISH)-row-begin {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <div class="container-fluid$$(
 	COPY_SAFE="$$(
@@ -4226,7 +4232,7 @@ $(CAT) <<_EOF_
 )">
 <div class="d-flex flex-row flex-wrap">
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4234,12 +4240,12 @@ _EOF_
 #### {{{4 $(PUBLISH)-row-end -----------
 
 function $(PUBLISH)-row-end {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </div>
 </div>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4249,7 +4255,7 @@ _EOF_
 # 1 true = main
 
 function $(PUBLISH)-column-begin {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <div class="d-flex flex-column$$(
 	if [ -n "$${1}" ]; then
@@ -4284,7 +4290,7 @@ $(CAT) <<_EOF_
 	elif [ "$${PUBLISH_COLS_STICKY}" = "1" ]; then	$(ECHO) " $(COMPOSER_TINYNAME)-sticky"; fi
 ) p-2">
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4292,11 +4298,11 @@ _EOF_
 #### {{{4 $(PUBLISH)-column-end --------
 
 function $(PUBLISH)-column-end {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </div>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4308,7 +4314,7 @@ _EOF_
 # 3 title				$${@:3} = $${3}++
 
 function $(PUBLISH)-pane-begin {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <div class="accordion">
 <div class="accordion-item">
@@ -4324,7 +4330,7 @@ $${@:3}
 )">
 <div class="accordion-body">
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4332,14 +4338,14 @@ _EOF_
 #### {{{4 $(PUBLISH)-pane-end ----------
 
 function $(PUBLISH)-pane-end {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </div>
 </div>
 </div>
 </div>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4350,7 +4356,7 @@ _EOF_
 # 2 title				$${@:2} = $${2}++
 
 function $(PUBLISH)-box-begin {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <div class="card">
 <h$${1} class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
@@ -4358,7 +4364,7 @@ $${@:2}
 </h$${1}>
 <div class="card-body">
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4366,12 +4372,12 @@ _EOF_
 #### {{{4 $(PUBLISH)-box-end -----------
 
 function $(PUBLISH)-box-end {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </div>
 </div>
 _EOF_
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4379,9 +4385,9 @@ _EOF_
 #### {{{4 $(PUBLISH)-spacer ------------
 
 function $(PUBLISH)-spacer {
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(ECHO) "$(HTML_BREAK)\\n"
-	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end -->\\n"
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
 
@@ -4415,6 +4421,7 @@ function $(PUBLISH)-file {
 			$(ECHO) "pagetitle: \"$${TITL}\"\\n"
 			$(ECHO) "---\\n"
 		fi
+		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) done $(MARKER) $${@} -->\\n"
 		return 0
 	fi
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -4423,7 +4430,7 @@ function $(PUBLISH)-file {
 		$(ECHO) "<!-- title-block $(DIVIDE) begin $(MARKER) $${HEAD} -->\\n"
 		$(PUBLISH)-$$($(ECHO) "$${HEAD}" | $(SED) "s|^([^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
 			NAME="$$(
-				$(SED) "1,/$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
+				$(SED) "1,/^$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
 				| $${YQ_WRITE} ".author" 2>/dev/null \\
 				| $(SED) "/^null$$/d"
 			)"
@@ -4438,7 +4445,7 @@ function $(PUBLISH)-file {
 				fi
 			fi
 			DATE="$$(
-				$(SED) "1,/$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
+				$(SED) "1,/^$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
 				| $${YQ_WRITE} ".date" 2>/dev/null \\
 				| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \\
 				| $(SED) "/^null$$/d"
@@ -4459,11 +4466,11 @@ function $(PUBLISH)-file {
 				$(ECHO) "$${NAME}"
 			fi
 		) || return 1
-		$(ECHO) "<!-- title-block $(DIVIDE) end -->\\n"
+		$(ECHO) "<!-- title-block $(DIVIDE) end $(MARKER) $${HEAD} -->\\n"
 	fi
 	$(ECHO) "\\n"
 	if [ -n "$${HEAD}" ]; then
-		$(SED) "1,/$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/d" $${1}
+		$(SED) "1,/^$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/d" $${1}
 	else
 		if [ -n "$$(
 			$(HEAD) -n1 $${1} \\
@@ -5478,9 +5485,9 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "$(DEPTH_MAX)" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		else \
-			$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) pane-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) pane-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		fi; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
@@ -5501,7 +5508,7 @@ endef
 
 override define TITLE_END =
 	if [ -n "$(c_site)" ]; then \
-		$(ECHO) "$(_N)\n$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n\n"; \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 	fi
 endef
 
@@ -7112,8 +7119,65 @@ override define $(PUBLISH)-$(TARGETS) =
 		done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	if [ -n "$$($(SED) -n "/^$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)$$/p" $(1))" ]; then \
+		$(ECHO) "$(_D)"; \
+		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
+		$(ECHO) "$(_E)"; \
+		$(call $(PUBLISH)-$(TARGETS)-contents,$(if $(c_list_plus),$(c_list_plus),$(c_list)),$(DEPTH_MAX)) \
+			| $(TEE) $(1).contents $($(PUBLISH)-$(DEBUGIT)-output); \
+			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)$$/r $(1).contents" $(1); \
+	fi
 	$(ECHO) "$(_D)"; \
 	$(eval override c_list := $(1))
+endef
+
+override define $(PUBLISH)-$(TARGETS)-contents =
+	FILE="$$( \
+		$(CAT) $(1) \
+		| $(PANDOC) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
+		| $(YQ_WRITE) ".blocks | map(select(.t == \"Header\")) | map(.c)" \
+	)"; \
+	MAX="$(2)"; if [ -z "$${MAX}" ]; then \
+		MAX="$(DEPTH_MAX)"; \
+	fi; \
+	NUM="0"; while [ "$${NUM}" -lt "$$( \
+		$(ECHO) "$${FILE}" \
+		| $(YQ_WRITE) "length" \
+	)" ]; do \
+		LVL="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][0]")"; \
+		LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1][0]")"; \
+		TXT=; STR="0"; while [ "$${STR}" -lt "$$( \
+			$(ECHO) "$${FILE}" \
+			| $(YQ_WRITE) ".[$${NUM}][2] | length" \
+		)" ]; do \
+			TYP="$$( \
+				$(ECHO) "$${FILE}" \
+				| $(YQ_WRITE) ".[$${NUM}][2][$${STR}][\"t\"]" \
+			)"; \
+			if [ "$${TYP}" = "Space" ]; then \
+				TXT="$${TXT} "; \
+			elif [ "$${TYP}" = "Str" ]; then \
+				TXT="$${TXT}$$( \
+					$(ECHO) "$${FILE}" \
+					| $(YQ_WRITE) ".[$${NUM}][2][$${STR}][\"c\"]" \
+				)"; \
+			fi; \
+			STR="$$($(EXPR) $${STR} + 1)"; \
+		done; \
+		if [ "$${LVL}" -le "$${MAX}" ]; then \
+			if [ "$${LVL}" = "1" ]; then	$(ECHO) "  *"; \
+			elif [ "$${LVL}" = "2" ]; then	$(ECHO) "    *"; \
+			elif [ "$${LVL}" = "3" ]; then	$(ECHO) "        *"; \
+			elif [ "$${LVL}" = "4" ]; then	$(ECHO) "            *"; \
+			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"; \
+			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"; \
+			fi; \
+			$(ECHO) " [$${TXT}](#$${LNK})"; \
+			$(ECHO) "\n"; \
+		fi; \
+		NUM="$$($(EXPR) $${NUM} + 1)"; \
+	done
 endef
 
 ########################################
@@ -7660,20 +7724,20 @@ override define $(PUBLISH)-library-digest-create =
 		$(ECHO) " $(PUBLISH_BUILD_CMD_END)\n\n" \
 			| $(TEE) --append $(1) \
 			$($(DEBUGIT)-output); \
-	$(CAT) "$(abspath $(dir $(COMPOSER_LIBRARY)))/$(2)" \
+	$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 		| $(PANDOC) --strip-comments --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_LINT)" \
-		| $(SED) "/$(PUBLISH_BUILD_CMD_BEG) .+ $(PUBLISH_BUILD_CMD_END)/d" \
+		| $(SED) "/^$(PUBLISH_BUILD_CMD_BEG) .+ $(PUBLISH_BUILD_CMD_END)$$/d" \
 		| $(TR) '\n' '$(TOKEN)' \
 		| $(SED) "s|^(.{$($(PUBLISH)-library-digest_chars)}).+$$|\1 $($(PUBLISH)-library-digest_continue)|g" \
 		| $(TR) '$(TOKEN)' '\n' \
 		| $(TEE) --append $(1) \
 		$($(DEBUGIT)-output); \
-	$(ECHO) "\n\n<a href=\"$$( \
+	$(ECHO) "\n\n[$($(PUBLISH)-library-digest_permalink)]($$( \
 			$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 			| $(SED) "s|$(3)$$|.$(EXTN_HTML)|g" \
-		)\">$($(PUBLISH)-library-digest_permalink)</a>\n" \
-			| $(TEE) --append $(1) \
-			$($(DEBUGIT)-output); \
+		))\n" \
+		| $(TEE) --append $(1) \
+		$($(DEBUGIT)-output); \
 	$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n" \
 		| $(TEE) --append $(1) \
 		$($(DEBUGIT)-output); \
@@ -7812,11 +7876,20 @@ endif
 #	verify: $(eval export $(COMPOSER_OPTIONS))
 #		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
 #	site
-#		steal automatic table of contents from garybgenett/projects, as ".contents", and replace...
+#		css tables align=top
+#		add ".contents" to site-template-all
+#			add a "depth" option to ".contents"...
+#			make it work on "$(1)" instead of "$(c_list)"?
+#				do a "function-loop" walk of the ast, and pull out the "header" paths
+#			need a test for all ascii characters...
 #		add banner and footer...?
 #			create "sections" for nav-*, so they can be dynamically reconfigured...
 #			these are going to be a pita to implement, and then change all the yml files...
+#		light color versions of all icons, for dark backgrounds...
+#			https://github.com/logos ... etc.
+#		https://github.com/garybgenett/www.garybgenett.net
 #	build.sh
+#		are "file path"s getting truncated?
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 #		which are default "#" links/hashes?  make them so, and remove the need from the configuration files?
 #		convert echo/cat/etc. to passed-in variables, because paths may be different between systems...
