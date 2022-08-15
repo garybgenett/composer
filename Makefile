@@ -215,8 +215,8 @@ override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 override HTML_BREAK			:= <p></p>
 override MENU_SELF			:= _
 
-override PUBLISH_COLS_MAIN_SIZE		:= 8
-override PUBLISH_COLS_MOBILE_HIDE	:= 0
+override PUBLISH_COLS_MAIN_SIZE		:= 6
+override PUBLISH_COLS_MOBILE_HIDE	:= 1
 override PUBLISH_COLS_STICKY		:= 1
 override PUBLISH_COPY_SAFE		:= 1
 
@@ -2140,6 +2140,8 @@ endef
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-REQUIRE -
 
+#WORK update this... the "bin" directory fixed this...
+
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
 integrated, including $(_C)[Pandoc]$(_D).  The repository needs to be initialized with
@@ -2279,6 +2281,9 @@ endef
 #		note that only the lowest library will be updated...
 #	note: a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
+#WORK
+#	add a list of the formats here...
+#	make sure all the level2 sections have links to the sub-sections...
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -2290,6 +2295,8 @@ commonly used document formats.
 Further options for each document type are in $(_C)[Formatting Variables]$(_D).  All
 improvements not exposed as variables will apply to all documents created with a
 given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+#WORK remove heredoc...
 
 Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
 and '$(_E)Heredoc$(_D)' sections of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the
@@ -2775,6 +2782,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
+#WORK either remove $(PUBLISH) here, or add it to the ones above...
+
   * The list of $(_C)[COMPOSER_TARGETS]$(_D) and $(_C)[COMPOSER_SUBDIRS]$(_D) to skip with $(_C)[$(PUBLISH)]$(_D),
     $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and $(_C)[$(DOITALL)]$(_D).  This allows for selective auto-detection,
     when the list of items to process is larger than those to leave alone.
@@ -3181,8 +3190,8 @@ override define HEREDOC_GITIGNORE =
 #>**/$(COMPOSER_SETTINGS)
 #>**/$(COMPOSER_YML)
 #>**/$(COMPOSER_CSS)
-#>**/$(COMPOSER_LOG_DEFAULT)
 
+**/$(COMPOSER_LOG_DEFAULT)
 **$(patsubst $(COMPOSER_DIR)%,%,$(COMPOSER_TMP))/
 
 ########################################
@@ -7098,36 +7107,60 @@ endef
 override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "$(_E)"; \
 	$(ECHO) "" >$(1); \
-	$(call PUBLISH_BUILD_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
+	$(ECHO) "" >$(1).$(COMPOSER_BASENAME); \
+	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1).$(COMPOSER_BASENAME)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
+	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
+			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$${FILE}) -->\n"; \
+			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
+		done \
+		| $(TEE) --append $(1).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	if [ -n "$$( \
+		$(SED) -n "/^$(PUBLISH_BUILD_CMD_BEG) contents .*$(PUBLISH_BUILD_CMD_END)$$/p" \
+			$(foreach FILE,$($(PUBLISH)-caches-begin),$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)) \
+			$(foreach FILE,$($(PUBLISH)-caches-end),$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)) \
+	)" ]; then \
+		$(ECHO) "$(_D)"; \
+		$(call $(HEADERS)-note,$(1).$(COMPOSER_BASENAME),contents,$(PUBLISH)); \
+		$(ECHO) "$(_E)"; \
+		$(call $(PUBLISH)-$(TARGETS)-contents,$(1).$(COMPOSER_BASENAME),$(DEPTH_MAX)) \
+			| $(TEE) $(1).contents $($(DEBUGIT)-output); \
+			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	fi; \
+	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
+	$(call PUBLISH_BUILD_SH_RUN) $(patsubst $(CURDIR)/%,%,$(1).$(COMPOSER_BASENAME)) title-block \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $($(PUBLISH)-caches-begin); do \
-			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
+			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
 			$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 		done \
+		| if [ -f $(1).contents ]; then \
+			$(SED) "/^$(PUBLISH_BUILD_CMD_BEG) contents .*$(PUBLISH_BUILD_CMD_END)$$/r $(1).contents"; \
+		else \
+			$(CAT); \
+		fi \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
-			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$${FILE}) -->\n"; \
-			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
-		done \
+	$(CAT) $(1).$(COMPOSER_BASENAME) \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $($(PUBLISH)-caches-end); do \
-			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(DIVIDE) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
+			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
 			$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 		done \
+		| if [ -f $(1).contents ]; then \
+			$(SED) "/^$(PUBLISH_BUILD_CMD_BEG) contents .*$(PUBLISH_BUILD_CMD_END)$$/r $(1).contents"; \
+		else \
+			$(CAT); \
+		fi \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	if [ -n "$$($(SED) -n "/^$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)$$/p" $(1))" ]; then \
-		$(ECHO) "$(_D)"; \
-		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
-		$(ECHO) "$(_E)"; \
-		$(call $(PUBLISH)-$(TARGETS)-contents,$(if $(c_list_plus),$(c_list_plus),$(c_list)),$(DEPTH_MAX)) \
-			| $(TEE) $(1).contents $($(PUBLISH)-$(DEBUGIT)-output); \
-			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)$$/r $(1).contents" $(1); \
-	fi
+	$(ECHO) "$(_S)"; \
+	$(RM) \
+		$(1).$(COMPOSER_BASENAME) $($(DEBUGIT)-output) \
+		$(1).contents $($(DEBUGIT)-output) \
+		; \
 	$(ECHO) "$(_D)"; \
 	$(eval override c_list := $(1))
 endef
@@ -7277,8 +7310,8 @@ $($(PUBLISH)-library):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
-#>	@$(ENV_MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+#>	@$(ENV_MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -7571,9 +7604,7 @@ $($(PUBLISH)-library-digest):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(MAKE) c_site="1" \
-		$(if $(COMPOSER_DEBUGIT),,$(SILENT)) \
-		$$($(call $(PUBLISH)-library-digest-list))
+	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
 	@$(ECHO) "$(_F)"
 	@$(ECHO) "" >$(@)
 	@$(ECHO) "---\n" >>$(@)
@@ -7878,6 +7909,8 @@ endif
 #	site
 #		css tables align=top
 #		add ".contents" to site-template-all
+#			garybgenett -> Error: open . as $file ireduce ({}; . *+ $file): no such file or directory
+#				works -> home projects gary-os composer / contents 3 / history / tags
 #			add a "depth" option to ".contents"...
 #			make it work on "$(1)" instead of "$(c_list)"?
 #				do a "function-loop" walk of the ast, and pull out the "header" paths
@@ -8078,8 +8111,8 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Configuration Settings $(PUBLISH
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| cols_main_size   | $(PUBLISH_COLS_MAIN_SIZE) | 6
-| cols_mobile_hide | $(PUBLISH_COLS_MOBILE_HIDE) | 1
+| cols_main_size   | $(PUBLISH_COLS_MAIN_SIZE) | 8
+| cols_mobile_hide | $(PUBLISH_COLS_MOBILE_HIDE) | 0
 | cols_sticky      | $(PUBLISH_COLS_STICKY) | 0
 | copy_safe        | $(PUBLISH_COPY_SAFE) | 0
 
@@ -8089,8 +8122,8 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(DEPTH_MAX) Configuration Settings $(PUBLISH
 | auto_update      | $(LIBRARY_AUTO_UPDATE) | 1
 | digest_title     | $(LIBRARY_DIGEST_TITLE) | Digest
 | digest_count     | $(LIBRARY_DIGEST_COUNT) | 20
-| digest_expanded  | $(LIBRARY_DIGEST_EXPANDED) | 1
-| digest_chars     | $(LIBRARY_DIGEST_CHARS) | 512
+| digest_expanded  | $(LIBRARY_DIGEST_EXPANDED) | 5
+| digest_chars     | $(LIBRARY_DIGEST_CHARS) | 2048
 | digest_spacer    | $(LIBRARY_DIGEST_SPACER) | 0
 | digest_continue  | $(LIBRARY_DIGEST_CONTINUE) | \*(continued)\*
 | digest_permalink | $(LIBRARY_DIGEST_PERMALINK) | (permalink)
@@ -8172,8 +8205,8 @@ override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS) =
 variables:
 
   $(PUBLISH)-config:
-    cols_main_size:			6
-    cols_mobile_hide:			1
+    cols_main_size:			8
+    cols_mobile_hide:			0
     cols_sticky:			0
     copy_safe:				0
 
@@ -8182,8 +8215,8 @@ variables:
     auto_update:			1
     digest_title:			Digest
     digest_count:			20
-    digest_expanded:			1
-    digest_chars:			512
+    digest_expanded:			5
+    digest_chars:			2048
     digest_spacer:			0
     digest_continue:			"*(continued)*"
     digest_permalink:			(permalink)
@@ -8279,7 +8312,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(MAKE) --makefile $(COMPOSER) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(EXAMPLE)$(2) >$(1); \
+		$(MAKE) $(SILENT) --makefile $(COMPOSER) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(EXAMPLE)$(2) >$(1); \
 	fi; \
 	if [ -n "$(3)" ]; then \
 		$(SED) -i \
