@@ -7128,7 +7128,7 @@ override define $(PUBLISH)-$(TARGETS) =
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	fi; \
 	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
-	$(call PUBLISH_BUILD_SH_RUN) $(patsubst $(CURDIR)/%,%,$(1).$(COMPOSER_BASENAME)) title-block \
+	$(call PUBLISH_BUILD_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $($(PUBLISH)-caches-begin); do \
