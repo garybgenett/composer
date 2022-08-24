@@ -218,7 +218,8 @@ override HTML_BREAK_LINE		:= //
 override MENU_SELF			:= _
 
 override PUBLISH_COLS_MAIN_SIZE		:= 6
-override PUBLISH_COLS_MOBILE_HIDE	:= 1
+override PUBLISH_COLS_HIDE_LEFT		:= 1
+override PUBLISH_COLS_HIDE_RIGHT	:= 1
 override PUBLISH_COLS_STICKY		:= 1
 override PUBLISH_COPY_SAFE		:= 1
 
@@ -3286,7 +3287,8 @@ $(_S)########################################$(_D)
     $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
 
     $(_C)cols_main_size$(_D):			$(_M)$(PUBLISH_COLS_MAIN_SIZE)$(_D)
-    $(_C)cols_mobile_hide$(_D):			$(_M)$(PUBLISH_COLS_MOBILE_HIDE)$(_D)
+    $(_C)cols_hide_left$(_D):			$(_M)$(PUBLISH_COLS_HIDE_LEFT)$(_D)
+    $(_C)cols_hide_right$(_D):			$(_M)$(PUBLISH_COLS_HIDE_RIGHT)$(_D)
     $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
     $(_C)copy_safe$(_D):				$(_M)$(PUBLISH_COPY_SAFE)$(_D)
 
@@ -3430,7 +3432,8 @@ variables:
     copyright:				$(COPYRIGHT_SHORT)
 
     cols_main_size:			6
-    cols_mobile_hide:			1
+    cols_hide_left:			1
+    cols_hide_right:			1
     cols_sticky:			1
     copy_safe:				0
 
@@ -3737,7 +3740,8 @@ DEPTH_MAX="$(DEPTH_MAX)"
 HTML_BREAK="$(HTML_BREAK)"
 
 PUBLISH_COLS_MAIN_SIZE="$(PUBLISH_COLS_MAIN_SIZE)"
-PUBLISH_COLS_MOBILE_HIDE="$(PUBLISH_COLS_MOBILE_HIDE)"
+PUBLISH_COLS_HIDE_LEFT="$(PUBLISH_COLS_HIDE_LEFT)"
+PUBLISH_COLS_HIDE_RIGHT="$(PUBLISH_COLS_HIDE_RIGHT)"
 PUBLISH_COLS_STICKY="$(PUBLISH_COLS_STICKY)"
 PUBLISH_COPY_SAFE="$(PUBLISH_COPY_SAFE)"
 
@@ -3874,19 +3878,19 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-nav-top -----------
 
-# 1 $(PUBLISH)-nav-top-list 1		$(PUBLISH)-nav-top
-# 2 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
+# 1 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
 
 # x $(PUBLISH)-nav-begin 1		true = top
 # x $(PUBLISH)-nav-begin 2		true = brand
+# x $(PUBLISH)-nav-top-list 1		$(PUBLISH)-nav-top
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "1" "1" "$${2}"	|| return 1
-	$(PUBLISH)-nav-top-list "$${1}"		|| return 1
-	$(PUBLISH)-nav-end "top" "1"		|| return 1
+	$(PUBLISH)-nav-begin "1" "1" "$${1}"		|| return 1
+	$(PUBLISH)-nav-top-list "$(PUBLISH)-nav-top"	|| return 1
+	$(PUBLISH)-nav-end "top" "1"			|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -3994,17 +3998,16 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-nav-bottom --------
 
-# 1 $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom
-
 # x $(PUBLISH)-nav-begin 1		true = top
 # x $(PUBLISH)-nav-begin 2		true = brand
 # x $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
+# x $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-bottom {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "" "" ""		|| return 1
+	$(PUBLISH)-nav-begin "" "" ""				|| return 1
 $(CAT) <<_EOF_
 <li class="nav-item me-3">$$(
 	$(ECHO) "$${YQ_DATA}" \\
@@ -4013,8 +4016,8 @@ $(CAT) <<_EOF_
 )</li>
 <li class="nav-item me-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
 _EOF_
-	$(PUBLISH)-nav-bottom-list "$${1}"	|| return 1
-	$(PUBLISH)-nav-end "bottom" ""		|| return 1
+	$(PUBLISH)-nav-bottom-list "$(PUBLISH)-nav-bottom"	|| return 1
+	$(PUBLISH)-nav-end "bottom" ""				|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4066,19 +4069,19 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-nav-side ----------
 
-# 1 $(PUBLISH)-nav-side-list 1		$(PUBLISH)-nav-left || $(PUBLISH)-nav-left
+# 1 $(PUBLISH)-column-begin 1		left || center || right
+# 1 $(PUBLISH)-nav-side-list 1		$(PUBLISH)-nav-left || $(PUBLISH)-nav-right
 
-# x $(PUBLISH)-column-begin 1		true = main
 # x $(PUBLISH)-column-end
 
-function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side "$${@}" || return 1; return 0; }
-function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side "$${@}" || return 1; return 0; }
+function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side left "$${@}" || return 1; return 0; }
+function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-column-begin ""		|| return 1
-	$(PUBLISH)-nav-side-list "$${1}"	|| return 1
-	$(PUBLISH)-column-end			|| return 1
+	$(PUBLISH)-column-begin "$${1}"			|| return 1
+	$(PUBLISH)-nav-side-list "$(PUBLISH)-nav-$${1}"	|| return 1
+	$(PUBLISH)-column-end				|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4086,7 +4089,7 @@ function $(PUBLISH)-nav-side {
 ########################################
 #### {{{4 $(PUBLISH)-nav-side-list -----
 
-# 1 $(PUBLISH)-nav-left || $(PUBLISH)-nav-left
+# 1 $(PUBLISH)-nav-left || $(PUBLISH)-nav-right
 
 # x $(PUBLISH)-nav-side-library 1	titles || authors || dates || tags
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
@@ -4276,13 +4279,31 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-column-begin ------
 
-# 1 true = main
+# 1 left || center || right
 
 function $(PUBLISH)-column-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 <div class="d-flex flex-column$$(
-	if [ -n "$${1}" ]; then
+	if [ "$${1}" = "left" ]; then
+		COLS_HIDE_LEFT="$$(
+			$(ECHO) "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_hide_left\"]" 2>/dev/null \\
+			| $(SED) "/^null$$/d"
+		)"
+		if [ -n "$${COLS_HIDE_LEFT}" ]; then
+			if [ "$${COLS_HIDE_LEFT}" = "1" ]; then		$(ECHO) " d-none d-sm-block"; fi
+		elif [ "$${PUBLISH_HIDE_LEFT}" = "1" ]; then		$(ECHO) " d-none d-sm-block"; fi
+	elif [ "$${1}" = "right" ]; then
+		COLS_HIDE_RIGHT="$$(
+			$(ECHO) "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_hide_right\"]" 2>/dev/null \\
+			| $(SED) "/^null$$/d"
+		)"
+		if [ -n "$${COLS_HIDE_RIGHT}" ]; then
+			if [ "$${COLS_HIDE_RIGHT}" = "1" ]; then	$(ECHO) " d-none d-sm-block"; fi
+		elif [ "$${PUBLISH_HIDE_RIGHT}" = "1" ]; then		$(ECHO) " d-none d-sm-block"; fi
+	else
 		COLS_MAIN_SIZE="$$(
 			$(ECHO) "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_main_size\"]" 2>/dev/null \\
@@ -4293,20 +4314,11 @@ $(CAT) <<_EOF_
 			else					$(ECHO) "$${PUBLISH_COLS_MAIN_SIZE}"
 			fi
 		)"
-	else
-		COLS_MOBILE_HIDE="$$(
-			$(ECHO) "$${YQ_DATA}" \\
-			| $${YQ_WRITE} "$(PUBLISH)-config.[\"cols_mobile_hide\"]" 2>/dev/null \\
-			| $(SED) "/^null$$/d"
-		)"
-		if [ -n "$${COLS_MOBILE_HIDE}" ]; then
-			if [ "$${COLS_MOBILE_HIDE}" = "1" ]; then	$(ECHO) " d-none d-sm-block"; fi
-		elif [ "$${PUBLISH_COLS_MOBILE_HIDE}" = "1" ]; then	$(ECHO) " d-none d-sm-block"; fi
 	fi
 )$$(
 	COLS_STICKY="$$(
 		$(ECHO) "$${YQ_DATA}" \\
-		| $${YQ_WRITE} "$(PUBLISH)-config.[\"cols_sticky\"]" 2>/dev/null \\
+		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_sticky\"]" 2>/dev/null \\
 		| $(SED) "/^null$$/d"
 	)"
 	if [ -n "$${COLS_STICKY}" ]; then
@@ -7190,6 +7202,10 @@ endef
 ########################################
 ### {{{4 $(PUBLISH)-$(TARGETS)-contents
 
+#WORKING:NOW:NOW
+#	contents on digest = 1
+#		strip $(HTML_BREAK_LINE) from list items
+
 override define $(PUBLISH)-$(TARGETS)-contents =
 	FILE="$$( \
 		$(CAT) $(1) \
@@ -7265,11 +7281,11 @@ $($(PUBLISH)-caches):
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "$(PUBLISH)-$($(@))" "$(COMPOSER_LOGO)"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "$(COMPOSER_LOGO)"; \
 	elif [ "$($(@))" != "$(patsubst nav-%,%,$($(@)))" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "$(PUBLISH)-$($(@))"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "1"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "center"; \
 	else \
 		$(call PUBLISH_BUILD_SH_RUN) "$($(@))"; \
 	fi \
@@ -7735,11 +7751,6 @@ endef
 ########################################
 ### {{{4 $(PUBLISH)-library-digest-create
 
-#WORKING:NOW:NOW
-#	contents on digest = 1
-#		strip $(HTML_BREAK_LINE) from list items
-#	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin $(DEPTH_MAX) $(4) " \
-
 #> update: YQ_WRITE.*title
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
@@ -8162,10 +8173,11 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLIS
 
 | $(PUBLISH)-config | defaults
 |:---|:---|
-| cols_main_size   | $(PUBLISH_COLS_MAIN_SIZE)
-| cols_mobile_hide | $(PUBLISH_COLS_MOBILE_HIDE)
-| cols_sticky      | $(PUBLISH_COLS_STICKY)
-| copy_safe        | $(PUBLISH_COPY_SAFE)
+| cols_main_size  | $(PUBLISH_COLS_MAIN_SIZE)
+| cols_hide_left  | $(PUBLISH_COLS_HIDE_LEFT)
+| cols_hide_right | $(PUBLISH_COLS_HIDE_RIGHT)
+| cols_sticky     | $(PUBLISH_COLS_STICKY)
+| copy_safe       | $(PUBLISH_COPY_SAFE)
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
@@ -8202,10 +8214,11 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLI
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| cols_main_size   | $(PUBLISH_COLS_MAIN_SIZE) | 8
-| cols_mobile_hide | $(PUBLISH_COLS_MOBILE_HIDE) | 0
-| cols_sticky      | $(PUBLISH_COLS_STICKY) | 0
-| copy_safe        | $(PUBLISH_COPY_SAFE) | 0
+| cols_main_size  | $(PUBLISH_COLS_MAIN_SIZE) | 8
+| cols_hide_left  | $(PUBLISH_COLS_hide_left) | 0
+| cols_hide_right | $(PUBLISH_COLS_hide_right) | 0
+| cols_sticky     | $(PUBLISH_COLS_STICKY) | 0
+| copy_safe       | $(PUBLISH_COPY_SAFE) | 0
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
@@ -8297,7 +8310,8 @@ variables:
 
   $(PUBLISH)-config:
     cols_main_size:			8
-    cols_mobile_hide:			0
+    cols_hide_left:			0
+    cols_hide_right:			0
     cols_sticky:			0
     copy_safe:				0
 
