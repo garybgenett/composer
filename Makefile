@@ -3913,7 +3913,13 @@ function $(PUBLISH)-nav-top-list {
 			elif [ "$${FILE}" = ".library-authors" ]; then	$(PUBLISH)-nav-top-library authors	|| return 1; continue
 			elif [ "$${FILE}" = ".library-dates" ]; then	$(PUBLISH)-nav-top-library dates	|| return 1; continue
 			elif [ "$${FILE}" = ".library-tags" ]; then	$(PUBLISH)-nav-top-library tags		|| return 1; continue
-			elif [ "$${FILE}" = ".contents" ]; then		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)\\n"; continue
+			elif [ -n "$$(
+				$(ECHO) "$${FILE}" | $(SED) -n "/^[.]contents/p"
+			)" ]; then
+				$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $$(
+					$(ECHO) "$${FILE}" | $(SED) "s|^[.](contents)[-]?(.*)$$|\\1 \\2|g"
+				) $(PUBLISH_BUILD_CMD_END)\\n"
+				continue
 			fi
 			LINK="$$(
 				$(ECHO) "$${YQ_DATA}" \\
@@ -4109,12 +4115,17 @@ function $(PUBLISH)-nav-side-list {
 			| $${YQ_WRITE} ".$${1}[$${NUM}]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-		if [ "$${TEXT}" = ".library-titles" ]; then	$(PUBLISH)-nav-side-library titles	|| return 1
+		if [ "$${TEXT}" = ".spacer" ]; then		$(PUBLISH)-spacer			|| return 1
+		elif [ "$${TEXT}" = ".library-titles" ]; then	$(PUBLISH)-nav-side-library titles	|| return 1
 		elif [ "$${TEXT}" = ".library-authors" ]; then	$(PUBLISH)-nav-side-library authors	|| return 1
 		elif [ "$${TEXT}" = ".library-dates" ]; then	$(PUBLISH)-nav-side-library dates	|| return 1
 		elif [ "$${TEXT}" = ".library-tags" ]; then	$(PUBLISH)-nav-side-library tags	|| return 1
-		elif [ "$${TEXT}" = ".contents" ]; then		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)\\n"
-		elif [ "$${TEXT}" = ".spacer" ]; then		$(PUBLISH)-spacer			|| return 1
+		elif [ -n "$$(
+			$(ECHO) "$${TEXT}" | $(SED) -n "/^[.]contents/p"
+		)" ]; then
+			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $$(
+				$(ECHO) "$${TEXT}" | $(SED) "s|^[.](contents)[-]?(.*)$$|\\1 \\2|g"
+			) $(PUBLISH_BUILD_CMD_END)\\n"
 		elif [ "$$(
 			$(ECHO) "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
@@ -7181,16 +7192,21 @@ override define $(PUBLISH)-$(TARGETS) =
 		done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	if [ -n "$$($(SED) -n "/^$(PUBLISH_BUILD_CMD_BEG) contents .*$(PUBLISH_BUILD_CMD_END)$$/p" $(1))" ]; then \
+	CONT="$$( \
+		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (contents)(.*) $(PUBLISH_BUILD_CMD_END)$$|\1 \2|gp" $(1) \
+		| $(HEAD) -n1 \
+	)"; \
+	if [ -n "$${CONT}" ]; then \
+		CONT="$$($(ECHO) "$${CONT}" | $(SED) "s|^contents||g")"; \
 		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "\n" >$(1).contents; \
-		$(call $(PUBLISH)-$(TARGETS)-contents,$(1),$(DEPTH_MAX)) \
+		$(call $(PUBLISH)-$(TARGETS)-contents,$(1),$${CONT}) \
 			| $(TEE) --append $(1).contents $($(DEBUGIT)-output); \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(ECHO) "\n" >>$(1).contents; \
-		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)$$/r $(1).contents" $(1); \
+		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) contents.* $(PUBLISH_BUILD_CMD_END)$$/r $(1).contents" $(1); \
 		$(ECHO) "$(_S)"; \
 		$(RM) $(1).contents $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
@@ -7204,7 +7220,9 @@ endef
 
 #WORKING:NOW:NOW
 #	contents on digest = 1
+#		custom list for digest, where only pane/box titles are considered?
 #		strip $(HTML_BREAK_LINE) from list items
+#	need a test for all ascii characters...
 
 override define $(PUBLISH)-$(TARGETS)-contents =
 	FILE="$$( \
@@ -8007,10 +8025,6 @@ endif
 #		add ".contents" to site-template-all
 #			garybgenett -> Error: open . as $file ireduce ({}; . *+ $file): no such file or directory
 #				empty .composer.yml = Aeson exception: Error in $: Expected a mapping
-#			add a "depth" option to ".contents"...
-#			make it work on "$(1)" instead of "$(c_list)"?
-#				do a "function-loop" walk of the ast, and pull out the "header" paths
-#			need a test for all ascii characters...
 #		add ".header x" tests for pane-begin and box-begin
 #		add generic functions for .composer.mk files...?
 #			@$(call $(HEADERS)-note,$(CURDIR),$(patsubst %-$(CLEANER),%,$(@)),$(CLEANER))
