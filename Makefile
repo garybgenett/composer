@@ -7736,7 +7736,6 @@ endef
 ### {{{4 $(PUBLISH)-library-digest-create
 
 #WORKING:NOW:NOW
-#	maybe variable the output and print each block during each run of the while loop...?
 #	contents on digest = 1
 #		strip $(HTML_BREAK_LINE) from list items
 #	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin $(DEPTH_MAX) $(4) " \
@@ -7748,112 +7747,111 @@ override define $(PUBLISH)-library-digest-create =
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 		else				$(ECHO) "$(_N)"; \
 		fi; \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 $(4) " \
-			| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-		TITL="$$( \
-			$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".\"$(2)\".title" 2>/dev/null \
-			| $(SED) "/^null$$/d"; \
-		)"; \
-		if [ -z "$${TITL}" ]; then \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 $(4) $$( \
 			TITL="$$( \
 				$(CAT) $($(PUBLISH)-library-metadata) \
-				| $(YQ_WRITE) ".\"$(2)\".pagetitle" 2>/dev/null \
+				| $(YQ_WRITE) ".\"$(2)\".title" 2>/dev/null \
 				| $(SED) "/^null$$/d"; \
 			)"; \
-		fi; \
-		if [ -z "$${TITL}" ]; then \
-			TITL="$$( \
+			if [ -z "$${TITL}" ]; then \
+				TITL="$$( \
+					$(CAT) $($(PUBLISH)-library-metadata) \
+					| $(YQ_WRITE) ".\"$(2)\".pagetitle" 2>/dev/null \
+					| $(SED) "/^null$$/d"; \
+				)"; \
+			fi; \
+			if [ -z "$${TITL}" ]; then \
+				TITL="$$( \
+					$(CAT) $($(PUBLISH)-library-metadata) \
+					| $(YQ_WRITE) ".\"$(2)\".path" 2>/dev/null \
+					| $(SED) "s|^$(abspath $(dir $(COMPOSER_LIBRARY)))/||g"; \
+				)"; \
+			fi; \
+			NAME="$$( \
 				$(CAT) $($(PUBLISH)-library-metadata) \
-				| $(YQ_WRITE) ".\"$(2)\".path" 2>/dev/null \
-				| $(SED) "s|^$(abspath $(dir $(COMPOSER_LIBRARY)))/||g"; \
-			)"; \
-		fi; \
-		NAME="$$( \
-			$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".\"$(2)\".author" 2>/dev/null \
-			| $(SED) "/^null$$/d"; \
-		)"; \
-		if [ -n "$${NAME}" ]; then \
-			JOIN="$$( \
-				$(ECHO) "$${NAME}" \
-				| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
+				| $(YQ_WRITE) ".\"$(2)\".author" 2>/dev/null \
 				| $(SED) "/^null$$/d"; \
 			)"; \
-			if [ -n "$${JOIN}" ]; then \
-				NAME="$${JOIN}"; \
+			if [ -n "$${NAME}" ]; then \
+				JOIN="$$( \
+					$(ECHO) "$${NAME}" \
+					| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
+					| $(SED) "/^null$$/d"; \
+				)"; \
+				if [ -n "$${JOIN}" ]; then \
+					NAME="$${JOIN}"; \
+				fi; \
 			fi; \
-		fi; \
-		DATE="$$( \
-			$(CAT) $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE) ".\"$(2)\".date" 2>/dev/null \
-			| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
-			| $(SED) "/^null$$/d"; \
-		)"; \
-		if [ -n "$${DATE}" ]; then \
-			$(ECHO) "$${DATE}" \
-				| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-		fi; \
-		if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then \
-			$(ECHO) " $(DIVIDE) " \
-				| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-		fi; \
-		if [ -n "$${TITL}" ]; then \
-			$(ECHO) "$${TITL}" \
-				| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-		fi; \
-		if [ -n "$${NAME}" ]; then \
-			if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
-				$(ECHO) " $(HTML_BREAK_LINE) " \
-					| $(TEE) --append $(1) $($(DEBUGIT)-output); \
+			DATE="$$( \
+				$(CAT) $($(PUBLISH)-library-metadata) \
+				| $(YQ_WRITE) ".\"$(2)\".date" 2>/dev/null \
+				| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
+				| $(SED) "/^null$$/d"; \
+			)"; \
+			if [ -n "$${DATE}" ]; then \
+				$(ECHO) "$${DATE}"; \
 			fi; \
-			$(ECHO) "$${NAME}" \
-				| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-		fi; \
-		$(ECHO) " $(PUBLISH_BUILD_CMD_END)\n\n" \
-			| $(TEE) --append $(1) $($(DEBUGIT)-output); \
+			if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then \
+				$(ECHO) " $(DIVIDE) "; \
+			fi; \
+			if [ -n "$${TITL}" ]; then \
+				$(ECHO) "$${TITL}"; \
+			fi; \
+			if [ -n "$${NAME}" ]; then \
+				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
+					$(ECHO) " $(HTML_BREAK_LINE) "; \
+				fi; \
+				$(ECHO) "$${NAME}"; \
+			fi; \
+		) $(PUBLISH_BUILD_CMD_END)\n" \
+			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		$(ECHO) "\n" \
+			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
 		$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 		| $(PANDOC) --strip-comments --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
 		| $(YQ_WRITE) ".blocks | length" \
 	)"; \
-	BLK="0"; SIZ="0"; NUM="0"; while \
+	SIZ="0"; NUM="0"; while \
 		[ "$${NUM}" -lt "$${LEN}" ] && \
 		[ "$${SIZ}" -le "$($(PUBLISH)-library-digest_chars)" ]; \
 	do \
-		if [ "$${NUM}" -gt "0" ]; then \
-			BLK="$${BLK}, $${NUM}"; \
-		fi; \
-		SIZ="$$($(EXPR) $${SIZ} + $$( \
+		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
-			| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
-			| $(PANDOC) --strip-comments --wrap="none" --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
-			| $(YQ_WRITE) ".blocks |= pick([ $${BLK} ])" \
-			| $(PANDOC) --strip-comments --wrap="none" --from="json" --to="$(TMPL_LINT)" \
-			| $(SED) "/^[[:space:]-]+$$/d" \
-			| $(WC_CHAR) \
-		))"; \
+				| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
+				| $(PANDOC) --strip-comments --wrap="none" --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
+				| $(YQ_WRITE) ".blocks |= pick([$${NUM}])" \
+				| $(PANDOC) --strip-comments --wrap="none" --from="json" --to="$(TMPL_LINT)"; \
+		fi; \
+		SIZ="$$( \
+			$(EXPR) $${SIZ} + $$( \
+				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
+				| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
+				| $(PANDOC) --strip-comments --wrap="none" --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
+				| $(YQ_WRITE) ".blocks |= pick([$${NUM}])" \
+				| $(PANDOC) --strip-comments --wrap="none" --from="json" --to="$(TMPL_LINT)" \
+				| $(TEE) --append $(1) \
+				| $(SED) "/^[[:space:]-]+$$/d" \
+				| $(WC_CHAR) \
+			) \
+		)"; \
+		$(ECHO) "\n" \
+			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done; \
-	$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
-		| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
-		| $(PANDOC) --strip-comments --wrap="none" --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
-		| $(YQ_WRITE) ".blocks |= pick([ $${BLK} ])" \
-		| $(PANDOC) --strip-comments --wrap="none" --from="json" --to="$(TMPL_LINT)" \
-		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-	$(ECHO) "\n" \
-		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
 	if [ "$${NUM}" -lt "$${LEN}" ]; then \
 		$(ECHO) "$(subst ",,$($(PUBLISH)-library-digest_continue)) " \
-			| $(TEE) --append $(1) $($(DEBUGIT)-output); \
+			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
 	$(ECHO) "[$(subst ",,$($(PUBLISH)-library-digest_permalink))]($$( \
 			$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 			| $(SED) "s|$(3)$$|.$(EXTN_HTML)|g" \
 		))\n" \
-		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-	$(ECHO) "\n$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n" \
-		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+	$(ECHO) "\n" \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n" \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "$(_D)"
 endef
 
