@@ -216,7 +216,7 @@ override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 
 override HTML_BREAK			:= <p></p>
 #>override HTML_BREAK_LINE		:= <br/>
-override HTML_BREAK_LINE		:= //
+override HTML_BREAK_LINE		:= --
 override MENU_SELF			:= _
 
 override PUBLISH_COLS_MAIN_SIZE		:= 6
@@ -2350,6 +2350,7 @@ endef
 #	note: a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 #	need to document ".header 0" for pane-begin and box-begin
+#		need to document ".contents 0"
 #WORK
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
@@ -3428,8 +3429,10 @@ $(_S)########################################$(_D)
     - $(_C)text$(_D): $(_N)|$(_D)
         $(_M)LEFT TEXT$(_D)
     - $(_C)box-end$(_D)
-    - $(_C)text$(_D): $(_N)|$(_D)
-        $(_M)EXAMPLE TEXT$(_D)
+    - $(_N).spacer$(_D)
+    - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
+    - $(_N).contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+    - $(_C)box-end$(_D)
 
 $(_S)########################################$(_D)
 
@@ -7290,7 +7293,7 @@ override define $(PUBLISH)-$(TARGETS) =
 		| $(HEAD) -n1 \
 	)"; \
 	if [ -n "$${CONT}" ]; then \
-		CONT="$$($(ECHO) "$${CONT}" | $(SED) "s|^contents||g")"; \
+		CONT="$$($(ECHO) "$${CONT}" | $(SED) "s|^contents[[:space:]]*||g")"; \
 		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
 		$(ECHO) "$(_E)"; \
@@ -7312,9 +7315,6 @@ endef
 ### {{{4 $(PUBLISH)-$(TARGETS)-contents
 
 #WORKING:NOW:NOW
-#	contents on digest = 1
-#		custom list for digest, where only pane/box titles are considered?
-#		strip $(HTML_BREAK_LINE) from list items
 #	need a test for all ascii characters...
 
 override define $(PUBLISH)-$(TARGETS)-contents =
@@ -7327,9 +7327,10 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				(select(.t == \"RawBlock\") | .c[1] | contains(\"$(PUBLISH_BUILD_CMD_BEG) header \")) \
 			) | .c]" \
 	)"; \
-	MAX="$(2)"; if [ -z "$${MAX}" ]; then \
-		MAX="$(DEPTH_MAX)"; \
-	fi; \
+	if [ -z "$(2)" ]; then					MAX="$(DEPTH_MAX)"; \
+		elif [ "$(2)" = "$(SPECIAL_VAL)" ]; then	MAX="$(DEPTH_MAX)"; \
+		else						MAX="$(2)"; \
+		fi; \
 	CNT="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) "length")"; \
 	NUM="0"; while [ "$${NUM}" -lt "$${CNT}" ]; do \
 		LVL="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][0]")"; \
@@ -7339,6 +7340,10 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^$(PUBLISH_BUILD_CMD_BEG) header ([0-9]+) (.*) $(PUBLISH_BUILD_CMD_END)$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
+			if [ "$(2)" = "$(SPECIAL_VAL)" ]; then \
+				NUM="$$($(EXPR) $${NUM} + 1)"; \
+				continue; \
+			fi; \
 			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1][0]")"; \
 			LEN="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][2] | length")"; \
 			TXT=; STR="0"; while [ "$${STR}" -lt "$${LEN}" ]; do \
@@ -7356,6 +7361,9 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				fi; \
 				STR="$$($(EXPR) $${STR} + 1)"; \
 			done; \
+		fi; \
+		if [ "$(2)" = "$(SPECIAL_VAL)" ]; then \
+			TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
 		fi; \
 		if [ -n "$${TXT}" ] && [ "$${LVL}" -le "$${MAX}" ]; then \
 			if [ "$${LVL}" = "1" ]; then	$(ECHO) "  *"; \
@@ -7445,6 +7453,8 @@ $($(PUBLISH)-library-digest) \
 endif
 
 .PHONY: $(PUBLISH)-library
+$(PUBLISH)-library: .set_title-$(PUBLISH)-library
+$(PUBLISH)-library: $(HEADERS)-$(PUBLISH)-library
 $(PUBLISH)-library: $($(PUBLISH)-library)
 $(PUBLISH)-library:
 	@$(ECHO) ""
@@ -8115,7 +8125,7 @@ endif
 #	site
 #		css tables align=top
 #		ability to remove author name(s) from digest(s)
-#		add ".contents" to site-template-all
+#		add ".contents 0" to site-template-all
 #			garybgenett -> Error: open . as $file ireduce ({}; . *+ $file): no such file or directory
 #				empty .composer.yml = Aeson exception: Error in $: Expected a mapping
 #		add ".header x" tests for pane-begin and box-begin
