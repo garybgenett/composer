@@ -3384,83 +3384,92 @@ $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-nav-top$(_D):
 
-    $(_M)MAIN$(_D):				$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-    $(_M)PAGES$(_D):
-      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-      $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):			$(_E)<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
-      $(_M)Introduction$(_D):			$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-      $(_M)Default Site$(_D):			$(_E)<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-      $(_M)Configured Site$(_D):			$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-      $(_M)Default Digest Page$(_D):		$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
-      $(_M)Configured Digest Page$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
-      $(_M)Default Markdown File$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)$(_D)
-      $(_M)Configured Markdown File$(_D):		$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)$(_D)
-      $(_M)Elements & Includes$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)$(_D)
-    $(_M)AUTHORS$(_D):
-      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-      $(_N).library-authors$(_D): $(_N)$(MENU_SELF)$(_D)
-    $(_M)DATES$(_D):
-      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-      $(_N).library-dates$(_D): $(_N)$(MENU_SELF)$(_D)
-    $(_M)TAGS$(_D):
-      $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-      $(_N).library-tags$(_D): $(_N)$(MENU_SELF)$(_D)
+    $(_M)MENU$(_D):
+      $(_M)MAIN$(_D):				$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+      $(_M)PAGES$(_D):
+        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+        $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
+        $(_M)Introduction$(_D):			$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+        $(_M)Default Site$(_D):			$(_E)<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+        $(_M)Configured Site$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+        $(_M)Default Digest Page$(_D):		$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+        $(_M)Configured Digest Page$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+        $(_M)Default Markdown File$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)$(_D)
+        $(_M)Configured Markdown File$(_D):	$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)$(_D)
+        $(_M)Elements & Includes$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)$(_D)
+    $(_M)LIBRARY$(_D):
+      $(_M)AUTHORS$(_D):
+        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+        $(_N).library-authors$(_D): $(_N)$(MENU_SELF)$(_D)
+      $(_M)DATES$(_D):
+        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+        $(_N).library-dates$(_D): $(_N)$(MENU_SELF)$(_D)
+      $(_M)TAGS$(_D):
+        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+        $(_N).library-tags$(_D): $(_N)$(MENU_SELF)$(_D)
 
 $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
-    $(_M)PATH 1$(_D): $(_E)"#"$(_D)
-    $(_M)PATH 2$(_D): $(_E)"#"$(_D)
-    $(_M)PATH 3$(_D): $(_E)"#"$(_D)
+    $(_M)FRAME$(_D):
+      $(_M)PATH 1$(_D): $(_E)"#"$(_D)
+      $(_M)PATH 2$(_D): $(_E)"#"$(_D)
+      $(_M)PATH 3$(_D): $(_E)"#"$(_D)
 
 $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-nav-left$(_D):
 
-    - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 LEFT 1$(_D)
-    - $(_C)text$(_D): $(_N)|$(_D)
-        * $(_M)ITEM 1$(_D)
-        * $(_M)ITEM 2$(_D)
-        * $(_M)ITEM 3$(_D)
-    - $(_C)pane-end$(_D)
-    - $(_N).spacer$(_D)
-    - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
-    - $(_C)text$(_D): $(_N)|$(_D)
-        $(_M)LEFT TEXT$(_D)
-    - $(_C)box-end$(_D)
-    - $(_N).spacer$(_D)
-    - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
-    - $(_N).contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
-    - $(_C)box-end$(_D)
+    $(_M)FRAME$(_D):
+      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 LEFT 1$(_D)
+      - $(_C)text$(_D): $(_N)|$(_D)
+          * $(_M)ITEM 1$(_D)
+          * $(_M)ITEM 2$(_D)
+          * $(_M)ITEM 3$(_D)
+      - $(_C)pane-end$(_D)
+      - $(_N).spacer$(_D)
+      - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
+      - $(_C)text$(_D): $(_N)|$(_D)
+          $(_M)LEFT TEXT$(_D)
+      - $(_C)box-end$(_D)
+    $(_M)SPACE$(_D):
+      - $(_N).spacer$(_D)
+    $(_M)CONTENTS$(_D):
+      - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
+      - $(_N).contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+      - $(_C)box-end$(_D)
 
 $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-nav-right$(_D):
 
-    - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 RIGHT 1$(_D)
-    - $(_C)text$(_D): $(_N)|$(_D)
-        * $(_M)ITEM 1$(_D)
-        * $(_M)ITEM 2$(_D)
-        * $(_M)ITEM 3$(_D)
-    - $(_C)pane-end$(_D)
-    - $(_N).spacer$(_D)
-    - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
-    - $(_C)text$(_D): $(_N)|$(_D)
-        $(_M)RIGHT TEXT$(_D)
-    - $(_C)box-end$(_D)
-    - $(_N).spacer$(_D)
-    - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) AUTHORS$(_D)
-    - $(_N).library-authors$(_D)
-    - $(_C)pane-end$(_D)
-    - $(_N).spacer$(_D)
-    - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) DATES$(_D)
-    - $(_N).library-dates$(_D)
-    - $(_C)pane-end$(_D)
-    - $(_N).spacer$(_D)
-    - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) TAGS$(_D)
-    - $(_N).library-tags$(_D)
-    - $(_C)pane-end$(_D)
+    $(_M)FRAME$(_D):
+      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 RIGHT 1$(_D)
+      - $(_C)text$(_D): $(_N)|$(_D)
+          * $(_M)ITEM 1$(_D)
+          * $(_M)ITEM 2$(_D)
+          * $(_M)ITEM 3$(_D)
+      - $(_C)pane-end$(_D)
+      - $(_N).spacer$(_D)
+      - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
+      - $(_C)text$(_D): $(_N)|$(_D)
+          $(_M)RIGHT TEXT$(_D)
+      - $(_C)box-end$(_D)
+    $(_M)SPACE$(_D):
+      - $(_N).spacer$(_D)
+    $(_M)LIBRARY$(_D):
+      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) AUTHORS$(_D)
+      - $(_N).library-authors$(_D)
+      - $(_C)pane-end$(_D)
+      - $(_N).spacer$(_D)
+      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) DATES$(_D)
+      - $(_N).library-dates$(_D)
+      - $(_C)pane-end$(_D)
+      - $(_N).spacer$(_D)
+      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) TAGS$(_D)
+      - $(_N).library-tags$(_D)
+      - $(_C)pane-end$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3537,234 +3546,243 @@ variables:
 
   $(PUBLISH)-nav-top:
 
-    Top: "#$(COMPOSER_TINYNAME)-cms"
-    Formats:
-      $(MENU_SELF): "#formats"
-      Bootstrap Website: _$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)      $(FILE): $(FILE))
-    CMS:
-      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-cms"
-      Overview: "#overview"
-      Quick Start: "#quick-start"
-      Principles: "#principles"
-      Requirements: "#requirements"
-    Operation:
-      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-operation"
-      Recommended Workflow: "#recommended-workflow"
-      Document Formatting:
-        $(MENU_SELF): "#document-formatting"
-        Bootstrap Websites: "#bootstrap-websites"
-        HTML: "#html"
-        PDF: "#pdf"
-        EPUB: "#epub"
-        Reveal.js Presentations: "#revealjs-presentations"
-        Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
-      Configuration Settings: "#configuration-settings"
-      Precedence Rules: "#precedence-rules"
-      Specifying Dependencies: "#specifying-dependencies"
-      Custom Targets: "#custom-targets"
-      Repository Versions: "#repository-versions"
-    Variables:
-      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-variables"
-      Formatting Variables:
-        $(MENU_SELF): "#formatting-variables"
-        c_site: "#c_site"
-        c_type / c_base / c_list: "#c_type--c_base--c_list"
-        c_lang: "#c_lang"
-        c_css: "#c_css"
-        c_toc: "#c_toc"
-        c_level: "#c_level"
-        c_margin: "#c_margin"
-        c_options: "#c_options"
-      Control Variables:
-        $(MENU_SELF): "#control-variables"
-        MAKEJOBS: "#makejobs"
-        COMPOSER_DOCOLOR: "#composer_docolor"
-        COMPOSER_DEBUGIT: "#composer_debugit"
-        COMPOSER_INCLUDE: "#composer_include"
-        COMPOSER_DEPENDS: "#composer_depends"
-        COMPOSER_KEEPING: "#composer_keeping"
-        COMPOSER_LOG: "#composer_log"
-        COMPOSER_EXT: "#composer_ext"
-        COMPOSER_TARGETS: "#composer_targets"
-        COMPOSER_SUBDIRS: "#composer_subdirs"
-        COMPOSER_IGNORES: "#composer_ignores"
-    Targets:
-      $(MENU_SELF): "#$(COMPOSER_TINYNAME)-targets"
-      Primary Targets:
-        $(MENU_SELF): "#primary-targets"
-        help / help-all: "#help--help-all"
-        template: "#template"
-        compose: "#compose"
-        site: "#site"
-        install / install-all / install-force: "#install--install-all--install-force"
-        clean / clean-all / *-clean: "#clean--clean-all---clean"
-        all / all-all / *-all: "#all--all-all---all"
-        list: "#list"
-      Additional Targets:
-        $(MENU_SELF): "#additional-targets"
-        debug / debug-file: "#debug--debug-file"
-        check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
-        _commit / _commit-all: "#_commit--_commit-all"
-        _release / _update / _update-all: "#_release--_update--_update-all"
-      Internal Targets: "#internal-targets"
-    Reference:
-      $(MENU_SELF): "#reference"
-      Configuration:
-        $(MENU_SELF): "#configuration"
-        Pandoc Extensions: "#pandoc-extensions"
-        Templates: "#templates"
-        Defaults: "#defaults"
-      Reserved:
-        $(MENU_SELF): "#reserved"
-        Target Names: "#target-names"
-        Variable Names: "#variable-names"
+    MENU:
+      Top: "#$(COMPOSER_TINYNAME)-cms"
+      Formats:
+        $(MENU_SELF): "#formats"
+        Bootstrap Website: _$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        $(FILE): $(FILE))
+    CONTENTS:
+      CMS:
+        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-cms"
+        Overview: "#overview"
+        Quick Start: "#quick-start"
+        Principles: "#principles"
+        Requirements: "#requirements"
+      Operation:
+        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-operation"
+        Recommended Workflow: "#recommended-workflow"
+        Document Formatting:
+          $(MENU_SELF): "#document-formatting"
+          Bootstrap Websites: "#bootstrap-websites"
+          HTML: "#html"
+          PDF: "#pdf"
+          EPUB: "#epub"
+          Reveal.js Presentations: "#revealjs-presentations"
+          Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
+        Configuration Settings: "#configuration-settings"
+        Precedence Rules: "#precedence-rules"
+        Specifying Dependencies: "#specifying-dependencies"
+        Custom Targets: "#custom-targets"
+        Repository Versions: "#repository-versions"
+      Variables:
+        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-variables"
+        Formatting Variables:
+          $(MENU_SELF): "#formatting-variables"
+          c_site: "#c_site"
+          c_type / c_base / c_list: "#c_type--c_base--c_list"
+          c_lang: "#c_lang"
+          c_css: "#c_css"
+          c_toc: "#c_toc"
+          c_level: "#c_level"
+          c_margin: "#c_margin"
+          c_options: "#c_options"
+        Control Variables:
+          $(MENU_SELF): "#control-variables"
+          MAKEJOBS: "#makejobs"
+          COMPOSER_DOCOLOR: "#composer_docolor"
+          COMPOSER_DEBUGIT: "#composer_debugit"
+          COMPOSER_INCLUDE: "#composer_include"
+          COMPOSER_DEPENDS: "#composer_depends"
+          COMPOSER_KEEPING: "#composer_keeping"
+          COMPOSER_LOG: "#composer_log"
+          COMPOSER_EXT: "#composer_ext"
+          COMPOSER_TARGETS: "#composer_targets"
+          COMPOSER_SUBDIRS: "#composer_subdirs"
+          COMPOSER_IGNORES: "#composer_ignores"
+      Targets:
+        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-targets"
+        Primary Targets:
+          $(MENU_SELF): "#primary-targets"
+          help / help-all: "#help--help-all"
+          template: "#template"
+          compose: "#compose"
+          site: "#site"
+          install / install-all / install-force: "#install--install-all--install-force"
+          clean / clean-all / *-clean: "#clean--clean-all---clean"
+          all / all-all / *-all: "#all--all-all---all"
+          list: "#list"
+        Additional Targets:
+          $(MENU_SELF): "#additional-targets"
+          debug / debug-file: "#debug--debug-file"
+          check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
+          _commit / _commit-all: "#_commit--_commit-all"
+          _release / _update / _update-all: "#_release--_update--_update-all"
+        Internal Targets: "#internal-targets"
+      Reference:
+        $(MENU_SELF): "#reference"
+        Configuration:
+          $(MENU_SELF): "#configuration"
+          Pandoc Extensions: "#pandoc-extensions"
+          Templates: "#templates"
+          Defaults: "#defaults"
+        Reserved:
+          $(MENU_SELF): "#reserved"
+          Target Names: "#target-names"
+          Variable Names: "#variable-names"
 
 ########################################
 
   $(PUBLISH)-nav-bottom:
 
-    Home:				./
-    Source:				./$(notdir $(COMPOSER_PKG))
-    Artifacts:				./$(notdir $(COMPOSER_ART))
-    Pandoc:				./$(notdir $(PANDOC_DIR))
-    Bootstrap:				./$(notdir $(BOOTSTRAP_DIR))
+    CODE:
+      Home:				./
+      Artifacts:			./$(notdir $(COMPOSER_ART))
+    TOOLS:
+      Source:				./$(notdir $(COMPOSER_PKG))
+      Pandoc:				./$(notdir $(PANDOC_DIR))
+      Bootstrap:			./$(notdir $(BOOTSTRAP_DIR))
 
 ########################################
 
   $(PUBLISH)-nav-left:
 
-    - box-begin $(SPECIAL_VAL) Formats
-    - text: |
-        * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
-    - box-end
-    - .spacer
-    - box-begin $(SPECIAL_VAL) Contents
-    - .contents 2
-    - box-end
-    - text: |
-        $(COMPOSER_TAGLINE)
+    MENU:
+      - box-begin $(SPECIAL_VAL) Formats
+      - text: |
+          * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)          * [$(FILE)]($(FILE)))
+      - box-end
+    SPACE:
+      - .spacer
+    CONTENTS:
+      - box-begin $(SPECIAL_VAL) Contents
+      - .contents 2
+      - box-end
+    TAGLINE:
+      - text: |
+          $(COMPOSER_TAGLINE)
 
 ########################################
 
   $(PUBLISH)-nav-right:
 
-    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_TECHNAME)
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Overview
-    - text: |
-        * [Overview]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Quick Start
-    - text: |
-        * [Quick Start]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Principles
-    - text: |
-        * [Principles]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Requirements
-    - text: |
-        * [Requirements]
-    - pane-end
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Operation
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Recommended Workflow
-    - text: |
-        * [Recommended Workflow]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Document Formatting
-    - text: |
-        * [Bootstrap Websites]
-        * [HTML]
-        * [PDF]
-        * [EPUB]
-        * [Reveal.js Presentations]
-        * [Microsoft Word & PowerPoint]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration Settings
-    - text: |
-        * [Configuration Settings]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Precedence Rules
-    - text: |
-        * [Precedence Rules]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Specifying Dependencies
-    - text: |
-        * [Specifying Dependencies]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Custom Targets
-    - text: |
-        * [Custom Targets]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Repository Versions
-    - text: |
-        * [Repository Versions]
-    - pane-end
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Variables
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Formatting Variables
-    - text: |
-        * [c_site]
-        * [c_type / c_base / c_list]
-        * [c_lang]
-        * [c_css]
-        * [c_toc]
-        * [c_level]
-        * [c_margin]
-        * [c_options]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Control Variables
-    - text: |
-        * [MAKEJOBS]
-        * [COMPOSER_DOCOLOR]
-        * [COMPOSER_DEBUGIT]
-        * [COMPOSER_INCLUDE]
-        * [COMPOSER_DEPENDS]
-        * [COMPOSER_KEEPING]
-        * [COMPOSER_LOG]
-        * [COMPOSER_EXT]
-        * [COMPOSER_TARGETS]
-        * [COMPOSER_SUBDIRS]
-        * [COMPOSER_IGNORES]
-    - pane-end
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Targets
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Primary Targets
-    - text: |
-        * [help / help-all]
-        * [template]
-        * [compose]
-        * [site]
-        * [install / install-all / install-force]
-        * [clean / clean-all / *-clean]
-        * [all / all-all / *-all]
-        * [list]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Additional Targets
-    - text: |
-        * [debug / debug-file]
-        * [check / check-all / config / config-site / config-all / targets]
-        * [_commit / _commit-all]
-        * [_release / _update / _update-all]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Internal Targets
-    - text: |
-        * [Internal Targets]
-    - pane-end
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) 1 Reference
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration
-    - text: |
-        * [Pandoc Extensions]
-        * [Templates]
-        * [Defaults]
-    - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Reserved
-    - text: |
-        * [Target Names]
-        * [Variable Names]
-    - pane-end
-    - pane-end
+    EDITOR:
+      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_TECHNAME)
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Overview
+      - text: |
+          * [Overview]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Quick Start
+      - text: |
+          * [Quick Start]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Principles
+      - text: |
+          * [Principles]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Requirements
+      - text: |
+          * [Requirements]
+      - pane-end
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Operation
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Recommended Workflow
+      - text: |
+          * [Recommended Workflow]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Document Formatting
+      - text: |
+          * [Bootstrap Websites]
+          * [HTML]
+          * [PDF]
+          * [EPUB]
+          * [Reveal.js Presentations]
+          * [Microsoft Word & PowerPoint]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration Settings
+      - text: |
+          * [Configuration Settings]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Precedence Rules
+      - text: |
+          * [Precedence Rules]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Specifying Dependencies
+      - text: |
+          * [Specifying Dependencies]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Custom Targets
+      - text: |
+          * [Custom Targets]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Repository Versions
+      - text: |
+          * [Repository Versions]
+      - pane-end
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Variables
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Formatting Variables
+      - text: |
+          * [c_site]
+          * [c_type / c_base / c_list]
+          * [c_lang]
+          * [c_css]
+          * [c_toc]
+          * [c_level]
+          * [c_margin]
+          * [c_options]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Control Variables
+      - text: |
+          * [MAKEJOBS]
+          * [COMPOSER_DOCOLOR]
+          * [COMPOSER_DEBUGIT]
+          * [COMPOSER_INCLUDE]
+          * [COMPOSER_DEPENDS]
+          * [COMPOSER_KEEPING]
+          * [COMPOSER_LOG]
+          * [COMPOSER_EXT]
+          * [COMPOSER_TARGETS]
+          * [COMPOSER_SUBDIRS]
+          * [COMPOSER_IGNORES]
+      - pane-end
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Targets
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Primary Targets
+      - text: |
+          * [help / help-all]
+          * [template]
+          * [compose]
+          * [site]
+          * [install / install-all / install-force]
+          * [clean / clean-all / *-clean]
+          * [all / all-all / *-all]
+          * [list]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Additional Targets
+      - text: |
+          * [debug / debug-file]
+          * [check / check-all / config / config-site / config-all / targets]
+          * [_commit / _commit-all]
+          * [_release / _update / _update-all]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Internal Targets
+      - text: |
+          * [Internal Targets]
+      - pane-end
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) 1 Reference
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration
+      - text: |
+          * [Pandoc Extensions]
+          * [Templates]
+          * [Defaults]
+      - pane-end
+      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Reserved
+      - text: |
+          * [Target Names]
+          * [Variable Names]
+      - pane-end
+      - pane-end
 
 ########################################
 
@@ -3957,15 +3975,20 @@ _EOF_
 
 # x $(PUBLISH)-nav-begin 1		true = top
 # x $(PUBLISH)-nav-begin 2		true = brand
-# x $(PUBLISH)-nav-top-list 1		$(PUBLISH)-nav-top
+# x $(PUBLISH)-nav-top-list 1		$(PUBLISH)-nav-top.[*]
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-top {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "1" "1" "$${1}"		|| return 1
-	$(PUBLISH)-nav-top-list "$(PUBLISH)-nav-top"	|| return 1
-	$(PUBLISH)-nav-end "top" "1"			|| return 1
+	$(PUBLISH)-nav-begin "1" "1" "$${1}"						|| return 1
+	$(ECHO) "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-nav-top | keys | .[]" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+		| while read -r MENU; do
+			$(PUBLISH)-nav-top-list "$(PUBLISH)-nav-top.[\"$${MENU}\"]"	|| return 1
+		done
+	$(PUBLISH)-nav-end "top" "1"							|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -3973,7 +3996,7 @@ function $(PUBLISH)-nav-top {
 ########################################
 #### {{{4 $(PUBLISH)-nav-top-list ------
 
-# 1 $(PUBLISH)-nav-top
+# 1 $(PUBLISH)-nav-top.[*]
 
 # x $(PUBLISH)-nav-top-library 1	titles || authors || dates || tags
 
@@ -4002,7 +4025,7 @@ function $(PUBLISH)-nav-top-list {
 				| $(SED) "/^null$$/d"
 			)"
 			if [ -n "$${LINK}" ]; then
-				if [ "$${1}" = "$(PUBLISH)-nav-top" ]; then
+				if [ -n "$$($(ECHO) "$${1}" | $(SED) -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
@@ -4030,7 +4053,7 @@ _EOF_
 					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
 					| $(SED) "/^null$$/d"
 				)"
-				if [ "$${1}" = "$(PUBLISH)-nav-top" ]; then
+				if [ -n "$$($(ECHO) "$${1}" | $(SED) -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
 	$(ECHO) "$${VAL}" \
@@ -4082,13 +4105,13 @@ _EOF_
 # x $(PUBLISH)-nav-begin 1		true = top
 # x $(PUBLISH)-nav-begin 2		true = brand
 # x $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
-# x $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom
+# x $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom.[*]
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-bottom {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "" "" ""				|| return 1
+	$(PUBLISH)-nav-begin "" "" ""								|| return 1
 $(CAT) <<_EOF_
 <li class="nav-item me-3">$$(
 	$(ECHO) "$${YQ_DATA}" \\
@@ -4097,8 +4120,13 @@ $(CAT) <<_EOF_
 )</li>
 <li class="nav-item me-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
 _EOF_
-	$(PUBLISH)-nav-bottom-list "$(PUBLISH)-nav-bottom"	|| return 1
-	$(PUBLISH)-nav-end "bottom" ""				|| return 1
+	$(ECHO) "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-nav-bottom | keys | .[]" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+		| while read -r MENU; do
+			$(PUBLISH)-nav-bottom-list "$(PUBLISH)-nav-bottom.[\"$${MENU}\"]"	|| return 1
+		done
+	$(PUBLISH)-nav-end "bottom" ""								|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4106,7 +4134,7 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-nav-bottom-list ---
 
-# 1 $(PUBLISH)-nav-bottom
+# 1 $(PUBLISH)-nav-bottom.[*]
 
 function $(PUBLISH)-nav-bottom-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -4151,7 +4179,7 @@ _EOF_
 #### {{{4 $(PUBLISH)-nav-side ----------
 
 # 1 $(PUBLISH)-column-begin 1		left || center || right
-# 1 $(PUBLISH)-nav-side-list 1		$(PUBLISH)-nav-left || $(PUBLISH)-nav-right
+# 1 $(PUBLISH)-nav-side-list 1		$(PUBLISH)-nav-left.[*] || $(PUBLISH)-nav-right.[*]
 
 # x $(PUBLISH)-column-end
 
@@ -4160,9 +4188,14 @@ function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right "$${@}" || return 1; r
 
 function $(PUBLISH)-nav-side {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-column-begin "$${1}"			|| return 1
-	$(PUBLISH)-nav-side-list "$(PUBLISH)-nav-$${1}"	|| return 1
-	$(PUBLISH)-column-end				|| return 1
+	$(PUBLISH)-column-begin "$${1}"							|| return 1
+	$(ECHO) "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-nav-$${1} | keys | .[]" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+		| while read -r MENU; do
+			$(PUBLISH)-nav-side-list "$(PUBLISH)-nav-$${1}.[\"$${MENU}\"]"	|| return 1
+		done
+	$(PUBLISH)-column-end								|| return 1
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4170,7 +4203,7 @@ function $(PUBLISH)-nav-side {
 ########################################
 #### {{{4 $(PUBLISH)-nav-side-list -----
 
-# 1 $(PUBLISH)-nav-left || $(PUBLISH)-nav-right
+# 1 $(PUBLISH)-nav-left.[*] || $(PUBLISH)-nav-right.[*]
 
 # x $(PUBLISH)-spacer
 # x $(PUBLISH)-nav-side-library 1	titles || authors || dates || tags
@@ -8385,27 +8418,31 @@ variables:
     auto_update:			1
 
   $(PUBLISH)-nav-top:
-    MAIN:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
     CHAINED:
-      $(MENU_SELF): "#"
-      ITEM 1: "#"
-      ITEM 2: "#"
-      ITEM 3: "#"
+      MAIN:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
+      CHAINED:
+        $(MENU_SELF): "#"
+        ITEM 1: "#"
+        ITEM 2: "#"
+        ITEM 3: "#"
 
   $(PUBLISH)-nav-bottom:
-    CHAINED:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
+    CHAINED:
+      CHAINED:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
 
   $(PUBLISH)-nav-left:
-    - .spacer
-    - text: |
-        CHAINED TEXT
+    CHAINED:
+      - .spacer
+      - text: |
+          CHAINED TEXT
 
   $(PUBLISH)-nav-right:
-    - .spacer
-    - box-begin $(SPECIAL_VAL) CHAINED
-    - text: |
-        CHAINED TEXT
-    - box-end
+    CHAINED:
+      - .spacer
+      - box-begin $(SPECIAL_VAL) CHAINED
+      - text: |
+          CHAINED TEXT
+      - box-end
 
 ################################################################################
 # End Of File
@@ -8441,9 +8478,10 @@ variables:
     digest_permalink:			"*(permalink)*"
 
   $(PUBLISH)-nav-top:
-    MAIN:
-      $(MENU_SELF): "#"
-      CHAINED:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
+    CHAINED:
+      MAIN:
+        $(MENU_SELF): "#"
+        CHAINED:			<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
 
 ################################################################################
 # End Of File
