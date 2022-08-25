@@ -3282,8 +3282,8 @@ $(patsubst $(COMPOSER_DIR)%,%,$(YQ_DIR))/yq_*
 ########################################
 # $(DEBUGIT) / $(TESTING)
 
-/.$(COMPOSER_BASENAME)**
-/$(COMPOSER_BASENAME)**
+/.$(COMPOSER_BASENAME)-**
+/$(COMPOSER_BASENAME)-**
 
 ################################################################################
 # End Of File
@@ -4760,6 +4760,10 @@ body {
 }
 
 /* ################################## */
+
+th, td {
+	vertical-align:			text-top;
+}
 
 .accordion-button {
 	color:				inherit;
@@ -8038,6 +8042,19 @@ $(PUBLISH)-$(EXAMPLE):
 	@$(call $(HEADERS))
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(ECHO) "$(_S)"
+	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)) \
+		>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
+	@$(LN) \
+		$(COMPOSER) \
+		$(COMPOSER_DIR)/.gitignore \
+		$(COMPOSER_DIR)/$(COMPOSER_YML) \
+		$(COMPOSER_ART) \
+		$(PANDOC_DIR) \
+		$(YQ_DIR) \
+		$(MDVIEWER_DIR) \
+		$(REVEALJS_DIR) \
+		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))
 	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
@@ -8062,7 +8079,10 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		--filter="-_/*" \
 		$(BOOTSTRAP_DIR)/		$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(BOOTSTRAP_DIR))
 	@$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)
-	@$(ENV_MAKE) $(SILENT) --makefile $(COMPOSER) --directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
+#>	@$(ENV_MAKE) $(SILENT) --makefile $(COMPOSER) --directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
+	@$(ENV_MAKE) $(SILENT) \
+		--makefile $($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
+		--directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
 endif
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(PUBLISH_BUILD_SH))),$(notdir $(PUBLISH_BUILD_SH)))
@@ -8157,7 +8177,6 @@ endif
 #	verify: $(eval export $(COMPOSER_OPTIONS))
 #		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
 #	site
-#		css tables align=top
 #		ability to remove author name(s) from digest(s)
 #		add ".contents 0" to site-template-all
 #			garybgenett -> Error: open . as $file ireduce ({}; . *+ $file): no such file or directory
@@ -8402,6 +8421,19 @@ endef
 
 ########################################
 #### {{{4 Heredoc: Config: Main --------
+
+override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS) =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH)-$(EXAMPLE))
+################################################################################
+
+override COMPOSER_INCLUDE		:= 1
+override c_site				:= 1
+
+################################################################################
+# End Of File
+################################################################################
+endef
 
 override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML) =
 ################################################################################
