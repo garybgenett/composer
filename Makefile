@@ -851,7 +851,8 @@ override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-mat
 override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(YQ_READ)) --output-format "yaml"
 override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
 override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
-override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
+#>override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
+override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' $(COMPOSER_YML_LIST)
 
 ########################################
 
@@ -1551,6 +1552,7 @@ endif
 
 #WORK document!
 #WORK also document command variables?  maybe another "reserved"-style section that parses them out?
+#WORK DO_HEREDOC
 #WORK $($(DEBUGIT)-output)
 
 override define $(COMPOSER_TINYNAME)-note =
@@ -7347,9 +7349,6 @@ endef
 ########################################
 ### {{{4 $(PUBLISH)-$(TARGETS)-contents
 
-#WORKING:NOW:NOW
-#	need a test for all ascii characters...
-
 override define $(PUBLISH)-$(TARGETS)-contents =
 	FILE="$$( \
 		$(CAT) $(1) \
@@ -8153,6 +8152,8 @@ else
 endif
 
 #WORKING:NOW:NOW
+#	"contents library" token of some sort...
+#		need to be able to program the library...
 #	verify: $(eval export $(COMPOSER_OPTIONS))
 #		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
 #	site
