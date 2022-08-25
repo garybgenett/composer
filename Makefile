@@ -19,6 +19,8 @@ override VIM_FOLDING := {{{1
 #		* `make COMPOSER_DEBUGIT="config targets" debug | less -rX`
 #			* `make debug-file`
 #			* `mv Composer-*.log artifacts/`
+#		* `make COMPOSER_DEBUGIT="0" headers-template-all | less -rX`
+#			* `make headers-template`
 #		* `make test-targets`
 #			* README.html.0.0.html
 #			* README.html.1.1.html
@@ -218,8 +220,8 @@ override HTML_BREAK_LINE		:= //
 override MENU_SELF			:= _
 
 override PUBLISH_COLS_MAIN_SIZE		:= 6
-override PUBLISH_COLS_HIDE_LEFT		:= 1
-override PUBLISH_COLS_HIDE_RIGHT	:= 1
+override PUBLISH_COLS_SHOW_LEFT		:= 1
+override PUBLISH_COLS_SHOW_RIGHT	:= 1
 override PUBLISH_COLS_STICKY		:= 1
 override PUBLISH_COPY_SAFE		:= 1
 
@@ -1542,6 +1544,58 @@ override COMPOSER_SUBDIRS		:=
 endif
 endif
 
+########################################
+## {{{2 Functions ----------------------
+
+#> update: $(HEADERS)-$(EXAMPLE)
+
+#WORK document!
+#WORK also document command variables?  maybe another "reserved"-style section that parses them out?
+#WORK $($(DEBUGIT)-output)
+
+override define $(COMPOSER_TINYNAME)-note =
+	$(call $(HEADERS)-note,$(CURDIR),$(1),note,$(@))
+endef
+
+override define $(COMPOSER_TINYNAME)-makefile =
+	$(call $(INSTALL)-$(MAKEFILE),$(1),-$(INSTALL),,$(2))
+endef
+
+override define $(COMPOSER_TINYNAME)-make =
+	+$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT))
+endef
+
+override define $(COMPOSER_TINYNAME)-mkdir =
+	if [ ! -d "$(1)" ]; then \
+		$(call $(HEADERS)-file,$(CURDIR),$(1),$(@)); \
+		$(ECHO) "$(_S)"; \
+		$(MKDIR) $(1) $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+override define $(COMPOSER_TINYNAME)-cp =
+	if	[ -d "$(1)" ] || \
+		[ -f "$(1)" ]; \
+	then \
+		$(call $(HEADERS)-file,$(CURDIR),$(_E)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
+		$(ECHO) "$(_S)"; \
+		$(CP) $(1) $(2) $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+override define $(COMPOSER_TINYNAME)-rm =
+	if	[ -d "$(1)" ] || \
+		[ -f "$(1)" ]; \
+	then \
+		$(call $(HEADERS)-rm,$(CURDIR),$(1),$(@)); \
+		$(ECHO) "$(_S)"; \
+		$(RM) $(if $(2),--recursive) $(1) $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
 ################################################################################
 # }}}1
 ################################################################################
@@ -1815,7 +1869,10 @@ $(HELPOUT)-$(HEADERS)-%:
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
 	@$(MAKE) $(SILENT) $(HELPOUT)-$(HEADERS)-$(*)
-	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
+	@$(if $(c_site),\
+		$(call TITLE_LN ,-1,$(COMPOSER_BASENAME) Operation,1) ,\
+		$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1) \
+	)
 	@$(call TITLE_LN,2,Recommended Workflow)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Document Formatting)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
@@ -1824,11 +1881,17 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Custom Targets)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Repository Versions)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)	; $(call TITLE_END)
 	@$(call TITLE_END)
-	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1
+	@$(if $(c_site),\
+		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_-1 ,\
+		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1 \
+	)
 	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)	; $(call TITLE_END)
 	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)	; $(call TITLE_END)
 	@$(call TITLE_END)
-	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1
+	@$(if $(c_site),\
+		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_-1 ,\
+		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1 \
+	)
 	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_PRIMARY_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)		; $(call TITLE_END)
 	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)	; $(call TITLE_END)
 	@if [ "$(*)" = "$(DOFORCE)" ]; then \
@@ -1864,7 +1927,10 @@ $(HELPOUT)-$(TYPE_PRES):
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
-	@$(call TITLE_LN,1,Reference)
+	@$(if $(c_site),\
+		$(call TITLE_LN ,-1,Reference) ,\
+		$(call TITLE_LN,1,Reference) \
+	)
 	@$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 #WORKING reference this somewhere...
@@ -1995,14 +2061,11 @@ endif
 
 override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES =
 	$(SED) -n -e "s|^.+TITLE_LN[,][^,]+[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
-	| $(SED) "/TITLE[:][[:space:]]+[$$]/d" \
 	| $(SED) \
-		-e "s|.[[:space:]]+;.+$$||g" \
 		-e "s|.;[[:space:]]+f$$||g" \
-		-e "/MARKER/d" \
+		-e "s|.[[:space:]]+$$||g" \
+		-e "s|.[[:space:]]+;.+$$||g" \
 		-e "/DIVIDE/d" \
-		-e "/TIMESTAMP/d" \
-		-e "s|\\\\||g" \
 		-e "s|$$|\||g"
 endef
 
@@ -2485,6 +2548,8 @@ If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D
 $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) or $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) will include them in runs of the respective targets.
 Targets with any other names will need to be run manually, or included in
 $(_C)[COMPOSER_TARGETS]$(_D) $(_E)(see [Control Variables])$(_D).
+
+#WORK ...or, via [Specifying Dependencies]
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
@@ -3077,6 +3142,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) "$(_D)"
 	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"			COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
 #>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+#>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
 	@$(ECHO) "$(_E)"
 	@$(MV) $(CURDIR)/$(COMPOSER_YML)						$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
@@ -3287,8 +3353,8 @@ $(_S)########################################$(_D)
     $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
 
     $(_C)cols_main_size$(_D):			$(_M)$(PUBLISH_COLS_MAIN_SIZE)$(_D)
-    $(_C)cols_hide_left$(_D):			$(_M)$(PUBLISH_COLS_HIDE_LEFT)$(_D)
-    $(_C)cols_hide_right$(_D):			$(_M)$(PUBLISH_COLS_HIDE_RIGHT)$(_D)
+    $(_C)cols_show_left$(_D):			$(_M)$(PUBLISH_COLS_SHOW_LEFT)$(_D)
+    $(_C)cols_show_right$(_D):			$(_M)$(PUBLISH_COLS_SHOW_RIGHT)$(_D)
     $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
     $(_C)copy_safe$(_D):				$(_M)$(PUBLISH_COPY_SAFE)$(_D)
 
@@ -3432,8 +3498,8 @@ variables:
     copyright:				$(COPYRIGHT_SHORT)
 
     cols_main_size:			6
-    cols_hide_left:			1
-    cols_hide_right:			1
+    cols_show_left:			1
+    cols_show_right:			0
     cols_sticky:			1
     copy_safe:				0
 
@@ -3468,7 +3534,10 @@ variables:
 
   $(PUBLISH)-nav-top:
 
-    Top: "#"
+    Top: "#$(COMPOSER_TINYNAME)-cms"
+    Formats:
+      $(MENU_SELF): "#formats"
+      Bootstrap Website: _$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)      $(FILE): $(FILE))
     CMS:
       $(MENU_SELF): "#$(COMPOSER_TINYNAME)-cms"
       Overview: "#overview"
@@ -3561,6 +3630,21 @@ variables:
 
   $(PUBLISH)-nav-left:
 
+    - box-begin $(SPECIAL_VAL) Formats
+    - text: |
+        * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
+    - box-end
+    - .spacer
+    - box-begin $(SPECIAL_VAL) Contents
+    - .contents 2
+    - box-end
+    - text: |
+        $(COMPOSER_TAGLINE)
+
+########################################
+
+  $(PUBLISH)-nav-right:
+
     - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_TECHNAME)
     - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Overview
     - text: |
@@ -3579,19 +3663,7 @@ variables:
         * [Requirements]
     - pane-end
     - pane-end
-    - .spacer
-    - box-begin $(SPECIAL_VAL) Formats
-    - text: |
-        * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        * [$(FILE)]($(FILE)))
-    - box-end
-    - text: |
-        $(COMPOSER_TAGLINE)
-
-########################################
-
-  $(PUBLISH)-nav-right:
-
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Operation
+    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Operation
     - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Recommended Workflow
     - text: |
         * [Recommended Workflow]
@@ -3626,7 +3698,7 @@ variables:
         * [Repository Versions]
     - pane-end
     - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Variables
+    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Variables
     - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Formatting Variables
     - text: |
         * [c_site]
@@ -3653,7 +3725,7 @@ variables:
         * [COMPOSER_IGNORES]
     - pane-end
     - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_BASENAME) Targets
+    - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Targets
     - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Primary Targets
     - text: |
         * [help / help-all]
@@ -3677,7 +3749,7 @@ variables:
         * [Internal Targets]
     - pane-end
     - pane-end
-    - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Reference
+    - pane-begin $(SPECIAL_VAL) 1 Reference
     - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration
     - text: |
         * [Pandoc Extensions]
@@ -3740,8 +3812,8 @@ DEPTH_MAX="$(DEPTH_MAX)"
 HTML_BREAK="$(HTML_BREAK)"
 
 PUBLISH_COLS_MAIN_SIZE="$(PUBLISH_COLS_MAIN_SIZE)"
-PUBLISH_COLS_HIDE_LEFT="$(PUBLISH_COLS_HIDE_LEFT)"
-PUBLISH_COLS_HIDE_RIGHT="$(PUBLISH_COLS_HIDE_RIGHT)"
+PUBLISH_COLS_SHOW_LEFT="$(PUBLISH_COLS_SHOW_LEFT)"
+PUBLISH_COLS_SHOW_RIGHT="$(PUBLISH_COLS_SHOW_RIGHT)"
 PUBLISH_COLS_STICKY="$(PUBLISH_COLS_STICKY)"
 PUBLISH_COPY_SAFE="$(PUBLISH_COPY_SAFE)"
 
@@ -3913,12 +3985,12 @@ function $(PUBLISH)-nav-top-list {
 			elif [ "$${FILE}" = ".library-authors" ]; then	$(PUBLISH)-nav-top-library authors	|| return 1; continue
 			elif [ "$${FILE}" = ".library-dates" ]; then	$(PUBLISH)-nav-top-library dates	|| return 1; continue
 			elif [ "$${FILE}" = ".library-tags" ]; then	$(PUBLISH)-nav-top-library tags		|| return 1; continue
-			elif [ -n "$$(
-				$(ECHO) "$${FILE}" | $(SED) -n "/^[.]contents/p"
-			)" ]; then
-				$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $$(
-					$(ECHO) "$${FILE}" | $(SED) "s|^[.](contents)[-]?(.*)$$|\\1 \\2|g"
-				) $(PUBLISH_BUILD_CMD_END)\\n"
+			elif [ "$${FILE}" = ".contents" ]; then
+				$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) contents $$(
+						$(ECHO) "$${YQ_DATA}" \\
+						| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
+						| $(SED) "/^null$$/d"
+					) $(PUBLISH_BUILD_CMD_END)\\n"
 				continue
 			fi
 			LINK="$$(
@@ -4097,9 +4169,9 @@ function $(PUBLISH)-nav-side {
 
 # 1 $(PUBLISH)-nav-left || $(PUBLISH)-nav-right
 
+# x $(PUBLISH)-spacer
 # x $(PUBLISH)-nav-side-library 1	titles || authors || dates || tags
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
-# x $(PUBLISH)-spacer
 
 function $(PUBLISH)-nav-side-list {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -4121,11 +4193,13 @@ function $(PUBLISH)-nav-side-list {
 		elif [ "$${TEXT}" = ".library-dates" ]; then	$(PUBLISH)-nav-side-library dates	|| return 1
 		elif [ "$${TEXT}" = ".library-tags" ]; then	$(PUBLISH)-nav-side-library tags	|| return 1
 		elif [ -n "$$(
-			$(ECHO) "$${TEXT}" | $(SED) -n "/^[.]contents/p"
+			$(ECHO) "$${TEXT}" \\
+			| $(SED) -n "/^[.]contents/p"
 		)" ]; then
 			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $$(
-				$(ECHO) "$${TEXT}" | $(SED) "s|^[.](contents)[-]?(.*)$$|\\1 \\2|g"
-			) $(PUBLISH_BUILD_CMD_END)\\n"
+					$(ECHO) "$${TEXT}" \\
+					| $(SED) "s|^[.](contents.*)$$|\\1|g"
+				) $(PUBLISH_BUILD_CMD_END)\\n"
 		elif [ "$$(
 			$(ECHO) "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
@@ -4297,23 +4371,23 @@ function $(PUBLISH)-column-begin {
 $(CAT) <<_EOF_
 <div class="d-flex flex-column$$(
 	if [ "$${1}" = "left" ]; then
-		COLS_HIDE_LEFT="$$(
+		COLS_SHOW_LEFT="$$(
 			$(ECHO) "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_hide_left\"]" 2>/dev/null \\
+			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_show_left\"]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-		if [ -n "$${COLS_HIDE_LEFT}" ]; then
-			if [ "$${COLS_HIDE_LEFT}" = "1" ]; then		$(ECHO) " d-none d-sm-block"; fi
-		elif [ "$${PUBLISH_HIDE_LEFT}" = "1" ]; then		$(ECHO) " d-none d-sm-block"; fi
+		if [ -n "$${COLS_SHOW_LEFT}" ]; then
+			if [ "$${COLS_SHOW_LEFT}" = "0" ]; then		$(ECHO) " d-none d-sm-block"; fi
+		elif [ "$${PUBLISH_SHOW_LEFT}" = "0" ]; then		$(ECHO) " d-none d-sm-block"; fi
 	elif [ "$${1}" = "right" ]; then
-		COLS_HIDE_RIGHT="$$(
+		COLS_SHOW_RIGHT="$$(
 			$(ECHO) "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_hide_right\"]" 2>/dev/null \\
+			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_show_right\"]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-		if [ -n "$${COLS_HIDE_RIGHT}" ]; then
-			if [ "$${COLS_HIDE_RIGHT}" = "1" ]; then	$(ECHO) " d-none d-sm-block"; fi
-		elif [ "$${PUBLISH_HIDE_RIGHT}" = "1" ]; then		$(ECHO) " d-none d-sm-block"; fi
+		if [ -n "$${COLS_SHOW_RIGHT}" ]; then
+			if [ "$${COLS_SHOW_RIGHT}" = "0" ]; then	$(ECHO) " d-none d-sm-block"; fi
+		elif [ "$${PUBLISH_SHOW_RIGHT}" = "0" ]; then		$(ECHO) " d-none d-sm-block"; fi
 	else
 		COLS_MAIN_SIZE="$$(
 			$(ECHO) "$${YQ_DATA}" \\
@@ -4371,7 +4445,7 @@ $(CAT) <<_EOF_
 <div class="accordion-item">
 <h$${HEAD} class="accordion-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:3}")">
 <button class="accordion-button$$(
-	if [ -z "$${2//$(SPECIAL_VAL)}" ]; then $(ECHO) " collapsed"; fi
+	if [ "$${2}" = "$(SPECIAL_VAL)" ]; then $(ECHO) " collapsed"; fi
 )" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($(ECHO) "$${@:3}" | $(SED) "s|[^[:alnum:]_-]||g")">
 _EOF_
 	if [ "$${1}" != "$(SPECIAL_VAL)" ] && [ -n "$${3}" ]; then
@@ -4382,7 +4456,7 @@ $${@:3}
 </button>
 </h$${HEAD}>
 <div id="toggle-$$($(ECHO) "$${@:3}" | $(SED) "s|[^[:alnum:]_-]||g")" class="accordion-collapse collapse$$(
-	if [ -n "$${2//$(SPECIAL_VAL)}" ]; then $(ECHO) " show"; fi
+	if [ "$${2}" != "$(SPECIAL_VAL)" ]; then $(ECHO) " show"; fi
 )">
 <div class="accordion-body">
 _EOF_
@@ -4575,7 +4649,12 @@ function $(PUBLISH)-file {
 
 function $(PUBLISH)-select {
 	ACTION="$${1}"; shift
-	if [ -f "$${ACTION}" ]; then
+	if	[ "$${ACTION}" = "contents" ] ||
+		[ "$${ACTION}" = "header" ];
+	then
+		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $${ACTION} $${@} $(PUBLISH_BUILD_CMD_END)\\n"
+		return 0
+	elif [ -f "$${ACTION}" ]; then
 		if ! $(PUBLISH)-file $${ACTION} $${@}; then
 			$(ECHO) "$(MARKER) ERROR [$${0/#*\/}] (file): $${ACTION} $${@}\\n" >&2
 			return 1
@@ -5655,6 +5734,8 @@ $(HEADERS):
 ########################################
 ### {{{3 $(HEADERS)-$(EXAMPLE) ---------
 
+#> update: $(HEADERS)-$(EXAMPLE)
+
 .PHONY: $(HEADERS)-$(EXAMPLE)
 $(HEADERS)-$(EXAMPLE): .set_title-$(HEADERS)-$(EXAMPLE)
 $(HEADERS)-$(EXAMPLE):
@@ -5672,11 +5753,23 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
 	@$(LINERULE)
 endif
-	@$(call $(HEADERS)-note,$(CURDIR),$(TESTING))
-	@$(call $(HEADERS)-dir,$(CURDIR),directory)
-	@$(call $(HEADERS)-file,$(CURDIR),creating)
-	@$(call $(HEADERS)-skip,$(CURDIR),skipping)
-	@$(call $(HEADERS)-rm,$(CURDIR),removing)
+	@$(call $(HEADERS)-note,$(CURDIR),$(TESTING),,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
+	@$(call $(HEADERS)-dir,$(CURDIR),directory,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
+	@$(call $(HEADERS)-file,$(CURDIR),creating,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
+	@$(call $(HEADERS)-skip,$(CURDIR),skipping,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
+	@$(call $(HEADERS)-rm,$(CURDIR),removing,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
+	@$(LINERULE)
+	@$(call $(COMPOSER_TINYNAME)-note,$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-mkdir,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE))
+	@$(TOUCH) .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE)
+	@$(call $(COMPOSER_TINYNAME)-makefile,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
+	@$(call $(COMPOSER_TINYNAME)-make) COMPOSER_DEBUGIT= --directory .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE) $(NOTHING)
+	@$(call $(COMPOSER_TINYNAME)-cp,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-rm,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE),1)
+endif
+endif
 
 ########################################
 ### {{{3 $(HEADERS)-% ------------------
@@ -5761,19 +5854,19 @@ override define $(HEADERS)-$(COMPOSER_PANDOC) =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) [$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
+	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
 endef
 override define $(HEADERS)-dir =
-	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
 endef
 override define $(HEADERS)-file =
-	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
 endef
 override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_C)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(2))"
 endef
 override define $(HEADERS)-rm =
-	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(_M)$(2))"
+	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
 endef
 
 ################################################################################
@@ -7155,9 +7248,9 @@ $(PUBLISH):
 override define $(PUBLISH)-$(CLEANER) =
 	if	[ -n "$(COMPOSER_LIBRARY)" ] && \
 		[ -d "$(COMPOSER_LIBRARY)" ] && \
-		[ "$$($(DIRNAME) $(COMPOSER_LIBRARY))" = "$(CURDIR)" ]; \
+		[ "$(abspath $(dir $(COMPOSER_LIBRARY)))" = "$(CURDIR)" ]; \
 	then \
-		$(call $(HEADERS)-rm,$(CURDIR),$(patsubst $(CURDIR)/%,%,$(COMPOSER_LIBRARY))); \
+		$(call $(HEADERS)-rm,$(abspath $(dir $(COMPOSER_LIBRARY))),$(notdir $(COMPOSER_LIBRARY))); \
 		$(ECHO) "$(_S)"; \
 		$(RM) --recursive $(COMPOSER_LIBRARY) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
@@ -7193,7 +7286,7 @@ override define $(PUBLISH)-$(TARGETS) =
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	CONT="$$( \
-		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (contents)(.*) $(PUBLISH_BUILD_CMD_END)$$|\1 \2|gp" $(1) \
+		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (contents.*) $(PUBLISH_BUILD_CMD_END)$$|\1|gp" $(1) \
 		| $(HEAD) -n1 \
 	)"; \
 	if [ -n "$${CONT}" ]; then \
@@ -8026,9 +8119,6 @@ endif
 #			garybgenett -> Error: open . as $file ireduce ({}; . *+ $file): no such file or directory
 #				empty .composer.yml = Aeson exception: Error in $: Expected a mapping
 #		add ".header x" tests for pane-begin and box-begin
-#		add generic functions for .composer.mk files...?
-#			@$(call $(HEADERS)-note,$(CURDIR),$(patsubst %-$(CLEANER),%,$(@)),$(CLEANER))
-#			ones for cp, mv, rm, etc.
 #		add banner and footer...?
 #			create "sections" for nav-*, so they can be dynamically reconfigured...
 #			these are going to be a pita to implement, and then change all the yml files...
@@ -8188,8 +8278,8 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLIS
 | $(PUBLISH)-config | defaults
 |:---|:---|
 | cols_main_size  | $(PUBLISH_COLS_MAIN_SIZE)
-| cols_hide_left  | $(PUBLISH_COLS_HIDE_LEFT)
-| cols_hide_right | $(PUBLISH_COLS_HIDE_RIGHT)
+| cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT)
+| cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT)
 | cols_sticky     | $(PUBLISH_COLS_STICKY)
 | copy_safe       | $(PUBLISH_COPY_SAFE)
 
@@ -8229,8 +8319,8 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLI
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
 | cols_main_size  | $(PUBLISH_COLS_MAIN_SIZE) | 8
-| cols_hide_left  | $(PUBLISH_COLS_hide_left) | 0
-| cols_hide_right | $(PUBLISH_COLS_hide_right) | 0
+| cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT) | 0
+| cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT) | 0
 | cols_sticky     | $(PUBLISH_COLS_STICKY) | 0
 | copy_safe       | $(PUBLISH_COPY_SAFE) | 0
 
@@ -8324,8 +8414,8 @@ variables:
 
   $(PUBLISH)-config:
     cols_main_size:			8
-    cols_hide_left:			0
-    cols_hide_right:			0
+    cols_show_left:			0
+    cols_show_right:			0
     cols_sticky:			0
     copy_safe:				0
 
@@ -8464,9 +8554,10 @@ ifneq ($(wildcard $(COMPOSER_TMP)),)
 	@$(ECHO) "$(_D)"
 endif
 	@$(call $(PUBLISH)-$(CLEANER))
-	@$(if $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))),\
+	@$(foreach FILE,$(shell $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))),\
+		$(call $(HEADERS)-note,$(CURDIR),$(patsubst %-$(CLEANER),%,$(FILE)),$(CLEANER)); \
 		$(eval export $(COMPOSER_OPTIONS)) \
-		$(MAKE) $$($(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))) \
+			$(MAKE) $(FILE); \
 	)
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
 		if	[ "$(FILE)" != "$(NOTHING)" ] && \
@@ -8523,9 +8614,10 @@ ifneq ($(COMPOSER_DEPENDS),)
 	@$(MAKE) $(DOITALL)-$(SUBDIRS)
 endif
 endif
-	@$(if $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))),\
+	@$(foreach FILE,$(shell $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))),\
+		$(call $(HEADERS)-note,$(CURDIR),$(patsubst %-$(DOITALL),%,$(FILE)),$(DOITALL)); \
 		$(eval export $(COMPOSER_OPTIONS)) \
-		$(MAKE) $$($(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))) \
+			$(MAKE) $(FILE); \
 	)
 ifeq ($(COMPOSER_TARGETS),)
 	@$(MAKE) $(NOTHING)-$(TARGETS)
