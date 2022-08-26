@@ -70,7 +70,7 @@ override VIM_FOLDING := {{{1
 # {{{1 TODO
 ################################################################################
 # PDF / EPUB / DOCX
-#	man pandoc = REPRODUCIBLE BUILDS
+#	man pandoc = REPRODUCIBLE BUILDS = https://pandoc.org/MANUAL.html#reproducible-builds
 #		Some of the document formats pandoc targets (such as EPUB, docx, and ODT) include build timestamps in the generated document.  That means that the files generated on successive builds will differ, even if the source does not.  To avoid this, set the SOURCE_DATE_EPOCH environment variable, and the timestamp will be taken from it instead of the current time.  SOURCE_DATE_EPOCH should contain an integer unix timestamp (specifying the number of second since midnight UTC January 1, 1970).
 #		Some document formats also include a unique identifier.  For EPUB, this can be set explicitly by setting the identifier metadata field (see EPUB Metadata, above).
 # PDF
@@ -2157,8 +2157,8 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
 $(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
-$(_S)#>[Markdown]: http://daringfireball.net/projects/markdown$(_D)
-$(_S)#>[Markdown]: https://commonmark.org$(_D)
+$(_S)#$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown$(_D)
+$(_S)#$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org$(_D)
 $(_E)[Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown$(_D)
 $(_E)[GitHub]: https://github.com$(_D)
 
@@ -3346,7 +3346,8 @@ $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_css	:= $(patsub
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_toc	:=$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_options	:= --variable=pagetitle="$(COMPOSER_TAGLINE)"$(_D)
 
-$(_M)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_S)#$(MARKER)$(_D) $(_S)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_S)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_M)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_E)$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 
 $(_M)$(OUT_README).$(EXTN_EPUB)$(_D): $(_E)override c_css		:=$(_D)
 
@@ -8250,6 +8251,7 @@ else
 endif
 
 #WORKING:NOW:NOW
+#	fix navbars so that all items have "nav-itm" class...
 #	verify: $(eval export $(COMPOSER_OPTIONS))
 #		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
 #	site
@@ -8261,6 +8263,7 @@ endif
 #			got it... = $(COMPOSER_YML_DATA) $(COMPOSER_LIBRARY).yml | $(YQ_WRITE) ...
 #		light color versions of all icons, for dark backgrounds...
 #			https://github.com/logos ... etc.
+#			https://fontawesome.com/search?q=github
 #	build.sh
 #		are "file path"s getting truncated?
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
