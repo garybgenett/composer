@@ -225,6 +225,10 @@ override PUBLISH_COLS_SHOW_RIGHT	:= 1
 override PUBLISH_COLS_STICKY		:= 1
 override PUBLISH_COPY_SAFE		:= 1
 
+#> talk: 183 / read: 234
+override PUBLISH_READ_TIME		:= "*Reading time: @W words, @T minutes*"
+override PUBLISH_READ_TIME_WPM		:= 220
+
 override LIBRARY_FOLDER			:= null
 override LIBRARY_AUTO_UPDATE		:= null
 
@@ -781,6 +785,7 @@ override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
 override WC_CHAR			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -c
+override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -w
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
@@ -1070,6 +1075,11 @@ override PANDOC_EXTENSIONS		+= +pandoc_title_block
 override PANDOC_EXTENSIONS		+= +raw_tex
 override PANDOC_EXTENSIONS		+= +shortcut_reference_links
 endif
+
+override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
+override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_TEXT)"
+override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json"
+override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
 override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	$(if $(c_lang),\
@@ -1421,10 +1431,27 @@ $(if $(wildcard $(FILE)),\
 	) \
 ))
 
-ifneq ($(and \
-	$(c_site) ,\
-	$(COMPOSER_LIBRARY_YML) \
-),)
+ifneq ($(c_site),)
+override $(PUBLISH)-config-variables := \
+	read_time:PUBLISH_READ_TIME \
+	read_time_wpm:PUBLISH_READ_TIME_WPM \
+
+override define $(PUBLISH)-config-variables-yml =
+override $(PUBLISH)-config-$(word 1,$(subst :, ,$(1))) := $(shell \
+	$(COMPOSER_YML_DATA) \
+	| $(YQ_WRITE) ".variables.[\"$(PUBLISH)-config\"].[\"$(word 1,$(subst :, ,$(1)))\"]" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
+)
+endef
+
+override define $(PUBLISH)-config-variables-default =
+$(if $($(PUBLISH)-config-$(word 1,$(subst :, ,$(1)))),,override $(PUBLISH)-config-$(word 1,$(subst :, ,$(1))) := $($(word 2,$(subst :, ,$(1)))))
+endef
+
+$(foreach FILE,$($(PUBLISH)-config-variables),$(eval $(call $(PUBLISH)-config-variables-yml,$(FILE))))
+$(foreach FILE,$($(PUBLISH)-config-variables),$(eval $(call $(PUBLISH)-config-variables-default,$(FILE))))
+
+ifneq ($(COMPOSER_LIBRARY_YML),)
 override $(PUBLISH)-library-variables := \
 	folder:LIBRARY_FOLDER \
 	auto_update:LIBRARY_AUTO_UPDATE \
@@ -1434,7 +1461,7 @@ override $(PUBLISH)-library-variables := \
 	digest_chars:LIBRARY_DIGEST_CHARS \
 	digest_spacer:LIBRARY_DIGEST_SPACER \
 	digest_continue:LIBRARY_DIGEST_CONTINUE \
-	digest_permalink:LIBRARY_DIGEST_PERMALINK
+	digest_permalink:LIBRARY_DIGEST_PERMALINK \
 
 override define $(PUBLISH)-library-variables-yml =
 override $(PUBLISH)-library-$(word 1,$(subst :, ,$(1))) := $(shell \
@@ -1450,6 +1477,8 @@ endef
 
 $(foreach FILE,$($(PUBLISH)-library-variables),$(eval $(call $(PUBLISH)-library-variables-yml,$(FILE))))
 $(foreach FILE,$($(PUBLISH)-library-variables),$(eval $(call $(PUBLISH)-library-variables-default,$(FILE))))
+
+endif
 endif
 endif
 
@@ -2353,6 +2382,7 @@ endef
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 #	need to document ".header 0" for pane-begin and box-begin
 #		need to document ".contents 0"
+#	document .readtime = @W / @T
 #WORK
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
@@ -3361,6 +3391,9 @@ $(_S)########################################$(_D)
     $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
     $(_C)copy_safe$(_D):				$(_M)$(PUBLISH_COPY_SAFE)$(_D)
 
+    $(_C)read_time$(_D):				$(_M)$(PUBLISH_READ_TIME)$(_D)
+    $(_C)read_time_wpm$(_D):			$(_M)$(PUBLISH_READ_TIME_WPM)$(_D)
+
     $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
     $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
     $(_C)search_text$(_D):			$(_M)q$(_D)
@@ -3516,6 +3549,9 @@ variables:
     cols_show_right:			0
     cols_sticky:			1
     copy_safe:				0
+
+    read_time:				null
+    read_time_wpm:			null
 
     search_name:			Search
     search_site:			https://duckduckgo.com
@@ -3902,7 +3938,7 @@ $$(
 )
 &nbsp;$$(
 	$(ECHO) "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"brand\]" 2>/dev/null \\
+	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"brand\"]" 2>/dev/null \\
 	| $(SED) "/^null$$/d"
 )
 </h1>
@@ -4019,6 +4055,9 @@ function $(PUBLISH)-nav-top-list {
 						| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
 						| $(SED) "/^null$$/d"
 					) $(PUBLISH_BUILD_CMD_END)\\n"
+				continue
+			elif [ "$${FILE}" = ".readtime" ]; then
+				$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) readtime -->\\n"
 				continue
 			fi
 			LINK="$$(
@@ -4238,6 +4277,8 @@ function $(PUBLISH)-nav-side-list {
 					$(ECHO) "$${TEXT}" \\
 					| $(SED) "s|^[.](contents.*)$$|\\1|g"
 				) $(PUBLISH_BUILD_CMD_END)\\n"
+		elif [ "$${TEXT}" = ".readtime" ]; then
+			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) readtime $(PUBLISH_BUILD_CMD_END)\\n"
 		elif [ "$$(
 			$(ECHO) "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
@@ -4320,7 +4361,7 @@ $(CAT) <<_EOF_
 </button>
 $$(
 	if [ -n "$${2}" ]; then	$(PUBLISH)-brand "$${3}" || return 1
-				$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) brand -->\\n"
+	else			$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) brand -->\\n"
 	fi
 )
 <div class="collapse navbar-collapse" id="navbar-fixed-$$(
@@ -4688,7 +4729,8 @@ function $(PUBLISH)-file {
 function $(PUBLISH)-select {
 	ACTION="$${1}"; shift
 	if	[ "$${ACTION}" = "contents" ] ||
-		[ "$${ACTION}" = "header" ];
+		[ "$${ACTION}" = "header" ] ||
+		[ "$${ACTION}" = "readtime" ];
 	then
 		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $${ACTION} $${@} $(PUBLISH_BUILD_CMD_END)\\n"
 		return 0
@@ -7327,13 +7369,13 @@ override define $(PUBLISH)-$(TARGETS) =
 		done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	$(ECHO) "$(_D)"; \
 	CONT="$$( \
 		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (contents.*) $(PUBLISH_BUILD_CMD_END)$$|\1|gp" $(1) \
 		| $(HEAD) -n1 \
 	)"; \
 	if [ -n "$${CONT}" ]; then \
 		CONT="$$($(ECHO) "$${CONT}" | $(SED) "s|^contents[[:space:]]*||g")"; \
-		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "\n" >$(1).contents; \
@@ -7346,7 +7388,21 @@ override define $(PUBLISH)-$(TARGETS) =
 		$(RM) $(1).contents $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi; \
-	$(ECHO) "$(_D)"; \
+	if [ -n "$$( \
+		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (readtime.*) $(PUBLISH_BUILD_CMD_END)$$|\1|gp" $(1) \
+		| $(HEAD) -n1 \
+	)" ]; then \
+		$(call $(HEADERS)-note,$(1),readtime,$(PUBLISH)); \
+		$(ECHO) "$(_E)"; \
+		$(ECHO) "" >$(1).readtime; \
+		$(call $(PUBLISH)-$(TARGETS)-readtime,$(1)) \
+			| $(TEE) --append $(1).readtime $($(DEBUGIT)-output); \
+			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) readtime.* $(PUBLISH_BUILD_CMD_END)$$/r $(1).readtime" $(1); \
+		$(ECHO) "$(_S)"; \
+		$(RM) $(1).readtime $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi; \
 	$(eval override c_list := $(1))
 endef
 
@@ -7356,7 +7412,7 @@ endef
 override define $(PUBLISH)-$(TARGETS)-contents =
 	FILE="$$( \
 		$(CAT) $(1) \
-		| $(PANDOC) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
+		| $(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) \
 		| $(YQ_WRITE) \
 			"[.. | select(has(\"t\")) | select( \
 				(.t == \"Header\") or \
@@ -7414,6 +7470,27 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		fi; \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done
+endef
+
+########################################
+### {{{4 $(PUBLISH)-$(TARGETS)-readtime
+
+override define $(PUBLISH)-$(TARGETS)-readtime =
+	WORD="$$( \
+		for FILE in $(1); do \
+			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
+		done \
+		| $(PANDOC_MD_TO_TEXT) \
+		| $(WC_WORD) \
+	)"; \
+	TIME="1"; \
+	if [ "$${WORD}" -gt "$($(PUBLISH)-config-read_time_wpm)" ]; then \
+		TIME="$$($(EXPR) $${WORD} / $($(PUBLISH)-config-read_time_wpm))"; \
+	fi; \
+	$(ECHO) "$($(PUBLISH)-config-read_time)\n" \
+		| $(SED) \
+			-e "s|@W|$${WORD}|g" \
+			-e "s|@T|$${TIME}|g"
 endef
 
 ########################################
@@ -7977,27 +8054,28 @@ override define $(PUBLISH)-library-digest-create =
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
 		$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
-		| $(PANDOC) --strip-comments --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
+		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" \
 	)"; \
-	SIZ="0"; NUM="0"; while \
-		[ "$${NUM}" -lt "$${LEN}" ] && \
+	SIZ="0"; BLK="0"; while \
+		[ "$${BLK}" -lt "$${LEN}" ] && \
 		[ "$${SIZ}" -le "$($(PUBLISH)-library-digest_chars)" ]; \
 	do \
 		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 				| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
-				| $(PANDOC) --strip-comments --wrap="none" --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
-				| $(YQ_WRITE) ".blocks |= pick([$${NUM}])" \
-				| $(PANDOC) --strip-comments --wrap="none" --from="json" --to="$(TMPL_LINT)"; \
+				| $(PANDOC_MD_TO_JSON) \
+				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
+				| $(PANDOC_JSON_TO_LINT) \
+				; \
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
 				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 				| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
-				| $(PANDOC) --strip-comments --wrap="none" --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json" \
-				| $(YQ_WRITE) ".blocks |= pick([$${NUM}])" \
-				| $(PANDOC) --strip-comments --wrap="none" --from="json" --to="$(TMPL_LINT)" \
+				| $(PANDOC_MD_TO_JSON) \
+				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
+				| $(PANDOC_JSON_TO_LINT) \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
 				| $(WC_CHAR) \
@@ -8005,9 +8083,9 @@ override define $(PUBLISH)-library-digest-create =
 		)"; \
 		$(ECHO) "\n" \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-		NUM="$$($(EXPR) $${NUM} + 1)"; \
+		BLK="$$($(EXPR) $${BLK} + 1)"; \
 	done; \
-	if [ "$${NUM}" -lt "$${LEN}" ]; then \
+	if [ "$${BLK}" -lt "$${LEN}" ]; then \
 		$(ECHO) "$(subst ",,$($(PUBLISH)-library-digest_continue)) " \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
@@ -8172,43 +8250,25 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	"contents library" token of some sort...
-#		need to be able to program the library...
 #	verify: $(eval export $(COMPOSER_OPTIONS))
 #		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
 #	site
 #		ability to remove author name(s) from digest(s)
-#		add ".contents 0" to site-template-all
-#			garybgenett -> Error: open . as $file ireduce ({}; . *+ $file): no such file or directory
-#				empty .composer.yml = Aeson exception: Error in $: Expected a mapping
-#		add ".header x" tests for pane-begin and box-begin
 #		add banner and footer...?
-#			create "sections" for nav-*, so they can be dynamically reconfigured...
-#			these are going to be a pita to implement, and then change all the yml files...
+#		place "contents" and "readtime" in all three locations...
+#		"contents library" token of some sort...
+#			need to be able to program the library...
+#			got it... = $(COMPOSER_YML_DATA) $(COMPOSER_LIBRARY).yml | $(YQ_WRITE) ...
 #		light color versions of all icons, for dark backgrounds...
 #			https://github.com/logos ... etc.
-#		https://github.com/garybgenett/www.garybgenett.net
 #	build.sh
 #		are "file path"s getting truncated?
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 #		which are default "#" links/hashes?  make them so, and remove the need from the configuration files?
 #		convert echo/cat/etc. to passed-in variables, because paths may be different between systems...
-#	fixes
-#		pagetitle for digest pages...
-#		actually, maybe rename or symlink digest.html?  this would be in addition to the include?
-#		ability to disable digest in library, and do flat links instead?
-#		h1/etc. sizes are *way* huge...
-#	c_site -> c_type = $(PUBLISH) ?
-#		would make documentation and other things much easier... no need to keep c_site/EXTN_HTML in sync...
-#		probably more future-proof, too...
-#	work backwards, turning YQ_WRITE.*title into a dedicated title-block function
-#		replace the YQ_WRITE.*title code in library-digest with a call to title-block
-#		test
 #	empty configuration versus hard-defaults
 #		they should match, and $(NOTHING) and pandoc directories should not have _library
 #		incorporate the COMPOSER_DEPENDS and other testing happening here, now
-#	char/word counts?  "time to read" metric?  = https://thereadtime.com
-#		make configurable, null = do not show
 
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
@@ -8345,6 +8405,8 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLIS
 | cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT)
 | cols_sticky     | $(PUBLISH_COLS_STICKY)
 | copy_safe       | $(PUBLISH_COPY_SAFE)
+| read_time       | $(PUBLISH_READ_TIME)
+| read_time_wpm   | $(PUBLISH_READ_TIME_WPM)
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
@@ -8386,6 +8448,8 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLI
 | cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT) | 0
 | cols_sticky     | $(PUBLISH_COLS_STICKY) | 0
 | copy_safe       | $(PUBLISH_COPY_SAFE) | 0
+| read_time       | $(PUBLISH_READ_TIME) | \*(count: @W, time: @T)\*
+| read_time_wpm   | $(PUBLISH_READ_TIME_WPM) | 200
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
@@ -8498,6 +8562,8 @@ variables:
     cols_show_right:			0
     cols_sticky:			0
     copy_safe:				0
+    read_time:				"*(count: @W, time: @T)*"
+    read_time_wpm:			200
 
   $(PUBLISH)-library:
     folder:				$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))
