@@ -7902,13 +7902,7 @@ $($(PUBLISH)-library-digest):
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
-	@$(ECHO) "$(_F)"
-	@$(ECHO) "" >$(@)
-	@$(ECHO) "---\n" >>$(@)
-	@$(ECHO) "pagetitle: $($(PUBLISH)-library-digest_title)\n" >>$(@)
-	@$(ECHO) "---\n" >>$(@)
-	@$(ECHO) "$(_D)"
-	@$(call $(PUBLISH)-library-digest-main,$(@))
+	@$(call $(PUBLISH)-library-digest-main,$(@),$($(PUBLISH)-library-digest_title))
 
 ########################################
 ### {{{4 $(PUBLISH)-library-digest-src -
@@ -7920,9 +7914,10 @@ $($(PUBLISH)-library-digest-src):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call $(PUBLISH)-library-digest-main,$(COMPOSER_LIBRARY).$(notdir $($(PUBLISH)-library-digest-src)))
+#>	@$(call $(PUBLISH)-library-digest-main,$(@))
+	@$(call $(PUBLISH)-library-digest-main,$(COMPOSER_LIBRARY).$(notdir $(@)))
 	@$(ECHO) "$(_S)"
-	@$(MV) $(COMPOSER_LIBRARY).$(notdir $($(PUBLISH)-library-digest-src)) $($(PUBLISH)-library-digest-src) $($(DEBUGIT)-output)
+	@$(MV) $(COMPOSER_LIBRARY).$(notdir $(@)) $(@) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 
 ########################################
@@ -7960,6 +7955,12 @@ $($(PUBLISH)-library-digest-files):
 
 override define $(PUBLISH)-library-digest-main =
 	$(ECHO) "$(_F)"; \
+	$(ECHO) "" >$(1).$(COMPOSER_BASENAME); \
+	if [ -n "$(2)" ]; then \
+		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
+		$(ECHO) "pagetitle: $(2)\n" >>$(1).$(COMPOSER_BASENAME); \
+		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
+	fi; \
 	NUM="0"; for FILE in $$( \
 		$(CAT) $($(PUBLISH)-library-metadata) \
 			| $(YQ_WRITE) " \
@@ -7970,16 +7971,18 @@ override define $(PUBLISH)-library-digest-main =
 			| $(HEAD) -n$($(PUBLISH)-library-digest_count); \
 	); do \
 		if [ "$${NUM}" -gt "0" ] && [ "$($(PUBLISH)-library-digest_spacer)" = "1" ]; then \
-			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)\n" >>$(1); \
+			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
 		fi; \
 		$(ECHO) "$(_D)"; \
 		EXPAND="$(SPECIAL_VAL)"; \
 		if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
 			EXPAND="1"; \
 		fi; \
-		$(call $(PUBLISH)-library-digest-create,$(1),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
+		$(call $(PUBLISH)-library-digest-create,$(1).$(COMPOSER_BASENAME),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done; \
+	$(ECHO) "$(_S)"; \
+	$(MV) $(1).$(COMPOSER_BASENAME) $(1) $($(DEBUGIT)-output); \
 	$(ECHO) "$(_D)"
 endef
 
@@ -7989,7 +7992,7 @@ endef
 #> update: YQ_WRITE.*title
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
-	$(call $(HEADERS)-note,$(1),$(2),$(PUBLISH)-digest); \
+	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-digest); \
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 		else				$(ECHO) "$(_N)"; \
 		fi; \
