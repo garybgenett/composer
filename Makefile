@@ -3460,14 +3460,14 @@ $(_S)########################################$(_D)
     $(_M)FRAME$(_D):
       - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 LEFT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
-          * $(_M)ITEM 1$(_D)
-          * $(_M)ITEM 2$(_D)
-          * $(_M)ITEM 3$(_D)
+          * ITEM 1
+          * ITEM 2
+          * ITEM 3
       - $(_C)pane-end$(_D)
       - $(_N).spacer$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
-          $(_M)LEFT TEXT$(_D)
+          LEFT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
       - $(_N).spacer$(_D)
@@ -3486,14 +3486,14 @@ $(_S)########################################$(_D)
     $(_M)FRAME$(_D):
       - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 RIGHT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
-          * $(_M)ITEM 1$(_D)
-          * $(_M)ITEM 2$(_D)
-          * $(_M)ITEM 3$(_D)
+          * ITEM 1
+          * ITEM 2
+          * ITEM 3
       - $(_C)pane-end$(_D)
       - $(_N).spacer$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
-          $(_M)RIGHT TEXT$(_D)
+          RIGHT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
       - $(_N).spacer$(_D)
@@ -3512,13 +3512,17 @@ $(_S)########################################$(_D)
 
 $(_S)########################################$(_D)
 
-  $(_H)$(PUBLISH)-info-top$(_D): $(_N)|$(_D)
-    $(_M)TOP INFO$(_D)
+  $(_H)$(PUBLISH)-info-top$(_D):
+    $(_M)INFO$(_D):
+      - $(_N)|$(_D)
+          TOP INFO
 
 $(_S)########################################$(_D)
 
-  $(_H)$(PUBLISH)-info-bottom$(_D): $(_N)|$(_D)
-    $(_M)BOTTOM INFO$(_D)
+  $(_H)$(PUBLISH)-info-bottom$(_D):
+    $(_M)INFO$(_D):
+      - $(_N)|$(_D)
+          BOTTOM INFO
 
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)End Of File$(_D)
@@ -3828,31 +3832,35 @@ variables:
 
 ########################################
 
-  $(PUBLISH)-info-top: |
-    <a rel="author" href="$(COMPOSER_HOMEPAGE)">
-      <img alt="$(COMPOSER_TECHNAME)"
-      class="$(COMPOSER_TINYNAME)-icon"
-      src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.jpg)"/></a>
+  $(PUBLISH)-info-top:
+    INFO:
+      - |
+          <a rel="author" href="$(COMPOSER_HOMEPAGE)">
+            <img alt="$(COMPOSER_TECHNAME)"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.jpg)"/></a>
 
 ########################################
 
-  $(PUBLISH)-info-bottom: |
-    <a rel="author" href="http://www.garybgenett.net/projects/composer">
-      <img alt="Gary B. Genett"
-      class="$(COMPOSER_TINYNAME)-icon"
-      src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-author.jpg)"/></a>
-    <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
-      <img alt="GPL License"
-      class="$(COMPOSER_TINYNAME)-icon"
-      src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-gpl.jpg)"/></a>
-    <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
-      <img alt="CC License"
-      class="$(COMPOSER_TINYNAME)-icon"
-      src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-cc.jpg)"/></a>
-    <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
-      <img alt="All Rights Reserved"
-      class="$(COMPOSER_TINYNAME)-icon"
-      src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-reserved.jpg)"/></a>
+  $(PUBLISH)-info-bottom:
+    INFO:
+      - |
+          <a rel="author" href="http://www.garybgenett.net/projects/composer">
+            <img alt="Gary B. Genett"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-author.jpg)"/></a>
+          <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
+            <img alt="GPL License"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-gpl.jpg)"/></a>
+          <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
+            <img alt="CC License"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-cc.jpg)"/></a>
+          <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
+            <img alt="All Rights Reserved"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-reserved.jpg)"/></a>
 
 ################################################################################
 # End Of File
@@ -3989,25 +3997,59 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-info-data ---------
 
-# 1 $(PUBLISH)-info-$${1}		top || bottom
+# 1 top || bottom
+
+# x $(PUBLISH)-info-data-list 1		$(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	INFO="$$(
+	if [ -n "$$(
 		$(ECHO) "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-info-$${1}" 2>/dev/null \\
 		| $(SED) "/^null$$/d"
-	)"
-	if [ -n "$${INFO}" ]; then
+	)" ]; then
 $(CAT) <<_EOF_
-<p class="nav-item me-3">
-$$(
-	$(ECHO) "$${INFO}\\n" \\
-	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
-)
-</p>
+<ul class="navbar-nav navbar-nav-scroll">
+_EOF_
+		$(ECHO) "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$(PUBLISH)-info-$${1} | keys | .[]" 2>/dev/null \\
+			| $(SED) "/^null$$/d" \\
+			| while read -r MENU; do
+				$(PUBLISH)-info-data-list "$(PUBLISH)-info-$${1}.[\"$${MENU}\"]" || return 1
+			done
+$(CAT) <<_EOF_
+</ul>
 _EOF_
 	fi
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-info-data-list ----
+
+# 1 $(PUBLISH)-info-$${1}.[*]
+
+function $(PUBLISH)-info-data-list {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$(ECHO) "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
+		| $(SED) "/^null$$/d" \\
+		| while read -r FILE; do
+			VAL="$$(
+				$(ECHO) "$${YQ_DATA}" \\
+				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
+				| $(SED) "/^null$$/d"
+			)"
+$(CAT) <<_EOF_
+<li class="nav-item me-3">
+_EOF_
+			$(ECHO) "$${VAL}\\n" \\
+				| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+$(CAT) <<_EOF_
+</li>
+_EOF_
+		done
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4076,7 +4118,7 @@ function $(PUBLISH)-nav-top-list {
 $(CAT) <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
-	$(ECHO) "$${LINK}" \
+	$(ECHO) "$${LINK}" \\
 	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 )" data-bs-toggle="dropdown">$${FILE}</a>
 <ul class="dropdown-menu bg-dark">
@@ -4084,7 +4126,7 @@ _EOF_
 				else
 $(CAT) <<_EOF_
 <li><a class="dropdown-item" href="$$(
-	$(ECHO) "$${LINK}" \
+	$(ECHO) "$${LINK}" \\
 	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a>
 <ul>
@@ -4103,14 +4145,14 @@ _EOF_
 				if [ -n "$$($(ECHO) "$${1}" | $(SED) -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $(CAT) <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
-	$(ECHO) "$${VAL}" \
+	$(ECHO) "$${VAL}" \\
 	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
 				else
 $(CAT) <<_EOF_
 <li><a class="dropdown-item" href="$$(
-	$(ECHO) "$${VAL}" \
+	$(ECHO) "$${VAL}" \\
 	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
@@ -4215,7 +4257,7 @@ $(CAT) <<_EOF_
 <li class="breadcrumb-item">$$(
 	if [ -z "$${NBSP}" ]; then $(ECHO) "$(DIVIDE)&nbsp;"; fi
 )<a href="$$(
-	$(ECHO) "$${VAL}" \
+	$(ECHO) "$${VAL}" \\
 	| $(SED) "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
