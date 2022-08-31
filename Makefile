@@ -197,20 +197,15 @@ override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
 
+override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
+override COMPOSER_ICON			:= $(COMPOSER_ART)/icon.img
+
 override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
 override BOOTSTRAP_CSS_CSS		:= $(COMPOSER_ART)/bootstrap.source.css
 override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
 
 override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
 override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
-
-#WORKING:NOW:NOW
-#	make these somehow configurable...
-#	must be .composer.mk, for revealjs
-#	however, must also be <composer_root> enabled...
-#	document!
-override COMPOSER_ICON			:= $(COMPOSER_ART)/icon.img
-override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
 
 ########################################
 
@@ -509,6 +504,8 @@ $(call READ_ALIASES,T,T,c_type)
 $(call READ_ALIASES,B,B,c_base)
 $(call READ_ALIASES,L,L,c_list)
 $(call READ_ALIASES,g,g,c_lang)
+$(call READ_ALIASES,b,b,c_logo)
+$(call READ_ALIASES,i,i,c_icon)
 $(call READ_ALIASES,s,s,c_css)
 $(call READ_ALIASES,c,c,c_toc)
 $(call READ_ALIASES,l,l,c_level)
@@ -528,6 +525,8 @@ override c_type				?= $(TYPE_DEFAULT)
 override c_base				?=
 override c_list				?=
 override c_lang				?= en-US
+override c_logo				?= $(COMPOSER_LOGO)
+override c_icon				?= $(COMPOSER_ICON)
 override c_css				?=
 override c_toc				?=
 override c_level			?= $(DEPTH_DEFAULT)
@@ -1107,14 +1106,14 @@ override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
 	$(if $(filter $(c_type),$(TYPE_PRES)),\
 		--variable=revealjs-url="$(REVEALJS_DIR)" \
 	) \
-	$(if $(wildcard $(COMPOSER_ICON)),\
+	$(if $(wildcard $(c_icon)),\
 		$(if $(or \
 			$(c_site) ,\
 			$(filter $(c_type),$(TYPE_HTML)) ,\
 			$(filter $(c_type),$(TYPE_EPUB)) ,\
 			$(filter $(c_type),$(TYPE_PRES)) ,\
 		),\
-			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(COMPOSER_ICON)\"/>" \
+			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(c_icon)\"/>" \
 		) \
 	) \
 	$(if $(c_site),\
@@ -1227,6 +1226,9 @@ override COMPOSER_OPTIONS_GLOBAL := \
 	c_site \
 	c_type \
 	c_lang \
+	c_logo \
+	c_icon \
+	c_css \
 
 override COMPOSER_OPTIONS_LOCAL := \
 	COMPOSER_INCLUDE \
@@ -1236,7 +1238,6 @@ override COMPOSER_OPTIONS_LOCAL := \
 	COMPOSER_IGNORES \
 	c_base \
 	c_list \
-	c_css \
 	c_toc \
 	c_level \
 	c_margin \
@@ -1709,6 +1710,8 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
 	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
 	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
+	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ $(_E)b"	"#WORKING"				"$(_M)$(c_logo)"
+	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ $(_E)i"	"#WORKING"				"$(_M)$(c_icon)"
 	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(_M)$(notdir $(call c_css_select))$(_D)"
 	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
@@ -2426,8 +2429,8 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS_JS))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS_CSS))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS))$(_D)
-$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(COMPOSER_ICON))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(COMPOSER_LOGO))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(COMPOSER_ICON))$(_D)
 
 $(_C)[Bootswatch]$(_D)
 
@@ -2678,6 +2681,14 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_lang)
 
   * Primarily for $(_C)[PDF]$(_D), this specifies the language that the table of contents
     ($(_C)[c_toc]$(_D)) and chapter headings ($(_C)[c_level]$(_D)) will use.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_logo)
+
+#WORKING
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,c_icon)
+
+#WORKING
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
 
@@ -3151,8 +3162,8 @@ endif
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
 	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(TEX_PDF_TEMPLATE))
 	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS))
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(ECHO) "$(_E)"
 	@$(foreach FILE,\
 		$(TMPL_HTML):$(EXTN_HTML) \
@@ -3192,19 +3203,19 @@ endif
 	@$(LS) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
 ifneq ($(COMPOSER_RELEASE),)
 	@$(ECHO) "$(_E)"
-	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(ECHO) "$(_D)"
-	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"			COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(CLEANER)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"			COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
 #>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
 #>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" $(DOITALL)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
 	@$(ECHO) "$(_E)"
 	@$(MV) $(CURDIR)/$(COMPOSER_YML)						$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
 	@$(ECHO) "$(_D)"
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(CURDIR)/$(COMPOSER_YML)
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 endif
 
 ########################################
@@ -3649,6 +3660,8 @@ variables:
           c_site: "#c_site"
           c_type / c_base / c_list: "#c_type--c_base--c_list"
           c_lang: "#c_lang"
+          c_logo: "#c_logo"
+          c_icon: "#c_icon"
           c_css: "#c_css"
           c_toc: "#c_toc"
           c_level: "#c_level"
@@ -3793,6 +3806,8 @@ variables:
           * [c_site]
           * [c_type / c_base / c_list]
           * [c_lang]
+          * [c_logo]
+          * [c_icon]
           * [c_css]
           * [c_toc]
           * [c_level]
@@ -3952,7 +3967,7 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 ########################################
 #### {{{4 $(PUBLISH)-brand -------------
 
-# 1 COMPOSER_LOGO
+# 1 c_logo
 
 function $(PUBLISH)-brand {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -4079,7 +4094,7 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-nav-top -----------
 
-# 1 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
+# 1 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 c_logo
 
 # x $(PUBLISH)-nav-begin 1		top || bottom
 # x $(PUBLISH)-nav-begin 2		true = brand
@@ -4215,7 +4230,7 @@ _EOF_
 
 # x $(PUBLISH)-nav-begin 1		top || bottom
 # x $(PUBLISH)-nav-begin 2		true = brand
-# x $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 COMPOSER_LOGO
+# x $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 c_logo
 # x $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom.[*]
 # x $(PUBLISH)-nav-bottom-list 2	$${NBSP}
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
@@ -4416,7 +4431,7 @@ _EOF_
 
 # 1 top || bottom
 # 2 true = brand
-# 3 $(PUBLISH)-brand 1			COMPOSER_LOGO
+# 3 $(PUBLISH)-brand 1			c_logo
 
 function $(PUBLISH)-nav-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -5847,6 +5862,8 @@ override $(HEADERS)-vars := \
 	c_base \
 	c_list \
 	c_lang \
+	c_logo \
+	c_icon \
 	c_css \
 	c_toc \
 	c_level \
@@ -7568,7 +7585,7 @@ $($(PUBLISH)-caches):
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "$(COMPOSER_LOGO)"; \
+		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "$(c_logo)"; \
 	elif [ "$($(@))" != "$(patsubst nav-%,%,$($(@)))" ]; then \
 		$(call PUBLISH_BUILD_SH_RUN) "$($(@))"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
@@ -8972,10 +8989,18 @@ ifeq ($(c_type),$(TYPE_LPDF))
 	@$(MKDIR) $(COMPOSER_TMP)/$(notdir $(@)).$(DATENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
+ifeq ($(c_type),$(TYPE_PRES))
+	@$(SED) -i.$(COMPOSER_BASENAME) "s|^(.+background[:].+url[(][\"])[^\"]+([\"].+)$$|\1$(c_logo)\2|g" $(REVEALJS_CSS)
+endif
 	@$(ECHO) "$(_F)"
 #>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
 	@$(PANDOC) $(call PANDOC_OPTIONS)
 	@$(ECHO) "$(_D)"
+ifeq ($(c_type),$(TYPE_PRES))
+	@$(ECHO) "$(_S)"
+	@$(MV) $(REVEALJS_CSS).$(COMPOSER_BASENAME) $(REVEALJS_CSS) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+endif
 ifneq ($(COMPOSER_LOG),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP) $(subst ",\",$(call PANDOC_OPTIONS))\n" >>$(CURDIR)/$(COMPOSER_LOG)
 endif
