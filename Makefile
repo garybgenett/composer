@@ -3991,7 +3991,9 @@ _EOF_
 	else
 		$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) logo -->\\n"
 	fi
-	$(ECHO) "$${BRND}\\n"
+	if [ -n "$${BRND}" ]; then
+		$(ECHO) "$${BRND}\\n"
+	fi
 $(CAT) <<_EOF_
 </h1>
 _EOF_
@@ -8198,6 +8200,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)) \
 		>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(_E)"
 	@$(LN) \
 		$(COMPOSER) \
 		$(COMPOSER_DIR)/.gitignore \
@@ -8209,6 +8212,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(REVEALJS_DIR) \
 		$(FONTAWES_DIR) \
 		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/
+	@$(ECHO) "$(_S)"
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))
 	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
@@ -8330,8 +8334,15 @@ endif
 #	verify: $(eval export $(COMPOSER_OPTIONS))
 #		c_margins error in $(TESTING)-$(COMPOSER_BASENAME) ?
 #	site
+#		add unit-item functionality to unit-beg/end
+#			require a flag to unit-beg to enable this
+#				simple unit-beg as they are should continue to work as they do, automatically triggering unit-item in the background
+#			convert digests to use unit-item natively
+#			value of $(SPECIAL_VAL) for digest_expanded sets only one open at a time
 #		ability to remove author name(s) from digest(s)
 #		add banner and footer...?
+#			yes, to the center column
+#			this can be for all kinds of things... add an example of box-beg/end to site-template
 #		place "contents" and "readtime" in all three locations...
 #		"contents library" token of some sort...
 #			need to be able to program the library...
