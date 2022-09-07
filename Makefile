@@ -95,7 +95,8 @@ override VIM_FOLDING := {{{1
 #WORKING:NOW
 # document
 #	change in behavior... particularly yml files...
-#		$(c_base).$(EXTENSION): $(COMPOSER_YML_LIST) $($(PUBLISH)-cache) $($(PUBLISH)-library)
+#		$(c_base).$(EXTENSION): $(COMPOSER) $(COMPOSER_YML_LIST) $($(PUBLISH)-cache) $($(PUBLISH)-library)
+#		$(COMPOSER) upgrade = use $(PRINTER) to check files to update...
 #	$(COMPOSER_YML) and note that it is now an override for everything
 #		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
 #		hashes will overlap, and arrays will append
@@ -2297,6 +2298,7 @@ endef
 # note that main directory is usable right away, without $(INSTALL)
 #	see config files for examples (unchanged composer.yml will impact websites created from this instance)
 # non-single-user use is not recommended
+#	parallel processing = [MAKEJOBS]
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
@@ -2350,6 +2352,7 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-FORMAT --
 
 #WORKING:NOW:NOW
+#	make demo = peek = replace screenshot with a gif
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
 #	note that they are intentionally reversed
@@ -7587,12 +7590,16 @@ ifneq ($(c_site),)
 $(filter %.$(EXTN_HTML),$(COMPOSER_TARGETS)): $($(PUBLISH)-cache)
 endif
 
+$($(PUBLISH)-cache): $(COMPOSER)
 $($(PUBLISH)-cache): $(COMPOSER_YML_LIST)
+#>$($(PUBLISH)-cache): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-cache)
 
+$($(PUBLISH)-caches): $(COMPOSER)
 $($(PUBLISH)-caches): $(COMPOSER_YML_LIST)
+#>$($(PUBLISH)-caches): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 	@$(call $(HEADERS)-note,$(COMPOSER_TMP),$($(@)),$(PUBLISH)-cache)
@@ -7642,14 +7649,6 @@ $($(PUBLISH)-caches) \
 	: \
 	$($(PUBLISH)-library)
 
-$($(PUBLISH)-library) \
-$($(PUBLISH)-library-metadata) \
-$($(PUBLISH)-library-index) \
-$($(PUBLISH)-library-digest) \
-	: \
-	$(COMPOSER_YML_LIST) \
-	$(COMPOSER_CONTENTS_EXT)
-
 endif
 
 .PHONY: $(PUBLISH)-library
@@ -7664,6 +7663,9 @@ $(PUBLISH)-library:
 
 #> update: COMPOSER_OPTIONS
 
+$($(PUBLISH)-library): $(COMPOSER)
+$($(PUBLISH)-library): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library): $($(PUBLISH)-library-digest)
@@ -7732,7 +7734,9 @@ endef
 
 #> update: YQ_WRITE.*title
 
+$($(PUBLISH)-library-metadata): $(COMPOSER)
 $($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-metadata): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-metadata):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
@@ -7834,7 +7838,9 @@ $($(PUBLISH)-library-metadata):
 ########################################
 ### {{{3 $(PUBLISH)-library-index ------
 
+$($(PUBLISH)-library-index): $(COMPOSER)
 $($(PUBLISH)-library-index): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-index): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
 	@$(ECHO) "$(_S)"
@@ -7979,7 +7985,9 @@ endif
 ########################################
 ### {{{4 $(PUBLISH)-library-digest-file
 
+$($(PUBLISH)-library-digest): $(COMPOSER)
 $($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-digest): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
@@ -7994,7 +8002,9 @@ $($(PUBLISH)-library-digest):
 ########################################
 ### {{{4 $(PUBLISH)-library-digest-src -
 
+$($(PUBLISH)-library-digest-src): $(COMPOSER)
 $($(PUBLISH)-library-digest-src): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-digest-src): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-src):
@@ -8011,7 +8021,9 @@ $($(PUBLISH)-library-digest-src):
 ### {{{4 $(PUBLISH)-library-digest-files
 
 #> update: Title / Author / Date[Year] / Tag
+$($(PUBLISH)-library-digest-files): $(COMPOSER)
 $($(PUBLISH)-library-digest-files): $(COMPOSER_YML_LIST)
+$($(PUBLISH)-library-digest-files): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
@@ -8976,6 +8988,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
 endif
 
+$(c_base).$(EXTENSION): $(COMPOSER)
 ifneq ($(COMPOSER_YML_LIST),)
 $(c_base).$(EXTENSION): $(COMPOSER_YML_LIST)
 endif
@@ -9035,6 +9048,7 @@ endif
 
 override define $(COMPOSER_PANDOC)-c_list_plus =
 	$(eval override c_list_plus := $(filter-out .set_title-%,$(+)))
+	$(eval override c_list_plus := $(filter-out $(COMPOSER),$(c_list_plus)))
 	$(eval override c_list_plus := $(filter-out $(COMPOSER_YML_LIST),$(c_list_plus)))
 	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-cache),$(c_list_plus)))
 	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-library),$(c_list_plus)))
@@ -9058,6 +9072,7 @@ endef
 
 override define TYPE_TARGETS =
 %.$(2): \
+	$$(COMPOSER) \
 	$$(COMPOSER_YML_LIST) \
 	$$(if $$(and \
 		$$(c_site) ,\
@@ -9073,6 +9088,7 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 endif
 
 %.$(2): \
+	$$(COMPOSER) \
 	$$(COMPOSER_YML_LIST) \
 	$$(if $$(and \
 		$$(c_site) ,\
@@ -9088,6 +9104,7 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 endif
 
 %.$(2): \
+	$$(COMPOSER) \
 	$$(COMPOSER_YML_LIST) \
 	$$(if $$(and \
 		$$(c_site) ,\
