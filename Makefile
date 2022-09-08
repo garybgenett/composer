@@ -111,6 +111,7 @@ override VIM_FOLDING := {{{1
 #	only one build at a time...
 # other
 #	verify test suite...
+#	epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
 #	--resource-path = something like COMPOSER_CSS?
 #	so many c_list/+ tests... really...?  probably...
 #			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
@@ -2368,7 +2369,7 @@ endef
 #		https://getbootstrap.com/docs/5.2/utilities/flex
 #	any simple css should do...
 #		https://getbootstrap.com/docs/5.2/utilities/colors
-#	$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
+#	$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
 #		(the ' as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #	$(PUBLISH) rebuilds indexes, force recursively
@@ -2403,7 +2404,7 @@ endef
 #		note that only the lowest library will be updated...
 #	note: a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
-#	need to document ".header 0" for pane-begin and box-begin
+#	need to document ".header 0" for fold-begin and box-begin
 #		need to document ".contents 0"
 #	document .readtime = @W / @T
 #WORK
@@ -3503,12 +3504,12 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-left$(_D):
 
     $(_M)FRAME$(_D):
-      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 LEFT 1$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 LEFT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
           * ITEM 3
-      - $(_C)pane-end$(_D)
+      - $(_C)fold-end$(_D)
       - $(_N).spacer$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
@@ -3529,12 +3530,12 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-right$(_D):
 
     $(_M)FRAME$(_D):
-      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) 1 RIGHT 1$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 RIGHT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
           * ITEM 3
-      - $(_C)pane-end$(_D)
+      - $(_C)fold-end$(_D)
       - $(_N).spacer$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
@@ -3543,17 +3544,17 @@ $(_S)########################################$(_D)
     $(_M)SPACE$(_D):
       - $(_N).spacer$(_D)
     $(_M)LIBRARY$(_D):
-      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) AUTHORS$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) AUTHORS$(_D)
       - $(_N).library-authors$(_D)
-      - $(_C)pane-end$(_D)
+      - $(_C)fold-end$(_D)
       - $(_N).spacer$(_D)
-      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) DATES$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) DATES$(_D)
       - $(_N).library-dates$(_D)
-      - $(_C)pane-end$(_D)
+      - $(_C)fold-end$(_D)
       - $(_N).spacer$(_D)
-      - $(_C)pane-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) TAGS$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) TAGS$(_D)
       - $(_N).library-tags$(_D)
-      - $(_C)pane-end$(_D)
+      - $(_C)fold-end$(_D)
 
 $(_S)########################################$(_D)
 
@@ -3759,30 +3760,30 @@ variables:
   $(PUBLISH)-nav-right:
 
     EDITOR:
-      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_TECHNAME)
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Overview
+      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_TECHNAME)
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Overview
       - text: |
           * [Overview]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Quick Start
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Quick Start
       - text: |
           * [Quick Start]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Principles
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Principles
       - text: |
           * [Principles]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Requirements
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Requirements
       - text: |
           * [Requirements]
-      - pane-end
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Operation
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Recommended Workflow
+      - fold-end
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Operation
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Recommended Workflow
       - text: |
           * [Recommended Workflow]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Document Formatting
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Document Formatting
       - text: |
           * [Bootstrap Websites]
           * [HTML]
@@ -3790,30 +3791,30 @@ variables:
           * [EPUB]
           * [Reveal.js Presentations]
           * [Microsoft Word & PowerPoint]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration Settings
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration Settings
       - text: |
           * [Configuration Settings]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Precedence Rules
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Precedence Rules
       - text: |
           * [Precedence Rules]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Specifying Dependencies
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Specifying Dependencies
       - text: |
           * [Specifying Dependencies]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Custom Targets
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Custom Targets
       - text: |
           * [Custom Targets]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Repository Versions
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Repository Versions
       - text: |
           * [Repository Versions]
-      - pane-end
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Variables
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Formatting Variables
+      - fold-end
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Variables
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Formatting Variables
       - text: |
           * [c_site]
           * [c_type / c_base / c_list]
@@ -3825,8 +3826,8 @@ variables:
           * [c_level]
           * [c_margin]
           * [c_options]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Control Variables
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Control Variables
       - text: |
           * [MAKEJOBS]
           * [COMPOSER_DOCOLOR]
@@ -3839,10 +3840,10 @@ variables:
           * [COMPOSER_TARGETS]
           * [COMPOSER_SUBDIRS]
           * [COMPOSER_IGNORES]
-      - pane-end
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Targets
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Primary Targets
+      - fold-end
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Targets
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Primary Targets
       - text: |
           * [help / help-all]
           * [template]
@@ -3852,32 +3853,32 @@ variables:
           * [clean / clean-all / *-clean]
           * [all / all-all / *-all]
           * [list]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Additional Targets
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Additional Targets
       - text: |
           * [debug / debug-file]
           * [check / check-all / config / config-site / config-all / targets]
           * [_commit / _commit-all]
           * [_release / _update / _update-all]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Internal Targets
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Internal Targets
       - text: |
           * [Internal Targets]
-      - pane-end
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) 1 Reference
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration
+      - fold-end
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) 1 Reference
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration
       - text: |
           * [Pandoc Extensions]
           * [Templates]
           * [Defaults]
-      - pane-end
-      - pane-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Reserved
+      - fold-end
+      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Reserved
       - text: |
           * [Target Names]
           * [Variable Names]
-      - pane-end
-      - pane-end
+      - fold-end
+      - fold-end
 
 ########################################
 
@@ -4601,13 +4602,13 @@ _EOF_
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-pane-begin --------
+#### {{{4 $(PUBLISH)-fold-begin --------
 
 # 1 header level
 # 2 true = expanded
 # 3 title				$${@:3} = $${3}++
 
-function $(PUBLISH)-pane-begin {
+function $(PUBLISH)-fold-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	HEAD="$${1}"
 	if [ "$${HEAD}" = "$(SPECIAL_VAL)" ]; then
@@ -4638,9 +4639,9 @@ _EOF_
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-pane-end ----------
+#### {{{4 $(PUBLISH)-fold-end ----------
 
-function $(PUBLISH)-pane-end {
+function $(PUBLISH)-fold-end {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </div>
@@ -5808,9 +5809,9 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "$(DEPTH_MAX)" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		else \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) pane-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		fi; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
@@ -5831,7 +5832,7 @@ endef
 
 override define TITLE_END =
 	if [ -n "$(c_site)" ]; then \
-		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 	fi
 endef
 
@@ -8095,7 +8096,7 @@ override define $(PUBLISH)-library-digest-create =
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 		else				$(ECHO) "$(_N)"; \
 		fi; \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-begin 1 $(4) $$( \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 $(4) $$( \
 			TITL="$$( \
 				$(CAT) $($(PUBLISH)-library-metadata) \
 				| $(YQ_WRITE) ".\"$(2)\".title" 2>/dev/null \
@@ -8199,7 +8200,7 @@ override define $(PUBLISH)-library-digest-create =
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) pane-end $(PUBLISH_BUILD_CMD_END)\n" \
+	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "$(_D)"
 endef
@@ -8359,10 +8360,10 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		add unit-item functionality to unit-beg/end
-#			require a flag to unit-beg to enable this
-#				simple unit-beg as they are should continue to work as they do, automatically triggering unit-item in the background
-#			convert digests to use unit-item natively
+#		add fold-item functionality to fold-beg/end
+#			require a flag to fold-beg to enable this
+#				simple fold-beg as they are should continue to work as they do, automatically triggering fold-item in the background
+#			convert digests to use fold-item natively
 #			value of $(SPECIAL_VAL) for digest_expanded sets only one open at a time
 #		ability to remove author name(s) from digest(s)
 #		add banner and footer...?
@@ -8534,6 +8535,17 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLIS
 *(For this test site, the library has been enabled as `$($(PUBLISH)-$(EXAMPLE)-folder)`, along with `auto_update`.)*
 
 $(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+#WORKING:NOW:NOW
+## fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL)
+## fold-item $(SPECIAL_VAL) $(SPECIAL_VAL)
+## fold-end
+## box-begin $(SPECIAL_VAL) $(SPECIAL_VAL)
+## box-end
+## library-\* = titles / authors / dates / tags
+## contents
+## readtime
+## spacer
 endef
 
 ########################################
