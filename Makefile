@@ -1283,7 +1283,7 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 )
 
 #>		$(FILE)="$($(FILE))"
-override COMPOSER_OPTIONS_EXPORT := \
+override COMPOSER_OPTIONS_EXPORT = \
 	$(foreach FILE,\
 		$(COMPOSER_OPTIONS_GLOBAL) \
 		$(COMPOSER_OPTIONS_LOCAL) \
@@ -2389,7 +2389,7 @@ endef
 #		rm _library/site-library.yml or do "make site" to rebuild
 #	c_site = title-block = title-prefix/pagetitle behavior
 #	any date format that yq can understand [link] can be used, but be consisitent...
-#	$(PUBLISH)-spacer[.spacer] / .box-begin / .box-end
+#	$(PUBLISH)-spacer[spacer] / box-begin / box-end
 #	need to do "null" to override on sub-composer.yml files
 #	all it takes is c_site to make a site page... site/page are just wrappers
 #		this is essentially what site-force does, is c_site=1 all, recursively
@@ -2404,9 +2404,11 @@ endef
 #		note that only the lowest library will be updated...
 #	note: a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
-#	need to document ".header 0" for fold-begin and box-begin
-#		need to document ".contents 0"
-#	document .readtime = @W / @T
+#	need to document "header 0" for fold-begin and box-begin
+#		need to document "contents 0"
+#			first instance of "contents.*" wins...
+#		also, "header x" at any old time...
+#	document readtime = @W / @T
 #WORK
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
@@ -3482,13 +3484,13 @@ $(_S)########################################$(_D)
     $(_M)LIBRARY$(_D):
       $(_M)AUTHORS$(_D):
         $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_N).library-authors$(_D): $(_N)$(MENU_SELF)$(_D)
+        $(_C)library$(_D) $(_M)authors$(_D):
       $(_M)DATES$(_D):
         $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_N).library-dates$(_D): $(_N)$(MENU_SELF)$(_D)
+        $(_C)library$(_D) $(_M)dates$(_D):
       $(_M)TAGS$(_D):
         $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_N).library-tags$(_D): $(_N)$(MENU_SELF)$(_D)
+        $(_C)library$(_D) $(_M)tags$(_D):
 
 $(_S)########################################$(_D)
 
@@ -3510,19 +3512,20 @@ $(_S)########################################$(_D)
           * ITEM 2
           * ITEM 3
       - $(_C)fold-end$(_D)
-      - $(_N).spacer$(_D)
+      - $(_C)spacer$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           LEFT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
-      - $(_N).spacer$(_D)
+      - $(_C)spacer$(_D)
     $(_M)CONTENTS$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
-      - $(_N).readtime$(_D)
-      - $(_N).spacer$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_S).contents$(_D) $(_S)$(SPECIAL_VAL)$(_D)
-      - $(_N).contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
+      - $(_C)readtime$(_D)
+      - $(_C)spacer$(_D)
+      - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_N)contents$(_D) $(_N)$(SPECIAL_VAL)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_N)contents$(_D)
       - $(_C)box-end$(_D)
 
 $(_S)########################################$(_D)
@@ -3536,24 +3539,24 @@ $(_S)########################################$(_D)
           * ITEM 2
           * ITEM 3
       - $(_C)fold-end$(_D)
-      - $(_N).spacer$(_D)
+      - $(_C)spacer$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           RIGHT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
-      - $(_N).spacer$(_D)
+      - $(_C)spacer$(_D)
     $(_M)LIBRARY$(_D):
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) AUTHORS$(_D)
-      - $(_N).library-authors$(_D)
+      - $(_C)library$(_D) $(_M)authors$(_D)
       - $(_C)fold-end$(_D)
-      - $(_N).spacer$(_D)
+      - $(_C)spacer$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) DATES$(_D)
-      - $(_N).library-dates$(_D)
+      - $(_C)library$(_D) $(_M)dates$(_D)
       - $(_C)fold-end$(_D)
-      - $(_N).spacer$(_D)
+      - $(_C)spacer$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) TAGS$(_D)
-      - $(_N).library-tags$(_D)
+      - $(_C)library$(_D) $(_M)tags$(_D)
       - $(_C)fold-end$(_D)
 
 $(_S)########################################$(_D)
@@ -3561,12 +3564,22 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-top$(_D):
     $(_M)INFO$(_D):
       - $(_N)|$(_D)
+          <a rel="author" href="$(COMPOSER_HOMEPAGE)">
+            <img alt="$(COMPOSER_TECHNAME)"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="<composer_root>/.$(COMPOSER_BASENAME)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.svg)"/></a>
+      - $(_N)|$(_D)
           TOP INFO
 
 $(_S)########################################$(_D)
 
   $(_H)$(PUBLISH)-info-bottom$(_D):
     $(_M)INFO$(_D):
+      - $(_N)|$(_D)
+          <a rel="author" href="$(COMPOSER_HOMEPAGE)">
+            <img alt="$(COMPOSER_TECHNAME)"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="<composer_root>/.$(COMPOSER_BASENAME)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.svg)"/></a>
       - $(_N)|$(_D)
           BOTTOM INFO
 
@@ -3746,10 +3759,10 @@ variables:
           * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)          * [$(FILE)]($(FILE)))
       - box-end
     SPACE:
-      - .spacer
+      - spacer
     CONTENTS:
       - box-begin $(SPECIAL_VAL) Contents
-      - .contents 2
+      - contents 2
       - box-end
     TAGLINE:
       - text: |
@@ -4144,20 +4157,19 @@ function $(PUBLISH)-nav-top-list {
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $(SED) "/^null$$/d" \\
 		| while read -r FILE; do
-			if [ "$${FILE}" = "$(MENU_SELF)" ]; then	continue
-			elif [ "$${FILE}" = ".library-titles" ]; then	$(PUBLISH)-nav-top-library titles	|| return 1; continue
-			elif [ "$${FILE}" = ".library-authors" ]; then	$(PUBLISH)-nav-top-library authors	|| return 1; continue
-			elif [ "$${FILE}" = ".library-dates" ]; then	$(PUBLISH)-nav-top-library dates	|| return 1; continue
-			elif [ "$${FILE}" = ".library-tags" ]; then	$(PUBLISH)-nav-top-library tags		|| return 1; continue
-			elif [ "$${FILE}" = ".contents" ]; then
-				$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) contents $$(
-						$(ECHO) "$${YQ_DATA}" \\
-						| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
-						| $(SED) "/^null$$/d"
-					) $(PUBLISH_BUILD_CMD_END)\\n"
+			if [ "$${FILE}" = "$(MENU_SELF)" ]; then
 				continue
-			elif [ "$${FILE}" = ".readtime" ]; then
-				$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) readtime -->\\n"
+			elif [ -n "$$($(ECHO) "$${FILE}" | $(SED) -n "/^spacer/p")" ]; then
+				$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
+				continue
+			elif [ -n "$$($(ECHO) "$${FILE}" | $(SED) -n "/^library/p")" ]; then
+				$(PUBLISH)-nav-top-$${FILE} || return 1
+				continue
+			elif [ -n "$$($(ECHO) "$${FILE}" | $(SED) -n "/^contents/p")" ]; then
+				$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $${FILE} $(PUBLISH_BUILD_CMD_END)\\n"
+				continue
+			elif [ -n "$$($(ECHO) "$${FILE}" | $(SED) -n "/^readtime/p")" ]; then
+				$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
 				continue
 			fi
 			LINK="$$(
@@ -4367,22 +4379,15 @@ function $(PUBLISH)-nav-side-list {
 			| $${YQ_WRITE} ".$${1}[$${NUM}]" 2>/dev/null \\
 			| $(SED) "/^null$$/d"
 		)"
-		if [ "$${TEXT}" = ".spacer" ]; then		$(PUBLISH)-spacer			|| return 1
-		elif [ "$${TEXT}" = ".library-titles" ]; then	$(PUBLISH)-nav-side-library titles	|| return 1
-		elif [ "$${TEXT}" = ".library-authors" ]; then	$(PUBLISH)-nav-side-library authors	|| return 1
-		elif [ "$${TEXT}" = ".library-dates" ]; then	$(PUBLISH)-nav-side-library dates	|| return 1
-		elif [ "$${TEXT}" = ".library-tags" ]; then	$(PUBLISH)-nav-side-library tags	|| return 1
-		elif [ -n "$$(
-			$(ECHO) "$${TEXT}" \\
-			| $(SED) -n "/^[.]contents/p"
-		)" ]; then
-			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $$(
-					$(ECHO) "$${TEXT}" \\
-					| $(SED) "s|^[.](contents.*)$$|\\1|g"
-				) $(PUBLISH_BUILD_CMD_END)\\n"
-		elif [ "$${TEXT}" = ".readtime" ]; then
+		if [ -n "$$($(ECHO) "$${TEXT}" | $(SED) -n "/^spacer/p")" ]; then
+			$(PUBLISH)-$${TEXT} || return 1
+		elif [ -n "$$($(ECHO) "$${TEXT}" | $(SED) -n "/^library/p")" ]; then
+			$(PUBLISH)-nav-side-$${TEXT} || return 1
+		elif [ -n "$$($(ECHO) "$${TEXT}" | $(SED) -n "/^contents/p")" ]; then
+			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $${TEXT} $(PUBLISH_BUILD_CMD_END)\\n"
+		elif [ -n "$$($(ECHO) "$${TEXT}" | $(SED) -n "/^readtime/p")" ]; then
 			$(ECHO) "\\n"
-			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) readtime $(PUBLISH_BUILD_CMD_END)\\n"
+			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $${TEXT} $(PUBLISH_BUILD_CMD_END)\\n"
 			$(ECHO) "\\n"
 		elif [ "$$(
 			$(ECHO) "$${YQ_DATA}" \\
@@ -4604,9 +4609,12 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-fold-begin --------
 
-# 1 header level
-# 2 true = expanded
+# 1 header level			$(SPECIAL_VAL) = none
+# 2 $(SPECIAL_VAL) = collapsed
 # 3 title				$${@:3} = $${3}++
+
+# 1 $(PUBLISH)-header 1			header level
+# 3 $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-fold-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -4623,7 +4631,7 @@ $(CAT) <<_EOF_
 )" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($(ECHO) "$${@:3}" | $(SED) "s|[^[:alnum:]_-]||g")">
 _EOF_
 	if [ "$${1}" != "$(SPECIAL_VAL)" ] && [ -n "$${3}" ]; then
-		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) header $${1} $${@:3} $(PUBLISH_BUILD_CMD_END)\\n"
+		$(PUBLISH)-header $${1} $${@:3} || return 1
 	fi
 $(CAT) <<_EOF_
 $${@:3}
@@ -4656,8 +4664,11 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-box-begin ---------
 
-# 1 header level
+# 1 header level			$(SPECIAL_VAL) = none
 # 2 title				$${@:2} = $${2}++
+
+# 1 $(PUBLISH)-header 1			header level
+# 2 $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-box-begin {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
@@ -4670,7 +4681,7 @@ $(CAT) <<_EOF_
 <h$${HEAD} class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
 _EOF_
 	if [ "$${1}" != "$(SPECIAL_VAL)" ] && [ -n "$${2}" ]; then
-		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) header $${1} $${@:2} $(PUBLISH_BUILD_CMD_END)\\n"
+		$(PUBLISH)-header $${1} $${@:2} || return 1
 	fi
 $(CAT) <<_EOF_
 $${@:2}
@@ -4688,6 +4699,22 @@ function $(PUBLISH)-box-end {
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $(CAT) <<_EOF_
 </div>
+</div>
+_EOF_
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-header ------------
+
+# 1 header level
+# 2 title				$${@:2} = $${2}++
+
+function $(PUBLISH)-header {
+	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+$(CAT) <<_EOF_
+<div id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
 </div>
 _EOF_
 	$(ECHO) "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4824,7 +4851,6 @@ function $(PUBLISH)-file {
 function $(PUBLISH)-select {
 	ACTION="$${1}"; shift
 	if	[ "$${ACTION}" = "contents" ] ||
-		[ "$${ACTION}" = "header" ] ||
 		[ "$${ACTION}" = "readtime" ];
 	then
 		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) $${ACTION} $${@} $(PUBLISH_BUILD_CMD_END)\\n"
@@ -5809,7 +5835,7 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "$(DEPTH_MAX)" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 1 $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 . $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		else \
 			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
 		fi; \
@@ -7415,7 +7441,7 @@ endif
 $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
-	@$(MAKE) $(COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
 
 ########################################
 ### {{{3 $(PUBLISH)-$(CLEANER) ---------
@@ -7507,7 +7533,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		| $(YQ_WRITE) \
 			"[.. | select(has(\"t\")) | select( \
 				(.t == \"Header\") or \
-				(select(.t == \"RawBlock\") | .c[1] | contains(\"$(PUBLISH_BUILD_CMD_BEG) header \")) \
+				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) \")) \
 			) | .c]" \
 	)"; \
 	if [ -z "$(2)" ]; then					MAX="$(DEPTH_MAX)"; \
@@ -7519,8 +7545,8 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		LVL="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][0]")"; \
 		if [ "$${LVL}" = "html" ]; then \
 			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1]")"; \
-			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^$(PUBLISH_BUILD_CMD_BEG) header ([0-9]+) (.*) $(PUBLISH_BUILD_CMD_END)$$|\1|g")"; \
-			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^$(PUBLISH_BUILD_CMD_BEG) header ([0-9]+) (.*) $(PUBLISH_BUILD_CMD_END)$$|\2|g")"; \
+			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\1|g")"; \
+			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
 			if [ "$(2)" = "$(SPECIAL_VAL)" ]; then \
@@ -8278,8 +8304,8 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)				>$(COMPOSER_DIR)/$(COMPOSER_YML)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_SETTINGS))
-	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override c_site := 1\n"					>>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
+#>	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
+#>	@$(ECHO) "override c_site := 1\n"					>>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE := 0\n"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
@@ -8360,6 +8386,9 @@ endif
 
 #WORKING:NOW:NOW
 #	site
+#		headers for boxes are huge...
+#		add use_cache option, to do html includes instead of --standalone --self-contained
+#			<div w3-include-html=" ... "></div>
 #		add fold-item functionality to fold-beg/end
 #			require a flag to fold-beg to enable this
 #				simple fold-beg as they are should continue to work as they do, automatically triggering fold-item in the background
@@ -8452,12 +8481,174 @@ override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 pagetitle: Main Page
 ---
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_BUILD_CMD_END)
+# Folds
+
+`$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 . Open Fold $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 . Open Fold $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) Closed Fold $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) Closed Fold $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) header 2 Non-Header Fold $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 Generic Fold $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 Generic Fold $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)
+
+# Boxes
+
+`$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Box $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Box $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) header 2 Non-Header Box $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+# Library
+
+$(PUBLISH_BUILD_CMD_BEG) header 2 Authors $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) library authors $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) library authors $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) header 2 Dates $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) library dates $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) library dates $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) header 2 Tags $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)
+
+# Helpers
+
+<!-- ## Header -->
+
+$(PUBLISH_BUILD_CMD_BEG) header 2 Header $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) header 2 Header $(PUBLISH_BUILD_CMD_END)`
+
+**This Is An Embedded Link Only -- There Is No HTML Header Here**
+
+## Spacer
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+
+$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+
+## Include
+
+`$(PUBLISH_BUILD_CMD_BEG) $(CONFIGS)/$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) $(CONFIGS)/$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_BUILD_CMD_END)
+
+#WORK do some post-processing to remove the `^<!-- $(PUBLISH)-file $(DIVIDE) .* ($(COMPOSER_SETTINGS)|$(COMPOSER_YML)) .*$$` lines
+
+```
+$(PUBLISH_BUILD_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS) $(PUBLISH_BUILD_CMD_END)
+```
+
+```
+$(PUBLISH_BUILD_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_YML) $(PUBLISH_BUILD_CMD_END)
+```
+
+<!-- $(COMPOSER_SETTINGS) -->
+
+```
+$(PUBLISH_BUILD_CMD_BEG) $(COMPOSER_YML) $(PUBLISH_BUILD_CMD_END)
+```
+
+## Contents
+
+#WORK this section is broken:
+
+  * there is already a "CONTENTS" panel on the left, which is grabbing the `<id>` link
+  * the "CONTENTS" helper on the left is also setting the argument for all the rest *(they will also stomp on each other)*
+  * probably can fix this with `contents-\*` files in an `examples` sub-directory:
+    * only use right pane in `$(COMPOSER_YML)` file
+    * duplicates of this page, and use `#contents` to link to them
+
+#WORK notes:
+
+  * no argument does `$(DEPTH_MAX)`
+  * `$(SPECIAL_VAL)`
+    * does `$(DEPTH_MAX)`
+    * only does `header` links
+    * trims from `$(HTML_BREAK_LINE)` to end of title *(primarily used internally for digest pages)*
+
+`$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+
+`$(PUBLISH_BUILD_CMD_BEG) contents 1 $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) contents 1 $(PUBLISH_BUILD_CMD_END)
+
+## Read Time
+
+`$(PUBLISH_BUILD_CMD_BEG) readtime $(PUBLISH_BUILD_CMD_END)`
+
+$(PUBLISH_BUILD_CMD_BEG) readtime $(PUBLISH_BUILD_CMD_END)
 
 #WORKING:NOW introduction
 # add <composer_root> to all links
 # add date, pagetitle (not title) and no author to config/index.html
 # note on example page about logo/icon
+
+$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_BUILD_CMD_END)
 
   * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)](<composer_root>/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
     * An interactive '$(PUBLISH)' rendered version of the $(COMPOSER_BASENAME) $(OUT_README)$(COMPOSER_EXT_DEFAULT) file
@@ -8497,7 +8688,7 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_BUILD_
   * [Configured Markdown File](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML))
   * [Elements & Includes](<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML))
 
-#WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the .nav/.spacer tokens
+#WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
 
 The rest below is an example "digest" page, created from the most recent pages, in reverse chronological order.
 
@@ -8535,17 +8726,6 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLIS
 *(For this test site, the library has been enabled as `$($(PUBLISH)-$(EXAMPLE)-folder)`, along with `auto_update`.)*
 
 $(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-
-#WORKING:NOW:NOW
-## fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL)
-## fold-item $(SPECIAL_VAL) $(SPECIAL_VAL)
-## fold-end
-## box-begin $(SPECIAL_VAL) $(SPECIAL_VAL)
-## box-end
-## library-\* = titles / authors / dates / tags
-## contents
-## readtime
-## spacer
 endef
 
 ########################################
@@ -8652,13 +8832,13 @@ variables:
 
   $(PUBLISH)-nav-left:
     CHAINED:
-      - .spacer
+      - spacer
       - text: |
           CHAINED TEXT
 
   $(PUBLISH)-nav-right:
     CHAINED:
-      - .spacer
+      - spacer
       - box-begin $(SPECIAL_VAL) CHAINED
       - text: |
           CHAINED TEXT
@@ -8826,7 +9006,7 @@ endif
 	@$(call $(PUBLISH)-$(CLEANER))
 	@$(foreach FILE,$(shell $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))),\
 		$(call $(HEADERS)-note,$(CURDIR),$(patsubst %-$(CLEANER),%,$(FILE)),$(CLEANER)); \
-		$(MAKE) $(COMPOSER_OPTIONS_EXPORT) $(FILE); \
+		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(FILE); \
 	)
 	@$(foreach FILE,$(COMPOSER_TARGETS),\
 		if	[ "$(FILE)" != "$(NOTHING)" ] && \
@@ -8885,7 +9065,7 @@ endif
 endif
 	@$(foreach FILE,$(shell $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))),\
 		$(call $(HEADERS)-note,$(CURDIR),$(patsubst %-$(DOITALL),%,$(FILE)),$(DOITALL)); \
-		$(MAKE) $(COMPOSER_OPTIONS_EXPORT) $(FILE); \
+		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(FILE); \
 	)
 ifeq ($(COMPOSER_TARGETS),)
 	@$(MAKE) $(NOTHING)-$(TARGETS)
@@ -8894,7 +9074,7 @@ else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(COMPOSER_TARGETS)
 else
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(COMPOSER_OPTIONS_EXPORT) $(DOITALL)-$(TARGETS)
+	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(DOITALL)-$(TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
@@ -9094,7 +9274,7 @@ override define TYPE_TARGETS =
 	) \
 	%$$(COMPOSER_EXT)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",extension)
 endif
@@ -9110,7 +9290,7 @@ endif
 	) \
 	%
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",wildcard)
 endif
@@ -9126,7 +9306,7 @@ endif
 	) \
 	$$(c_list)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",list)
 endif
