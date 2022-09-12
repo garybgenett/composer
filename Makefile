@@ -7535,6 +7535,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				(.t == \"Header\") or \
 				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) \")) \
 			) | .c]" \
+		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
 	if [ -z "$(2)" ]; then					MAX="$(DEPTH_MAX)"; \
 		elif [ "$(2)" = "$(SPECIAL_VAL)" ]; then	MAX="$(DEPTH_MAX)"; \
