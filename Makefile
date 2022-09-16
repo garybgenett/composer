@@ -1532,10 +1532,12 @@ override $(PUBLISH)-variables := \
 
 $(foreach FILE,\
 	$(shell \
-		YQ_DATA_LIBRARY="$$( \
-			$(YQ_WRITE) ".variables" $(COMPOSER_LIBRARY_YML) 2>/dev/null \
-			| $(SED) "/^null$$/d" \
-		)"; \
+		if [ -n "$(COMPOSER_LIBRARY_YML)" ]; then \
+			YQ_DATA_LIBRARY="$$( \
+				$(YQ_WRITE) ".variables" $(COMPOSER_LIBRARY_YML) 2>/dev/null \
+				| $(SED) "/^null$$/d" \
+			)"; \
+		fi; \
 		YQ_DATA="$$( \
 			$(COMPOSER_YML_DATA) 2>/dev/null \
 			| $(YQ_WRITE) ".variables" 2>/dev/null \
@@ -1546,7 +1548,9 @@ $(foreach FILE,\
 			YAML="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\2|g")"; \
 			DFLT="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\3|g")"; \
 			CONF="$$( \
-				if [ "$${SECT}" = "library" ]; then \
+				if	[ "$${SECT}" = "library" ] && \
+					[ -n "$(COMPOSER_LIBRARY_YML)" ]; \
+				then \
 					$(ECHO) "$${YQ_DATA_LIBRARY}"; \
 				else \
 					$(ECHO) "$${YQ_DATA}"; \
@@ -7654,7 +7658,7 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-readtime =
 	WORD="$$( \
-		for FILE in $(1); do \
+		for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
 			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
 		done \
 		| $(PANDOC_MD_TO_TEXT) \
