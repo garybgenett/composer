@@ -6922,11 +6922,11 @@ endef
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
 	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd)/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd)/$(COMPOSER_CSS)))
 	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],$$))
-	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS)))
 	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))))
-	$(call $(TESTING)-count,4,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS))))
+	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS))))
 	$(call $(TESTING)-count,2,^COMPOSER_MY_PATH)
 
 ########################################
@@ -7000,7 +7000,7 @@ $(TESTING)-COMPOSER_IGNORES-init:
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
-	$(call $(TESTING)-count,2,$(NOTHING).+$(CONFIGS)-$(TARGETS))
+	$(call $(TESTING)-count,3,$(NOTHING).+$(CONFIGS)-$(TARGETS))
 	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
 
 ########################################
@@ -7083,13 +7083,13 @@ $(TESTING)-CSS-init:
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS)))
-	$(call $(TESTING)-count,6,$(notdir $(REVEALJS_CSS)))
-	$(call $(TESTING)-count,6,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
 	$(call $(TESTING)-count,6,$(notdir $(MDVIEWER_CSS_ALT)))
 	$(call $(TESTING)-count,1,c_css[^/]+$$)
-	$(call $(TESTING)-count,2,$(notdir $(COMPOSER_CSS)))
+	$(call $(TESTING)-count,3,$(notdir $(COMPOSER_CSS)))
 	$(call $(TESTING)-count,6,$(notdir $(MDVIEWER_CSS_ALT)))
-	$(call $(TESTING)-count,6,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
 
 ########################################
 ### {{{3 $(TESTING)-other --------------
