@@ -1513,7 +1513,6 @@ override $(PUBLISH)-caches := \
 ########################################
 
 ifneq ($(COMPOSER_YML_LIST),)
-ifneq ($(c_site),)
 
 override COMPOSER_LIBRARY_YML		:=
 override COMPOSER_LIBRARY_DIR		:=
@@ -1528,6 +1527,8 @@ $(if $(wildcard $(FILE)),\
 		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
 	) \
 ))
+
+ifneq ($(c_site),)
 
 #> update: $(PUBLISH)-variables
 override $(PUBLISH)-variables := \
@@ -4025,9 +4026,14 @@ endef
 
 override define HEREDOC_PUBLISH_BUILD_SH =
 #!$(BASH)
-set -e
+# $(patsubst foldlevel=0,foldlevel=2,$(VIM_OPTIONS))
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).build.sh
+################################################################################
+### {{{3 Settings ----------------------
+
+set -e
+
 ################################################################################
 ### {{{3 Variables ---------------------
 
@@ -4977,6 +4983,8 @@ function $(PUBLISH)-select {
 $(PUBLISH)-select $${@} || exit 1
 
 exit 0
+################################################################################
+# }}}3
 ################################################################################
 # End Of File
 ################################################################################
@@ -7543,7 +7551,7 @@ $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
 	@if [ -f "$($(@))" ]; then \
 		$(call $(HEADERS)-rm,$(abspath $(dir $($(@)))),$(notdir $($(@)))); \
 		$(ECHO) "$(_S)"; \
-		$(RM) $(CURDIR)/$($(@)) $($(DEBUGIT)-output); \
+		$(RM) $($(@)) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
 
