@@ -16,11 +16,14 @@ override VIM_FOLDING := {{{1
 #			* `make test-_release`
 #			* `make list`
 #			* `make test`
-#		* `make COMPOSER_DEBUGIT="config targets" debug | less -rX`
-#			* `make debug-file`
-#			* `mv Composer-*.log artifacts/`
-#		* `make COMPOSER_DEBUGIT="0" headers-template-all | less -rX`
+#		* `make COMPOSER_DEBUGIT="check config targets" debug | less -rX`
+#			* `rm Composer-*.debug-*.txt`
+#			* `make COMPOSER_DEBUGIT="help" debug-file`
+#			* `mv Composer-*.debug-*.txt artifacts/`
+#		* `make headers-template-all`
 #			* `make headers-template`
+#			* `make COMPOSER_DEBUGIT="1" c_type="html" headers-template-all`
+#			* `make COMPOSER_DEBUGIT="1" headers-template`
 #		* `make test-targets`
 #			* README.html.0.0.html
 #			* README.html.1.1.html
@@ -48,6 +51,8 @@ override VIM_FOLDING := {{{1
 #			* Pages
 #				* README.site.html (`make docs`)
 #				* _site/index.html (`make site-template-all`)
+#				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template-all`)
+#				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template`)
 #				* _site/index.html (`make site-template`)
 #	* Prepare
 #		* Update: README.md
@@ -56,9 +61,11 @@ override VIM_FOLDING := {{{1
 #				* Fits in $(COLUMNS) characters
 #				* Mouse select color handling
 #				* Test all "Reference" links in browser
+#				* Spell check
 #			* `make docs`
 #				* Screenshot
-#			* Spell check
+#				* Verify
+#				* CSS
 #	* Publish
 #		* Check: `git diff master Makefile`
 #		* Update: COMPOSER_VERSION
@@ -74,6 +81,8 @@ override VIM_FOLDING := {{{1
 #		Some of the document formats pandoc targets (such as EPUB, docx, and ODT) include build timestamps in the generated document.  That means that the files generated on successive builds will differ, even if the source does not.  To avoid this, set the SOURCE_DATE_EPOCH environment variable, and the timestamp will be taken from it instead of the current time.  SOURCE_DATE_EPOCH should contain an integer unix timestamp (specifying the number of second since midnight UTC January 1, 1970).
 #		Some document formats also include a unique identifier.  For EPUB, this can be set explicitly by setting the identifier metadata field (see EPUB Metadata, above).
 # PDF
+#	two different templates, with an option, for left/right versus left-only headers/footers
+#		maybe also a customizable version, akin to the resume format i use
 #	https://github.com/alexeygumirov/pandoc-for-pdf-how-to
 #		https://github.com/Wandmalfarbe/pandoc-latex-template
 #		https://learnbyexample.github.io/customizing-pandoc
@@ -131,14 +140,14 @@ override VIM_FOLDING := {{{1
 # {{{1 Composer Globals --------------------------------------------------------
 ################################################################################
 
+override COMPOSER_CNAME			:= garybgenett.net
+override COMPOSER_HOMEPAGE		:= http://www.$(COMPOSER_CNAME)/projects/composer
+override COMPOSER_REPOPAGE		:= https://github.com/garybgenett/composer
+override COMPOSER_VERSION		:= v3.1
+
 override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TINYNAME		:= composer
-override COMPOSER_VERSION		:= v3.1
-
-override COMPOSER_HOMEPAGE		:= http://www.garybgenett.net/projects/composer
-override COMPOSER_SEARCH		:= garybgenett.net
-
 override COMPOSER_TECHNAME		:= $(COMPOSER_BASENAME) CMS
 override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
@@ -167,9 +176,10 @@ override DEPTH_MAX			:= 6
 
 ########################################
 
-override COMPOSER_SETTINGS		:= .composer.mk
-override COMPOSER_YML			:= .composer.yml
-override COMPOSER_CSS			:= .composer.css
+override COMPOSER_SETTINGS		:= .$(COMPOSER_TINYNAME).mk
+override COMPOSER_YML			:= .$(COMPOSER_TINYNAME).yml
+override COMPOSER_CSS			:= .$(COMPOSER_TINYNAME).css
+
 override COMPOSER_LOG_DEFAULT		:= .composed
 override COMPOSER_EXT_DEFAULT		:= .md
 override COMPOSER_EXT_SPECIAL		:= $(COMPOSER_EXT_DEFAULT).cms
@@ -193,52 +203,97 @@ ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
 
-override COMPOSER_TMP			:= $(CURDIR)/.composer.tmp
+override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
+override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
 override COMPOSER_LIBRARY		:=
 
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
 
+#> update: includes duplicates
+override EXAMPLE			:= template
+override PUBLISH			:= site
+
+override COMPOSER_YML_EXAMPLE		:= $(COMPOSER_ART)/$(patsubst %.yml,%,$(COMPOSER_YML)).$(EXAMPLE).yml
+
+override COMPOSER_CUSTOM		:= $(COMPOSER_ART)/$(COMPOSER_TINYNAME)
+override CUSTOM_PUBLISH_SH		:= $(COMPOSER_CUSTOM).$(PUBLISH).sh
+override CUSTOM_PUBLISH_CSS		:= $(COMPOSER_CUSTOM).$(PUBLISH).css
+override CUSTOM_PUBLISH_CSS_SHADE	= $(COMPOSER_CUSTOM).$(PUBLISH).shade.$(1).css
+override CUSTOM_PDF_LATEX		:= $(COMPOSER_CUSTOM).pdf.latex
+override CUSTOM_REVEALJS_CSS		:= $(COMPOSER_CUSTOM).revealjs.css
+
+override BOOTSTRAP_DEF_JS		:= $(COMPOSER_ART)/bootstrap-default.js
+override BOOTSTRAP_DEF_CSS		:= $(COMPOSER_ART)/bootstrap-default.css
+override BOOTSTRAP_ART_JS		:= $(COMPOSER_ART)/bootstrap.js
+override BOOTSTRAP_ART_CSS		:= $(COMPOSER_ART)/bootstrap.css
+
 override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
+override COMPOSER_LOGO_VER		:= v1.0
 override COMPOSER_ICON			:= $(COMPOSER_ART)/icon.img
-
-override BOOTSTRAP_CSS_JS		:= $(COMPOSER_ART)/bootstrap.source.js
-override BOOTSTRAP_CSS_CSS		:= $(COMPOSER_ART)/bootstrap.source.css
-override BOOTSTRAP_CSS			:= $(COMPOSER_ART)/bootstrap.css
-
-override TEX_PDF_TEMPLATE		:= $(COMPOSER_ART)/pdf.latex
-override REVEALJS_CSS			:= $(COMPOSER_ART)/revealjs.css
+override COMPOSER_ICON_VER		:= v1.0
 
 ########################################
 
-#> update: $(PUBLISH)-variables
-
+override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
 #>override HTML_BREAK_LINE		:= <br/>
 override HTML_BREAK_LINE		:= --
 override MENU_SELF			:= _
 
-override PUBLISH_COLS_MAIN_SIZE		:= 6
+#> update: $(PUBLISH)-variables
+
+override PUBLISH_CSS_SHADE		:= dark
+override PUBLISH_CSS_SHADE_ALT		:= $(SPECIAL_VAL)
+
+#WORKING:NOW:NOW
+#	go ahead and make all three columns configurable...
+#	also, make mobile columns configurable, where $(SPECIAL_VAL) disables them... default to 6/6
+#	make (word,3) a banner-style page with two sub-columns, and maybe add a carousel
+#		maybe also make carousel a $(PUBLISH_CMD_BEG) option...?  good for books or ads or something...
+#		https://getbootstrap.com/docs/5.2/components/scrollspy
+override PUBLISH_COLS			:= 12
+override PUBLISH_COLS_BREAK		:= lg
+override PUBLISH_COLS_BREAK_ALT		:= xl
+override PUBLISH_COLS_SIZE_LEFT		:= 3
+override PUBLISH_COLS_SIZE_LEFT_ALT	:= 2
+override PUBLISH_COLS_SIZE_MAIN		:= 7
+override PUBLISH_COLS_SIZE_MAIN_ALT	:= 8
 override PUBLISH_COLS_SHOW_LEFT		:= 1
+override PUBLISH_COLS_SHOW_LEFT_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_SHOW_RIGHT	:= 1
+override PUBLISH_COLS_SHOW_RIGHT_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_STICKY		:= 1
+override PUBLISH_COLS_STICKY_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_COPY_SAFE		:= 1
+override PUBLISH_COPY_SAFE_ALT		:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
-override PUBLISH_READ_TIME		:= "*Reading time: @W words, @T minutes*"
+override PUBLISH_READ_TIME		:= *Reading time: @W words, @T minutes*
+override PUBLISH_READ_TIME_ALT		:= *(count: @W, time: @T)*
 override PUBLISH_READ_TIME_WPM		:= 220
+override PUBLISH_READ_TIME_WPM_ALT	:= 200
 
-override LIBRARY_FOLDER			:= null
-override LIBRARY_AUTO_UPDATE		:= null
+override LIBRARY_FOLDER			:= $(SPECIAL_VAL)
+override LIBRARY_FOLDER_ALT		:= _library
+override LIBRARY_AUTO_UPDATE		:= $(SPECIAL_VAL)
+override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
+override LIBRARY_DIGEST_TITLE_ALT	:= Digest
 override LIBRARY_DIGEST_COUNT		:= 10
+override LIBRARY_DIGEST_COUNT_ALT	:= 20
 override LIBRARY_DIGEST_EXPANDED	:= 10
+override LIBRARY_DIGEST_EXPANDED_ALT	:= 5
 override LIBRARY_DIGEST_CHARS		:= 1024
+override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_SPACER		:= 1
-override LIBRARY_DIGEST_CONTINUE	:= "[...]"
-override LIBRARY_DIGEST_PERMALINK	:= "*(permalink to full text)*"
+override LIBRARY_DIGEST_SPACER_ALT	:= $(SPECIAL_VAL)
+override LIBRARY_DIGEST_CONTINUE	:= [...]
+override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
+override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
+override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
 
 ########################################
 
@@ -400,7 +455,8 @@ export MAKEFLAGS
 
 #>override MAKEFILE			:= $(notdir $(firstword $(MAKEFILE_LIST)))
 override MAKEFILE			:= Makefile
-override MAKEFLAGS			:= --no-builtin-rules --no-builtin-variables --no-print-directory
+override MAKEFLAGS			:= $(if $(filter k%,$(MAKEFLAGS)),--keep-going)
+override MAKEFLAGS			:= $(MAKEFLAGS) --no-builtin-rules --no-builtin-variables --no-print-directory
 
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
@@ -643,8 +699,8 @@ override BOOTSTRAP_DOC_VER		:= 5.1
 override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
-override BOOTSTRAP_CSS_JS_SRC		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
-override BOOTSTRAP_CSS_CSS_SRC		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
+override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
+override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
 ########################################
 
@@ -691,42 +747,6 @@ endif
 override FONTAWES_LIC			:= MIT / CC-BY
 override FONTAWES_SRC			:= https://github.com/FortAwesome/Font-Awesome.git
 override FONTAWES_DIR			:= $(COMPOSER_DIR)/font-awesome
-
-########################################
-
-#WORKING:NOW
-# expose these as $(CSS_ALT)-type variables...?
-# it's probably time to make each of them a tested part of the team...
-# four options, including for revealjs, which has each of these
-#	light (default)
-#	dark (css_alt)
-#	solarized-light
-#	solarized-dark
-# copy to, and reference from, $(COMPOSER_ART) ...?
-# document
-
-override MDVIEWER_CSS			:= $(MDVIEWER_DIR)/themes/markdown7.css
-override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/markdown9.css
-override MDVIEWER_CSS_SOLAR		:= $(MDVIEWER_DIR)/themes/solarized-light.css
-override MDVIEWER_CSS_SOLAR_ALT		:= $(MDVIEWER_DIR)/themes/solarized-dark.css
-
-override BOOTSTRAP_CSS_THEME		:= $(MDVIEWER_CSS_SOLAR)
-
-#WORKING:NOW
-#		journal
-#		quartz
-#		sketchy
-#		slate
-#		solar
-
-override BOOTSWATCH_CSS_LIGHT		:= $(COMPOSER_DIR)/bootswatch/dist/flatly/bootstrap.css
-#>override BOOTSWATCH_CSS_DARK		:= $(COMPOSER_DIR)/bootswatch/dist/cyborg/bootstrap.css
-override BOOTSWATCH_CSS_DARK		:= $(COMPOSER_DIR)/bootswatch/dist/darkly/bootstrap.css
-override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_CSS_LIGHT)
-override BOOTSWATCH_CSS_SOLAR_DARK	:= $(COMPOSER_DIR)/bootswatch/dist/solar/bootstrap.css
-
-override REVEALJS_CSS_THEME		:= $(REVEALJS_DIR)/dist/theme/black.css
-override REVEALJS_CSS_THEME_SOLAR	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 
 ########################################
 
@@ -818,34 +838,32 @@ override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 
-#> update: includes duplicates
 override DOMAKE				:= $(notdir $(MAKE))
 export GZIP				:=
 
 ########################################
 
 ifeq ($(wildcard $(PANDOC_BIN)),)
+ifneq ($(wildcard $(PANDOC_DIR)),)
 ifneq ($(wildcard $(COMPOSER_BIN)/$(notdir $(PANDOC_BIN)).*),)
 $(shell \
-	$(CAT) $(COMPOSER_BIN)/$(notdir $(PANDOC_BIN)).* >>$(PANDOC_BIN); \
+	$(CAT) $(COMPOSER_BIN)/$(notdir $(PANDOC_BIN)).* >$(PANDOC_BIN); \
 	$(CHMOD) $(PANDOC_BIN) >/dev/null \
 )
-override PANDOC				:= $(PANDOC_BIN)
+endif
 endif
 endif
 ifeq ($(wildcard $(YQ_BIN)),)
+ifneq ($(wildcard $(YQ_DIR)),)
 ifneq ($(wildcard $(COMPOSER_BIN)/$(notdir $(YQ_BIN)).*),)
 $(shell \
-	$(CAT) $(COMPOSER_BIN)/$(notdir $(YQ_BIN)).* >>$(YQ_BIN); \
+	$(CAT) $(COMPOSER_BIN)/$(notdir $(YQ_BIN)).* >$(YQ_BIN); \
 	$(CHMOD) $(YQ_BIN) >/dev/null \
 )
-override YQ				:= $(YQ_BIN)
+endif
 endif
 endif
 
-#>#> update: includes duplicates
-#>override UPGRADE			:= _update
-#>override DOITALL			:= all
 ifneq ($(wildcard $(PANDOC_BIN)),)
 override PANDOC				:= $(PANDOC_BIN)
 endif
@@ -870,8 +888,10 @@ override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-mat
 override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(YQ_READ)) --output-format "yaml"
 override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
 override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
-#>override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)' $(COMPOSER_YML_LIST)
-override COMPOSER_YML_DATA		:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' $(COMPOSER_YML_LIST)
+
+#>override YQ_EVAL			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)'
+override YQ_EVAL			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)'
+override COMPOSER_YML_DATA		= $(YQ_EVAL) $(if $(1),,$(wildcard $(COMPOSER_YML_EXAMPLE))) $(COMPOSER_YML_LIST) $(wildcard $(2))
 
 ########################################
 
@@ -977,9 +997,9 @@ override EXTN_PRES			:= $(TYPE_PRES).$(TYPE_HTML)
 override EXTN_DOCX			:= $(TYPE_DOCX)
 override EXTN_PPTX			:= $(TYPE_PPTX)
 override EXTN_TEXT			:= txt
-override EXTN_LINT			:= $(subst $(TOKEN),,$(subst $(TOKEN).,,$(addprefix $(TOKEN),$(COMPOSER_EXT_DEFAULT)))).$(EXTN_TEXT)
+override EXTN_LINT			:= $(patsubst .%,%,$(COMPOSER_EXT_DEFAULT)).$(EXTN_TEXT)
 
-$(foreach FILE,\
+override TYPE_TARGETS_LIST := \
 	HTML \
 	LPDF \
 	EPUB \
@@ -988,10 +1008,11 @@ $(foreach FILE,\
 	PPTX \
 	TEXT \
 	LINT \
-	,\
-	$(if $(filter $(TYPE_$(FILE)),$(c_type)),\
-		$(eval override OUTPUT		:= $(TMPL_$(FILE))); \
-		$(eval override EXTENSION	:= $(EXTN_$(FILE))); \
+
+$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+	$(if $(filter $(c_type),$(TYPE_$(TYPE))),\
+	$(eval override OUTPUT		:= $(TMPL_$(TYPE))); \
+	$(eval override EXTENSION	:= $(EXTN_$(TYPE))); \
 	) \
 )
 
@@ -1020,47 +1041,100 @@ endif
 ########################################
 ## {{{2 CSS ----------------------------
 
-#WORKING:NOW do something like this for c_margin?
+override CSS_ICON_MENU			:= $(FONTAWES_DIR)/svgs/solid/list-ul.svg
+override CSS_ICON_TOGGLE		:= $(FONTAWES_DIR)/svgs/solid/chevron-down.svg
+override CSS_ICON_SEARCH		:= $(FONTAWES_DIR)/svgs/solid/magnifying-glass.svg
+override CSS_ICON_COPYRIGHT		:= $(FONTAWES_DIR)/svgs/regular/copyright.svg
+override CSS_ICON_GITHUB		:= $(FONTAWES_DIR)/svgs/brands/github.svg
 
-override define c_css_select =
-$(strip $(if $(c_css),\
-	$(if $(filter $(SPECIAL_VAL),$(c_css)),,\
-	$(if $(filter $(CSS_ALT),$(c_css)),$(MDVIEWER_CSS_ALT) ,\
-	$(abspath $(c_css)) \
+override CSS_ICONS = \
+	menu:$(CSS_ICON_MENU) \
+	toggle:$(CSS_ICON_TOGGLE) \
+	search:$(CSS_ICON_SEARCH) \
+	copyright:$(CSS_ICON_COPYRIGHT) \
+	github:$(CSS_ICON_GITHUB) \
+	gpl:$(EXT_ICON_GPL) \
+	cc-by-nc-nd:$(EXT_ICON_CC) \
+
+########################################
+
+override BOOTSWATCH_CSS_LIGHT		:= $(BOOTSWATCH_DIR)/dist/flatly/bootstrap.css
+override BOOTSWATCH_CSS_DARK		:= $(BOOTSWATCH_DIR)/dist/slate/bootstrap.css
+override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.css
+override BOOTSWATCH_CSS_SOLAR_DARK	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.css
+override BOOTSWATCH_CSS_ALT		:= $(BOOTSWATCH_DIR)/dist/quartz/bootstrap.css
+
+override MDVIEWER_CSS_LIGHT		:= $(MDVIEWER_DIR)/themes/markdown7.css
+override MDVIEWER_CSS_DARK		:= $(MDVIEWER_DIR)/themes/markdown9.css
+override MDVIEWER_CSS_SOLAR_LIGHT	:= $(MDVIEWER_DIR)/themes/solarized-light.css
+override MDVIEWER_CSS_SOLAR_DARK	:= $(MDVIEWER_DIR)/themes/solarized-dark.css
+override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/screen.css
+
+override REVEALJS_CSS_LIGHT		:= $(REVEALJS_DIR)/dist/theme/white.css
+override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
+override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
+override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
+override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
+
+#WORKING document
+override CSS_THEME			= $(COMPOSER_ART)/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
+override CSS_THEMES = \
+	$(PUBLISH):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
+	$(TYPE_HTML):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
+	$(TYPE_PRES):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
+	\
+	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light) \
+	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT) \
+	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK) \
+	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT) \
+	$(PUBLISH):solar-dark:$(BOOTSWATCH_CSS_SOLAR_DARK) \
+	$(PUBLISH):$(CSS_ALT):$(BOOTSWATCH_CSS_ALT) \
+	\
+	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light) \
+	$(TYPE_HTML):light:$(MDVIEWER_CSS_LIGHT) \
+	$(TYPE_HTML):dark:$(MDVIEWER_CSS_DARK) \
+	$(TYPE_HTML):solar-light:$(MDVIEWER_CSS_SOLAR_LIGHT) \
+	$(TYPE_HTML):solar-dark:$(MDVIEWER_CSS_SOLAR_DARK) \
+	$(TYPE_HTML):$(CSS_ALT):$(MDVIEWER_CSS_ALT) \
+	\
+	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark) \
+	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT) \
+	$(TYPE_PRES):dark:$(REVEALJS_CSS_DARK) \
+	$(TYPE_PRES):solar-light:$(REVEALJS_CSS_SOLAR_LIGHT) \
+	$(TYPE_PRES):solar-dark:$(REVEALJS_CSS_SOLAR_DARK) \
+	$(TYPE_PRES):$(CSS_ALT):$(REVEALJS_CSS_ALT) \
+
+########################################
+
+override define c_css_select_theme =
+$(subst $(NULL) ,,$(call CSS_THEME,\
+	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),$(PUBLISH) ,\
+	$(if $(filter $(c_type),$(TYPE_EPUB)),$(TYPE_HTML) ,\
+	$(c_type) \
 	)) \
 ,\
-	$(if $(c_site),$(BOOTSTRAP_CSS_THEME) ,\
-	$(if $(filter $(TYPE_PRES),$(c_type)),$(REVEALJS_CSS_THEME) ,\
-	$(MDVIEWER_CSS) \
-	)) \
+	$(1) \
 ))
 endef
 
-#>$(eval override c_css			:= $(call c_css_select))
+override define c_css_select =
+$(subst $(NULL) ,,$(if $(c_css),\
+	$(if $(filter $(c_css),$(SPECIAL_VAL)),,\
+	$(if \
+		$(wildcard $(call CSS_THEME,$(word 1,$(subst ., ,$(c_css))),$(word 2,$(subst ., ,$(c_css))))) ,\
+		$(call CSS_THEME,$(word 1,$(subst ., ,$(c_css))),$(word 2,$(subst ., ,$(c_css)))) ,\
+	$(if \
+		$(wildcard $(call c_css_select_theme,$(c_css))) ,\
+		$(call c_css_select_theme,$(c_css)) ,\
+	$(abspath $(c_css)) \
+	))) \
+,\
+	$(call c_css_select_theme) \
+))
+endef
 
 ########################################
-## {{{2 Command ------------------------
-
-override PANDOC_OPTIONS_DATA		:=
-ifneq ($(COMPOSER_DEBUGIT_ALL),)
-override PANDOC_OPTIONS_DATA		:= --verbose
-endif
-
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --data-dir="$(PANDOC_DIR)"
-
-ifneq ($(wildcard $(COMPOSER_ART)/template.$(EXTENSION)),)
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --template="$(COMPOSER_ART)/template.$(EXTENSION)"
-else ifneq ($(wildcard $(PANDOC_DIR)/data/templates/default.$(OUTPUT)),)
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --template="$(PANDOC_DIR)/data/templates/default.$(OUTPUT)"
-endif
-
-ifneq ($(wildcard $(COMPOSER_ART)/reference.$(EXTENSION)),)
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) --reference-doc="$(COMPOSER_ART)/reference.$(EXTENSION)"
-endif
-
-override PANDOC_OPTIONS_DATA		:= $(PANDOC_OPTIONS_DATA) $(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)")
-
-########################################
+## {{{2 Extensions ---------------------
 
 override PANDOC_EXTENSIONS		:=
 override PANDOC_EXTENSIONS		+= +ascii_identifiers
@@ -1071,6 +1145,7 @@ override PANDOC_EXTENSIONS		+= +footnotes
 override PANDOC_EXTENSIONS		+= +gfm_auto_identifiers
 override PANDOC_EXTENSIONS		+= +implicit_figures
 override PANDOC_EXTENSIONS		+= +implicit_header_references
+override PANDOC_EXTENSIONS		+= +link_attributes
 override PANDOC_EXTENSIONS		+= +pipe_tables
 override PANDOC_EXTENSIONS		+= +raw_html
 override PANDOC_EXTENSIONS		+= +smart
@@ -1090,113 +1165,147 @@ override PANDOC_EXTENSIONS		+= +raw_tex
 override PANDOC_EXTENSIONS		+= +shortcut_reference_links
 endif
 
+########################################
+## {{{2 Command ------------------------
+
 override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
 override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_TEXT)"
 override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json"
 override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
-override PANDOC_OPTIONS			= $(strip $(PANDOC_OPTIONS_DATA) \
-	$(if $(c_lang),\
-		--variable=lang="$(c_lang)" \
-	) \
+#> update: TYPE_TARGETS
+
+override PANDOC_OPTIONS			= $(strip \
+	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
+	\
+	--standalone \
+	--self-contained \
+	--columns="$(COLUMNS)" \
+	--eol="$(EOL)" \
 	$(if $(or \
 		$(filter $(c_type),$(TYPE_HTML)) ,\
 		$(filter $(c_type),$(TYPE_PRES)) ,\
 		),--wrap="none",--wrap="auto" \
 	) \
+	\
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PANDOC_TEX_PDF)" \
-		--pdf-engine-opt="-output-directory=$(COMPOSER_TMP)/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)" \
-		--include-in-header="$(TEX_PDF_TEMPLATE)" \
+		--pdf-engine-opt="-output-directory=$(call COMPOSER_TMP_FILE)" \
 		--listings \
 	) \
 	$(if $(filter $(c_type),$(TYPE_PRES)),\
 		--variable=revealjs-url="$(REVEALJS_DIR)" \
 	) \
-	$(if $(wildcard $(c_icon)),\
+	\
+	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
+	--data-dir="$(COMPOSER_ART)" \
+	$(if $(wildcard $(COMPOSER_ART)/template.$(OUTPUT)),	--template="$(COMPOSER_ART)/template.$(OUTPUT)") \
+	$(if $(wildcard $(COMPOSER_ART)/reference.$(OUTPUT)),	--reference-doc="$(COMPOSER_ART)/reference.$(OUTPUT)") \
+	$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).header),	--include-in-header="$(COMPOSER_CUSTOM)-$(c_type).header") \
+	\
+	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
+						--include-in-header="$(BOOTSTRAP_ART_JS).pre" \
+		$(if $(call c_css_select),	--include-in-header="$(BOOTSTRAP_ART_JS)" ,\
+						--include-in-header="$(BOOTSTRAP_DEF_JS)" \
+		)				--include-in-header="$(BOOTSTRAP_ART_JS).post" \
+		$(if $(call c_css_select),	--css="$(BOOTSTRAP_ART_CSS)" ,\
+						--css="$(BOOTSTRAP_DEF_CSS)" \
+		) \
+	) \
+	$(if $(call c_css_select),\
 		$(if $(or \
-			$(c_site) ,\
 			$(filter $(c_type),$(TYPE_HTML)) ,\
 			$(filter $(c_type),$(TYPE_EPUB)) ,\
 			$(filter $(c_type),$(TYPE_PRES)) ,\
 		),\
-			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(c_icon)\"/>" \
+			--css="$(strip $(if \
+				$(wildcard $(call c_css_select)) ,\
+				$(realpath $(call c_css_select)) ,\
+				$(call c_css_select) \
+				))" \
 		) \
 	) \
-	$(if $(c_site),\
-		--include-in-header="$(BOOTSTRAP_CSS_JS)" \
-		$(if $(call c_css_select),\
-			--css="$(BOOTSTRAP_CSS_CSS)" \
-			$(if $(wildcard $(BOOTSTRAP_CSS)),--css="$(BOOTSTRAP_CSS)") \
-			$(if $(filter $(BOOTSTRAP_CSS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
-			,\
-			--css="$(BOOTSTRAP_CSS_CSS_SRC)" \
+	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
+		$(if $(filter-out $(SPECIAL_VAL),$(PUBLISH_CSS_SHADE)),\
+			--css="$(call CUSTOM_PUBLISH_CSS_SHADE,$(PUBLISH_CSS_SHADE))" \
 		) \
-	) \
-	$(if $(call c_css_select),\
-		$(if $(c_site),,\
-		$(if $(filter $(c_type),$(TYPE_HTML)),	--css="$(call c_css_select)") \
-		$(if $(filter $(c_type),$(TYPE_EPUB)),	--css="$(call c_css_select)") \
-		$(if $(filter $(c_type),$(TYPE_PRES)),\
-			$(if $(filter $(REVEALJS_CSS),$(call c_css_select)),,--css="$(call c_css_select)") \
-			$(if $(wildcard $(REVEALJS_CSS)),--css="$(REVEALJS_CSS)") \
+		$(if $(wildcard $(COMPOSER_CUSTOM)-$(PUBLISH).css),\
+				--css="$(COMPOSER_CUSTOM)-$(PUBLISH).css" \
+		) \
+	,$(if $(filter $(c_type),$(TYPE_PRES)),\
+		$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),\
+				--css="$(call COMPOSER_TMP_FILE).css" \
+		) \
+	,\
+		$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),\
+				--css="$(COMPOSER_CUSTOM)-$(c_type).css" \
 		) \
 	)) \
+	\
+	$(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)") \
+	\
+	$(if $(c_lang),\
+		--variable=lang="$(c_lang)" \
+	) \
+	$(if $(wildcard $(c_icon)),\
+		$(if $(or \
+			$(filter $(c_type),$(TYPE_HTML)) ,\
+			$(filter $(c_type),$(TYPE_PRES)) ,\
+		),\
+			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(abspath $(c_icon))\"/>" \
+		) \
+	) \
 	$(if $(c_toc),\
 		--table-of-contents \
-		$(if $(filter $(SPECIAL_VAL),$(c_toc)),	--toc-depth="$(DEPTH_MAX)" --number-sections ,\
+		$(if $(filter $(c_toc),$(SPECIAL_VAL)),	--toc-depth="$(DEPTH_MAX)" --number-sections ,\
 							--toc-depth="$(c_toc)" \
 		) \
 	) \
 	$(if $(c_level),\
 		$(if $(filter $(c_type),$(TYPE_HTML)),			--section-divs) \
 		$(if $(filter $(c_type),$(TYPE_LPDF)),\
-			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--top-level-division="part" ,\
-			$(if $(filter $(DEPTH_DEFAULT),$(c_level)),	--top-level-division="chapter" ,\
+			$(if $(filter $(c_level),$(SPECIAL_VAL)),	--top-level-division="part" ,\
+			$(if $(filter $(c_level),$(DEPTH_DEFAULT)),	--top-level-division="chapter" ,\
 									--top-level-division="section" \
 		))) \
 		$(if $(filter $(c_type),$(TYPE_EPUB)),\
-			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--epub-chapter-level="$(DEPTH_DEFAULT)" ,\
+			$(if $(filter $(c_level),$(SPECIAL_VAL)),	--epub-chapter-level="$(DEPTH_DEFAULT)" ,\
 									--epub-chapter-level="$(c_level)" \
 		)) \
 		$(if $(filter $(c_type),$(TYPE_PRES)),\
-			$(if $(filter $(SPECIAL_VAL),$(c_level)),	--section-divs --slide-level="1" ,\
+			$(if $(filter $(c_level),$(SPECIAL_VAL)),	--section-divs --slide-level="1" ,\
 									--section-divs --slide-level="$(DEPTH_DEFAULT)" \
 		)) \
 	) \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
-		$(if $(c_margin),		--variable=geometry="margin=$(c_margin)" ,\
-		$(if $(c_margin_top),		--variable=geometry="top=$(c_margin_top)") \
-		$(if $(c_margin_bottom),	--variable=geometry="bottom=$(c_margin_bottom)") \
-		$(if $(c_margin_left),		--variable=geometry="left=$(c_margin_left)") \
-		$(if $(c_margin_right),		--variable=geometry="right=$(c_margin_right)") \
-	)) \
+		$(if $(c_margin),			--variable=geometry="margin=$(c_margin)" ,\
+			$(if $(c_margin_top),		--variable=geometry="top=$(c_margin_top)") \
+			$(if $(c_margin_bottom),	--variable=geometry="bottom=$(c_margin_bottom)") \
+			$(if $(c_margin_left),		--variable=geometry="left=$(c_margin_left)") \
+			$(if $(c_margin_right),		--variable=geometry="right=$(c_margin_right)") \
+		) \
+	) \
+	$(if $(c_options),$(c_options)) \
 	\
-	--standalone \
-	--self-contained \
-	--columns="$(COLUMNS)" \
-	--eol="$(EOL)" \
-	\
-	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
 	--to="$(OUTPUT)" \
 	--output="$(CURDIR)/$(c_base).$(EXTENSION)" \
-	\
-	$(if $(c_options),$(c_options)) \
-	$(if $(c_list_plus),$(c_list_plus),$(c_list)) \
 )
+#>	$(if $(c_list_plus),$(c_list_plus),$(c_list)) \
 
 ########################################
 
 override PANDOC_OPTIONS_ERROR		:=
-ifeq ($(c_type),$(TYPE_LPDF))
-ifneq ($(c_toc),)
-ifneq ($(c_level),$(SPECIAL_VAL))
-ifneq ($(c_level),$(DEPTH_DEFAULT))
-override PANDOC_OPTIONS_ERROR		= The 'c_toc' option must be empty when 'c_level != [$(SPECIAL_VAL)|$(DEPTH_DEFAULT)]' for '$(TYPE_LPDF)'
-endif
-endif
-endif
-endif
+
+#> update: ERROR: TYPE_LPDF
+#ifeq ($(c_type),$(TYPE_LPDF))
+#ifneq ($(c_toc),)
+#ifneq ($(c_level),$(SPECIAL_VAL))
+#ifneq ($(c_level),$(DEPTH_DEFAULT))
+#override PANDOC_OPTIONS_ERROR		= The 'c_toc' option must be empty when 'c_level != [$(SPECIAL_VAL)|$(DEPTH_DEFAULT)]' for '$(TYPE_LPDF)'
+#endif
+#endif
+#endif
+#endif
 
 ################################################################################
 # {{{1 Composer Operation ------------------------------------------------------
@@ -1284,7 +1393,7 @@ override COMPOSER_OPTIONS_PANDOC := \
 			$(c_margin_top) ,\
 			$(c_margin_bottom) ,\
 			$(c_margin_left) ,\
-			$(c_margin_right) \
+			$(c_margin_right) ,\
 		)),\
 			c_margin_top \
 			c_margin_bottom \
@@ -1295,19 +1404,21 @@ override COMPOSER_OPTIONS_PANDOC := \
 	) \
 	c_options \
 
-override COMPOSER_OPTIONS_PROTECT := \
+override COMPOSER_OPTIONS_PUBLISH_ENV := \
 	MAKEJOBS \
 	COMPOSER_DOCOLOR \
 	COMPOSER_DEBUGIT \
-	COMPOSER_INCLUDE \
-	COMPOSER_DEPENDS \
-	\
-	COMPOSER_TARGETS \
-	COMPOSER_SUBDIRS \
-	COMPOSER_IGNORES \
-	\
-	c_base \
-	c_list \
+
+override COMPOSER_OPTIONS_PUBLISH := \
+	COMPOSER_INCLUDE$(TOKEN) \
+	COMPOSER_DEPENDS$(TOKEN) \
+	COMPOSER_TARGETS$(TOKEN) \
+	COMPOSER_SUBDIRS$(TOKEN) \
+	COMPOSER_IGNORES$(TOKEN) \
+	c_site$(TOKEN)1 \
+	c_type$(TOKEN)$(EXTN_HTML) \
+#>	c_base$(TOKEN) \
+#>	c_list$(TOKEN) \
 
 $(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
@@ -1324,7 +1435,7 @@ override COMPOSER_OPTIONS := \
 			$(c_margin_top) ,\
 			$(c_margin_bottom) ,\
 			$(c_margin_left) ,\
-			$(c_margin_right) \
+			$(c_margin_right) ,\
 		)),\
 			"/^c_margin$$/d" \
 		,\
@@ -1365,6 +1476,7 @@ override COMPOSER_OPTIONS_EXPORT = \
 
 override COMPOSER_PANDOC		:= compose
 
+#WORKING:NOW:NOW CREATOR := _repo ... or something... and move to below UPGRADE...
 override HELPOUT			:= help
 override CREATOR			:= docs
 override EXAMPLE			:= template
@@ -1463,15 +1575,12 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 ########################################
 ## {{{2 Publish ------------------------
 
-override PUBLISH_BUILD_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(MARKER)
-override PUBLISH_BUILD_CMD_END		= $(MARKER) -->
+override PUBLISH_CMD_ROOT		= <$(COMPOSER_TINYNAME)_root>
+override PUBLISH_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(MARKER)
+override PUBLISH_CMD_END		= $(MARKER) -->
 
-override PUBLISH_BUILD_SH		:= $(COMPOSER_ART)/$(PUBLISH).build.sh
-override PUBLISH_BUILD_SH_RUN		= \
-	CURDIR="$(CURDIR)" \
-	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
-	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
-	\
+#> update: $(PUBLISH)-variables
+override PUBLISH_SH_RUN			= \
 	SED="$(SED)" \
 	\
 	CAT="$(CAT)" \
@@ -1486,7 +1595,19 @@ override PUBLISH_BUILD_SH_RUN		= \
 	YQ="$(YQ)" \
 	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
 	\
-	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(PUBLISH_BUILD_SH)
+	CURDIR="$(CURDIR)" \
+	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
+	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
+	\
+	PUBLISH_COLS_BREAK="$(PUBLISH_COLS_BREAK)" \
+	PUBLISH_COLS_SIZE_LEFT="$(PUBLISH_COLS_SIZE_LEFT)" \
+	PUBLISH_COLS_SIZE_MAIN="$(PUBLISH_COLS_SIZE_MAIN)" \
+	PUBLISH_COLS_SHOW_LEFT="$(PUBLISH_COLS_SHOW_LEFT)" \
+	PUBLISH_COLS_SHOW_RIGHT="$(PUBLISH_COLS_SHOW_RIGHT)" \
+	PUBLISH_COLS_STICKY="$(PUBLISH_COLS_STICKY)" \
+	PUBLISH_COPY_SAFE="$(PUBLISH_COPY_SAFE)" \
+	\
+	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 
 ########################################
 
@@ -1512,6 +1633,28 @@ override $(PUBLISH)-caches := \
 
 ########################################
 
+#> update: $(PUBLISH)-variables
+override $(PUBLISH)-variables := \
+	PUBLISH_CSS_SHADE:config:css_shade \
+	PUBLISH_COLS_BREAK:config:cols_break \
+	PUBLISH_COLS_SIZE_LEFT:config:cols_size_left \
+	PUBLISH_COLS_SIZE_MAIN:config:cols_size_main \
+	PUBLISH_COLS_SHOW_LEFT:config:cols_show_left \
+	PUBLISH_COLS_SHOW_RIGHT:config:cols_show_right \
+	PUBLISH_COLS_STICKY:config:cols_sticky \
+	PUBLISH_COPY_SAFE:config:copy_safe \
+	PUBLISH_READ_TIME:config:read_time \
+	PUBLISH_READ_TIME_WPM:config:read_time_wpm \
+	LIBRARY_FOLDER:library:folder \
+	LIBRARY_AUTO_UPDATE:library:auto_update \
+	LIBRARY_DIGEST_TITLE:library:digest_title \
+	LIBRARY_DIGEST_COUNT:library:digest_count \
+	LIBRARY_DIGEST_EXPANDED:library:digest_expanded \
+	LIBRARY_DIGEST_CHARS:library:digest_chars \
+	LIBRARY_DIGEST_SPACER:library:digest_spacer \
+	LIBRARY_DIGEST_CONTINUE:library:digest_continue \
+	LIBRARY_DIGEST_PERMALINK:library:digest_permalink \
+
 ifneq ($(COMPOSER_YML_LIST),)
 
 override COMPOSER_LIBRARY_YML		:=
@@ -1522,27 +1665,16 @@ $(if $(wildcard $(FILE)),\
 		$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $(FILE) 2>/dev/null \
 		| $(SED) "/^null$$/d" \
 	)) \
-	$(if $(COMPOSER_LIBRARY_DIR),\
+	$(if $(filter-out $(SPECIAL_VAL),$(COMPOSER_LIBRARY_DIR)),\
 		$(eval override COMPOSER_LIBRARY_YML := $(FILE)) \
 		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
 	) \
 ))
 
-ifneq ($(c_site),)
-
-#> update: $(PUBLISH)-variables
-override $(PUBLISH)-variables := \
-	config:read_time:PUBLISH_READ_TIME \
-	config:read_time_wpm:PUBLISH_READ_TIME_WPM \
-	library:folder:LIBRARY_FOLDER \
-	library:auto_update:LIBRARY_AUTO_UPDATE \
-	library:digest_title:LIBRARY_DIGEST_TITLE \
-	library:digest_count:LIBRARY_DIGEST_COUNT \
-	library:digest_expanded:LIBRARY_DIGEST_EXPANDED \
-	library:digest_chars:LIBRARY_DIGEST_CHARS \
-	library:digest_spacer:LIBRARY_DIGEST_SPACER \
-	library:digest_continue:LIBRARY_DIGEST_CONTINUE \
-	library:digest_permalink:LIBRARY_DIGEST_PERMALINK \
+ifneq ($(or \
+	$(c_site) ,\
+	$(COMPOSER_DOITALL_$(CONFIGS)) ,\
+),)
 
 $(foreach FILE,\
 	$(shell \
@@ -1553,14 +1685,14 @@ $(foreach FILE,\
 			)"; \
 		fi; \
 		YQ_DATA="$$( \
-			$(COMPOSER_YML_DATA) 2>/dev/null \
+			$(call COMPOSER_YML_DATA) 2>/dev/null \
 			| $(YQ_WRITE) ".variables" 2>/dev/null \
 			| $(SED) "/^null$$/d" \
 		)"; \
 		for FILE in $($(PUBLISH)-variables); do \
-			SECT="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\1|g")"; \
-			YAML="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\2|g")"; \
-			DFLT="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\3|g")"; \
+			MVAR="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\1|g")"; \
+			SECT="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\2|g")"; \
+			YAML="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\3|g")"; \
 			CONF="$$( \
 				if	[ "$${SECT}" = "library" ] && \
 					[ -n "$(COMPOSER_LIBRARY_YML)" ]; \
@@ -1573,11 +1705,9 @@ $(foreach FILE,\
 					| $(SED) "/^null$$/d" \
 			)"; \
 			if [ -n "$${CONF}" ]; then \
-				$(ECHO) "override $(PUBLISH)-$${SECT}-$${YAML} := $${CONF}\n"; \
-			else \
-				$(ECHO) "override $(PUBLISH)-$${SECT}-$${YAML} := \$$($${DFLT})\n"; \
-			fi \
-				| $(SED) "s|[[:space:]]|$(TOKEN)|g"; \
+				$(ECHO) "override $${MVAR} := $${CONF}\n" \
+					| $(SED) "s|[[:space:]]|$(TOKEN)|g"; \
+			fi; \
 		done \
 	),\
 	$(eval $(subst $(TOKEN), ,$(FILE))) \
@@ -1590,6 +1720,10 @@ endif
 
 ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_DIR))
 override COMPOSER_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_LIBRARY))
+endif
+#WORKING:NOW:NOW need a better solution here...
+ifeq ($(COMPOSER_LIBRARY),)
+override COMPOSER_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP))
 endif
 
 override $(PUBLISH)-library		:= $(COMPOSER_LIBRARY)/$(PUBLISH)-library
@@ -1697,7 +1831,8 @@ override define $(COMPOSER_TINYNAME)-makefile =
 endef
 
 override define $(COMPOSER_TINYNAME)-make =
-	+$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT))
+	$(call $(HEADERS)-note,$(CURDIR),$(1),$(notdir $(MAKE)),$(@)); \
+	$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(1)
 endef
 
 override define $(COMPOSER_TINYNAME)-mkdir =
@@ -1716,6 +1851,17 @@ override define $(COMPOSER_TINYNAME)-cp =
 		$(call $(HEADERS)-file,$(CURDIR),$(_E)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
 		$(ECHO) "$(_S)"; \
 		$(CP) $(1) $(2) $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+override define $(COMPOSER_TINYNAME)-mv =
+	if	[ -d "$(1)" ] || \
+		[ -f "$(1)" ]; \
+	then \
+		$(call $(HEADERS)-file,$(CURDIR),$(_N)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
+		$(ECHO) "$(_S)"; \
+		$(MV) $(1) $(2) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
 endef
@@ -1805,8 +1951,8 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
 	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
 	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
-	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ $(_E)b"	"#WORKING"				"$(_M)$(c_logo)"
-	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ $(_E)i"	"#WORKING"				"$(_M)$(c_icon)"
+	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ $(_E)b"	"#WORKING"				"$(_M)$(notdir $(c_logo))"
+	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ $(_E)i"	"#WORKING"				"$(_M)$(notdir $(c_icon))"
 	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(_M)$(notdir $(call c_css_select))$(_D)"
 	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
 	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
@@ -1859,7 +2005,7 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
-	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number to keep / \`$(_N)0$(_D)\` is last run only*"
+	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number to keep / \`$(_N)0$(_D)\` is none*"
 	@$(PRINT) "  * *\`$(_N)(boolean)$(_D)\`  = empty is disabled / any value enables*"
 
 ########################################
@@ -1969,7 +2115,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(PRINT) "$(_E)(see [Recommended Workflow])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)cd$(_D) $(_M).../documents"
-	@$(PRINT) "$(CODEBLOCK)$(_C)mv$(_D) $(_M)$(call $(HEADERS)-release,$(COMPOSER_DIR)) .$(COMPOSER_BASENAME)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)mv$(_D) $(_M).../$(notdir $(COMPOSER_DIR)) .$(COMPOSER_BASENAME)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)"
 	@$(ENDOLINE)
@@ -1978,9 +2124,13 @@ $(HELPOUT)-EXAMPLES_%:
 ########################################
 ## {{{2 $(HELPOUT)-$(DOITALL) ----------
 
+#WORKING:NOW:NOW
+#	need a better indicator than just c_site here...
+#	retool README.site.html to use box instead of fold, and only for h1 items
+
 .PHONY: $(HELPOUT)-$(HEADERS)-%
 $(HELPOUT)-$(HEADERS)-%:
-	@if [ -z "$(c_site)" ]; then $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE); fi
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(MAKE) $(SILENT) $(HELPOUT)-$(DOITALL)-HEADER
 		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)$(HTML_BREAK)$(_D)"; fi
@@ -2020,14 +2170,14 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Repository Versions)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)	; $(call TITLE_END)
 	@$(call TITLE_END)
 	@$(if $(c_site),\
-		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_-1 ,\
+		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1 ,\
 		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1 \
 	)
 	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)	; $(call TITLE_END)
 	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)	; $(call TITLE_END)
 	@$(call TITLE_END)
 	@$(if $(c_site),\
-		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_-1 ,\
+		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1 ,\
 		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1 \
 	)
 	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_PRIMARY_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)		; $(call TITLE_END)
@@ -2066,7 +2216,7 @@ $(HELPOUT)-$(TYPE_PRES):
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(if $(c_site),\
-		$(call TITLE_LN ,-1,Reference) ,\
+		$(call TITLE_LN ,1,Reference) ,\
 		$(call TITLE_LN,1,Reference) \
 	)
 	@$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(TARGETS)
@@ -2253,11 +2403,11 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 #WORKING create an [Install] link to a new section = download [Makefile](github raw) into dedicated directory (see [Recommended Workflow]) and `make $(DISTRIB)`
 override define $(HELPOUT)-$(DOITALL)-LINKS =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
-$(_E)[License: GPL]: https://github.com/garybgenett/composer/blob/master/LICENSE$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/master/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
 $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
-$(_S)[$(COMPOSER_FULLNAME)]: https://github.com/garybgenett/composer/tree/$(COMPOSER_VERSION)$(_D)
+$(_S)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
 $(_S)[$(COMPOSER_BASENAME) Icon]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-v1.0.png$(_D)
 $(_S)[$(COMPOSER_BASENAME) Screenshot]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
 endef
@@ -2276,6 +2426,7 @@ $(_E)[Bootstrap]: https://getbootstrap.com$(_D)
 $(_E)[Bootswatch]: https://bootswatch.com$(_D)
 $(_E)[Markdown Viewer]: https://github.com/Thiht/markdown-viewer$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
+$(_E)[Font-Awesome]: https://fontawesome.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
 $(_S)[GNU]: http://www.gnu.org$(_D)
@@ -2438,6 +2589,7 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-FORMAT --
 
 #WORKING:NOW:NOW
+#	change COMPOSER_KEEPING behavior so that $(SPECIAL_VAL) removes it after every run...?
 #	make demo = peek = replace screenshot with a gif
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
@@ -2448,13 +2600,14 @@ endef
 #	favicon.ico = idendical to $(_C)[Reveal.js Presentations]$(_D)
 #		works on all html, including revealjs
 #	order of nav presentation in plain-text: top, left, middle, right, bottom
+#	breakpoints = https://getbootstrap.com/docs/5.2/layout/grid/#grid-options
 #	the *-info-* fields will accept any markdown, html, or bootstrap
 #		it is a simple span within the navbar, so flex and others will work
 #		https://getbootstrap.com/docs/5.2/components/navbar
 #		https://getbootstrap.com/docs/5.2/utilities/flex
 #	any simple css should do...
 #		https://getbootstrap.com/docs/5.2/utilities/colors
-#	$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_BUILD_CMD_END)<!-- -->
+#	$(PUBLISH_CMD_BEG) fold-begin 1 $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)<!-- -->
 #		(the ' as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #	$(PUBLISH) rebuilds indexes, force recursively
@@ -2492,9 +2645,16 @@ endef
 #	need to document "header 0" for fold-begin and box-begin
 #		need to document "contents 0"
 #			first instance of "contents.*" wins...
+#			same with readtime, although it doesn't matter...
 #		also, "header x" at any old time...
 #	document readtime = @W / @T
 #	document "make config" in "library", to show files with missing headers
+#	document .$(TARGETS) special value
+#	document template.*/reference.* and $(COMPOSER_CUSTOM)-header.*/$(COMPOSER_CUSTOM)-css.* files
+#	maybe a note that all files also "depend" on Makefile, so they will all update along with it?
+#	includes tree is based off of makefile list, so need to $(INSTALL) in order to get $(COMPOSER_SETTINGS/YML)
+#		that said, -f now works for single files with no configuration file reading...
+#	document composer_dir/composer_root ... in composer.mk section?
 #WORK
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
@@ -2527,9 +2687,11 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 
 #WORKING
 
-$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS_JS))$(_D)
-$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS_CSS))$(_D)
-$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_CSS))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_ART_JS))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(BOOTSTRAP_ART_CSS))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(CUSTOM_PUBLISH_CSS))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(COMPOSER_LOGO))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(COMPOSER_ICON))$(_D)
 
@@ -2561,7 +2723,7 @@ Internally, $(_C)[Pandoc]$(_D) first converts to $(_M)LaTeX$(_D), and then uses 
 convert into the final $(_C)[PDF]$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) inserts customized $(_M)LaTeX$(_D) to modify the
 final output:
 
-$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(TEX_PDF_TEMPLATE))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(CUSTOM_PDF_LATEX))$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,EPUB)
 
@@ -2573,7 +2735,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,Reveal.js Presentations)
 The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to create a more
 traditional and readable end result.  The customized version is at:
 
-$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(REVEALJS_CSS))$(_D)
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(CUSTOM_REVEALJS_CSS))$(_D)
 
 It links in a default theme from the `$(patsubst $(COMPOSER_DIR)/%,.../$(_M)%,$(REVEALJS_DIR))/dist/theme$(_D)` directory.  Edit
 the location in the file, or use $(_C)[c_css]$(_D) to select a different theme.
@@ -2589,7 +2751,7 @@ To have different logos for different directories $(_E)(using [Recommended Workf
 
 $(CODEBLOCK)$(_C)cd$(_D) $(_M).../presentations$(_D)
 $(CODEBLOCK)$(_C)cp$(_D) $(_N).../$(notdir $(COMPOSER_LOGO))$(_D) $(_M)./$(_D)
-$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs .../$(patsubst $(COMPOSER_DIR)%,.$(COMPOSER_BASENAME)%,$(REVEALJS_CSS))$(_D) $(_M)./$(COMPOSER_CSS)$(_D)
+$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs .../$(patsubst $(COMPOSER_DIR)%,.$(COMPOSER_BASENAME)%,$(CUSTOM_REVEALJS_CSS))$(_D) $(_M)./$(COMPOSER_CSS)$(_D)
 $(CODEBLOCK)$(_C)echo$(_D) $(_N)'$(_E)override c_type := $(TYPE_PRES)'$(_D) >>$(_M)./$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)$(_D)
 
@@ -2671,13 +2833,13 @@ directories being processed first, this can be done simply using $(_C)[GNU Make]
 syntax in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
 $(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)
-$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(BOOTSTRAP_DIR))$(_D)
+$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(PANDOC_DIR))$(_D)
 
 This would require `$(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)`, and for
-`$(_E)$(notdir $(BOOTSTRAP_DIR))$(_D)` to be processed before `$(_M)$(notdir $(COMPOSER_ART))$(_D)`.  Directories need to be
-specified with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with
-target names $(_E)(see [Custom Targets])$(_D).  Good examples of this are the internal
-$(_C)[$(CREATOR)]$(_D) and $(_C)[$(TESTING)]$(_D) targets, which are common directory names.
+`$(_E)$(notdir $(PANDOC_DIR))$(_D)` to be processed before `$(_M)$(notdir $(COMPOSER_ART))$(_D)`.  Directories need to be specified
+with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with target names
+$(_E)(see [Custom Targets])$(_D).  Good examples of this are the internal $(_C)[$(CREATOR)]$(_D) and
+$(_C)[$(TESTING)]$(_D) targets, which are common directory names.
 
 Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
 support.  Note that if a file or directory is set to depend on a target, that
@@ -2954,7 +3116,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_KEEPING)
 
-#WORK
+#WORK $(SPECIAL_VAL) deletes all...
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LOG)
 
@@ -3196,6 +3358,13 @@ endef
 
 #> update: TYPE_TARGETS
 
+#WORKING:NOW:NOW
+#	add $(DOITALL) or $(DOFORCE) to this, replacing $(COMPOSER_RELEASE), so it is non-destructive by default...
+#	or, maybe split into $(CREATOR) and $(EXTRACT), to separate the two activities?
+#		can also just flat-out rename it, to make it clear... it's not a user-facing target
+#	need to then add $(EXTRACT) as a prerequisite, or do $(MAKE) $(EXTRACT)
+#	ultimately, by default $(RELEASE) needs to be safe for a user-repository
+
 .PHONY: $(CREATOR)
 ifneq ($(filter $(CREATOR),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -3205,17 +3374,19 @@ $(CREATOR):
 	@$(call $(HEADERS))
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
-	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_README_COMPOSER_YML) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
-	@$(ECHO) "$(_E)"
-	@$(RM)										$(CURDIR)/$(COMPOSER_CSS)
-	@$(ECHO) "$(_D)"
 endif
 	@$(ECHO) "$(_S)"
 	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
+ifneq ($(COMPOSER_RELEASE),)
+	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
+	@$(ECHO) "$(_E)"
+	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
 		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
@@ -3230,92 +3401,112 @@ endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
-	@$(ECHO) "$(_S)"
-	@$(ECHO) "$(DIST_ICON_AUTHOR)"				| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-author.png
-	@$(ECHO) "$(DIST_ICON_v1.0)"				| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_YML_EXAMPLE))
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
+	@$(ECHO) "$(_E)"
+	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png
+	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
+#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png
+	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png \
+											$($(DEBUGIT)-output)
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/screenshot-v3.0.png
-	@$(foreach ICON_FILE,\
-		$(ICON_GITHUB) \
-		$(ICON_GPL) \
-		$(ICON_CC) \
-		$(ICON_RESERVED) \
-		,\
-		$(eval ICON := $(word 1,$(subst |, ,$(ICON_FILE)))) \
-		$(eval FILE := $(word 2,$(subst |, ,$(ICON_FILE)))) \
+	@$(foreach CSS_ICON,$(call CSS_ICONS),\
+		$(eval NAME := $(word 1,$(subst :, ,$(CSS_ICON)))) \
+		$(eval FILE := $(word 2,$(subst :, ,$(CSS_ICON)))) \
 		$(call NEWLINE) \
 		if [ -f "$(FILE)" ]; then \
-			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(ICON).svg $($(DEBUGIT)-output); \
+			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(NAME).svg $($(DEBUGIT)-output); \
 		else \
-			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(ICON).png; \
+			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(NAME).png; \
 		fi; $(call NEWLINE) \
 	)
-	@$(ECHO) "$(_D)"
-	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PUBLISH_BUILD_SH))
-	@$(ECHO) "<script>\n"								>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_JS))
-	@$(CAT) $(BOOTSTRAP_CSS_JS_SRC)							>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_JS))
-	@$(ECHO) "</script>\n"								>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_JS))
-	@$(CAT) $(BOOTSTRAP_CSS_CSS_SRC)						>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_CSS))
-	@$(call HEREDOC_BOOTSTRAP_CSS_HACK)						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_CSS))
-	@$(call DO_HEREDOC,HEREDOC_BOOTSTRAP_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
-	@$(SED) -i 's&HEREDOC_BOOTSTRAP_CSS_HACK&$(strip \
-		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_BOOTSTRAP_CSS_HACK)) \
-		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_CSS_CSS_SRC))&g' \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS))
-	@$(call DO_HEREDOC,HEREDOC_TEX_PDF_TEMPLATE)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(TEX_PDF_TEMPLATE))
-	@$(call DO_HEREDOC,HEREDOC_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS))
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
-	@$(ECHO) "$(_E)"
-	@$(foreach FILE,\
-		$(TMPL_HTML):$(EXTN_HTML) \
-		$(TMPL_LPDF):$(EXTN_LPDF) \
-		$(TMPL_EPUB):$(EXTN_EPUB) \
-		$(TMPL_PRES):$(EXTN_PRES) \
-		\
-		$(TMPL_TEXT):$(EXTN_TEXT) \
-		$(TMPL_LINT):$(EXTN_LINT) \
-		,\
-		$(PANDOC) --verbose \
-			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/template.default.$(word 2,$(subst :, ,$(FILE)))" \
-			--print-default-template="$(word 1,$(subst :, ,$(FILE)))"; \
-		if [ ! -f $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/template.$(word 2,$(subst :, ,$(FILE))) ]; then \
-			$(LN) \
-				$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/template.default.$(word 2,$(subst :, ,$(FILE))) \
-				$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/template.$(word 2,$(subst :, ,$(FILE))); \
-		fi; \
+#> update: HEREDOC_CUSTOM_PUBLISH
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(PUBLISH).css $($(DEBUGIT)-output)
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
+	@$(ECHO) "<script>\n"								>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)).pre
+	@$(ECHO) "</script>\n"								>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)).post
+	@$(LN) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
+	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
+	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
+	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
+	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
+	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
+		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
+		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_DIR_CSS))&g' \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark)) \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(foreach FILE,$(call CSS_THEMES),\
+		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
+			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
+			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
+		)									$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE)))) \
+											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	)
-	@$(foreach FILE,\
-		$(TMPL_DOCX):$(EXTN_DOCX) \
-		$(TMPL_PPTX):$(EXTN_PPTX) \
-		,\
-		$(PANDOC) --verbose \
-			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/reference.default.$(word 2,$(subst :, ,$(FILE)))" \
-			--print-default-data-file="reference.$(word 1,$(subst :, ,$(FILE)))"; \
-		if [ ! -f $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/reference.$(word 2,$(subst :, ,$(FILE))) ]; then \
-			$(LN) \
-				$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/reference.default.$(word 2,$(subst :, ,$(FILE))) \
-				$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/reference.$(word 2,$(subst :, ,$(FILE))); \
-		fi; \
+#WORKING:NOW:NOW
+#	styles.html, epub.css, etc.
+#		--print-default-data-file="templates/styles.html"
+#		--print-default-data-file="epub.css"
+#	styles.html -> c_css=0 -> --metadata="document-css=false" ?
+#		maybe theme.*-pandoc.css files, or just empty c_css does not do document-css=false?
+#		create theme.epub* files, and link to theme.html* files?
+#	https://github.com/kognise/water.css
+#		https://www.cssbed.com/water.css-dark
+#		https://github.com/altercation/solarized
+#		https://github.com/troxler/awesome-css-frameworks
+#			https://github.com/csstools/sanitize.css
+#		yarn build
+#			npm install yarn
+#			npm install
+#	![Composer Screenshot](artifacts/screenshot-v1.0.png){width=100%} + \ at end
+#	$(COMPOSER_ART)
+#		bootstrap
+#		composer
+#		images
+#		pandoc = +epub.css +styles.html
+#		themes = +ln:shades
+	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+		$(foreach FILE,\
+			template \
+			reference \
+			,\
+			$(PANDOC_BIN) --verbose \
+				--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE)-default.$(TMPL_$(TYPE))" \
+				$(if $(filter $(FILE),template),--print-default-template="$(TMPL_$(TYPE))" ,\
+								--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
+				) 2>/dev/null || $(TRUE); \
+			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
+				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE).$(TMPL_$(TYPE))" ]; then \
+				$(LN) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE)-default.$(TMPL_$(TYPE)) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE).$(TMPL_$(TYPE)) \
+					$($(DEBUGIT)-output); \
+			fi; \
+		) \
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(_D)"
-	@$(LS) $(CURDIR)
-	@$(LS) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))
 ifneq ($(COMPOSER_RELEASE),)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
+#>	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
+#>	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
 	@$(ECHO) "$(_E)"
-	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(CP) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-v1.0.png	$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
+	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG="$(COMPOSER_LOG_DEFAULT)"			COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
-#>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-#>	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_LOG=						COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
-	@$(ECHO) "$(_E)"
-	@$(MV) $(CURDIR)/$(COMPOSER_YML)						$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
-	@$(ECHO) "$(_D)"
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(CURDIR)/$(COMPOSER_YML)
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
 endif
@@ -3327,7 +3518,12 @@ endif
 
 .PHONY: $(EXAMPLE)
 $(EXAMPLE):
-	@$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(EXAMPLE)
+	@$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(@)
+
+#WORKING shows up in $(TARGETS) ...
+.PHONY: $(EXAMPLE)-yml
+$(EXAMPLE)-yml:
+	@$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(@)
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
@@ -3359,6 +3555,16 @@ $(EXAMPLE):
 	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_N)endif$(_D))
 
+#WORKING document, add to "defaults" section
+.PHONY: .$(EXAMPLE)-yml
+.$(EXAMPLE)-yml:
+	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
+#>	@$(call COMPOSER_YML_DATA) 2>/dev/null
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE) \
+		| $(YQ_WRITE_OUT) 2>/dev/null \
+		| $(SED) "/^[[:space:]]*[#].*$$/d" \
+		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK),$(COMMENTED))|g"
+
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
 endef
@@ -3374,22 +3580,22 @@ endef
 # {{{1 Embedded Files ----------------------------------------------------------
 ################################################################################
 
-override DIST_ICON_AUTHOR		:= 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
-override DIST_ICON_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==
+override DIST_LOGO_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==
+override DIST_ICON_v1.0			:= $(DIST_LOGO_v1.0)
 override DIST_SCREENSHOT_v1.0		:= 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
 override DIST_SCREENSHOT_v3.0		:= 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
 
-override ICON_GITHUB			:= github|$(FONTAWES_DIR)/svgs/brands/github.svg
-override ICON_GPL			:= gpl|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
-override ICON_CC			:= cc-by-nc-nd|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
-override ICON_RESERVED			:= reserved|$(FONTAWES_DIR)/svgs/regular/copyright.svg
+# https://www.gnu.org/graphics/license-logos.html
+# https://creativecommons.org/licenses/by-nc-nd
+override EXT_ICON_GPL			:= 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
+override EXT_ICON_CC			:= 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
 
 ########################################
 ## {{{2 Heredoc Function ---------------
 
 override define DO_HEREDOC =
 	$(if $(2),$(eval $(call COMPOSER_NOCOLOR))) \
-	$(ECHO) '$(subst ',[Q],$(subst $(call NEWLINE),[N],$(call $(1))))[N]' \
+	$(ECHO) '$(subst ',[Q],$(subst $(call NEWLINE),[N],$(call $(1),$(3))))[N]' \
 		| $(SED) \
 			-e "s|[[]Q[]]|\'|g" \
 			-e "s|[[]N[]]|\\n|g" \
@@ -3428,9 +3634,9 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(COMPOSER_BASENAME)
 
-#>**/$(COMPOSER_SETTINGS)
-#>**/$(COMPOSER_YML)
-#>**/$(COMPOSER_CSS)
+#$(MARKER) **/$(COMPOSER_SETTINGS)
+#$(MARKER) **/$(COMPOSER_YML)
+#$(MARKER) **/$(COMPOSER_CSS)
 
 **/$(COMPOSER_LOG_DEFAULT)
 **$(patsubst $(COMPOSER_DIR)%,%,$(COMPOSER_TMP))/
@@ -3469,7 +3675,8 @@ $(_N)ifeq$(_D) ($(_E)$$(COMPOSER_MY_PATH)$(_D),$(_N)$$(CURDIR)$(_D))
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Wildcards$(_D)
 
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_css		:= $(CSS_ALT)$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png$(_D)
 $(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc		:= $(SPECIAL_VAL)$(_D)
 
 $(_S)########################################$(_D)
@@ -3477,17 +3684,14 @@ $(_S)#$(_D) $(_H)Settings$(_D)
 
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D):			$(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_site	:= 1
-$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_css	:= $(patsubst $(COMPOSER_DIR)/%,%,$(MDVIEWER_CSS_SOLAR_ALT))$(_D)
+$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_css	:= html.solar-dark$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_toc	:=$(_D)
-$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_options	:= --variable=pagetitle="$(COMPOSER_TAGLINE)"$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_S)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_S)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
-$(_M)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_E)$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_M)$(OUT_README).$(EXTN_HTML)$(_D): $(_E)override c_css		:= dark$(_D)
 
-$(_M)$(OUT_README).$(EXTN_EPUB)$(_D): $(_E)override c_css		:=$(_D)
+$(_S)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_S)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 
 $(_M)$(OUT_README).$(EXTN_PRES)$(_D):			$(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)$(_D)
-$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_css	:=$(_D)
 $(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc	:=$(_D)
 
 $(_S)########################################$(_D)
@@ -3496,6 +3700,58 @@ $(_N)endif$(_D)
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)End Of File$(_D)
 $(_S)################################################################################$(_D)
+endef
+
+########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH))
+
+override define HEREDOC_COMPOSER_MK_PUBLISH =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH))
+################################################################################
+
+override COMPOSER_INCLUDE		:= 1
+
+override c_site				:= 1
+override c_logo				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png
+override c_icon				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) $(NOTHING))
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_NOTHING =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
+################################################################################
+
+override c_logo				:=
+override c_icon				:=
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) $(TESTING))
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+################################################################################
+
+override COMPOSER_INCLUDE		:=
+
+override c_css				:= $(SPECIAL_VAL)
+
+################################################################################
+# End Of File
+################################################################################
 endef
 
 ########################################
@@ -3510,66 +3766,98 @@ $(_S)###########################################################################
 
 $(_H)variables$(_D):
 
-$(_S)################################################################################$(_D)
-$(_S)#$(_D) $(_H)$(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)$(_D)
+$(_S)########################################$(_D)
+$(_S)#$(_D) $(_H)$(PUBLISH)$(_D)
 
-  $(_C)title-prefix$(_D):				$(_M)null$(_D) $(_S)#$(MARKER)$(_D) $(_N)EXAMPLE SITE$(_D)
+  $(_C)title-prefix$(_D):				$(_M)EXAMPLE SITE$(_D)
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-config$(_D):
 
-    $(_C)homepage$(_D):				$(_M)http://www.example.net$(_D)
+    $(_C)homepage$(_D):				$(_M)$(COMPOSER_HOMEPAGE)$(_D)
     $(_C)brand$(_D):				$(_M)LOGO / BRAND$(_D)
-    $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):			$(_M)COPYRIGHT$(_D)
+    $(_C)copyright$(_D): $(_N)|$(_D)
+      <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
+        <img alt="GPL License"
+        class="$(COMPOSER_TINYNAME)-icon"
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-gpl.png"/></a>
+      <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
+        <img alt="CC License"
+        class="$(COMPOSER_TINYNAME)-icon"
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-cc-by-nc-nd.png"/></a>
+      <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
+        <img alt="All Rights Reserved"
+        class="$(COMPOSER_TINYNAME)-icon"
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-copyright.svg"/></a>
+      $(_M)COPYRIGHT$(_D)
 
-    $(_C)cols_main_size$(_D):			$(_M)$(PUBLISH_COLS_MAIN_SIZE)$(_D)
-    $(_C)cols_show_left$(_D):			$(_M)$(PUBLISH_COLS_SHOW_LEFT)$(_D)
-    $(_C)cols_show_right$(_D):			$(_M)$(PUBLISH_COLS_SHOW_RIGHT)$(_D)
-    $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
-    $(_C)copy_safe$(_D):				$(_M)$(PUBLISH_COPY_SAFE)$(_D)
-
-    $(_C)read_time$(_D):				$(_M)$(PUBLISH_READ_TIME)$(_D)
-    $(_C)read_time_wpm$(_D):			$(_M)$(PUBLISH_READ_TIME_WPM)$(_D)
-
-    $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
+    $(_C)search_name$(_D): $(_N)|$(_D)
+      <img alt="Search"
+        class="$(COMPOSER_TINYNAME)-icon"
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-search.svg"/>
     $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
     $(_C)search_text$(_D):			$(_M)q$(_D)
     $(_C)search_form$(_D): $(_N)|$(_D)
-      $(_M)<input type="hidden" name="sites" value="example.net"/>$(_D)
+      <input type="hidden" name="sites" value="$(_M)$(COMPOSER_CNAME)$(_D)"/>
+      <input type="hidden" name="ia" value="web"/>
+      <input type="hidden" name="kae" value="d"/>
+      <input type="hidden" name="ko" value="1"/>
+      <input type="hidden" name="kp" value="-1"/>
+      <input type="hidden" name="kv" value="1"/>
+      <input type="hidden" name="kz" value="-1"/>
+
+$(_S)#$(MARKER)$(_D) $(_C)css_shade$(_D):				$(_M)$(PUBLISH_CSS_SHADE)$(_D)
+
+$(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_size_left$(_D):			$(_M)$(PUBLISH_COLS_SIZE_LEFT)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_size_main$(_D):			$(_M)$(PUBLISH_COLS_SIZE_MAIN)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_show_left$(_D):			$(_M)$(PUBLISH_COLS_SHOW_LEFT)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_show_right$(_D):			$(_M)$(PUBLISH_COLS_SHOW_RIGHT)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)copy_safe$(_D):				$(_M)$(PUBLISH_COPY_SAFE)$(_D)
+
+$(_S)#$(MARKER)$(_D) $(_C)read_time$(_D):				$(_N)"$(_M)$(PUBLISH_READ_TIME)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)read_time_wpm$(_D):			$(_M)$(PUBLISH_READ_TIME_WPM)$(_D)
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-library$(_D):
 
-    $(_C)folder$(_D):				$(_M)$(LIBRARY_FOLDER)$(_D)
-    $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
+    $(_C)folder$(_D):				$(_S)#$(MARKER)$(_D) $(_M)$(LIBRARY_FOLDER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 
-    $(_C)digest_title$(_D):			$(_M)$(LIBRARY_DIGEST_TITLE)$(_D)
-    $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
-    $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
-    $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
-    $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
-    $(_C)digest_continue$(_D):			$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_D)
-    $(_C)digest_permalink$(_D):			$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_M)$(LIBRARY_DIGEST_TITLE)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-nav-top$(_D):
 
     $(_M)MENU$(_D):
-      $(_M)MAIN$(_D):				$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
+      $(_M)MAIN$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
       $(_M)PAGES$(_D):
         $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
-        $(_M)Introduction$(_D):			$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-        $(_M)Default Site$(_D):			$(_E)<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-        $(_M)Configured Site$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(_D)
-        $(_M)Default Digest Page$(_D):		$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
-        $(_M)Configured Digest Page$(_D):		$(_E)<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
-        $(_M)Default Markdown File$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)$(_D)
-        $(_M)Configured Markdown File$(_D):	$(_E)<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)$(_D)
-        $(_M)Elements & Includes$(_D):		$(_E)<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)$(_D)
+        $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
+        $(_C)spacer$(_D):
+        $(_M)Introduction$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        $(_M)Default Site$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        $(_M)Configured Site$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        $(_M)Default Digest Page$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+        $(_M)Configured Digest Page$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML)$(_D)
+        $(_M)Default Markdown File$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        $(_M)Elements & Includes$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)$(_D)
+    $(_M)CONTENTS$(_D):
+      $(_M)CONTENTS$(_D):
+        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
+        $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D):
+$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D):
+$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D):
     $(_M)LIBRARY$(_D):
       $(_M)AUTHORS$(_D):
         $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
@@ -3582,20 +3870,18 @@ $(_S)########################################$(_D)
         $(_C)library$(_D) $(_M)tags$(_D):
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
-    $(_M)FRAME$(_D):
-      $(_M)PATH 1$(_D): $(_E)"#"$(_D)
-      $(_M)PATH 2$(_D): $(_E)"#"$(_D)
-      $(_M)PATH 3$(_D): $(_E)"#"$(_D)
+    $(_M)MENU$(_D):
+      $(_M)PATH 1$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      $(_M)PATH 2$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      $(_M)PATH 3$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-nav-left$(_D):
 
-    $(_M)FRAME$(_D):
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 LEFT 1$(_D)
+    $(_M)MENU$(_D):
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) LEFT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
@@ -3613,16 +3899,15 @@ $(_S)########################################$(_D)
       - $(_C)readtime$(_D)
       - $(_C)spacer$(_D)
       - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_N)contents$(_D) $(_N)$(SPECIAL_VAL)$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_N)contents$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D)
       - $(_C)box-end$(_D)
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-nav-right$(_D):
 
-    $(_M)FRAME$(_D):
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 RIGHT 1$(_D)
+    $(_M)MENU$(_D):
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) RIGHT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
@@ -3636,41 +3921,42 @@ $(_S)########################################$(_D)
     $(_M)SPACE$(_D):
       - $(_C)spacer$(_D)
     $(_M)LIBRARY$(_D):
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) AUTHORS$(_D)
+      - $(_C)fold-begin group$(_D) $(_M)fold-library$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) fold-library AUTHORS$(_D)
       - $(_C)library$(_D) $(_M)authors$(_D)
       - $(_C)fold-end$(_D)
-      - $(_C)spacer$(_D)
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) DATES$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) fold-library DATES$(_D)
       - $(_C)library$(_D) $(_M)dates$(_D)
       - $(_C)fold-end$(_D)
-      - $(_C)spacer$(_D)
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) TAGS$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 fold-library TAGS$(_D)
       - $(_C)library$(_D) $(_M)tags$(_D)
       - $(_C)fold-end$(_D)
+      - $(_C)fold-end group$(_D)
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-info-top$(_D):
-    $(_M)INFO$(_D):
-      - $(_N)|$(_D)
-          <a rel="author" href="$(COMPOSER_HOMEPAGE)">
-            <img alt="$(COMPOSER_TECHNAME)"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="<composer_root>/.$(COMPOSER_BASENAME)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.svg)"/></a>
+
+    $(_M)TEXT$(_D):
       - $(_N)|$(_D)
           TOP INFO
+    $(_M)TIME$(_D):
+    $(_M)ICON$(_D):
+      - $(_N)|$(_D)
+          <a rel="author" href="$(_M)$(COMPOSER_REPOPAGE)$(_D)">
+            <img alt="$(_M)$(COMPOSER_TECHNAME)$(_D)"
+            class="$(COMPOSER_TINYNAME)-icon"
+            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-github.svg"/></a>
 
 $(_S)########################################$(_D)
-
   $(_H)$(PUBLISH)-info-bottom$(_D):
-    $(_M)INFO$(_D):
-      - $(_N)|$(_D)
-          <a rel="author" href="$(COMPOSER_HOMEPAGE)">
-            <img alt="$(COMPOSER_TECHNAME)"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="<composer_root>/.$(COMPOSER_BASENAME)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.svg)"/></a>
+
+    $(_M)TEXT$(_D):
       - $(_N)|$(_D)
           BOTTOM INFO
+    $(_M)TIME$(_D):
+      - $(_N)|$(_D)
+          $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+    $(_M)ICON$(_D):
 
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)End Of File$(_D)
@@ -3678,51 +3964,120 @@ $(_S)###########################################################################
 endef
 
 ########################################
+## {{{2 Heredoc: composer_yml ($(EXAMPLE))
+
+override define HEREDOC_COMPOSER_YML_EXAMPLE =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(EXAMPLE))
+################################################################################
+
+variables:
+
+################################################################################
+# $(PUBLISH)
+
+  title-prefix:
+
+########################################
+  $(PUBLISH)-config:
+
+    homepage:
+    brand:
+    copyright:
+
+    search_name:
+    search_site:
+    search_text:
+    search_form:
+
+    css_shade:				$(PUBLISH_CSS_SHADE)
+
+    cols_break:				$(PUBLISH_COLS_BREAK)
+    cols_size_left:			$(PUBLISH_COLS_SIZE_LEFT)
+    cols_size_main:			$(PUBLISH_COLS_SIZE_MAIN)
+    cols_show_left:			$(PUBLISH_COLS_SHOW_LEFT)
+    cols_show_right:			$(PUBLISH_COLS_SHOW_RIGHT)
+    cols_sticky:			$(PUBLISH_COLS_STICKY)
+    copy_safe:				$(PUBLISH_COPY_SAFE)
+
+    read_time:				"$(PUBLISH_READ_TIME)"
+    read_time_wpm:			$(PUBLISH_READ_TIME_WPM)
+
+########################################
+  $(PUBLISH)-library:
+
+    folder:				$(LIBRARY_FOLDER)
+    auto_update:			$(LIBRARY_AUTO_UPDATE)
+
+    digest_title:			$(LIBRARY_DIGEST_TITLE)
+    digest_count:			$(LIBRARY_DIGEST_COUNT)
+    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED)
+    digest_chars:			$(LIBRARY_DIGEST_CHARS)
+    digest_spacer:			$(LIBRARY_DIGEST_SPACER)
+    digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)"
+    digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)"
+
+########################################
+
+  $(PUBLISH)-nav-top:
+  $(PUBLISH)-nav-bottom:
+  $(PUBLISH)-nav-left:
+  $(PUBLISH)-nav-right:
+
+  $(PUBLISH)-info-top:
+  $(PUBLISH)-info-bottom:
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
 ## {{{2 Heredoc: composer_yml ($(OUT_README))
 
-override define HEREDOC_README_COMPOSER_YML =
+override define HEREDOC_COMPOSER_YML_README =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(OUT_README))
 ################################################################################
 
 variables:
 
-################################################################################
-# $(COMPOSER_BASENAME) $(DIVIDE) $(PUBLISH)
+########################################
+# $(PUBLISH)
 
-  title-prefix:				"$(COMPOSER_HEADLINE)"
+  title-prefix:
 
 ########################################
-
   $(PUBLISH)-config:
 
     homepage:				$(COMPOSER_HOMEPAGE)
     brand:				$(COMPOSER_TECHNAME)
-    copyright:				$(COPYRIGHT_SHORT)
+    copyright: |
+      <a rel="license" href="$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)">
+        <img alt="GPL License"
+        class="$(COMPOSER_TINYNAME)-icon"
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-gpl.png"/></a>
+      $(COPYRIGHT_SHORT)
 
-    cols_main_size:			6
-    cols_show_left:			1
-    cols_show_right:			0
-    cols_sticky:			1
-    copy_safe:				0
+    search_name:			null
+    search_site:			null
+    search_text:			null
+    search_form:			null
+
+    css_shade:				null
+
+    cols_break:				null
+    cols_size_left:			3
+    cols_size_main:			9
+    cols_show_left:			$(SPECIAL_VAL)
+    cols_show_right:			$(SPECIAL_VAL)
+    cols_sticky:			null
+    copy_safe:				$(SPECIAL_VAL)
 
     read_time:				null
     read_time_wpm:			null
 
-    search_name:			Search
-    search_site:			https://duckduckgo.com
-    search_text:			q
-    search_form: |
-      <input type="hidden" name="sites" value="$(COMPOSER_SEARCH)"/>
-      <input type="hidden" name="ia" value="web"/>
-      <input type="hidden" name="kae" value="d"/>
-      <input type="hidden" name="ko" value="1"/>
-      <input type="hidden" name="kp" value="-1"/>
-      <input type="hidden" name="kv" value="1"/>
-      <input type="hidden" name="kz" value="-1"/>
-
 ########################################
-
   $(PUBLISH)-library:
 
     folder:				null
@@ -3737,14 +4092,15 @@ variables:
     digest_permalink:			null
 
 ########################################
-
   $(PUBLISH)-nav-top:
 
     MENU:
-      Top: "#$(COMPOSER_TINYNAME)-cms"
+      Top: $(OUT_README).$(PUBLISH).$(EXTN_HTML)
       Formats:
         $(MENU_SELF): "#formats"
-        Bootstrap Website: _$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        $(FILE): $(FILE))
+        Example Website: $(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+        spacer:$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        $(FILE): $(FILE))
+#WORKING:NOW is there a way to automate this menu?
     CONTENTS:
       CMS:
         $(MENU_SELF): "#$(COMPOSER_TINYNAME)-cms"
@@ -3827,192 +4183,49 @@ variables:
           Variable Names: "#variable-names"
 
 ########################################
-
   $(PUBLISH)-nav-bottom:
 
-    CODE:
+    MENU:
       Home:				./
-      Artifacts:			./$(notdir $(COMPOSER_ART))
-    TOOLS:
-      Source:				./$(notdir $(COMPOSER_PKG))
-      Pandoc:				./$(notdir $(PANDOC_DIR))
-      Bootstrap:			./$(notdir $(BOOTSTRAP_DIR))
+      Artifacts:			./$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))
+      Pandoc:				./$(patsubst $(COMPOSER_DIR)/%,%,$(PANDOC_DIR))
+      Bootstrap:			./$(patsubst $(COMPOSER_DIR)/%,%,$(BOOTSTRAP_DIR))
 
 ########################################
-
   $(PUBLISH)-nav-left:
 
     MENU:
       - box-begin $(SPECIAL_VAL) Formats
       - text: |
-          * [Bootstrap Website](_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)          * [$(FILE)]($(FILE)))
+          * [Example Website]($(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - spacer
+      - text: |$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)          * [$(FILE)]($(FILE)))
       - box-end
     SPACE:
       - spacer
     CONTENTS:
       - box-begin $(SPECIAL_VAL) Contents
-      - contents 2
+      - contents $(DEPTH_MAX)
       - box-end
     TAGLINE:
       - text: |
           $(COMPOSER_TAGLINE)
 
 ########################################
-
   $(PUBLISH)-nav-right:
 
-    EDITOR:
-      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_TECHNAME)
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Overview
-      - text: |
-          * [Overview]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Quick Start
-      - text: |
-          * [Quick Start]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Principles
-      - text: |
-          * [Principles]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Requirements
-      - text: |
-          * [Requirements]
-      - fold-end
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Operation
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Recommended Workflow
-      - text: |
-          * [Recommended Workflow]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Document Formatting
-      - text: |
-          * [Bootstrap Websites]
-          * [HTML]
-          * [PDF]
-          * [EPUB]
-          * [Reveal.js Presentations]
-          * [Microsoft Word & PowerPoint]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration Settings
-      - text: |
-          * [Configuration Settings]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Precedence Rules
-      - text: |
-          * [Precedence Rules]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Specifying Dependencies
-      - text: |
-          * [Specifying Dependencies]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Custom Targets
-      - text: |
-          * [Custom Targets]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Repository Versions
-      - text: |
-          * [Repository Versions]
-      - fold-end
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Variables
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Formatting Variables
-      - text: |
-          * [c_site]
-          * [c_type / c_base / c_list]
-          * [c_lang]
-          * [c_logo]
-          * [c_icon]
-          * [c_css]
-          * [c_toc]
-          * [c_level]
-          * [c_margin]
-          * [c_options]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Control Variables
-      - text: |
-          * [MAKEJOBS]
-          * [COMPOSER_DOCOLOR]
-          * [COMPOSER_DEBUGIT]
-          * [COMPOSER_INCLUDE]
-          * [COMPOSER_DEPENDS]
-          * [COMPOSER_KEEPING]
-          * [COMPOSER_LOG]
-          * [COMPOSER_EXT]
-          * [COMPOSER_TARGETS]
-          * [COMPOSER_SUBDIRS]
-          * [COMPOSER_IGNORES]
-      - fold-end
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) 1 $(COMPOSER_BASENAME) Targets
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Primary Targets
-      - text: |
-          * [help / help-all]
-          * [template]
-          * [compose]
-          * [site]
-          * [install / install-all / install-force]
-          * [clean / clean-all / *-clean]
-          * [all / all-all / *-all]
-          * [list]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Additional Targets
-      - text: |
-          * [debug / debug-file]
-          * [check / check-all / config / config-site / config-all / targets]
-          * [_commit / _commit-all]
-          * [_release / _update / _update-all]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Internal Targets
-      - text: |
-          * [Internal Targets]
-      - fold-end
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) 1 Reference
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Configuration
-      - text: |
-          * [Pandoc Extensions]
-          * [Templates]
-          * [Defaults]
-      - fold-end
-      - fold-begin $(SPECIAL_VAL) $(SPECIAL_VAL) Reserved
-      - text: |
-          * [Target Names]
-          * [Variable Names]
-      - fold-end
-      - fold-end
-
 ########################################
-
   $(PUBLISH)-info-top:
-    INFO:
+
+    ICON:
       - |
-          <a rel="author" href="$(COMPOSER_HOMEPAGE)">
+          <a rel="author" href="$(COMPOSER_REPOPAGE)">
             <img alt="$(COMPOSER_TECHNAME)"
             class="$(COMPOSER_TINYNAME)-icon"
-            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-github.svg)"/></a>
+            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-github.svg"/></a>
 
 ########################################
-
   $(PUBLISH)-info-bottom:
-    INFO:
-      - |
-          <a rel="author" href="http://www.garybgenett.net/projects/composer">
-            <img alt="Gary B. Genett"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-author.png)"/></a>
-          <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
-            <img alt="GPL License"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-gpl.png)"/></a>
-          <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
-            <img alt="CC License"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-cc-by-nc-nd.png)"/></a>
-          <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
-            <img alt="All Rights Reserved"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)/icon-reserved.svg)"/></a>
 
 ################################################################################
 # End Of File
@@ -4020,13 +4233,201 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: $(PUBLISH)_build_sh ---
+## {{{2 Heredoc: composer_yml ($(PUBLISH))
 
-#> update: $(PUBLISH)-variables
+override define HEREDOC_COMPOSER_YML_PUBLISH =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH))
+################################################################################
 
-override define HEREDOC_PUBLISH_BUILD_SH =
+variables:
+
+  title-prefix:				EXAMPLE SITE
+
+########################################
+
+  $(PUBLISH)-config:				{}
+
+  $(PUBLISH)-library:
+    folder:				$(LIBRARY_FOLDER_ALT)
+    auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
+
+########################################
+
+  $(PUBLISH)-nav-top:
+    CHAINED:
+      CHAINED:				$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+
+  $(PUBLISH)-nav-bottom:
+    CHAINED:
+      CHAINED:				$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+
+  $(PUBLISH)-nav-left:
+    CHAINED:
+      - text: |
+          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+
+  $(PUBLISH)-nav-right:
+    CHAINED:
+      - text: |
+          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+
+  $(PUBLISH)-info-top:
+    CHAINED:
+      - |
+          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+
+  $(PUBLISH)-info-bottom:
+    CHAINED:
+      - |
+          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(CONFIGS))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(CONFIGS))
+################################################################################
+
+variables:
+
+########################################
+
+  $(PUBLISH)-config:
+    css_shade:				$(PUBLISH_CSS_SHADE_ALT)
+    cols_break:				$(PUBLISH_COLS_BREAK_ALT)
+    cols_size_left:			$(PUBLISH_COLS_SIZE_LEFT_ALT)
+    cols_size_main:			$(PUBLISH_COLS_SIZE_MAIN_ALT)
+    cols_show_left:			$(PUBLISH_COLS_SHOW_LEFT_ALT)
+    cols_show_right:			$(PUBLISH_COLS_SHOW_RIGHT_ALT)
+    cols_sticky:			$(PUBLISH_COLS_STICKY_ALT)
+    copy_safe:				$(PUBLISH_COPY_SAFE_ALT)
+    read_time:				"$(PUBLISH_READ_TIME_ALT)"
+    read_time_wpm:			$(PUBLISH_READ_TIME_WPM_ALT)
+
+  $(PUBLISH)-library:
+    folder:				$($(PUBLISH)-$(EXAMPLE)-library)
+    auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
+    digest_title:			$(LIBRARY_DIGEST_TITLE_ALT)
+    digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
+    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED_ALT)
+    digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
+    digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
+    digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
+    digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
+
+########################################
+
+  $(PUBLISH)-nav-top:
+    CHAINED:
+      CHAINED:
+        $(MENU_SELF): "#"
+        CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+
+  $(PUBLISH)-info-bottom:
+    TIME:
+      - |
+          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - |
+          $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(LIBRARY_FOLDER))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(LIBRARY_FOLDER_ALT))
+################################################################################
+
+variables:
+
+  $(PUBLISH)-nav-top:
+    CONTENTS:
+      CONTENTS:
+        $(MENU_SELF): "#"
+        contents $(SPECIAL_VAL):
+
+  $(PUBLISH)-nav-left:
+    CONTENTS:
+      - box-begin $(SPECIAL_VAL) CONTENTS
+      - readtime
+      - spacer
+      - contents $(SPECIAL_VAL)
+      - box-end
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(PANDOC))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_PANDOC =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PANDOC_DIR)))
+################################################################################
+
+variables:
+
+  $(PUBLISH)-nav-top:
+    CONTENTS:
+      CONTENTS:
+        $(MENU_SELF): "#"
+        contents 1:
+
+  $(PUBLISH)-nav-left:
+    CONTENTS:
+      - box-begin $(SPECIAL_VAL) CONTENTS
+      - readtime
+      - spacer
+      - contents 3
+      - box-end
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(TESTING))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_TESTING =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+################################################################################
+
+variables:
+
+  $(PUBLISH)-config:
+    css_shade:				$(SPECIAL_VAL)
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: custom_$(PUBLISH)_sh --
+
+#WORKING:NOW:NOW
+#	this is going to be a real pain, maybe, but need to turn nav-top into arrays, also, so the behavior is consistent...
+#	also, need to review composer.yml options, and if they should be passed in, looked up, etc., etc.?  in particular, need consistent behavior between <empty>/$(SPECIAL_VAL) ...
+
+override define HEREDOC_CUSTOM_PUBLISH_SH =
 #!$(BASH)
-# $(patsubst foldlevel=0,foldlevel=2,$(VIM_OPTIONS))
+# $(patsubst filetype=make,filetype=sh,$(patsubst foldlevel=0,foldlevel=2,$(VIM_OPTIONS)))
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).build.sh
 ################################################################################
@@ -4034,28 +4435,23 @@ override define HEREDOC_PUBLISH_BUILD_SH =
 
 set -e
 
+########################################
+#### {{{4 Globals ----------------------
+
+COMPOSER_HOMEPAGE="$(COMPOSER_HOMEPAGE)"
+CREATED_TAGLINE="$(CREATED_TAGLINE)"
+
+SPECIAL_VAL="$(SPECIAL_VAL)"
+DEPTH_MAX="$(DEPTH_MAX)"
+
+MENU_SELF="$(MENU_SELF)"
+PUBLISH_COLS="$(PUBLISH_COLS)"
+
 ################################################################################
 ### {{{3 Variables ---------------------
 
-DEPTH_MAX="$(DEPTH_MAX)"
-
-HTML_BREAK="$(HTML_BREAK)"
-
-PUBLISH_COLS_MAIN_SIZE="$(PUBLISH_COLS_MAIN_SIZE)"
-PUBLISH_COLS_SHOW_LEFT="$(PUBLISH_COLS_SHOW_LEFT)"
-PUBLISH_COLS_SHOW_RIGHT="$(PUBLISH_COLS_SHOW_RIGHT)"
-PUBLISH_COLS_STICKY="$(PUBLISH_COLS_STICKY)"
-PUBLISH_COPY_SAFE="$(PUBLISH_COPY_SAFE)"
-
 ########################################
-
-CURDIR="$${CURDIR}"
-COMPOSER_ROOT="$${COMPOSER_ROOT}"
-COMPOSER_ROOT_PATH="$$($${REALPATH} $${CURDIR} $${COMPOSER_ROOT})"
-PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
-PUBLISH_LIBRARY_INDEX_PATH="$$($${REALPATH} $${CURDIR} $$($${DIRNAME} $${PUBLISH_LIBRARY_INDEX}))"
-
-########################################
+#### {{{4 Commands ---------------------
 
 SED="$${SED}"
 
@@ -4070,21 +4466,43 @@ TR="$${TR}"
 
 YQ_READ="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_READ)))"
 YQ_WRITE="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_WRITE)))"
-#WORKING:NOW:NOW maybe need a non-"-e" echo, to get rid of the expansive "\\n" escaping...
+YQ_DATA_ECHO="$${ECHO/-en/-n}"
 YQ_DATA="$$(
-	$(subst $(YQ_READ),$${YQ_READ},$(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(COMPOSER_YML_DATA))) 2>/dev/null \\
+	$(patsubst $(YQ_READ),$${YQ_READ},$(strip $(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(call COMPOSER_YML_DATA,1)))) 2>/dev/null \\
 	| $${YQ_WRITE} ".variables" 2>/dev/null \\
 	| $${SED} "/^null$$/d" \\
-	| $${SED} "s|\\\\\\n|\\\\\\\\\\\\\\n|g"
 )"
 
+########################################
+#### {{{4 Filesystem -------------------
+
+CURDIR="$${CURDIR}"
+COMPOSER_ROOT="$${COMPOSER_ROOT}"
+COMPOSER_ROOT_PATH="$$($${REALPATH} $${CURDIR} $${COMPOSER_ROOT})"
+PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
+PUBLISH_LIBRARY_INDEX_PATH="$$($${REALPATH} $${CURDIR} $$($${DIRNAME} $${PUBLISH_LIBRARY_INDEX}))"
+
+########################################
+#### {{{4 Options ----------------------
+
+#> update: $(PUBLISH)-variables
+
+PUBLISH_COLS_BREAK="$${PUBLISH_COLS_BREAK}"
+PUBLISH_COLS_SIZE_LEFT="$${PUBLISH_COLS_SIZE_LEFT}"
+PUBLISH_COLS_SIZE_MAIN="$${PUBLISH_COLS_SIZE_MAIN}"
+PUBLISH_COLS_SHOW_LEFT="$${PUBLISH_COLS_SHOW_LEFT}"
+PUBLISH_COLS_SHOW_RIGHT="$${PUBLISH_COLS_SHOW_RIGHT}"
+PUBLISH_COLS_STICKY="$${PUBLISH_COLS_STICKY}"
+PUBLISH_COPY_SAFE="$${PUBLISH_COPY_SAFE}"
+
 ################################################################################
-### {{{3 Functions ---------------------
+### {{{3 Functions (Config) ------------
 
 ########################################
 #### {{{4 $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT
 
 #> update: $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT
+
 function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 	$${ECHO} "$${@}" \\
 	| $${TR} 'A-Z' 'a-z' \\
@@ -4108,21 +4526,21 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 function $(PUBLISH)-brand {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
-<h1 class="navbar-brand">
+<a class="navbar-brand" href="$$(
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"homepage\"]" 2>/dev/null \\
+	| $${SED} "/^null$$/d"
+)">
 _EOF_
 	BRND="$$(
-		$${ECHO} "$${YQ_DATA}" \\
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"brand\"]" 2>/dev/null \\
 		| $${SED} "/^null$$/d"
 	)"
 	if [ -s "$${1}" ]; then
-		$${ECHO} "<a href=\"$$(
-			$${ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"homepage\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)\"><img class=\"$(COMPOSER_TINYNAME)-logo\" src=\"$${1}\"/></a>\\n"
+		$${ECHO} "<img class=\"$(COMPOSER_TINYNAME)-logo align-top\" src=\"$${1}\"/>\\n"
 		if [ -n "$${BRND}" ]; then
-			$${ECHO} "&nbsp;\\n"
+			$${ECHO} "$(HTML_SPACE)\\n"
 		fi
 	else
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) logo -->\\n"
@@ -4131,7 +4549,7 @@ _EOF_
 		$${ECHO} "$${BRND}\\n"
 	fi
 $${CAT} <<_EOF_
-</h1>
+</a>
 _EOF_
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
@@ -4142,89 +4560,37 @@ _EOF_
 
 function $(PUBLISH)-search {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	NAME="$$(
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_name\"]" 2>/dev/null \\
+		| $${SED} "/^null$$/d"
+	)"
+	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
 <form class="nav-item d-flex me-3" action="$$(
-	$${ECHO} "$${YQ_DATA}" \\
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_site"\"] 2>/dev/null \\
 	| $${SED} "/^null$$/d"
 )">
 <input class="form-control form-control-sm me-1" type="text" name="$$(
-	$${ECHO} "$${YQ_DATA}" \\
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_text\"]" 2>/dev/null \\
 	| $${SED} "/^null$$/d"
 )"/>
 <button class="btn btn-sm" type="submit">$$(
-	$${ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_name\"]" 2>/dev/null \\
-	| $${SED} "/^null$$/d"
+	$${ECHO} "$${NAME}" \\
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )</button>
 $$(
-	$${ECHO} "$${YQ_DATA}" \\
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_form\"]" 2>/dev/null \\
 	| $${SED} "/^null$$/d"
 )
 </form>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-info-data ---------
-
-# 1 top || bottom
-
-# x $(PUBLISH)-info-data-list 1		$(PUBLISH)-info-$${1}.[*]
-
-function $(PUBLISH)-info-data {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	if [ -n "$$(
-		$${ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-info-$${1}" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)" ]; then
-$${CAT} <<_EOF_
-<ul class="navbar-nav navbar-nav-scroll">
-_EOF_
-		$${ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-info-$${1} | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
-			| while read -r MENU; do
-				$(PUBLISH)-info-data-list "$(PUBLISH)-info-$${1}.[\"$${MENU}\"]" || return 1
-			done
-$${CAT} <<_EOF_
-</ul>
-_EOF_
+	else
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) search -->\\n"
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-info-data-list ----
-
-# 1 $(PUBLISH)-info-$${1}.[*]
-
-function $(PUBLISH)-info-data-list {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
-		| while read -r FILE; do
-			VAL="$$(
-				$${ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
-$${CAT} <<_EOF_
-<li class="nav-item me-3">
-_EOF_
-			$${ECHO} "$${VAL}\\n" \\
-				| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
-$${CAT} <<_EOF_
-</li>
-_EOF_
-		done
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4243,7 +4609,7 @@ _EOF_
 function $(PUBLISH)-nav-top {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(PUBLISH)-nav-begin "top" "1" "$${1}"						|| return 1
-	$${ECHO} "$${YQ_DATA}" \\
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-nav-top | keys | .[]" 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
 		| while read -r MENU; do
@@ -4263,27 +4629,30 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-top-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${ECHO} "$${YQ_DATA}" \\
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
 		| while read -r FILE; do
-			if [ "$${FILE}" = "$(MENU_SELF)" ]; then
+			if [ "$${FILE}" = "$${MENU_SELF}" ]; then
 				continue
 			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
-				$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
+				$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
 				continue
 			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 				$(PUBLISH)-nav-top-$${FILE} || return 1
 				continue
 			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
-				$${ECHO} "$(PUBLISH_BUILD_CMD_BEG) $${FILE} $(PUBLISH_BUILD_CMD_END)\\n"
+				$${ECHO} "$(PUBLISH_CMD_BEG) $$(
+					$${ECHO} "$${FILE}" \\
+					| $${SED} "s|^contents|contents-menu|g"
+				) $(PUBLISH_CMD_END)\\n"
 				continue
 			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 				$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
 				continue
 			fi
 			LINK="$$(
-				$${ECHO} "$${YQ_DATA}" \\
+				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"].[\"$(MENU_SELF)\"]" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
@@ -4293,15 +4662,15 @@ $${CAT} <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )" data-bs-toggle="dropdown">$${FILE}</a>
-<ul class="dropdown-menu bg-dark">
+<ul class="dropdown-menu">
 _EOF_
 				else
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a>
 <ul>
 _EOF_
@@ -4312,7 +4681,7 @@ $${CAT} <<_EOF_
 _EOF_
 			else
 				VAL="$$(
-					$${ECHO} "$${YQ_DATA}" \\
+					$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
 					| $${SED} "/^null$$/d"
 				)"
@@ -4320,14 +4689,14 @@ _EOF_
 $${CAT} <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
 	$${ECHO} "$${VAL}" \\
-	| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
 				else
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$$(
 	$${ECHO} "$${VAL}" \\
-	| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
 				fi
@@ -4374,16 +4743,24 @@ _EOF_
 function $(PUBLISH)-nav-bottom {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(PUBLISH)-nav-begin "bottom" "" ""									|| return 1
+	COPY="$$(
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"copyright\"]" 2>/dev/null \\
+		| $${SED} "/^null$$/d"
+	)"
+	if [ -n "$${COPY}" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item me-3">$$(
-	$${ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"copyright\"]" 2>/dev/null \\
-	| $${SED} "/^null$$/d"
+	$${ECHO} "$${COPY}\\n" \\
+		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )</li>
-<li class="nav-item me-3">$(DIVIDE)&nbsp;<a href="$(COMPOSER_HOMEPAGE)">$(CREATED_TAGLINE)</a></li>
+_EOF_
+	fi
+$${CAT} <<_EOF_
+<li class="nav-item me-3">$(DIVIDE)$(HTML_SPACE)<a class="$(COMPOSER_TINYNAME)-link" href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
 	if [ -n "$$(
-		$${ECHO} "$${YQ_DATA}" \\
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-nav-bottom" 2>/dev/null \\
 		| $${SED} "/^null$$/d"
 	)" ]; then
@@ -4391,7 +4768,7 @@ $${CAT} <<_EOF_
 <li class="nav-item me-3"><ol class="breadcrumb">
 _EOF_
 		NBSP=
-		$${ECHO} "$${YQ_DATA}" \\
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$(PUBLISH)-nav-bottom | keys | .[]" 2>/dev/null \\
 			| $${SED} "/^null$$/d" \\
 			| while read -r MENU; do
@@ -4416,21 +4793,21 @@ _EOF_
 function $(PUBLISH)-nav-bottom-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	NBSP="$${2}"
-	$${ECHO} "$${YQ_DATA}" \\
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
 		| while read -r FILE; do
 			VAL="$$(
-				$${ECHO} "$${YQ_DATA}" \\
+				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
 $${CAT} <<_EOF_
 <li class="breadcrumb-item">$$(
-	if [ -z "$${NBSP}" ]; then $${ECHO} "$(DIVIDE)&nbsp;"; fi
+	if [ -z "$${NBSP}" ]; then $${ECHO} "$(DIVIDE)$(HTML_SPACE)"; fi
 )<a href="$$(
 	$${ECHO} "$${VAL}" \\
-	| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
 			NBSP="true"
@@ -4452,14 +4829,22 @@ function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right "$${@}" || return 1; r
 
 function $(PUBLISH)-nav-side {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-column-begin "$${1}"							|| return 1
-	$${ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-nav-$${1} | keys | .[]" 2>/dev/null \\
+	if [ -n "$$(
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-nav-$${1}" 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
-		| while read -r MENU; do
-			$(PUBLISH)-nav-side-list "$(PUBLISH)-nav-$${1}.[\"$${MENU}\"]"	|| return 1
-		done
-	$(PUBLISH)-column-end								|| return 1
+	)" ]; then
+		$(PUBLISH)-column-begin "$${1}"							|| return 1
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$(PUBLISH)-nav-$${1} | keys | .[]" 2>/dev/null \\
+			| $${SED} "/^null$$/d" \\
+			| while read -r MENU; do
+				$(PUBLISH)-nav-side-list "$(PUBLISH)-nav-$${1}.[\"$${MENU}\"]"	|| return 1
+			done
+		$(PUBLISH)-column-end								|| return 1
+	else
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
+	fi
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4476,43 +4861,46 @@ function $(PUBLISH)-nav-side {
 function $(PUBLISH)-nav-side-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	SIZE="$$(
-		$${ECHO} "$${YQ_DATA}" \\
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$${1} | length" 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
 	)"
 	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
-		TEXT="$$(
-			$${ECHO} "$${YQ_DATA}" \\
+		FILE="$$(
+			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$${1}[$${NUM}]" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)"
-		if [ -n "$$($${ECHO} "$${TEXT}" | $${SED} -n "/^spacer/p")" ]; then
-			$(PUBLISH)-$${TEXT} || return 1
-		elif [ -n "$$($${ECHO} "$${TEXT}" | $${SED} -n "/^library/p")" ]; then
-			$(PUBLISH)-nav-side-$${TEXT} || return 1
-		elif [ -n "$$($${ECHO} "$${TEXT}" | $${SED} -n "/^contents/p")" ]; then
-			$${ECHO} "$(PUBLISH_BUILD_CMD_BEG) $${TEXT} $(PUBLISH_BUILD_CMD_END)\\n"
-		elif [ -n "$$($${ECHO} "$${TEXT}" | $${SED} -n "/^readtime/p")" ]; then
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$(PUBLISH)-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$(PUBLISH)-nav-side-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
+			$${ECHO} "$(PUBLISH_CMD_BEG) $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^contents|contents-list|g"
+			) $(PUBLISH_CMD_END)\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$${ECHO} "\\n"
-			$${ECHO} "$(PUBLISH_BUILD_CMD_BEG) $${TEXT} $(PUBLISH_BUILD_CMD_END)\\n"
+			$${ECHO} "$(PUBLISH_CMD_BEG) $${FILE} $(PUBLISH_CMD_END)\\n"
 			$${ECHO} "\\n"
 		elif [ "$$(
-			$${ECHO} "$${YQ_DATA}" \\
+			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)" = "text" ]; then
 			TEXT="$$(
-				$${ECHO} "$${YQ_DATA}" \\
+				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"text\"]" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
 			$${ECHO} "\\n"
 			$${ECHO} "$${TEXT}\\n" \\
-				| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 			$${ECHO} "\\n"
 		else
-			$(PUBLISH)-select $${TEXT} || return 1
+			$(PUBLISH)-select $${FILE} || return 1
 		fi
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
@@ -4531,7 +4919,7 @@ function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; r
 function $(PUBLISH)-nav-side-library {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
-<table class="table table-sm table-borderless align-top text-nowrap">
+<table class="table table-borderless align-top">
 _EOF_
 	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
@@ -4553,6 +4941,69 @@ _EOF_
 }
 
 ########################################
+#### {{{4 $(PUBLISH)-info-data ---------
+
+# 1 top || bottom
+
+# x $(PUBLISH)-info-data-list 1		$(PUBLISH)-info-$${1}.[*]
+
+function $(PUBLISH)-info-data {
+	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	if [ -n "$$(
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$(PUBLISH)-info-$${1}" 2>/dev/null \\
+		| $${SED} "/^null$$/d"
+	)" ]; then
+$${CAT} <<_EOF_
+<ul class="navbar-nav navbar-nav-scroll">
+_EOF_
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$(PUBLISH)-info-$${1} | keys | .[]" 2>/dev/null \\
+			| $${SED} "/^null$$/d" \\
+			| while read -r MENU; do
+				$(PUBLISH)-info-data-list "$(PUBLISH)-info-$${1}.[\"$${MENU}\"]" || return 1
+			done
+$${CAT} <<_EOF_
+</ul>
+_EOF_
+	fi
+	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-info-data-list ----
+
+# 1 $(PUBLISH)-info-$${1}.[*]
+
+function $(PUBLISH)-info-data-list {
+	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
+		| $${SED} "/^null$$/d" \\
+		| while read -r FILE; do
+			VAL="$$(
+				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d"
+			)"
+$${CAT} <<_EOF_
+<li class="nav-item me-3">
+_EOF_
+			$${ECHO} "$${VAL}\\n" \\
+				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+$${CAT} <<_EOF_
+</li>
+_EOF_
+		done
+	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	return 0
+}
+
+################################################################################
+### {{{3 Functions (Framework) ---------
+
+########################################
 #### {{{4 $(PUBLISH)-nav-begin ---------
 
 # 1 top || bottom
@@ -4562,7 +5013,8 @@ _EOF_
 function $(PUBLISH)-nav-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
-<nav class="navbar navbar-expand-sm fixed-$${1} bg-dark">
+<div class="$(COMPOSER_TINYNAME)-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}"></div>
+<nav class="navbar navbar-expand-$${PUBLISH_COLS_BREAK} fixed-$${1}">
 <div class="container-fluid">
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}">
 <span class="navbar-toggler-icon"></span>
@@ -4574,7 +5026,7 @@ _EOF_
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) brand -->\\n"
 	fi
 $${CAT} <<_EOF_
-<div class="collapse navbar-collapse" id="navbar-fixed-$${1}">
+<div class="navbar-collapse collapse" id="navbar-fixed-$${1}">
 <ul class="navbar-nav navbar-nav-scroll me-auto">
 _EOF_
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4593,11 +5045,7 @@ $${CAT} <<_EOF_
 </ul>
 _EOF_
 	$(PUBLISH)-info-data "$${1}" || return 1
-	if [ -n "$${2}" ] && [ -n "$$(
-		$${ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_name\"]" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)" ]; then
+	if [ -n "$${2}" ]; then
 		$(PUBLISH)-search || return 1
 	else
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) search -->\\n"
@@ -4618,14 +5066,9 @@ function $(PUBLISH)-row-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="container-fluid$$(
-	COPY_SAFE="$$(
-		$${ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"copy_safe\"]" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)"
-	if [ -n "$${COPY_SAFE}" ]; then
-		if [ "$${COPY_SAFE}" = "1" ]; then	$${ECHO} " user-select-none"; fi
-	elif [ "$${PUBLISH_COPY_SAFE}" = "1" ]; then	$${ECHO} " user-select-none"; fi
+	if [ "$${PUBLISH_COPY_SAFE}" != "$${SPECIAL_VAL}" ]; then
+		$${ECHO} " user-select-none"
+	fi
 )">
 <div class="d-flex flex-row flex-wrap">
 _EOF_
@@ -4651,49 +5094,29 @@ _EOF_
 
 # 1 left || center || right
 
+# @ options				$${@}
+
 function $(PUBLISH)-column-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="d-flex flex-column$$(
-	if [ "$${1}" = "left" ]; then
-		COLS_SHOW_LEFT="$$(
-			$${ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_show_left\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-		if [ -n "$${COLS_SHOW_LEFT}" ]; then
-			if [ "$${COLS_SHOW_LEFT}" = "0" ]; then		$${ECHO} " d-none d-sm-block"; fi
-		elif [ "$${PUBLISH_SHOW_LEFT}" = "0" ]; then		$${ECHO} " d-none d-sm-block"; fi
-	elif [ "$${1}" = "right" ]; then
-		COLS_SHOW_RIGHT="$$(
-			$${ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_show_right\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-		if [ -n "$${COLS_SHOW_RIGHT}" ]; then
-			if [ "$${COLS_SHOW_RIGHT}" = "0" ]; then	$${ECHO} " d-none d-sm-block"; fi
-		elif [ "$${PUBLISH_SHOW_RIGHT}" = "0" ]; then		$${ECHO} " d-none d-sm-block"; fi
+	if	[ "$${1}" = "left" ] ||
+		[ "$${1}" = "center" ] ||
+		[ "$${1}" = "right" ];
+	then
+		PUBLISH_COLS_SIZE_RIGHT="$$($${EXPR} $${PUBLISH_COLS} - $${PUBLISH_COLS_SIZE_LEFT} - $${PUBLISH_COLS_SIZE_MAIN})"
+		if [ "$${1}" = "left" ]; then		$${ECHO} " order-1 order-$${PUBLISH_COLS_BREAK}-1 col-$$($${EXPR} $${PUBLISH_COLS} / 2) col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE_LEFT}"
+		elif [ "$${1}" = "right" ]; then	$${ECHO} " order-2 order-$${PUBLISH_COLS_BREAK}-3 col-$$($${EXPR} $${PUBLISH_COLS} / 2) col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE_RIGHT}"
+		else					$${ECHO} " order-3 order-$${PUBLISH_COLS_BREAK}-2 col-$${PUBLISH_COLS} col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE_MAIN}"
+		fi
+		if [ "$${1}" = "left" ] &&	[ "$${PUBLISH_COLS_SHOW_LEFT}" = "$${SPECIAL_VAL}" ]; then	$${ECHO} " d-none d-$${PUBLISH_COLS_BREAK}-block"; fi
+		if [ "$${1}" = "right" ] &&	[ "$${PUBLISH_COLS_SHOW_RIGHT}" = "$${SPECIAL_VAL}" ]; then	$${ECHO} " d-none d-$${PUBLISH_COLS_BREAK}-block"; fi
+		if [ "$${PUBLISH_COLS_STICKY}" != "$${SPECIAL_VAL}" ]; then
+			$${ECHO} " $(COMPOSER_TINYNAME)-sticky"
+		fi
 	else
-		COLS_MAIN_SIZE="$$(
-			$${ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_main_size\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-		$${ECHO} " col-sm-$$(
-			if [ -n "$${COLS_MAIN_SIZE}" ]; then	$${ECHO} "$${COLS_MAIN_SIZE}"
-			else					$${ECHO} "$${PUBLISH_COLS_MAIN_SIZE}"
-			fi
-		)"
+		if [ -n "$${@}" ]; then $${ECHO} " $${@}"; fi
 	fi
-)$$(
-	COLS_STICKY="$$(
-		$${ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"cols_sticky\"]" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)"
-	if [ -n "$${COLS_STICKY}" ]; then
-		if [ "$${COLS_STICKY}" = "1" ]; then	$${ECHO} " $(COMPOSER_TINYNAME)-sticky"; fi
-	elif [ "$${PUBLISH_COLS_STICKY}" = "1" ]; then	$${ECHO} " $(COMPOSER_TINYNAME)-sticky"; fi
 ) p-2">
 _EOF_
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4715,37 +5138,52 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-fold-begin --------
 
+# 1 "group"
+# 2 id
+
 # 1 header level			$(SPECIAL_VAL) = none
 # 2 $(SPECIAL_VAL) = collapsed
-# 3 title				$${@:3} = $${3}++
+# 3 id					$(SPECIAL_VAL) = none
+# 4 title				$${@:4} = $${4}++
 
 # 1 $(PUBLISH)-header 1			header level
 # 3 $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-fold-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	if [ "$${1}" = "group" ]; then
+$${CAT} <<_EOF_
+<div class="accordion" id="$${2}">
+_EOF_
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+		return 0
+	fi
 	HLVL="$${1}"
-	if [ "$${HLVL}" = "$(SPECIAL_VAL)" ]; then
-		HLVL="$(DEPTH_MAX)"
+	if [ "$${HLVL}" = "$${SPECIAL_VAL}" ]; then
+		HLVL="$${DEPTH_MAX}"
 	fi
 $${CAT} <<_EOF_
 <div class="accordion">
 <div class="accordion-item">
-<h$${HLVL} class="accordion-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:3}")">
+<div class="accordion-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:4}")">
 <button class="accordion-button$$(
-	if [ "$${2}" = "$(SPECIAL_VAL)" ]; then $${ECHO} " collapsed"; fi
-)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($${ECHO} "$${@:3}" | $${SED} "s|[^[:alnum:]_-]||g")">
+	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then $${ECHO} " collapsed"; fi
+)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($${ECHO} "$${@:4}" | $${SED} "s|[^[:alnum:]_-]||g")">
 _EOF_
-	if [ "$${1}" != "$(SPECIAL_VAL)" ] && [ -n "$${3}" ]; then
-		$(PUBLISH)-header $${1} $${@:3} || return 1
+	if [ "$${1}" != "$${SPECIAL_VAL}" ] && [ -n "$${4}" ]; then
+		$(PUBLISH)-header $${1} $${@:4} || return 1
 	fi
 $${CAT} <<_EOF_
-$${@:3}
-</button>
+<h$${HLVL} class="$(COMPOSER_TINYNAME)-header">
+$${@:4}
 </h$${HLVL}>
-<div id="toggle-$$($${ECHO} "$${@:3}" | $${SED} "s|[^[:alnum:]_-]||g")" class="accordion-collapse collapse$$(
-	if [ "$${2}" != "$(SPECIAL_VAL)" ]; then $${ECHO} " show"; fi
-)">
+</button>
+</div>
+<div id="toggle-$$($${ECHO} "$${@:4}" | $${SED} "s|[^[:alnum:]_-]||g")" class="accordion-collapse collapse$$(
+	if [ "$${2}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " show"; fi
+)"$$(
+	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\\"#$${3}\\""; fi
+)>
 <div class="accordion-body">
 _EOF_
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4755,8 +5193,17 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-fold-end ----------
 
+# 1 "group"
+
 function $(PUBLISH)-fold-end {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	if [ "$${1}" = "group" ]; then
+$${CAT} <<_EOF_
+</div>
+_EOF_
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+		return 0
+	fi
 $${CAT} <<_EOF_
 </div>
 </div>
@@ -4779,19 +5226,21 @@ _EOF_
 function $(PUBLISH)-box-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	HLVL="$${1}"
-	if [ "$${HLVL}" = "$(SPECIAL_VAL)" ]; then
-		HLVL="$(DEPTH_MAX)"
+	if [ "$${HLVL}" = "$${SPECIAL_VAL}" ]; then
+		HLVL="$${DEPTH_MAX}"
 	fi
 $${CAT} <<_EOF_
 <div class="card">
-<h$${HLVL} class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
+<div class="card-header" id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
 _EOF_
-	if [ "$${1}" != "$(SPECIAL_VAL)" ] && [ -n "$${2}" ]; then
+	if [ "$${1}" != "$${SPECIAL_VAL}" ] && [ -n "$${2}" ]; then
 		$(PUBLISH)-header $${1} $${@:2} || return 1
 	fi
 $${CAT} <<_EOF_
+<h$${HLVL} class="$(COMPOSER_TINYNAME)-header">
 $${@:2}
 </h$${HLVL}>
+</div>
 <div class="card-body">
 _EOF_
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4837,6 +5286,9 @@ function $(PUBLISH)-spacer {
 	return 0
 }
 
+################################################################################
+### {{{3 Functions (Script) ------------
+
 ########################################
 #### {{{4 $(PUBLISH)-file --------------
 
@@ -4871,12 +5323,12 @@ function $(PUBLISH)-file {
 		return 0
 	fi
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	BLCK="$$($${SED} -n "s|^$(PUBLISH_BUILD_CMD_BEG) title-block (.+) $(PUBLISH_BUILD_CMD_END)$$|\\1|gp" $${1})"
+	BLCK="$$($${SED} -n "s|^$(PUBLISH_CMD_BEG) title-block (.+) $(PUBLISH_CMD_END)$$|\\1|gp" $${1})"
 	if [ -n "$${BLCK}" ]; then
 		$${ECHO} "<!-- title-block $(DIVIDE) begin $(MARKER) $${BLCK} -->\\n"
 		$(PUBLISH)-$$($${ECHO} "$${BLCK}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
 			NAME="$$(
-				$${SED} "1,/^$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
+				$${SED} "1,/^$(PUBLISH_CMD_BEG) title-block .+ $(PUBLISH_CMD_END)$$/p" $${1} \\
 				| $${YQ_WRITE} ".author" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
@@ -4891,7 +5343,7 @@ function $(PUBLISH)-file {
 				fi
 			fi
 			DATE="$$(
-				$${SED} "1,/^$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/p" $${1} \\
+				$${SED} "1,/^$(PUBLISH_CMD_BEG) title-block .+ $(PUBLISH_CMD_END)$$/p" $${1} \\
 				| $${YQ_WRITE} ".date" 2>/dev/null \\
 				| $${SED} "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \\
 				| $${SED} "/^null$$/d"
@@ -4916,7 +5368,7 @@ function $(PUBLISH)-file {
 	fi
 	$${ECHO} "\\n"
 	if [ -n "$${BLCK}" ]; then
-		$${SED} "1,/^$(PUBLISH_BUILD_CMD_BEG) title-block .+ $(PUBLISH_BUILD_CMD_END)$$/d" $${1}
+		$${SED} "1,/^$(PUBLISH_CMD_BEG) title-block .+ $(PUBLISH_CMD_END)$$/d" $${1}
 	else
 		if [ -n "$$(
 			$${HEAD} -n1 $${1} \\
@@ -4927,16 +5379,15 @@ function $(PUBLISH)-file {
 			$${CAT} $${1}
 		fi
 	fi \\
-		| while IFS=$$'\n' read -r FILE; do
+		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
-			BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_BUILD_CMD_BEG)}"
-			BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_BUILD_CMD_END)}"
-			if [ "$${FILE}" != "$${BUILD_CMD}" ]; then
+			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$(PUBLISH_CMD_BEG)(.+)$(PUBLISH_CMD_END)$$|\\1|g")"
+			if [ "$${FILE}" = "$(PUBLISH_CMD_BEG)$${BUILD_CMD}$(PUBLISH_CMD_END)" ]; then
 				$(PUBLISH)-select $${BUILD_CMD} || return 1
 			else
 				$${PRINTF} "%s\\n" "$${FILE}"
 			fi \\
-			| $${SED} "s|[<]composer_root[>]|$${COMPOSER_ROOT_PATH}|g"
+			| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then return 1; fi
 		done \\
 		|| return 1
@@ -4956,11 +5407,13 @@ function $(PUBLISH)-file {
 
 function $(PUBLISH)-select {
 	ACTION="$${1}"; shift
-	if	[ "$${ACTION}" = "contents" ] ||
-		[ "$${ACTION}" = "readtime" ];
-	then
-		$${ECHO} "$(PUBLISH_BUILD_CMD_BEG) $${ACTION} $${@} $(PUBLISH_BUILD_CMD_END)\\n"
-		return 0
+	if	[ "$${ACTION}" = "contents" ]; then
+		$${ECHO} "$(PUBLISH_CMD_BEG) $${ACTION}-list $${@} $(PUBLISH_CMD_END)\\n"
+	elif	[ "$${ACTION}" = "contents-menu" ] ||
+		[ "$${ACTION}" = "contents-list" ] ||
+		[ "$${ACTION}" = "contents-done" ] ||
+		[ "$${ACTION}" = "readtime" ]; then
+		$${ECHO} "$(PUBLISH_CMD_BEG) $${ACTION} $${@} $(PUBLISH_CMD_END)\\n"
 	elif [ -f "$${ACTION}" ]; then
 		if ! $(PUBLISH)-file $${ACTION} $${@}; then
 			$${ECHO} "$(MARKER) ERROR [$${0/#*\/}] (file): $${ACTION} $${@}\\n" >&2
@@ -4976,7 +5429,7 @@ function $(PUBLISH)-select {
 }
 
 ################################################################################
-### {{{3 Main Script ------------------
+### {{{3 Main Script -------------------
 
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
 
@@ -4991,33 +5444,80 @@ exit 0
 endef
 
 ########################################
-## {{{2 Heredoc: bootstrap_css ---------
+## {{{2 Heredoc: custom_$(PUBLISH)_css -
 
-override define HEREDOC_BOOTSTRAP_CSS_HACK =
+#> sed -nr "s|^.*[[:space:]]class[=]||gp" Makefile | sed -r "s|[[:space:]]+|\n|g" | sort -u
+
+override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
 	$(SED) -i \
 		-e "/^[[:space:]]+background-color[:]/d" \
 		-e "/^[[:space:]]+color[:]/d"
 endef
 
-override define HEREDOC_BOOTSTRAP_CSS =
+########################################
+### {{{3 custom_$(PUBLISH)_css (Bootstrap)
+
+override define HEREDOC_CUSTOM_PUBLISH_CSS =
 /* #############################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS
 ############################################################################# */
 
-/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(BOOTSTRAP_CSS))) $(BOOTSTRAP_CSS_THEME))"); */
+:root {
+	--bs-scroll-height:		60vh;
+	--bs-breadcrumb-divider:	"/";
+}
 
-/* HEREDOC_BOOTSTRAP_CSS_HACK */
+/* ################################## */
 
-/* ########################################################################## */
+.navbar-toggler-icon {
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_ART)/icon-menu.svg)");
+}
+
+.accordion-button::after,
+.accordion-button:not(.collapsed)::after {
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_ART)/icon-toggle.svg)");
+}
+
+.navbar-toggler:focus,
+.accordion-button:focus,
+.btn:focus {
+	box-shadow:			0 0 0 0.0rem rgba(var(--bs-black-rgb));
+}
+
+.dropdown:hover .dropdown-menu {
+	display:			block;
+#>	margin-top:			0;
+}
+
+/* ################################## */
+
+html {
+	position:			relative;
+	min-height:			100%;
+}
 
 body {
-	padding-top:			50px;
-	padding-bottom:			50px;
+	padding-top:			60px;
+	padding-bottom:			40px;
 }
 
 .$(COMPOSER_TINYNAME)-sticky {
 	max-height:			90vh;
 	overflow:			auto;
+}
+
+.$(COMPOSER_TINYNAME)-toggler {
+	z-index:			1;
+	cursor:				pointer;
+	position:			absolute;
+	top:				0;
+	bottom:				0;
+	left:				0;
+	right:				0;
+}
+
+.$(COMPOSER_TINYNAME)-toggler.collapsed {
+	z-index:			-1;
 }
 
 .$(COMPOSER_TINYNAME)-logo {
@@ -5030,28 +5530,25 @@ body {
 	width:				auto;
 }
 
+.$(COMPOSER_TINYNAME)-header {
+	font-size:			1.1rem;
+}
+
+.$(COMPOSER_TINYNAME)-link { }
+
 /* ################################## */
 
+h1					{ font-size: 2rem; }
+h2					{ font-size: 1.5rem; }
+h3					{ font-size: 1.3rem; }
+h4					{ font-size: 1.2rem; }
+h5					{ font-size: 1.1rem; }
+h6					{ font-size: 1rem; }
+
+/* #WORKING:NOW:NOW move to a general "html" css file... test to see if regular html is broken first... same with header font sizes...?  epub? */
 th, td {
 	vertical-align:			text-top;
 }
-
-.accordion-button {
-	color:				inherit;
-	font-weight:			bold;
-}
-
-.bg-dark				{ background-color: rgba(var(--bs-dark-rgb)); }
-.card-header				{ background-color: rgba(var(--bs-dark-rgb)); }
-.accordion-button			{ background-color: rgba(var(--bs-dark-rgb)); }
-
-.card					{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
-.accordion-item				{ border: 1px solid rgba(var(--bs-secondary-rgb)); }
-
-.accordion-button::after			{ background-color: rgba(var(--bs-danger-rgb)); }
-.accordion-button:not(.collapsed)::after	{ background-color: rgba(var(--bs-success-rgb)); }
-.accordion-button:focus				{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
-.accordion-button:not(.collapsed):focus		{ box-shadow: 0 0 0 0.25rem rgba(var(--bs-black-rgb)); }
 
 /* #############################################################################
 # End Of File
@@ -5059,11 +5556,379 @@ th, td {
 endef
 
 ########################################
-## {{{2 Heredoc: pdf_latex -------------
+### {{{3 custom_$(PUBLISH)_css (Shade) -
 
-override define HEREDOC_TEX_PDF_TEMPLATE =
+override define HEREDOC_CUSTOM_PUBLISH_CSS_SHADE =
+/* #############################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS ($(1))
+############################################################################# */
+
+/* HEREDOC_CUSTOM_PUBLISH_CSS_HACK */
+
+/* ########################################################################## */
+
+.navbar,
+.dropdown-menu,
+.accordion-button,
+.card-header {
+	background-color:		rgba(var(--bs-$(1)-rgb));
+}
+
+.accordion-button:not(.collapsed) {
+	background-color:		rgba(var(--bs-$(1)-rgb));
+	color:				rgba(var(--bs-secondary-rgb));
+}
+
+.accordion-item,
+.card {
+	border:				1px solid rgba(var(--bs-secondary-rgb));
+}
+
+/* #############################################################################
+# End Of File
+############################################################################# */
+endef
+
+########################################
+### {{{3 custom_$(PUBLISH)_css (Theme) -
+
+override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
+/* #############################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS (Theme)
+############################################################################# */
+
+/* #> @import url("$(shell $(REALPATH) $(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,custom))) $(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))"); */
+
+/* ########################################################################## */
+
+:root {
+	/* dark background */
+	--solarized-dark3:			#002b36;
+	--solarized-dark2:			#073642;
+	/* content */
+	--solarized-dark1:			#586e75;
+	--solarized-dark0:			#657b83;
+	--solarized-light0:			#839496;
+	--solarized-light1:			#93a1a1;
+	/* light background */
+	--solarized-light2:			#eee8d5;
+	--solarized-light3:			#fdf6e3;
+	/* accent */
+	--solarized-yellow:			#b58900;
+	--solarized-orange:			#cb4b16;
+	--solarized-red:			#dc322f;
+	--solarized-magenta:			#d33682;
+	--solarized-violet:			#6c71c4;
+	--solarized-blue:			#268bd2;
+	--solarized-cyan:			#2aa198;
+	--solarized-green:			#859900;
+
+	--$(COMPOSER_TINYNAME)-back:		#000000; // black;	// var(--solarized-dark3);
+	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
+	--$(COMPOSER_TINYNAME)-line:		#404040; // darkgray;	// var(--solarized-dark1);
+	--$(COMPOSER_TINYNAME)-text:		#c0c0c0; // white;	// var(--solarized-light1);
+	--$(COMPOSER_TINYNAME)-link:		#c00000; // red;	// var(--solarized-red);
+	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
+	--$(COMPOSER_TINYNAME)-rule:		3px;
+	--$(COMPOSER_TINYNAME)-bord:		1px;
+	--$(COMPOSER_TINYNAME)-buff:		6px;
+}
+
+/* ################################## */
+
+body {
+	background-color:		var(--$(COMPOSER_TINYNAME)-back);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+::selection {
+	background-color:		var(--$(COMPOSER_TINYNAME)-done);
+	color:				var(--$(COMPOSER_TINYNAME)-back);
+}
+
+h1:not(.$(COMPOSER_TINYNAME)-header),
+h2:not(.$(COMPOSER_TINYNAME)-header),
+h3:not(.$(COMPOSER_TINYNAME)-header),
+h4:not(.$(COMPOSER_TINYNAME)-header),
+h5:not(.$(COMPOSER_TINYNAME)-header),
+h6:not(.$(COMPOSER_TINYNAME)-header) {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+	border-bottom:			var(--$(COMPOSER_TINYNAME)-rule) solid var(--$(COMPOSER_TINYNAME)-line);
+}
+hr,
+hr:not([size]) {
+	background-color:		var(--$(COMPOSER_TINYNAME)-line);
+	height:				var(--$(COMPOSER_TINYNAME)-bord);
+	border:				none;
+	opacity:			1;
+}
+
+table {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+	border-collapse:		collapse;
+}
+th {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+td,
+th {
+	padding:			var(--$(COMPOSER_TINYNAME)-buff);
+}
+
+code,
+pre {
+	background-color:		var(--$(COMPOSER_TINYNAME)-back);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+	font:				monospace;
+}
+pre code {
+	border:				none;
+}
+
+a,
+a:active,
+a:link {
+	color:				var(--$(COMPOSER_TINYNAME)-link);
+}
+a:hover,
+a:visited {
+	color:				var(--$(COMPOSER_TINYNAME)-done);
+}
+
+/* ################################## */
+
+.$(COMPOSER_TINYNAME)-link:active,
+.$(COMPOSER_TINYNAME)-link:hover,
+.$(COMPOSER_TINYNAME)-link:link,
+.$(COMPOSER_TINYNAME)-link:visited,
+.$(COMPOSER_TINYNAME)-link {
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+/* ########################################################################## */
+
+.accordion-body,
+.card-body,
+.table {
+	background-color:		var(--$(COMPOSER_TINYNAME)-back);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+/* ################################## */
+
+.accordion,
+.accordion-button,
+.accordion-button:not(.collapsed),
+.accordion-header,
+.accordion-item,
+.breadcrumb,
+.breadcrumb-item + .breadcrumb-item::before,
+.breadcrumb-item a,
+.breadcrumb-item a:active,
+.breadcrumb-item a:link,
+.breadcrumb-item a:visited,
+.breadcrumb-item,
+.breadcrumb-item::before,
+.card,
+.card-header,
+.dropdown,
+.dropdown-divider,
+.dropdown-item,
+.dropdown-item:active,
+.dropdown-item:link,
+.dropdown-item:visited,
+.dropdown-menu,
+.dropdown-toggle,
+.nav-item,
+.nav-link,
+.nav-link:active,
+.nav-link:link,
+.nav-link:visited,
+.navbar,
+.navbar-brand,
+.navbar-brand:active,
+.navbar-brand:link,
+.navbar-brand:visited,
+.navbar-toggler,
+.navbar-toggler-icon {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+.navbar-brand:hover {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+.$(COMPOSER_TINYNAME)-link:hover,
+.breadcrumb-item a:hover {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-link);
+}
+
+.dropdown-item:hover,
+.nav-link:hover {
+	background-color:		var(--$(COMPOSER_TINYNAME)-back);
+	color:				var(--$(COMPOSER_TINYNAME)-link);
+}
+
+.accordion-button::after,
+.accordion-button:not(.collapsed)::after,
+.btn,
+.btn:hover,
+.navbar-toggler,
+.navbar-toggler-icon {
+	background-color:		var(--$(COMPOSER_TINYNAME)-line);
+	color:				var(--$(COMPOSER_TINYNAME)-back);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+	color:				var(--$(COMPOSER_TINYNAME)-line);
+}
+
+/* ################################## */
+
+.dropdown-item,
+.nav-link {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-menu);
+}
+
+.dropdown-item:hover,
+.nav-link:hover {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+}
+
+.btn,
+.navbar-toggler {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-back);
+}
+
+.dropdown-divider,
+.dropdown-menu {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+}
+
+.accordion-header,
+.accordion-item,
+.card,
+.card-header {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+}
+
+/* #############################################################################
+# End Of File
+############################################################################# */
+endef
+
+########################################
+### {{{3 custom_$(PUBLISH)_css ($(TESTING))
+
+override define HEREDOC_CUSTOM_PUBLISH_CSS_TESTING =
+/* #############################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS ($(TESTING))
+############################################################################# */
+
+a,
+a:active,
+a:hover,
+a:link,
+a:visited,
+body,
+code,
+hr,
+pre,
+table {
+	background-color:		black;
+	color:				white;
+	border:				3px solid red;
+}
+
+/* ################################## */
+
+.$(COMPOSER_TINYNAME)-link:active,
+.$(COMPOSER_TINYNAME)-link:hover,
+.$(COMPOSER_TINYNAME)-link:link,
+.$(COMPOSER_TINYNAME)-link:visited,
+.$(COMPOSER_TINYNAME)-link {
+	background-color:		white;
+	color:				black;
+	border:				3px solid red;
+}
+
+/* ########################################################################## */
+
+.accordion,
+.accordion-body,
+.accordion-button,
+.accordion-button::after,
+.accordion-button:not(.collapsed),
+.accordion-button:not(.collapsed)::after,
+.accordion-header,
+.accordion-item,
+.breadcrumb,
+.breadcrumb-item + .breadcrumb-item::before,
+.breadcrumb-item a,
+.breadcrumb-item a:active,
+.breadcrumb-item a:hover,
+.breadcrumb-item a:link,
+.breadcrumb-item a:visited,
+.breadcrumb-item,
+.breadcrumb-item::before,
+.btn,
+.btn:hover,
+.card,
+.card-body,
+.card-header,
+.dropdown,
+.dropdown-divider,
+.dropdown-item,
+.dropdown-item:active,
+.dropdown-item:hover,
+.dropdown-item:link,
+.dropdown-item:visited,
+.dropdown-menu,
+.dropdown-toggle,
+.nav-item,
+.nav-link,
+.nav-link:active,
+.nav-link:hover,
+.nav-link:link,
+.nav-link:visited,
+.navbar,
+.navbar-brand,
+.navbar-brand:active,
+.navbar-brand:hover,
+.navbar-brand:link,
+.navbar-brand:visited,
+.navbar-toggler,
+.navbar-toggler-icon,
+.table {
+	background-color:		gray;
+	color:				cyan;
+	border:				3px solid green;
+}
+
+/* ################################## */
+
+.$(TESTING) {
+	background-color:		brown;
+	color:				yellow;
+	border:				3px solid blue;
+}
+
+/* #############################################################################
+# End Of File
+############################################################################# */
+endef
+
+########################################
+## {{{2 Heredoc: custom_pdf_latex ------
+
+override define HEREDOC_CUSTOM_PDF_LATEX =
 % ##############################################################################
-% $(COMPOSER_TECHNAME) $(DIVIDE) TeX Live (PDF)
+% $(COMPOSER_TECHNAME) $(DIVIDE) $(DESC_LPDF) (TeX Live)
 % ##############################################################################
 
 \\usepackage{extramarks}
@@ -5099,19 +5964,15 @@ override define HEREDOC_TEX_PDF_TEMPLATE =
 endef
 
 ########################################
-## {{{2 Heredoc: revealjs_css ----------
+## {{{2 Heredoc: custom_revealjs_css ---
 
-override define HEREDOC_REVEALJS_CSS =
+override define HEREDOC_CUSTOM_REVEALJS_CSS =
 /* #############################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) Reveal.js CSS
+# $(COMPOSER_TECHNAME) $(DIVIDE) $(DESC_PRES)
 ############################################################################# */
 
-/* #>@import url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(REVEALJS_CSS_THEME))"); */
-
-/* ########################################################################## */
-
 .reveal .slides {
-	background:			url("$(shell $(REALPATH) $(abspath $(dir $(REVEALJS_CSS))) $(COMPOSER_LOGO))");
+	background:			url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_REVEALJS_CSS))) $(COMPOSER_LOGO))");
 	background-repeat:		no-repeat;
 	background-position:		100% 0%;
 	background-size:		auto 20%;
@@ -5943,9 +6804,9 @@ endif
 override define TITLE_LN =
 	if [ -n "$(c_site)" ] && [ "$(1)" != "$(DEPTH_MAX)" ]; then \
 		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 . $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin 1 1 $(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
 		else \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-begin $(1) $(SPECIAL_VAL) $(2) $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin $(1) $(SPECIAL_VAL) $(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
 		fi; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
@@ -5966,7 +6827,7 @@ endef
 
 override define TITLE_END =
 	if [ -n "$(c_site)" ]; then \
-		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)$(_D)\n\n"; \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)$(_D)\n\n"; \
 	fi
 endef
 
@@ -5994,11 +6855,8 @@ override COMPOSER_DEBUGIT		:= $(SPECIAL_VAL)
 override COMPOSER_DEBUGIT_ALL		:= $(SPECIAL_VAL)
 endif
 
-ifneq ($(COMPOSER_RELEASE),)
-override $(HEADERS)-release = $(patsubst $(abspath $(dir $(COMPOSER_DIR)))%,...%,$(1))
-else
-override $(HEADERS)-release = $(1)
-endif
+override $(HEADERS)-path-dir		= $(patsubst $(abspath $(dir $(COMPOSER_DIR)))%,...%,$(1))
+override $(HEADERS)-path-root		= $(patsubst $(abspath $(dir $(COMPOSER_ROOT)))%,...%,$(1))
 
 .PHONY: $(HEADERS)
 $(HEADERS): .set_title-$(HEADERS)
@@ -6024,7 +6882,9 @@ endif
 	@$(call $(HEADERS),1)
 	@$(call $(HEADERS)-run)
 	@$(call $(HEADERS)-run,1)
-	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(notdir $(PANDOC)))
+	@	$(eval override c_base := $(@)) \
+		$(eval override c_list := $(@)$(COMPOSER_EXT_DEFAULT)) \
+		$(call $(HEADERS)-$(COMPOSER_PANDOC),$(notdir $(PANDOC)),$(COMPOSER_DEBUGIT_ALL))
 	@$(LINERULE)
 	@$(call $(HEADERS)-note,$(CURDIR),$(TESTING),,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
 	@$(call $(HEADERS)-dir,$(CURDIR),directory,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
@@ -6038,8 +6898,9 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(call $(COMPOSER_TINYNAME)-mkdir,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE))
 	@$(TOUCH) .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE)
 	@$(call $(COMPOSER_TINYNAME)-makefile,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
-	@$(call $(COMPOSER_TINYNAME)-make) COMPOSER_DEBUGIT= --directory .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE) $(NOTHING)
+	@$(call $(COMPOSER_TINYNAME)-make,COMPOSER_DEBUGIT= --directory .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE) $(NOTHING))
 	@$(call $(COMPOSER_TINYNAME)-cp,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-mv,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
 	@$(call $(COMPOSER_TINYNAME)-rm,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE),1)
 endif
 endif
@@ -6059,7 +6920,7 @@ $(HEADERS)-run-%:
 
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))$(_D)]"; \
+	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))$(_D)]"; \
 	$(TABLE_C2) "---"			"---"; \
 	$(foreach FILE,\
 		MAKEFILE_LIST \
@@ -6068,16 +6929,12 @@ override define $(HEADERS) =
 		COMPOSER_LIBRARY \
 		CURDIR
 		,\
-		$(TABLE_C2) "$(_E)$(FILE)"	"[$(_N)$(call $(HEADERS)-release,$($(FILE)))$(_D)]"; \
+		$(TABLE_C2) "$(_E)$(FILE)"	"[$(_N)$(call $(HEADERS)-path-root,$($(FILE)))$(_D)]"; \
 	) \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
 	$(foreach FILE,$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(COMPOSER_OPTIONS_MAKE)),\
-		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$(strip $(if \
-			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
-			$(filter c_css,$(FILE)),$(call c_css_select) ,\
-			$(subst ",\",$($(FILE))) \
-		)))$(_D)]$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)), $(_E)$(MARKER)$(_D))"; \
+		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$($(FILE))$(_D)]$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)), $(_E)$(MARKER)$(_D))"; \
 	) \
 	$(HEADER_L)
 endef
@@ -6085,7 +6942,7 @@ endef
 #> update: $(HEADERS)-run
 override define $(HEADERS)-run =
 	$(LINERULE); \
-	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-release,$(COMPOSER_DIR))"; \
+	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))"; \
 	$(TABLE_M2) ":---"			":---"; \
 	$(foreach FILE,\
 		MAKEFILE_LIST \
@@ -6094,20 +6951,18 @@ override define $(HEADERS)-run =
 		COMPOSER_LIBRARY \
 		CURDIR
 		,\
-		$(TABLE_M2) "$(_E)$(FILE)"	"$(_N)$(call $(HEADERS)-release,$($(FILE)))"; \
+		$(TABLE_M2) "$(_E)$(FILE)"	"$(_N)$(call $(HEADERS)-path-root,$($(FILE)))"; \
 	) \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(COMPOSER_OPTIONS_PANDOC)),\
-		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(strip $(if \
-			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
-			$(filter c_css,$(FILE)),$(call c_css_select) ,\
-			$(subst ",\",$($(FILE))) \
-		)))$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(strip $(if \
-			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
-			$(filter c_css,$(FILE)),$(call c_css_select) ,\
-			$(subst ",\",$($(FILE))) \
-		))), )$(_E)$(MARKER)$(_D))"; \
+		$(eval OUT := $(strip \
+			$(if $(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,\
+			$(if $(filter c_css,$(FILE)),$(call $(HEADERS)-path-root,$(call c_css_select)) ,\
+			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
+			)) \
+		)) \
+		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(OUT), )$(_E)$(MARKER)$(_D))"; \
 	) \
 	$(LINERULE)
 endef
@@ -6124,24 +6979,32 @@ override define $(HEADERS)-$(COMPOSER_PANDOC) =
 		$(call $(HEADERS)-file,$(CURDIR),$(1)); \
 	else \
 		$(call $(HEADERS)-run,1,$(1)); \
-		$(PRINT) "$(_H)$(MARKER)$(_D) $(_C)$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))"; \
+		$(ECHO) "$(_H)$(MARKER)$(_D) $(_C)"; \
+		$(call $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS,$(2)); \
+		$(ECHO) "$(_D)\n"; \
 	fi
+endef
+override define $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS =
+	$(if $(1),\
+		$(ECHO) "$(PANDOC) $(subst --,\\\\\n$(CODEBLOCK)--,$(subst ",\",$(subst \,\\\\,$(call PANDOC_OPTIONS)))) \\\\\n$(CODEBLOCK)$(subst $(NULL) , \\\\\n$(CODEBLOCK),$(if $(c_list_plus),$(c_list_plus),$(c_list)))" ,\
+		$(ECHO) "$(PANDOC) $(subst ",\",$(subst \,\\\\,$(call PANDOC_OPTIONS))) $(if $(c_list_plus),$(c_list_plus),$(c_list))" \
+	)
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-release,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
+	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-path-root,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
 endef
 override define $(HEADERS)-dir =
-	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
+	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
 endef
 override define $(HEADERS)-file =
-	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
 endef
 override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(2))"
 endef
 override define $(HEADERS)-rm =
-	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-release,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
+	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
 endef
 
 ################################################################################
@@ -6267,6 +7130,7 @@ $(DEBUGIT)-file:
 		| $(TEE) --append $(DEBUGIT_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
+	@$(ECHO) "\n"
 	@$(TAIL) -n10 $(DEBUGIT_FILE)
 	@$(LS) $(DEBUGIT_FILE)
 
@@ -6346,12 +7210,15 @@ $(TESTING)-file:
 	@$(ENDOLINE)
 	@$(ECHO) "# $(VIM_OPTIONS)\n" >$(TESTING_FILE)
 	@$(MAKE) \
+		COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)" \
 		COMPOSER_DOITALL_$(TESTING)="$(COMPOSER_DOITALL_$(TESTING))" \
 		COMPOSER_DOCOLOR= \
+		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 		$(TESTING) 2>&1 \
 		| $(TEE) --append $(TESTING_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
+	@$(ECHO) "\n"
 	@$(TAIL) -n10 $(TESTING_FILE)
 	@$(LS) $(TESTING_FILE)
 
@@ -6367,6 +7234,11 @@ $(TESTING): $(HEADERS)-$(TESTING)
 $(TESTING): $(TESTING)-$(HEADERS)
 $(TESTING): $(TESTING)-$(HEADERS)-CHECKIT
 $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
+#>ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
+#>ifneq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
+#>$(TESTING): $(TESTING)-$(HEADERS)-$(DEBUGIT)
+#>endif
+#>endif
 $(TESTING): $(TESTING)-Think
 $(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-speed
@@ -6416,6 +7288,7 @@ $(TESTING)-$(PRINTER):
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
+override TESTING_MAKEJOBS		:= 8
 override TESTING_ENV_MAKE		:= $(ENV) \
 	MAKEJOBS="1" \
 	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
@@ -6619,10 +7492,10 @@ $(TESTING)-speed:
 
 override define $(TESTING)-speed-init =
 	$(MKDIR) $(call $(TESTING)-pwd); \
-	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)				>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
+	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)		>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	for TLD in {1..3}; do \
 		$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
-		$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))	>$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
+		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)	>$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		for SUB in {1..3}; do \
 			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
 		done; \
@@ -6650,11 +7523,13 @@ $(TESTING)-speed-init:
 
 .PHONY: $(TESTING)-speed-done
 $(TESTING)-speed-done:
-	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type d | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) -type f | $(SED) -n "/.+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(SED) -n "/Creating/p" $(call $(TESTING)-log) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type d -print \) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(MAKEJOBS)"
 	@$(call $(TESTING)-find,MAKECMDGOALS)
-	@$(call $(TESTING)-find,[0-9]s$$)
+#>	@$(call $(TESTING)-find,[0-9]s$$)
+	@$(call $(TESTING)-find,^real)
 
 ########################################
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
@@ -6737,6 +7612,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 ########################################
 ### {{{3 $(TESTING)-$(TARGETS) ---------
 
+#> update: TYPE_TARGETS
+
 .PHONY: $(TESTING)-$(TARGETS)
 $(TESTING)-$(TARGETS): $(TESTING)-Think
 $(TESTING)-$(TARGETS):
@@ -6749,46 +7626,45 @@ $(TESTING)-$(TARGETS):
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
-#> update: TYPE_TARGETS
+#WORKING:NOW:NOW
+#	do we also need a test of $(PUBLISH) $(c_css) $(PUBLISH_CSS_SHADE) combinations?
+#	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
+#	make -f .../Makefile *.html
+#		make[1]: *** No rule to make target 'compose'.
+
 .PHONY: $(TESTING)-$(TARGETS)-init
 $(TESTING)-$(TARGETS)-init:
 #>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 	@$(ECHO) "override COMPOSER_TARGETS :=\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(foreach EXTN,\
-		$(EXTN_HTML) \
-		$(EXTN_LPDF) \
-		$(EXTN_EPUB) \
-		$(EXTN_PRES) \
-		$(EXTN_DOCX) \
-		$(EXTN_PPTX) \
-		$(EXTN_TEXT) \
-		$(EXTN_LINT) \
-		,\
+	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
-				$(ECHO) "override COMPOSER_TARGETS += $(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-				$(ECHO) "$(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN): override c_toc := $(subst x,,$(TOC))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-				$(ECHO) "$(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN): override c_level := $(subst x,,$(LEVEL))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-				$(ECHO) "$(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN): $(OUT_README)$(COMPOSER_EXT_DEFAULT)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-				$(call $(TESTING)-run) $(OUT_README).$(EXTN).$(TOC).$(LEVEL).$(EXTN) || $(TRUE); \
+				$(ECHO) "override COMPOSER_TARGETS += $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE))\n"			>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(ECHO) "$(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)): override c_toc := $(subst x,,$(TOC))\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(ECHO) "$(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)): override c_level := $(subst x,,$(LEVEL))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+				$(ECHO) "$(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)): $(OUT_README)$(COMPOSER_EXT_DEFAULT)\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 				$(call NEWLINE) \
 			) \
 		) \
 	)
+#>				$(call $(TESTING)-run) $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)) || $(TRUE)
+	@$(call $(TESTING)-run,,1) --keep-going MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL) || $(TRUE)
 #>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 
 .PHONY: $(TESTING)-$(TARGETS)-done
 $(TESTING)-$(TARGETS)-done:
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_HTML)[.][x0-9][.][x0-9][.]$(EXTN_HTML))
-	$(call $(TESTING)-count,22,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_LPDF)[.][x0-9][.][x0-9][.]$(EXTN_LPDF))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_EPUB)[.][x0-9][.][x0-9][.]$(EXTN_EPUB))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_PRES)[.][x0-9][.][x0-9][.]$(EXTN_PRES))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_DOCX)[.][x0-9][.][x0-9][.]$(EXTN_DOCX))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_PPTX)[.][x0-9][.][x0-9][.]$(EXTN_PPTX))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_TEXT)[.][x0-9][.][x0-9][.]$(EXTN_TEXT))
-	$(call $(TESTING)-count,64,$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_LINT)[.][x0-9][.][x0-9][.]$(EXTN_LINT))
-	$(call $(TESTING)-count,42,ERROR)
+	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+		$(eval COUNT := 64) \
+		$(call $(TESTING)-count,$(COUNT),$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
+		$(call NEWLINE) \
+	)
+#> update: ERROR: TYPE_LPDF
+#>		$(if $(filter $(TYPE),LPDF),$(eval COUNT := 22)) \
+#>	\
+#>		$(eval TYPE := LPDF) \
+#>		$(eval COUNT := 42) \
+#>		$(call $(TESTING)-count,$(COUNT),ERROR:.+$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE)))
 
 ########################################
 ### {{{3 $(TESTING)-$(INSTALL) ---------
@@ -6955,12 +7831,12 @@ endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd)/$(COMPOSER_CSS)))
-	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],$$))
-	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS)))
-	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,.,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))))
-	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS))))
+	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd))))
+	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd)/$(COMPOSER_CSS))))
+	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],$$)))
+	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS))))
+	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))))
+	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS)))))
 	$(call $(TESTING)-count,2,^COMPOSER_MY_PATH)
 
 ########################################
@@ -7084,7 +7960,7 @@ $(TESTING)-CSS:
 		Use '$(_C)c_css$(_D)' to verify each method of setting variables ,\
 		\n\t * Default: '$(_C)$(TYPE_HTML)$(_D)' \
 		\n\t * Default: '$(_C)$(TYPE_PRES)$(_D)' \
-		\n\t * Environment: '$(_C)$(notdir $(REVEALJS_CSS))$(_D)' \
+		\n\t * Environment: '$(_C)$(notdir $(CUSTOM_PUBLISH_CSS))$(_D)' \
 		\n\t * Environment: '$(_C)$(CSS_ALT)$(_D)' alias \
 		\n\t * Environment: '$(_C)$(SPECIAL_VAL)$(_D)' Pandoc default \
 		\n\t * File: '$(_C)$(COMPOSER_CSS)$(_D)' $(_E)(precedence over environment)$(_D) \
@@ -7097,33 +7973,34 @@ $(TESTING)-CSS:
 
 .PHONY: $(TESTING)-CSS-init
 $(TESTING)-CSS-init:
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)	>/dev/null
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)		>/dev/null
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_PRES)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(REVEALJS_CSS))" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(CUSTOM_PUBLISH_CSS))" $(OUT_README).$(EXTN_EPUB)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(MDVIEWER_CSS_ALT))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT)))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
-	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(REVEALJS_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(CUSTOM_PUBLISH_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
-	$(call $(TESTING)-count,2,$(notdir $(MDVIEWER_CSS)))
-	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
-	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
-	$(call $(TESTING)-count,6,$(notdir $(MDVIEWER_CSS_ALT)))
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))))
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES))))
+	$(call $(TESTING)-count,5,$(notdir $(CUSTOM_PUBLISH_CSS)))
+	$(call $(TESTING)-count,4,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))))
 	$(call $(TESTING)-count,1,c_css[^/]+$$)
-	$(call $(TESTING)-count,3,$(notdir $(COMPOSER_CSS)))
-	$(call $(TESTING)-count,6,$(notdir $(MDVIEWER_CSS_ALT)))
-	$(call $(TESTING)-count,7,$(notdir $(REVEALJS_CSS)))
+	$(call $(TESTING)-count,2,$(notdir $(COMPOSER_CSS)))
+	$(call $(TESTING)-count,4,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))))
+	$(call $(TESTING)-count,5,$(notdir $(CUSTOM_PUBLISH_CSS)))
+	$(call $(TESTING)-count,8,--css=)
 
 ########################################
 ### {{{3 $(TESTING)-other --------------
@@ -7185,6 +8062,7 @@ $(TESTING)-other-init:
 		&& $(GIT) log
 	@$(call $(TESTING)-make)
 
+#WORKING:NOW:NOW add a test for missing repository binaries...
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
 	#> binaries
@@ -7307,8 +8185,8 @@ endif
 	@$(TABLE_M2) "- $(_C)GNU Findutils"		"$(_D)$(FIND)"
 	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_D)$(SED)"
 	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_D)$(REALMAKE)"
-	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-release,$(PANDOC))"
-	@$(TABLE_M2) "- $(_C)[YQ]"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-release,$(YQ))"
+	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(PANDOC))"
+	@$(TABLE_M2) "- $(_C)[YQ]"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
 	@$(TABLE_M2) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"
@@ -7331,29 +8209,35 @@ endif
 ## {{{2 $(CONFIGS) ---------------------
 
 #> update: COMPOSER_OPTIONS
+#> update: $(PUBLISH)-variables
 #> update: $(HEADERS)-run
 
 .PHONY: $(CONFIGS)
 $(CONFIGS): .set_title-$(CONFIGS)
 $(CONFIGS):
 	@$(call $(HEADERS))
-	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
-	@$(TABLE_M2) ":---"			":---"
+#>	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
+#>	@$(TABLE_M2) ":---"			":---"
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
-		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(strip $(if \
-			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
-			$(filter c_css,$(FILE)),$(call c_css_select) ,\
-			$(subst ",\",$($(FILE))) \
-		)))$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(strip $(if \
-			$(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,$(if \
-			$(filter c_css,$(FILE)),$(call c_css_select) ,\
-			$(subst ",\",$($(FILE))) \
-		))), )$(_E)$(MARKER)$(_D))"; \
+		$(eval OUT := $(strip \
+			$(if $(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,\
+			$(if $(filter c_css,$(FILE)),$(call $(HEADERS)-path-root,$(call c_css_select)) ,\
+			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
+			)) \
+		)) \
+		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(OUT), )$(_E)$(MARKER)$(_D))"; \
 	)
+ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
+	@$(LINERULE)
+	@$(foreach FILE,$($(PUBLISH)-variables),\
+		$(COLUMN_2) "$(_C)$(word 1,$(subst :, ,$(FILE)))" "$(_H)$(subst ",\",$($(word 1,$(subst :, ,$(FILE)))))"; \
+		$(call NEWLINE) \
+	)
+endif
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
-#>	@$(COMPOSER_YML_DATA) 2>/dev/null | $(YQ_WRITE_OUT) 2>/dev/null
-	@$(COMPOSER_YML_DATA) | $(YQ_WRITE_OUT)
+#>	@$(call COMPOSER_YML_DATA) 2>/dev/null | $(YQ_WRITE_OUT) 2>/dev/null
+	@$(call COMPOSER_YML_DATA) | $(YQ_WRITE_OUT)
 endif
 ifeq ($(COMPOSER_LIBRARY),$(CURDIR))
 	@$(LINERULE)
@@ -7438,15 +8322,12 @@ $(CONVICT):
 $(DISTRIB): .set_title-$(DISTRIB)
 $(DISTRIB):
 	@$(call $(HEADERS))
-	@$(ECHO) "$(_E)"
 	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
 		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
 	fi
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
-	@$(ECHO) "$(_D)"
 	@$(MAKE) --makefile $(COMPOSER) $(UPGRADE)-$(DOITALL)
 	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)
-	@$(LS) $(CURDIR)
 
 ########################################
 ## {{{2 $(UPGRADE) ---------------------
@@ -7473,35 +8354,6 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
-	@$(ENDOLINE)
-	@$(ECHO) "$(_E)"
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.json \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.chrome.json
-ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
-	@$(ECHO) "$(_M)"
-	@$(LS) --color=never --directory \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_BIN)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_BIN))
-endif
-	@$(ECHO) "$(_D)"
-	@$(LS) --directory \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR))/data/templates \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR))/dist \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR))/dist \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.firefox.json \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.chrome.json \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.edge.json \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_CSS)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_CSS_ALT)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_CSS_SOLAR)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_CSS_SOLAR_ALT)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_CSS_THEME)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_CSS_LIGHT)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_CSS_DARK)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_CSS_SOLAR_LIGHT)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_CSS_SOLAR_DARK)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS_THEME)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_CSS_THEME_SOLAR))
 
 ################################################################################
 # {{{1 Main Targets ------------------------------------------------------------
@@ -7561,7 +8413,7 @@ $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
 override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "$(_E)"; \
 	$(ECHO) "" >$(1); \
-	$(call PUBLISH_BUILD_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
+	$(call PUBLISH_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
@@ -7573,7 +8425,7 @@ override define $(PUBLISH)-$(TARGETS) =
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
 			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$${FILE}) -->\n"; \
-			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
+			$(call PUBLISH_SH_RUN) $${FILE}; \
 		done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
@@ -7583,47 +8435,41 @@ override define $(PUBLISH)-$(TARGETS) =
 		done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	$(ECHO) "$(_D)"; \
-	CONT="$$( \
-		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (contents.*) $(PUBLISH_BUILD_CMD_END)$$|\1|gp" $(1) \
-		| $(HEAD) -n1 \
-	)"; \
-	if [ -n "$${CONT}" ]; then \
-		CONT="$$($(ECHO) "$${CONT}" | $(SED) "s|^contents[[:space:]]*||g")"; \
-		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
-		$(ECHO) "$(_E)"; \
-		$(ECHO) "\n" >$(1).contents; \
-		$(call $(PUBLISH)-$(TARGETS)-contents,$(1),$${CONT}) \
-			| $(TEE) --append $(1).contents $($(DEBUGIT)-output); \
-			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-		$(ECHO) "\n" >>$(1).contents; \
-		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) contents.* $(PUBLISH_BUILD_CMD_END)$$/r $(1).contents" $(1); \
-		$(ECHO) "$(_S)"; \
-		$(RM) $(1).contents $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi; \
-	if [ -n "$$( \
-		$(SED) -n "s|^$(PUBLISH_BUILD_CMD_BEG) (readtime.*) $(PUBLISH_BUILD_CMD_END)$$|\1|gp" $(1) \
-		| $(HEAD) -n1 \
-	)" ]; then \
-		$(call $(HEADERS)-note,$(1),readtime,$(PUBLISH)); \
-		$(ECHO) "$(_E)"; \
-		$(ECHO) "" >$(1).readtime; \
-		$(call $(PUBLISH)-$(TARGETS)-readtime,$(1)) \
-			| $(TEE) --append $(1).readtime $($(DEBUGIT)-output); \
-			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-		$(SED) -i "/^$(PUBLISH_BUILD_CMD_BEG) readtime.* $(PUBLISH_BUILD_CMD_END)$$/r $(1).readtime" $(1); \
-		$(ECHO) "$(_S)"; \
-		$(RM) $(1).readtime $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi; \
-	$(eval override c_list := $(1))
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
-### {{{4 $(PUBLISH)-$(TARGETS)-contents
+#### {{{4 $(PUBLISH)-$(TARGETS)-contents
 
 override define $(PUBLISH)-$(TARGETS)-contents =
+	MENU="$$( \
+		$(SED) -n "s|^$(PUBLISH_CMD_BEG) (contents-menu.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
+		| $(HEAD) -n1 \
+	)"; \
+	LIST="$$( \
+		$(SED) -n "s|^$(PUBLISH_CMD_BEG) (contents-list.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
+		| $(HEAD) -n1 \
+	)"; \
+	if	[ -n "$${MENU}" ] || \
+		[ -n "$${LIST}" ]; \
+	then \
+		MENU="$$($(ECHO) "$${MENU}" | $(SED) "s|^contents-menu[[:space:]]*||g")"; \
+		LIST="$$($(ECHO) "$${LIST}" | $(SED) "s|^contents-list[[:space:]]*||g")"; \
+		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
+		$(ECHO) "$(_E)"; \
+		$(call $(PUBLISH)-$(TARGETS)-contents-do,$(1),$${MENU},$${LIST}); \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) contents-menu.* $(PUBLISH_CMD_END)$$/r $(1).contents-menu" $(1); \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) contents-list.* $(PUBLISH_CMD_END)$$/r $(1).contents-list" $(1); \
+		$(ECHO) "$(_S)"; \
+		$(RM) $(1).contents-menu $($(DEBUGIT)-output); \
+		$(RM) $(1).contents-list $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+override define $(PUBLISH)-$(TARGETS)-contents-do =
+	$(ECHO) "\n" >$(1).contents-menu; \
+	$(ECHO) "\n" >$(1).contents-list; \
 	FILE="$$( \
 		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
 		| $(YQ_WRITE) \
@@ -7634,9 +8480,13 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			2>/dev/null \
 		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
-	if [ -z "$(2)" ]; then					MAX="$(DEPTH_MAX)"; \
-		elif [ "$(2)" = "$(SPECIAL_VAL)" ]; then	MAX="$(DEPTH_MAX)"; \
-		else						MAX="$(2)"; \
+	if [ -z "$(2)" ]; then					MENU_MAX="$(DEPTH_MAX)"; \
+		elif [ "$(2)" = "$(SPECIAL_VAL)" ]; then	MENU_MAX="$(DEPTH_MAX)"; \
+		else						MENU_MAX="$(2)"; \
+		fi; \
+	if [ -z "$(3)" ]; then					LIST_MAX="$(DEPTH_MAX)"; \
+		elif [ "$(3)" = "$(SPECIAL_VAL)" ]; then	LIST_MAX="$(DEPTH_MAX)"; \
+		else						LIST_MAX="$(3)"; \
 		fi; \
 	CNT="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) "length" 2>/dev/null)"; \
 	NUM="0"; while [ "$${NUM}" -lt "$${CNT}" ]; do \
@@ -7647,10 +8497,6 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
-			if [ "$(2)" = "$(SPECIAL_VAL)" ]; then \
-				NUM="$$($(EXPR) $${NUM} + 1)"; \
-				continue; \
-			fi; \
 			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1][0]" 2>/dev/null)"; \
 			LEN="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][2] | length" 2>/dev/null)"; \
 			TXT=; STR="0"; while [ "$${STR}" -lt "$${LEN}" ]; do \
@@ -7660,6 +8506,11 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				)"; \
 				if [ "$${TYP}" = "Space" ]; then \
 					TXT="$${TXT} "; \
+				elif [ "$${TYP}" = "Code" ]; then \
+					TXT="$${TXT}$$( \
+						$(ECHO) "$${FILE}" \
+						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"][1]" 2>/dev/null \
+					)"; \
 				elif [ "$${TYP}" = "Str" ]; then \
 					TXT="$${TXT}$$( \
 						$(ECHO) "$${FILE}" \
@@ -7669,43 +8520,86 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				STR="$$($(EXPR) $${STR} + 1)"; \
 			done; \
 		fi; \
-		if [ "$(2)" = "$(SPECIAL_VAL)" ]; then \
-			TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
-		fi; \
-		if [ -n "$${TXT}" ] && [ "$${LVL}" -le "$${MAX}" ]; then \
-			if [ "$${LVL}" = "1" ]; then	$(ECHO) "  *"; \
-			elif [ "$${LVL}" = "2" ]; then	$(ECHO) "    *"; \
-			elif [ "$${LVL}" = "3" ]; then	$(ECHO) "        *"; \
-			elif [ "$${LVL}" = "4" ]; then	$(ECHO) "            *"; \
-			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"; \
-			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"; \
+		$(ECHO) "$(MARKER) $${LVL}" $($(DEBUGIT)-output); \
+		if [ -n "$${TXT}" ] && [ "$${LVL}" -le "$${MENU_MAX}" ]; then \
+			if [ "$${LVL}" = "1" ]; then	$(ECHO) "  *"				>>$(1).contents-menu; \
+			elif [ "$${LVL}" = "2" ]; then	$(ECHO) "    *"				>>$(1).contents-menu; \
+			elif [ "$${LVL}" = "3" ]; then	$(ECHO) "        *"			>>$(1).contents-menu; \
+			elif [ "$${LVL}" = "4" ]; then	$(ECHO) "            *"			>>$(1).contents-menu; \
+			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"		>>$(1).contents-menu; \
+			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-menu; \
 			fi; \
-			$(ECHO) " [$${TXT}](#$${LNK})"; \
-			$(ECHO) "\n"; \
+			MENU_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
+			$(ECHO) " [$${MENU_TXT}](#$${LNK}){.dropdown-item}"			>>$(1).contents-menu; \
+			$(ECHO) "\n"								>>$(1).contents-menu; \
+			$(ECHO) " menu" $($(DEBUGIT)-output); \
+		else \
+			$(ECHO) "    -" $($(DEBUGIT)-output); \
 		fi; \
+		if [ -n "$${TXT}" ] && [ "$${LVL}" -le "$${LIST_MAX}" ]; then \
+			if [ "$${LVL}" = "1" ]; then	$(ECHO) "  *"				>>$(1).contents-list; \
+			elif [ "$${LVL}" = "2" ]; then	$(ECHO) "    *"				>>$(1).contents-list; \
+			elif [ "$${LVL}" = "3" ]; then	$(ECHO) "        *"			>>$(1).contents-list; \
+			elif [ "$${LVL}" = "4" ]; then	$(ECHO) "            *"			>>$(1).contents-list; \
+			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"		>>$(1).contents-list; \
+			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-list; \
+			fi; \
+			LIST_TXT="$${TXT}"; \
+			if [ "$(3)" = "$(SPECIAL_VAL)" ]; then \
+				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
+			fi; \
+			$(ECHO) " [$${LIST_TXT}](#$${LNK})"					>>$(1).contents-list; \
+			$(ECHO) "\n"								>>$(1).contents-list; \
+			$(ECHO) " list" $($(DEBUGIT)-output); \
+		else \
+			$(ECHO) "    -" $($(DEBUGIT)-output); \
+		fi; \
+		$(ECHO) " $(DIVIDE) $${TXT}\n" $($(DEBUGIT)-output); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
-	done
+	done; \
+	$(ECHO) "\n$(PUBLISH_CMD_BEG) contents-done $(PUBLISH_CMD_END)\n" >>$(1).contents-menu; \
+	$(ECHO) "\n" >>$(1).contents-list
+endef
+
+override define $(PUBLISH)-$(TARGETS)-contents-done =
+	$(SED) -i "/^$(PUBLISH_CMD_BEG) contents-menu.* $(PUBLISH_CMD_END)$$/{ n; /^.*$$/d }" $(1); \
+	$(SED) -i "    N; /^.*\n$(PUBLISH_CMD_BEG) contents-done $(PUBLISH_CMD_END)$$/d" $(1); \
+	$(SED) -i "1n; N; /^.*\n$(PUBLISH_CMD_BEG) contents-done $(PUBLISH_CMD_END)$$/d" $(1)
 endef
 
 ########################################
-### {{{4 $(PUBLISH)-$(TARGETS)-readtime
+#### {{{4 $(PUBLISH)-$(TARGETS)-readtime
 
 override define $(PUBLISH)-$(TARGETS)-readtime =
+	if [ -n "$$( \
+		$(SED) -n "s|^$(PUBLISH_CMD_BEG) (readtime.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
+		| $(HEAD) -n1 \
+	)" ]; then \
+		$(call $(HEADERS)-note,$(1),readtime,$(PUBLISH)); \
+		$(ECHO) "$(_E)"; \
+		$(call $(PUBLISH)-$(TARGETS)-readtime-do,$(1),$(if $(c_list_plus),$(c_list_plus),$(c_list))); \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) readtime.* $(PUBLISH_CMD_END)$$/r $(1).readtime" $(1); \
+		$(ECHO) "$(_S)"; \
+		$(RM) $(1).readtime $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+override define $(PUBLISH)-$(TARGETS)-readtime-do =
 	WORD="$$( \
-		for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
-			$(call PUBLISH_BUILD_SH_RUN) $${FILE}; \
-		done \
+		$(call PUBLISH_SH_RUN) $(1) \
 		| $(PANDOC_MD_TO_TEXT) \
 		| $(WC_WORD) \
 	)"; \
 	TIME="1"; \
-	if [ "$${WORD}" -gt "$($(PUBLISH)-config-read_time_wpm)" ]; then \
-		TIME="$$($(EXPR) $${WORD} / $($(PUBLISH)-config-read_time_wpm))"; \
+	if [ "$${WORD}" -gt "$(PUBLISH_READ_TIME_WPM)" ]; then \
+		TIME="$$($(EXPR) $${WORD} / $(PUBLISH_READ_TIME_WPM))"; \
 	fi; \
-	$(ECHO) "$($(PUBLISH)-config-read_time)\n" \
+	$(ECHO) "$(PUBLISH_READ_TIME)\n" \
 		| $(SED) \
 			-e "s|@W|$${WORD}|g" \
-			-e "s|@T|$${TIME}|g"
+			-e "s|@T|$${TIME}|g" \
+		>$(1).readtime
 endef
 
 ########################################
@@ -7716,6 +8610,7 @@ $(filter %.$(EXTN_HTML),$(COMPOSER_TARGETS)): $($(PUBLISH)-cache)
 endif
 
 $($(PUBLISH)-cache): $(COMPOSER)
+$($(PUBLISH)-cache): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-cache): $(COMPOSER_YML_LIST)
 #>$($(PUBLISH)-cache): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
@@ -7723,6 +8618,7 @@ $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-cache)
 
 $($(PUBLISH)-caches): $(COMPOSER)
+$($(PUBLISH)-caches): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-caches): $(COMPOSER_YML_LIST)
 #>$($(PUBLISH)-caches): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-caches):
@@ -7732,13 +8628,11 @@ $($(PUBLISH)-caches):
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "$(c_logo)"; \
-	elif [ "$($(@))" != "$(patsubst nav-%,%,$($(@)))" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))"; \
+		$(call PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))" "center"; \
+		$(call PUBLISH_SH_RUN) "$($(@))" "center"; \
 	else \
-		$(call PUBLISH_BUILD_SH_RUN) "$($(@))"; \
+		$(call PUBLISH_SH_RUN) "$($(@))"; \
 	fi \
 		| $(TEE) $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -7758,8 +8652,8 @@ ifneq ($(and \
 	$(c_site) ,\
 	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) ,\
 	$(or \
-		$(filter 1,$($(PUBLISH)-library-auto_update)) ,\
-		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) \
+		$(filter-out $(SPECIAL_VAL),$(LIBRARY_AUTO_UPDATE)) ,\
+		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
 	) \
 ),)
 
@@ -7784,11 +8678,12 @@ $(PUBLISH)-library:
 	@$(ECHO) ""
 
 ########################################
-### {{{4 $(PUBLISH)-library-* ----------
+#### {{{4 $(PUBLISH)-library-dir -------
 
 #> update: COMPOSER_OPTIONS
 
 $($(PUBLISH)-library): $(COMPOSER)
+$($(PUBLISH)-library): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
@@ -7800,9 +8695,9 @@ $($(PUBLISH)-library):
 	@$(ECHO) "$(_D)"
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_SETTINGS))
-	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
+	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
-	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" c_type="$(TYPE_HTML)" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
+	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
 	@if [ -f "$(abspath $(dir $(COMPOSER_LIBRARY)))/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
 		$(ECHO) "$(_E)"; \
@@ -7820,25 +8715,20 @@ $($(PUBLISH)-library):
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
 $(PUBLISH)-$(COMPOSER_SETTINGS):
-	@$(foreach FILE,$(filter-out $(COMPOSER_OPTIONS_PROTECT),$(COMPOSER_OPTIONS)),\
-		$(ECHO) "override $(FILE) := $($(FILE))\n"; \
-		$(call NEWLINE) \
+	@$(foreach FILE,$(filter-out $(COMPOSER_OPTIONS_PUBLISH_ENV),$(COMPOSER_OPTIONS)),\
+		$(if $(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH)),\
+			$(ECHO) "override $(FILE) := $(word 2,$(subst $(TOKEN), ,$(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH))))\n"; \
+			$(call NEWLINE) \
+		) \
 	)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
-	@if [ -n "$(patsubst $(COMPOSER_DIR)/$(COMPOSER_YML),,$(COMPOSER_YML_LIST))" ]; then \
-		$(patsubst $(COMPOSER_DIR)/$(COMPOSER_YML),,$(COMPOSER_YML_DATA)) 2>/dev/null \
-			| $(YQ_WRITE_FILE) " \
-				.variables.[\"$(PUBLISH)-library\"].[\"folder\"] = null \
-				| .variables.[\"$(PUBLISH)-library\"].[\"auto_update\"] = null \
-				" 2>/dev/null; \
-	else \
-		$(ECHO) "variables:\n"; \
-		$(ECHO) "  $(PUBLISH)-library:\n"; \
-		$(ECHO) "    folder: null\n"; \
-		$(ECHO) "    auto_update: null\n"; \
-	fi
+	@$(call COMPOSER_YML_DATA,,$(COMPOSER_LIBRARY).yml) 2>/dev/null \
+		| $(YQ_WRITE_FILE) " \
+			.variables.[\"$(PUBLISH)-library\"].[\"folder\"]	= $(SPECIAL_VAL) \
+			| .variables.[\"$(PUBLISH)-library\"].[\"auto_update\"]	= $(SPECIAL_VAL) \
+			" 2>/dev/null
 
 override define $(PUBLISH)-library-sort-yq =
 	sort_by(.path) \
@@ -7855,11 +8745,12 @@ override define $(PUBLISH)-library-sort-sh =
 endef
 
 ########################################
-### {{{3 $(PUBLISH)-library-metadata ---
+#### {{{4 $(PUBLISH)-library-metadata --
 
 #> update: YQ_WRITE.*title
 
 $($(PUBLISH)-library-metadata): $(COMPOSER)
+$($(PUBLISH)-library-metadata): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-metadata): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-metadata):
@@ -7882,7 +8773,7 @@ $($(PUBLISH)-library-metadata):
 					$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $${FILE} 2>/dev/null \
 					| $(SED) "/^null$$/d" \
 				)"; \
-				if [ -n "$${DIR}" ]; then \
+				if [ -n "$${DIR}" ] && [ "$${DIR}" != "$(SPECIAL_VAL)" ]; then \
 					$(ECHO) " -o \\( -path $$( \
 							$(DIRNAME) $${FILE} \
 						)/$$( \
@@ -7941,7 +8832,7 @@ $($(PUBLISH)-library-metadata):
 		$(ECHO) "$(_D)"; \
 	fi
 	@$(ECHO) "$(_F)"
-	@$(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)' \
+	@$(YQ_EVAL) \
 			$(@).$(PRINTER) \
 			$(@).$(COMPOSER_BASENAME) \
 			2>/dev/null \
@@ -7960,9 +8851,10 @@ $($(PUBLISH)-library-metadata):
 	fi
 
 ########################################
-### {{{3 $(PUBLISH)-library-index ------
+#### {{{4 $(PUBLISH)-library-index -----
 
 $($(PUBLISH)-library-index): $(COMPOSER)
+$($(PUBLISH)-library-index): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-index): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-index): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
@@ -8001,7 +8893,7 @@ $($(PUBLISH)-library-index):
 	fi
 
 ########################################
-### {{{4 $(PUBLISH)-library-indexer ----
+##### {{{5 $(PUBLISH)-library-indexer --
 
 #> update: Title / Author / Date[Year] / Tag
 override define $(PUBLISH)-library-indexer =
@@ -8067,7 +8959,7 @@ override define $(PUBLISH)-library-indexer =
 endef
 
 ########################################
-### {{{3 $(PUBLISH)-library-digest -----
+#### {{{4 $(PUBLISH)-library-digest ----
 
 #>		titles
 #>			| $(SED) "/^null$$/d"
@@ -8084,7 +8976,7 @@ override define $(PUBLISH)-library-digest-list =
 						$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
 					)$(COMPOSER_EXT_DEFAULT)"; \
 				if [ -n "$(1)" ]; then \
-					if [ "$(1)" = "$${OUTFILE}" ]; then \
+					if [ "$(1)" = "$${OUTFILE}.$(COMPOSER_BASENAME)" ]; then \
 						$(ECHO) "$${TYPE}$(TOKEN)$${FILE}\n"; \
 					fi; \
 				else \
@@ -8102,9 +8994,10 @@ override $(PUBLISH)-library-digest-files := $(shell $(call $(PUBLISH)-library-di
 endif
 
 ########################################
-### {{{4 $(PUBLISH)-library-digest-file
+##### {{{5 $(PUBLISH)-library-digest-file
 
 $($(PUBLISH)-library-digest): $(COMPOSER)
+$($(PUBLISH)-library-digest): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
@@ -8116,12 +9009,13 @@ $($(PUBLISH)-library-digest):
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
-	@$(call $(PUBLISH)-library-digest-main,$(@),$($(PUBLISH)-library-digest_title))
+	@$(call $(PUBLISH)-library-digest-main,$(@),$(LIBRARY_DIGEST_TITLE))
 
 ########################################
-### {{{4 $(PUBLISH)-library-digest-src -
+##### {{{5 $(PUBLISH)-library-digest-src
 
 $($(PUBLISH)-library-digest-src): $(COMPOSER)
+$($(PUBLISH)-library-digest-src): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-digest-src): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest-src): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-metadata)
@@ -8137,10 +9031,11 @@ $($(PUBLISH)-library-digest-src):
 	@$(ECHO) "$(_D)"
 
 ########################################
-### {{{4 $(PUBLISH)-library-digest-files
+##### {{{5 $(PUBLISH)-library-digest-files
 
 #> update: Title / Author / Date[Year] / Tag
 $($(PUBLISH)-library-digest-files): $(COMPOSER)
+$($(PUBLISH)-library-digest-files): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-digest-files): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-digest-files): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
@@ -8149,26 +9044,31 @@ $($(PUBLISH)-library-digest-files):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_F)"
-	@$(ECHO) "" >$(@)
+	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@TOKEN="$$($(ECHO) "$(TOKEN)" | $(SED) "s|(.)|\\\\\1|g")"; \
-		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\1|g")"; \
-		NAME="$$($(call $(PUBLISH)-library-digest-list,$(@)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\2|g")"; \
-		$(ECHO) "---\n" >>$(@); \
+		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\1|g")"; \
+		NAME="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\2|g")"; \
+		$(ECHO) "---\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "pagetitle: \"$$( \
 				if [ "$${TYPE}" = "titles" ]; then	$(ECHO) "Title"; \
 				elif [ "$${TYPE}" = "authors" ]; then	$(ECHO) "Author"; \
 				elif [ "$${TYPE}" = "dates" ]; then	$(ECHO) "Year"; \
 				elif [ "$${TYPE}" = "tags" ]; then	$(ECHO) "Tag"; \
 				fi \
-			): $${NAME}\"\n" >>$(@); \
-		$(ECHO) "---\n" >>$(@); \
+			): $${NAME}\"\n" >>$(@).$(COMPOSER_BASENAME); \
+		$(ECHO) "---\n" >>$(@).$(COMPOSER_BASENAME); \
+		$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(YQ_WRITE) ".$${TYPE}.[\"$${NAME}\"] | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
 			| while read -r FILE; do \
-				$(call $(PUBLISH)-library-digest-create,$(@),$${FILE},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
-			done
+				$(call $(PUBLISH)-library-digest-create,$(@).$(COMPOSER_BASENAME),$${FILE},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
+			done; \
+		$(ECHO) "$(PUBLISH_CMD_BEG) fold-end group $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
+	@$(ECHO) "$(_S)"
+	@$(MV) $(@).$(COMPOSER_BASENAME) $(@) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 
 ########################################
-### {{{4 $(PUBLISH)-library-digest-main
+##### {{{5 $(PUBLISH)-library-digest-main
 
 override define $(PUBLISH)-library-digest-main =
 	$(ECHO) "$(_F)"; \
@@ -8178,32 +9078,34 @@ override define $(PUBLISH)-library-digest-main =
 		$(ECHO) "pagetitle: $(2)\n" >>$(1).$(COMPOSER_BASENAME); \
 		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
 	fi; \
+	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
 	NUM="0"; for FILE in $$( \
 		$(YQ_WRITE) " \
 				map(select(.title != null or .pagetitle != null)) \
 				| $(call $(PUBLISH)-library-sort-yq) \
 				| .[].path \
 			" $($(PUBLISH)-library-metadata) 2>/dev/null \
-			| $(HEAD) -n$($(PUBLISH)-library-digest_count); \
+			| $(HEAD) -n$(LIBRARY_DIGEST_COUNT); \
 	); do \
-		if [ "$${NUM}" -gt "0" ] && [ "$($(PUBLISH)-library-digest_spacer)" = "1" ]; then \
-			$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
+		if [ "$${NUM}" -gt "0" ] && [ "$(LIBRARY_DIGEST_SPACER)" != "$(SPECIAL_VAL)" ]; then \
+			$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
 		fi; \
 		$(ECHO) "$(_D)"; \
 		EXPAND="$(SPECIAL_VAL)"; \
-		if [ "$${NUM}" -lt "$($(PUBLISH)-library-digest_expanded)" ]; then \
+		if [ "$${NUM}" -lt "$(LIBRARY_DIGEST_EXPANDED)" ]; then \
 			EXPAND="1"; \
 		fi; \
 		$(call $(PUBLISH)-library-digest-create,$(1).$(COMPOSER_BASENAME),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done; \
+	$(ECHO) "$(PUBLISH_CMD_BEG) fold-end group $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
 	$(ECHO) "$(_S)"; \
 	$(MV) $(1).$(COMPOSER_BASENAME) $(1) $($(DEBUGIT)-output); \
 	$(ECHO) "$(_D)"
 endef
 
 ########################################
-### {{{4 $(PUBLISH)-library-digest-create
+##### {{{5 $(PUBLISH)-library-digest-create
 
 #> update: YQ_WRITE.*title
 override define $(PUBLISH)-library-digest-create =
@@ -8212,7 +9114,7 @@ override define $(PUBLISH)-library-digest-create =
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 		else				$(ECHO) "$(_N)"; \
 		fi; \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) fold-begin 1 $(4) $$( \
+	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $(4) library-digest $$( \
 			TITL="$$( \
 				$(YQ_WRITE) ".\"$(2)\".title" $($(PUBLISH)-library-metadata) 2>/dev/null \
 				| $(SED) "/^null$$/d"; \
@@ -8263,7 +9165,7 @@ override define $(PUBLISH)-library-digest-create =
 				fi; \
 				$(ECHO) "$${NAME}"; \
 			fi; \
-		) $(PUBLISH_BUILD_CMD_END)\n" \
+		) $(PUBLISH_CMD_END)\n" \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		$(ECHO) "\n" \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
@@ -8273,11 +9175,11 @@ override define $(PUBLISH)-library-digest-create =
 	)"; \
 	SIZ="0"; BLK="0"; while \
 		[ "$${BLK}" -lt "$${LEN}" ] && \
-		[ "$${SIZ}" -le "$($(PUBLISH)-library-digest_chars)" ]; \
+		[ "$${SIZ}" -le "$(LIBRARY_DIGEST_CHARS)" ]; \
 	do \
 		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
-				| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
+				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
 				| $(PANDOC_JSON_TO_LINT) \
@@ -8286,7 +9188,7 @@ override define $(PUBLISH)-library-digest-create =
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
 				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
-				| $(SED) "s|[<]composer_root[>]|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
+				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$$($(REALPATH) $(abspath $(dir $(1))) $(COMPOSER_ROOT))|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
 				| $(PANDOC_JSON_TO_LINT) \
@@ -8300,17 +9202,17 @@ override define $(PUBLISH)-library-digest-create =
 		BLK="$$($(EXPR) $${BLK} + 1)"; \
 	done; \
 	if [ "$${BLK}" -lt "$${LEN}" ]; then \
-		$(ECHO) "$(subst ",,$($(PUBLISH)-library-digest_continue)) " \
+		$(ECHO) "$(subst ",,$(LIBRARY_DIGEST_CONTINUE)) " \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
-	$(ECHO) "[$(subst ",,$($(PUBLISH)-library-digest_permalink))]($$( \
+	$(ECHO) "[$(subst ",,$(LIBRARY_DIGEST_PERMALINK))]($$( \
 			$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 			| $(SED) "s|$(3)$$|.$(EXTN_HTML)|g" \
 		))\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-	$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)\n" \
+	$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "$(_D)"
 endef
@@ -8318,42 +9220,62 @@ endef
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
 
-override $(PUBLISH)-$(EXAMPLE)				:= $(CURDIR)/_$(PUBLISH)
-override $(PUBLISH)-$(EXAMPLE)-main			:= index
-override $(PUBLISH)-$(EXAMPLE)-include			:= index-digest
-override $(PUBLISH)-$(EXAMPLE)-folder			:= _library
-override $(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS)	:= _index
-override $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir		:= $(CONFIGS)/$(notdir $(BOOTSTRAP_DIR))/site/content/docs/$(BOOTSTRAP_DOC_VER)/getting-started
+override $(PUBLISH)-$(EXAMPLE)		:= $(CURDIR)/_$(PUBLISH)
+override $(PUBLISH)-$(EXAMPLE)-index	:= index
+override $(PUBLISH)-$(EXAMPLE)-library	:= $(LIBRARY_FOLDER_ALT)-$(CONFIGS)
+
+override $(PUBLISH)-$(EXAMPLE)-dirs := \
+	. \
+	$(patsubst .%,%,$(NOTHING)) \
+	$(CONFIGS) \
+	$(notdir $(PANDOC_DIR)) \
+	$(notdir $(BOOTSTRAP_DIR))/site/content/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
+
+override $(PUBLISH)-$(EXAMPLE)-files := \
+	$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+	$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+	$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+	$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/MANUAL.$(EXTN_HTML) \
+	$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/introduction.$(EXTN_HTML) \
+
+override $(PUBLISH)-$(EXAMPLE)-include	:= $($(PUBLISH)-$(EXAMPLE)-index)-digest
+override $(PUBLISH)-$(EXAMPLE)-included	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-include)
+override $(PUBLISH)-$(EXAMPLE)-examples	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/examples
+override $(PUBLISH)-$(EXAMPLE)-pages	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/pages
 
 ########################################
-### {{{4 $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
+#### {{{4 $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE):
-	@$(call $(HEADERS))
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)) \
-		>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
+	@$(RM) --recursive			$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
+	@$(MKDIR)				$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@$(LN) \
 		$(COMPOSER) \
 		$(COMPOSER_DIR)/.gitignore \
-		$(COMPOSER_DIR)/$(COMPOSER_YML) \
 		$(COMPOSER_ART) \
+		\
 		$(PANDOC_DIR) \
 		$(YQ_DIR) \
+		$(COMMONMARK_DIR) \
+		$(BOOTSTRAP_DIR) \
+		$(BOOTSWATCH_DIR) \
 		$(MDVIEWER_DIR) \
 		$(REVEALJS_DIR) \
 		$(FONTAWES_DIR) \
-		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/
+		\
+		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/ \
+#>		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)
-	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))
-	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
-	@$(MKDIR)				$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(BOOTSTRAP_DIR))
+	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
+		$(MKDIR)			$($(PUBLISH)-$(EXAMPLE))/$(FILE) $($(DEBUGIT)-output); \
+	)
+	@$(MKDIR)				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(RSYNC) \
 		--delete-excluded \
@@ -8362,7 +9284,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		--filter="-_/test/**" \
 		--filter="+_/**$(COMPOSER_EXT_DEFAULT)" \
 		--filter="-_/**" \
-		$(PANDOC_DIR)/			$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))
+		$(PANDOC_DIR)/			$($(PUBLISH)-$(EXAMPLE))/$(notdir $(PANDOC_DIR))
+	@$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)))
 	@$(RSYNC) \
 		--delete-excluded \
 		--prune-empty-dirs \
@@ -8372,109 +9295,179 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		--filter="-_/site/content/docs/*/examples" \
 		--filter="-_/site/*" \
 		--filter="-_/*" \
-		$(BOOTSTRAP_DIR)/		$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(BOOTSTRAP_DIR))
-	@$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$(patsubst $(COMPOSER_DIR)%,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)%,$(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)
-#>	@$(ENV_MAKE) $(SILENT) --makefile $(COMPOSER) --directory $($(PUBLISH)-$(EXAMPLE)) $(INSTALL)-$(DOFORCE)
+		$(BOOTSTRAP_DIR)/		$($(PUBLISH)-$(EXAMPLE))/$(notdir $(BOOTSTRAP_DIR))
+	@$(SED) -i "s|^[#]{1}||g"		$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))
+#>		--makefile $(COMPOSER)
 	@$(ENV_MAKE) $(SILENT) \
 		--makefile $($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
 		--directory $($(PUBLISH)-$(EXAMPLE)) \
 		MAKEJOBS="$(SPECIAL_VAL)" \
+		COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
+		COMPOSER_DEBUGIT= \
 		$(INSTALL)-$(DOFORCE)
 endif
-ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-file,$(COMPOSER_DIR),$(COMPOSER_YML))
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)				>$(COMPOSER_DIR)/$(COMPOSER_YML)
-	@$(call $(HEADERS)-file,$(abspath $(dir $(PUBLISH_BUILD_SH))),$(notdir $(PUBLISH_BUILD_SH)))
-	@$(call DO_HEREDOC,HEREDOC_PUBLISH_BUILD_SH)				>$(PUBLISH_BUILD_SH)
-endif
+	@$(call $(HEADERS))
+	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
+		$(call $(HEADERS)-note,$($(PUBLISH)-$(EXAMPLE)),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
+	)
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_SETTINGS))
-#>	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
-#>	@$(ECHO) "override c_site := 1\n"					>>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_INCLUDE := 0\n"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_NOTHING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(ECHO) "override COMPOSER_INCLUDE := 1\n"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/$(COMPOSER_SETTINGS)
+	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
+		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
+	)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML))		>$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS))	>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(NOTHING))	>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(SED) -i "s|^(.+auto_update.+)1$$|\1null|g" \
-										$(if $(COMPOSER_RELEASE),$(COMPOSER_DIR)/$(COMPOSER_YML)) \
-										$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
-										$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML) \
-										$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
-	@$(TOUCH) \
-										$(if $(COMPOSER_RELEASE),$(COMPOSER_DIR)/$(COMPOSER_YML)) \
-										$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
-										$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_YML) \
-										$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE)		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+#>	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+ifneq ($(or \
+	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
+	$(COMPOSER_DEBUGIT) ,\
+),)
+	@$(SED) -i \
+		-e "s|^(.+css_shade.+)$(PUBLISH_CSS_SHADE_ALT)$$|\1$(PUBLISH_CSS_SHADE)|g" \
+		-e "s|^(.+auto_update.+)$(LIBRARY_AUTO_UPDATE_ALT)$$|\1$(LIBRARY_AUTO_UPDATE)|g" \
+									$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
+									$(if $(COMPOSER_DEBUGIT),$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML))
+	@$(TOUCH)							$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
+	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
+		$(TOUCH)						$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+	)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_CSS))
+	@$(ECHO) "$(_S)"
+	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_E)"
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(ECHO) "$(_S)"
-	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS)) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_E)"
-	@$(LN) $(BOOTSWATCH_CSS_SOLAR_LIGHT) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
+	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 else
-	@$(ECHO) "$(_S)"
-	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_E)"
-	@$(LN) $(BOOTSWATCH_CSS_SOLAR_LIGHT) $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
+	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 endif
+	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../*$(COMPOSER_EXT_DEFAULT))
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)			>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))		>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS))		>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(NOTHING))		>$($(PUBLISH)-$(EXAMPLE))/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-features)			>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(PUBLISH)-$(TESTING)-features$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)			>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL)
-	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS),$(COMPOSER_SETTINGS))
-	@$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(PUBLISH)-$(TESTING).$(EXTN_HTML)\n"			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(PUBLISH)-$(TESTING).$(EXTN_HTML): \\\n'			>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) '\t$(PUBLISH)-$(TESTING)-features$(COMPOSER_EXT_SPECIAL) \\\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
-		$(eval override MARK := 203$(NUM)-01-01) \
-		$(eval override FILE := $($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(MARK)-$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)							>$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(NOTHING))					>$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS))					>$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$($(PUBLISH)-$(EXAMPLE)-files)))
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))					>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-included)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-features)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-features$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL)
+	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs)),$(COMPOSER_SETTINGS))
+	@$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(notdir $($(PUBLISH)-$(EXAMPLE)-examples)).$(EXTN_HTML)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) '$(notdir $($(PUBLISH)-$(EXAMPLE)-examples)).$(EXTN_HTML): \\\n'			>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-features$(COMPOSER_EXT_SPECIAL) \\\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(foreach YEAR,202 203,\
+		$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
+		$(eval override MARK := $(YEAR)$(NUM)-01-01) \
+		$(eval override FILE := $($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(MARK)-$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
-		$(ECHO) "---\n"											>$(FILE); \
-		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"				>>$(FILE); \
-		$(ECHO) "author: $(COMPOSER_COMPOSER)\n"							>>$(FILE); \
-		$(ECHO) "date: $(MARK)\n"									>>$(FILE); \
-		$(ECHO) "tags: [$(TESTING)1, $(TESTING)2, $(TESTING)3, $(TESTING)$(NUM)]\n"			>>$(FILE); \
-		$(ECHO) "---\n"											>>$(FILE); \
-		$(ECHO) "$(PUBLISH_BUILD_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)\n"	>>$(FILE); \
-		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)		>>$(FILE); \
-		$(ECHO) '\t$(notdir $(FILE)) \\\n'				>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS); \
+		$(ECHO) "---\n"										>$(FILE); \
+		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"			>>$(FILE); \
+		$(ECHO) "author: [$(COMPOSER_COMPOSER), $(TESTING)-a, $(TESTING)-b, $(TESTING)-c]\n"	>>$(FILE); \
+		$(ECHO) "date: $(MARK)\n"								>>$(FILE); \
+		$(ECHO) "tags: [$(TESTING)1, $(TESTING)2, $(TESTING)3, $(TESTING)$(NUM)]\n"		>>$(FILE); \
+		$(ECHO) "---\n"										>>$(FILE); \
+		$(ECHO) "$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)\n"	>>$(FILE); \
+		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)	>>$(FILE); \
+		$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-pages))/$(notdir $(FILE)) \\\n'		>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS); \
+	))
+	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "endif\n"										>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+ifneq ($(COMPOSER_DEBUGIT),)
+ifneq ($(COMPOSER_RELEASE),)
+	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
+#> update: HEREDOC_CUSTOM_PUBLISH
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+endif
+	@$(foreach FILE,\
+		.$(COMPOSER_BASENAME) \
+		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		,\
+		$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
+		$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
+		$(ECHO) "$(_C)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+		$(ECHO) "$(_D)"; \
 	)
-	@$(ECHO) '\t$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "endif\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(CONFIGS)/$(COMPOSER_SETTINGS)
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@time $(ENV_MAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS="$(SPECIAL_VAL)" $(PUBLISH)-$(DOITALL)
+	@$(ECHO) "\n"
+	@$(foreach FILE,\
+		$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)) \
+		$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)) \
+		$(word 3,$($(PUBLISH)-$(EXAMPLE)-files)) \
+		$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)) \
+		$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)) \
+		$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML) \
+		$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML) \
+		$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML) \
+		,\
+		$(ENV_MAKE) $(SILENT) \
+			--directory $(abspath $(dir $($(PUBLISH)-$(EXAMPLE))/$(FILE))) \
+			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
+			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
+			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+			$(notdir $(FILE)); \
+			$(call NEWLINE) \
+	)
 else
-	@time $(ENV_MAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOITALL)
-	@time $(ENV_MAKE) $(SILENT) --directory $($(PUBLISH)-$(EXAMPLE)) MAKEJOBS= $(PUBLISH)-$(DOFORCE)
+	@$(foreach FILE,\
+		$(PUBLISH)-$(DOITALL) \
+		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
+		,\
+		time $(ENV_MAKE) $(SILENT) \
+			--directory $($(PUBLISH)-$(EXAMPLE)) \
+			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
+			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
+			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+			$(FILE); \
+			$(call NEWLINE) \
+	)
 endif
 
 #WORKING:NOW:NOW
-#	"$(call $(HEADERS))" versus ": $(HEADERS)-*"
+#	add
+#		devel/master branch issue...
+#		link font-awesome icons into $(COMPOSER_ART) ... all assets should be represented there
+#		add "readtime" marker to top/bottom navbar/info?  no real sense prohibiting it...
+#			what about "content"?  it's kind of the same thing... it's cheap to do it...
+#			if so, make sure "content" on the bottom does a "skip"...
+#		consider removing main $(COMPOSER_YML) ... it makes $(CONFIGS) output confusing...
+#			it is already in _site/.Composer, so we can point to there in the documentation...
+#		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
+#		remove command line short-aliases?  (except for J= V= C= , etc.)
+#		do $(call $(HEADERS)-path-root,???) on c_logo in $(CUSTOM_PUBLISH_SH) ... others?
+#			also need to do it in $(COMPOSER_YML) output in $(OUT_README)
+#		add tags list to bottom of pages/digests
+#		an "updated" feature, to timestamp pages?  option to key off of "date"?
 #	site
-#		headers for boxes are huge...
-#		switch to "release" headers across the board, and trim to $(COMPOSER_ROOT) instead of $(COMPOSER_DIR)
+#		sadly, remove the right-hand bar from README.site.html, and do "contents 6"
+#			it was super fun, but it is not really a usable or gentle introduction, so... y'know... user first...
+#		force "$(LIBRARY_FOLDER)" "contents" menus to be "$(SPECIAL_VAL)", somehow...
+#			this includes the include file...  ha!  see what i did, there...?
+#				probably can't, since it is main page... index.html with only/all sub-folders best-practice?
+#			need a different demonstration for the $(LIBRARY_FOLDER).yml file...  maybe just keep the "contents" overrite?
 #		add use_cache option, to do html includes instead of --standalone --self-contained
 #			<div w3-include-html=" ... "></div>
+#			pandoc: --self-contained -> data-external="1"
+#			how to handle the $(PUBLISH)-cache dependency when this is enabled?
 #		add fold-item functionality to fold-beg/end
 #			require a flag to fold-beg to enable this
 #				simple fold-beg as they are should continue to work as they do, automatically triggering fold-item in the background
@@ -8488,6 +9481,13 @@ endif
 #		"contents library" token of some sort...
 #			need to be able to program the library...
 #			got it... = $(COMPOSER_YML_DATA) $(COMPOSER_LIBRARY).yml | $(YQ_WRITE) ...
+#		some type of previous/next page kind of thing, for post-to-post browsing...
+#			https://getbootstrap.com/docs/5.2/components/pagination
+#			nav-tree?
+#				https://github.com/akalp/bs5-nav-tree
+#				https://github.com/nhmvienna/bs5treeview
+#				https://www.w3schools.com/howto/howto_js_treeview.asp
+#			how would that even work...?
 #	build.sh
 #		are "file path"s getting truncated?
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
@@ -8501,62 +9501,71 @@ endif
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
-	@$(call TITLE_LN ,$(DEPTH_MAX),Recommended Workflow)
+	@$(call TITLE_LN ,2,Recommended Workflow)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 
 override define $(PUBLISH)-$(EXAMPLE)-digest =
 ---
 pagetitle: Latest Updates
 ---
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
 #WORKING
-Library Digest Page: [$($(PUBLISH)-$(EXAMPLE)-folder)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-folder)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-folder)/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
+Library Digest Page: [$(LIBRARY_FOLDER_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))]($(PUBLISH_CMD_ROOT)/$(LIBRARY_FOLDER_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(LIBRARY_FOLDER_ALT)/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
 pagetitle: Digest
 ---
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
 #WORKING
-Library Digest Page ($(CONFIGS)): [$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))](<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_BUILD_CMD_END)
+Library Digest Page ($(CONFIGS)): [$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))]($(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-library)/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-features =
 ---
 pagetitle: Site Features Page
 ---
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) LIBRARY $(PUBLISH_BUILD_CMD_END)
-<div class="container-fluid">
-<div class="d-flex flex-row flex-wrap">
-<div class="d-flex flex-column border border-1 me-3 p-2">
-$(PUBLISH_BUILD_CMD_BEG) library authors $(PUBLISH_BUILD_CMD_END)
-</div>
-<div class="d-flex flex-column border border-1 me-3 p-2">
-$(PUBLISH_BUILD_CMD_BEG) library dates $(PUBLISH_BUILD_CMD_END)
-</div>
-<div class="d-flex flex-column border border-1 me-3 p-2">
-$(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)
-</div>
-</div>
-</div>
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) LIBRARY $(PUBLISH_CMD_END)
+
+	$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
+	$(PUBLISH_CMD_BEG) column-begin col-4/col-3/col-3 $(PUBLISH_CMD_END)
+	$(PUBLISH_CMD_BEG) library authors/dates/tags $(PUBLISH_CMD_END)
+	$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+	$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-4 $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 override define $(PUBLISH)-$(EXAMPLE)-comments =
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) COMMENT $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) COMMENT $(PUBLISH_CMD_END)
 COMMENT
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) REPLY $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) REPLY $(PUBLISH_CMD_END)
 REPLY
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -8568,128 +9577,128 @@ pagetitle: Main Page
 ---
 # Folds
 
-`$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 . Open Fold $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-begin 2 1 $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 . Open Fold $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) fold-begin 2 1 $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) Closed Fold $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) Closed Fold $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) header 2 Non-Header Fold $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Non-Header Fold $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 Generic Fold $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 Generic Fold $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) fold-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
 
 # Boxes
 
-`$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Box $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-begin 2 Box $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Box $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 2 Box $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) header 2 Non-Header Box $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Non-Header Box $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 # Library
 
-$(PUBLISH_BUILD_CMD_BEG) header 2 Authors $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Authors $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) library authors $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) library authors $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) header 2 Dates $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Dates $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) library dates $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) library dates $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) header 2 Tags $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Tags $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) library tags $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)
 
 # Helpers
 
 <!-- ## Header -->
 
-$(PUBLISH_BUILD_CMD_BEG) header 2 Header $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Header $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) header 2 Header $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) header 2 Header $(PUBLISH_CMD_END)`
 
 **This Is An Embedded Link Only -- There Is No HTML Header Here**
 
 ## Spacer
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 ## Include
 
-`$(PUBLISH_BUILD_CMD_BEG) $(CONFIGS)/$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) $(CONFIGS)/$(PUBLISH)-$(TESTING)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
 #WORK do some post-processing to remove the `^<!-- $(PUBLISH)-file $(DIVIDE) .* ($(COMPOSER_SETTINGS)|$(COMPOSER_YML)) .*$$` lines
 
 ```
-$(PUBLISH_BUILD_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS) $(PUBLISH_CMD_END)
 ```
 
 ```
-$(PUBLISH_BUILD_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_YML) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
 ```
 
 <!-- $(COMPOSER_SETTINGS) -->
 
 ```
-$(PUBLISH_BUILD_CMD_BEG) $(COMPOSER_YML) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) $(COMPOSER_YML) $(PUBLISH_CMD_END)
 ```
 
 ## Contents
@@ -8710,68 +9719,68 @@ $(PUBLISH_BUILD_CMD_BEG) $(COMPOSER_YML) $(PUBLISH_BUILD_CMD_END)
     * only does `header` links
     * trims from `$(HTML_BREAK_LINE)` to end of title *(primarily used internally for digest pages)*
 
-`$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) contents $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) contents $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) contents $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
-`$(PUBLISH_BUILD_CMD_BEG) contents 1 $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) contents 1 $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)
 
 ## Read Time
 
-`$(PUBLISH_BUILD_CMD_BEG) readtime $(PUBLISH_BUILD_CMD_END)`
+`$(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)`
 
-$(PUBLISH_BUILD_CMD_BEG) readtime $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 #WORKING:NOW introduction
-# add <composer_root> to all links
+# add $(PUBLISH_CMD_ROOT) to all links
 # add date, pagetitle (not title) and no author to config/index.html
 # note on example page about logo/icon
 
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
 
-  * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)](<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)](<composer_root>/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
+  * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)]($(PUBLISH_CMD_ROOT)/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
     * An interactive '$(PUBLISH)' rendered version of the $(COMPOSER_BASENAME) $(OUT_README)$(COMPOSER_EXT_DEFAULT) file
-    * All elements and the page layout were specifically tuned *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml](<composer_root>/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml))*
+    * All elements and the page layout were specifically tuned *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml]($(PUBLISH_CMD_ROOT)/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml))*
   * [$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)]($($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)) *([$($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)]($($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)))*
     * Automatically generated digest page
     * Default settings, with example page elements
-  * [$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)]($(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)) *([$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)]($(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include)$(COMPOSER_EXT_DEFAULT)))*
+  * [$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML)]($($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML)) *([$($(PUBLISH)-$(EXAMPLE)-included)$(COMPOSER_EXT_DEFAULT)]($($(PUBLISH)-$(EXAMPLE)-included)$(COMPOSER_EXT_DEFAULT)))*
     * Automatically generated digest page
     * All settings modified
-  * [$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)]($($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)) *([$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)]($($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)))*
+  * [$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))]($(word 1,$($(PUBLISH)-$(EXAMPLE)-files))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))))*
     * Written for $(COMPOSER_BASENAME), manual titles and formatting
     * All settings changed, with chained menus
-  * [$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)]($(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)) *([$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)]($(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)))*
+  * [$(word 3,$($(PUBLISH)-$(EXAMPLE)-files))]($(word 3,$($(PUBLISH)-$(EXAMPLE)-files))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$($(PUBLISH)-$(EXAMPLE)-files)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$($(PUBLISH)-$(EXAMPLE)-files)))))*
     * Written for $(COMPOSER_BASENAME), manual titles and formatting
     * All settings changed, with changed configuration of top menu
-  * [$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)]($(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML)) *([$(CONFIGS)/$(COMPOSER_SETTINGS)]($(CONFIGS)/$(COMPOSER_SETTINGS)))*
+  * [$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)]($($(PUBLISH)-$(EXMPLAE)-examples).$(EXTN_HTML)) *([$(word 3,$($(PUBLISH)-$(EXAMPLE)-files))/$(COMPOSER_SETTINGS)]($(word 3,$($(PUBLISH)-$(EXAMPLE)-files))/$(COMPOSER_SETTINGS)))*
     * #WORKING:NOW
     * #WORKING:NOW
-  * [$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)]($(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)) *([$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)]($(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)))*
+  * [$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))]($(word 2,$($(PUBLISH)-$(EXAMPLE)-files))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))))*
     * Written for $(COMPOSER_BASENAME), automatic titles and formatting
     * Default settings, with all page elements empty
-  * [$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)]($(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML)) *([$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)]($(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL$(COMPOSER_EXT_DEFAULT)))*
+  * [$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))]($(word 4,$($(PUBLISH)-$(EXAMPLE)-files))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)))))*
     * External file, written in default syntax, without $(COMPOSER_BASENAME) automatic formatting
     * Inherited settings and page elements, with changed configuration of top menu
-  * [$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)]($($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML)) *([$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction$(COMPOSER_EXT_DEFAULT)]($($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction$(COMPOSER_EXT_DEFAULT)))*
+  * [$(word 5,$($(PUBLISH)-$(EXAMPLE)-files))]($(word 5,$($(PUBLISH)-$(EXAMPLE)-files))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))))*
     * #WORKING:NOW
     * #WORKING:NOW
 
-  * [$(COMPOSER_BASENAME) $(OUT_README)](<composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
-  * [Introduction](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
-  * [Default Site](<composer_root>/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
-  * [Configured Site](<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))
-  * [Default Digest Page](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML))
-  * [Configured Digest Page](<composer_root>/$(CONFIGS)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML))
-  * [Default Markdown File](<composer_root>/$(CONFIGS)/$(notdir $(PANDOC_DIR))/MANUAL.$(EXTN_HTML))
-  * [Configured Markdown File](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-$(CONFIGS)-dir)/introduction.$(EXTN_HTML))
-  * [Elements & Includes](<composer_root>/$(CONFIGS)/$(PUBLISH)-$(TESTING).$(EXTN_HTML))
+  * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
+  * [Introduction]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+  * [Default Site]($(PUBLISH_CMD_ROOT)/$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))
+  * [Configured Site]($(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-files)))
+  * [Default Digest Page]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML))
+  * [Configured Digest Page]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML))
+  * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)))
+  * [Configured Markdown File]($(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))
+  * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
 
@@ -8779,21 +9788,24 @@ The rest below is an example "digest" page, created from the most recent pages, 
 
 At the very bottom of the page is an example of including a file to emulate a comments section.
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_END)
 
 #WORKING:NOW default css
 #WORKING:NOW integrate this (and as much of the rest as makes sense) into $(HELPOUT), and back-port as $(MAKE) / DO_HEREDOC
 
 | $(PUBLISH)-config | defaults
 |:---|:---|
-| cols_main_size  | $(PUBLISH_COLS_MAIN_SIZE)
+| css_shade       | $(PUBLISH_CSS_SHADE)
+| cols_break      | $(PUBLISH_COLS_BREAK)
+| cols_size_left  | $(PUBLISH_COLS_SIZE_LEFT)
+| cols_size_main  | $(PUBLISH_COLS_SIZE_MAIN)
 | cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT)
 | cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT)
 | cols_sticky     | $(PUBLISH_COLS_STICKY)
 | copy_safe       | $(PUBLISH_COPY_SAFE)
-| read_time       | $(PUBLISH_READ_TIME)
+| read_time       | $(subst *,\*,$(PUBLISH_READ_TIME))
 | read_time_wpm   | $(PUBLISH_READ_TIME_WPM)
 
 | $(PUBLISH)-library | defaults
@@ -8805,12 +9817,12 @@ $(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLIS
 | digest_expanded  | $(LIBRARY_DIGEST_EXPANDED)
 | digest_chars     | $(LIBRARY_DIGEST_CHARS)
 | digest_spacer    | $(LIBRARY_DIGEST_SPACER)
-| digest_continue  | $(LIBRARY_DIGEST_CONTINUE)
-| digest_permalink | $(LIBRARY_DIGEST_PERMALINK)
+| digest_continue  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE))
+| digest_permalink | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK))
 
-*(For this test site, the library has been enabled as `$($(PUBLISH)-$(EXAMPLE)-folder)`, along with `auto_update`.)*
+*(For this test site, the library has been enabled as `$(LIBRARY_FOLDER_ALT)`.)*
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -8821,37 +9833,40 @@ override define $(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS) =
 pagetitle: Configuration Testing
 date: 2040-01-01
 ---
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_CMD_END)
 
 #WORKING:NOW
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) spacer $(PUBLISH_BUILD_CMD_END)
-$(PUBLISH_BUILD_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD_END)
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| cols_main_size  | $(PUBLISH_COLS_MAIN_SIZE) | 8
-| cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT) | 0
-| cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT) | 0
-| cols_sticky     | $(PUBLISH_COLS_STICKY) | 0
-| copy_safe       | $(PUBLISH_COPY_SAFE) | 0
-| read_time       | $(PUBLISH_READ_TIME) | \*(count: @W, time: @T)\*
-| read_time_wpm   | $(PUBLISH_READ_TIME_WPM) | 200
+| css_shade       | $(PUBLISH_CSS_SHADE)               | $(PUBLISH_CSS_SHADE_ALT)
+| cols_break      | $(PUBLISH_COLS_BREAK)              | $(PUBLISH_COLS_BREAK_ALT)
+| cols_size_left  | $(PUBLISH_COLS_SIZE_LEFT)          | $(PUBLISH_COLS_SIZE_LEFT_ALT)
+| cols_size_main  | $(PUBLISH_COLS_SIZE_MAIN)          | $(PUBLISH_COLS_SIZE_MAIN_ALT)
+| cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT)          | $(PUBLISH_COLS_SHOW_LEFT_ALT)
+| cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT)         | $(PUBLISH_COLS_SHOW_RIGHT_ALT)
+| cols_sticky     | $(PUBLISH_COLS_STICKY)             | $(PUBLISH_COLS_STICKY_ALT)
+| copy_safe       | $(PUBLISH_COPY_SAFE)               | $(PUBLISH_COPY_SAFE_ALT)
+| read_time       | $(subst *,\*,$(PUBLISH_READ_TIME)) | $(subst *,\*,$(PUBLISH_READ_TIME_ALT))
+| read_time_wpm   | $(PUBLISH_READ_TIME_WPM)           | $(PUBLISH_READ_TIME_WPM_ALT)
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
-| folder           | $(LIBRARY_FOLDER) | $($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))
-| auto_update      | $(LIBRARY_AUTO_UPDATE) | 1
-| digest_title     | $(LIBRARY_DIGEST_TITLE) | Digest
-| digest_count     | $(LIBRARY_DIGEST_COUNT) | 20
-| digest_expanded  | $(LIBRARY_DIGEST_EXPANDED) | 5
-| digest_chars     | $(LIBRARY_DIGEST_CHARS) | 2048
-| digest_spacer    | $(LIBRARY_DIGEST_SPACER) | 0
-| digest_continue  | $(LIBRARY_DIGEST_CONTINUE) | \*(continued)\*
-| digest_permalink | $(LIBRARY_DIGEST_PERMALINK) | \*(permalink)\*
+| folder           | $(LIBRARY_FOLDER)                         | $($(PUBLISH)-$(EXAMPLE)-library)
+| auto_update      | $(LIBRARY_AUTO_UPDATE)                    | $(LIBRARY_AUTO_UPDATE_ALT)
+| digest_title     | $(LIBRARY_DIGEST_TITLE)                   | $(LIBRARY_DIGEST_TITLE_ALT)
+| digest_count     | $(LIBRARY_DIGEST_COUNT)                   | $(LIBRARY_DIGEST_COUNT_ALT)
+| digest_expanded  | $(LIBRARY_DIGEST_EXPANDED)                | $(LIBRARY_DIGEST_EXPANDED_ALT)
+| digest_chars     | $(LIBRARY_DIGEST_CHARS)                   | $(LIBRARY_DIGEST_CHARS_ALT)
+| digest_spacer    | $(LIBRARY_DIGEST_SPACER)                  | $(LIBRARY_DIGEST_SPACER_ALT)
+| digest_continue  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE))  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE_ALT))
+| digest_permalink | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK)) | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK_ALT))
 
-$(PUBLISH_BUILD_CMD_BEG) box-end $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -8863,142 +9878,12 @@ title: Empty Configuration
 author: $(COMPOSER_COMPOSER)
 date: 1970-01-01
 ---
-$(PUBLISH_BUILD_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_BUILD_CMD_END)
+$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 All the settings and menus are empty for this page, except for this content.  This file was written for $(COMPOSER_BASENAME), so the page title and layout were done automatically.
 
-  * *Source file: [_$(PUBLISH)/$(patsubst .%,%,$(NOTHING))/$($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT)]($($(PUBLISH)-$(EXAMPLE)-main)$(COMPOSER_EXT_DEFAULT))*
-  * *Main page: [_$(PUBLISH)/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)](<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML))*
-endef
-
-########################################
-#### {{{4 Heredoc: Config: Main --------
-
-override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS) =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH)-$(EXAMPLE))
-################################################################################
-
-override COMPOSER_INCLUDE		:= 1
-override c_site				:= 1
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML) =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(EXAMPLE))
-################################################################################
-
-variables:
-
-  title-prefix:				EXAMPLE SITE
-
-  $(PUBLISH)-config:				{}
-
-  $(PUBLISH)-library:
-    folder:				$($(PUBLISH)-$(EXAMPLE)-folder)
-    auto_update:			1
-
-  $(PUBLISH)-nav-top:
-    CHAINED:
-      MAIN:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
-      CHAINED:
-        $(MENU_SELF): "#"
-        ITEM 1: "#"
-        ITEM 2: "#"
-        ITEM 3: "#"
-
-  $(PUBLISH)-nav-bottom:
-    CHAINED:
-      CHAINED:				<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
-
-  $(PUBLISH)-nav-left:
-    CHAINED:
-      - spacer
-      - text: |
-          CHAINED TEXT
-
-  $(PUBLISH)-nav-right:
-    CHAINED:
-      - spacer
-      - box-begin $(SPECIAL_VAL) CHAINED
-      - text: |
-          CHAINED TEXT
-      - box-end
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-#### {{{4 Heredoc: Config: Config ------
-
-override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(CONFIGS) =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(EXAMPLE) = $(CONFIGS))
-################################################################################
-
-variables:
-
-  $(PUBLISH)-config:
-    cols_main_size:			8
-    cols_show_left:			0
-    cols_show_right:			0
-    cols_sticky:			0
-    copy_safe:				0
-    read_time:				"*(count: @W, time: @T)*"
-    read_time_wpm:			200
-
-  $(PUBLISH)-library:
-    folder:				$($(PUBLISH)-$(EXAMPLE)-folder-$(CONFIGS))
-    auto_update:			1
-    digest_title:			Digest
-    digest_count:			20
-    digest_expanded:			5
-    digest_chars:			2048
-    digest_spacer:			0
-    digest_continue:			"*(continued)*"
-    digest_permalink:			"*(permalink)*"
-
-  $(PUBLISH)-nav-top:
-    CHAINED:
-      MAIN:
-        $(MENU_SELF): "#"
-        CHAINED:			<composer_root>/$($(PUBLISH)-$(EXAMPLE)-main).$(EXTN_HTML)
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-#### {{{4 Heredoc: Config: Nothing -----
-
-override define $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_YML)-$(NOTHING) =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH)-$(EXAMPLE) = $(NOTHING))
-################################################################################
-
-variables:
-
-  title-prefix:				null
-
-  $(PUBLISH)-config:				null
-  $(PUBLISH)-library:				null
-  $(PUBLISH)-nav-top:				null
-  $(PUBLISH)-nav-bottom:			null
-  $(PUBLISH)-nav-left:			null
-  $(PUBLISH)-nav-right:			null
-  $(PUBLISH)-info-top:			null
-  $(PUBLISH)-info-bottom:			null
-
-################################################################################
-# End Of File
-################################################################################
+  * *Source file: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))]($(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))))*
+  * *Main page: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))*
 endef
 
 ########################################
@@ -9153,25 +10038,32 @@ $(addprefix $(CLEANER)-,$(COMPOSER_TARGETS)):
 override define $(CLEANER)-logs =
 	if	[ -n "$(COMPOSER_KEEPING)" ] && \
 		[ -n "$(COMPOSER_LOG)" ] && \
-		[ -f "$(CURDIR)/$(COMPOSER_LOG)" ] && \
-		[ "$$($(CAT) $(CURDIR)/$(COMPOSER_LOG) | $(WC))" -gt "$(COMPOSER_KEEPING)" ]; \
+		[ -f "$(CURDIR)/$(COMPOSER_LOG)" ]; \
 	then \
 		$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_LOG),$(CLEANER)-logs); \
 		$(ECHO) "$(_S)"; \
-		$(MV) $(CURDIR)/$(COMPOSER_LOG) $(CURDIR)/$(COMPOSER_LOG).$(@) $($(DEBUGIT)-output); \
-		$(TAIL) -n$(COMPOSER_KEEPING) $(CURDIR)/$(COMPOSER_LOG).$(@) >$(CURDIR)/$(COMPOSER_LOG); \
-		$(RM) $(CURDIR)/$(COMPOSER_LOG).$(@) $($(DEBUGIT)-output); \
+		if [ "$(COMPOSER_KEEPING)" = "$(SPECIAL_VAL)" ]; then \
+			$(RM) $(CURDIR)/$(COMPOSER_LOG) $($(DEBUGIT)-output); \
+		elif [ "$$($(CAT) $(CURDIR)/$(COMPOSER_LOG) | $(WC))" -gt "$(COMPOSER_KEEPING)" ]; then \
+			$(MV) $(CURDIR)/$(COMPOSER_LOG) $(CURDIR)/$(COMPOSER_LOG).$(@) $($(DEBUGIT)-output); \
+			$(TAIL) -n$(COMPOSER_KEEPING) $(CURDIR)/$(COMPOSER_LOG).$(@) >$(CURDIR)/$(COMPOSER_LOG); \
+			$(RM) $(CURDIR)/$(COMPOSER_LOG).$(@) $($(DEBUGIT)-output); \
+		fi; \
 		$(ECHO) "$(_D)"; \
 	fi; \
-	if	[ -d "$(COMPOSER_TMP)" ] && \
-		[ "$$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(WC))" -gt "$(COMPOSER_KEEPING)" ]; \
+	if	[ -n "$(COMPOSER_KEEPING)" ] && \
+		[ -d "$(COMPOSER_TMP)" ]; \
 	then \
 		$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)-logs); \
 		$(ECHO) "$(_S)"; \
-		$(RM) --recursive $$( \
-				$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null \
-				| $(TAIL) -n+$(COMPOSER_KEEPING) \
-			) $($(DEBUGIT)-output); \
+		if [ "$(COMPOSER_KEEPING)" = "$(SPECIAL_VAL)" ]; then \
+			$(RM) --recursive $(COMPOSER_TMP) $($(DEBUGIT)-output); \
+		elif [ "$$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(WC))" -gt "$(COMPOSER_KEEPING)" ]; then \
+			$(RM) --recursive $$( \
+					$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null \
+					| $(TAIL) -n+$(COMPOSER_KEEPING) \
+				) $($(DEBUGIT)-output); \
+		fi; \
 		$(ECHO) "$(_D)"; \
 	fi
 endef
@@ -9184,7 +10076,7 @@ endef
 $(DOITALL): $(DOITALL)-$(SUBDIRS)-$(HEADERS)
 $(DOITALL):
 #>	@$(call $(HEADERS))
-	@$(call $(CLEANER)-logs)
+#>	@$(call $(CLEANER)-logs)
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
 	@$(MAKE) $(DOITALL)-$(SUBDIRS)
@@ -9202,6 +10094,7 @@ else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(COMPOSER_TARGETS)
 else
 	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(DOITALL)-$(TARGETS)
+	@$(call $(CLEANER)-logs)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
@@ -9302,82 +10195,27 @@ $(COMPOSER_LOG):
 ################################################################################
 
 ########################################
-## {{{2 $(COMPOSER_PANDOC) -------------
+## {{{2 $(COMPOSER_PANDOC)-functions ---
 
-.PHONY: $(COMPOSER_PANDOC)
-$(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
-$(COMPOSER_PANDOC):
-	@$(call $(COMPOSER_PANDOC)-c_list_plus)
-	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
-endif
+override $(COMPOSER_PANDOC)-dependencies = $(strip \
+	$(COMPOSER) \
+	$(COMPOSER_INCLUDES) \
+	$(COMPOSER_YML_LIST) \
+	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
+		$($(PUBLISH)-cache) \
+	) \
+)
 
-$(c_base).$(EXTENSION): $(COMPOSER)
-ifneq ($(COMPOSER_YML_LIST),)
-$(c_base).$(EXTENSION): $(COMPOSER_YML_LIST)
-endif
-ifneq ($(c_site),)
-$(c_base).$(EXTN_HTML): $($(PUBLISH)-cache)
-endif
-
-$(c_base).$(EXTENSION): $(c_list)
-$(c_base).$(EXTENSION):
-	@$(call $(COMPOSER_PANDOC)-c_list_plus)
-	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
-	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
-ifneq ($(PANDOC_OPTIONS_ERROR),)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION): $(call PANDOC_OPTIONS_ERROR)" >&2
-	@$(ENDOLINE)
-	@exit 1
-endif
-ifneq ($(c_site),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(notdir $(COMPOSER_TMP))/$(@).$(DATENAME)$(COMPOSER_EXT_DEFAULT),$(PUBLISH))
-	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-	@$(call $(PUBLISH)-$(TARGETS),$(COMPOSER_TMP)/$(notdir $(@)).$(DATENAME)$(COMPOSER_EXT_DEFAULT))
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@))
-endif
-endif
-ifeq ($(c_type),$(TYPE_LPDF))
-	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(notdir $(COMPOSER_TMP))/$(@).$(DATENAME),$(TYPE_LPDF))
-	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(COMPOSER_TMP)/$(notdir $(@)).$(DATENAME) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-endif
-ifeq ($(c_type),$(TYPE_PRES))
-	@$(SED) -i.$(COMPOSER_BASENAME) "s|^(.+background[:].+url[(][\"])[^\"]+([\"].+)$$|\1$(c_logo)\2|g" $(REVEALJS_CSS)
-endif
-	@$(ECHO) "$(_F)"
-#>	@$(PANDOC) $(subst ",\",$(call PANDOC_OPTIONS))
-	@$(PANDOC) $(call PANDOC_OPTIONS)
-	@$(ECHO) "$(_D)"
-ifeq ($(c_type),$(TYPE_PRES))
-	@$(ECHO) "$(_S)"
-	@$(MV) $(REVEALJS_CSS).$(COMPOSER_BASENAME) $(REVEALJS_CSS) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-endif
-ifneq ($(COMPOSER_LOG),)
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP) $(subst ",\",$(call PANDOC_OPTIONS))\n" >>$(CURDIR)/$(COMPOSER_LOG)
-endif
-ifneq ($(COMPOSER_DEBUGIT),)
-ifneq ($(c_site),)
-	@$(call $(HEADERS)-note,$(c_base) $(MARKER) c_site,c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
-else
-	@$(call $(HEADERS)-note,$(c_base) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
-endif
-endif
-
+#>	$(eval override c_list_plus := $(filter-out $(COMPOSER),$(c_list_plus)))
 override define $(COMPOSER_PANDOC)-c_list_plus =
-	$(eval override c_list_plus := $(filter-out .set_title-%,$(+)))
-	$(eval override c_list_plus := $(filter-out $(COMPOSER),$(c_list_plus)))
-	$(eval override c_list_plus := $(filter-out $(COMPOSER_YML_LIST),$(c_list_plus)))
-	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-cache),$(c_list_plus)))
-	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-library),$(c_list_plus)))
-	$(eval override c_list_plus := $(filter-out $(c_list),$(c_list_plus)))
+	$(eval override c_list_plus := $(filter-out .set_title-%,$(+))) \
+	$(eval override c_list_plus := $(filter-out $(COMPOSER_INCLUDES),$(c_list_plus))) \
+	$(eval override c_list_plus := $(filter-out $(COMPOSER_YML_LIST),$(c_list_plus))) \
+	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-cache),$(c_list_plus))) \
+	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-library),$(c_list_plus))) \
+	$(eval override c_list_plus := $(subst $(COMPOSER)$(if $(1), $(1)),,$(c_list_plus))) \
+	$(eval override c_list_plus := $(strip $(c_list_plus))) \
+	$(eval override c_list := $(strip $(c_list)))
 endef
 
 override define $(COMPOSER_PANDOC)-$(NOTHING) =
@@ -9391,68 +10229,124 @@ override define $(COMPOSER_PANDOC)-$(NOTHING) =
 endef
 
 ########################################
+## {{{2 $(COMPOSER_PANDOC) -------------
+
+.PHONY: $(COMPOSER_PANDOC)
+$(COMPOSER_PANDOC): $(c_base).$(EXTENSION)
+$(COMPOSER_PANDOC):
+#>	@$(call $(COMPOSER_PANDOC)-c_list_plus,$(c_base).$(EXTENSION))
+	@$(call $(COMPOSER_PANDOC)-c_list_plus)
+	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\")
+endif
+
+ifneq ($(c_base),)
+$(c_base).$(EXTENSION): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type))
+$(c_base).$(EXTENSION): $(c_list)
+$(c_base).$(EXTENSION):
+	@$(call $(COMPOSER_PANDOC)-c_list_plus,$(c_list))
+	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
+	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
+ifneq ($(PANDOC_OPTIONS_ERROR),)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_F)$(MARKER) ERROR: $(c_base).$(EXTENSION): $(call PANDOC_OPTIONS_ERROR)" >&2
+	@$(ENDOLINE)
+	@exit 1
+endif
+ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1)$(COMPOSER_EXT_DEFAULT),$(PUBLISH))
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call $(PUBLISH)-$(TARGETS),$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
+	@$(call $(PUBLISH)-$(TARGETS)-contents,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
+	@$(call $(PUBLISH)-$(TARGETS)-readtime,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
+	@$(eval override c_list		:= $(if $(c_list_plus),$(c_list_plus),$(c_list)))
+	@$(eval override c_list_plus	:= $(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
+endif
+ifeq ($(c_type),$(TYPE_LPDF))
+	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1),$(TYPE_LPDF))
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+endif
+ifeq ($(c_type),$(TYPE_PRES))
+ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1).css,$(TYPE_PRES))
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+	@$(CP) $(COMPOSER_CUSTOM)-$(c_type).css $(call COMPOSER_TMP_FILE).css $($(DEBUGIT)-output)
+	@$(SED) -i "s|^(.+background[:].+url[(][\"])[^\"]+([\"].+)$$|\1$(abspath $(c_logo))\2|g" $(call COMPOSER_TMP_FILE).css
+	@$(ECHO) "$(_D)"
+endif
+endif
+	@$(ECHO) "$(_F)"
+	@$(PANDOC) $(call PANDOC_OPTIONS) $(if $(c_list_plus),$(c_list_plus),$(c_list))
+	@$(ECHO) "$(_D)"
+ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
+	@$(call $(PUBLISH)-$(TARGETS)-contents-done,$(CURDIR)/$(@))
+endif
+ifneq ($(COMPOSER_LOG),)
+#WORKING:NOW:NOW consolidate these into a single operation...
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP) "			>>$(CURDIR)/$(COMPOSER_LOG)
+	@$(call $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS)	>>$(CURDIR)/$(COMPOSER_LOG)
+ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
+	@$(ECHO) " #$(MARKER) $(c_list)"			>>$(CURDIR)/$(COMPOSER_LOG)
+endif
+	@$(ECHO) "\n"						>>$(CURDIR)/$(COMPOSER_LOG)
+endif
+ifneq ($(COMPOSER_DEBUGIT),)
+ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
+	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type) ($(PUBLISH)),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",pandoc)
+else
+	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",pandoc)
+endif
+endif
+endif
+
+########################################
 ## {{{2 $(COMPOSER_EXT) ----------------
 
 #> update: TYPE_TARGETS
 
+override define TYPE_TARGETS_OPTIONS =
+	$(if $(wildcard $(CURDIR)/$(MAKEFILE)),,--makefile $(COMPOSER)) \
+	$(call COMPOSER_OPTIONS_EXPORT) \
+	$(COMPOSER_PANDOC) \
+	c_type="$(1)" c_base="$(*)" c_list="$(if $(c_list_plus),$(c_list_plus),$(2))"
+endef
+
 override define TYPE_TARGETS =
-%.$(2): \
-	$$(COMPOSER) \
-	$$(COMPOSER_YML_LIST) \
-	$$(if $$(and \
-		$$(c_site) ,\
-		$$(filter %.$$(EXTN_HTML),$(2)) \
-		),\
-		$$($$(PUBLISH)-cache) \
-	) \
-	%$$(COMPOSER_EXT)
-	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+%.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) %$$(COMPOSER_EXT)
+	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(*)$$(COMPOSER_EXT))
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_EXT))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",extension)
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",extension)
 endif
 
-%.$(2): \
-	$$(COMPOSER) \
-	$$(COMPOSER_YML_LIST) \
-	$$(if $$(and \
-		$$(c_site) ,\
-		$$(filter %.$$(EXTN_HTML),$(2)) \
-		),\
-		$$($$(PUBLISH)-cache) \
-	) \
-	%
-	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+%.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) %
+	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(*))
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",wildcard)
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",wildcard)
 endif
 
-%.$(2): \
-	$$(COMPOSER) \
-	$$(COMPOSER_YML_LIST) \
-	$$(if $$(and \
-		$$(c_site) ,\
-		$$(filter %.$$(EXTN_HTML),$(2)) \
-		),\
-		$$($$(PUBLISH)-cache) \
-	) \
-	$$(c_list)
-	@$$(call $$(COMPOSER_PANDOC)-c_list_plus)
-	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(COMPOSER_PANDOC) c_type="$(1)" c_base="$$(*)" c_list="$$(if $$(c_list_plus),$$(c_list_plus),$$(c_list))"
+#WORKING:NOW:NOW
+#	different error handling for empty c_list/c_list_plus?
+#	better error message for missing c_type/c_base/c_list?
+
+%.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) $$(c_list)
+	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(c_list))
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(*) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",list)
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",list)
 endif
 endef
 
-$(eval $(call TYPE_TARGETS,$(TYPE_HTML),$(EXTN_HTML)))
-$(eval $(call TYPE_TARGETS,$(TYPE_LPDF),$(EXTN_LPDF)))
-$(eval $(call TYPE_TARGETS,$(TYPE_EPUB),$(EXTN_EPUB)))
-$(eval $(call TYPE_TARGETS,$(TYPE_PRES),$(EXTN_PRES)))
-$(eval $(call TYPE_TARGETS,$(TYPE_DOCX),$(EXTN_DOCX)))
-$(eval $(call TYPE_TARGETS,$(TYPE_PPTX),$(EXTN_PPTX)))
-$(eval $(call TYPE_TARGETS,$(TYPE_TEXT),$(EXTN_TEXT)))
-$(eval $(call TYPE_TARGETS,$(TYPE_LINT),$(EXTN_LINT)))
+$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+	$(eval $(call TYPE_TARGETS,$(TYPE_$(TYPE)),$(EXTN_$(TYPE)))) \
+)
 
 ################################################################################
 # }}}1
