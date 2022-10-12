@@ -247,33 +247,46 @@ override MENU_SELF			:= _
 override PUBLISH_CSS_SHADE		:= dark
 override PUBLISH_CSS_SHADE_ALT		:= $(SPECIAL_VAL)
 
-#WORKING:NOW:NOW
-#	go ahead and make all three columns configurable...
-#	also, make mobile columns configurable, where $(SPECIAL_VAL) disables them... default to 6/6
-#	make (word,3) a banner-style page with two sub-columns, and maybe add a carousel
-#		maybe also make carousel a $(PUBLISH_CMD_BEG) option...?  good for books or ads or something...
-#		https://getbootstrap.com/docs/5.2/components/scrollspy
-override PUBLISH_COLS			:= 12
-override PUBLISH_COLS_BREAK		:= lg
-override PUBLISH_COLS_BREAK_ALT		:= xl
-override PUBLISH_COLS_SIZE_LEFT		:= 3
-override PUBLISH_COLS_SIZE_LEFT_ALT	:= 2
-override PUBLISH_COLS_SIZE_MAIN		:= 7
-override PUBLISH_COLS_SIZE_MAIN_ALT	:= 8
-override PUBLISH_COLS_SHOW_LEFT		:= 1
-override PUBLISH_COLS_SHOW_LEFT_ALT	:= $(SPECIAL_VAL)
-override PUBLISH_COLS_SHOW_RIGHT	:= 1
-override PUBLISH_COLS_SHOW_RIGHT_ALT	:= $(SPECIAL_VAL)
-override PUBLISH_COLS_STICKY		:= 1
-override PUBLISH_COLS_STICKY_ALT	:= $(SPECIAL_VAL)
-override PUBLISH_COPY_SAFE		:= 1
-override PUBLISH_COPY_SAFE_ALT		:= $(SPECIAL_VAL)
-
 #> talk: 183 / read: 234
 override PUBLISH_READ_TIME		:= *Reading time: @W words, @T minutes*
 override PUBLISH_READ_TIME_ALT		:= *(count: @W, time: @T)*
 override PUBLISH_READ_TIME_WPM		:= 220
 override PUBLISH_READ_TIME_WPM_ALT	:= 200
+override PUBLISH_COPY_PROTECT		:= 1
+override PUBLISH_COPY_PROTECT_ALT	:= $(SPECIAL_VAL)
+
+override PUBLISH_COLS_BREAK		:= lg
+override PUBLISH_COLS_BREAK_ALT		:= xl
+override PUBLISH_COLS_STICKY		:= 1
+override PUBLISH_COLS_STICKY_ALT	:= $(SPECIAL_VAL)
+
+override PUBLISH_COLS_ORDER_L		:= 1
+override PUBLISH_COLS_ORDER_C		:= 2
+override PUBLISH_COLS_ORDER_R		:= 3
+override PUBLISH_COLS_REORDER_L		:= 1
+override PUBLISH_COLS_REORDER_C		:= 3
+override PUBLISH_COLS_REORDER_R		:= 2
+
+override PUBLISH_COLS_ORDER_L_ALT	:= 1
+override PUBLISH_COLS_ORDER_C_ALT	:= 3
+override PUBLISH_COLS_ORDER_R_ALT	:= 2
+override PUBLISH_COLS_REORDER_L_ALT	:= 2
+override PUBLISH_COLS_REORDER_C_ALT	:= 1
+override PUBLISH_COLS_REORDER_R_ALT	:= $(SPECIAL_VAL)
+
+override PUBLISH_COLS_SIZE_L		:= 3
+override PUBLISH_COLS_SIZE_C		:= 7
+override PUBLISH_COLS_SIZE_R		:= 2
+override PUBLISH_COLS_RESIZE_L		:= 6
+override PUBLISH_COLS_RESIZE_C		:= 12
+override PUBLISH_COLS_RESIZE_R		:= 6
+
+override PUBLISH_COLS_SIZE_L_ALT	:= 12
+override PUBLISH_COLS_SIZE_C_ALT	:= 9
+override PUBLISH_COLS_SIZE_R_ALT	:= 3
+override PUBLISH_COLS_RESIZE_L_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESIZE_C_ALT	:= 12
+override PUBLISH_COLS_RESIZE_R_ALT	:= 12
 
 override LIBRARY_FOLDER			:= $(SPECIAL_VAL)
 override LIBRARY_FOLDER_ALT		:= _library
@@ -1599,54 +1612,52 @@ override PUBLISH_SH_RUN			= \
 	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
 	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
 	\
+	PUBLISH_COPY_PROTECT="$(PUBLISH_COPY_PROTECT)" \
 	PUBLISH_COLS_BREAK="$(PUBLISH_COLS_BREAK)" \
-	PUBLISH_COLS_SIZE_LEFT="$(PUBLISH_COLS_SIZE_LEFT)" \
-	PUBLISH_COLS_SIZE_MAIN="$(PUBLISH_COLS_SIZE_MAIN)" \
-	PUBLISH_COLS_SHOW_LEFT="$(PUBLISH_COLS_SHOW_LEFT)" \
-	PUBLISH_COLS_SHOW_RIGHT="$(PUBLISH_COLS_SHOW_RIGHT)" \
 	PUBLISH_COLS_STICKY="$(PUBLISH_COLS_STICKY)" \
-	PUBLISH_COPY_SAFE="$(PUBLISH_COPY_SAFE)" \
+	PUBLISH_COLS_ORDER_L="$(PUBLISH_COLS_ORDER_L)" \
+	PUBLISH_COLS_ORDER_C="$(PUBLISH_COLS_ORDER_C)" \
+	PUBLISH_COLS_ORDER_R="$(PUBLISH_COLS_ORDER_R)" \
+	PUBLISH_COLS_REORDER_L="$(PUBLISH_COLS_REORDER_L)" \
+	PUBLISH_COLS_REORDER_C="$(PUBLISH_COLS_REORDER_C)" \
+	PUBLISH_COLS_REORDER_R="$(PUBLISH_COLS_REORDER_R)" \
+	PUBLISH_COLS_SIZE_L="$(PUBLISH_COLS_SIZE_L)" \
+	PUBLISH_COLS_SIZE_C="$(PUBLISH_COLS_SIZE_C)" \
+	PUBLISH_COLS_SIZE_R="$(PUBLISH_COLS_SIZE_R)" \
+	PUBLISH_COLS_RESIZE_L="$(PUBLISH_COLS_RESIZE_L)" \
+	PUBLISH_COLS_RESIZE_C="$(PUBLISH_COLS_RESIZE_C)" \
+	PUBLISH_COLS_RESIZE_R="$(PUBLISH_COLS_RESIZE_R)" \
 	\
 	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
-
-########################################
-
-override $(PUBLISH)-cache		:= $(COMPOSER_TMP)/$(PUBLISH)-cache
-
-override $(PUBLISH)-caches-begin := \
-	nav-top \
-	row-begin \
-	nav-left \
-	column-begin
-override $(PUBLISH)-caches-end := \
-	column-end \
-	nav-right \
-	row-end \
-	nav-bottom
-override $(PUBLISH)-caches := \
-	$(foreach FILE,\
-		$($(PUBLISH)-caches-begin) \
-		$($(PUBLISH)-caches-end) \
-		,\
-		$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML) \
-	)
 
 ########################################
 
 #> update: $(PUBLISH)-variables
 override $(PUBLISH)-variables := \
 	PUBLISH_CSS_SHADE:config:css_shade \
-	PUBLISH_COLS_BREAK:config:cols_break \
-	PUBLISH_COLS_SIZE_LEFT:config:cols_size_left \
-	PUBLISH_COLS_SIZE_MAIN:config:cols_size_main \
-	PUBLISH_COLS_SHOW_LEFT:config:cols_show_left \
-	PUBLISH_COLS_SHOW_RIGHT:config:cols_show_right \
-	PUBLISH_COLS_STICKY:config:cols_sticky \
-	PUBLISH_COPY_SAFE:config:copy_safe \
+	\
 	PUBLISH_READ_TIME:config:read_time \
 	PUBLISH_READ_TIME_WPM:config:read_time_wpm \
+	PUBLISH_COPY_PROTECT:config:copy_protect \
+	\
+	PUBLISH_COLS_BREAK:config:cols_break \
+	PUBLISH_COLS_STICKY:config:cols_sticky \
+	PUBLISH_COLS_ORDER_L:config:cols_order=0 \
+	PUBLISH_COLS_ORDER_C:config:cols_order=1 \
+	PUBLISH_COLS_ORDER_R:config:cols_order=2 \
+	PUBLISH_COLS_REORDER_L:config:cols_reorder=0 \
+	PUBLISH_COLS_REORDER_C:config:cols_reorder=1 \
+	PUBLISH_COLS_REORDER_R:config:cols_reorder=2 \
+	PUBLISH_COLS_SIZE_L:config:cols_size=0 \
+	PUBLISH_COLS_SIZE_C:config:cols_size=1 \
+	PUBLISH_COLS_SIZE_R:config:cols_size=2 \
+	PUBLISH_COLS_RESIZE_L:config:cols_resize=0 \
+	PUBLISH_COLS_RESIZE_C:config:cols_resize=1 \
+	PUBLISH_COLS_RESIZE_R:config:cols_resize=2 \
+	\
 	LIBRARY_FOLDER:library:folder \
 	LIBRARY_AUTO_UPDATE:library:auto_update \
+	\
 	LIBRARY_DIGEST_TITLE:library:digest_title \
 	LIBRARY_DIGEST_COUNT:library:digest_count \
 	LIBRARY_DIGEST_EXPANDED:library:digest_expanded \
@@ -1693,6 +1704,8 @@ $(foreach FILE,\
 			MVAR="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\1|g")"; \
 			SECT="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\2|g")"; \
 			YAML="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\3|g")"; \
+			ARRY="$$($(ECHO) "$${YAML}" | $(SED) -n "s|^(.+)[=](.+)$$|\2|gp")"; \
+			YAML="$$($(ECHO) "$${YAML}" | $(SED) "s|[=](.+)$$||g")"; \
 			CONF="$$( \
 				if	[ "$${SECT}" = "library" ] && \
 					[ -n "$(COMPOSER_LIBRARY_YML)" ]; \
@@ -1701,8 +1714,13 @@ $(foreach FILE,\
 				else \
 					$(ECHO) "$${YQ_DATA}"; \
 				fi \
-					| $(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"]" 2>/dev/null \
-					| $(SED) "/^null$$/d" \
+					| if [ -n "$${ARRY}" ]; then \
+						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"].[\"$${ARRY}\"]" 2>/dev/null \
+						| $(SED) "/^null$$/d"; \
+					else \
+						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"]" 2>/dev/null \
+						| $(SED) "/^null$$/d"; \
+					fi; \
 			)"; \
 			if [ -n "$${CONF}" ]; then \
 				$(ECHO) "override $${MVAR} := $${CONF}\n" \
@@ -1715,6 +1733,28 @@ $(foreach FILE,\
 
 endif
 endif
+
+########################################
+
+override $(PUBLISH)-cache		:= $(COMPOSER_TMP)/$(PUBLISH)-cache
+
+override $(PUBLISH)-caches-begin := \
+	nav-top \
+	row-begin \
+	nav-left \
+	column-begin
+override $(PUBLISH)-caches-end := \
+	column-end \
+	nav-right \
+	row-end \
+	nav-bottom
+override $(PUBLISH)-caches := \
+	$(foreach FILE,\
+		$($(PUBLISH)-caches-begin) \
+		$($(PUBLISH)-caches-end) \
+		,\
+		$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML) \
+	)
 
 ########################################
 
@@ -3776,7 +3816,7 @@ $(_S)########################################$(_D)
 
     $(_C)homepage$(_D):				$(_M)$(COMPOSER_HOMEPAGE)$(_D)
     $(_C)brand$(_D):				$(_M)LOGO / BRAND$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):			$(_M)COPYRIGHT$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
     $(_C)copyright$(_D): $(_N)|$(_D)
       <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
         <img alt="GPL License"
@@ -3798,7 +3838,7 @@ $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
         class="$(COMPOSER_TINYNAME)-icon"
         src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-search.svg"/>
     $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
-    $(_C)search_text$(_D):			$(_M)q$(_D)
+    $(_C)search_call$(_D):			$(_M)q$(_D)
     $(_C)search_form$(_D): $(_N)|$(_D)
       <input type="hidden" name="sites" value="$(_M)$(COMPOSER_CNAME)$(_D)"/>
       <input type="hidden" name="ia" value="web"/>
@@ -3810,16 +3850,16 @@ $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)css_shade$(_D):				$(_M)$(PUBLISH_CSS_SHADE)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_size_left$(_D):			$(_M)$(PUBLISH_COLS_SIZE_LEFT)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_size_main$(_D):			$(_M)$(PUBLISH_COLS_SIZE_MAIN)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_show_left$(_D):			$(_M)$(PUBLISH_COLS_SHOW_LEFT)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_show_right$(_D):			$(_M)$(PUBLISH_COLS_SHOW_RIGHT)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)copy_safe$(_D):				$(_M)$(PUBLISH_COPY_SAFE)$(_D)
-
 $(_S)#$(MARKER)$(_D) $(_C)read_time$(_D):				$(_N)"$(_M)$(PUBLISH_READ_TIME)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)read_time_wpm$(_D):			$(_M)$(PUBLISH_READ_TIME_WPM)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
+
+$(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_order$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_ORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-library$(_D):
@@ -3880,6 +3920,7 @@ $(_S)########################################$(_D)
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-left$(_D):
 
+    $(_M)BEGIN$(_D):
     $(_M)MENU$(_D):
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) LEFT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
@@ -3887,7 +3928,9 @@ $(_S)########################################$(_D)
           * ITEM 2
           * ITEM 3
       - $(_C)fold-end$(_D)
+    $(_M)MIDDLE$(_D):
       - $(_C)spacer$(_D)
+    $(_M)TEXT$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           LEFT TEXT
@@ -3902,10 +3945,12 @@ $(_S)########################################$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D)
       - $(_C)box-end$(_D)
+    $(_M)END$(_D):
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-right$(_D):
 
+    $(_M)BEGIN$(_D):
     $(_M)MENU$(_D):
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) RIGHT 1$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
@@ -3913,7 +3958,9 @@ $(_S)########################################$(_D)
           * ITEM 2
           * ITEM 3
       - $(_C)fold-end$(_D)
+    $(_M)MIDDLE$(_D):
       - $(_C)spacer$(_D)
+    $(_M)TEXT$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
       - $(_C)text$(_D): $(_N)|$(_D)
           RIGHT TEXT
@@ -3932,6 +3979,7 @@ $(_S)########################################$(_D)
       - $(_C)library$(_D) $(_M)tags$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-end group$(_D)
+    $(_M)END$(_D):
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-top$(_D):
@@ -3987,21 +4035,21 @@ variables:
 
     search_name:
     search_site:
-    search_text:
+    search_call:
     search_form:
 
     css_shade:				$(PUBLISH_CSS_SHADE)
 
-    cols_break:				$(PUBLISH_COLS_BREAK)
-    cols_size_left:			$(PUBLISH_COLS_SIZE_LEFT)
-    cols_size_main:			$(PUBLISH_COLS_SIZE_MAIN)
-    cols_show_left:			$(PUBLISH_COLS_SHOW_LEFT)
-    cols_show_right:			$(PUBLISH_COLS_SHOW_RIGHT)
-    cols_sticky:			$(PUBLISH_COLS_STICKY)
-    copy_safe:				$(PUBLISH_COPY_SAFE)
-
     read_time:				"$(PUBLISH_READ_TIME)"
     read_time_wpm:			$(PUBLISH_READ_TIME_WPM)
+    copy_protect:			$(PUBLISH_COPY_PROTECT)
+
+    cols_break:				$(PUBLISH_COLS_BREAK)
+    cols_sticky:			$(PUBLISH_COLS_STICKY)
+    cols_order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]
+    cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
+    cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
+    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
 
 ########################################
   $(PUBLISH)-library:
@@ -4061,21 +4109,21 @@ variables:
 
     search_name:			null
     search_site:			null
-    search_text:			null
+    search_call:			null
     search_form:			null
 
     css_shade:				null
 
-    cols_break:				null
-    cols_size_left:			3
-    cols_size_main:			9
-    cols_show_left:			$(SPECIAL_VAL)
-    cols_show_right:			$(SPECIAL_VAL)
-    cols_sticky:			null
-    copy_safe:				$(SPECIAL_VAL)
-
     read_time:				null
     read_time_wpm:			null
+    copy_protect:			$(SPECIAL_VAL)
+
+    cols_break:				null
+    cols_sticky:			null
+    cols_order:				null
+    cols_reorder:			null
+    cols_size:				[ 3, 9, $(SPECIAL_VAL) ]
+    cols_resize:			[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
 
 ########################################
   $(PUBLISH)-library:
@@ -4301,15 +4349,15 @@ variables:
 
   $(PUBLISH)-config:
     css_shade:				$(PUBLISH_CSS_SHADE_ALT)
-    cols_break:				$(PUBLISH_COLS_BREAK_ALT)
-    cols_size_left:			$(PUBLISH_COLS_SIZE_LEFT_ALT)
-    cols_size_main:			$(PUBLISH_COLS_SIZE_MAIN_ALT)
-    cols_show_left:			$(PUBLISH_COLS_SHOW_LEFT_ALT)
-    cols_show_right:			$(PUBLISH_COLS_SHOW_RIGHT_ALT)
-    cols_sticky:			$(PUBLISH_COLS_STICKY_ALT)
-    copy_safe:				$(PUBLISH_COPY_SAFE_ALT)
     read_time:				"$(PUBLISH_READ_TIME_ALT)"
     read_time_wpm:			$(PUBLISH_READ_TIME_WPM_ALT)
+    copy_protect:			$(PUBLISH_COPY_PROTECT_ALT)
+    cols_break:				$(PUBLISH_COLS_BREAK_ALT)
+    cols_sticky:			$(PUBLISH_COLS_STICKY_ALT)
+    cols_order:				[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
+    cols_reorder:			[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
+    cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
+    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
 
   $(PUBLISH)-library:
     folder:				$($(PUBLISH)-$(EXAMPLE)-library)
@@ -4329,6 +4377,20 @@ variables:
       CHAINED:
         $(MENU_SELF): "#"
         CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+
+  $(PUBLISH)-nav-left:
+    BEGIN:
+      - row-begin
+      - column-begin col-2
+    MIDDLE:
+      - column-end
+      - column-begin col-2
+    SPACE:
+      - column-end
+      - column-begin col-4
+    END:
+      - column-end
+      - row-end
 
   $(PUBLISH)-info-bottom:
     TIME:
@@ -4445,7 +4507,6 @@ SPECIAL_VAL="$(SPECIAL_VAL)"
 DEPTH_MAX="$(DEPTH_MAX)"
 
 MENU_SELF="$(MENU_SELF)"
-PUBLISH_COLS="$(PUBLISH_COLS)"
 
 ################################################################################
 ### {{{3 Variables ---------------------
@@ -4487,13 +4548,24 @@ PUBLISH_LIBRARY_INDEX_PATH="$$($${REALPATH} $${CURDIR} $$($${DIRNAME} $${PUBLISH
 
 #> update: $(PUBLISH)-variables
 
+PUBLISH_COPY_PROTECT="$${PUBLISH_COPY_PROTECT}"
+
 PUBLISH_COLS_BREAK="$${PUBLISH_COLS_BREAK}"
-PUBLISH_COLS_SIZE_LEFT="$${PUBLISH_COLS_SIZE_LEFT}"
-PUBLISH_COLS_SIZE_MAIN="$${PUBLISH_COLS_SIZE_MAIN}"
-PUBLISH_COLS_SHOW_LEFT="$${PUBLISH_COLS_SHOW_LEFT}"
-PUBLISH_COLS_SHOW_RIGHT="$${PUBLISH_COLS_SHOW_RIGHT}"
 PUBLISH_COLS_STICKY="$${PUBLISH_COLS_STICKY}"
-PUBLISH_COPY_SAFE="$${PUBLISH_COPY_SAFE}"
+
+PUBLISH_COLS_ORDER[0]="$${PUBLISH_COLS_ORDER_L}"
+PUBLISH_COLS_ORDER[1]="$${PUBLISH_COLS_ORDER_C}"
+PUBLISH_COLS_ORDER[2]="$${PUBLISH_COLS_ORDER_R}"
+PUBLISH_COLS_REORDER[0]="$${PUBLISH_COLS_REORDER_L}"
+PUBLISH_COLS_REORDER[1]="$${PUBLISH_COLS_REORDER_C}"
+PUBLISH_COLS_REORDER[2]="$${PUBLISH_COLS_REORDER_R}"
+
+PUBLISH_COLS_SIZE[0]="$${PUBLISH_COLS_SIZE_L}"
+PUBLISH_COLS_SIZE[1]="$${PUBLISH_COLS_SIZE_C}"
+PUBLISH_COLS_SIZE[2]="$${PUBLISH_COLS_SIZE_R}"
+PUBLISH_COLS_RESIZE[0]="$${PUBLISH_COLS_RESIZE_L}"
+PUBLISH_COLS_RESIZE[1]="$${PUBLISH_COLS_RESIZE_C}"
+PUBLISH_COLS_RESIZE[2]="$${PUBLISH_COLS_RESIZE_R}"
 
 ################################################################################
 ### {{{3 Functions (Config) ------------
@@ -4574,7 +4646,7 @@ $${CAT} <<_EOF_
 )">
 <input class="form-control form-control-sm me-1" type="text" name="$$(
 	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_text\"]" 2>/dev/null \\
+	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_call\"]" 2>/dev/null \\
 	| $${SED} "/^null$$/d"
 )"/>
 <button class="btn btn-sm" type="submit">$$(
@@ -5066,7 +5138,7 @@ function $(PUBLISH)-row-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="container-fluid$$(
-	if [ "$${PUBLISH_COPY_SAFE}" != "$${SPECIAL_VAL}" ]; then
+	if [ "$${PUBLISH_COPY_PROTECT}" != "$${SPECIAL_VAL}" ]; then
 		$${ECHO} " user-select-none"
 	fi
 )">
@@ -5104,13 +5176,19 @@ $${CAT} <<_EOF_
 		[ "$${1}" = "center" ] ||
 		[ "$${1}" = "right" ];
 	then
-		PUBLISH_COLS_SIZE_RIGHT="$$($${EXPR} $${PUBLISH_COLS} - $${PUBLISH_COLS_SIZE_LEFT} - $${PUBLISH_COLS_SIZE_MAIN})"
-		if [ "$${1}" = "left" ]; then		$${ECHO} " order-1 order-$${PUBLISH_COLS_BREAK}-1 col-$$($${EXPR} $${PUBLISH_COLS} / 2) col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE_LEFT}"
-		elif [ "$${1}" = "right" ]; then	$${ECHO} " order-2 order-$${PUBLISH_COLS_BREAK}-3 col-$$($${EXPR} $${PUBLISH_COLS} / 2) col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE_RIGHT}"
-		else					$${ECHO} " order-3 order-$${PUBLISH_COLS_BREAK}-2 col-$${PUBLISH_COLS} col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE_MAIN}"
+		NUM="1"
+		if [ "$${1}" = "left" ]; then		NUM="0"
+		elif [ "$${1}" = "right" ]; then	NUM="2"
 		fi
-		if [ "$${1}" = "left" ] &&	[ "$${PUBLISH_COLS_SHOW_LEFT}" = "$${SPECIAL_VAL}" ]; then	$${ECHO} " d-none d-$${PUBLISH_COLS_BREAK}-block"; fi
-		if [ "$${1}" = "right" ] &&	[ "$${PUBLISH_COLS_SHOW_RIGHT}" = "$${SPECIAL_VAL}" ]; then	$${ECHO} " d-none d-$${PUBLISH_COLS_BREAK}-block"; fi
+		$${ECHO} " order-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_ORDER[$${NUM}]} order-$${PUBLISH_COLS_REORDER[$${NUM}]}"
+		$${ECHO} " col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE[$${NUM}]} col-$${PUBLISH_COLS_RESIZE[$${NUM}]}"
+		if	[ "$${PUBLISH_COLS_ORDER[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
+			[ "$${PUBLISH_COLS_REORDER[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
+			[ "$${PUBLISH_COLS_SIZE[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
+			[ "$${PUBLISH_COLS_RESIZE[$${NUM}]}"	= "$${SPECIAL_VAL}" ];
+		then
+			$${ECHO} " d-$${PUBLISH_COLS_BREAK}-block d-none"
+		fi
 		if [ "$${PUBLISH_COLS_STICKY}" != "$${SPECIAL_VAL}" ]; then
 			$${ECHO} " $(COMPOSER_TINYNAME)-sticky"
 		fi
@@ -5603,38 +5681,51 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
 
 :root {
 	/* dark background */
-	--solarized-dark3:			#002b36;
-	--solarized-dark2:			#073642;
+	--solarized-dark3:		#002b36;
+	--solarized-dark2:		#073642;
 	/* content */
-	--solarized-dark1:			#586e75;
-	--solarized-dark0:			#657b83;
-	--solarized-light0:			#839496;
-	--solarized-light1:			#93a1a1;
+	--solarized-dark1:		#586e75;
+	--solarized-dark0:		#657b83;
+	--solarized-light0:		#839496;
+	--solarized-light1:		#93a1a1;
 	/* light background */
-	--solarized-light2:			#eee8d5;
-	--solarized-light3:			#fdf6e3;
+	--solarized-light2:		#eee8d5;
+	--solarized-light3:		#fdf6e3;
 	/* accent */
-	--solarized-yellow:			#b58900;
-	--solarized-orange:			#cb4b16;
-	--solarized-red:			#dc322f;
-	--solarized-magenta:			#d33682;
-	--solarized-violet:			#6c71c4;
-	--solarized-blue:			#268bd2;
-	--solarized-cyan:			#2aa198;
-	--solarized-green:			#859900;
+	--solarized-yellow:		#b58900;
+	--solarized-orange:		#cb4b16;
+	--solarized-red:		#dc322f;
+	--solarized-magenta:		#d33682;
+	--solarized-violet:		#6c71c4;
+	--solarized-blue:		#268bd2;
+	--solarized-cyan:		#2aa198;
+	--solarized-green:		#859900;
 
+	/* colors */
 	--$(COMPOSER_TINYNAME)-back:		#000000; // black;	// var(--solarized-dark3);
 	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
 	--$(COMPOSER_TINYNAME)-line:		#404040; // darkgray;	// var(--solarized-dark1);
 	--$(COMPOSER_TINYNAME)-text:		#c0c0c0; // white;	// var(--solarized-light1);
 	--$(COMPOSER_TINYNAME)-link:		#c00000; // red;	// var(--solarized-red);
 	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
+
+	/* layout */
 	--$(COMPOSER_TINYNAME)-rule:		3px;
 	--$(COMPOSER_TINYNAME)-bord:		1px;
-	--$(COMPOSER_TINYNAME)-buff:		6px;
+	--$(COMPOSER_TINYNAME)-padd:		6px;
 }
 
 /* ################################## */
+
+.$(COMPOSER_TINYNAME)-link:active,
+.$(COMPOSER_TINYNAME)-link:hover,
+.$(COMPOSER_TINYNAME)-link:link,
+.$(COMPOSER_TINYNAME)-link:visited,
+.$(COMPOSER_TINYNAME)-link {
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+/* ########################################################################## */
 
 body {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
@@ -5644,6 +5735,18 @@ body {
 	background-color:		var(--$(COMPOSER_TINYNAME)-done);
 	color:				var(--$(COMPOSER_TINYNAME)-back);
 }
+
+a,
+a:active,
+a:link {
+	color:				var(--$(COMPOSER_TINYNAME)-link);
+}
+a:hover,
+a:visited {
+	color:				var(--$(COMPOSER_TINYNAME)-done);
+}
+
+/* ################################## */
 
 h1:not(.$(COMPOSER_TINYNAME)-header),
 h2:not(.$(COMPOSER_TINYNAME)-header),
@@ -5673,7 +5776,7 @@ th {
 }
 td,
 th {
-	padding:			var(--$(COMPOSER_TINYNAME)-buff);
+	padding:			var(--$(COMPOSER_TINYNAME)-padd);
 }
 
 code,
@@ -5685,26 +5788,6 @@ pre {
 }
 pre code {
 	border:				none;
-}
-
-a,
-a:active,
-a:link {
-	color:				var(--$(COMPOSER_TINYNAME)-link);
-}
-a:hover,
-a:visited {
-	color:				var(--$(COMPOSER_TINYNAME)-done);
-}
-
-/* ################################## */
-
-.$(COMPOSER_TINYNAME)-link:active,
-.$(COMPOSER_TINYNAME)-link:hover,
-.$(COMPOSER_TINYNAME)-link:link,
-.$(COMPOSER_TINYNAME)-link:visited,
-.$(COMPOSER_TINYNAME)-link {
-	color:				var(--$(COMPOSER_TINYNAME)-text);
 }
 
 /* ########################################################################## */
@@ -5815,6 +5898,10 @@ a:visited {
 .card,
 .card-header {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+}
+
+.table {
+	border:				none;
 }
 
 /* #############################################################################
@@ -9797,16 +9884,16 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 
 | $(PUBLISH)-config | defaults
 |:---|:---|
-| css_shade       | $(PUBLISH_CSS_SHADE)
-| cols_break      | $(PUBLISH_COLS_BREAK)
-| cols_size_left  | $(PUBLISH_COLS_SIZE_LEFT)
-| cols_size_main  | $(PUBLISH_COLS_SIZE_MAIN)
-| cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT)
-| cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT)
-| cols_sticky     | $(PUBLISH_COLS_STICKY)
-| copy_safe       | $(PUBLISH_COPY_SAFE)
-| read_time       | $(subst *,\*,$(PUBLISH_READ_TIME))
-| read_time_wpm   | $(PUBLISH_READ_TIME_WPM)
+| css_shade     | $(PUBLISH_CSS_SHADE)
+| read_time     | $(subst *,\*,$(PUBLISH_READ_TIME))
+| read_time_wpm | $(PUBLISH_READ_TIME_WPM)
+| copy_protect  | $(PUBLISH_COPY_PROTECT)
+| cols_break    | $(PUBLISH_COLS_BREAK)
+| cols_sticky   | $(PUBLISH_COLS_STICKY)
+| cols_order    | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]
+| cols_reorder  | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
+| cols_size     | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
+| cols_resize   | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
@@ -9843,16 +9930,16 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| css_shade       | $(PUBLISH_CSS_SHADE)               | $(PUBLISH_CSS_SHADE_ALT)
-| cols_break      | $(PUBLISH_COLS_BREAK)              | $(PUBLISH_COLS_BREAK_ALT)
-| cols_size_left  | $(PUBLISH_COLS_SIZE_LEFT)          | $(PUBLISH_COLS_SIZE_LEFT_ALT)
-| cols_size_main  | $(PUBLISH_COLS_SIZE_MAIN)          | $(PUBLISH_COLS_SIZE_MAIN_ALT)
-| cols_show_left  | $(PUBLISH_COLS_SHOW_LEFT)          | $(PUBLISH_COLS_SHOW_LEFT_ALT)
-| cols_show_right | $(PUBLISH_COLS_SHOW_RIGHT)         | $(PUBLISH_COLS_SHOW_RIGHT_ALT)
-| cols_sticky     | $(PUBLISH_COLS_STICKY)             | $(PUBLISH_COLS_STICKY_ALT)
-| copy_safe       | $(PUBLISH_COPY_SAFE)               | $(PUBLISH_COPY_SAFE_ALT)
-| read_time       | $(subst *,\*,$(PUBLISH_READ_TIME)) | $(subst *,\*,$(PUBLISH_READ_TIME_ALT))
-| read_time_wpm   | $(PUBLISH_READ_TIME_WPM)           | $(PUBLISH_READ_TIME_WPM_ALT)
+| css_shade     | $(PUBLISH_CSS_SHADE)               | $(PUBLISH_CSS_SHADE_ALT)
+| read_time     | $(subst *,\*,$(PUBLISH_READ_TIME)) | $(subst *,\*,$(PUBLISH_READ_TIME_ALT))
+| read_time_wpm | $(PUBLISH_READ_TIME_WPM)           | $(PUBLISH_READ_TIME_WPM_ALT)
+| copy_protect  | $(PUBLISH_COPY_PROTECT)            | $(PUBLISH_COPY_PROTECT_ALT)
+| cols_break    | $(PUBLISH_COLS_BREAK)              | $(PUBLISH_COLS_BREAK_ALT)
+| cols_sticky   | $(PUBLISH_COLS_STICKY)             | $(PUBLISH_COLS_STICKY_ALT)
+| cols_order    | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]       | [ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
+| cols_reorder  | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ] | [ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
+| cols_size     | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]          | [ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
+| cols_resize   | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]    | [ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
