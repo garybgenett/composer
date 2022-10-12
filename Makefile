@@ -1674,9 +1674,10 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
 $(if $(wildcard $(FILE)),\
 	$(eval override COMPOSER_LIBRARY_DIR := $(shell \
 		$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $(FILE) 2>/dev/null \
+		| $(SED) "/^$(SPECIAL_VAR)$$/d" \
 		| $(SED) "/^null$$/d" \
 	)) \
-	$(if $(filter-out $(SPECIAL_VAL),$(COMPOSER_LIBRARY_DIR)),\
+	$(if $(COMPOSER_LIBRARY_DIR),\
 		$(eval override COMPOSER_LIBRARY_YML := $(FILE)) \
 		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
 	) \
@@ -4483,7 +4484,7 @@ endef
 ########################################
 ## {{{2 Heredoc: custom_$(PUBLISH)_sh --
 
-#WORKING:NOW:NOW
+#WORKING:NOW:NOW:FIX
 #	this is going to be a real pain, maybe, but need to turn nav-top into arrays, also, so the behavior is consistent...
 #	also, need to review composer.yml options, and if they should be passed in, looked up, etc., etc.?  in particular, need consistent behavior between <empty>/$(SPECIAL_VAL) ...
 
@@ -4601,12 +4602,14 @@ $${CAT} <<_EOF_
 <a class="navbar-brand" href="$$(
 	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"homepage\"]" 2>/dev/null \\
+	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 	| $${SED} "/^null$$/d"
 )">
 _EOF_
 	BRND="$$(
 		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"brand\"]" 2>/dev/null \\
+		| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 		| $${SED} "/^null$$/d"
 	)"
 	if [ -s "$${1}" ]; then
@@ -4635,6 +4638,7 @@ function $(PUBLISH)-search {
 	NAME="$$(
 		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_name\"]" 2>/dev/null \\
+		| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 		| $${SED} "/^null$$/d"
 	)"
 	if [ -n "$${NAME}" ]; then
@@ -4642,11 +4646,13 @@ $${CAT} <<_EOF_
 <form class="nav-item d-flex me-3" action="$$(
 	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_site"\"] 2>/dev/null \\
+	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 	| $${SED} "/^null$$/d"
 )">
 <input class="form-control form-control-sm me-1" type="text" name="$$(
 	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_call\"]" 2>/dev/null \\
+	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 	| $${SED} "/^null$$/d"
 )"/>
 <button class="btn btn-sm" type="submit">$$(
@@ -4656,6 +4662,7 @@ $${CAT} <<_EOF_
 $$(
 	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_form\"]" 2>/dev/null \\
+	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 	| $${SED} "/^null$$/d"
 )
 </form>
@@ -4818,6 +4825,7 @@ function $(PUBLISH)-nav-bottom {
 	COPY="$$(
 		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"copyright\"]" 2>/dev/null \\
+		| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
 		| $${SED} "/^null$$/d"
 	)"
 	if [ -n "$${COPY}" ]; then
@@ -8858,14 +8866,15 @@ $($(PUBLISH)-library-metadata):
 			| while read -r FILE; do \
 				DIR="$$( \
 					$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $${FILE} 2>/dev/null \
+					| $(SED) "/^$(SPECIAL_VAL)$$/d" \
 					| $(SED) "/^null$$/d" \
 				)"; \
-				if [ -n "$${DIR}" ] && [ "$${DIR}" != "$(SPECIAL_VAL)" ]; then \
+				if [ -n "$${DIR}" ]; then \
 					$(ECHO) " -o \\( -path $$( \
 							$(DIRNAME) $${FILE} \
 						)/$$( \
 							$(ECHO) "$${DIR}" \
-							| $(SED) "s|^.+[/]([^/]+)$$|\1|g" \
+							| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
 						) -prune \\)"; \
 				fi; \
 			done \
