@@ -5199,13 +5199,15 @@ $${CAT} <<_EOF_
 		fi
 		$${ECHO} " order-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_ORDER[$${NUM}]} order-$${PUBLISH_COLS_REORDER[$${NUM}]}"
 		$${ECHO} " col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE[$${NUM}]} col-$${PUBLISH_COLS_RESIZE[$${NUM}]}"
-#WORKING:NOW:NOW:FIX this isn't quite correct... need to test when there is text and 0 columns, and vice-versa...
-		if	[ "$${PUBLISH_COLS_ORDER[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
-			[ "$${PUBLISH_COLS_REORDER[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
-			[ "$${PUBLISH_COLS_SIZE[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
-			[ "$${PUBLISH_COLS_RESIZE[$${NUM}]}"	= "$${SPECIAL_VAL}" ];
-		then
-			$${ECHO} " d-$${PUBLISH_COLS_BREAK}-block d-none"
+		if	[ "$${PUBLISH_COLS_ORDER[$${NUM}]}"	!= "$${SPECIAL_VAL}" ] &&
+			[ "$${PUBLISH_COLS_SIZE[$${NUM}]}"	!= "$${SPECIAL_VAL}" ];
+		then	$${ECHO} " d-$${PUBLISH_COLS_BREAK}-block"
+		else	$${ECHO} " d-$${PUBLISH_COLS_BREAK}-none"
+		fi
+		if	[ "$${PUBLISH_COLS_REORDER[$${NUM}]}"	!= "$${SPECIAL_VAL}" ] &&
+			[ "$${PUBLISH_COLS_RESIZE[$${NUM}]}"	!= "$${SPECIAL_VAL}" ];
+		then	$${ECHO} " d-block"
+		else	$${ECHO} " d-none"
 		fi
 		if [ "$${PUBLISH_COLS_STICKY}" != "$${SPECIAL_VAL}" ]; then
 			$${ECHO} " $(COMPOSER_TINYNAME)-sticky"
