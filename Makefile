@@ -5583,7 +5583,7 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 #>	margin-top:			0;
 }
 
-/* ################################## */
+/* ########################################################################## */
 
 html {
 	position:			relative;
@@ -7344,6 +7344,7 @@ $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 #>endif
 $(TESTING): $(TESTING)-Think
 $(TESTING): $(TESTING)-$(DISTRIB)
+#>$(TESTING): $(TESTING)-heredoc
 #>$(TESTING): $(TESTING)-speed
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
@@ -7577,6 +7578,41 @@ $(TESTING)-$(DISTRIB)-done:
 		$(YQ_DIR)/$(YQ_LNX_BIN) \
 		$(YQ_DIR)/$(YQ_WIN_BIN) \
 		$(YQ_DIR)/$(YQ_MAC_BIN)
+
+########################################
+### {{{3 $(TESTING)-heredoc ------------
+
+.PHONY: $(TESTING)-heredoc
+$(TESTING)-heredoc: $(TESTING)-Think
+$(TESTING)-heredoc:
+	@$(call $(TESTING)-$(HEADERS),\
+		Export of all embedded files ,\
+		\n\t * $(_H)Manual review of formatting and content$(_D) \
+	)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+#>	@$(call $(TESTING)-hold)
+
+.PHONY: $(TESTING)-heredoc-init
+$(TESTING)-heredoc-init:
+	@$(foreach FILE,$(shell \
+		$(SED) -n "s|^.*define.+(HEREDOC[_][^[:space:]]+).*$$|\1|gp" $(COMPOSER) \
+		),\
+		$(call DO_HEREDOC,$(FILE),1,$(notdir $(call $(TESTING)-pwd)))	>$(call $(TESTING)-pwd)/$(FILE).$(EXTN_TEXT); \
+		$(call NEWLINE) \
+	)
+	@$(foreach FILE,$(shell \
+		$(SED) -n "/^[#].*[ ]Embedded[ ]Files.*$$/,/[{][{][{]/p" $(COMPOSER) \
+			| $(SED) -n "s|^override[[:space:]]+([^:=[:space:]]+).+$$|\1|gp" \
+		),\
+		$(ECHO) "$($(FILE))" \
+			| $(BASE64) -d						>$(call $(TESTING)-pwd)/$(FILE).png; \
+		$(call NEWLINE) \
+	)
+
+.PHONY: $(TESTING)-heredoc-done
+$(TESTING)-heredoc-done:
+	@$(LS) $(call $(TESTING)-pwd)
 
 ########################################
 ### {{{3 $(TESTING)-speed --------------
