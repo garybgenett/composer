@@ -216,8 +216,9 @@ override EXAMPLE			:= template
 override PUBLISH			:= site
 
 override COMPOSER_YML_EXAMPLE		:= $(COMPOSER_ART)/$(patsubst %.yml,%,$(COMPOSER_YML)).$(EXAMPLE).yml
+override PANDOC_DATA			:= $(COMPOSER_ART)/pandoc
 
-override COMPOSER_CUSTOM		:= $(COMPOSER_ART)/$(COMPOSER_TINYNAME)
+override COMPOSER_CUSTOM		:= $(COMPOSER_ART)/$(COMPOSER_TINYNAME)/$(COMPOSER_TINYNAME)
 override CUSTOM_PUBLISH_SH		:= $(COMPOSER_CUSTOM).$(PUBLISH).sh
 override CUSTOM_PUBLISH_CSS		:= $(COMPOSER_CUSTOM).$(PUBLISH).css
 override CUSTOM_PUBLISH_CSS_SHADE	= $(COMPOSER_CUSTOM).$(PUBLISH).shade.$(1).css
@@ -225,14 +226,15 @@ override CUSTOM_HTML_CSS		:= $(COMPOSER_CUSTOM).html.css
 override CUSTOM_PDF_LATEX		:= $(COMPOSER_CUSTOM).pdf.latex
 override CUSTOM_REVEALJS_CSS		:= $(COMPOSER_CUSTOM).revealjs.css
 
-override BOOTSTRAP_DEF_JS		:= $(COMPOSER_ART)/bootstrap-default.js
-override BOOTSTRAP_DEF_CSS		:= $(COMPOSER_ART)/bootstrap-default.css
-override BOOTSTRAP_ART_JS		:= $(COMPOSER_ART)/bootstrap.js
-override BOOTSTRAP_ART_CSS		:= $(COMPOSER_ART)/bootstrap.css
+override BOOTSTRAP_DEF_JS		:= $(COMPOSER_ART)/bootstrap/bootstrap-default.js
+override BOOTSTRAP_DEF_CSS		:= $(COMPOSER_ART)/bootstrap/bootstrap-default.css
+override BOOTSTRAP_ART_JS		:= $(COMPOSER_ART)/bootstrap/bootstrap.js
+override BOOTSTRAP_ART_CSS		:= $(COMPOSER_ART)/bootstrap/bootstrap.css
 
-override COMPOSER_LOGO			:= $(COMPOSER_ART)/logo.img
+override COMPOSER_IMAGES		:= $(COMPOSER_ART)/images
+override COMPOSER_LOGO			:= $(COMPOSER_IMAGES)/logo.img
 override COMPOSER_LOGO_VER		:= v1.0
-override COMPOSER_ICON			:= $(COMPOSER_ART)/icon.img
+override COMPOSER_ICON			:= $(COMPOSER_IMAGES)/icon.img
 override COMPOSER_ICON_VER		:= v1.0
 
 ########################################
@@ -1091,7 +1093,7 @@ override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
 override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
 
 #WORKING document
-override CSS_THEME			= $(COMPOSER_ART)/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
+override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
 override CSS_THEMES = \
 	$(PUBLISH):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
 	$(TYPE_HTML):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
@@ -1212,9 +1214,9 @@ override PANDOC_OPTIONS			= $(strip \
 	) \
 	\
 	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
-	--data-dir="$(COMPOSER_ART)" \
-	$(if $(wildcard $(COMPOSER_ART)/template.$(OUTPUT)),	--template="$(COMPOSER_ART)/template.$(OUTPUT)") \
-	$(if $(wildcard $(COMPOSER_ART)/reference.$(OUTPUT)),	--reference-doc="$(COMPOSER_ART)/reference.$(OUTPUT)") \
+	--data-dir="$(PANDOC_DATA)" \
+	$(if $(wildcard $(PANDOC_DATA)/template.$(OUTPUT)),	--template="$(PANDOC_DATA)/template.$(OUTPUT)") \
+	$(if $(wildcard $(PANDOC_DATA)/reference.$(OUTPUT)),	--reference-doc="$(PANDOC_DATA)/reference.$(OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).header),	--include-in-header="$(COMPOSER_CUSTOM)-$(c_type).header") \
 	\
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
@@ -2450,8 +2452,8 @@ $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
 $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
 $(_S)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
-$(_S)[$(COMPOSER_BASENAME) Icon]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-v1.0.png$(_D)
-$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/screenshot-v3.0.png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Icon]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon-v1.0.png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v3.0.png$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
@@ -2506,8 +2508,7 @@ and prettifies the output formats, all in one place.  It also serves as a build
 system, so that large repositories can be managed as documentation archives or
 published as $(_C)[Bootstrap Websites]$(_D).
 
-$(_S)![$(COMPOSER_BASENAME) Icon]$(_D)
-$(_S)![$(COMPOSER_BASENAME) Screenshot]$(_D)
+$(_E)![$(COMPOSER_BASENAME) Screenshot]($(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v3.0.png)$(_S){max-width=100%}\\$(_D)
 endef
 
 ########################################
@@ -3418,7 +3419,14 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 endif
 	@$(ECHO) "$(_S)"
-	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) $($(DEBUGIT)-output)
+	@$(MKDIR) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES)) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA)) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(BOOTSTRAP_DEF_JS)))) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(COMPOSER_CUSTOM)))) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CSS_THEME,$(CREATOR))))) \
+		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
@@ -3448,22 +3456,22 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png
+	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
-#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png
-	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png \
+#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
+	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
 											$($(DEBUGIT)-output)
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/screenshot-v3.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
 		$(eval NAME := $(word 1,$(subst :, ,$(CSS_ICON)))) \
 		$(eval FILE := $(word 2,$(subst :, ,$(CSS_ICON)))) \
 		$(call NEWLINE) \
 		if [ -f "$(FILE)" ]; then \
-			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(NAME).svg $($(DEBUGIT)-output); \
+			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).svg $($(DEBUGIT)-output); \
 		else \
-			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/icon-$(NAME).png; \
+			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).png; \
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
@@ -3500,7 +3508,7 @@ endif
 											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	)
-#WORKING:NOW:NOW
+#WORKING:NOW:NOW:FIX
 #	styles.html, epub.css, etc.
 #		--print-default-data-file="templates/styles.html"
 #		--print-default-data-file="epub.css"
@@ -3515,28 +3523,22 @@ endif
 #		yarn build
 #			npm install yarn
 #			npm install
-#	![Composer Screenshot](artifacts/screenshot-v1.0.png){width=100%} + \ at end
-#	$(COMPOSER_ART)
-#		bootstrap
-#		composer
-#		images
-#		pandoc = +epub.css +styles.html
-#		themes = +ln:shades
+#WORKING:NOW:NOW:FIX
 	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach FILE,\
 			template \
 			reference \
 			,\
 			$(PANDOC_BIN) --verbose \
-				--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE)-default.$(TMPL_$(TYPE))" \
+				--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" \
 				$(if $(filter $(FILE),template),--print-default-template="$(TMPL_$(TYPE))" ,\
 								--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
 				) 2>/dev/null || $(TRUE); \
-			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
-				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE).$(TMPL_$(TYPE))" ]; then \
+			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
+				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE))" ]; then \
 				$(LN) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE)-default.$(TMPL_$(TYPE)) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(FILE).$(TMPL_$(TYPE)) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
 					$($(DEBUGIT)-output); \
 			fi; \
 		) \
@@ -3719,8 +3721,8 @@ $(_N)ifeq$(_D) ($(_E)$$(COMPOSER_MY_PATH)$(_D),$(_N)$$(CURDIR)$(_D))
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Wildcards$(_D)
 
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png$(_D)
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_D)
 $(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc		:= $(SPECIAL_VAL)$(_D)
 
 $(_S)########################################$(_D)
@@ -3757,8 +3759,8 @@ override define HEREDOC_COMPOSER_MK_PUBLISH =
 override COMPOSER_INCLUDE		:= 1
 
 override c_site				:= 1
-override c_logo				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/logo-$(COMPOSER_LOGO_VER).png
-override c_icon				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-$(COMPOSER_ICON_VER).png
+override c_logo				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
+override c_icon				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
 
 ################################################################################
 # End Of File
@@ -3825,22 +3827,22 @@ $(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
       <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
         <img alt="GPL License"
         class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-gpl.png"/></a>
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.gpl.png"/></a>
       <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
         <img alt="CC License"
         class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-cc-by-nc-nd.png"/></a>
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.cc-by-nc-nd.png"/></a>
       <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
         <img alt="All Rights Reserved"
         class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-copyright.svg"/></a>
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.copyright.svg"/></a>
       $(_M)COPYRIGHT$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
     $(_C)search_name$(_D): $(_N)|$(_D)
       <img alt="Search"
         class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-search.svg"/>
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.search.svg"/>
     $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
     $(_C)search_call$(_D):			$(_M)q$(_D)
     $(_C)search_form$(_D): $(_N)|$(_D)
@@ -3994,7 +3996,7 @@ $(_S)########################################$(_D)
           <a rel="author" href="$(_M)$(COMPOSER_REPOPAGE)$(_D)">
             <img alt="$(_M)$(COMPOSER_TECHNAME)$(_D)"
             class="$(COMPOSER_TINYNAME)-icon"
-            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_ART))/icon-github.svg"/></a>
+            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.github.svg"/></a>
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
@@ -4103,7 +4105,7 @@ variables:
       <a rel="license" href="$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)">
         <img alt="GPL License"
         class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-gpl.png"/></a>
+        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.gpl.png"/></a>
       $(COPYRIGHT_SHORT)
 
     search_name:			null
@@ -4267,7 +4269,7 @@ variables:
           <a rel="author" href="$(COMPOSER_REPOPAGE)">
             <img alt="$(COMPOSER_TECHNAME)"
             class="$(COMPOSER_TINYNAME)-icon"
-            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/icon-github.svg"/></a>
+            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.github.svg"/></a>
 
 ########################################
   $(PUBLISH)-info-bottom:
@@ -5572,12 +5574,12 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 /* ################################## */
 
 .navbar-toggler-icon {
-	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_ART)/icon-menu.svg)");
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.menu.svg");
 }
 
 .accordion-button::after,
 .accordion-button:not(.collapsed)::after {
-	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_ART)/icon-toggle.svg)");
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.toggle.svg");
 }
 
 .navbar-toggler:focus,
