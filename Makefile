@@ -1716,7 +1716,7 @@ $(foreach FILE,\
 					$(ECHO) "$${YQ_DATA}"; \
 				fi \
 					| if [ -n "$${ARRY}" ]; then \
-						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"].[\"$${ARRY}\"]" 2>/dev/null \
+						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"][$${ARRY}]" 2>/dev/null \
 						| $(SED) "/^null$$/d"; \
 					else \
 						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"]" 2>/dev/null \
@@ -3879,44 +3879,40 @@ $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_P
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
 
+#WORKING:NOW:NOW work in a sub-menu here, for demonstration...  or, is README.site enough?
     $(_M)MENU$(_D):
-      $(_M)MAIN$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      $(_M)PAGES$(_D):
-        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
-        $(_C)spacer$(_D):
-        $(_M)Introduction$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-        $(_M)Default Site$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-        $(_M)Configured Site$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-        $(_M)Default Digest Page$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
-        $(_M)Configured Digest Page$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML)$(_D)
-        $(_M)Default Markdown File$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-        $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-        $(_M)Elements & Includes$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)$(_D)
+      - $(_M)MAIN$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PAGES$(_D):
+        - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
+        - $(_C)spacer$(_D)
+        - $(_M)Introduction$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        - $(_M)Default Site$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        - $(_M)Configured Site$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        - $(_M)Default Digest Page$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+        - $(_M)Configured Digest Page$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML)$(_D)
+        - $(_M)Default Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        - $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+        - $(_M)Elements & Includes$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
-      $(_M)CONTENTS$(_D):
-        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D):
-$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D):
-$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D):
+      - $(_M)CONTENTS$(_D):
+        - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
+$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D)
     $(_M)LIBRARY$(_D):
-      $(_M)AUTHORS$(_D):
-        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_C)library$(_D) $(_M)authors$(_D):
-      $(_M)DATES$(_D):
-        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_C)library$(_D) $(_M)dates$(_D):
-      $(_M)TAGS$(_D):
-        $(_N)$(MENU_SELF)$(_D): $(_N)"#"$(_D)
-        $(_C)library$(_D) $(_M)tags$(_D):
+      - $(_M)AUTHORS$(_D):
+        - $(_C)library$(_D) $(_M)authors$(_D)
+      - $(_M)DATES$(_D):
+        - $(_C)library$(_D) $(_M)dates$(_D)
+      - $(_M)TAGS$(_D):
+        - $(_C)library$(_D) $(_M)tags$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
     $(_M)MENU$(_D):
-      $(_M)PATH 1$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      $(_M)PATH 2$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      $(_M)PATH 3$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PATH 1$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PATH 2$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PATH 3$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-left$(_D):
@@ -3924,7 +3920,7 @@ $(_S)########################################$(_D)
     $(_M)BEGIN$(_D):
     $(_M)MENU$(_D):
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) LEFT 1$(_D)
-      - $(_C)text$(_D): $(_N)|$(_D)
+      - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
           * ITEM 3
@@ -3933,8 +3929,7 @@ $(_S)########################################$(_D)
       - $(_C)spacer$(_D)
     $(_M)TEXT$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
-      - $(_C)text$(_D): $(_N)|$(_D)
-          LEFT TEXT
+      - $(_C)$(MENU_SELF)$(_D): LEFT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
       - $(_C)spacer$(_D)
@@ -3954,7 +3949,7 @@ $(_S)########################################$(_D)
     $(_M)BEGIN$(_D):
     $(_M)MENU$(_D):
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) RIGHT 1$(_D)
-      - $(_C)text$(_D): $(_N)|$(_D)
+      - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
           * ITEM 3
@@ -3963,8 +3958,7 @@ $(_S)########################################$(_D)
       - $(_C)spacer$(_D)
     $(_M)TEXT$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
-      - $(_C)text$(_D): $(_N)|$(_D)
-          RIGHT TEXT
+      - $(_C)$(MENU_SELF)$(_D): RIGHT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
       - $(_C)spacer$(_D)
@@ -3986,8 +3980,7 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-top$(_D):
 
     $(_M)TEXT$(_D):
-      - $(_N)|$(_D)
-          TOP INFO
+      - TOP INFO
     $(_M)TIME$(_D):
     $(_M)ICON$(_D):
       - $(_N)|$(_D)
@@ -4000,11 +3993,10 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
 
     $(_M)TEXT$(_D):
-      - $(_N)|$(_D)
-          BOTTOM INFO
+      - BOTTOM INFO
+#WORKING:NOW:NOW this still feels like it should be a standard option...
     $(_M)TIME$(_D):
-      - $(_N)|$(_D)
-          $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+      - $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
     $(_M)ICON$(_D):
 
 $(_S)################################################################################$(_D)
@@ -4144,111 +4136,110 @@ variables:
   $(PUBLISH)-nav-top:
 
     MENU:
-      Top: $(OUT_README).$(PUBLISH).$(EXTN_HTML)
-      Formats:
-        $(MENU_SELF): "#formats"
-        Example Website: $(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
-        spacer:$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        $(FILE): $(FILE))
+      - Top: $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+      - Formats:
+        - Example Website: $(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+        - spacer:$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        - $(FILE): $(FILE))
 #WORKING:NOW is there a way to automate this menu?
     CONTENTS:
-      CMS:
-        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-cms"
-        Overview: "#overview"
-        Quick Start: "#quick-start"
-        Principles: "#principles"
-        Requirements: "#requirements"
-      Operation:
-        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-operation"
-        Recommended Workflow: "#recommended-workflow"
-        Document Formatting:
-          $(MENU_SELF): "#document-formatting"
-          Bootstrap Websites: "#bootstrap-websites"
-          HTML: "#html"
-          PDF: "#pdf"
-          EPUB: "#epub"
-          Reveal.js Presentations: "#revealjs-presentations"
-          Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
-        Configuration Settings: "#configuration-settings"
-        Precedence Rules: "#precedence-rules"
-        Specifying Dependencies: "#specifying-dependencies"
-        Custom Targets: "#custom-targets"
-        Repository Versions: "#repository-versions"
-      Variables:
-        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-variables"
-        Formatting Variables:
-          $(MENU_SELF): "#formatting-variables"
-          c_site: "#c_site"
-          c_type / c_base / c_list: "#c_type--c_base--c_list"
-          c_lang: "#c_lang"
-          c_logo: "#c_logo"
-          c_icon: "#c_icon"
-          c_css: "#c_css"
-          c_toc: "#c_toc"
-          c_level: "#c_level"
-          c_margin: "#c_margin"
-          c_options: "#c_options"
-        Control Variables:
-          $(MENU_SELF): "#control-variables"
-          MAKEJOBS: "#makejobs"
-          COMPOSER_DOCOLOR: "#composer_docolor"
-          COMPOSER_DEBUGIT: "#composer_debugit"
-          COMPOSER_INCLUDE: "#composer_include"
-          COMPOSER_DEPENDS: "#composer_depends"
-          COMPOSER_KEEPING: "#composer_keeping"
-          COMPOSER_LOG: "#composer_log"
-          COMPOSER_EXT: "#composer_ext"
-          COMPOSER_TARGETS: "#composer_targets"
-          COMPOSER_SUBDIRS: "#composer_subdirs"
-          COMPOSER_IGNORES: "#composer_ignores"
-      Targets:
-        $(MENU_SELF): "#$(COMPOSER_TINYNAME)-targets"
-        Primary Targets:
-          $(MENU_SELF): "#primary-targets"
-          help / help-all: "#help--help-all"
-          template: "#template"
-          compose: "#compose"
-          site: "#site"
-          install / install-all / install-force: "#install--install-all--install-force"
-          clean / clean-all / *-clean: "#clean--clean-all---clean"
-          all / all-all / *-all: "#all--all-all---all"
-          list: "#list"
-        Additional Targets:
-          $(MENU_SELF): "#additional-targets"
-          debug / debug-file: "#debug--debug-file"
-          check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
-          _commit / _commit-all: "#_commit--_commit-all"
-          _release / _update / _update-all: "#_release--_update--_update-all"
-        Internal Targets: "#internal-targets"
-      Reference:
-        $(MENU_SELF): "#reference"
-        Configuration:
-          $(MENU_SELF): "#configuration"
-          Pandoc Extensions: "#pandoc-extensions"
-          Templates: "#templates"
-          Defaults: "#defaults"
-        Reserved:
-          $(MENU_SELF): "#reserved"
-          Target Names: "#target-names"
-          Variable Names: "#variable-names"
+      - CMS:
+        - $(MENU_SELF): "#composer-cms"
+        - Overview: "#overview"
+        - Quick Start: "#quick-start"
+        - Principles: "#principles"
+        - Requirements: "#requirements"
+      - Operation:
+        - $(MENU_SELF): "#composer-operation"
+        - Recommended Workflow: "#recommended-workflow"
+        - Document Formatting:
+          - $(MENU_SELF): "#document-formatting"
+          - Bootstrap Websites: "#bootstrap-websites"
+          - HTML: "#html"
+          - PDF: "#pdf"
+          - EPUB: "#epub"
+          - Reveal.js Presentations: "#revealjs-presentations"
+          - Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
+        - Configuration Settings: "#configuration-settings"
+        - Precedence Rules: "#precedence-rules"
+        - Specifying Dependencies: "#specifying-dependencies"
+        - Custom Targets: "#custom-targets"
+        - Repository Versions: "#repository-versions"
+      - Variables:
+        - $(MENU_SELF): "#composer-variables"
+        - Formatting Variables:
+          - $(MENU_SELF): "#formatting-variables"
+          - c_site: "#c_site"
+          - c_type / c_base / c_list: "#c_type--c_base--c_list"
+          - c_lang: "#c_lang"
+          - c_logo: "#c_logo"
+          - c_icon: "#c_icon"
+          - c_css: "#c_css"
+          - c_toc: "#c_toc"
+          - c_level: "#c_level"
+          - c_margin: "#c_margin"
+          - c_options: "#c_options"
+        - Control Variables:
+          - $(MENU_SELF): "#control-variables"
+          - MAKEJOBS: "#makejobs"
+          - COMPOSER_DOCOLOR: "#composer_docolor"
+          - COMPOSER_DEBUGIT: "#composer_debugit"
+          - COMPOSER_INCLUDE: "#composer_include"
+          - COMPOSER_DEPENDS: "#composer_depends"
+          - COMPOSER_KEEPING: "#composer_keeping"
+          - COMPOSER_LOG: "#composer_log"
+          - COMPOSER_EXT: "#composer_ext"
+          - COMPOSER_TARGETS: "#composer_targets"
+          - COMPOSER_SUBDIRS: "#composer_subdirs"
+          - COMPOSER_IGNORES: "#composer_ignores"
+      - Targets:
+        - $(MENU_SELF): "#composer-targets"
+        - Primary Targets:
+          - $(MENU_SELF): "#primary-targets"
+          - help / help-all: "#help--help-all"
+          - template: "#template"
+          - compose: "#compose"
+          - site: "#site"
+          - install / install-all / install-force: "#install--install-all--install-force"
+          - clean / clean-all / *-clean: "#clean--clean-all---clean"
+          - all / all-all / *-all: "#all--all-all---all"
+          - list: "#list"
+        - Additional Targets:
+          - $(MENU_SELF): "#additional-targets"
+          - debug / debug-file: "#debug--debug-file"
+          - check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
+          - _commit / _commit-all: "#_commit--_commit-all"
+          - _release / _update / _update-all: "#_release--_update--_update-all"
+        - Internal Targets: "#internal-targets"
+      - Reference:
+        - $(MENU_SELF): "#reference"
+        - Configuration:
+          - $(MENU_SELF): "#configuration"
+          - Pandoc Extensions: "#pandoc-extensions"
+          - Templates: "#templates"
+          - Defaults: "#defaults"
+        - Reserved:
+          - $(MENU_SELF): "#reserved"
+          - Target Names: "#target-names"
+          - Variable Names: "#variable-names"
 
 ########################################
   $(PUBLISH)-nav-bottom:
 
     MENU:
-      Home:				./
-      Artifacts:			./$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))
-      Pandoc:				./$(patsubst $(COMPOSER_DIR)/%,%,$(PANDOC_DIR))
-      Bootstrap:			./$(patsubst $(COMPOSER_DIR)/%,%,$(BOOTSTRAP_DIR))
+      - Home:				./
+      - Artifacts:			./$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))
+      - Pandoc:				./$(patsubst $(COMPOSER_DIR)/%,%,$(PANDOC_DIR))
+      - Bootstrap:			./$(patsubst $(COMPOSER_DIR)/%,%,$(BOOTSTRAP_DIR))
 
 ########################################
   $(PUBLISH)-nav-left:
 
     MENU:
       - box-begin $(SPECIAL_VAL) Formats
-      - text: |
+      - $(MENU_SELF): |
           * [Example Website]($(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
       - spacer
-      - text: |$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)          * [$(FILE)]($(FILE)))
+      - $(MENU_SELF): |$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)          * [$(FILE)]($(FILE)))
       - box-end
     SPACE:
       - spacer
@@ -4257,8 +4248,7 @@ variables:
       - contents $(DEPTH_MAX)
       - box-end
     TAGLINE:
-      - text: |
-          $(COMPOSER_TAGLINE)
+      - $(MENU_SELF): $(COMPOSER_TAGLINE)
 
 ########################################
   $(PUBLISH)-nav-right:
@@ -4305,31 +4295,27 @@ variables:
 
   $(PUBLISH)-nav-top:
     CHAINED:
-      CHAINED:				$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+      - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-bottom:
     CHAINED:
-      CHAINED:				$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+      - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-left:
     CHAINED:
-      - text: |
-          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - $(MENU_SELF): [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
 
   $(PUBLISH)-nav-right:
     CHAINED:
-      - text: |
-          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - $(MENU_SELF): [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
 
   $(PUBLISH)-info-top:
     CHAINED:
-      - |
-          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
 
   $(PUBLISH)-info-bottom:
     CHAINED:
-      - |
-          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
 
 ################################################################################
 # End Of File
@@ -4375,9 +4361,8 @@ variables:
 
   $(PUBLISH)-nav-top:
     CHAINED:
-      CHAINED:
-        $(MENU_SELF): "#"
-        CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+      - CHAINED:
+        - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-left:
     BEGIN:
@@ -4395,10 +4380,8 @@ variables:
 
   $(PUBLISH)-info-bottom:
     TIME:
-      - |
-          [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
-      - |
-          $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+      - [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 ################################################################################
 # End Of File
@@ -4417,9 +4400,8 @@ variables:
 
   $(PUBLISH)-nav-top:
     CONTENTS:
-      CONTENTS:
-        $(MENU_SELF): "#"
-        contents $(SPECIAL_VAL):
+      - CONTENTS:
+        - contents $(SPECIAL_VAL)
 
   $(PUBLISH)-nav-left:
     CONTENTS:
@@ -4446,9 +4428,8 @@ variables:
 
   $(PUBLISH)-nav-top:
     CONTENTS:
-      CONTENTS:
-        $(MENU_SELF): "#"
-        contents 1:
+      - CONTENTS:
+        - contents 1
 
   $(PUBLISH)-nav-left:
     CONTENTS:
@@ -4483,10 +4464,6 @@ endef
 
 ########################################
 ## {{{2 Heredoc: custom_$(PUBLISH)_sh --
-
-#WORKING:NOW:NOW:FIX
-#	this is going to be a real pain, maybe, but need to turn nav-top into arrays, also, so the behavior is consistent...
-#	also, need to review composer.yml options, and if they should be passed in, looked up, etc., etc.?  in particular, need consistent behavior between <empty>/$(SPECIAL_VAL) ...
 
 override define HEREDOC_CUSTOM_PUBLISH_SH =
 #!$(BASH)
@@ -4708,35 +4685,61 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-top-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
-		| while read -r FILE; do
-			if [ "$${FILE}" = "$${MENU_SELF}" ]; then
-				continue
-			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
-				$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
-				continue
-			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
-				$(PUBLISH)-nav-top-$${FILE} || return 1
-				continue
-			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
-				$${ECHO} "$(PUBLISH_CMD_BEG) $$(
-					$${ECHO} "$${FILE}" \\
-					| $${SED} "s|^contents|contents-menu|g"
-				) $(PUBLISH_CMD_END)\\n"
-				continue
-			elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
-				$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
-				continue
-			fi
-			LINK="$$(
+	local SIZE="$$(
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$${1} | length" 2>/dev/null \\
+		| $${SED} "/^null$$/d"
+	)"
+	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		FILE="$$(
+			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		if [ -z "$${FILE}" ]; then
+			FILE="$$(
 				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"].[\"$(MENU_SELF)\"]" 2>/dev/null \\
+				| $${YQ_WRITE} ".$${1}[$${NUM}]" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
-			if [ -n "$${LINK}" ]; then
-				if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
+		else
+			LINK="$$(
+				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d"
+			)"
+		fi
+		if [ -z "$${LINK}" ]; then
+			LINK="#"
+		fi
+		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
+			NUM="$$($${EXPR} $${NUM} + 1)"
+			continue
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$(PUBLISH)-nav-top-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
+			$${ECHO} "$(PUBLISH_CMD_BEG) $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^contents|contents-menu|g"
+			) $(PUBLISH_CMD_END)\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
+		elif [ -n "$$(
+			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"][0]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)" ]; then
+			LINK="$$(
+				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"][0].[\"$${MENU_SELF}\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d"
+			)"
+			if [ -z "$${LINK}" ]; then
+				LINK="#"
+			fi
+			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
@@ -4745,7 +4748,7 @@ $${CAT} <<_EOF_
 )" data-bs-toggle="dropdown">$${FILE}</a>
 <ul class="dropdown-menu">
 _EOF_
-				else
+			else
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$$(
 	$${ECHO} "$${LINK}" \\
@@ -4753,34 +4756,30 @@ $${CAT} <<_EOF_
 )">$${FILE}</a>
 <ul>
 _EOF_
-				fi
-				$(PUBLISH)-nav-top-list "$${1}.[\"$${FILE}\"]" || return 1
+			fi
+			$(PUBLISH)-nav-top-list "$${1}[$${NUM}].[\"$${FILE}\"]" || return 1
 $${CAT} <<_EOF_
 </ul></li>
 _EOF_
-			else
-				VAL="$$(
-					$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-					| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
-					| $${SED} "/^null$$/d"
-				)"
-				if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
+		else
+			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
-	$${ECHO} "$${VAL}" \\
+	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
-				else
+			else
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$$(
-	$${ECHO} "$${VAL}" \\
+	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
-				fi
 			fi
-		done
+		fi
+		NUM="$$($${EXPR} $${NUM} + 1)"
+	done
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4873,25 +4872,33 @@ _EOF_
 function $(PUBLISH)-nav-bottom-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	NBSP="$${2}"
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
+	SIZE="$$(
+		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+		| $${YQ_WRITE} ".$${1} | length" 2>/dev/null \\
 		| $${SED} "/^null$$/d" \\
-		| while read -r FILE; do
-			VAL="$$(
-				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
+	)"
+	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		FILE="$$(
+			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		LINK="$$(
+			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
+			| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
 $${CAT} <<_EOF_
 <li class="breadcrumb-item">$$(
 	if [ -z "$${NBSP}" ]; then $${ECHO} "$(DIVIDE)$(HTML_SPACE)"; fi
 )<a href="$$(
-	$${ECHO} "$${VAL}" \\
+	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
-			NBSP="true"
-		done
+		NBSP="true"
+		NUM="$$($${EXPR} $${NUM} + 1)"
+	done
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4969,10 +4976,10 @@ function $(PUBLISH)-nav-side-list {
 			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
 			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
-		)" = "text" ]; then
+		)" = "$(MENU_SELF)" ]; then
 			TEXT="$$(
 				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"text\"]" 2>/dev/null \\
+				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$(MENU_SELF)\"]" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
 			$${ECHO} "\\n"
@@ -5190,6 +5197,7 @@ $${CAT} <<_EOF_
 		fi
 		$${ECHO} " order-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_ORDER[$${NUM}]} order-$${PUBLISH_COLS_REORDER[$${NUM}]}"
 		$${ECHO} " col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE[$${NUM}]} col-$${PUBLISH_COLS_RESIZE[$${NUM}]}"
+#WORKING:NOW:NOW:FIX this isn't quite correct... need to test when there is text and 0 columns, and vice-versa...
 		if	[ "$${PUBLISH_COLS_ORDER[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
 			[ "$${PUBLISH_COLS_REORDER[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
 			[ "$${PUBLISH_COLS_SIZE[$${NUM}]}"	= "$${SPECIAL_VAL}" ] ||
@@ -9502,6 +9510,10 @@ endif
 		$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
 		$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
 		$(ECHO) "$(_C)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+		if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml" ]; then \
+			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml; fi; \
+		if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml" ]; then \
+			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml; fi; \
 		$(ECHO) "$(_D)"; \
 	)
 	@$(ECHO) "\n"
