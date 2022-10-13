@@ -3896,8 +3896,8 @@ $(_S)########################################$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
         - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
-$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
-$(_S)#$(MARKER)$(_D)     $(_C)contents$(_D)
+$(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+$(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D)
     $(_M)LIBRARY$(_D):
       - $(_M)AUTHORS$(_D):
         - $(_C)library$(_D) $(_M)authors$(_D)
@@ -3929,7 +3929,8 @@ $(_S)########################################$(_D)
       - $(_C)spacer$(_D)
     $(_M)TEXT$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) LEFT 2$(_D)
-      - $(_C)$(MENU_SELF)$(_D): LEFT TEXT
+      - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
+          LEFT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
       - $(_C)spacer$(_D)
@@ -3958,7 +3959,8 @@ $(_S)########################################$(_D)
       - $(_C)spacer$(_D)
     $(_M)TEXT$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) RIGHT 2$(_D)
-      - $(_C)$(MENU_SELF)$(_D): RIGHT TEXT
+      - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
+          RIGHT TEXT
       - $(_C)box-end$(_D)
     $(_M)SPACE$(_D):
       - $(_C)spacer$(_D)
@@ -4303,19 +4305,19 @@ variables:
 
   $(PUBLISH)-nav-left:
     CHAINED:
-      - $(MENU_SELF): [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
   $(PUBLISH)-nav-right:
     CHAINED:
-      - $(MENU_SELF): [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
   $(PUBLISH)-info-top:
     CHAINED:
-      - [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
   $(PUBLISH)-info-bottom:
     CHAINED:
-      - [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
 ################################################################################
 # End Of File
@@ -4380,7 +4382,7 @@ variables:
 
   $(PUBLISH)-info-bottom:
     TIME:
-      - [CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
+      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
       - $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 ################################################################################
