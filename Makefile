@@ -731,6 +731,12 @@ override FONTAWES_DIR			:= $(COMPOSER_DIR)/font-awesome
 
 ########################################
 
+#WORKING:NOW:NOW:FIX
+#	add markdown-themes, so we have non-minified versions
+#	use those instead?  do we even need the viewer repository?
+#	should we manually minify all css files, including user-selected ones?
+#		does pandoc have an html minify option?
+
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 ifneq ($(origin MDVIEWER_CMT),override)
@@ -3526,7 +3532,7 @@ endif
 	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
 	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
 	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
-	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
+#>	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
 	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
 		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
 		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_DIR_CSS))&g' \
@@ -4879,14 +4885,14 @@ function $(PUBLISH)-nav-bottom {
 	)"
 	if [ -n "$${COPY}" ]; then
 $${CAT} <<_EOF_
-<li class="nav-item me-3">$$(
+<li class="$(COMPOSER_TINYNAME)-link nav-item me-3">$$(
 	$${ECHO} "$${COPY}\\n" \\
 		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )</li>
 _EOF_
 	fi
 $${CAT} <<_EOF_
-<li class="nav-item me-3">$(DIVIDE)$(HTML_SPACE)<a class="$(COMPOSER_TINYNAME)-link" href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
+<li class="$(COMPOSER_TINYNAME)-link nav-item me-3">$(DIVIDE)$(HTML_SPACE)<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
 	if [ -n "$$(
 		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
@@ -4894,7 +4900,7 @@ _EOF_
 		| $${SED} "/^null$$/d"
 	)" ]; then
 $${CAT} <<_EOF_
-<li class="nav-item me-3"><ol class="breadcrumb">
+<li class="$(COMPOSER_TINYNAME)-link nav-item me-3"><ol class="breadcrumb">
 _EOF_
 		NBSP=
 		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
@@ -5125,7 +5131,7 @@ function $(PUBLISH)-info-data-list {
 				| $${SED} "/^null$$/d"
 			)"
 $${CAT} <<_EOF_
-<li class="nav-item me-3">
+<li class="$(COMPOSER_TINYNAME)-link nav-item me-3">
 _EOF_
 			$${ECHO} "$${VAL}\\n" \\
 				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
@@ -5635,6 +5641,13 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 #>	margin-top:			0;
 }
 
+.breadcrumb-item a:hover,
+.dropdown-item:hover,
+.nav-link:hover,
+.navbar-brand:hover {
+	text-decoration:		none;
+}
+
 /* ########################################################################## */
 
 html {
@@ -5679,9 +5692,17 @@ body {
 
 .$(COMPOSER_TINYNAME)-header {
 	font-size:			1.1rem;
+	margin-top:			0px;
+	margin-bottom:			0px;
 }
 
-.$(COMPOSER_TINYNAME)-link { }
+.$(COMPOSER_TINYNAME)-link a,
+.$(COMPOSER_TINYNAME)-link a:active,
+.$(COMPOSER_TINYNAME)-link a:hover,
+.$(COMPOSER_TINYNAME)-link a:link,
+.$(COMPOSER_TINYNAME)-link a:visited {
+	text-decoration:		none;
+}
 
 /* ################################## */
 
@@ -5760,6 +5781,8 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
 
 	/* layout */
+	--$(COMPOSER_TINYNAME)-body:		800px;
+	--$(COMPOSER_TINYNAME)-lead:		0.5em;
 	--$(COMPOSER_TINYNAME)-rule:		3px;
 	--$(COMPOSER_TINYNAME)-bord:		1px;
 	--$(COMPOSER_TINYNAME)-padd:		6px;
@@ -5767,19 +5790,28 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 
 /* ################################## */
 
-.$(COMPOSER_TINYNAME)-link:active,
-.$(COMPOSER_TINYNAME)-link:hover,
-.$(COMPOSER_TINYNAME)-link:link,
-.$(COMPOSER_TINYNAME)-link:visited,
-.$(COMPOSER_TINYNAME)-link {
+.$(COMPOSER_TINYNAME)-header {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+.$(COMPOSER_TINYNAME)-link a,
+.$(COMPOSER_TINYNAME)-link a:active,
+.$(COMPOSER_TINYNAME)-link a:hover,
+.$(COMPOSER_TINYNAME)-link a:link,
+.$(COMPOSER_TINYNAME)-link a:visited {
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 }
 
 /* ########################################################################## */
 
+html,
 body {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+body {
+	max-width:			var(--$(COMPOSER_TINYNAME)-body);
 }
 ::selection {
 	background-color:		var(--$(COMPOSER_TINYNAME)-done);
@@ -5807,6 +5839,8 @@ h6:not(.$(COMPOSER_TINYNAME)-header) {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 	border-bottom:			var(--$(COMPOSER_TINYNAME)-rule) solid var(--$(COMPOSER_TINYNAME)-line);
+	margin-top:			var(--$(COMPOSER_TINYNAME)-lead);
+	margin-bottom:			0px;
 }
 hr,
 hr:not([size]) {
@@ -5819,6 +5853,8 @@ hr:not([size]) {
 table {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 	border-collapse:		collapse;
+	margin-top:			var(--$(COMPOSER_TINYNAME)-lead);
+	margin-bottom:			0px;
 }
 th {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
@@ -5830,14 +5866,19 @@ th {
 }
 
 code,
+pre code,
 pre {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
-	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 	font:				monospace;
+}
+code,
+pre {
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 }
 pre code {
 	border:				none;
+	box-shadow:			0 0 0 0.0rem rgba(var(--$(COMPOSER_TINYNAME)-text));
 }
 
 /* ########################################################################## */
@@ -5895,25 +5936,25 @@ pre code {
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 }
 
-.$(COMPOSER_TINYNAME)-link:hover,
-.breadcrumb-item a:hover {
-	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
-	color:				var(--$(COMPOSER_TINYNAME)-link);
-}
-
+.$(COMPOSER_TINYNAME)-link a:hover,
+.breadcrumb-item a:hover,
 .dropdown-item:hover,
 .nav-link:hover {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-link);
 }
 
-.accordion-button::after,
-.accordion-button:not(.collapsed)::after,
 .btn,
 .btn:hover,
 .navbar-toggler,
 .navbar-toggler-icon {
 	background-color:		var(--$(COMPOSER_TINYNAME)-line);
+	color:				var(--$(COMPOSER_TINYNAME)-back);
+}
+
+.accordion-button::after,
+.accordion-button:not(.collapsed)::after {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
 	color:				var(--$(COMPOSER_TINYNAME)-back);
 }
 
@@ -5923,11 +5964,16 @@ pre code {
 
 /* ################################## */
 
+.$(COMPOSER_TINYNAME)-link a,
+.breadcrumb-item a,
 .dropdown-item,
-.nav-link {
+.nav-link,
+.navbar-brand {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-menu);
 }
 
+.$(COMPOSER_TINYNAME)-link a:hover,
+.breadcrumb-item a:hover,
 .dropdown-item:hover,
 .nav-link:hover {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
@@ -5984,11 +6030,11 @@ table {
 
 /* ################################## */
 
-.$(COMPOSER_TINYNAME)-link:active,
-.$(COMPOSER_TINYNAME)-link:hover,
-.$(COMPOSER_TINYNAME)-link:link,
-.$(COMPOSER_TINYNAME)-link:visited,
-.$(COMPOSER_TINYNAME)-link {
+.$(COMPOSER_TINYNAME)-link a,
+.$(COMPOSER_TINYNAME)-link a:active,
+.$(COMPOSER_TINYNAME)-link a:hover,
+.$(COMPOSER_TINYNAME)-link a:link,
+.$(COMPOSER_TINYNAME)-link a:visited {
 	background-color:		white;
 	color:				black;
 	border:				3px solid red;
@@ -6111,14 +6157,6 @@ override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC =
 @import '../variables-$(1).css';
 @import '../variables-solarized-$(1).css';
 @import '../parts/_core.css';
-
-.$(COMPOSER_TINYNAME)-header {
-	margin-top:			0px;
-	margin-bottom:			0px;
-}
-.navbar-brand:hover {
-	text-decoration:		none;
-}
 endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER =
@@ -8937,6 +8975,11 @@ $($(PUBLISH)-caches):
 
 ########################################
 ### {{{3 $(PUBLISH)-library ------------
+
+#WORKING:NOW:NOW:FIX
+#	library behavior during site-template
+#		rebuilds twice in config during site-all ... what triggers the second one?
+#		rebuild of bootstrap during site-force step ... expected?
 
 ifneq ($(and \
 	$(c_site) ,\
