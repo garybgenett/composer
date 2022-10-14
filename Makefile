@@ -693,18 +693,6 @@ endif
 
 ########################################
 
-# https://commonmark.org
-# https://github.com/commonmark/commonmark-spec
-# https://github.com/commonmark/commonmark-spec/blob/master/LICENSE
-ifneq ($(origin COMMONMARK_CMT),override)
-override COMMONMARK_CMT			:= 0.30.0
-endif
-override COMMONMARK_LIC			:= CC-BY-SA
-override COMMONMARK_SRC			:= https://github.com/commonmark/commonmark-spec.git
-override COMMONMARK_DIR			:= $(COMPOSER_DIR)/commonmark
-
-########################################
-
 # https://getbootstrap.com
 # https://github.com/twbs/bootstrap
 # https://github.com/twbs/bootstrap/blob/main/LICENSE
@@ -732,6 +720,17 @@ override BOOTSWATCH_DIR			:= $(COMPOSER_DIR)/bootswatch
 
 ########################################
 
+# https://github.com/FortAwesome/Font-Awesome
+# https://github.com/FortAwesome/Font-Awesome/blob/master/LICENSE.txt
+ifneq ($(origin FONTAWES_CMT),override)
+override FONTAWES_CMT			:= 6.1.2
+endif
+override FONTAWES_LIC			:= MIT / CC-BY
+override FONTAWES_SRC			:= https://github.com/FortAwesome/Font-Awesome.git
+override FONTAWES_DIR			:= $(COMPOSER_DIR)/font-awesome
+
+########################################
+
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 ifneq ($(origin MDVIEWER_CMT),override)
@@ -744,6 +743,18 @@ override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 
 ########################################
 
+# https://github.com/kognise/water.css
+# https://github.com/kognise/water.css/blob/master/LICENSE.md
+ifneq ($(origin WATERCSS_CMT),override)
+#>override WATERCSS_CMT			:= d950cbc9f8607521587fae1aa523f85e25f8396f
+override WATERCSS_CMT			:= d950cbc9f8607521587f
+endif
+override WATERCSS_LIC			:= MIT
+override WATERCSS_SRC			:= https://github.com/kognise/water.css.git
+override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
+
+########################################
+
 # https://github.com/hakimel/reveal.js
 # https://github.com/hakimel/reveal.js/blob/master/LICENSE
 ifneq ($(origin REVEALJS_CMT),override)
@@ -751,18 +762,7 @@ override REVEALJS_CMT			:= 4.3.1
 endif
 override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
-override REVEALJS_DIR			:= $(COMPOSER_DIR)/revealjs
-
-########################################
-
-# https://github.com/FortAwesome/Font-Awesome
-# https://github.com/FortAwesome/Font-Awesome/blob/master/LICENSE.txt
-ifneq ($(origin FONTAWES_CMT),override)
-override FONTAWES_CMT			:= 6.1.2
-endif
-override FONTAWES_LIC			:= MIT / CC-BY
-override FONTAWES_SRC			:= https://github.com/FortAwesome/Font-Awesome.git
-override FONTAWES_DIR			:= $(COMPOSER_DIR)/font-awesome
+override REVEALJS_DIR			:= $(COMPOSER_DIR)/reveal.js
 
 ########################################
 
@@ -781,6 +781,7 @@ override WGET_VER			:= 1.20.3
 override TAR_VER			:= 1.34
 override GZIP_VER			:= 1.10
 override 7Z_VER				:= 16.02
+override NPM_VER			:= 6.14.8
 
 override DIFFUTILS_VER			:= 3.7
 override RSYNC_VER			:= 3.2.3
@@ -850,6 +851,7 @@ override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
+override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --verbose
 
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
@@ -963,6 +965,26 @@ override define WGET_PACKAGE_DO =
 	$(MKDIR) $(COMPOSER_BIN); \
 	$(RM) $(COMPOSER_BIN)/$(notdir $(5)).*; \
 	$(SPLIT) $(1)/$(5) $(COMPOSER_BIN)/$(notdir $(5)).
+endef
+
+########################################
+
+override define NPM_RUN =
+	cd $(1) && \
+		PATH="$(PATH):$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin" \
+		$(if $(2),$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin/$(2))
+endef
+
+override define NPM_INSTALL =
+	$(ENDOLINE); \
+	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)npm$(_D))"; \
+	$(MKDIR) $(COMPOSER_PKG)/$(notdir $(1)).npm; \
+	$(RM) $(1)/node_modules;				$(LN) $(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules $(1)/; \
+	$(RM) $(COMPOSER_PKG)/$(notdir $(1)).npm/package.json;	$(LN) $(1)/package.json $(COMPOSER_PKG)/$(notdir $(1)).npm/; \
+	$(call NPM_RUN,$(1)) $(NPM) \
+		--prefix $(COMPOSER_PKG)/$(notdir $(1)).npm \
+		--cache $(COMPOSER_PKG)/$(notdir $(1)).npm \
+		install
 endef
 
 ################################################################################
@@ -1086,6 +1108,12 @@ override MDVIEWER_CSS_SOLAR_LIGHT	:= $(MDVIEWER_DIR)/themes/solarized-light.css
 override MDVIEWER_CSS_SOLAR_DARK	:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/screen.css
 
+override WATERCSS_CSS_LIGHT		:= $(WATERCSS_DIR)/out/light.css
+override WATERCSS_CSS_DARK		:= $(WATERCSS_DIR)/out/dark.css
+override WATERCSS_CSS_SOLAR_LIGHT	:= $(WATERCSS_DIR)/out/solarized-light.css
+override WATERCSS_CSS_SOLAR_DARK	:= $(WATERCSS_DIR)/out/solarized-dark.css
+#>override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
+
 override REVEALJS_CSS_LIGHT		:= $(REVEALJS_DIR)/dist/theme/white.css
 override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
 override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
@@ -1107,11 +1135,16 @@ override CSS_THEMES = \
 	$(PUBLISH):$(CSS_ALT):$(BOOTSWATCH_CSS_ALT) \
 	\
 	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light) \
-	$(TYPE_HTML):light:$(MDVIEWER_CSS_LIGHT) \
-	$(TYPE_HTML):dark:$(MDVIEWER_CSS_DARK) \
+	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT) \
+	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK) \
 	$(TYPE_HTML):solar-light:$(MDVIEWER_CSS_SOLAR_LIGHT) \
 	$(TYPE_HTML):solar-dark:$(MDVIEWER_CSS_SOLAR_DARK) \
 	$(TYPE_HTML):$(CSS_ALT):$(MDVIEWER_CSS_ALT) \
+	\
+	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT) \
+	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK) \
+	$(TYPE_HTML):solar-light-alt:$(WATERCSS_CSS_SOLAR_LIGHT) \
+	$(TYPE_HTML):solar-dark-alt:$(WATERCSS_CSS_SOLAR_DARK) \
 	\
 	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark) \
 	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT) \
@@ -1677,10 +1710,9 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
 $(if $(wildcard $(FILE)),\
 	$(eval override COMPOSER_LIBRARY_DIR := $(shell \
 		$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $(FILE) 2>/dev/null \
-		| $(SED) "/^$(SPECIAL_VAR)$$/d" \
 		| $(SED) "/^null$$/d" \
 	)) \
-	$(if $(COMPOSER_LIBRARY_DIR),\
+	$(if $(filter-out $(SPECIAL_VAL),$(COMPOSER_LIBRARY_DIR)),\
 		$(eval override COMPOSER_LIBRARY_YML := $(FILE)) \
 		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
 	) \
@@ -2465,12 +2497,12 @@ $(_E)[GitHub]: https://github.com$(_D)
 
 $(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
 $(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
-$(_E)[CommonMark]: https://commonmark.org$(_D)
 $(_E)[Bootstrap]: https://getbootstrap.com$(_D)
 $(_E)[Bootswatch]: https://bootswatch.com$(_D)
-$(_E)[Markdown Viewer]: https://github.com/Thiht/markdown-viewer$(_D)
-$(_E)[Reveal.js]: https://revealjs.com$(_D)
 $(_E)[Font-Awesome]: https://fontawesome.com$(_D)
+$(_E)[Markdown Viewer]: https://github.com/Thiht/markdown-viewer$(_D)
+$(_E)[Water.css]: https://watercss.kognise.dev$(_D)
+$(_E)[Reveal.js]: https://revealjs.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
 $(_S)[GNU]: http://www.gnu.org$(_D)
@@ -2931,12 +2963,12 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)PANDOC_CMT$(_D)` $(_E)(defaults to `PANDOC_VER`)$(_D)
   * `$(_C)YQ_VER$(_D)` $(_E)(must be a binary version number)$(_D)
   * `$(_C)YQ_CMT$(_D)` $(_E)(defaults to `YQ_VER`)$(_D)
-  * `$(_C)COMMONMARK_CMT$(_D)`
   * `$(_C)BOOTSTRAP_CMT$(_D)`
   * `$(_C)BOOTSWATCH_CMT$(_D)`
-  * `$(_C)MDVIEWER_CMT$(_D)`
-  * `$(_C)REVEALJS_CMT$(_D)`
   * `$(_C)FONTAWES_CMT$(_D)`
+  * `$(_C)MDVIEWER_CMT$(_D)`
+  * `$(_C)WATERCSS_CMT$(_D)`
+  * `$(_C)REVEALJS_CMT$(_D)`
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
@@ -3509,9 +3541,6 @@ endif
 		$(call NEWLINE) \
 	)
 #WORKING:NOW:NOW:FIX
-#	styles.html, epub.css, etc.
-#		--print-default-data-file="templates/styles.html"
-#		--print-default-data-file="epub.css"
 #	styles.html -> c_css=0 -> --metadata="document-css=false" ?
 #		maybe theme.*-pandoc.css files, or just empty c_css does not do document-css=false?
 #		create theme.epub* files, and link to theme.html* files?
@@ -3520,9 +3549,6 @@ endif
 #		https://github.com/altercation/solarized
 #		https://github.com/troxler/awesome-css-frameworks
 #			https://github.com/csstools/sanitize.css
-#		yarn build
-#			npm install yarn
-#			npm install
 #WORKING:NOW:NOW:FIX
 	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach FILE,\
@@ -3542,6 +3568,16 @@ endif
 					$($(DEBUGIT)-output); \
 			fi; \
 		) \
+		$(call NEWLINE) \
+	)
+	@$(foreach FILE,\
+		templates/styles.html \
+		epub.css \
+		,\
+		$(PANDOC_BIN) --verbose \
+			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE))" \
+			--print-default-data-file="$(FILE)" \
+			2>/dev/null; \
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(_D)"
@@ -3607,19 +3643,25 @@ $(EXAMPLE)-yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>	@$(call COMPOSER_YML_DATA) 2>/dev/null
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE) \
-		| $(YQ_WRITE_OUT) 2>/dev/null \
 		| $(SED) "/^[[:space:]]*[#].*$$/d" \
+		| $(YQ_WRITE_OUT) 2>/dev/null \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK),$(COMMENTED))|g"
 
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
 endef
-#>	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$(subst ",\",$($(2)))))
 override define $(EXAMPLE)-var-static =
 	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
 endef
+#> update: $(HEADERS)-run
 override define $(EXAMPLE)-var =
-	$(call $(EXAMPLE)-print,$(1),override $(_C)$(2)$(_D) :=$(if $($(2)), $(_M)$(subst ",\",$($(2)))))
+	$(eval OUT := $(strip \
+		$(if $(filter c_list,$(2)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,\
+		$(if $(filter c_css,$(2)),$(patsubst $(COMPOSER_DIR)%,$(TOKEN)%,$(call c_css_select)) ,\
+		$(subst ",\",$(patsubst $(COMPOSER_DIR)%,$(TOKEN)%,$($(2)))) \
+		)) \
+	)) \
+	$(call $(EXAMPLE)-print,$(1),override $(_C)$(2)$(_D) :=$(if $(OUT), $(_M)$(subst $(TOKEN),\$$(COMPOSER_DIR),$(OUT))))
 endef
 
 ################################################################################
@@ -5596,11 +5638,12 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 /* ########################################################################## */
 
 html {
-	position:			relative;
 	min-height:			100%;
+	position:			relative;
 }
 
 body {
+	min-width:			100%;
 	padding-top:			60px;
 	padding-bottom:			40px;
 }
@@ -5706,26 +5749,7 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
 /* ########################################################################## */
 
 :root {
-	/* dark background */
-	--solarized-dark3:		#002b36;
-	--solarized-dark2:		#073642;
-	/* content */
-	--solarized-dark1:		#586e75;
-	--solarized-dark0:		#657b83;
-	--solarized-light0:		#839496;
-	--solarized-light1:		#93a1a1;
-	/* light background */
-	--solarized-light2:		#eee8d5;
-	--solarized-light3:		#fdf6e3;
-	/* accent */
-	--solarized-yellow:		#b58900;
-	--solarized-orange:		#cb4b16;
-	--solarized-red:		#dc322f;
-	--solarized-magenta:		#d33682;
-	--solarized-violet:		#6c71c4;
-	--solarized-blue:		#268bd2;
-	--solarized-cyan:		#2aa198;
-	--solarized-green:		#859900;
+$(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 
 	/* colors */
 	--$(COMPOSER_TINYNAME)-back:		#000000; // black;	// var(--solarized-dark3);
@@ -6037,7 +6061,33 @@ table {
 endef
 
 ########################################
-## {{{2 custom_html_css ----------------
+## {{{2 Heredoc: custom_html_css -------
+
+override define HEREDOC_CUSTOM_HTML_CSS_SOLARIZED =
+	/* dark background */
+	--solarized-dark3:		#002b36;
+	--solarized-dark2:		#073642;
+	/* content */
+	--solarized-dark1:		#586e75;
+	--solarized-dark0:		#657b83;
+	--solarized-light0:		#839496;
+	--solarized-light1:		#93a1a1;
+	/* light background */
+	--solarized-light2:		#eee8d5;
+	--solarized-light3:		#fdf6e3;
+	/* accent */
+	--solarized-yellow:		#b58900;
+	--solarized-orange:		#cb4b16;
+	--solarized-red:		#dc322f;
+	--solarized-magenta:		#d33682;
+	--solarized-violet:		#6c71c4;
+	--solarized-blue:		#268bd2;
+	--solarized-cyan:		#2aa198;
+	--solarized-green:		#859900;
+endef
+
+########################################
+### {{{3 custom_html_css (Main) --------
 
 override define HEREDOC_CUSTOM_HTML_CSS =
 /* #############################################################################
@@ -6052,6 +6102,54 @@ th {
 /* #############################################################################
 # End Of File
 ############################################################################# */
+endef
+
+########################################
+### {{{3 custom_html_css (Water.css) ---
+
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC =
+@import '../variables-$(1).css';
+@import '../variables-solarized-$(1).css';
+@import '../parts/_core.css';
+
+.$(COMPOSER_TINYNAME)-header {
+	margin-top:			0px;
+	margin-bottom:			0px;
+}
+.navbar-brand:hover {
+	text-decoration:		none;
+}
+endef
+
+override define HEREDOC_CUSTOM_HTML_CSS_WATER =
+:root {
+$(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
+
+	/* colors */
+	--background-body:		var(--solarized-$(1)3);
+	--text-muted:			var(--solarized-$(1)0);
+	--text-main:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
+	--text-bright:			var(--solarized-$(if $(filter light,$(1)),dark,light)1);
+	--links:			var(--solarized-yellow);
+
+	/* layout */
+	--background-alt:		var(--solarized-$(1)2);
+	--background:			var(--solarized-$(1)2);
+	--border:			var(--solarized-$(1)2);
+	--focus:			var(--solarized-$(1)2);
+
+	/* widgets */
+	--button-base:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
+	--button-hover:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
+	--form-placeholder:		var(--solarized-$(if $(filter light,$(1)),dark,light)0);
+	--form-text:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
+
+	/* accents */
+	--code:				var(--solarized-green);
+	--highlight:			var(--solarized-cyan);
+	--selection:			var(--solarized-violet);
+	--variable:			var(--solarized-cyan);
+}
 endef
 
 ########################################
@@ -8194,12 +8292,12 @@ $(TESTING)-other-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override PANDOC_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMMONMARK_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override BOOTSTRAP_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override BOOTSWATCH_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override FONTAWES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override WATERCSS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
 	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -8304,12 +8402,12 @@ $(CHECKIT):
 	@$(TABLE_M3) ":---"				":---"					":---"
 	@$(TABLE_M3) "$(_E)[Pandoc]"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
 	@$(TABLE_M3) "$(_E)[YQ]"			"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
-	@$(TABLE_M3) "$(_E)[CommonMark]"		"$(_E)$(COMMONMARK_CMT)"		"$(_N)$(COMMONMARK_LIC)"
 	@$(TABLE_M3) "$(_E)[Bootstrap]"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
 	@$(TABLE_M3) "$(_E)[Bootswatch]"		"$(_E)$(BOOTSWATCH_CMT)"		"$(_N)$(BOOTSWATCH_LIC)"
-	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
-	@$(TABLE_M3) "$(_E)[Reveal.js]"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(TABLE_M3) "$(_E)[Font-Awesome]"		"$(_E)$(FONTAWES_CMT)"			"$(_N)$(FONTAWES_LIC)"
+	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
+	@$(TABLE_M3) "$(_E)[Water.css]"			"$(_E)$(WATERCSS_CMT)"			"$(_N)$(WATERCSS_LIC)"
+	@$(TABLE_M3) "$(_E)[Reveal.js]"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
 	@$(TABLE_M2) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"
@@ -8340,6 +8438,9 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)GNU Gzip"			"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)7z"			"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+ifneq ($(wildcard $(firstword $(NPM))),)
+	@$(TABLE_M3) "- $(_E)Node.js (npm)"		"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
+endif
 	@$(TABLE_M3) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "- $(_E)GNU Diffutils"		"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_E)Rsync"			"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
@@ -8362,6 +8463,9 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "- $(_E)GNU Tar"			"$(_N)$(TAR)"
 	@$(TABLE_M2) "- $(_E)GNU Gzip"			"$(_N)$(GZIP_BIN)"
 	@$(TABLE_M2) "- $(_E)7z"			"$(_N)$(7Z)"
+ifneq ($(wildcard $(firstword $(NPM))),)
+	@$(TABLE_M2) "- $(_E)Node.js (npm)"		"$(_N)$(call $(HEADERS)-path-dir,$(NPM))"
+endif
 	@$(TABLE_M2) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"
 	@$(TABLE_M2) "- $(_E)GNU Diffutils"		"$(_N)$(DIFF)"
 	@$(TABLE_M2) "- $(_E)Rsync"			"$(_N)$(RSYNC)"
@@ -8507,12 +8611,12 @@ $(UPGRADE):
 	@$(call $(HEADERS))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMMONMARK_DIR)),$(COMMONMARK_SRC),$(COMMONMARK_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(FONTAWES_DIR)),$(FONTAWES_SRC),$(FONTAWES_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),$(WATERCSS_SRC),$(WATERCSS_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
@@ -8520,6 +8624,25 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+ifneq ($(wildcard $(firstword $(NPM))),)
+	@$(call NPM_INSTALL,$(MDVIEWER_DIR))
+	@$(call NPM_INSTALL,$(WATERCSS_DIR))
+	@$(foreach FILE,\
+		mdc \
+		prism \
+		remark \
+		themes \
+		,\
+		$(call NPM_RUN,$(MDVIEWER_DIR)) $(NPM) run-script build:$(FILE); \
+	)
+	@$(foreach FILE,light dark,\
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
+		$(call NEWLINE) \
+	)
+	$(call NPM_RUN,$(WATERCSS_DIR)) $(NPM) install yarn
+	$(call NPM_RUN,$(WATERCSS_DIR),yarn) build
+endif
 endif
 
 ################################################################################
@@ -9430,12 +9553,12 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		\
 		$(PANDOC_DIR) \
 		$(YQ_DIR) \
-		$(COMMONMARK_DIR) \
 		$(BOOTSTRAP_DIR) \
 		$(BOOTSWATCH_DIR) \
-		$(MDVIEWER_DIR) \
-		$(REVEALJS_DIR) \
 		$(FONTAWES_DIR) \
+		$(MDVIEWER_DIR) \
+		$(WATERCSS_DIR) \
+		$(REVEALJS_DIR) \
 		\
 		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/ \
 #>		$($(DEBUGIT)-output)
@@ -9548,7 +9671,7 @@ endif
 		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"			>>$(FILE); \
 		$(ECHO) "author: [$(COMPOSER_COMPOSER), $(TESTING)-a, $(TESTING)-b, $(TESTING)-c]\n"	>>$(FILE); \
 		$(ECHO) "date: $(MARK)\n"								>>$(FILE); \
-		$(ECHO) "tags: [$(TESTING)1, $(TESTING)2, $(TESTING)3, $(TESTING)$(NUM)]\n"		>>$(FILE); \
+		$(ECHO) "tags: [$(TESTING)-$(NUM), $(TESTING)-1, $(TESTING)-2, $(TESTING)-3]\n"		>>$(FILE); \
 		$(ECHO) "---\n"										>>$(FILE); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)\n"	>>$(FILE); \
 		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)	>>$(FILE); \
