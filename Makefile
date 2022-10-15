@@ -981,7 +981,6 @@ override define NPM_RUN =
 		$(if $(2),$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin/$(2))
 endef
 
-#>		install
 override define NPM_INSTALL =
 	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)npm$(_D))"; \
@@ -991,7 +990,7 @@ override define NPM_INSTALL =
 	$(call NPM_RUN,$(1)) $(NPM) \
 		--prefix $(COMPOSER_PKG)/$(notdir $(1)).npm \
 		--cache $(COMPOSER_PKG)/$(notdir $(1)).npm \
-		update
+		install
 endef
 
 ################################################################################
@@ -8703,8 +8702,8 @@ ifneq ($(wildcard $(firstword $(NPM))),)
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
 		$(call NEWLINE) \
 	)
-	$(call NPM_RUN,$(WATERCSS_DIR)) $(NPM) install yarn
-	$(call NPM_RUN,$(WATERCSS_DIR),yarn) build
+	@$(call NPM_RUN,$(WATERCSS_DIR)) $(NPM) install yarn
+	@$(call NPM_RUN,$(WATERCSS_DIR),yarn) build
 endif
 endif
 
@@ -9633,7 +9632,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 #>		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) \
-						$($(PUBLISH)-$(EXAMPLE)-dirs) \
+						$(addprefix $($(PUBLISH)-$(EXAMPLE))/,$($(PUBLISH)-$(EXAMPLE)-dirs)) \
 						$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages) \
 						$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes) \
 						$($(DEBUGIT)-output)
