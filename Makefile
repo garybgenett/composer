@@ -1118,7 +1118,7 @@ override WATERCSS_CSS_LIGHT		:= $(WATERCSS_DIR)/out/light.css
 override WATERCSS_CSS_DARK		:= $(WATERCSS_DIR)/out/dark.css
 override WATERCSS_CSS_SOLAR_LIGHT	:= $(WATERCSS_DIR)/out/solarized-light.css
 override WATERCSS_CSS_SOLAR_DARK	:= $(WATERCSS_DIR)/out/solarized-dark.css
-#>override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
+override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
 
 override REVEALJS_CSS_LIGHT		:= $(REVEALJS_DIR)/dist/theme/white.css
 override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
@@ -1129,10 +1129,14 @@ override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
 #WORKING document
 override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
 override CSS_THEMES = \
-	$(PUBLISH):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
-	$(TYPE_HTML):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
-	$(TYPE_PRES):custom:$(call CUSTOM_PUBLISH_CSS_SHADE,custom) \
-	\
+	$(foreach FILE,\
+		custom \
+		custom-solar \
+		,\
+		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
+		$(TYPE_HTML):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
+		$(TYPE_PRES):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
+	) \
 	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light) \
 	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT) \
 	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK) \
@@ -1143,14 +1147,15 @@ override CSS_THEMES = \
 	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light) \
 	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT) \
 	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK) \
-	$(TYPE_HTML):solar-light:$(MDVIEWER_CSS_SOLAR_LIGHT) \
-	$(TYPE_HTML):solar-dark:$(MDVIEWER_CSS_SOLAR_DARK) \
-	$(TYPE_HTML):$(CSS_ALT):$(MDVIEWER_CSS_ALT) \
+	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT) \
+	$(TYPE_HTML):solar-dark:$(WATERCSS_CSS_SOLAR_DARK) \
+	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT) \
 	\
 	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT) \
 	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK) \
-	$(TYPE_HTML):solar-light-alt:$(WATERCSS_CSS_SOLAR_LIGHT) \
-	$(TYPE_HTML):solar-dark-alt:$(WATERCSS_CSS_SOLAR_DARK) \
+	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT) \
+	$(TYPE_HTML):solar-dark-alt:$(MDVIEWER_CSS_SOLAR_DARK) \
+	$(TYPE_HTML):$(CSS_ALT)-alt:$(MDVIEWER_CSS_ALT) \
 	\
 	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark) \
 	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT) \
@@ -1158,6 +1163,29 @@ override CSS_THEMES = \
 	$(TYPE_PRES):solar-light:$(REVEALJS_CSS_SOLAR_LIGHT) \
 	$(TYPE_PRES):solar-dark:$(REVEALJS_CSS_SOLAR_DARK) \
 	$(TYPE_PRES):$(CSS_ALT):$(REVEALJS_CSS_ALT) \
+
+override CSS_THEMES_TESTING := \
+	$(SPECIAL_VAL):custom \
+	$(SPECIAL_VAL):custom-solar \
+	\
+	light:light \
+	dark:dark \
+	solar-light:light \
+	solar-dark:dark \
+	$(CSS_ALT):$(SPECIAL_VAL) \
+	\
+	$(TYPE_HTML).light:light \
+	$(TYPE_HTML).light-alt:light \
+	$(TYPE_HTML).solar-light:dark \
+	$(TYPE_HTML).solar-light-alt:dark \
+	\
+	$(TYPE_HTML).dark:dark \
+	$(TYPE_HTML).dark-alt:dark \
+	$(TYPE_HTML).solar-dark:dark \
+	$(TYPE_HTML).solar-dark-alt:dark \
+	\
+	$(TYPE_HTML).$(CSS_ALT):$(SPECIAL_VAL) \
+	$(TYPE_HTML).$(CSS_ALT)-alt:dark \
 
 ########################################
 
@@ -3518,6 +3546,8 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
+											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))
@@ -3532,7 +3562,7 @@ endif
 	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
 	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
 	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
-#>	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
+	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
 	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
 		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
 		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_DIR_CSS))&g' \
@@ -5874,7 +5904,8 @@ pre {
 }
 code,
 pre {
-	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+#>	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-done);
 }
 pre code {
 	border:				none;
@@ -9576,6 +9607,7 @@ override $(PUBLISH)-$(EXAMPLE)-include	:= $($(PUBLISH)-$(EXAMPLE)-index)-digest
 override $(PUBLISH)-$(EXAMPLE)-included	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-include)
 override $(PUBLISH)-$(EXAMPLE)-examples	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/examples
 override $(PUBLISH)-$(EXAMPLE)-pages	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/pages
+override $(PUBLISH)-$(EXAMPLE)-themes	:= $(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index)-themes
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
@@ -9731,6 +9763,8 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
+											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
 endif
 	@$(foreach FILE,\
@@ -9747,6 +9781,41 @@ endif
 		$(ECHO) "$(_D)"; \
 	)
 	@$(ECHO) "\n"
+#WORKING:NOW:NOW:FIX
+#	make all of this part of the default runs, somehow...  maybe a custom target...?
+#WORKING:NOW:NOW:FIX
+	@$(ECHO) "\n"								>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(foreach FILE,$(CSS_THEMES_TESTING),\
+		$(eval THEME := $(word 1,$(subst :, ,$(FILE)))) \
+		$(eval SHADE := $(word 2,$(subst :, ,$(FILE)))) \
+		$(ECHO) "  * [Theme: $(THEME) -- Shade: $(SHADE)]($($(PUBLISH)-$(EXAMPLE)-themes)+$(THEME)+$(SHADE).$(EXTN_HTML))" \
+										>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+		$(if $(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)),\
+			$(ECHO) " *(automatic \`prefers-color-scheme\` color selection)*" \
+										>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+		) \
+		$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+		$(call NEWLINE) \
+	)
+	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(foreach FILE,$(CSS_THEMES_TESTING),\
+		$(eval THEME := $(word 1,$(subst :, ,$(FILE)))) \
+		$(eval SHADE := $(word 2,$(subst :, ,$(FILE)))) \
+		$(ECHO) "override c_css := $(THEME)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS); \
+		$(ECHO) "  $(PUBLISH)-config: { css_shade: $(SHADE) }\n"	>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML); \
+		$(ENV_MAKE) $(SILENT) \
+			--directory $($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs)) \
+			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
+			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
+			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+			c_base="$(notdir $($(PUBLISH)-$(EXAMPLE)-themes))+$(THEME)+$(SHADE)" \
+			c_list="$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(notdir $(word 1,$($(PUBLISH)-$(EXAMPLE)-files))))" \
+			$(COMPOSER_PANDOC); \
+		$(call NEWLINE) \
+	)
+	@$(ECHO) ""								>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)			>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+#WORKING:NOW:NOW:FIX
 	@$(foreach FILE,\
 		$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)) \
 		$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)) \
@@ -9913,6 +9982,12 @@ override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 pagetitle: Main Page
 ---
+$(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)) $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
 # Folds
 
 `$(PUBLISH_CMD_BEG) fold-begin 2 1 $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)`
