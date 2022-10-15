@@ -981,6 +981,7 @@ override define NPM_RUN =
 		$(if $(2),$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin/$(2))
 endef
 
+#>		install
 override define NPM_INSTALL =
 	$(ENDOLINE); \
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)npm$(_D))"; \
@@ -990,7 +991,7 @@ override define NPM_INSTALL =
 	$(call NPM_RUN,$(1)) $(NPM) \
 		--prefix $(COMPOSER_PKG)/$(notdir $(1)).npm \
 		--cache $(COMPOSER_PKG)/$(notdir $(1)).npm \
-		install
+		update
 endef
 
 ################################################################################
@@ -6184,24 +6185,33 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	--text-main:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
 	--text-bright:			var(--solarized-$(if $(filter light,$(1)),dark,light)1);
 	--links:			var(--solarized-yellow);
-
 	/* layout */
 	--background-alt:		var(--solarized-$(1)2);
 	--background:			var(--solarized-$(1)2);
 	--border:			var(--solarized-$(1)2);
 	--focus:			var(--solarized-$(1)2);
-
 	/* widgets */
 	--button-base:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
 	--button-hover:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
 	--form-placeholder:		var(--solarized-$(if $(filter light,$(1)),dark,light)0);
 	--form-text:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
-
 	/* accents */
-	--code:				var(--solarized-green);
+	--code:				var(--solarized-orange);
 	--highlight:			var(--solarized-cyan);
 	--selection:			var(--solarized-violet);
 	--variable:			var(--solarized-cyan);
+}
+
+.$(COMPOSER_TINYNAME)-header {
+	color:				var(--solarized-green);
+}
+h1:not(.$(COMPOSER_TINYNAME)-header),
+h2:not(.$(COMPOSER_TINYNAME)-header),
+h3:not(.$(COMPOSER_TINYNAME)-header),
+h4:not(.$(COMPOSER_TINYNAME)-header),
+h5:not(.$(COMPOSER_TINYNAME)-header),
+h6:not(.$(COMPOSER_TINYNAME)-header) {
+	color:				var(--solarized-magenta);
 }
 endef
 
@@ -9796,12 +9806,14 @@ endif
 	@$(ECHO) "\n"									>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1) | $(SED) "/^[#]/d"	>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"									>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) ""									>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "variables:\n  $(PUBLISH)-config:\n"					>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 	@$(foreach FILE,$(CSS_THEMES),\
 		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
 		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
 		$(if $(filter-out $(TOKEN),$(SHADE)),\
-			$(ECHO) "override c_css := $(THEME)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS); \
-			$(ECHO) "  $(PUBLISH)-config: { css_shade: $(SHADE) }\n"	>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML); \
+			$(ECHO) "override c_css := $(THEME)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS); \
+			$(ECHO) "    css_shade: $(SHADE)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML); \
 			$(ENV_MAKE) $(SILENT) \
 				--directory $($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes) \
 				MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
@@ -9813,8 +9825,6 @@ endif
 		) \
 		$(call NEWLINE) \
 	)
-	@$(ECHO) ""									>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)				>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 #WORKING:NOW:NOW:FIX
 	@$(foreach FILE,\
 		$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)) \
