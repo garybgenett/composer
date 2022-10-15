@@ -1137,7 +1137,7 @@ override CSS_THEMES = \
 		$(TYPE_HTML):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 		$(TYPE_PRES):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 	) \
-	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light):$(TOKEN):[Bootswatch] \
+	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light-alt):$(TOKEN):[Bootswatch] \
 	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT):light \
 	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK):dark \
 	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT):light \
@@ -1147,14 +1147,14 @@ override CSS_THEMES = \
 	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light):$(TOKEN):[Water.css] \
 	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT):light:$(TOKEN):$(TYPE_HTML) \
 	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK):dark \
-	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT):dark:$(TOKEN):$(PUBLISH) \
+	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT):dark \
 	$(TYPE_HTML):solar-dark:$(WATERCSS_CSS_SOLAR_DARK):dark \
 	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):$(SPECIAL_VAL) \
 	\
 	$(TOKEN):$(TOKEN):$(TOKEN):$(TOKEN):[Markdown$(TOKEN)Viewer] \
 	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT):light \
 	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK):dark \
-	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT):dark \
+	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT):dark:$(TOKEN):$(PUBLISH) \
 	$(TYPE_HTML):solar-dark-alt:$(MDVIEWER_CSS_SOLAR_DARK):dark \
 	$(TYPE_HTML):$(CSS_ALT)-alt:$(MDVIEWER_CSS_ALT):dark \
 	\
@@ -3789,10 +3789,10 @@ $(_S)#$(_D) $(_H)Settings$(_D)
 
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D):			$(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_site	:= 1
-$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_css	:= html.solar-dark$(_D)
+$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_css	:= html.solar-dark-alt$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_toc	:=$(_D)
 
-$(_M)$(OUT_README).$(EXTN_HTML)$(_D): $(_E)override c_css		:= dark$(_D)
+$(_M)$(OUT_README).$(EXTN_HTML)$(_D): $(_E)override c_css		:= html.dark$(_D)
 
 $(_S)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_S)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 
