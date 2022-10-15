@@ -1133,29 +1133,30 @@ override CSS_THEMES = \
 		custom \
 		custom-solar \
 		,\
-		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
+		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)):$(SPECIAL_VAL)$(if $(filter custom,$(FILE)),:$(COMPOSER_BASENAME)$(TOKEN)Custom) \
 		$(TYPE_HTML):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 		$(TYPE_PRES):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 	) \
-	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light) \
-	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT) \
-	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK) \
-	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT) \
-	$(PUBLISH):solar-dark:$(BOOTSWATCH_CSS_SOLAR_DARK) \
-	$(PUBLISH):$(CSS_ALT):$(BOOTSWATCH_CSS_ALT) \
+	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light):$(TOKEN):[Bootswatch] \
+	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT):light \
+	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK):dark \
+	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT):light \
+	$(PUBLISH):solar-dark:$(BOOTSWATCH_CSS_SOLAR_DARK):dark \
+	$(PUBLISH):$(CSS_ALT):$(BOOTSWATCH_CSS_ALT):$(SPECIAL_VAL) \
 	\
-	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light) \
-	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT) \
-	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK) \
-	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT) \
-	$(TYPE_HTML):solar-dark:$(WATERCSS_CSS_SOLAR_DARK) \
-	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT) \
+	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light):$(TOKEN):[Water.css] \
+	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT):light:$(TOKEN):$(TYPE_HTML) \
+	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK):dark \
+	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT):dark:$(TOKEN):$(PUBLISH) \
+	$(TYPE_HTML):solar-dark:$(WATERCSS_CSS_SOLAR_DARK):dark \
+	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):$(SPECIAL_VAL) \
 	\
-	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT) \
-	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK) \
-	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT) \
-	$(TYPE_HTML):solar-dark-alt:$(MDVIEWER_CSS_SOLAR_DARK) \
-	$(TYPE_HTML):$(CSS_ALT)-alt:$(MDVIEWER_CSS_ALT) \
+	$(TOKEN):$(TOKEN):$(TOKEN):$(TOKEN):[Markdown$(TOKEN)Viewer] \
+	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT):light \
+	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK):dark \
+	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT):dark \
+	$(TYPE_HTML):solar-dark-alt:$(MDVIEWER_CSS_SOLAR_DARK):dark \
+	$(TYPE_HTML):$(CSS_ALT)-alt:$(MDVIEWER_CSS_ALT):dark \
 	\
 	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark) \
 	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT) \
@@ -1164,28 +1165,8 @@ override CSS_THEMES = \
 	$(TYPE_PRES):solar-dark:$(REVEALJS_CSS_SOLAR_DARK) \
 	$(TYPE_PRES):$(CSS_ALT):$(REVEALJS_CSS_ALT) \
 
-override CSS_THEMES_TESTING := \
-	$(SPECIAL_VAL):custom \
-	$(SPECIAL_VAL):custom-solar \
-	\
-	light:light \
-	dark:dark \
-	solar-light:light \
-	solar-dark:dark \
-	$(CSS_ALT):$(SPECIAL_VAL) \
-	\
-	$(TYPE_HTML).light:light \
-	$(TYPE_HTML).light-alt:light \
-	$(TYPE_HTML).solar-light:dark \
-	$(TYPE_HTML).solar-light-alt:dark \
-	\
-	$(TYPE_HTML).dark:dark \
-	$(TYPE_HTML).dark-alt:dark \
-	$(TYPE_HTML).solar-dark:dark \
-	$(TYPE_HTML).solar-dark-alt:dark \
-	\
-	$(TYPE_HTML).$(CSS_ALT):$(SPECIAL_VAL) \
-	$(TYPE_HTML).$(CSS_ALT)-alt:dark \
+#>	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark):$(TOKEN):[Reveal.js] \
+#>	$(TYPE_PRES):dark:$(REVEALJS_CSS_DARK):$(SPECIAL_VAL):$(TOKEN):$(TYPE_PRES) \
 
 ########################################
 
@@ -3568,14 +3549,14 @@ endif
 		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_DIR_CSS))&g' \
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark)) \
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
-	@$(foreach FILE,$(call CSS_THEMES),\
+	@$(foreach FILE,$(call CSS_THEMES),$(if $(filter-out $(TOKEN):%,$(FILE)),\
 		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
 			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
 			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
 		)									$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE)))) \
 											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
-	)
+	))
 #WORKING:NOW:NOW:FIX
 #	styles.html -> c_css=0 -> --metadata="document-css=false" ?
 #		maybe theme.*-pandoc.css files, or just empty c_css does not do document-css=false?
@@ -5588,7 +5569,10 @@ function $(PUBLISH)-file {
 # @ null || function arguments
 
 function $(PUBLISH)-select {
-	ACTION="$${1}"; shift
+	ACTION="$$(
+		$${ECHO} "$${1}\\n" \\
+		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	)"; shift
 	if	[ "$${ACTION}" = "contents" ]; then
 		$${ECHO} "$(PUBLISH_CMD_BEG) $${ACTION}-list $${@} $(PUBLISH_CMD_END)\\n"
 	elif	[ "$${ACTION}" = "contents-menu" ] ||
@@ -9607,7 +9591,7 @@ override $(PUBLISH)-$(EXAMPLE)-include	:= $($(PUBLISH)-$(EXAMPLE)-index)-digest
 override $(PUBLISH)-$(EXAMPLE)-included	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-include)
 override $(PUBLISH)-$(EXAMPLE)-examples	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/examples
 override $(PUBLISH)-$(EXAMPLE)-pages	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/pages
-override $(PUBLISH)-$(EXAMPLE)-themes	:= $(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index)-themes
+override $(PUBLISH)-$(EXAMPLE)-themes	:= $(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/themes
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
@@ -9638,10 +9622,11 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/ \
 #>		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_S)"
-	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
-		$(MKDIR)			$($(PUBLISH)-$(EXAMPLE))/$(FILE) $($(DEBUGIT)-output); \
-	)
-	@$(MKDIR)				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages) $($(DEBUGIT)-output)
+	@$(MKDIR) \
+						$($(PUBLISH)-$(EXAMPLE)-dirs) \
+						$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages) \
+						$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes) \
+						$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(RSYNC) \
 		--delete-excluded \
@@ -9783,38 +9768,53 @@ endif
 	@$(ECHO) "\n"
 #WORKING:NOW:NOW:FIX
 #	make all of this part of the default runs, somehow...  maybe a custom target...?
+#	make the themes markdown output into a define that can select which type?  could be used elsewhere in the documentation...
 #WORKING:NOW:NOW:FIX
-	@$(ECHO) "\n"								>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(foreach FILE,$(CSS_THEMES_TESTING),\
-		$(eval THEME := $(word 1,$(subst :, ,$(FILE)))) \
-		$(eval SHADE := $(word 2,$(subst :, ,$(FILE)))) \
-		$(ECHO) "  * [Theme: $(THEME) -- Shade: $(SHADE)]($($(PUBLISH)-$(EXAMPLE)-themes)+$(THEME)+$(SHADE).$(EXTN_HTML))" \
-										>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
-		$(if $(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)),\
-			$(ECHO) " *(automatic \`prefers-color-scheme\` color selection)*" \
-										>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+	@$(ECHO) "\n"									>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(foreach FILE,$(CSS_THEMES),\
+		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+		$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+		$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+		$(if $(filter-out $(TOKEN),$(TITLE)),\
+			$(ECHO) "\n**$(subst $(TOKEN), ,$(TITLE))**\n\n"		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
 		) \
-		$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+		$(if $(filter-out $(TOKEN),$(SHADE)),\
+			$(ECHO) "  * [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(EXTN_HTML))" \
+											>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+			$(if $(filter-out $(TOKEN),$(DEFLT)),\
+				$(ECHO) " **(default: \`$(DEFLT)\`)**"			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+			) \
+			$(if $(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)),\
+				$(ECHO) " *(automatic \`prefers-color-scheme\` color selection)*" \
+											>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+			) \
+			$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
+		) \
 		$(call NEWLINE) \
 	)
-	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(foreach FILE,$(CSS_THEMES_TESTING),\
-		$(eval THEME := $(word 1,$(subst :, ,$(FILE)))) \
-		$(eval SHADE := $(word 2,$(subst :, ,$(FILE)))) \
-		$(ECHO) "override c_css := $(THEME)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS); \
-		$(ECHO) "  $(PUBLISH)-config: { css_shade: $(SHADE) }\n"	>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML); \
-		$(ENV_MAKE) $(SILENT) \
-			--directory $($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs)) \
-			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
-			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
-			c_base="$(notdir $($(PUBLISH)-$(EXAMPLE)-themes))+$(THEME)+$(SHADE)" \
-			c_list="$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(notdir $(word 1,$($(PUBLISH)-$(EXAMPLE)-files))))" \
-			$(COMPOSER_PANDOC); \
+	@$(ECHO) "\n"									>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1) | $(SED) "/^[#]/d"	>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) "\n"									>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(foreach FILE,$(CSS_THEMES),\
+		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+		$(if $(filter-out $(TOKEN),$(SHADE)),\
+			$(ECHO) "override c_css := $(THEME)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS); \
+			$(ECHO) "  $(PUBLISH)-config: { css_shade: $(SHADE) }\n"	>>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML); \
+			$(ENV_MAKE) $(SILENT) \
+				--directory $($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes) \
+				MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
+				COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
+				COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+				c_base="$(THEME)+$(SHADE)" \
+				c_list="$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))" \
+				$(COMPOSER_PANDOC); \
+		) \
 		$(call NEWLINE) \
 	)
-	@$(ECHO) ""								>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)			>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(ECHO) ""									>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)				>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 #WORKING:NOW:NOW:FIX
 	@$(foreach FILE,\
 		$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)) \
@@ -9984,7 +9984,7 @@ pagetitle: Main Page
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
@@ -10094,24 +10094,24 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 ## Include
 
-`$(PUBLISH_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
 #WORK do some post-processing to remove the `^<!-- $(PUBLISH)-file $(DIVIDE) .* ($(COMPOSER_SETTINGS)|$(COMPOSER_YML)) .*$$` lines
 
 ```
-$(PUBLISH_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS) $(PUBLISH_CMD_END)
 ```
 
 ```
-$(PUBLISH_CMD_BEG) .$(COMPOSER_BASENAME)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/.$(COMPOSER_BASENAME)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
 ```
 
 <!-- $(COMPOSER_SETTINGS) -->
 
 ```
-$(PUBLISH_CMD_BEG) $(COMPOSER_YML) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
 ```
 
 ## Contents
