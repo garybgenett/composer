@@ -1118,7 +1118,8 @@ override WATERCSS_CSS_LIGHT		:= $(WATERCSS_DIR)/out/light.css
 override WATERCSS_CSS_DARK		:= $(WATERCSS_DIR)/out/dark.css
 override WATERCSS_CSS_SOLAR_LIGHT	:= $(WATERCSS_DIR)/out/solarized-light.css
 override WATERCSS_CSS_SOLAR_DARK	:= $(WATERCSS_DIR)/out/solarized-dark.css
-override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
+#>override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
+override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water-shade.css
 
 override REVEALJS_CSS_LIGHT		:= $(REVEALJS_DIR)/dist/theme/white.css
 override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
@@ -6174,6 +6175,19 @@ override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC =
 @import '../parts/_core.css';
 endef
 
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE =
+.navbar,
+.dropdown-menu,
+.accordion-button,
+.card-header {
+	background-color:		var(--background);
+}
+.accordion-item,
+.card {
+	border:				1px solid var(--border);
+}
+endef
+
 override define HEREDOC_CUSTOM_HTML_CSS_WATER =
 :root {
 $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
@@ -6201,6 +6215,7 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	--variable:			var(--solarized-cyan);
 }
 
+$(call HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)
 .$(COMPOSER_TINYNAME)-header {
 	color:				var(--solarized-green);
 }
@@ -8697,6 +8712,9 @@ ifneq ($(wildcard $(firstword $(NPM))),)
 		,\
 		$(call NPM_RUN,$(MDVIEWER_DIR)) $(NPM) run-script build:$(FILE); \
 	)
+	@$(SED) -i -e "/^dist[/]$$/d" -e "/^out[/]$$/d"				$(WATERCSS_DIR)/.gitignore
+	@$(CP) $(WATERCSS_DIR)/src/builds/water.css				$(WATERCSS_DIR)/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)			>>$(WATERCSS_DIR)/src/builds/water-shade.css
 	@$(foreach FILE,light dark,\
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
