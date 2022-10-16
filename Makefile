@@ -1121,11 +1121,13 @@ override WATERCSS_CSS_SOLAR_LIGHT	:= $(WATERCSS_DIR)/out/solarized-light.css
 override WATERCSS_CSS_SOLAR_DARK	:= $(WATERCSS_DIR)/out/solarized-dark.css
 override WATERCSS_CSS_SOLAR_ALT		:= $(WATERCSS_DIR)/out/solarized-shade.css
 
-override MDVIEWER_CSS_LIGHT		:= $(MDVIEWER_DIR)/themes/markdown7.css
-override MDVIEWER_CSS_DARK		:= $(MDVIEWER_DIR)/themes/markdown9.css
-override MDVIEWER_CSS_SOLAR_LIGHT	:= $(MDVIEWER_DIR)/themes/solarized-light.css
-override MDVIEWER_CSS_SOLAR_DARK	:= $(MDVIEWER_DIR)/themes/solarized-dark.css
-override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/screen.css
+#>override MDVIEWER_CSS_DIR		:= $(MDVIEWER_DIR)/themes
+override MDVIEWER_CSS_DIR		:= $(MDTHEMES_DIR)
+override MDVIEWER_CSS_LIGHT		:= $(MDVIEWER_CSS_DIR)/markdown7.css
+override MDVIEWER_CSS_DARK		:= $(MDVIEWER_CSS_DIR)/markdown9.css
+override MDVIEWER_CSS_SOLAR_LIGHT	:= $(MDVIEWER_CSS_DIR)/solarized-light.css
+override MDVIEWER_CSS_SOLAR_DARK	:= $(MDVIEWER_CSS_DIR)/solarized-dark.css
+override MDVIEWER_CSS_ALT		:= $(MDVIEWER_CSS_DIR)/screen.css
 
 override REVEALJS_CSS_LIGHT		:= $(REVEALJS_DIR)/dist/theme/white.css
 override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
@@ -1162,11 +1164,11 @@ override CSS_THEMES = \
 	$(TYPE_HTML):solar-$(CSS_ALT):$(WATERCSS_CSS_SOLAR_ALT):$(SPECIAL_VAL) \
 	\
 	$(TOKEN):$(TOKEN):$(TOKEN):$(TOKEN):[Markdown$(TOKEN)Viewer] \
-	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT):light \
-	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK):dark \
-	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT):dark \
-	$(TYPE_HTML):solar-dark-alt:$(MDVIEWER_CSS_SOLAR_DARK):dark \
-	$(TYPE_HTML):$(CSS_ALT)-alt:$(MDVIEWER_CSS_ALT):dark \
+	$(TYPE_HTML):alt-light:$(MDVIEWER_CSS_LIGHT):light \
+	$(TYPE_HTML):alt-dark:$(MDVIEWER_CSS_DARK):dark \
+	$(TYPE_HTML):alt-solar-light:$(MDVIEWER_CSS_SOLAR_LIGHT):dark \
+	$(TYPE_HTML):alt-solar-dark:$(MDVIEWER_CSS_SOLAR_DARK):dark \
+	$(TYPE_HTML):alt-$(CSS_ALT):$(MDVIEWER_CSS_ALT):dark \
 	\
 	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark):$(TOKEN):[Reveal.js] \
 	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT):$(SPECIAL_VAL) \
@@ -9898,7 +9900,7 @@ endif
 			--directory $(abspath $(dir $($(PUBLISH)-$(EXAMPLE))/$(FILE))) \
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+			COMPOSER_DEBUGIT="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(COMPOSER_DEBUGIT))" \
 			$(if $(filter $($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL),$(FILE)),\
 				$(DOITALL) ,\
 				$(notdir $(FILE)) \
@@ -9914,7 +9916,7 @@ else
 			--directory $($(PUBLISH)-$(EXAMPLE)) \
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+			COMPOSER_DEBUGIT= \
 			$(FILE); \
 			$(call NEWLINE) \
 	)
@@ -9978,12 +9980,13 @@ endif
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS) =
+override MAKEJOBS :=
+override COMPOSER_TARGETS :=
+
 .PHONY: shade-%
 shade-%:
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_YML)
-
-override COMPOSER_TARGETS :=\
+	@$$(TOUCH) $$(COMPOSER_YML) \
 $(foreach FILE,$(CSS_THEMES),\
 	$(if $(filter-out $(TOKEN),\
 		$(word 4,$(subst :, ,$(FILE))) \
