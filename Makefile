@@ -731,11 +731,19 @@ override FONTAWES_DIR			:= $(COMPOSER_DIR)/font-awesome
 
 ########################################
 
-#WORKING:NOW:NOW:FIX
-#	add markdown-themes, so we have non-minified versions
-#	use those instead?  do we even need the viewer repository?
-#	should we manually minify all css files, including user-selected ones?
-#		does pandoc have an html minify option?
+# https://github.com/kognise/water.css
+# https://github.com/kognise/water.css/blob/master/LICENSE.md
+ifneq ($(origin WATERCSS_CMT),override)
+#>override WATERCSS_CMT			:= d950cbc9f8607521587fae1aa523f85e25f8396f
+override WATERCSS_CMT			:= d950cbc9f8607521587f
+endif
+override WATERCSS_LIC			:= MIT
+override WATERCSS_SRC			:= https://github.com/kognise/water.css.git
+override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
+
+########################################
+
+#WORK document replacement/enhancement with water.css
 
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
@@ -747,17 +755,14 @@ override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 
-########################################
-
-# https://github.com/kognise/water.css
-# https://github.com/kognise/water.css/blob/master/LICENSE.md
-ifneq ($(origin WATERCSS_CMT),override)
-#>override WATERCSS_CMT			:= d950cbc9f8607521587fae1aa523f85e25f8396f
-override WATERCSS_CMT			:= d950cbc9f8607521587f
+# https://github.com/simov/markdown-themes
+ifneq ($(origin MDTHEMES_CMT),override)
+#>override MDTHEMES_CMT			:= 6b3643d0f703727d847207c1ddfdde700216cc11
+override MDTHEMES_CMT			:= 6b3643d0f703727d8472
 endif
-override WATERCSS_LIC			:= MIT
-override WATERCSS_SRC			:= https://github.com/kognise/water.css.git
-override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
+override MDTHEMES_LIC			:= None
+override MDTHEMES_SRC			:= https://github.com/simov/markdown-themes.git
+override MDTHEMES_DIR			:= $(COMPOSER_DIR)/markdown-themes
 
 ########################################
 
@@ -1108,18 +1113,19 @@ override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.cs
 override BOOTSWATCH_CSS_SOLAR_DARK	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.css
 override BOOTSWATCH_CSS_ALT		:= $(BOOTSWATCH_DIR)/dist/quartz/bootstrap.css
 
+override WATERCSS_CSS_LIGHT		:= $(WATERCSS_DIR)/out/light.css
+override WATERCSS_CSS_DARK		:= $(WATERCSS_DIR)/out/dark.css
+#>override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
+override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water-shade.css
+override WATERCSS_CSS_SOLAR_LIGHT	:= $(WATERCSS_DIR)/out/solarized-light.css
+override WATERCSS_CSS_SOLAR_DARK	:= $(WATERCSS_DIR)/out/solarized-dark.css
+override WATERCSS_CSS_SOLAR_ALT		:= $(WATERCSS_DIR)/out/solarized-shade.css
+
 override MDVIEWER_CSS_LIGHT		:= $(MDVIEWER_DIR)/themes/markdown7.css
 override MDVIEWER_CSS_DARK		:= $(MDVIEWER_DIR)/themes/markdown9.css
 override MDVIEWER_CSS_SOLAR_LIGHT	:= $(MDVIEWER_DIR)/themes/solarized-light.css
 override MDVIEWER_CSS_SOLAR_DARK	:= $(MDVIEWER_DIR)/themes/solarized-dark.css
 override MDVIEWER_CSS_ALT		:= $(MDVIEWER_DIR)/themes/screen.css
-
-override WATERCSS_CSS_LIGHT		:= $(WATERCSS_DIR)/out/light.css
-override WATERCSS_CSS_DARK		:= $(WATERCSS_DIR)/out/dark.css
-override WATERCSS_CSS_SOLAR_LIGHT	:= $(WATERCSS_DIR)/out/solarized-light.css
-override WATERCSS_CSS_SOLAR_DARK	:= $(WATERCSS_DIR)/out/solarized-dark.css
-#>override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water.css
-override WATERCSS_CSS_ALT		:= $(WATERCSS_DIR)/out/water-shade.css
 
 override REVEALJS_CSS_LIGHT		:= $(REVEALJS_DIR)/dist/theme/white.css
 override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
@@ -1134,40 +1140,40 @@ override CSS_THEMES = \
 		custom \
 		custom-solar \
 		,\
-		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)):$(SPECIAL_VAL)$(if $(filter custom,$(FILE)),:$(COMPOSER_BASENAME)$(TOKEN)Custom) \
+		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)):$(SPECIAL_VAL)$(if $(filter custom,$(FILE)),:[$(COMPOSER_BASENAME)]$(TOKEN)*(Templates)*) \
 		$(TYPE_HTML):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 		$(TYPE_PRES):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 	) \
-	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-light-alt):$(TOKEN):[Bootswatch] \
+	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-$(CSS_ALT)):$(TOKEN):[Bootswatch] \
 	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT):light \
 	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK):dark \
-	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT):light \
+	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT):dark \
 	$(PUBLISH):solar-dark:$(BOOTSWATCH_CSS_SOLAR_DARK):dark \
 	$(PUBLISH):$(CSS_ALT):$(BOOTSWATCH_CSS_ALT):$(SPECIAL_VAL) \
 	\
-	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),light):$(TOKEN):[Water.css] \
-	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT):light:$(TOKEN):$(TYPE_HTML) \
+	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT)):$(TOKEN):[Water.css] \
+	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT):light \
 	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK):dark \
+	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):dark \
+	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):$(SPECIAL_VAL):$(TOKEN):$(TYPE_HTML) \
 	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT):dark \
 	$(TYPE_HTML):solar-dark:$(WATERCSS_CSS_SOLAR_DARK):dark \
-	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):$(SPECIAL_VAL) \
+	$(TYPE_HTML):solar-$(CSS_ALT):$(WATERCSS_CSS_SOLAR_ALT):dark:$(TOKEN):$(PUBLISH) \
+	$(TYPE_HTML):solar-$(CSS_ALT):$(WATERCSS_CSS_SOLAR_ALT):$(SPECIAL_VAL) \
 	\
 	$(TOKEN):$(TOKEN):$(TOKEN):$(TOKEN):[Markdown$(TOKEN)Viewer] \
 	$(TYPE_HTML):light-alt:$(MDVIEWER_CSS_LIGHT):light \
 	$(TYPE_HTML):dark-alt:$(MDVIEWER_CSS_DARK):dark \
-	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT):dark:$(TOKEN):$(PUBLISH) \
+	$(TYPE_HTML):solar-light-alt:$(MDVIEWER_CSS_SOLAR_LIGHT):dark \
 	$(TYPE_HTML):solar-dark-alt:$(MDVIEWER_CSS_SOLAR_DARK):dark \
 	$(TYPE_HTML):$(CSS_ALT)-alt:$(MDVIEWER_CSS_ALT):dark \
 	\
-	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark) \
-	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT) \
-	$(TYPE_PRES):dark:$(REVEALJS_CSS_DARK) \
-	$(TYPE_PRES):solar-light:$(REVEALJS_CSS_SOLAR_LIGHT) \
-	$(TYPE_PRES):solar-dark:$(REVEALJS_CSS_SOLAR_DARK) \
-	$(TYPE_PRES):$(CSS_ALT):$(REVEALJS_CSS_ALT) \
-
-#>	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark):$(TOKEN):[Reveal.js] \
-#>	$(TYPE_PRES):dark:$(REVEALJS_CSS_DARK):$(SPECIAL_VAL):$(TOKEN):$(TYPE_PRES) \
+	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark):$(TOKEN):[Reveal.js] \
+	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT):$(SPECIAL_VAL) \
+	$(TYPE_PRES):dark:$(REVEALJS_CSS_DARK):$(SPECIAL_VAL):$(TOKEN):$(TYPE_PRES) \
+	$(TYPE_PRES):solar-light:$(REVEALJS_CSS_SOLAR_LIGHT):$(SPECIAL_VAL) \
+	$(TYPE_PRES):solar-dark:$(REVEALJS_CSS_SOLAR_DARK):$(SPECIAL_VAL) \
+	$(TYPE_PRES):$(CSS_ALT):$(REVEALJS_CSS_ALT):$(SPECIAL_VAL) \
 
 ########################################
 
@@ -2506,8 +2512,8 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
 $(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
-$(_S)#$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown$(_D)
-$(_S)#$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org$(_D)
+$(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown -->$(_D)
+$(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org -->$(_D)
 $(_E)[Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown$(_D)
 $(_E)[GitHub]: https://github.com$(_D)
 
@@ -2516,7 +2522,8 @@ $(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
 $(_E)[Bootstrap]: https://getbootstrap.com$(_D)
 $(_E)[Bootswatch]: https://bootswatch.com$(_D)
 $(_E)[Font-Awesome]: https://fontawesome.com$(_D)
-$(_E)[Markdown Viewer]: https://github.com/Thiht/markdown-viewer$(_D)
+$(_E)[Markdown Viewer]: https://github.com/simov/markdown-viewer$(_D)
+$(_E)[Markdown Themes]: https://github.com/simov/markdown-themes$(_D)
 $(_E)[Water.css]: https://watercss.kognise.dev$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
@@ -2982,8 +2989,9 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)BOOTSTRAP_CMT$(_D)`
   * `$(_C)BOOTSWATCH_CMT$(_D)`
   * `$(_C)FONTAWES_CMT$(_D)`
-  * `$(_C)MDVIEWER_CMT$(_D)`
   * `$(_C)WATERCSS_CMT$(_D)`
+  * `$(_C)MDVIEWER_CMT$(_D)`
+  * `$(_C)MDTHEMES_CMT$(_D)`
   * `$(_C)REVEALJS_CMT$(_D)`
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
@@ -3485,6 +3493,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
+ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
 		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
@@ -3498,10 +3507,13 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_YML_EXAMPLE))
+ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
+endif
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
 	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
@@ -3531,6 +3543,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
 											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+#> update: HEREDOC_CUSTOM_PUBLISH
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))
@@ -3554,7 +3567,7 @@ endif
 		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
 			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
 			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
-		)									$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE)))) \
+		)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE))))) \
 											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	))
@@ -3600,10 +3613,13 @@ endif
 	)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
+ifeq ($(COMPOSER_DEBUGIT),)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
-#>	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_HTML)
-#>	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
+else
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
+endif
 	@$(ECHO) "$(_E)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
@@ -3790,10 +3806,7 @@ $(_S)#$(_D) $(_H)Settings$(_D)
 
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D):			$(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_site	:= 1
-$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_css	:= html.solar-dark-alt$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_toc	:=$(_D)
-
-$(_M)$(OUT_README).$(EXTN_HTML)$(_D): $(_E)override c_css		:= html.dark$(_D)
 
 $(_S)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_S)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 
@@ -4435,13 +4448,13 @@ variables:
   $(PUBLISH)-nav-left:
     BEGIN:
       - row-begin
-      - column-begin col-2
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-2 col-6
     MIDDLE:
       - column-end
-      - column-begin col-2
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-2 col-6
     SPACE:
       - column-end
-      - column-begin col-4
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-12
     END:
       - column-end
       - row-end
@@ -5279,7 +5292,9 @@ $${CAT} <<_EOF_
 			$${ECHO} " $(COMPOSER_TINYNAME)-sticky"
 		fi
 	else
-		if [ -n "$${@}" ]; then $${ECHO} " $${@}"; fi
+		if [ -n "$${1}" ]; then
+			$${ECHO} " $${@}"
+		fi
 	fi
 ) p-2">
 _EOF_
@@ -5617,8 +5632,8 @@ endef
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
 	$(SED) -i \
-		-e "/^[[:space:]]+background-color[:]/d" \
-		-e "/^[[:space:]]+color[:]/d"
+		-e "s|([^-])background-color[:][^;]+[;]|\\1|g" \
+		-e "s|([^-])color[:][^;]+[;]|\\1|g"
 endef
 
 ########################################
@@ -6172,6 +6187,14 @@ endef
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC =
 @import '../variables-$(1).css';
 @import '../variables-solarized-$(1).css';
+@import '../parts/_core.css';
+endef
+
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
+@import '../variables-light.css';
+@import '../variables-dark.css' (prefers-color-scheme: dark);
+@import '../variables-solarized-light.css';
+@import '../variables-solarized-dark.css' (prefers-color-scheme: dark);
 @import '../parts/_core.css';
 endef
 
@@ -7436,7 +7459,7 @@ $(DEBUGIT)-file:
 		| $(TEE) --append $(DEBUGIT_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
-	@$(ECHO) "\n"
+	@$(ENDOLINE)
 	@$(TAIL) -n10 $(DEBUGIT_FILE)
 	@$(LS) $(DEBUGIT_FILE)
 
@@ -7524,7 +7547,7 @@ $(TESTING)-file:
 		| $(TEE) --append $(TESTING_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
-	@$(ECHO) "\n"
+	@$(ENDOLINE)
 	@$(TAIL) -n10 $(TESTING_FILE)
 	@$(LS) $(TESTING_FILE)
 
@@ -7801,7 +7824,7 @@ $(TESTING)-heredoc-init:
 	@$(foreach FILE,$(shell \
 		$(SED) -n "s|^.*define.+(HEREDOC[_][^[:space:]]+).*$$|\1|gp" $(COMPOSER) \
 		),\
-		$(call DO_HEREDOC,$(FILE),1,$(notdir $(call $(TESTING)-pwd)))	>$(call $(TESTING)-pwd)/$(FILE).$(EXTN_TEXT); \
+		$(call DO_HEREDOC ,$(FILE),1,$(notdir $(call $(TESTING)-pwd)))	>$(call $(TESTING)-pwd)/$(FILE).$(EXTN_TEXT); \
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$(shell \
@@ -7812,10 +7835,16 @@ $(TESTING)-heredoc-init:
 			| $(BASE64) -d						>$(call $(TESTING)-pwd)/$(FILE).png; \
 		$(call NEWLINE) \
 	)
+	@$(SED) -n "s|^.+DO_HEREDOC[,]([^[:space:]]+).*$$|\1|gp" $(COMPOSER) \
+		| $(SED) \
+			-e "s|[)]$$||g" \
+			-e "s|[,].*$$||g" \
+		| $(SORT) \
+		>$(call $(TESTING)-pwd)/.DO_HEREDOC.$(EXTN_TEXT)
 
 .PHONY: $(TESTING)-heredoc-done
 $(TESTING)-heredoc-done:
-	@$(LS) $(call $(TESTING)-pwd)
+	@$(CAT) $(call $(TESTING)-pwd)/.DO_HEREDOC.$(EXTN_TEXT)
 
 ########################################
 ### {{{3 $(TESTING)-speed --------------
@@ -8372,8 +8401,9 @@ $(TESTING)-other-init:
 	@$(ECHO) "override BOOTSTRAP_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override BOOTSWATCH_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override FONTAWES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override WATERCSS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override MDTHEMES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
@@ -8421,7 +8451,7 @@ $(TESTING)-other-done:
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,36,$(NOTHING))
+	$(call $(TESTING)-count,40,$(NOTHING))
 	$(call $(TESTING)-count,6,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> targets
@@ -8482,8 +8512,9 @@ $(CHECKIT):
 	@$(TABLE_M3) "$(_E)[Bootstrap]"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
 	@$(TABLE_M3) "$(_E)[Bootswatch]"		"$(_E)$(BOOTSWATCH_CMT)"		"$(_N)$(BOOTSWATCH_LIC)"
 	@$(TABLE_M3) "$(_E)[Font-Awesome]"		"$(_E)$(FONTAWES_CMT)"			"$(_N)$(FONTAWES_LIC)"
-	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(TABLE_M3) "$(_E)[Water.css]"			"$(_E)$(WATERCSS_CMT)"			"$(_N)$(WATERCSS_LIC)"
+	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
+	@$(TABLE_M3) "$(_E)[Markdown Themes]"		"$(_E)$(MDTHEMES_CMT)"			"$(_N)$(MDTHEMES_LIC)"
 	@$(TABLE_M3) "$(_E)[Reveal.js]"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
@@ -8587,6 +8618,7 @@ ifneq ($(COMPOSER_YML_LIST),)
 #>	@$(call COMPOSER_YML_DATA) 2>/dev/null | $(YQ_WRITE_OUT) 2>/dev/null
 	@$(call COMPOSER_YML_DATA) | $(YQ_WRITE_OUT)
 endif
+#WORK document
 ifeq ($(COMPOSER_LIBRARY),$(CURDIR))
 	@$(LINERULE)
 ifneq ($(wildcard $($(PUBLISH)-library-index)),)
@@ -8599,7 +8631,13 @@ endif
 ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
 	@$(LINERULE)
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
+	@$(LINERULE)
+	@$(ENV_MAKE) $(CONFIGS)-env
 endif
+
+.PHONY: $(CONFIGS)-env
+$(CONFIGS)-env:
+	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
 
 ########################################
 ## {{{2 $(TARGETS) ---------------------
@@ -8686,24 +8724,40 @@ $(DISTRIB):
 $(UPGRADE): .set_title-$(UPGRADE)
 $(UPGRADE):
 	@$(call $(HEADERS))
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(FONTAWES_DIR)),$(FONTAWES_SRC),$(FONTAWES_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),$(WATERCSS_SRC),$(WATERCSS_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDTHEMES_DIR)),$(MDTHEMES_SRC),$(MDTHEMES_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
+endif
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
-ifneq ($(wildcard $(firstword $(NPM))),)
+endif
+#WORK document
+ifeq ($(wildcard $(firstword $(NPM))),)
+	@$(ENDOLINE)
+	@$(MAKE) $(NOTHING)-npm
+else
+#WORK document
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
+#> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call NPM_INSTALL,$(MDVIEWER_DIR))
 	@$(call NPM_INSTALL,$(WATERCSS_DIR))
+	@$(call NPM_RUN,$(WATERCSS_DIR)) $(NPM) install yarn
+endif
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(MDVIEWER_DIR))$(_D) ($(_E)build$(_D))"
 	@$(foreach FILE,\
 		mdc \
 		prism \
@@ -8711,16 +8765,22 @@ ifneq ($(wildcard $(firstword $(NPM))),)
 		themes \
 		,\
 		$(call NPM_RUN,$(MDVIEWER_DIR)) $(NPM) run-script build:$(FILE); \
+		$(call NEWLINE) \
 	)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(WATERCSS_DIR))$(_D) ($(_E)build$(_D))"
 	@$(SED) -i -e "/^dist[/]$$/d" -e "/^out[/]$$/d"				$(WATERCSS_DIR)/.gitignore
-	@$(CP) $(WATERCSS_DIR)/src/builds/water.css				$(WATERCSS_DIR)/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)			>>$(WATERCSS_DIR)/src/builds/water-shade.css
 	@$(foreach FILE,light dark,\
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
 		$(call NEWLINE) \
 	)
-	@$(call NPM_RUN,$(WATERCSS_DIR)) $(NPM) install yarn
+	@$(CP) $(WATERCSS_DIR)/src/builds/water.css				$(WATERCSS_DIR)/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR)		>$(WATERCSS_DIR)/src/builds/solarized-shade.css
+	@$(foreach FILE,water-shade solarized-shade,\
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)		>>$(WATERCSS_DIR)/src/builds/$(FILE).css; \
+		$(call NEWLINE) \
+	)
 	@$(call NPM_RUN,$(WATERCSS_DIR),yarn) build
 endif
 endif
@@ -9642,8 +9702,9 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(BOOTSTRAP_DIR) \
 		$(BOOTSWATCH_DIR) \
 		$(FONTAWES_DIR) \
-		$(MDVIEWER_DIR) \
 		$(WATERCSS_DIR) \
+		$(MDVIEWER_DIR) \
+		$(MDTHEMES_DIR) \
 		$(REVEALJS_DIR) \
 		\
 		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/ \
@@ -9685,7 +9746,10 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(INSTALL)-$(DOFORCE)
 endif
 	@$(call $(HEADERS))
-	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
+	@$(foreach FILE,\
+		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
+		,\
 		$(call $(HEADERS)-note,$($(PUBLISH)-$(EXAMPLE)),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
 	)
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_SETTINGS))
@@ -9709,20 +9773,6 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-ifneq ($(or \
-	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
-	$(COMPOSER_DEBUGIT) ,\
-),)
-	@$(SED) -i \
-		-e "s|^(.+css_shade.+)$(PUBLISH_CSS_SHADE_ALT)$$|\1$(PUBLISH_CSS_SHADE)|g" \
-		-e "s|^(.+auto_update.+)$(LIBRARY_AUTO_UPDATE_ALT)$$|\1$(LIBRARY_AUTO_UPDATE)|g" \
-									$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
-									$(if $(COMPOSER_DEBUGIT),$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML))
-	@$(TOUCH)							$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
-	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
-		$(TOUCH)						$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
-	)
-endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_CSS))
 	@$(ECHO) "$(_S)"
 	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
@@ -9766,6 +9816,42 @@ endif
 	))
 	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"										>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)),$(COMPOSER_SETTINGS))
+	@$(foreach FILE,$(CSS_THEMES),\
+		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+		$(if $(filter-out $(TOKEN),$(SHADE)),\
+			$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)),$(THEME)$(_D) $(_C)($(SHADE))); \
+			$(call NEWLINE) \
+		) \
+	)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)) \
+		| $(SED) -e "s|[[:space:]]*$$||g"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)) \
+		| $(SED) -e "s|[[:space:]]*$$||g"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)) \
+		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t|    |g"		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+ifneq ($(or \
+	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
+	$(COMPOSER_DEBUGIT) ,\
+),)
+	@$(SED) -i "s|^(.+auto_update.+)$(LIBRARY_AUTO_UPDATE_ALT)$$|\1$(LIBRARY_AUTO_UPDATE)|g" \
+				$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
+				$(if $(COMPOSER_DEBUGIT),\
+					$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) \
+				)
+	@$(foreach FILE,\
+		.$(COMPOSER_BASENAME) \
+		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
+		,\
+		$(TOUCH)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+		$(call NEWLINE) \
+	)
+endif
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
@@ -9778,10 +9864,12 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
 											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+#> update: HEREDOC_CUSTOM_PUBLISH
 endif
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
 		,\
 		$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
 		$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
@@ -9790,59 +9878,11 @@ endif
 			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml; fi; \
 		if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml" ]; then \
 			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml; fi; \
+		if [ "$(FILE)" =		"$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))" ]; then \
+			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); fi; \
 		$(ECHO) "$(_D)"; \
 	)
-	@$(ECHO) "\n"
-#WORKING:NOW:NOW:FIX
-#	make all of this part of the default runs, somehow...  maybe a custom target...?
-#	make the themes markdown output into a define that can select which type?  could be used elsewhere in the documentation...
-#WORKING:NOW:NOW:FIX
-	@$(ECHO) "\n"									>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(foreach FILE,$(CSS_THEMES),\
-		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
-		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
-		$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
-		$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
-		$(if $(filter-out $(TOKEN),$(TITLE)),\
-			$(ECHO) "\n**$(subst $(TOKEN), ,$(TITLE))**\n\n"		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
-		) \
-		$(if $(filter-out $(TOKEN),$(SHADE)),\
-			$(ECHO) "  * [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(EXTN_HTML))" \
-											>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
-			$(if $(filter-out $(TOKEN),$(DEFLT)),\
-				$(ECHO) " **(default: \`$(DEFLT)\`)**"			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
-			) \
-			$(if $(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)),\
-				$(ECHO) " *(automatic \`prefers-color-scheme\` color selection)*" \
-											>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
-			) \
-			$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); \
-		) \
-		$(call NEWLINE) \
-	)
-	@$(ECHO) "\n"									>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1) | $(SED) "/^[#]/d"	>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(ECHO) "\n"									>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(ECHO) ""									>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "variables:\n  $(PUBLISH)-config:\n"					>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
-	@$(foreach FILE,$(CSS_THEMES),\
-		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
-		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
-		$(if $(filter-out $(TOKEN),$(SHADE)),\
-			$(ECHO) "override c_css := $(THEME)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS); \
-			$(ECHO) "    css_shade: $(SHADE)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML); \
-			$(ENV_MAKE) $(SILENT) \
-				--directory $($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes) \
-				MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
-				COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-				COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
-				c_base="$(THEME)+$(SHADE)" \
-				c_list="$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))" \
-				$(COMPOSER_PANDOC); \
-		) \
-		$(call NEWLINE) \
-	)
-#WORKING:NOW:NOW:FIX
+	@$(ENDOLINE)
 	@$(foreach FILE,\
 		$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)) \
 		$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)) \
@@ -9852,13 +9892,17 @@ endif
 		$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML) \
+		$($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL) \
 		,\
 		$(ENV_MAKE) $(SILENT) \
 			--directory $(abspath $(dir $($(PUBLISH)-$(EXAMPLE))/$(FILE))) \
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
 			COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
-			$(notdir $(FILE)); \
+			$(if $(filter $($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL),$(FILE)),\
+				$(DOITALL) ,\
+				$(notdir $(FILE)) \
+			); \
 			$(call NEWLINE) \
 	)
 else
@@ -9929,6 +9973,88 @@ endif
 #	empty configuration versus hard-defaults
 #		they should match, and $(NOTHING) and pandoc directories should not have _library
 #		incorporate the COMPOSER_DEPENDS and other testing happening here, now
+
+########################################
+##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)
+
+override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS) =
+.PHONY: shade-%
+shade-%:
+	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
+	@$$(TOUCH) $$(COMPOSER_YML)
+
+override COMPOSER_TARGETS :=\
+$(foreach FILE,$(CSS_THEMES),\
+	$(if $(filter-out $(TOKEN),\
+		$(word 4,$(subst :, ,$(FILE))) \
+	),\
+	$(call NEWLINE)$(call NEWLINE)$(call \
+		$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target,$(strip \
+		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
+))))
+endef
+
+########################################
+##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target
+
+#WORKING:NOW:NOW:FIX
+#	increase the darkness of water*+0 borders
+#	conundrum: dark shade needs to be the default, but it doesn't work with css_alt...
+#		ugh... exception time...?  yes, that is the only thing which makes sense...
+#		document!
+#	somehow note that site.solar-light is just site.solar-dark ...
+#	also force c_type=revealjs and update the theme links...
+
+override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target =
+override COMPOSER_TARGETS += $(1)
+.PHONY: $(1)
+$(1):
+	@$$(ENV_MAKE) $$(SILENT) \\
+		shade-$(word 2,$(subst +, ,$(1)))
+	@$$(ENV_MAKE) $$(SILENT) \\
+		c_base="$(1)" \\
+		c_list="$$(COMPOSER_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))" \\
+		c_css="$(word 1,$(subst +, ,$(1)))" \\
+		$(COMPOSER_PANDOC)
+endef
+
+########################################
+##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)
+
+override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML) =
+variables:
+  $(PUBLISH)-config:
+    css_shade: $(SPECIAL_VAL)
+endef
+
+########################################
+##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)
+
+override define $(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER) =
+$(strip \
+$(foreach FILE,$(CSS_THEMES),\
+	$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+	$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+	$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+	$(if $(filter-out $(TOKEN),$(TITLE)),\
+		[N]**$(subst $(TOKEN), ,$(TITLE))**[N][N] \
+	) \
+	$(if $(filter-out $(TOKEN),$(SHADE)),\
+		* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(EXTN_HTML)) \
+		$(if $(filter-out $(TOKEN),$(DEFLT)),\
+			**(default: `$(DEFLT)`)** \
+		) \
+		$(if $(or \
+			$(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)) ,\
+			$(filter $(TYPE_HTML).solar-$(CSS_ALT),$(THEME)) ,\
+		),\
+			[N]\t* *(automatic `prefers-color-scheme` color selection)* \
+		) \
+		[N] \
+	) \
+))
+endef
 
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
@@ -10624,10 +10750,14 @@ $(COMPOSER_LOG): $(if $(COMPOSER_EXT),\
 	$(COMPOSER_CONTENTS_EXT) ,\
 	$(NOTHING)-COMPOSER_EXT \
 )
+$(COMPOSER_LOG): $(if $(wildcard $(COMPOSER_LOG)),,\
+	$(NOTHING)-$(COMPOSER_LOG) \
+)
 $(COMPOSER_LOG):
 	@$(LS) --directory \
 		$(COMPOSER_LOG) \
 		$(filter-out $(NOTHING)-COMPOSER_EXT,$(?)) \
+		2>/dev/null \
 		|| $(TRUE)
 
 ################################################################################
@@ -10773,8 +10903,11 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	aw, jeez... now dependencies like "target: other target" are broken...  gah.
+#		somehow search $(TARGETS)-$(PRINTER) ...?  yeah, now things will be even slower...  meh.
+#		worth it for the easy feature-set ...?  what else is broken that i'm not thinking of...?
 #	different error handling for empty c_list/c_list_plus?
-#	better error message for missing c_type/c_base/c_list?
+#		better error message for missing c_type/c_base/c_list?
 
 %.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) $$(c_list)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(c_list))
