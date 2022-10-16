@@ -1109,8 +1109,9 @@ override CSS_ICONS = \
 
 override BOOTSWATCH_CSS_LIGHT		:= $(BOOTSWATCH_DIR)/dist/flatly/bootstrap.css
 override BOOTSWATCH_CSS_DARK		:= $(BOOTSWATCH_DIR)/dist/slate/bootstrap.css
-override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.css
+#>override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.css
 override BOOTSWATCH_CSS_SOLAR_DARK	:= $(BOOTSWATCH_DIR)/dist/solar/bootstrap.css
+override BOOTSWATCH_CSS_SOLAR_LIGHT	:= $(BOOTSWATCH_CSS_SOLAR_DARK)
 override BOOTSWATCH_CSS_ALT		:= $(BOOTSWATCH_DIR)/dist/quartz/bootstrap.css
 
 override WATERCSS_CSS_LIGHT		:= $(WATERCSS_DIR)/out/light.css
@@ -1142,7 +1143,7 @@ override CSS_THEMES = \
 		custom \
 		custom-solar \
 		,\
-		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)):$(SPECIAL_VAL)$(if $(filter custom,$(FILE)),:[$(COMPOSER_BASENAME)]$(TOKEN)*(Templates)*) \
+		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)):$(SPECIAL_VAL)$(if $(filter custom,$(FILE)),:[$(COMPOSER_BASENAME)]) \
 		$(TYPE_HTML):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 		$(TYPE_PRES):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 	) \
@@ -9832,10 +9833,20 @@ endif
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)) \
 		| $(SED) -e "s|[[:space:]]*$$||g"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)) \
-		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t|    |g"		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL)
+		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) "$(_E)"
+	@$(LN)									$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))) \
+										$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_DEFAULT) \
+										$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page) \
+		| $(SED) \
+			-e "s|^page(title[:].+)$$|\1|g" \
+			-e "/^$(PUBLISH_CMD_BEG)/d" \
+										>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(or \
 	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
 	$(COMPOSER_DEBUGIT) ,\
@@ -9881,7 +9892,7 @@ endif
 		if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml" ]; then \
 			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml; fi; \
 		if [ "$(FILE)" =		"$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))" ]; then \
-			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)$(COMPOSER_EXT_SPECIAL); fi; \
+			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL); fi; \
 		$(ECHO) "$(_D)"; \
 	)
 	@$(ENDOLINE)
@@ -9932,6 +9943,8 @@ endif
 #		consider removing main $(COMPOSER_YML) ... it makes $(CONFIGS) output confusing...
 #			it is already in _site/.Composer, so we can point to there in the documentation...
 #		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
+#			title versus pagetitle... do need to test both...
+#				pagetitle does not alwasy produce a header, such as with revealjs...
 #		remove command line short-aliases?  (except for J= V= C= , etc.)
 #		do $(call $(HEADERS)-path-root,???) on c_logo in $(CUSTOM_PUBLISH_SH) ... others?
 #			also need to do it in $(COMPOSER_YML) output in $(OUT_README)
@@ -10000,19 +10013,14 @@ endef
 ########################################
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target
 
-#WORKING:NOW:NOW:FIX
-#	somehow note that site.solar-light is just site.solar-dark ...
-#	also force c_type=revealjs and update the theme links...
-
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target =
 override COMPOSER_TARGETS += $(1)
 .PHONY: $(1)
 $(1):
-	@$$(ENV_MAKE) $$(SILENT) \\
-		shade-$(word 2,$(subst +, ,$(1)))
-	@$$(ENV_MAKE) $$(SILENT) \\
-		c_base="$(1)" \\
-		c_list="$$(COMPOSER_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))" \\
+	@$$(MAKE) shade-$(word 2,$(subst +, ,$(1)))
+	@$$(MAKE) \\
+		$(if $(filter $(TYPE_PRES).%,$(1)),c_type="$(TYPE_PRES)" \\$(call NEWLINE)\t\t)c_base="$(1)" \\
+		$(if $(filter $(TYPE_PRES).%,$(1)),c_list="$($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)",c_list="$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_DEFAULT)") \\
 		c_css="$(word 1,$(subst +, ,$(1)))" \\
 		$(COMPOSER_PANDOC)
 endef
@@ -10037,18 +10045,25 @@ $(foreach FILE,$(CSS_THEMES),\
 	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
 	$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
 	$(if $(filter-out $(TOKEN),$(TITLE)),\
-		[N]**$(subst $(TOKEN), ,$(TITLE))**[N][N] \
+		[N]**$(subst $(TOKEN), ,$(TITLE))** \
+		$(if $(filter [$(COMPOSER_BASENAME)],$(TITLE)),\
+			*(Templates)* \
+		) \
+		[N][N] \
 	) \
 	$(if $(filter-out $(TOKEN),$(SHADE)),\
-		* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(EXTN_HTML)) \
+		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
 		$(if $(filter-out $(TOKEN),$(DEFLT)),\
 			**(default: `$(DEFLT)`)** \
+		) \
+		$(if $(filter $(PUBLISH).solar-light,$(THEME)),\
+			[N]\t\t\t\t*(same as `$(PUBLISH).solar-dark`)* \
 		) \
 		$(if $(or \
 			$(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)) ,\
 			$(filter $(TYPE_HTML).solar-$(CSS_ALT),$(THEME)) ,\
 		),\
-			[N]\t* *(automatic `prefers-color-scheme` color selection)* \
+			[N]\t\t\t\t* *(automatic `prefers-color-scheme` color selection)* \
 		) \
 		[N] \
 	) \
@@ -10136,7 +10151,7 @@ pagetitle: Main Page
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
