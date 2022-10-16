@@ -6226,11 +6226,11 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	/* layout */
 	--background-alt:		var(--solarized-$(1)2);
 	--background:			var(--solarized-$(1)2);
-	--border:			var(--solarized-$(1)2);
-	--focus:			var(--solarized-$(1)2);
+	--border:			var(--solarized-$(1)1);
+	--focus:			var(--solarized-$(1)1);
 	/* widgets */
-	--button-base:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
-	--button-hover:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
+	--button-base:			var(--solarized-$(1)1);
+	--button-hover:			var(--solarized-$(1)1);
 	--form-placeholder:		var(--solarized-$(if $(filter light,$(1)),dark,light)0);
 	--form-text:			var(--solarized-$(if $(filter light,$(1)),dark,light)0);
 	/* accents */
@@ -10001,10 +10001,6 @@ endef
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target
 
 #WORKING:NOW:NOW:FIX
-#	increase the darkness of water*+0 borders
-#	conundrum: dark shade needs to be the default, but it doesn't work with css_alt...
-#		ugh... exception time...?  yes, that is the only thing which makes sense...
-#		document!
 #	somehow note that site.solar-light is just site.solar-dark ...
 #	also force c_type=revealjs and update the theme links...
 
