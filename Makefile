@@ -982,20 +982,23 @@ endef
 
 override define NPM_RUN =
 	cd $(1) && \
-		PATH="$(PATH):$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin" \
-		$(if $(2),$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin/$(2))
+		PATH="$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin:$(PATH)" \
+		$(if $(3),\
+			$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin/$(3) ,\
+			$(NPM) \
+				$(if $(2),,--prefix $(COMPOSER_PKG)/$(notdir $(1)).npm) \
+				--cache $(COMPOSER_PKG)/$(notdir $(1)).npm \
+				$(2) \
+		)
 endef
 
 override define NPM_INSTALL =
 	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)npm$(_D))"; \
+	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)npm$(_D)$(if $(2), $(MARKER) $(_E)$(2)$(_D)))"; \
 	$(MKDIR) $(COMPOSER_PKG)/$(notdir $(1)).npm; \
 	$(RM) $(1)/node_modules;				$(LN) $(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules $(1)/; \
 	$(RM) $(COMPOSER_PKG)/$(notdir $(1)).npm/package.json;	$(LN) $(1)/package.json $(COMPOSER_PKG)/$(notdir $(1)).npm/; \
-	$(call NPM_RUN,$(1)) $(NPM) \
-		--prefix $(COMPOSER_PKG)/$(notdir $(1)).npm \
-		--cache $(COMPOSER_PKG)/$(notdir $(1)).npm \
-		install
+	$(call NPM_RUN,$(1)) install $(2)
 endef
 
 ################################################################################
@@ -8760,7 +8763,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call NPM_INSTALL,$(MDVIEWER_DIR))
 	@$(call NPM_INSTALL,$(WATERCSS_DIR))
-	@$(call NPM_RUN,$(WATERCSS_DIR)) $(NPM) install yarn
+	@$(call NPM_INSTALL,$(WATERCSS_DIR),yarn)
 endif
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(MDVIEWER_DIR))$(_D) ($(_E)build$(_D))"
@@ -8770,7 +8773,7 @@ endif
 		remark \
 		themes \
 		,\
-		$(call NPM_RUN,$(MDVIEWER_DIR)) $(NPM) run-script build:$(FILE); \
+		$(call NPM_RUN,$(MDVIEWER_DIR),run-script) build:$(FILE); \
 		$(call NEWLINE) \
 	)
 	@$(ENDOLINE)
@@ -8787,7 +8790,7 @@ endif
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)		>>$(WATERCSS_DIR)/src/builds/$(FILE).css; \
 		$(call NEWLINE) \
 	)
-	@$(call NPM_RUN,$(WATERCSS_DIR),yarn) build
+	@$(call NPM_RUN,$(WATERCSS_DIR),,yarn) build
 endif
 endif
 
