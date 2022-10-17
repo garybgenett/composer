@@ -3583,6 +3583,9 @@ endif
 #		https://github.com/altercation/solarized
 #		https://github.com/troxler/awesome-css-frameworks
 #			https://github.com/csstools/sanitize.css
+#	remove the html5shiv from the html5 template
+#		programmatically would be ideal...
+#		test to make sure page loads do not require any network at all...
 #WORKING:NOW:NOW:FIX
 	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach FILE,\
@@ -8575,7 +8578,7 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "- $(_E)GNU Gzip"			"$(_N)$(GZIP_BIN)"
 	@$(TABLE_M2) "- $(_E)7z"			"$(_N)$(7Z)"
 ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(TABLE_M2) "- $(_E)Node.js (npm)"		"$(_N)$(call $(HEADERS)-path-dir,$(NPM))"
+	@$(TABLE_M2) "- $(_E)Node.js (npm)"		"$(_N)$(NPM)"
 endif
 	@$(TABLE_M2) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"
 	@$(TABLE_M2) "- $(_E)GNU Diffutils"		"$(_N)$(DIFF)"
@@ -9082,9 +9085,13 @@ $($(PUBLISH)-caches):
 ### {{{3 $(PUBLISH)-library ------------
 
 #WORKING:NOW:NOW:FIX
+#	add index.html ...?
+#WORKING:NOW:NOW:FIX
 #	library behavior during site-template
 #		rebuilds twice in config during site-all ... what triggers the second one?
 #		rebuild of bootstrap during site-force step ... expected?
+#	ideally, we would not have as much rebuilding before the site-force...
+#		maybe "touch" for all the content files...?
 
 ifneq ($(and \
 	$(c_site) ,\
@@ -9776,6 +9783,8 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+#WORKING:NOW:NOW:FIX
+#	need to re-visit this... it needs to be tested, but changing the theme on the final site doesn't make sense... reverse it...
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_CSS))
 	@$(ECHO) "$(_S)"
 	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
@@ -10465,6 +10474,20 @@ All the settings and menus are empty for this page, except for this content.  Th
   * *Source file: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))]($(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))))*
   * *Main page: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))*
 endef
+
+#WORKING:NOW:NOW:FIX
+#	automate the $($(PUBLISH)-$(EXAMPLE)-files) list/menu, and add it here
+#		use it to also auto-generate the yml file(s)
+#		time to add "themes" to those lists, instead of it being it's own value...
+#		a define will work best, with a flag to add {.dropdown-item}
+#		create a variable, parallel to (*)-files, which has the names of the pages
+#		each page can then have it's own heredoc/define which describes it
+#		time, then, to do "includes" on each of the pages...
+#WORK
+#	random note/thought
+#		composer makes it very easy to create rich interfaces for delivering content efficiently
+#		the trade-off is that the computational horsepower is spent as capital rather than operational cost
+#		best practice is to have an overnight $(PUBLISH)-$(DOFORCE) process...
 
 ########################################
 ## {{{2 $(INSTALL) ---------------------
