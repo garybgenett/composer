@@ -6196,6 +6196,11 @@ endef
 ########################################
 ### {{{3 custom_html_css (Water.css) ---
 
+#WORKING:NOW:NOW
+#	need to touch-up the light theme, so it has the same accents/texture as dark...
+#		maybe make both water/solar nav/fold/box elements a dark background...?
+#	get rid of contact information icons, and any others...
+
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
 $(eval SHADE := $(word 1,$(subst :, ,$(1))))
 $(eval PRFRS := $(word 2,$(subst :, ,$(1))))
@@ -8367,6 +8372,7 @@ $(TESTING)-CSS-init:
 	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 
+#WORKING:NOW:NOW:FIX
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))))
@@ -9666,6 +9672,7 @@ endef
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
 
 override $(PUBLISH)-$(EXAMPLE)		:= $(CURDIR)/_$(PUBLISH)
+override $(PUBLISH)-$(EXAMPLE)-log	:= $(CURDIR)/$(call OUTPUT_FILENAME,$(PUBLISH))
 override $(PUBLISH)-$(EXAMPLE)-index	:= index
 override $(PUBLISH)-$(EXAMPLE)-library	:= $(LIBRARY_FOLDER_ALT)-$(CONFIGS)
 
@@ -9873,6 +9880,7 @@ ifneq ($(or \
 		$(call NEWLINE) \
 	)
 endif
+	@$(ECHO) "" >$($(PUBLISH)-$(EXAMPLE)-log)
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
@@ -9891,17 +9899,19 @@ endif
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
 		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
-		,\
-		$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
-		$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
-		$(ECHO) "$(_C)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
-		if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml" ]; then \
-			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml; fi; \
-		if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml" ]; then \
-			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml; fi; \
-		if [ "$(FILE)" =		"$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))" ]; then \
-			$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL); fi; \
-		$(ECHO) "$(_D)"; \
+		,{ \
+			$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
+			$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
+			$(ECHO) "$(_C)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+			if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml" ]; then \
+				$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml; fi; \
+			if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml" ]; then \
+				$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml; fi; \
+			if [ "$(FILE)" =		"$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))" ]; then \
+				$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL); fi; \
+			$(ECHO) "$(_D)"; \
+		} 2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
+		$(call NEWLINE) \
 	)
 	@$(ENDOLINE)
 	@$(foreach FILE,\
@@ -9923,12 +9933,14 @@ endif
 			$(if $(filter $($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL),$(FILE)),\
 				$(DOITALL) ,\
 				$(notdir $(FILE)) \
-			); \
+			) \
+			2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
 			$(call NEWLINE) \
 	)
 else
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
+		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		,\
 		time $(ENV_MAKE) $(SILENT) \
@@ -9936,7 +9948,8 @@ else
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
 			COMPOSER_DEBUGIT= \
-			$(FILE); \
+			$(FILE) \
+			2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
 			$(call NEWLINE) \
 	)
 endif
