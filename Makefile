@@ -3631,6 +3631,9 @@ else
 endif
 	@$(ECHO) "$(_E)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
+	@$(LN)										$(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML) \
+											$(CURDIR)/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
@@ -6193,21 +6196,15 @@ endef
 ########################################
 ### {{{3 custom_html_css (Water.css) ---
 
-override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC =
-@import '../variables-$(1).css';
-@import '../variables-solarized-$(1).css';
-@import '../parts/_core.css';
-endef
-
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
-@import '../variables-light.css';
-@import '../variables-dark.css' (prefers-color-scheme: dark);
-@import '../variables-solarized-light.css';
-@import '../variables-solarized-dark.css' (prefers-color-scheme: dark);
+$(eval SHADE := $(word 1,$(subst :, ,$(1))))
+$(eval PRFRS := $(word 2,$(subst :, ,$(1))))
+@import '../variables-$(SHADE).css'		$(if $(PRFRS), (prefers-color-scheme: $(SHADE)));
+@import '../variables-solarized-$(SHADE).css'	$(if $(PRFRS), (prefers-color-scheme: $(SHADE)));
 @import '../parts/_core.css';
 endef
 
-override define HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE =
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE =
 .navbar,
 .dropdown-menu,
 .accordion-button,
@@ -6220,7 +6217,7 @@ override define HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE =
 }
 endef
 
-override define HEREDOC_CUSTOM_HTML_CSS_WATER =
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR =
 :root {
 $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 
@@ -6247,7 +6244,7 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	--variable:			var(--solarized-cyan);
 }
 
-$(call HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)
+$(call HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)
 .$(COMPOSER_TINYNAME)-header {
 	color:				var(--solarized-green);
 }
@@ -8778,18 +8775,19 @@ endif
 	)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(WATERCSS_DIR))$(_D) ($(_E)build$(_D))"
-	@$(SED) -i -e "/^dist[/]$$/d" -e "/^out[/]$$/d"				$(WATERCSS_DIR)/.gitignore
+	@$(SED) -i \
+		-e "/^dist[/]$$/d" \
+		-e "/^out[/]$$/d" \
+											$(WATERCSS_DIR)/.gitignore
 	@$(foreach FILE,light dark,\
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
 		$(call NEWLINE) \
 	)
-	@$(CP) $(WATERCSS_DIR)/src/builds/water.css				$(WATERCSS_DIR)/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR)		>$(WATERCSS_DIR)/src/builds/solarized-shade.css
-	@$(foreach FILE,water-shade solarized-shade,\
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SHADE)		>>$(WATERCSS_DIR)/src/builds/$(FILE).css; \
-		$(call NEWLINE) \
-	)
+	@$(CP) $(WATERCSS_DIR)/src/builds/water.css					$(WATERCSS_DIR)/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(WATERCSS_DIR)/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(WATERCSS_DIR)/src/builds/solarized-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(WATERCSS_DIR)/src/builds/solarized-shade.css
 	@$(call NPM_RUN,$(WATERCSS_DIR),,yarn) build
 endif
 endif
@@ -9087,8 +9085,6 @@ $($(PUBLISH)-caches):
 ########################################
 ### {{{3 $(PUBLISH)-library ------------
 
-#WORKING:NOW:NOW:FIX
-#	add index.html ...?
 #WORKING:NOW:NOW:FIX
 #	library behavior during site-template
 #		rebuilds twice in config during site-all ... what triggers the second one?
