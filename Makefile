@@ -1195,7 +1195,13 @@ $(subst $(NULL) ,,$(call CSS_THEME,\
 endef
 
 override define c_css_select =
-$(subst $(NULL) ,,$(if $(c_css),\
+$(subst $(NULL) ,,\
+$(if $(or \
+	$(filter $(c_type),$(TYPE_HTML)) ,\
+	$(filter $(c_type),$(TYPE_EPUB)) ,\
+	$(filter $(c_type),$(TYPE_PRES)) ,\
+),\
+$(if $(c_css),\
 	$(if $(filter $(c_css),$(SPECIAL_VAL)),,\
 	$(if \
 		$(wildcard $(call CSS_THEME,$(word 1,$(subst ., ,$(c_css))),$(word 2,$(subst ., ,$(c_css))))) ,\
@@ -1207,7 +1213,7 @@ $(subst $(NULL) ,,$(if $(c_css),\
 	))) \
 ,\
 	$(call c_css_select_theme) \
-))
+)))
 endef
 
 ########################################
@@ -2693,7 +2699,6 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-FORMAT --
 
 #WORKING:NOW:NOW
-#	change COMPOSER_KEEPING behavior so that $(SPECIAL_VAL) removes it after every run...?
 #	make demo = peek = replace screenshot with a gif
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
@@ -2759,6 +2764,8 @@ endef
 #	includes tree is based off of makefile list, so need to $(INSTALL) in order to get $(COMPOSER_SETTINGS/YML)
 #		that said, -f now works for single files with no configuration file reading...
 #	document composer_dir/composer_root ... in composer.mk section?
+#	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
+
 #WORK
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
@@ -6196,7 +6203,7 @@ endef
 ########################################
 ### {{{3 custom_html_css (Water.css) ---
 
-#WORKING:NOW:NOW
+#WORKING:NOW:NOW:FIX
 #	need to touch-up the light theme, so it has the same accents/texture as dark...
 #		maybe make both water/solar nav/fold/box elements a dark background...?
 #	get rid of contact information icons, and any others...
@@ -8008,12 +8015,6 @@ $(TESTING)-$(TARGETS):
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
-#WORKING:NOW:NOW
-#	do we also need a test of $(PUBLISH) $(c_css) $(PUBLISH_CSS_SHADE) combinations?
-#	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
-#	make -f .../Makefile *.html
-#		make[1]: *** No rule to make target 'compose'.
-
 .PHONY: $(TESTING)-$(TARGETS)-init
 $(TESTING)-$(TARGETS)-init:
 #>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
@@ -8031,7 +8032,6 @@ $(TESTING)-$(TARGETS)-init:
 	)
 #>				$(call $(TESTING)-run) $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)) || $(TRUE)
 	@$(call $(TESTING)-run,,1) --keep-going MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL) || $(TRUE)
-#>	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 
 .PHONY: $(TESTING)-$(TARGETS)-done
@@ -8112,7 +8112,6 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(TESTING)-$(FILE)-$(DOITALL)\n$(TESTING)-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 #> update: $(CLEANER) > $(DOITALL)
 #>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(CLEANER)" $(CLEANER)
@@ -8173,11 +8172,7 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"	>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "\$$(info COMPOSER_MY_PATH)\n"			>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "endif\n"					>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"; \
-	$(CAT) \
-		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS) \
-		$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS) \
-		$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"
 endef
 
 override define $(TESTING)-COMPOSER_INCLUDE-done =
@@ -8256,7 +8251,6 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 		$(patsubst %/.,%,$(wildcard $(addsuffix /.,$(call $(TESTING)-pwd)/data/*))) \
 		))))): $(DOITALL)-$(SUBDIRS)-docx\n" \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run,,1) MAKEJOBS="$(SPECIAL_VAL)" $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
@@ -8283,7 +8277,6 @@ $(TESTING)-COMPOSER_IGNORES-init:
 	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) $(notdir $(wildcard $(call $(TESTING)-pwd)/data/*))\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(INSTALL)-$(DOITALL)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CLEANER)-$(DOITALL)
@@ -8340,14 +8333,17 @@ $(TESTING)-CSS: $(TESTING)-Think
 $(TESTING)-CSS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Use '$(_C)c_css$(_D)' to verify each method of setting variables ,\
-		\n\t * Default: '$(_C)$(TYPE_HTML)$(_D)' \
+		\n\t * Default: '$(_C)$(PUBLISH)$(_D)' $(_E)(and 'css_shade' selection, with '$(notdir $(CUSTOM_PUBLISH_CSS))' overlay)$(_D) \
+		\n\t * Default: '$(_C)$(TYPE_HTML)$(_D)' $(_E)(and 'template' selection, with '$(COMPOSER_BASENAME)' overlay)$(_D) \
 		\n\t * Default: '$(_C)$(TYPE_PRES)$(_D)' \
-		\n\t * Environment: '$(_C)$(notdir $(CUSTOM_PUBLISH_CSS))$(_D)' \
-		\n\t * Environment: '$(_C)$(CSS_ALT)$(_D)' alias \
+		\n\t * Environment: '$(_C)$(CSS_ALT)$(_D)' alias $(_E)(and '$(TYPE_EPUB)' use of '$(TYPE_HTML)')$(_D) \
+		\n\t * Environment: '$(_C)$(TYPE_PRES).$(CSS_ALT)$(_D)' alias $(_E)(and cross-type theme selection)$(_D) \
 		\n\t * Environment: '$(_C)$(SPECIAL_VAL)$(_D)' Pandoc default \
 		\n\t * File: '$(_C)$(COMPOSER_CSS)$(_D)' $(_E)(precedence over environment)$(_D) \
-		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' $(_E)(precedence over everything)$(_D) \
+		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' $(_E)(precedence over everything, and direct file path)$(_D) \
 		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' per-target $(_E)(precedence over everything)$(_D) \
+		\n\t * Default: '$(_C)$(TYPE_LPDF)$(_D)' $(_E)(solely for 'header' selection)$(_D) \
+		\n\t * Default: '$(_C)$(TYPE_DOCX)$(_D)' $(_E)(solely for 'reference' selection)$(_D) \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -8357,33 +8353,43 @@ $(TESTING)-CSS:
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)	>/dev/null
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)		>/dev/null
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_site="1" $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_PRES)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(CUSTOM_PUBLISH_CSS))" $(OUT_README).$(EXTN_EPUB)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(TYPE_PRES).$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT)))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(CUSTOM_PUBLISH_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
-	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(CUSTOM_PUBLISH_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css := $(PUBLISH).$(CSS_ALT)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LPDF); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_LPDF)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DOCX); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DOCX)
 
-#WORKING:NOW:NOW:FIX
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))))
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES))))
-	$(call $(TESTING)-count,5,$(notdir $(CUSTOM_PUBLISH_CSS)))
-	$(call $(TESTING)-count,4,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))))
-	$(call $(TESTING)-count,1,c_css[^/]+$$)
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH))));		$(call $(TESTING)-count,1,$(notdir $(WATERCSS_CSS_SOLAR_ALT)))
+											$(call $(TESTING)-count,1,$(notdir $(call CUSTOM_PUBLISH_CSS_SHADE,dark)))
+											$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
+											$(call $(TESTING)-count,3,$(notdir $(BOOTSTRAP_ART_JS)))
+											$(call $(TESTING)-count,2,$(notdir $(BOOTSTRAP_ART_CSS)))
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))));		$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
+											$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_HTML).css)
+											$(call $(TESTING)-count,2,template.$(TMPL_HTML))
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES))));		$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_DARK)))
+											$(call $(TESTING)-count,3,$(OUT_README).$(EXTN_PRES).[-0-9]+.css)
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES),$(CSS_ALT))));	$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_ALT)))
+	$(call $(TESTING)-count,3,c_css[^/]+$$)
 	$(call $(TESTING)-count,2,$(notdir $(COMPOSER_CSS)))
-	$(call $(TESTING)-count,4,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))))
-	$(call $(TESTING)-count,5,$(notdir $(CUSTOM_PUBLISH_CSS)))
-	$(call $(TESTING)-count,8,--css=)
+	$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
+	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(BOOTSWATCH_CSS_ALT)))
+	$(call $(TESTING)-count,13,--css=)
+	$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header)
+	$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
 
 ########################################
 ### {{{3 $(TESTING)-other --------------
@@ -8417,11 +8423,9 @@ $(TESTING)-other-init:
 	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override MDTHEMES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
 	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
 	#> targets
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(OUT_MANUAL).$(EXTN_LPDF)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -8429,7 +8433,6 @@ $(TESTING)-other-init:
 	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(CAT) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
@@ -9092,11 +9095,11 @@ $($(PUBLISH)-caches):
 ### {{{3 $(PUBLISH)-library ------------
 
 #WORKING:NOW:NOW:FIX
-#	library behavior during site-template
-#		rebuilds twice in config during site-all ... what triggers the second one?
-#		rebuild of bootstrap during site-force step ... expected?
+#	rebuild of bootstrap during site-force step ... expected?
 #	ideally, we would not have as much rebuilding before the site-force...
 #		maybe "touch" for all the content files...?
+#	do V=0 to find the slow spot
+#		re-add c_site test for yml config, along with config-all
 
 ifneq ($(and \
 	$(c_site) ,\
@@ -10957,6 +10960,12 @@ endif
 #		worth it for the easy feature-set ...?  what else is broken that i'm not thinking of...?
 #	different error handling for empty c_list/c_list_plus?
 #		better error message for missing c_type/c_base/c_list?
+#	add a COMPOSER_CUSTOMS ?
+#		or, filter out all makefile, c_list, etc. and use what is left over
+#		or, whatever is in COMPOSER_CONTENT, COMPOSER_TARGETS, COMPOSER_SUBDIRS, with $(NOTHING) notices ?
+#	make -f .../Makefile *.html
+#		make[1]: *** No rule to make target 'compose'.
+#		maybe add --makefile $(COMPOSER) to these?
 
 %.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) $$(c_list)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(c_list))
