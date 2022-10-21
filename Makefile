@@ -5608,6 +5608,7 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 
 	/* colors */
 	--$(COMPOSER_TINYNAME)-back:		#000000; // black;	// var(--solarized-dark3);
+#>	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-bs-dark);
 	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
 	--$(COMPOSER_TINYNAME)-line:		#404040; // darkgray;	// var(--solarized-dark1);
 	--$(COMPOSER_TINYNAME)-text:		#c0c0c0; // white;	// var(--solarized-light1);
@@ -5965,6 +5966,9 @@ override define HEREDOC_CUSTOM_HTML_CSS_SOLARIZED =
 	--solarized-blue:		#268bd2;
 	--solarized-cyan:		#2aa198;
 	--solarized-green:		#859900;
+	/* normal */
+	--solarized-bs-light:		rgba(var(--bs-light-rgb));
+	--solarized-bs-dark:		rgba(var(--bs-dark-rgb));
 endef
 
 ########################################
