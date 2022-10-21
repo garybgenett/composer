@@ -215,9 +215,6 @@ override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
 override EXAMPLE			:= template
 override PUBLISH			:= site
 
-override COMPOSER_YML_EXAMPLE		:= $(COMPOSER_ART)/$(patsubst %.yml,%,$(COMPOSER_YML)).$(EXAMPLE).yml
-override PANDOC_DATA			:= $(COMPOSER_ART)/pandoc
-
 override COMPOSER_CUSTOM		:= $(COMPOSER_ART)/$(COMPOSER_TINYNAME)/$(COMPOSER_TINYNAME)
 override CUSTOM_PUBLISH_SH		:= $(COMPOSER_CUSTOM).$(PUBLISH).sh
 override CUSTOM_PUBLISH_CSS		:= $(COMPOSER_CUSTOM).$(PUBLISH).css
@@ -225,6 +222,8 @@ override CUSTOM_PUBLISH_CSS_SHADE	= $(COMPOSER_CUSTOM).$(PUBLISH).shade.$(1).css
 override CUSTOM_HTML_CSS		:= $(COMPOSER_CUSTOM).html.css
 override CUSTOM_PDF_LATEX		:= $(COMPOSER_CUSTOM).pdf.latex
 override CUSTOM_REVEALJS_CSS		:= $(COMPOSER_CUSTOM).revealjs.css
+
+override PANDOC_DATA			:= $(COMPOSER_ART)/pandoc
 
 override BOOTSTRAP_DEF_JS		:= $(COMPOSER_ART)/bootstrap/bootstrap-default.js
 override BOOTSTRAP_DEF_CSS		:= $(COMPOSER_ART)/bootstrap/bootstrap-default.css
@@ -245,10 +244,8 @@ override HTML_BREAK			:= <p></p>
 override HTML_BREAK_LINE		:= --
 override MENU_SELF			:= _
 
-#> update: $(PUBLISH)-variables
-
 override PUBLISH_CSS_SHADE		:= dark
-override PUBLISH_CSS_SHADE_ALT		:= $(SPECIAL_VAL)
+override PUBLISH_CSS_SHADE_ALT		:= null
 
 #> talk: 183 / read: 234
 override PUBLISH_READ_TIME		:= *Reading time: @W words, @T minutes*
@@ -256,12 +253,12 @@ override PUBLISH_READ_TIME_ALT		:= *(count: @W, time: @T)*
 override PUBLISH_READ_TIME_WPM		:= 220
 override PUBLISH_READ_TIME_WPM_ALT	:= 200
 override PUBLISH_COPY_PROTECT		:= 1
-override PUBLISH_COPY_PROTECT_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COPY_PROTECT_ALT	:= null
 
 override PUBLISH_COLS_BREAK		:= lg
 override PUBLISH_COLS_BREAK_ALT		:= xl
 override PUBLISH_COLS_STICKY		:= 1
-override PUBLISH_COLS_STICKY_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_STICKY_ALT	:= null
 
 override PUBLISH_COLS_ORDER_L		:= 1
 override PUBLISH_COLS_ORDER_C		:= 2
@@ -291,9 +288,9 @@ override PUBLISH_COLS_RESIZE_L_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_RESIZE_C_ALT	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= 12
 
-override LIBRARY_FOLDER			:= $(SPECIAL_VAL)
+override LIBRARY_FOLDER			:= null
 override LIBRARY_FOLDER_ALT		:= _library
-override LIBRARY_AUTO_UPDATE		:= $(SPECIAL_VAL)
+override LIBRARY_AUTO_UPDATE		:= null
 override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
@@ -305,7 +302,7 @@ override LIBRARY_DIGEST_EXPANDED_ALT	:= 5
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_SPACER		:= 1
-override LIBRARY_DIGEST_SPACER_ALT	:= $(SPECIAL_VAL)
+override LIBRARY_DIGEST_SPACER_ALT	:= null
 override LIBRARY_DIGEST_CONTINUE	:= [...]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
@@ -914,13 +911,27 @@ override DATEMARK			:= $(firstword $(subst T, ,$(DATESTAMP)))
 ########################################
 
 override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-matter "extract" --input-format "yaml" --output-format "json"
-override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(YQ_READ)) --output-format "yaml"
+override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(subst --output-format "json",--output-format "yaml",$(YQ_READ)))
+override YQ_WRITE_JSON			:= $(subst --front-matter "extract" ,,$(YQ_READ))
 override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
 override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
 
-#>override YQ_EVAL			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . *+ $$file)'
-override YQ_EVAL			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . * $$file)'
-override COMPOSER_YML_DATA		= $(YQ_EVAL) $(if $(1),,$(wildcard $(COMPOSER_YML_EXAMPLE))) $(COMPOSER_YML_LIST) $(wildcard $(2))
+#>override YQ_EVAL			:= . *+
+override YQ_EVAL			:= . *
+override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; $(YQ_EVAL) $$file)'
+override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
+override define YQ_EVAL_DATA =
+	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
+	$(if $(and $(2),$(3)),\
+		| $(YQ_WRITE_JSON) '$(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
+			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) 2>/dev/null \
+		)) }}' \
+	,\
+		$(foreach FILE,$(2),\
+			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null \
+		) \
+	)
+endef
 
 ########################################
 
@@ -1139,47 +1150,51 @@ override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
 override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
 
+#> update: includes duplicates
+override PUBLISH			:= site
+
 #WORKING document
 override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
-override CSS_THEMES = \
+override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 	$(foreach FILE,\
 		custom \
 		custom-solar \
 		,\
-		$(PUBLISH):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)):$(SPECIAL_VAL)$(if $(filter custom,$(FILE)),:[$(COMPOSER_BASENAME)]) \
-		$(TYPE_HTML):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
-		$(TYPE_PRES):$(FILE):$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
+		|$(PUBLISH)	:$(FILE)	:$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE))		:null		$(if $(filter custom,$(FILE)),:[$(COMPOSER_BASENAME)]) \
+		|$(TYPE_HTML)	:$(FILE)	:$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
+		|$(TYPE_PRES)	:$(FILE)	:$(call CUSTOM_PUBLISH_CSS_SHADE,$(FILE)) \
 	) \
-	$(PUBLISH):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),solar-$(CSS_ALT)):$(TOKEN):[Bootswatch] \
-	$(PUBLISH):light:$(BOOTSWATCH_CSS_LIGHT):light \
-	$(PUBLISH):dark:$(BOOTSWATCH_CSS_DARK):dark \
-	$(PUBLISH):solar-light:$(BOOTSWATCH_CSS_SOLAR_LIGHT):dark \
-	$(PUBLISH):solar-dark:$(BOOTSWATCH_CSS_SOLAR_DARK):dark \
-	$(PUBLISH):$(CSS_ALT):$(BOOTSWATCH_CSS_ALT):$(SPECIAL_VAL) \
+	|$(PUBLISH)	:$(SPECIAL_VAL)		:$(call CSS_THEME,$(TYPE_HTML),solar-$(CSS_ALT))	:$(TOKEN)	:[Bootswatch] \
+	|$(PUBLISH)	:light			:$(BOOTSWATCH_CSS_LIGHT)				:light \
+	|$(PUBLISH)	:dark			:$(BOOTSWATCH_CSS_DARK)					:dark \
+	|$(PUBLISH)	:solar-light		:$(BOOTSWATCH_CSS_SOLAR_LIGHT)				:dark \
+	|$(PUBLISH)	:solar-dark		:$(BOOTSWATCH_CSS_SOLAR_DARK)				:dark \
+	|$(PUBLISH)	:$(CSS_ALT)		:$(BOOTSWATCH_CSS_ALT)					:null \
 	\
-	$(TYPE_HTML):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT)):$(TOKEN):[Water.css] \
-	$(TYPE_HTML):light:$(WATERCSS_CSS_LIGHT):light \
-	$(TYPE_HTML):dark:$(WATERCSS_CSS_DARK):dark \
-	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):dark \
-	$(TYPE_HTML):$(CSS_ALT):$(WATERCSS_CSS_ALT):$(SPECIAL_VAL):$(TOKEN):$(TYPE_HTML) \
-	$(TYPE_HTML):solar-light:$(WATERCSS_CSS_SOLAR_LIGHT):dark \
-	$(TYPE_HTML):solar-dark:$(WATERCSS_CSS_SOLAR_DARK):dark \
-	$(TYPE_HTML):solar-$(CSS_ALT):$(WATERCSS_CSS_SOLAR_ALT):dark:$(TOKEN):$(PUBLISH) \
-	$(TYPE_HTML):solar-$(CSS_ALT):$(WATERCSS_CSS_SOLAR_ALT):$(SPECIAL_VAL) \
+	|$(TYPE_HTML)	:$(SPECIAL_VAL)		:$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))		:$(TOKEN)	:[Water.css] \
+	|$(TYPE_HTML)	:light			:$(WATERCSS_CSS_LIGHT)					:light \
+	|$(TYPE_HTML)	:dark			:$(WATERCSS_CSS_DARK)					:dark \
+	|$(TYPE_HTML)	:$(CSS_ALT)		:$(WATERCSS_CSS_ALT)					:dark \
+	|$(TYPE_HTML)	:$(CSS_ALT)		:$(WATERCSS_CSS_ALT)					:null		:$(TOKEN)	:$(TYPE_HTML) \
+	|$(TYPE_HTML)	:solar-light		:$(WATERCSS_CSS_SOLAR_LIGHT)				:dark \
+	|$(TYPE_HTML)	:solar-dark		:$(WATERCSS_CSS_SOLAR_DARK)				:dark \
+	|$(TYPE_HTML)	:solar-$(CSS_ALT)	:$(WATERCSS_CSS_SOLAR_ALT)				:dark		:$(TOKEN)	:$(PUBLISH) \
+	|$(TYPE_HTML)	:solar-$(CSS_ALT)	:$(WATERCSS_CSS_SOLAR_ALT)				:null \
 	\
-	$(TOKEN):$(TOKEN):$(TOKEN):$(TOKEN):[Markdown$(TOKEN)Viewer] \
-	$(TYPE_HTML):alt-light:$(MDVIEWER_CSS_LIGHT):light \
-	$(TYPE_HTML):alt-dark:$(MDVIEWER_CSS_DARK):dark \
-	$(TYPE_HTML):alt-solar-light:$(MDVIEWER_CSS_SOLAR_LIGHT):dark \
-	$(TYPE_HTML):alt-solar-dark:$(MDVIEWER_CSS_SOLAR_DARK):dark \
-	$(TYPE_HTML):alt-$(CSS_ALT):$(MDVIEWER_CSS_ALT):dark \
+	|$(TOKEN)	:$(TOKEN)		:$(TOKEN)						:$(TOKEN)	:[Markdown$(TOKEN)Viewer] \
+	|$(TYPE_HTML)	:alt-light		:$(MDVIEWER_CSS_LIGHT)					:light \
+	|$(TYPE_HTML)	:alt-dark		:$(MDVIEWER_CSS_DARK)					:dark \
+	|$(TYPE_HTML)	:alt-solar-light	:$(MDVIEWER_CSS_SOLAR_LIGHT)				:dark \
+	|$(TYPE_HTML)	:alt-solar-dark		:$(MDVIEWER_CSS_SOLAR_DARK)				:dark \
+	|$(TYPE_HTML)	:alt-$(CSS_ALT)		:$(MDVIEWER_CSS_ALT)					:dark \
 	\
-	$(TYPE_PRES):$(SPECIAL_VAL):$(call CSS_THEME,$(TYPE_PRES),dark):$(TOKEN):[Reveal.js] \
-	$(TYPE_PRES):light:$(REVEALJS_CSS_LIGHT):$(SPECIAL_VAL) \
-	$(TYPE_PRES):dark:$(REVEALJS_CSS_DARK):$(SPECIAL_VAL):$(TOKEN):$(TYPE_PRES) \
-	$(TYPE_PRES):solar-light:$(REVEALJS_CSS_SOLAR_LIGHT):$(SPECIAL_VAL) \
-	$(TYPE_PRES):solar-dark:$(REVEALJS_CSS_SOLAR_DARK):$(SPECIAL_VAL) \
-	$(TYPE_PRES):$(CSS_ALT):$(REVEALJS_CSS_ALT):$(SPECIAL_VAL) \
+	|$(TYPE_PRES)	:$(SPECIAL_VAL)		:$(call CSS_THEME,$(TYPE_PRES),dark)			:$(TOKEN)	:[Reveal.js] \
+	|$(TYPE_PRES)	:light			:$(REVEALJS_CSS_LIGHT)					:null \
+	|$(TYPE_PRES)	:dark			:$(REVEALJS_CSS_DARK)					:null		:$(TOKEN)	:$(TYPE_PRES) \
+	|$(TYPE_PRES)	:solar-light		:$(REVEALJS_CSS_SOLAR_LIGHT)				:null \
+	|$(TYPE_PRES)	:solar-dark		:$(REVEALJS_CSS_SOLAR_DARK)				:null \
+	|$(TYPE_PRES)	:$(CSS_ALT)		:$(REVEALJS_CSS_ALT)					:null \
+)))
 
 ########################################
 
@@ -1309,8 +1324,8 @@ override PANDOC_OPTIONS			= $(strip \
 		) \
 	) \
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
-		$(if $(filter-out $(SPECIAL_VAL),$(PUBLISH_CSS_SHADE)),\
-			--css="$(call CUSTOM_PUBLISH_CSS_SHADE,$(PUBLISH_CSS_SHADE))" \
+		$(if $(call COMPOSER_YML_DATA_VAL,config.css_shade),\
+			--css="$(call CUSTOM_PUBLISH_CSS_SHADE,$(call COMPOSER_YML_DATA_VAL,config.css_shade))" \
 		) \
 		$(if $(wildcard $(COMPOSER_CUSTOM)-$(PUBLISH).css),\
 				--css="$(COMPOSER_CUSTOM)-$(PUBLISH).css" \
@@ -1658,151 +1673,62 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 ########################################
 ## {{{2 Publish ------------------------
 
-override PUBLISH_CMD_ROOT		= <$(COMPOSER_TINYNAME)_root>
-override PUBLISH_CMD_BEG		= <!-- $(COMPOSER_TINYNAME) $(MARKER)
-override PUBLISH_CMD_END		= $(MARKER) -->
+override define COMPOSER_YML_DATA_SKEL =
+{ variables: {
+  title-prefix: ,
 
-#> update: $(PUBLISH)-variables
-override PUBLISH_SH_RUN			= \
-	SED="$(SED)" \
-	\
-	CAT="$(CAT)" \
-	DIRNAME="$(DIRNAME)" \
-	ECHO="$(ECHO)" \
-	EXPR="$(EXPR)" \
-	HEAD="$(HEAD)" \
-	PRINTF="$(PRINTF)" \
-	REALPATH="$(REALPATH)" \
-	TR="$(TR)" \
-	\
-	YQ="$(YQ)" \
-	COMPOSER_YML_LIST="$(COMPOSER_YML_LIST)" \
-	\
-	CURDIR="$(CURDIR)" \
-	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
-	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
-	\
-	PUBLISH_COPY_PROTECT="$(PUBLISH_COPY_PROTECT)" \
-	PUBLISH_COLS_BREAK="$(PUBLISH_COLS_BREAK)" \
-	PUBLISH_COLS_STICKY="$(PUBLISH_COLS_STICKY)" \
-	PUBLISH_COLS_ORDER_L="$(PUBLISH_COLS_ORDER_L)" \
-	PUBLISH_COLS_ORDER_C="$(PUBLISH_COLS_ORDER_C)" \
-	PUBLISH_COLS_ORDER_R="$(PUBLISH_COLS_ORDER_R)" \
-	PUBLISH_COLS_REORDER_L="$(PUBLISH_COLS_REORDER_L)" \
-	PUBLISH_COLS_REORDER_C="$(PUBLISH_COLS_REORDER_C)" \
-	PUBLISH_COLS_REORDER_R="$(PUBLISH_COLS_REORDER_R)" \
-	PUBLISH_COLS_SIZE_L="$(PUBLISH_COLS_SIZE_L)" \
-	PUBLISH_COLS_SIZE_C="$(PUBLISH_COLS_SIZE_C)" \
-	PUBLISH_COLS_SIZE_R="$(PUBLISH_COLS_SIZE_R)" \
-	PUBLISH_COLS_RESIZE_L="$(PUBLISH_COLS_RESIZE_L)" \
-	PUBLISH_COLS_RESIZE_C="$(PUBLISH_COLS_RESIZE_C)" \
-	PUBLISH_COLS_RESIZE_R="$(PUBLISH_COLS_RESIZE_R)" \
-	\
-	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
+  $(PUBLISH)-config: {
+    homepage: ,
+    brand: ,
+    copyright: ,
 
-########################################
+    search_name: ,
+    search_site: ,
+    search_call: ,
+    search_form: ,
 
-#> update: $(PUBLISH)-variables
-override $(PUBLISH)-variables := \
-	PUBLISH_CSS_SHADE:config:css_shade \
-	\
-	PUBLISH_READ_TIME:config:read_time \
-	PUBLISH_READ_TIME_WPM:config:read_time_wpm \
-	PUBLISH_COPY_PROTECT:config:copy_protect \
-	\
-	PUBLISH_COLS_BREAK:config:cols_break \
-	PUBLISH_COLS_STICKY:config:cols_sticky \
-	PUBLISH_COLS_ORDER_L:config:cols_order=0 \
-	PUBLISH_COLS_ORDER_C:config:cols_order=1 \
-	PUBLISH_COLS_ORDER_R:config:cols_order=2 \
-	PUBLISH_COLS_REORDER_L:config:cols_reorder=0 \
-	PUBLISH_COLS_REORDER_C:config:cols_reorder=1 \
-	PUBLISH_COLS_REORDER_R:config:cols_reorder=2 \
-	PUBLISH_COLS_SIZE_L:config:cols_size=0 \
-	PUBLISH_COLS_SIZE_C:config:cols_size=1 \
-	PUBLISH_COLS_SIZE_R:config:cols_size=2 \
-	PUBLISH_COLS_RESIZE_L:config:cols_resize=0 \
-	PUBLISH_COLS_RESIZE_C:config:cols_resize=1 \
-	PUBLISH_COLS_RESIZE_R:config:cols_resize=2 \
-	\
-	LIBRARY_FOLDER:library:folder \
-	LIBRARY_AUTO_UPDATE:library:auto_update \
-	\
-	LIBRARY_DIGEST_TITLE:library:digest_title \
-	LIBRARY_DIGEST_COUNT:library:digest_count \
-	LIBRARY_DIGEST_EXPANDED:library:digest_expanded \
-	LIBRARY_DIGEST_CHARS:library:digest_chars \
-	LIBRARY_DIGEST_SPACER:library:digest_spacer \
-	LIBRARY_DIGEST_CONTINUE:library:digest_continue \
-	LIBRARY_DIGEST_PERMALINK:library:digest_permalink \
+    css_shade:				$(PUBLISH_CSS_SHADE),
 
-ifneq ($(COMPOSER_YML_LIST),)
+    read_time:				"$(PUBLISH_READ_TIME)",
+    read_time_wpm:			$(PUBLISH_READ_TIME_WPM),
+    copy_protect:			$(PUBLISH_COPY_PROTECT),
 
-override COMPOSER_LIBRARY_YML		:=
-override COMPOSER_LIBRARY_DIR		:=
-$(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
-$(if $(wildcard $(FILE)),\
-	$(eval override COMPOSER_LIBRARY_DIR := $(shell \
-		$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $(FILE) 2>/dev/null \
-		| $(SED) "/^null$$/d" \
-	)) \
-	$(if $(filter-out $(SPECIAL_VAL),$(COMPOSER_LIBRARY_DIR)),\
-		$(eval override COMPOSER_LIBRARY_YML := $(FILE)) \
-		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
-	) \
-))
+    cols_break:				$(PUBLISH_COLS_BREAK),
+    cols_sticky:			$(PUBLISH_COLS_STICKY),
+    cols_order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ],
+    cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
+    cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
+    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
+  },
 
-ifneq ($(or \
-	$(c_site) ,\
-	$(COMPOSER_DOITALL_$(CONFIGS)) ,\
-),)
+  $(PUBLISH)-library: {
+    folder:				$(LIBRARY_FOLDER),
+    auto_update:			$(LIBRARY_AUTO_UPDATE),
 
-$(foreach FILE,\
-	$(shell \
-		if [ -n "$(COMPOSER_LIBRARY_YML)" ]; then \
-			YQ_DATA_LIBRARY="$$( \
-				$(YQ_WRITE) ".variables" $(COMPOSER_LIBRARY_YML) 2>/dev/null \
-				| $(SED) "/^null$$/d" \
-			)"; \
-		fi; \
-		YQ_DATA="$$( \
-			$(call COMPOSER_YML_DATA) 2>/dev/null \
-			| $(YQ_WRITE) ".variables" 2>/dev/null \
-			| $(SED) "/^null$$/d" \
-		)"; \
-		for FILE in $($(PUBLISH)-variables); do \
-			MVAR="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\1|g")"; \
-			SECT="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\2|g")"; \
-			YAML="$$($(ECHO) "$${FILE}" | $(SED) "s|^(.+)[:](.+)[:](.+)$$|\3|g")"; \
-			ARRY="$$($(ECHO) "$${YAML}" | $(SED) -n "s|^(.+)[=](.+)$$|\2|gp")"; \
-			YAML="$$($(ECHO) "$${YAML}" | $(SED) "s|[=](.+)$$||g")"; \
-			CONF="$$( \
-				if	[ "$${SECT}" = "library" ] && \
-					[ -n "$(COMPOSER_LIBRARY_YML)" ]; \
-				then \
-					$(ECHO) "$${YQ_DATA_LIBRARY}"; \
-				else \
-					$(ECHO) "$${YQ_DATA}"; \
-				fi \
-					| if [ -n "$${ARRY}" ]; then \
-						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"][$${ARRY}]" 2>/dev/null \
-						| $(SED) "/^null$$/d"; \
-					else \
-						$(YQ_WRITE) ".$(PUBLISH)-$${SECT}.[\"$${YAML}\"]" 2>/dev/null \
-						| $(SED) "/^null$$/d"; \
-					fi; \
-			)"; \
-			if [ -n "$${CONF}" ]; then \
-				$(ECHO) "override $${MVAR} := $${CONF}\n" \
-					| $(SED) "s|[[:space:]]|$(TOKEN)|g"; \
-			fi; \
-		done \
-	),\
-	$(eval $(subst $(TOKEN), ,$(FILE))) \
+    digest_title:			$(LIBRARY_DIGEST_TITLE),
+    digest_count:			$(LIBRARY_DIGEST_COUNT),
+    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
+    digest_chars:			$(LIBRARY_DIGEST_CHARS),
+    digest_spacer:			$(LIBRARY_DIGEST_SPACER),
+    digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
+    digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
+  },
+
+  $(PUBLISH)-nav-top: ,
+  $(PUBLISH)-nav-bottom: ,
+  $(PUBLISH)-nav-left: ,
+  $(PUBLISH)-nav-right: ,
+
+  $(PUBLISH)-info-top: ,
+  $(PUBLISH)-info-bottom: ,
+}}
+endef
+
+override COMPOSER_YML_DATA_VAL = $(shell \
+	$(ECHO) '$(COMPOSER_YML_DATA)' \
+	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null \
+	| $(SED) "/^null$$/d" \
 )
-
-endif
-endif
 
 ########################################
 
@@ -1828,6 +1754,22 @@ override $(PUBLISH)-caches := \
 
 ########################################
 
+ifneq ($(COMPOSER_YML_LIST),)
+override COMPOSER_LIBRARY_YML		:=
+override COMPOSER_LIBRARY_DIR		:=
+$(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
+$(if $(wildcard $(FILE)),\
+	$(eval override COMPOSER_LIBRARY_DIR := $(shell \
+		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $(FILE) 2>/dev/null \
+		| $(SED) "/^null$$/d" \
+	)) \
+	$(if $(COMPOSER_LIBRARY_DIR),\
+		$(eval override COMPOSER_LIBRARY_YML := $(FILE)) \
+		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
+	) \
+))
+endif
+
 ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_DIR))
 override COMPOSER_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_LIBRARY))
 endif
@@ -1848,6 +1790,47 @@ override COMPOSER_IGNORES		:= $(sort \
 	$(notdir $(COMPOSER_LIBRARY)) \
 )
 endif
+
+########################################
+
+override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
+ifneq ($(COMPOSER_YML_LIST),)
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
+ifneq ($(COMPOSER_LIBRARY_YML),)
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
+endif
+endif
+override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
+
+#######################################
+
+#> update: includes duplicates
+override MARKER				:= >>
+
+override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
+override PUBLISH_CMD_BEG		:= <!-- $(COMPOSER_TINYNAME) $(MARKER)
+override PUBLISH_CMD_END		:= $(MARKER) -->
+
+override PUBLISH_SH_RUN := \
+	SED="$(SED)" \
+	\
+	CAT="$(CAT)" \
+	DIRNAME="$(DIRNAME)" \
+	ECHO="$(ECHO)" \
+	EXPR="$(EXPR)" \
+	HEAD="$(HEAD)" \
+	PRINTF="$(PRINTF)" \
+	REALPATH="$(REALPATH)" \
+	TR="$(TR)" \
+	\
+	YQ_WRITE="$(subst ",,$(YQ_WRITE))" \
+	COMPOSER_YML_DATA='$(COMPOSER_YML_DATA)' \
+	\
+	CURDIR="$(CURDIR)" \
+	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
+	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
+	\
+	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 
 ########################################
 ## {{{2 Filesystem ---------------------
@@ -3501,9 +3484,11 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
-	@$(RM)										$(CURDIR)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(RM) \
+											$(CURDIR)/$(COMPOSER_YML) \
+											$(CURDIR)/$(COMPOSER_CSS) \
+											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
 ifeq ($(COMPOSER_DEBUGIT),)
@@ -3523,7 +3508,6 @@ endif
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_YML_EXAMPLE))
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
 endif
@@ -3629,6 +3613,7 @@ endif
 	)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
@@ -3694,9 +3679,7 @@ $(EXAMPLE)-yml:
 .PHONY: .$(EXAMPLE)-yml
 .$(EXAMPLE)-yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
-#>	@$(call COMPOSER_YML_DATA) 2>/dev/null
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE) \
-		| $(SED) "/^[[:space:]]*[#].*$$/d" \
+	@$(ECHO) '$(COMPOSER_YML_DATA)' \
 		| $(YQ_WRITE_OUT) 2>/dev/null \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK),$(COMMENTED))|g"
 
@@ -3894,8 +3877,6 @@ endef
 
 ########################################
 ## {{{2 Heredoc: composer_yml ----------
-
-#> update: $(PUBLISH)-variables
 
 override define HEREDOC_COMPOSER_YML =
 $(_S)################################################################################$(_D)
@@ -4105,75 +4086,6 @@ $(_S)###########################################################################
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(EXAMPLE))
-
-override define HEREDOC_COMPOSER_YML_EXAMPLE =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(EXAMPLE))
-################################################################################
-
-variables:
-
-################################################################################
-# $(PUBLISH)
-
-  title-prefix:
-
-########################################
-  $(PUBLISH)-config:
-
-    homepage:
-    brand:
-    copyright:
-
-    search_name:
-    search_site:
-    search_call:
-    search_form:
-
-    css_shade:				$(PUBLISH_CSS_SHADE)
-
-    read_time:				"$(PUBLISH_READ_TIME)"
-    read_time_wpm:			$(PUBLISH_READ_TIME_WPM)
-    copy_protect:			$(PUBLISH_COPY_PROTECT)
-
-    cols_break:				$(PUBLISH_COLS_BREAK)
-    cols_sticky:			$(PUBLISH_COLS_STICKY)
-    cols_order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]
-    cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
-    cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
-    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
-
-########################################
-  $(PUBLISH)-library:
-
-    folder:				$(LIBRARY_FOLDER)
-    auto_update:			$(LIBRARY_AUTO_UPDATE)
-
-    digest_title:			$(LIBRARY_DIGEST_TITLE)
-    digest_count:			$(LIBRARY_DIGEST_COUNT)
-    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED)
-    digest_chars:			$(LIBRARY_DIGEST_CHARS)
-    digest_spacer:			$(LIBRARY_DIGEST_SPACER)
-    digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)"
-    digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)"
-
-########################################
-
-  $(PUBLISH)-nav-top:
-  $(PUBLISH)-nav-bottom:
-  $(PUBLISH)-nav-left:
-  $(PUBLISH)-nav-right:
-
-  $(PUBLISH)-info-top:
-  $(PUBLISH)-info-bottom:
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
 ## {{{2 Heredoc: composer_yml ($(OUT_README))
 
 override define HEREDOC_COMPOSER_YML_README =
@@ -4200,37 +4112,37 @@ variables:
         src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.gpl.png"/></a>
       $(COPYRIGHT_SHORT)
 
-    search_name:			null
-    search_site:			null
-    search_call:			null
-    search_form:			null
+#$(MARKER) search_name:			null
+#$(MARKER) search_site:			null
+#$(MARKER) search_call:			null
+#$(MARKER) search_form:			null
 
-    css_shade:				null
+#$(MARKER) css_shade:				null
 
-    read_time:				null
-    read_time_wpm:			null
-    copy_protect:			$(SPECIAL_VAL)
+#$(MARKER) read_time:				null
+#$(MARKER) read_time_wpm:			null
+    copy_protect:			null
 
-    cols_break:				null
-    cols_sticky:			null
-    cols_order:				null
-    cols_reorder:			null
+#$(MARKER) cols_break:				null
+#$(MARKER) cols_sticky:			null
+#$(MARKER) cols_order:				null
+#$(MARKER) cols_reorder:			null
     cols_size:				[ 3, 9, $(SPECIAL_VAL) ]
     cols_resize:			[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
 
 ########################################
   $(PUBLISH)-library:
 
-    folder:				null
-    auto_update:			null
+#$(MARKER) folder:				null
+#$(MARKER) auto_update:			null
 
-    digest_title:			null
-    digest_count:			null
-    digest_expanded:			null
-    digest_chars:			null
-    digest_spacer:			null
-    digest_continue:			null
-    digest_permalink:			null
+#$(MARKER) digest_title:			null
+#$(MARKER) digest_count:			null
+#$(MARKER) digest_expanded:			null
+#$(MARKER) digest_chars:			null
+#$(MARKER) digest_spacer:			null
+#$(MARKER) digest_continue:			null
+#$(MARKER) digest_permalink:			null
 
 ########################################
   $(PUBLISH)-nav-top:
@@ -4462,7 +4374,7 @@ variables:
   $(PUBLISH)-nav-top:
     CHAINED:
       - CHAINED:
-        - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+        - CHAIN'ING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-left:
     BEGIN:
@@ -4555,7 +4467,7 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_TESTING =
 variables:
 
   $(PUBLISH)-config:
-    css_shade:				$(SPECIAL_VAL)
+    css_shade:				null
 
 ################################################################################
 # End Of File
@@ -4603,14 +4515,8 @@ PRINTF="$${PRINTF}"
 REALPATH="$${REALPATH}"
 TR="$${TR}"
 
-YQ_READ="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_READ)))"
-YQ_WRITE="$(subst ",,$(patsubst $(YQ),$${YQ},$(YQ_WRITE)))"
-YQ_DATA_ECHO="$${ECHO/-en/-n}"
-YQ_DATA="$$(
-	$(patsubst $(YQ_READ),$${YQ_READ},$(strip $(subst $(COMPOSER_YML_LIST),$${COMPOSER_YML_LIST},$(call COMPOSER_YML_DATA,1)))) 2>/dev/null \\
-	| $${YQ_WRITE} ".variables" 2>/dev/null \\
-	| $${SED} "/^null$$/d" \\
-)"
+YQ_WRITE="$${YQ_WRITE}"
+COMPOSER_YML_DATA="$${COMPOSER_YML_DATA}"
 
 ########################################
 #### {{{4 Filesystem -------------------
@@ -4621,32 +4527,18 @@ COMPOSER_ROOT_PATH="$$($${REALPATH} $${CURDIR} $${COMPOSER_ROOT})"
 PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
 PUBLISH_LIBRARY_INDEX_PATH="$$($${REALPATH} $${CURDIR} $$($${DIRNAME} $${PUBLISH_LIBRARY_INDEX}))"
 
-########################################
-#### {{{4 Options ----------------------
-
-#> update: $(PUBLISH)-variables
-
-PUBLISH_COPY_PROTECT="$${PUBLISH_COPY_PROTECT}"
-
-PUBLISH_COLS_BREAK="$${PUBLISH_COLS_BREAK}"
-PUBLISH_COLS_STICKY="$${PUBLISH_COLS_STICKY}"
-
-PUBLISH_COLS_ORDER[0]="$${PUBLISH_COLS_ORDER_L}"
-PUBLISH_COLS_ORDER[1]="$${PUBLISH_COLS_ORDER_C}"
-PUBLISH_COLS_ORDER[2]="$${PUBLISH_COLS_ORDER_R}"
-PUBLISH_COLS_REORDER[0]="$${PUBLISH_COLS_REORDER_L}"
-PUBLISH_COLS_REORDER[1]="$${PUBLISH_COLS_REORDER_C}"
-PUBLISH_COLS_REORDER[2]="$${PUBLISH_COLS_REORDER_R}"
-
-PUBLISH_COLS_SIZE[0]="$${PUBLISH_COLS_SIZE_L}"
-PUBLISH_COLS_SIZE[1]="$${PUBLISH_COLS_SIZE_C}"
-PUBLISH_COLS_SIZE[2]="$${PUBLISH_COLS_SIZE_R}"
-PUBLISH_COLS_RESIZE[0]="$${PUBLISH_COLS_RESIZE_L}"
-PUBLISH_COLS_RESIZE[1]="$${PUBLISH_COLS_RESIZE_C}"
-PUBLISH_COLS_RESIZE[2]="$${PUBLISH_COLS_RESIZE_R}"
-
 ################################################################################
 ### {{{3 Functions (Config) ------------
+
+########################################
+#### {{{4 COMPOSER_YML_DATA_VAL --------
+
+function COMPOSER_YML_DATA_VAL {
+	$${ECHO} "$${COMPOSER_YML_DATA}" \\
+		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null \\
+		| $${SED} "/^null$$/d"
+	return 0
+}
 
 ########################################
 #### {{{4 $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT
@@ -4676,19 +4568,9 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 function $(PUBLISH)-brand {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
-<a class="navbar-brand" href="$$(
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"homepage\"]" 2>/dev/null \\
-	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-	| $${SED} "/^null$$/d"
-)">
+<a class="navbar-brand" href="$$(COMPOSER_YML_DATA_VAL config.homepage)">
 _EOF_
-	BRND="$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"brand\"]" 2>/dev/null \\
-		| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-		| $${SED} "/^null$$/d"
-	)"
+	BRND="$$(COMPOSER_YML_DATA_VAL config.brand)"
 	if [ -s "$${1}" ]; then
 		$${ECHO} "<img class=\"$(COMPOSER_TINYNAME)-logo align-top\" src=\"$${1}\"/>\\n"
 		if [ -n "$${BRND}" ]; then
@@ -4712,36 +4594,16 @@ _EOF_
 
 function $(PUBLISH)-search {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	NAME="$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_name\"]" 2>/dev/null \\
-		| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-		| $${SED} "/^null$$/d"
-	)"
+	NAME="$$(COMPOSER_YML_DATA_VAL config.search_name)"
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
-<form class="nav-item d-flex me-3" action="$$(
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_site"\"] 2>/dev/null \\
-	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-	| $${SED} "/^null$$/d"
-)">
-<input class="form-control form-control-sm me-1" type="text" name="$$(
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_call\"]" 2>/dev/null \\
-	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-	| $${SED} "/^null$$/d"
-)"/>
+<form class="nav-item d-flex me-3" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
+<input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)"/>
 <button class="btn btn-sm" type="submit">$$(
 	$${ECHO} "$${NAME}" \\
 	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )</button>
-$$(
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-	| $${YQ_WRITE} ".$(PUBLISH)-config.[\"search_form\"]" 2>/dev/null \\
-	| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-	| $${SED} "/^null$$/d"
-)
+$$(COMPOSER_YML_DATA_VAL config.search_form)
 </form>
 _EOF_
 	else
@@ -4764,14 +4626,12 @@ _EOF_
 
 function $(PUBLISH)-nav-top {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "top" "1" "$${1}"						|| return 1
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-nav-top | keys | .[]" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
+	$(PUBLISH)-nav-begin "top" "1" "$${1}"					|| return 1
+	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" \\
 		| while read -r MENU; do
-			$(PUBLISH)-nav-top-list "$(PUBLISH)-nav-top.[\"$${MENU}\"]"	|| return 1
+			$(PUBLISH)-nav-top-list "nav-top.[\"$${MENU}\"]"	|| return 1
 		done
-	$(PUBLISH)-nav-end "top" "1"							|| return 1
+	$(PUBLISH)-nav-end "top" "1"						|| return 1
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4785,29 +4645,13 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-top-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	local SIZE="$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | length" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)"
+	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		FILE="$$(
-			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
 		if [ -z "$${FILE}" ]; then
-			FILE="$$(
-				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}[$${NUM}]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
+			FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		else
-			LINK="$$(
-				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
+			LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"]")"
 		fi
 		if [ -z "$${LINK}" ]; then
 			LINK="#"
@@ -4826,20 +4670,12 @@ function $(PUBLISH)-nav-top-list {
 			) $(PUBLISH_CMD_END)\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
-		elif [ -n "$$(
-			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"][0]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)" ]; then
-			LINK="$$(
-				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"][0].[\"$${MENU_SELF}\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
+		elif [ -n "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0]")" ]; then
+			LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0].[\"$${MENU_SELF}\"]")"
 			if [ -z "$${LINK}" ]; then
 				LINK="#"
 			fi
-			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
+			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
@@ -4862,7 +4698,7 @@ $${CAT} <<_EOF_
 </ul></li>
 _EOF_
 		else
-			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^$(PUBLISH)-nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
+			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
 	$${ECHO} "$${LINK}" \\
@@ -4920,45 +4756,34 @@ _EOF_
 
 function $(PUBLISH)-nav-bottom {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "bottom" "" ""									|| return 1
-	COPY="$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-config.[\"copyright\"]" 2>/dev/null \\
-		| $${SED} "/^$(SPECIAL_VAL)$$/d" \\
-		| $${SED} "/^null$$/d"
-	)"
+	$(PUBLISH)-nav-begin "bottom" "" ""								|| return 1
+	COPY="$$(COMPOSER_YML_DATA_VAL config.copyright)"
 	if [ -n "$${COPY}" ]; then
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3">$$(
 	$${ECHO} "$${COPY}\\n" \\
-		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )</li>
 _EOF_
 	fi
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3">$(DIVIDE)$(HTML_SPACE)<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
-	if [ -n "$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-nav-bottom" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)" ]; then
+	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3"><ol class="breadcrumb">
 _EOF_
 		NBSP=
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-nav-bottom | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
+		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" \\
 			| while read -r MENU; do
-				$(PUBLISH)-nav-bottom-list "$(PUBLISH)-nav-bottom.[\"$${MENU}\"]" "$${NBSP}"	|| return 1
+				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]" "$${NBSP}"	|| return 1
 				NBSP="true"
 			done
 $${CAT} <<_EOF_
 </ol></li>
 _EOF_
 	fi
-	$(PUBLISH)-nav-end "bottom" ""										|| return 1
+	$(PUBLISH)-nav-end "bottom" ""									|| return 1
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4972,22 +4797,10 @@ _EOF_
 function $(PUBLISH)-nav-bottom-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	NBSP="$${2}"
-	SIZE="$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | length" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
-	)"
+	SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		FILE="$$(
-			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-		LINK="$$(
-			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$${FILE}\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
+		LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"]")"
 $${CAT} <<_EOF_
 <li class="breadcrumb-item">$$(
 	if [ -z "$${NBSP}" ]; then $${ECHO} "$(DIVIDE)$(HTML_SPACE)"; fi
@@ -5016,19 +4829,13 @@ function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right "$${@}" || return 1; r
 
 function $(PUBLISH)-nav-side {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	if [ -n "$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-nav-$${1}" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
-	)" ]; then
-		$(PUBLISH)-column-begin "$${1}"							|| return 1
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-nav-$${1} | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
+	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-$${1})" ]; then
+		$(PUBLISH)-column-begin "$${1}"						|| return 1
+		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" \\
 			| while read -r MENU; do
-				$(PUBLISH)-nav-side-list "$(PUBLISH)-nav-$${1}.[\"$${MENU}\"]"	|| return 1
+				$(PUBLISH)-nav-side-list "nav-$${1}.[\"$${MENU}\"]"	|| return 1
 			done
-		$(PUBLISH)-column-end								|| return 1
+		$(PUBLISH)-column-end							|| return 1
 	else
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
 	fi
@@ -5047,18 +4854,10 @@ function $(PUBLISH)-nav-side {
 
 function $(PUBLISH)-nav-side-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	SIZE="$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | length" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
-	)"
+	SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
-		FILE="$$(
-			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$${1}[$${NUM}]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
@@ -5072,18 +4871,10 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "\\n"
 			$${ECHO} "$(PUBLISH_CMD_BEG) $${FILE} $(PUBLISH_CMD_END)\\n"
 			$${ECHO} "\\n"
-		elif [ "$$(
-			$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$${1}[$${NUM}] | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)" = "$(MENU_SELF)" ]; then
-			TEXT="$$(
-				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}[$${NUM}].[\"$(MENU_SELF)\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
+		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$(MENU_SELF)" ]; then
 			$${ECHO} "\\n"
-			$${ECHO} "$${TEXT}\\n" \\
+			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$(MENU_SELF)\"]" \\
+				| $${SED} "s|^|  |g" \\
 				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 			$${ECHO} "\\n"
 		else
@@ -5136,19 +4927,13 @@ _EOF_
 
 function $(PUBLISH)-info-data {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	if [ -n "$$(
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$(PUBLISH)-info-$${1}" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)" ]; then
+	if [ -n "$$(COMPOSER_YML_DATA_VAL info-$${1})" ]; then
 $${CAT} <<_EOF_
 <ul class="navbar-nav navbar-nav-scroll">
 _EOF_
-		$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-			| $${YQ_WRITE} ".$(PUBLISH)-info-$${1} | keys | .[]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
+		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" \\
 			| while read -r MENU; do
-				$(PUBLISH)-info-data-list "$(PUBLISH)-info-$${1}.[\"$${MENU}\"]" || return 1
+				$(PUBLISH)-info-data-list "info-$${1}.[\"$${MENU}\"]" || return 1
 			done
 $${CAT} <<_EOF_
 </ul>
@@ -5165,21 +4950,14 @@ _EOF_
 
 function $(PUBLISH)-info-data-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-		| $${YQ_WRITE} ".$${1} | keys | .[]" 2>/dev/null \\
-		| $${SED} "/^null$$/d" \\
+	COMPOSER_YML_DATA_VAL "$${1} | keys | .[]" \\
 		| while read -r FILE; do
-			VAL="$$(
-				$${YQ_DATA_ECHO} "$${YQ_DATA}" \\
-				| $${YQ_WRITE} ".$${1}.[\"$${FILE}\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3">
-_EOF_
-			$${ECHO} "$${VAL}\\n" \\
-				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
-$${CAT} <<_EOF_
+$$(
+	COMPOSER_YML_DATA_VAL "$${1}.[\"$${FILE}\"]" \\
+	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+)
 </li>
 _EOF_
 		done
@@ -5201,7 +4979,7 @@ function $(PUBLISH)-nav-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="$(COMPOSER_TINYNAME)-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}"></div>
-<nav class="navbar navbar-expand-$${PUBLISH_COLS_BREAK} fixed-$${1}">
+<nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols_break) fixed-$${1}">
 <div class="container-fluid">
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}">
 <span class="navbar-toggler-icon"></span>
@@ -5253,7 +5031,7 @@ function $(PUBLISH)-row-begin {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="container-fluid$$(
-	if [ "$${PUBLISH_COPY_PROTECT}" != "$${SPECIAL_VAL}" ]; then
+	if [ -n "$$(COMPOSER_YML_DATA_VAL config.copy_protect)" ]; then
 		$${ECHO} " user-select-none"
 	fi
 )">
@@ -5295,19 +5073,24 @@ $${CAT} <<_EOF_
 		if [ "$${1}" = "left" ]; then		NUM="0"
 		elif [ "$${1}" = "right" ]; then	NUM="2"
 		fi
-		$${ECHO} " order-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_ORDER[$${NUM}]} order-$${PUBLISH_COLS_REORDER[$${NUM}]}"
-		$${ECHO} " col-$${PUBLISH_COLS_BREAK}-$${PUBLISH_COLS_SIZE[$${NUM}]} col-$${PUBLISH_COLS_RESIZE[$${NUM}]}"
-		if	[ "$${PUBLISH_COLS_ORDER[$${NUM}]}"	!= "$${SPECIAL_VAL}" ] &&
-			[ "$${PUBLISH_COLS_SIZE[$${NUM}]}"	!= "$${SPECIAL_VAL}" ];
-		then	$${ECHO} " d-$${PUBLISH_COLS_BREAK}-block"
-		else	$${ECHO} " d-$${PUBLISH_COLS_BREAK}-none"
+		COLS_BREAK="$$(		COMPOSER_YML_DATA_VAL config.cols_break)"
+		COLS_ORDER="$$(		COMPOSER_YML_DATA_VAL config.cols_order[$${NUM}])"
+		COLS_REORDER="$$(	COMPOSER_YML_DATA_VAL config.cols_reorder[$${NUM}])"
+		COLS_SIZE="$$(		COMPOSER_YML_DATA_VAL config.cols_size[$${NUM}])"
+		COLS_RESIZE="$$(	COMPOSER_YML_DATA_VAL config.cols_resize[$${NUM}])"
+		$${ECHO} " order-$${COLS_BREAK}-$${COLS_ORDER} order-$${COLS_REORDER}"
+		$${ECHO} " col-$${COLS_BREAK}-$${COLS_SIZE} col-$${COLS_RESIZE}"
+		if	[ "$${COLS_ORDER}"	!= "$${SPECIAL_VAL}" ] &&
+			[ "$${COLS_SIZE}"	!= "$${SPECIAL_VAL}" ];
+		then	$${ECHO} " d-$${COLS_BREAK}-block"
+		else	$${ECHO} " d-$${COLS_BREAK}-none"
 		fi
-		if	[ "$${PUBLISH_COLS_REORDER[$${NUM}]}"	!= "$${SPECIAL_VAL}" ] &&
-			[ "$${PUBLISH_COLS_RESIZE[$${NUM}]}"	!= "$${SPECIAL_VAL}" ];
+		if	[ "$${COLS_REORDER}"	!= "$${SPECIAL_VAL}" ] &&
+			[ "$${COLS_RESIZE}"	!= "$${SPECIAL_VAL}" ];
 		then	$${ECHO} " d-block"
 		else	$${ECHO} " d-none"
 		fi
-		if [ "$${PUBLISH_COLS_STICKY}" != "$${SPECIAL_VAL}" ]; then
+		if [ -n "$$(COMPOSER_YML_DATA_VAL config.cols_sticky)" ]; then
 			$${ECHO} " $(COMPOSER_TINYNAME)-sticky"
 		fi
 	else
@@ -5579,7 +5362,9 @@ function $(PUBLISH)-file {
 	fi \\
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
-			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$(PUBLISH_CMD_BEG)(.+)$(PUBLISH_CMD_END)$$|\\1|g")"
+#>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$(PUBLISH_CMD_BEG)(.+)$(PUBLISH_CMD_END)$$|\\1|g")"
+			BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_CMD_BEG)}"
+			BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_CMD_END)}"
 			if [ "$${FILE}" = "$(PUBLISH_CMD_BEG)$${BUILD_CMD}$(PUBLISH_CMD_END)" ]; then
 				$(PUBLISH)-select $${BUILD_CMD} || return 1
 			else
@@ -8129,8 +7914,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))\/doc[^\/].+$(COMPOSER_LOG_DEFAULT))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
-	$(call $(TESTING)-count,6,$(TESTING)-1-$(CLEANER))
-	$(call $(TESTING)-count,6,$(TESTING)-1-$(DOITALL))
+	$(call $(TESTING)-count,4,$(TESTING)-1-$(CLEANER))
+	$(call $(TESTING)-count,4,$(TESTING)-1-$(DOITALL))
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE ---
@@ -8466,7 +8251,7 @@ $(TESTING)-other-done:
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,40,$(NOTHING))
+	$(call $(TESTING)-count,20,$(NOTHING))
 	$(call $(TESTING)-count,6,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> targets
@@ -8603,7 +8388,6 @@ endif
 ## {{{2 $(CONFIGS) ---------------------
 
 #> update: COMPOSER_OPTIONS
-#> update: $(PUBLISH)-variables
 #> update: $(HEADERS)-run
 
 .PHONY: $(CONFIGS)
@@ -8621,17 +8405,10 @@ $(CONFIGS):
 		)) \
 		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(OUT), )$(_E)$(MARKER)$(_D))"; \
 	)
-ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
-	@$(LINERULE)
-	@$(foreach FILE,$($(PUBLISH)-variables),\
-		$(COLUMN_2) "$(_C)$(word 1,$(subst :, ,$(FILE)))" "$(_H)$(subst ",\",$($(word 1,$(subst :, ,$(FILE)))))"; \
-		$(call NEWLINE) \
-	)
-endif
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
-#>	@$(call COMPOSER_YML_DATA) 2>/dev/null | $(YQ_WRITE_OUT) 2>/dev/null
-	@$(call COMPOSER_YML_DATA) | $(YQ_WRITE_OUT)
+#>	@$(ECHO) '$(COMPOSER_YML_DATA)' | $(YQ_WRITE_OUT) 2>/dev/null
+	@$(ECHO) '$(COMPOSER_YML_DATA)' | $(YQ_WRITE_OUT)
 endif
 #WORK document
 ifeq ($(COMPOSER_LIBRARY),$(CURDIR))
@@ -8859,7 +8636,7 @@ $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
 override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "$(_E)"; \
 	$(ECHO) "" >$(1); \
-	$(call PUBLISH_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
+	$(PUBLISH_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
@@ -8871,7 +8648,7 @@ override define $(PUBLISH)-$(TARGETS) =
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
 			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$${FILE}) -->\n"; \
-			$(call PUBLISH_SH_RUN) $${FILE}; \
+			$(PUBLISH_SH_RUN) $${FILE}; \
 		done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
@@ -9033,15 +8810,15 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-readtime-do =
 	WORD="$$( \
-		$(call PUBLISH_SH_RUN) $(1) \
+		$(PUBLISH_SH_RUN) $(1) \
 		| $(PANDOC_MD_TO_TEXT) \
 		| $(WC_WORD) \
 	)"; \
 	TIME="1"; \
-	if [ "$${WORD}" -gt "$(PUBLISH_READ_TIME_WPM)" ]; then \
-		TIME="$$($(EXPR) $${WORD} / $(PUBLISH_READ_TIME_WPM))"; \
+	if [ "$${WORD}" -gt "$(call COMPOSER_YML_DATA_VAL,config.read_time_wpm)" ]; then \
+		TIME="$$($(EXPR) $${WORD} / $(call COMPOSER_YML_DATA_VAL,config.read_time_wpm))"; \
 	fi; \
-	$(ECHO) "$(PUBLISH_READ_TIME)\n" \
+	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.read_time)\n" \
 		| $(SED) \
 			-e "s|@W|$${WORD}|g" \
 			-e "s|@T|$${TIME}|g" \
@@ -9074,11 +8851,11 @@ $($(PUBLISH)-caches):
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(call PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
+		$(PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
-		$(call PUBLISH_SH_RUN) "$($(@))" "center"; \
+		$(PUBLISH_SH_RUN) "$($(@))" "center"; \
 	else \
-		$(call PUBLISH_SH_RUN) "$($(@))"; \
+		$(PUBLISH_SH_RUN) "$($(@))"; \
 	fi \
 		| $(TEE) $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -9094,18 +8871,11 @@ $($(PUBLISH)-caches):
 ########################################
 ### {{{3 $(PUBLISH)-library ------------
 
-#WORKING:NOW:NOW:FIX
-#	rebuild of bootstrap during site-force step ... expected?
-#	ideally, we would not have as much rebuilding before the site-force...
-#		maybe "touch" for all the content files...?
-#	do V=0 to find the slow spot
-#		re-add c_site test for yml config, along with config-all
-
 ifneq ($(and \
 	$(c_site) ,\
 	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) ,\
 	$(or \
-		$(filter-out $(SPECIAL_VAL),$(LIBRARY_AUTO_UPDATE)) ,\
+		$(call COMPOSER_YML_DATA_VAL,library.auto_update) ,\
 		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
 	) \
 ),)
@@ -9177,10 +8947,10 @@ $(PUBLISH)-$(COMPOSER_SETTINGS):
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
-	@$(call COMPOSER_YML_DATA,,$(COMPOSER_LIBRARY).yml) 2>/dev/null \
+	@$(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY).yml) \
 		| $(YQ_WRITE_FILE) " \
-			.variables.[\"$(PUBLISH)-library\"].[\"folder\"]	= $(SPECIAL_VAL) \
-			| .variables.[\"$(PUBLISH)-library\"].[\"auto_update\"]	= $(SPECIAL_VAL) \
+			.variables.$(PUBLISH)-library.folder = null \
+			| .variables.$(PUBLISH)-library.auto_update = null \
 			" 2>/dev/null
 
 override define $(PUBLISH)-library-sort-yq =
@@ -9223,8 +8993,7 @@ $($(PUBLISH)-library-metadata):
 		$(shell $(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path \*/$(COMPOSER_YML) \
 			| while read -r FILE; do \
 				DIR="$$( \
-					$(YQ_WRITE) ".variables.[\"$(PUBLISH)-library\"].[\"folder\"]" $${FILE} 2>/dev/null \
-					| $(SED) "/^$(SPECIAL_VAL)$$/d" \
+					$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $${FILE} 2>/dev/null \
 					| $(SED) "/^null$$/d" \
 				)"; \
 				if [ -n "$${DIR}" ]; then \
@@ -9286,7 +9055,7 @@ $($(PUBLISH)-library-metadata):
 		$(ECHO) "$(_D)"; \
 	fi
 	@$(ECHO) "$(_F)"
-	@$(YQ_EVAL) \
+	@$(YQ_EVAL_FILES) \
 			$(@).$(PRINTER) \
 			$(@).$(COMPOSER_BASENAME) \
 			2>/dev/null \
@@ -9463,7 +9232,7 @@ $($(PUBLISH)-library-digest):
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
-	@$(call $(PUBLISH)-library-digest-main,$(@),$(LIBRARY_DIGEST_TITLE))
+	@$(call $(PUBLISH)-library-digest-main,$(@),$(call COMPOSER_YML_DATA_VAL,library.digest_title))
 
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-src
@@ -9533,20 +9302,22 @@ override define $(PUBLISH)-library-digest-main =
 		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
 	fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
+	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.digest_spacer)"; \
+	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.digest_expanded)"; \
 	NUM="0"; for FILE in $$( \
 		$(YQ_WRITE) " \
 				map(select(.title != null or .pagetitle != null)) \
 				| $(call $(PUBLISH)-library-sort-yq) \
 				| .[].path \
 			" $($(PUBLISH)-library-metadata) 2>/dev/null \
-			| $(HEAD) -n$(LIBRARY_DIGEST_COUNT); \
+			| $(HEAD) -n$(call COMPOSER_YML_DATA_VAL,library.digest_count); \
 	); do \
-		if [ "$${NUM}" -gt "0" ] && [ "$(LIBRARY_DIGEST_SPACER)" != "$(SPECIAL_VAL)" ]; then \
+		if [ "$${NUM}" -gt "0" ] && [ -n "$${DIGEST_SPACER}" ]; then \
 			$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
 		fi; \
 		$(ECHO) "$(_D)"; \
 		EXPAND="$(SPECIAL_VAL)"; \
-		if [ "$${NUM}" -lt "$(LIBRARY_DIGEST_EXPANDED)" ]; then \
+		if [ "$${NUM}" -lt "$${DIGEST_EXPANDED}" ]; then \
 			EXPAND="1"; \
 		fi; \
 		$(call $(PUBLISH)-library-digest-create,$(1).$(COMPOSER_BASENAME),$${FILE},$(COMPOSER_EXT),$${EXPAND}); \
@@ -9627,9 +9398,10 @@ override define $(PUBLISH)-library-digest-create =
 		$(PANDOC_MD_TO_JSON) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 		| $(YQ_WRITE) ".blocks | length" \
 	)"; \
+	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
 	SIZ="0"; BLK="0"; while \
 		[ "$${BLK}" -lt "$${LEN}" ] && \
-		[ "$${SIZ}" -le "$(LIBRARY_DIGEST_CHARS)" ]; \
+		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
 		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
@@ -9656,10 +9428,10 @@ override define $(PUBLISH)-library-digest-create =
 		BLK="$$($(EXPR) $${BLK} + 1)"; \
 	done; \
 	if [ "$${BLK}" -lt "$${LEN}" ]; then \
-		$(ECHO) "$(subst ",,$(LIBRARY_DIGEST_CONTINUE)) " \
+		$(ECHO) "$(subst ",,$(call COMPOSER_YML_DATA_VAL,library.digest_continue)) " \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
-	$(ECHO) "[$(subst ",,$(LIBRARY_DIGEST_PERMALINK))]($$( \
+	$(ECHO) "[$(subst ",,$(call COMPOSER_YML_DATA_VAL,library.digest_permalink))]($$( \
 			$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 			| $(SED) "s|$(3)$$|.$(EXTN_HTML)|g" \
 		))\n" \
@@ -9767,6 +9539,7 @@ endif
 	@$(call $(HEADERS))
 	@$(foreach FILE,\
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$($(PUBLISH)-$(EXAMPLE)-pages) \
 		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
 		,\
 		$(call $(HEADERS)-note,$($(PUBLISH)-$(EXAMPLE)),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
@@ -9778,22 +9551,30 @@ endif
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(foreach FILE,$($(PUBLISH)-$(EXAMPLE)-dirs),\
+	@$(foreach FILE,\
+		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$($(PUBLISH)-$(EXAMPLE)-pages) \
+		$($(PUBLISH)-$(EXAMPLE)-themes) \
+		,\
 		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
 	)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
+	@$(ECHO) "$(_S)"
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_EXAMPLE)		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) $($(DEBUGIT)-output)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 #>	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-#WORKING:NOW:NOW:FIX
-#	need to re-visit this... it needs to be tested, but changing the theme on the final site doesn't make sense... reverse it...
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_YML) $($(DEBUGIT)-output)
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_CSS))
 	@$(ECHO) "$(_S)"
 	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
@@ -9801,9 +9582,9 @@ endif
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-else
 	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+else
+	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 endif
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../*$(COMPOSER_EXT_DEFAULT))
@@ -9847,9 +9628,9 @@ endif
 		) \
 	)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+		| $(SED) -e "s|[[:space:]]*$$||g"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"				>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
+		| $(SED) -e "s|[[:space:]]*$$||g"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)) \
 		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
@@ -9870,16 +9651,19 @@ ifneq ($(or \
 	$(COMPOSER_DEBUGIT) ,\
 ),)
 	@$(SED) -i "s|^(.+auto_update.+)$(LIBRARY_AUTO_UPDATE_ALT)$$|\1$(LIBRARY_AUTO_UPDATE)|g" \
-				$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
-				$(if $(COMPOSER_DEBUGIT),\
-					$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) \
-				)
+		$($(PUBLISH)-$(EXAMPLE))/$(COMPOSER_YML) \
+		$(if $(COMPOSER_DEBUGIT),\
+			$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) \
+		)
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
-		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
+		$($(PUBLISH)-$(EXAMPLE)-pages) \
+		$($(PUBLISH)-$(EXAMPLE)-themes) \
 		,\
-		$(TOUCH)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+		if [ -f "$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML)" ]; then \
+			$(TOUCH) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+		fi; \
 		$(call NEWLINE) \
 	)
 endif
@@ -9901,6 +9685,7 @@ endif
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$($(PUBLISH)-$(EXAMPLE)-pages) \
 		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
 		,{ \
 			$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
@@ -9995,9 +9780,6 @@ endif
 #			yes, to the center column
 #			this can be for all kinds of things... add an example of box-beg/end to site-template
 #		place "contents" and "readtime" in all three locations...
-#		"contents library" token of some sort...
-#			need to be able to program the library...
-#			got it... = $(COMPOSER_YML_DATA) $(COMPOSER_LIBRARY).yml | $(YQ_WRITE) ...
 #		some type of previous/next page kind of thing, for post-to-post browsing...
 #			https://getbootstrap.com/docs/5.2/components/pagination
 #			nav-tree?
@@ -10055,7 +9837,7 @@ endef
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML) =
 variables:
   $(PUBLISH)-config:
-    css_shade: $(SPECIAL_VAL)
+    css_shade: null
 endef
 
 ########################################
@@ -10954,7 +10736,7 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",wildcard)
 endif
 
-#WORKING:NOW:NOW
+#WORKING:NOW:NOW:FIX
 #	aw, jeez... now dependencies like "target: other target" are broken...  gah.
 #		somehow search $(TARGETS)-$(PRINTER) ...?  yeah, now things will be even slower...  meh.
 #		worth it for the easy feature-set ...?  what else is broken that i'm not thinking of...?
