@@ -3568,19 +3568,6 @@ endif
 											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	))
-#WORKING:NOW:NOW:FIX
-#	styles.html -> c_css=0 -> --metadata="document-css=false" ?
-#		maybe theme.*-pandoc.css files, or just empty c_css does not do document-css=false?
-#		create theme.epub* files, and link to theme.html* files?
-#	https://github.com/kognise/water.css
-#		https://www.cssbed.com/water.css-dark
-#		https://github.com/altercation/solarized
-#		https://github.com/troxler/awesome-css-frameworks
-#			https://github.com/csstools/sanitize.css
-#	remove the html5shiv from the html5 template
-#		programmatically would be ideal...
-#		test to make sure page loads do not require any network at all...
-#WORKING:NOW:NOW:FIX
 	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach FILE,\
 			template \
@@ -3593,10 +3580,16 @@ endif
 				) 2>/dev/null || $(TRUE); \
 			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
 				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE))" ]; then \
-				$(LN) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
-					$($(DEBUGIT)-output); \
+				if [ "$(FILE).$(TMPL_$(TYPE))" = "template.$(TMPL_HTML)" ]; then \
+					$(SED) "/IE 9/,/endif/d" \
+						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+						>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)); \
+				else \
+					$(LN) \
+						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
+						$($(DEBUGIT)-output); \
+				fi; \
 			fi; \
 		) \
 		$(call NEWLINE) \
@@ -3606,9 +3599,16 @@ endif
 		epub.css \
 		,\
 		$(PANDOC_BIN) --verbose \
-			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE))" \
+			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" \
 			--print-default-data-file="$(FILE)" \
 			2>/dev/null; \
+			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
+				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE))" ]; then \
+				$(LN) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE))) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE)) \
+					$($(DEBUGIT)-output); \
+			fi; \
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(_D)"
@@ -8974,6 +8974,10 @@ endef
 ########################################
 #### {{{4 $(PUBLISH)-library-metadata --
 
+#WORKING:NOW:NOW:FIX
+#	add *-note when initializing
+#	find/list should respect composr_ignores
+
 #> update: YQ_WRITE.*title
 
 $($(PUBLISH)-library-metadata): $(COMPOSER)
@@ -9717,7 +9721,7 @@ endif
 		$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL) \
 		,\
-		$(ENV_MAKE) $(SILENT) \
+		time $(ENV_MAKE) $(SILENT) \
 			--directory $(abspath $(dir $($(PUBLISH)-$(EXAMPLE))/$(FILE))) \
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(SPECIAL_VAL))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
@@ -10444,11 +10448,13 @@ override define $(CLEANER)-logs =
 		[ -n "$(COMPOSER_LOG)" ] && \
 		[ -f "$(CURDIR)/$(COMPOSER_LOG)" ]; \
 	then \
-		$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_LOG),$(CLEANER)-logs); \
-		$(ECHO) "$(_S)"; \
 		if [ "$(COMPOSER_KEEPING)" = "$(SPECIAL_VAL)" ]; then \
+			$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_LOG),$(CLEANER)-logs); \
+			$(ECHO) "$(_S)"; \
 			$(RM) $(CURDIR)/$(COMPOSER_LOG) $($(DEBUGIT)-output); \
 		elif [ "$$($(CAT) $(CURDIR)/$(COMPOSER_LOG) | $(WC))" -gt "$(COMPOSER_KEEPING)" ]; then \
+			$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_LOG),$(CLEANER)-logs); \
+			$(ECHO) "$(_S)"; \
 			$(MV) $(CURDIR)/$(COMPOSER_LOG) $(CURDIR)/$(COMPOSER_LOG).$(@) $($(DEBUGIT)-output); \
 			$(TAIL) -n$(COMPOSER_KEEPING) $(CURDIR)/$(COMPOSER_LOG).$(@) >$(CURDIR)/$(COMPOSER_LOG); \
 			$(RM) $(CURDIR)/$(COMPOSER_LOG).$(@) $($(DEBUGIT)-output); \
@@ -10458,11 +10464,13 @@ override define $(CLEANER)-logs =
 	if	[ -n "$(COMPOSER_KEEPING)" ] && \
 		[ -d "$(COMPOSER_TMP)" ]; \
 	then \
-		$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)-logs); \
-		$(ECHO) "$(_S)"; \
 		if [ "$(COMPOSER_KEEPING)" = "$(SPECIAL_VAL)" ]; then \
+			$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)-logs); \
+			$(ECHO) "$(_S)"; \
 			$(RM) --recursive $(COMPOSER_TMP) $($(DEBUGIT)-output); \
 		elif [ "$$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(WC))" -gt "$(COMPOSER_KEEPING)" ]; then \
+			$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)-logs); \
+			$(ECHO) "$(_S)"; \
 			$(RM) --recursive $$( \
 					$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null \
 					| $(TAIL) -n+$(COMPOSER_KEEPING) \
