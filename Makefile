@@ -5992,10 +5992,9 @@ endef
 ########################################
 ### {{{3 custom_html_css (Water.css) ---
 
-#WORKING:NOW:NOW:FIX
-#	need to touch-up the light theme, so it has the same accents/texture as dark...
-#		maybe make both water/solar nav/fold/box elements a dark background...?
-#	get rid of contact information icons, and any others...
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK =
+	$(SED) "/^a.href.=/,/^}/d"
+endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
 $(eval SHADE := $(word 1,$(subst :, ,$(1))))
@@ -8569,6 +8568,7 @@ endif
 		-e "/^dist[/]$$/d" \
 		-e "/^out[/]$$/d" \
 											$(WATERCSS_DIR)/.gitignore
+	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(WATERCSS_DIR)/src/parts/*.css
 	@$(foreach FILE,light dark,\
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
 		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
