@@ -9837,6 +9837,14 @@ override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS) =
 override MAKEJOBS :=
 override COMPOSER_TARGETS :=
 
+.PHONY: themes-$(CLEANER)
+themes-$(CLEANER):
+	@$$(foreach FILE,$$(wildcard *.$(EXTN_HTML)),\\
+		$$(call $(COMPOSER_TINYNAME)-rm,$$(FILE)); \\
+		$$(call NEWLINE) \\
+	)
+	@$$(ECHO) ""
+
 .PHONY: shade-%
 shade-%:
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
