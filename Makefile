@@ -4464,7 +4464,8 @@ function $(PUBLISH)-nav-top-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
+#>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
 		if [ -z "$${FILE}" ]; then
 			FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		else
@@ -4544,14 +4545,14 @@ _EOF_
 
 function $(PUBLISH)-nav-top-library {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} 2>/dev/null \\
+	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
 		| $${SED} "/^null$$/d" \\
 		| while read -r FILE; do
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE} ($$(
-	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${PUBLISH_LIBRARY_INDEX} 2>/dev/null \\
+	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${PUBLISH_LIBRARY_INDEX} \\
 	| $${SED} "/^null$$/d" \\
 ))</a></li>
 _EOF_
@@ -4616,7 +4617,8 @@ function $(PUBLISH)-nav-bottom-list {
 	NBSP="$${2}"
 	SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
+#>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
 		LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"]")"
 $${CAT} <<_EOF_
 <li class="breadcrumb-item">$$(
@@ -4688,9 +4690,10 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "\\n"
 			$${ECHO} "$(PUBLISH_CMD_BEG) $${FILE} $(PUBLISH_CMD_END)\\n"
 			$${ECHO} "\\n"
-		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$(MENU_SELF)" ]; then
+#>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
+		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
-			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$(MENU_SELF)\"]" \\
+			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
 				| $${SED} "s|^|  |g" \\
 				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 			$${ECHO} "\\n"
@@ -4716,14 +4719,14 @@ function $(PUBLISH)-nav-side-library {
 $${CAT} <<_EOF_
 <table class="table table-borderless align-top">
 _EOF_
-	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} 2>/dev/null \\
+	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
 		| $${SED} "/^null$$/d" \\
 		| while read -r FILE; do
 $${CAT} <<_EOF_
 <tr><td><a href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE}</a></td><td class="text-end">$$(
-	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${PUBLISH_LIBRARY_INDEX} 2>/dev/null \\
+	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${PUBLISH_LIBRARY_INDEX} \\
 	| $${SED} "/^null$$/d" \\
 )</td></tr>
 _EOF_
@@ -4767,7 +4770,8 @@ _EOF_
 
 function $(PUBLISH)-info-data-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	COMPOSER_YML_DATA_VAL "$${1} | keys | .[]" \\
+#>	COMPOSER_YML_DATA_VAL "$${1} | keys | .[]"
+	COMPOSER_YML_DATA_VAL "$${1} | keys | .[]" 2>/dev/null \\
 		| while read -r FILE; do
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3">
@@ -4939,9 +4943,9 @@ _EOF_
 # 1 "group"
 # 2 id
 
-# 1 header level			$(SPECIAL_VAL) = none
-# 2 $(SPECIAL_VAL) = collapsed
-# 3 id					$(SPECIAL_VAL) = none
+# 1 header level			$${SPECIAL_VAL} = none
+# 2 $${SPECIAL_VAL} = collapsed
+# 3 id					$${SPECIAL_VAL} = none
 # 4 title				$${@:4} = $${4}++
 
 # 1 $(PUBLISH)-header 1			header level
@@ -5015,7 +5019,7 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-box-begin ---------
 
-# 1 header level			$(SPECIAL_VAL) = none
+# 1 header level			$${SPECIAL_VAL} = none
 # 2 title				$${@:2} = $${2}++
 
 # 1 $(PUBLISH)-header 1			header level
@@ -5180,8 +5184,8 @@ function $(PUBLISH)-file {
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
 #>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$(PUBLISH_CMD_BEG)(.+)$(PUBLISH_CMD_END)$$|\\1|g")"
-			BUILD_CMD="$${BUILD_CMD/#$(PUBLISH_CMD_BEG)}"
-			BUILD_CMD="$${BUILD_CMD/%$(PUBLISH_CMD_END)}"
+			BUILD_CMD="$${BUILD_CMD/#$(subst $(NULL) ,\ ,$(PUBLISH_CMD_BEG))}"
+			BUILD_CMD="$${BUILD_CMD/%$(subst $(NULL) ,\ ,$(PUBLISH_CMD_END))}"
 			if [ "$${FILE}" = "$(PUBLISH_CMD_BEG)$${BUILD_CMD}$(PUBLISH_CMD_END)" ]; then
 				$(PUBLISH)-select $${BUILD_CMD} || return 1
 			else
