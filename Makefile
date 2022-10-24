@@ -1772,10 +1772,6 @@ endif
 ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_DIR))
 override COMPOSER_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_LIBRARY))
 endif
-#WORKING:NOW:NOW need a better solution here...
-ifeq ($(COMPOSER_LIBRARY),)
-override COMPOSER_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP))
-endif
 
 override $(PUBLISH)-library		:= $(COMPOSER_LIBRARY)/$(PUBLISH)-library
 override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
@@ -8900,7 +8896,11 @@ endif
 .PHONY: $(PUBLISH)-library
 $(PUBLISH)-library: .set_title-$(PUBLISH)-library
 $(PUBLISH)-library: $(HEADERS)-$(PUBLISH)-library
+ifneq ($(COMPOSER_LIBRARY),)
 $(PUBLISH)-library: $($(PUBLISH)-library)
+else
+$(PUBLISH)-library: $(NOTHING)-$(PUBLISH)-library
+endif
 $(PUBLISH)-library:
 	@$(ECHO) ""
 
