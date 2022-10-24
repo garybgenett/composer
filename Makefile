@@ -920,15 +920,17 @@ override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
 override YQ_EVAL			:= . *
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; $(YQ_EVAL) $$file)'
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
+#>			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) 2>/dev/null
+#>			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
 	$(if $(and $(wildcard $(2)),$(3)),\
 		| $(YQ_WRITE_JSON) '$(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
-			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) 2>/dev/null \
+			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) \
 		)) }}' \
 	,\
 		$(foreach FILE,$(wildcard $(2)),\
-			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null \
+			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' \
 		) \
 	)
 endef
@@ -1723,9 +1725,10 @@ override define COMPOSER_YML_DATA_SKEL =
 }}
 endef
 
+#>	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null
 override COMPOSER_YML_DATA_VAL = $(shell \
-	$(ECHO) '$(COMPOSER_YML_DATA)' \
-	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null \
+	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
+	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" \
 	| $(SED) "/^null$$/d" \
 )
 
@@ -1795,7 +1798,7 @@ ifneq ($(COMPOSER_LIBRARY_YML),)
 override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
 endif
 endif
-override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
+#>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
 #######################################
 
@@ -1819,7 +1822,7 @@ override PUBLISH_SH_RUN := \
 	TR="$(TR)" \
 	\
 	YQ_WRITE="$(subst ",,$(YQ_WRITE))" \
-	COMPOSER_YML_DATA='$(COMPOSER_YML_DATA)' \
+	COMPOSER_YML_DATA='$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 	\
 	CURDIR="$(CURDIR)" \
 	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
@@ -3492,7 +3495,7 @@ $(EXAMPLE)-yml:
 .PHONY: .$(EXAMPLE)-yml
 .$(EXAMPLE)-yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
-	@$(ECHO) '$(COMPOSER_YML_DATA)' \
+	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) 2>/dev/null \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK),$(COMMENTED))|g"
 
@@ -4346,9 +4349,10 @@ PUBLISH_LIBRARY_INDEX_PATH="$$($${REALPATH} $${CURDIR} $$($${DIRNAME} $${PUBLISH
 ########################################
 #### {{{4 COMPOSER_YML_DATA_VAL --------
 
+#>		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null
 function COMPOSER_YML_DATA_VAL {
 	$${ECHO} "$${COMPOSER_YML_DATA}" \\
-		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null \\
+		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" \\
 		| $${SED} "/^null$$/d"
 	return 0
 }
@@ -8223,8 +8227,8 @@ $(CONFIGS):
 	)
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
-#>	@$(ECHO) '$(COMPOSER_YML_DATA)' | $(YQ_WRITE_OUT) 2>/dev/null
-	@$(ECHO) '$(COMPOSER_YML_DATA)' | $(YQ_WRITE_OUT)
+#>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE_OUT) 2>/dev/null
+	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE_OUT)
 endif
 #WORK document
 ifeq ($(COMPOSER_LIBRARY),$(CURDIR))
@@ -8949,8 +8953,6 @@ $(PUBLISH)-$(COMPOSER_SETTINGS):
 			$(call NEWLINE) \
 		) \
 	)
-
-#WORKING:NOW:NOW:FIX
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
