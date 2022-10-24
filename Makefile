@@ -13,7 +13,7 @@ override VIM_FOLDING := {{{1
 #		* PANDOC_OPTIONS_ERROR
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
-#			* `make test-_release`
+#			* `make test-dir`
 #			* `make list`
 #			* `make test`
 #		* `make COMPOSER_DEBUGIT="check config targets" debug | less -rX`
@@ -1605,6 +1605,7 @@ override PRINTER			:= list
 
 #> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> grep -E "[)]-[a-z]+" Makefile
+#> make .all_targets | sed -r "s|[:].*$||g" | sort -u
 override COMPOSER_RESERVED := \
 	$(COMPOSER_PANDOC) \
 	\
@@ -1653,7 +1654,10 @@ endef
 
 $(foreach FILE,$(filter-out \
 	$(HELPOUT) \
+	$(EXAMPLE) \
 	$(HEADERS) \
+	$(MAKE_DB) \
+	$(LISTING) \
 	$(NOTHING) \
 	$(SUBDIRS) \
 ,$(COMPOSER_RESERVED)),\
@@ -7156,7 +7160,7 @@ export override COMPOSER_DOITALL_$(TESTING) := file
 export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 endif
 .PHONY: $(TESTING)-file
-$(TESTING)-file: .set_title-$(TESTING)
+$(TESTING)-file: .set_title-$(TESTING)-file
 $(TESTING)-file: $(HEADERS)-$(TESTING)
 $(TESTING)-file: $(TESTING)-$(HEADERS)
 $(TESTING)-file:
@@ -7233,6 +7237,12 @@ $(TESTING)-$(HEADERS):
 $(TESTING)-$(HEADERS)-%:
 	@$(call TITLE_LN ,1,$(MARKER)[ $($(*)) ]$(MARKER) $(VIM_FOLDING))
 	@$(MAKE) $($(*)) 2>&1
+
+#WORK document!
+.PHONY: $(TESTING)-dir
+$(TESTING)-dir: $(TESTING)-$(DISTRIB)
+$(TESTING)-dir:
+	@$(ECHO) ""
 
 #WORK document!
 .PHONY: $(TESTING)-$(PRINTER)
@@ -8990,7 +9000,8 @@ $($(PUBLISH)-library-metadata): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-metadata): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-metadata):
-	@$(call $(HEADERS)-note,$(abspath $(dir $(COMPOSER_LIBRARY))),$(_H)$(notdir $(COMPOSER_LIBRARY)),$(PUBLISH)-library)
+#>	@$(call $(HEADERS)-note,$(abspath $(dir $(COMPOSER_LIBRARY))),$(_H)$(notdir $(COMPOSER_LIBRARY)),$(PUBLISH)-library)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(call $(HEADERS)-path-root,$(COMPOSER_LIBRARY)),$(PUBLISH)-library)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_F)"
@@ -10773,9 +10784,6 @@ endif
 #	add a COMPOSER_CUSTOMS ?
 #		or, filter out all makefile, c_list, etc. and use what is left over
 #		or, whatever is in COMPOSER_CONTENT, COMPOSER_TARGETS, COMPOSER_SUBDIRS, with $(NOTHING) notices ?
-#	make -f .../Makefile *.html
-#		make[1]: *** No rule to make target 'compose'.
-#		maybe add --makefile $(COMPOSER) to these?
 
 %.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) $$(c_list)
 	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(c_list))
