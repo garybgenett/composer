@@ -8851,18 +8851,14 @@ ifneq ($(c_site),)
 $(filter %.$(EXTN_HTML),$(COMPOSER_TARGETS)): $($(PUBLISH)-cache)
 endif
 
-$($(PUBLISH)-cache): $(COMPOSER)
-$($(PUBLISH)-cache): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-cache): $(COMPOSER_YML_LIST)
-#>$($(PUBLISH)-cache): $(COMPOSER_CONTENTS_EXT)
+#>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
+$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-cache)
 
-$($(PUBLISH)-caches): $(COMPOSER)
-$($(PUBLISH)-caches): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-caches): $(COMPOSER_YML_LIST)
-#>$($(PUBLISH)-caches): $(COMPOSER_CONTENTS_EXT)
+#>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
+$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 	@$(call $(HEADERS)-note,$(COMPOSER_TMP),$($(@)),$(PUBLISH)-cache)
@@ -8928,10 +8924,7 @@ $(PUBLISH)-library:
 
 #> update: COMPOSER_OPTIONS
 
-$($(PUBLISH)-library): $(COMPOSER)
-$($(PUBLISH)-library): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-library): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library): $(COMPOSER_CONTENTS_EXT)
+$($(PUBLISH)-library): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library): $($(PUBLISH)-library-digest)
@@ -8995,10 +8988,7 @@ endef
 
 #> update: YQ_WRITE.*title
 
-$($(PUBLISH)-library-metadata): $(COMPOSER)
-$($(PUBLISH)-library-metadata): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library-metadata): $(COMPOSER_CONTENTS_EXT)
+$($(PUBLISH)-library-metadata): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-metadata):
 #>	@$(call $(HEADERS)-note,$(abspath $(dir $(COMPOSER_LIBRARY))),$(_H)$(notdir $(COMPOSER_LIBRARY)),$(PUBLISH)-library)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(call $(HEADERS)-path-root,$(COMPOSER_LIBRARY)),$(PUBLISH)-library)
@@ -9111,10 +9101,7 @@ $($(PUBLISH)-library-metadata):
 ########################################
 #### {{{4 $(PUBLISH)-library-index -----
 
-$($(PUBLISH)-library-index): $(COMPOSER)
-$($(PUBLISH)-library-index): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-library-index): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library-index): $(COMPOSER_CONTENTS_EXT)
+$($(PUBLISH)-library-index): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
 	@$(ECHO) "$(_S)"
@@ -9254,10 +9241,7 @@ endif
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-file
 
-$($(PUBLISH)-library-digest): $(COMPOSER)
-$($(PUBLISH)-library-digest): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-library-digest): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library-digest): $(COMPOSER_CONTENTS_EXT)
+$($(PUBLISH)-library-digest): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
@@ -9272,10 +9256,7 @@ $($(PUBLISH)-library-digest):
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-src
 
-$($(PUBLISH)-library-digest-src): $(COMPOSER)
-$($(PUBLISH)-library-digest-src): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-library-digest-src): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library-digest-src): $(COMPOSER_CONTENTS_EXT)
+$($(PUBLISH)-library-digest-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-src):
@@ -9292,10 +9273,7 @@ $($(PUBLISH)-library-digest-src):
 ##### {{{5 $(PUBLISH)-library-digest-files
 
 #> update: Title / Author / Date[Year] / Tag
-$($(PUBLISH)-library-digest-files): $(COMPOSER)
-$($(PUBLISH)-library-digest-files): $(COMPOSER_INCLUDES)
-$($(PUBLISH)-library-digest-files): $(COMPOSER_YML_LIST)
-$($(PUBLISH)-library-digest-files): $(COMPOSER_CONTENTS_EXT)
+$($(PUBLISH)-library-digest-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
@@ -10652,6 +10630,9 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip \
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
 	$(COMPOSER_YML_LIST) \
+	$(if $(filter $(1),$(PUBLISH)),\
+		$(COMPOSER_CONTENTS_EXT) \
+	) \
 	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
 		$($(PUBLISH)-cache) \
 	) \
