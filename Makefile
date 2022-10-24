@@ -1676,6 +1676,79 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(CONVICT),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 
 ########################################
+## {{{2 Filesystem ---------------------
+
+#> update: COMPOSER_TARGETS.*=
+#> update: COMPOSER_SUBDIRS.*=
+
+override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
+override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
+override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
+override COMPOSER_CONTENTS_EXT		:= $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))
+
+ifneq ($(COMPOSER_EXT),)
+override COMPOSER_TARGETS_AUTO		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(COMPOSER_CONTENTS_EXT))
+else
+override COMPOSER_TARGETS_AUTO		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
+endif
+#WORKING document!
+override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO),$(COMPOSER_TARGETS))
+
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(COMPOSER_TARGETS_AUTO)
+endif
+ifeq ($(COMPOSER_SUBDIRS),)
+override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
+endif
+
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(CONFIGS)-$(TARGETS)
+endif
+endif
+ifneq ($(COMPOSER_SUBDIRS),)
+override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
+ifeq ($(COMPOSER_SUBDIRS),)
+override COMPOSER_SUBDIRS		:= $(NOTHING)-$(CONFIGS)-$(SUBDIRS)
+endif
+endif
+
+#> update: $(CLEANER) > $(DOITALL)
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(DOITALL)
+endif
+endif
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
+endif
+endif
+
+########################################
+
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+ifeq ($(notdir $(COMPOSER_ROOT)),$(notdir $(TESTING_DIR)))
+override TESTING_DIR			:= $(COMPOSER_ROOT)
+endif
+ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
+override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
+endif
+
+#> update: $(TESTING)-Think
+ifeq ($(notdir $(TESTING_DIR)),$(notdir $(CURDIR)))
+ifneq ($(COMPOSER_TARGETS),$(NOTHING))
+override COMPOSER_TARGETS		:=
+endif
+ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
+override COMPOSER_SUBDIRS		:=
+endif
+endif
+
+########################################
 ## {{{2 Publish ------------------------
 
 override define COMPOSER_YML_DATA_SKEL =
@@ -1835,79 +1908,6 @@ override PUBLISH_SH_RUN := \
 	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 
 ########################################
-## {{{2 Filesystem ---------------------
-
-#> update: COMPOSER_TARGETS.*=
-#> update: COMPOSER_SUBDIRS.*=
-
-override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
-override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
-override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
-override COMPOSER_CONTENTS_EXT		:= $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))
-
-ifneq ($(COMPOSER_EXT),)
-override COMPOSER_TARGETS_AUTO		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(COMPOSER_CONTENTS_EXT))
-else
-override COMPOSER_TARGETS_AUTO		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
-endif
-#WORKING document!
-override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO),$(COMPOSER_TARGETS))
-
-ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(COMPOSER_TARGETS_AUTO)
-endif
-ifeq ($(COMPOSER_SUBDIRS),)
-override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
-endif
-
-ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
-ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(CONFIGS)-$(TARGETS)
-endif
-endif
-ifneq ($(COMPOSER_SUBDIRS),)
-override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
-ifeq ($(COMPOSER_SUBDIRS),)
-override COMPOSER_SUBDIRS		:= $(NOTHING)-$(CONFIGS)-$(SUBDIRS)
-endif
-endif
-
-#> update: $(CLEANER) > $(DOITALL)
-ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
-ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(DOITALL)
-endif
-endif
-ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
-ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
-endif
-endif
-
-########################################
-
-#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-ifeq ($(notdir $(COMPOSER_ROOT)),$(notdir $(TESTING_DIR)))
-override TESTING_DIR			:= $(COMPOSER_ROOT)
-endif
-ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
-override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
-endif
-
-#> update: $(TESTING)-Think
-ifeq ($(notdir $(TESTING_DIR)),$(notdir $(CURDIR)))
-ifneq ($(COMPOSER_TARGETS),$(NOTHING))
-override COMPOSER_TARGETS		:=
-endif
-ifneq ($(COMPOSER_SUBDIRS),$(NOTHING))
-override COMPOSER_SUBDIRS		:=
-endif
-endif
-
-########################################
 ## {{{2 Functions ----------------------
 
 #> update: $(HEADERS)-$(EXAMPLE)
@@ -1969,6 +1969,43 @@ override define $(COMPOSER_TINYNAME)-rm =
 		$(ECHO) "$(_S)"; \
 		$(RM) $(if $(2),--recursive) $(1) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+########################################
+## {{{2 $(COMPOSER_PANDOC) -------------
+
+override $(COMPOSER_PANDOC)-dependencies = $(strip \
+	$(COMPOSER) \
+	$(COMPOSER_INCLUDES) \
+	$(COMPOSER_YML_LIST) \
+	$(if $(filter $(1),$(PUBLISH)),\
+		$(COMPOSER_CONTENTS_EXT) \
+	) \
+	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
+		$($(PUBLISH)-cache) \
+	) \
+)
+
+#>	$(eval override c_list_plus := $(filter-out $(COMPOSER),$(c_list_plus)))
+override define $(COMPOSER_PANDOC)-c_list_plus =
+	$(eval override c_list_plus := $(filter-out .set_title-%,$(+))) \
+	$(eval override c_list_plus := $(filter-out $(COMPOSER_INCLUDES),$(c_list_plus))) \
+	$(eval override c_list_plus := $(filter-out $(COMPOSER_YML_LIST),$(c_list_plus))) \
+	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-cache),$(c_list_plus))) \
+	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-library),$(c_list_plus))) \
+	$(eval override c_list_plus := $(subst $(COMPOSER)$(if $(1), $(1)),,$(c_list_plus))) \
+	$(eval override c_list_plus := $(strip $(c_list_plus))) \
+	$(eval override c_list := $(strip $(c_list)))
+endef
+
+override define $(COMPOSER_PANDOC)-$(NOTHING) =
+	if	[ -z "$(c_type)" ] || \
+		[ -z "$(c_base)" ] || \
+		[ -z "$(if $(c_list_plus),$(c_list_plus),$(c_list))" ]; \
+	then \
+		$(call $(HEADERS)-note,$(COMPOSER_PANDOC),c_type=\"$(c_type)\" c_base=\"$(c_base)\" c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",$(NOTHING)); \
+		exit 1; \
 	fi
 endef
 
@@ -5818,7 +5855,8 @@ endef
 ### {{{3 custom_html_css (Water.css) ---
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK =
-	$(SED) "/^a.href.=/,/^}/d"
+	$(SED) -i \
+		-e "/^a.href.=/,/^}/d"
 endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
@@ -10622,43 +10660,6 @@ $(COMPOSER_LOG):
 ################################################################################
 # {{{1 Pandoc Targets ----------------------------------------------------------
 ################################################################################
-
-########################################
-## {{{2 $(COMPOSER_PANDOC)-functions ---
-
-override $(COMPOSER_PANDOC)-dependencies = $(strip \
-	$(COMPOSER) \
-	$(COMPOSER_INCLUDES) \
-	$(COMPOSER_YML_LIST) \
-	$(if $(filter $(1),$(PUBLISH)),\
-		$(COMPOSER_CONTENTS_EXT) \
-	) \
-	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
-		$($(PUBLISH)-cache) \
-	) \
-)
-
-#>	$(eval override c_list_plus := $(filter-out $(COMPOSER),$(c_list_plus)))
-override define $(COMPOSER_PANDOC)-c_list_plus =
-	$(eval override c_list_plus := $(filter-out .set_title-%,$(+))) \
-	$(eval override c_list_plus := $(filter-out $(COMPOSER_INCLUDES),$(c_list_plus))) \
-	$(eval override c_list_plus := $(filter-out $(COMPOSER_YML_LIST),$(c_list_plus))) \
-	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-cache),$(c_list_plus))) \
-	$(eval override c_list_plus := $(filter-out $($(PUBLISH)-library),$(c_list_plus))) \
-	$(eval override c_list_plus := $(subst $(COMPOSER)$(if $(1), $(1)),,$(c_list_plus))) \
-	$(eval override c_list_plus := $(strip $(c_list_plus))) \
-	$(eval override c_list := $(strip $(c_list)))
-endef
-
-override define $(COMPOSER_PANDOC)-$(NOTHING) =
-	if	[ -z "$(c_type)" ] || \
-		[ -z "$(c_base)" ] || \
-		[ -z "$(if $(c_list_plus),$(c_list_plus),$(c_list))" ]; \
-	then \
-		$(call $(HEADERS)-note,$(COMPOSER_PANDOC),c_type=\"$(c_type)\" c_base=\"$(c_base)\" c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",$(NOTHING)); \
-		exit 1; \
-	fi
-endef
 
 ########################################
 ## {{{2 $(COMPOSER_PANDOC) -------------
