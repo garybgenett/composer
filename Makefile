@@ -922,12 +922,12 @@ override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; $(YQ_E
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
-	$(if $(and $(2),$(3)),\
+	$(if $(and $(wildcard $(2)),$(3)),\
 		| $(YQ_WRITE_JSON) '$(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
 			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) 2>/dev/null \
 		)) }}' \
 	,\
-		$(foreach FILE,$(2),\
+		$(foreach FILE,$(wildcard $(2)),\
 			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null \
 		) \
 	)
@@ -2743,6 +2743,7 @@ endef
 #		that said, -f now works for single files with no configuration file reading...
 #	document composer_dir/composer_root ... in composer.mk section?
 #	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
+#	COMPOSER_IGNORES now works for the "library", also...
 
 #WORK
 #	add a list of the formats here...
@@ -2875,7 +2876,7 @@ All variable definitions must be in the `$(_N)override [variable] := [value]$(_D
 from the $(_C)[$(EXAMPLE)]$(_D) target.  Doing otherwise will result in unexpected behavior,
 and is not supported.  The regular expression that is used to detect them:
 
-$(CODEBLOCK)$(_N)$(COMPOSER_REGEX_OVERRIDE)$(_D)
+$(CODEBLOCK)$(_N)$(call COMPOSER_REGEX_OVERRIDE)$(_D)
 
 Variables can also be specified per-target, using $(_C)[GNU Make]$(_D) syntax:
 
@@ -8949,6 +8950,8 @@ $(PUBLISH)-$(COMPOSER_SETTINGS):
 		) \
 	)
 
+#WORKING:NOW:NOW:FIX
+
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
 	@$(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY).yml) \
@@ -8974,10 +8977,6 @@ endef
 ########################################
 #### {{{4 $(PUBLISH)-library-metadata --
 
-#WORKING:NOW:NOW:FIX
-#	add *-note when initializing
-#	find/list should respect composr_ignores
-
 #> update: YQ_WRITE.*title
 
 $($(PUBLISH)-library-metadata): $(COMPOSER)
@@ -8985,6 +8984,7 @@ $($(PUBLISH)-library-metadata): $(COMPOSER_INCLUDES)
 $($(PUBLISH)-library-metadata): $(COMPOSER_YML_LIST)
 $($(PUBLISH)-library-metadata): $(COMPOSER_CONTENTS_EXT)
 $($(PUBLISH)-library-metadata):
+	@$(call $(HEADERS)-note,$(abspath $(dir $(COMPOSER_LIBRARY))),$(_H)$(notdir $(COMPOSER_LIBRARY)),$(PUBLISH)-library)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_F)"
@@ -8993,32 +8993,42 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) \
-		\( -path $(COMPOSER_DIR) -prune \) \
-		-o \( -path $(COMPOSER_TMP) -prune \) \
-		-o \( -path $(COMPOSER_LIBRARY) -prune \) \
-		-o \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) \
-		$(shell $(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path \*/$(COMPOSER_YML) \
+	@eval $(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) \
+		\\\( -path $(COMPOSER_DIR) -prune \\\) \
+		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
+		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
+		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
+		$$($(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_SETTINGS)" \
+			| while read -r FILE; do \
+				$(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,COMPOSER_IGNORES)(.+)$$|\2|gp" $${FILE} \
+					| $(TR) ' ' '\n' \
+					| $(SED) "/^$$/d" \
+					| while read -r DIR; do \
+						$(ECHO) " -o \\\( -path $$($(DIRNAME) $${FILE})/$${DIR} -prune \\\)"; \
+					done; \
+			done \
+		) \
+		$$($(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_YML)" \
 			| while read -r FILE; do \
 				DIR="$$( \
 					$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $${FILE} 2>/dev/null \
 					| $(SED) "/^null$$/d" \
 				)"; \
 				if [ -n "$${DIR}" ]; then \
-					$(ECHO) " -o \\( -path $$( \
+					$(ECHO) " -o \\\( -path $$( \
 							$(DIRNAME) $${FILE} \
 						)/$$( \
 							$(ECHO) "$${DIR}" \
 							| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
-						) -prune \\)"; \
+						) -prune \\\)"; \
 				fi; \
 			done \
 		) \
-		-o \( -type f $$( \
+		-o \\\( -type f $$( \
 				if [ -f "$(@)" ]; then \
 					$(ECHO) "-newer $(@)"; \
 				fi \
-			) -name "*$(COMPOSER_EXT)" -print \) \
+			) -name "\*$(COMPOSER_EXT)" -print \\\) \
 	| while read -r FILE; do \
 		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(@),$$( \
@@ -9557,7 +9567,7 @@ endif
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_NOTHING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := .github\n"		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
@@ -10280,7 +10290,7 @@ All the settings and menus are empty for this page, except for this content.  Th
   * *Main page: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))*
 endef
 
-#WORKING:NOW:NOW:FIX
+#WORKING:NOW:NOW
 #	automate the $($(PUBLISH)-$(EXAMPLE)-files) list/menu, and add it here
 #		use it to also auto-generate the yml file(s)
 #		time to add "themes" to those lists, instead of it being it's own value...
