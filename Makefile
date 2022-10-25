@@ -2215,6 +2215,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOFORCE)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"#WORK"
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
 
 ########################################
@@ -2778,6 +2779,8 @@ endef
 #	document composer_dir/composer_root ... in composer.mk section?
 #	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
 #	COMPOSER_IGNORES now works for the "library", also...
+#	file targets can not depend on non-file targets...?
+#		MANUAL.pdf: pre-process README.md LICENSE.md
 
 #WORK
 #	add a list of the formats here...
@@ -3472,6 +3475,7 @@ $(_S)[$(TESTING)]: #internal-targets$(_D)
 $(_S)[$(TESTING)-file]: #internal-targets$(_D)
 $(_S)[$(CHECKIT)-$(DOFORCE)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
+$(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(SUBDIRS)]: #internal-targets$(_D)
 
 $(_N)*(None of these are intended to be run directly during normal use, and are only
@@ -5460,8 +5464,8 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 
 	/* colors */
 	--$(COMPOSER_TINYNAME)-back:		#000000; // black;	// var(--solarized-dark3);
-#>	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-bs-dark);
-	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
+#>	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
+	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-bs-dark);
 	--$(COMPOSER_TINYNAME)-line:		#404040; // darkgray;	// var(--solarized-dark1);
 	--$(COMPOSER_TINYNAME)-text:		#c0c0c0; // white;	// var(--solarized-light1);
 	--$(COMPOSER_TINYNAME)-link:		#c00000; // red;	// var(--solarized-red);
@@ -8372,7 +8376,7 @@ $(DISTRIB):
 	fi
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
 	@$(MAKE) --makefile $(COMPOSER) $(UPGRADE)-$(DOITALL)
-	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)
+	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)-$(DOITALL)
 
 ########################################
 ## {{{2 $(UPGRADE) ---------------------
@@ -8411,9 +8415,9 @@ else
 #WORK document
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
-	@$(call NPM_INSTALL,$(MDVIEWER_DIR))
-	@$(call NPM_INSTALL,$(WATERCSS_DIR))
-	@$(call NPM_INSTALL,$(WATERCSS_DIR),yarn)
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),yarn)
 endif
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(MDVIEWER_DIR))$(_D) ($(_E)build$(_D))"
@@ -8423,7 +8427,7 @@ endif
 		remark \
 		themes \
 		,\
-		$(call NPM_RUN,$(MDVIEWER_DIR),run-script) build:$(FILE); \
+		$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),run-script) build:$(FILE); \
 		$(call NEWLINE) \
 	)
 	@$(ENDOLINE)
@@ -8431,18 +8435,19 @@ endif
 	@$(SED) -i \
 		-e "/^dist[/]$$/d" \
 		-e "/^out[/]$$/d" \
-											$(WATERCSS_DIR)/.gitignore
-	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(WATERCSS_DIR)/src/parts/*.css
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/.gitignore
+	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/parts/*.css
 	@$(foreach FILE,light dark,\
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(WATERCSS_DIR)/src/builds/solarized-$(FILE).css; \
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(WATERCSS_DIR)/src/variables-solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/variables-solarized-$(FILE).css; \
 		$(call NEWLINE) \
 	)
-	@$(CP) $(WATERCSS_DIR)/src/builds/water.css					$(WATERCSS_DIR)/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(WATERCSS_DIR)/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(WATERCSS_DIR)/src/builds/solarized-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(WATERCSS_DIR)/src/builds/solarized-shade.css
-	@$(call NPM_RUN,$(WATERCSS_DIR),,yarn) build
+	@$(CP)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water.css \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
+	@$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),,yarn) build
 endif
 endif
 
@@ -8450,13 +8455,6 @@ endif
 ## {{{2 $(CREATOR) ---------------------
 
 #> update: TYPE_TARGETS
-
-#WORKING:NOW:NOW
-#	add $(DOITALL) or $(DOFORCE) to this, replacing $(COMPOSER_RELEASE), so it is non-destructive by default...
-#	or, maybe split into $(CREATOR) and $(EXTRACT), to separate the two activities?
-#		can also just flat-out rename it, to make it clear... it's not a user-facing target
-#	need to then add $(EXTRACT) as a prerequisite, or do $(MAKE) $(EXTRACT)
-#	ultimately, by default $(RELEASE) needs to be safe for a user-repository
 
 .PHONY: $(CREATOR)
 ifneq ($(filter $(CREATOR),$(MAKECMDGOALS)),)
@@ -8480,6 +8478,7 @@ endif
 		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
@@ -8490,11 +8489,13 @@ ifneq ($(COMPOSER_RELEASE),)
 											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
+endif
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
 		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
 		$(HELPOUT)-$(PUBLISH)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
@@ -8502,13 +8503,16 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
 		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 endif
+endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
 ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
+endif
 endif
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
@@ -8612,6 +8616,7 @@ endif
 	)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
@@ -8626,8 +8631,7 @@ endif
 											$(CURDIR)/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
 											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
+endif
 endif
 
 ################################################################################
