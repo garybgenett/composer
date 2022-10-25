@@ -1753,17 +1753,17 @@ endif
 
 override define COMPOSER_YML_DATA_SKEL =
 { variables: {
-  title-prefix: ,
+  title-prefix:				null,
 
   $(PUBLISH)-config: {
-    homepage: ,
-    brand: ,
-    copyright: ,
+    homepage:				null,
+    brand:				null,
+    copyright:				null,
 
-    search_name: ,
-    search_site: ,
-    search_call: ,
-    search_form: ,
+    search_name:			null,
+    search_site:			null,
+    search_call:			null,
+    search_form:			null,
 
     css_shade:				$(PUBLISH_CSS_SHADE),
 
@@ -1792,13 +1792,13 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
   },
 
-  $(PUBLISH)-nav-top: ,
-  $(PUBLISH)-nav-bottom: ,
-  $(PUBLISH)-nav-left: ,
-  $(PUBLISH)-nav-right: ,
+  $(PUBLISH)-nav-top:			null,
+  $(PUBLISH)-nav-bottom:		null,
+  $(PUBLISH)-nav-left:			null,
+  $(PUBLISH)-nav-right:			null,
 
-  $(PUBLISH)-info-top: ,
-  $(PUBLISH)-info-bottom: ,
+  $(PUBLISH)-info-top:			null,
+  $(PUBLISH)-info-bottom:		null,
 }}
 endef
 
@@ -2792,6 +2792,13 @@ endef
 #	COMPOSER_IGNORES now works for the "library", also...
 #	file targets can not depend on non-file targets...?
 #		MANUAL.pdf: pre-process README.md LICENSE.md
+#	infinite "include" loops are not detected...
+
+#WORK
+#	random note/thought
+#		composer makes it very easy to create rich interfaces for delivering content efficiently
+#		the trade-off is that the computational horsepower is spent as capital rather than operational cost
+#		best practice is to have an overnight $(PUBLISH)-$(DOFORCE) process...
 
 #WORK
 #	add a list of the formats here...
@@ -3826,15 +3833,16 @@ $(_S)########################################$(_D)
         - $(_C)spacer$(_D)
         - $(_M)Introduction$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
         - $(_M)Default Site$(_D):
-          - $(_C)$(MENU_SELF)$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
           - $(_M)Configured Site$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
         - $(_M)Default Digest Page$(_D):
-          - $(_C)$(MENU_SELF)$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
+          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML)$(_D)
           - $(_M)Configured Digest Page$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML)$(_D)
         - $(_M)Default Markdown File$(_D):
-          - $(_C)$(MENU_SELF)$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
           - $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
         - $(_M)Elements & Includes$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)$(_D)
+        - $(_M)Themes & Shades$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
         - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
@@ -3852,9 +3860,9 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
     $(_M)MENU$(_D):
-      - $(_M)PATH 1$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      - $(_M)PATH 2$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      - $(_M)PATH 3$(_D): $(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PATH 1$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PATH 2$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)PATH 3$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-left$(_D):
@@ -5480,11 +5488,14 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	--$(COMPOSER_TINYNAME)-line:		#404040; // darkgray;	// var(--solarized-dark1);
 	--$(COMPOSER_TINYNAME)-text:		#c0c0c0; // white;	// var(--solarized-light1);
 	--$(COMPOSER_TINYNAME)-link:		#c00000; // red;	// var(--solarized-red);
-	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
+#>	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
+	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-orange);
 
 	/* layout */
+	--$(COMPOSER_TINYNAME)-font:		system-ui, sans-serif;
 	--$(COMPOSER_TINYNAME)-body:		800px;
-	--$(COMPOSER_TINYNAME)-lead:		0.5em;
+	--$(COMPOSER_TINYNAME)-lead:		1.0em;
+	--$(COMPOSER_TINYNAME)-next:		0.5em;
 	--$(COMPOSER_TINYNAME)-rule:		3px;
 	--$(COMPOSER_TINYNAME)-bord:		1px;
 	--$(COMPOSER_TINYNAME)-padd:		6px;
@@ -5511,6 +5522,9 @@ html,
 body {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
+	font-family:			var(--$(COMPOSER_TINYNAME)-font);
+	text-rendering:			optimizeLegibility;
+	word-wrap:			normal;
 }
 body {
 	max-width:			var(--$(COMPOSER_TINYNAME)-body);
@@ -5542,7 +5556,7 @@ h6:not(.$(COMPOSER_TINYNAME)-header) {
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 	border-bottom:			var(--$(COMPOSER_TINYNAME)-rule) solid var(--$(COMPOSER_TINYNAME)-line);
 	margin-top:			var(--$(COMPOSER_TINYNAME)-lead);
-	margin-bottom:			0px;
+	margin-bottom:			var(--$(COMPOSER_TINYNAME)-next);
 }
 hr,
 hr:not([size]) {
@@ -5692,13 +5706,13 @@ pre code {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 }
 
-.accordion-header,
 .accordion-item,
-.card,
-.card-header {
+.card {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 }
 
+.accordion-header,
+.card-header,
 .table {
 	border:				none;
 }
@@ -9627,7 +9641,7 @@ endif
 	@$(ECHO) "$(_S)"
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) $($(DEBUGIT)-output)
+	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n'		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 #>	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
@@ -9861,7 +9875,7 @@ endif
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS) =
 override MAKEJOBS :=
-override COMPOSER_TARGETS :=
+override COMPOSER_TARGETS := $($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)
 
 .PHONY: themes-$(CLEANER)
 themes-$(CLEANER):
@@ -9883,6 +9897,8 @@ $(foreach FILE,$(CSS_THEMES),\
 		$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target,$(strip \
 		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
 ))))
+
+override COMPOSER_TARGETS += shade-$(PUBLISH_CSS_SHADE)
 endef
 
 ########################################
@@ -9906,7 +9922,7 @@ endef
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML) =
 variables:
   $(PUBLISH)-config:
-    css_shade: null
+    css_shade: $(PUBLISH_CSS_SHADE)
 endef
 
 ########################################
@@ -10029,6 +10045,14 @@ $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
+# Page Layout
+
+| | | |
+|:---|:---|---:|
+| `brand` (`homepage`) | `nav-top`     | `info-top` / `search_name`
+| `nav-left`           | **Main Body** | `nav-right`
+| `copyright`          | `nav-bottom`  | `info-bottom`
 
 # Folds
 
@@ -10236,6 +10260,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
   * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)))
   * [Configured Markdown File]($(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))
   * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML))
+  * [Themes & Shades]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
 
@@ -10327,33 +10352,17 @@ endef
 ########################################
 #### {{{4 Heredoc: Page: Nothing -------
 
+#> $(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define $(PUBLISH)-$(EXAMPLE)-page-$(NOTHING) =
 ---
 title: Empty Configuration
 author: $(COMPOSER_COMPOSER)
 date: 1970-01-01
 ---
-$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+This is a default page, where all menus and settings are empty.  All aspects of `c_site` pages are configurable using `$(COMPOSER_YML)` files.
 
-All the settings and menus are empty for this page, except for this content.  This file was written for $(COMPOSER_BASENAME), so the page title and layout were done automatically.
-
-  * *Source file: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files)))]($(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$($(PUBLISH)-$(EXAMPLE)-files))))*
-  * *Main page: [$(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))*
+*[Return to main page]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))*
 endef
-
-#WORKING:NOW:NOW
-#	automate the $($(PUBLISH)-$(EXAMPLE)-files) list/menu, and add it here
-#		use it to also auto-generate the yml file(s)
-#		time to add "themes" to those lists, instead of it being it's own value...
-#		a define will work best, with a flag to add {.dropdown-item}
-#		create a variable, parallel to (*)-files, which has the names of the pages
-#		each page can then have it's own heredoc/define which describes it
-#		time, then, to do "includes" on each of the pages...
-#WORK
-#	random note/thought
-#		composer makes it very easy to create rich interfaces for delivering content efficiently
-#		the trade-off is that the computational horsepower is spent as capital rather than operational cost
-#		best practice is to have an overnight $(PUBLISH)-$(DOFORCE) process...
 
 ########################################
 ## {{{2 $(INSTALL) ---------------------
