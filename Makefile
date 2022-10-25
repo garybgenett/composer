@@ -7377,9 +7377,6 @@ override define $(TESTING)-find =
 	$(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))); \
 	if [ $(if $(3),-n,-z) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(if $(2),$(2),$(@))) | $(SED) "s|[$$]|.|g")" ]; then \
 		$(call $(TESTING)-fail); \
-		if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
-			exit 1; \
-		fi; \
 	fi
 endef
 
@@ -7388,16 +7385,16 @@ override define $(TESTING)-count =
 	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC); \
 	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(if $(3),$(3),$(@))) | $(WC))" != "$(1)" ]; then \
 		$(call $(TESTING)-fail); \
-		if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
-			exit 1; \
-		fi; \
 	fi
 endef
 
 override define $(TESTING)-fail =
 	$(ENDOLINE); \
 	$(call $(HEADERS)-note,$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))),FAILED!); \
-	$(ENDOLINE)
+	$(ENDOLINE); \
+	if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
+		exit 1; \
+	fi
 endef
 
 override define $(TESTING)-hold =
@@ -8108,7 +8105,6 @@ $(TESTING)-other-init:
 		&& $(GIT) log
 	@$(call $(TESTING)-make)
 
-#WORKING:NOW:NOW add a test for missing repository binaries...
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
 	#> binaries
@@ -8118,9 +8114,6 @@ $(TESTING)-other-done:
 		[ "$(YQ)" != "$(YQ_BIN)" ]; \
 	then \
 		$(call $(TESTING)-fail); \
-		if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
-			exit 1; \
-		fi; \
 	fi
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
