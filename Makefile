@@ -1304,13 +1304,14 @@ override PANDOC_OPTIONS			= $(strip \
 	$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).header),	--include-in-header="$(COMPOSER_CUSTOM)-$(c_type).header") \
 	\
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
-						--include-in-header="$(BOOTSTRAP_ART_JS).pre" \
+						--include-in-header="$(patsubst %.js,%.pre.js,$(BOOTSTRAP_ART_JS))" \
 		$(if $(call c_css_select),	--include-in-header="$(BOOTSTRAP_ART_JS)" ,\
 						--include-in-header="$(BOOTSTRAP_DEF_JS)" \
-		)				--include-in-header="$(BOOTSTRAP_ART_JS).post" \
+		)				--include-in-header="$(patsubst %.js,%.post.js,$(BOOTSTRAP_ART_JS))" \
+						--css="$(patsubst %.css,%.pre.css,$(BOOTSTRAP_ART_CSS))" \
 		$(if $(call c_css_select),	--css="$(BOOTSTRAP_ART_CSS)" ,\
 						--css="$(BOOTSTRAP_DEF_CSS)" \
-		) \
+		)				--css="$(patsubst %.css,%.post.css,$(BOOTSTRAP_ART_CSS))" \
 	) \
 	$(if $(call c_css_select),\
 		$(if $(or \
@@ -2599,7 +2600,7 @@ and prettifies the output formats, all in one place.  It also serves as a build
 system, so that large repositories can be managed as documentation archives or
 published as $(_C)[Bootstrap Websites]$(_D).
 
-$(_E)![$(COMPOSER_BASENAME) Screenshot]($(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v3.0.png)$(_S){max-width=100%}\\$(_D)
+$(_E)![$(COMPOSER_BASENAME) Screenshot]($(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v3.0.png)$(_S)\\$(_D)
 endef
 
 ########################################
@@ -5315,6 +5316,27 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
 		-e "s|([^-])color[:][^;]+[;]|\\1|g"
 endef
 
+override define HEREDOC_CUSTOM_PUBLISH_JS_PRE =
+<script>
+endef
+override define HEREDOC_CUSTOM_PUBLISH_JS_POST =
+</script>
+endef
+
+override define HEREDOC_CUSTOM_PUBLISH_CSS_PRE =
+endef
+override define HEREDOC_CUSTOM_PUBLISH_CSS_POST =
+::-webkit-scrollbar-track {
+	background-color:		transparent;
+}
+::-webkit-scrollbar-thumb {
+	background-color:		rgba(var(--bs-secondary-rgb));
+}
+body {
+	scrollbar-color:		rgba(var(--bs-secondary-rgb)) transparent;
+}
+endef
+
 ########################################
 ### {{{3 custom_$(PUBLISH)_css (Bootstrap)
 
@@ -5366,9 +5388,31 @@ html {
 
 body {
 	min-width:			100%;
-	padding-top:			60px;
-	padding-bottom:			40px;
+	margin:				0px;
+	padding:			0px;
+	padding-top:			80px;
+	padding-bottom:			20px;
 }
+
+::-webkit-scrollbar {
+	height:				100px;
+	width:				10px;
+}
+::-webkit-scrollbar-button {
+	height:				0px;
+	width:				0px;
+}
+::-webkit-scrollbar-track {
+	border-radius:			10px;
+}
+::-webkit-scrollbar-thumb {
+	border-radius:			10px;
+}
+body {
+	scrollbar-width:		thin;
+}
+
+/* ################################## */
 
 .$(COMPOSER_TINYNAME)-sticky {
 	max-height:			90vh;
@@ -5413,7 +5457,7 @@ body {
 	text-decoration:		none;
 }
 
-/* ################################## */
+$(call HEREDOC_CUSTOM_HTML_CSS)
 
 h1					{ font-size: 2rem; }
 h2					{ font-size: 1.5rem; }
@@ -5421,11 +5465,6 @@ h3					{ font-size: 1.3rem; }
 h4					{ font-size: 1.2rem; }
 h5					{ font-size: 1.1rem; }
 h6					{ font-size: 1rem; }
-
-td,
-th {
-	vertical-align:			text-top;
-}
 
 /* #############################################################################
 # End Of File
@@ -5523,8 +5562,6 @@ body {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 	font-family:			var(--$(COMPOSER_TINYNAME)-font);
-	text-rendering:			optimizeLegibility;
-	word-wrap:			normal;
 }
 body {
 	max-width:			var(--$(COMPOSER_TINYNAME)-body);
@@ -5532,6 +5569,18 @@ body {
 ::selection {
 	background-color:		var(--$(COMPOSER_TINYNAME)-done);
 	color:				var(--$(COMPOSER_TINYNAME)-back);
+}
+
+::-webkit-scrollbar-track {
+#>	background-color:		var(--composer-menu);
+	background-color:		var(--composer-back);
+}
+::-webkit-scrollbar-thumb {
+	background-color:		var(--composer-line);
+}
+body {
+#>	scrollbar-color:		var(--composer-line) var(--composer-menu);
+	scrollbar-color:		var(--composer-line) var(--composer-back);
 }
 
 a,
@@ -5542,6 +5591,15 @@ a:link {
 a:hover,
 a:visited {
 	color:				var(--$(COMPOSER_TINYNAME)-done);
+}
+a,
+a:active,
+a:link,
+a:visited {
+	text-decoration:		none;
+}
+a:hover {
+	text-decoration:		underline;
 }
 
 /* ################################## */
@@ -5562,7 +5620,7 @@ hr,
 hr:not([size]) {
 	background-color:		var(--$(COMPOSER_TINYNAME)-line);
 	height:				var(--$(COMPOSER_TINYNAME)-bord);
-	border:				none;
+	border:				0px;
 	opacity:			1;
 }
 
@@ -5580,6 +5638,11 @@ td,
 th {
 	padding:			var(--$(COMPOSER_TINYNAME)-padd);
 }
+tbody tr:nth-child(even) {
+#>	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	background-color:		var(--$(COMPOSER_TINYNAME)-back);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
 
 code,
 pre code,
@@ -5594,7 +5657,7 @@ pre {
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-done);
 }
 pre code {
-	border:				none;
+	border:				0px;
 	box-shadow:			0 0 0 0.0rem rgba(var(--$(COMPOSER_TINYNAME)-text));
 }
 
@@ -5714,7 +5777,7 @@ pre code {
 .accordion-header,
 .card-header,
 .table {
-	border:				none;
+	border:				0px;
 }
 
 /* #############################################################################
@@ -5738,11 +5801,22 @@ a:visited,
 body,
 code,
 hr,
+html,
 pre,
 table {
 	background-color:		black;
 	color:				white;
 	border:				3px solid red;
+}
+
+::-webkit-scrollbar-track {
+	background-color:		red;
+}
+::-webkit-scrollbar-thumb {
+	background-color:		white;
+}
+body {
+	scrollbar-color:		white red;
 }
 
 /* ################################## */
@@ -5860,9 +5934,18 @@ override define HEREDOC_CUSTOM_HTML_CSS =
 # $(COMPOSER_TECHNAME) $(DIVIDE) HTML CSS
 ############################################################################# */
 
-td,
-th {
+$(if $(1),$(1),body) {
+	text-rendering:			optimizeLegibility;
 	vertical-align:			text-top;
+	text-align:			left;
+	block-align:			left;
+	word-wrap:			normal;
+}
+
+img,
+video {
+	max-width:			100%;
+	height:				auto;
 }
 
 /* #############################################################################
@@ -6010,9 +6093,6 @@ override define HEREDOC_CUSTOM_REVEALJS_CSS =
 .reveal * {
 	font-size:			90%;
 	text-transform:			none;
-	vertical-align:			text-top;
-	text-align:			left;
-	block-align:			left;
 }
 
 .reveal dl,
@@ -6023,6 +6103,7 @@ override define HEREDOC_CUSTOM_REVEALJS_CSS =
 	margin-left:			2em;
 }
 
+$(call HEREDOC_CUSTOM_HTML_CSS,.reveal *)
 /* #############################################################################
 # End Of File
 ############################################################################# */
@@ -8059,7 +8140,7 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH))));		$(call $(TESTING)-count,1,$(notdir $(WATERCSS_CSS_SOLAR_ALT)))
 											$(call $(TESTING)-count,1,$(notdir $(call CUSTOM_PUBLISH_CSS_SHADE,dark)))
 											$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
-											$(call $(TESTING)-count,3,$(notdir $(BOOTSTRAP_ART_JS)))
+											$(call $(TESTING)-count,1,$(notdir $(BOOTSTRAP_ART_JS)))
 											$(call $(TESTING)-count,2,$(notdir $(BOOTSTRAP_ART_CSS)))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))));		$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
 											$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_HTML).css)
@@ -8072,7 +8153,7 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,2,$(notdir $(COMPOSER_CSS)))
 	$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(BOOTSWATCH_CSS_ALT)))
-	$(call $(TESTING)-count,13,--css=)
+	$(call $(TESTING)-count,15,--css=)
 	$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header)
 	$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
 
@@ -8576,8 +8657,10 @@ endif
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_HTML).css $($(DEBUGIT)-output)
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
-	@$(ECHO) "<script>\n"								>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)).pre
-	@$(ECHO) "</script>\n"								>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)).post
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.pre.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.post.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.pre.css,$(BOOTSTRAP_ART_CSS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.post.css,$(BOOTSTRAP_ART_CSS)))
 	@$(LN) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
 	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
 	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
@@ -8585,7 +8668,7 @@ endif
 	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
 	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
 		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
-		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_DIR_CSS))&g' \
+		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_ART_CSS))&g' \
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark)) \
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(foreach FILE,$(call CSS_THEMES),$(if $(filter-out $(TOKEN):%,$(FILE)),\
@@ -9643,7 +9726,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n'		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-#>	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
@@ -10050,9 +10133,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 | | | |
 |:---|:---|---:|
-| `brand` (`homepage`) | `nav-top`     | `info-top` / `search_name`
-| `nav-left`           | **Main Body** | `nav-right`
-| `copyright`          | `nav-bottom`  | `info-bottom`
+| `brand` (`homepage`) | `nav-top`              | `info-top` / `search_*`
+| `nav-left`           | **`c_list` / `$$(+)`** | `nav-right`
+| `copyright`          | `nav-bottom`           | `info-bottom`
 
 # Folds
 
@@ -10782,8 +10865,6 @@ endif
 #	aw, jeez... now dependencies like "target: other target" are broken...  gah.
 #		somehow search $(TARGETS)-$(PRINTER) ...?  yeah, now things will be even slower...  meh.
 #		worth it for the easy feature-set ...?  what else is broken that i'm not thinking of...?
-#	different error handling for empty c_list/c_list_plus?
-#		better error message for missing c_type/c_base/c_list?
 #	add a COMPOSER_CUSTOMS ?
 #		or, filter out all makefile, c_list, etc. and use what is left over
 #		or, whatever is in COMPOSER_CONTENT, COMPOSER_TARGETS, COMPOSER_SUBDIRS, with $(NOTHING) notices ?
