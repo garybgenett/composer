@@ -298,7 +298,7 @@ override LIBRARY_DIGEST_TITLE_ALT	:= Digest
 override LIBRARY_DIGEST_COUNT		:= 10
 override LIBRARY_DIGEST_COUNT_ALT	:= 20
 override LIBRARY_DIGEST_EXPANDED	:= 10
-override LIBRARY_DIGEST_EXPANDED_ALT	:= 5
+override LIBRARY_DIGEST_EXPANDED_ALT	:= 1
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_SPACER		:= 1
@@ -8884,6 +8884,10 @@ override define $(PUBLISH)-$(TARGETS)-contents-do =
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
+			if [ "$(2)" = "$(SPECIAL_VAL)" ]; then \
+				NUM="$$($(EXPR) $${NUM} + 1)"; \
+				continue; \
+			fi; \
 			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1][0]" 2>/dev/null)"; \
 			LEN="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][2] | length" 2>/dev/null)"; \
 			TXT=; STR="0"; while [ "$${STR}" -lt "$${LEN}" ]; do \
