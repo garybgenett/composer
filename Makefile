@@ -2009,6 +2009,17 @@ override define $(COMPOSER_PANDOC)-$(NOTHING) =
 	fi
 endef
 
+override define $(COMPOSER_PANDOC)-log =
+	{ \
+		$(ECHO) "$(call COMPOSER_TIMESTAMP) "; \
+		$(call $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS); \
+		if [ -n "$(c_site)" ] && [ "$(c_type)" = "$(TYPE_HTML)" ]; then \
+			$(ECHO) " #$(MARKER) $(c_list)"; \
+		fi; \
+		$(ECHO) "\n"; \
+	}
+endef
+
 ################################################################################
 # }}}1
 ################################################################################
@@ -10720,13 +10731,7 @@ ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
 	@$(call $(PUBLISH)-$(TARGETS)-contents-done,$(CURDIR)/$(@))
 endif
 ifneq ($(COMPOSER_LOG),)
-#WORKING:NOW:NOW consolidate these into a single operation...
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP) "			>>$(CURDIR)/$(COMPOSER_LOG)
-	@$(call $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS)	>>$(CURDIR)/$(COMPOSER_LOG)
-ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
-	@$(ECHO) " #$(MARKER) $(c_list)"			>>$(CURDIR)/$(COMPOSER_LOG)
-endif
-	@$(ECHO) "\n"						>>$(CURDIR)/$(COMPOSER_LOG)
+	@$(call $(COMPOSER_PANDOC)-log) >>$(CURDIR)/$(COMPOSER_LOG)
 endif
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
