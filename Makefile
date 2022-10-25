@@ -2075,7 +2075,7 @@ $(HELPOUT)-VARIABLES_TITLE_%:
 #> update: READ_ALIASES
 .PHONY: $(HELPOUT)-VARIABLES_FORMAT_%
 $(HELPOUT)-VARIABLES_FORMAT_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
 	@$(TABLE_M3) ":---"				":---"					":---"
 	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Build as Bootstrap page"		"$(_M)$(c_site)"
@@ -2117,7 +2117,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 
 .PHONY: $(HELPOUT)-VARIABLES_CONTROL_%
 $(HELPOUT)-VARIABLES_CONTROL_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"						":---"
 	@$(TABLE_M3) "$(_C)[MAKEJOBS]"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )\`$(_N)(makejobs)$(_D)\`"
@@ -2149,7 +2149,7 @@ $(HELPOUT)-TARGETS_TITLE_%:
 
 .PHONY: $(HELPOUT)-TARGETS_PRIMARY_%
 $(HELPOUT)-TARGETS_PRIMARY_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Primary Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)]"			"Basic $(HELPOUT) overview $(_E)(default)$(_D)"
@@ -2181,7 +2181,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 
 .PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
 $(HELPOUT)-TARGETS_ADDITIONAL_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)]"			"Diagnostics, tests targets list in $(_C)[COMPOSER_DEBUGIT]$(_D)"
@@ -2199,7 +2199,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Internal Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOFORCE)]"		"Complete \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` content $(_E)(similar to [$(HELPOUT)-$(DOITALL)])$(_D)"
@@ -2222,7 +2222,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
-	@if [ "$(*)" -gt "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
 	@$(PRINT) "Fetch the necessary binary components"
 	@$(PRINT) "$(_E)(see [Requirements])$(_D):"
 	@$(ENDOLINE)
@@ -2256,16 +2256,14 @@ $(HELPOUT)-EXAMPLES_%:
 ########################################
 ## {{{2 $(HELPOUT)-$(DOITALL) ----------
 
-#WORKING:NOW:NOW
-#	need a better indicator than just c_site here...
-#	retool README.site.html to use box instead of fold, and only for h1 items
-
 .PHONY: $(HELPOUT)-$(HEADERS)-%
 $(HELPOUT)-$(HEADERS)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(MAKE) $(SILENT) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ -n "$(c_site)" ]; then $(ENDOLINE); $(PRINT) "$(_S)$(HTML_BREAK)$(_D)"; fi
+		@if [ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ]; then \
+			$(call TITLE_LN,spacer); \
+		fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -2284,15 +2282,16 @@ $(HELPOUT)-$(HEADERS)-%:
 		@$(ENDOLINE); $(MAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 		@$(call TITLE_END)
-	@$(call TITLE_END)
+#>	@$(call TITLE_END)
 
+export override COMPOSER_DOITALL_$(HELPOUT) ?=
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
-	@$(MAKE) $(SILENT) $(HELPOUT)-$(HEADERS)-$(*)
-	@$(if $(c_site),\
-		$(call TITLE_LN ,-1,$(COMPOSER_BASENAME) Operation,1) ,\
-		$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1) \
+	@$(if $(and $(c_site),$(filter $(DOFORCE),$(*))),\
+		$(eval export override COMPOSER_DOITALL_$(HELPOUT) := $(PUBLISH)) \
 	)
+	@$(MAKE) $(SILENT) $(HELPOUT)-$(HEADERS)-$(*)
+	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Document Formatting)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
@@ -2300,28 +2299,22 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Specifying Dependencies)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Custom Targets)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Repository Versions)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)	; $(call TITLE_END)
-	@$(call TITLE_END)
-	@$(if $(c_site),\
-		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1 ,\
-		$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1 \
-	)
+#>	@$(call TITLE_END)
+	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1
 	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)	; $(call TITLE_END)
 	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)	; $(call TITLE_END)
-	@$(call TITLE_END)
-	@$(if $(c_site),\
-		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1 ,\
-		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1 \
-	)
+#>	@$(call TITLE_END)
+	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1
 	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_PRIMARY_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)		; $(call TITLE_END)
 	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)	; $(call TITLE_END)
 	@if [ "$(*)" = "$(DOFORCE)" ]; then \
 		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)	; $(call TITLE_END); \
-		$(call TITLE_END); \
-		$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
-	else \
-		$(call TITLE_END); \
 	fi
-	@if [ -z "$(c_site)" ]; then \
+#>	@$(call TITLE_END)
+	@if [ "$(*)" = "$(DOFORCE)" ]; then \
+		$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
+	fi
+	@if [ "$(COMPOSER_DOITALL_$(HELPOUT))" != "$(PUBLISH)" ]; then \
 		$(MAKE) $(SILENT) $(HELPOUT)-FOOTER; \
 	fi
 
@@ -2347,10 +2340,7 @@ $(HELPOUT)-$(TYPE_PRES):
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
-	@$(if $(c_site),\
-		$(call TITLE_LN ,1,Reference) ,\
-		$(call TITLE_LN,1,Reference) \
-	)
+	@$(call TITLE_LN,1,Reference)
 	@$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 #WORKING reference this somewhere...
@@ -2423,7 +2413,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 			$(call NEWLINE) \
 		)
 	@$(call TITLE_END)
-	@$(call TITLE_END)
+#>	@$(call TITLE_END)
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 $(HELPOUT)-$(DOFORCE)-$(TARGETS):
@@ -6799,18 +6789,29 @@ endif
 
 ########################################
 
+#>		if	[ "$(1)" = "-1" ]; \
+#>		then	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	1	1		$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
+#.		else	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	$(1)	$(SPECIAL_VAL)	$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
+#>		fi;
 override define TITLE_LN =
-	if [ -n "$(c_site)" ] && [ "$(1)" != "$(DEPTH_MAX)" ]; then \
-		if [ "$(1)" = "-1" ]; then \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin 1 1 $(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
-		else \
-			$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin $(1) $(SPECIAL_VAL) $(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
-		fi; \
+	if	[ "$(1)" = "spacer" ]; then \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(_D)\n\n"; \
+	elif	[ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ] && \
+		[ "$(1)" != "-1" ] && \
+		[ "$(1)" != "1" ] && \
+		[ "$(1)" != "$(DEPTH_MAX)" ]; then \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(_D)\n\n"; \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) box-begin $(1) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
 	else \
 		ttl_len="`$(EXPR) length '$(2)'`"; \
 		ttl_len="`$(EXPR) $(COLUMNS) - 2 - $(1) - $${ttl_len}`"; \
 		if [ "$(1)" -le "0" ]; then ttl_len="`$(EXPR) $${ttl_len} - 1 + $(1)`"; fi; \
-		if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then $(ENDOLINE); $(LINERULE); fi; \
+		if [ "$(1)" -gt "0" ] && [ "$(1)" -le "$(HEAD_MAIN)" ]; then \
+			if [ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ]; \
+			then	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(_D)\n\n"; \
+			else	$(ENDOLINE); $(LINERULE); \
+			fi; \
+		fi; \
 		$(ENDOLINE); \
 		$(ECHO) "$(_S)"; \
 		if [ "$(1)" -le "0" ]; then $(ECHO) "#"; fi; \
@@ -6823,9 +6824,10 @@ override define TITLE_LN =
 	fi
 endef
 
+#>		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)$(_D)\n\n";
 override define TITLE_END =
-	if [ -n "$(c_site)" ]; then \
-		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)$(_D)\n\n"; \
+	if [ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ]; then \
+		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)$(_D)\n\n"; \
 	fi
 endef
 
@@ -8497,14 +8499,14 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
 		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
 		$(HELPOUT)-$(PUBLISH)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= \
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
 		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
