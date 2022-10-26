@@ -4245,7 +4245,6 @@ variables:
   $(PUBLISH)-nav-top:
     CHAINED:
       - CHAINED:
-        - CHAIN"ER:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
         - CHAIN'ING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-left:
@@ -4257,8 +4256,12 @@ variables:
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-2 col-6
     SPACE:
       - column-end
-      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-12
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
     END:
+      - column-end
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-1 col-2
+      - $(MENU_SELF): |
+          "QUOT'ING"
       - column-end
       - row-end
 
@@ -7788,15 +7791,15 @@ $(TESTING)-$(TARGETS):
 
 .PHONY: $(TESTING)-$(TARGETS)-init
 $(TESTING)-$(TARGETS)-init:
-#>	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
-	@$(ECHO) "override COMPOSER_TARGETS :=\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].[x0-9].*
+	@$(ECHO) "override c_list := $(OUT_README)$(COMPOSER_EXT_DEFAULT)\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS :=\n"				>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
 				$(ECHO) "override COMPOSER_TARGETS += $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE))\n"			>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 				$(ECHO) "$(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)): override c_toc := $(subst x,,$(TOC))\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 				$(ECHO) "$(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)): override c_level := $(subst x,,$(LEVEL))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-				$(ECHO) "$(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)): $(OUT_README)$(COMPOSER_EXT_DEFAULT)\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 				$(call NEWLINE) \
 			) \
 		) \
@@ -8173,7 +8176,6 @@ $(TESTING)-other:
 		\n\t * Check binary files \
 		\n\t * Repository versions variables \
 		\n\t * Use '$(_C).$(TARGETS)$(_D)' in '$(_C)COMPOSER_TARGETS$(_D)' \
-		\n\t\t * Automatic '$(_C)c_list$(_D)' in '$(_C)$(COMPOSER_SETTINGS)$(_D)' \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -8199,11 +8201,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
 	#> targets
-	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(OUT_MANUAL).$(EXTN_LPDF)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_MANUAL).$(EXTN_LPDF):" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(OUT_README)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
@@ -8234,10 +8232,10 @@ $(TESTING)-other-done:
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
 	$(call $(TESTING)-count,20,$(NOTHING))
-	$(call $(TESTING)-count,6,$(notdir $(PANDOC_BIN)))
+	$(call $(TESTING)-count,5,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> targets
-	$(call $(TESTING)-count,4,MAKECMDGOALS.+$(COMPOSER_PANDOC))
+	$(call $(TESTING)-count,3,MAKECMDGOALS.+$(COMPOSER_PANDOC))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -9898,6 +9896,10 @@ endif
 			$(call NEWLINE) \
 	)
 else
+#WORKING:NOW:NOW:FIX
+#	site-template-all (composer.site.sh) = Error: Cannot get keys of !!null, keys only works for maps and arrays
+#	Error: parsing expression: Lexer error: could not match text starting at 1:63 failing at 1:64. >> unmatched text: "E"
+#	still do $(DOFORCE) twice...?  this has probably changed after dependencies/touches...
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
@@ -10816,9 +10818,9 @@ ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
 	@$(call $(PUBLISH)-$(TARGETS)-readtime,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
 	@$(eval override c_list		:= $(if $(c_list_plus),$(c_list_plus),$(c_list)))
 	@$(eval override c_list_plus	:= $(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
-endif
+#>ifneq ($(COMPOSER_DEBUGIT),)
+#>	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
+#>endif
 endif
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(call $(HEADERS)-note,$(CURDIR),$(if $(c_list_plus),$(c_list_plus),$(c_list))$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1),$(TYPE_LPDF))
