@@ -9828,24 +9828,30 @@ ifneq ($(or \
 		$(if $(COMPOSER_DEBUGIT),\
 			$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) \
 		)
+ifneq ($(COMPOSER_DEBUGIT),)
 	@$(SED) -i \
 		-e "s|^(.+cols_reorder.+)[[] $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) []]$$|\1[ 1, 2, 3 ]|g" \
 		-e "s|^(.+cols_resize.+)[[] $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) []]$$|\1[ 12, 12, 12 ]|g" \
 		$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+else
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
 		$($(PUBLISH)-$(EXAMPLE)-pages) \
 		$($(PUBLISH)-$(EXAMPLE)-themes) \
 		,\
-		if [ -f "$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML)" ]; then \
-			$(TOUCH) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
-			$(TOUCH) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
-		fi; \
-		$(call NEWLINE) \
+		$(foreach TIME,\
+			$(COMPOSER_SETTINGS) \
+			$(COMPOSER_YML) \
+			,\
+			if [ -f "$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(TIME)" ]; then \
+				$(TOUCH) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(TIME); \
+			fi; \
+			$(call NEWLINE) \
+		) \
 	)
 endif
-	@$(ECHO) "" >$($(PUBLISH)-$(EXAMPLE)-log)
+endif
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
@@ -9860,6 +9866,7 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
+	@$(ECHO) "" >$($(PUBLISH)-$(EXAMPLE)-log)
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
@@ -9986,20 +9993,41 @@ override COMPOSER_IGNORES := $($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOS
 override SHADES_BASE := _shade
 override SHADES_LIST := null light dark
 
+.PHONY: themes-$(CLEANER)
+themes-$(CLEANER):
+	@$$(foreach FILE,\\
+		$$(wildcard $$(SHADES_BASE)-*) \\
+		$$(wildcard *.$(EXTN_HTML)) \\
+		,\\
+		$$(call $(COMPOSER_TINYNAME)-rm,$$(FILE)); \\
+		$$(call NEWLINE) \\
+	)
+	@$$(ECHO) ""
+
 .PHONY: $$(SHADES_BASE)-done
 $$(SHADES_BASE)-done:
+	@$$(call $$(COMPOSER_TINYNAME)-note,$$(patsubst $$(SHADES_BASE)-%,%,$$(@)))
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $(PUBLISH_CSS_SHADE)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_SETTINGS)
-	@$$(TOUCH) $$(COMPOSER_YML)
-	@$$(foreach FILE,$$(SHADES_LIST),$$(TOUCH) $$(SHADES_BASE)-$$(FILE);)
+	@$$(foreach FILE,\\
+		$$(COMPOSER_SETTINGS) \\
+		$$(COMPOSER_YML) \\
+		$$(addprefix $$(SHADES_BASE)-,$$(SHADES_LIST)) \\
+		,\\
+		$$(TOUCH) $$(FILE) \\
+		$$(call NEWLINE) \\
+	)
 
+#>		$$(call $$(COMPOSER_PANDOC)-dependencies,$$(PUBLISH)))
 $$(foreach FILE,$$(SHADES_LIST),\\
-	$$(eval $$(SHADES_BASE)-$$(FILE): $$(COMPOSER_SETTINGS)) \\
-	$$(eval $$(SHADES_BASE)-$$(FILE): $$(COMPOSER_YML)) \\
-)
+	$$(eval $$(SHADES_BASE)-$$(FILE): \\
+		$$(COMPOSER_SETTINGS) \\
+		$$(COMPOSER_YML) \\
+))
 $$(SHADES_BASE)-%:
+	@$$(call $$(COMPOSER_TINYNAME)-note,$$(*))
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_YML) \
+	@$$(TOUCH) $$(COMPOSER_YML)
+	@$$(RM) $$(SHADES_BASE)-* $$($$(DEBUGIT)-output) \
 $(foreach FILE,$(CSS_THEMES),\
 	$(if $(filter-out $(TOKEN),\
 		$(word 4,$(subst :, ,$(FILE))) \
@@ -10016,12 +10044,20 @@ endef
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target =
-override THEME_FILE := $($(PUBLISH)-$(EXAMPLE)-index)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)
-override THEME_EXTN := $(if $(filter $(TYPE_PRES).%,$(1)),$(EXTN_PRES),$(EXTN_HTML))
-override COMPOSER_TARGETS += $(1).$$(THEME_EXTN)
-$(1).$$(THEME_EXTN): override c_list := $$(THEME_FILE)
-$(1).$$(THEME_EXTN): override c_css := $(word 1,$(subst +, ,$(1)))
-$(1).$$(THEME_EXTN): $$(SHADES_BASE)-$(word 2,$(subst +, ,$(1)))
+override COMPOSER_TARGETS += $(1).done
+#>	$$(call $$(COMPOSER_PANDOC)-dependencies,$$(PUBLISH))
+$(1).done: \\
+	$$(COMPOSER_SETTINGS) \\
+	$$(COMPOSER_YML)
+$(1).done:
+	@$$(MAKE) $$(SILENT) $$(SHADES_BASE)-$(word 2,$(subst +, ,$(1)))
+	@$$(MAKE) \\
+		c_type="$(if $(filter $(TYPE_PRES).%,$(1)),$(TYPE_PRES),$(TYPE_HTML))" \\
+		c_base="$(1)" \\
+		c_list="$($(PUBLISH)-$(EXAMPLE)-index)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)" \\
+		c_css="$(word 1,$(subst +, ,$(1)))" \\
+		$$(COMPOSER_PANDOC)
+	@$$(TOUCH) $$(@)
 endef
 
 ########################################
