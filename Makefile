@@ -9990,44 +9990,24 @@ override MAKEJOBS :=
 override COMPOSER_TARGETS := $($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)
 override COMPOSER_IGNORES := $($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 
-override SHADES_BASE := _shade
-override SHADES_LIST := null light dark
-
 .PHONY: themes-$(CLEANER)
 themes-$(CLEANER):
-	@$$(foreach FILE,\\
-		$$(wildcard $$(SHADES_BASE)-*) \\
-		$$(wildcard *.$(EXTN_HTML)) \\
-		,\\
+	@$$(foreach FILE,$$(wildcard *.$(EXTN_HTML)),\\
 		$$(call $(COMPOSER_TINYNAME)-rm,$$(FILE)); \\
 		$$(call NEWLINE) \\
 	)
 	@$$(ECHO) ""
 
-.PHONY: $$(SHADES_BASE)-done
-$$(SHADES_BASE)-done:
-	@$$(call $$(COMPOSER_TINYNAME)-note,$$(patsubst $$(SHADES_BASE)-%,%,$$(@)))
-	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $(PUBLISH_CSS_SHADE)|g" $$(COMPOSER_YML)
-	@$$(foreach FILE,\\
-		$$(COMPOSER_SETTINGS) \\
-		$$(COMPOSER_YML) \\
-		$$(addprefix $$(SHADES_BASE)-,$$(SHADES_LIST)) \\
-		,\\
-		$$(TOUCH) $$(FILE) \\
-		$$(call NEWLINE) \\
-	)
+.PHONY: themes-done
+themes-done: themes-$(PUBLISH_CSS_SHADE)
+themes-done:
+	@$$(ECHO) ""
 
-#>		$$(call $$(COMPOSER_PANDOC)-dependencies,$$(PUBLISH)))
-$$(foreach FILE,$$(SHADES_LIST),\\
-	$$(eval $$(SHADES_BASE)-$$(FILE): \\
-		$$(COMPOSER_SETTINGS) \\
-		$$(COMPOSER_YML) \\
-))
-$$(SHADES_BASE)-%:
+.PHONY: themes-%
+themes-%:
 	@$$(call $$(COMPOSER_TINYNAME)-note,$$(*))
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_YML)
-	@$$(RM) $$(SHADES_BASE)-* $$($$(DEBUGIT)-output) \
+	@$$(TOUCH) $$(COMPOSER_YML) \
 $(foreach FILE,$(CSS_THEMES),\
 	$(if $(filter-out $(TOKEN),\
 		$(word 4,$(subst :, ,$(FILE))) \
@@ -10037,7 +10017,7 @@ $(foreach FILE,$(CSS_THEMES),\
 		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
 ))))
 
-override COMPOSER_TARGETS += $$(SHADES_BASE)-done
+override COMPOSER_TARGETS += themes-done
 endef
 
 ########################################
@@ -10045,12 +10025,9 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target =
 override COMPOSER_TARGETS += $(1).done
-#>	$$(call $$(COMPOSER_PANDOC)-dependencies,$$(PUBLISH))
-$(1).done: \\
-	$$(COMPOSER_SETTINGS) \\
-	$$(COMPOSER_YML)
+$(1).done: $$(COMPOSER_YML)
 $(1).done:
-	@$$(MAKE) $$(SILENT) $$(SHADES_BASE)-$(word 2,$(subst +, ,$(1)))
+	@$$(MAKE) $$(SILENT) themes-$(word 2,$(subst +, ,$(1)))
 	@$$(MAKE) \\
 		c_type="$(if $(filter $(TYPE_PRES).%,$(1)),$(TYPE_PRES),$(TYPE_HTML))" \\
 		c_base="$(1)" \\
