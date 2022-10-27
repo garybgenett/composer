@@ -4245,7 +4245,7 @@ variables:
   $(PUBLISH)-nav-top:
     CHAINED:
       - CHAINED:
-        - CHAIN'ING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+        - CHAINING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-left:
     BEGIN:
@@ -4258,10 +4258,6 @@ variables:
       - column-end
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
     END:
-      - column-end
-      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-1 col-2
-      - $(MENU_SELF): |
-          "QUOT'ING"
       - column-end
       - row-end
 
@@ -4503,7 +4499,8 @@ _EOF_
 function $(PUBLISH)-nav-top {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	$(PUBLISH)-nav-begin "top" "1" "$${1}"					|| return 1
-	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" \\
+#>	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]"
+	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" 2>/dev/null \\
 		| while read -r MENU; do
 			$(PUBLISH)-nav-top-list "nav-top.[\"$${MENU}\"]"	|| return 1
 		done
@@ -4523,6 +4520,7 @@ function $(PUBLISH)-nav-top-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
 #>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
 		if [ -z "$${FILE}" ]; then
@@ -4591,6 +4589,7 @@ $${CAT} <<_EOF_
 _EOF_
 			fi
 		fi
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4651,7 +4650,8 @@ $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3"><ol class="breadcrumb">
 _EOF_
 		NBSP=
-		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" \\
+#>		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]"
+		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" 2>/dev/null \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]" "$${NBSP}"	|| return 1
 				NBSP="true"
@@ -4674,10 +4674,10 @@ _EOF_
 function $(PUBLISH)-nav-bottom-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	NBSP="$${2}"
-	SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
-	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-#>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
-		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
+	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
+	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
 		LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"]")"
 $${CAT} <<_EOF_
 <li class="breadcrumb-item">$$(
@@ -4688,6 +4688,7 @@ $${CAT} <<_EOF_
 )">$${FILE}</a></li>
 _EOF_
 		NBSP="true"
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
@@ -4709,7 +4710,8 @@ function $(PUBLISH)-nav-side {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-$${1})" ]; then
 		$(PUBLISH)-column-begin "$${1}"						|| return 1
-		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" \\
+#>		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]"
+		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" 2>/dev/null \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-side-list "nav-$${1}.[\"$${MENU}\"]"	|| return 1
 			done
@@ -4732,8 +4734,8 @@ function $(PUBLISH)-nav-side {
 
 function $(PUBLISH)-nav-side-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
-	NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
+	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
@@ -4810,7 +4812,8 @@ function $(PUBLISH)-info-data {
 $${CAT} <<_EOF_
 <ul class="navbar-nav navbar-nav-scroll">
 _EOF_
-		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" \\
+#>		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]"
+		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" 2>/dev/null \\
 			| while read -r MENU; do
 				$(PUBLISH)-info-data-list "info-$${1}.[\"$${MENU}\"]" || return 1
 			done
@@ -4829,18 +4832,20 @@ _EOF_
 
 function $(PUBLISH)-info-data-list {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-#>	COMPOSER_YML_DATA_VAL "$${1} | keys | .[]"
-	COMPOSER_YML_DATA_VAL "$${1} | keys | .[]" 2>/dev/null \\
-		| while read -r FILE; do
+	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
+	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3">
 $$(
-	COMPOSER_YML_DATA_VAL "$${1}.[\"$${FILE}\"]" \\
+	COMPOSER_YML_DATA_VAL "$${1}.[$${NUM}]" \\
 	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
 )
 </li>
 _EOF_
-		done
+		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
+		NUM="$$($${EXPR} $${NUM} + 1)"
+	done
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -5062,15 +5067,14 @@ function $(PUBLISH)-fold-end {
 $${CAT} <<_EOF_
 </div>
 _EOF_
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
-		return 0
-	fi
+	else
 $${CAT} <<_EOF_
 </div>
 </div>
 </div>
 </div>
 _EOF_
+	fi
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -9824,6 +9828,10 @@ ifneq ($(or \
 		$(if $(COMPOSER_DEBUGIT),\
 			$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) \
 		)
+	@$(SED) -i \
+		-e "s|^(.+cols_reorder.+)[[] $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) []]$$|\1[ 1, 2, 3 ]|g" \
+		-e "s|^(.+cols_resize.+)[[] $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) []]$$|\1[ 12, 12, 12 ]|g" \
+		$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
@@ -9897,8 +9905,6 @@ endif
 	)
 else
 #WORKING:NOW:NOW:FIX
-#	site-template-all (composer.site.sh) = Error: Cannot get keys of !!null, keys only works for maps and arrays
-#	Error: parsing expression: Lexer error: could not match text starting at 1:63 failing at 1:64. >> unmatched text: "E"
 #	still do $(DOFORCE) twice...?  this has probably changed after dependencies/touches...
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
