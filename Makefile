@@ -5394,8 +5394,8 @@ body {
 	min-width:			100%;
 	margin:				0px;
 	padding:			0px;
-	padding-top:			7vh;
-	padding-bottom:			6vh;
+	padding-top:			70px;
+	padding-bottom:			70px;
 }
 
 /* ################################## */
@@ -5422,7 +5422,7 @@ body {
 /* ################################## */
 
 .$(COMPOSER_TINYNAME)-sticky {
-	max-height:			87vh;
+	max-height:			85vh;
 	overflow:			auto;
 }
 
