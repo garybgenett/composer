@@ -3937,6 +3937,7 @@ $(_S)########################################$(_D)
     $(_M)TEXT$(_D):
       - TOP INFO
     $(_M)TIME$(_D):
+$(_S)#$(MARKER)$(_D)   - readtime
     $(_M)ICON$(_D):
       - $(_N)|$(_D)
           <a rel="author" href="$(_M)$(COMPOSER_REPOPAGE)$(_D)">
@@ -3950,7 +3951,7 @@ $(_S)########################################$(_D)
     $(_M)TEXT$(_D):
       - BOTTOM INFO
     $(_M)TIME$(_D):
-      - $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+      - readtime
     $(_M)ICON$(_D):
 
 $(_S)################################################################################$(_D)
@@ -4276,10 +4277,15 @@ variables:
       - column-end
       - row-end
 
+  $(PUBLISH)-info-top:
+    TIME:
+#>    - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
+#>    - readtime
+
   $(PUBLISH)-info-bottom:
     TIME:
       - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
-      - $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+      - readtime
 
 ################################################################################
 # End Of File
@@ -4869,8 +4875,15 @@ function $(PUBLISH)-info-data-list {
 $${CAT} <<_EOF_
 <li class="$(COMPOSER_TINYNAME)-link nav-item me-3">
 $$(
-	COMPOSER_YML_DATA_VAL "$${1}.[$${NUM}]" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
+	if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
+		$${ECHO} "\\n"
+		$${ECHO} "$(PUBLISH_CMD_BEG) $${FILE} $(PUBLISH_CMD_END)\\n"
+		$${ECHO} "\\n"
+	else
+		$${ECHO} "$${FILE}\\n" \\
+		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	fi
 )
 </li>
 _EOF_
@@ -9958,21 +9971,13 @@ endif
 
 #WORKING:NOW:NOW
 #	add
-#		devel/master branch issue...
-#		link font-awesome icons into $(COMPOSER_ART) ... all assets should be represented there
-#		add "readtime" marker to top/bottom navbar/info?  no real sense prohibiting it...
-#			what about "content"?  it's kind of the same thing... it's cheap to do it...
-#			if so, make sure "content" on the bottom does a "skip"...
-#		consider removing main $(COMPOSER_YML) ... it makes $(CONFIGS) output confusing...
-#			it is already in _site/.Composer, so we can point to there in the documentation...
+#		add tags list to bottom of pages/digests
 #		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
 #			title versus pagetitle... do need to test both...
 #				pagetitle does not alwasy produce a header, such as with revealjs...
 #		remove command line short-aliases?  (except for J= V= C= , etc.)
 #		do $(call $(HEADERS)-path-root,???) on c_logo in $(CUSTOM_PUBLISH_SH) ... others?
 #			also need to do it in $(COMPOSER_YML) output in $(OUT_README)
-#		add tags list to bottom of pages/digests
-#		an "updated" feature, to timestamp pages?  option to key off of "date"?
 #	site
 #		sadly, remove the right-hand bar from README.site.html, and do "contents 6"
 #			it was super fun, but it is not really a usable or gentle introduction, so... y'know... user first...
