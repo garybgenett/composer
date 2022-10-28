@@ -1173,6 +1173,7 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 	|$(PUBLISH)	:dark			:$(BOOTSWATCH_CSS_DARK)					:dark \
 	|$(PUBLISH)	:solar-light		:$(BOOTSWATCH_CSS_SOLAR_LIGHT)				:dark \
 	|$(PUBLISH)	:solar-dark		:$(BOOTSWATCH_CSS_SOLAR_DARK)				:dark \
+	|$(PUBLISH)	:$(CSS_ALT)		:$(BOOTSWATCH_CSS_ALT)					:dark \
 	|$(PUBLISH)	:$(CSS_ALT)		:$(BOOTSWATCH_CSS_ALT)					:null \
 	\
 	|$(TYPE_HTML)	:$(SPECIAL_VAL)		:$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))		:$(TOKEN)	:[Water.css] \
