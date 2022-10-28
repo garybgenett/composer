@@ -9924,8 +9924,6 @@ endif
 			$(call NEWLINE) \
 	)
 else
-#WORKING:NOW:NOW:FIX
-#	still do $(DOFORCE) twice...?  this has probably changed after dependencies/touches...
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
@@ -10047,7 +10045,7 @@ $(1).done:
 		c_list="$($(PUBLISH)-$(EXAMPLE)-index)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)" \\
 		c_css="$(word 1,$(subst +, ,$(1)))" \\
 		$$(COMPOSER_PANDOC)
-	@$$(TOUCH) $$(@)
+	@$$(ECHO) "" >$$(@)
 endef
 
 ########################################
