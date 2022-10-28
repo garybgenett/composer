@@ -4448,6 +4448,14 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 }
 
 ########################################
+#### {{{4 $(PUBLISH)-error -------------
+
+function $(PUBLISH)-error {
+	$${ECHO} "$(MARKER) ERROR [$${0/#*\/}] ($${1}): $${@:2}\\n" >&2
+	return 0
+}
+
+########################################
 #### {{{4 $(PUBLISH)-brand -------------
 
 # 1 c_logo
@@ -4618,9 +4626,12 @@ _EOF_
 
 function $(PUBLISH)-nav-top-library {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
-		| $${SED} "/^null$$/d" \\
-		| while read -r FILE; do
+	if [ ! -f "$${PUBLISH_LIBRARY_INDEX}" ]; then
+		$(PUBLISH)-error $${FUNCNAME} $${@} "$(MARKER) library index missing"
+	else
+		$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
+			| $${SED} "/^null$$/d" \\
+			| while read -r FILE; do
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
@@ -4629,7 +4640,8 @@ $${CAT} <<_EOF_
 	| $${SED} "/^null$$/d" \\
 ))</a></li>
 _EOF_
-		done
+			done
+	fi
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -4792,12 +4804,15 @@ function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; r
 
 function $(PUBLISH)-nav-side-library {
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	if [ ! -f "$${PUBLISH_LIBRARY_INDEX}" ]; then
+		$(PUBLISH)-error $${FUNCNAME} $${@} "$(MARKER) library index missing"
+	else
 $${CAT} <<_EOF_
 <table class="table table-borderless align-top">
 _EOF_
-	$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
-		| $${SED} "/^null$$/d" \\
-		| while read -r FILE; do
+		$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
+			| $${SED} "/^null$$/d" \\
+			| while read -r FILE; do
 $${CAT} <<_EOF_
 <tr><td><a href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
@@ -4806,10 +4821,11 @@ $${CAT} <<_EOF_
 	| $${SED} "/^null$$/d" \\
 )</td></tr>
 _EOF_
-		done
+			done
 $${CAT} <<_EOF_
 </table>
 _EOF_
+	fi
 	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
 	return 0
 }
@@ -5301,12 +5317,12 @@ function $(PUBLISH)-select {
 		$${ECHO} "$(PUBLISH_CMD_BEG) $${ACTION} $${@} $(PUBLISH_CMD_END)\\n"
 	elif [ -f "$${ACTION}" ]; then
 		if ! $(PUBLISH)-file $${ACTION} $${@}; then
-			$${ECHO} "$(MARKER) ERROR [$${0/#*\/}] (file): $${ACTION} $${@}\\n" >&2
+			$(PUBLISH)-error file $${ACTION} $${@}
 			return 1
 		fi
 	else
 		if ! $(PUBLISH)-$${ACTION} $${@}; then
-			$${ECHO} "$(MARKER) ERROR [$${0/#*\/}]: $${ACTION} $${@}\\n" >&2
+			$(PUBLISH)-error function $${ACTION} $${@}
 			return 1
 		fi
 	fi
