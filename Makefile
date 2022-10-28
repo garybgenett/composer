@@ -270,9 +270,10 @@ override PUBLISH_COLS_REORDER_R		:= 2
 override PUBLISH_COLS_ORDER_L_ALT	:= 1
 override PUBLISH_COLS_ORDER_C_ALT	:= 3
 override PUBLISH_COLS_ORDER_R_ALT	:= 2
+override PUBLISH_COLS_REORDER_L_ALT_MOD	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_REORDER_L_ALT	:= 2
-override PUBLISH_COLS_REORDER_C_ALT	:= 1
-override PUBLISH_COLS_REORDER_R_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_REORDER_C_ALT	:= 3
+override PUBLISH_COLS_REORDER_R_ALT	:= 1
 
 override PUBLISH_COLS_SIZE_L		:= 3
 override PUBLISH_COLS_SIZE_C		:= 7
@@ -284,9 +285,10 @@ override PUBLISH_COLS_RESIZE_R		:= 6
 override PUBLISH_COLS_SIZE_L_ALT	:= 12
 override PUBLISH_COLS_SIZE_C_ALT	:= 9
 override PUBLISH_COLS_SIZE_R_ALT	:= 3
-override PUBLISH_COLS_RESIZE_L_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESIZE_L_ALT	:= 12
 override PUBLISH_COLS_RESIZE_C_ALT	:= 12
-override PUBLISH_COLS_RESIZE_R_ALT	:= 12
+override PUBLISH_COLS_RESIZE_R_ALT_MOD	:= 12
+override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 override LIBRARY_FOLDER			:= null
 override LIBRARY_FOLDER_ALT		:= _library
@@ -4257,6 +4259,19 @@ variables:
     SPACE:
       - column-end
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
+    END:
+      - column-end
+      - row-end
+
+  $(PUBLISH)-nav-right:
+    BEGIN:
+      - row-begin
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-12 col-6
+    MIDDLE:
+      - spacer
+    SPACE:
+      - column-end
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-12 col-6
     END:
       - column-end
       - row-end
@@ -9726,15 +9741,6 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(foreach FILE,\
-		$($(PUBLISH)-$(EXAMPLE)-dirs) \
-		$($(PUBLISH)-$(EXAMPLE)-pages) \
-		$($(PUBLISH)-$(EXAMPLE)-themes) \
-		,\
-		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
-	)
-endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
 	@$(ECHO) "$(_S)"
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
@@ -9753,12 +9759,6 @@ endif
 	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_E)"
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-else
-	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-endif
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../*$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)							>$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
@@ -9801,24 +9801,42 @@ endif
 		) \
 	)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+		| $(SED) -e "s|[[:space:]]*$$||g"			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"				>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
+		| $(SED) -e "s|[[:space:]]*$$||g"			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)) \
-		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
-	@$(ECHO) "\n"								>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"	>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "$(_E)"
-	@$(LN)									$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))) \
-										$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_DEFAULT) \
-										$($(DEBUGIT)-output)
+	@$(LN)								$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))) \
+									$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_DEFAULT) \
+									$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page) \
 		| $(SED) \
 			-e "s|^page(title[:].+)$$|\1|g" \
 			-e "/^$(PUBLISH_CMD_BEG)/d" \
-										>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+									>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "$(_E)"
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(foreach FILE,\
+		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$($(PUBLISH)-$(EXAMPLE)-pages) \
+		$($(PUBLISH)-$(EXAMPLE)-themes) \
+		,\
+		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
+	)
+	@$(SED) -i \
+		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
+		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT_MOD) ]|g" \
+		$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+else
+	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+endif
+	@$(ECHO) "$(_D)"
 ifneq ($(or \
 	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
 	$(COMPOSER_DEBUGIT) ,\
@@ -9828,12 +9846,7 @@ ifneq ($(or \
 		$(if $(COMPOSER_DEBUGIT),\
 			$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML) \
 		)
-ifneq ($(COMPOSER_DEBUGIT),)
-	@$(SED) -i \
-		-e "s|^(.+cols_reorder.+)[[] $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) []]$$|\1[ 1, 2, 3 ]|g" \
-		-e "s|^(.+cols_resize.+)[[] $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) []]$$|\1[ 12, 12, 12 ]|g" \
-		$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-else
+ifeq ($(COMPOSER_DEBUGIT),)
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
