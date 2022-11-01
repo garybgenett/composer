@@ -249,7 +249,7 @@ override PUBLISH_CSS_SHADE_ALT		:= null
 
 #> talk: 183 / read: 234
 override PUBLISH_READ_TIME		:= *Reading time: @W words, @T minutes*
-override PUBLISH_READ_TIME_ALT		:= *(count: @W, time: @T)*
+override PUBLISH_READ_TIME_ALT		:= *Count: @W / Time: @T*
 override PUBLISH_READ_TIME_WPM		:= 220
 override PUBLISH_READ_TIME_WPM_ALT	:= 200
 override PUBLISH_COPY_PROTECT		:= 1
@@ -1326,7 +1326,7 @@ override PANDOC_OPTIONS			= $(strip \
 				$(wildcard $(call c_css_select)) ,\
 				$(realpath $(call c_css_select)) ,\
 				$(call c_css_select) \
-				))" \
+			))" \
 		) \
 	) \
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
@@ -1334,15 +1334,15 @@ override PANDOC_OPTIONS			= $(strip \
 			--css="$(call CUSTOM_PUBLISH_CSS_SHADE,$(call COMPOSER_YML_DATA_VAL,config.css_shade))" \
 		) \
 		$(if $(wildcard $(COMPOSER_CUSTOM)-$(PUBLISH).css),\
-				--css="$(COMPOSER_CUSTOM)-$(PUBLISH).css" \
+			--css="$(COMPOSER_CUSTOM)-$(PUBLISH).css" \
 		) \
 	,$(if $(filter $(c_type),$(TYPE_PRES)),\
 		$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),\
-				--css="$(call COMPOSER_TMP_FILE).css" \
+			--css="$(call COMPOSER_TMP_FILE).css" \
 		) \
 	,\
 		$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),\
-				--css="$(COMPOSER_CUSTOM)-$(c_type).css" \
+			--css="$(COMPOSER_CUSTOM)-$(c_type).css" \
 		) \
 	)) \
 	\
@@ -1817,26 +1817,32 @@ override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
 override PUBLISH_CMD_BEG		:= <!-- $(COMPOSER_TINYNAME) $(MARKER)
 override PUBLISH_CMD_END		:= $(MARKER) -->
 
+ifeq ($(c_site),)
+override COMPOSER_ROOT_PATH		:=
+override COMPOSER_LIBRARY_PATH		:=
+override PUBLISH_SH_RUN			:=
+else
+override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT))
+override COMPOSER_LIBRARY_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_LIBRARY) 2>/dev/null)
 override PUBLISH_SH_RUN := \
 	SED="$(SED)" \
 	\
 	CAT="$(CAT)" \
-	DIRNAME="$(DIRNAME)" \
 	ECHO="$(ECHO)" \
 	EXPR="$(EXPR)" \
-	HEAD="$(HEAD)" \
 	PRINTF="$(PRINTF)" \
-	REALPATH="$(REALPATH)" \
 	TR="$(TR)" \
 	\
 	YQ_WRITE="$(subst ",,$(YQ_WRITE))" \
 	COMPOSER_YML_DATA='$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 	\
-	CURDIR="$(CURDIR)" \
 	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
-	PUBLISH_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
+	COMPOSER_ROOT_PATH="$(COMPOSER_ROOT_PATH)" \
+	COMPOSER_LIBRARY_PATH="$(COMPOSER_LIBRARY_PATH)" \
+	COMPOSER_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
 	\
 	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
+endif
 
 ########################################
 ## {{{2 Filesystem ---------------------
@@ -3863,10 +3869,10 @@ $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D)
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
-    $(_M)MENU$(_D):
-      - $(_M)PATH 1$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      - $(_M)PATH 2$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-      - $(_M)PATH 3$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+    $(_M)PATH$(_D):
+      - $(_M)PATH$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+    $(_M)TAGS$(_D):
+      - $(_C)tagslist$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-left$(_D):
@@ -3895,6 +3901,9 @@ $(_S)########################################$(_D)
       - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D)
+      - $(_C)spacer$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
+      - $(_C)tagslist$(_D) $(_M)[, ] "Tags:"$(_D)
       - $(_C)box-end$(_D)
     $(_M)END$(_D):
 
@@ -3936,9 +3945,10 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-top$(_D):
 
     $(_M)TEXT$(_D):
-      - TOP INFO
-    $(_M)TIME$(_D):
-$(_S)#$(MARKER)$(_D)   - readtime
+      - TOP TEXT
+    $(_M)INFO$(_D):
+$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
       - $(_N)|$(_D)
           <a rel="author" href="$(_M)$(COMPOSER_REPOPAGE)$(_D)">
@@ -3950,9 +3960,10 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
 
     $(_M)TEXT$(_D):
-      - BOTTOM INFO
-    $(_M)TIME$(_D):
-      - readtime
+      - BOTTOM TEXT
+    $(_M)INFO$(_D):
+$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
+      - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
 
 $(_S)################################################################################$(_D)
@@ -4178,31 +4189,31 @@ variables:
     folder:				$(LIBRARY_FOLDER_ALT)
     auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
 
+################################################################################
+# End Of File
+################################################################################
+endef
+
 ########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(LIBRARY_FOLDER))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(LIBRARY_FOLDER_ALT))
+################################################################################
+
+variables:
 
   $(PUBLISH)-nav-top:
-    CHAINED:
-      - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
-
-  $(PUBLISH)-nav-bottom:
-    CHAINED:
-      - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+    CONTENTS:
+      - CONTENTS:
+        - contents $(SPECIAL_VAL)
 
   $(PUBLISH)-nav-left:
-    CHAINED:
-      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
-
-  $(PUBLISH)-nav-right:
-    CHAINED:
-      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
-
-  $(PUBLISH)-info-top:
-    CHAINED:
-      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
-
-  $(PUBLISH)-info-bottom:
-    CHAINED:
-      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
+    CONTENTS:
+      - box-begin $(SPECIAL_VAL) CONTENTS
+      - contents $(SPECIAL_VAL)
+      - box-end
 
 ################################################################################
 # End Of File
@@ -4250,6 +4261,13 @@ variables:
     CHAINED:
       - CHAINED:
         - CHAINING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+    CONTENTS:
+
+  $(PUBLISH)-nav-bottom:
+    PATH:
+      - DEFINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+    CHAINED:
+      - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
   $(PUBLISH)-nav-left:
     BEGIN:
@@ -4261,9 +4279,17 @@ variables:
     SPACE:
       - column-end
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
+    CONTENTS:
+      - box-begin $(SPECIAL_VAL) CONTENTS
+      - tagslist [ / ]
+      - spacer
+      - readtime
+      - box-end
     END:
       - column-end
       - row-end
+    CHAINED:
+      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
   $(PUBLISH)-nav-right:
     BEGIN:
@@ -4277,44 +4303,16 @@ variables:
     END:
       - column-end
       - row-end
+    CHAINED:
+      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
   $(PUBLISH)-info-top:
-    TIME:
-#>    - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
-#>    - readtime
+    CHAINED:
+      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
 
   $(PUBLISH)-info-bottom:
-    TIME:
+    CHAINED:
       - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))'
-      - readtime
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(LIBRARY_FOLDER))
-
-override define HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(LIBRARY_FOLDER_ALT))
-################################################################################
-
-variables:
-
-  $(PUBLISH)-nav-top:
-    CONTENTS:
-      - CONTENTS:
-        - contents $(SPECIAL_VAL)
-
-  $(PUBLISH)-nav-left:
-    CONTENTS:
-      - box-begin $(SPECIAL_VAL) CONTENTS
-      - readtime
-      - spacer
-      - contents $(SPECIAL_VAL)
-      - box-end
 
 ################################################################################
 # End Of File
@@ -4342,6 +4340,8 @@ variables:
       - readtime
       - spacer
       - contents 3
+      - spacer
+      - tagslist [, ] "Tags:"
       - box-end
 
 ################################################################################
@@ -4376,49 +4376,49 @@ override define HEREDOC_CUSTOM_PUBLISH_SH =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(PUBLISH).build.sh
 ################################################################################
-### {{{3 Settings ----------------------
 
 set -e
 
 ########################################
-#### {{{4 Globals ----------------------
+### {{{3 Globals -----------------------
 
 COMPOSER_HOMEPAGE="$(COMPOSER_HOMEPAGE)"
+COMPOSER_TINYNAME="$(COMPOSER_TINYNAME)"
 CREATED_TAGLINE="$(CREATED_TAGLINE)"
 
 SPECIAL_VAL="$(SPECIAL_VAL)"
 DEPTH_MAX="$(DEPTH_MAX)"
 
+HTML_SPACE="$(HTML_SPACE)"
+HTML_BREAK="$(HTML_BREAK)"
+HTML_BREAK_LINE="$(HTML_BREAK_LINE)"
 MENU_SELF="$(MENU_SELF)"
 
-################################################################################
-### {{{3 Variables ---------------------
+PUBLISH_CMD_ROOT="$(PUBLISH_CMD_ROOT)"
+PUBLISH_CMD_BEG="$(PUBLISH_CMD_BEG)"
+PUBLISH_CMD_END="$(PUBLISH_CMD_END)"
+
+MARKER="$(MARKER)"
+DIVIDE="$(DIVIDE)"
 
 ########################################
-#### {{{4 Commands ---------------------
+### {{{3 Variables ---------------------
 
 SED="$${SED}"
 
 CAT="$${CAT}"
-DIRNAME="$${DIRNAME}"
 ECHO="$${ECHO}"
 EXPR="$${EXPR}"
-HEAD="$${HEAD}"
 PRINTF="$${PRINTF}"
-REALPATH="$${REALPATH}"
 TR="$${TR}"
 
 YQ_WRITE="$${YQ_WRITE}"
 COMPOSER_YML_DATA="$${COMPOSER_YML_DATA}"
 
-########################################
-#### {{{4 Filesystem -------------------
-
-CURDIR="$${CURDIR}"
 COMPOSER_ROOT="$${COMPOSER_ROOT}"
-COMPOSER_ROOT_PATH="$$($${REALPATH} $${CURDIR} $${COMPOSER_ROOT})"
-PUBLISH_LIBRARY_INDEX="$${PUBLISH_LIBRARY_INDEX}"
-PUBLISH_LIBRARY_INDEX_PATH="$$($${REALPATH} $${CURDIR} $$($${DIRNAME} $${PUBLISH_LIBRARY_INDEX}))"
+COMPOSER_ROOT_PATH="$${COMPOSER_ROOT_PATH}"
+COMPOSER_LIBRARY_PATH="$${COMPOSER_LIBRARY_PATH}"
+COMPOSER_LIBRARY_INDEX="$${COMPOSER_LIBRARY_INDEX}"
 
 ################################################################################
 ### {{{3 Functions (Config) ------------
@@ -4458,7 +4458,7 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 #### {{{4 $(PUBLISH)-error -------------
 
 function $(PUBLISH)-error {
-	$${ECHO} "$(MARKER) ERROR [$${0/#*\/}] ($${1}): $${@:2}\\n" >&2
+	$${ECHO} "$${MARKER} ERROR [$${0/#*\/}] ($${1}): $${@:2}\\n" >&2
 	return 0
 }
 
@@ -4468,18 +4468,18 @@ function $(PUBLISH)-error {
 # 1 c_logo
 
 function $(PUBLISH)-brand {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 <a class="navbar-brand" href="$$(COMPOSER_YML_DATA_VAL config.homepage)">
 _EOF_
 	BRND="$$(COMPOSER_YML_DATA_VAL config.brand)"
 	if [ -s "$${1}" ]; then
-		$${ECHO} "<img class=\"$(COMPOSER_TINYNAME)-logo align-top\" src=\"$${1}\"/>\\n"
+		$${ECHO} "<img class=\"$${COMPOSER_TINYNAME}-logo align-top\" src=\"$${1}\"/>\\n"
 		if [ -n "$${BRND}" ]; then
-			$${ECHO} "$(HTML_SPACE)\\n"
+			$${ECHO} "$${HTML_SPACE}\\n"
 		fi
 	else
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) logo -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} logo -->\\n"
 	fi
 	if [ -n "$${BRND}" ]; then
 		$${ECHO} "$${BRND}\\n"
@@ -4487,7 +4487,7 @@ _EOF_
 $${CAT} <<_EOF_
 </a>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4495,7 +4495,7 @@ _EOF_
 #### {{{4 $(PUBLISH)-search ------------
 
 function $(PUBLISH)-search {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	NAME="$$(COMPOSER_YML_DATA_VAL config.search_name)"
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
@@ -4503,15 +4503,15 @@ $${CAT} <<_EOF_
 <input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)"/>
 <button class="btn btn-sm" type="submit">$$(
 	$${ECHO} "$${NAME}" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )</button>
 $$(COMPOSER_YML_DATA_VAL config.search_form)
 </form>
 _EOF_
 	else
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) search -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} search -->\\n"
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4527,7 +4527,7 @@ _EOF_
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-top {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	$(PUBLISH)-nav-begin "top" "1" "$${1}"					|| return 1
 #>	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]"
 	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" 2>/dev/null \\
@@ -4535,7 +4535,7 @@ function $(PUBLISH)-nav-top {
 			$(PUBLISH)-nav-top-list "nav-top.[\"$${MENU}\"]"	|| return 1
 		done
 	$(PUBLISH)-nav-end "top" "1"						|| return 1
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4547,10 +4547,10 @@ function $(PUBLISH)-nav-top {
 # x $(PUBLISH)-nav-top-library 1	titles || authors || dates || tags
 
 function $(PUBLISH)-nav-top-list {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${1}[$${NUM}] -->\\n"
 #>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
 		if [ -z "$${FILE}" ]; then
@@ -4562,19 +4562,20 @@ function $(PUBLISH)-nav-top-list {
 			LINK="#"
 		fi
 		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
-			NUM="$$($${EXPR} $${NUM} + 1)"
-			continue
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
 			$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-nav-top-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
-			$${ECHO} "$(PUBLISH_CMD_BEG) $$(
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^contents|contents-menu|g"
-			) $(PUBLISH_CMD_END)\\n"
+			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
-			$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${FILE} -->\\n"
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
 		elif [ -n "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0]")" ]; then
 			LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0].[\"$${MENU_SELF}\"]")"
 			if [ -z "$${LINK}" ]; then
@@ -4585,7 +4586,7 @@ $${CAT} <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )" data-bs-toggle="dropdown">$${FILE}</a>
 <ul class="dropdown-menu">
 _EOF_
@@ -4593,7 +4594,7 @@ _EOF_
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a>
 <ul>
 _EOF_
@@ -4607,22 +4608,22 @@ _EOF_
 $${CAT} <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
 			else
 $${CAT} <<_EOF_
 <li><a class="dropdown-item" href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
 			fi
 		fi
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4632,24 +4633,24 @@ _EOF_
 # 1 titles || authors || dates || tags
 
 function $(PUBLISH)-nav-top-library {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	if [ ! -f "$${PUBLISH_LIBRARY_INDEX}" ]; then
-		$(PUBLISH)-error $${FUNCNAME} $${@} "$(MARKER) library index missing"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
+	if [ ! -f "$${COMPOSER_LIBRARY_INDEX}" ]; then
+		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
 	else
-		$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
+		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} \\
 			| $${SED} "/^null$$/d" \\
 			| while read -r FILE; do
 $${CAT} <<_EOF_
-<li><a class="dropdown-item" href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+<li><a class="dropdown-item" href="$${COMPOSER_LIBRARY_INDEX_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE} ($$(
-	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${PUBLISH_LIBRARY_INDEX} \\
+	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
 	| $${SED} "/^null$$/d" \\
 ))</a></li>
 _EOF_
 			done
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4660,42 +4661,41 @@ _EOF_
 # x $(PUBLISH)-nav-begin 2		true = brand
 # x $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 c_logo
 # x $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom.[*]
-# x $(PUBLISH)-nav-bottom-list 2	$${NBSP}
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 # x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-bottom {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$(PUBLISH)-nav-begin "bottom" "" ""								|| return 1
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
+	$(PUBLISH)-nav-begin "bottom" "" ""						|| return 1
 	COPY="$$(COMPOSER_YML_DATA_VAL config.copyright)"
 	if [ -n "$${COPY}" ]; then
 $${CAT} <<_EOF_
-<li class="$(COMPOSER_TINYNAME)-link nav-item me-3">$$(
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$$(
 	$${ECHO} "$${COPY}\\n" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )</li>
 _EOF_
 	fi
 $${CAT} <<_EOF_
-<li class="$(COMPOSER_TINYNAME)-link nav-item me-3">$(DIVIDE)$(HTML_SPACE)<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
+#><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="breadcrumb">
 $${CAT} <<_EOF_
-<li class="$(COMPOSER_TINYNAME)-link nav-item me-3"><ol class="breadcrumb">
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3"><ol class="breadcrumb">
+<li class="breadcrumb-item"></li>
 _EOF_
-		NBSP=
 #>		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]"
 		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" 2>/dev/null \\
 			| while read -r MENU; do
-				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]" "$${NBSP}"	|| return 1
-				NBSP="true"
+				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]"	|| return 1
 			done
 $${CAT} <<_EOF_
 </ol></li>
 _EOF_
 	fi
-	$(PUBLISH)-nav-end "bottom" ""									|| return 1
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$(PUBLISH)-nav-end "bottom" ""							|| return 1
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4703,29 +4703,47 @@ _EOF_
 #### {{{4 $(PUBLISH)-nav-bottom-list ---
 
 # 1 $(PUBLISH)-nav-bottom.[*]
-# 2 $${NBSP}
 
 function $(PUBLISH)-nav-bottom-list {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	NBSP="$${2}"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
-		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
-		LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"]")"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${1}[$${NUM}] -->\\n"
+#>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
+		if [ -z "$${FILE}" ]; then
+			FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
+		else
+			LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"]")"
+		fi
+		if [ -z "$${LINK}" ]; then
+			LINK="#"
+		fi
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^tagslist|tagslist-menu|g"
+			) $${PUBLISH_CMD_END}\\n"
+		else
 $${CAT} <<_EOF_
-<li class="breadcrumb-item">$$(
-	if [ -z "$${NBSP}" ]; then $${ECHO} "$(DIVIDE)$(HTML_SPACE)"; fi
-)<a href="$$(
+<li class="breadcrumb-item"><a href="$$(
 	$${ECHO} "$${LINK}" \\
-	| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a></li>
 _EOF_
-		NBSP="true"
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
+		fi
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4741,7 +4759,7 @@ function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side left "$${@}" || return 1; ret
 function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-$${1})" ]; then
 		$(PUBLISH)-column-begin "$${1}"						|| return 1
 #>		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]"
@@ -4751,9 +4769,9 @@ function $(PUBLISH)-nav-side {
 			done
 		$(PUBLISH)-column-end							|| return 1
 	else
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) $${1} -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${1} -->\\n"
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4767,38 +4785,44 @@ function $(PUBLISH)-nav-side {
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
 
 function $(PUBLISH)-nav-side-list {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${1}[$${NUM}] -->\\n"
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-nav-side-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
-			$${ECHO} "$(PUBLISH_CMD_BEG) $$(
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^contents|contents-list|g"
-			) $(PUBLISH_CMD_END)\\n"
+			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
-			$${ECHO} "\\n"
-			$${ECHO} "$(PUBLISH_CMD_BEG) $${FILE} $(PUBLISH_CMD_END)\\n"
-			$${ECHO} "\\n"
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^readtime|readtime-list|g"
+			) $${PUBLISH_CMD_END}\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^tagslist|tagslist-list|g"
+			) $${PUBLISH_CMD_END}\\n"
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
 				| $${SED} "s|^|  |g" \\
-				| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 			$${ECHO} "\\n"
 		else
 			$(PUBLISH)-select $${FILE} || return 1
 		fi
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4810,21 +4834,21 @@ function $(PUBLISH)-nav-side-list {
 function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; return 0; }
 
 function $(PUBLISH)-nav-side-library {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	if [ ! -f "$${PUBLISH_LIBRARY_INDEX}" ]; then
-		$(PUBLISH)-error $${FUNCNAME} $${@} "$(MARKER) library index missing"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
+	if [ ! -f "$${COMPOSER_LIBRARY_INDEX}" ]; then
+		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
 	else
 $${CAT} <<_EOF_
 <table class="table table-borderless align-top">
 _EOF_
-		$${YQ_WRITE} ".$${1} | keys | .[]" $${PUBLISH_LIBRARY_INDEX} \\
+		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} \\
 			| $${SED} "/^null$$/d" \\
 			| while read -r FILE; do
 $${CAT} <<_EOF_
-<tr><td><a href="$${PUBLISH_LIBRARY_INDEX_PATH}/$${1}-$$(
+<tr><td><a href="$${COMPOSER_LIBRARY_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE}</a></td><td class="text-end">$$(
-	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${PUBLISH_LIBRARY_INDEX} \\
+	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
 	| $${SED} "/^null$$/d" \\
 )</td></tr>
 _EOF_
@@ -4833,7 +4857,7 @@ $${CAT} <<_EOF_
 </table>
 _EOF_
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4845,7 +4869,7 @@ _EOF_
 # x $(PUBLISH)-info-data-list 1		$(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	if [ -n "$$(COMPOSER_YML_DATA_VAL info-$${1})" ]; then
 $${CAT} <<_EOF_
 <ul class="navbar-nav navbar-nav-scroll">
@@ -4859,7 +4883,7 @@ $${CAT} <<_EOF_
 </ul>
 _EOF_
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4869,29 +4893,44 @@ _EOF_
 # 1 $(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data-list {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${1}[$${NUM}] -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${1}[$${NUM}] -->\\n"
 $${CAT} <<_EOF_
-<li class="$(COMPOSER_TINYNAME)-link nav-item me-3">
-$$(
-	FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
-	if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
-		$${ECHO} "\\n"
-		$${ECHO} "$(PUBLISH_CMD_BEG) $${FILE} $(PUBLISH_CMD_END)\\n"
-		$${ECHO} "\\n"
-	else
-		$${ECHO} "$${FILE}\\n" \\
-		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
-	fi
-)
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">
+_EOF_
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
+			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^readtime|readtime-list|g"
+			) $${PUBLISH_CMD_END}\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^tagslist|tagslist-list|g"
+			) $${PUBLISH_CMD_END}\\n"
+		else
+			$${ECHO} "\\n"
+			$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^|  |g" \\
+				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+			$${ECHO} "\\n"
+		fi
+$${CAT} <<_EOF_
 </li>
 _EOF_
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${1}[$${NUM}] -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${1}[$${NUM}] -->\\n"
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4906,9 +4945,9 @@ _EOF_
 # 3 $(PUBLISH)-brand 1			c_logo
 
 function $(PUBLISH)-nav-begin {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
-<div class="$(COMPOSER_TINYNAME)-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}"></div>
+<div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}"></div>
 <nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols_break) fixed-$${1}">
 <div class="container-fluid">
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}">
@@ -4918,13 +4957,13 @@ _EOF_
 	if [ -n "$${2}" ]; then
 		$(PUBLISH)-brand "$${3}" || return 1
 	else
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) brand -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} brand -->\\n"
 	fi
 $${CAT} <<_EOF_
 <div class="navbar-collapse collapse" id="navbar-fixed-$${1}">
 <ul class="navbar-nav navbar-nav-scroll me-auto">
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4935,7 +4974,7 @@ _EOF_
 # 2 $(PUBLISH)-search			true = search
 
 function $(PUBLISH)-nav-end {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 </ul>
 _EOF_
@@ -4943,14 +4982,14 @@ _EOF_
 	if [ -n "$${2}" ]; then
 		$(PUBLISH)-search || return 1
 	else
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) skip $(MARKER) search -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} search -->\\n"
 	fi
 $${CAT} <<_EOF_
 </div>
 </div>
 </nav>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4958,7 +4997,7 @@ _EOF_
 #### {{{4 $(PUBLISH)-row-begin ---------
 
 function $(PUBLISH)-row-begin {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="container-fluid$$(
 	if [ -n "$$(COMPOSER_YML_DATA_VAL config.copy_protect)" ]; then
@@ -4967,7 +5006,7 @@ $${CAT} <<_EOF_
 )">
 <div class="d-flex flex-row flex-wrap">
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4975,12 +5014,12 @@ _EOF_
 #### {{{4 $(PUBLISH)-row-end -----------
 
 function $(PUBLISH)-row-end {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 </div>
 </div>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -4992,7 +5031,7 @@ _EOF_
 # @ options				$${@}
 
 function $(PUBLISH)-column-begin {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 <div class="d-flex flex-column$$(
 	if	[ "$${1}" = "left" ] ||
@@ -5021,7 +5060,7 @@ $${CAT} <<_EOF_
 		else	$${ECHO} " d-none"
 		fi
 		if [ -n "$$(COMPOSER_YML_DATA_VAL config.cols_sticky)" ]; then
-			$${ECHO} " $(COMPOSER_TINYNAME)-sticky"
+			$${ECHO} " $${COMPOSER_TINYNAME}-sticky"
 		fi
 	else
 		if [ -n "$${1}" ]; then
@@ -5030,7 +5069,7 @@ $${CAT} <<_EOF_
 	fi
 ) p-2">
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5038,11 +5077,11 @@ _EOF_
 #### {{{4 $(PUBLISH)-column-end --------
 
 function $(PUBLISH)-column-end {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 </div>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5061,12 +5100,12 @@ _EOF_
 # 3 $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-fold-begin {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	if [ "$${1}" = "group" ]; then
 $${CAT} <<_EOF_
 <div class="accordion" id="$${2}">
 _EOF_
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 		return 0
 	fi
 	HLVL="$${1}"
@@ -5085,7 +5124,7 @@ _EOF_
 		$(PUBLISH)-header $${1} $${@:4} || return 1
 	fi
 $${CAT} <<_EOF_
-<h$${HLVL} class="$(COMPOSER_TINYNAME)-header">
+<h$${HLVL} class="$${COMPOSER_TINYNAME}-header">
 $${@:4}
 </h$${HLVL}>
 </button>
@@ -5097,7 +5136,7 @@ $${@:4}
 )>
 <div class="accordion-body">
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5107,7 +5146,7 @@ _EOF_
 # 1 "group"
 
 function $(PUBLISH)-fold-end {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	if [ "$${1}" = "group" ]; then
 $${CAT} <<_EOF_
 </div>
@@ -5120,7 +5159,7 @@ $${CAT} <<_EOF_
 </div>
 _EOF_
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5134,7 +5173,7 @@ _EOF_
 # 2 $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-box-begin {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 	HLVL="$${1}"
 	if [ "$${HLVL}" = "$${SPECIAL_VAL}" ]; then
 		HLVL="$${DEPTH_MAX}"
@@ -5147,13 +5186,13 @@ _EOF_
 		$(PUBLISH)-header $${1} $${@:2} || return 1
 	fi
 $${CAT} <<_EOF_
-<h$${HLVL} class="$(COMPOSER_TINYNAME)-header">
+<h$${HLVL} class="$${COMPOSER_TINYNAME}-header">
 $${@:2}
 </h$${HLVL}>
 </div>
 <div class="card-body">
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5161,12 +5200,12 @@ _EOF_
 #### {{{4 $(PUBLISH)-box-end -----------
 
 function $(PUBLISH)-box-end {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 </div>
 </div>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5177,12 +5216,12 @@ _EOF_
 # 2 title				$${@:2} = $${2}++
 
 function $(PUBLISH)-header {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
 $${CAT} <<_EOF_
 <div id="$$($(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${@:2}")">
 </div>
 _EOF_
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5190,9 +5229,9 @@ _EOF_
 #### {{{4 $(PUBLISH)-spacer ------------
 
 function $(PUBLISH)-spacer {
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	$${ECHO} "$(HTML_BREAK)\\n"
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
+	$${ECHO} "$${HTML_BREAK}\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5219,7 +5258,7 @@ function $(PUBLISH)-file {
 	if [ -z "$${TITL}" ]; then
 		TITL="$$(
 			$${SED} -n "1,/^---$$/p" $${1} \\
-			| $(YQ_WRITE) ".pagetitle" 2>/dev/null \\
+			| $${YQ_WRITE} ".pagetitle" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)"
 	fi
@@ -5229,16 +5268,16 @@ function $(PUBLISH)-file {
 			$${ECHO} "pagetitle: \"$${TITL}\"\\n"
 			$${ECHO} "---\\n"
 		fi
-		$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) done $(MARKER) $${@} -->\\n"
+		$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} done $${MARKER} $${@} -->\\n"
 		return 0
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) begin $(MARKER) $${@} -->\\n"
-	BLCK="$$($${SED} -n "s|^$(PUBLISH_CMD_BEG) title-block (.+) $(PUBLISH_CMD_END)$$|\\1|gp" $${1})"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} begin $${MARKER} $${@} -->\\n"
+	BLCK="$$($${SED} -n "s|^$${PUBLISH_CMD_BEG} title-block (.+) $${PUBLISH_CMD_END}$$|\\1|gp" $${1})"
 	if [ -n "$${BLCK}" ]; then
-		$${ECHO} "<!-- title-block $(DIVIDE) begin $(MARKER) $${BLCK} -->\\n"
+		$${ECHO} "<!-- title-block $${DIVIDE} begin $${MARKER} $${BLCK} -->\\n"
 		$(PUBLISH)-$$($${ECHO} "$${BLCK}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
 			NAME="$$(
-				$${SED} "1,/^$(PUBLISH_CMD_BEG) title-block .+ $(PUBLISH_CMD_END)$$/p" $${1} \\
+				$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/p" $${1} \\
 				| $${YQ_WRITE} ".author" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
@@ -5253,7 +5292,7 @@ function $(PUBLISH)-file {
 				fi
 			fi
 			DATE="$$(
-				$${SED} "1,/^$(PUBLISH_CMD_BEG) title-block .+ $(PUBLISH_CMD_END)$$/p" $${1} \\
+				$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/p" $${1} \\
 				| $${YQ_WRITE} ".date" 2>/dev/null \\
 				| $${SED} "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \\
 				| $${SED} "/^null$$/d"
@@ -5262,26 +5301,26 @@ function $(PUBLISH)-file {
 				$${ECHO} "$${DATE}"
 			fi
 			if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then
-				$${ECHO} " $(DIVIDE) "
+				$${ECHO} " $${DIVIDE} "
 			fi
 			if [ -n "$${TITL}" ]; then
 				$${ECHO} "$${TITL}"
 			fi
 			if [ -n "$${NAME}" ]; then
 				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then
-					$${ECHO} " $(HTML_BREAK_LINE) "
+					$${ECHO} " $${HTML_BREAK_LINE} "
 				fi
 				$${ECHO} "$${NAME}"
 			fi
 		) || return 1
-		$${ECHO} "<!-- title-block $(DIVIDE) end $(MARKER) $${BLCK} -->\\n"
+		$${ECHO} "<!-- title-block $${DIVIDE} end $${MARKER} $${BLCK} -->\\n"
 	fi
 	$${ECHO} "\\n"
 	if [ -n "$${BLCK}" ]; then
-		$${SED} "1,/^$(PUBLISH_CMD_BEG) title-block .+ $(PUBLISH_CMD_END)$$/d" $${1}
+		$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/d" $${1}
 	else
 		if [ -n "$$(
-			$${HEAD} -n1 $${1} \\
+			$${SED} -n "1p" $${1} \\
 			| $${SED} -n "/^---$$/p"
 		)" ]; then
 			$${SED} "1,/^---$$/d" $${1}
@@ -5291,15 +5330,15 @@ function $(PUBLISH)-file {
 	fi \\
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
-#>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$(PUBLISH_CMD_BEG)(.+)$(PUBLISH_CMD_END)$$|\\1|g")"
-			BUILD_CMD="$${BUILD_CMD/#$(subst $(NULL) ,\ ,$(PUBLISH_CMD_BEG))}"
-			BUILD_CMD="$${BUILD_CMD/%$(subst $(NULL) ,\ ,$(PUBLISH_CMD_END))}"
-			if [ "$${FILE}" = "$(PUBLISH_CMD_BEG)$${BUILD_CMD}$(PUBLISH_CMD_END)" ]; then
+#>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$${PUBLISH_CMD_BEG}(.+)$${PUBLISH_CMD_END}$$|\\1|g")"
+			BUILD_CMD="$${BUILD_CMD/#$${PUBLISH_CMD_BEG}}"
+			BUILD_CMD="$${BUILD_CMD/%$${PUBLISH_CMD_END}}"
+			if [ "$${FILE}" = "$${PUBLISH_CMD_BEG}$${BUILD_CMD}$${PUBLISH_CMD_END}" ]; then
 				$(PUBLISH)-select $${BUILD_CMD} || return 1
 			else
 				$${PRINTF} "%s\\n" "$${FILE}"
 			fi \\
-			| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then return 1; fi
 		done \\
 		|| return 1
@@ -5307,7 +5346,7 @@ function $(PUBLISH)-file {
 	if [ -n "$${BLCK}" ]; then
 		$(PUBLISH)-$$($${ECHO} "$${BLCK}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-end|g") || return 1
 	fi
-	$${ECHO} "<!-- $${FUNCNAME} $(DIVIDE) end $(MARKER) $${@} -->\\n"
+	$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} end $${MARKER} $${@} -->\\n"
 	return 0
 }
 
@@ -5320,15 +5359,24 @@ function $(PUBLISH)-file {
 function $(PUBLISH)-select {
 	ACTION="$$(
 		$${ECHO} "$${1}\\n" \\
-		| $${SED} "s|$(PUBLISH_CMD_ROOT)|$${COMPOSER_ROOT_PATH}|g"
+		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 	)"; shift
-	if	[ "$${ACTION}" = "contents" ]; then
-		$${ECHO} "$(PUBLISH_CMD_BEG) $${ACTION}-list $${@} $(PUBLISH_CMD_END)\\n"
-	elif	[ "$${ACTION}" = "contents-menu" ] ||
+	if
+		[ "$${ACTION}" = "contents" ] ||
+		[ "$${ACTION}" = "readtime" ] ||
+		[ "$${ACTION}" = "tagslist" ];
+	then
+		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list $${@} $${PUBLISH_CMD_END}\\n"
+	elif
+		[ "$${ACTION}" = "contents-menu" ] ||
 		[ "$${ACTION}" = "contents-list" ] ||
 		[ "$${ACTION}" = "contents-done" ] ||
-		[ "$${ACTION}" = "readtime" ]; then
-		$${ECHO} "$(PUBLISH_CMD_BEG) $${ACTION} $${@} $(PUBLISH_CMD_END)\\n"
+		[ "$${ACTION}" = "readtime-menu" ] ||
+		[ "$${ACTION}" = "readtime-list" ] ||
+		[ "$${ACTION}" = "tagslist-menu" ] ||
+		[ "$${ACTION}" = "tagslist-list" ];
+	then
+		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION} $${@} $${PUBLISH_CMD_END}\\n"
 	elif [ -f "$${ACTION}" ]; then
 		if ! $(PUBLISH)-file $${ACTION} $${@}; then
 			$(PUBLISH)-error file $${ACTION} $${@}
@@ -8878,39 +8926,44 @@ override define $(PUBLISH)-$(TARGETS) =
 endef
 
 ########################################
-#### {{{4 $(PUBLISH)-$(TARGETS)-contents
+#### {{{4 $(PUBLISH)-$(TARGETS)-helpers
 
-override define $(PUBLISH)-$(TARGETS)-contents =
+override define $(PUBLISH)-$(TARGETS)-helpers =
 	MENU="$$( \
-		$(SED) -n "s|^$(PUBLISH_CMD_BEG) (contents-menu.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
+		$(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(2)-menu.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
 		| $(HEAD) -n1 \
 	)"; \
 	LIST="$$( \
-		$(SED) -n "s|^$(PUBLISH_CMD_BEG) (contents-list.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
+		$(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(2)-list.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
 		| $(HEAD) -n1 \
 	)"; \
 	if	[ -n "$${MENU}" ] || \
 		[ -n "$${LIST}" ]; \
 	then \
-		MENU="$$($(ECHO) "$${MENU}" | $(SED) "s|^contents-menu[[:space:]]*||g")"; \
-		LIST="$$($(ECHO) "$${LIST}" | $(SED) "s|^contents-list[[:space:]]*||g")"; \
-		$(call $(HEADERS)-note,$(1),contents,$(PUBLISH)); \
+		MENU="$$($(ECHO) "$${MENU}" | $(SED) "s|^$(2)-menu[[:space:]]*||g")"; \
+		LIST="$$($(ECHO) "$${LIST}" | $(SED) "s|^$(2)-list[[:space:]]*||g")"; \
+		$(call $(HEADERS)-note,$(1),$(2),$(PUBLISH)); \
 		$(ECHO) "$(_E)"; \
-		$(call $(PUBLISH)-$(TARGETS)-contents-do,$(1),$${MENU},$${LIST}); \
-		$(SED) -i "/^$(PUBLISH_CMD_BEG) contents-menu.* $(PUBLISH_CMD_END)$$/r $(1).contents-menu" $(1); \
-		$(SED) -i "/^$(PUBLISH_CMD_BEG) contents-list.* $(PUBLISH_CMD_END)$$/r $(1).contents-list" $(1); \
+		$(ECHO) "\n" >$(1).$(2)-menu; \
+		$(ECHO) "\n" >$(1).$(2)-list; \
+		$(call $(PUBLISH)-$(TARGETS)-$(2),$(1)); \
+		$(ECHO) "\n" >>$(1).$(2)-menu; \
+		$(ECHO) "\n" >>$(1).$(2)-list; \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(2)-menu.* $(PUBLISH_CMD_END)$$/r $(1).$(2)-menu" $(1); \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(2)-list.* $(PUBLISH_CMD_END)$$/r $(1).$(2)-list" $(1); \
 		if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
 			$(ECHO) "$(_S)"; \
-			$(RM) $(1).contents-menu $($(DEBUGIT)-output); \
-			$(RM) $(1).contents-list $($(DEBUGIT)-output); \
+			$(RM) $(1).$(2)-menu $($(DEBUGIT)-output); \
+			$(RM) $(1).$(2)-list $($(DEBUGIT)-output); \
 		fi; \
 		$(ECHO) "$(_D)"; \
 	fi
 endef
 
-override define $(PUBLISH)-$(TARGETS)-contents-do =
-	$(ECHO) "\n" >$(1).contents-menu; \
-	$(ECHO) "\n" >$(1).contents-list; \
+########################################
+#### {{{4 $(PUBLISH)-$(TARGETS)-contents
+
+override define $(PUBLISH)-$(TARGETS)-contents =
 	FILE="$$( \
 		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
 		| $(YQ_WRITE) \
@@ -8921,13 +8974,13 @@ override define $(PUBLISH)-$(TARGETS)-contents-do =
 			2>/dev/null \
 		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
-	if [ -z "$(2)" ]; then					MENU_MAX="$(DEPTH_MAX)"; \
-		elif [ "$(2)" = "$(SPECIAL_VAL)" ]; then	MENU_MAX="$(DEPTH_MAX)"; \
-		else						MENU_MAX="$(2)"; \
+	if [ -z "$${MENU}" ]; then				MENU_MAX="$(DEPTH_MAX)"; \
+		elif [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then	MENU_MAX="$(DEPTH_MAX)"; \
+		else						MENU_MAX="$${MENU}"; \
 		fi; \
-	if [ -z "$(3)" ]; then					LIST_MAX="$(DEPTH_MAX)"; \
-		elif [ "$(3)" = "$(SPECIAL_VAL)" ]; then	LIST_MAX="$(DEPTH_MAX)"; \
-		else						LIST_MAX="$(3)"; \
+	if [ -z "$${LIST}" ]; then				LIST_MAX="$(DEPTH_MAX)"; \
+		elif [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then	LIST_MAX="$(DEPTH_MAX)"; \
+		else						LIST_MAX="$${LIST}"; \
 		fi; \
 	CNT="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) "length" 2>/dev/null)"; \
 	NUM="0"; while [ "$${NUM}" -lt "$${CNT}" ]; do \
@@ -8940,8 +8993,8 @@ override define $(PUBLISH)-$(TARGETS)-contents-do =
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
-			if [ "$(2)" = "$(SPECIAL_VAL)" ]; then MENU_HDR=; fi; \
-			if [ "$(3)" = "$(SPECIAL_VAL)" ]; then LIST_HDR=; fi; \
+			if [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then MENU_HDR=; fi; \
+			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then LIST_HDR=; fi; \
 			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1][0]" 2>/dev/null)"; \
 			LEN="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][2] | length" 2>/dev/null)"; \
 			TXT=; STR="0"; while [ "$${STR}" -lt "$${LEN}" ]; do \
@@ -8990,7 +9043,7 @@ override define $(PUBLISH)-$(TARGETS)-contents-do =
 			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-list; \
 			fi; \
 			LIST_TXT="$${TXT}"; \
-			if [ "$(3)" = "$(SPECIAL_VAL)" ]; then \
+			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then \
 				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
 			fi; \
 			$(ECHO) " [$${LIST_TXT}](#$${LNK})"					>>$(1).contents-list; \
@@ -9002,8 +9055,7 @@ override define $(PUBLISH)-$(TARGETS)-contents-do =
 		$(ECHO) " $(DIVIDE) $${TXT}\n" $($(DEBUGIT)-output); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done; \
-	$(ECHO) "\n$(PUBLISH_CMD_BEG) contents-done $(PUBLISH_CMD_END)\n" >>$(1).contents-menu; \
-	$(ECHO) "\n" >>$(1).contents-list
+	$(ECHO) "\n$(PUBLISH_CMD_BEG) contents-done $(PUBLISH_CMD_END)\n" >>$(1).contents-menu
 endef
 
 override define $(PUBLISH)-$(TARGETS)-contents-done =
@@ -9016,25 +9068,8 @@ endef
 #### {{{4 $(PUBLISH)-$(TARGETS)-readtime
 
 override define $(PUBLISH)-$(TARGETS)-readtime =
-	if [ -n "$$( \
-		$(SED) -n "s|^$(PUBLISH_CMD_BEG) (readtime.*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) \
-		| $(HEAD) -n1 \
-	)" ]; then \
-		$(call $(HEADERS)-note,$(1),readtime,$(PUBLISH)); \
-		$(ECHO) "$(_E)"; \
-		$(call $(PUBLISH)-$(TARGETS)-readtime-do,$(1),$(if $(c_list_plus),$(c_list_plus),$(c_list))); \
-		$(SED) -i "/^$(PUBLISH_CMD_BEG) readtime.* $(PUBLISH_CMD_END)$$/r $(1).readtime" $(1); \
-		if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
-			$(ECHO) "$(_S)"; \
-			$(RM) $(1).readtime $($(DEBUGIT)-output); \
-		fi; \
-		$(ECHO) "$(_D)"; \
-	fi
-endef
-
-override define $(PUBLISH)-$(TARGETS)-readtime-do =
 	WORD="$$( \
-		$(PUBLISH_SH_RUN) $(1) \
+		$(PUBLISH_SH_RUN) $(if $(c_list_plus),$(c_list_plus),$(c_list)) \
 		| $(PANDOC_MD_TO_TEXT) \
 		| $(WC_WORD) \
 	)"; \
@@ -9046,15 +9081,43 @@ override define $(PUBLISH)-$(TARGETS)-readtime-do =
 		| $(SED) \
 			-e "s|@W|$${WORD}|g" \
 			-e "s|@T|$${TIME}|g" \
-		>$(1).readtime
+		>>$(1).readtime-list
+endef
+
+########################################
+#### {{{4 $(PUBLISH)-$(TARGETS)-tagslist
+
+override define $(PUBLISH)-$(TARGETS)-tagslist =
+	LIST_SEP="$$($(ECHO) "$${LIST}" | $(SED) -n "s|^[[]([^]]+)[]][[:space:]]*(.*)$$|\1|gp")"; \
+	LIST_HDR="$$($(ECHO) "$${LIST}" | $(SED)    "s|^[[]([^]]+)[]][[:space:]]*(.*)$$|\2|g")"; \
+	if [ -z "$${LIST_SEP}" ]; then \
+		LIST_SEP=" "; \
+	fi; \
+	LIST_HDR="$$( \
+		$(ECHO) "$${LIST_HDR}" \
+		| $(SED) \
+			-e "s|^[\"]||g" \
+			-e "s|[\"]$$||g" \
+	)"; \
+	$(ECHO) "$${LIST_HDR} " >>$(1).tagslist-list; \
+	$(YQ_READ) ".tags | .[]" $(if $(c_list_plus),$(c_list_plus),$(c_list)) \
+		| $(SED) \
+			-e "s|^[\"]*||g" \
+			-e "s|[\"]*$$||g" \
+		| while read -r FILE; do \
+			$(ECHO) "<li class=\"breadcrumb-item\"><a href=\"$(COMPOSER_LIBRARY_PATH)/tags-$$( \
+					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
+				).$(EXTN_HTML)\">$${FILE}</a></li>\n" >>$(1).tagslist-menu; \
+			$(ECHO) "$${LIST_SEP}[$${FILE}]($(COMPOSER_LIBRARY_PATH)/tags-$$( \
+					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
+				).$(EXTN_HTML))" >>$(1).tagslist-list; \
+		done; \
+	$(ECHO) "\n" >>$(1).tagslist-list; \
+	$(SED) -i "s|^($${LIST_HDR} )$${LIST_SEP}|\1|g" $(1).tagslist-list
 endef
 
 ########################################
 ### {{{3 $(PUBLISH)-cache --------------
-
-ifneq ($(c_site),)
-$(filter %.$(EXTN_HTML),$(COMPOSER_TARGETS)): $($(PUBLISH)-cache)
-endif
 
 #>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
@@ -9099,18 +9162,13 @@ ifneq ($(and \
 		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
 	) \
 ),)
-
-$(c_base).$(EXTN_HTML) \
+$(c_base).$(EXTENSION) \
 $(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
 $(DOITALL)-$(SUBDIRS) $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)) \
-	: \
-	$($(PUBLISH)-library)
-
 $($(PUBLISH)-cache) \
 $($(PUBLISH)-caches) \
 	: \
 	$($(PUBLISH)-library)
-
 endif
 
 .PHONY: $(PUBLISH)-library
@@ -9425,10 +9483,8 @@ override define $(PUBLISH)-library-digest-list =
 				OUTFILE="$(COMPOSER_LIBRARY)/$${TYPE}-$$( \
 						$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
 					)$(COMPOSER_EXT_DEFAULT)"; \
-				if [ -n "$(1)" ]; then \
-					if [ "$(1)" = "$${OUTFILE}.$(COMPOSER_BASENAME)" ]; then \
-						$(ECHO) "$${TYPE}$(TOKEN)$${FILE}\n"; \
-					fi; \
+				if [ "$(1)" = "$${OUTFILE}.$(COMPOSER_BASENAME)" ]; then \
+					$(ECHO) "$${TYPE}$(TOKEN)$${FILE}\n"; \
 				else \
 					$(ECHO) "$${OUTFILE}\n"; \
 				fi; \
@@ -9811,9 +9867,9 @@ endif
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
 		$(ECHO) "---\n"										>$(FILE); \
 		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"			>>$(FILE); \
-		$(ECHO) "author: [$(COMPOSER_COMPOSER), $(TESTING)-a, $(TESTING)-b, $(TESTING)-c]\n"	>>$(FILE); \
+		$(ECHO) "author: [$(COMPOSER_COMPOSER), \"Author #1\", \"Author #2\", \"Author #3\"]\n"	>>$(FILE); \
 		$(ECHO) "date: $(MARK)\n"								>>$(FILE); \
-		$(ECHO) "tags: [$(TESTING)-$(NUM), $(TESTING)-1, $(TESTING)-2, $(TESTING)-3]\n"		>>$(FILE); \
+		$(ECHO) "tags: [\"Tag #$(NUM)\", \"Tag #1\", \"Tag #2\", \"Tag #3\"]\n"			>>$(FILE); \
 		$(ECHO) "---\n"										>>$(FILE); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)\n"	>>$(FILE); \
 		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)	>>$(FILE); \
@@ -9972,48 +10028,28 @@ endif
 
 #WORKING:NOW:NOW
 #	add
-#		add tags list to bottom of pages/digests
+#		need a title-block test, somewhere in there...
 #		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
-#			title versus pagetitle... do need to test both...
-#				pagetitle does not alwasy produce a header, such as with revealjs...
+#		title versus pagetitle... do need to test both...
+#			pagetitle does not alwasy produce a header, such as with revealjs...
 #		remove command line short-aliases?  (except for J= V= C= , etc.)
 #		do $(call $(HEADERS)-path-root,???) on c_logo in $(CUSTOM_PUBLISH_SH) ... others?
 #			also need to do it in $(COMPOSER_YML) output in $(OUT_README)
 #	site
-#		sadly, remove the right-hand bar from README.site.html, and do "contents 6"
-#			it was super fun, but it is not really a usable or gentle introduction, so... y'know... user first...
 #		force "$(LIBRARY_FOLDER)" "contents" menus to be "$(SPECIAL_VAL)", somehow...
 #			this includes the include file...  ha!  see what i did, there...?
 #				probably can't, since it is main page... index.html with only/all sub-folders best-practice?
 #			need a different demonstration for the $(LIBRARY_FOLDER).yml file...  maybe just keep the "contents" overrite?
-#		add use_cache option, to do html includes instead of --standalone --self-contained
-#			<div w3-include-html=" ... "></div>
-#			pandoc: --self-contained -> data-external="1"
-#			how to handle the $(PUBLISH)-cache dependency when this is enabled?
-#		add fold-item functionality to fold-beg/end
-#			require a flag to fold-beg to enable this
-#				simple fold-beg as they are should continue to work as they do, automatically triggering fold-item in the background
-#			convert digests to use fold-item natively
-#			value of $(SPECIAL_VAL) for digest_expanded sets only one open at a time
 #		ability to remove author name(s) from digest(s)
-#		add banner and footer...?
-#			yes, to the center column
-#			this can be for all kinds of things... add an example of box-beg/end to site-template
-#		place "contents" and "readtime" in all three locations...
-#		some type of previous/next page kind of thing, for post-to-post browsing...
-#			https://getbootstrap.com/docs/5.2/components/pagination
-#			nav-tree?
-#				https://github.com/akalp/bs5-nav-tree
-#				https://github.com/nhmvienna/bs5treeview
-#				https://www.w3schools.com/howto/howto_js_treeview.asp
-#			how would that even work...?
+#		templatize copyright/search, somehow...?
+#			maybe a shorthand for images...?
+#			basically, try to replace as much html as possible...
+#		remove composer comment commands from digests?
+#			things like folds/boxes/tagslist might pass-through, which would be ugly...
+#			any drawbacks or backfires...?
 #	build.sh
 #		are "file path"s getting truncated?
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
-#		which are default "#" links/hashes?  make them so, and remove the need from the configuration files?
-#	empty configuration versus hard-defaults
-#		they should match, and $(NOTHING) and pandoc directories should not have _library
-#		incorporate the COMPOSER_DEPENDS and other testing happening here, now
 
 ########################################
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)
@@ -10025,8 +10061,9 @@ override COMPOSER_IGNORES := $($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOS
 
 .PHONY: themes-$(CLEANER)
 themes-$(CLEANER):
-	@$$(foreach FILE,$$(wildcard *.$(EXTN_HTML)),\\
-		$$(call $(COMPOSER_TINYNAME)-rm,$$(FILE)); \\
+	@$$(foreach FILE,$$(filter %.done,$$(COMPOSER_TARGETS)),\\
+		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_HTML),$$(FILE))); \\
+		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_PRES),$$(FILE))); \\
 		$$(call NEWLINE) \\
 	)
 	@$$(ECHO) ""
@@ -10193,6 +10230,10 @@ endef
 override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 pagetitle: Main Page
+tags:
+  - "Tag #0"
+  - "Tag #1"
+  - "Tag #2"
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 
@@ -10370,6 +10411,12 @@ $(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
+## Tags List
+
+`$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_CMD_END)
+
 #WORKING:NOW introduction
 # add $(PUBLISH_CMD_ROOT) to all links
 # add date, pagetitle (not title) and no author to config/index.html
@@ -10466,6 +10513,10 @@ override define $(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS) =
 ---
 pagetitle: Configuration Testing
 date: 2040-01-01
+tags:
+  - "Tag #0"
+  - "Tag #1"
+  - "Tag #2"
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_CMD_END)
 
@@ -10866,8 +10917,9 @@ ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(call $(PUBLISH)-$(TARGETS),$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
-	@$(call $(PUBLISH)-$(TARGETS)-contents,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
-	@$(call $(PUBLISH)-$(TARGETS)-readtime,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
+	@$(call $(PUBLISH)-$(TARGETS)-helpers,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT),contents)
+	@$(call $(PUBLISH)-$(TARGETS)-helpers,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT),readtime)
+	@$(call $(PUBLISH)-$(TARGETS)-helpers,$(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT),tagslist)
 	@$(eval override c_list		:= $(if $(c_list_plus),$(c_list_plus),$(c_list)))
 	@$(eval override c_list_plus	:= $(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
 #>ifneq ($(COMPOSER_DEBUGIT),)
