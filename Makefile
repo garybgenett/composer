@@ -7905,7 +7905,7 @@ $(TESTING)-$(TARGETS)-init:
 $(TESTING)-$(TARGETS)-done:
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(eval COUNT := 64) \
-		$(call $(TESTING)-count,$(COUNT),$(notdir $(call $(TESTING)-pwd))\/$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
+		$(call $(TESTING)-count,$(COUNT), $(subst /,[/],$(call $(TESTING)-pwd))[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
 		$(call NEWLINE) \
 	)
 #> update: ERROR: TYPE_LPDF
@@ -8190,7 +8190,7 @@ $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_LOG)
 	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_EXT)
 	$(call $(TESTING)-find, $(subst .,[.],$(COMPOSER_LOG_DEFAULT))$$)
-	$(call $(TESTING)-find, $(patsubst .%,%,$(COMPOSER_LOG_DEFAULT))$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$)
+	$(call $(TESTING)-find, $(patsubst .%,%,$(COMPOSER_LOG_DEFAULT))$(subst .,[.],$(COMPOSER_EXT_DEFAULT))[*]?$$)
 
 ########################################
 ### {{{3 $(TESTING)-CSS ----------------
@@ -9096,10 +9096,7 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			-e "s|[\"]$$||g" \
 	)"; \
 	$(ECHO) "$${LIST_HDR} " >>$(1).tagslist-list; \
-	$(YQ_READ) ".tags | .[]" $(if $(c_list_plus),$(c_list_plus),$(c_list)) 2>/dev/null \
-		| $(SED) \
-			-e "s|^[\"]||g" \
-			-e "s|[\"]$$||g" \
+	$(YQ_WRITE) ".tags | .[]" $(if $(c_list_plus),$(c_list_plus),$(c_list)) 2>/dev/null \
 		| while read -r FILE; do \
 			$(ECHO) "<li class=\"breadcrumb-item\"><a href=\"$(COMPOSER_LIBRARY_PATH)/tags-$$( \
 					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
