@@ -3918,7 +3918,7 @@ $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D)
       - $(_C)spacer$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
-      - $(_C)tagslist$(_D) $(_N)[$(_M), $(_N)]$(_M) "Tags:"$(_D)
+      - $(_C)tagslist$(_D) $(_N)"$(_M), $(_N)"$(_M) $(_N)"$(_M)*Tags:\\ $(_N)"$(_M) $(_N)"$(_M)*$(_N)"$(_D)
       - $(_C)box-end$(_D)
     $(_M)END$(_D):
 
@@ -4292,7 +4292,7 @@ variables:
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
-      - tagslist [ / ]
+      - tagslist " / " "*" "*"
       - spacer
       - readtime
       - box-end
@@ -4352,7 +4352,7 @@ variables:
       - spacer
       - contents 3
       - spacer
-      - tagslist [, ] "Tags:"
+      - tagslist ", " "*Tags:\\ " "*"
       - box-end
 
 ################################################################################
@@ -9156,18 +9156,13 @@ endef
 #### {{{4 $(PUBLISH)-$(TARGETS)-tagslist
 
 override define $(PUBLISH)-$(TARGETS)-tagslist =
-	LIST_SEP="$$($(ECHO) "$${LIST}" | $(SED) -n "s|^[[]([^]]+)[]][[:space:]]*(.*)$$|\1|gp")"; \
-	LIST_HDR="$$($(ECHO) "$${LIST}" | $(SED)    "s|^[[]([^]]+)[]][[:space:]]*(.*)$$|\2|g")"; \
+	LIST_SEP="$$($(ECHO) "$${LIST}" | $(SED) -n "s|^[\"]([^\"]+)[\"]([[:space:]]+[\"]([^\"]+)[\"])?([[:space:]]+[\"]([^\"]+)[\"])?$$|\1|gp")"; \
+	LIST_BEG="$$($(ECHO) "$${LIST}" | $(SED)    "s|^[\"]([^\"]+)[\"]([[:space:]]+[\"]([^\"]+)[\"])?([[:space:]]+[\"]([^\"]+)[\"])?$$|\3|g")"; \
+	LIST_END="$$($(ECHO) "$${LIST}" | $(SED)    "s|^[\"]([^\"]+)[\"]([[:space:]]+[\"]([^\"]+)[\"])?([[:space:]]+[\"]([^\"]+)[\"])?$$|\5|g")"; \
 	if [ -z "$${LIST_SEP}" ]; then \
 		LIST_SEP=" "; \
 	fi; \
-	LIST_HDR="$$( \
-		$(ECHO) "$${LIST_HDR}" \
-		| $(SED) \
-			-e "s|^[\"]||g" \
-			-e "s|[\"]$$||g" \
-	)"; \
-	$(ECHO) "$${LIST_HDR} " >>$(1).tagslist-list; \
+	$(ECHO) "$${LIST_BEG}" >>$(1).tagslist-list; \
 	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
 		$(SED) -n "1,/^---$$/p" $${FILE} \
 			>$(1).tagslist_$$( \
@@ -9188,8 +9183,11 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
 				).$(EXTN_HTML))" >>$(1).tagslist-list; \
 		done; \
-	$(ECHO) "\n" >>$(1).tagslist-list; \
-	$(SED) -i "s|^($${LIST_HDR} )$${LIST_SEP}|\1|g" $(1).tagslist-list; \
+	$(ECHO) "$${LIST_END}\n" >>$(1).tagslist-list; \
+	$(SED) -i "s|^($$( \
+			$(ECHO) "$${LIST_BEG}" \
+			| $(SED) "s|([+*])|\\\\\1|g" \
+		))$${LIST_SEP}|\1|g" $(1).tagslist-list; \
 	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
 		$(ECHO) "$(_S)"; \
 		$(RM) $(1).tagslist_* $($(DEBUGIT)-output); \
