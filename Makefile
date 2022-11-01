@@ -8594,9 +8594,18 @@ endif
 		fi; \
 		$(call NEWLINE) \
 	)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$($(DOSETUP)-dir)/$(MAKEFILE),1)
-	@$(CAT) $(CURDIR)/Makefile \
-		| $(SED) "/^$$/d"
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$($(DOSETUP)-dir)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP)))); \
+		$(ECHO) "$(_M)"; \
+		$(CAT) $(CURDIR)/Makefile | $(SED) "/^$$/d"; \
+		$(ECHO) "$(_D)"
+	@if [ ! -e "$(CURDIR)/.gitignore" ]; then \
+		$(ECHO) "$(_E)"; \
+		$(CP) $($(DOSETUP)-dir)/.gitignore $(CURDIR)/.gitignore; \
+		$(ECHO) "$(_D)"; \
+	fi; \
+		$(ECHO) "$(_C)"; \
+		$(DIFF) $($(DOSETUP)-dir)/.gitignore $(CURDIR)/.gitignore 2>/dev/null || $(TRUE); \
+		$(ECHO) "$(_D)"
 	@$(LS) $($(DOSETUP)-dir)
 
 ########################################
