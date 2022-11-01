@@ -154,7 +154,7 @@ override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
 override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
-override COMPOSER_TAGLINE		:= Happy Making!
+override COMPOSER_TAGLINE		:= *Happy Making!*
 
 override COPYRIGHT_FULL			:= Copyright (c) 2014, 2015, 2022, $(COMPOSER_COMPOSER)
 override COPYRIGHT_SHORT		:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
@@ -2056,7 +2056,7 @@ $(HELPOUT)-FOOTER:
 	@$(ENDOLINE)
 	@$(LINERULE)
 	@$(ENDOLINE)
-	@$(PRINT) "*$(_H)$(COMPOSER_TAGLINE)$(_D)*"
+	@$(PRINT) "$(_H)$(COMPOSER_TAGLINE)$(_D)"
 
 ########################################
 
@@ -2808,6 +2808,14 @@ endef
 #	file targets can not depend on non-file targets...?
 #		MANUAL.pdf: pre-process README.md LICENSE.md
 #	infinite "include" loops are not detected...
+#	document:
+#		COMPOSER_DIR
+#		COMPOSER_ROOT
+#		COMPOSER_TMP
+#		COMPOSER_LIBRARY
+#		COMPOSER_PKG
+#		COMPOSER_ART
+#		PANDOC_DATA
 
 #WORK
 #	random note/thought
@@ -4155,7 +4163,7 @@ variables:
       - contents $(DEPTH_MAX)
       - box-end
     TAGLINE:
-      - $(MENU_SELF): $(COMPOSER_TAGLINE)
+      - $(MENU_SELF): "$(COMPOSER_TAGLINE)"
 
 ########################################
   $(PUBLISH)-nav-right:
