@@ -7075,8 +7075,8 @@ override COMPOSER_DEBUGIT		:= $(SPECIAL_VAL)
 override COMPOSER_DEBUGIT_ALL		:= $(SPECIAL_VAL)
 endif
 
-override $(HEADERS)-path-dir		= $(patsubst $(abspath $(dir $(COMPOSER_DIR)))%,...%,$(1))
-override $(HEADERS)-path-root		= $(patsubst $(abspath $(dir $(COMPOSER_ROOT)))%,...%,$(1))
+override $(HEADERS)-path-dir		= $(subst $(abspath $(dir $(COMPOSER_DIR))),...,$(1))
+override $(HEADERS)-path-root		= $(subst $(abspath $(dir $(COMPOSER_ROOT))),...,$(1))
 
 .PHONY: $(HEADERS)
 $(HEADERS): .set_title-$(HEADERS)
@@ -7115,13 +7115,13 @@ ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(LINERULE)
 	@$(call $(COMPOSER_TINYNAME)-note,$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-mkdir,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE))
-	@$(TOUCH) .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE)
-	@$(call $(COMPOSER_TINYNAME)-makefile,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
-	@$(call $(COMPOSER_TINYNAME)-make,COMPOSER_DEBUGIT= --directory .$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE) $(NOTHING))
-	@$(call $(COMPOSER_TINYNAME)-cp,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-mv,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-rm,.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE),1)
+	@$(call $(COMPOSER_TINYNAME)-mkdir				,$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE))
+	@$(TOUCH)							$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE)
+	@$(call $(COMPOSER_TINYNAME)-makefile				,$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
+	@$(call $(COMPOSER_TINYNAME)-make,COMPOSER_DEBUGIT= --directory $(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE) $(NOTHING))
+	@$(call $(COMPOSER_TINYNAME)-cp					,$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-mv					,$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-rm					,$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE),1)
 endif
 endif
 
@@ -7212,19 +7212,19 @@ override define $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS =
 endef
 
 override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-path-root,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(2)"
+	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-path-root,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(call $(HEADERS)-path-root,$(2))"
 endef
 override define $(HEADERS)-dir =
-	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
+	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
 endef
 override define $(HEADERS)-file =
-	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
 endef
 override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(2))"
+	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(call $(HEADERS)-path-root,$(2)))"
 endef
 override define $(HEADERS)-rm =
-	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(2))"
+	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
 endef
 
 ################################################################################
@@ -9304,7 +9304,7 @@ endef
 $($(PUBLISH)-library-metadata): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-metadata):
 #>	@$(call $(HEADERS)-note,$(abspath $(dir $(COMPOSER_LIBRARY))),$(_H)$(notdir $(COMPOSER_LIBRARY)),$(PUBLISH)-library)
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(call $(HEADERS)-path-root,$(COMPOSER_LIBRARY)),$(PUBLISH)-library)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-library)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_F)"
