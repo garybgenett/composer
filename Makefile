@@ -815,7 +815,8 @@ export LC_COLLATE			:= C
 #> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
-override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find) -L
+override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
+override FIND_ALL			:= $(call COMPOSER_FIND,$(PATH_LIST),find) -L
 #WORKING no longer needed?  $(TESTING)-speed -> $(TESTING)-stress, and add $(CLEANER)/$(DOITALL) for a vary large directory of files
 override XARGS				:= $(call COMPOSER_FIND,$(PATH_LIST),xargs) --max-procs=$(MAKEJOBS) -I {}
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
@@ -1595,6 +1596,7 @@ override CHECKIT			:= check
 override CONFIGS			:= config
 override TARGETS			:= targets
 
+override DOSETUP			:= _init
 override CONVICT			:= _commit
 override DISTRIB			:= _release
 override UPGRADE			:= _update
@@ -1628,6 +1630,7 @@ override COMPOSER_RESERVED := \
 	$(CONFIGS) \
 	$(TARGETS) \
 	\
+	$(DOSETUP) \
 	$(CONVICT) \
 	$(DISTRIB) \
 	$(UPGRADE) \
@@ -2212,6 +2215,8 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)]"			"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(DOITALL)]"		"Complete $(_C)[$(CONFIGS)]$(_D), including environment variables"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
+	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"#WORK"
+	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"#WORK"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)"'$$EDITOR'"$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Full upgrade to current release, repository preparation"
@@ -3444,6 +3449,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONF
     $(_C)[COMPOSER_TARGETS]$(_D), and $(_C)[COMPOSER_SUBDIRS]$(_D) is printed by $(_C)[$(TARGETS)]$(_D).
   * Together, $(_C)[$(CONFIGS)]$(_D) and $(_C)[$(TARGETS)]$(_D) reveal the entire internal state of
     $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DOSETUP) / $(DOSETUP)-$(DOFORCE))
+
+#WORKING
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT) / $(CONVICT)-$(DOITALL))
 
@@ -7779,8 +7788,8 @@ $(TESTING)-speed-init:
 
 .PHONY: $(TESTING)-speed-done
 $(TESTING)-speed-done:
-	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type d -print \) | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type d -print \) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(MAKEJOBS)"
 	@$(call $(TESTING)-find,MAKECMDGOALS)
@@ -8543,6 +8552,54 @@ endef
 ################################################################################
 
 ########################################
+## {{{2 $(DOSETUP) ---------------------
+
+override $(DOSETUP)-dir			:= $(CURDIR)/.$(COMPOSER_BASENAME)
+
+.PHONY: $(DOSETUP)
+$(DOSETUP): .set_title-$(DOSETUP)
+$(DOSETUP):
+	@$(call $(HEADERS))
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) $($(DOSETUP)-dir)
+ifeq ($(COMPOSER_DOITALL_$(DOSETUP)),$(DOFORCE))
+	@$(foreach FILE,$(shell \
+			$(FIND) $($(DOSETUP)-dir) -mindepth 1 -maxdepth 1 -type l 2>/dev/null \
+			| $(SORT) \
+		),\
+		$(RM) $(FILE); \
+		$(call NEWLINE) \
+	)
+endif
+	@$(ECHO) "$(_D)"
+	@$(foreach FILE,\
+		$(COMPOSER) \
+		$(COMPOSER_DIR)/.gitignore \
+		$(COMPOSER_ART) \
+		\
+		$(PANDOC_DIR) \
+		$(YQ_DIR) \
+		$(BOOTSTRAP_DIR) \
+		$(BOOTSWATCH_DIR) \
+		$(FONTAWES_DIR) \
+		$(WATERCSS_DIR) \
+		$(MDVIEWER_DIR) \
+		$(MDTHEMES_DIR) \
+		$(REVEALJS_DIR) \
+		,\
+		if [ ! -e "$($(DOSETUP)-dir)/$(notdir $(FILE))" ]; then \
+			$(ECHO) "$(_E)"; \
+			$(LN) $(FILE) $($(DOSETUP)-dir)/$(notdir $(FILE)); \
+			$(ECHO) "$(_D)"; \
+		fi; \
+		$(call NEWLINE) \
+	)
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$($(DOSETUP)-dir)/$(MAKEFILE),1)
+	@$(CAT) $(CURDIR)/Makefile \
+		| $(SED) "/^$$/d"
+	@$(LS) $($(DOSETUP)-dir)
+
+########################################
 ## {{{2 $(CONVICT) ---------------------
 
 override GIT_OPTS_CONVICT		:= --verbose $(if \
@@ -9256,12 +9313,12 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@eval $(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) \
+	@eval $(FIND_ALL) $(abspath $(dir $(COMPOSER_LIBRARY))) \
 		\\\( -path $(COMPOSER_DIR) -prune \\\) \
 		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
 		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
 		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
-		$$($(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_SETTINGS)" \
+		$$($(FIND_ALL) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_SETTINGS)" \
 			| while read -r FILE; do \
 				$(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,COMPOSER_IGNORES)(.+)$$|\2|gp" $${FILE} \
 					| $(TR) ' ' '\n' \
@@ -9271,7 +9328,7 @@ $($(PUBLISH)-library-metadata):
 					done; \
 			done \
 		) \
-		$$($(FIND) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_YML)" \
+		$$($(FIND_ALL) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_YML)" \
 			| while read -r FILE; do \
 				DIR="$$( \
 					$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $${FILE} 2>/dev/null \
@@ -9748,32 +9805,13 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
 	@$(RM) --recursive			$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
-	@$(MKDIR)				$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_E)"
-	@$(LN) \
-		$(COMPOSER) \
-		$(COMPOSER_DIR)/.gitignore \
-		$(COMPOSER_ART) \
-		\
-		$(PANDOC_DIR) \
-		$(YQ_DIR) \
-		$(BOOTSTRAP_DIR) \
-		$(BOOTSWATCH_DIR) \
-		$(FONTAWES_DIR) \
-		$(WATERCSS_DIR) \
-		$(MDVIEWER_DIR) \
-		$(MDTHEMES_DIR) \
-		$(REVEALJS_DIR) \
-		\
-		$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/ \
-#>		$($(DEBUGIT)-output)
-	@$(ECHO) "$(_S)"
+	@$(ECHO) "$(_D)"
+	@$(MAKE) --directory			$($(PUBLISH)-$(EXAMPLE)) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
 	@$(MKDIR) \
 						$(addprefix $($(PUBLISH)-$(EXAMPLE))/,$($(PUBLISH)-$(EXAMPLE)-dirs)) \
 						$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages) \
 						$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes) \
 						$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
 	@$(RSYNC) \
 		--delete-excluded \
 		--prune-empty-dirs \
