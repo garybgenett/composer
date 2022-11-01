@@ -3903,7 +3903,7 @@ $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D)
       - $(_C)spacer$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
-      - $(_C)tagslist$(_D) $(_M)[, ] "Tags:"$(_D)
+      - $(_C)tagslist$(_D) $(_N)[$(_M), $(_N)]$(_M) "Tags:"$(_D)
       - $(_C)box-end$(_D)
     $(_M)END$(_D):
 
@@ -4180,10 +4180,6 @@ override define HEREDOC_COMPOSER_YML_PUBLISH =
 variables:
 
   title-prefix:				EXAMPLE SITE
-
-########################################
-
-  $(PUBLISH)-config:				{}
 
   $(PUBLISH)-library:
     folder:				$(LIBRARY_FOLDER_ALT)
@@ -9100,10 +9096,10 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			-e "s|[\"]$$||g" \
 	)"; \
 	$(ECHO) "$${LIST_HDR} " >>$(1).tagslist-list; \
-	$(YQ_READ) ".tags | .[]" $(if $(c_list_plus),$(c_list_plus),$(c_list)) \
+	$(YQ_READ) ".tags | .[]" $(if $(c_list_plus),$(c_list_plus),$(c_list)) 2>/dev/null \
 		| $(SED) \
-			-e "s|^[\"]*||g" \
-			-e "s|[\"]*$$||g" \
+			-e "s|^[\"]||g" \
+			-e "s|[\"]$$||g" \
 		| while read -r FILE; do \
 			$(ECHO) "<li class=\"breadcrumb-item\"><a href=\"$(COMPOSER_LIBRARY_PATH)/tags-$$( \
 					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
@@ -9410,16 +9406,14 @@ override define $(PUBLISH)-library-indexer =
 	if [ "$(1)" = "title" ]; then \
 		$(YQ_WRITE) ".[].[\".$(COMPOSER_BASENAME)\"]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
 	elif [ "$(1)" = "author" ]; then \
-		$(YQ_WRITE) ".[].author" $($(PUBLISH)-library-metadata) 2>/dev/null \
-		| $(SED) "s|^[-][ ]||g"; \
+		$(YQ_WRITE) ".[].author | .[]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
 	elif [ "$(1)" = "date" ]; then \
 		$(YQ_WRITE) ".[].date" $($(PUBLISH)-library-metadata) 2>/dev/null \
 		| $(SED) \
 			-e "s|^([0-9]{4}).*$$|\1|g" \
 			-e "s|^.*([0-9]{4})$$|\1|g"; \
 	elif [ "$(1)" = "tag" ]; then \
-		$(YQ_WRITE) ".[].tags" $($(PUBLISH)-library-metadata) 2>/dev/null \
-		| $(SED) "s|^[-][ ]||g"; \
+		$(YQ_WRITE) ".[].tags | .[]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
 	fi \
 		| $(call $(PUBLISH)-library-sort-sh,$(1)) \
 		| while read -r FILE; do \
@@ -9483,8 +9477,10 @@ override define $(PUBLISH)-library-digest-list =
 				OUTFILE="$(COMPOSER_LIBRARY)/$${TYPE}-$$( \
 						$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
 					)$(COMPOSER_EXT_DEFAULT)"; \
-				if [ "$(1)" = "$${OUTFILE}.$(COMPOSER_BASENAME)" ]; then \
-					$(ECHO) "$${TYPE}$(TOKEN)$${FILE}\n"; \
+				if [ -n "$(1)" ]; then \
+					if [ "$(1)" = "$${OUTFILE}.$(COMPOSER_BASENAME)" ]; then \
+						$(ECHO) "$${TYPE}$(TOKEN)$${FILE}\n"; \
+					fi; \
 				else \
 					$(ECHO) "$${OUTFILE}\n"; \
 				fi; \
@@ -9827,8 +9823,16 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS)
 	@$(ECHO) ""							>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(foreach FILE,\
+		$($(PUBLISH)-$(EXAMPLE)-dirs) \
+		$($(PUBLISH)-$(EXAMPLE)-pages) \
+		$($(PUBLISH)-$(EXAMPLE)-themes) \
+		,\
+		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
+	)
+endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
-	@$(ECHO) "$(_S)"
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n'		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
@@ -9837,14 +9841,27 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(ECHO) "$(_S)"
 	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_YML) $($(DEBUGIT)-output)
 	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(SED) -i \
+		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
+		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT_MOD) ]|g" \
+									$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_CSS))
 	@$(ECHO) "$(_S)"
-	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(RM) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(MKDIR) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library) $($(DEBUGIT)-output)
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(MKDIR)							$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_E)"
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+else
+	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+endif
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../*$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page)							>$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))
@@ -9867,9 +9884,9 @@ endif
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
 		$(ECHO) "---\n"										>$(FILE); \
 		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"			>>$(FILE); \
-		$(ECHO) "author: [$(COMPOSER_COMPOSER), \"Author #1\", \"Author #2\", \"Author #3\"]\n"	>>$(FILE); \
+		$(ECHO) "author: [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]\n"		>>$(FILE); \
 		$(ECHO) "date: $(MARK)\n"								>>$(FILE); \
-		$(ECHO) "tags: [\"Tag #$(NUM)\", \"Tag #1\", \"Tag #2\", \"Tag #3\"]\n"			>>$(FILE); \
+		$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"					>>$(FILE); \
 		$(ECHO) "---\n"										>>$(FILE); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)\n"	>>$(FILE); \
 		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)	>>$(FILE); \
@@ -9905,24 +9922,6 @@ endif
 			-e "s|^page(title[:].+)$$|\1|g" \
 			-e "/^$(PUBLISH_CMD_BEG)/d" \
 									>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "$(_E)"
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(foreach FILE,\
-		$($(PUBLISH)-$(EXAMPLE)-dirs) \
-		$($(PUBLISH)-$(EXAMPLE)-pages) \
-		$($(PUBLISH)-$(EXAMPLE)-themes) \
-		,\
-		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
-	)
-	@$(SED) -i \
-		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
-		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT_MOD) ]|g" \
-		$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-else
-	@$(LN) $(call CSS_THEME,$(PUBLISH),dark) $($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-endif
-	@$(ECHO) "$(_D)"
 ifneq ($(or \
 	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
 	$(COMPOSER_DEBUGIT) ,\
@@ -10231,9 +10230,9 @@ override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 pagetitle: Main Page
 tags:
-  - "Tag #0"
-  - "Tag #1"
-  - "Tag #2"
+  - Tag 0
+  - Tag 1
+  - Tag 2
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 
@@ -10514,9 +10513,9 @@ override define $(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS) =
 pagetitle: Configuration Testing
 date: 2040-01-01
 tags:
-  - "Tag #0"
-  - "Tag #1"
-  - "Tag #2"
+  - Tag 0
+  - Tag 1
+  - Tag 2
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_CMD_END)
 
