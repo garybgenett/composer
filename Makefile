@@ -9168,7 +9168,18 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			-e "s|[\"]$$||g" \
 	)"; \
 	$(ECHO) "$${LIST_HDR} " >>$(1).tagslist-list; \
-	$(YQ_WRITE) ".tags | .[]" $(if $(c_list_plus),$(c_list_plus),$(c_list)) 2>/dev/null \
+	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
+		$(SED) -n "1,/^---$$/p" $${FILE} \
+			>$(1).tagslist_$$( \
+				$(ECHO) "$${FILE}" \
+				| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
+			); \
+	done; \
+	$(YQ_READ) ".tags | .[]" $(1).tagslist_* \
+		| $(SED) \
+			-e "s|^[\"]||g" \
+			-e "s|[\"]$$||g" \
+		| $(SORT) \
 		| while read -r FILE; do \
 			$(ECHO) "<li class=\"breadcrumb-item\"><a href=\"$(COMPOSER_LIBRARY_PATH)/tags-$$( \
 					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
@@ -9178,7 +9189,12 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 				).$(EXTN_HTML))" >>$(1).tagslist-list; \
 		done; \
 	$(ECHO) "\n" >>$(1).tagslist-list; \
-	$(SED) -i "s|^($${LIST_HDR} )$${LIST_SEP}|\1|g" $(1).tagslist-list
+	$(SED) -i "s|^($${LIST_HDR} )$${LIST_SEP}|\1|g" $(1).tagslist-list; \
+	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
+		$(ECHO) "$(_S)"; \
+		$(RM) $(1).tagslist_* $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
 endef
 
 ########################################
@@ -9368,7 +9384,7 @@ $($(PUBLISH)-library-metadata):
 		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(@),$$( \
 				$(ECHO) "$${FILE}" \
-				| $(SED) "s|^$(abspath $(dir $(COMPOSER_LIBRARY)))/||g" \
+				| $(SED) "s|^$(subst /,.,$(abspath $(dir $(COMPOSER_LIBRARY))))/||g" \
 			),$(PUBLISH)-metadata); \
 		if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 			else				$(ECHO) "$(_N)"; \
