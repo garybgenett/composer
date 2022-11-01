@@ -9822,6 +9822,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
 	@$(RM) --recursive			$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
+	@$(MKDIR)				$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) --directory			$($(PUBLISH)-$(EXAMPLE)) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
 	@$(MKDIR) \
