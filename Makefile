@@ -4032,11 +4032,11 @@ variables:
 #$(MARKER) readtime_wpm:			null
     copy_protect:			null
 
-#$(MARKER) cols_break:				null
+    cols_break:				md
 #$(MARKER) cols_sticky:			null
 #$(MARKER) cols_order:				null
 #$(MARKER) cols_reorder:			null
-    cols_size:				[ 3, 9, $(SPECIAL_VAL) ]
+    cols_size:				[ 4, 8, $(SPECIAL_VAL) ]
     cols_resize:			[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
 
 ########################################
@@ -4585,7 +4585,7 @@ function $(PUBLISH)-nav-top-list {
 		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
 			$${ECHO} "<!-- $${FUNCNAME} $${DIVIDE} skip $${MARKER} $${FILE} -->\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
-			$${ECHO} "<li><hr class=\"dropdown-divider\"/></li>\\n"
+			$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-nav-top-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
