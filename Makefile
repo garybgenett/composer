@@ -4652,7 +4652,7 @@ function $(PUBLISH)-nav-top-library {
 			| $${SED} "/^null$$/d" \\
 			| while read -r FILE; do
 $${CAT} <<_EOF_
-<li><a class="dropdown-item" href="$${COMPOSER_LIBRARY_INDEX_PATH}/$${1}-$$(
+<li><a class="dropdown-item" href="$${COMPOSER_LIBRARY_PATH}/$${1}-$$(
 	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
 ).$(EXTN_HTML)">$${FILE} ($$(
 	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
