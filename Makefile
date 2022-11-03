@@ -5393,15 +5393,14 @@ function $(PUBLISH)-select {
 	then
 		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list $${@} $${PUBLISH_CMD_END}\\n"
 	elif
-		[ "$${ACTION}" = "contents-menu" ] ||
-		[ "$${ACTION}" = "contents-list" ] ||
-		[ "$${ACTION}" = "tagslist-menu" ] ||
-		[ "$${ACTION}" = "tagslist-list" ] ||
-		[ "$${ACTION}" = "readtime-menu" ] ||
-		[ "$${ACTION}" = "readtime-list" ];
+		[ "$${ACTION}" = "contents-menu" ] || [ "$${ACTION}" = "contents-list" ] ||
+		[ "$${ACTION}" = "tagslist-menu" ] || [ "$${ACTION}" = "tagslist-list" ] ||
+		[ "$${ACTION}" = "readtime-menu" ] || [ "$${ACTION}" = "readtime-list" ];
 	then
 		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION} $${@} $${PUBLISH_CMD_END}\\n"
-	elif [ -f "$${ACTION}" ]; then
+	elif
+		[ -f "$${ACTION}" ];
+	then
 		if ! $(PUBLISH)-file $${ACTION} $${@}; then
 			$(PUBLISH)-error file $${ACTION} $${@}
 			return 1
