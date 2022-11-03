@@ -4865,7 +4865,7 @@ function $(PUBLISH)-nav-side-library {
 		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
 	else
 $${CAT} <<_EOF_
-<table class="table table-borderless align-top">
+<table class="$(COMPOSER_TINYNAME)-table table table-borderless align-top">
 _EOF_
 		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} \\
 			| $${SED} "/^null$$/d" \\
@@ -5346,8 +5346,7 @@ function $(PUBLISH)-file {
 		$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/d" $${1}
 	else
 		if [ -n "$$(
-			$${SED} -n "1p" $${1} \\
-			| $${SED} -n "/^---$$/p"
+			$${SED} -n "1{/^---$$/p}" $${1}
 		)" ]; then
 			$${SED} "1,/^---$$/d" $${1}
 		else
@@ -5616,6 +5615,10 @@ html {
 	margin-bottom:			0px;
 }
 
+.$(COMPOSER_TINYNAME)-table {
+	border:				0px;
+}
+
 .$(COMPOSER_TINYNAME)-link a,
 .$(COMPOSER_TINYNAME)-link a:active,
 .$(COMPOSER_TINYNAME)-link a:hover,
@@ -5831,8 +5834,7 @@ pre code {
 /* ########################################################################## */
 
 .accordion-body,
-.card-body,
-.table {
+.card-body {
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 }
@@ -5942,8 +5944,7 @@ pre code {
 }
 
 .accordion-header,
-.card-header,
-.table {
+.card-header {
 	border:				0px;
 }
 
@@ -9194,18 +9195,15 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 	if [ -z "$${TAGS_SEP}" ]; then \
 		TAGS_SEP=" "; \
 	fi; \
-	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
-		$(SED) -n "1,/^---$$/p" $${FILE} \
-			>$(1).tagslist_$$( \
-				$(ECHO) "$${FILE}" \
-				| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
-			); \
-	done; \
 	$(ECHO) "$${TAGS_BEG}" >>$(1).tagslist-list; \
-	$(YQ_READ) ".tags | .[]" $(1).tagslist_* \
-		| $(SED) \
-			-e "s|^[\"]||g" \
-			-e "s|[\"]$$||g" \
+	for TAGS in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
+		if [ -n "$$( \
+			$(SED) -n "1{/^---$$/p}" $${TAGS} \
+		)" ]; then \
+			$(SED) -n "1,/^---$$/p" $${TAGS} \
+			| $(YQ_WRITE) ".tags | .[]"; \
+		fi; \
+	done \
 		| $(SORT) \
 		| while read -r FILE; do \
 			LINK="$(COMPOSER_LIBRARY_PATH)/tags-$$( \
@@ -9218,12 +9216,7 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 	$(SED) -i "s|^($$( \
 			$(ECHO) "$${TAGS_BEG}" \
 			| $(SED) "s|([+*])|\\\\\1|g" \
-		))$${TAGS_SEP}|\1|g" $(1).tagslist-list; \
-	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
-		$(ECHO) "$(_S)"; \
-		$(RM) $(1).tagslist_* $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+		))$${TAGS_SEP}|\1|g" $(1).tagslist-list
 endef
 
 override define $(PUBLISH)-$(TARGETS)-tagslist-done =
@@ -10155,7 +10148,6 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	pandoc = Error: bad file '/tmp/temp1973971289': yaml: line 2: did not find expected alphabetic or numeric character
 #	add
 #		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
 #		title versus pagetitle... do need to test both...
