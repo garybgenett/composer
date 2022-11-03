@@ -1668,7 +1668,7 @@ $(foreach FILE,$(filter-out \
 	$(LISTING) \
 	$(NOTHING) \
 	$(SUBDIRS) \
-,$(COMPOSER_RESERVED)),\
+,$(addsuffix %,$(COMPOSER_RESERVED))),\
 	$(eval export override COMPOSER_DOITALL_$(FILE) ?=) \
 	$(foreach MOD,\
 		$(DOITALL) \
@@ -3545,12 +3545,14 @@ endef
 #> update: COMPOSER_OPTIONS
 
 .PHONY: $(EXAMPLE)
-$(EXAMPLE):
-	@$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(@)
-
-#WORKING shows up in $(TARGETS) ...
+.PHONY: $(EXAMPLE)-install
 .PHONY: $(EXAMPLE)-yml
-$(EXAMPLE)-yml:
+.PHONY: $(EXAMPLE)-md
+$(EXAMPLE) \
+$(EXAMPLE)-install \
+$(EXAMPLE)-yml \
+$(EXAMPLE)-md \
+:
 	@$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(@)
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
@@ -3590,6 +3592,19 @@ $(EXAMPLE)-yml:
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) 2>/dev/null \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK),$(COMMENTED))|g"
+
+#WORKING document, add to "defaults" section
+.PHONY: .$(EXAMPLE)-md
+.$(EXAMPLE)-md: override GIT_USER := $(shell git config --get user.name 2>/dev/null)
+.$(EXAMPLE)-md:
+	@$(call $(EXAMPLE)-print,,$(_S)---)
+	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$(COMPOSER_HEADLINE)$(_N)\")
+	@$(call $(EXAMPLE)-print,,$(_C)author$(_D): $(_M)$(if $(GIT_USER),$(GIT_USER),$(USER)))
+	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(DATEMARK))
+	@$(call $(EXAMPLE)-print,,$(_C)tags$(_D):)
+	@$(call $(EXAMPLE)-print,,  $(_N)-$(_D) $(_M)$(COMPOSER_BASENAME))
+	@$(call $(EXAMPLE)-print,,$(_S)---)
+	@$(call $(EXAMPLE)-print,,$(COMPOSER_TAGLINE))
 
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
