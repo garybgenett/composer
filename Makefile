@@ -2825,6 +2825,11 @@ endef
 #		PANDOC_DATA
 
 #WORK
+#	features
+#		100% configurable using simple plain-text files
+#		extremely flexible, complete control over page layout and elements
+#		supports dependencies
+#		fast; multi-threaded
 #	random note/thought
 #		composer makes it very easy to create rich interfaces for delivering content efficiently
 #		the trade-off is that the computational horsepower is spent as capital rather than operational cost
@@ -10150,8 +10155,8 @@ else
 endif
 
 #WORKING:NOW:NOW
+#	pandoc = Error: bad file '/tmp/temp1973971289': yaml: line 2: did not find expected alphabetic or numeric character
 #	add
-#		need a title-block test, somewhere in there...
 #		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
 #		title versus pagetitle... do need to test both...
 #			pagetitle does not alwasy produce a header, such as with revealjs...
@@ -10645,6 +10650,8 @@ tags:
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_CMD_END)
 
 #WORKING:NOW
+
+  * [title-block test]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01-$(EXAMPLE)_00.$(EXTN_HTML))
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
