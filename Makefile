@@ -9232,7 +9232,7 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			| $(YQ_WRITE) ".tags | .[]"; \
 		fi; \
 	done \
-		| $(SORT) \
+		| $(call $(PUBLISH)-library-sort-sh,tag) \
 		| while read -r FILE; do \
 			LINK="$(COMPOSER_LIBRARY_PATH)/tags-$$( \
 					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
@@ -10177,9 +10177,6 @@ endif
 
 #WORKING:NOW:NOW
 #	add
-#		"$(call $(HEADERS))" versus ": $(HEADERS)-*"
-#		title versus pagetitle... do need to test both...
-#			pagetitle does not alwasy produce a header, such as with revealjs...
 #		remove command line short-aliases?  (except for J= V= C= , etc.)
 #		do $(call $(HEADERS)-path-root,???) on c_logo in $(CUSTOM_PUBLISH_SH) ... others?
 #			also need to do it in $(COMPOSER_YML) output in $(OUT_README)
@@ -10310,7 +10307,7 @@ $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
 
 override define $(PUBLISH)-$(EXAMPLE)-digest =
 ---
-pagetitle: Latest Updates
+title: Latest Updates
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
 #WORKING
@@ -10322,7 +10319,7 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
-pagetitle: Digest
+title: Digest
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
 #WORKING
@@ -10334,7 +10331,7 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-features =
 ---
-pagetitle: Site Features Page
+title: Site Features Page
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) LIBRARY $(PUBLISH_CMD_END)
 
@@ -10377,7 +10374,7 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
-pagetitle: Main Page
+title: Main Page
 tags:
   - Tag 0
   - Tag 1
@@ -10660,7 +10657,7 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-page-$(CONFIGS) =
 ---
-pagetitle: Configuration Testing
+title: Configuration Testing
 date: 2040-01-01
 tags:
   - Tag 0
