@@ -9131,7 +9131,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		| $(YQ_WRITE) \
 			"[.. | select(has(\"t\")) | select( \
 				(.t == \"Header\") or \
-				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) \")) \
+				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) \")) \
 			) | .c]" \
 			2>/dev/null \
 		| $(SED) "s|\\\\|\\\\\\\\|g" \
@@ -9151,8 +9151,8 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		LVL="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][0]" 2>/dev/null)"; \
 		if [ "$${LVL}" = "html" ]; then \
 			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1]" 2>/dev/null)"; \
-			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\1|g")"; \
-			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) begin $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
+			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\1|g")"; \
+			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
 			if [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then MENU_HDR=; fi; \
