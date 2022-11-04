@@ -57,6 +57,7 @@ override VIM_FOLDING := {{{1
 #	* Prepare
 #		* Update: README.md
 #			* `make COMPOSER_DEBUGIT="1" help-force | less -rX`
+#				* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-force | less -rX`
 #				* `override INPUT := commonmark`
 #				* Fits in $(COLUMNS) characters
 #				* Mouse select color handling
@@ -1668,7 +1669,7 @@ $(foreach FILE,$(filter-out \
 	$(LISTING) \
 	$(NOTHING) \
 	$(SUBDIRS) \
-,$(addsuffix %,$(COMPOSER_RESERVED))),\
+,$(COMPOSER_RESERVED)),\
 	$(eval export override COMPOSER_DOITALL_$(FILE) ?=) \
 	$(foreach MOD,\
 		$(DOITALL) \
@@ -2135,16 +2136,16 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other $(_C)[c_type]$(_D) values will be passed directly to $(_C)[Pandoc]$(_D)*"
 	@$(PRINT) "  * *Special $(_C)[c_css]$(_D) values:*"
-	@$(COLUMN_2) "    * *\`$(_M)$(COMPOSER_CSS)$(_D)\`"		"= Filesystem override of variable value*"
-	@$(COLUMN_2) "    * *\`$(_N)$(CSS_ALT)$(_D)\`"		"= Use the alternate default stylesheet*"
-	@$(COLUMN_2) "    * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"= Revert to the $(_C)[Pandoc]$(_D) default*"
+	@$(COLUMN_2) "      * *\`$(_M)$(COMPOSER_CSS)$(_D)\`"		"= Filesystem override of variable value*"
+	@$(COLUMN_2) "      * *\`$(_N)$(CSS_ALT)$(_D)\`"		"= Use the alternate default stylesheet*"
+	@$(COLUMN_2) "      * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"= Revert to the $(_C)[Pandoc]$(_D) default*"
 	@$(COLUMN_2) "  * *Special $(_C)[c_toc]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= List all headers, and number sections*"
 	@$(COLUMN_2) "  * *Special $(_C)[c_level]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= Varies by $(_C)[c_type]$(_D) $(_E)(see [$(HELPOUT)-$(DOITALL)])$(_D)*"
 	@$(PRINT) "  * *An empty $(_C)[c_margin]$(_D) value enables individual margins:*"
-	@$(PRINT) "    * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
-	@$(PRINT) "    * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
-	@$(PRINT) "    * *\`$(_C)c_margin_left$(_D)\`   ~ \`$(_E)ml$(_D)\`*"
-	@$(PRINT) "    * *\`$(_C)c_margin_right$(_D)\`  ~ \`$(_E)mr$(_D)\`*"
+	@$(PRINT) "      * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
+	@$(PRINT) "      * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
+	@$(PRINT) "      * *\`$(_C)c_margin_left$(_D)\`   ~ \`$(_E)ml$(_D)\`*"
+	@$(PRINT) "      * *\`$(_C)c_margin_right$(_D)\`  ~ \`$(_E)mr$(_D)\`*"
 
 .PHONY: $(HELPOUT)-VARIABLES_CONTROL_%
 $(HELPOUT)-VARIABLES_CONTROL_%:
@@ -2186,6 +2187,8 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)]"			"Basic $(HELPOUT) overview $(_E)(default)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"$(_C)[Bootstrap Websites]$(_D) from all $(_C)[Markdown]$(_D) files"
 #WORK
@@ -2387,38 +2390,27 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(ENDOLINE); $(ECHO) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
 	@$(MAKE) .$(EXAMPLE)-$(INSTALL) \
-		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
-			-e "/^[#]{$(DEPTH_MAX)}.+[[:space:]]/d" \
-			-e "s|[\t]+| |g" \
-			-e "s|^|$(CODEBLOCK)|g" \
-			-e "s|^[[:space:]]+$$||g" \
-			-e "s|[[:space:]]+$$||g" \
-		)
+		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
 	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
 	@$(MAKE) .$(EXAMPLE) \
-		$(if $(COMPOSER_DOCOLOR),,| $(SED) \
-			-e "/^[#]{$(DEPTH_MAX)}.+[[:space:]]/d" \
-			-e "s|[\t]+| |g" \
-			-e "s|^|$(CODEBLOCK)|g" \
-			-e "s|^[[:space:]]+$$||g" \
-			-e "s|[[:space:]]+$$||g" \
-		)
+		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
+	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)-yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
+	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
+	@$(MAKE) .$(EXAMPLE)-yml \
+		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
+	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)-md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
+#>	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
+	@$(ENDOLINE); $(ENDOLINE)
+	@$(MAKE) .$(EXAMPLE)-md \
+		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Defaults)"
 	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
 	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK) \
-		| $(SED) \
-			-e "s|[\t]+| |g" \
-			-e "s|^|$(CODEBLOCK)|g" \
-			-e "s|^[[:space:]]+$$||g" \
-			-e "s|[[:space:]]+$$||g"
-	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_YML)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
+		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),1)
+	@$(ENDOLINE); $(PRINT) "The template \`$(_M)$(COMPOSER_YML)$(_D)\` in the \`$(_M)$(notdir $(COMPOSER_ART))$(_D)\` directory:"
 	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML) \
-		| $(SED) \
-			-e "s|[\t]+| |g" \
-			-e "s|^|$(CODEBLOCK)|g" \
-			-e "s|^[[:space:]]+$$||g" \
-			-e "s|[[:space:]]+$$||g"
+		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),1)
 	@$(call TITLE_END)
 	@$(call TITLE_LN,2,Reserved,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Target Names)"
@@ -2535,6 +2527,16 @@ override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT =
 	| $(SED) \
 		-e "s|DASH|-|g" \
 		-e "s|UNDER|_|g"
+endef
+
+override define $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE) =
+	$(if $(1),| $(SED) \
+		-e "/^[#]{$(DEPTH_MAX)}.+[[:space:]]/d" \
+		-e "s|[\t]+| |g" \
+		-e "s|^|$(CODEBLOCK)|g" \
+		-e "s|^[[:space:]]+$$||g" \
+		-e "s|[[:space:]]+$$||g" \
+	)
 endef
 
 ########################################
@@ -3368,10 +3370,12 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(HELPOUT) / $(HELPOUT)-$(DOITALL))
     extra sections covering internal targets, along with reserved target and
     variable names, but is otherwise identical to the $(_C)[$(HELPOUT)-$(DOITALL)]$(_D) output.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE) / $(EXAMPLE)-yml / $(EXAMPLE)-md)
 
-  * Prints a useful template for creating new `$(_M)$(COMPOSER_SETTINGS)$(_D)` files $(_E)(see
-    [Configuration Settings] and [Templates])$(_D).
+  * Prints useful templates for creating new files $(_E)(see [Templates])$(_D):
+      * $(_C)[$(COMPOSER_BASENAME)]$(_D) `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Configuration Settings])$(_D)
+      * $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_C)[$(PUBLISH)]$(_D) and $(_C)[Pandoc]$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)(see [$(PUBLISH)])$(_D)
+      * $(_C)[Pandoc]$(_D) `$(_C)$(INPUT)$(_D)`
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
 
@@ -3430,10 +3434,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT) / $(DEBUGIT)-file)
   * This is the tool to use for any support issues.  Submit the output file to:
     $(_E)[composer@garybgenett.net]$(_D)
   * Internally, it also runs:
-    * $(_C)[$(TESTING)]$(_D)
-    * $(_C)[$(CHECKIT)-$(DOITALL)]$(_D)
-    * $(_C)[$(CONFIGS)-$(DOITALL)]$(_D)
-    * $(_C)[$(TARGETS)]$(_D)
+      * $(_C)[$(TESTING)]$(_D)
+      * $(_C)[$(CHECKIT)-$(DOITALL)]$(_D)
+      * $(_C)[$(CONFIGS)-$(DOITALL)]$(_D)
+      * $(_C)[$(TARGETS)]$(_D)
   * If issues are occurring when running a particular set of targets, list them
     in $(_C)[COMPOSER_DEBUGIT]$(_D).
   * For general issues, run in the top-level directory $(_E)(see [Recommended
@@ -3542,14 +3546,12 @@ endef
 ########################################
 ## {{{2 $(EXAMPLE) ---------------------
 
-#> update: COMPOSER_OPTIONS
-
-.PHONY: $(EXAMPLE)
 .PHONY: $(EXAMPLE)-install
+.PHONY: $(EXAMPLE)
 .PHONY: $(EXAMPLE)-yml
 .PHONY: $(EXAMPLE)-md
-$(EXAMPLE) \
 $(EXAMPLE)-install \
+$(EXAMPLE) \
 $(EXAMPLE)-yml \
 $(EXAMPLE)-md \
 :
@@ -3561,6 +3563,8 @@ $(EXAMPLE)-md-file:
 	@$(MAKE) $(EXAMPLE)-md >$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
 	@$(EDITOR) $(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
 
+########################################
+
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
@@ -3568,6 +3572,7 @@ $(EXAMPLE)-md-file:
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-print,,include $(_E)$(~)(COMPOSER_TEACHER))
 
+#> update: COMPOSER_OPTIONS
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
@@ -3591,15 +3596,14 @@ $(EXAMPLE)-md-file:
 	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_N)endif$(_D))
 
-#WORKING document, add to "defaults" section
 .PHONY: .$(EXAMPLE)-yml
 .$(EXAMPLE)-yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
-	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
+#>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))'
+	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n' \
 		| $(YQ_WRITE_OUT) 2>/dev/null \
-		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK),$(COMMENTED))|g"
+		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
 
-#WORKING document, add to "defaults" section
 .PHONY: .$(EXAMPLE)-md
 .$(EXAMPLE)-md: override GIT_USER := $(shell git config --get user.name 2>/dev/null)
 .$(EXAMPLE)-md:
@@ -3612,12 +3616,16 @@ $(EXAMPLE)-md-file:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(COMPOSER_TAGLINE))
 
+########################################
+
 override define $(EXAMPLE)-print =
 	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
 endef
+
 override define $(EXAMPLE)-var-static =
 	$(call $(EXAMPLE)-print,$(1),override $(_E)$(2)$(_D) :=$(if $($(2)), $(_N)$($(2))))
 endef
+
 #> update: $(HEADERS)-run
 override define $(EXAMPLE)-var =
 	$(eval OUT := $(strip \
