@@ -247,6 +247,8 @@ override PUBLISH_CSS_SHADE		:= dark
 override PUBLISH_CSS_SHADE_ALT		:= null
 
 #> talk: 183 / read: 234
+override PUBLISH_CREATORS		:= *Authors: @, @*
+override PUBLISH_CREATORS_ALT		:= *@ / @*
 override PUBLISH_TAGSLIST		:= *Tags: @, @*
 override PUBLISH_TAGSLIST_ALT		:= *@ / @*
 override PUBLISH_READTIME		:= *Reading time: @W@ words, @T@ minutes*
@@ -1704,6 +1706,7 @@ override define COMPOSER_YML_DATA_SKEL =
 
     css_shade:				$(PUBLISH_CSS_SHADE),
 
+    creators:				"$(PUBLISH_CREATORS)",
     tagslist:				"$(PUBLISH_TAGSLIST)",
     readtime:				"$(PUBLISH_READTIME)",
     readtime_wpm:			$(PUBLISH_READTIME_WPM),
@@ -1853,6 +1856,7 @@ endif
 
 override PUBLISH_SH_HELPERS := \
 	contents \
+	creators \
 	tagslist \
 	readtime \
 
@@ -3865,6 +3869,7 @@ $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)css_shade$(_D):				$(_M)$(PUBLISH_CSS_SHADE)$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(PUBLISH_TAGSLIST)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(PUBLISH_READTIME)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
@@ -3929,7 +3934,8 @@ $(_S)########################################$(_D)
 
     $(_M)PATH$(_D):
       - $(_M)PATH$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-    $(_M)TAGS$(_D):
+    $(_M)INFO$(_D):
+      - $(_C)creators$(_D)
       - $(_C)tagslist$(_D)
 
 $(_S)########################################$(_D)
@@ -3959,6 +3965,8 @@ $(_S)########################################$(_D)
       - $(_C)contents$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+      - $(_C)spacer$(_D)
+      - $(_C)creators$(_D)
       - $(_C)spacer$(_D)
       - $(_C)tagslist$(_D)
       - $(_C)box-end$(_D)
@@ -4004,6 +4012,7 @@ $(_S)########################################$(_D)
     $(_M)TEXT$(_D):
       - TOP TEXT
     $(_M)INFO$(_D):
+$(_S)#$(MARKER)$(_D)   - $(_C)creators$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
@@ -4019,6 +4028,7 @@ $(_S)########################################$(_D)
     $(_M)TEXT$(_D):
       - BOTTOM TEXT
     $(_M)INFO$(_D):
+$(_S)#$(MARKER)$(_D)   - $(_C)creators$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
       - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
@@ -4158,6 +4168,7 @@ variables:
 
   $(PUBLISH)-config:
     css_shade:				$(PUBLISH_CSS_SHADE_ALT)
+    creators:				"$(PUBLISH_CREATORS_ALT)"
     tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
     readtime:				"$(PUBLISH_READTIME_ALT)"
     readtime_wpm:			$(PUBLISH_READTIME_WPM_ALT)
@@ -4206,6 +4217,8 @@ variables:
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
+      - creators
+      - spacer
       - tagslist
       - spacer
       - readtime
@@ -4265,6 +4278,8 @@ variables:
       - readtime
       - spacer
       - contents 3
+      - spacer
+      - creators
       - spacer
       - tagslist
       - box-end
@@ -4519,6 +4534,8 @@ function $(PUBLISH)-nav-top-list {
 					$${SED} "s|^contents|contents-menu|g"
 				fi
 			) $${PUBLISH_CMD_END}\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
@@ -4672,6 +4689,11 @@ function $(PUBLISH)-nav-bottom-list {
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^creators|creators-menu|g"
+			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
@@ -4745,6 +4767,11 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^contents|contents-list|g"
+			) $${PUBLISH_CMD_END}\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^creators|creators-list|g"
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
@@ -4854,6 +4881,11 @@ _EOF_
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^creators|creators-list|g"
+			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
@@ -5309,12 +5341,14 @@ function $(PUBLISH)-select {
 	)"; shift
 	if
 		[ "$${ACTION}" = "contents" ] ||
+		[ "$${ACTION}" = "creators" ] ||
 		[ "$${ACTION}" = "tagslist" ] ||
 		[ "$${ACTION}" = "readtime" ];
 	then
 		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list $${@} $${PUBLISH_CMD_END}\\n"
 	elif
 		[ "$${ACTION}" = "contents-menu" ] || [ "$${ACTION}" = "contents-list" ] ||
+		[ "$${ACTION}" = "creators-menu" ] || [ "$${ACTION}" = "creators-list" ] ||
 		[ "$${ACTION}" = "tagslist-menu" ] || [ "$${ACTION}" = "tagslist-list" ] ||
 		[ "$${ACTION}" = "readtime-menu" ] || [ "$${ACTION}" = "readtime-list" ];
 	then
@@ -9128,6 +9162,49 @@ override define $(PUBLISH)-$(TARGETS)-contents-done =
 endef
 
 ########################################
+#### {{{4 $(PUBLISH)-$(TARGETS)-creators
+
+override define $(PUBLISH)-$(TARGETS)-creators =
+	AUTH="$(call COMPOSER_YML_DATA_VAL,config.creators)"; \
+	AUTH_BEG="$$($(ECHO) "$${AUTH}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\1|g")"; \
+	AUTH_SEP="$$($(ECHO) "$${AUTH}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\2|g")"; \
+	AUTH_END="$$($(ECHO) "$${AUTH}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\3|g")"; \
+	if [ -z "$${AUTH_SEP}" ]; then \
+		AUTH_SEP=" "; \
+	fi; \
+	$(ECHO) "$${AUTH_BEG}" >>$(1).creators-list; \
+	for AUTH in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
+		if [ -n "$$( \
+			$(SED) -n "1{/^---$$/p}" $${AUTH} \
+		)" ]; then \
+			$(SED) -n "1,/^---$$/p" $${AUTH} \
+			| $(YQ_WRITE) ".author | .[]"; \
+		fi; \
+	done \
+		| $(call $(PUBLISH)-library-sort-sh,author) \
+		| while read -r FILE; do \
+			LINK="$(COMPOSER_LIBRARY_PATH)/authors-$$( \
+					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
+				).$(EXTN_HTML)"; \
+			$(ECHO) "  * [$${FILE}]($${LINK}){.breadcrumb-item}\n"	>>$(1).creators-menu; \
+			$(ECHO) "$${AUTH_SEP}[$${FILE}]($${LINK})"		>>$(1).creators-list; \
+		done; \
+	$(ECHO) "$${AUTH_END}\n" >>$(1).creators-list; \
+	$(SED) -i "s|^($$( \
+			$(ECHO) "$${AUTH_BEG}" \
+			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
+		))$${AUTH_SEP}|\1|g" $(1).creators-list
+endef
+
+override define $(PUBLISH)-$(TARGETS)-creators-done =
+	$(SED) -i \
+		-e "1d" \
+		-e '$$d' \
+		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
+		$(1)
+endef
+
+########################################
 #### {{{4 $(PUBLISH)-$(TARGETS)-tagslist
 
 override define $(PUBLISH)-$(TARGETS)-tagslist =
@@ -9911,6 +9988,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(SED) -i \
+		-e "s|^(.+creators[:]).*$$|\1|g" \
 		-e "s|^(.+tagslist[:]).*$$|\1|g" \
 		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
 		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT_MOD) ]|g" \
@@ -10092,7 +10170,9 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		add "authors" helper, identical to tagslist
+#		consolidate creators/tagslist into a single helper...
+#			add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
+#			behavior can be strange when there are no authors/tags... it can leave dangling text...
 #		ability to remove author name(s) from digest(s)
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
@@ -10457,6 +10537,12 @@ $(PUBLISH_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)
 
+## Authors List
+
+`$(PUBLISH_CMD_BEG) creators $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) creators $(PUBLISH_CMD_END)
+
 ## Tags List
 
 `$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_CMD_END)`
@@ -10531,6 +10617,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 | $(PUBLISH)-config | defaults
 |:---|:---|
 | css_shade    | $(PUBLISH_CSS_SHADE)
+| creators     | $(subst *,\*,$(PUBLISH_CREATORS))
 | tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST))
 | readtime     | $(subst *,\*,$(PUBLISH_READTIME))
 | readtime_wpm | $(PUBLISH_READTIME_WPM)
@@ -10584,6 +10671,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
 | css_shade    | $(PUBLISH_CSS_SHADE)              | $(PUBLISH_CSS_SHADE_ALT)
+| creators     | $(subst *,\*,$(PUBLISH_CREATORS)) | $(subst *,\*,$(PUBLISH_CREATORS_ALT))
 | tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST)) | $(subst *,\*,$(PUBLISH_TAGSLIST_ALT))
 | readtime     | $(subst *,\*,$(PUBLISH_READTIME)) | $(subst *,\*,$(PUBLISH_READTIME_ALT))
 | readtime_wpm | $(PUBLISH_READTIME_WPM)           | $(PUBLISH_READTIME_WPM_ALT)
