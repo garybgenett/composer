@@ -10093,19 +10093,14 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		force "$(LIBRARY_FOLDER)" "contents" menus to be "$(SPECIAL_VAL)", somehow...
-#			this includes the include file...  ha!  see what i did, there...?
-#				probably can't, since it is main page... index.html with only/all sub-folders best-practice?
-#			need a different demonstration for the $(LIBRARY_FOLDER).yml file...  maybe just keep the "contents" overrite?
+#		add "authors" helper, identical to tagslist
 #		ability to remove author name(s) from digest(s)
+#		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
+#			index.html with only/all sub-folders as best-practice?
+#			this is a real pain when using COMPOSER_INCLUDE...
 #		templatize copyright/search, somehow...?
 #			maybe a shorthand for images...?
 #			basically, try to replace as much html as possible...
-#		remove composer comment commands from digests?
-#			things like folds/boxes/tagslist might pass-through, which would be ugly...
-#			any drawbacks or backfires...?
-#	build.sh
-#		are "file path"s getting truncated?
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 
 ########################################
@@ -10449,6 +10444,7 @@ $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
     * does `$(DEPTH_MAX)`
     * only does `header` links
     * trims from `$(HTML_BREAK_LINE)` to end of title *(primarily used internally for digest pages)*
+  * placed at the "root" level creates a full bar using "h1"s as dropdowns
 
 `$(PUBLISH_CMD_BEG) contents $(PUBLISH_CMD_END)`
 
