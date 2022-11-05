@@ -4490,8 +4490,7 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-top-list {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
-	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
+	local ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(PUBLISH)-marker $${FUNCNAME} start $${1}[$${NUM}]
@@ -4536,7 +4535,7 @@ $${CAT} <<_EOF_
 	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )" data-bs-toggle="dropdown">$${FILE}</a>
-<ul class="$(COMPOSER_TINYNAME)-menu-$${COLS_BREAK} dropdown-menu">
+<ul class="$(COMPOSER_TINYNAME)-menu-$$(COMPOSER_YML_DATA_VAL config.cols_break) dropdown-menu">
 _EOF_
 			else
 $${CAT} <<_EOF_
