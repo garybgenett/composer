@@ -1426,7 +1426,7 @@ override COMPOSER_TEACHER		:= $(~)(abspath $(~)(dir $(~)(COMPOSER_MY_PATH)))/$(M
 
 override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
 override COMPOSER_REGEX_PREFIX		:= [_.]
-override SED_ESCAPE_LIST		:= \$$*+.?^
+override SED_ESCAPE_LIST		:= [\$$*+.?^]
 
 #> update: includes duplicates
 override DEBUGIT			:= debug
@@ -3913,9 +3913,9 @@ $(_S)########################################$(_D)
         - $(_M)Themes & Shades$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
-        - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
+        - $(_C)contents$(_D)
+$(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
-$(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D)
     $(_M)LIBRARY$(_D):
       - $(_M)AUTHORS$(_D):
         - $(_C)library$(_D) $(_M)authors$(_D)
@@ -3956,9 +3956,9 @@ $(_S)########################################$(_D)
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
       - $(_C)readtime$(_D)
       - $(_C)spacer$(_D)
-      - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
+      - $(_C)contents$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D)
       - $(_C)spacer$(_D)
       - $(_C)tagslist$(_D)
       - $(_C)box-end$(_D)
@@ -4039,11 +4039,7 @@ override define HEREDOC_COMPOSER_YML_README =
 variables:
 
 ########################################
-# $(PUBLISH)
 
-  title-prefix:
-
-########################################
   $(PUBLISH)-config:
 
     homepage:				$(COMPOSER_HOMEPAGE)
@@ -4055,141 +4051,23 @@ variables:
         src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.gpl.png"/></a>
       $(COPYRIGHT_SHORT)
 
-#$(MARKER) search_name:			null
-#$(MARKER) search_site:			null
-#$(MARKER) search_call:			null
-#$(MARKER) search_form:			null
-
-#$(MARKER) css_shade:				null
-
-#$(MARKER) tagslist:				null
-#$(MARKER) readtime:				null
-#$(MARKER) readtime_wpm:			null
     copy_protect:			null
-
     cols_break:				md
-#$(MARKER) cols_sticky:			null
-#$(MARKER) cols_order:				null
-#$(MARKER) cols_reorder:			null
     cols_size:				[ 4, 8, $(SPECIAL_VAL) ]
     cols_resize:			[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
 
 ########################################
-  $(PUBLISH)-library:
 
-#$(MARKER) folder:				null
-#$(MARKER) auto_update:			null
-
-#$(MARKER) digest_title:			null
-#$(MARKER) digest_count:			null
-#$(MARKER) digest_expanded:			null
-#$(MARKER) digest_chars:			null
-#$(MARKER) digest_spacer:			null
-#$(MARKER) digest_continue:			null
-#$(MARKER) digest_permalink:			null
-
-########################################
   $(PUBLISH)-nav-top:
-
     MENU:
       - Top: $(OUT_README).$(PUBLISH).$(EXTN_HTML)
       - Formats:
         - Example Website: $(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
         - spacer:$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        - $(FILE): $(FILE))
-#WORKING:NOW is there a way to automate this menu?
     CONTENTS:
-      - CMS:
-        - $(MENU_SELF): "#composer-cms"
-        - Overview: "#overview"
-        - Quick Start: "#quick-start"
-        - Principles: "#principles"
-        - Requirements: "#requirements"
-      - Operation:
-        - $(MENU_SELF): "#composer-operation"
-        - Recommended Workflow: "#recommended-workflow"
-        - Document Formatting:
-          - $(MENU_SELF): "#document-formatting"
-          - Bootstrap Websites: "#bootstrap-websites"
-          - HTML: "#html"
-          - PDF: "#pdf"
-          - EPUB: "#epub"
-          - Reveal.js Presentations: "#revealjs-presentations"
-          - Microsoft Word & PowerPoint: "#microsoft-word--powerpoint"
-        - Configuration Settings: "#configuration-settings"
-        - Precedence Rules: "#precedence-rules"
-        - Specifying Dependencies: "#specifying-dependencies"
-        - Custom Targets: "#custom-targets"
-        - Repository Versions: "#repository-versions"
-      - Variables:
-        - $(MENU_SELF): "#composer-variables"
-        - Formatting Variables:
-          - $(MENU_SELF): "#formatting-variables"
-          - c_site: "#c_site"
-          - c_type / c_base / c_list: "#c_type--c_base--c_list"
-          - c_lang: "#c_lang"
-          - c_logo: "#c_logo"
-          - c_icon: "#c_icon"
-          - c_css: "#c_css"
-          - c_toc: "#c_toc"
-          - c_level: "#c_level"
-          - c_margin: "#c_margin"
-          - c_options: "#c_options"
-        - Control Variables:
-          - $(MENU_SELF): "#control-variables"
-          - MAKEJOBS: "#makejobs"
-          - COMPOSER_DOCOLOR: "#composer_docolor"
-          - COMPOSER_DEBUGIT: "#composer_debugit"
-          - COMPOSER_INCLUDE: "#composer_include"
-          - COMPOSER_DEPENDS: "#composer_depends"
-          - COMPOSER_KEEPING: "#composer_keeping"
-          - COMPOSER_LOG: "#composer_log"
-          - COMPOSER_EXT: "#composer_ext"
-          - COMPOSER_TARGETS: "#composer_targets"
-          - COMPOSER_SUBDIRS: "#composer_subdirs"
-          - COMPOSER_IGNORES: "#composer_ignores"
-      - Targets:
-        - $(MENU_SELF): "#composer-targets"
-        - Primary Targets:
-          - $(MENU_SELF): "#primary-targets"
-          - help / help-all: "#help--help-all"
-          - template: "#template"
-          - compose: "#compose"
-          - site: "#site"
-          - install / install-all / install-force: "#install--install-all--install-force"
-          - clean / clean-all / *-clean: "#clean--clean-all---clean"
-          - all / all-all / *-all: "#all--all-all---all"
-          - list: "#list"
-        - Additional Targets:
-          - $(MENU_SELF): "#additional-targets"
-          - debug / debug-file: "#debug--debug-file"
-          - check / check-all / config / config-site / config-all / targets: "#check--check-all--config--config-site--config-all--targets"
-          - _commit / _commit-all: "#_commit--_commit-all"
-          - _release / _update / _update-all: "#_release--_update--_update-all"
-        - Internal Targets: "#internal-targets"
-      - Reference:
-        - $(MENU_SELF): "#reference"
-        - Configuration:
-          - $(MENU_SELF): "#configuration"
-          - Pandoc Extensions: "#pandoc-extensions"
-          - Templates: "#templates"
-          - Defaults: "#defaults"
-        - Reserved:
-          - $(MENU_SELF): "#reserved"
-          - Target Names: "#target-names"
-          - Variable Names: "#variable-names"
+      - contents
 
-########################################
-  $(PUBLISH)-nav-bottom:
-
-    MENU:
-      - Home:				./
-      - Artifacts:			./$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))
-      - Pandoc:				./$(patsubst $(COMPOSER_DIR)/%,%,$(PANDOC_DIR))
-      - Bootstrap:			./$(patsubst $(COMPOSER_DIR)/%,%,$(BOOTSTRAP_DIR))
-
-########################################
   $(PUBLISH)-nav-left:
-
     MENU:
       - box-begin $(SPECIAL_VAL) Formats
       - $(MENU_SELF): |
@@ -4201,26 +4079,18 @@ variables:
       - spacer
     CONTENTS:
       - box-begin $(SPECIAL_VAL) Contents
-      - contents $(DEPTH_MAX)
+      - contents
       - box-end
     TAGLINE:
       - $(MENU_SELF): "$(COMPOSER_TAGLINE)"
 
-########################################
-  $(PUBLISH)-nav-right:
-
-########################################
   $(PUBLISH)-info-top:
-
     ICON:
       - |
           <a rel="author" href="$(COMPOSER_REPOPAGE)">
             <img alt="$(COMPOSER_TECHNAME)"
             class="$(COMPOSER_TINYNAME)-icon"
             src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.github.svg"/></a>
-
-########################################
-  $(PUBLISH)-info-bottom:
 
 ################################################################################
 # End Of File
@@ -4515,7 +4385,10 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 function $(PUBLISH)-marker {
 	$${ECHO} "<!-- $${1} $${DIVIDE} $${2} $${MARKER} $$(
 		$${ECHO} "$${@:3}" \\
-		| $${SED} "s|$${COMPOSER_ROOT//$(SED_ESCAPE_LIST)/.}|...|g"
+		| $${SED} "s|$$(
+				$${ECHO} "$${COMPOSER_ROOT}" \\
+				| $${SED} "s|$(SED_ESCAPE_LIST)|.|g"
+			)|...|g"
 	) -->\\n"
 	return 0
 }
@@ -4617,6 +4490,7 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-top-list {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
 	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -4640,7 +4514,11 @@ function $(PUBLISH)-nav-top-list {
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
-				| $${SED} "s|^contents|contents-menu|g"
+				| if [ -n "$${ROOT}" ]; then
+					$${SED} "s|^contents|contents-menu $${MENU_SELF}|g"
+				else
+					$${SED} "s|^contents|contents-menu|g"
+				fi
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
@@ -4651,7 +4529,7 @@ function $(PUBLISH)-nav-top-list {
 			if [ -z "$${LINK}" ]; then
 				LINK="#"
 			fi
-			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
+			if [ -n "$${ROOT}" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item dropdown">
 <a class="nav-link dropdown-toggle" href="$$(
@@ -4674,7 +4552,7 @@ $${CAT} <<_EOF_
 </ul></li>
 _EOF_
 		else
-			if [ -n "$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")" ]; then
+			if [ -n "$${ROOT}" ]; then
 $${CAT} <<_EOF_
 <li class="nav-item"><a class="nav-link" href="$$(
 	$${ECHO} "$${LINK}" \\
@@ -9136,6 +9014,11 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			2>/dev/null \
 		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
+	ROOT=; \
+	if [ -n "$$($(ECHO) "$${MENU}" | $(SED) -n "/^$(MENU_SELF)/p")" ]; then \
+		ROOT="$(MENU_SELF)"; \
+		MENU="$${MENU/#$(MENU_SELF)}"; \
+	fi; \
 	if [ -z "$${MENU}" ]; then				MENU_MAX="$(DEPTH_MAX)"; \
 		elif [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then	MENU_MAX="$(DEPTH_MAX)"; \
 		else						MENU_MAX="$${MENU}"; \
@@ -9181,7 +9064,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			done; \
 		fi; \
 		$(ECHO) "$(MARKER) $${LVL}" $($(DEBUGIT)-output); \
-		if [ "$${MENU_HDR}" ] && [ -n "$${TXT}" ] && [ "$${LVL}" -le "$${MENU_MAX}" ]; then \
+		if [ -n "$${MENU_HDR}" ] && [ -n "$${TXT}" ] && [ "$${LVL}" -le "$${MENU_MAX}" ]; then \
 			if [ "$${LVL}" = "1" ]; then	$(ECHO) "  *"				>>$(1).contents-menu; \
 			elif [ "$${LVL}" = "2" ]; then	$(ECHO) "    *"				>>$(1).contents-menu; \
 			elif [ "$${LVL}" = "3" ]; then	$(ECHO) "        *"			>>$(1).contents-menu; \
@@ -9216,10 +9099,28 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		fi; \
 		$(ECHO) " $(DIVIDE) $${TXT}\n" $($(DEBUGIT)-output); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
-	done
+	done; \
+	if [ -n "$${ROOT}" ]; then \
+		$(SED) -i \
+			-e "s|^  \* (.+)$$|\n\1\n|g" \
+			-e "s|^    \* |  * |g" \
+			-e "s|^    ||g" \
+			$(1).contents-menu; \
+	fi
 endef
 
 override define $(PUBLISH)-$(TARGETS)-contents-done =
+	if [ -n "$${ROOT}" ]; then \
+		if [ -n "$(COMPOSER_RELEASE)" ]; then \
+			$(SED) -i "s|$(COMPOSER_BASENAME) ||g" $(1); \
+		fi; \
+		R_DD="<li class=\"nav-item dropdown\">"; \
+		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols_break) dropdown-menu\">"; \
+		R_CL="class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\""; \
+		$(SED) -i "    N; s|^[<]p[>](.*)class=[\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1); \
+		$(SED) -i "1n; N; s|^[<]p[>](.*)class=[\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1); \
+		$(ECHO) "</li>\n\n" >>$(1); \
+	fi; \
 	$(SED) -i \
 		-e "1d" \
 		-e '$$d' \
@@ -9256,7 +9157,10 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			$(ECHO) "$${TAGS_SEP}[$${FILE}]($${LINK})"		>>$(1).tagslist-list; \
 		done; \
 	$(ECHO) "$${TAGS_END}\n" >>$(1).tagslist-list; \
-	$(SED) -i "s|^($${TAGS_BEG//$(SED_ESCAPE_LIST)/.})$${TAGS_SEP}|\1|g" $(1).tagslist-list
+	$(SED) -i "s|^($$( \
+			$(ECHO) "$${TAGS_BEG}" \
+			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
+		))$${TAGS_SEP}|\1|g" $(1).tagslist-list
 endef
 
 override define $(PUBLISH)-$(TARGETS)-tagslist-done =
