@@ -9224,7 +9224,7 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			| $(YQ_WRITE) ".tags | .[]"; \
 		fi; \
 	done \
-		| $(call $(PUBLISH)-library-sort-sh,tag) \
+		| $(call $(PUBLISH)-library-sort-sh,tags) \
 		| while read -r FILE; do \
 			LINK="$(COMPOSER_LIBRARY_PATH)/tags-$$( \
 					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
@@ -9534,7 +9534,7 @@ $($(PUBLISH)-library-index):
 		title \
 		author \
 		date \
-		tag \
+		tags \
 		,\
 		$(call $(PUBLISH)-library-indexer,$(FILE)); \
 		$(call NEWLINE) \
@@ -9571,7 +9571,7 @@ override define $(PUBLISH)-library-indexer =
 		| $(SED) \
 			-e "s|^([0-9]{4}).*$$|\1|g" \
 			-e "s|^.*([0-9]{4})$$|\1|g"; \
-	elif [ "$(1)" = "tag" ]; then \
+	elif [ "$(1)" = "tags" ]; then \
 		$(YQ_WRITE) ".[].tags | .[]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
 	fi \
 		| $(call $(PUBLISH)-library-sort-sh,$(1)) \
@@ -9581,7 +9581,7 @@ override define $(PUBLISH)-library-indexer =
 					if [ "$(1)" = "title" ]; then		$(ECHO) "Title"; \
 					elif [ "$(1)" = "author" ]; then	$(ECHO) "Author"; \
 					elif [ "$(1)" = "date" ]; then		$(ECHO) "Year"; \
-					elif [ "$(1)" = "tag" ]; then		$(ECHO) "Tag"; \
+					elif [ "$(1)" = "tags" ]; then		$(ECHO) "Tag"; \
 					fi \
 				): $${FILE},$(PUBLISH)-index); \
 			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
@@ -9601,7 +9601,7 @@ override define $(PUBLISH)-library-indexer =
 				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.date == null))"					$($(PUBLISH)-library-metadata) 2>/dev/null; \
 					else				$(YQ_WRITE) "map(select(.date == \"$${FILE}*\" or .date == \"*$${FILE}\"))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
 					fi; \
-			elif [ "$(1)" = "tag" ]; then \
+			elif [ "$(1)" = "tags" ]; then \
 				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.tags == null))"			$($(PUBLISH)-library-metadata) 2>/dev/null; \
 					else				$(YQ_WRITE) "map(select(.tags | .[] | contains(\"$${FILE}\")))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
 					fi; \
