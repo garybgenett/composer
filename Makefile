@@ -1440,7 +1440,7 @@ override COMPOSER_REGEX_PREFIX		:= [_.]
 override SED_ESCAPE_LIST		:= [\$$*+.?^]
 
 #> update: includes duplicates
-override DEBUGIT			:= debug
+override DEBUGIT			:= _debug
 override PUBLISH			:= site
 
 override $(DEBUGIT)-output		:= $(if $(COMPOSER_DEBUGIT),,>/dev/null)
