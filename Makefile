@@ -1922,7 +1922,7 @@ override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
 endif
 endif
 
-override COMPOSER_EXPORTS_DEFAULT	:= $(sort $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE))))
+override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
 ifneq ($(COMPOSER_EXPORTS),)
 override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
 else
@@ -8475,6 +8475,7 @@ $(TESTING)-COMPOSER_EXPORTS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_EXPORTS$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included \
+		\n\t * Use '$(_C).$(TARGETS)$(_D)' in '$(_C)COMPOSER_EXPORTS$(_D)' \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -9096,6 +9097,9 @@ override define $(EXPORTS)-find =
 endef
 
 override define $(EXPORTS)-libraries =
+	if [ "$(1)" = "$(COMPOSER_ROOT)" ]; then \
+		$(call $(EXPORTS)-library,$(COMPOSER_DIR),$(COMPOSER_ROOT)); \
+	fi; \
 	$(FIND_ALL) $(1) \
 		\( -path $(2) -prune \) \
 		-o \( -path $(COMPOSER_DIR) -prune \) \
@@ -9104,17 +9108,21 @@ override define $(EXPORTS)-libraries =
 		-o \( -path "*/$(COMPOSER_YML)" -print \) \
 			| $(SED) "s|[/]$(COMPOSER_YML)$$||g" \
 			| while read -r LDIR; do \
-				LFIL="$$( \
-					$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $${LDIR}/$(COMPOSER_YML) 2>/dev/null \
-					| $(SED) "/^null$$/d" \
-				)"; \
-				if [ -n "$${LFIL}" ]; then \
-					$(ECHO) " -o \\\( -path $${LDIR}/$$( \
-						$(ECHO) "$${LFIL}" \
-						| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
-					) -prune \\\)\n"; \
-				fi; \
+				$(call $(EXPORTS)-library,$${LDIR}); \
 			done
+endef
+
+override define $(EXPORTS)-library =
+	LFIL="$$( \
+		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $(1)/$(COMPOSER_YML) 2>/dev/null \
+		| $(SED) "/^null$$/d" \
+	)"; \
+	if [ -n "$${LFIL}" ]; then \
+		$(ECHO) " -o \\\( -path $(if $(2),$(2),$(1))/$$( \
+			$(ECHO) "$${LFIL}" \
+			| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
+		) -prune \\\)\n"; \
+	fi
 endef
 
 ################################################################################
@@ -9618,7 +9626,7 @@ $($(PUBLISH)-library-metadata):
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(call $(EXPORTS)-find,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY)) \
-		$$($(call $(EXPORTS)-libraries,$(abspath $(dir $(COMPOSER_LIBRARY))))) \
+		$$($(call $(EXPORTS)-libraries,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY))) \
 		-o \\\( -type f -name "\*$(COMPOSER_EXT)" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 	| while read -r FILE; do \
 		$(ECHO) "$(_D)"; \
