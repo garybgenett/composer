@@ -8314,9 +8314,9 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(TESTING)-$(FILE)-$(CLEANER)\n$(TESTING)-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(CLEANER))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(TESTING)-$(FILE)-$(DOITALL)\n$(TESTING)-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(DOITALL))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 #> update: $(CLEANER) > $(DOITALL)
 #>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
@@ -8335,8 +8335,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+\/$(notdir $(call $(TESTING)-pwd))\/doc[^\/].+$(COMPOSER_LOG_DEFAULT))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
-	$(call $(TESTING)-count,4,$(TESTING)-1-$(CLEANER))
-	$(call $(TESTING)-count,4,$(TESTING)-1-$(DOITALL))
+	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(CLEANER)))
+	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(DOITALL)))
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE ---
