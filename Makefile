@@ -407,9 +407,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_TREE	[$(COMPOSER_INCLUD
 override COMPOSER_INCLUDES_LIST		:= $(COMPOSER_INCLUDES_TREE)
 ifeq ($(COMPOSER_INCLUDE),)
 ifneq ($(CURDIR),$(COMPOSER_DIR))
-ifneq ($(CURDIR),$(COMPOSER_ROOT))
 override COMPOSER_INCLUDES_LIST		:= $(firstword $(COMPOSER_INCLUDES_TREE)) $(lastword $(COMPOSER_INCLUDES_TREE))
-endif
 endif
 endif
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUDES_LIST)]))
@@ -4150,8 +4148,6 @@ override define HEREDOC_COMPOSER_YML_PUBLISH =
 ################################################################################
 
 variables:
-
-  title-prefix:				EXAMPLE SITE
 
   $(PUBLISH)-library:
     folder:				$(LIBRARY_FOLDER_ALT)
@@ -8726,7 +8722,7 @@ $(CONVICT):
 $(EXPORTS): .set_title-$(EXPORTS)
 $(EXPORTS):
 	@$(call $(HEADERS))
-	@$(eval override $(@) := $(shell $(call $(EXPORTS)-tree)))
+	@$(eval override $(@) := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT),$(COMPOSER_EXPORT))))
 	@$(foreach FILE,$($(@)),\
 		$(ENDOLINE); \
 		$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) ($(_E)$(COMPOSER_ROOT)$(_D)) $(_M)$(patsubst $(COMPOSER_ROOT),...,$(patsubst $(COMPOSER_ROOT)/%,%,$(FILE)))"; \
@@ -8792,57 +8788,52 @@ endef
 ### {{{3 $(EXPORTS)-% ------------------
 
 override define $(EXPORTS)-tree =
-	eval $(FIND_ALL) $(COMPOSER_ROOT) \
-		\\\( -path $(COMPOSER_DIR) -prune \\\) \
-		-o \\\( -path $(COMPOSER_EXPORT) -prune \\\) \
-		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
-		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
-		$$( \
-			$(call $(EXPORTS)-ignores) \
-			| while read -r EPRN; do \
-				$(ECHO) " -o \\\( -path $${EPRN} -prune \\\)"; \
-			done \
-		) \
+	$(call $(EXPORTS)-find,$(1),$(2)) \
 		-o \\\( -type d -print \\\)
 endef
 
-override define $(EXPORTS)-ignores =
-	$(FIND_ALL) $(COMPOSER_ROOT) \
-		\( -path $(COMPOSER_DIR) -prune \) \
-		-o \( -path $(COMPOSER_EXPORT) -prune \) \
-		-o \( -path $(COMPOSER_TMP) -prune \) \
-		-o \( -path "*/$(notdir $(COMPOSER_TMP))" -prune \) \
-		-o \( -path "*/$(COMPOSER_SETTINGS)" -print \) \
-			| while read -r ESET; do \
-				ESET="$$($(DIRNAME) $${ESET})"; \
-				$(MAKE) $(SILENT) --directory $${ESET} $(CONFIGS)-COMPOSER_IGNORES \
-					| while read -r EIGN; do \
-						$(ECHO) "$${ESET}/$${EIGN}\n"; \
-					done; \
-			done
-endef
-
-override define $(EXPORTS)-library =
-	if [ -f "$(1)/$(COMPOSER_YML)" ]; then \
-		ELIB="$$( \
-			$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $(1)/$(COMPOSER_YML) 2>/dev/null \
-			| $(SED) "/^null$$/d" \
-		)"; \
-		if [ -n "$${ELIB}" ]; then \
-			$(ECHO) "$(if $(2),$(2),$(1))/$$( \
-				$(ECHO) "$${ELIB}" \
-				| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
-			)\n"; \
-		fi; \
-	fi
+override define $(EXPORTS)-find =
+	eval $(FIND_ALL) $(1) \
+		\\\( -path $(2) -prune \\\) \
+		-o \\\( -path $(COMPOSER_DIR) -prune \\\) \
+		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
+		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
+		$$($(FIND_ALL) $(1) \
+			\( -path $(2) -prune \) \
+			-o \( -path $(COMPOSER_DIR) -prune \) \
+			-o \( -path $(COMPOSER_TMP) -prune \) \
+			-o \( -path "*/$(notdir $(COMPOSER_TMP))" -prune \) \
+			-o \( -path "*/$(COMPOSER_SETTINGS)" -print \) \
+				| while read -r EDIR; do \
+					EDIR="$$($(DIRNAME) $${EDIR})"; \
+					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES \
+						| while read -r EFIL; do \
+							$(ECHO) " -o \\\( -path $${EDIR}/$${EFIL} -prune \\\)"; \
+						done; \
+				done \
+		)
 endef
 
 override define $(EXPORTS)-libraries =
-	$(call $(EXPORTS)-library,$(COMPOSER_DIR),$(COMPOSER_ROOT)); \
-	$(call $(EXPORTS)-tree) \
-		| while read -r EDIR; do \
-			$(call $(EXPORTS)-library,$${EDIR}); \
-		done
+	$(FIND_ALL) $(1) \
+		\( -path $(2) -prune \) \
+		-o \( -path $(COMPOSER_DIR) -prune \) \
+		-o \( -path $(COMPOSER_TMP) -prune \) \
+		-o \( -path "*/$(notdir $(COMPOSER_TMP))" -prune \) \
+		-o \( -path "*/$(COMPOSER_YML)" -print \) \
+			| $(SED) "s|[/]$(COMPOSER_YML)$$||g" \
+			| while read -r LDIR; do \
+				LFIL="$$( \
+					$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $${LDIR}/$(COMPOSER_YML) 2>/dev/null \
+					| $(SED) "/^null$$/d" \
+				)"; \
+				if [ -n "$${LFIL}" ]; then \
+					$(ECHO) " -o \\\( -path $${LDIR}/$$( \
+						$(ECHO) "$${LFIL}" \
+						| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
+					) -prune \\\)\n"; \
+				fi; \
+			done
 endef
 
 ########################################
@@ -9621,42 +9612,9 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@eval $(FIND_ALL) $(abspath $(dir $(COMPOSER_LIBRARY))) \
-		\\\( -path $(COMPOSER_DIR) -prune \\\) \
-		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
-		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
-		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
-		$$($(FIND_ALL) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_SETTINGS)" \
-			| while read -r FILE; do \
-				$(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,COMPOSER_IGNORES)(.+)$$|\2|gp" $${FILE} \
-					| $(TR) ' ' '\n' \
-					| $(SED) "/^$$/d" \
-					| while read -r DIR; do \
-						$(ECHO) " -o \\\( -path $$($(DIRNAME) $${FILE})/$${DIR} -prune \\\)"; \
-					done; \
-			done \
-		) \
-		$$($(FIND_ALL) $(abspath $(dir $(COMPOSER_LIBRARY))) -path "*/$(COMPOSER_YML)" \
-			| while read -r FILE; do \
-				DIR="$$( \
-					$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $${FILE} 2>/dev/null \
-					| $(SED) "/^null$$/d" \
-				)"; \
-				if [ -n "$${DIR}" ]; then \
-					$(ECHO) " -o \\\( -path $$( \
-							$(DIRNAME) $${FILE} \
-						)/$$( \
-							$(ECHO) "$${DIR}" \
-							| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
-						) -prune \\\)"; \
-				fi; \
-			done \
-		) \
-		-o \\\( -type f $$( \
-				if [ -f "$(@)" ]; then \
-					$(ECHO) "-newer $(@)"; \
-				fi \
-			) -name "\*$(COMPOSER_EXT)" -print \\\) \
+	@$(call $(EXPORTS)-find,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY)) \
+		$$($(call $(EXPORTS)-libraries,$(abspath $(dir $(COMPOSER_LIBRARY))))) \
+		-o \\\( -type f -name "\*$(COMPOSER_EXT)" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 	| while read -r FILE; do \
 		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(@),$$( \
@@ -10927,33 +10885,16 @@ $(INSTALL):
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 else
-	@if	[ "$(COMPOSER_ROOT)" = "$(CURDIR)" ]; \
+	@if	[ "$(CURDIR)" = "$(COMPOSER_ROOT)" ] || \
+		[ "$(MAKELEVEL)" = "0" ]; \
 	then \
-		if	[ -f "$(CURDIR)/$(MAKEFILE)" ] && \
+		if	[ "$(CURDIR)" = "$(COMPOSER_ROOT)" ] && \
+			[ -f "$(CURDIR)/$(MAKEFILE)" ] && \
 			[ "$(COMPOSER_DOITALL_$(INSTALL))" != "$(DOFORCE)" ]; \
 		then \
 			$(call $(HEADERS)-note,$(CURDIR),$(_H)Main_$(MAKEFILE)); \
 		fi; \
-		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
-		then \
-			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL),$(COMPOSER)); \
-			$(ECHO) "$(_S)"; \
-			$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) $($(DEBUGIT)-output); \
-			$(ECHO) "$(_D)"; \
-		else \
-			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER)); \
-		fi; \
-	elif	[ "$(MAKELEVEL)" = "0" ]; \
-	then \
-		if	[ "$(COMPOSER_DOITALL_$(INSTALL))" = "$(DOFORCE)" ]; \
-		then \
-			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME),-$(INSTALL)); \
-			$(ECHO) "$(_S)"; \
-			$(MV) $(CURDIR)/$(MAKEFILE).$(COMPOSER_BASENAME) $(CURDIR)/$(MAKEFILE) $($(DEBUGIT)-output); \
-			$(ECHO) "$(_D)"; \
-		else \
-			$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL)); \
-		fi; \
+		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(if $(filter $(CURDIR),$(COMPOSER_ROOT)),$(COMPOSER)),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL)))); \
 	fi
 endif
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
