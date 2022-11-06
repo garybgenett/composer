@@ -1607,8 +1607,12 @@ override MAKE_DB			:= .make_database
 override LISTING			:= .all_targets
 override NOTHING			:= .null
 
-override DEBUGIT			:= debug
-override TESTING			:= test
+override DISTRIB			:= _release
+override UPGRADE			:= _update
+override CREATOR			:= _setup
+
+override DEBUGIT			:= _debug
+override TESTING			:= _test
 override CHECKIT			:= check
 override CONFIGS			:= config
 override TARGETS			:= targets
@@ -1616,10 +1620,6 @@ override TARGETS			:= targets
 override DOSETUP			:= _init
 override CONVICT			:= _commit
 override EXPORTS			:= _export
-#WORKING:NOW:NOW split here, and move distrib ones above...
-override DISTRIB			:= _release
-override UPGRADE			:= _update
-override CREATOR			:= _setup
 
 override PUBLISH			:= site
 override INSTALL			:= install
@@ -1643,6 +1643,10 @@ override COMPOSER_RESERVED := \
 	$(LISTING) \
 	$(NOTHING) \
 	\
+	$(DISTRIB) \
+	$(UPGRADE) \
+	$(CREATOR) \
+	\
 	$(DEBUGIT) \
 	$(TESTING) \
 	$(CHECKIT) \
@@ -1652,9 +1656,6 @@ override COMPOSER_RESERVED := \
 	$(DOSETUP) \
 	$(CONVICT) \
 	$(EXPORTS) \
-	$(DISTRIB) \
-	$(UPGRADE) \
-	$(CREATOR) \
 	\
 	$(PUBLISH) \
 	$(INSTALL) \
@@ -2240,6 +2241,9 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Full upgrade to current release, repository preparation"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)]"			"Update all included components $(_E)(see [Requirements])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Complete $(_C)[$(UPGRADE)]$(_D), including binaries: $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)]"			"Diagnostics, tests targets list in $(_C)[COMPOSER_DEBUGIT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)-file]"			"Export $(_C)[$(DEBUGIT)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)]"			"List system packages and versions $(_E)(see [Requirements])$(_D)"
@@ -2252,9 +2256,6 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)"'$$EDITOR'"$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"#WORK"
-	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Full upgrade to current release, repository preparation"
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)]"			"Update all included components $(_E)(see [Requirements])$(_D)"
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Complete $(_C)[$(UPGRADE)]$(_D), including binaries: $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
@@ -2270,11 +2271,11 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(MAKE_DB)]"			"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
+	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"#WORK"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOFORCE)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
-	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"#WORK"
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
 
 ########################################
@@ -3462,6 +3463,25 @@ endef
 #> update: $(DEBUGIT): targets list
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL))
+
+#WORKING break this section up
+
+  * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
+    and install all external components.
+  * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
+    whereas $(_C)[$(UPGRADE)]$(_D) only fetches the repositories.
+  * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) performs the steps necessary
+    to turn the current directory into a complete clone of $(_C)[$(COMPOSER_BASENAME)]$(_D).
+  * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
+    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
+
+Rapid cloning:
+
+$(CODEBLOCK)$(_C)mkdir$(_D) $(_M).../clone$(_D)
+$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../.$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT) / $(DEBUGIT)-file)
 
   * This is the tool to use for any support issues.  Submit the output file to:
@@ -3535,25 +3555,6 @@ $(CODEBLOCK)$(_E)$(call COMPOSER_TIMESTAMP)$(_D)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS))
 
 #WORKING
-
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL))
-
-#WORKING break this section up
-
-  * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
-    and install all external components.
-  * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
-    whereas $(_C)[$(UPGRADE)]$(_D) only fetches the repositories.
-  * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) performs the steps necessary
-    to turn the current directory into a complete clone of $(_C)[$(COMPOSER_BASENAME)]$(_D).
-  * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
-    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
-
-Rapid cloning:
-
-$(CODEBLOCK)$(_C)mkdir$(_D) $(_M).../clone$(_D)
-$(CODEBLOCK)$(_C)cd$(_D) $(_M).../clone$(_D)
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .../.$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
 endef
 
 ########################################
@@ -3569,11 +3570,11 @@ $(_S)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(MAKE_DB)]: #internal-targets$(_D)
 $(_S)[$(LISTING)]: #internal-targets$(_D)
 $(_S)[$(NOTHING)]: #internal-targets$(_D)
+$(_S)[$(CREATOR)]: #internal-targets$(_D)
+$(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(TESTING)]: #internal-targets$(_D)
 $(_S)[$(TESTING)-file]: #internal-targets$(_D)
 $(_S)[$(CHECKIT)-$(DOFORCE)]: #internal-targets$(_D)
-$(_S)[$(CREATOR)]: #internal-targets$(_D)
-$(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(SUBDIRS)]: #internal-targets$(_D)
 
 $(_N)*(None of these are intended to be run directly during normal use, and are only
@@ -7362,6 +7363,286 @@ else
 endif
 
 ################################################################################
+# {{{1 Release Targets ---------------------------------------------------------
+################################################################################
+
+########################################
+## {{{2 $(DISTRIB) ---------------------
+
+#> update: PHONY.*$(DISTRIB)
+#	$(UPGRADE)
+#	$(CREATOR)
+
+.PHONY: $(DISTRIB)
+$(DISTRIB): .set_title-$(DISTRIB)
+$(DISTRIB):
+	@$(call $(HEADERS))
+	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
+		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
+	fi
+	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
+	@$(MAKE) --makefile $(COMPOSER) $(UPGRADE)-$(DOITALL)
+	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)-$(DOITALL)
+
+########################################
+## {{{2 $(UPGRADE) ---------------------
+
+#> update: PHONY.*(UPGRADE)
+
+.PHONY: $(UPGRADE)
+$(UPGRADE): .set_title-$(UPGRADE)
+$(UPGRADE):
+	@$(call $(HEADERS))
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(FONTAWES_DIR)),$(FONTAWES_SRC),$(FONTAWES_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),$(WATERCSS_SRC),$(WATERCSS_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDTHEMES_DIR)),$(MDTHEMES_SRC),$(MDTHEMES_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
+endif
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
+	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
+	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
+	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
+	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+endif
+#WORK document
+ifeq ($(wildcard $(firstword $(NPM))),)
+	@$(ENDOLINE)
+	@$(MAKE) $(NOTHING)-npm
+else
+#WORK document
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
+#> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),yarn)
+endif
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(MDVIEWER_DIR))$(_D) ($(_E)build$(_D))"
+	@$(foreach FILE,\
+		mdc \
+		prism \
+		remark \
+		themes \
+		,\
+		$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),run-script) build:$(FILE); \
+		$(call NEWLINE) \
+	)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(WATERCSS_DIR))$(_D) ($(_E)build$(_D))"
+	@$(SED) -i \
+		-e "/^dist[/]$$/d" \
+		-e "/^out[/]$$/d" \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/.gitignore
+	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/parts/*.css
+	@$(foreach FILE,light dark,\
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/variables-solarized-$(FILE).css; \
+		$(call NEWLINE) \
+	)
+	@$(CP)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water.css \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
+	@$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),,yarn) build
+endif
+endif
+
+########################################
+## {{{2 $(CREATOR) ---------------------
+
+#> update: TYPE_TARGETS
+
+.PHONY: $(CREATOR)
+ifneq ($(filter $(CREATOR),$(MAKECMDGOALS)),)
+.NOTPARALLEL:
+endif
+$(CREATOR): .set_title-$(CREATOR)
+$(CREATOR):
+	@$(call $(HEADERS))
+ifneq ($(COMPOSER_RELEASE),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
+endif
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES)) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA)) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(BOOTSTRAP_DEF_JS)))) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(COMPOSER_CUSTOM)))) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,$(CREATOR))))) \
+		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CSS_THEME,$(CREATOR))))) \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
+	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(_E)"
+	@$(RM) \
+											$(CURDIR)/$(COMPOSER_YML) \
+											$(CURDIR)/$(COMPOSER_CSS) \
+											$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+endif
+endif
+ifeq ($(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
+		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
+	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
+		$(HELPOUT)-$(PUBLISH)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
+	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
+		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+endif
+endif
+	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
+	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
+endif
+	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
+endif
+endif
+	@$(ECHO) "$(_E)"
+	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
+	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
+	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
+#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
+	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
+											$($(DEBUGIT)-output)
+	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+	@$(foreach CSS_ICON,$(call CSS_ICONS),\
+		$(eval NAME := $(word 1,$(subst :, ,$(CSS_ICON)))) \
+		$(eval FILE := $(word 2,$(subst :, ,$(CSS_ICON)))) \
+		$(call NEWLINE) \
+		if [ -f "$(FILE)" ]; then \
+			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).svg $($(DEBUGIT)-output); \
+		else \
+			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).png; \
+		fi; $(call NEWLINE) \
+	)
+#> update: HEREDOC_CUSTOM_PUBLISH
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
+											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+#> update: HEREDOC_CUSTOM_PUBLISH
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(PUBLISH).css $($(DEBUGIT)-output)
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_HTML).css $($(DEBUGIT)-output)
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
+	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.pre.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.post.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.pre.css,$(BOOTSTRAP_ART_CSS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.post.css,$(BOOTSTRAP_ART_CSS)))
+	@$(LN) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
+	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
+	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
+	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
+	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
+	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
+		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
+		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_ART_CSS))&g' \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light)) \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(foreach FILE,$(call CSS_THEMES),$(if $(filter-out $(TOKEN):%,$(FILE)),\
+		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
+			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
+			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
+		)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE))))) \
+											$($(DEBUGIT)-output); \
+		$(call NEWLINE) \
+	))
+	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+		$(foreach FILE,\
+			template \
+			reference \
+			,\
+			$(PANDOC_BIN) --verbose \
+				--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" \
+				$(if $(filter $(FILE),template),--print-default-template="$(TMPL_$(TYPE))" ,\
+								--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
+				) 2>/dev/null || $(TRUE); \
+			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
+				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE))" ]; then \
+				if [ "$(FILE).$(TMPL_$(TYPE))" = "template.$(TMPL_HTML)" ]; then \
+					$(SED) "/IE 9/,/endif/d" \
+						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+						>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)); \
+				else \
+					$(LN) \
+						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
+						$($(DEBUGIT)-output); \
+				fi; \
+			fi; \
+		) \
+		$(call NEWLINE) \
+	)
+	@$(foreach FILE,\
+		templates/styles.html \
+		epub.css \
+		,\
+		$(PANDOC_BIN) --verbose \
+			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" \
+			--print-default-data-file="$(FILE)" \
+			2>/dev/null; \
+			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
+				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE))" ]; then \
+				$(LN) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE))) \
+					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE)) \
+					$($(DEBUGIT)-output); \
+			fi; \
+		$(call NEWLINE) \
+	)
+	@$(ECHO) "$(_D)"
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
+ifeq ($(COMPOSER_DEBUGIT),)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
+else
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
+endif
+	@$(ECHO) "$(_E)"
+	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
+	@$(LN)										$(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML) \
+											$(CURDIR)/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+											$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+endif
+endif
+
+################################################################################
 # {{{1 Debug Targets -----------------------------------------------------------
 ################################################################################
 
@@ -8632,7 +8913,7 @@ override define $(TARGETS)-$(PRINTER) =
 endef
 
 ################################################################################
-# {{{1 Release Targets ---------------------------------------------------------
+# {{{1 Repository Targets ------------------------------------------------------
 ################################################################################
 
 ########################################
@@ -8835,282 +9116,6 @@ override define $(EXPORTS)-libraries =
 				fi; \
 			done
 endef
-
-########################################
-## {{{2 $(DISTRIB) ---------------------
-
-#> update: PHONY.*$(DISTRIB)
-#	$(UPGRADE)
-#	$(CREATOR)
-
-.PHONY: $(DISTRIB)
-$(DISTRIB): .set_title-$(DISTRIB)
-$(DISTRIB):
-	@$(call $(HEADERS))
-	@if [ "$(COMPOSER)" != "$(CURDIR)/$(MAKEFILE)" ]; then \
-		$(CP) $(COMPOSER) $(CURDIR)/$(MAKEFILE); \
-	fi
-	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
-	@$(MAKE) --makefile $(COMPOSER) $(UPGRADE)-$(DOITALL)
-	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)-$(DOITALL)
-
-########################################
-## {{{2 $(UPGRADE) ---------------------
-
-#> update: PHONY.*(UPGRADE)
-
-.PHONY: $(UPGRADE)
-$(UPGRADE): .set_title-$(UPGRADE)
-$(UPGRADE):
-	@$(call $(HEADERS))
-ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(FONTAWES_DIR)),$(FONTAWES_SRC),$(FONTAWES_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),$(WATERCSS_SRC),$(WATERCSS_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDTHEMES_DIR)),$(MDTHEMES_SRC),$(MDTHEMES_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
-endif
-ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
-ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
-endif
-#WORK document
-ifeq ($(wildcard $(firstword $(NPM))),)
-	@$(ENDOLINE)
-	@$(MAKE) $(NOTHING)-npm
-else
-#WORK document
-ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
-#> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),yarn)
-endif
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(MDVIEWER_DIR))$(_D) ($(_E)build$(_D))"
-	@$(foreach FILE,\
-		mdc \
-		prism \
-		remark \
-		themes \
-		,\
-		$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),run-script) build:$(FILE); \
-		$(call NEWLINE) \
-	)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(WATERCSS_DIR))$(_D) ($(_E)build$(_D))"
-	@$(SED) -i \
-		-e "/^dist[/]$$/d" \
-		-e "/^out[/]$$/d" \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/.gitignore
-	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/parts/*.css
-	@$(foreach FILE,light dark,\
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-$(FILE).css; \
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/variables-solarized-$(FILE).css; \
-		$(call NEWLINE) \
-	)
-	@$(CP)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water.css \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
-	@$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),,yarn) build
-endif
-endif
-
-########################################
-## {{{2 $(CREATOR) ---------------------
-
-#> update: TYPE_TARGETS
-
-.PHONY: $(CREATOR)
-ifneq ($(filter $(CREATOR),$(MAKECMDGOALS)),)
-.NOTPARALLEL:
-endif
-$(CREATOR): .set_title-$(CREATOR)
-$(CREATOR):
-	@$(call $(HEADERS))
-ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
-endif
-	@$(ECHO) "$(_S)"
-	@$(MKDIR) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(BOOTSTRAP_DEF_JS)))) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(COMPOSER_CUSTOM)))) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,$(CREATOR))))) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CSS_THEME,$(CREATOR))))) \
-		$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-ifneq ($(COMPOSER_RELEASE),)
-ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
-	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)					>$(CURDIR)/.gitattributes
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)						>$(CURDIR)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)					>$(CURDIR)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(_E)"
-	@$(RM) \
-											$(CURDIR)/$(COMPOSER_YML) \
-											$(CURDIR)/$(COMPOSER_CSS) \
-											$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-endif
-endif
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
-		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-ifneq ($(COMPOSER_RELEASE),)
-ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
-	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
-		$(HELPOUT)-$(PUBLISH)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
-	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
-		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-endif
-endif
-	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
-	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
-endif
-	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
-ifneq ($(COMPOSER_RELEASE),)
-ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
-endif
-endif
-	@$(ECHO) "$(_E)"
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
-#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
-	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
-											$($(DEBUGIT)-output)
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
-	@$(foreach CSS_ICON,$(call CSS_ICONS),\
-		$(eval NAME := $(word 1,$(subst :, ,$(CSS_ICON)))) \
-		$(eval FILE := $(word 2,$(subst :, ,$(CSS_ICON)))) \
-		$(call NEWLINE) \
-		if [ -f "$(FILE)" ]; then \
-			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).svg $($(DEBUGIT)-output); \
-		else \
-			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).png; \
-		fi; $(call NEWLINE) \
-	)
-#> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
-											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
-#> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(PUBLISH).css $($(DEBUGIT)-output)
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_HTML).css $($(DEBUGIT)-output)
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.pre.js,$(BOOTSTRAP_ART_JS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.post.js,$(BOOTSTRAP_ART_JS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.pre.css,$(BOOTSTRAP_ART_CSS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.post.css,$(BOOTSTRAP_ART_CSS)))
-	@$(LN) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
-	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
-	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
-	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
-	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
-	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
-		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
-		) $(patsubst $(COMPOSER_DIR)%,...%,$(BOOTSTRAP_ART_CSS))&g' \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light)) \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
-	@$(foreach FILE,$(call CSS_THEMES),$(if $(filter-out $(TOKEN):%,$(FILE)),\
-		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
-			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
-			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
-		)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE))))) \
-											$($(DEBUGIT)-output); \
-		$(call NEWLINE) \
-	))
-	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-		$(foreach FILE,\
-			template \
-			reference \
-			,\
-			$(PANDOC_BIN) --verbose \
-				--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" \
-				$(if $(filter $(FILE),template),--print-default-template="$(TMPL_$(TYPE))" ,\
-								--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
-				) 2>/dev/null || $(TRUE); \
-			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
-				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE))" ]; then \
-				if [ "$(FILE).$(TMPL_$(TYPE))" = "template.$(TMPL_HTML)" ]; then \
-					$(SED) "/IE 9/,/endif/d" \
-						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
-						>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)); \
-				else \
-					$(LN) \
-						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
-						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
-						$($(DEBUGIT)-output); \
-				fi; \
-			fi; \
-		) \
-		$(call NEWLINE) \
-	)
-	@$(foreach FILE,\
-		templates/styles.html \
-		epub.css \
-		,\
-		$(PANDOC_BIN) --verbose \
-			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" \
-			--print-default-data-file="$(FILE)" \
-			2>/dev/null; \
-			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
-				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE))" ]; then \
-				$(LN) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE))) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE)) \
-					$($(DEBUGIT)-output); \
-			fi; \
-		$(call NEWLINE) \
-	)
-	@$(ECHO) "$(_D)"
-ifneq ($(COMPOSER_RELEASE),)
-ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
-ifeq ($(COMPOSER_DEBUGIT),)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
-else
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
-endif
-	@$(ECHO) "$(_E)"
-	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
-	@$(LN)										$(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML) \
-											$(CURDIR)/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
-											$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-endif
-endif
 
 ################################################################################
 # {{{1 Main Targets ------------------------------------------------------------
