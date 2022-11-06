@@ -2322,9 +2322,6 @@ $(HELPOUT)-$(HEADERS)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(MAKE) $(SILENT) $(HELPOUT)-$(DOITALL)-HEADER
-		@if [ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ]; then \
-			$(call TITLE_LN,spacer); \
-		fi
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -3994,13 +3991,10 @@ $(_S)########################################$(_D)
     $(_M)CONTENTS$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
       - $(_C)readtime$(_D)
-      - $(_C)spacer$(_D)
       - $(_C)contents$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
-      - $(_C)spacer$(_D)
       - $(_C)creators$(_D)
-      - $(_C)spacer$(_D)
       - $(_C)tagslist$(_D)
       - $(_C)box-end$(_D)
     $(_M)END$(_D):
@@ -4106,7 +4100,7 @@ variables:
       - Top: $(OUT_README).$(PUBLISH).$(EXTN_HTML)
       - Formats:
         - Example Website: $(notdir $($(PUBLISH)-$(EXAMPLE)))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
-        - spacer:$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        - $(FILE): $(FILE))
+        - spacer$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        - $(FILE): $(FILE))
     CONTENTS:
       - contents
 
@@ -4249,9 +4243,7 @@ variables:
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
       - creators
-      - spacer
       - tagslist
-      - spacer
       - readtime
       - box-end
     END:
@@ -4307,11 +4299,8 @@ variables:
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
       - readtime
-      - spacer
       - contents 3
-      - spacer
       - creators
-      - spacer
       - tagslist
       - box-end
 
@@ -4796,25 +4785,33 @@ function $(PUBLISH)-nav-side-list {
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-nav-side-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
+			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^contents|contents-list|g"
 			) $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
+			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^creators|creators-list|g"
 			) $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^tagslist|tagslist-list|g"
 			) $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
+			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^readtime|readtime-list|g"
 			) $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "\\n"
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
@@ -7060,9 +7057,7 @@ endif
 #.		else	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	$(1)	$(SPECIAL_VAL)	$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
 #>		fi;
 override define TITLE_LN =
-	if	[ "$(1)" = "spacer" ]; then \
-		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(_D)\n\n"; \
-	elif	[ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ] && \
+	if	[ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ] && \
 		[ "$(1)" != "-1" ] && \
 		[ "$(1)" != "1" ] && \
 		[ "$(1)" != "$(DEPTH_MAX)" ]; then \
@@ -9239,6 +9234,49 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 endef
 
 ########################################
+#### {{{4 $(PUBLISH)-$(TARGETS)-metalist
+
+override define $(PUBLISH)-$(TARGETS)-metalist =
+	META="$(call COMPOSER_YML_DATA_VAL,config.$(2))"; \
+	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\1|g")"; \
+	META_SEP="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\2|g")"; \
+	META_END="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\3|g")"; \
+	if [ -z "$${META_SEP}" ]; then \
+		META_SEP=" "; \
+	fi; \
+	$(ECHO) "$${META_BEG}" >>$(1).$(2)-list; \
+	for META in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
+		if [ -n "$$( \
+			$(SED) -n "1{/^---$$/p}" $${META} \
+		)" ]; then \
+			$(SED) -n "1,/^---$$/p" $${META} \
+			| $(YQ_WRITE) ".$(3) | .[]"; \
+		fi; \
+	done \
+		| $(call $(PUBLISH)-library-sort-sh,$(3)) \
+		| while read -r FILE; do \
+			LINK="$(COMPOSER_LIBRARY_PATH)/$(patsubst %s,%,$(3))s-$$( \
+					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
+				).$(EXTN_HTML)"; \
+			$(ECHO) "  * [$${FILE}]($${LINK}){.breadcrumb-item}\n"	>>$(1).$(2)-menu; \
+			$(ECHO) "$${META_SEP}[$${FILE}]($${LINK})"		>>$(1).$(2)-list; \
+		done; \
+	$(ECHO) "$${META_END}\n" >>$(1).$(2)-list; \
+	$(SED) -i "s|^($$( \
+			$(ECHO) "$${META_BEG}" \
+			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
+		))$${META_SEP}|\1|g" $(1).$(2)-list
+endef
+
+override define $(PUBLISH)-$(TARGETS)-metalist-done =
+	$(SED) -i \
+		-e "1d" \
+		-e '$$d' \
+		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
+		$(1)
+endef
+
+########################################
 #### {{{4 $(PUBLISH)-$(TARGETS)-contents
 
 override define $(PUBLISH)-$(TARGETS)-contents =
@@ -9265,7 +9303,6 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		elif [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then	LIST_MAX="$(DEPTH_MAX)"; \
 		else						LIST_MAX="$${LIST}"; \
 		fi; \
-	$(ECHO) "\n" >>$(1).contents-list; \
 	CNT="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) "length" 2>/dev/null)"; \
 	NUM="0"; while [ "$${NUM}" -lt "$${CNT}" ]; do \
 		MENU_HDR="$(SPECIAL_VAL)"; \
@@ -9339,7 +9376,6 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		$(ECHO) " $(DIVIDE) $${TXT}\n" $($(DEBUGIT)-output); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 	done; \
-	$(ECHO) "\n" >>$(1).contents-list; \
 	if [ -n "$${ROOT}" ]; then \
 		$(SED) -i \
 			-e "s|^  \* (.+)$$|\n\1\n|g" \
@@ -9372,86 +9408,22 @@ endef
 #### {{{4 $(PUBLISH)-$(TARGETS)-creators
 
 override define $(PUBLISH)-$(TARGETS)-creators =
-	AUTH="$(call COMPOSER_YML_DATA_VAL,config.creators)"; \
-	AUTH_BEG="$$($(ECHO) "$${AUTH}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\1|g")"; \
-	AUTH_SEP="$$($(ECHO) "$${AUTH}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\2|g")"; \
-	AUTH_END="$$($(ECHO) "$${AUTH}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\3|g")"; \
-	if [ -z "$${AUTH_SEP}" ]; then \
-		AUTH_SEP=" "; \
-	fi; \
-	$(ECHO) "$${AUTH_BEG}" >>$(1).creators-list; \
-	for AUTH in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
-		if [ -n "$$( \
-			$(SED) -n "1{/^---$$/p}" $${AUTH} \
-		)" ]; then \
-			$(SED) -n "1,/^---$$/p" $${AUTH} \
-			| $(YQ_WRITE) ".author | .[]"; \
-		fi; \
-	done \
-		| $(call $(PUBLISH)-library-sort-sh,author) \
-		| while read -r FILE; do \
-			LINK="$(COMPOSER_LIBRARY_PATH)/authors-$$( \
-					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
-				).$(EXTN_HTML)"; \
-			$(ECHO) "  * [$${FILE}]($${LINK}){.breadcrumb-item}\n"	>>$(1).creators-menu; \
-			$(ECHO) "$${AUTH_SEP}[$${FILE}]($${LINK})"		>>$(1).creators-list; \
-		done; \
-	$(ECHO) "$${AUTH_END}\n" >>$(1).creators-list; \
-	$(SED) -i "s|^($$( \
-			$(ECHO) "$${AUTH_BEG}" \
-			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
-		))$${AUTH_SEP}|\1|g" $(1).creators-list
+	$(call $(PUBLISH)-$(TARGETS)-metalist,$(1),creators,author)
 endef
 
 override define $(PUBLISH)-$(TARGETS)-creators-done =
-	$(SED) -i \
-		-e "1d" \
-		-e '$$d' \
-		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
-		$(1)
+	$(call $(PUBLISH)-$(TARGETS)-metalist-done,$(1))
 endef
 
 ########################################
 #### {{{4 $(PUBLISH)-$(TARGETS)-tagslist
 
 override define $(PUBLISH)-$(TARGETS)-tagslist =
-	TAGS="$(call COMPOSER_YML_DATA_VAL,config.tagslist)"; \
-	TAGS_BEG="$$($(ECHO) "$${TAGS}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\1|g")"; \
-	TAGS_SEP="$$($(ECHO) "$${TAGS}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\2|g")"; \
-	TAGS_END="$$($(ECHO) "$${TAGS}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\3|g")"; \
-	if [ -z "$${TAGS_SEP}" ]; then \
-		TAGS_SEP=" "; \
-	fi; \
-	$(ECHO) "$${TAGS_BEG}" >>$(1).tagslist-list; \
-	for TAGS in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
-		if [ -n "$$( \
-			$(SED) -n "1{/^---$$/p}" $${TAGS} \
-		)" ]; then \
-			$(SED) -n "1,/^---$$/p" $${TAGS} \
-			| $(YQ_WRITE) ".tags | .[]"; \
-		fi; \
-	done \
-		| $(call $(PUBLISH)-library-sort-sh,tags) \
-		| while read -r FILE; do \
-			LINK="$(COMPOSER_LIBRARY_PATH)/tags-$$( \
-					$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${FILE}) \
-				).$(EXTN_HTML)"; \
-			$(ECHO) "  * [$${FILE}]($${LINK}){.breadcrumb-item}\n"	>>$(1).tagslist-menu; \
-			$(ECHO) "$${TAGS_SEP}[$${FILE}]($${LINK})"		>>$(1).tagslist-list; \
-		done; \
-	$(ECHO) "$${TAGS_END}\n" >>$(1).tagslist-list; \
-	$(SED) -i "s|^($$( \
-			$(ECHO) "$${TAGS_BEG}" \
-			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
-		))$${TAGS_SEP}|\1|g" $(1).tagslist-list
+	$(call $(PUBLISH)-$(TARGETS)-metalist,$(1),tagslist,tags)
 endef
 
 override define $(PUBLISH)-$(TARGETS)-tagslist-done =
-	$(SED) -i \
-		-e "1d" \
-		-e '$$d' \
-		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
-		$(1)
+	$(call $(PUBLISH)-$(TARGETS)-metalist-done,$(1))
 endef
 
 ########################################
@@ -10344,9 +10316,9 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		consolidate creators/tagslist into a single helper...
-#			add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
-#			behavior can be strange when there are no authors/tags... it can leave dangling text...
+#		can the breadcrumbs be cleaned up...?
+#		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
+#			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
 #		ability to remove author name(s) from digest(s)
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
