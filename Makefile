@@ -1955,6 +1955,7 @@ endif
 #> update: $(HEADERS)-$(EXAMPLE)
 
 #WORK document!
+#WORK test?
 #WORK also document command variables?  maybe another "reserved"-style section that parses them out?
 #WORK DO_HEREDOC
 #WORK $($(DEBUGIT)-output)
@@ -4572,7 +4573,7 @@ $${CAT} <<_EOF_
 	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )" data-bs-toggle="dropdown">$${FILE}</a>
-<ul class="$(COMPOSER_TINYNAME)-menu-$$(COMPOSER_YML_DATA_VAL config.cols_break) dropdown-menu">
+<ul class="$${COMPOSER_TINYNAME}-menu-$$(COMPOSER_YML_DATA_VAL config.cols_break) dropdown-menu">
 _EOF_
 			else
 $${CAT} <<_EOF_
@@ -4580,7 +4581,7 @@ $${CAT} <<_EOF_
 	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )">$${FILE}</a>
-<ul class="$(COMPOSER_TINYNAME)-menu-list">
+<ul class="$${COMPOSER_TINYNAME}-menu-list">
 _EOF_
 			fi
 			$(PUBLISH)-nav-top-list "$${1}[$${NUM}].[\"$${FILE}\"]" || return 1
@@ -4665,9 +4666,9 @@ $${CAT} <<_EOF_
 <li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
-#><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="breadcrumb">
+#><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="$${COMPOSER_TINYNAME}-breadcrumb breadcrumb">
 $${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3"><ol class="breadcrumb">
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3"><ol class="$${COMPOSER_TINYNAME}-breadcrumb breadcrumb">
 <li class="breadcrumb-item"></li>
 _EOF_
 #>		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]"
@@ -4842,7 +4843,7 @@ function $(PUBLISH)-nav-side-library {
 		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
 	else
 $${CAT} <<_EOF_
-<table class="$(COMPOSER_TINYNAME)-table table table-borderless align-top">
+<table class="$${COMPOSER_TINYNAME}-table table table-borderless align-top">
 _EOF_
 #>		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX}
 		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
@@ -5579,6 +5580,11 @@ html {
 	list-style-type:		none;
 	list-style-position:		none;
 	list-style-image:		none;
+}
+
+.$(COMPOSER_TINYNAME)-breadcrumb {
+	margin:				0px;
+	padding:			0px;
 }
 
 /* ################################## */
@@ -10316,7 +10322,6 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		can the breadcrumbs be cleaned up...?
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
 #		ability to remove author name(s) from digest(s)
