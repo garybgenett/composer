@@ -9053,22 +9053,22 @@ $(EXPORTS)-git:
 	@$(call $(HEADERS))
 	@$(call $(EXPORTS)-$(CONFIGS),1)
 ifneq ($(and \
-	$(EXPORT_MIRROR) ,\
-	$(EXPORT_BRANCH) \
+	$(_EXPORT_GIT_REPO) ,\
+	$(_EXPORT_GIT_BRANCH) \
 ),)
-	@$(call GIT_RUN_COMPOSER,subtree split -d --prefix "$(notdir $(COMPOSER_EXPORT))" --branch "$(EXPORT_BRANCH)")
-	@$(call GIT_RUN_COMPOSER,--no-pager log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(EXPORT_BRANCH)")
+	@$(call GIT_RUN_COMPOSER,subtree split -d --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BRANCH)")
+	@$(call GIT_RUN_COMPOSER,--no-pager log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(_EXPORT_GIT_BRANCH)")
 	@$(ENDOLINE)
-	@$(call GIT_RUN_COMPOSER,push --force "$(EXPORT_MIRROR)" "$(EXPORT_BRANCH)")
+	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BRANCH)")
 endif
 
 override define $(EXPORTS)-$(CONFIGS) =
-	if	[ -n "$(EXPORT_MIRROR)" ] || \
+	if	[ -n "$(_EXPORT_GIT_REPO)" ] || \
 		[ -n "$(1)" ]; \
 	then \
 		$(foreach FILE,\
-			EXPORT_MIRROR \
-			EXPORT_BRANCH \
+			_EXPORT_GIT_REPO \
+			_EXPORT_GIT_BRANCH \
 			,\
 			$(TABLE_M2) "$(_C)$(FILE)" "$(_M)$($(FILE))"; \
 		) \
@@ -9708,6 +9708,7 @@ $($(PUBLISH)-library-index):
 			$(@).$(PRINTER) \
 			$(@).$(COMPOSER_BASENAME) \
 			2>/dev/null \
+		| $(YQ_WRITE_FILE) 2>/dev/null \
 		>$(@).$(PUBLISH); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 	@$(ECHO) "$(_D)"
@@ -9731,14 +9732,16 @@ override define $(PUBLISH)-library-indexer =
 	if [ "$(1)" = "title" ]; then \
 		$(YQ_WRITE) ".[].[\".$(COMPOSER_BASENAME)\"]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
 	elif [ "$(1)" = "author" ]; then \
-		$(YQ_WRITE) ".[].author | .[]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
+		$(YQ_WRITE) ".[].author" $($(PUBLISH)-library-metadata) 2>/dev/null \
+		| $(SED) "s|^[-][ ]||g"; \
 	elif [ "$(1)" = "date" ]; then \
 		$(YQ_WRITE) ".[].date" $($(PUBLISH)-library-metadata) 2>/dev/null \
 		| $(SED) \
 			-e "s|^([0-9]{4}).*$$|\1|g" \
 			-e "s|^.*([0-9]{4})$$|\1|g"; \
 	elif [ "$(1)" = "tags" ]; then \
-		$(YQ_WRITE) ".[].tags | .[]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
+		$(YQ_WRITE) ".[].tags" $($(PUBLISH)-library-metadata) 2>/dev/null \
+		| $(SED) "s|^[-][ ]||g"; \
 	fi \
 		| $(call $(PUBLISH)-library-sort-sh,$(1)) \
 		| while read -r FILE; do \
