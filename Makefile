@@ -1759,6 +1759,15 @@ override define COMPOSER_YML_DATA_SKEL =
 }}
 endef
 
+override define COMPOSER_YML_DATA_INDEX =
+{ .$(COMPOSER_BASENAME):		{},
+  titles:				{ null: [] },
+  authors:				{ null: [] },
+  dates:				{ null: [] },
+  tags:					{ null: [] },
+}
+endef
+
 #>	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null
 override COMPOSER_YML_DATA_VAL = $(shell \
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
@@ -9692,15 +9701,20 @@ $($(PUBLISH)-library-index):
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
+	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_INDEX))\n' >$(@).$(PRINTER)
 	@$(ECHO) "$(_F)"
-#>	@$(YQ_WRITE_FILE) "sort_keys(..)" $(@).$(COMPOSER_BASENAME) 2>/dev/null
-	@$(YQ_WRITE_FILE) $(@).$(COMPOSER_BASENAME) 2>/dev/null \
+#>		| $(YQ_WRITE_FILE) "sort_keys(..)" 2>/dev/null
+	@$(YQ_EVAL_FILES) \
+			$(@).$(PRINTER) \
+			$(@).$(COMPOSER_BASENAME) \
+			2>/dev/null \
 		>$(@).$(PUBLISH); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 	@$(ECHO) "$(_D)"
 	@if [ -s "$(@).$(PUBLISH)" ]; then \
 		$(ECHO) "$(_S)"; \
 		$(RM) $(@).$(COMPOSER_BASENAME)	$($(DEBUGIT)-output); \
+		$(RM) $(@).$(PRINTER)		$($(DEBUGIT)-output); \
 		$(MV) $(@).$(PUBLISH) $(@)	$($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	else \
