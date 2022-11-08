@@ -574,13 +574,6 @@ override COMPOSER_IGNORES		?=
 #>override COMPOSER_IGNORES		:=
 #>endif
 
-override COMPOSER_EXPORTS		:= $(sort \
-	$(notdir $(COMPOSER_EXPORTS)) \
-)
-override COMPOSER_IGNORES		:= $(sort \
-	$(notdir $(COMPOSER_IGNORES)) \
-)
-
 ########################################
 
 $(call READ_ALIASES,S,S,c_site)
@@ -1749,13 +1742,13 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
   },
 
-  $(PUBLISH)-nav-top:			null,
-  $(PUBLISH)-nav-bottom:		null,
+  $(PUBLISH)-nav-top:				null,
+  $(PUBLISH)-nav-bottom:			null,
   $(PUBLISH)-nav-left:			null,
   $(PUBLISH)-nav-right:			null,
 
   $(PUBLISH)-info-top:			null,
-  $(PUBLISH)-info-bottom:		null,
+  $(PUBLISH)-info-bottom:			null,
 }}
 endef
 
@@ -2849,15 +2842,9 @@ endef
 #	file targets can not depend on non-file targets...?
 #		MANUAL.pdf: pre-process README.md LICENSE.md
 #	infinite "include" loops are not detected...
-#	document:
-#		COMPOSER_DIR
-#		COMPOSER_ROOT
-#		COMPOSER_EXPORT
-#		COMPOSER_TMP
-#		COMPOSER_LIBRARY
-#		COMPOSER_PKG
-#		COMPOSER_ART
-#		PANDOC_DATA
+#	index.html: $(CURDIR)/history/index-include.md.cms
+#		add to to documentation
+#		must use the full path name for the library include...
 
 #WORK
 #	features
@@ -2869,6 +2856,16 @@ endef
 #		composer makes it very easy to create rich interfaces for delivering content efficiently
 #		the trade-off is that the computational horsepower is spent as capital rather than operational cost
 #		best practice is to have an overnight $(PUBLISH)-$(DOFORCE) process...
+#	document:
+#		COMPOSER_MY_PATH
+#		COMPOSER_DIR
+#		COMPOSER_ROOT
+#		COMPOSER_EXPORT
+#		COMPOSER_TMP
+#		COMPOSER_LIBRARY
+#		COMPOSER_PKG
+#		COMPOSER_ART
+#		PANDOC_DATA
 
 #WORK
 #	add a list of the formats here...
@@ -3823,16 +3820,77 @@ override c_icon				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER
 endef
 
 ########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) $(EXAMPLE))
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(EXAMPLE))
+################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
+
+$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML): $$(CURDIR)/$(LIBRARY_FOLDER_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
+
+################################################################################
+endif
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
 ## {{{2 Heredoc: composer_mk ($(PUBLISH) $(NOTHING))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_NOTHING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
 ################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
 
 override c_logo				:=
 override c_icon				:=
 
+################################################################################
+endif
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) $(CONFIGS))
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(CONFIGS))
+################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
+
+$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML): $$(CURDIR)/$(LIBRARY_FOLDER_ALT)-$(CONFIGS)/$(notdir $($(PUBLISH)-library-digest-src))
+
+################################################################################
+endif
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) $(PANDOC))
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_PANDOC =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PANDOC_DIR)))
+################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
+
+override COMPOSER_IGNORES		:= .github
+
+################################################################################
+endif
 ################################################################################
 # End Of File
 ################################################################################
@@ -3845,11 +3903,15 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
 ################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
 
 override COMPOSER_INCLUDE		:=
 
 override c_css				:= $(SPECIAL_VAL)
 
+################################################################################
+endif
 ################################################################################
 # End Of File
 ################################################################################
@@ -4145,11 +4207,11 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH))
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
 
-override define HEREDOC_COMPOSER_YML_PUBLISH =
+override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(EXAMPLE))
 ################################################################################
 
 variables:
@@ -4183,6 +4245,21 @@ variables:
       - box-begin $(SPECIAL_VAL) CONTENTS
       - contents $(SPECIAL_VAL)
       - box-end
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(NOTHING))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
+################################################################################
+
+$(call COMPOSER_YML_DATA_SKEL)
 
 ################################################################################
 # End Of File
@@ -5677,6 +5754,7 @@ endef
 ########################################
 ### {{{3 custom_$(PUBLISH)_css (Theme) -
 
+#WORKING:NOW:NOW solar= *-done?
 override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
 /* #############################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS (Theme)
@@ -10126,13 +10204,15 @@ endif
 	)
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_SETTINGS))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS)
-	@$(RM)								>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_NOTHING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(RM)								>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
-	@$(ECHO) "override COMPOSER_IGNORES := .github\n"		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS)		>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(RM)								>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
-	@$(RM)								>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_S)"
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
+	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(foreach FILE,\
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
@@ -10144,8 +10224,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)		>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n'		>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
@@ -10184,6 +10264,7 @@ endif
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-features)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-features$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL)
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs)),$(COMPOSER_SETTINGS))
+	@$(ECHO) "\n"											>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(notdir $($(PUBLISH)-$(EXAMPLE)-examples)).$(EXTN_HTML)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
@@ -10216,9 +10297,9 @@ endif
 		) \
 	)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+		| $(SED) -e "s|[[:space:]]*$$||g"			>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"			>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
+		| $(SED) -e "s|[[:space:]]*$$||g"			>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)) \
 		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"	>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
@@ -10284,8 +10365,8 @@ endif
 		$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)) \
 		,{ \
 			$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
-			$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS); \
-			$(ECHO) "$(_C)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML); \
+			$(ECHO) "$(_M)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_SETTINGS)	|| $(TRUE); \
+			$(ECHO) "$(_C)"; $(CAT) $($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(COMPOSER_YML)	|| $(TRUE); \
 			if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml" ]; then \
 				$(ECHO) "$(_E)"; $(CAT)	$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$(LIBRARY_FOLDER_ALT).yml; fi; \
 			if [ -f				"$($(PUBLISH)-$(EXAMPLE))/$(FILE)/$($(PUBLISH)-$(EXAMPLE)-library).yml" ]; then \
@@ -10338,7 +10419,11 @@ else
 endif
 
 #WORKING:NOW:NOW
+#	move themes heredocs up to the heredoc section, and the library.yml up above example...
+#	move cols_* back above helpers in yml configuration files again?  where does css_shade fit?
+#	COMPOSER_IGNORES priority ordering with COMPOSER_TARGETS, COMPOSER_EXPORTS, etc., which wins?
 #	site
+#		replace COMPOSER_MY_PATH hack with a COMPOSER_CURDIR boolean variable?  to simplify...?  affirmative.
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
 #		ability to remove author name(s) from digest(s)
@@ -10354,9 +10439,17 @@ endif
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS) =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
+################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
+
 override MAKEJOBS :=
 override COMPOSER_TARGETS := $($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)
 override COMPOSER_IGNORES := $($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+
+################################################################################
 
 .PHONY: themes-$(CLEANER)
 themes-$(CLEANER):
@@ -10376,8 +10469,9 @@ themes-done:
 themes-%:
 	@$$(call $$(COMPOSER_TINYNAME)-note,$$(*))
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_YML) \
-$(foreach FILE,$(CSS_THEMES),\
+	@$$(TOUCH) $$(COMPOSER_YML)
+
+########################################$(foreach FILE,$(CSS_THEMES),\
 	$(if $(filter-out $(TOKEN),\
 		$(word 4,$(subst :, ,$(FILE))) \
 	),\
@@ -10386,11 +10480,16 @@ $(foreach FILE,$(CSS_THEMES),\
 		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
 ))))
 
-override COMPOSER_TARGETS += themes-done
-endef
-
 ########################################
-##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target
+
+override COMPOSER_TARGETS += themes-done
+
+################################################################################
+endif
+################################################################################
+# End Of File
+################################################################################
+endef
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target =
 override COMPOSER_TARGETS += $(1).done
@@ -10410,9 +10509,18 @@ endef
 ##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)
 
 override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML) =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes)
+################################################################################
+
 variables:
+
   $(PUBLISH)-config:
-    css_shade: $(PUBLISH_CSS_SHADE)
+    css_shade:				$(PUBLISH_CSS_SHADE)
+
+################################################################################
+# End Of File
+################################################################################
 endef
 
 ########################################
