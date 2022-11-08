@@ -3918,6 +3918,92 @@ endif
 endef
 
 ########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) pages)
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_PAGES =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) pages)
+################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
+################################################################################
+endif
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_mk ($(PUBLISH) themes)
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
+################################################################################
+ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+################################################################################
+
+override MAKEJOBS :=
+override COMPOSER_TARGETS := $($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)
+override COMPOSER_IGNORES := $($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+
+################################################################################
+
+.PHONY: themes-$(CLEANER)
+themes-$(CLEANER):
+	@$$(foreach FILE,$$(filter %.done,$$(COMPOSER_TARGETS)),\\
+		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_HTML),$$(FILE))); \\
+		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_PRES),$$(FILE))); \\
+		$$(call NEWLINE) \\
+	)
+	@$$(ECHO) ""
+
+.PHONY: themes-done
+themes-done: themes-$(PUBLISH_CSS_SHADE)
+themes-done:
+	@$$(ECHO) ""
+
+.PHONY: themes-%
+themes-%:
+	@$$(call $$(COMPOSER_TINYNAME)-note,$$(*))
+	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
+	@$$(TOUCH) $$(COMPOSER_YML)
+
+########################################$(foreach FILE,$(CSS_THEMES),\
+	$(if $(filter-out $(TOKEN),\
+		$(word 4,$(subst :, ,$(FILE))) \
+	),\
+	$(call NEWLINE)$(call NEWLINE)$(call \
+		HEREDOC_COMPOSER_MK_PUBLISH_THEMES_TARGET,$(strip \
+		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
+))))
+
+########################################
+
+override COMPOSER_TARGETS += themes-done
+
+################################################################################
+endif
+################################################################################
+# End Of File
+################################################################################
+endef
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES_TARGET =
+override COMPOSER_TARGETS += $(1).done
+$(1).done: $$(COMPOSER_YML)
+$(1).done:
+	@$$(MAKE) $$(SILENT) themes-$(word 2,$(subst +, ,$(1)))
+	@$$(MAKE) \\
+		c_type="$(if $(filter $(TYPE_PRES).%,$(1)),$(TYPE_PRES),$(TYPE_HTML))" \\
+		c_base="$(1)" \\
+		c_list="$($(PUBLISH)-$(EXAMPLE)-index)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)" \\
+		c_css="$(word 1,$(subst +, ,$(1)))" \\
+		$$(COMPOSER_PANDOC)
+	@$$(ECHO) "" >$$(@)
+endef
+
+########################################
 ## {{{2 Heredoc: composer_yml ----------
 
 override define HEREDOC_COMPOSER_YML =
@@ -4207,25 +4293,6 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
-
-override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(EXAMPLE))
-################################################################################
-
-variables:
-
-  $(PUBLISH)-library:
-    folder:				$(LIBRARY_FOLDER_ALT)
-    auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
 ## {{{2 Heredoc: composer_yml ($(PUBLISH) $(LIBRARY_FOLDER))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY =
@@ -4245,6 +4312,25 @@ variables:
       - box-begin $(SPECIAL_VAL) CONTENTS
       - contents $(SPECIAL_VAL)
       - box-end
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(EXAMPLE))
+################################################################################
+
+variables:
+
+  $(PUBLISH)-library:
+    folder:				$(LIBRARY_FOLDER_ALT)
+    auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
 
 ################################################################################
 # End Of File
@@ -4408,6 +4494,36 @@ variables:
 
   $(PUBLISH)-config:
     css_shade:				null
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) pages)
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_PAGES =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) pages)
+################################################################################
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+## {{{2 Heredoc: composer_yml ($(PUBLISH) themes)
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_THEMES =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes)
+################################################################################
+
+variables:
+
+  $(PUBLISH)-config:
+    css_shade:				$(PUBLISH_CSS_SHADE)
 
 ################################################################################
 # End Of File
@@ -10209,10 +10325,9 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS)		>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(_S)"
-	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
-	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PAGES)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_THEMES)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(foreach FILE,\
 		$($(PUBLISH)-$(EXAMPLE)-dirs) \
@@ -10224,17 +10339,16 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 endif
 	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE)),.../$(COMPOSER_YML))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_YML)
-	@$(ECHO) "$(_S)"
-	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_YML) $($(DEBUGIT)-output)
-	@$(RM)								$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(LIBRARY_FOLDER_ALT).yml
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY)	>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGES)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_THEMES)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(SED) -i \
 		-e "s|^(.+creators[:]).*$$|\1|g" \
@@ -10263,7 +10377,6 @@ endif
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS))					>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-included)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-features)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-features$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL)
-	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs)),$(COMPOSER_SETTINGS))
 	@$(ECHO) "\n"											>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
@@ -10287,7 +10400,6 @@ endif
 	))
 	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"										>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)),$(COMPOSER_SETTINGS))
 	@$(foreach FILE,$(CSS_THEMES),\
 		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
 		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
@@ -10296,15 +10408,11 @@ endif
 			$(call NEWLINE) \
 		) \
 	)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"			>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)) \
-		| $(SED) -e "s|[[:space:]]*$$||g"			>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)) \
-		| $(SED) -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"	>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-themes)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "$(_E)"
 	@$(LN)								$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))) \
 									$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_DEFAULT) \
@@ -10419,7 +10527,6 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	move themes heredocs up to the heredoc section, and the library.yml up above example...
 #	move cols_* back above helpers in yml configuration files again?  where does css_shade fit?
 #	COMPOSER_IGNORES priority ordering with COMPOSER_TARGETS, COMPOSER_EXPORTS, etc., which wins?
 #	site
@@ -10434,130 +10541,6 @@ endif
 #			maybe a shorthand for images...?
 #			basically, try to replace as much html as possible...
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
-
-########################################
-##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)
-
-override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS) =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
-################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
-################################################################################
-
-override MAKEJOBS :=
-override COMPOSER_TARGETS := $($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)
-override COMPOSER_IGNORES := $($(PUBLISH)-$(EXAMPLE)-index).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-
-################################################################################
-
-.PHONY: themes-$(CLEANER)
-themes-$(CLEANER):
-	@$$(foreach FILE,$$(filter %.done,$$(COMPOSER_TARGETS)),\\
-		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_HTML),$$(FILE))); \\
-		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_PRES),$$(FILE))); \\
-		$$(call NEWLINE) \\
-	)
-	@$$(ECHO) ""
-
-.PHONY: themes-done
-themes-done: themes-$(PUBLISH_CSS_SHADE)
-themes-done:
-	@$$(ECHO) ""
-
-.PHONY: themes-%
-themes-%:
-	@$$(call $$(COMPOSER_TINYNAME)-note,$$(*))
-	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_YML)
-
-########################################$(foreach FILE,$(CSS_THEMES),\
-	$(if $(filter-out $(TOKEN),\
-		$(word 4,$(subst :, ,$(FILE))) \
-	),\
-	$(call NEWLINE)$(call NEWLINE)$(call \
-		$(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target,$(strip \
-		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
-))))
-
-########################################
-
-override COMPOSER_TARGETS += themes-done
-
-################################################################################
-endif
-################################################################################
-# End Of File
-################################################################################
-endef
-
-override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_SETTINGS)-target =
-override COMPOSER_TARGETS += $(1).done
-$(1).done: $$(COMPOSER_YML)
-$(1).done:
-	@$$(MAKE) $$(SILENT) themes-$(word 2,$(subst +, ,$(1)))
-	@$$(MAKE) \\
-		c_type="$(if $(filter $(TYPE_PRES).%,$(1)),$(TYPE_PRES),$(TYPE_HTML))" \\
-		c_base="$(1)" \\
-		c_list="$($(PUBLISH)-$(EXAMPLE)-index)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)" \\
-		c_css="$(word 1,$(subst +, ,$(1)))" \\
-		$$(COMPOSER_PANDOC)
-	@$$(ECHO) "" >$$(@)
-endef
-
-########################################
-##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML)
-
-override define $(PUBLISH)-$(EXAMPLE)-themes-$(COMPOSER_YML) =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes)
-################################################################################
-
-variables:
-
-  $(PUBLISH)-config:
-    css_shade:				$(PUBLISH_CSS_SHADE)
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-##### {{{5 $(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER)
-
-override define $(PUBLISH)-$(EXAMPLE)-themes-$(PRINTER) =
-$(strip \
-$(foreach FILE,$(CSS_THEMES),\
-	$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
-	$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
-	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
-	$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
-	$(if $(filter-out $(TOKEN),$(TITLE)),\
-		[N]**$(subst $(TOKEN), ,$(TITLE))** \
-		$(if $(filter [$(COMPOSER_BASENAME)],$(TITLE)),\
-			*(Templates)* \
-		) \
-		[N][N] \
-	) \
-	$(if $(filter-out $(TOKEN),$(SHADE)),\
-		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
-		$(if $(filter-out $(TOKEN),$(DEFLT)),\
-			**(default: `$(DEFLT)`)** \
-		) \
-		$(if $(filter $(PUBLISH).solar-light,$(THEME)),\
-			[N]\t\t\t\t*(same as `$(PUBLISH).solar-dark`)* \
-		) \
-		$(if $(or \
-			$(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)) ,\
-			$(filter $(TYPE_HTML).solar-$(CSS_ALT),$(THEME)) ,\
-		),\
-			[N]\t\t\t\t* *(automatic `prefers-color-scheme` color selection)* \
-		) \
-		[N] \
-	) \
-))
-endef
 
 ########################################
 #### {{{4 Heredoc: Example Page(s) -----
@@ -10987,6 +10970,42 @@ date: 1970-01-01
 This is a default page, where all menus and settings are empty.  All aspects of `c_site` pages are configurable using `$(COMPOSER_YML)` files.
 
 *[Return to main page]($(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files)))*
+endef
+
+########################################
+#### {{{4 Heredoc: Page: Themes --------
+
+override define $(PUBLISH)-$(EXAMPLE)-page-themes =
+$(strip \
+$(foreach FILE,$(CSS_THEMES),\
+	$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+	$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+	$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+	$(if $(filter-out $(TOKEN),$(TITLE)),\
+		[N]**$(subst $(TOKEN), ,$(TITLE))** \
+		$(if $(filter [$(COMPOSER_BASENAME)],$(TITLE)),\
+			*(Templates)* \
+		) \
+		[N][N] \
+	) \
+	$(if $(filter-out $(TOKEN),$(SHADE)),\
+		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
+		$(if $(filter-out $(TOKEN),$(DEFLT)),\
+			**(default: `$(DEFLT)`)** \
+		) \
+		$(if $(filter $(PUBLISH).solar-light,$(THEME)),\
+			[N]\t\t\t\t*(same as `$(PUBLISH).solar-dark`)* \
+		) \
+		$(if $(or \
+			$(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)) ,\
+			$(filter $(TYPE_HTML).solar-$(CSS_ALT),$(THEME)) ,\
+		),\
+			[N]\t\t\t\t* *(automatic `prefers-color-scheme` color selection)* \
+		) \
+		[N] \
+	) \
+))
 endef
 
 ########################################
