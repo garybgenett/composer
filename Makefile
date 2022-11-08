@@ -414,6 +414,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_LIST	[$(COMPOSER_INCLUD
 
 ########################################
 
+override COMPOSER_CURDIR		:=
 override COMPOSER_INCLUDES		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD			[$(FILE)])) \
@@ -421,7 +422,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_LIST)),\
 		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE			[$(FILE)])) \
 		$(eval override MAKEFILE_LIST := $(filter-out $(FILE),$(MAKEFILE_LIST))) \
 		$(eval override COMPOSER_INCLUDES := $(COMPOSER_INCLUDES) $(FILE)) \
-		$(eval override COMPOSER_MY_PATH := $(abspath $(dir $(FILE)))) \
+		$(eval override COMPOSER_CURDIR := $(if $(filter $(abspath $(dir $(FILE))),$(CURDIR)),$(SPECIAL_VAL))) \
 		$(eval include $(FILE)) \
 	) \
 )
@@ -2857,15 +2858,15 @@ endef
 #		the trade-off is that the computational horsepower is spent as capital rather than operational cost
 #		best practice is to have an overnight $(PUBLISH)-$(DOFORCE) process...
 #	document:
-#		COMPOSER_MY_PATH
-#		COMPOSER_DIR
-#		COMPOSER_ROOT
-#		COMPOSER_EXPORT
-#		COMPOSER_TMP
-#		COMPOSER_LIBRARY
-#		COMPOSER_PKG
-#		COMPOSER_ART
-#		PANDOC_DATA
+#		$(_C)[COMPOSER_CURDIR]$(_D)
+#		$(_C)[COMPOSER_DIR]$(_D)
+#		$(_C)[COMPOSER_ROOT]$(_D)
+#		$(_C)[COMPOSER_EXPORT]$(_D)
+#		$(_C)[COMPOSER_TMP]$(_D)
+#		$(_C)[COMPOSER_LIBRARY]$(_D)
+#		$(_C)[COMPOSER_PKG]$(_D)
+#		$(_C)[COMPOSER_ART]$(_D)
+#		$(_C)[PANDOC_DATA]$(_D)
 
 #WORK
 #	add a list of the formats here...
@@ -3289,10 +3290,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
   * When using this option, care should be taken with "$(_N)Local$(_D)" variables from
     $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D).  They will be propagated down the tree, which
     is generally not desired except in very specific cases.  Using
-    `$(_C)COMPOSER_MY_PATH$(_D)` to limit their scope is recommended $(_E)(see below)$(_D).
-  * The `$(_C)COMPOSER_MY_PATH$(_D)` variable is set to the directory of each
-    `$(_M)$(COMPOSER_SETTINGS)$(_D)` file as it is being included.  Comparing this with `$(_E)CURDIR$(_D)`
-    provides a way to limit particular portions of the file to the local
+    $(_C)[COMPOSER_CURDIR]$(_D) to limit their scope is recommended $(_E)(see below)$(_D).
+  * The $(_C)[COMPOSER_CURDIR]$(_D) variable is set when reading in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file
+    in the `$(_C)$(DOMAKE)$(_D)` running directory $(_E)(the `$$CURDIR`)$(_D), and is empty otherwise.
+    This provides a way to limit particular portions of the file to the local
     directory, regardless of whether $(_C)[COMPOSER_INCLUDE]$(_D) is set or not.  An
     example of this is below.
   * This setting also causes `$(_M)$(COMPOSER_YML)$(_D)` and `$(_M)$(COMPOSER_CSS)$(_D)` files to be
@@ -3309,9 +3310,9 @@ $(CODEBLOCK).../tld/$(_M)$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK).../tld/sub/$(_M)$(MAKEFILE)$(_D)
 $(CODEBLOCK).../tld/sub/$(_M)$(COMPOSER_SETTINGS)$(_D)
 
-Example usage of the `$(_C)COMPOSER_MY_PATH$(_D)` variable:
+Example usage of the $(_C)[COMPOSER_CURDIR]$(_D) variable:
 
-$(CODEBLOCK)$(_N)ifeq$(_D) ($(_E)$$(COMPOSER_MY_PATH)$(_D),$(_N)$$(CURDIR)$(_D))
+$(CODEBLOCK)$(_N)ifneq$(_D) ($(_E)$$(COMPOSER_CURDIR)$(_D),)
 $(CODEBLOCK)$(CODEBLOCK)[...]
 $(CODEBLOCK)$(_N)endif$(_D)
 
@@ -3626,7 +3627,7 @@ $(EXAMPLE)-md-file:
 	)
 	@$(ENDOLINE)
 	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-	@$(call $(EXAMPLE)-print,1,$(_N)ifeq$(_D) ($(_E)\$$(COMPOSER_MY_PATH)$(_D),$(_N)\$$(CURDIR)$(_D)))
+	@$(call $(EXAMPLE)-print,1,$(_N)ifneq$(_D) ($(_E)\$$(COMPOSER_CURDIR)$(_D),))
 	@$(ENDOLINE)
 	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_H)Local)
@@ -3771,7 +3772,7 @@ override define HEREDOC_COMPOSER_MK =
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)$(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration$(_D)
 $(_S)################################################################################$(_D)
-$(_N)ifeq$(_D) ($(_E)$$(COMPOSER_MY_PATH)$(_D),$(_N)$$(CURDIR)$(_D))
+$(_N)ifneq$(_D) ($(_E)$$(COMPOSER_CURDIR)$(_D),)
 $(_S)################################################################################$(_D)
 
 $(_S)########################################$(_D)
@@ -3826,7 +3827,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(EXAMPLE))
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 $($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML): $$(CURDIR)/$(LIBRARY_FOLDER_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
@@ -3845,7 +3846,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_NOTHING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override c_logo				:=
@@ -3865,7 +3866,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(CONFIGS))
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 $($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML): $$(CURDIR)/$(LIBRARY_FOLDER_ALT)-$(CONFIGS)/$(notdir $($(PUBLISH)-library-digest-src))
@@ -3884,7 +3885,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_PANDOC =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PANDOC_DIR)))
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override COMPOSER_IGNORES		:= .github
@@ -3903,7 +3904,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override COMPOSER_INCLUDE		:=
@@ -3924,7 +3925,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_PAGES =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) pages)
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 ################################################################################
 endif
@@ -3940,7 +3941,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
 ################################################################################
-ifeq ($$(COMPOSER_MY_PATH),$$(CURDIR))
+ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override MAKEJOBS :=
@@ -8557,7 +8558,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))$(_D)' \
-		\n\t * Check '$(_C)COMPOSER_MY_PATH$(_D)' variable \
+		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
 		\n\t * Verify '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
 	)
 	@$(call $(TESTING)-init)
@@ -8578,41 +8579,41 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS); \
 	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"	>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "\$$(info COMPOSER_MY_PATH)\n"			>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "endif\n"					>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"	>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "\$$(info COMPOSER_CURDIR)\n"		>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "endif\n"				>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"
 endef
 
 override define $(TESTING)-COMPOSER_INCLUDE-done =
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_MY_PATH/p" \
+		-e "/COMPOSER_CURDIR/p" \
 		-e "/COMPOSER_DEPENDS/p" \
 		-e "/c_css/p" \
 		; \
 	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS); \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_MY_PATH/p" \
+		-e "/COMPOSER_CURDIR/p" \
 		-e "/COMPOSER_DEPENDS/p" \
 		-e "/c_css/p" \
 		; \
 	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(RM) $(call $(TESTING)-pwd,/)/$(COMPOSER_CSS); \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_MY_PATH/p" \
+		-e "/COMPOSER_CURDIR/p" \
 		-e "/COMPOSER_DEPENDS/p" \
 		-e "/c_css/p" \
 		; \
 	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
 	$(RM) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_CSS); \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_MY_PATH/p" \
+		-e "/COMPOSER_CURDIR/p" \
 		-e "/COMPOSER_DEPENDS/p" \
 		-e "/c_css/p" \
 		; \
 	$(call $(TESTING)-run,/) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_MY_PATH/p"
+		-e "/COMPOSER_CURDIR/p"
 endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
@@ -8623,7 +8624,7 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS))))
 	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))))
 	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS)))))
-	$(call $(TESTING)-count,2,^COMPOSER_MY_PATH)
+	$(call $(TESTING)-count,2,^COMPOSER_CURDIR)
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_DEPENDS ---
@@ -10377,7 +10378,7 @@ endif
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-features)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-features$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-comments)						>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"											>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "ifeq (\$$(COMPOSER_MY_PATH),\$$(CURDIR))\n"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"							>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"						>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(notdir $($(PUBLISH)-$(EXAMPLE)-examples)).$(EXTN_HTML)\n"				>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(notdir $($(PUBLISH)-$(EXAMPLE)-examples)).$(EXTN_HTML): override c_list := \\\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
@@ -10528,7 +10529,6 @@ endif
 #WORKING:NOW:NOW
 #	COMPOSER_IGNORES priority ordering with COMPOSER_TARGETS, COMPOSER_EXPORTS, etc., which wins?
 #	site
-#		replace COMPOSER_MY_PATH hack with a COMPOSER_CURDIR boolean variable?  to simplify...?  affirmative.
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
 #		ability to remove author name(s) from digest(s)
