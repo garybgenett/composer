@@ -245,16 +245,6 @@ override MENU_SELF			:= _
 
 override PUBLISH_CSS_SHADE		:= dark
 override PUBLISH_CSS_SHADE_ALT		:= null
-
-#> talk: 183 / read: 234
-override PUBLISH_CREATORS		:= *Authors: @, @*
-override PUBLISH_CREATORS_ALT		:= *@ / @*
-override PUBLISH_TAGSLIST		:= *Tags: @, @*
-override PUBLISH_TAGSLIST_ALT		:= *@ / @*
-override PUBLISH_READTIME		:= *Reading time: @W@ words, @T@ minutes*
-override PUBLISH_READTIME_ALT		:= *Words: @W@ / Minutes: @T@*
-override PUBLISH_READTIME_WPM		:= 220
-override PUBLISH_READTIME_WPM_ALT	:= 200
 override PUBLISH_COPY_PROTECT		:= 1
 override PUBLISH_COPY_PROTECT_ALT	:= null
 
@@ -293,6 +283,16 @@ override PUBLISH_COLS_RESIZE_C_ALT	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT_MOD	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
+#> talk: 183 / read: 234
+override PUBLISH_CREATORS		:= *Authors: @, @*
+override PUBLISH_CREATORS_ALT		:= *@ / @*
+override PUBLISH_TAGSLIST		:= *Tags: @, @*
+override PUBLISH_TAGSLIST_ALT		:= *@ / @*
+override PUBLISH_READTIME		:= *Reading time: @W@ words, @T@ minutes*
+override PUBLISH_READTIME_ALT		:= *Words: @W@ / Minutes: @T@*
+override PUBLISH_READTIME_WPM		:= 220
+override PUBLISH_READTIME_WPM_ALT	:= 200
+
 override LIBRARY_FOLDER			:= null
 override LIBRARY_FOLDER_ALT		:= _library
 override LIBRARY_AUTO_UPDATE		:= null
@@ -300,12 +300,12 @@ override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
+override LIBRARY_DIGEST_CHARS		:= 1024
+override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_COUNT		:= 10
 override LIBRARY_DIGEST_COUNT_ALT	:= 20
 override LIBRARY_DIGEST_EXPANDED	:= 10
 override LIBRARY_DIGEST_EXPANDED_ALT	:= 1
-override LIBRARY_DIGEST_CHARS		:= 1024
-override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_SPACER		:= 1
 override LIBRARY_DIGEST_SPACER_ALT	:= null
 override LIBRARY_DIGEST_CONTINUE	:= [...]
@@ -1714,11 +1714,6 @@ override define COMPOSER_YML_DATA_SKEL =
     search_form:			null,
 
     css_shade:				$(PUBLISH_CSS_SHADE),
-
-    creators:				"$(PUBLISH_CREATORS)",
-    tagslist:				"$(PUBLISH_TAGSLIST)",
-    readtime:				"$(PUBLISH_READTIME)",
-    readtime_wpm:			$(PUBLISH_READTIME_WPM),
     copy_protect:			$(PUBLISH_COPY_PROTECT),
 
     cols_break:				$(PUBLISH_COLS_BREAK),
@@ -1727,16 +1722,21 @@ override define COMPOSER_YML_DATA_SKEL =
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
+
+    creators:				"$(PUBLISH_CREATORS)",
+    tagslist:				"$(PUBLISH_TAGSLIST)",
+    readtime:				"$(PUBLISH_READTIME)",
+    readtime_wpm:			$(PUBLISH_READTIME_WPM),
   },
 
   $(PUBLISH)-library: {
     folder:				$(LIBRARY_FOLDER),
     auto_update:			$(LIBRARY_AUTO_UPDATE),
 
-    digest_title:			$(LIBRARY_DIGEST_TITLE),
+    digest_title:			"$(LIBRARY_DIGEST_TITLE)",
+    digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
     digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
-    digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_spacer:			$(LIBRARY_DIGEST_SPACER),
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
@@ -4056,11 +4056,6 @@ $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
       <input type="hidden" name="kz" value="-1"/>
 
 $(_S)#$(MARKER)$(_D) $(_C)css_shade$(_D):				$(_M)$(PUBLISH_CSS_SHADE)$(_D)
-
-$(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(PUBLISH_TAGSLIST)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(PUBLISH_READTIME)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
@@ -4070,16 +4065,21 @@ $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_R
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(PUBLISH_TAGSLIST)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(PUBLISH_READTIME)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
+
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-library$(_D):
 
     $(_C)folder$(_D):				$(_S)#$(MARKER)$(_D) $(_M)$(LIBRARY_FOLDER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_M)$(LIBRARY_DIGEST_TITLE)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
@@ -4366,10 +4366,6 @@ variables:
 
   $(PUBLISH)-config:
     css_shade:				$(PUBLISH_CSS_SHADE_ALT)
-    creators:				"$(PUBLISH_CREATORS_ALT)"
-    tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
-    readtime:				"$(PUBLISH_READTIME_ALT)"
-    readtime_wpm:			$(PUBLISH_READTIME_WPM_ALT)
     copy_protect:			$(PUBLISH_COPY_PROTECT_ALT)
     cols_break:				$(PUBLISH_COLS_BREAK_ALT)
     cols_sticky:			$(PUBLISH_COLS_STICKY_ALT)
@@ -4377,14 +4373,18 @@ variables:
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
+    creators:				"$(PUBLISH_CREATORS_ALT)"
+    tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
+    readtime:				"$(PUBLISH_READTIME_ALT)"
+    readtime_wpm:			$(PUBLISH_READTIME_WPM_ALT)
 
   $(PUBLISH)-library:
     folder:				$($(PUBLISH)-$(EXAMPLE)-library)
     auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
-    digest_title:			$(LIBRARY_DIGEST_TITLE_ALT)
+    digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
+    digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(LIBRARY_DIGEST_EXPANDED_ALT)
-    digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
@@ -5870,7 +5870,6 @@ endef
 ########################################
 ### {{{3 custom_$(PUBLISH)_css (Theme) -
 
-#WORKING:NOW:NOW solar= *-done?
 override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
 /* #############################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS (Theme)
@@ -10527,7 +10526,6 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	move cols_* back above helpers in yml configuration files again?  where does css_shade fit?
 #	COMPOSER_IGNORES priority ordering with COMPOSER_TARGETS, COMPOSER_EXPORTS, etc., which wins?
 #	site
 #		replace COMPOSER_MY_PATH hack with a COMPOSER_CURDIR boolean variable?  to simplify...?  affirmative.
@@ -10876,10 +10874,6 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 | $(PUBLISH)-config | defaults
 |:---|:---|
 | css_shade    | $(PUBLISH_CSS_SHADE)
-| creators     | $(subst *,\*,$(PUBLISH_CREATORS))
-| tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST))
-| readtime     | $(subst *,\*,$(PUBLISH_READTIME))
-| readtime_wpm | $(PUBLISH_READTIME_WPM)
 | copy_protect | $(PUBLISH_COPY_PROTECT)
 | cols_break   | $(PUBLISH_COLS_BREAK)
 | cols_sticky  | $(PUBLISH_COLS_STICKY)
@@ -10887,15 +10881,19 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 | cols_reorder | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
 | cols_size    | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
 | cols_resize  | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
+| creators     | $(subst *,\*,$(PUBLISH_CREATORS))
+| tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST))
+| readtime     | $(subst *,\*,$(PUBLISH_READTIME))
+| readtime_wpm | $(PUBLISH_READTIME_WPM)
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
 | folder           | $(LIBRARY_FOLDER)
 | auto_update      | $(LIBRARY_AUTO_UPDATE)
 | digest_title     | $(LIBRARY_DIGEST_TITLE)
+| digest_chars     | $(LIBRARY_DIGEST_CHARS)
 | digest_count     | $(LIBRARY_DIGEST_COUNT)
 | digest_expanded  | $(LIBRARY_DIGEST_EXPANDED)
-| digest_chars     | $(LIBRARY_DIGEST_CHARS)
 | digest_spacer    | $(LIBRARY_DIGEST_SPACER)
 | digest_continue  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE))
 | digest_permalink | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK))
@@ -10930,10 +10928,6 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
 | css_shade    | $(PUBLISH_CSS_SHADE)              | $(PUBLISH_CSS_SHADE_ALT)
-| creators     | $(subst *,\*,$(PUBLISH_CREATORS)) | $(subst *,\*,$(PUBLISH_CREATORS_ALT))
-| tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST)) | $(subst *,\*,$(PUBLISH_TAGSLIST_ALT))
-| readtime     | $(subst *,\*,$(PUBLISH_READTIME)) | $(subst *,\*,$(PUBLISH_READTIME_ALT))
-| readtime_wpm | $(PUBLISH_READTIME_WPM)           | $(PUBLISH_READTIME_WPM_ALT)
 | copy_protect | $(PUBLISH_COPY_PROTECT)           | $(PUBLISH_COPY_PROTECT_ALT)
 | cols_break   | $(PUBLISH_COLS_BREAK)             | $(PUBLISH_COLS_BREAK_ALT)
 | cols_sticky  | $(PUBLISH_COLS_STICKY)            | $(PUBLISH_COLS_STICKY_ALT)
@@ -10941,15 +10935,19 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 | cols_reorder | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ] | [ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
 | cols_size    | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]          | [ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
 | cols_resize  | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]    | [ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
+| creators     | $(subst *,\*,$(PUBLISH_CREATORS)) | $(subst *,\*,$(PUBLISH_CREATORS_ALT))
+| tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST)) | $(subst *,\*,$(PUBLISH_TAGSLIST_ALT))
+| readtime     | $(subst *,\*,$(PUBLISH_READTIME)) | $(subst *,\*,$(PUBLISH_READTIME_ALT))
+| readtime_wpm | $(PUBLISH_READTIME_WPM)           | $(PUBLISH_READTIME_WPM_ALT)
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
 | folder           | $(LIBRARY_FOLDER)                         | $($(PUBLISH)-$(EXAMPLE)-library)
 | auto_update      | $(LIBRARY_AUTO_UPDATE)                    | $(LIBRARY_AUTO_UPDATE_ALT)
 | digest_title     | $(LIBRARY_DIGEST_TITLE)                   | $(LIBRARY_DIGEST_TITLE_ALT)
+| digest_chars     | $(LIBRARY_DIGEST_CHARS)                   | $(LIBRARY_DIGEST_CHARS_ALT)
 | digest_count     | $(LIBRARY_DIGEST_COUNT)                   | $(LIBRARY_DIGEST_COUNT_ALT)
 | digest_expanded  | $(LIBRARY_DIGEST_EXPANDED)                | $(LIBRARY_DIGEST_EXPANDED_ALT)
-| digest_chars     | $(LIBRARY_DIGEST_CHARS)                   | $(LIBRARY_DIGEST_CHARS_ALT)
 | digest_spacer    | $(LIBRARY_DIGEST_SPACER)                  | $(LIBRARY_DIGEST_SPACER_ALT)
 | digest_continue  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE))  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE_ALT))
 | digest_permalink | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK)) | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK_ALT))
