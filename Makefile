@@ -8222,7 +8222,7 @@ override define $(TESTING)-load =
 			$(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
 	fi; \
-	$(ECHO) "override COMPOSER_IGNORES := $(TESTING)\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_IGNORES := test\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@)),1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(INSTALL)-$(DOFORCE)
 endef
 
@@ -8796,8 +8796,9 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS ---
 
-#WORKING
+#WORKING:NOW:NOW
 #	verify that COMPOSER_IGNORES overrides COMPOSER_EXPORTS...
+#		ensure that the wildcard only works on COMPOSER_EXPORTS, and not COMPOSER_TARGETS, COMPOSER_SUBDIRS or the library...
 
 .PHONY: $(TESTING)-COMPOSER_EXPORTS
 $(TESTING)-COMPOSER_EXPORTS: $(TESTING)-Think
@@ -8806,6 +8807,7 @@ $(TESTING)-COMPOSER_EXPORTS:
 		Validate '$(_C)COMPOSER_EXPORTS$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included \
 		\n\t * Use '$(_C).$(TARGETS)$(_D)' in '$(_C)COMPOSER_EXPORTS$(_D)' \
+		\n\t * Confirm '$(_C)COMPOSER_IGNORES$(_D)', including wildcards \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -8829,6 +8831,7 @@ $(TESTING)-COMPOSER_IGNORES:
 		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' detection \
+		\n\t * Confirm that wildcards have no effect \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -8838,17 +8841,23 @@ $(TESTING)-COMPOSER_IGNORES:
 $(TESTING)-COMPOSER_IGNORES-init:
 	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) $(notdir $(wildcard $(call $(TESTING)-pwd)/data/*))\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) $(notdir $(wildcard $(call $(TESTING)-pwd)/data/*))\n"	>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := *.$(EXTN_LPDF)\n"									>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(INSTALL)-$(DOITALL)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CLEANER)-$(DOITALL)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(DOITALL)-$(DOITALL)
+	@$(RM) $(call $(TESTING)-pwd)/changelog.md
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd) c_type="$(TYPE_LPDF)" $(CONFIGS)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd) c_type="$(TYPE_LPDF)" $(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_LPDF))
 	$(call $(TESTING)-count,3,$(NOTHING).+$(CONFIGS)-$(TARGETS))
 	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
+	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+[*].$(EXTN_LPDF))
 
 ########################################
 ### {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
@@ -10654,6 +10663,7 @@ endif
 
 #WORKING:NOW:NOW
 #	COMPOSER_IGNORES priority ordering with COMPOSER_TARGETS, COMPOSER_EXPORTS, etc., which wins?
+#		add a COMPOSER_EXPORTS/COMPOSER_IGNORES "library" test to site-template, including wildcards...
 #	site
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
