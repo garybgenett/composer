@@ -239,7 +239,7 @@ override COMPOSER_ICON_VER		:= v1.0
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
-#>override HTML_BREAK_LINE		:= <br/>
+#>override HTML_BREAK_LINE		:= <br>
 override HTML_BREAK_LINE		:= --
 override MENU_SELF			:= _
 
@@ -1121,14 +1121,15 @@ override CSS_ICON_SEARCH		:= $(FONTAWES_DIR)/svgs/solid/magnifying-glass.svg
 override CSS_ICON_COPYRIGHT		:= $(FONTAWES_DIR)/svgs/regular/copyright.svg
 override CSS_ICON_GITHUB		:= $(FONTAWES_DIR)/svgs/brands/github.svg
 
-override CSS_ICONS = \
-	menu:$(CSS_ICON_MENU) \
-	toggle:$(CSS_ICON_TOGGLE) \
-	search:$(CSS_ICON_SEARCH) \
-	copyright:$(CSS_ICON_COPYRIGHT) \
-	github:$(CSS_ICON_GITHUB) \
-	gpl:$(EXT_ICON_GPL) \
-	cc-by-nc-nd:$(EXT_ICON_CC) \
+override CSS_ICONS = $(subst |, ,$(subst $(NULL) ,,$(strip \
+	|menu		;svg	;$(CSS_ICON_MENU)	;$(TOKEN)	;Menu \
+	|toggle		;svg	;$(CSS_ICON_TOGGLE)	;$(TOKEN)	;Toggle \
+	|search		;svg	;$(CSS_ICON_SEARCH)	;search		;Search \
+	|gpl		;png	;$(EXT_ICON_GPL)	;license	;GPL$(TOKEN)License			;https://www.gnu.org/licenses/gpl-3.0.html \
+	|cc-by-nc-nd	;png	;$(EXT_ICON_CC)		;license	;CC$(TOKEN)License			;https://creativecommons.org/licenses/by-nc-nd/4.0 \
+	|copyright	;svg	;$(CSS_ICON_COPYRIGHT)	;license	;All$(TOKEN)Rights$(TOKEN)Reserved	;https://wikipedia.org/wiki/All_rights_reserved \
+	|github		;svg	;$(CSS_ICON_GITHUB)	;author		:GitHub					;https://github.com \
+)))
 
 ########################################
 
@@ -1160,9 +1161,6 @@ override REVEALJS_CSS_DARK		:= $(REVEALJS_DIR)/dist/theme/black.css
 override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
 override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
-
-#> update: includes duplicates
-override PUBLISH			:= site
 
 #WORKING document
 override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
@@ -1364,7 +1362,7 @@ override PANDOC_OPTIONS			= $(strip \
 			$(filter $(c_type),$(TYPE_HTML)) ,\
 			$(filter $(c_type),$(TYPE_PRES)) ,\
 		),\
-			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(abspath $(c_icon))\"/>" \
+			--variable=header-includes="<link rel=\"icon\" type=\"image/x-icon\" href=\"$(abspath $(c_icon))\">" \
 		) \
 	) \
 	$(if $(c_toc),\
@@ -1858,6 +1856,7 @@ override PUBLISH_SH_RUN := \
 	YQ_WRITE="$(subst ",,$(YQ_WRITE))" \
 	COMPOSER_YML_DATA='$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 	\
+	COMPOSER_DIR="$(COMPOSER_DIR)" \
 	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
 	COMPOSER_ROOT_PATH="$(COMPOSER_ROOT_PATH)" \
 	COMPOSER_LIBRARY_PATH="$(COMPOSER_LIBRARY_PATH)" \
@@ -3970,7 +3969,7 @@ themes-%:
 	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
 	@$$(TOUCH) $$(COMPOSER_YML)
 
-########################################$(foreach FILE,$(CSS_THEMES),\
+########################################$(foreach FILE,$(call CSS_THEMES),\
 	$(if $(filter-out $(TOKEN),\
 		$(word 4,$(subst :, ,$(FILE))) \
 	),\
@@ -4026,35 +4025,24 @@ $(_S)########################################$(_D)
     $(_C)brand$(_D):				$(_M)LOGO / BRAND$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
     $(_C)copyright$(_D): $(_N)|$(_D)
-      <a rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html">
-        <img alt="GPL License"
-        class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.gpl.png"/></a>
-      <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0">
-        <img alt="CC License"
-        class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.cc-by-nc-nd.png"/></a>
-      <a rel="license" href="https://wikipedia.org/wiki/All_rights_reserved">
-        <img alt="All Rights Reserved"
-        class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.copyright.svg"/></a>
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon gpl$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon cc-by-nc-nd$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon copyright$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_M)COPYRIGHT$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
     $(_C)search_name$(_D): $(_N)|$(_D)
-      <img alt="Search"
-        class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.search.svg"/>
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon search$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
     $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
     $(_C)search_call$(_D):			$(_M)q$(_D)
     $(_C)search_form$(_D): $(_N)|$(_D)
-      <input type="hidden" name="sites" value="$(_M)$(COMPOSER_CNAME)$(_D)"/>
-      <input type="hidden" name="ia" value="web"/>
-      <input type="hidden" name="kae" value="d"/>
-      <input type="hidden" name="ko" value="1"/>
-      <input type="hidden" name="kp" value="-1"/>
-      <input type="hidden" name="kv" value="1"/>
-      <input type="hidden" name="kz" value="-1"/>
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)sites$(_D) $(_E)$(COMPOSER_CNAME)$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ia web$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kae d$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ko 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kp -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kv 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kz -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)css_shade$(_D):				$(_M)$(PUBLISH_CSS_SHADE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
@@ -4202,11 +4190,7 @@ $(_S)#$(MARKER)$(_D)   - $(_C)creators$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
-      - $(_N)|$(_D)
-          <a rel="author" href="$(_M)$(COMPOSER_REPOPAGE)$(_D)">
-            <img alt="$(_M)$(COMPOSER_TECHNAME)$(_D)"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,.$(COMPOSER_BASENAME)/%,$(COMPOSER_IMAGES))/icon.github.svg"/></a>
+      - $(_C)icon github$(_D) $(_M)$(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
@@ -4241,10 +4225,7 @@ variables:
     homepage:				$(COMPOSER_HOMEPAGE)
     brand:				$(COMPOSER_TECHNAME)
     copyright: |
-      <a rel="license" href="$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)">
-        <img alt="GPL License"
-        class="$(COMPOSER_TINYNAME)-icon"
-        src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.gpl.png"/></a>
+      $(PUBLISH_CMD_BEG) icon gpl $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
       $(COPYRIGHT_SHORT)
 
     copy_protect:			null
@@ -4282,11 +4263,7 @@ variables:
 
   $(PUBLISH)-info-top:
     ICON:
-      - |
-          <a rel="author" href="$(COMPOSER_REPOPAGE)">
-            <img alt="$(COMPOSER_TECHNAME)"
-            class="$(COMPOSER_TINYNAME)-icon"
-            src="$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon.github.svg"/></a>
+      - icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME)
 
 ################################################################################
 # End Of File
@@ -4508,6 +4485,9 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_PAGES =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) pages)
 ################################################################################
+
+variables: {}
+
 ################################################################################
 # End Of File
 ################################################################################
@@ -4579,6 +4559,7 @@ TR="$${TR}"
 YQ_WRITE="$${YQ_WRITE}"
 COMPOSER_YML_DATA="$${COMPOSER_YML_DATA}"
 
+COMPOSER_DIR="$${COMPOSER_DIR}"
 COMPOSER_ROOT="$${COMPOSER_ROOT}"
 COMPOSER_ROOT_PATH="$${COMPOSER_ROOT_PATH}"
 COMPOSER_LIBRARY_PATH="$${COMPOSER_LIBRARY_PATH}"
@@ -4640,6 +4621,24 @@ function $(PUBLISH)-error {
 	return 0
 }
 
+########################################
+#### {{{4 $(PUBLISH)-parse -------------
+
+function $(PUBLISH)-parse {
+	while read -r FILE; do
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^$${PUBLISH_CMD_BEG} $${1}/p")" ]; then
+			FILE="$${FILE/#$${PUBLISH_CMD_BEG} }"
+			FILE="$${FILE/% $${PUBLISH_CMD_END}}"
+			$(PUBLISH)-$${FILE}
+		else
+			$${ECHO} "$${FILE}\\n" \\
+			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+			| $${SED} "s|$${COMPOSER_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+		fi
+	done
+	return 0
+}
+
 ################################################################################
 ### {{{3 Functions (Config) ------------
 
@@ -4655,7 +4654,7 @@ $${CAT} <<_EOF_
 _EOF_
 	BRND="$$(COMPOSER_YML_DATA_VAL config.brand)"
 	if [ -s "$${1}" ]; then
-		$${ECHO} "<img class=\"$${COMPOSER_TINYNAME}-logo align-top\" src=\"$${1}\"/>\\n"
+		$${ECHO} "<img class=\"$${COMPOSER_TINYNAME}-logo align-top\" src=\"$${1}\">\\n"
 		if [ -n "$${BRND}" ]; then
 			$${ECHO} "$${HTML_SPACE}\\n"
 		fi
@@ -4681,12 +4680,17 @@ function $(PUBLISH)-search {
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
 <form class="nav-item d-flex me-3" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
-<input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)"/>
-<button class="btn btn-sm" type="submit">$$(
-	$${ECHO} "$${NAME}" \\
-	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-)</button>
-$$(COMPOSER_YML_DATA_VAL config.search_form)
+<input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
+<button class="btn btn-sm" type="submit">
+$$(
+	$${ECHO} "$${NAME}\\n" \\
+	| $(PUBLISH)-parse icon
+)
+</button>
+$$(
+	COMPOSER_YML_DATA_VAL config.search_form \\
+	| $(PUBLISH)-parse form
+)
 </form>
 _EOF_
 	else
@@ -4745,10 +4749,15 @@ function $(PUBLISH)-nav-top-list {
 		fi
 		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} override $${FILE}
 			$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
-			$(PUBLISH)-nav-top-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
@@ -4764,6 +4773,8 @@ function $(PUBLISH)-nav-top-list {
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$(PUBLISH)-nav-top-$${FILE} || return 1
 		elif [ -n "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0]")" ]; then
 			LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0].[\"$${MENU_SELF}\"]")"
 			if [ -z "$${LINK}" ]; then
@@ -4859,10 +4870,12 @@ function $(PUBLISH)-nav-bottom {
 	COPY="$$(COMPOSER_YML_DATA_VAL config.copyright)"
 	if [ -n "$${COPY}" ]; then
 $${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$$(
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">
+$$(
 	$${ECHO} "$${COPY}\\n" \\
-	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-)</li>
+	| $(PUBLISH)-parse icon
+)
+</li>
 _EOF_
 	fi
 $${CAT} <<_EOF_
@@ -4908,9 +4921,13 @@ function $(PUBLISH)-nav-bottom-list {
 		if [ -z "$${LINK}" ]; then
 			LINK="#"
 		fi
-		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
@@ -4925,6 +4942,8 @@ function $(PUBLISH)-nav-bottom-list {
 				| $${SED} "s|^tagslist|tagslist-menu|g"
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		else
 $${CAT} <<_EOF_
@@ -4984,10 +5003,14 @@ function $(PUBLISH)-nav-side-list {
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(PUBLISH)-marker $${FUNCNAME} start $${1}[$${NUM}]
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
-		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
-			$(PUBLISH)-nav-side-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+			$(PUBLISH)-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
+			$(PUBLISH)-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
+			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
@@ -5016,6 +5039,8 @@ function $(PUBLISH)-nav-side-list {
 				| $${SED} "s|^readtime|readtime-list|g"
 			) $${PUBLISH_CMD_END}\\n"
 			$${ECHO} "\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$(PUBLISH)-nav-side-$${FILE} || return 1
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
@@ -5109,10 +5134,14 @@ $${CAT} <<_EOF_
 <li class="$${COMPOSER_TINYNAME}-link nav-item me-3">
 _EOF_
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
-		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
+		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
+			$(PUBLISH)-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
+			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
@@ -5130,6 +5159,8 @@ _EOF_
 				$${ECHO} "$${FILE}" \\
 				| $${SED} "s|^readtime|readtime-list|g"
 			) $${PUBLISH_CMD_END}\\n"
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		else
 			$${ECHO} "\\n"
 			$${ECHO} "$${FILE}" \\
@@ -5422,6 +5453,9 @@ _EOF_
 	return 0
 }
 
+################################################################################
+### {{{3 Functions (Helpers) -----------
+
 ########################################
 #### {{{4 $(PUBLISH)-header ------------
 
@@ -5444,6 +5478,72 @@ _EOF_
 function $(PUBLISH)-spacer {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$${ECHO} "$${HTML_BREAK}\\n"
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-icon --------------
+
+# 1 icon				[token = $${@} -1]
+# 2 link rel
+# 3 link href
+# 4 alt text				$${@:4} = $${4}++
+
+function $(PUBLISH)-icon {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	ICON="$${1}"
+	LREL="$${2}"
+	LLOC="$${3}"
+	TEXT="$${@:4}"
+$(foreach CSS_ICON,$(call CSS_ICONS),\
+$(eval NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
+$(eval ICON := icon.$(NAME).$(word 2,$(subst ;, ,$(CSS_ICON)))) \
+$(eval LREL := $(subst $(TOKEN),,$(word 4,$(subst ;, ,$(CSS_ICON))))) \
+$(eval LLOC := $(subst $(TOKEN),,$(word 6,$(subst ;, ,$(CSS_ICON))))) \
+$(eval TEXT := $(subst $(TOKEN), ,$(word 5,$(subst ;, ,$(CSS_ICON))))) \
+$(TOKEN)
+	if [ "$${ICON}" = "$(NAME)" ]; then
+		ICON="$(ICON)"
+		LREL="$(LREL)"
+		if [ -n "$${2}" ]; then LLOC="$${2}";	else LLOC="$(if $(or $(LLOC),$(TEXT)),$(LLOC),$${2})"; fi
+		if [ -n "$${3}" ]; then TEXT="$${@:3}";	else TEXT="$(if $(or $(LLOC),$(TEXT)),$(TEXT),$${@:3})"; fi
+	fi
+)	if	[ -n "$${LREL}" ] &&
+		[ -n "$${LLOC}" ]
+	then
+$${CAT} <<_EOF_
+<a rel="$${LREL}" href="$${LLOC}">
+_EOF_
+	fi
+$${CAT} <<_EOF_
+<img class="$${COMPOSER_TINYNAME}-icon" alt="$${TEXT}" src="$$(
+	$${ECHO} "$${COMPOSER_DIR}/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/$${ICON}" \\
+	| $${SED} "s|$${COMPOSER_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+)">
+_EOF_
+	if	[ -n "$${LREL}" ] &&
+		[ -n "$${LLOC}" ]
+	then
+$${CAT} <<_EOF_
+</a>
+_EOF_
+	fi
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-form --------------
+
+# 1 name
+# 2 value
+
+function $(PUBLISH)-form {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+$${CAT} <<_EOF_
+<input type="hidden" name="$${1}" value="$${2}">
+_EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -5543,9 +5643,9 @@ function $(PUBLISH)-file {
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
 #>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$${PUBLISH_CMD_BEG}(.+)$${PUBLISH_CMD_END}$$|\\1|g")"
-			BUILD_CMD="$${BUILD_CMD/#$${PUBLISH_CMD_BEG}}"
-			BUILD_CMD="$${BUILD_CMD/%$${PUBLISH_CMD_END}}"
-			if [ "$${FILE}" = "$${PUBLISH_CMD_BEG}$${BUILD_CMD}$${PUBLISH_CMD_END}" ]; then
+			BUILD_CMD="$${BUILD_CMD/#$${PUBLISH_CMD_BEG} }"
+			BUILD_CMD="$${BUILD_CMD/% $${PUBLISH_CMD_END}}"
+			if [ "$${FILE}" = "$${PUBLISH_CMD_BEG} $${BUILD_CMD} $${PUBLISH_CMD_END}" ]; then
 				$(PUBLISH)-select $${BUILD_CMD} || return 1
 			else
 				$${PRINTF} "%s\\n" "$${FILE}"
@@ -5570,7 +5670,7 @@ function $(PUBLISH)-file {
 
 function $(PUBLISH)-select {
 	ACTION="$$(
-		$${ECHO} "$${1}\\n" \\
+		$${ECHO} "$${1}" \\
 		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 	)"; shift
 	if
@@ -7735,17 +7835,18 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
-		$(eval NAME := $(word 1,$(subst :, ,$(CSS_ICON)))) \
-		$(eval FILE := $(word 2,$(subst :, ,$(CSS_ICON)))) \
+		$(eval NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
+		$(eval TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
+		$(eval FILE := $(word 3,$(subst ;, ,$(CSS_ICON)))) \
 		$(call NEWLINE) \
 		if [ -f "$(FILE)" ]; then \
-			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).svg $($(DEBUGIT)-output); \
+			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE) $($(DEBUGIT)-output); \
 		else \
-			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).png; \
+			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/[$(TOKEN)]{3}$$/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
@@ -10400,7 +10501,7 @@ endif
 	))
 	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"										>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
-	@$(foreach FILE,$(CSS_THEMES),\
+	@$(foreach FILE,$(call CSS_THEMES),\
 		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
 		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
 		$(if $(filter-out $(TOKEN),$(SHADE)),\
@@ -10412,7 +10513,7 @@ endif
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"							>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)		>>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
-	@$(SED) -i "s|[[:space:]]*$$||g"				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
+	@$(SED) -i -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"		$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "$(_E)"
 	@$(LN)								$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))) \
 									$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$($(PUBLISH)-$(EXAMPLE)-index)$(COMPOSER_EXT_DEFAULT) \
@@ -10455,7 +10556,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/[$(TOKEN)]{3}$$/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
@@ -10535,9 +10636,6 @@ endif
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
-#		templatize copyright/search, somehow...?
-#			maybe a shorthand for images...?
-#			basically, try to replace as much html as possible...
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 
 ########################################
@@ -10693,27 +10791,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
-# Library
-
-$(PUBLISH_CMD_BEG) header 2 Authors $(PUBLISH_CMD_END)
-
-`$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)`
-
-$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) header 2 Dates $(PUBLISH_CMD_END)
-
-`$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)`
-
-$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) header 2 Tags $(PUBLISH_CMD_END)
-
-`$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)`
-
-$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)
-
-# Helpers
+# Tokens
 
 <!-- ## Header -->
 
@@ -10741,27 +10819,45 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
+## Icon
+
+#WORK icon list: $(foreach CSS_ICON,$(call CSS_ICONS),$(word 1,$(subst ;, ,$(CSS_ICON))))
+
+`$(PUBLISH_CMD_BEG) icon cc-by-nc-nd $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) icon cc-by-nc-nd $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) icon gpl < composer_root >/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) icon gpl <composer_root>/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author < composer_root >/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author <composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
+
+## Form
+
+`$(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
+
+#WORK results in: `<input type="hidden" name="sites" value="$(COMPOSER_CNAME)">`
+
 ## Include
 
 `$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
-#WORK do some post-processing to remove the `^<!-- $(PUBLISH)-file $(DIVIDE) .* ($(COMPOSER_SETTINGS)|$(COMPOSER_YML)) .*$$` lines
-
-```
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/.$(COMPOSER_BASENAME)/$(COMPOSER_SETTINGS) $(PUBLISH_CMD_END)
-```
-
-```
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/.$(COMPOSER_BASENAME)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
-```
-
-<!-- $(COMPOSER_SETTINGS) -->
-
-```
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(COMPOSER_YML) $(PUBLISH_CMD_END)
-```
+# Helpers
 
 ## Contents
 
@@ -10811,6 +10907,28 @@ $(PUBLISH_CMD_BEG) tagslist $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
+
+# Library
+
+$(PUBLISH_CMD_BEG) header 2 Authors $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) header 2 Dates $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) header 2 Tags $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)
+
+# Introduction
 
 #WORKING:NOW introduction
 # add $(PUBLISH_CMD_ROOT) to all links
@@ -10975,7 +11093,7 @@ endef
 
 override define $(PUBLISH)-$(EXAMPLE)-page-themes =
 $(strip \
-$(foreach FILE,$(CSS_THEMES),\
+$(foreach FILE,$(call CSS_THEMES),\
 	$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
 	$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
 	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
