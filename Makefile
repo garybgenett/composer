@@ -5782,11 +5782,6 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 
 /* ################################## */
 
-.dropdown:hover .dropdown-menu {
-	display:			block;
-#>	margin-top:			0;
-}
-
 .breadcrumb-item a:hover,
 .dropdown-item:hover,
 .nav-link:hover,
@@ -5853,30 +5848,60 @@ html {
 
 /* ################################## */
 
-@media (min-width: 1400px) { .$(COMPOSER_TINYNAME)-menu-xxl {
-	max-height:			var(--bs-scroll-height);
-	overflow:			auto;
-}}
+@media (min-width: 1400px) {
+	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-xxl {
+		display:		block;
+#>		margin-top:		0;
+	}
+	.$(COMPOSER_TINYNAME)-menu-xxl {
+		max-height:		var(--bs-scroll-height);
+		overflow:		auto;
+	}
+}
 
-@media (min-width: 1200px) { .$(COMPOSER_TINYNAME)-menu-xl {
-	max-height:			var(--bs-scroll-height);
-	overflow:			auto;
-}}
+@media (min-width: 1200px) {
+	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-xl {
+		display:		block;
+#>		margin-top:		0;
+	}
+	.$(COMPOSER_TINYNAME)-menu-xl {
+		max-height:		var(--bs-scroll-height);
+		overflow:		auto;
+	}
+}
 
-@media (min-width: 992px) { .$(COMPOSER_TINYNAME)-menu-lg {
-	max-height:			var(--bs-scroll-height);
-	overflow:			auto;
-}}
+@media (min-width: 992px) {
+	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-lg {
+		display:		block;
+#>		margin-top:		0;
+	}
+	.$(COMPOSER_TINYNAME)-menu-lg {
+		max-height:		var(--bs-scroll-height);
+		overflow:		auto;
+	}
+}
 
-@media (min-width: 768px) { .$(COMPOSER_TINYNAME)-menu-md {
-	max-height:			var(--bs-scroll-height);
-	overflow:			auto;
-}}
+@media (min-width: 768px) {
+	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-md {
+		display:		block;
+#>		margin-top:		0;
+	}
+	.$(COMPOSER_TINYNAME)-menu-md {
+		max-height:		var(--bs-scroll-height);
+		overflow:		auto;
+	}
+}
 
-@media (min-width: 576px) { .$(COMPOSER_TINYNAME)-menu-sm {
-	max-height:			var(--bs-scroll-height);
-	overflow:			auto;
-}}
+@media (min-width: 576px) {
+	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-sm {
+		display:		block;
+#>		margin-top:		0;
+	}
+	.$(COMPOSER_TINYNAME)-menu-sm {
+		max-height:		var(--bs-scroll-height);
+		overflow:		auto;
+	}
+}
 
 .$(COMPOSER_TINYNAME)-menu-list {
 	list-style:			none;
