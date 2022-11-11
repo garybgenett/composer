@@ -8833,31 +8833,28 @@ $(TESTING)-COMPOSER_IGNORES:
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' detection \
 		\n\t * Confirm that wildcards have no effect \
 	)
-	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-init
 $(TESTING)-COMPOSER_IGNORES-init:
-	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) $(notdir $(wildcard $(call $(TESTING)-pwd)/data/*))\n"	>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := *.$(EXTN_LPDF)\n"									>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CONFIGS)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(INSTALL)-$(DOITALL)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(CLEANER)-$(DOITALL)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data $(DOITALL)-$(DOITALL)
-	@$(RM) $(call $(TESTING)-pwd)/changelog.md
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd) c_type="$(TYPE_LPDF)" $(CONFIGS)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd) c_type="$(TYPE_LPDF)" $(DOITALL)
+	@$(ECHO) "override COMPOSER_IGNORES := $(notdir $(wildcard $(call $(TESTING)-pwd)/*))\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
+	@$(call $(TESTING)-run) $(INSTALL)-$(DOITALL)
+	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) *.$(EXTN_DEFAULT)\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
+	@$(call $(TESTING)-run) $(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_LPDF))
 	$(call $(TESTING)-count,3,$(NOTHING).+$(CONFIGS)-$(TARGETS))
 	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
-	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+[*].$(EXTN_LPDF))
+	$(call $(TESTING)-find,Creating.+$(OUT_LICENSE).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+[*].$(EXTN_DEFAULT))
 
 ########################################
 ### {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
