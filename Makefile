@@ -8796,10 +8796,6 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS ---
 
-#WORKING:NOW:NOW
-#	verify that COMPOSER_IGNORES overrides COMPOSER_EXPORTS...
-#		ensure that the wildcard only works on COMPOSER_EXPORTS, and not COMPOSER_TARGETS, COMPOSER_SUBDIRS or the library...
-
 .PHONY: $(TESTING)-COMPOSER_EXPORTS
 $(TESTING)-COMPOSER_EXPORTS: $(TESTING)-Think
 $(TESTING)-COMPOSER_EXPORTS:
@@ -8807,19 +8803,29 @@ $(TESTING)-COMPOSER_EXPORTS:
 		Validate '$(_C)COMPOSER_EXPORTS$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included \
 		\n\t * Use '$(_C).$(TARGETS)$(_D)' in '$(_C)COMPOSER_EXPORTS$(_D)' \
-		\n\t * Confirm '$(_C)COMPOSER_IGNORES$(_D)', including wildcards \
+		\n\t * Confirm '$(_C)COMPOSER_IGNORES$(_D)' $(_E)(including wildcards)$(_D) \
 	)
-	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-init
 $(TESTING)-COMPOSER_EXPORTS-init:
-	@$(ECHO) ""
+	@$(ECHO) ""													>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(DOITALL)
+	@$(call $(TESTING)-run) $(EXPORTS)
+	@$(LS) --recursive $(patsubst $(COMPOSER_ROOT)%,$(call $(TESTING)-pwd)%,$(COMPOSER_EXPORT))
+	@$(ECHO) "override COMPOSER_EXPORTS := .$(TARGETS)\n"								>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README)* $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(EXPORTS)
+	@$(LS) --recursive $(patsubst $(COMPOSER_ROOT)%,$(call $(TESTING)-pwd)%,$(COMPOSER_EXPORT))
 
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-done
 $(TESTING)-COMPOSER_EXPORTS-done:
-	@$(ECHO) ""
+	$(call $(TESTING)-count,6,$(EXPORTS).+$(notdir $(COMPOSER_ART)))
+	$(call $(TESTING)-count,6,deleting.+$(notdir $(COMPOSER_ART)))
+	$(call $(TESTING)-find,\+\+\+.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,deleting.+$(OUT_README).$(EXTN_DEFAULT))
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_IGNORES ---
@@ -8850,9 +8856,9 @@ $(TESTING)-COMPOSER_IGNORES-init:
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
 	$(call $(TESTING)-count,3,$(NOTHING).+$(CONFIGS)-$(TARGETS))
 	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
 	$(call $(TESTING)-find,Creating.+$(OUT_LICENSE).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+[*].$(EXTN_DEFAULT))
 
@@ -9425,7 +9431,7 @@ override define $(EXPORTS)-find =
 					EDIR="$$($(DIRNAME) $${EDIR})"; \
 					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES \
 						| while read -r EFIL; do \
-							$(ECHO) " -o \\\( -path $${EDIR}/$${EFIL} -prune \\\)"; \
+							$(ECHO) " -o \\\( -path $${EDIR}/$${EFIL//\*/\\\*} -prune \\\)"; \
 						done; \
 				done \
 		)
@@ -10658,8 +10664,7 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	COMPOSER_IGNORES priority ordering with COMPOSER_TARGETS, COMPOSER_EXPORTS, etc., which wins?
-#		add a COMPOSER_EXPORTS/COMPOSER_IGNORES "library" test to site-template, including wildcards...
+#	add a COMPOSER_EXPORTS/COMPOSER_IGNORES "library" test to site-template, including wildcards...
 #	site
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
