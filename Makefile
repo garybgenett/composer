@@ -8704,14 +8704,15 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))$(_D)' \
-		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
 		\n\t * Verify '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
+		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
 	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-init
 $(TESTING)-COMPOSER_INCLUDE-init:
+	@$(call $(TESTING)-make)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
