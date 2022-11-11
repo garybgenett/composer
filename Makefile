@@ -1128,7 +1128,7 @@ override CSS_ICONS = $(subst |, ,$(subst $(NULL) ,,$(strip \
 	|gpl		;png	;$(EXT_ICON_GPL)	;license	;GPL$(TOKEN)License			;https://www.gnu.org/licenses/gpl-3.0.html \
 	|cc-by-nc-nd	;png	;$(EXT_ICON_CC)		;license	;CC$(TOKEN)License			;https://creativecommons.org/licenses/by-nc-nd/4.0 \
 	|copyright	;svg	;$(CSS_ICON_COPYRIGHT)	;license	;All$(TOKEN)Rights$(TOKEN)Reserved	;https://wikipedia.org/wiki/All_rights_reserved \
-	|github		;svg	;$(CSS_ICON_GITHUB)	;author		:GitHub					;https://github.com \
+	|github		;svg	;$(CSS_ICON_GITHUB)	;author		;GitHub					;https://github.com \
 )))
 
 ########################################
@@ -2838,6 +2838,9 @@ endef
 #	document composer_dir/composer_root ... in composer.mk section?
 #	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
 #	COMPOSER_IGNORES now works for the "library", also...
+#		in terms of the library, however, it does not pay attention to COMPOSER_INCLUDES, and only local COMPOSER_SETTINGS files trigger it...
+#			is this difference in behavior acceptable...?
+#			it would be extremely expensive to make it otherwise...
 #		and then there is COMPOSER_EXPORTS...
 #	file targets can not depend on non-file targets...?
 #		MANUAL.pdf: pre-process README.md LICENSE.md
@@ -3907,11 +3910,28 @@ ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override COMPOSER_INCLUDE		:=
+override COMPOSER_IGNORES		:=
 
 override c_css				:= $(SPECIAL_VAL)
 
 ################################################################################
 endif
+################################################################################
+# End Of File
+################################################################################
+endef
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING_TREE =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+################################################################################
+#>ifneq ($$(COMPOSER_CURDIR),)
+################################################################################
+
+override COMPOSER_IGNORES		:= *$(COMPOSER_EXT_DEFAULT) *.$(EXTN_HTML)
+
+################################################################################
+#>endif
 ################################################################################
 # End Of File
 ################################################################################
@@ -9416,7 +9436,7 @@ override define $(EXPORTS)-tree =
 endef
 
 override define $(EXPORTS)-find =
-	eval $(FIND_ALL) $(1) \
+	eval $(FIND_ALL) $(1) -regextype sed \
 		\\\( -path $(2) -prune \\\) \
 		-o \\\( -path $(COMPOSER_DIR) -prune \\\) \
 		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
@@ -9431,7 +9451,7 @@ override define $(EXPORTS)-find =
 					EDIR="$$($(DIRNAME) $${EDIR})"; \
 					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES \
 						| while read -r EFIL; do \
-							$(ECHO) " -o \\\( -path $${EDIR}/$${EFIL//\*/\\\*} -prune \\\)"; \
+							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" -prune \\\)"; \
 						done; \
 				done \
 		)
@@ -9945,7 +9965,7 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "$(_D)"
 	@$(call $(EXPORTS)-find,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY)) \
 		$$($(call $(EXPORTS)-libraries,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY))) \
-		-o \\\( -type f -name "\*$(COMPOSER_EXT)" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
+		-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 	| while read -r FILE; do \
 		$(ECHO) "$(_D)"; \
 		$(call $(HEADERS)-note,$(@),$$( \
@@ -10380,12 +10400,13 @@ override $(PUBLISH)-$(EXAMPLE)-log	:= $(CURDIR)/$(call OUTPUT_FILENAME,$(PUBLISH
 override $(PUBLISH)-$(EXAMPLE)-index	:= index
 override $(PUBLISH)-$(EXAMPLE)-library	:= $(LIBRARY_FOLDER_ALT)-$(CONFIGS)
 
+override $(PUBLISH)-$(EXAMPLE)-testing_tree := $(notdir $(BOOTSTRAP_DIR))/site/content
 override $(PUBLISH)-$(EXAMPLE)-dirs := \
 	. \
 	$(patsubst .%,%,$(NOTHING)) \
 	$(CONFIGS) \
 	$(notdir $(PANDOC_DIR)) \
-	$(notdir $(BOOTSTRAP_DIR))/site/content/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
+	$($(PUBLISH)-$(EXAMPLE)-testing_tree)/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
 
 override $(PUBLISH)-$(EXAMPLE)-files := \
 	$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
@@ -10462,6 +10483,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS)		>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PANDOC)		>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$($(PUBLISH)-$(EXAMPLE))/$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING_TREE)	>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-testing_tree)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PAGES)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_THEMES)		>$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_SETTINGS)
@@ -10646,6 +10668,11 @@ endif
 			2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
 			$(call NEWLINE) \
 	)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@time $(ENV_MAKE) $(SILENT) \
+		--directory $($(PUBLISH)-$(EXAMPLE)) \
+		$(EXPORTS)
+endif
 else
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
@@ -10664,7 +10691,6 @@ else
 endif
 
 #WORKING:NOW:NOW
-#	add a COMPOSER_EXPORTS/COMPOSER_IGNORES "library" test to site-template, including wildcards...
 #	site
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
