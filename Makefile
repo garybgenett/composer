@@ -8200,7 +8200,7 @@ override define $(TESTING)-mark =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
-	$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
+	$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) $(CREATOR); \
 	if [ -n "$(2)" ]; then \
 		$(MV) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(OUT_README); \
@@ -8220,7 +8220,7 @@ override define $(TESTING)-load =
 			--filter="-_/$(PANDOC_WIN_BIN)" \
 			--filter="-_/$(PANDOC_MAC_BIN)" \
 			$(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
-		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
+		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
 	$(ECHO) "override COMPOSER_IGNORES := test\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@)),1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(INSTALL)-$(DOFORCE)
@@ -8237,7 +8237,7 @@ override define $(TESTING)-init =
 		$(MKDIR) $(abspath $(dir $(TESTING_COMPOSER_MAKEFILE))); \
 		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
 	else \
-		$(call $(TESTING)-make,$(if $(1),$(1),$(@))); \
+		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
 	$(MAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -9004,7 +9004,6 @@ $(TESTING)-other-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
 	#> git
-	@$(call $(TESTING)-make,,$(TESTING_COMPOSER_MAKEFILE))
 	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) init \
@@ -9013,7 +9012,6 @@ $(TESTING)-other-init:
 	@$(call $(TESTING)-run) $(CONVICT)-$(DOITALL)
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) log
-	@$(call $(TESTING)-make)
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
@@ -9036,6 +9034,7 @@ $(TESTING)-other-done:
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
+	$(call $(TESTING)-find,create mode.+$(TESTING_LOGFILE))
 	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
 
 ########################################
