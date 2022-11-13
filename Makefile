@@ -284,6 +284,8 @@ override PUBLISH_COLS_RESIZE_R_ALT_MOD	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
+override PUBLISH_CREATORS_LIST		:= 1
+override PUBLISH_CREATORS_LIST_ALT	:= null
 override PUBLISH_CREATORS		:= *Authors: @, @*
 override PUBLISH_CREATORS_ALT		:= *@ / @*
 override PUBLISH_TAGSLIST		:= *Tags: @, @*
@@ -945,7 +947,7 @@ override GIT_LOG_COUNT			:= 10
 override GIT_RUN			= cd $(1) && $(GIT) --git-dir="$(2)" --work-tree="$(1)" $(3)
 override define GIT_RUN_COMPOSER =
 	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) ($(_E)$(COMPOSER_ROOT)$(_D)) $(_M)$(1)"; \
+	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(1)"; \
 	$(call GIT_RUN,$(COMPOSER_ROOT),$(strip $(if \
 		$(wildcard $(COMPOSER_ROOT).git),\
 		$(COMPOSER_ROOT).git ,\
@@ -1722,6 +1724,7 @@ override define COMPOSER_YML_DATA_SKEL =
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
 
+    creators_list:			$(PUBLISH_CREATORS_LIST),
     creators:				"$(PUBLISH_CREATORS)",
     tagslist:				"$(PUBLISH_TAGSLIST)",
     readtime:				"$(PUBLISH_READTIME)",
@@ -4074,6 +4077,7 @@ $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_R
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)creators_list$(_D):			$(_M)$(PUBLISH_CREATORS_LIST)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(PUBLISH_TAGSLIST)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(PUBLISH_READTIME)$(_N)"$(_D)
@@ -4371,6 +4375,7 @@ variables:
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
+    creators_list:			$(PUBLISH_CREATORS_LIST_ALT)
     creators:				"$(PUBLISH_CREATORS_ALT)"
     tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
     readtime:				"$(PUBLISH_READTIME_ALT)"
@@ -5639,7 +5644,7 @@ function $(PUBLISH)-file {
 			if [ -n "$${TITL}" ]; then
 				$${ECHO} "$${TITL}"
 			fi
-			if [ -n "$${NAME}" ]; then
+			if [ -n "$${NAME}" ] && [ -n "$$(COMPOSER_YML_DATA_VAL config.creators_list)" ]; then
 				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then
 					$${ECHO} " $${HTML_BREAK_LINE} "
 				fi
@@ -7457,7 +7462,9 @@ endef
 .PHONY: .set_title-%
 .set_title-%:
 ifneq ($(COMPOSER_DOCOLOR),)
-	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
+#>	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
+#>	@$(ECHO) "\e]0;$(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(call $(HEADERS)-path-root,$(CURDIR))\a"
+	@$(ECHO) "\e]0;$(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
 else
 	@$(ECHO) ""
 endif
@@ -9803,8 +9810,9 @@ override define $(PUBLISH)-$(TARGETS)-readtime =
 		| $(WC_WORD) \
 	)"; \
 	TIME="1"; \
-	if [ "$${WORD}" -gt "$(call COMPOSER_YML_DATA_VAL,config.readtime_wpm)" ]; then \
-		TIME="$$($(EXPR) $${WORD} / $(call COMPOSER_YML_DATA_VAL,config.readtime_wpm))"; \
+	WPM="$(call COMPOSER_YML_DATA_VAL,config.readtime_wpm)"; \
+	if [ "$${WORD}" -gt "$${WPM}" ]; then \
+		TIME="$$($(EXPR) $${WORD} / $${WPM})"; \
 	fi; \
 	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.readtime)\n" \
 		| $(SED) \
@@ -10231,6 +10239,7 @@ $($(PUBLISH)-library-digest-files):
 			): $${NAME}\"\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "---\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME); \
+		CREATORS_LIST="$(call COMPOSER_YML_DATA_VAL,config.creators_list)"; \
 		$(YQ_WRITE) ".$${TYPE}.[\"$${NAME}\"] | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
 			| while read -r FILE; do \
 				$(call $(PUBLISH)-library-digest-create,$(@).$(COMPOSER_BASENAME),$${FILE},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
@@ -10252,8 +10261,9 @@ override define $(PUBLISH)-library-digest-main =
 		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
 	fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
-	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.digest_spacer)"; \
+	CREATORS_LIST="$(call COMPOSER_YML_DATA_VAL,config.creators_list)"; \
 	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.digest_expanded)"; \
+	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.digest_spacer)"; \
 	NUM="0"; for FILE in $$( \
 		$(YQ_WRITE) " \
 				map(select(.title != null or .pagetitle != null)) \
@@ -10334,7 +10344,7 @@ override define $(PUBLISH)-library-digest-create =
 			if [ -n "$${TITL}" ]; then \
 				$(ECHO) "$${TITL}"; \
 			fi; \
-			if [ -n "$${NAME}" ]; then \
+			if [ -n "$${NAME}" ] && [ -n "$${CREATORS_LIST}" ]; then \
 				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
 					$(ECHO) " $(HTML_BREAK_LINE) "; \
 				fi; \
@@ -10695,7 +10705,6 @@ endif
 #	site
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
-#		ability to remove author name(s) from digest(s)
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
@@ -11054,18 +11063,19 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 
 | $(PUBLISH)-config | defaults
 |:---|:---|
-| css_shade    | $(PUBLISH_CSS_SHADE)
-| copy_protect | $(PUBLISH_COPY_PROTECT)
-| cols_break   | $(PUBLISH_COLS_BREAK)
-| cols_sticky  | $(PUBLISH_COLS_STICKY)
-| cols_order   | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]
-| cols_reorder | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
-| cols_size    | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
-| cols_resize  | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
-| creators     | $(subst *,\*,$(PUBLISH_CREATORS))
-| tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST))
-| readtime     | $(subst *,\*,$(PUBLISH_READTIME))
-| readtime_wpm | $(PUBLISH_READTIME_WPM)
+| css_shade     | $(PUBLISH_CSS_SHADE)
+| copy_protect  | $(PUBLISH_COPY_PROTECT)
+| cols_break    | $(PUBLISH_COLS_BREAK)
+| cols_sticky   | $(PUBLISH_COLS_STICKY)
+| cols_order    | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]
+| cols_reorder  | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
+| cols_size     | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
+| cols_resize   | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
+| creators_list | $(PUBLISH_CREATORS_LIST)
+| creators      | $(subst *,\*,$(PUBLISH_CREATORS))
+| tagslist      | $(subst *,\*,$(PUBLISH_TAGSLIST))
+| readtime      | $(subst *,\*,$(PUBLISH_READTIME))
+| readtime_wpm  | $(PUBLISH_READTIME_WPM)
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
@@ -11108,18 +11118,19 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| css_shade    | $(PUBLISH_CSS_SHADE)              | $(PUBLISH_CSS_SHADE_ALT)
-| copy_protect | $(PUBLISH_COPY_PROTECT)           | $(PUBLISH_COPY_PROTECT_ALT)
-| cols_break   | $(PUBLISH_COLS_BREAK)             | $(PUBLISH_COLS_BREAK_ALT)
-| cols_sticky  | $(PUBLISH_COLS_STICKY)            | $(PUBLISH_COLS_STICKY_ALT)
-| cols_order   | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]       | [ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
-| cols_reorder | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ] | [ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
-| cols_size    | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]          | [ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
-| cols_resize  | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]    | [ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
-| creators     | $(subst *,\*,$(PUBLISH_CREATORS)) | $(subst *,\*,$(PUBLISH_CREATORS_ALT))
-| tagslist     | $(subst *,\*,$(PUBLISH_TAGSLIST)) | $(subst *,\*,$(PUBLISH_TAGSLIST_ALT))
-| readtime     | $(subst *,\*,$(PUBLISH_READTIME)) | $(subst *,\*,$(PUBLISH_READTIME_ALT))
-| readtime_wpm | $(PUBLISH_READTIME_WPM)           | $(PUBLISH_READTIME_WPM_ALT)
+| css_shade     | $(PUBLISH_CSS_SHADE)              | $(PUBLISH_CSS_SHADE_ALT)
+| copy_protect  | $(PUBLISH_COPY_PROTECT)           | $(PUBLISH_COPY_PROTECT_ALT)
+| cols_break    | $(PUBLISH_COLS_BREAK)             | $(PUBLISH_COLS_BREAK_ALT)
+| cols_sticky   | $(PUBLISH_COLS_STICKY)            | $(PUBLISH_COLS_STICKY_ALT)
+| cols_order    | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]       | [ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
+| cols_reorder  | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ] | [ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
+| cols_size     | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]          | [ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
+| cols_resize   | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]    | [ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
+| creators_list | $(PUBLISH_CREATORS_LIST)          | $(PUBLISH_CREATORS_LIST_ALT)
+| creators      | $(subst *,\*,$(PUBLISH_CREATORS)) | $(subst *,\*,$(PUBLISH_CREATORS_ALT))
+| tagslist      | $(subst *,\*,$(PUBLISH_TAGSLIST)) | $(subst *,\*,$(PUBLISH_TAGSLIST_ALT))
+| readtime      | $(subst *,\*,$(PUBLISH_READTIME)) | $(subst *,\*,$(PUBLISH_READTIME_ALT))
+| readtime_wpm  | $(PUBLISH_READTIME_WPM)           | $(PUBLISH_READTIME_WPM_ALT)
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
