@@ -9636,6 +9636,9 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 			$(ECHO) "$${META_SEP}[$${FILE}]($${LINK})"		>>$(1).$(2)-list; \
 		done; \
 	$(ECHO) "$${META_END}\n" >>$(1).$(2)-list; \
+	if [ ! -s "$(1).$(2)-menu" ]; then \
+		$(ECHO) ""							>$(1).$(2)-list; \
+	fi; \
 	$(SED) -i "s|^($$( \
 			$(ECHO) "$${META_BEG}" \
 			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
@@ -10679,6 +10682,8 @@ endif
 			2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
 			$(call NEWLINE) \
 	)
+#WORKING:NOW:NOW
+# where does this really fit...?  it either needs to be in the final repository or not...
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@time $(ENV_MAKE) $(SILENT) \
 		--directory $($(PUBLISH)-$(EXAMPLE)) \
