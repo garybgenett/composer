@@ -628,7 +628,7 @@ override c_list_plus			:=
 
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
-#>override PANDOC_VER			:= 2.13
+#>override PANDOC_VER			:= 2.18
 ifneq ($(origin PANDOC_VER),override)
 override PANDOC_VER			:= 2.18
 endif
@@ -662,7 +662,7 @@ endif
 # https://mikefarah.gitbook.io/yq
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
-#>override YQ_VER			:= 2.7.2
+#>override YQ_VER			:= 3.1.0
 ifneq ($(origin YQ_VER),override)
 override YQ_VER				:= 4.24.2
 endif
@@ -777,25 +777,25 @@ override REVEALJS_DIR			:= $(COMPOSER_DIR)/reveal.js
 
 ########################################
 
-override BASH_VER			:= 5.0.18
-override COREUTILS_VER			:= 8.31
-override FINDUTILS_VER			:= 4.8.0
+override BASH_VER			:= 5.1.16
+override COREUTILS_VER			:= 8.32
+override FINDUTILS_VER			:= 4.9.0
 override SED_VER			:= 4.8
 
-override MAKE_VER			:= 4.2.1
+override MAKE_VER			:= 4.3
 override PANDOC_VER			:= $(PANDOC_VER)
 override YQ_VER				:= $(YQ_VER)
-override TEX_PDF_VER			:= 2021 3.14159 2.6-1.40.22
+override TEX_PDF_VER			:= 2021 3.141592653-2.6-1.40.22
 
-override GIT_VER			:= 2.32.0
-override WGET_VER			:= 1.20.3
+override GIT_VER			:= 2.37.4
+override WGET_VER			:= 1.21.3
 override TAR_VER			:= 1.34
-override GZIP_VER			:= 1.10
+override GZIP_VER			:= 1.12
 override 7Z_VER				:= 16.02
-override NPM_VER			:= 6.14.8
+override NPM_VER			:= 8.19.2
 
-override DIFFUTILS_VER			:= 3.7
-override RSYNC_VER			:= 3.2.3
+override DIFFUTILS_VER			:= 3.8
+override RSYNC_VER			:= 3.2.4
 
 ################################################################################
 # {{{1 Tooling Options ---------------------------------------------------------
@@ -2686,14 +2686,11 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
-integrated, including $(_C)[Pandoc]$(_D).  The repository needs to be initialized with
-$(_C)[$(UPGRADE)-$(DOITALL)]$(_D) to fetch the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries $(_E)(see [Repository
-Versions])$(_D).
-
-$(_C)[$(COMPOSER_BASENAME)]$(_D) does require a minimal command-line environment based on $(_N)[GNU]$(_D) tools,
-particularly $(_C)[GNU Make]$(_D), which is standard for all $(_N)[GNU/Linux]$(_D) systems.  The
-$(_N)[Windows Subsystem for Linux]$(_D) for Windows and $(_N)[MacPorts]$(_D) for macOS both provide
-suitable environments.
+integrated directly into the repository, including $(_C)[Pandoc]$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) does
+require a minimal command-line environment based on $(_N)[GNU]$(_D) tools, particularly
+$(_C)[GNU Make]$(_D), which is standard for all $(_N)[GNU/Linux]$(_D) systems.  The $(_N)[Windows
+Subsystem for Linux]$(_D) for Windows and $(_N)[MacPorts]$(_D) for macOS both provide suitable
+environments.
 
 The one large external requirement is $(_C)[TeX Live]$(_D), and it can be installed using
 the package managers of each of the above systems.  It is only necessary for
