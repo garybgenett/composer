@@ -750,6 +750,7 @@ override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
 ifneq ($(origin MDVIEWER_CMT),override)
 #>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
 override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
+override MDVIEWER_CMT_SASS_VER		:= ^1.0.0
 endif
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
@@ -7773,6 +7774,7 @@ ifeq ($(wildcard $(firstword $(NPM))),)
 else
 #WORK document
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
+	@$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(MDVIEWER_DIR)/package.json
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
