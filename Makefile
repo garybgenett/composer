@@ -10681,13 +10681,6 @@ endif
 			2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
 			$(call NEWLINE) \
 	)
-#WORKING:NOW:NOW
-# where does this really fit...?  it either needs to be in the final repository or not...
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@time $(ENV_MAKE) $(SILENT) \
-		--directory $($(PUBLISH)-$(EXAMPLE)) \
-		$(EXPORTS)
-endif
 else
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
@@ -10703,6 +10696,12 @@ else
 			2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
 			$(call NEWLINE) \
 	)
+endif
+ifeq ($(COMPOSER_DEBUGIT),)
+	@time $(ENV_MAKE) $(SILENT) \
+		--directory $($(PUBLISH)-$(EXAMPLE)) \
+		$(EXPORTS) \
+		2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log)
 endif
 
 #WORKING:NOW:NOW
