@@ -10706,8 +10706,18 @@ endif
 
 #WORKING:NOW:NOW
 #	site
+#		composer.yml include files
+#			add both pre and post, which pre and post add to c_list
+#			need to transform composer_root from "<>" to "$()" before doing so
+#			add to site-template...
+#		add additional title-block behavior, so that it can also be done in composer.yml
+#			this is in line with the per-directory behavior across the board
+#			we want the ability to keep source files completely generic and non-composer
+#			add to site-template... (pandoc page)
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
+#				this has been fixed, already...?
+#			isn't this already done...?
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
