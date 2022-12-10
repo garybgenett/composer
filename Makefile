@@ -77,6 +77,8 @@ override VIM_FOLDING := {{{1
 ################################################################################
 # {{{1 TODO
 ################################################################################
+# HTML
+#	metadata / keywords
 # PDF / EPUB / DOCX
 #	man pandoc = REPRODUCIBLE BUILDS = https://pandoc.org/MANUAL.html#reproducible-builds
 #		Some of the document formats pandoc targets (such as EPUB, docx, and ODT) include build timestamps in the generated document.  That means that the files generated on successive builds will differ, even if the source does not.  To avoid this, set the SOURCE_DATE_EPOCH environment variable, and the timestamp will be taken from it instead of the current time.  SOURCE_DATE_EPOCH should contain an integer unix timestamp (specifying the number of second since midnight UTC January 1, 1970).
@@ -235,13 +237,41 @@ override COMPOSER_LOGO_VER		:= v1.0
 override COMPOSER_ICON			:= $(COMPOSER_IMAGES)/icon.img
 override COMPOSER_ICON_VER		:= v1.0
 
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(DATENAME).$(EXTN_TEXT)
+override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
+
+########################################
+
+override COMPOSER_RELEASE		:=
+ifeq ($(COMPOSER_DIR),$(CURDIR))
+override COMPOSER_RELEASE		:= 1
+endif
+
+########################################
+
+override MARKER				:= >>
+override DIVIDE				:= ::
+override TOKEN				:= ~^~
+override NULL				:=
+
+# https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
+override define NEWLINE =
+$(NULL)
+$(NULL)
+endef
+
 ########################################
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
-#>override HTML_BREAK_LINE		:= <br>
-override HTML_BREAK_LINE		:= --
+override HTML_HIDE			:= <br hidden>
 override MENU_SELF			:= _
+
+override PUBLISH_HEADER			:= null
+override PUBLISH_HEADER_ALT		:= null
+override PUBLISH_FOOTER			:= null
+override PUBLISH_FOOTER_ALT		:= null
 
 override PUBLISH_CSS_SHADE		:= dark
 override PUBLISH_CSS_SHADE_ALT		:= null
@@ -284,14 +314,16 @@ override PUBLISH_COLS_RESIZE_R_ALT_MOD	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
-override PUBLISH_CREATORS_LIST		:= 1
-override PUBLISH_CREATORS_LIST_ALT	:= null
-override PUBLISH_CREATORS		:= *Authors: @, @*
-override PUBLISH_CREATORS_ALT		:= *@ / @*
-override PUBLISH_TAGSLIST		:= *Tags: @, @*
-override PUBLISH_TAGSLIST_ALT		:= *@ / @*
-override PUBLISH_READTIME		:= *Reading time: @W@ words, @T@ minutes*
-override PUBLISH_READTIME_ALT		:= *Words: @W@ / Minutes: @T@*
+override PUBLISH_METAINFO		:= <D> $(DIVIDE) <T><|> -- <A|;>
+override PUBLISH_METAINFO_ALT		:= <T>$(HTML_SPACE)$(HTML_SPACE)*(<D>)*<|><br>*-- <A| -- >*<br>*. <G| . >*
+#>override PUBLISH_CONTENTS		:=
+#>override PUBLISH_CONTENTS_ALT		:=
+override PUBLISH_CREATORS		:= *Authors: <|>, <|>*
+override PUBLISH_CREATORS_ALT		:= *<|> / <|>*
+override PUBLISH_TAGSLIST		:= *Tags: <|>, <|>*
+override PUBLISH_TAGSLIST_ALT		:= *<|> / <|>*
+override PUBLISH_READTIME		:= *Reading time: <W> words, <T> minutes*
+override PUBLISH_READTIME_ALT		:= *Words: <W> / Minutes: <T>*
 override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 
@@ -314,19 +346,6 @@ override LIBRARY_DIGEST_CONTINUE	:= [...]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
-
-########################################
-
-#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(DATENAME).$(EXTN_TEXT)
-override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
-
-########################################
-
-override COMPOSER_RELEASE		:=
-ifeq ($(COMPOSER_DIR),$(CURDIR))
-override COMPOSER_RELEASE		:= 1
-endif
 
 ################################################################################
 # {{{1 Include Files -----------------------------------------------------------
@@ -367,8 +386,6 @@ override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOSER_DEB
 export SHELL
 
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
-
-override TOKEN				:= ~^~
 
 ########################################
 
@@ -1715,6 +1732,9 @@ override define COMPOSER_YML_DATA_SKEL =
     search_call:			null,
     search_form:			null,
 
+    header:				null,
+    footer:				null,
+
     css_shade:				$(PUBLISH_CSS_SHADE),
     copy_protect:			$(PUBLISH_COPY_PROTECT),
 
@@ -1725,7 +1745,7 @@ override define COMPOSER_YML_DATA_SKEL =
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
 
-    creators_list:			$(PUBLISH_CREATORS_LIST),
+    metainfo:				"$(PUBLISH_METAINFO)",
     creators:				"$(PUBLISH_CREATORS)",
     tagslist:				"$(PUBLISH_TAGSLIST)",
     readtime:				"$(PUBLISH_READTIME)",
@@ -1834,9 +1854,6 @@ endif
 
 #######################################
 
-#> update: includes duplicates
-override MARKER				:= >>
-
 override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
 override PUBLISH_CMD_BEG		:= <!-- $(COMPOSER_TINYNAME) $(MARKER)
 override PUBLISH_CMD_END		:= $(MARKER) -->
@@ -1870,6 +1887,7 @@ override PUBLISH_SH_RUN := \
 endif
 
 override PUBLISH_SH_HELPERS := \
+	metainfo \
 	contents \
 	creators \
 	tagslist \
@@ -2807,7 +2825,8 @@ endef
 #	the library indexes as a merge for new files
 #		removed files and fields will remain
 #		rm _library/site-library.yml or do "make site" to rebuild
-#	c_site = title-block = title-prefix/pagetitle behavior
+#	c_site = metainfo = title-prefix/pagetitle behavior
+#		regardless of include, main file, etc...
 #	any date format that yq can understand [link] can be used, but be consisitent...
 #	$(PUBLISH)-spacer[spacer] / box-begin / box-end
 #	need to do "null" to override on sub-composer.yml files
@@ -2829,7 +2848,7 @@ endef
 #			first instance of "contents.*" wins...
 #			same with readtime, although it doesn't matter...
 #		also, "header x" at any old time...
-#	document readtime = @W@ / @T@
+#	document readtime = <W> / <T>
 #	document "make config" in "library", to show files with missing headers
 #	document .$(TARGETS) special value
 #	document template.*/reference.* and $(COMPOSER_CUSTOM)-header.*/$(COMPOSER_CUSTOM)-css.* files
@@ -3702,10 +3721,10 @@ override EXT_ICON_CC			:= iVBORw0KGgoAAAANSUhEUgAAAFgAAAAfCAMAAABUFvrSAAAAIGNIUk
 
 override define DO_HEREDOC =
 	$(if $(2),$(eval $(call COMPOSER_NOCOLOR))) \
-	$(ECHO) '$(subst ',[Q],$(subst $(call NEWLINE),[N],$(call $(1),$(3))))[N]' \
+	$(ECHO) '$(subst ',<Q>,$(subst $(call NEWLINE),<N>,$(call $(1),$(3))))<N>' \
 		| $(SED) \
-			-e "s|[[]Q[]]|\'|g" \
-			-e "s|[[]N[]]|\\n|g" \
+			-e "s|<Q>|\'|g" \
+			-e "s|<N>|\\n|g" \
 	$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_COLOR)))
 endef
 
@@ -4065,6 +4084,9 @@ $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kv 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kz -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)header$(_D):				$(_M)$(PUBLISH_HEADER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)footer$(_D):				$(_M)$(PUBLISH_FOOTER)$(_D)
+
 $(_S)#$(MARKER)$(_D) $(_C)css_shade$(_D):				$(_M)$(PUBLISH_CSS_SHADE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
 
@@ -4075,10 +4097,10 @@ $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_R
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)creators_list$(_D):			$(_M)$(PUBLISH_CREATORS_LIST)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(PUBLISH_TAGSLIST)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(PUBLISH_READTIME)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)metainfo$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_CREATORS))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_TAGSLIST))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_READTIME))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
 
 $(_S)########################################$(_D)
@@ -4113,7 +4135,9 @@ $(_S)########################################$(_D)
         - $(_M)Default Markdown File$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
           - $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
-        - $(_M)Elements & Includes$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)$(_D)
+        - $(_M)Elements & Includes$(_D):
+          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML)$(_D)
+          - $(_M)Metainfo File$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01-$(EXAMPLE)_00.$(EXTN_HTML)$(_D)
         - $(_M)Themes & Shades$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
@@ -4365,6 +4389,8 @@ variables:
 ########################################
 
   $(PUBLISH)-config:
+    header:				$(PUBLISH_HEADER_ALT)
+    footer:				$(PUBLISH_FOOTER_ALT)
     css_shade:				$(PUBLISH_CSS_SHADE_ALT)
     copy_protect:			$(PUBLISH_COPY_PROTECT_ALT)
     cols_break:				$(PUBLISH_COLS_BREAK_ALT)
@@ -4373,7 +4399,7 @@ variables:
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
-    creators_list:			$(PUBLISH_CREATORS_LIST_ALT)
+    metainfo:				"$(PUBLISH_METAINFO_ALT)"
     creators:				"$(PUBLISH_CREATORS_ALT)"
     tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
     readtime:				"$(PUBLISH_READTIME_ALT)"
@@ -4396,7 +4422,7 @@ variables:
     CHAINED:
       - CHAINED:
         - CHAINING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
-    CONTENTS:
+    LIBRARY:
 
   $(PUBLISH)-nav-bottom:
     PATH:
@@ -4463,6 +4489,10 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_PANDOC =
 ################################################################################
 
 variables:
+
+  $(PUBLISH)-config:
+    header:				$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/_header$(COMPOSER_EXT_SPECIAL)
+    footer:				$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/_footer$(COMPOSER_EXT_SPECIAL)
 
   $(PUBLISH)-nav-top:
     CONTENTS:
@@ -4558,7 +4588,6 @@ DEPTH_MAX="$(DEPTH_MAX)"
 
 HTML_SPACE="$(HTML_SPACE)"
 HTML_BREAK="$(HTML_BREAK)"
-HTML_BREAK_LINE="$(HTML_BREAK_LINE)"
 MENU_SELF="$(MENU_SELF)"
 
 PUBLISH_CMD_ROOT="$(PUBLISH_CMD_ROOT)"
@@ -4781,6 +4810,8 @@ function $(PUBLISH)-nav-top-list {
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
@@ -4952,6 +4983,8 @@ function $(PUBLISH)-nav-bottom-list {
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
@@ -5034,6 +5067,13 @@ function $(PUBLISH)-nav-side-list {
 			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
+			$${ECHO} "\\n"
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^metainfo|metainfo-list|g"
+			) $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
@@ -5165,6 +5205,8 @@ _EOF_
 			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
@@ -5577,8 +5619,6 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-file --------------
 
-#> update: YQ_WRITE.*title
-
 # 1 file path
 # @ null
 
@@ -5586,86 +5626,28 @@ _EOF_
 # x $(PUBLISH)-*
 
 function $(PUBLISH)-file {
-	TITL="$$(
-		$${SED} -n "1,/^---$$/p" $${1} \\
-		| $${YQ_WRITE} ".title" 2>/dev/null \\
-		| $${SED} "/^null$$/d"
-	)"
-	if [ -z "$${TITL}" ]; then
-		TITL="$$(
-			$${SED} -n "1,/^---$$/p" $${1} \\
-			| $${YQ_WRITE} ".pagetitle" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-	fi
-	if [ "$${!#}" = "title-block" ]; then
-		if [ -n "$${TITL}" ]; then
-			$${ECHO} "---\\n"
-			$${ECHO} "pagetitle: \"$${TITL}\"\\n"
-			$${ECHO} "---\\n"
-		fi
-		$(PUBLISH)-marker $${FUNCNAME} done $${@}
-		return 0
-	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	BLCK="$$($${SED} -n "s|^$${PUBLISH_CMD_BEG} title-block (.+) $${PUBLISH_CMD_END}$$|\\1|gp" $${1})"
-	if [ -n "$${BLCK}" ]; then
-		$(PUBLISH)-marker title-block start $${BLCK}
-		$(PUBLISH)-$$($${ECHO} "$${BLCK}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-begin \\2|g") $$(
-			NAME="$$(
-				$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/p" $${1} \\
-				| $${YQ_WRITE} ".author" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
-			if [ -n "$${NAME}" ]; then
-				JOIN="$$(
-					$${ECHO} "$${NAME}" \\
-					| $${YQ_WRITE} "join(\"; \")" 2>/dev/null \\
-					| $${SED} "/^null$$/d"
-				)"
-				if [ -n "$${JOIN}" ]; then
-					NAME="$${JOIN}"
-				fi
-			fi
-			DATE="$$(
-				$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/p" $${1} \\
-				| $${YQ_WRITE} ".date" 2>/dev/null \\
-				| $${SED} "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \\
-				| $${SED} "/^null$$/d"
-			)"
-			if [ -n "$${DATE}" ]; then
-				$${ECHO} "$${DATE}"
-			fi
-			if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then
-				$${ECHO} " $${DIVIDE} "
-			fi
-			if [ -n "$${TITL}" ]; then
-				$${ECHO} "$${TITL}"
-			fi
-			if [ -n "$${NAME}" ] && [ -n "$$(COMPOSER_YML_DATA_VAL config.creators_list)" ]; then
-				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then
-					$${ECHO} " $${HTML_BREAK_LINE} "
-				fi
-				$${ECHO} "$${NAME}"
-			fi
-		) || return 1
-		$(PUBLISH)-marker title-block finish $${BLCK}
-	fi
-	$${ECHO} "\\n"
-	if [ -n "$${BLCK}" ]; then
-		$${SED} "1,/^$${PUBLISH_CMD_BEG} title-block .+ $${PUBLISH_CMD_END}$$/d" $${1}
-	else
-		if [ -n "$$(
-			$${SED} -n "1{/^---$$/p}" $${1}
-		)" ]; then
-			$${SED} "1,/^---$$/d" $${1}
+	META="$$($${SED} -n "s|^$${PUBLISH_CMD_BEG} metainfo ($${MENU_SELF}.*) $${PUBLISH_CMD_END}$$|\\1|gp" $${1})"
+#WORKING:NOW:NOW:FIX
+	if [ -n "$${META}" ]; then
+		META="$$($${ECHO} "$${META}" | $${SED} "s|^$${MENU_SELF}[[:space:]]+||g")"
+		if [ -n "$${META}" ]; then
+			$(PUBLISH)-$$($${ECHO} "$${META}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-begin|g") || return 1
 		else
-			$${CAT} $${1}
+			$${ECHO} "#WORKING:NOW:NOW:FIX"
 		fi
+	fi
+	if [ -n "$$(
+		$${SED} -n "1{/^---$$/p}" $${1}
+	)" ]; then
+		$${SED} "1,/^---$$/d" $${1}
+	else
+		$${CAT} $${1}
 	fi \\
+		| $${SED} "/^$${PUBLISH_CMD_BEG} metainfo ($${MENU_SELF}.*) $${PUBLISH_CMD_END}$$/d" \\
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
-#>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$${PUBLISH_CMD_BEG}(.+)$${PUBLISH_CMD_END}$$|\\1|g")"
+#>			BUILD_CMD="$$($${ECHO} "$${FILE}" | $${SED} "s|^$${PUBLISH_CMD_BEG} (.+) $${PUBLISH_CMD_END}$$|\\1|g")"
 			BUILD_CMD="$${BUILD_CMD/#$${PUBLISH_CMD_BEG} }"
 			BUILD_CMD="$${BUILD_CMD/% $${PUBLISH_CMD_END}}"
 			if [ "$${FILE}" = "$${PUBLISH_CMD_BEG} $${BUILD_CMD} $${PUBLISH_CMD_END}" ]; then
@@ -5677,9 +5659,8 @@ function $(PUBLISH)-file {
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then return 1; fi
 		done \\
 		|| return 1
-	$${ECHO} "\\n"
-	if [ -n "$${BLCK}" ]; then
-		$(PUBLISH)-$$($${ECHO} "$${BLCK}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-end|g") || return 1
+	if [ -n "$${META}" ]; then
+		$(PUBLISH)-$$($${ECHO} "$${META}" | $${SED} "s|^([^[:space:]]+)(.+)$$|\\1-end|g") || return 1
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -5697,6 +5678,7 @@ function $(PUBLISH)-select {
 		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 	)"; shift
 	if
+		[ "$${ACTION}" = "metainfo" ] ||
 		[ "$${ACTION}" = "contents" ] ||
 		[ "$${ACTION}" = "creators" ] ||
 		[ "$${ACTION}" = "tagslist" ] ||
@@ -5704,6 +5686,7 @@ function $(PUBLISH)-select {
 	then
 		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list $${@} $${PUBLISH_CMD_END}\\n"
 	elif
+		[ "$${ACTION}" = "metainfo-menu" ] || [ "$${ACTION}" = "metainfo-list" ] ||
 		[ "$${ACTION}" = "contents-menu" ] || [ "$${ACTION}" = "contents-list" ] ||
 		[ "$${ACTION}" = "creators-menu" ] || [ "$${ACTION}" = "creators-list" ] ||
 		[ "$${ACTION}" = "tagslist-menu" ] || [ "$${ACTION}" = "tagslist-list" ] ||
@@ -7369,20 +7352,6 @@ $(eval $(call COMPOSER_COLOR))
 else
 $(eval $(call COMPOSER_NOCOLOR))
 endif
-
-########################################
-
-#> update: includes duplicates
-override MARKER				:= >>
-override DIVIDE				:= ::
-override TOKEN				:= ~^~
-override NULL				:=
-
-# https://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
-override define NEWLINE =
-$(NULL)
-$(NULL)
-endef
 
 ########################################
 
@@ -9355,8 +9324,8 @@ override GIT_OPTS_CONVICT		:= --verbose $(if \
 $(CONVICT): .set_title-$(CONVICT)
 $(CONVICT):
 	@$(call $(HEADERS))
-	$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
-	$(call GIT_RUN_COMPOSER,commit \
+	@$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
+	@$(call GIT_RUN_COMPOSER,commit \
 		$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(CONVICT))),,--edit) \
 		--message='$(call COMPOSER_TIMESTAMP)' \
 		$(GIT_OPTS_CONVICT) \
@@ -9549,31 +9518,40 @@ $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
 ### {{{3 $(PUBLISH)-$(TARGETS) ---------
 
 override define $(PUBLISH)-$(TARGETS) =
+	HEADER="$$($(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.header)" | $(SED) "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT)|g")"; \
+	FOOTER="$$($(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.footer)" | $(SED) "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT)|g")"; \
 	$(ECHO) "$(_E)"; \
 	$(ECHO) "" >$(1); \
-	$(PUBLISH_SH_RUN) $(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list))) title-block \
-		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
-	for FILE in $($(PUBLISH)-caches-begin); do \
-			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
-			$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
-		done \
+	$(call $(PUBLISH)-$(TARGETS)-metainfo-text,1,1,$(word 1,$(if $(c_list_plus),$(c_list_plus),$(c_list)))) \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	for FILE in $(if $(c_list_plus),$(c_list_plus),$(c_list)); do \
-			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$${FILE}) -->\n"; \
-			$(PUBLISH_SH_RUN) $${FILE}; \
-		done \
-		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	for FILE in $($(PUBLISH)-caches-end); do \
-			$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)) -->\n"; \
-			$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
-		done \
-		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	$(call $(PUBLISH)-$(TARGETS)-cache,$(1),$($(PUBLISH)-caches-begin)); \
+	if [ -n "$${HEADER}" ]; then $(call $(PUBLISH)-$(TARGETS)-file,$(1),$${HEADER}); fi; \
+	$(call $(PUBLISH)-$(TARGETS)-file,$(1),$(if $(c_list_plus),$(c_list_plus),$(c_list))); \
+	if [ -n "$${FOOTER}" ]; then $(call $(PUBLISH)-$(TARGETS)-file,$(1),$${FOOTER}); fi; \
+	$(call $(PUBLISH)-$(TARGETS)-cache,$(1),$($(PUBLISH)-caches-end)); \
 	$(ECHO) "$(_D)"
+endef
+
+override define $(PUBLISH)-$(TARGETS)-cache =
+	for FILE in $(2); do \
+		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML) -->\n" \
+			| $(SED) "s|$(COMPOSER_ROOT)|...|g"; \
+		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
+	done \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
+endef
+
+override define $(PUBLISH)-$(TARGETS)-file =
+	for FILE in $(2); do \
+		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $${FILE} -->\n" \
+			| $(SED) "s|$(COMPOSER_ROOT)|...|g"; \
+		$(PUBLISH_SH_RUN) $${FILE}; \
+	done \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
 ########################################
@@ -9592,9 +9570,11 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 		$(ECHO) "" >$(1).$(2)-menu; \
 		$(ECHO) "" >$(1).$(2)-list; \
 		$(call $(PUBLISH)-$(TARGETS)-$(2),$(1)); \
-		$(CAT) $(1).$(2)-menu | $(PANDOC_MD_TO_HTML) >$(1).$(2)-menu.done; \
+		$(PUBLISH_SH_RUN)	$(1).$(2)-list | $(SED) "/$(notdir $(1).$(2)-list)/d"	>$(1).$(2)-list.done; \
+		$(CAT)			$(1).$(2)-menu | $(PANDOC_MD_TO_HTML)			>$(1).$(2)-menu.done; \
 		$(call $(PUBLISH)-$(TARGETS)-$(2)-done,$(1).$(2)-menu.done); \
 		$(ECHO) "$(_S)"; \
+		$(MV) $(1).$(2)-list.done $(1).$(2)-list $($(DEBUGIT)-output); \
 		$(MV) $(1).$(2)-menu.done $(1).$(2)-menu $($(DEBUGIT)-output); \
 		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(2)-menu.* $(PUBLISH_CMD_END)$$/r $(1).$(2)-menu" $(1); \
 		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(2)-list.* $(PUBLISH_CMD_END)$$/r $(1).$(2)-list" $(1); \
@@ -9611,9 +9591,9 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-metalist =
 	META="$(call COMPOSER_YML_DATA_VAL,config.$(2))"; \
-	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\1|g")"; \
-	META_SEP="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\2|g")"; \
-	META_END="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[@](.*)[@](.*)$$|\3|g")"; \
+	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)<[|]>(.*)<[|]>(.*)$$|\1|g")"; \
+	META_SEP="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)<[|]>(.*)<[|]>(.*)$$|\2|g")"; \
+	META_END="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)<[|]>(.*)<[|]>(.*)$$|\3|g")"; \
 	if [ -z "$${META_SEP}" ]; then \
 		META_SEP=" "; \
 	fi; \
@@ -9623,7 +9603,9 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 			$(SED) -n "1{/^---$$/p}" $${META} \
 		)" ]; then \
 			$(SED) -n "1,/^---$$/p" $${META} \
-			| $(YQ_WRITE) ".$(3) | .[]"; \
+			| $(YQ_WRITE) ".$(3)" \
+			| $(SED) "s|^[-][ ]||g" \
+			| $(SED) "/^null$$/d"; \
 		fi; \
 	done \
 		| $(call $(PUBLISH)-library-sort-sh,$(3)) \
@@ -9650,6 +9632,116 @@ override define $(PUBLISH)-$(TARGETS)-metalist-done =
 		-e '$$d' \
 		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
 		$(1)
+endef
+
+########################################
+#### {{{4 $(PUBLISH)-$(TARGETS)-metainfo
+
+#> update: YQ_WRITE.*title
+
+#WORKING:NOW:NOW:FIX
+#	add a site-template test for pages where it is something like a "h1" and not a fold/box...
+#	maybe do the block on the pandoc page, but just simple titles on the "elements" page...?
+#	add support for multiple keys, and test all in PUBLISH_METAINFO_ALT...
+#		<T>	title/pagetitle
+#		<A>	authors
+#		<D>	date
+#		<G>	tags
+#		<|>	splitter, to replace HTML_BREAK_LINE = document (contents-menu, contents-list $(SPECIAL_VAL))
+#		others?
+#	add auth/tags separators configuration variables...
+#	test of plain metainfo...
+#		$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
+
+override define $(PUBLISH)-$(TARGETS)-metainfo-text =
+	{ \
+	if [ -n "$(2)" ]; then \
+		META="$$( \
+			$(SED) -n "1,/^---$$/p" $(3) \
+		)"; \
+	else \
+		META="$$( \
+			$(YQ_WRITE) ".\"$(3)\"" $($(PUBLISH)-library-metadata) 2>/dev/null \
+			| $(SED) "/^null$$/d" \
+		)"; \
+	fi; \
+	TITL="$$( \
+		$(ECHO) "$${META}" \
+		| $(YQ_WRITE) ".title" 2>/dev/null \
+		| $(SED) "/^null$$/d" \
+	)"; \
+	if [ -z "$${TITL}" ]; then \
+		TITL="$$( \
+			$(ECHO) "$${META}" \
+			| $(YQ_WRITE) ".pagetitle" 2>/dev/null \
+			| $(SED) "/^null$$/d" \
+		)"; \
+	fi; \
+#WORKING:NOW:NOW:FIX if [ -n "$(2)" ]; then parse out composer_root, and test...
+	if [ -z "$${TITL}" ]; then \
+		TITL="$(3)"; \
+	fi; \
+	AUTH="$$( \
+		$(ECHO) "$${META}" \
+		| $(YQ_WRITE) ".author" 2>/dev/null \
+		| $(SED) "/^null$$/d" \
+	)"; \
+	if [ -n "$${AUTH}" ]; then \
+		JOIN="$$( \
+			$(ECHO) "$${AUTH}" \
+			| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
+			| $(SED) "/^null$$/d" \
+		)"; \
+		if [ -n "$${JOIN}" ]; then \
+			AUTH="$${JOIN}"; \
+		fi; \
+	fi; \
+	DATE="$$( \
+		$(ECHO) "$${META}" \
+		| $(YQ_WRITE) ".date" 2>/dev/null \
+		| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
+		| $(SED) "/^null$$/d" \
+	)"; \
+	TAGS="$$( \
+		$(ECHO) "$${META}" \
+		| $(YQ_WRITE) ".tags | join(\"; \")" 2>/dev/null \
+		| $(SED) "/^null$$/d" \
+	)"; \
+	if [ -n "$(1)" ]; then \
+		$(ECHO) "---\n"; \
+		$(ECHO) "pagetitle: \"$${TITL}\"\n"; \
+		$(ECHO) "author:\n";	if [ -n "$${AUTH}" ]; then $(ECHO) "  - \"$${AUTH}\"\n"	| $(SED) "s|[;][ ]|\"\n  - \"|g"; fi; \
+		$(ECHO) "date: $${DATE}\n"; \
+		$(ECHO) "tags:\n";	if [ -n "$${TAGS}" ]; then $(ECHO) "  - \"$${TAGS}\"\n"	| $(SED) "s|[;][ ]|\"\n  - \"|g"; fi; \
+		$(ECHO) "---\n"; \
+	else \
+		META_TXT="$(call COMPOSER_YML_DATA_VAL,config.metainfo)"; \
+		AUTH_SEP="$$($(ECHO) "$${META_TXT}" | $(SED) -n "s|^.*<A[|]([^>]*)>.*$$|\1|gp")"; \
+		TAGS_SEP="$$($(ECHO) "$${META_TXT}" | $(SED) -n "s|^.*<G[|]([^>]*)>.*$$|\1|gp")"; \
+		if [ -z "$${AUTH_SEP}" ]; then AUTH_SEP=" "; fi; \
+		if [ -z "$${TAGS_SEP}" ]; then TAGS_SEP=" "; fi; \
+		$(ECHO) "$${META_TXT}" \
+		| $(SED) \
+			-e "s|<T>|$${TITL}|g" \
+			-e "s|<A[^>]*>|$$($(ECHO) "$${AUTH}" | $(SED) "s|[;][ ]|$${AUTH_SEP}|g")|g" \
+			-e "s|<D>|$${DATE}|g" \
+			-e "s|<G[^>]*>|$$($(ECHO) "$${TAGS}" | $(SED) "s|[;][ ]|$${TAGS_SEP}|g")|g" \
+			-e "s|<G>|$${TAGS}|g" \
+			-e "s|<[|]>|$(HTML_HIDE)|g" \
+		; \
+	fi; \
+	}
+endef
+
+override define $(PUBLISH)-$(TARGETS)-metainfo =
+	if [ -n "$${LIST}" ]; then $(ECHO) "$(PUBLISH_CMD_BEG) $${LIST} "	>>$(1).metainfo-list; fi; \
+	$(call $(PUBLISH)-$(TARGETS)-metainfo-text,,1,$(1))			>>$(1).metainfo-list; \
+	if [ -n "$${LIST}" ]; then $(ECHO) " $(PUBLISH_CMD_END)"		>>$(1).metainfo-list; fi; \
+	$(ECHO) "\n"								>>$(1).metainfo-list
+endef
+
+override define $(PUBLISH)-$(TARGETS)-metainfo-done =
+	$(ECHO) ""
 endef
 
 ########################################
@@ -9724,7 +9816,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"		>>$(1).contents-menu; \
 			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-menu; \
 			fi; \
-			MENU_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
+			MENU_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
 			$(ECHO) " [$${MENU_TXT}](#$${LNK}){.dropdown-item}"			>>$(1).contents-menu; \
 			$(ECHO) "\n"								>>$(1).contents-menu; \
 			$(ECHO) " menu" $($(DEBUGIT)-output); \
@@ -9741,7 +9833,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			fi; \
 			LIST_TXT="$${TXT}"; \
 			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then \
-				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|[[:space:]]*$(HTML_BREAK_LINE).*$$||g")"; \
+				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
 			fi; \
 			$(ECHO) " [$${LIST_TXT}](#$${LNK})"					>>$(1).contents-list; \
 			$(ECHO) "\n"								>>$(1).contents-list; \
@@ -9818,8 +9910,8 @@ override define $(PUBLISH)-$(TARGETS)-readtime =
 	fi; \
 	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.readtime)\n" \
 		| $(SED) \
-			-e "s|[@]W[@]|$${WORD}|g" \
-			-e "s|[@]T[@]|$${TIME}|g" \
+			-e "s|<W>|$${WORD}|g" \
+			-e "s|<T>|$${TIME}|g" \
 		>>$(1).readtime-list
 endef
 
@@ -10241,7 +10333,6 @@ $($(PUBLISH)-library-digest-files):
 			): $${NAME}\"\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "---\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME); \
-		CREATORS_LIST="$(call COMPOSER_YML_DATA_VAL,config.creators_list)"; \
 		$(YQ_WRITE) ".$${TYPE}.[\"$${NAME}\"] | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
 			| while read -r FILE; do \
 				$(call $(PUBLISH)-library-digest-create,$(@).$(COMPOSER_BASENAME),$${FILE},$(COMPOSER_EXT_DEFAULT),$(SPECIAL_VAL)); \
@@ -10263,7 +10354,6 @@ override define $(PUBLISH)-library-digest-main =
 		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
 	fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
-	CREATORS_LIST="$(call COMPOSER_YML_DATA_VAL,config.creators_list)"; \
 	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.digest_expanded)"; \
 	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.digest_spacer)"; \
 	NUM="0"; for FILE in $$( \
@@ -10295,6 +10385,7 @@ endef
 ##### {{{5 $(PUBLISH)-library-digest-create
 
 #> update: YQ_WRITE.*title
+
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-digest); \
@@ -10302,60 +10393,11 @@ override define $(PUBLISH)-library-digest-create =
 		else				$(ECHO) "$(_N)"; \
 		fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $(4) library-digest $$( \
-			TITL="$$( \
-				$(YQ_WRITE) ".\"$(2)\".title" $($(PUBLISH)-library-metadata) 2>/dev/null \
-				| $(SED) "/^null$$/d"; \
-			)"; \
-			if [ -z "$${TITL}" ]; then \
-				TITL="$$( \
-					$(YQ_WRITE) ".\"$(2)\".pagetitle" $($(PUBLISH)-library-metadata) 2>/dev/null \
-					| $(SED) "/^null$$/d"; \
-				)"; \
-			fi; \
-			if [ -z "$${TITL}" ]; then \
-				TITL="$$( \
-					$(YQ_WRITE) ".\"$(2)\".path" $($(PUBLISH)-library-metadata) 2>/dev/null \
-					| $(SED) "s|^$(abspath $(dir $(COMPOSER_LIBRARY)))/||g"; \
-				)"; \
-			fi; \
-			NAME="$$( \
-				$(YQ_WRITE) ".\"$(2)\".author" $($(PUBLISH)-library-metadata) 2>/dev/null \
-				| $(SED) "/^null$$/d"; \
-			)"; \
-			if [ -n "$${NAME}" ]; then \
-				JOIN="$$( \
-					$(ECHO) "$${NAME}" \
-					| $(YQ_WRITE) "join(\"; \")" 2>/dev/null \
-					| $(SED) "/^null$$/d"; \
-				)"; \
-				if [ -n "$${JOIN}" ]; then \
-					NAME="$${JOIN}"; \
-				fi; \
-			fi; \
-			DATE="$$( \
-				$(YQ_WRITE) ".\"$(2)\".date" $($(PUBLISH)-library-metadata) 2>/dev/null \
-				| $(SED) "s|[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}.*$$||g" \
-				| $(SED) "/^null$$/d"; \
-			)"; \
-			if [ -n "$${DATE}" ]; then \
-				$(ECHO) "$${DATE}"; \
-			fi; \
-			if [ -n "$${DATE}" ] && [ -n "$${TITL}" ]; then \
-				$(ECHO) " $(DIVIDE) "; \
-			fi; \
-			if [ -n "$${TITL}" ]; then \
-				$(ECHO) "$${TITL}"; \
-			fi; \
-			if [ -n "$${NAME}" ] && [ -n "$${CREATORS_LIST}" ]; then \
-				if [ -n "$${DATE}" ] || [ -n "$${TITL}" ]; then \
-					$(ECHO) " $(HTML_BREAK_LINE) "; \
-				fi; \
-				$(ECHO) "$${NAME}"; \
-			fi; \
+			$(call $(PUBLISH)-$(TARGETS)-metainfo-text,,,$(2)) \
 		) $(PUBLISH_CMD_END)\n" \
-			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-		$(ECHO) "\n" \
-			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+	$(ECHO) "\n" \
+		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
 		$(PANDOC_MD_TO_JSON) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 		| $(YQ_WRITE) ".blocks | length" \
@@ -10523,6 +10565,7 @@ endif
 	@$(SED) -i "s|[[:space:]]*$$||g"				$($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-themes)/$(COMPOSER_YML)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(SED) -i \
+		-e "s|^(.+metainfo[:].*<A)[|][^>]*(.*<G)[|][^>]*(.*)$$|\1\2\3|g" \
 		-e "s|^(.+creators[:]).*$$|\1|g" \
 		-e "s|^(.+tagslist[:]).*$$|\1|g" \
 		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
@@ -10560,18 +10603,20 @@ endif
 		$(eval override MARK := $(YEAR)$(NUM)-01-01) \
 		$(eval override FILE := $($(PUBLISH)-$(EXAMPLE))/$($(PUBLISH)-$(EXAMPLE)-pages)/$(MARK)-$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
-		$(ECHO) "---\n"										>$(FILE); \
-		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"			>>$(FILE); \
-		$(ECHO) "author: [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]\n"		>>$(FILE); \
-		$(ECHO) "date: $(MARK)\n"								>>$(FILE); \
-		$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"					>>$(FILE); \
-		$(ECHO) "---\n"										>>$(FILE); \
-		$(ECHO) "$(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)\n"	>>$(FILE); \
-		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)	>>$(FILE); \
+		$(ECHO) "---\n"											>$(FILE); \
+		$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"				>>$(FILE); \
+		$(ECHO) "author: [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]\n"			>>$(FILE); \
+		$(ECHO) "date: $(MARK)\n"									>>$(FILE); \
+		$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"						>>$(FILE); \
+		$(ECHO) "---\n"											>>$(FILE); \
+		$(ECHO) "$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box $(SPECIAL_VAL) $(PUBLISH_CMD_END)\n"	>>$(FILE); \
+		$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)		>>$(FILE); \
 		$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-pages))/$(notdir $(FILE)) \\\n'		>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS); \
 	))
 	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"										>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-header)						>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/_header$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-page-footer)						>$($(PUBLISH)-$(EXAMPLE))/$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/_footer$(COMPOSER_EXT_SPECIAL)
 	@$(foreach FILE,$(call CSS_THEMES),\
 		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
 		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
@@ -10667,6 +10712,7 @@ endif
 		$($(PUBLISH)-$(EXAMPLE)-include).$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-included).$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML) \
+		$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01-$(EXAMPLE)_00.$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL) \
 		,\
 		time $(ENV_MAKE) $(SILENT) \
@@ -10705,15 +10751,14 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	move all site-template heredoc pages to embedded files section...
+#		make them sub-headers "{ { {" under one heading, like site.sh
+#		in the same vein, sub-header all the mk and yml configuration files...
 #	site
 #		composer.yml include files
 #			add both pre and post, which pre and post add to c_list
 #			need to transform composer_root from "<>" to "$()" before doing so
 #			add to site-template...
-#		add additional title-block behavior, so that it can also be done in composer.yml
-#			this is in line with the per-directory behavior across the board
-#			we want the ability to keep source files completely generic and non-composer
-#			add to site-template... (pandoc page)
 #		add author/date/tags to test pages, and/or promote 2020-01-01-template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
 #				this has been fixed, already...?
@@ -10724,12 +10769,15 @@ endif
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 
 ########################################
-#### {{{4 Heredoc: Example Page(s) -----
+#### {{{4 Heredoc: Example Pages -------
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
 	@$(call TITLE_LN ,2,Recommended Workflow)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
+
+########################################
+#### {{{4 Heredoc: Page: Digest --------
 
 override define $(PUBLISH)-$(EXAMPLE)-digest =
 ---
@@ -10743,6 +10791,9 @@ $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) $(LIBRARY_FOLDER_ALT)/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)
 endef
 
+########################################
+#### {{{4 Heredoc: Page: Digest: Config
+
 override define $(PUBLISH)-$(EXAMPLE)-digest-$(CONFIGS) =
 ---
 title: Digest
@@ -10754,6 +10805,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) $($(PUBLISH)-$(EXAMPLE)-library)/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)
 endef
+
+########################################
+#### {{{4 Heredoc: Page: Features ------
 
 override define $(PUBLISH)-$(EXAMPLE)-features =
 ---
@@ -10801,6 +10855,8 @@ endef
 override define $(PUBLISH)-$(EXAMPLE)-page =
 ---
 title: Main Page
+author: $(COMPOSER_COMPOSER)
+date: $(DATEMARK)
 tags:
   - Tag 0
   - Tag 1
@@ -10944,6 +11000,18 @@ $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples)-comment
 
 # Helpers
 
+## Metainfo
+
+#WORK there is also the "$(MENU_SELF)" version that needs to be documented...
+
+`$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
 ## Contents
 
 #WORK this section is broken:
@@ -10960,7 +11028,7 @@ $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples)-comment
   * `$(SPECIAL_VAL)`
     * does `$(DEPTH_MAX)`
     * only does `header` links
-    * trims from `$(HTML_BREAK_LINE)` to end of title *(primarily used internally for digest pages)*
+    * trims from `<|>` to end of title *(primarily used internally for digest pages)*
   * placed at the "root" level creates a full bar using "h1"s as dropdowns
 
 `$(PUBLISH_CMD_BEG) contents $(PUBLISH_CMD_END)`
@@ -11059,6 +11127,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
   * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files)))
   * [Configured Markdown File]($(PUBLISH_CMD_ROOT)/$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))
   * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-examples).$(EXTN_HTML))
+  * [Metainfo File]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01-$(EXAMPLE)_00.$(EXTN_HTML))
   * [Themes & Shades]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
@@ -11076,31 +11145,33 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 
 | $(PUBLISH)-config | defaults
 |:---|:---|
-| css_shade     | $(PUBLISH_CSS_SHADE)
-| copy_protect  | $(PUBLISH_COPY_PROTECT)
-| cols_break    | $(PUBLISH_COLS_BREAK)
-| cols_sticky   | $(PUBLISH_COLS_STICKY)
-| cols_order    | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]
-| cols_reorder  | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]
-| cols_size     | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]
-| cols_resize   | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]
-| creators_list | $(PUBLISH_CREATORS_LIST)
-| creators      | $(subst *,\*,$(PUBLISH_CREATORS))
-| tagslist      | $(subst *,\*,$(PUBLISH_TAGSLIST))
-| readtime      | $(subst *,\*,$(PUBLISH_READTIME))
-| readtime_wpm  | $(PUBLISH_READTIME_WPM)
+| header       | `$(PUBLISH_HEADER)`
+| footer       | `$(PUBLISH_FOOTER)`
+| css_shade    | `$(PUBLISH_CSS_SHADE)`
+| copy_protect | `$(PUBLISH_COPY_PROTECT)`
+| cols_break   | `$(PUBLISH_COLS_BREAK)`
+| cols_sticky  | `$(PUBLISH_COLS_STICKY)`
+| cols_order   | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
+| cols_reorder | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
+| cols_size    | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
+| cols_resize  | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
+| metainfo     | `$(PUBLISH_METAINFO)`
+| creators     | `$(PUBLISH_CREATORS)`
+| tagslist     | `$(PUBLISH_TAGSLIST)`
+| readtime     | `$(PUBLISH_READTIME)`
+| readtime_wpm | `$(PUBLISH_READTIME_WPM)`
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
-| folder           | $(LIBRARY_FOLDER)
-| auto_update      | $(LIBRARY_AUTO_UPDATE)
-| digest_title     | $(LIBRARY_DIGEST_TITLE)
-| digest_chars     | $(LIBRARY_DIGEST_CHARS)
-| digest_count     | $(LIBRARY_DIGEST_COUNT)
-| digest_expanded  | $(LIBRARY_DIGEST_EXPANDED)
-| digest_spacer    | $(LIBRARY_DIGEST_SPACER)
-| digest_continue  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE))
-| digest_permalink | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK))
+| folder           | `$(LIBRARY_FOLDER)`
+| auto_update      | `$(LIBRARY_AUTO_UPDATE)`
+| digest_title     | `$(LIBRARY_DIGEST_TITLE)`
+| digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
+| digest_count     | `$(LIBRARY_DIGEST_COUNT)`
+| digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`
+| digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`
+| digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`
+| digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)`
 
 *(For this test site, the library has been enabled as `$(LIBRARY_FOLDER_ALT)`.)*
 
@@ -11123,7 +11194,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_CMD_END)
 
 #WORKING:NOW
 
-  * [title-block test]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01-$(EXAMPLE)_00.$(EXTN_HTML))
+  * [metainfo test]($(PUBLISH_CMD_ROOT)/$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01-$(EXAMPLE)_00.$(EXTN_HTML))
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -11131,31 +11202,58 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| css_shade     | $(PUBLISH_CSS_SHADE)              | $(PUBLISH_CSS_SHADE_ALT)
-| copy_protect  | $(PUBLISH_COPY_PROTECT)           | $(PUBLISH_COPY_PROTECT_ALT)
-| cols_break    | $(PUBLISH_COLS_BREAK)             | $(PUBLISH_COLS_BREAK_ALT)
-| cols_sticky   | $(PUBLISH_COLS_STICKY)            | $(PUBLISH_COLS_STICKY_ALT)
-| cols_order    | [ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]       | [ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
-| cols_reorder  | [ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ] | [ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
-| cols_size     | [ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]          | [ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
-| cols_resize   | [ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]    | [ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
-| creators_list | $(PUBLISH_CREATORS_LIST)          | $(PUBLISH_CREATORS_LIST_ALT)
-| creators      | $(subst *,\*,$(PUBLISH_CREATORS)) | $(subst *,\*,$(PUBLISH_CREATORS_ALT))
-| tagslist      | $(subst *,\*,$(PUBLISH_TAGSLIST)) | $(subst *,\*,$(PUBLISH_TAGSLIST_ALT))
-| readtime      | $(subst *,\*,$(PUBLISH_READTIME)) | $(subst *,\*,$(PUBLISH_READTIME_ALT))
-| readtime_wpm  | $(PUBLISH_READTIME_WPM)           | $(PUBLISH_READTIME_WPM_ALT)
+| header       | `$(PUBLISH_HEADER)`       | `$(PUBLISH_HEADER_ALT)`
+| footer       | `$(PUBLISH_FOOTER)`       | `$(PUBLISH_FOOTER_ALT)`
+| css_shade    | `$(PUBLISH_CSS_SHADE)`    | `$(PUBLISH_CSS_SHADE_ALT)`
+| copy_protect | `$(PUBLISH_COPY_PROTECT)` | `$(PUBLISH_COPY_PROTECT_ALT)`
+| cols_break   | `$(PUBLISH_COLS_BREAK)`   | `$(PUBLISH_COLS_BREAK_ALT)`
+| cols_sticky  | `$(PUBLISH_COLS_STICKY)`  | `$(PUBLISH_COLS_STICKY_ALT)`
+| cols_order   | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`       | `[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]`
+| cols_reorder | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]` | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
+| cols_size    | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`          | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
+| cols_resize  | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`    | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
+| metainfo     | `$(PUBLISH_METAINFO)`     | `$(PUBLISH_METAINFO_ALT)`
+| creators     | `$(PUBLISH_CREATORS)`     | `$(PUBLISH_CREATORS_ALT)`
+| tagslist     | `$(PUBLISH_TAGSLIST)`     | `$(PUBLISH_TAGSLIST_ALT)`
+| readtime     | `$(PUBLISH_READTIME)`     | `$(PUBLISH_READTIME_ALT)`
+| readtime_wpm | `$(PUBLISH_READTIME_WPM)` | $(PUBLISH_READTIME_WPM_ALT)
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
-| folder           | $(LIBRARY_FOLDER)                         | $($(PUBLISH)-$(EXAMPLE)-library)
-| auto_update      | $(LIBRARY_AUTO_UPDATE)                    | $(LIBRARY_AUTO_UPDATE_ALT)
-| digest_title     | $(LIBRARY_DIGEST_TITLE)                   | $(LIBRARY_DIGEST_TITLE_ALT)
-| digest_chars     | $(LIBRARY_DIGEST_CHARS)                   | $(LIBRARY_DIGEST_CHARS_ALT)
-| digest_count     | $(LIBRARY_DIGEST_COUNT)                   | $(LIBRARY_DIGEST_COUNT_ALT)
-| digest_expanded  | $(LIBRARY_DIGEST_EXPANDED)                | $(LIBRARY_DIGEST_EXPANDED_ALT)
-| digest_spacer    | $(LIBRARY_DIGEST_SPACER)                  | $(LIBRARY_DIGEST_SPACER_ALT)
-| digest_continue  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE))  | $(subst *,\*,$(LIBRARY_DIGEST_CONTINUE_ALT))
-| digest_permalink | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK)) | $(subst *,\*,$(LIBRARY_DIGEST_PERMALINK_ALT))
+| folder           | `$(LIBRARY_FOLDER)`           | `$($(PUBLISH)-$(EXAMPLE)-library)`
+| auto_update      | `$(LIBRARY_AUTO_UPDATE)`      | `$(LIBRARY_AUTO_UPDATE_ALT)`
+| digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
+| digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
+| digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
+| digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`  | `$(LIBRARY_DIGEST_EXPANDED_ALT)`
+| digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`    | `$(LIBRARY_DIGEST_SPACER_ALT)`
+| digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`  | `$(LIBRARY_DIGEST_CONTINUE_ALT)`
+| digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)` | `$(LIBRARY_DIGEST_PERMALINK_ALT)`
+
+#WORK *(header/footer are changed in: [$(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))]($(PUBLISH_CMD_ROOT)/$(word 4,$($(PUBLISH)-$(EXAMPLE)-files))))*
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+endef
+
+########################################
+#### {{{4 Heredoc: Page: Pandoc --------
+
+override define $(PUBLISH)-$(EXAMPLE)-page-header =
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
+
+#WORKING: this is a test of the header...
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+endef
+
+override define $(PUBLISH)-$(EXAMPLE)-page-footer =
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
+
+#WORKING: this is a test of the footer...
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
@@ -11163,7 +11261,7 @@ endef
 ########################################
 #### {{{4 Heredoc: Page: Nothing -------
 
-#> $(PUBLISH_CMD_BEG) title-block box $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+#>$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define $(PUBLISH)-$(EXAMPLE)-page-$(NOTHING) =
 ---
 title: Empty Configuration
@@ -11186,11 +11284,11 @@ $(foreach FILE,$(call CSS_THEMES),\
 	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
 	$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
 	$(if $(filter-out $(TOKEN),$(TITLE)),\
-		[N]**$(subst $(TOKEN), ,$(TITLE))** \
+		<N>**$(subst $(TOKEN), ,$(TITLE))** \
 		$(if $(filter [$(COMPOSER_BASENAME)],$(TITLE)),\
 			*(Templates)* \
 		) \
-		[N][N] \
+		<N><N> \
 	) \
 	$(if $(filter-out $(TOKEN),$(SHADE)),\
 		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes))/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
@@ -11198,15 +11296,15 @@ $(foreach FILE,$(call CSS_THEMES),\
 			**(default: `$(DEFLT)`)** \
 		) \
 		$(if $(filter $(PUBLISH).solar-light,$(THEME)),\
-			[N]\t\t\t\t*(same as `$(PUBLISH).solar-dark`)* \
+			<N>\t\t\t\t*(same as `$(PUBLISH).solar-dark`)* \
 		) \
 		$(if $(or \
 			$(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)) ,\
 			$(filter $(TYPE_HTML).solar-$(CSS_ALT),$(THEME)) ,\
 		),\
-			[N]\t\t\t\t* *(automatic `prefers-color-scheme` color selection)* \
+			<N>\t\t\t\t* *(automatic `prefers-color-scheme` color selection)* \
 		) \
-		[N] \
+		<N> \
 	) \
 ))
 endef
