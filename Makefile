@@ -203,7 +203,7 @@ override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),
 ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
-override COMPOSER_EXPORT		:= $(COMPOSER_ROOT)/.$(COMPOSER_TINYNAME).export
+override COMPOSER_EXPORT		:= $(COMPOSER_ROOT)/_$(COMPOSER_TINYNAME).export
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
 override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
