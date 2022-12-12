@@ -10212,8 +10212,8 @@ override define $(EXPORTS)-filter =
 			fi; \
 		done \
 		| $(SORT); \
-	if [ -n "$(1)" ]; then \
-		$(ECHO) "--filter=-_/*"; \
+	if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/*"; \
+	else			$(ECHO) " -o -prune"; \
 	fi
 endef
 
@@ -11494,6 +11494,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	multiple levels of empty directories when doing "_export"... on the lowest ones are caught...?
 #	make error on first run with empty library...
 #		config-COMPOSER_IGNORES / config-COMPOSER_EXPORTS
 #		need to make sure the makefile is in place before allowing sitemap to run...
