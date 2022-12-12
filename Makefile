@@ -332,6 +332,9 @@ override LIBRARY_FOLDER_ALT		:= _library
 override LIBRARY_AUTO_UPDATE		:= null
 override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
+override LIBRARY_SITEMAP_TITLE		:= Site Map
+override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
+
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
 override LIBRARY_DIGEST_CHARS		:= 1024
@@ -1756,6 +1759,8 @@ override define COMPOSER_YML_DATA_SKEL =
     folder:				$(LIBRARY_FOLDER),
     auto_update:			$(LIBRARY_AUTO_UPDATE),
 
+    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE)",
+
     digest_title:			"$(LIBRARY_DIGEST_TITLE)",
     digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
@@ -2305,6 +2310,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOFORCE)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-map]"			"#WORK"
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
 
 ########################################
@@ -2466,7 +2472,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Target Names)"
 	@$(ENDOLINE); $(PRINT) "Do not create targets which match these, or use them as prefixes:"
 #WORKING maybe just do: $(MAKE) $(SILENT) $(LISTING) | $(SED) -e "/^[#]/d" -e "s|^([^:]+).*$|\1|g" | $(SORT)
-	@$(ENDOLINE); $(eval LIST := $(shell \
+	@$(ENDOLINE); $(eval override LIST := $(shell \
 			$(ECHO) "$(COMPOSER_RESERVED)" \
 			| $(TR) ' ' '\n' \
 			| $(SORT) \
@@ -2476,7 +2482,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 		)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Variable Names)"
 	@$(ENDOLINE); $(PRINT) "Do not create variables which match these, and avoid similar names:"
-	@$(ENDOLINE); $(eval LIST := $(shell \
+	@$(ENDOLINE); $(eval override LIST := $(shell \
 			$(SED) -n \
 				-e "s|^$(call COMPOSER_REGEX_OVERRIDE).*$$|\1|gp" \
 				-e "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" \
@@ -2493,7 +2499,7 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 $(HELPOUT)-$(DOFORCE)-$(TARGETS):
-	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES) \
+	@$(eval override LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES) \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
 				$(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$(FILE)) \
@@ -2501,7 +2507,7 @@ $(HELPOUT)-$(DOFORCE)-$(TARGETS):
 			$(call NEWLINE) \
 		)
 	@$(ENDOLINE)
-	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+	@$(eval override LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
 			| $(SED) "/[/]/d" \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
@@ -2510,7 +2516,7 @@ $(HELPOUT)-$(DOFORCE)-$(TARGETS):
 			$(call NEWLINE) \
 		)
 	@$(ENDOLINE)
-	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+	@$(eval override LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
 			| $(SED) -n "/[/]/p" \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(PRINT) "$(_S)[$(strip $(subst $(TOKEN), ,$(FILE)))]: #$(shell \
@@ -2519,7 +2525,7 @@ $(HELPOUT)-$(DOFORCE)-$(TARGETS):
 			$(call NEWLINE) \
 		)
 	@$(ENDOLINE)
-	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+	@$(eval override LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
 			| $(SED) -n "/[/]/p" \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(foreach HEAD,$(subst /, ,$(FILE)),\
@@ -2531,13 +2537,13 @@ $(HELPOUT)-$(DOFORCE)-$(TARGETS):
 		)
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(ENDOLINE)
-	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES) \
+	@$(eval override LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-TITLES) \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(PRINT) "$(_N)[$(strip $(subst $(TOKEN), ,$(FILE)))]"; \
 			$(call NEWLINE) \
 		)
 	@$(ENDOLINE)
-	@$(eval LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
+	@$(eval override LIST := $(shell $(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-SECTIONS) \
 			| $(TR) '/' '|' \
 		))$(foreach FILE,$(subst |, ,$(subst $(NULL) ,$(TOKEN),$(LIST))),\
 			$(PRINT) "$(_N)[$(strip $(subst $(TOKEN), ,$(FILE)))]"; \
@@ -2811,7 +2817,7 @@ endef
 #		https://getbootstrap.com/docs/5.2/utilities/flex
 #	any simple css should do...
 #		https://getbootstrap.com/docs/5.2/utilities/colors
-#	$(PUBLISH_CMD_BEG) fold-begin 1 $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)<!-- -->
+#	$(PUBLISH_CMD_BEG) fold-begin . $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)<!-- -->
 #		(the ' as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #	$(PUBLISH) rebuilds indexes, force recursively
@@ -3583,7 +3589,7 @@ Commit title format:
 
 $(CODEBLOCK)$(_E)$(call COMPOSER_TIMESTAMP)$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-map)
 
 #WORKING
 endef
@@ -3697,7 +3703,7 @@ endef
 
 #> update: $(HEADERS)-run
 override define $(EXAMPLE)-var =
-	$(eval OUT := $(strip \
+	$(eval override OUT := $(strip \
 		$(if $(filter c_list,$(2)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,\
 		$(if $(filter c_css,$(2)),$(patsubst $(COMPOSER_DIR)%,$(TOKEN)%,$(call c_css_select)) ,\
 		$(subst ",\",$(patsubst $(COMPOSER_DIR)%,$(TOKEN)%,$($(2)))) \
@@ -4113,6 +4119,8 @@ $(_S)########################################$(_D)
     $(_C)folder$(_D):				$(_S)#$(MARKER)$(_D) $(_M)$(LIBRARY_FOLDER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
+
 $(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
@@ -4160,7 +4168,7 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
     $(_M)PATH$(_D):
-      - $(_M)PATH$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))$(_D)
+      - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(LIBRARY_FOLDER_ALT)/$($(PUBLISH)-$(EXAMPLE)-sitemap).$(EXTN_HTML)$(_D)
     $(_M)INFO$(_D):
       - $(_C)creators$(_D)
       - $(_C)tagslist$(_D)
@@ -4170,7 +4178,7 @@ $(_S)########################################$(_D)
 
     $(_M)BEGIN$(_D):
     $(_M)MENU$(_D):
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) LEFT FOLD$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . $(SPECIAL_VAL) LEFT FOLD$(_D)
       - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
@@ -4202,7 +4210,7 @@ $(_S)########################################$(_D)
 
     $(_M)BEGIN$(_D):
     $(_M)MENU$(_D):
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 $(SPECIAL_VAL) RIGHT FOLD$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . $(SPECIAL_VAL) RIGHT FOLD$(_D)
       - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
           * ITEM 1
           * ITEM 2
@@ -4225,7 +4233,7 @@ $(_S)########################################$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) fold-library DATES$(_D)
       - $(_C)library$(_D) $(_M)dates$(_D)
       - $(_C)fold-end$(_D)
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) 1 fold-library TAGS$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . fold-library TAGS$(_D)
       - $(_C)library$(_D) $(_M)tags$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-end group$(_D)
@@ -4413,6 +4421,7 @@ variables:
   $(PUBLISH)-library:
     folder:				$($(PUBLISH)-$(EXAMPLE)-library)
     auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
+    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
@@ -4424,14 +4433,14 @@ variables:
 ########################################
 
   $(PUBLISH)-nav-top:
+    LIBRARY:
     CHAINED:
       - CHAINED:
         - CHAINING:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
-    LIBRARY:
 
   $(PUBLISH)-nav-bottom:
     PATH:
-      - DEFINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
+      - SITEMAP:			$(PUBLISH_CMD_ROOT)/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-library)/$($(PUBLISH)-$(EXAMPLE)-sitemap).$(EXTN_HTML)
     CHAINED:
       - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$($(PUBLISH)-$(EXAMPLE)-files))
 
@@ -4697,8 +4706,8 @@ function $(PUBLISH)-parse {
 ########################################
 #### {{{4 $(PUBLISH)-metainfo-block ----
 
-# 1 $${SPECIAL_VAL} = metadata || . = text
-# 2 $${SPECIAL_VAL} = library || . = file
+# 1 $${SPECIAL_VAL} = metadata || text
+# 2 $${SPECIAL_VAL} = library || file
 # 3 file path
 
 function $(PUBLISH)-metainfo-block {
@@ -5663,11 +5672,11 @@ function $(PUBLISH)-icon {
 	LLOC="$${3}"
 	TEXT="$${@:4}"
 $(foreach CSS_ICON,$(call CSS_ICONS),\
-$(eval NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
-$(eval ICON := icon.$(NAME).$(word 2,$(subst ;, ,$(CSS_ICON)))) \
-$(eval LREL := $(subst $(TOKEN),,$(word 4,$(subst ;, ,$(CSS_ICON))))) \
-$(eval LLOC := $(subst $(TOKEN),,$(word 6,$(subst ;, ,$(CSS_ICON))))) \
-$(eval TEXT := $(subst $(TOKEN), ,$(word 5,$(subst ;, ,$(CSS_ICON))))) \
+$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
+$(eval override ICON := icon.$(NAME).$(word 2,$(subst ;, ,$(CSS_ICON)))) \
+$(eval override LREL := $(subst $(TOKEN),,$(word 4,$(subst ;, ,$(CSS_ICON))))) \
+$(eval override LLOC := $(subst $(TOKEN),,$(word 6,$(subst ;, ,$(CSS_ICON))))) \
+$(eval override TEXT := $(subst $(TOKEN), ,$(word 5,$(subst ;, ,$(CSS_ICON))))) \
 $(TOKEN)
 	if [ "$${ICON}" = "$(NAME)" ]; then
 		ICON="$(ICON)"
@@ -6565,8 +6574,8 @@ override define HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK =
 endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
-$(eval SHADE := $(word 1,$(subst :, ,$(1))))
-$(eval PRFRS := $(word 2,$(subst :, ,$(1))))
+$(eval override SHADE := $(word 1,$(subst :, ,$(1))))
+$(eval override PRFRS := $(word 2,$(subst :, ,$(1))))
 @import '../variables-$(SHADE).css'		$(if $(PRFRS), (prefers-color-scheme: $(SHADE)));
 @import '../variables-solarized-$(SHADE).css'	$(if $(PRFRS), (prefers-color-scheme: $(SHADE)));
 @import '../parts/_core.css';
@@ -7656,7 +7665,7 @@ override define $(HEADERS)-run =
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(COMPOSER_OPTIONS_PANDOC)),\
-		$(eval OUT := $(strip \
+		$(eval override OUT := $(strip \
 			$(if $(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,\
 			$(if $(filter c_css,$(FILE)),$(call $(HEADERS)-path-root,$(call c_css_select)) ,\
 			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
@@ -7966,9 +7975,9 @@ endif
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
-		$(eval NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
-		$(eval TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
-		$(eval FILE := $(word 3,$(subst ;, ,$(CSS_ICON)))) \
+		$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
+		$(eval override TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
+		$(eval override FILE := $(word 3,$(subst ;, ,$(CSS_ICON)))) \
 		$(call NEWLINE) \
 		if [ -f "$(FILE)" ]; then \
 			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE) $($(DEBUGIT)-output); \
@@ -8679,15 +8688,15 @@ $(TESTING)-$(TARGETS)-init:
 .PHONY: $(TESTING)-$(TARGETS)-done
 $(TESTING)-$(TARGETS)-done:
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-		$(eval COUNT := 64) \
+		$(eval override COUNT := 64) \
 		$(call $(TESTING)-count,$(COUNT), $(subst /,[/],$(call $(TESTING)-pwd))[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
 		$(call NEWLINE) \
 	)
 #> update: ERROR: TYPE_LPDF
-#>		$(if $(filter $(TYPE),LPDF),$(eval COUNT := 22)) \
+#>		$(if $(filter $(TYPE),LPDF),$(eval override COUNT := 22)) \
 #>	\
-#>		$(eval TYPE := LPDF) \
-#>		$(eval COUNT := 42) \
+#>		$(eval override TYPE := LPDF) \
+#>		$(eval override COUNT := 42) \
 #>		$(call $(TESTING)-count,$(COUNT),ERROR:.+$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE)))
 
 ########################################
@@ -9284,7 +9293,7 @@ $(CONFIGS):
 #>	@$(TABLE_M2) ":---"			":---"
 	@$(call $(EXPORTS)-$(CONFIGS))
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
-		$(eval OUT := $(strip \
+		$(eval override OUT := $(strip \
 			$(if $(filter c_list,$(FILE)),$(if $(c_list_plus),$(c_list_plus),$(c_list)) ,\
 			$(if $(filter c_css,$(FILE)),$(call $(HEADERS)-path-root,$(call c_css_select)) ,\
 			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
@@ -9452,28 +9461,14 @@ $(CONVICT):
 $(EXPORTS): .set_title-$(EXPORTS)
 $(EXPORTS):
 	@$(call $(HEADERS))
-	@$(eval override $(@) := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT),$(COMPOSER_EXPORT))))
-	@$(foreach FILE,$($(@)),\
+	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT),$(COMPOSER_EXPORT))))
+	@$(foreach FILE,$(sort $(TREE)),\
 		$(ENDOLINE); \
 		$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(FILE))"; \
 		$(RSYNC) \
 			--copy-links \
 			--delete-excluded \
-			$(foreach FILT,\
-				$(patsubst $(FILE)/%,%,$(filter $(FILE)/%,$($(@)))),\
-				--filter=P_/$(word 1,$(subst /, ,$(FILT))) \
-			) \
-			$$($(MAKE) $(SILENT) --directory $(FILE) $(CONFIGS)-COMPOSER_IGNORES \
-				| while read -r FILE; do \
-					$(ECHO) "--filter=-_/$${FILE}\n"; \
-				done \
-			) \
-			$$($(MAKE) $(SILENT) --directory $(FILE) $(CONFIGS)-COMPOSER_EXPORTS \
-				| while read -r FILE; do \
-					$(ECHO) "--filter=+_/$${FILE}\n"; \
-				done \
-			) \
-			--filter="-_/*" \
+			$$($(call $(EXPORTS)-filter,1,$(TREE),$(FILE))) \
 			$(COMPOSER_ROOT)$(patsubst $(COMPOSER_ROOT)%,%,$(FILE))/ \
 			$(COMPOSER_EXPORT)$(patsubst $(COMPOSER_ROOT)%,%,$(FILE)); \
 		$(call NEWLINE) \
@@ -9501,6 +9496,52 @@ $(EXPORTS)-empty:
 			-e "s|$(COMPOSER_EXPORT)|.|g" \
 			-e "/[.][/]$$/d"
 	@$(ECHO) "$(_D)"
+
+.PHONY: $(EXPORTS)-map
+$(EXPORTS)-map:
+#>	@$(call $(HEADERS))
+	@$(ECHO) "---\n"
+	@$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.sitemap_title)\n"
+	@$(ECHO) "date: $(DATEMARK)\n"
+	@$(ECHO) "---\n"
+	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-group $(PUBLISH_CMD_END)\n"
+	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_EXPORT))))
+	@$(foreach FILE,$(sort $(TREE)),\
+		shopt -s lastpipe; PRINT=; \
+		eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,,$(TREE),$(FILE))) \
+			| $(SORT) \
+			| while read -r FILE; do \
+				if [ -z "$${PRINT}" ]; then \
+					PRINT="$(SPECIAL_VAL)"; \
+					$(ECHO) "\n"; \
+					$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $(SPECIAL_VAL) sitemap-group $$( \
+							$(ECHO) "$(FILE)" \
+							| $(SED) \
+								-e "s|$(COMPOSER_ROOT)/||g" \
+								-e "s|$(COMPOSER_ROOT)|/|g" \
+						) $(PUBLISH_CMD_END)\n"; \
+					$(ECHO) "\n"; \
+				fi; \
+				$(ECHO) "  * [$$( \
+						$(ECHO) "$${FILE}" \
+						| $(SED) \
+							-e "s|^.*[/]([^/]+)$$|\1|g" \
+					)]($$( \
+						$(ECHO) "$${FILE}" \
+						| $(SED) \
+							-e "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g" \
+							-e "s|^$(COMPOSER_ROOT)/||g" \
+							-e "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g" \
+					))\n"; \
+			done; \
+			if [ -n "$${PRINT}" ]; then \
+				$(ECHO) "\n"; \
+				$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n"; \
+			fi; \
+			$(call NEWLINE) \
+	)
+	@$(ECHO) "\n"
+	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-end group $(PUBLISH_CMD_END)\n"
 
 ########################################
 ### {{{3 $(EXPORTS)-git ----------------
@@ -9593,6 +9634,35 @@ override define $(EXPORTS)-library =
 			$(ECHO) "$${LFIL}" \
 			| $(SED) "s|^.*[/]([^/]+)$$|\1|g" \
 		) -prune \\\)\n"; \
+	fi
+endef
+
+override define $(EXPORTS)-filter =
+	if [ -z "$(1)" ]; then \
+		$(ECHO) "-mindepth 1 -maxdepth 1 \\\( -type d -prune \\\)"; \
+	fi; \
+	{ $(ECHO) ""; \
+		$(foreach SAFE,$(patsubst $(3)/%,%,$(filter $(3)/%,$(2))),\
+			$(if $(1),		$(ECHO) "--filter=P_/$(word 1,$(subst /, ,$(SAFE)))\n"; \
+			) \
+		) } \
+		| $(SORT); \
+	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES \
+		| while read -r FILE; do \
+			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$${FILE}\n"; \
+			else			$(ECHO) " -o \\( -path \"$${FILE}\" -prune \\\)"; \
+			fi; \
+		done \
+		| $(SORT); \
+	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS \
+		| while read -r FILE; do \
+			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$${FILE}\n"; \
+			else			$(ECHO) " -o \\( -path \"$${FILE}\" -print \\\)"; \
+			fi; \
+		done \
+		| $(SORT); \
+	if [ -n "$(1)" ]; then \
+		$(ECHO) "--filter=-_/*"; \
 	fi
 endef
 
@@ -10067,6 +10137,12 @@ $($(PUBLISH)-library):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
+	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$($(PUBLISH)-$(EXAMPLE)-sitemap)$(COMPOSER_EXT_DEFAULT)); \
+		$(ECHO) "$(_E)"; \
+		$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(EXPORTS)-map \
+			| $(TEE) $(COMPOSER_LIBRARY)/$($(PUBLISH)-$(EXAMPLE)-sitemap)$(COMPOSER_EXT_DEFAULT) $($(DEBUGIT)-output); \
+			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+		$(ECHO) "$(_D)"
 #>	@$(ENV_MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
@@ -10376,15 +10452,16 @@ $($(PUBLISH)-library-digest-files):
 	@TOKEN="$$($(ECHO) "$(TOKEN)" | $(SED) "s|(.)|\\\\\1|g")"; \
 		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\1|g")"; \
 		NAME="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\2|g")"; \
-		$(ECHO) "---\n" >>$(@).$(COMPOSER_BASENAME); \
+		$(ECHO) "---\n"			>>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "pagetitle: \"$$( \
 				if [ "$${TYPE}" = "titles" ]; then	$(ECHO) "Title"; \
 				elif [ "$${TYPE}" = "authors" ]; then	$(ECHO) "Author"; \
 				elif [ "$${TYPE}" = "dates" ]; then	$(ECHO) "Year"; \
 				elif [ "$${TYPE}" = "tags" ]; then	$(ECHO) "Tag"; \
 				fi \
-			): $${NAME}\"\n" >>$(@).$(COMPOSER_BASENAME); \
-		$(ECHO) "---\n" >>$(@).$(COMPOSER_BASENAME); \
+			): $${NAME}\"\n"	>>$(@).$(COMPOSER_BASENAME); \
+		$(ECHO) "date: $(DATEMARK)\n"	>>$(@).$(COMPOSER_BASENAME); \
+		$(ECHO) "---\n"			>>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME); \
 		$(YQ_WRITE) ".$${TYPE}.[\"$${NAME}\"] | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
 			| while read -r FILE; do \
@@ -10402,9 +10479,10 @@ override define $(PUBLISH)-library-digest-main =
 	$(ECHO) "$(_F)"; \
 	$(ECHO) "" >$(1).$(COMPOSER_BASENAME); \
 	if [ -n "$(2)" ]; then \
-		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
-		$(ECHO) "pagetitle: $(2)\n" >>$(1).$(COMPOSER_BASENAME); \
-		$(ECHO) "---\n" >>$(1).$(COMPOSER_BASENAME); \
+		$(ECHO) "---\n"			>>$(1).$(COMPOSER_BASENAME); \
+		$(ECHO) "pagetitle: $(2)\n"	>>$(1).$(COMPOSER_BASENAME); \
+		$(ECHO) "date: $(DATEMARK)\n"	>>$(1).$(COMPOSER_BASENAME); \
+		$(ECHO) "---\n"			>>$(1).$(COMPOSER_BASENAME); \
 	fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(1).$(COMPOSER_BASENAME); \
 	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.digest_expanded)"; \
@@ -10506,6 +10584,7 @@ endef
 override $(PUBLISH)-$(EXAMPLE)		:= $(CURDIR)/_$(PUBLISH)
 override $(PUBLISH)-$(EXAMPLE)-log	:= $(CURDIR)/$(call OUTPUT_FILENAME,$(PUBLISH))
 override $(PUBLISH)-$(EXAMPLE)-index	:= index
+override $(PUBLISH)-$(EXAMPLE)-sitemap	:= sitemap
 override $(PUBLISH)-$(EXAMPLE)-library	:= $(LIBRARY_FOLDER_ALT)-$(CONFIGS)
 
 override $(PUBLISH)-$(EXAMPLE)-testing_tree := $(notdir $(BOOTSTRAP_DIR))/site/content
@@ -10671,8 +10750,8 @@ endif
 	@$(ECHO) '\t$(notdir $($(PUBLISH)-$(EXAMPLE)-examples))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"										>>$($(PUBLISH)-$(EXAMPLE))/$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$(COMPOSER_SETTINGS)
 	@$(foreach FILE,$(call CSS_THEMES),\
-		$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
-		$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+		$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+		$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
 		$(if $(filter-out $(TOKEN),$(SHADE)),\
 			$(call $(HEADERS)-file,$($(PUBLISH)-$(EXAMPLE))/$(patsubst ./%,%,$($(PUBLISH)-$(EXAMPLE)-themes)),$(THEME)$(_D) $(_C)($(SHADE))); \
 			$(call NEWLINE) \
@@ -10980,9 +11059,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 # Folds
 
-`$(PUBLISH_CMD_BEG) fold-begin 2 1 $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-begin 2 . $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) fold-begin 2 1 $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) fold-begin 2 . $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)`
 
@@ -10998,9 +11077,9 @@ $(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) header 2 Non-Header Fold $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) . $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) 1 $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) . $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
 
@@ -11272,6 +11351,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 |:---|:---|
 | folder           | `$(LIBRARY_FOLDER)`
 | auto_update      | `$(LIBRARY_AUTO_UPDATE)`
+| sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`
@@ -11336,6 +11416,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 |:---|:---|:---|
 | folder           | `$(LIBRARY_FOLDER)`           | `$($(PUBLISH)-$(EXAMPLE)-library)`
 | auto_update      | `$(LIBRARY_AUTO_UPDATE)`      | `$(LIBRARY_AUTO_UPDATE_ALT)`
+| sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
@@ -11368,10 +11449,10 @@ endef
 override define $(PUBLISH)-$(EXAMPLE)-page-themes =
 $(strip \
 $(foreach FILE,$(call CSS_THEMES),\
-	$(eval THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
-	$(eval SHADE := $(word 4,$(subst :, ,$(FILE)))) \
-	$(eval TITLE := $(word 5,$(subst :, ,$(FILE)))) \
-	$(eval DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+	$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+	$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+	$(eval override TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+	$(eval override DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
 	$(if $(filter-out $(TOKEN),$(TITLE)),\
 		<N>**$(subst $(TOKEN), ,$(TITLE))** \
 		$(if $(filter [$(COMPOSER_BASENAME)],$(TITLE)),\
