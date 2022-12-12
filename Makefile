@@ -3798,7 +3798,10 @@ $(patsubst $(COMPOSER_DIR)%,%,$(YQ_DIR))/yq_*
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk -----------
+## {{{2 Heredoc: composer_mk * ---------
+
+########################################
+### {{{3 Heredoc: composer_mk ----------
 
 override define HEREDOC_COMPOSER_MK =
 $(_S)################################################################################$(_D)
@@ -3834,7 +3837,7 @@ $(_S)###########################################################################
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH))
+### {{{3 Heredoc: composer_mk ($(PUBLISH))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH =
 ################################################################################
@@ -3853,7 +3856,7 @@ override c_icon				:= $$(COMPOSER_DIR)/$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) $(EXAMPLE))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(EXAMPLE))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ################################################################################
@@ -3872,7 +3875,7 @@ endif
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) $(NOTHING))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(NOTHING))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_NOTHING =
 ################################################################################
@@ -3892,7 +3895,7 @@ endif
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) $(CONFIGS))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(CONFIGS))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS =
 ################################################################################
@@ -3911,7 +3914,7 @@ endif
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) $(PANDOC))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(PANDOC))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_PANDOC =
 ################################################################################
@@ -3930,7 +3933,7 @@ endif
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) $(TESTING))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(TESTING))
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING =
 ################################################################################
@@ -3968,7 +3971,7 @@ override COMPOSER_IGNORES		:= *$(COMPOSER_EXT_DEFAULT) *.$(EXTN_HTML)
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) pages)
+### {{{3 Heredoc: composer_mk ($(PUBLISH) pages)
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_PAGES =
 ################################################################################
@@ -3984,7 +3987,7 @@ endif
 endef
 
 ########################################
-## {{{2 Heredoc: composer_mk ($(PUBLISH) themes)
+### {{{3 Heredoc: composer_mk ($(PUBLISH) themes)
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES =
 ################################################################################
@@ -4054,7 +4057,10 @@ $(1).done:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ----------
+## {{{2 Heredoc: composer_yml * --------
+
+########################################
+### {{{3 Heredoc: composer_yml ---------
 
 override define HEREDOC_COMPOSER_YML =
 $(_S)################################################################################$(_D)
@@ -4268,7 +4274,7 @@ $(_S)###########################################################################
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(OUT_README))
+### {{{3 Heredoc: composer_yml ($(OUT_README))
 
 override define HEREDOC_COMPOSER_YML_README =
 ################################################################################
@@ -4330,7 +4336,7 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(LIBRARY_FOLDER))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(LIBRARY_FOLDER))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY =
 ################################################################################
@@ -4356,7 +4362,7 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE =
 ################################################################################
@@ -4375,7 +4381,7 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(NOTHING))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(NOTHING))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 ################################################################################
@@ -4390,7 +4396,7 @@ $(call COMPOSER_YML_DATA_SKEL)
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(CONFIGS))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(CONFIGS))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS =
 ################################################################################
@@ -4489,7 +4495,7 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(PANDOC))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(PANDOC))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_PANDOC =
 ################################################################################
@@ -4522,7 +4528,7 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) $(TESTING))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(TESTING))
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_TESTING =
 ################################################################################
@@ -4540,7 +4546,7 @@ variables:
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) pages)
+### {{{3 Heredoc: composer_yml ($(PUBLISH) pages)
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_PAGES =
 ################################################################################
@@ -4555,7 +4561,7 @@ variables: {}
 endef
 
 ########################################
-## {{{2 Heredoc: composer_yml ($(PUBLISH) themes)
+### {{{3 Heredoc: composer_yml ($(PUBLISH) themes)
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_THEMES =
 ################################################################################
@@ -5845,9 +5851,12 @@ exit 0
 endef
 
 ########################################
-## {{{2 Heredoc: custom_$(PUBLISH)_css -
+## {{{2 Heredoc: custom_$(PUBLISH)_css *
 
 #> sed -nr "s|^.*[[:space:]]class[=]||gp" Makefile | sed -r "s|[[:space:]]+|\n|g" | sort -u
+
+########################################
+### {{{3 Heredoc: custom_$(PUBLISH)_css
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
 	$(SED) -i \
@@ -5877,7 +5886,7 @@ body {
 endef
 
 ########################################
-### {{{3 custom_$(PUBLISH)_css (Bootstrap)
+### {{{3 Heredoc: custom_$(PUBLISH)_css (Bootstrap)
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS =
 /* #############################################################################
@@ -6086,7 +6095,7 @@ h6					{ font-size: 1rem; }
 endef
 
 ########################################
-### {{{3 custom_$(PUBLISH)_css (Shade) -
+### {{{3 Heredoc: custom_$(PUBLISH)_css (Shade)
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_SHADE =
 /* #############################################################################
@@ -6120,7 +6129,7 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_SHADE =
 endef
 
 ########################################
-### {{{3 custom_$(PUBLISH)_css (Theme) -
+### {{{3 Heredoc: custom_$(PUBLISH)_css (Theme)
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
 /* #############################################################################
@@ -6398,7 +6407,7 @@ pre code {
 endef
 
 ########################################
-### {{{3 custom_$(PUBLISH)_css ($(TESTING))
+### {{{3 Heredoc: custom_$(PUBLISH)_css ($(TESTING))
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_TESTING =
 /* #############################################################################
@@ -6510,7 +6519,10 @@ body {
 endef
 
 ########################################
-## {{{2 Heredoc: custom_html_css -------
+## {{{2 Heredoc: custom_html_css * -----
+
+########################################
+### {{{3 Heredoc: custom_html_css ------
 
 override define HEREDOC_CUSTOM_HTML_CSS_SOLARIZED =
 	/* dark background */
@@ -6539,7 +6551,7 @@ override define HEREDOC_CUSTOM_HTML_CSS_SOLARIZED =
 endef
 
 ########################################
-### {{{3 custom_html_css (Main) --------
+### {{{3 Heredoc: custom_html_css (Main)
 
 override define HEREDOC_CUSTOM_HTML_CSS =
 /* #############################################################################
@@ -6566,7 +6578,7 @@ video {
 endef
 
 ########################################
-### {{{3 custom_html_css (Water.css) ---
+### {{{3 Heredoc: custom_html_css (Water.css)
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK =
 	$(SED) -i \
@@ -10899,7 +10911,6 @@ endif
 #WORKING:NOW:NOW
 #	move all site-template heredoc pages to embedded files section...
 #		make them sub-headers "{ { {" under one heading, like site.sh
-#		in the same vein, sub-header all the mk and yml configuration files...
 #	metainfo
 #		add a site-template test for pages where it is something like a "h1" and not a fold/box...
 #		maybe do the block on the pandoc page, but just simple titles on the "elements" page...?
