@@ -2319,9 +2319,6 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
-	@$(PRINT) "Fetch the necessary binary components"
-	@$(PRINT) "$(_E)(see [Requirements])$(_D):"
-	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(UPGRADE)-$(DOITALL)$(_D)"
 	@$(ENDOLINE)
 	@$(PRINT) "Create documents from source $(_C)[Markdown]$(_D) files"
@@ -2733,7 +2730,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, follow the
-instructions in the `$(_M)README$(COMPOSER_EXT_DEFAULT)$(_D)`.
+instructions in the `$(_M)README.md$(_D)`.
 
 The versions of the integrated repositories can be changed, if desired $(_E)(see
 [Repository Versions])$(_D).
@@ -4363,6 +4360,7 @@ override define HEREDOC_GITIGNORE =
 
 $(patsubst $(COMPOSER_DIR)%,%,$(COMPOSER_PKG))/
 **/.git
+**/node_modules/
 
 $(patsubst $(COMPOSER_DIR)%,%,$(PANDOC_DIR))/pandoc-*
 $(patsubst $(COMPOSER_DIR)%,%,$(YQ_DIR))/yq_*
@@ -5293,6 +5291,8 @@ function $(PUBLISH)-parse {
 ########################################
 #### {{{4 $(PUBLISH)-metainfo-block ----
 
+#> update: YQ_WRITE.*title
+
 # 1 $${SPECIAL_VAL} = metadata || text
 # 2 $${SPECIAL_VAL} = library || file
 # 3 file path
@@ -5301,7 +5301,7 @@ function $(PUBLISH)-metainfo-block {
 	META=
 	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then
 		META="$$(
-			$${YQ_WRITE} ".\"$${3}\"" $${PUBLISH_LIBRARY_METADATA} 2>/dev/null \\
+			$${YQ_WRITE} ".\"$${3}\"" $${COMPOSER_LIBRARY_METADATA} 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)"
 	elif [ "$$($${SED} -n "/^---$$/p" $${3})" ]; then
@@ -9529,6 +9529,8 @@ $(TESTING)-COMPOSER_EXPORTS-init:
 	@$(call $(TESTING)-run) $(EXPORTS)
 	@$(LS) --recursive $(patsubst $(COMPOSER_ROOT)%,$(call $(TESTING)-pwd)%,$(COMPOSER_EXPORT))
 
+#WORKING:NOW:NOW:FIX
+
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-done
 $(TESTING)-COMPOSER_EXPORTS-done:
 	$(call $(TESTING)-count,6,$(EXPORTS).+$(notdir $(COMPOSER_ART)))
@@ -9562,6 +9564,8 @@ $(TESTING)-COMPOSER_IGNORES-init:
 	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) *.$(EXTN_DEFAULT)\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)
+
+#WORKING:NOW:NOW:FIX
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
@@ -10397,8 +10401,6 @@ endef
 ########################################
 #### {{{4 $(PUBLISH)-$(TARGETS)-metainfo
 
-#> update: YQ_WRITE.*title
-
 override define $(PUBLISH)-$(TARGETS)-metainfo =
 	if [ -n "$${LIST}" ]; then \
 		$(ECHO) "$(PUBLISH_CMD_BEG) "				>>$(1).metainfo-list; \
@@ -10697,6 +10699,9 @@ $(PUBLISH)-$(COMPOSER_SETTINGS):
 			$(call NEWLINE) \
 		) \
 	)
+	@$(ECHO) "\n"
+	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-digest))): $(notdir $($(PUBLISH)-library-digest-src))\n"
+	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-sitemap))): $(notdir $($(PUBLISH)-library-sitemap-src))\n"
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
@@ -10954,8 +10959,8 @@ endif
 $($(PUBLISH)-library-digest): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
-$($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
+$($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
@@ -11046,8 +11051,6 @@ $($(PUBLISH)-library-digest-files):
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-create
 
-#> update: YQ_WRITE.*title
-
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-digest); \
@@ -11064,8 +11067,9 @@ override define $(PUBLISH)-library-digest-create =
 		$(PANDOC_MD_TO_JSON) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 		| $(YQ_WRITE) ".blocks | length" \
 	)"; \
-	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
-	SIZ="0"; BLK="0"; while \
+	SIZ="0"; BLK="0"; \
+		DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
+	while \
 		[ "$${BLK}" -lt "$${LEN}" ] && \
 		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
@@ -11490,7 +11494,12 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	make error on first run with empty library...
+#		config-COMPOSER_IGNORES / config-COMPOSER_EXPORTS
+#		need to make sure the makefile is in place before allowing sitemap to run...
+#		there's a while world of race conditions around the sitemap... noodle on *that* for a while...
 #	site
+#		add in COMPOSER_IGNORES to hide main/digest files, just like for personal site...
 #		test full run with _site as +site instead, just to see...
 #			basically, test/validate SED_ESCAPE_LIST everywhere...
 #		add author/date/tags to test pages, and/or promote 2020-01-01+template_00.html
