@@ -8456,7 +8456,7 @@ ifeq ($(wildcard $(firstword $(NPM))),)
 else
 #WORK document
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
-	@$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(MDVIEWER_DIR)/package.json
+	@$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/package.json
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
@@ -11490,19 +11490,11 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
-#	metainfo
-#		add a site-template test for pages where it is something like a "h1" and not a fold/box...
-#		maybe do the block on the pandoc page, but just simple titles on the "elements" page...?
 #	site
 #		test full run with _site as +site instead, just to see...
 #			basically, test/validate SED_ESCAPE_LIST everywhere...
-#		composer.yml include files
-#			add both pre and post, which pre and post add to c_list
-#			need to transform composer_root from "<>" to "$()" before doing so
-#			add to site-template...
 #		add author/date/tags to test pages, and/or promote 2020-01-01+template_00.html
 #			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
-#				this has been fixed, already...?
 #			isn't this already done...?
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
