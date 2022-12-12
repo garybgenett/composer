@@ -2875,6 +2875,8 @@ endef
 #	index.html: $(CURDIR)/history/index-include.md.cms
 #		add to to documentation
 #		must use the full path name for the library include...
+#	wildcards have no effect in composer_ignores... except for in regards to composer_exports...?
+#		need to think about this...
 
 #WORK
 #	features
@@ -8884,7 +8886,7 @@ override TESTING_MAKEJOBS		:= 8
 override TESTING_ENV_MAKE		:= $(ENV) \
 	MAKEJOBS="1" \
 	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-	COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
+	COMPOSER_DEBUGIT= \
 	$(REALMAKE)
 
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
@@ -9529,12 +9531,11 @@ $(TESTING)-COMPOSER_EXPORTS-init:
 	@$(call $(TESTING)-run) $(EXPORTS)
 	@$(LS) --recursive $(patsubst $(COMPOSER_ROOT)%,$(call $(TESTING)-pwd)%,$(COMPOSER_EXPORT))
 
-#WORKING:NOW:NOW:FIX
-
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-done
 $(TESTING)-COMPOSER_EXPORTS-done:
-	$(call $(TESTING)-count,6,$(EXPORTS).+$(notdir $(COMPOSER_ART)))
-	$(call $(TESTING)-count,6,deleting.+$(notdir $(COMPOSER_ART)))
+	$(call $(TESTING)-count,12,$(MARKER).+$(EXPORTS))
+	$(call $(TESTING)-count,2,deleting)
+	$(call $(TESTING)-count,5,Removing)
 	$(call $(TESTING)-find,\+\+\+.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,deleting.+$(OUT_README).$(EXTN_DEFAULT))
 
@@ -9564,8 +9565,6 @@ $(TESTING)-COMPOSER_IGNORES-init:
 	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) *.$(EXTN_DEFAULT)\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)
-
-#WORKING:NOW:NOW:FIX
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
