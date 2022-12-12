@@ -9534,8 +9534,8 @@ $(TESTING)-COMPOSER_EXPORTS-init:
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-done
 $(TESTING)-COMPOSER_EXPORTS-done:
 	$(call $(TESTING)-count,12,$(MARKER).+$(EXPORTS))
-	$(call $(TESTING)-count,2,deleting)
-	$(call $(TESTING)-count,5,Removing)
+	$(call $(TESTING)-count,1,deleting)
+	$(call $(TESTING)-count,6,Removing)
 	$(call $(TESTING)-find,\+\+\+.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,deleting.+$(OUT_README).$(EXTN_DEFAULT))
 
@@ -10069,23 +10069,23 @@ $(EXPORTS):
 			$(COMPOSER_EXPORT)$(patsubst $(COMPOSER_ROOT)%,%,$(FILE)); \
 		$(call NEWLINE) \
 	)
-	@$(MAKE) $(SILENT) $(EXPORTS)-empty
-
-.PHONY: $(EXPORTS)-empty
-$(EXPORTS)-empty:
 	@$(ENDOLINE)
-#>	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D) $(MARKER) $(_E)directories$(_D))"
-	@$(PRINT) "$(_H)$(MARKER) $(EXPORTS)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D) $(MARKER) $(_E)directories$(_D))"
-	@$(foreach FILE,$(shell $(FIND) $(COMPOSER_EXPORT) -type d -empty),\
-		$(call $(HEADERS)-rm,$(COMPOSER_EXPORT),$(patsubst $(COMPOSER_EXPORT)/%,%,$(FILE))); \
-		$(ECHO) "$(_S)"; \
-		$(RM) --recursive $(FILE) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-		$(call NEWLINE) \
-	)
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D) $(MARKER) $(_E)directories$(_D))"
+	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
+		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
+		| while read -r FILE; do \
+			FILE="$$( \
+				$(ECHO) "$${FILE}\n" \
+				| $(SED) "s|^$(COMPOSER_EXPORT)[/]||g" \
+			)"; \
+			$(call $(HEADERS)-rm,$(COMPOSER_EXPORT),$${FILE}); \
+			$(ECHO) "$(_S)"; \
+			$(RM) --dir $(COMPOSER_EXPORT)/$${FILE} $($(DEBUGIT)-output); \
+			$(ECHO) "$(_D)"; \
+		done; \
+	done
 	@$(ENDOLINE)
-#>	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D))"
-	@$(PRINT) "$(_H)$(MARKER) $(EXPORTS)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D))"
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D))"
 	@$(ECHO) "$(_C)"
 	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
 		| $(SED) \
@@ -11493,7 +11493,6 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
-#	multiple levels of empty directories when doing "_export"... on the lowest ones are caught...?
 #	make error on first run with empty library...
 #		config-COMPOSER_IGNORES / config-COMPOSER_EXPORTS
 #		need to make sure the makefile is in place before allowing sitemap to run...
