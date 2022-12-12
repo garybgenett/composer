@@ -2319,8 +2319,6 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 .PHONY: $(HELPOUT)-EXAMPLES_%
 $(HELPOUT)-EXAMPLES_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(UPGRADE)-$(DOITALL)$(_D)"
-	@$(ENDOLINE)
 	@$(PRINT) "Create documents from source $(_C)[Markdown]$(_D) files"
 	@$(PRINT) "$(_E)(see [Formatting Variables])$(_D):"
 	@$(ENDOLINE)
