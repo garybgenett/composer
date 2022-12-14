@@ -215,11 +215,13 @@ override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),
 ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
-override COMPOSER_EXPORT		:= $(COMPOSER_ROOT)/.$(COMPOSER_BASENAME).export
+override COMPOSER_LIBRARY		:=
+
+override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/.$(COMPOSER_BASENAME).export
+override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
 override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
-override COMPOSER_LIBRARY		:=
 
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
@@ -498,8 +500,7 @@ override MAKEFILE			:= Makefile
 override MAKEFLAGS			:= $(if $(filter k%,$(MAKEFLAGS)),--keep-going)
 override MAKEFLAGS			:= $(MAKEFLAGS) --no-builtin-rules --no-builtin-variables --no-print-directory
 
-#>ifneq ($(COMPOSER_DEBUGIT_ALL),)
-ifneq ($(COMPOSER_DEBUGIT),)
+ifneq ($(COMPOSER_DEBUGIT_ALL),)
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
 else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
@@ -555,6 +556,22 @@ endif
 
 #> update: includes duplicates
 #> update: COMPOSER_OPTIONS
+
+########################################
+
+#WORKING:NOW add a $(TESTING) for these...
+
+ifneq ($(origin _EXPORT_DIRECTORY),override)
+override _EXPORT_DIRECTORY		:= $(COMPOSER_EXPORT_DEFAULT)
+else ifneq ($(_EXPORT_DIRECTORY),)
+override COMPOSER_EXPORT		:= $(_EXPORT_DIRECTORY)
+endif
+ifneq ($(origin _EXPORT_GIT_REPO),override)
+override _EXPORT_GIT_REPO		:=
+endif
+ifneq ($(origin _EXPORT_GIT_BRANCH),override)
+override _EXPORT_GIT_BRANCH		:=
+endif
 
 ########################################
 
@@ -1924,6 +1941,12 @@ endif
 ########################################
 ## {{{2 Filesystem ---------------------
 
+ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
+override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT)) $(COMPOSER_IGNORES)
+endif
+
+########################################
+
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
 
@@ -2910,6 +2933,10 @@ endef
 #		$(_C)[COMPOSER_DIR]$(_D)
 #		$(_C)[COMPOSER_ROOT]$(_D)
 #		$(_C)[COMPOSER_EXPORT]$(_D)
+#			hidden variables...
+#			$(_EXPORT_DIRECTORY)
+#			$(_EXPORT_GIT_REPO)
+#			$(_EXPORT_GIT_BRANCH)
 #		$(_C)[COMPOSER_TMP]$(_D)
 #		$(_C)[COMPOSER_LIBRARY]$(_D)
 #		$(_C)[COMPOSER_PKG]$(_D)
@@ -3437,8 +3464,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
 #	also overridden by $(_C)[COMPOSER_IGNORES]$(_D)
 #	document .$(TARGETS) token...
 #	hidden variables...
-#		$(_EXPORT_GIT_REPO) ,\
-#		$(_EXPORT_GIT_BRANCH) \
+#		$(_EXPORT_DIRECTORY)
+#		$(_EXPORT_GIT_REPO)
+#		$(_EXPORT_GIT_BRANCH)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
@@ -10124,25 +10152,45 @@ $(EXPORTS)-git: .set_title-$(EXPORTS)-git
 $(EXPORTS)-git:
 	@$(call $(HEADERS))
 	@$(call $(EXPORTS)-$(CONFIGS),1)
+#>	$(_EXPORT_DIRECTORY)
 ifneq ($(and \
+	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) ,\
 	$(_EXPORT_GIT_REPO) ,\
 	$(_EXPORT_GIT_BRANCH) \
 ),)
-	@$(call GIT_RUN_COMPOSER,subtree split -d --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BRANCH)")
+#>	@$(call GIT_RUN_COMPOSER,subtree split -d --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BRANCH)")
+	@$(call GIT_RUN_COMPOSER,subtree split --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BRANCH)") || $(TRUE)
 	@$(call GIT_RUN_COMPOSER,log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(_EXPORT_GIT_BRANCH)")
 	@$(ENDOLINE)
 	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BRANCH)")
+else
+	@$(MAKE) $(NOTHING)-$(EXPORTS)
 endif
 
 override define $(EXPORTS)-$(CONFIGS) =
-	if	[ -n "$(_EXPORT_GIT_REPO)" ] || \
+	if	[ "$(COMPOSER_EXPORT)" != "$(COMPOSER_EXPORT_DEFAULT)" ] || \
+		[ -n "$(_EXPORT_DIRECTORY)" ] || \
+		[ -n "$(_EXPORT_GIT_REPO)" ] || \
+		[ -n "$(_EXPORT_GIT_BRANCH)" ] || \
 		[ -n "$(1)" ]; \
 	then \
 		$(foreach FILE,\
+			_EXPORT_DIRECTORY \
 			_EXPORT_GIT_REPO \
 			_EXPORT_GIT_BRANCH \
 			,\
-			$(TABLE_M2) "$(_C)$(FILE)" "$(_M)$($(FILE))"; \
+			$(TABLE_M2) "$(_C)$(FILE)" "$(strip \
+				$(if $(filter $(FILE),_EXPORT_DIRECTORY),\
+					$(if $(filter $(COMPOSER_EXPORT),$(COMPOSER_EXPORT_DEFAULT)),	$(_H)$(COMPOSER_EXPORT) ,\
+					$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$(_H)$(COMPOSER_ROOT)$(_D)/$(_M)$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT)) ,\
+													$(_E)$(COMPOSER_EXPORT) \
+					)) \
+				,\
+					$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$(_M)$($(FILE)) ,\
+					$(_N)$($(FILE)) \
+					) \
+				) \
+			)"; \
 		) \
 		$(LINERULE); \
 	fi
@@ -10253,7 +10301,7 @@ $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $(PUBLISH)-library
+	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $(PUBLISH)-sitemap="$(DOFORCE)" $(PUBLISH)-library
 endif
 
 ########################################
@@ -10685,12 +10733,14 @@ $($(PUBLISH)-library): $($(PUBLISH)-library-digest)
 ifeq ($(MAKELEVEL),0)
 $($(PUBLISH)-library): $($(PUBLISH)-library-sitemap)
 endif
-ifeq ($(MAKELEVEL),1)
+ifeq ($($(PUBLISH)-sitemap),$(DOFORCE))
 $($(PUBLISH)-library): $($(PUBLISH)-library-sitemap)
 endif
 $($(PUBLISH)-library):
 	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+ifeq ($(filter $(DOFORCE),$($(PUBLISH)-sitemap)),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
+endif
 
 ########################################
 #### {{{4 $(PUBLISH)-library-$(MAKEFILE)
