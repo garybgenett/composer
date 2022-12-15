@@ -217,7 +217,11 @@ override COMPOSER_ROOT			:= $(CURDIR)
 endif
 override COMPOSER_LIBRARY		:=
 
-override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/.$(COMPOSER_BASENAME).export
+#> update: includes duplicates
+override EXPORTS			:= export
+override PUBLISH			:= site
+
+override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/.$(COMPOSER_BASENAME).$(EXPORTS)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
@@ -226,9 +230,6 @@ override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
-
-#> update: includes duplicates
-override PUBLISH			:= site
 
 override COMPOSER_CUSTOM		:= $(COMPOSER_ART)/$(COMPOSER_TINYNAME)/$(COMPOSER_TINYNAME)
 override CUSTOM_PUBLISH_SH		:= $(COMPOSER_CUSTOM).$(PUBLISH).sh
@@ -1465,7 +1466,7 @@ override PANDOC_OPTIONS_ERROR		:=
 # {{{1 Composer Operation ------------------------------------------------------
 ################################################################################
 
-override ENV_MAKE			:= $(ENV) $(REALMAKE)
+override ENV_MAKE			:= $(ENV) $(REALMAKE) $(MAKEFLAGS)
 
 override ~				:= "'$$'"
 override COMPOSER_MY_PATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
@@ -1653,9 +1654,9 @@ override CHECKIT			:= check
 override CONFIGS			:= config
 override TARGETS			:= targets
 
-override DOSETUP			:= _init
-override CONVICT			:= _commit
-override EXPORTS			:= _export
+override DOSETUP			:= init
+override CONVICT			:= commit
+override EXPORTS			:= export
 
 override PUBLISH			:= site
 override INSTALL			:= install
@@ -11442,7 +11443,7 @@ endif
 	@$(call DO_HEREDOC,PUBLISH_METAINFO_PAGE)					>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"					>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML)\n"			>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML)\n"			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML): override c_list := \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-features$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach YEAR,202 203,\
