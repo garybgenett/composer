@@ -1711,7 +1711,7 @@ $(if $(filter $(1)-$(2),$(MAKECMDGOALS)),\
 .PHONY: $(1)-$(2)
 $(1)-$(2): $(1)
 $(1)-$(2):
-	@$$(ECHO) ""
+	@$(ECHO) ""
 endef
 
 $(foreach FILE,$(filter-out \
@@ -8721,8 +8721,9 @@ else
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
 	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
 endif
-	@$(ECHO) "$(_E)"
+	@$(ECHO) "$(_S)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_E)"
 	@$(LN)										$(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML) \
 											$(CURDIR)/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
 											$($(DEBUGIT)-output)
@@ -9463,7 +9464,7 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd,/)\n" >$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS); \
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "override COMPOSER_DEPENDS := $(call $(TESTING)-pwd)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS); \
-	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"	>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "\$$(info COMPOSER_CURDIR)\n"		>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "endif\n"				>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
@@ -11811,10 +11812,6 @@ $(SUBDIRS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
 $(SUBDIRS):
 	@$(ECHO) ""
 
-#WORKING:NOW:NOW:FIX
-#	this section should be "$$" instead of "$", to make it more readable/clear...
-#	need to give the ": $(HEADERS" versus "@$(HEADERS) situation a final, single solution...
-#		it is preferable to do "@", even if it means doing "$(MAKE) $(call $(1))"...
 override define $(SUBDIRS)-$(EXAMPLE) =
 .PHONY: $(1)-$(SUBDIRS)-$(HEADERS)
 ifeq ($(MAKELEVEL),0)
@@ -11823,9 +11820,9 @@ $(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
 endif
 $(1)-$(SUBDIRS)-$(HEADERS):
 ifneq ($(COMPOSER_DOITALL_$(1)),)
-	@$$(call $$(HEADERS)-$$(SUBDIRS),$(1))
+	@$(call $(HEADERS)-$(SUBDIRS),$(1))
 endif
-	@$$(ECHO) ""
+	@$(ECHO) ""
 
 .PHONY: $(1)-$(SUBDIRS)
 ifeq ($(COMPOSER_SUBDIRS),)
@@ -11842,10 +11839,10 @@ $(1)-$(SUBDIRS):
 
 .PHONY: $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
-	@$$(eval override $$(@) := $$(CURDIR)/$$(patsubst $(1)-$$(SUBDIRS)-%,%,$$(@)))
-	@$$(if $$(wildcard $$($$(@))/$$(MAKEFILE)),\
+	@$$(eval override $$(@) := $(CURDIR)/$$(patsubst $(1)-$(SUBDIRS)-%,%,$$(@)))
+	@$$(if $$(wildcard $$($$(@))/$(MAKEFILE)),\
 		$$(MAKE) --directory $$($$(@)) $(1) ,\
-		$$(MAKE) --directory $$($$(@)) --makefile $$(COMPOSER) $$(NOTHING)-$$(MAKEFILE) \
+		$$(MAKE) --directory $$($$(@)) --makefile $(COMPOSER) $(NOTHING)-$(MAKEFILE) \
 	)
 endef
 
@@ -11979,25 +11976,25 @@ override define TYPE_TARGETS_OPTIONS =
 endef
 
 override define TYPE_TARGETS =
-%.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) %$$(COMPOSER_EXT)
-#>	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(*)$$(COMPOSER_EXT))
-	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_EXT))
-ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",extension)
+%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) %$(COMPOSER_EXT)
+#>	@$$(call $(COMPOSER_PANDOC)-c_list_plus,$$(*)$(COMPOSER_EXT))
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$(COMPOSER_EXT))
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$$(call $(HEADERS)-note,$$(@) $(MARKER) $(1),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",extension)
 endif
 
-%.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) %
-#>	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(*))
+%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) %
+#>	@$$(call $(COMPOSER_PANDOC)-c_list_plus,$$(*))
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
-ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",wildcard)
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$$(call $(HEADERS)-note,$$(@) $(MARKER) $(1),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",wildcard)
 endif
 
-%.$(2): $$(call $$(COMPOSER_PANDOC)-dependencies,$(1)) $$(c_list)
-#>	@$$(call $$(COMPOSER_PANDOC)-c_list_plus,$$(c_list))
+%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) $(c_list)
+#>	@$$(call $(COMPOSER_PANDOC)-c_list_plus,$$(c_list))
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),c_list=\"$$(c_list)\" (+)=\"$$(c_list_plus)\",list)
+	@$$(call $(HEADERS)-note,$$(@) $(MARKER) $(1),c_list=\"$(c_list)\" (+)=\"$(c_list_plus)\",list)
 endif
 endef
 
