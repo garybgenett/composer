@@ -1867,17 +1867,6 @@ override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COM
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
 
-########################################
-
-override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
-ifneq ($(COMPOSER_YML_LIST),)
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
-ifneq ($(COMPOSER_LIBRARY_YML),)
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
-endif
-endif
-#>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
-
 #######################################
 
 override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
@@ -1922,6 +1911,45 @@ override PUBLISH_SH_HELPERS := \
 	creators \
 	tagslist \
 	readtime \
+
+########################################
+
+override $(PUBLISH)-$(EXAMPLE)		:= $(CURDIR)/_$(PUBLISH)
+override $(PUBLISH)-$(EXAMPLE)-log	:= $(CURDIR)/$(call OUTPUT_FILENAME,$(PUBLISH))
+override $(PUBLISH)-$(EXAMPLE)-index	:= index
+override $(PUBLISH)-$(EXAMPLE)-library	:= $(LIBRARY_FOLDER_ALT)-$(CONFIGS)
+
+override $(PUBLISH)-$(EXAMPLE)-testing_tree := $(notdir $(BOOTSTRAP_DIR))/site/content
+override $(PUBLISH)-$(EXAMPLE)-dirs := \
+	. \
+	$(patsubst .%,%,$(NOTHING)) \
+	$(CONFIGS) \
+	$(notdir $(PANDOC_DIR)) \
+	$($(PUBLISH)-$(EXAMPLE)-testing_tree)/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
+
+override $(PUBLISH)-$(EXAMPLE)-files := \
+	$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+	$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+	$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
+	$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/MANUAL.$(EXTN_HTML) \
+	$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/introduction.$(EXTN_HTML) \
+
+override $(PUBLISH)-$(EXAMPLE)-include	:= $($(PUBLISH)-$(EXAMPLE)-index)-digest
+override $(PUBLISH)-$(EXAMPLE)-included	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-include)
+override $(PUBLISH)-$(EXAMPLE)-examples	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/examples
+override $(PUBLISH)-$(EXAMPLE)-pages	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/pages
+override $(PUBLISH)-$(EXAMPLE)-themes	:= $(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/themes
+
+########################################
+
+override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
+ifneq ($(COMPOSER_YML_LIST),)
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
+ifneq ($(COMPOSER_LIBRARY_YML),)
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
+endif
+endif
+#>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
 ########################################
 
@@ -11267,37 +11295,6 @@ $($(PUBLISH)-library-sitemap-src):
 
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
-
-#WORKING:NOW:NOW:FIX finally move these up to "composer operation"...
-
-override $(PUBLISH)-$(EXAMPLE)		:= $(CURDIR)/_$(PUBLISH)
-override $(PUBLISH)-$(EXAMPLE)-log	:= $(CURDIR)/$(call OUTPUT_FILENAME,$(PUBLISH))
-override $(PUBLISH)-$(EXAMPLE)-index	:= index
-override $(PUBLISH)-$(EXAMPLE)-library	:= $(LIBRARY_FOLDER_ALT)-$(CONFIGS)
-
-override $(PUBLISH)-$(EXAMPLE)-testing_tree := $(notdir $(BOOTSTRAP_DIR))/site/content
-override $(PUBLISH)-$(EXAMPLE)-dirs := \
-	. \
-	$(patsubst .%,%,$(NOTHING)) \
-	$(CONFIGS) \
-	$(notdir $(PANDOC_DIR)) \
-	$($(PUBLISH)-$(EXAMPLE)-testing_tree)/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
-
-override $(PUBLISH)-$(EXAMPLE)-files := \
-	$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
-	$(word 2,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
-	$(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-index).$(EXTN_HTML) \
-	$(word 4,$($(PUBLISH)-$(EXAMPLE)-dirs))/MANUAL.$(EXTN_HTML) \
-	$(word 5,$($(PUBLISH)-$(EXAMPLE)-dirs))/introduction.$(EXTN_HTML) \
-
-override $(PUBLISH)-$(EXAMPLE)-include	:= $($(PUBLISH)-$(EXAMPLE)-index)-digest
-override $(PUBLISH)-$(EXAMPLE)-included	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/$($(PUBLISH)-$(EXAMPLE)-include)
-override $(PUBLISH)-$(EXAMPLE)-examples	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/examples
-override $(PUBLISH)-$(EXAMPLE)-pages	:= $(word 3,$($(PUBLISH)-$(EXAMPLE)-dirs))/pages
-override $(PUBLISH)-$(EXAMPLE)-themes	:= $(word 1,$($(PUBLISH)-$(EXAMPLE)-dirs))/themes
-
-########################################
-#### {{{4 $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
