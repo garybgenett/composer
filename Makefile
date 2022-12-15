@@ -322,9 +322,6 @@ override LIBRARY_FOLDER_ALT		:= _library
 override LIBRARY_AUTO_UPDATE		:= null
 override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
-override LIBRARY_SITEMAP_TITLE		:= Site Map
-override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
-
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
 override LIBRARY_DIGEST_CHARS		:= 1024
@@ -339,6 +336,11 @@ override LIBRARY_DIGEST_CONTINUE	:= [...]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
+
+override LIBRARY_SITEMAP_TITLE		:= Site Map
+override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
+override LIBRARY_SITEMAP_EXPANDED	:= 1
+override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 
 ########################################
 
@@ -1778,8 +1780,6 @@ override define COMPOSER_YML_DATA_SKEL =
     folder:				$(LIBRARY_FOLDER),
     auto_update:			$(LIBRARY_AUTO_UPDATE),
 
-    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE)",
-
     digest_title:			"$(LIBRARY_DIGEST_TITLE)",
     digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
@@ -1787,6 +1787,9 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_spacer:			$(LIBRARY_DIGEST_SPACER),
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
+
+    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE)",
+    sitemap_expanded:			"$(LIBRARY_SITEMAP_EXPANDED)",
   },
 
   $(PUBLISH)-nav-top:				null,
@@ -1867,6 +1870,17 @@ override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COM
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
 
+########################################
+
+override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
+ifneq ($(COMPOSER_YML_LIST),)
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
+ifneq ($(COMPOSER_LIBRARY_YML),)
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
+endif
+endif
+#>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
+
 #######################################
 
 override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
@@ -1941,17 +1955,6 @@ override PUBLISH_PAGES			:= $(word 3,$(PUBLISH_DIRS))/pages
 override PUBLISH_THEMES			:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/themes)
 
 override PUBLISH_SOURCE			:= $(PUBLISH_PAGES)/2020-01-01+$(EXAMPLE)_00
-
-########################################
-
-override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
-ifneq ($(COMPOSER_YML_LIST),)
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
-ifneq ($(COMPOSER_LIBRARY_YML),)
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
-endif
-endif
-#>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
 ########################################
 
@@ -2945,6 +2948,8 @@ endef
 #		add to to documentation
 #		must use the full path name for the library include...
 #	CURDIR and files must match, or settings and includes will break...
+#	the library can be used purely as a documentation archive manager, if desired... (i.e. metadata, sitemap, etc.)
+#	every output file needs to have a *.md with the metadata in it in order for the library to work...
 
 #WORK
 #	features
@@ -4022,7 +4027,6 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 |:---|:---|
 | folder           | `$(LIBRARY_FOLDER)`
 | auto_update      | `$(LIBRARY_AUTO_UPDATE)`
-| sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`
@@ -4030,6 +4034,8 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 | digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)`
+| sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
+| sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)`
 
 *(For this test site, the library has been enabled as: `$(LIBRARY_FOLDER_ALT)`)*
 
@@ -4102,7 +4108,6 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 |:---|:---|:---|
 | folder           | `$(LIBRARY_FOLDER)`           | `$(PUBLISH_LIBRARY)`
 | auto_update      | `$(LIBRARY_AUTO_UPDATE)`      | `$(LIBRARY_AUTO_UPDATE_ALT)`
-| sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
@@ -4110,6 +4115,8 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 | digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`    | `$(LIBRARY_DIGEST_SPACER_ALT)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`  | `$(LIBRARY_DIGEST_CONTINUE_ALT)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)` | `$(LIBRARY_DIGEST_PERMALINK_ALT)`
+| sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
+| sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
@@ -4781,8 +4788,6 @@ $(_S)########################################$(_D)
     $(_C)folder$(_D):				$(_S)#$(MARKER)$(_D) $(_M)$(LIBRARY_FOLDER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
-
 $(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
@@ -4790,6 +4795,9 @@ $(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED
 $(_S)#$(MARKER)$(_D) $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
+
+$(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)sitemap_expanded$(_D):			$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
@@ -5083,7 +5091,6 @@ variables:
   $(PUBLISH)-library:
     folder:				$(PUBLISH_LIBRARY)
     auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
-    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
@@ -5091,6 +5098,8 @@ variables:
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
+    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
+    sitemap_expanded:			"$(LIBRARY_SITEMAP_EXPANDED_ALT)"
 
 ########################################
 
@@ -9620,7 +9629,6 @@ $(TESTING)-COMPOSER_EXPORTS-done:
 
 #WORKING:NOW:NOW:FIX
 #	if we do a $(wildcard ...) on COMPOSER_IGNORES when doing $(filter-out ...), wildcards would be supported...
-#	let's do this...
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
@@ -11069,6 +11077,7 @@ $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest):
+#WORKING:NOW:NOW:FIX 2eeea187e756ffcacb8996c9e04df969898f971e = $(SILENT)
 	@$(MAKE) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
 	@{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest_title)\n"; \
@@ -11158,6 +11167,10 @@ $($(PUBLISH)-library-digest-files):
 #	$(ECHO) "($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(abspath $(dir $(COMPOSER_LIBRARY))))"; \
 #		$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2)
 
+#WORKING:NOW:NOW:FIX
+#	gah.  623543a377f178f1c625360af113d52d9db5174d possibly broke the metainfo-block below (and elsewhere)...
+#		need to ensure that COMPOSER_YML_DATA is coming from the right $(CURDIR) ...
+
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-digest); \
@@ -11237,11 +11250,6 @@ $($(PUBLISH)-library-sitemap):
 ########################################
 ##### {{{5 $(PUBLISH)-library-sitemap-src
 
-#WORKING:NOW:NOW:FIX
-#	might be nice to try and do a .table = filename | if [ -f *.md ] && title-block ...?
-#	then document that the library can be used purely as a documentation archive manager, if desired...
-#		aaand... we desire it, so let's use it...
-
 $($(PUBLISH)-library-sitemap-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-src): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 #>$($(PUBLISH)-library-sitemap-src): $($(PUBLISH)-library-metadata)
@@ -11253,6 +11261,7 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_EXPORT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		shopt -s lastpipe; PRINT=; \
+			SITEMAP_EXPANDED="$(SPECIAL_VAL)"; if [ -n "$(call COMPOSER_YML_DATA_VAL,library.sitemap_expanded)" ]; then SITEMAP_EXPANDED="."; fi; \
 		eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,,$(TREE),$(FILE))) \
 			| $(SORT) \
 			| while read -r FILE; do \
@@ -11261,17 +11270,17 @@ $($(PUBLISH)-library-sitemap-src):
 					$(ECHO) "$(_D)"; \
 					$(call $(HEADERS)-note,$(@),$(patsubst $(COMPOSER_ROOT),/,$(patsubst $(COMPOSER_ROOT)/%,%,$(FILE))),$(PUBLISH)-sitemap); \
 					$(ECHO) "$(_E)"; \
-					$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $(SPECIAL_VAL) sitemap-group $$( \
+					$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${SITEMAP_EXPANDED} sitemap-group $$( \
 							$(ECHO) "$(FILE)" \
 							| $(SED) \
 								-e "s|$(COMPOSER_ROOT)/||g" \
 								-e "s|$(COMPOSER_ROOT)|/|g" \
 						) $(PUBLISH_CMD_END)\n" \
 						| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
-					$(ECHO) "\n" \
+					$(ECHO) "\n|||\n|:---|:---|\n" \
 						| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 				fi; \
-				$(ECHO) "  * [$$( \
+				$(ECHO) "| [$$( \
 						$(ECHO) "$${FILE}" \
 						| $(SED) \
 							-e "s|^.*[/]([^/]+)$$|\1|g" \
@@ -11280,8 +11289,18 @@ $($(PUBLISH)-library-sitemap-src):
 						| $(SED) \
 							-e "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g" \
 							-e "s|^$(COMPOSER_ROOT)/||g" \
-							-e "s|$(COMPOSER_EXT)$$|.$(EXTN_HTML)|g" \
-					))\n" \
+							-e "s|$(subst .,[.],$(COMPOSER_EXT))$$|.$(EXTN_HTML)|g" \
+					)) | " \
+					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
+				$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+					if	[ "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" != "$${FILE}" ] && \
+						[ -f "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" ]; \
+					then \
+						$(PUBLISH_SH_RUN) metainfo-block . . $${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)} \
+							| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
+					fi; \
+				) \
+				$(ECHO) "\n" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 			done; \
 			if [ -n "$${PRINT}" ]; then \
@@ -11574,6 +11593,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	fix water.css so that tables aren't always 50%/50%...?
 #	remove c_list_plus... we're not going to bring it back, at this point...
 #	make error on first run with empty library...
 #		config-COMPOSER_IGNORES / config-COMPOSER_EXPORTS
