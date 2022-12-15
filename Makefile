@@ -499,11 +499,11 @@ export MAKEFLAGS
 
 #>override MAKEFILE			:= $(notdir $(firstword $(MAKEFILE_LIST)))
 override MAKEFILE			:= Makefile
-override MAKEFLAGS			:= $(if $(filter k%,$(MAKEFLAGS)),--keep-going)
-override MAKEFLAGS			:= $(MAKEFLAGS) --no-builtin-rules --no-builtin-variables --no-print-directory
+override MAKEFLAGS			:= $(if $(filter k%,$(MAKEFLAGS)),--keep-going,--stop)
+override MAKEFLAGS			:= $(MAKEFLAGS) --no-builtin-rules --no-builtin-variables $(if $(COMPOSER_DEBUGIT_ALL),--print-directory,--no-print-directory)
 
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose --trace
 else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
 endif
