@@ -2949,6 +2949,7 @@ endef
 #		must use the full path name for the library include...
 #	CURDIR and files must match, or settings and includes will break...
 #	the library can be used purely as a documentation archive manager, if desired... (i.e. metadata, sitemap, etc.)
+#		test this... it may require c_site more than we think...
 #	every output file needs to have a *.md with the metadata in it in order for the library to work...
 
 #WORK
@@ -11067,6 +11068,11 @@ ifneq ($(and \
 override $(PUBLISH)-library-digest-files := $(shell $(call $(PUBLISH)-library-digest-list))
 endif
 
+.PHONY: $(PUBLISH)-library-digest-files
+$(PUBLISH)-library-digest-files: $($(PUBLISH)-library-digest-files)
+$(PUBLISH)-library-digest-files:
+	@$(ECHO) ""
+
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-file
 
@@ -11077,8 +11083,7 @@ $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest):
-#WORKING:NOW:NOW:FIX 2eeea187e756ffcacb8996c9e04df969898f971e = $(SILENT)
-	@$(MAKE) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
+	@$(MAKE) c_site="1" $(PUBLISH)-library-digest-files
 	@{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest_title)\n"; \
 		$(ECHO) "date: $(DATEMARK)\n"; \
