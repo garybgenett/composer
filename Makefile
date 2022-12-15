@@ -2030,7 +2030,7 @@ endif
 #> update: $(HEADERS)-$(EXAMPLE)
 
 #WORK document!
-#WORK test?
+#WORK test? = yes.
 #WORK also document command variables?  maybe another "reserved"-style section that parses them out?
 #WORK DO_HEREDOC
 #WORK $($(DEBUGIT)-output)
@@ -2043,9 +2043,10 @@ override define $(COMPOSER_TINYNAME)-makefile =
 	$(call $(INSTALL)-$(MAKEFILE),$(1),-$(INSTALL),,$(2))
 endef
 
+#WORK would be nice to verify that doing $$(MAKE) instead of just $(MAKE) preserves @+/MAKEJOBS...
 override define $(COMPOSER_TINYNAME)-make =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),$(notdir $(MAKE)),$(@)); \
-	$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(1)
+	$$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(1)
 endef
 
 override define $(COMPOSER_TINYNAME)-mkdir =
@@ -8715,11 +8716,11 @@ ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DEBUGIT),)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
+	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
+	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
 else
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
-	@$(ENV_MAKE) $(SILENT) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
+	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
 endif
 	@$(ECHO) "$(_S)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
@@ -9591,6 +9592,11 @@ $(TESTING)-COMPOSER_EXPORTS-done:
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_IGNORES ---
 
+#WORKING:NOW:NOW:FIX
+#	if we do a $(wildcard ...) on COMPOSER_IGNORES when doing $(filter-out ...), wildcards would be supported...
+#	let's do this...
+#	also, need to remove the documentation note...
+
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
 $(TESTING)-COMPOSER_IGNORES:
@@ -9998,7 +10004,7 @@ $(TARGETS):
 	@$(PRINT) "$(_H)$(MARKER) $(TARGETS)"; $(ECHO) "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
-	@$(MAKE) $(SILENT) $(PRINTER)-$(PRINTER)
+	@$(MAKE) $(PRINTER)-$(PRINTER)
 
 override define $(TARGETS)-$(PRINTER) =
 	$(MAKE) $(SILENT) $(LISTING) | $(SED) \
@@ -10302,7 +10308,7 @@ $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $(PUBLISH)-sitemap="$(DOFORCE)" $(PUBLISH)-library
+	@$(MAKE) c_site="1" $(PUBLISH)-sitemap="$(DOFORCE)" $(PUBLISH)-library
 endif
 
 ########################################
@@ -10738,7 +10744,7 @@ ifeq ($($(PUBLISH)-sitemap),$(DOFORCE))
 $($(PUBLISH)-library): $($(PUBLISH)-library-sitemap)
 endif
 $($(PUBLISH)-library):
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+	@$(MAKE) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 ifeq ($(filter $(DOFORCE),$($(PUBLISH)-sitemap)),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
 endif
@@ -10755,10 +10761,8 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(ECHO) "$(_D)"
 #>	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_SETTINGS))
-#>	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
-#>	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
 	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
 	@if [ -f "$(abspath $(dir $(COMPOSER_LIBRARY)))/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
@@ -11040,7 +11044,7 @@ $($(PUBLISH)-library-digest): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest):
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
+	@$(MAKE) c_site="1" $$($(call $(PUBLISH)-library-digest-list))
 	@{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest_title)\n"; \
 		$(ECHO) "date: $(DATEMARK)\n"; \
@@ -11201,6 +11205,11 @@ $($(PUBLISH)-library-sitemap):
 ########################################
 ##### {{{5 $(PUBLISH)-library-sitemap-src
 
+#WORKING:NOW:NOW:FIX
+#	might be nice to try and do a .table = filename | if [ -f *.md ] && title-block ...?
+#	then document that the library can be used purely as a documentation archive manager, if desired...
+#		aaand... we desire it, so let's use it...
+
 $($(PUBLISH)-library-sitemap-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-src): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 #>$($(PUBLISH)-library-sitemap-src): $($(PUBLISH)-library-metadata)
@@ -11260,7 +11269,6 @@ $($(PUBLISH)-library-sitemap-src):
 ### {{{3 $(PUBLISH)-$(EXAMPLE) ---------
 
 #WORKING:NOW:NOW:FIX finally move these up to "composer operation"...
-#WORKING:NOW:NOW:FIX make $(SILENT) consistent... is it even needed, with "--no-print-directory" in MAKEFLAGS...?
 
 override $(PUBLISH)-$(EXAMPLE)		:= $(CURDIR)/_$(PUBLISH)
 override $(PUBLISH)-$(EXAMPLE)-log	:= $(CURDIR)/$(call OUTPUT_FILENAME,$(PUBLISH))
@@ -11327,7 +11335,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(BOOTSTRAP_DIR)/		$($(PUBLISH)-$(EXAMPLE))/$(notdir $(BOOTSTRAP_DIR))
 	@$(SED) -i "s|^[#]{1}||g"		$($(PUBLISH)-$(EXAMPLE))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$($(PUBLISH)-$(EXAMPLE)-files)))
 #>		--makefile $(COMPOSER)
-	@$(ENV_MAKE) $(SILENT) \
+	@$(ENV_MAKE) \
 		--makefile $($(PUBLISH)-$(EXAMPLE))/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
 		--directory $($(PUBLISH)-$(EXAMPLE)) \
 		MAKEJOBS="$(TESTING_MAKEJOBS)" \
@@ -11526,7 +11534,7 @@ endif
 		$($(PUBLISH)-$(EXAMPLE)-pages)/2020-01-01+$(EXAMPLE)_00.$(EXTN_HTML) \
 		$($(PUBLISH)-$(EXAMPLE)-themes)/$(DOITALL) \
 		,\
-		time $(ENV_MAKE) $(SILENT) \
+		time $(ENV_MAKE) \
 			--directory $(abspath $(dir $($(PUBLISH)-$(EXAMPLE))/$(FILE))) \
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
@@ -11545,7 +11553,7 @@ else
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		,\
-		time $(ENV_MAKE) $(SILENT) \
+		time $(ENV_MAKE) \
 			--directory $($(PUBLISH)-$(EXAMPLE)) \
 			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS))" \
 			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
@@ -11557,7 +11565,7 @@ else
 	)
 endif
 ifeq ($(COMPOSER_DEBUGIT),)
-	@time $(ENV_MAKE) $(SILENT) \
+	@time $(ENV_MAKE) \
 		--directory $($(PUBLISH)-$(EXAMPLE)) \
 		$(EXPORTS) \
 		2>&1 | $(TEE) --append $($(PUBLISH)-$(EXAMPLE)-log); \
@@ -11620,7 +11628,7 @@ else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),)
 	@$(MAKE) $(COMPOSER_SUBDIRS)
 else
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(INSTALL)-$(TARGETS)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(INSTALL)-$(TARGETS)
 	@$(MAKE) $(INSTALL)-$(SUBDIRS)
 endif
 endif
@@ -11681,7 +11689,7 @@ ifneq ($(c_site),)
 endif
 	@$(eval override $(TARGETS)-$(PRINTER)-$(CLEANER) := $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))))
 	@if [ -n "$($(TARGETS)-$(PRINTER)-$(CLEANER))" ]; then \
-		$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(CLEANER)-,$($(TARGETS)-$(PRINTER)-$(CLEANER))); \
+		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(CLEANER)-,$($(TARGETS)-$(PRINTER)-$(CLEANER))); \
 	fi
 ifeq ($(COMPOSER_TARGETS),)
 	@$(MAKE) $(NOTHING)-$(TARGETS)
@@ -11690,7 +11698,7 @@ else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(COMPOSER_TARGETS)
 else
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(CLEANER)-$(TARGETS)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(CLEANER)-$(TARGETS)
 endif
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@$(MAKE) $(CLEANER)-$(SUBDIRS)
@@ -11773,7 +11781,7 @@ endif
 endif
 	@$(eval override $(TARGETS)-$(PRINTER)-$(DOITALL) := $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))))
 	@if [ -n "$($(TARGETS)-$(PRINTER)-$(DOITALL))" ]; then \
-		$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(DOITALL)-,$($(TARGETS)-$(PRINTER)-$(DOITALL))); \
+		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(DOITALL)-,$($(TARGETS)-$(PRINTER)-$(DOITALL))); \
 	fi
 ifeq ($(COMPOSER_TARGETS),)
 	@$(MAKE) $(NOTHING)-$(TARGETS)
@@ -11782,7 +11790,7 @@ else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(COMPOSER_TARGETS)
 else
-	@$(MAKE) $(if $(COMPOSER_DEBUGIT),,$(SILENT)) $(call COMPOSER_OPTIONS_EXPORT) $(DOITALL)-$(TARGETS)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(DOITALL)-$(TARGETS)
 	@$(call $(CLEANER)-logs)
 endif
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
