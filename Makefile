@@ -1325,7 +1325,7 @@ override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
 override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_HTML)"
 override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_TEXT)"
 override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json"
-override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
+override PANDOC_JSON_TO_TEXT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_TEXT)"
 
 #> update: TYPE_TARGETS
 
@@ -11167,13 +11167,6 @@ $($(PUBLISH)-library-digest-files):
 ##### {{{5 $(PUBLISH)-library-digest-create
 
 #WORKING:NOW:NOW:FIX
-#	need to circle back to b609755478ed0123d565165fd812b5d3e97a3fc7, to make sure links didn't get goofed up, now...
-#	they probably did, but we should be able to maintain the performance improvement by putting it into a variable instead of calling $REALPATH a gazillion times...
-#		frankly, it is embarassing it was ever like that in the first place... no wonder it was so slow...
-#	$(ECHO) "($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(abspath $(dir $(COMPOSER_LIBRARY))))"; \
-#		$(REALPATH) $(abspath $(dir $(1))) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2)
-
-#WORKING:NOW:NOW:FIX
 #	gah.  623543a377f178f1c625360af113d52d9db5174d possibly broke the metainfo-block below (and elsewhere)...
 #		need to ensure that COMPOSER_YML_DATA is coming from the right $(CURDIR) ...
 
@@ -11203,7 +11196,7 @@ override define $(PUBLISH)-library-digest-create =
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
-				| $(PANDOC_JSON_TO_LINT) \
+				| $(PANDOC_JSON_TO_TEXT) \
 				; \
 		fi; \
 		SIZ="$$( \
@@ -11211,7 +11204,7 @@ override define $(PUBLISH)-library-digest-create =
 				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
-				| $(PANDOC_JSON_TO_LINT) \
+				| $(PANDOC_JSON_TO_TEXT) \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
 				| $(WC_CHAR) \
@@ -11226,8 +11219,9 @@ override define $(PUBLISH)-library-digest-create =
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
 	{	$(ECHO) "[$(subst ",,$(call COMPOSER_YML_DATA_VAL,library.digest_permalink))]"; \
-		$(ECHO) "($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(abspath $(dir $(COMPOSER_LIBRARY))))"; \
-		$(ECHO) "/$(patsubst %$(3),%.$(EXTN_HTML),$(2)))\n"; \
+		$(ECHO) "($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(abspath $(dir $(COMPOSER_LIBRARY))))/"; \
+		$(ECHO) "$(2)" | $(SED) "s|$(subst .,[.],$(3))$$|.$(EXTN_HTML)|g"; \
+		$(ECHO) ")\n"; \
 	} \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "\n" \
@@ -11599,6 +11593,10 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	so, sitemap rebuild works on _site, but not on configs when running from outside the configs tree...
+#		how do we feel about this, as expected behavior?
+#		probably need to finally move the site-sitemap site-library call to the end of $(DOITALL)
+#			ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
 #	fix water.css so that tables aren't always 50%/50%...?
 #	remove c_list_plus... we're not going to bring it back, at this point...
 #	make error on first run with empty library...
