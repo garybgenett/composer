@@ -509,7 +509,7 @@ else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
 endif
 
-override SILENT				:= --silent --debug=none
+override SILENT				:= --silent --no-print-directory --debug=none
 
 ########################################
 
@@ -967,16 +967,17 @@ override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
 override YQ_EVAL			:= . *
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; $(YQ_EVAL) $$file)'
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
-#>			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) 2>/dev/null
+#>				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null
+#>			)) }}' 2>/dev/null
 #>			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
-	$(if $(and $(wildcard $(2)),$(3)),\
-		| $(YQ_WRITE_JSON) '$(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
-			$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(2) \
-		)) }}' \
-	,\
-		$(foreach FILE,$(wildcard $(2)),\
+	$(foreach FILE,$(wildcard $(2)),\
+		$(if $(3),\
+			| $(YQ_WRITE_JSON) '$(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
+				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) \
+			)) }}' \
+		,\
 			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' \
 		) \
 	)
@@ -1876,10 +1877,18 @@ override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(
 override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
 ifneq ($(COMPOSER_YML_LIST),)
 override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
+endif
+
+ifneq ($(COMPOSER_YML_LIST),)
 ifneq ($(COMPOSER_LIBRARY_YML),)
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY_YML),library))
+ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
+ifneq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(addsuffix /$(COMPOSER_YML),$(shell $(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) $(CONFIGS)-COMPOSER_INCLUDES_TREE)),library))
 endif
 endif
+endif
+endif
+
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
 #######################################
@@ -10020,7 +10029,8 @@ $(CONFIGS)-%:
 		| $(SED) \
 			-e "s|[[:space:]]+|\n|g" \
 			-e "/^$$/d" \
-		| $(SORT)
+
+#>		| $(SORT)
 
 ########################################
 ## {{{2 $(TARGETS) ---------------------
@@ -10261,6 +10271,7 @@ override define $(EXPORTS)-find =
 				| while read -r EDIR; do \
 					EDIR="$$($(DIRNAME) $${EDIR})"; \
 					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES \
+						| $(SORT) \
 						| while read -r EFIL; do \
 							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" -prune \\\)"; \
 						done; \
@@ -10308,6 +10319,7 @@ override define $(EXPORTS)-filter =
 		) } \
 		| $(SORT); \
 	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES \
+		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$${FILE}\n"; \
 			else			$(ECHO) " -o \\( -path \"$${FILE}\" -prune \\\)"; \
@@ -10315,6 +10327,7 @@ override define $(EXPORTS)-filter =
 		done \
 		| $(SORT); \
 	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS \
+		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$${FILE}\n"; \
 			else			$(ECHO) " -o \\( -path \"$${FILE}\" -print \\\)"; \
@@ -11165,10 +11178,6 @@ $($(PUBLISH)-library-digest-files):
 
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-create
-
-#WORKING:NOW:NOW:FIX
-#	gah.  623543a377f178f1c625360af113d52d9db5174d possibly broke the metainfo-block below (and elsewhere)...
-#		need to ensure that COMPOSER_YML_DATA is coming from the right $(CURDIR) ...
 
 override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"; \
