@@ -1710,7 +1710,8 @@ override DOFORCE			:= force
 
 override define COMPOSER_RESERVED_DOITALL =
 $(if $(filter $(1)-$(2),$(MAKECMDGOALS)),\
-	export override COMPOSER_DOITALL_$(1) := $(2))
+	export override COMPOSER_DOITALL_$(1) := $(2) \
+)
 
 .PHONY: $(1)-$(2)
 $(1)-$(2): $(1)
@@ -3716,15 +3717,9 @@ endef
 ########################################
 ## {{{2 $(PUBLISH) Pages ---------------
 
-#WORKING:NOW:NOW:FIX
-#	[WARNING] Duplicate identifier 'welcome-to-composer-happy-making' at line 965 column 1
-#		[WARNING] Duplicate identifier 'recommended-workflow-1' at line 969 column 1
-#	add pass-through in site-template
-#		$(eval override MARK := $(YEAR)$(NUM)-01-01)
-
-.PHONY: $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
-	@$(call TITLE_LN ,2,Recommended Workflow)
+.PHONY: $(PUBLISH)-$(EXAMPLE)-%
+$(PUBLISH)-$(EXAMPLE)-%:
+	@$(call TITLE_LN ,2,$(*) Recommended Workflow)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 
 ########################################
@@ -10041,6 +10036,16 @@ $(CONFIGS)-%:
 
 #>		| $(SORT)
 
+#WORK document?
+.PHONY: $(CONFIGS)-yml
+$(CONFIGS)-yml:
+ifneq ($(COMPOSER_YML_LIST),)
+#>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE) 2>/dev/null
+	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE)
+else
+	@$(ECHO) "{}\n"
+endif
+
 ########################################
 ## {{{2 $(TARGETS) ---------------------
 
@@ -11471,8 +11476,8 @@ endif
 			$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"; \
 			$(ECHO) "---\n"; \
 			$(ECHO) "$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)\n"; \
-			$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE); \
-		}									>>$(FILE); \
+			$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
+		}									>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGES))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
 	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
@@ -11612,7 +11617,6 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW:FIX
-#	$(CONFIGS)-yml
 #	switch to $(COMPOSER_TINY)-* helpers?
 #		add cp, ln, etc.
 #WORKING:NOW:NOW
