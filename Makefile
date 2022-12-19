@@ -1326,7 +1326,7 @@ override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
 override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_HTML)"
 override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_TEXT)"
 override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json"
-override PANDOC_JSON_TO_TEXT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_TEXT)"
+override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
 #> update: TYPE_TARGETS
 
@@ -1883,7 +1883,7 @@ ifneq ($(COMPOSER_YML_LIST),)
 ifneq ($(COMPOSER_LIBRARY_YML),)
 ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
 ifneq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(addsuffix /$(COMPOSER_YML),$(shell $(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) $(CONFIGS)-COMPOSER_INCLUDES_TREE)),library))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) $(CONFIGS)-COMPOSER_YML_LIST),library))
 endif
 endif
 endif
@@ -1984,8 +1984,10 @@ endif
 ########################################
 ## {{{2 Filesystem ---------------------
 
+override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
+
 ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
-override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT)) $(COMPOSER_IGNORES)
+override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT))$(if $(COMPOSER_IGNORES), $(COMPOSER_IGNORES))
 endif
 
 ########################################
@@ -2003,8 +2005,12 @@ override COMPOSER_TARGETS_AUTO		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTENSION),$(
 else
 override COMPOSER_TARGETS_AUTO		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
 endif
+
 #WORKING document!
 override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO),$(COMPOSER_TARGETS))
+override COMPOSER_SUBDIRS		:= $(patsubst .$(TARGETS),$(COMPOSER_CONTENTS_DIRS),$(COMPOSER_SUBDIRS))
+override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
+override COMPOSER_IGNORES		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO) $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_IGNORES))
 
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(COMPOSER_TARGETS_AUTO)
@@ -2014,13 +2020,13 @@ override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
 endif
 
 ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_TARGETS))
+override COMPOSER_TARGETS		:= $(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(NOTHING)-$(CONFIGS)-$(TARGETS)
 endif
 endif
 ifneq ($(COMPOSER_SUBDIRS),)
-override COMPOSER_SUBDIRS		:= $(filter-out $(COMPOSER_IGNORES),$(COMPOSER_SUBDIRS))
+override COMPOSER_SUBDIRS		:= $(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_SUBDIRS))
 ifeq ($(COMPOSER_SUBDIRS),)
 override COMPOSER_SUBDIRS		:= $(NOTHING)-$(CONFIGS)-$(SUBDIRS)
 endif
@@ -2040,10 +2046,7 @@ override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
 endif
 endif
 
-override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
-ifneq ($(COMPOSER_EXPORTS),)
-override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
-else
+ifeq ($(COMPOSER_EXPORTS),)
 override COMPOSER_EXPORTS		:= $(COMPOSER_EXPORTS_DEFAULT)
 endif
 
@@ -2940,6 +2943,8 @@ endef
 #	document readtime = <W> / <T>
 #	document "make config" in "library", to show files with missing headers
 #	document .$(TARGETS) special value
+#		all four of: TARGETS, SUBDIRS, EXPORTS, IGNORES
+#		wildcards work, as "*", but only once is allowed
 #	document template.*/reference.* and $(COMPOSER_CUSTOM)-header.*/$(COMPOSER_CUSTOM)-css.* files
 #	maybe a note that all files also "depend" on Makefile, so they will all update along with it?
 #	includes tree is based off of makefile list, so need to $(INSTALL) in order to get $(COMPOSER_SETTINGS/YML)
@@ -3710,6 +3715,12 @@ endef
 
 ########################################
 ## {{{2 $(PUBLISH) Pages ---------------
+
+#WORKING:NOW:NOW:FIX
+#	[WARNING] Duplicate identifier 'welcome-to-composer-happy-making' at line 965 column 1
+#		[WARNING] Duplicate identifier 'recommended-workflow-1' at line 969 column 1
+#	add pass-through in site-template
+#		$(eval override MARK := $(YEAR)$(NUM)-01-01)
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE)-$(EXAMPLE):
@@ -9278,6 +9289,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
+		\n\t\t * Use of '$(_C).$(TARGETS)$(_D)' targets \
 		\n\t\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
 	@$(call $(TESTING)-mark)
@@ -9311,8 +9323,11 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	#> values
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
-	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n"					>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n"					>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
@@ -9326,7 +9341,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
 	#> margins
-	$(call $(TESTING)-count,16,\|.+c_margin)
+	$(call $(TESTING)-count,17,\|.+c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
@@ -9335,8 +9350,10 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,6,[\"]$(TESTING)=$(DEBUGIT)[\"])
 	$(call $(TESTING)-count,6,[']$(TESTING)=$(DEBUGIT)['])
 	#> values
-	$(call $(TESTING)-find,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-count,17,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,17,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT) $(notdir $(call $(TESTING)-pwd)))
+	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+artifacts $(notdir $(call $(TESTING)-pwd)))
 	$(call $(TESTING)-count,1,Processing.+$(NOTHING).+$(NOTHING)-$(TARGETS))
 	$(call $(TESTING)-count,1,Processing.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
 
@@ -9608,9 +9625,9 @@ $(TESTING)-COMPOSER_EXPORTS: $(TESTING)-Think
 $(TESTING)-COMPOSER_EXPORTS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_EXPORTS$(_D)' behavior ,\
-		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included \
-		\n\t * Use '$(_C).$(TARGETS)$(_D)' in '$(_C)COMPOSER_EXPORTS$(_D)' \
-		\n\t * Confirm '$(_C)COMPOSER_IGNORES$(_D)' $(_E)(including wildcards)$(_D) \
+		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included $(_E)(including wildcards)$(_D) \
+		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped $(_E)(including wildcards)$(_D) \
+		\n\t * Use '$(_C).$(TARGETS)$(_D)' \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -9638,17 +9655,14 @@ $(TESTING)-COMPOSER_EXPORTS-done:
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_IGNORES ---
 
-#WORKING:NOW:NOW:FIX
-#	if we do a $(wildcard ...) on COMPOSER_IGNORES when doing $(filter-out ...), wildcards would be supported...
-
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
 $(TESTING)-COMPOSER_IGNORES:
 	@$(call $(TESTING)-$(HEADERS),\
 		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
-		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped \
-		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' detection \
-		\n\t * Confirm that wildcards have no effect \
+		\n\t * Verify '$(_C)COMPOSER_EXPORT$(_D)' is added \
+		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped $(_E)(including wildcards)$(_D) \
+		\n\t * Use '$(_C).$(TARGETS)$(_D)' \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -9656,22 +9670,23 @@ $(TESTING)-COMPOSER_IGNORES:
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-init
 $(TESTING)-COMPOSER_IGNORES-init:
-	@$(ECHO) "override COMPOSER_IGNORES := $(notdir $(wildcard $(call $(TESTING)-pwd)/*))\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(INSTALL)-$(DOFORCE)
+	@$(call $(TESTING)-run) --directory $(patsubst $(COMPOSER_DIR)/%,$(call $(TESTING)-pwd)/%,$(COMPOSER_ART)) $(CONFIGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README)*\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
-	@$(call $(TESTING)-run) $(INSTALL)-$(DOITALL)
-	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README).$(EXTN_DEFAULT) *.$(EXTN_DEFAULT)\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CONFIGS)
-	@$(call $(TESTING)-run) $(DOITALL)
+	@$(ECHO) "override COMPOSER_IGNORES := .$(TARGETS)\n"		>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_IGNORES-done:
-	$(call $(TESTING)-count,3,$(NOTHING).+$(CONFIGS)-$(TARGETS))
-	$(call $(TESTING)-count,4,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
+	$(call $(TESTING)-count,1,COMPOSER_IGNORES[^/].+$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT)))
+	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+$(OUT_README)[*])
 	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
 	$(call $(TESTING)-find,Creating.+$(OUT_LICENSE).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+[*].$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,$(NOTHING).+$(CONFIGS)-$(TARGETS))
+	$(call $(TESTING)-count,1,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
 
 ########################################
 ### {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
@@ -9786,7 +9801,6 @@ $(TESTING)-other:
 		Miscellaneous test cases ,\
 		\n\t * Check binary files \
 		\n\t * Repository versions variables \
-		\n\t * Use '$(_C).$(TARGETS)$(_D)' in '$(_C)COMPOSER_TARGETS$(_D)' \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -9811,9 +9825,6 @@ $(TESTING)-other-init:
 	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
-	#> targets
-	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(DOITALL)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
@@ -9843,8 +9854,6 @@ $(TESTING)-other-done:
 	$(call $(TESTING)-count,20,$(NOTHING))
 	$(call $(TESTING)-count,5,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
-	#> targets
-	$(call $(TESTING)-count,3,MAKECMDGOALS.+$(COMPOSER_PANDOC))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -10219,9 +10228,9 @@ else
 	@$(MAKE) $(NOTHING)-$(EXPORTS)
 endif
 
+#>		[ -n "$(_EXPORT_DIRECTORY)" ] ||
 override define $(EXPORTS)-$(CONFIGS) =
 	if	[ "$(COMPOSER_EXPORT)" != "$(COMPOSER_EXPORT_DEFAULT)" ] || \
-		[ -n "$(_EXPORT_DIRECTORY)" ] || \
 		[ -n "$(_EXPORT_GIT_REPO)" ] || \
 		[ -n "$(_EXPORT_GIT_BRANCH)" ] || \
 		[ -n "$(1)" ]; \
@@ -10544,6 +10553,10 @@ endef
 ########################################
 #### {{{4 $(PUBLISH)-$(TARGETS)-contents
 
+#>			LIST_TXT="$${TXT}"; \
+#>			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then \
+#>				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
+#>			fi
 override define $(PUBLISH)-$(TARGETS)-contents =
 	FILE="$$( \
 		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
@@ -10628,10 +10641,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"		>>$(1).contents-list; \
 			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-list; \
 			fi; \
-			LIST_TXT="$${TXT}"; \
-			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then \
-				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
-			fi; \
+			LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
 			$(ECHO) " [$${LIST_TXT}](#$${LNK})"					>>$(1).contents-list; \
 			$(ECHO) "\n"								>>$(1).contents-list; \
 			$(ECHO) " list" $($(DEBUGIT)-output); \
@@ -11205,7 +11215,7 @@ override define $(PUBLISH)-library-digest-create =
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
-				| $(PANDOC_JSON_TO_TEXT) \
+				| $(PANDOC_JSON_TO_LINT) \
 				; \
 		fi; \
 		SIZ="$$( \
@@ -11213,7 +11223,7 @@ override define $(PUBLISH)-library-digest-create =
 				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
-				| $(PANDOC_JSON_TO_TEXT) \
+				| $(PANDOC_JSON_TO_LINT) \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
 				| $(WC_CHAR) \
@@ -11601,6 +11611,10 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
 
+#WORKING:NOW:NOW:FIX
+#	$(CONFIGS)-yml
+#	switch to $(COMPOSER_TINY)-* helpers?
+#		add cp, ln, etc.
 #WORKING:NOW:NOW
 #	so, sitemap rebuild works on _site, but not on configs when running from outside the configs tree...
 #		how do we feel about this, as expected behavior?
