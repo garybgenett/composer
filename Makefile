@@ -1359,14 +1359,14 @@ override PANDOC_OPTIONS			= $(strip \
 	$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).header),	--include-in-header="$(COMPOSER_CUSTOM)-$(c_type).header") \
 	\
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
-						--include-in-header="$(patsubst %.js,%.pre.js,$(BOOTSTRAP_ART_JS))" \
+						--include-in-header="$(patsubst %.js,%-pre.js,$(BOOTSTRAP_ART_JS))" \
 		$(if $(call c_css_select),	--include-in-header="$(BOOTSTRAP_ART_JS)" ,\
 						--include-in-header="$(BOOTSTRAP_DEF_JS)" \
-		)				--include-in-header="$(patsubst %.js,%.post.js,$(BOOTSTRAP_ART_JS))" \
-						--css="$(patsubst %.css,%.pre.css,$(BOOTSTRAP_ART_CSS))" \
+		)				--include-in-header="$(patsubst %.js,%-post.js,$(BOOTSTRAP_ART_JS))" \
+						--css="$(patsubst %.css,%-pre.css,$(BOOTSTRAP_ART_CSS))" \
 		$(if $(call c_css_select),	--css="$(BOOTSTRAP_ART_CSS)" ,\
 						--css="$(BOOTSTRAP_DEF_CSS)" \
-		)				--css="$(patsubst %.css,%.post.css,$(BOOTSTRAP_ART_CSS))" \
+		)				--css="$(patsubst %.css,%-post.css,$(BOOTSTRAP_ART_CSS))" \
 	) \
 	$(if $(call c_css_select),\
 		$(if $(or \
@@ -7266,7 +7266,8 @@ endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK =
 	$(SED) -i \
-		-e "/^a.href.=/,/^}/d"
+		-e "/^a.href.=/,/^}/d" \
+		-e "/^.+table-layout[:]/d"
 endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
@@ -8698,10 +8699,10 @@ endif
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_HTML).css $($(DEBUGIT)-output)
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
 	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.pre.js,$(BOOTSTRAP_ART_JS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%.post.js,$(BOOTSTRAP_ART_JS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.pre.css,$(BOOTSTRAP_ART_CSS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%.post.css,$(BOOTSTRAP_ART_CSS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%-pre.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%-post.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%-pre.css,$(BOOTSTRAP_ART_CSS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%-post.css,$(BOOTSTRAP_ART_CSS)))
 	@$(LN) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
 	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
 	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
@@ -10369,8 +10370,15 @@ $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
+
+#WORK document?
+.PHONY: $(PUBLISH)-post
+$(PUBLISH)-post:
+	@$(ECHO) ""
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
+ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
 	@$(MAKE) c_site="1" $(PUBLISH)-sitemap="$(DOFORCE)" $(PUBLISH)-library
+endif
 endif
 
 ########################################
@@ -11616,15 +11624,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
 
-#WORKING:NOW:NOW:FIX
-#	switch to $(COMPOSER_TINY)-* helpers?
-#		add cp, ln, etc.
 #WORKING:NOW:NOW
-#	so, sitemap rebuild works on _site, but not on configs when running from outside the configs tree...
-#		how do we feel about this, as expected behavior?
-#		probably need to finally move the site-sitemap site-library call to the end of $(DOITALL)
-#			ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
-#	fix water.css so that tables aren't always 50%/50%...?
 #	remove c_list_plus... we're not going to bring it back, at this point...
 #	make error on first run with empty library...
 #		config-COMPOSER_IGNORES / config-COMPOSER_EXPORTS
@@ -11640,6 +11640,8 @@ endif
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
+#	switch to $(COMPOSER_TINY)-* helpers?
+#		add cp, ln, etc.
 #	notes
 #		worth noting that two site-force in a row will trigger two builds...
 #			first pass
@@ -11849,6 +11851,9 @@ ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
 	@$(MAKE) $(DOITALL)-$(SUBDIRS)
 endif
+endif
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
+	@$(MAKE) $(PUBLISH)-post
 endif
 
 #WORK document!
