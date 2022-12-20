@@ -11607,30 +11607,17 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
-#	make error on first run with empty library...
-#		config-COMPOSER_IGNORES / config-COMPOSER_EXPORTS
-#		need to make sure the makefile is in place before allowing sitemap to run...
 #	site
 #		add in COMPOSER_IGNORES to hide main/digest files, just like for personal site...
 #		test full run with _site as +site instead, just to see...
 #			basically, test/validate SED_ESCAPE_LIST everywhere...
-#		add author/date/tags to test pages, and/or promote $(PUBLISH_SOURCE).$(EXTN_HTML)
-#			behavior can be strange when there are no authors/tags... it can leave dangling text... anything?
-#			isn't this already done...?
+#		add author/date/tags to test pages...
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
 #	switch to $(COMPOSER_TINY)-* helpers?
 #		add cp, ln, etc.
-#	notes
-#		worth noting that two site-force in a row will trigger two builds...
-#			first pass
-#				the first will skip sitemap until the end
-#				sitemap will update site-library
-#			second pass
-#				site-cache is older than site-library
-#				site-cache triggers *.html
 
 ########################################
 ## {{{2 $(INSTALL) ---------------------
