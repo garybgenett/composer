@@ -221,7 +221,7 @@ override COMPOSER_LIBRARY		:=
 override EXPORTS			:= export
 override PUBLISH			:= site
 
-override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/.$(COMPOSER_BASENAME).$(EXPORTS)
+override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/$(COMPOSER_BASENAME).$(EXPORTS)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
@@ -11341,7 +11341,6 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
 	@$(RM) --recursive			$(PUBLISH_ROOT)/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
-	@$(MKDIR)				$(PUBLISH_ROOT)/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) --directory			$(PUBLISH_ROOT) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
 	@$(MKDIR) \
