@@ -9625,7 +9625,7 @@ $(TESTING)-COMPOSER_EXPORTS-init:
 
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-done
 $(TESTING)-COMPOSER_EXPORTS-done:
-	$(call $(TESTING)-count,12,$(MARKER).+$(EXPORTS))
+	$(call $(TESTING)-count,12,$(MARKER) $(EXPORTS))
 	$(call $(TESTING)-count,1,deleting)
 	$(call $(TESTING)-count,6,Removing)
 	$(call $(TESTING)-find,\+\+\+.+$(OUT_README).$(EXTN_DEFAULT))
@@ -9804,6 +9804,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
@@ -9831,7 +9832,7 @@ $(TESTING)-other-done:
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
 	$(call $(TESTING)-count,20,$(NOTHING))
-	$(call $(TESTING)-count,5,$(notdir $(PANDOC_BIN)))
+	$(call $(TESTING)-count,3,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
