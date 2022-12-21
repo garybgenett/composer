@@ -167,7 +167,7 @@ override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
 override MARKER				:= >>
 override DIVIDE				:= ::
-override TOKEN				:= ~^~
+override TOKEN				:= ~---~
 override NULL				:=
 
 override define NEWLINE =
@@ -2073,11 +2073,17 @@ endif
 
 #> update: $(HEADERS)-$(EXAMPLE)
 
-#WORK document!
-#WORK test? = yes.
-#WORK also document command variables?  maybe another "reserved"-style section that parses them out?
-#WORK DO_HEREDOC
-#WORK $($(DEBUGIT)-output)
+#WORK
+#	switch to $(COMPOSER_TINY)-* helpers?
+#		add cp, ln, etc.
+#	document!
+#	use "+" to maintain MAKEJOBS...
+#	test? = yes.
+#	also document command variables?  maybe another "reserved"-style section that parses them out?
+#		$(SED), $(PRINT), etc., etc.
+#		colors?  $(_F), etc.
+#	DO_HEREDOC
+#	$($(DEBUGIT)-output)
 
 override define $(COMPOSER_TINYNAME)-note =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),note,$(@))
@@ -2090,7 +2096,7 @@ endef
 #WORK would be nice to verify that doing $$(MAKE) instead of just $(MAKE) preserves @+/MAKEJOBS...
 override define $(COMPOSER_TINYNAME)-make =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),$(notdir $(MAKE)),$(@)); \
-	$$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(1)
+	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(1)
 endef
 
 override define $(COMPOSER_TINYNAME)-mkdir =
@@ -2977,6 +2983,8 @@ endef
 #		$(_C)[COMPOSER_PKG]$(_D)
 #		$(_C)[COMPOSER_ART]$(_D)
 #		$(_C)[PANDOC_DATA]$(_D)
+#		other?
+#			$(_C)[DATEMARK]$(_D)
 
 #WORK
 #	add a list of the formats here...
@@ -8666,7 +8674,7 @@ endif
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/[$(TOKEN)]{3}$$/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
@@ -11158,9 +11166,9 @@ $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
-	@TOKEN="$$($(ECHO) "$(TOKEN)" | $(SED) "s|(.)|\\\\\1|g")"; \
-		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\1|g")"; \
-		NAME="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$${TOKEN}(.+)$$|\2|g")"; \
+	@\
+		TYPE="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")"; \
+		NAME="$$($(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")"; \
 		{	$(ECHO) "---\n"; \
 			$(ECHO) "pagetitle: \"$$( \
 					if [ "$${TYPE}" = "titles" ]; then	$(ECHO) "Title"; \
@@ -11209,16 +11217,20 @@ override define $(PUBLISH)-library-digest-create =
 	do \
 		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
 			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
+				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
+				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 				| $(PANDOC_JSON_TO_LINT) \
 				; \
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
 				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
+				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
+				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 				| $(PANDOC_JSON_TO_LINT) \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
@@ -11303,7 +11315,6 @@ $($(PUBLISH)-library-sitemap-src):
 						$(ECHO) "$${FILE}" \
 						| $(SED) \
 							-e "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g" \
-							-e "s|^$(COMPOSER_ROOT)/||g" \
 							-e "s|$(subst .,[.],$(COMPOSER_EXT))$$|.$(EXTN_HTML)|g" \
 					)) | " \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
@@ -11527,7 +11538,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/[$(TOKEN)]{3}$$/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
@@ -11616,8 +11627,6 @@ endif
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
-#	switch to $(COMPOSER_TINY)-* helpers?
-#		add cp, ln, etc.
 
 ########################################
 ## {{{2 $(INSTALL) ---------------------
