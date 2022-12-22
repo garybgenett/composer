@@ -308,7 +308,7 @@ override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
 override PUBLISH_METAINFO_NULL		:= *(none)*
-override PUBLISH_METAINFO_NULL_ALT	:= *(null)*
+override PUBLISH_METAINFO_NULL_ALT	:= null
 override PUBLISH_METAINFO		:= <D> $(DIVIDE) <T><|> -- <A|; >
 override PUBLISH_METAINFO_ALT		:= <T>$(HTML_SPACE)$(HTML_SPACE)*(<D>)*<|><br>*-- <A| -- >*<br>*. <G| . >*
 #>override PUBLISH_CONTENTS		:=
