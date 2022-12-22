@@ -215,6 +215,8 @@ override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),
 ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
+
+override COMPOSER_LIBRARY_ROOT		:=
 override COMPOSER_LIBRARY		:=
 
 #> update: includes duplicates
@@ -305,7 +307,9 @@ override PUBLISH_COLS_RESIZE_R_ALT_MOD	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
-override PUBLISH_METAINFO		:= <D> $(DIVIDE) <T><|> -- <A|;>
+override PUBLISH_METAINFO_NULL		:= *(none)*
+override PUBLISH_METAINFO_NULL_ALT	:= *(null)*
+override PUBLISH_METAINFO		:= <D> $(DIVIDE) <T><|> -- <A|; >
 override PUBLISH_METAINFO_ALT		:= <T>$(HTML_SPACE)$(HTML_SPACE)*(<D>)*<|><br>*-- <A| -- >*<br>*. <G| . >*
 #>override PUBLISH_CONTENTS		:=
 #>override PUBLISH_CONTENTS_ALT		:=
@@ -1769,6 +1773,7 @@ override define COMPOSER_YML_DATA_SKEL =
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
 
+    metainfo_null:			"$(PUBLISH_METAINFO_NULL)",
     metainfo:				"$(PUBLISH_METAINFO)",
     creators:				"$(PUBLISH_CREATORS)",
     tagslist:				"$(PUBLISH_TAGSLIST)",
@@ -1843,7 +1848,6 @@ override $(PUBLISH)-caches := \
 ########################################
 
 ifneq ($(COMPOSER_YML_LIST),)
-override COMPOSER_LIBRARY_YML		:=
 override COMPOSER_LIBRARY_DIR		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_TREE)),\
 $(if $(wildcard $(FILE)),\
@@ -1852,14 +1856,15 @@ $(if $(wildcard $(FILE)),\
 		| $(SED) "/^null$$/d" \
 	)) \
 	$(if $(COMPOSER_LIBRARY_DIR),\
-		$(eval override COMPOSER_LIBRARY_YML := $(FILE)) \
-		$(eval override COMPOSER_LIBRARY := $(abspath $(dir $(FILE)))/$(notdir $(COMPOSER_LIBRARY_DIR))) \
+		$(eval override COMPOSER_LIBRARY_ROOT	:= $(abspath $(dir $(FILE)))) \
+		$(eval override COMPOSER_LIBRARY	:= $(COMPOSER_LIBRARY_ROOT)/$(notdir $(COMPOSER_LIBRARY_DIR))) \
 	) \
 ))
 endif
 
-ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_DIR))
-override COMPOSER_LIBRARY		:= $(COMPOSER_ROOT)/$(notdir $(COMPOSER_LIBRARY))
+ifeq ($(COMPOSER_LIBRARY_ROOT),$(COMPOSER_DIR))
+override COMPOSER_LIBRARY_ROOT		:= $(COMPOSER_ROOT)
+override COMPOSER_LIBRARY		:= $(COMPOSER_LIBRARY_ROOT)/$(notdir $(COMPOSER_LIBRARY))
 endif
 
 override $(PUBLISH)-library		:= $(COMPOSER_LIBRARY)/$(PUBLISH)-library
@@ -1878,10 +1883,10 @@ override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),
 endif
 
 ifneq ($(COMPOSER_YML_LIST),)
-ifneq ($(COMPOSER_LIBRARY_YML),)
+ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
-ifneq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) $(CONFIGS)-COMPOSER_YML_LIST),library))
+ifneq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY_ROOT) $(CONFIGS)-COMPOSER_YML_LIST),library))
 endif
 endif
 endif
@@ -4017,21 +4022,22 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Default Configuration $(PUBLISH_CMD_
 
 | $(PUBLISH)-config | defaults
 |:---|:---|
-| header       | `$(PUBLISH_HEADER)`
-| footer       | `$(PUBLISH_FOOTER)`
-| css_shade    | `$(PUBLISH_CSS_SHADE)`
-| copy_protect | `$(PUBLISH_COPY_PROTECT)`
-| cols_break   | `$(PUBLISH_COLS_BREAK)`
-| cols_sticky  | `$(PUBLISH_COLS_STICKY)`
-| cols_order   | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
-| cols_reorder | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
-| cols_size    | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
-| cols_resize  | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
-| metainfo     | `$(PUBLISH_METAINFO)`
-| creators     | `$(PUBLISH_CREATORS)`
-| tagslist     | `$(PUBLISH_TAGSLIST)`
-| readtime     | `$(PUBLISH_READTIME)`
-| readtime_wpm | `$(PUBLISH_READTIME_WPM)`
+| header        | `$(PUBLISH_HEADER)`
+| footer        | `$(PUBLISH_FOOTER)`
+| css_shade     | `$(PUBLISH_CSS_SHADE)`
+| copy_protect  | `$(PUBLISH_COPY_PROTECT)`
+| cols_break    | `$(PUBLISH_COLS_BREAK)`
+| cols_sticky   | `$(PUBLISH_COLS_STICKY)`
+| cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
+| cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
+| cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
+| cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
+| metainfo_null | `$(PUBLISH_METAINFO_NULL)`
+| metainfo      | `$(PUBLISH_METAINFO)`
+| creators      | `$(PUBLISH_CREATORS)`
+| tagslist      | `$(PUBLISH_TAGSLIST)`
+| readtime      | `$(PUBLISH_READTIME)`
+| readtime_wpm  | `$(PUBLISH_READTIME_WPM)`
 
 | $(PUBLISH)-library | defaults
 |:---|:---|
@@ -4098,21 +4104,22 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Configuration Settings $(PUBLISH_CMD
 
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
-| header       | `$(PUBLISH_HEADER)`       | `$(PUBLISH_HEADER_ALT)`
-| footer       | `$(PUBLISH_FOOTER)`       | `$(PUBLISH_FOOTER_ALT)`
-| css_shade    | `$(PUBLISH_CSS_SHADE)`    | `$(PUBLISH_CSS_SHADE_ALT)`
-| copy_protect | `$(PUBLISH_COPY_PROTECT)` | `$(PUBLISH_COPY_PROTECT_ALT)`
-| cols_break   | `$(PUBLISH_COLS_BREAK)`   | `$(PUBLISH_COLS_BREAK_ALT)`
-| cols_sticky  | `$(PUBLISH_COLS_STICKY)`  | `$(PUBLISH_COLS_STICKY_ALT)`
-| cols_order   | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`       | `[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]`
-| cols_reorder | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]` | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
-| cols_size    | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`          | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
-| cols_resize  | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`    | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
-| metainfo     | `$(PUBLISH_METAINFO)`     | `$(PUBLISH_METAINFO_ALT)`
-| creators     | `$(PUBLISH_CREATORS)`     | `$(PUBLISH_CREATORS_ALT)`
-| tagslist     | `$(PUBLISH_TAGSLIST)`     | `$(PUBLISH_TAGSLIST_ALT)`
-| readtime     | `$(PUBLISH_READTIME)`     | `$(PUBLISH_READTIME_ALT)`
-| readtime_wpm | `$(PUBLISH_READTIME_WPM)` | $(PUBLISH_READTIME_WPM_ALT)
+| header        | `$(PUBLISH_HEADER)`        | `$(PUBLISH_HEADER_ALT)`
+| footer        | `$(PUBLISH_FOOTER)`        | `$(PUBLISH_FOOTER_ALT)`
+| css_shade     | `$(PUBLISH_CSS_SHADE)`     | `$(PUBLISH_CSS_SHADE_ALT)`
+| copy_protect  | `$(PUBLISH_COPY_PROTECT)`  | `$(PUBLISH_COPY_PROTECT_ALT)`
+| cols_break    | `$(PUBLISH_COLS_BREAK)`    | `$(PUBLISH_COLS_BREAK_ALT)`
+| cols_sticky   | `$(PUBLISH_COLS_STICKY)`   | `$(PUBLISH_COLS_STICKY_ALT)`
+| cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`       | `[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]`
+| cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]` | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
+| cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`          | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
+| cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`    | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
+| metainfo_null | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
+| metainfo      | `$(PUBLISH_METAINFO)`      | `$(PUBLISH_METAINFO_ALT)`
+| creators      | `$(PUBLISH_CREATORS)`      | `$(PUBLISH_CREATORS_ALT)`
+| tagslist      | `$(PUBLISH_TAGSLIST)`      | `$(PUBLISH_TAGSLIST_ALT)`
+| readtime      | `$(PUBLISH_READTIME)`      | `$(PUBLISH_READTIME_ALT)`
+| readtime_wpm  | `$(PUBLISH_READTIME_WPM)`  | $(PUBLISH_READTIME_WPM_ALT)
 
 | $(PUBLISH)-library | defaults | values
 |:---|:---|:---|
@@ -4785,6 +4792,7 @@ $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_R
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)metainfo_null$(_D):			$(_N)"$(_M)$(PUBLISH_METAINFO_NULL)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)metainfo$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)creators$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_CREATORS))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_TAGSLIST))$(_N)"$(_D)
@@ -5091,6 +5099,7 @@ variables:
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
+    metainfo_null:			"$(PUBLISH_METAINFO_NULL_ALT)"
     metainfo:				"$(PUBLISH_METAINFO_ALT)"
     creators:				"$(PUBLISH_CREATORS_ALT)"
     tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
@@ -5466,11 +5475,16 @@ function $(PUBLISH)-metainfo-block {
 		$${ECHO} "tags:\\n";	if [ -n "$${TAGS}" ]; then $${ECHO} "  - \"$${TAGS}\"\\n"	| $${SED} "s|[;][ ]|\"\\n  - \"|g"; fi
 		$${ECHO} "---\\n"
 	else
+		NULL_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo_null)"
 		META_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo)"
 		AUTH_SEP="$$($${ECHO} "$${META_TXT}" | $${SED} -n "s|^.*<A[|]([^>]*)>.*$$|\\1|gp")"
 		TAGS_SEP="$$($${ECHO} "$${META_TXT}" | $${SED} -n "s|^.*<G[|]([^>]*)>.*$$|\\1|gp")"
 		if [ -z "$${AUTH_SEP}" ]; then AUTH_SEP=" "; fi
 		if [ -z "$${TAGS_SEP}" ]; then TAGS_SEP=" "; fi
+		if [ -z "$${TITL}" ]; then TITL="$${NULL_TXT}"; fi
+		if [ -z "$${AUTH}" ]; then AUTH="$${NULL_TXT}"; fi
+		if [ -z "$${DATE}" ]; then DATE="$${NULL_TXT}"; fi
+		if [ -z "$${TAGS}" ]; then TAGS="$${NULL_TXT}"; fi
 		$${ECHO} "$${META_TXT}" \\
 			| $${SED} \\
 				-e "s|<T>|$${TITL}|g" \\
@@ -10367,7 +10381,7 @@ $(PUBLISH):
 $(PUBLISH)-post:
 	@$(ECHO) ""
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-ifeq ($(abspath $(dir $(COMPOSER_LIBRARY))),$(CURDIR))
+ifeq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
 	@$(MAKE) c_site="1" $(PUBLISH)-sitemap="$(DOFORCE)" $(PUBLISH)-library
 endif
 endif
@@ -10385,9 +10399,9 @@ $(PUBLISH)-$(CLEANER): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(PUBLISH)-$(CLEANER):
 	@if	[ -n "$(COMPOSER_LIBRARY)" ] && \
 		[ -d "$(COMPOSER_LIBRARY)" ] && \
-		[ "$(abspath $(dir $(COMPOSER_LIBRARY)))" = "$(CURDIR)" ]; \
+		[ "$(COMPOSER_LIBRARY_ROOT)" = "$(CURDIR)" ]; \
 	then \
-		$(call $(HEADERS)-rm,$(abspath $(dir $(COMPOSER_LIBRARY))),$(notdir $(COMPOSER_LIBRARY))); \
+		$(call $(HEADERS)-rm,$(COMPOSER_LIBRARY_ROOT),$(notdir $(COMPOSER_LIBRARY))); \
 		$(ECHO) "$(_S)"; \
 		$(RM) --recursive $(COMPOSER_LIBRARY) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
@@ -10823,13 +10837,13 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(ECHO) "$(_D)"
 #>	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_SETTINGS))
-	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
+	@$(ENV_MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
-	@$(ENV_MAKE) $(SILENT) --directory $(abspath $(dir $(COMPOSER_LIBRARY))) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
-	@if [ -f "$(abspath $(dir $(COMPOSER_LIBRARY)))/$(COMPOSER_CSS)" ]; then \
+	@$(ENV_MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
+	@if [ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
 		$(ECHO) "$(_E)"; \
-		$(CP) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(COMPOSER_CSS) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
+		$(CP) $(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	elif [ -f "$(COMPOSER_LIBRARY)/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-rm,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
@@ -10887,20 +10901,20 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call $(EXPORTS)-find,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY)) \
-			$$($(call $(EXPORTS)-libraries,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_LIBRARY))) \
+	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY)) \
+			$$($(call $(EXPORTS)-libraries,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY))) \
 			-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 		| while read -r FILE; do \
 			$(ECHO) "$(_D)"; \
 			$(call $(HEADERS)-note,$(@),$$( \
 					$(ECHO) "$${FILE}" \
-					| $(SED) "s|^$(subst /,.,$(abspath $(dir $(COMPOSER_LIBRARY))))/||g" \
+					| $(SED) "s|^$(subst /,.,$(COMPOSER_LIBRARY_ROOT))/||g" \
 				),$(PUBLISH)-metadata); \
 			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 				else				$(ECHO) "$(_N)"; \
 				fi; \
 			$(ECHO) "\"$${FILE}\": " \
-				| $(SED) "s|^([\"])$(abspath $(dir $(COMPOSER_LIBRARY)))/|\1|g" \
+				| $(SED) "s|^([\"])$(COMPOSER_LIBRARY_ROOT)/|\1|g" \
 				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
 			if [ -n "$$( \
 				$(YQ_READ) $${FILE} 2>/dev/null \
@@ -10918,7 +10932,7 @@ $($(PUBLISH)-library-metadata):
 			fi \
 				| $(YQ_WRITE) ". += { \"path\": \"$$( \
 						$(ECHO) "$${FILE}" \
-						| $(SED) "s|^$(abspath $(dir $(COMPOSER_LIBRARY)))/||g" \
+						| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)/||g" \
 					)\" }" 2>/dev/null \
 				| $(YQ_WRITE) ". += { \".updated\": \"$(DATESTAMP)\" }" 2>/dev/null \
 				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
@@ -11206,7 +11220,7 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
-		$(PANDOC_MD_TO_JSON) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
+		$(PANDOC_MD_TO_JSON) $(COMPOSER_LIBRARY_ROOT)/$(2) \
 		| $(YQ_WRITE) ".blocks | length" \
 	)"; \
 	SIZ="0"; BLK="0"; \
@@ -11216,7 +11230,7 @@ override define $(PUBLISH)-library-digest-create =
 		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
 		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
-			$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
+			$(CAT) $(COMPOSER_LIBRARY_ROOT)/$(2) \
 				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
@@ -11226,7 +11240,7 @@ override define $(PUBLISH)-library-digest-create =
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
-				$(CAT) $(abspath $(dir $(COMPOSER_LIBRARY)))/$(2) \
+				$(CAT) $(COMPOSER_LIBRARY_ROOT)/$(2) \
 				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
@@ -11246,7 +11260,7 @@ override define $(PUBLISH)-library-digest-create =
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
 	{	$(ECHO) "[$(subst ",,$(call COMPOSER_YML_DATA_VAL,library.digest_permalink))]"; \
-		$(ECHO) "($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(abspath $(dir $(COMPOSER_LIBRARY))))/"; \
+		$(ECHO) "($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(COMPOSER_LIBRARY_ROOT))/"; \
 		$(ECHO) "$(2)" | $(SED) "s|$(subst .,[.],$(3))$$|.$(EXTN_HTML)|g"; \
 		$(ECHO) ")\n"; \
 	} \
@@ -11285,9 +11299,10 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-group $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
-	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(abspath $(dir $(COMPOSER_LIBRARY))),$(COMPOSER_EXPORT))))
+	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_EXPORT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		shopt -s lastpipe; PRINT=; \
+			METAINFO_NULL="$(call COMPOSER_YML_DATA_VAL,config.metainfo_null)"; \
 			SITEMAP_EXPANDED="$(SPECIAL_VAL)"; if [ -n "$(call COMPOSER_YML_DATA_VAL,library.sitemap_expanded)" ]; then SITEMAP_EXPANDED="."; fi; \
 		eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,,$(TREE),$(FILE))) \
 			| $(SORT) \
@@ -11332,12 +11347,12 @@ $($(PUBLISH)-library-sitemap-src):
 					if [ -L "$${FILE}" ]; then \
 						INFO="$$($(word 1,$(REALPATH)) $${FILE})"; \
 						$(ECHO) "["; \
-						$(ECHO) "$${INFO}" | $(SED) "s|^$(abspath $(dir $(COMPOSER_LIBRARY)))/||g"; \
+						$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)/||g"; \
 						$(ECHO) "]("; \
 						$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g"; \
 						$(ECHO) ")"; \
 					else \
-						$(ECHO) "--"; \
+						$(ECHO) "$${METAINFO_NULL}"; \
 					fi \
 						| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 				fi; \
@@ -11367,6 +11382,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
 	@$(RM) --recursive			$(PUBLISH_ROOT)/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
+	@$(MKDIR)				$(PUBLISH_ROOT)/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) --directory			$(PUBLISH_ROOT) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
 	@$(MKDIR) \
@@ -11445,7 +11461,8 @@ endif
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_YML)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(SED) -i \
-		-e "s|^(.+metainfo[:].*<A)[|][^>]*(.*<G)[|][^>]*(.*)$$|\1\2\3|g" \
+		-e "s|^(.+metainfo[:].*[<]A)[|][^>]*(.*)$$|\1\2|g" \
+		-e "s|^(.+metainfo[:].*[<]G)[|][^>]*(.*)$$|\1\2|g" \
 		-e "s|^(.+creators[:]).*$$|\1|g" \
 		-e "s|^(.+tagslist[:]).*$$|\1|g" \
 		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
