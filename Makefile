@@ -11338,24 +11338,22 @@ $($(PUBLISH)-library-sitemap-src):
 					if	[ "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" != "$${FILE}" ] && \
 						[ -f "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" ]; \
 					then \
-						INFO="$(SPECIAL_VAL)"; \
-						$(PUBLISH_SH_RUN) metainfo-block . . $${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)} \
-							| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
+						INFO="$$($(PUBLISH_SH_RUN) metainfo-block . . $${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)})"; \
 					fi; \
 				) \
-				if [ -z "$${INFO}" ]; then \
-					if [ -L "$${FILE}" ]; then \
-						INFO="$$($(word 1,$(REALPATH)) $${FILE})"; \
-						$(ECHO) "["; \
-						$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)/||g"; \
-						$(ECHO) "]("; \
-						$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g"; \
-						$(ECHO) ")"; \
-					else \
-						$(ECHO) "$${METAINFO_NULL}"; \
-					fi \
-						| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
-				fi; \
+				if [ -n "$${INFO}" ]; then \
+					$(ECHO) "$${INFO}"; \
+				elif [ -L "$${FILE}" ]; then \
+					INFO="$$($(word 1,$(REALPATH)) $${FILE})"; \
+					$(ECHO) "["; \
+					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)/||g"; \
+					$(ECHO) "]("; \
+					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g"; \
+					$(ECHO) ")"; \
+				else \
+					$(ECHO) "$${METAINFO_NULL}"; \
+				fi \
+					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 				$(ECHO) "\n" \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 			done; \
