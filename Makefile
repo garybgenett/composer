@@ -11789,7 +11789,7 @@ override define $(CLEANER)-logs =
 			$(ECHO) "$(_S)"; \
 			$(RM) --recursive $$( \
 					$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null \
-					| $(TAIL) -n+$(COMPOSER_KEEPING) \
+					| $(TAIL) -n+$$($(EXPR) $(COMPOSER_KEEPING) + 1) \
 				) $($(DEBUGIT)-output); \
 		fi; \
 		$(ECHO) "$(_D)"; \
