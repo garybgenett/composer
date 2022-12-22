@@ -11338,11 +11338,16 @@ $($(PUBLISH)-library-sitemap-src):
 					if	[ "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" != "$${FILE}" ] && \
 						[ -f "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" ]; \
 					then \
-						INFO="$$($(PUBLISH_SH_RUN) metainfo-block . . $${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)})"; \
+						INFO="$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}"; \
 					fi; \
 				) \
-				if [ -n "$${INFO}" ]; then \
-					$(ECHO) "$${INFO}"; \
+				if [ -f "$${INFO}" ]; then \
+					INFO="$$($(PUBLISH_SH_RUN) metainfo-block . . $${INFO})"; \
+					if [ -n "$${INFO}" ]; then \
+						$(ECHO) "$${INFO}"; \
+					else \
+						$(ECHO) "$${METAINFO_NULL}"; \
+					fi; \
 				elif [ -L "$${FILE}" ]; then \
 					INFO="$$($(word 1,$(REALPATH)) $${FILE})"; \
 					$(ECHO) "["; \
@@ -11351,7 +11356,7 @@ $($(PUBLISH)-library-sitemap-src):
 					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g"; \
 					$(ECHO) ")"; \
 				else \
-					$(ECHO) "$${METAINFO_NULL}"; \
+					$(ECHO) "--"; \
 				fi \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 				$(ECHO) "\n" \
