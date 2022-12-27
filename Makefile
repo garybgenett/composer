@@ -1980,8 +1980,8 @@ override PUBLISH_FILES := \
 	$(word 4,$(PUBLISH_DIRS))/MANUAL.$(EXTN_HTML) \
 	$(word 5,$(PUBLISH_DIRS))/introduction.$(EXTN_HTML) \
 
-override PUBLISH_INCLUDE		:= $(PUBLISH_INDEX)-digest
-override PUBLISH_INCLUDES		:= $(word 3,$(PUBLISH_DIRS))/$(PUBLISH_INCLUDE)
+override PUBLISH_INCLUDE		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_INDEX)-digest)
+override PUBLISH_INCLUDE_ALT		:= $(word 3,$(PUBLISH_DIRS))/$(notdir $(PUBLISH_INCLUDE))
 override PUBLISH_EXAMPLES		:= $(word 3,$(PUBLISH_DIRS))/examples
 override PUBLISH_PAGES			:= $(word 3,$(PUBLISH_DIRS))/pages
 override PUBLISH_THEMES			:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/themes)
@@ -2006,8 +2006,9 @@ endif
 ########################################
 ## {{{2 Filesystem ---------------------
 
-override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
+override COMPOSER_DOSETUP_DIR		:= $(CURDIR)/.$(COMPOSER_BASENAME)
 
+override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
 ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
 override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT))$(if $(COMPOSER_IGNORES), $(COMPOSER_IGNORES))
 endif
@@ -3758,10 +3759,7 @@ override define PUBLISH_EXAMPLE_PAGE =
 title: Main Page
 author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
-tags:
-  - Tag 0
-  - Tag 1
-  - Tag 2
+tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 
@@ -4002,7 +4000,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
   * [$(PUBLISH_INCLUDE).$(EXTN_HTML)]($(PUBLISH_INCLUDE).$(EXTN_HTML)) *([$(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)]($(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)))*
     * Automatically generated digest page
     * Default settings, with example page elements
-  * [$(PUBLISH_INCLUDES).$(EXTN_HTML)]($(PUBLISH_INCLUDES).$(EXTN_HTML)) *([$(PUBLISH_INCLUDES)$(COMPOSER_EXT_DEFAULT)]($(PUBLISH_INCLUDES)$(COMPOSER_EXT_DEFAULT)))*
+  * [$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)]($(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)) *([$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)]($(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)))*
     * Automatically generated digest page
     * All settings modified
   * [$(word 1,$(PUBLISH_FILES))]($(word 1,$(PUBLISH_FILES))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES)))))*
@@ -4029,7 +4027,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
   * [Default Site]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
   * [Configured Site]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
   * [Default Digest Page]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
-  * [Configured Digest Page]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDES).$(EXTN_HTML))
+  * [Configured Digest Page]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
   * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
   * [Configured Markdown File]($(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES)))
   * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES).$(EXTN_HTML))
@@ -4096,6 +4094,7 @@ override define PUBLISH_NOTHING_PAGE =
 title: Empty Configuration
 author: $(COMPOSER_COMPOSER)
 date: 1970-01-01
+tags: [Main]
 ---
 This is a default page, where all menus and settings are empty.  All aspects of `c_site` pages are configurable using `$(COMPOSER_YML)` files.
 
@@ -4114,10 +4113,7 @@ author:
   - Author 2
   - Author 3
 date: $(DATEMARK)
-tags:
-  - Tag 0
-  - Tag 1
-  - Tag 2
+tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:NOW $(PUBLISH_CMD_END)
 
@@ -4172,9 +4168,10 @@ endef
 
 override define PUBLISH_INCLUDE_PAGE =
 ---
-title: Latest Updates
+title: $(LIBRARY_DIGEST_TITLE)
 author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
+tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
 #WORKING
@@ -4187,11 +4184,12 @@ endef
 ########################################
 ### {{{3 $(PUBLISH) Include: Digest (Config)
 
-override define PUBLISH_INCLUDES_PAGE =
+override define PUBLISH_INCLUDE_PAGE_ALT =
 ---
-title: Digest
+title: $(LIBRARY_DIGEST_TITLE_ALT)
 author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
+tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
 #WORKING
@@ -4230,7 +4228,7 @@ override define PUBLISH_FEATURES_PAGE =
 title: Site Features Page
 author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
-tags: None
+tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Elements $(PUBLISH_CMD_END)
 
@@ -4573,7 +4571,11 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
-$(PUBLISH_INCLUDE).$(EXTN_HTML): $(LIBRARY_FOLDER_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
+override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT)
+
+########################################
+
+$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML): $$(COMPOSER_ROOT)/$(LIBRARY_FOLDER_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
 
 ################################################################################
 endif
@@ -4612,7 +4614,11 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS =
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
-$(PUBLISH_INCLUDE).$(EXTN_HTML): $(LIBRARY_FOLDER_ALT)-$(CONFIGS)/$(notdir $($(PUBLISH)-library-digest-src))
+override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE_ALT))$(COMPOSER_EXT_DEFAULT)
+
+########################################
+
+$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML): $$(COMPOSER_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
 
 ################################################################################
 endif
@@ -4704,9 +4710,10 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES =
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
-override MAKEJOBS :=
-override COMPOSER_TARGETS := $(PUBLISH_INDEX).$(EXTN_HTML)
-override COMPOSER_IGNORES := $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+override MAKEJOBS			:=
+
+override COMPOSER_TARGETS		:= $(PUBLISH_INDEX).$(EXTN_HTML)
+override COMPOSER_IGNORES		:= $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 
 ################################################################################
 
@@ -4859,7 +4866,7 @@ $(_S)########################################$(_D)
           - $(_M)Configured Site$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES))$(_D)
         - $(_M)Default Digest Page$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
-          - $(_M)Configured Digest Page$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDES).$(EXTN_HTML)$(_D)
+          - $(_M)Configured Digest Page$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
         - $(_M)Default Markdown File$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES))$(_D)
           - $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES))$(_D)
@@ -10102,17 +10109,15 @@ endef
 ########################################
 ## {{{2 $(DOSETUP) ---------------------
 
-override $(DOSETUP)-dir			:= $(CURDIR)/.$(COMPOSER_BASENAME)
-
 .PHONY: $(DOSETUP)
 $(DOSETUP): .set_title-$(DOSETUP)
 $(DOSETUP):
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) $($(DOSETUP)-dir)
+	@$(MKDIR) $(COMPOSER_DOSETUP_DIR)
 ifeq ($(COMPOSER_DOITALL_$(DOSETUP)),$(DOFORCE))
 	@$(foreach FILE,$(shell \
-			$(FIND) $($(DOSETUP)-dir) -mindepth 1 -maxdepth 1 -type l 2>/dev/null \
+			$(FIND) $(COMPOSER_DOSETUP_DIR) -mindepth 1 -maxdepth 1 -type l 2>/dev/null \
 			| $(SORT) \
 		),\
 		$(RM) $(FILE); \
@@ -10135,26 +10140,26 @@ endif
 		$(MDTHEMES_DIR) \
 		$(REVEALJS_DIR) \
 		,\
-		if [ ! -e "$($(DOSETUP)-dir)/$(notdir $(FILE))" ]; then \
+		if [ ! -e "$(COMPOSER_DOSETUP_DIR)/$(notdir $(FILE))" ]; then \
 			$(ECHO) "$(_E)"; \
-			$(LN) $(FILE) $($(DOSETUP)-dir)/$(notdir $(FILE)); \
+			$(LN) $(FILE) $(COMPOSER_DOSETUP_DIR)/$(notdir $(FILE)); \
 			$(ECHO) "$(_D)"; \
 		fi; \
 		$(call NEWLINE) \
 	)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$($(DOSETUP)-dir)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP)))); \
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER_DOSETUP_DIR)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP)))); \
 		$(ECHO) "$(_M)"; \
 		$(CAT) $(CURDIR)/Makefile | $(SED) "/^$$/d"; \
 		$(ECHO) "$(_D)"
 	@if [ ! -e "$(CURDIR)/.gitignore" ]; then \
 		$(ECHO) "$(_E)"; \
-		$(CP) $($(DOSETUP)-dir)/.gitignore $(CURDIR)/.gitignore; \
+		$(CP) $(COMPOSER_DOSETUP_DIR)/.gitignore $(CURDIR)/.gitignore; \
 		$(ECHO) "$(_D)"; \
 	fi; \
 		$(ECHO) "$(_C)"; \
-		$(DIFF) $($(DOSETUP)-dir)/.gitignore $(CURDIR)/.gitignore 2>/dev/null || $(TRUE); \
+		$(DIFF) $(COMPOSER_DOSETUP_DIR)/.gitignore $(CURDIR)/.gitignore 2>/dev/null || $(TRUE); \
 		$(ECHO) "$(_D)"
-	@$(LS) $($(DOSETUP)-dir)
+	@$(LS) $(COMPOSER_DOSETUP_DIR)
 
 ########################################
 ## {{{2 $(CONVICT) ---------------------
@@ -11619,7 +11624,7 @@ endif
 	@$(call DO_HEREDOC,PUBLISH_NOTHING_PAGE)					>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$(PUBLISH_FILES)))
 	@$(call DO_HEREDOC,PUBLISH_CONFIGS_PAGE)					>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))
 	@$(call DO_HEREDOC,PUBLISH_INCLUDE_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,PUBLISH_INCLUDES_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDES)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,PUBLISH_INCLUDE_PAGE_ALT)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,PUBLISH_HEADER_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_FOOTER_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-footer$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_FEATURES_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-features$(COMPOSER_EXT_SPECIAL)
@@ -11739,7 +11744,7 @@ endif
 		$(word 4,$(PUBLISH_FILES)) \
 		$(word 5,$(PUBLISH_FILES)) \
 		$(PUBLISH_INCLUDE).$(EXTN_HTML) \
-		$(PUBLISH_INCLUDES).$(EXTN_HTML) \
+		$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
 		$(PUBLISH_EXAMPLES).$(EXTN_HTML) \
 		$(PUBLISH_SOURCE).$(EXTN_HTML) \
 		$(PUBLISH_THEMES)/$(DOITALL) \
@@ -11784,8 +11789,6 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		add author/date/tags to test pages...
-#			add in COMPOSER_IGNORES to hide main/digest files, just like for personal site...
 #		test full run with _site as +site instead, just to see...
 #			basically, test/validate SED_ESCAPE_LIST everywhere...
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
