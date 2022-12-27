@@ -344,6 +344,9 @@ override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
 
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
+#WORKING:NOW:NOW:FIX
+#	make this a generic setting for the entire library?
+#	or, another one for digest?  and, rename current to...?
 override LIBRARY_SITEMAP_EXPANDED	:= 1
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 
@@ -1739,8 +1742,10 @@ $(foreach FILE,$(filter-out \
 )
 
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(HEADERS)-$(EXAMPLE),$(DOITALL)))
-$(eval $(call COMPOSER_RESERVED_DOITALL,$(CONFIGS),$(PUBLISH)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CONVICT),$(PRINTER)))
+$(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(patsubst .%,%,$(NOTHING))))
+$(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOITALL)))
+$(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOFORCE)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 
 ########################################
@@ -2337,6 +2342,11 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Recursively create $(_C)[Bootstrap Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Recursively create $(_C)[Bootstrap Websites]$(_D)"
 # $(PUBLISH)-$(CLEANER)
+# $(PUBLISH)-$(PRINTER)
+# $(PUBLISH)-$(PRINTER)-$(NOTHING)
+# $(PUBLISH)-$(PRINTER)-$(DOITALL)
+# $(PUBLISH)-$(PRINTER)-$(DOFORCE)
+# $(PUBLISH)-$(PRINTER)-%
 # $(PUBLISH)-library
 # $(PUBLISH)-$(COMPOSER_SETTINGS)
 # $(PUBLISH)-$(COMPOSER_YML)
@@ -3641,6 +3651,11 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONF
 #WORK $(PUBLISH)-$(DOITALL)
 #WORK $(PUBLISH)-$(DOFORCE)
 # $(PUBLISH)-$(CLEANER)
+# $(PUBLISH)-$(PRINTER)
+# $(PUBLISH)-$(PRINTER)-$(NOTHING)
+# $(PUBLISH)-$(PRINTER)-$(DOITALL)
+# $(PUBLISH)-$(PRINTER)-$(DOFORCE)
+# $(PUBLISH)-$(PRINTER)-%
 # $(PUBLISH)-library
 # $(PUBLISH)-$(COMPOSER_SETTINGS)
 # $(PUBLISH)-$(COMPOSER_YML)
@@ -10011,16 +10026,6 @@ ifneq ($(COMPOSER_YML_LIST),)
 #>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE_OUT) 2>/dev/null
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE_OUT)
 endif
-#WORK document
-ifeq ($(COMPOSER_LIBRARY),$(CURDIR))
-	@$(LINERULE)
-ifneq ($(wildcard $($(PUBLISH)-library-index)),)
-#>	@$(YQ_WRITE_OUT) "del(.\".Composer\") | (.[] |= .null) | (.[] |= sort_by(.))" $($(PUBLISH)-library-index) 2>/dev/null
-	@$(YQ_WRITE_OUT) "del(.\".Composer\") | (.[] |= .null) | (.[] |= sort_by(.))" $($(PUBLISH)-library-index)
-else
-	@$(call $(HEADERS)-note,$(CURDIR),$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-index)),$(NOTHING))
-endif
-endif
 ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
 	@$(LINERULE)
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
@@ -10745,6 +10750,105 @@ override define $(PUBLISH)-$(TARGETS)-readtime-done =
 endef
 
 ########################################
+### {{{3 $(PUBLISH)-$(PRINTER) ---------
+
+#WORK document
+
+.PHONY: $(PUBLISH)-$(PRINTER)-%
+$(PUBLISH)-$(PRINTER)-%:
+	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
+
+.PHONY: $(PUBLISH)-$(PRINTER)
+$(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
+$(PUBLISH)-$(PRINTER): override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
+$(PUBLISH)-$(PRINTER): override METAFILE := $(filter-out $(patsubst .%,%,$(NOTHING)),$(filter-out $(DOITALL),$(filter-out $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))))
+$(PUBLISH)-$(PRINTER): override METATEST := $(if $(METAFILE),(test(\"^$(METAFILE)$$\") or test(\"/$(METAFILE)$$\")),test(\"^$(METACDIR)\"))
+$(PUBLISH)-$(PRINTER):
+	@$(call $(HEADERS))
+ifeq ($(COMPOSER_LIBRARY),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_YML)$(_D) $(MARKER) $(_H)$(PUBLISH)-library.folder,$(NOTHING))
+else ifeq ($(and \
+	$(wildcard $($(PUBLISH)-library-metadata)) ,\
+	$(wildcard $($(PUBLISH)-library-index)) \
+),)
+	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-metadata)),$(NOTHING)))
+	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-index)),$(NOTHING)))
+else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(patsubst .%,%,$(NOTHING)))
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | $(METATEST))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[].[] |= [ (to_entries | .[].value) ] \
+			| .[].[] |= sort_by(.) \
+			| .[] |= .null \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+else ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),)
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | $(METATEST))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[] |= [ (to_entries | .[].key) ] \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
+	@$(ENDOLINE)
+	@$(LINERULE)
+	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))"
+	@$(LINERULE)
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| with_entries(select(.key | $(METATEST))) \
+		" $($(PUBLISH)-library-metadata)
+#>		" $($(PUBLISH)-library-metadata) 2>/dev/null
+	@$(ENDOLINE)
+	@$(LINERULE)
+	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))"
+	@$(LINERULE)
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | $(METATEST))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[].[] |= [ (to_entries | .[].value) ] \
+			| .[].[] |= sort_by(.) \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+endif
+else
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | test(\"^$(METACDIR)[^/]+$$\"))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[] |= [ (to_entries | .[].key) ] \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+	@$(foreach FILE,$(COMPOSER_CONTENTS_EXT),\
+		$(LINERULE); \
+		$(ECHO) "$(_M)$(MARKER) "; \
+		$(LS) --color=none $(FILE); \
+		$(ECHO) "$(_D)"; \
+		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))$(_D)\n"; \
+		$(YQ_WRITE_OUT) " \
+				del(.\".$(COMPOSER_BASENAME)\") \
+				| .\"$(METACDIR)$(FILE)\" \
+				| del(.\"path\") \
+			" $($(PUBLISH)-library-metadata); \
+		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))$(_D)\n"; \
+		$(YQ_WRITE_OUT) " \
+				del(.\".$(COMPOSER_BASENAME)\") \
+				| .[].[] |= with_entries(select(.value | test(\"^$(METACDIR)$(FILE)$$\"))) \
+				| .[].[] |= del(select(length == 0)) \
+				| .[] |= [ (to_entries | .[].key) ] \
+				| .titles |= (to_entries | .[0].value) \
+			" $($(PUBLISH)-library-index); \
+		$(call NEWLINE) \
+	)
+#>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
+#>			" $($(PUBLISH)-library-index) 2>/dev/null;
+	@$(LINERULE)
+endif
+
+########################################
 ### {{{3 $(PUBLISH)-cache --------------
 
 #>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
@@ -10973,6 +11077,7 @@ $($(PUBLISH)-library-index): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-index): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
+	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_INDEX))\n' >$(@).$(PRINTER)
 	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_N)"
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
@@ -10988,7 +11093,6 @@ $($(PUBLISH)-library-index):
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
-	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_INDEX))\n' >$(@).$(PRINTER)
 	@$(ECHO) "$(_F)"
 #>		| $(YQ_WRITE_FILE) "sort_keys(..)" 2>/dev/null
 	@$(YQ_EVAL_FILES) \
@@ -11001,8 +11105,8 @@ $($(PUBLISH)-library-index):
 	@$(ECHO) "$(_D)"
 	@if [ -s "$(@).$(PUBLISH)" ]; then \
 		$(ECHO) "$(_S)"; \
-		$(RM) $(@).$(COMPOSER_BASENAME)	$($(DEBUGIT)-output); \
 		$(RM) $(@).$(PRINTER)		$($(DEBUGIT)-output); \
+		$(RM) $(@).$(COMPOSER_BASENAME)	$($(DEBUGIT)-output); \
 		$(MV) $(@).$(PUBLISH) $(@)	$($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	else \
