@@ -216,8 +216,8 @@ ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
 
-override COMPOSER_LIBRARY_ROOT		:=
-override COMPOSER_LIBRARY		:=
+override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
+override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
 
 #> update: includes duplicates
 override EXPORTS			:= export
@@ -226,8 +226,8 @@ override PUBLISH			:= site
 override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/$(COMPOSER_BASENAME).$(EXPORTS)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
-override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
-override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
+override COMPOSER_LIBRARY_ROOT		:=
+override COMPOSER_LIBRARY		:=
 
 override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
@@ -10182,7 +10182,7 @@ $(CONVICT):
 $(EXPORTS): .set_title-$(EXPORTS)
 $(EXPORTS):
 	@$(call $(HEADERS))
-	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT),$(COMPOSER_EXPORT))))
+	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		$(ENDOLINE); \
 		$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(FILE))"; \
@@ -10277,31 +10277,34 @@ endef
 ### {{{3 $(EXPORTS)-% ------------------
 
 override define $(EXPORTS)-tree =
-	$(call $(EXPORTS)-find,$(1),$(2)) \
+	$(call $(EXPORTS)-find,$(1)) \
 		-o \\\( -type d -print \\\)
 endef
 
+#>					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES
 override define $(EXPORTS)-find =
 	eval $(FIND_ALL) $(1) -regextype sed \
-		\\\( -path $(2) -prune \\\) \
-		-o \\\( -path $(COMPOSER_DIR) -prune \\\) \
+		\\\( -path $(COMPOSER_DIR) -prune \\\) \
 		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
 		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
+		-o \\\( -path $(COMPOSER_EXPORT) -prune \\\) \
+		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
 		$$($(FIND_ALL) $(1) \
-			\( -path $(2) -prune \) \
-			-o \( -path $(COMPOSER_DIR) -prune \) \
+			\( -path $(COMPOSER_DIR) -prune \) \
 			-o \( -path $(COMPOSER_TMP) -prune \) \
 			-o \( -path "*/$(notdir $(COMPOSER_TMP))" -prune \) \
-			-o \( -path "*/$(COMPOSER_SETTINGS)" -print \) \
+			-o \( -path $(COMPOSER_EXPORT) -prune \) \
+			-o \( -path $(COMPOSER_LIBRARY) -prune \) \
+			-o \( -type d -print \) \
 				| while read -r EDIR; do \
-					EDIR="$$($(DIRNAME) $${EDIR})"; \
-					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES \
+					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
 						| $(SORT) \
 						| while read -r EFIL; do \
-							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" -prune \\\)"; \
+							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
 						done; \
 				done \
-		)
+		) \
+		$(if $(2),-o \\\( -path /dev/null -print \\\))
 endef
 
 override define $(EXPORTS)-libraries =
@@ -10792,7 +10795,6 @@ else ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),)
 		" $($(PUBLISH)-library-index)
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
-	@$(ENDOLINE)
 	@$(LINERULE)
 	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))"
 	@$(LINERULE)
@@ -10801,7 +10803,6 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
 			| with_entries(select(.key | $(METATEST))) \
 		" $($(PUBLISH)-library-metadata)
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
-	@$(ENDOLINE)
 	@$(LINERULE)
 	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))"
 	@$(LINERULE)
@@ -10813,6 +10814,22 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
 			| .[].[] |= sort_by(.) \
 		" $($(PUBLISH)-library-index)
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
+	@TREE=; $(call $(EXPORTS)-find,$(CURDIR),\
+			-type f -name \"*$(COMPOSER_EXT)\" \
+		) \
+		| $(SED) "s|^$(CURDIR)/||g" \
+		| $(SORT) \
+		| while read -r FILE; do \
+			if [ -z "$${TREE}" ]; then \
+				TREE="$(SPECIAL_VAL)"; \
+				$(LINERULE); \
+				$(PRINT) "$(_M)$(MARKER) COMPOSER_IGNORES"; \
+				$(LINERULE); \
+				$(ECHO) "$(_N)"; \
+			fi; \
+			$(ECHO) "$${FILE}\n"; \
+		done; \
+		$(ECHO) "$(_D)"
 endif
 else
 	@$(YQ_WRITE_OUT) " \
@@ -10822,7 +10839,7 @@ else
 			| .[] |= [ (to_entries | .[].key) ] \
 		" $($(PUBLISH)-library-index)
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
-	@$(foreach FILE,$(COMPOSER_CONTENTS_EXT),\
+	@$(foreach FILE,$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
 		$(LINERULE); \
 		$(ECHO) "$(_M)$(MARKER) "; \
 		$(LS) --color=none $(FILE); \
@@ -10845,7 +10862,11 @@ else
 	)
 #>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
 #>			" $($(PUBLISH)-library-index) 2>/dev/null;
-	@$(LINERULE)
+	@$(if $(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),$(LINERULE))
+	@$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+		$(PRINT) "$(_N)$(FILE)"; \
+		$(call NEWLINE) \
+	)
 endif
 
 ########################################
@@ -11005,7 +11026,7 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY)) \
+	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT)) \
 			$$($(call $(EXPORTS)-libraries,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY))) \
 			-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 		| while read -r FILE; do \
@@ -11403,7 +11424,7 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-group $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
-	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_EXPORT))))
+	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		shopt -s lastpipe; PRINT=; \
 			METAINFO_NULL="$(call COMPOSER_YML_DATA_VAL,config.metainfo_null)"; \
