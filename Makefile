@@ -13,18 +13,17 @@ override VIM_FOLDING := {{{1
 #		* PANDOC_OPTIONS_ERROR
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
-#			* `make test-dir`
-#			* `make list`
-#			* `make test`
-#		* `make COMPOSER_DEBUGIT="check config targets" debug | less -rX`
-#			* `rm Composer-*.debug-*.txt`
-#			* `make COMPOSER_DEBUGIT="help" debug-file`
-#			* `mv Composer-*.debug-*.txt artifacts/`
+#			* `make _test-dir`
+#			* `make _test-file`
+#		* `make COMPOSER_DEBUGIT="check config targets" _debug | less -rX`
+#			* `rm Composer-*._debug-*.txt`
+#			* `make COMPOSER_DEBUGIT="help" _debug-file`
+#			* `mv Composer-*._debug-*.txt artifacts/`
 #		* `make headers-template-all`
 #			* `make headers-template`
-#			* `make COMPOSER_DEBUGIT="1" c_type="html" headers-template-all`
+#			* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
 #			* `make COMPOSER_DEBUGIT="1" headers-template`
-#		* `make test-targets`
+#		* `make _test-targets`
 #			* README.html.0.0.html
 #			* README.html.1.1.html
 #			* README.html.x.x.html
@@ -49,11 +48,12 @@ override VIM_FOLDING := {{{1
 #				* Mobile
 #				* Text-based
 #			* Pages
-#				* README.site.html (`make docs`)
+#				* README.site.html (`make _setup-all`)
 #				* _site/index.html (`make site-template-all`)
 #				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template-all`)
 #				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template`)
 #				* _site/index.html (`make site-template`)
+#		* `make MAKEJOBS="[X]" _test-speed`
 #	* Prepare
 #		* Update: README.md
 #			* `make COMPOSER_DEBUGIT="1" help-force | less -rX`
@@ -63,7 +63,7 @@ override VIM_FOLDING := {{{1
 #				* Mouse select color handling
 #				* Test all "Reference" links in browser
 #				* Spell check
-#			* `make docs`
+#			* `make _setup-all`
 #				* Screenshot
 #				* Verify
 #				* CSS
@@ -1747,6 +1747,20 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(patsubst .%,%,$(
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOFORCE)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
+
+########################################
+## {{{2 Testing ------------------------
+
+override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
+override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
+override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
+
+override TESTING_MAKEJOBS		:= 8
+override TESTING_ENV_MAKE		:= $(ENV) \
+	MAKEJOBS="1" \
+	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
+	COMPOSER_DEBUGIT= \
+	$(REALMAKE)
 
 ########################################
 ## {{{2 Publish ------------------------
@@ -9001,16 +9015,6 @@ $(TESTING)-$(PRINTER):
 
 ########################################
 ### {{{3 $(TESTING)-functions ----------
-
-override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
-override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
-override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
-override TESTING_MAKEJOBS		:= 8
-override TESTING_ENV_MAKE		:= $(ENV) \
-	MAKEJOBS="1" \
-	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-	COMPOSER_DEBUGIT= \
-	$(REALMAKE)
 
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
