@@ -4713,7 +4713,7 @@ ifneq ($$(COMPOSER_CURDIR),)
 override MAKEJOBS			:=
 
 override COMPOSER_TARGETS		:= $(PUBLISH_INDEX).$(EXTN_HTML)
-override COMPOSER_IGNORES		:= $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+override COMPOSER_IGNORES		:= $(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 
 ################################################################################
 
@@ -11795,6 +11795,9 @@ endif
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
 #		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
+#		main/themes pages
+#			split these, so that the examples are in an include file that main/themes pull in
+#			main should be split into an introduction page and an examples page
 
 ########################################
 ## {{{2 $(INSTALL) ---------------------
