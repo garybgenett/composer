@@ -9445,10 +9445,10 @@ $(TESTING)-speed:
 
 override define $(TESTING)-speed-init =
 	$(MKDIR) $(call $(TESTING)-pwd); \
-	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)		>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
+	$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	for TLD in {1..3}; do \
 		$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
-		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH)	>$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
+		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		for SUB in {1..3}; do \
 			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
 		done; \
