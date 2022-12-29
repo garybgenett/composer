@@ -9615,7 +9615,7 @@ $(TESTING)-$(TARGETS)-init:
 $(TESTING)-$(TARGETS)-done:
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(eval override COUNT := 64) \
-		$(call $(TESTING)-count,$(COUNT),[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
+		$(call $(TESTING)-count,$(COUNT), $(subst /,[/],$(call $(TESTING)-pwd))[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
 		$(call NEWLINE) \
 	)
 #> update: ERROR: TYPE_LPDF
