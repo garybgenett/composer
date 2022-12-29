@@ -8208,18 +8208,10 @@ endef
 ################################################################################
 
 # https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
-#	default	= light gray
-#	header	= light green
-#	core	= cyan
-#	mark	= yellow
-#	note	= red
-#	extra	= magenta
-#	syntax	= dark blue
-
-override SED_ESCAPE_COLOR		:= ........
 
 #>override _D				:= \e[0;37m
 override define COMPOSER_COLOR =
+override SED_ESCAPE_COLOR		:= ........
 override _D				:= \e[0m
 override _H				:= \e[0;32m
 override _C				:= \e[0;36m
@@ -8231,6 +8223,7 @@ override _F				:= \e[41;37m
 endef
 
 override define COMPOSER_NOCOLOR =
+override SED_ESCAPE_COLOR		:=
 override _D				:=
 override _H				:=
 override _C				:=
