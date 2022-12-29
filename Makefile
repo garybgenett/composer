@@ -4510,7 +4510,7 @@ override EXT_ICON_CC			:= iVBORw0KGgoAAAANSUhEUgAAAFgAAAAfCAMAAABUFvrSAAAAIGNIUk
 
 override define DO_HEREDOC =
 	$(if $(2),$(eval $(call COMPOSER_NOCOLOR))) \
-	$(word 1,$(ECHO)) '$(subst ',<Q>,$(subst $(call NEWLINE),<N>,$(call $(1),$(3))))' \
+	$(ECHO) '$(subst ',<Q>,$(subst $(call NEWLINE),<N>,$(call $(1),$(3))))<N>' \
 		| $(SED) \
 			-e "s|<Q>|\'|g" \
 			-e "s|<N>|\\n|g" \
@@ -5400,7 +5400,7 @@ endef
 
 override define HEREDOC_CUSTOM_PUBLISH_SH =
 #!$(BASH)
-# $(patsubst filetype=make,filetype=sh,$(patsubst foldlevel=0,foldlevel=2,$(VIM_OPTIONS)))
+# $(patsubst filetype=make,filetype=sh,$(patsubst foldlevel=0,foldlevel=2,$(subst \,\\,$(VIM_OPTIONS))))
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(notdir $(CUSTOM_PUBLISH_SH))
 ################################################################################
@@ -9031,8 +9031,7 @@ $(DEBUGIT)-file:
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
-	@$(ECHO) "# " >$(DEBUGIT_FILE)
-	@$(call DO_HEREDOC,VIM_OPTIONS) >>$(DEBUGIT_FILE)
+	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(DEBUGIT_FILE)
 	@$(MAKE) \
 		COMPOSER_DOITALL_$(DEBUGIT)="$(COMPOSER_DOITALL_$(DEBUGIT))" \
 		COMPOSER_DOITALL_$(TESTING)="$(DEBUGIT)" \
@@ -9121,8 +9120,7 @@ $(TESTING)-file:
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
-	@$(ECHO) "# " >$(TESTING_FILE)
-	@$(call DO_HEREDOC,VIM_OPTIONS) >>$(TESTING_FILE)
+	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(TESTING_FILE)
 	@$(MAKE) \
 		COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)" \
 		COMPOSER_DOITALL_$(TESTING)="$(COMPOSER_DOITALL_$(TESTING))" \
