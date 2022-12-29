@@ -8476,6 +8476,13 @@ endif
 
 override $(HEADERS)-path-dir		= $(subst $(abspath $(dir $(COMPOSER_DIR))),$(EXPAND),$(1))
 override $(HEADERS)-path-root		= $(subst $(abspath $(dir $(COMPOSER_ROOT))),$(EXPAND),$(1))
+override $(HEADERS)-path-list := \
+	COMPOSER_ROOT \
+	CURDIR \
+	MAKEFILE_LIST \
+	COMPOSER_INCLUDES \
+	COMPOSER_YML_LIST \
+	COMPOSER_LIBRARY \
 
 .PHONY: $(HEADERS)
 $(HEADERS): .set_title-$(HEADERS)
@@ -8541,18 +8548,14 @@ $(HEADERS)-%:
 $(HEADERS)-run-%:
 	@$(call $(HEADERS)-run,,$(*))
 
+#>	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))$(_D)]";
+#>		$(TABLE_C2) "$(_E)$(FILE)"	"[$(_N)$(call $(HEADERS)-path-root,$($(FILE)))$(_D)]";
 override define $(HEADERS) =
 	$(HEADER_L); \
-	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))$(_D)]"; \
+	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(COMPOSER_DIR)$(_D)]"; \
 	$(TABLE_C2) "---"			"---"; \
-	$(foreach FILE,\
-		MAKEFILE_LIST \
-		COMPOSER_INCLUDES \
-		COMPOSER_YML_LIST \
-		COMPOSER_LIBRARY \
-		CURDIR
-		,\
-		$(TABLE_C2) "$(_E)$(FILE)"	"[$(_N)$(call $(HEADERS)-path-root,$($(FILE)))$(_D)]"; \
+	$(foreach FILE,$($(HEADERS)-path-list),\
+		$(TABLE_C2) "$(_E)$(FILE)"	"[$(_N)$(if $(filter COMPOSER_ROOT,$(FILE)),$(COMPOSER_ROOT),$(call $(HEADERS)-path-root,$($(FILE))))$(_D)]"; \
 	) \
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
@@ -8563,18 +8566,14 @@ override define $(HEADERS) =
 endef
 
 #> update: $(HEADERS)-run
+#>	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))";
+#>		$(TABLE_M2) "$(_E)$(FILE)"	"$(_N)$(call $(HEADERS)-path-root,$($(FILE)))";
 override define $(HEADERS)-run =
 	$(LINERULE); \
-	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))"; \
+	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(COMPOSER_DIR)"; \
 	$(TABLE_M2) ":---"			":---"; \
-	$(foreach FILE,\
-		MAKEFILE_LIST \
-		COMPOSER_INCLUDES \
-		COMPOSER_YML_LIST \
-		COMPOSER_LIBRARY \
-		CURDIR
-		,\
-		$(TABLE_M2) "$(_E)$(FILE)"	"$(_N)$(call $(HEADERS)-path-root,$($(FILE)))"; \
+	$(foreach FILE,$($(HEADERS)-path-list),\
+		$(TABLE_M2) "$(_E)$(FILE)"	"$(_N)$(if $(filter COMPOSER_ROOT,$(FILE)),$(COMPOSER_ROOT),$(call $(HEADERS)-path-root,$($(FILE))))"; \
 	) \
 	$(TABLE_M2) "$(_E)MAKECMDGOALS"		"$(_N)$(MAKECMDGOALS)$(_D) ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
@@ -9066,6 +9065,7 @@ $(DEBUGIT): $(DEBUGIT)-TARGETS
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DEBUGIT
 ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),)
 ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),$(TESTING))
+$(DEBUGIT): $(DEBUGIT)-MARKER-TESTING
 $(DEBUGIT): $(DEBUGIT)-TESTING
 endif
 endif
@@ -9076,7 +9076,12 @@ $(DEBUGIT): $(DEBUGIT)-LISTING
 $(DEBUGIT): $(DEBUGIT)-MAKE_DB
 $(DEBUGIT): $(DEBUGIT)-COMPOSER_DIR
 $(DEBUGIT): $(DEBUGIT)-CURDIR
+ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),)
+$(DEBUGIT): $(DEBUGIT)-MARKER-FOOTER
+endif
+ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),$(TESTING))
 $(DEBUGIT): $(HELPOUT)-FOOTER
+endif
 $(DEBUGIT):
 	@$(ECHO) ""
 
@@ -9097,15 +9102,28 @@ $(DEBUGIT)-$(HEADERS):
 
 .PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
-	@$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $(*) $(DIVIDE) $($(*)) ]$(MARKER))
-	@if [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
-		$(MAKE) --just-print COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $($(*)) 2>&1; \
-	elif [ -d "$($(*))" ]; then \
-		$(LS) --recursive $($(*)); \
-	elif [ -f "$($(*))" ]; then \
-		$(CAT) $($(*)); \
+	@if [ "$(*)" = "$(patsubst MARKER-%,%,$(*))" ]; then \
+		$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $(*) $(DIVIDE) $($(*)) ]$(MARKER)); \
+	fi
+	@if [ "$(*)" != "$(patsubst MARKER-%,%,$(*))" ]; then \
+		$(ENDOLINE); \
+		$(LINERULE); \
+		$(ENDOLINE); \
+		$(PRINT) "# $(subst {,},$(VIM_FOLDING)) $(*)"; \
+	elif [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
+		$(MAKE) --keep-going COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $($(*)) 2>&1 || $(TRUE); \
 	else \
-		$(MAKE) COMPOSER_DEBUGIT= $($(*)) 2>&1; \
+		for FILE in $($(*)); do \
+			if [ -d "$${FILE}" ]; then \
+				$(call TITLE_LN ,2,$(patsubst %1,%2,$(VIM_FOLDING)) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
+				$(LS) --recursive $${FILE}; \
+			elif [ -f "$${FILE}" ]; then \
+				$(call TITLE_LN ,2,$(patsubst %1,%2,$(VIM_FOLDING)) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
+				$(CAT) $${FILE}; \
+			else \
+				$(MAKE) --keep-going COMPOSER_DEBUGIT= $${FILE} 2>&1 || $(TRUE); \
+			fi; \
+		done; \
 	fi
 
 ########################################
@@ -9153,7 +9171,8 @@ $(TESTING): $(TESTING)-$(HEADERS)-CHECKIT
 $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 #>ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
 #>ifneq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
-#>$(TESTING): $(TESTING)-$(HEADERS)-$(DEBUGIT)
+#>$(TESTING): $(DEBUGIT)-MARKER-DEBUGIT
+#>$(TESTING): $(TESTING)-$(HEADERS)-DEBUGIT
 #>endif
 #>endif
 $(TESTING): $(TESTING)-Think
@@ -9172,7 +9191,12 @@ $(TESTING): $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING): $(TESTING)-CSS
 $(TESTING): $(TESTING)-other
 $(TESTING): $(TESTING)-$(EXAMPLE)
+ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
+$(TESTING): $(DEBUGIT)-MARKER-FOOTER
+endif
+ifneq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
 $(TESTING): $(HELPOUT)-FOOTER
+endif
 $(TESTING):
 	@$(ECHO) ""
 
@@ -10514,7 +10538,7 @@ override define $(EXPORTS)-find =
 		-o \\\( -path \"\*/$(notdir $(COMPOSER_TMP))\" -prune \\\) \
 		-o \\\( -path $(COMPOSER_EXPORT) -prune \\\) \
 		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
-		$$($(FIND_ALL) $(1) \
+		$$(if [ -z "$(2)" ]; then $(FIND_ALL) $(1) \
 			\( -path $(COMPOSER_DIR) -prune \) \
 			-o \( -path $(COMPOSER_TMP) -prune \) \
 			-o \( -path \"*/$(notdir $(COMPOSER_TMP))\" -prune \) \
@@ -10528,7 +10552,7 @@ override define $(EXPORTS)-find =
 							$(ECHO) " -o \\\( -path \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
 						done; \
 				done \
-		) \
+		fi) \
 		$(if $(2),-o \\\( -path /dev/null -print \\\))
 endef
 
@@ -11297,7 +11321,8 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT)) \
+#>	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT))
+	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),$(SPECIAL_VAL)) \
 			$$($(call $(EXPORTS)-libraries,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY))) \
 			-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 		| while read -r FILE; do \
@@ -12060,6 +12085,7 @@ endif
 
 #WORKING:NOW:NOW
 #	site
+#		add a sitemap symlink test... maybe themes/index.html...?
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
