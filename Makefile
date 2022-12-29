@@ -9,8 +9,9 @@ override VIM_FOLDING := {{{1
 #	* Update
 #		* Tooling Versions
 #		* Pandoc Options
-#		* TYPE_TARGETS
-#		* PANDOC_OPTIONS_ERROR
+#			* `TYPE_TARGETS`
+#			* `PANDOC_OPTIONS`
+#			* `PANDOC_OPTIONS_ERROR`
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
 #			* `make _test-dir`
@@ -53,20 +54,35 @@ override VIM_FOLDING := {{{1
 #				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template-all`)
 #				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template`)
 #				* _site/index.html (`make site-template`)
-#		* `make MAKEJOBS="[X]" _test-speed`
+#			* Paths
+#				* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/$(COMPOSER_BASENAME)+$(EXPORTS)`
+#				* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
+#				* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
+#		* Test: Performance
+#			* `time make COMPOSER_DEBUGIT="0" FAIL`
+#				* Minimize '$(shell)' calls = '/: override .*(shell'
+#				* With and without '$c_site' enabled
+#			* `make MAKEJOBS="[X]" _test-speed`
 #	* Prepare
+#		* Verify
+#			* Formatting
+#				* `make _test-heredoc`
+#			* Markers
+#				* '#> update'
+#				* '#> validate'
 #		* Update: README.md
 #			* `make COMPOSER_DEBUGIT="1" help-force | less -rX`
 #				* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-force | less -rX`
 #				* `override INPUT := commonmark`
-#				* Fits in $(COLUMNS) characters
-#				* Mouse select color handling
-#				* Test all "Reference" links in browser
-#				* Spell check
-#			* `make _setup-all`
-#				* Screenshot
+#					* `PANDOC_EXTENSIONS`
 #				* Verify
-#				* CSS
+#					* Fits in $(COLUMNS) characters
+#					* Mouse select color handling
+#					* Test all "Reference" links in browser
+#					* Spell check
+#			* `make _setup-all`
+#				* Review each, including CSS
+#				* Create screenshot
 #	* Publish
 #		* Check: `git diff master Makefile`
 #		* Update: COMPOSER_VERSION
@@ -863,7 +879,7 @@ export LC_COLLATE			:= C
 ########################################
 ## {{{2 Paths --------------------------
 
-#> sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
+#> validate: sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
@@ -872,7 +888,7 @@ override FIND_ALL			:= $(call COMPOSER_FIND,$(PATH_LIST),find) -L
 override XARGS				:= $(call COMPOSER_FIND,$(PATH_LIST),xargs) --max-procs=$(MAKEJOBS) -I {}
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
-override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) -w0
+override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) --wrap=0 --decode
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv --dereference
@@ -898,9 +914,9 @@ override TOUCH				:= $(call COMPOSER_FIND,$(PATH_LIST),touch) --date="@0"
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
-override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -l
-override WC_CHAR			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -c
-override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) -w
+override WC				:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --lines
+override WC_CHAR			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --bytes
+override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --words
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
@@ -1481,7 +1497,7 @@ override COMPOSER_TEACHER		:= $(~)(abspath $(~)(dir $(~)(COMPOSER_MY_PATH)))/$(M
 
 override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
 override COMPOSER_REGEX_PREFIX		:= [_.]
-override SED_ESCAPE_LIST		:= [\$$*+.?^]
+override SED_ESCAPE_LIST		:= ^[:alnum:]
 
 #> update: includes duplicates
 override DEBUGIT			:= _debug
@@ -1657,6 +1673,7 @@ override CREATOR			:= _setup
 
 override DEBUGIT			:= _debug
 override TESTING			:= _test
+
 override CHECKIT			:= check
 override CONFIGS			:= config
 override TARGETS			:= targets
@@ -1672,9 +1689,9 @@ override DOITALL			:= all
 override SUBDIRS			:= subdirs
 override PRINTER			:= list
 
-#> grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
-#> grep -E "[)]-[a-z]+" Makefile
-#> make .all_targets | sed -r "s|[:].*$||g" | sort -u
+#> validate: grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
+#> validate: grep -E "[)]-[a-z]+" Makefile
+#> validate: make .all_targets | sed -r "s|[:].*$||g" | sort -u
 override COMPOSER_RESERVED := \
 	$(COMPOSER_PANDOC) \
 	\
@@ -1693,6 +1710,7 @@ override COMPOSER_RESERVED := \
 	\
 	$(DEBUGIT) \
 	$(TESTING) \
+	\
 	$(CHECKIT) \
 	$(CONFIGS) \
 	$(TARGETS) \
@@ -1922,11 +1940,11 @@ override PUBLISH_CMD_END		:= $(MARKER) -->
 ifeq ($(c_site),)
 override COMPOSER_ROOT_PATH		:=
 override COMPOSER_LIBRARY_PATH		:=
-override PUBLISH_SH_RUN			:=
+override PUBLISH_SH_RUN			=
 else
 override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT))
 override COMPOSER_LIBRARY_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_LIBRARY) 2>/dev/null)
-override PUBLISH_SH_RUN := \
+override PUBLISH_SH_RUN = \
 	HTML_HIDE="$(HTML_HIDE)" \
 	\
 	SED="$(SED)" \
@@ -1943,6 +1961,7 @@ override PUBLISH_SH_RUN := \
 	\
 	COMPOSER_DIR="$(COMPOSER_DIR)" \
 	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
+	COMPOSER_ROOT_REGEX="$(COMPOSER_ROOT_REGEX)" \
 	COMPOSER_ROOT_PATH="$(COMPOSER_ROOT_PATH)" \
 	COMPOSER_LIBRARY_PATH="$(COMPOSER_LIBRARY_PATH)" \
 	COMPOSER_LIBRARY_METADATA="$($(PUBLISH)-library-metadata)" \
@@ -2005,6 +2024,12 @@ endif
 
 ########################################
 ## {{{2 Filesystem ---------------------
+
+override COMPOSER_ROOT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_ROOT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+override COMPOSER_EXPORT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_EXPORT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+override COMPOSER_LIBRARY_ROOT_REGEX	:= $(shell $(ECHO) "$(COMPOSER_LIBRARY_ROOT)"	| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+
+########################################
 
 override COMPOSER_DOSETUP_DIR		:= $(CURDIR)/.$(COMPOSER_BASENAME)
 
@@ -4386,7 +4411,8 @@ $(EXAMPLE)-md-file:
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
 
 .PHONY: .$(EXAMPLE)-md
-.$(EXAMPLE)-md: override GIT_USER := $(shell git config --get user.name 2>/dev/null)
+#>.$(EXAMPLE)-md: override GIT_USER := $(shell git config --get user.name 2>/dev/null)
+.$(EXAMPLE)-md: override GIT_USER = $(shell git config --get user.name 2>/dev/null)
 .$(EXAMPLE)-md:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$(COMPOSER_HEADLINE)$(_N)\")
@@ -5349,13 +5375,14 @@ COMPOSER_YML_DATA="$${COMPOSER_YML_DATA}"
 
 COMPOSER_DIR="$${COMPOSER_DIR}"
 COMPOSER_ROOT="$${COMPOSER_ROOT}"
+COMPOSER_ROOT_REGEX="$${COMPOSER_ROOT_REGEX}"
 COMPOSER_ROOT_PATH="$${COMPOSER_ROOT_PATH}"
 COMPOSER_LIBRARY_PATH="$${COMPOSER_LIBRARY_PATH}"
 COMPOSER_LIBRARY_METADATA="$${COMPOSER_LIBRARY_METADATA}"
 COMPOSER_LIBRARY_INDEX="$${COMPOSER_LIBRARY_INDEX}"
 
 ################################################################################
-### {{{3 Functions (Script) ------------
+### {{{3 Functions (Global) ------------
 
 ########################################
 #### {{{4 COMPOSER_YML_DATA_VAL --------
@@ -5392,12 +5419,11 @@ function $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT {
 #### {{{4 $(PUBLISH)-marker ------------
 
 function $(PUBLISH)-marker {
-	$${ECHO} "<!-- $${1} $${DIVIDE} $${2} $${MARKER} $$(
-		$${ECHO} "$${@:3}" \\
-		| $${SED} "s|$$(
-				$${ECHO} "$${COMPOSER_ROOT}" \\
-				| $${SED} "s|$(SED_ESCAPE_LIST)|.|g"
-			)|...|g"
+	$${ECHO} "<!-- $${1} $${DIVIDE} $${2} $${MARKER}$$(
+		if [ -n "$${3}" ]; then
+			$${ECHO} " $${@:3}" \\
+			| $${SED} "s|$${COMPOSER_ROOT_REGEX}|...|g"
+		fi
 	) -->\\n"
 	return 0
 }
@@ -5406,7 +5432,12 @@ function $(PUBLISH)-marker {
 #### {{{4 $(PUBLISH)-error -------------
 
 function $(PUBLISH)-error {
-	$${ECHO} "$${MARKER} ERROR [$${0/#*\/}] ($${1}): $${@:2}\\n" >&2
+	$${ECHO} "$${MARKER} ERROR [$${0/#*\/}] ($${1}):$$(
+		if [ -n "$${2}" ]; then
+			$${ECHO} " $${@:2}" \\
+			| $${SED} "s|$${COMPOSER_ROOT_REGEX}|...|g"
+		fi
+	)\\n" >&2
 	return 0
 }
 
@@ -5642,7 +5673,7 @@ function $(PUBLISH)-nav-top-list {
 			LINK="#"
 		fi
 		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
-			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+			$${ECHO} ""
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
@@ -5789,6 +5820,7 @@ _EOF_
 				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]"	|| return 1
 			done
 $${CAT} <<_EOF_
+<li class="breadcrumb-item"></li>
 </ol></li>
 _EOF_
 	fi
@@ -6533,9 +6565,17 @@ function $(PUBLISH)-select {
 	then
 		if [ "$${ACTION}" = "metainfo" ] && [ "$${1}" = "$${MENU_SELF}" ]; then
 			shift
-			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-self $${@} $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-self$$(
+				if [ -n "$${1}" ]; then
+					$${ECHO} " $${@}"
+				fi
+			) $${PUBLISH_CMD_END}\\n"
 		else
-			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list $${@} $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list$$(
+				if [ -n "$${1}" ]; then
+					$${ECHO} " $${@}"
+				fi
+			) $${PUBLISH_CMD_END}\\n"
 		fi
 	elif
 		[ "$${ACTION}" = "metainfo-menu" ] || [ "$${ACTION}" = "metainfo-list" ] ||
@@ -6544,7 +6584,11 @@ function $(PUBLISH)-select {
 		[ "$${ACTION}" = "tagslist-menu" ] || [ "$${ACTION}" = "tagslist-list" ] ||
 		[ "$${ACTION}" = "readtime-menu" ] || [ "$${ACTION}" = "readtime-list" ];
 	then
-		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION} $${@} $${PUBLISH_CMD_END}\\n"
+		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}$$(
+			if [ -n "$${1}" ]; then
+				$${ECHO} " $${@}"
+			fi
+		) $${PUBLISH_CMD_END}\\n"
 	elif
 		[ -f "$${ACTION}" ];
 	then
@@ -6579,7 +6623,7 @@ endef
 ########################################
 ## {{{2 Heredoc: custom_$(PUBLISH)_css *
 
-#> sed -nr "s|^.*[[:space:]]class[=]||gp" Makefile | sed -r "s|[[:space:]]+|\n|g" | sort -u
+#> validate: sed -nr "s|^.*[[:space:]]class[=]||gp" Makefile | sed -r "s|[[:space:]]+|\n|g" | sort -u
 
 ########################################
 ### {{{3 Heredoc: custom_$(PUBLISH)_css
@@ -8172,6 +8216,8 @@ endef
 #	extra	= magenta
 #	syntax	= dark blue
 
+override SED_ESCAPE_COLOR		:= ........
+
 #>override _D				:= \e[0;37m
 override define COMPOSER_COLOR =
 override _D				:= \e[0m
@@ -8195,16 +8241,16 @@ override _S				:=
 override _F				:=
 endef
 
-override define COMPOSER_SHOWCOLOR =
-$(_D)_D = Default$(_D)
-$(_H)_H = Header$(_D)
-$(_C)_C = Configuration$(_D)
-$(_M)_M = Message$(_D)
-$(_N)_N = Notice$(_D)
-$(_E)_E = Extra$(_D)
-$(_S)_S = Syntax$(_D)
-$(_F)_F = Fail$(_D)
-endef
+.PHONY: COMPOSER_DOCOLORS
+COMPOSER_DOCOLORS:
+	@$(PRINT) "$(_D)_D = Default$(_D)"
+	@$(PRINT) "$(_H)_H = Header$(_D)"
+	@$(PRINT) "$(_C)_C = Configuration$(_D)"
+	@$(PRINT) "$(_M)_M = Message$(_D)"
+	@$(PRINT) "$(_N)_N = Notice$(_D)"
+	@$(PRINT) "$(_E)_E = Extra$(_D)"
+	@$(PRINT) "$(_S)_S = Syntax$(_D)"
+	@$(PRINT) "$(_F)_F = Fail$(_D)"
 
 ifneq ($(COMPOSER_DOCOLOR),)
 $(eval $(call COMPOSER_COLOR))
@@ -8284,7 +8330,7 @@ endef
 ########################################
 ## {{{2 .set_title ---------------------
 
-#> grep -E "[.]set_title" Makefile
+#> validate: grep -E "[.]set_title" Makefile
 .PHONY: .set_title-%
 .set_title-%:
 ifneq ($(COMPOSER_DOCOLOR),)
@@ -8352,6 +8398,8 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(call $(COMPOSER_TINYNAME)-rm					,$(CURDIR)/.$(COMPOSER_BASENAME).$(HEADERS)-$(EXAMPLE),1)
 endif
 endif
+	@$(LINERULE)
+	@$(MAKE) $(SILENT) COMPOSER_DEBUGIT= COMPOSER_DOCOLORS
 
 ########################################
 ### {{{3 $(HEADERS)-% ------------------
@@ -8455,6 +8503,8 @@ override define $(HEADERS)-rm =
 endef
 
 ################################################################################
+# }}}1
+################################################################################
 # {{{1 Global Targets ----------------------------------------------------------
 ################################################################################
 
@@ -8508,7 +8558,7 @@ $(LISTING):
 ########################################
 ## {{{2 $(NOTHING) ---------------------
 
-#> grep -E "[$][(]NOTHING[)][-]" Makefile
+#> validate: grep -E "[$][(]NOTHING[)][-]" Makefile
 override NOTHING_IGNORES := \
 	$(TARGETS) \
 	$(SUBDIRS) \
@@ -8704,14 +8754,14 @@ endif
 endif
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
+	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
-#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
+#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
 	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
 											$($(DEBUGIT)-output)
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
 		$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
 		$(eval override TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
@@ -8720,7 +8770,7 @@ endif
 		if [ -f "$(FILE)" ]; then \
 			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE) $($(DEBUGIT)-output); \
 		else \
-			$(ECHO) "$(FILE)"			| $(BASE64) -d		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
+			$(ECHO) "$(FILE)"			| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
@@ -9021,7 +9071,7 @@ $(TESTING)-$(PRINTER):
 	@$(MAKE) $(LISTING) | $(SED) -n "s|[:][ ]$(TESTING)-Think||gp" | $(SORT)
 
 ########################################
-### {{{3 $(TESTING)-functions ----------
+### {{{3 $(TESTING) Functions ----------
 
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
@@ -9227,7 +9277,7 @@ $(TESTING)-heredoc-init:
 			| $(SED) -n "s|^override[[:space:]]+([^:=[:space:]]+).+$$|\1|gp" \
 		),\
 		$(ECHO) "$($(FILE))" \
-			| $(BASE64) -d						>$(call $(TESTING)-pwd)/$(FILE).png; \
+			| $(BASE64)						>$(call $(TESTING)-pwd)/$(FILE).png; \
 		$(call NEWLINE) \
 	)
 	@$(SED) -n "s|^.+DO_HEREDOC[,]([^[:space:]]+).*$$|\1|gp" $(COMPOSER) \
@@ -9424,7 +9474,7 @@ $(TESTING)-$(TARGETS)-init:
 $(TESTING)-$(TARGETS)-done:
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(eval override COUNT := 64) \
-		$(call $(TESTING)-count,$(COUNT), $(subst /,[/],$(call $(TESTING)-pwd))[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
+		$(call $(TESTING)-count,$(COUNT),[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
 		$(call NEWLINE) \
 	)
 #> update: ERROR: TYPE_LPDF
@@ -9595,12 +9645,12 @@ endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd))))
-	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd)/$(COMPOSER_CSS))))
-	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/))$(if $(COMPOSER_DOCOLOR),[^/],$$)))
-	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS))))
-	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))))
-	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,\/,$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS)))))
+	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd))))
+	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd)/$(COMPOSER_CSS))))
+	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/))$(SED_ESCAPE_COLOR)$$))
+	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS))))
+	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))))
+	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,...%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS)))))
 	$(call $(TESTING)-count,2,^COMPOSER_CURDIR)
 
 ########################################
@@ -9915,6 +9965,10 @@ $(TESTING)-$(EXAMPLE)-done:
 	$(call $(TESTING)-find,Processing.+$(NOTHING)$$)
 	$(call $(TESTING)-find,Processing.+$(TESTING)-$(EXAMPLE)$$)
 
+################################################################################
+# {{{1 Information Targets -----------------------------------------------------
+################################################################################
+
 ########################################
 ## {{{2 $(CHECKIT) ---------------------
 
@@ -10209,8 +10263,8 @@ $(EXPORTS):
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
 		| while read -r FILE; do \
 			FILE="$$( \
-				$(ECHO) "$${FILE}\n" \
-				| $(SED) "s|^$(COMPOSER_EXPORT)[/]||g" \
+				$(ECHO) "$${FILE}" \
+				| $(SED) "s|^$(COMPOSER_EXPORT_REGEX)[/]||g" \
 			)"; \
 			$(call $(HEADERS)-rm,$(COMPOSER_EXPORT),$${FILE}); \
 			$(ECHO) "$(_S)"; \
@@ -10219,11 +10273,11 @@ $(EXPORTS):
 		done; \
 	done
 	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D))"
+	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D) $(MARKER) $(_E)files$(_D))"
 	@$(ECHO) "$(_C)"
 	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
 		| $(SED) \
-			-e "s|$(COMPOSER_EXPORT)|.|g" \
+			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
 			-e "/[.][/]$$/d"
 	@$(ECHO) "$(_D)"
 
@@ -10292,16 +10346,16 @@ endef
 
 #>					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES
 override define $(EXPORTS)-find =
-	eval $(FIND_ALL) $(1) -regextype sed \
+	eval $(FIND_ALL) $(1) \
 		\\\( -path $(COMPOSER_DIR) -prune \\\) \
 		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
-		-o \\\( -path "\*/$(notdir $(COMPOSER_TMP))" -prune \\\) \
+		-o \\\( -path \"\*/$(notdir $(COMPOSER_TMP))\" -prune \\\) \
 		-o \\\( -path $(COMPOSER_EXPORT) -prune \\\) \
 		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
 		$$($(FIND_ALL) $(1) \
 			\( -path $(COMPOSER_DIR) -prune \) \
 			-o \( -path $(COMPOSER_TMP) -prune \) \
-			-o \( -path "*/$(notdir $(COMPOSER_TMP))" -prune \) \
+			-o \( -path \"*/$(notdir $(COMPOSER_TMP))\" -prune \) \
 			-o \( -path $(COMPOSER_EXPORT) -prune \) \
 			-o \( -path $(COMPOSER_LIBRARY) -prune \) \
 			-o \( -type d -print \) \
@@ -10309,7 +10363,7 @@ override define $(EXPORTS)-find =
 					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
 						| $(SORT) \
 						| while read -r EFIL; do \
-							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
+							$(ECHO) " -o \\\( -path \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
 						done; \
 				done \
 		) \
@@ -10351,14 +10405,22 @@ override define $(EXPORTS)-filter =
 	fi; \
 	{ $(ECHO) ""; \
 		$(foreach SAFE,$(patsubst $(3)/%,%,$(filter $(3)/%,$(2))),\
-			$(if $(1),		$(ECHO) "--filter=P_/$(word 1,$(subst /, ,$(SAFE)))\n"; \
+			$(if $(1),		$(ECHO) "--filter=P_/$$( \
+								$(ECHO) "$(word 1,$(subst /, ,$(SAFE)))" \
+								| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+								| $(SED) "s|\[\*\]|*|g" \
+							)\n"; \
 			) \
 		) } \
 		| $(SORT); \
 	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES \
 		| $(SORT) \
 		| while read -r FILE; do \
-			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$${FILE}\n"; \
+			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$$( \
+								$(ECHO) "$${FILE}" \
+								| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+								| $(SED) "s|\[\*\]|*|g" \
+							)\n"; \
 			else			$(ECHO) " -o \\( -path \"$${FILE}\" -prune \\\)"; \
 			fi; \
 		done \
@@ -10366,7 +10428,11 @@ override define $(EXPORTS)-filter =
 	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS \
 		| $(SORT) \
 		| while read -r FILE; do \
-			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$${FILE}\n"; \
+			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$$( \
+								$(ECHO) "$${FILE}" \
+								| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+								| $(SED) "s|\[\*\]|*|g" \
+							)\n"; \
 			else			$(ECHO) " -o \\( -path \"$${FILE}\" -print \\\)"; \
 			fi; \
 		done \
@@ -10377,7 +10443,7 @@ override define $(EXPORTS)-filter =
 endef
 
 ################################################################################
-# {{{1 Main Targets ------------------------------------------------------------
+# {{{1 Composer Targets --------------------------------------------------------
 ################################################################################
 
 ########################################
@@ -10447,7 +10513,7 @@ override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "$(_E)"; \
 	$(ECHO) "" >$(1); \
 	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(patsubst $(COMPOSER_ROOT)%,...%,$(1)) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
-	$(PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(word 1,$(c_list)) \
+	$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(word 1,$(c_list)) \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(call $(PUBLISH)-$(TARGETS)-cache,$(1),$($(PUBLISH)-caches-begin)); \
@@ -10461,7 +10527,7 @@ endef
 override define $(PUBLISH)-$(TARGETS)-cache =
 	for FILE in $(2); do \
 		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML) -->\n" \
-			| $(SED) "s|$(COMPOSER_ROOT)|...|g"; \
+			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|...|g"; \
 		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 	done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
@@ -10471,8 +10537,8 @@ endef
 override define $(PUBLISH)-$(TARGETS)-file =
 	for FILE in $(2); do \
 		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $${FILE} -->\n" \
-			| $(SED) "s|$(COMPOSER_ROOT)|...|g"; \
-		$(PUBLISH_SH_RUN) $${FILE}; \
+			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|...|g"; \
+		$(call PUBLISH_SH_RUN) $${FILE}; \
 	done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -10499,11 +10565,8 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 			>$(1).$(2)-menu.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 			$(call $(PUBLISH)-$(TARGETS)-$(2)-done,$(1).$(2)-menu.done); \
-		$(PUBLISH_SH_RUN) $(1).$(2)-list \
-			| $(SED) "/$$( \
-					$(ECHO) "$(notdir $(1).$(2)-list)" \
-					| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
-				)/d" \
+		$(call PUBLISH_SH_RUN) $(1).$(2)-list \
+			| $(SED) "/[/]$(notdir $(1).$(2)-list) -->$$/d" \
 			>$(1).$(2)-list.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(ECHO) "$(_S)"; \
@@ -10524,9 +10587,9 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-metalist =
 	META="$(call COMPOSER_YML_DATA_VAL,config.$(2))"; \
-	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)<[|]>(.*)<[|]>(.*)$$|\1|g")"; \
-	META_SEP="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)<[|]>(.*)<[|]>(.*)$$|\2|g")"; \
-	META_END="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)<[|]>(.*)<[|]>(.*)$$|\3|g")"; \
+	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\1|g")"; \
+	META_SEP="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\2|g")"; \
+	META_END="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\3|g")"; \
 	if [ -z "$${META_SEP}" ]; then \
 		META_SEP=" "; \
 	fi; \
@@ -10555,8 +10618,11 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 	fi; \
 	$(SED) -i "s|^($$( \
 			$(ECHO) "$${META_BEG}" \
-			| $(SED) "s|$(SED_ESCAPE_LIST)|.|g" \
-		))$${META_SEP}|\1|g" $(1).$(2)-list
+			| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+		))$$( \
+			$(ECHO) "$${META_SEP}" \
+			| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+		)|\1|g" $(1).$(2)-list
 endef
 
 override define $(PUBLISH)-$(TARGETS)-metalist-done =
@@ -10575,7 +10641,7 @@ override define $(PUBLISH)-$(TARGETS)-metainfo =
 		$(ECHO) "$(PUBLISH_CMD_BEG) "				>>$(1).metainfo-list; \
 		$(ECHO) "$${LIST} "					>>$(1).metainfo-list; \
 	fi; \
-	$(PUBLISH_SH_RUN) metainfo-block . . $(1)			>>$(1).metainfo-list; \
+	$(call PUBLISH_SH_RUN) metainfo-block . . $(1)			>>$(1).metainfo-list; \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	if [ -n "$${LIST}" ]; then $(ECHO) " $(PUBLISH_CMD_END)"	>>$(1).metainfo-list; fi; \
 	$(ECHO) "\n"							>>$(1).metainfo-list
@@ -10593,6 +10659,16 @@ endef
 #>				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
 #>			fi
 override define $(PUBLISH)-$(TARGETS)-contents =
+	if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
+		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
+		| $(YQ_WRITE) \
+			"[.. | select(has(\"t\")) | select( \
+				(.t == \"Header\") or \
+				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) \")) \
+			) | .c]" \
+			2>/dev/null \
+		; \
+	fi; \
 	FILE="$$( \
 		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
 		| $(YQ_WRITE) \
@@ -10601,7 +10677,6 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) \")) \
 			) | .c]" \
 			2>/dev/null \
-		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
 	ROOT=; \
 	if [ -n "$$($(ECHO) "$${MENU}" | $(SED) -n "/^$(MENU_SELF)/p")" ]; then \
@@ -10741,7 +10816,7 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-readtime =
 	WORD="$$( \
-		$(PUBLISH_SH_RUN) $(c_list) \
+		$(call PUBLISH_SH_RUN) $(c_list) \
 		| $(PANDOC_MD_TO_TEXT) \
 		| $(WC_WORD) \
 	)"; \
@@ -10774,7 +10849,12 @@ $(PUBLISH)-$(PRINTER)-%:
 $(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER): override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
 $(PUBLISH)-$(PRINTER): override METAFILE := $(filter-out $(patsubst .%,%,$(NOTHING)),$(filter-out $(DOITALL),$(filter-out $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))))
-$(PUBLISH)-$(PRINTER): override METATEST := $(if $(METAFILE),(test(\"^$(METAFILE)$$\") or test(\"/$(METAFILE)$$\")),test(\"^$(METACDIR)\"))
+#>$(PUBLISH)-$(PRINTER): override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+#>$(PUBLISH)-$(PRINTER): override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+#>$(PUBLISH)-$(PRINTER): override METATEST := $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
+$(PUBLISH)-$(PRINTER): override METACRGX = $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+$(PUBLISH)-$(PRINTER): override METAFRGX = $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+$(PUBLISH)-$(PRINTER): override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
 $(PUBLISH)-$(PRINTER):
 	@$(call $(HEADERS))
 ifeq ($(COMPOSER_LIBRARY),)
@@ -10826,8 +10906,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
 	@TREE=; $(call $(EXPORTS)-find,$(CURDIR),\
 			-type f -name \"*$(COMPOSER_EXT)\" \
 		) \
-		$(if $(METAFILE),| $(SED) -n -e "/^$(METAFILE)$$/p" -e "/[/]$(METAFILE)$$/p") \
-		| $(SED) "s|^$(CURDIR)/||g" \
+		$(if $(METAFILE),| $(SED) -n -e "/^$(METAFRGX)$$/p" -e "/[/]$(METAFRGX)$$/p") \
+		| $(SED) "s|^$(CURDIR)[/]||g" \
 		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -z "$${TREE}" ]; then \
@@ -10844,7 +10924,7 @@ endif
 else
 	@$(YQ_WRITE_OUT) " \
 			del(.\".$(COMPOSER_BASENAME)\") \
-			| .[].[] |= with_entries(select(.value | test(\"^$(METACDIR)[^/]+$$\"))) \
+			| .[].[] |= with_entries(select(.value | test(\"^$(METACRGX)[^/]+$$\"))) \
 			| .[].[] |= del(select(length == 0)) \
 			| .[] |= [ (to_entries | .[].key) ] \
 		" $($(PUBLISH)-library-index)
@@ -10863,7 +10943,10 @@ else
 		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))$(_D)\n"; \
 		$(YQ_WRITE_OUT) " \
 				del(.\".$(COMPOSER_BASENAME)\") \
-				| .[].[] |= with_entries(select(.value | test(\"^$(METACDIR)$(FILE)$$\"))) \
+				| .[].[] |= with_entries(select(.value | test(\"^$(METACRGX)$$( \
+						$(ECHO) "$(FILE)" \
+						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+					)$$\"))) \
 				| .[].[] |= del(select(length == 0)) \
 				| .[] |= [ (to_entries | .[].key) ] \
 				| .titles |= (to_entries | .[0].value) \
@@ -10897,11 +10980,11 @@ $($(PUBLISH)-caches):
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
+		$(call PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
-		$(PUBLISH_SH_RUN) "$($(@))" "center"; \
+		$(call PUBLISH_SH_RUN) "$($(@))" "center"; \
 	else \
-		$(PUBLISH_SH_RUN) "$($(@))"; \
+		$(call PUBLISH_SH_RUN) "$($(@))"; \
 	fi \
 		| $(TEE) $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -11043,13 +11126,13 @@ $($(PUBLISH)-library-metadata):
 			$(ECHO) "$(_D)"; \
 			$(call $(HEADERS)-note,$(@),$$( \
 					$(ECHO) "$${FILE}" \
-					| $(SED) "s|^$(subst /,.,$(COMPOSER_LIBRARY_ROOT))/||g" \
+					| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 				),$(PUBLISH)-metadata); \
 			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
 				else				$(ECHO) "$(_N)"; \
 				fi; \
 			$(ECHO) "\"$${FILE}\": " \
-				| $(SED) "s|^([\"])$(COMPOSER_LIBRARY_ROOT)/|\1|g" \
+				| $(SED) "s|^([\"])$(COMPOSER_LIBRARY_ROOT_REGEX)[/]|\1|g" \
 				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
 			if [ -n "$$( \
 				$(YQ_READ) $${FILE} 2>/dev/null \
@@ -11067,7 +11150,7 @@ $($(PUBLISH)-library-metadata):
 			fi \
 				| $(YQ_WRITE) ". += { \"path\": \"$$( \
 						$(ECHO) "$${FILE}" \
-						| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)/||g" \
+						| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 					)\" }" 2>/dev/null \
 				| $(YQ_WRITE) ". += { \".updated\": \"$(DATESTAMP)\" }" 2>/dev/null \
 				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
@@ -11349,7 +11432,7 @@ override define $(PUBLISH)-library-digest-create =
 		else				$(ECHO) "$(_N)"; \
 		fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $(4) library-digest $$( \
-			$(PUBLISH_SH_RUN) metainfo-block . $(SPECIAL_VAL) $(2) \
+			$(call PUBLISH_SH_RUN) metainfo-block . $(SPECIAL_VAL) $(2) \
 		) $(PUBLISH_CMD_END)\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(ECHO) "\n" \
@@ -11371,7 +11454,7 @@ override define $(PUBLISH)-library-digest-create =
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
 				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 				| $(PANDOC_JSON_TO_LINT) \
-				; \
+			; \
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
@@ -11450,8 +11533,8 @@ $($(PUBLISH)-library-sitemap-src):
 					$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${SITEMAP_EXPANDED} sitemap-group $$( \
 							$(ECHO) "$(FILE)" \
 							| $(SED) \
-								-e "s|$(COMPOSER_ROOT)/||g" \
-								-e "s|$(COMPOSER_ROOT)|/|g" \
+								-e "s|$(COMPOSER_ROOT_REGEX)[/]||g" \
+								-e "s|$(COMPOSER_ROOT_REGEX)|/|g" \
 						) $(PUBLISH_CMD_END)\n" \
 						| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
 					$(ECHO) "\n|||\n|:---|:---|\n" \
@@ -11464,7 +11547,7 @@ $($(PUBLISH)-library-sitemap-src):
 					)]($$( \
 						$(ECHO) "$${FILE}" \
 						| $(SED) \
-							-e "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g" \
+							-e "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g" \
 							-e "s|$(subst .,[.],$(COMPOSER_EXT))$$|.$(EXTN_HTML)|g" \
 					)) | " \
 					| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(PUBLISH)-$(DEBUGIT)-output); \
@@ -11477,7 +11560,7 @@ $($(PUBLISH)-library-sitemap-src):
 					fi; \
 				) \
 				if [ -f "$${INFO}" ]; then \
-					INFO="$$($(PUBLISH_SH_RUN) metainfo-block . . $${INFO})"; \
+					INFO="$$($(call PUBLISH_SH_RUN) metainfo-block . . $${INFO})"; \
 					if [ -n "$${INFO}" ]; then \
 						$(ECHO) "$${INFO}"; \
 					else \
@@ -11486,9 +11569,9 @@ $($(PUBLISH)-library-sitemap-src):
 				elif [ -L "$${FILE}" ]; then \
 					INFO="$$($(word 1,$(REALPATH)) $${FILE})"; \
 					$(ECHO) "["; \
-					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)/||g"; \
+					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g"; \
 					$(ECHO) "]("; \
-					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT)|$(PUBLISH_CMD_ROOT)|g"; \
+					$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
 					$(ECHO) ")"; \
 				else \
 					$(ECHO) "--"; \
@@ -11789,8 +11872,6 @@ endif
 
 #WORKING:NOW:NOW
 #	site
-#		test full run with _site as +site instead, just to see...
-#			basically, test/validate SED_ESCAPE_LIST everywhere...
 #		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #			index.html with only/all sub-folders as best-practice?
 #			this is a real pain when using COMPOSER_INCLUDE...
