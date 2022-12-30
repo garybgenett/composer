@@ -533,7 +533,8 @@ else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
 endif
 
-override SILENT				:= --silent --no-print-directory --debug=none
+override NOFAIL				:= --keep-going
+override SILENT				:= COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(NOFAIL) --no-print-directory --silent --debug=none
 
 ########################################
 
@@ -4410,7 +4411,7 @@ $(EXAMPLE) \
 $(EXAMPLE)-yml \
 $(EXAMPLE)-md \
 :
-	@$(MAKE) $(SILENT) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(@)
+	@$(MAKE) $(SILENT) $(call COMPOSER_OPTIONS_EXPORT) .$(@)
 
 #WORKING keep this?  can it be improved?
 .PHONY: $(EXAMPLE)-md-file
@@ -8533,7 +8534,7 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 endif
 endif
 	@$(LINERULE)
-	@$(MAKE) $(SILENT) COMPOSER_DEBUGIT= $(HEADERS)-colors
+	@$(MAKE) $(SILENT) $(HEADERS)-colors
 
 ########################################
 ### {{{3 $(HEADERS)-%
@@ -8666,8 +8667,7 @@ endif
 
 .PHONY: $(MAKE_DB)
 $(MAKE_DB):
-	@$(MAKE) \
-		$(SILENT) \
+	@$(MAKE) $(SILENT) \
 		--question \
 		--print-data-base \
 		--no-builtin-rules \
@@ -9112,7 +9112,7 @@ $(DEBUGIT)-%:
 		$(ENDOLINE); \
 		$(PRINT) "# $(subst {,},$(VIM_FOLDING)) $(*)"; \
 	elif [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
-		$(MAKE) --keep-going COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $($(*)) 2>&1 || $(TRUE); \
+		$(MAKE) $(NOFAIL) COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $($(*)) 2>&1 || $(TRUE); \
 	else \
 		for FILE in $($(*)); do \
 			if [ -d "$${FILE}" ]; then \
@@ -9122,7 +9122,7 @@ $(DEBUGIT)-%:
 				$(call TITLE_LN ,2,$(patsubst %1,%2,$(VIM_FOLDING)) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
 				$(CAT) $${FILE}; \
 			else \
-				$(MAKE) --keep-going COMPOSER_DEBUGIT= $${FILE} 2>&1 || $(TRUE); \
+				$(MAKE) $(NOFAIL) COMPOSER_DEBUGIT= $${FILE} 2>&1 || $(TRUE); \
 			fi; \
 		done; \
 	fi
@@ -9636,7 +9636,7 @@ $(TESTING)-$(TARGETS)-init:
 		) \
 	)
 #>				$(call $(TESTING)-run) $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)) || $(TRUE)
-	@$(call $(TESTING)-run,,1) --keep-going MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL) || $(TRUE)
+	@$(call $(TESTING)-run,,1) $(NOFAIL) MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL) || $(TRUE)
 	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 
 .PHONY: $(TESTING)-$(TARGETS)-done
@@ -10539,7 +10539,7 @@ override define $(EXPORTS)-find =
 		-o \\\( -path \"\*/$(notdir $(COMPOSER_TMP))\" -prune \\\) \
 		-o \\\( -path $(COMPOSER_EXPORT) -prune \\\) \
 		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
-		$$(if [ -z "$(2)" ]; then $(FIND_ALL) $(1) \
+		$$(if [ -z "$(3)" ]; then $(FIND_ALL) $(1) \
 			\( -path $(COMPOSER_DIR) -prune \) \
 			-o \( -path $(COMPOSER_TMP) -prune \) \
 			-o \( -path \"*/$(notdir $(COMPOSER_TMP))\" -prune \) \
@@ -10853,17 +10853,7 @@ endef
 #>				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
 #>			fi
 override define $(PUBLISH)-$(TARGETS)-contents =
-	if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
-		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
-		| $(YQ_WRITE) \
-			"[.. | select(has(\"t\")) | select( \
-				(.t == \"Header\") or \
-				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) \")) \
-			) | .c]" \
-			2>/dev/null \
-		; \
-	fi; \
-	FILE="$$( \
+	PAST="$$( \
 		$(filter-out --strip-comments,$(PANDOC_MD_TO_JSON)) $(1) \
 		| $(YQ_WRITE) \
 			"[.. | select(has(\"t\")) | select( \
@@ -10872,6 +10862,9 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			) | .c]" \
 			2>/dev/null \
 	)"; \
+	if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
+		$(ECHO) "$${PAST}"; \
+	fi; \
 	ROOT=; \
 	if [ -n "$$($(ECHO) "$${MENU}" | $(SED) -n "/^$(MENU_SELF)/p")" ]; then \
 		ROOT="$(MENU_SELF)"; \
@@ -10885,36 +10878,36 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		elif [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then	LIST_MAX="$(DEPTH_MAX)"; \
 		else						LIST_MAX="$${LIST}"; \
 		fi; \
-	CNT="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) "length" 2>/dev/null)"; \
+	CNT="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) "length" 2>/dev/null)"; \
 	NUM="0"; while [ "$${NUM}" -lt "$${CNT}" ]; do \
 		MENU_HDR="$(SPECIAL_VAL)"; \
 		LIST_HDR="$(SPECIAL_VAL)"; \
-		LVL="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][0]" 2>/dev/null)"; \
+		LVL="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][0]" 2>/dev/null)"; \
 		if [ "$${LVL}" = "html" ]; then \
-			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1]" 2>/dev/null)"; \
+			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1]" 2>/dev/null)"; \
 			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\1|g")"; \
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			LNK="$$($(call $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT,$${TXT}))"; \
 		else \
 			if [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then MENU_HDR=; fi; \
 			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then LIST_HDR=; fi; \
-			LNK="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][1][0]" 2>/dev/null)"; \
-			LEN="$$($(ECHO) "$${FILE}" | $(YQ_WRITE) ".[$${NUM}][2] | length" 2>/dev/null)"; \
+			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1][0]" 2>/dev/null)"; \
+			LEN="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][2] | length" 2>/dev/null)"; \
 			TXT=; STR="0"; while [ "$${STR}" -lt "$${LEN}" ]; do \
 				TYP="$$( \
-					$(ECHO) "$${FILE}" \
+					$(ECHO) "$${PAST}" \
 					| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"t\"]" 2>/dev/null \
 				)"; \
 				if [ "$${TYP}" = "Space" ]; then \
 					TXT="$${TXT} "; \
 				elif [ "$${TYP}" = "Code" ]; then \
 					TXT="$${TXT}$$( \
-						$(ECHO) "$${FILE}" \
+						$(ECHO) "$${PAST}" \
 						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"][1]" 2>/dev/null \
 					)"; \
 				elif [ "$${TYP}" = "Str" ]; then \
 					TXT="$${TXT}$$( \
-						$(ECHO) "$${FILE}" \
+						$(ECHO) "$${PAST}" \
 						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"]" 2>/dev/null \
 					)"; \
 				fi; \
@@ -11195,7 +11188,7 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-#>	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),$(SPECIAL_VAL))
+#>	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),,$(SPECIAL_VAL))
 	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT)) \
 			$$($(call $(EXPORTS)-libraries,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY))) \
 			-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
@@ -11944,7 +11937,7 @@ endif
 			$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"; \
 			$(ECHO) "---\n"; \
 			$(ECHO) "$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)\n"; \
-			$(MAKE) $(SILENT) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
+			$(MAKE) $(SILENT) $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
 		}									>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGES))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
@@ -12148,7 +12141,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(MAKE) $(SILENT) --makefile $(COMPOSER) COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= .$(EXAMPLE)$(2) >$(1); \
+		$(MAKE) $(SILENT) --makefile $(COMPOSER) .$(EXAMPLE)$(2) >$(1); \
 	fi; \
 	if [ -n "$(3)" ]; then \
 		$(SED) -i \
