@@ -3037,6 +3037,7 @@ endef
 #	the library can be used purely as a documentation archive manager, if desired... (i.e. metadata, sitemap, etc.)
 #		test this... it may require c_site more than we think...
 #	every output file needs to have a *.md with the metadata in it in order for the library to work...
+#	library does great with additions and updates, but removals require site-clean or hand-editing of metadata/index...
 
 #WORK
 #	features
@@ -11033,133 +11034,6 @@ override define $(PUBLISH)-$(TARGETS)-readtime-done =
 endef
 
 ########################################
-### {{{3 $(PUBLISH)-$(PRINTER)
-########################################
-
-#WORK document
-
-.PHONY: $(PUBLISH)-$(PRINTER)-%
-$(PUBLISH)-$(PRINTER)-%:
-	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
-
-.PHONY: $(PUBLISH)-$(PRINTER)
-$(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
-$(PUBLISH)-$(PRINTER): override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
-$(PUBLISH)-$(PRINTER): override METAFILE := $(filter-out $(patsubst .%,%,$(NOTHING)),$(filter-out $(DOITALL),$(filter-out $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))))
-#>$(PUBLISH)-$(PRINTER): override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-#>$(PUBLISH)-$(PRINTER): override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-#>$(PUBLISH)-$(PRINTER): override METATEST := $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
-$(PUBLISH)-$(PRINTER): override METACRGX = $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-$(PUBLISH)-$(PRINTER): override METAFRGX = $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-$(PUBLISH)-$(PRINTER): override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
-$(PUBLISH)-$(PRINTER):
-	@$(call $(HEADERS))
-ifeq ($(COMPOSER_LIBRARY),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_YML)$(_D) $(MARKER) $(_H)$(PUBLISH)-library.folder,$(NOTHING))
-else ifeq ($(and \
-	$(wildcard $($(PUBLISH)-library-metadata)) ,\
-	$(wildcard $($(PUBLISH)-library-index)) \
-),)
-	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-metadata)),$(NOTHING)))
-	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-index)),$(NOTHING)))
-else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(patsubst .%,%,$(NOTHING)))
-	@$(YQ_WRITE_OUT) " \
-			del(.\".$(COMPOSER_BASENAME)\") \
-			| .[].[] |= with_entries(select(.value | $(METATEST))) \
-			| .[].[] |= del(select(length == 0)) \
-			| .[].[] |= [ (to_entries | .[].value) ] \
-			| .[].[] |= sort_by(.) \
-			| .[] |= .null \
-		" $($(PUBLISH)-library-index)
-#>		" $($(PUBLISH)-library-index) 2>/dev/null
-else ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),)
-	@$(YQ_WRITE_OUT) " \
-			del(.\".$(COMPOSER_BASENAME)\") \
-			| .[].[] |= with_entries(select(.value | $(METATEST))) \
-			| .[].[] |= del(select(length == 0)) \
-			| .[] |= [ (to_entries | .[].key) ] \
-		" $($(PUBLISH)-library-index)
-#>		" $($(PUBLISH)-library-index) 2>/dev/null
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
-	@$(LINERULE)
-	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))"
-	@$(LINERULE)
-	@$(YQ_WRITE_OUT) " \
-			del(.\".$(COMPOSER_BASENAME)\") \
-			| with_entries(select(.key | $(METATEST))) \
-		" $($(PUBLISH)-library-metadata)
-#>		" $($(PUBLISH)-library-metadata) 2>/dev/null
-	@$(LINERULE)
-	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))"
-	@$(LINERULE)
-	@$(YQ_WRITE_OUT) " \
-			del(.\".$(COMPOSER_BASENAME)\") \
-			| .[].[] |= with_entries(select(.value | $(METATEST))) \
-			| .[].[] |= del(select(length == 0)) \
-			| .[].[] |= [ (to_entries | .[].value) ] \
-			| .[].[] |= sort_by(.) \
-		" $($(PUBLISH)-library-index)
-#>		" $($(PUBLISH)-library-index) 2>/dev/null
-	@TREE=; $(call $(EXPORTS)-find,$(CURDIR),\
-			-type f -name \"*$(COMPOSER_EXT)\" \
-		) \
-		$(if $(METAFILE),| $(SED) -n -e "/^$(METAFRGX)$$/p" -e "/[/]$(METAFRGX)$$/p") \
-		| $(SED) "s|^$(CURDIR)[/]||g" \
-		| $(SORT) \
-		| while read -r FILE; do \
-			if [ -z "$${TREE}" ]; then \
-				TREE="$(SPECIAL_VAL)"; \
-				$(LINERULE); \
-				$(PRINT) "$(_M)$(MARKER) COMPOSER_IGNORES"; \
-				$(LINERULE); \
-				$(ECHO) "$(_N)"; \
-			fi; \
-			$(ECHO) "$${FILE}\n"; \
-		done; \
-		$(ECHO) "$(_D)"
-endif
-else
-	@$(YQ_WRITE_OUT) " \
-			del(.\".$(COMPOSER_BASENAME)\") \
-			| .[].[] |= with_entries(select(.value | test(\"^$(METACRGX)[^/]+$$\"))) \
-			| .[].[] |= del(select(length == 0)) \
-			| .[] |= [ (to_entries | .[].key) ] \
-		" $($(PUBLISH)-library-index)
-#>		" $($(PUBLISH)-library-index) 2>/dev/null
-	@$(foreach FILE,$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
-		$(LINERULE); \
-		$(ECHO) "$(_M)$(MARKER) "; \
-		$(LS) --color=none $(FILE); \
-		$(ECHO) "$(_D)"; \
-		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))$(_D)\n"; \
-		$(YQ_WRITE_OUT) " \
-				del(.\".$(COMPOSER_BASENAME)\") \
-				| .\"$(METACDIR)$(FILE)\" \
-				| del(.\"path\") \
-			" $($(PUBLISH)-library-metadata); \
-		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))$(_D)\n"; \
-		$(YQ_WRITE_OUT) " \
-				del(.\".$(COMPOSER_BASENAME)\") \
-				| .[].[] |= with_entries(select(.value | test(\"^$(METACRGX)$$( \
-						$(ECHO) "$(FILE)" \
-						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-					)$$\"))) \
-				| .[].[] |= del(select(length == 0)) \
-				| .[] |= [ (to_entries | .[].key) ] \
-				| .titles |= (to_entries | .[0].value) \
-			" $($(PUBLISH)-library-index); \
-		$(call NEWLINE) \
-	)
-#>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
-#>			" $($(PUBLISH)-library-index) 2>/dev/null;
-	@$(if $(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),$(LINERULE))
-	@$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
-		$(PRINT) "$(_N)$(FILE)"; \
-		$(call NEWLINE) \
-	)
-endif
-
-########################################
 ### {{{3 $(PUBLISH)-cache
 ########################################
 
@@ -11321,8 +11195,8 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-#>	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT))
-	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),$(SPECIAL_VAL)) \
+#>	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),$(SPECIAL_VAL))
+	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT)) \
 			$$($(call $(EXPORTS)-libraries,$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_LIBRARY))) \
 			-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(@)),-newer $(@)) -print \\\) \
 		| while read -r FILE; do \
@@ -11804,6 +11678,133 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(ECHO) "$(_S)"
 	@$(MV) $(@).$(COMPOSER_BASENAME) $(@) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
+
+########################################
+### {{{3 $(PUBLISH)-$(PRINTER)
+########################################
+
+#WORK document
+
+.PHONY: $(PUBLISH)-$(PRINTER)-%
+$(PUBLISH)-$(PRINTER)-%:
+	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
+
+.PHONY: $(PUBLISH)-$(PRINTER)
+$(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
+$(PUBLISH)-$(PRINTER): override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
+$(PUBLISH)-$(PRINTER): override METAFILE := $(filter-out $(patsubst .%,%,$(NOTHING)),$(filter-out $(DOITALL),$(filter-out $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))))
+#>$(PUBLISH)-$(PRINTER): override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+#>$(PUBLISH)-$(PRINTER): override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+#>$(PUBLISH)-$(PRINTER): override METATEST := $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
+$(PUBLISH)-$(PRINTER): override METACRGX = $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+$(PUBLISH)-$(PRINTER): override METAFRGX = $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+$(PUBLISH)-$(PRINTER): override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
+$(PUBLISH)-$(PRINTER):
+	@$(call $(HEADERS))
+ifeq ($(COMPOSER_LIBRARY),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_YML)$(_D) $(MARKER) $(_H)$(PUBLISH)-library.folder,$(NOTHING))
+else ifeq ($(and \
+	$(wildcard $($(PUBLISH)-library-metadata)) ,\
+	$(wildcard $($(PUBLISH)-library-index)) \
+),)
+	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-metadata)),$(NOTHING)))
+	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-index)),$(NOTHING)))
+else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(patsubst .%,%,$(NOTHING)))
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | $(METATEST))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[].[] |= [ (to_entries | .[].value) ] \
+			| .[].[] |= sort_by(.) \
+			| .[] |= .null \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+else ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),)
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | $(METATEST))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[] |= [ (to_entries | .[].key) ] \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DOFORCE))
+	@$(LINERULE)
+	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))"
+	@$(LINERULE)
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| with_entries(select(.key | $(METATEST))) \
+		" $($(PUBLISH)-library-metadata)
+#>		" $($(PUBLISH)-library-metadata) 2>/dev/null
+	@$(LINERULE)
+	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))"
+	@$(LINERULE)
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | $(METATEST))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[].[] |= [ (to_entries | .[].value) ] \
+			| .[].[] |= sort_by(.) \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+	@TREE=; $(call $(EXPORTS)-find,$(CURDIR),\
+			-type f -name \"*$(COMPOSER_EXT)\" \
+		) \
+		$(if $(METAFILE),| $(SED) -n -e "/^$(METAFRGX)$$/p" -e "/[/]$(METAFRGX)$$/p") \
+		| $(SED) "s|^$(CURDIR)[/]||g" \
+		| $(SORT) \
+		| while read -r FILE; do \
+			if [ -z "$${TREE}" ]; then \
+				TREE="$(SPECIAL_VAL)"; \
+				$(LINERULE); \
+				$(PRINT) "$(_M)$(MARKER) COMPOSER_IGNORES"; \
+				$(LINERULE); \
+				$(ECHO) "$(_N)"; \
+			fi; \
+			$(ECHO) "$${FILE}\n"; \
+		done; \
+		$(ECHO) "$(_D)"
+endif
+else
+	@$(YQ_WRITE_OUT) " \
+			del(.\".$(COMPOSER_BASENAME)\") \
+			| .[].[] |= with_entries(select(.value | test(\"^$(METACRGX)[^/]+$$\"))) \
+			| .[].[] |= del(select(length == 0)) \
+			| .[] |= [ (to_entries | .[].key) ] \
+		" $($(PUBLISH)-library-index)
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
+	@$(foreach FILE,$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+		$(LINERULE); \
+		$(ECHO) "$(_M)$(MARKER) "; \
+		$(LS) --color=none $(FILE); \
+		$(ECHO) "$(_D)"; \
+		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))$(_D)\n"; \
+		$(YQ_WRITE_OUT) " \
+				del(.\".$(COMPOSER_BASENAME)\") \
+				| .\"$(METACDIR)$(FILE)\" \
+				| del(.\"path\") \
+			" $($(PUBLISH)-library-metadata); \
+		$(ECHO) "$(_N)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))$(_D)\n"; \
+		$(YQ_WRITE_OUT) " \
+				del(.\".$(COMPOSER_BASENAME)\") \
+				| .[].[] |= with_entries(select(.value | test(\"^$(METACRGX)$$( \
+						$(ECHO) "$(FILE)" \
+						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+					)$$\"))) \
+				| .[].[] |= del(select(length == 0)) \
+				| .[] |= [ (to_entries | .[].key) ] \
+				| .titles |= (to_entries | .[0].value) \
+			" $($(PUBLISH)-library-index); \
+		$(call NEWLINE) \
+	)
+#>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
+#>			" $($(PUBLISH)-library-index) 2>/dev/null;
+	@$(if $(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),$(LINERULE))
+	@$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+		$(PRINT) "$(_N)$(FILE)"; \
+		$(call NEWLINE) \
+	)
+endif
 
 ########################################
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
