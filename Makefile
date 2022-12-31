@@ -9292,14 +9292,14 @@ override define $(TESTING)-init =
 	else \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
-	$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(TESTING)) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
+	$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(TESTING)) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
 override define $(TESTING)-done =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) DONE [$(@)]"; \
-	$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(TESTING)) $(@)-done 2>&1
+	$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(TESTING)) $(@)-done 2>&1
 endef
 
 override define $(TESTING)-find =
@@ -10866,6 +10866,7 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) \")) \
 			) | .c]" \
 			2>/dev/null \
+		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
 	if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
 		$(ECHO) "$${PAST}"; \
@@ -12072,13 +12073,6 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		2>&1 | $(TEE) --append $(PUBLISH_LOG); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
-
-#WORKING:NOW:NOW:FIX
-#	after all the env_make...
-#		make _test
-#		make _test-file
-#		make V=0 site-template-all
-#		make J=20 _test-speed 2>&1 | tee Composer-v3.1._test-speed.txt
 
 #WORKING:NOW:NOW
 #	site
