@@ -54,13 +54,15 @@ override VIM_FOLDING := {{{1
 #				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template-all`)
 #				* _site/index.html (`make COMPOSER_DEBUGIT="1" site-template`)
 #				* _site/index.html (`make site-template`)
+#				* _site/index.html (`make --directory _site export`)
 #			* Paths
 #				* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/$(COMPOSER_BASENAME)+$(EXPORTS)`
 #				* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
 #				* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
 #		* Test: Performance
 #			* `time make COMPOSER_DEBUGIT="0" FAIL`
-#				* Minimize '$(shell)' calls = '/: override .*(shell'
+#				* Make sure '--trace' debug output is identical
+#				* Minimize '$(shell)' and '/: override .* $(shell' calls
 #				* With and without 'c_site' enabled
 #			* `make MAKEJOBS="[X]" _test-speed`
 #	* Prepare
@@ -524,17 +526,18 @@ export MAKEFLAGS
 
 #>override MAKEFILE			:= $(notdir $(firstword $(MAKEFILE_LIST)))
 override MAKEFILE			:= Makefile
-override MAKEFLAGS			:= $(if $(filter k%,$(MAKEFLAGS)),--keep-going,--stop)
-override MAKEFLAGS			:= $(MAKEFLAGS) --no-builtin-rules --no-builtin-variables $(if $(COMPOSER_DEBUGIT_ALL),--print-directory,--no-print-directory)
 
+override MAKEFLAGS_ENV			= --no-builtin-rules --no-builtin-variables $(if $(1),--print-directory,--no-print-directory)
+override NOFAIL				:= --keep-going
+
+override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,$(COMPOSER_DEBUGIT_ALL)) $(if $(filter k%,$(MAKEFLAGS)),$(NOFAIL),--stop)
 ifneq ($(COMPOSER_DEBUGIT_ALL),)
-override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose --trace
+#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose --trace
+override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
 else
+#>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none --silent
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
 endif
-
-override NOFAIL				:= --keep-going
-override SILENT				:= COMPOSER_DOCOLOR= COMPOSER_DEBUGIT= $(NOFAIL) --no-print-directory --silent --debug=none
 
 ########################################
 
@@ -898,7 +901,7 @@ override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv --dereference
 override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
 override DIRNAME			:= $(call COMPOSER_FIND,$(PATH_LIST),dirname)
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
-override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - PATH="$(PATH)"
+override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - USER="$(USER)" HOME="$(HOME)" PATH="$(PATH)"
 override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
 override HEAD				:= $(call COMPOSER_FIND,$(PATH_LIST),head)
 override LN				:= $(call COMPOSER_FIND,$(PATH_LIST),ln) -fsv --relative
@@ -1497,7 +1500,11 @@ override PANDOC_OPTIONS_ERROR		:=
 # {{{1 Composer Operation
 ################################################################################
 
-override ENV_MAKE			:= $(ENV) $(REALMAKE) $(MAKEFLAGS)
+override ENV_MAKE			= $(ENV) $(REALMAKE) $(call MAKEFLAGS_ENV) \
+	$(if $(filter $(NOTHING),$(1)),,MAKEJOBS="$(1)") \
+	$(if $(filter $(NOTHING),$(2)),,COMPOSER_DOCOLOR="$(2)") \
+	$(if $(filter $(NOTHING),$(3)),,COMPOSER_DEBUGIT="$(3)") \
+	$(foreach FILE,$(4),$(FILE)="$($(FILE))")
 
 override ~				:= "'$$'"
 override COMPOSER_MY_PATH		:= $(~)(abspath $(~)(dir $(~)(lastword $(~)(MAKEFILE_LIST))))
@@ -1780,16 +1787,11 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 ## {{{2 Testing
 ########################################
 
+override TESTING_MAKEJOBS		:= 8
+
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
 override TESTING_COMPOSER_MAKEFILE	:= $(TESTING_DIR)/$(TESTING_COMPOSER_DIR)/$(MAKEFILE)
-
-override TESTING_MAKEJOBS		:= 8
-override TESTING_ENV_MAKE		:= $(ENV) \
-	MAKEJOBS="1" \
-	COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-	COMPOSER_DEBUGIT= \
-	$(REALMAKE)
 
 ########################################
 ## {{{2 Publish
@@ -1932,7 +1934,7 @@ override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),
 ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
 ifneq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY_ROOT) $(CONFIGS)-COMPOSER_YML_LIST),library))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) $(CONFIGS)-COMPOSER_YML_LIST),library))
 endif
 endif
 endif
@@ -2308,7 +2310,8 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
 	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Build as Bootstrap page"		"$(_M)$(c_site)"
+#WORK	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"$(_C)[Bootstrap Websites]$(_D) ($(_C)[HTML]$(_D))"	"$(_M)$(c_site)"
+	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Enable $(_C)[Bootstrap Websites]$(_D)"	"$(_M)$(c_site)"
 	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
 	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
 	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
@@ -2321,22 +2324,22 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)[c_margin]$(_D)  ~ $(_E)m"	"Size of margins ($(_C)[PDF]$(_D))"	"$(_M)$(c_margin)"
 	@$(TABLE_M3) "$(_C)[c_options]$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Values:$(_D) $(_C)c_type"	"$(_H)Format"				"$(_H)Extension"
-	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_M)$(TYPE_HTML)"		"$(DESC_HTML)"				"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
-	@$(TABLE_M3) "$(_M)$(TYPE_LPDF)"		"$(DESC_LPDF)"				"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
-	@$(TABLE_M3) "$(_M)$(TYPE_EPUB)"		"$(DESC_EPUB)"				"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
-	@$(TABLE_M3) "$(_M)$(TYPE_PRES)"		"$(DESC_PRES)"				"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
-	@$(TABLE_M3) "$(_M)$(TYPE_DOCX)"		"$(DESC_DOCX)"				"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
-	@$(TABLE_M3) "$(_M)$(TYPE_PPTX)"		"$(DESC_PPTX)"				"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
-	@$(TABLE_M3) "$(_M)$(TYPE_TEXT)"		"$(DESC_TEXT)"				"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
-	@$(TABLE_M3) "$(_M)$(TYPE_LINT)"		"$(DESC_LINT)"				"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
+	@$(TABLE_M3) "$(_H)Values$(_D) ($(_C)c_type$(_D))"	"$(_H)Format"	"$(_H)Extension"
+	@$(TABLE_M3) ":---"					":---"		":---"
+	@$(TABLE_M3) "$(_M)$(TYPE_HTML)"			"$(DESC_HTML)"	"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
+	@$(TABLE_M3) "$(_M)$(TYPE_LPDF)"			"$(DESC_LPDF)"	"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
+	@$(TABLE_M3) "$(_M)$(TYPE_EPUB)"			"$(DESC_EPUB)"	"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
+	@$(TABLE_M3) "$(_M)$(TYPE_PRES)"			"$(DESC_PRES)"	"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
+	@$(TABLE_M3) "$(_M)$(TYPE_DOCX)"			"$(DESC_DOCX)"	"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
+	@$(TABLE_M3) "$(_M)$(TYPE_PPTX)"			"$(DESC_PPTX)"	"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
+	@$(TABLE_M3) "$(_M)$(TYPE_TEXT)"			"$(DESC_TEXT)"	"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
+	@$(TABLE_M3) "$(_M)$(TYPE_LINT)"			"$(DESC_LINT)"	"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other $(_C)[c_type]$(_D) values will be passed directly to $(_C)[Pandoc]$(_D)*"
 	@$(PRINT) "  * *Special $(_C)[c_css]$(_D) values:*"
-	@$(COLUMN_2) "      * *\`$(_M)$(COMPOSER_CSS)$(_D)\`"		"= Filesystem override of variable value*"
-	@$(COLUMN_2) "      * *\`$(_N)$(CSS_ALT)$(_D)\`"		"= Use the alternate default stylesheet*"
-	@$(COLUMN_2) "      * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"			"= Revert to the $(_C)[Pandoc]$(_D) default*"
+	@$(COLUMN_2) "      * *\`$(_M)$(COMPOSER_CSS)$(_D)\`"					"= Filesystem override of variable value*"
+	@$(COLUMN_2) "      * *\`$(_N)$(CSS_ALT)$(_D)\`"					"= Use the alternate default stylesheet*"
+	@$(COLUMN_2) "      * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"					"= Revert to the $(_C)[Pandoc]$(_D) default*"
 	@$(COLUMN_2) "  * *Special $(_C)[c_toc]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= List all headers, and number sections*"
 	@$(COLUMN_2) "  * *Special $(_C)[c_level]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= Varies by $(_C)[c_type]$(_D) $(_E)(see [$(HELPOUT)-$(DOITALL)])$(_D)*"
 	@$(PRINT) "  * *An empty $(_C)[c_margin]$(_D) value enables individual margins:*"
@@ -2500,23 +2503,23 @@ $(HELPOUT)-EXAMPLES_%:
 $(HELPOUT)-$(HEADERS)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
-		@$(MAKE) $(SILENT) $(HELPOUT)-$(DOITALL)-HEADER
+		@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOITALL)-HEADER
 		@if [ "$(*)" = "$(DOFORCE)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
 		@if [ "$(*)" = "$(DOFORCE)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT); \
 		fi
-	@$(call TITLE_LN,2,Overview)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
+	@$(call TITLE_LN,2,Overview)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-OVERVIEW)
 		@$(call TITLE_END)
-	@$(call TITLE_LN,2,Quick Start)			; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
-		@$(ENDOLINE); $(MAKE) $(SILENT) $(HELPOUT)-USAGE
-		@$(ENDOLINE); $(MAKE) $(SILENT) $(HELPOUT)-EXAMPLES_0
+	@$(call TITLE_LN,2,Quick Start)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
+		@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-USAGE
+		@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-EXAMPLES_0
 		@$(call TITLE_END)
-	@$(call TITLE_LN,2,Principles)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
+	@$(call TITLE_LN,2,Principles)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-GOALS)
 		@$(call TITLE_END)
-	@$(call TITLE_LN,2,Requirements)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
-		@$(ENDOLINE); $(MAKE) $(CHECKIT)-$(DOFORCE) | $(SED) "/^[^#]*[#]/d"
+	@$(call TITLE_LN,2,Requirements)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE)
+		@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(CHECKIT)-$(DOFORCE) | $(SED) "/$(SED_ESCAPE_COLOR)[#]/d"
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-REQUIRE_POST)
 		@$(call TITLE_END)
 #>	@$(call TITLE_END)
@@ -2527,32 +2530,32 @@ $(HELPOUT)-%:
 	@$(if $(and $(c_site),$(filter $(DOFORCE),$(*))),\
 		$(eval export override COMPOSER_DOITALL_$(HELPOUT) := $(PUBLISH)) \
 	)
-	@$(MAKE) $(SILENT) $(HELPOUT)-$(HEADERS)-$(*)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
-	@$(call TITLE_LN,2,Recommended Workflow)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Document Formatting)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Configuration Settings)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Precedence Rules)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Specifying Dependencies)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Custom Targets)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Repository Versions)			; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Specifying Dependencies)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-DEPENDS)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Custom Targets)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-CUSTOM)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Repository Versions)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VERSIONS)	; $(call TITLE_END)
 #>	@$(call TITLE_END)
-	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_TITLE_1
-	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_FORMAT_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)	; $(call TITLE_END)
-	@$(MAKE) $(SILENT) $(HELPOUT)-VARIABLES_CONTROL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)	; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-VARIABLES_TITLE_1
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-VARIABLES_FORMAT_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_FORMAT)	; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-VARIABLES_CONTROL_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL)	; $(call TITLE_END)
 #>	@$(call TITLE_END)
-	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_TITLE_1
-	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_PRIMARY_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)		; $(call TITLE_END)
-	@$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_ADDITIONAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)	; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-TARGETS_TITLE_1
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-TARGETS_PRIMARY_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_PRIMARY)		; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-TARGETS_ADDITIONAL_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL)	; $(call TITLE_END)
 	@if [ "$(*)" = "$(DOFORCE)" ]; then \
-		$(MAKE) $(SILENT) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)	; $(call TITLE_END); \
+		$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-TARGETS_INTERNAL_2	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL)	; $(call TITLE_END); \
 	fi
 #>	@$(call TITLE_END)
 	@if [ "$(*)" = "$(DOFORCE)" ]; then \
-		$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
+		$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOFORCE)-$(PRINTER); \
 	fi
 	@if [ "$(COMPOSER_DOITALL_$(HELPOUT))" != "$(PUBLISH)" ]; then \
-		$(MAKE) $(SILENT) $(HELPOUT)-FOOTER; \
+		$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-FOOTER; \
 	fi
 
 ########################################
@@ -2561,7 +2564,7 @@ $(HELPOUT)-%:
 
 .PHONY: $(HELPOUT)-$(PUBLISH)
 $(HELPOUT)-$(PUBLISH):
-	@$(MAKE) $(SILENT) c_site="1" $(HELPOUT)-$(DOFORCE)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) c_site="1" $(HELPOUT)-$(DOFORCE)
 
 ########################################
 ### {{{3 $(HELPOUT)-$(TYPE_PRES)
@@ -2569,10 +2572,10 @@ $(HELPOUT)-$(PUBLISH):
 
 .PHONY: $(HELPOUT)-$(TYPE_PRES)
 $(HELPOUT)-$(TYPE_PRES):
-	@$(MAKE) $(SILENT) $(HELPOUT)-$(HEADERS)-$(TYPE_PRES)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(TYPE_PRES)
 	@$(ENDOLINE)
 	@$(LINERULE)
-	@$(MAKE) $(SILENT) $(HELPOUT)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOFORCE)
@@ -2581,7 +2584,7 @@ $(HELPOUT)-$(TYPE_PRES):
 .PHONY: $(HELPOUT)-$(DOFORCE)-$(PRINTER)
 $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(call TITLE_LN,1,Reference)
-	@$(MAKE) $(SILENT) $(HELPOUT)-$(DOFORCE)-$(TARGETS)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOFORCE)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 #WORKING reference this somewhere...
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Pandoc Extensions)"
@@ -2592,33 +2595,27 @@ $(HELPOUT)-$(DOFORCE)-$(PRINTER):
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Templates)"
 	@$(ENDOLINE); $(ECHO) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(MAKE) .$(EXAMPLE)-$(INSTALL) \
-		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
 	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(MAKE) .$(EXAMPLE) \
-		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
 	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)-yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(MAKE) .$(EXAMPLE)-yml \
-		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-yml		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
 	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)-md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
 #>	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
 	@$(ENDOLINE); $(ENDOLINE)
-	@$(MAKE) .$(EXAMPLE)-md \
-		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(if $(COMPOSER_DOCOLOR),,1))
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-md		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Defaults)"
 	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
-	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK) \
-		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),1)
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "The template \`$(_M)$(COMPOSER_YML)$(_D)\` in the \`$(_M)$(notdir $(COMPOSER_ART))$(_D)\` directory:"
-	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML) \
-		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE),1)
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML)		$(call $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE))
 	@$(call TITLE_END)
 	@$(call TITLE_LN,2,Reserved,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Target Names)"
 	@$(ENDOLINE); $(PRINT) "Do not create targets which match these, or use them as prefixes:"
-#WORKING maybe just do: $(MAKE) $(SILENT) $(LISTING) | $(SED) -e "/^[#]/d" -e "s|^([^:]+).*$|\1|g" | $(SORT)
+#WORKING maybe just do: $(call ENV_MAKE) $(LISTING) | $(SED) -e "/^[#]/d" -e "s|^([^:]+).*$|\1|g" | $(SORT)
 	@$(ENDOLINE); $(eval override LIST := $(shell \
 			$(ECHO) "$(COMPOSER_RESERVED)" \
 			| $(TR) ' ' '\n' \
@@ -2733,7 +2730,7 @@ override define $(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT =
 endef
 
 override define $(HELPOUT)-$(DOFORCE)-$(PRINTER)-$(EXAMPLE) =
-	$(if $(1),| $(SED) \
+	$(if $(1),,| $(SED) \
 		-e "/^[#]{$(DEPTH_MAX)}.+[[:space:]]/d" \
 		-e "s|[\t]+| |g" \
 		-e "s|^|$(CODEBLOCK)|g" \
@@ -4411,12 +4408,12 @@ $(EXAMPLE) \
 $(EXAMPLE)-yml \
 $(EXAMPLE)-md \
 :
-	@$(MAKE) $(SILENT) $(call COMPOSER_OPTIONS_EXPORT) .$(@)
+	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= .$(@)
 
 #WORKING keep this?  can it be improved?
 .PHONY: $(EXAMPLE)-md-file
 $(EXAMPLE)-md-file:
-	@$(MAKE) $(EXAMPLE)-md >$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
+	@$(call ENV_MAKE) $(EXAMPLE)-md >$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
 	@$(EDITOR) $(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
 
 ########################################
@@ -4461,12 +4458,15 @@ $(EXAMPLE)-md-file:
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
 
 .PHONY: .$(EXAMPLE)-md
-#>.$(EXAMPLE)-md: override GIT_USER := $(shell git config --get user.name 2>/dev/null)
-.$(EXAMPLE)-md: override GIT_USER = $(shell git config --get user.name 2>/dev/null)
 .$(EXAMPLE)-md:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$(COMPOSER_HEADLINE)$(_N)\")
-	@$(call $(EXAMPLE)-print,,$(_C)author$(_D): $(_M)$(if $(GIT_USER),$(GIT_USER),$(USER)))
+	@$(call $(EXAMPLE)-print,,$(_C)author$(_D): $(_M)$$( \
+			FILE="$$($(GIT) config --get user.name 2>/dev/null)"; \
+			if [ -n "$${FILE}" ]; then	$(ECHO) "$${FILE}"; \
+				else			$(ECHO) "$${USER}"; \
+			fi \
+		))
 	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(DATEMARK))
 	@$(call $(EXAMPLE)-print,,$(_C)tags$(_D):)
 	@$(call $(EXAMPLE)-print,,  $(_N)-$(_D) $(_M)$(COMPOSER_BASENAME))
@@ -4852,7 +4852,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES_TARGET =
 override COMPOSER_TARGETS += $(1).done
 $(1).done: $$(COMPOSER_YML)
 $(1).done:
-	@$$(MAKE) $$(SILENT) themes-$(word 2,$(subst +, ,$(1)))
+	@$$(MAKE) themes-$(word 2,$(subst +, ,$(1)))
 	@$$(MAKE) \\
 		c_type="$(if $(filter $(TYPE_PRES).%,$(1)),$(TYPE_PRES),$(TYPE_HTML))" \\
 		c_base="$(1)" \\
@@ -8343,7 +8343,7 @@ endef
 
 #>override _D				:= \e[0;37m
 override define COMPOSER_COLOR =
-override SED_ESCAPE_COLOR		:= ........
+override SED_ESCAPE_COLOR		:= [[:cntrl:]][[][0-9]{1,2}([;][0-9]{2})?m
 override _D				:= \e[0m
 override _H				:= \e[0;32m
 override _C				:= \e[0;36m
@@ -8534,7 +8534,7 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 endif
 endif
 	@$(LINERULE)
-	@$(MAKE) $(SILENT) $(HEADERS)-colors
+	@$(call ENV_MAKE) $(HEADERS)-colors
 
 ########################################
 ### {{{3 $(HEADERS)-%
@@ -8562,7 +8562,7 @@ override define $(HEADERS) =
 	$(TABLE_C2) "$(_E)MAKECMDGOALS"		"[$(_N)$(MAKECMDGOALS)$(_D)] ($(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@))))$(_D)))"; \
 	$(TABLE_C2) "$(_E)MAKELEVEL"		"[$(_N)$(MAKELEVEL)$(_D)]"; \
 	$(foreach FILE,$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(COMPOSER_OPTIONS_MAKE)),\
-		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$($(FILE))$(_D)]$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)), $(_E)$(MARKER)$(_D))"; \
+		$(TABLE_C2) "$(_C)$(FILE)"	"[$(_M)$($(FILE))$(_D)]$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)), $(_E)$(MARKER))"; \
 	) \
 	$(HEADER_L)
 endef
@@ -8585,7 +8585,7 @@ override define $(HEADERS)-run =
 			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
 			) \
 		)) \
-		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(OUT), )$(_E)$(MARKER)$(_D))"; \
+		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(_D)$(if $(OUT), )$(_E)$(MARKER))"; \
 	) \
 	$(LINERULE)
 endef
@@ -8667,7 +8667,7 @@ endif
 
 .PHONY: $(MAKE_DB)
 $(MAKE_DB):
-	@$(MAKE) $(SILENT) \
+	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) \
 		--question \
 		--print-data-base \
 		--no-builtin-rules \
@@ -8680,9 +8680,9 @@ $(MAKE_DB):
 
 .PHONY: $(LISTING)
 $(LISTING):
-	@$(MAKE) $(SILENT) $(MAKE_DB) \
-		| $(SED) -n -e "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" \
-		| $(SED) -n -e "/^$(COMPOSER_REGEX_PREFIX)?$(COMPOSER_REGEX)[:]+/p" \
+	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(MAKE_DB) \
+		| $(SED) -n "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" \
+		| $(SED) -n "/^$(COMPOSER_REGEX_PREFIX)?$(COMPOSER_REGEX)[:]+/p" \
 		| $(SORT)
 
 ########################################
@@ -8865,16 +8865,13 @@ endif
 endif
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
-		$(HELPOUT)-$(DOFORCE)				| $(SED) "/^[#][>]/d"	>$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
+	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(DOFORCE)		| $(SED) "/^[#][>]/d" >$(CURDIR)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)
 ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
-		$(HELPOUT)-$(PUBLISH)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(PUBLISH)		| $(SED) "/^[#][>]/d" >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
-	@$(MAKE) $(SILENT) --directory $(COMPOSER_DIR) COMPOSER_DOCOLOR= c_site= \
-		$(HELPOUT)-$(TYPE_PRES)				| $(SED) "/^[#][>]/d"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(TYPE_PRES)		| $(SED) "/^[#][>]/d" >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 endif
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
@@ -8889,14 +8886,14 @@ endif
 endif
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"		| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
+	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"			| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
 	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
-#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"		| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
+#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"			| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
 	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
 											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
 											$($(DEBUGIT)-output)
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"			| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"			| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
 		$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
 		$(eval override TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
@@ -8905,7 +8902,7 @@ endif
 		if [ -f "$(FILE)" ]; then \
 			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE) $($(DEBUGIT)-output); \
 		else \
-			$(ECHO) "$(FILE)"			| $(BASE64)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
+			$(ECHO) "$(FILE)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
@@ -8995,11 +8992,11 @@ ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DEBUGIT),)
-	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(CLEANER)
-	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(DOITALL)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(CLEANER)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(DOITALL)
 else
-	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(PUBLISH).$(EXTN_HTML)
-	@$(ENV_MAKE) COMPOSER_EXT="$(COMPOSER_EXT_DEFAULT)" COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" $(OUT_README).$(EXTN_HTML)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(OUT_README).$(EXTN_HTML)
 endif
 	@$(ECHO) "$(_S)"
 	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
@@ -9239,7 +9236,7 @@ $(TESTING)-$(PRINTER):
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE),-$(INSTALL),$(2),1)
-override $(TESTING)-run			= $(if $(2),$(patsubst MAKEJOBS="%",,$(TESTING_ENV_MAKE)),$(TESTING_ENV_MAKE)) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
+override $(TESTING)-run			= $(call ENV_MAKE,$(2),$(COMPOSER_DOCOLOR)) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
 	$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $(patsubst $(TESTING)-%,%,$(@)) ]$(MARKER)); \
@@ -9280,11 +9277,10 @@ override define $(TESTING)-load =
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
 	$(ECHO) "override COMPOSER_IGNORES := test\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
-	$(call $(TESTING)-run,$(if $(1),$(1),$(@)),1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(INSTALL)-$(DOFORCE)
+	$(call $(TESTING)-run,$(if $(1),$(1),$(@)),$(TESTING_MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 endef
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-#>	$(TESTING_ENV_MAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@)));
 override define $(TESTING)-init =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) INIT [$(@)]:"; \
@@ -9296,15 +9292,14 @@ override define $(TESTING)-init =
 	else \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
-	$(MAKE) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
+	$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) $(@)-init 2>&1 | $(TEE) $(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
 	if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
 
-#>	$(TESTING_ENV_MAKE) $(@)-done 2>&1
 override define $(TESTING)-done =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) DONE [$(@)]"; \
-	$(MAKE) $(@)-done 2>&1
+	$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) $(@)-done 2>&1
 endef
 
 override define $(TESTING)-find =
@@ -9442,8 +9437,7 @@ $(TESTING)-heredoc-init:
 		$(SED) -n "/^[#].*[ ]Embedded[ ]Files.*$$/,/[{][{][{]/p" $(COMPOSER) \
 			| $(SED) -n "s|^override[[:space:]]+([^:=[:space:]]+).+$$|\1|gp" \
 		),\
-		$(ECHO) "$($(FILE))" \
-			| $(BASE64)						>$(call $(TESTING)-pwd)/$(FILE).png; \
+		$(ECHO) "$($(FILE))" | $(BASE64)				>$(call $(TESTING)-pwd)/$(FILE).png; \
 		$(call NEWLINE) \
 	)
 	@$(SED) -n "s|^.+DO_HEREDOC[,]([^[:space:]]+).*$$|\1|gp" $(COMPOSER) \
@@ -9499,13 +9493,13 @@ endef
 .PHONY: $(TESTING)-speed-init
 $(TESTING)-speed-init:
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
-	@time $(call $(TESTING)-run,,1) MAKEJOBS="$(MAKEJOBS)" $(INSTALL)-$(DOFORCE)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 #> update: $(PUBLISH) > $(CLEANER) > $(DOITALL)
-#>	@time $(call $(TESTING)-run,,1) MAKEJOBS="$(MAKEJOBS)" $(PUBLISH)-$(DOFORCE)
-#>	@time $(call $(TESTING)-run,,1) MAKEJOBS="$(MAKEJOBS)" $(CLEANER)-$(DOITALL)
-	@time $(call $(TESTING)-run,,1) MAKEJOBS="$(MAKEJOBS)" $(DOITALL)-$(DOITALL)
-	@time $(call $(TESTING)-run,,1) MAKEJOBS="$(MAKEJOBS)" $(CLEANER)-$(DOITALL)
-	@time $(call $(TESTING)-run,,1) MAKEJOBS="$(MAKEJOBS)" $(PUBLISH)-$(DOFORCE)
+#>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
+#>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 
 .PHONY: $(TESTING)-speed-done
 $(TESTING)-speed-done:
@@ -9545,9 +9539,9 @@ $(TESTING)-$(COMPOSER_BASENAME):
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	#> precedence
-	@$(call $(TESTING)-run,,1) MAKEJOBS="1000" c_jobs="100" J="10" $(CONFIGS)
-	@$(call $(TESTING)-run,,1) c_jobs="100" J="10" $(CONFIGS)
-	@$(call $(TESTING)-run,,1) J="10" $(CONFIGS)
+	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="1000" c_jobs="100" J="10" $(CONFIGS)
+	@$(call $(TESTING)-run,,$(NOTHING)) c_jobs="100" J="10" $(CONFIGS)
+	@$(call $(TESTING)-run,,$(NOTHING)) J="10" $(CONFIGS)
 	#> input
 	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
@@ -9567,12 +9561,12 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> values
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n"					>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)\n"					>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
@@ -9595,10 +9589,12 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,6,[\"]$(TESTING)=$(DEBUGIT)[\"])
 	$(call $(TESTING)-count,6,[']$(TESTING)=$(DEBUGIT)['])
 	#> values
-	$(call $(TESTING)-count,17,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,17,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-count,16,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,16,COMPOSER_SUBDIRS.+artifacts)
 	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT) $(notdir $(call $(TESTING)-pwd)))
 	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+artifacts $(notdir $(call $(TESTING)-pwd)))
+	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING))
+	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(NOTHING))
 	$(call $(TESTING)-count,1,Processing.+$(NOTHING).+$(NOTHING)-$(TARGETS))
 	$(call $(TESTING)-count,1,Processing.+$(NOTHING).+$(NOTHING)-$(SUBDIRS))
 
@@ -9636,7 +9632,7 @@ $(TESTING)-$(TARGETS)-init:
 		) \
 	)
 #>				$(call $(TESTING)-run) $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)) || $(TRUE)
-	@$(call $(TESTING)-run,,1) $(NOFAIL) MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL) || $(TRUE)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(NOFAIL) $(DOITALL) || $(TRUE)
 	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 
 .PHONY: $(TESTING)-$(TARGETS)-done
@@ -9656,6 +9652,10 @@ $(TESTING)-$(TARGETS)-done:
 ########################################
 ### {{{3 $(TESTING)-$(INSTALL)
 ########################################
+
+#WORKING
+#	this should test $(INSTALL) specifically, including $(DOFORCE) versus not
+#	parallel/linear $(CLEANER)/$(DOITALL) should be below...
 
 .PHONY: $(TESTING)-$(INSTALL)
 $(TESTING)-$(INSTALL): $(TESTING)-Think
@@ -9681,8 +9681,8 @@ $(TESTING)-$(INSTALL):
 .PHONY: $(TESTING)-$(INSTALL)-init
 $(TESTING)-$(INSTALL)-init:
 	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
-	@$(call $(TESTING)-run,,1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL)-$(DOITALL)
-	@$(call $(TESTING)-run,,1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 	@$(call $(TESTING)-run) $(INSTALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
@@ -9723,8 +9723,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 #>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(CLEANER)" $(CLEANER)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(DOITALL)" $(DOITALL)
-	@$(call $(TESTING)-run,,1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL)-$(DOITALL)
-	@$(call $(TESTING)-run,,1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(CLEANER)-$(DOITALL)-done:
@@ -9861,7 +9861,7 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 		$(patsubst %/.,%,$(wildcard $(addsuffix /.,$(call $(TESTING)-pwd)/data/*))) \
 		))))): $(DOITALL)-$(SUBDIRS)-docx\n" \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run,,1) MAKEJOBS="$(TESTING_MAKEJOBS)" $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
@@ -10265,7 +10265,7 @@ $(CONFIGS):
 			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
 			) \
 		)) \
-		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(_D)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $(OUT), )$(_E)$(MARKER)$(_D))"; \
+		$(TABLE_M2) "$(_C)$(FILE)"	"$(_M)$(OUT)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(_D)$(if $(OUT), )$(_E)$(MARKER))"; \
 	)
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
@@ -10276,7 +10276,7 @@ ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
 	@$(LINERULE)
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
 	@$(LINERULE)
-	@$(ENV_MAKE) $(CONFIGS)-env
+	@$(call ENV_MAKE) $(CONFIGS)-env
 endif
 
 .PHONY: $(CONFIGS)-env
@@ -10324,18 +10324,25 @@ $(TARGETS):
 	@$(MAKE) $(PRINTER)-$(PRINTER)
 
 override define $(TARGETS)-$(PRINTER) =
-	$(MAKE) $(SILENT) $(LISTING) | $(SED) \
+	$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
-		$(if $(c_site),-e "s|$(patsubst $(COMPOSER_ROOT)/%,$(COMPOSER_ROOT_REGEX)/%,$($(PUBLISH)-cache))||g") \
-		$(if $(c_site),-e "s|$(patsubst $(COMPOSER_ROOT)/%,$(COMPOSER_ROOT_REGEX)/%,$($(PUBLISH)-library))||g") \
-		$(if $(1),-e "/^$(HEADERS)[-]$(1)[:]+.*$$/d",$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d")) \
-		$(if $(1),,-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d") \
-		$(if $(1),,-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d") \
-		-e "s|[:]+[[:space:]]*$$||g" \
-		-e "s|[[:space:]]+|$(TOKEN)|g" \
-		$(if $(1),| $(SED) -n "/^[^:]+[-]$(1)$$/p")
+		$(if $(c_site),\
+			-e "s|$(patsubst $(COMPOSER_ROOT)/%,$(COMPOSER_ROOT_REGEX)/%,$($(PUBLISH)-cache))||g" \
+			-e "s|$(patsubst $(COMPOSER_ROOT)/%,$(COMPOSER_ROOT_REGEX)/%,$($(PUBLISH)-library))||g" \
+		) \
+		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
+		$(if $(1),\
+			-e "s|[:].*$$||g" \
+			| $(SED) -n "/[-]$(1)$$/p" \
+			| $(SORT) \
+		,\
+			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
+			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
+			-e "s|[:]+[[:space:]]*$$||g" \
+			-e "s|[[:space:]]+|$(TOKEN)|g" \
+		)
 endef
 
 ################################################################################
@@ -10531,7 +10538,6 @@ override define $(EXPORTS)-tree =
 		-o \\\( -type d -print \\\)
 endef
 
-#>					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES
 override define $(EXPORTS)-find =
 	eval $(FIND_ALL) $(1) \
 		\\\( -path $(COMPOSER_DIR) -prune \\\) \
@@ -10547,7 +10553,7 @@ override define $(EXPORTS)-find =
 			-o \( -path $(COMPOSER_LIBRARY) -prune \) \
 			-o \( -type d -print \) \
 				| while read -r EDIR; do \
-					$(MAKE) $(SILENT) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
+					$(call ENV_MAKE) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
 						| $(SORT) \
 						| while read -r EFIL; do \
 							$(ECHO) " -o \\\( -path \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
@@ -10600,7 +10606,7 @@ override define $(EXPORTS)-filter =
 			) \
 		) } \
 		| $(SORT); \
-	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES \
+	$(call ENV_MAKE) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
 		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$$( \
@@ -10612,7 +10618,7 @@ override define $(EXPORTS)-filter =
 			fi; \
 		done \
 		| $(SORT); \
-	$(MAKE) $(SILENT) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS \
+	$(call ENV_MAKE) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS 2>/dev/null \
 		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$$( \
@@ -10652,7 +10658,7 @@ $(PUBLISH):
 $(PUBLISH)-post:
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
 ifeq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
-	@$(MAKE) c_site="1" $(PUBLISH)-post="$(DOFORCE)" $(PUBLISH)-library
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(PUBLISH)-post="$(DOFORCE)" $(PUBLISH)-library
 endif
 endif
 	@$(ECHO) ""
@@ -11123,9 +11129,9 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(ECHO) "$(_D)"
 #>	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_SETTINGS))
-	@$(ENV_MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS) >$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
+	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS)	>$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
-	@$(ENV_MAKE) $(SILENT) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_YML) >$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
+	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_YML)		>$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
 	@if [ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS)" ]; then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
 		$(ECHO) "$(_E)"; \
@@ -11839,12 +11845,9 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(BOOTSTRAP_DIR)/		$(PUBLISH_ROOT)/$(notdir $(BOOTSTRAP_DIR))
 	@$(SED) -i "s|^[#]{1}||g"		$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$(PUBLISH_FILES)))
 #>		--makefile $(COMPOSER)
-	@$(ENV_MAKE) \
+	@$(call ENV_MAKE,$(TESTING_MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 		--makefile $(PUBLISH_ROOT)/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
 		--directory $(PUBLISH_ROOT) \
-		MAKEJOBS="$(TESTING_MAKEJOBS)" \
-		COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-		COMPOSER_DEBUGIT= \
 		$(INSTALL)-$(DOFORCE)
 endif
 	@$(call $(HEADERS))
@@ -11937,7 +11940,7 @@ endif
 			$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"; \
 			$(ECHO) "---\n"; \
 			$(ECHO) "$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)\n"; \
-			$(MAKE) $(SILENT) $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
+			$(call ENV_MAKE) $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
 		}									>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGES))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
@@ -12039,11 +12042,8 @@ endif
 		$(PUBLISH_SOURCE).$(EXTN_HTML) \
 		$(PUBLISH_THEMES)/$(DOITALL) \
 		,\
-		time $(ENV_MAKE) \
+		time $(call ENV_MAKE,$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS)),$(COMPOSER_DOCOLOR),$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(COMPOSER_DEBUGIT))) \
 			--directory $(abspath $(dir $(PUBLISH_ROOT)/$(FILE))) \
-			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS))" \
-			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-			COMPOSER_DEBUGIT="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(COMPOSER_DEBUGIT))" \
 			$(if $(filter %/$(DOITALL),$(FILE)),\
 				$(DOITALL) ,\
 				$(notdir $(FILE)) \
@@ -12058,11 +12058,8 @@ else
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		,\
-		time $(ENV_MAKE) \
+		time $(call ENV_MAKE,$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS)),$(COMPOSER_DOCOLOR)) \
 			--directory $(PUBLISH_ROOT) \
-			MAKEJOBS="$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS))" \
-			COMPOSER_DOCOLOR="$(COMPOSER_DOCOLOR)" \
-			COMPOSER_DEBUGIT= \
 			$(FILE) \
 			2>&1 | $(TEE) --append $(PUBLISH_LOG); \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
@@ -12076,6 +12073,13 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		2>&1 | $(TEE) --append $(PUBLISH_LOG); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
+
+#WORKING:NOW:NOW:FIX
+#	after all the env_make...
+#		make _test
+#		make _test-file
+#		make V=0 site-template-all
+#		make J=20 _test-speed 2>&1 | tee Composer-v3.1._test-speed.txt
 
 #WORKING:NOW:NOW
 #	site
@@ -12141,7 +12145,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(MAKE) $(SILENT) --makefile $(COMPOSER) .$(EXAMPLE)$(2) >$(1); \
+		$(call ENV_MAKE) --makefile $(COMPOSER) .$(EXAMPLE)$(2) >$(1); \
 	fi; \
 	if [ -n "$(3)" ]; then \
 		$(SED) -i \
@@ -12275,9 +12279,11 @@ ifeq ($(COMPOSER_DEPENDS),)
 	@$(MAKE) $(DOITALL)-$(SUBDIRS)
 endif
 endif
+#>ifneq ($(c_site),)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
 	@$(MAKE) $(PUBLISH)-post
 endif
+#>endif
 
 #WORK document!
 .PHONY: $(DOITALL)-%
