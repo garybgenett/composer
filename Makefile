@@ -727,6 +727,10 @@ else ifeq ($(OS_TYPE),Darwin)
 override PANDOC_BIN			:= $(PANDOC_DIR)/$(PANDOC_MAC_BIN)
 endif
 
+#WORKING
+# https://github.com/vim-pandoc/vim-pandoc
+# https://github.com/vim-pandoc/vim-pandoc-syntax
+
 ########################################
 
 # https://mikefarah.gitbook.io/yq
@@ -775,6 +779,9 @@ override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
 override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
 override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
+
+#WORKING
+# https://github.com/twbs/bootlint
 
 ########################################
 
@@ -10537,19 +10544,19 @@ override define $(EXPORTS)-tree =
 		-o \\\( -type d -print \\\)
 endef
 
+#>		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\)
+#>			-o \( -path $(COMPOSER_LIBRARY) -prune \)
 override define $(EXPORTS)-find =
 	eval $(FIND_ALL) $(1) \
 		\\\( -path $(COMPOSER_DIR) -prune \\\) \
 		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
 		-o \\\( -path \"\*/$(notdir $(COMPOSER_TMP))\" -prune \\\) \
 		-o \\\( -path $(COMPOSER_EXPORT) -prune \\\) \
-		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\) \
 		$$(if [ -z "$(3)" ]; then $(FIND_ALL) $(1) \
 			\( -path $(COMPOSER_DIR) -prune \) \
 			-o \( -path $(COMPOSER_TMP) -prune \) \
 			-o \( -path \"*/$(notdir $(COMPOSER_TMP))\" -prune \) \
 			-o \( -path $(COMPOSER_EXPORT) -prune \) \
-			-o \( -path $(COMPOSER_LIBRARY) -prune \) \
 			-o \( -type d -print \) \
 				| while read -r EDIR; do \
 					$(call ENV_MAKE) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
