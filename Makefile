@@ -7000,10 +7000,8 @@ h4					{ font-size: 1.2rem; }
 h5					{ font-size: 1.1rem; }
 h6					{ font-size: 1rem; }
 
-dl,
-ol,
 ul {
-	margin:				0px;
+	margin-top:			0px;
 }
 
 /* #############################################################################
