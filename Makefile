@@ -6799,7 +6799,6 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 :root {
 	--bs-scroll-height:		60vh;
 	--bs-breadcrumb-divider:	"/";
-	--$(COMPOSER_TINYNAME)-menu-div:		var(--bs-breadcrumb-divider);
 }
 
 /* ################################## */
@@ -6835,6 +6834,10 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 }
 
 /* ########################################################################## */
+
+html {
+	font-size:			12px;
+}
 
 body {
 	min-width:			100%;
@@ -6961,7 +6964,7 @@ html {
 }
 
 .$(COMPOSER_TINYNAME)-menu-div::before {
-	content:			var(--$(COMPOSER_TINYNAME)-menu-div);
+	content:			var(--bs-breadcrumb-divider);
 }
 
 .$(COMPOSER_TINYNAME)-menu-list {
