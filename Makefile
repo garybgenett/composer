@@ -5953,10 +5953,6 @@ _EOF_
 function $(PUBLISH)-nav-bottom {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-nav-begin "bottom" ""						|| return 1
-#WORKING:NOW:NOW:FIX let's make the tagline less conspicuous, if we can...?
-$${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
-_EOF_
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
 #><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="breadcrumb">
 $${CAT} <<_EOF_
@@ -6279,6 +6275,12 @@ _EOF_
 	$(PUBLISH)-info-data "$${1}" || return 1
 	if [ "$${1}" = "top" ]; then
 		$(PUBLISH)-search || return 1
+	else
+$${CAT} <<_EOF_
+<p class="$${COMPOSER_TINYNAME}-link navbar-text me-3">
+$${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a>
+</p>
+_EOF_
 	fi
 $${CAT} <<_EOF_
 </div>
