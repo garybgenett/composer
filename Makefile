@@ -291,7 +291,7 @@ override PUBLISH_COPY_PROTECT		:= 1
 override PUBLISH_COPY_PROTECT_ALT	:= null
 
 override PUBLISH_COLS_BREAK		:= lg
-override PUBLISH_COLS_BREAK_ALT		:= xl
+override PUBLISH_COLS_BREAK_ALT		:= md
 override PUBLISH_COLS_STICKY		:= 1
 override PUBLISH_COLS_STICKY_ALT	:= null
 
@@ -4979,6 +4979,8 @@ $(_S)########################################$(_D)
         - $(_C)contents$(_D)
 $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
+    $(_M)SPACE$(_D):
+      - $(_C)spacer$(_D)
     $(_M)LIBRARY$(_D):
       - $(_M)AUTHORS$(_D):
         - $(_C)library$(_D) $(_M)authors$(_D)
@@ -5019,12 +5021,12 @@ $(_S)########################################$(_D)
     $(_M)CONTENTS$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
       - $(_C)metainfo$(_D)
-      - $(_C)readtime$(_D)
       - $(_C)contents$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
       - $(_C)creators$(_D)
       - $(_C)tagslist$(_D)
+      - $(_C)readtime$(_D)
       - $(_C)box-end$(_D)
     $(_M)END$(_D):
 
@@ -5068,6 +5070,7 @@ $(_S)########################################$(_D)
     $(_M)TEXT$(_D):
       - TOP TEXT
     $(_M)INFO$(_D):
+$(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)creators$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
@@ -5077,9 +5080,11 @@ $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
 
+
     $(_M)TEXT$(_D):
       - BOTTOM TEXT
     $(_M)INFO$(_D):
+$(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)creators$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
       - $(_C)readtime$(_D)
@@ -5283,7 +5288,7 @@ variables:
       - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-2 col-6
     SPACE:
       - column-end
-      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-4 col-10
+      - column-begin col-$(PUBLISH_COLS_BREAK_ALT)-6 col-10
     END:
       - column-end
       - row-end
@@ -5341,10 +5346,10 @@ variables:
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
 #$(MARKER)   - metainfo
-      - readtime
       - contents 3
       - creators
       - tagslist
+      - readtime
       - box-end
 
 ################################################################################
@@ -5536,9 +5541,12 @@ function $(PUBLISH)-error {
 #### {{{4 $(PUBLISH)-parse
 ########################################
 
+# 1 icon || form
+
 function $(PUBLISH)-parse {
 	while read -r FILE; do
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^$${PUBLISH_CMD_BEG} $${1}/p")" ]; then
+#>			FILE="$$($${ECHO} "$${FILE}" | $${SED} "s|^$${PUBLISH_CMD_BEG} (.+) $${PUBLISH_CMD_END}$$|\\1|g")"
 			FILE="$${FILE/#$${PUBLISH_CMD_BEG} }"
 			FILE="$${FILE/% $${PUBLISH_CMD_END}}"
 			$(PUBLISH)-$${FILE}
@@ -5674,7 +5682,7 @@ $${CAT} <<_EOF_
 _EOF_
 	BRND="$$(COMPOSER_YML_DATA_VAL config.brand)"
 	if [ -s "$${1}" ]; then
-		$${ECHO} "<img class=\"$${COMPOSER_TINYNAME}-logo align-top\" src=\"$${1}\">\\n"
+		$${ECHO} "<img class=\"$${COMPOSER_TINYNAME}-logo\" src=\"$${1}\">\\n"
 		if [ -n "$${BRND}" ]; then
 			$${ECHO} "$${HTML_SPACE}\\n"
 		fi
@@ -5692,6 +5700,24 @@ _EOF_
 }
 
 ########################################
+#### {{{4 $(PUBLISH)-copyright
+########################################
+
+function $(PUBLISH)-copyright {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+$${CAT} <<_EOF_
+<p class="$${COMPOSER_TINYNAME}-link navbar-text me-3">
+$$(
+	COMPOSER_YML_DATA_VAL config.copyright \\
+	| $(PUBLISH)-parse icon
+)
+</p>
+_EOF_
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
 #### {{{4 $(PUBLISH)-search
 ########################################
 
@@ -5700,7 +5726,7 @@ function $(PUBLISH)-search {
 	NAME="$$(COMPOSER_YML_DATA_VAL config.search_name)"
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
-<form class="nav-item d-flex me-3" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
+<form class="nav-item d-flex" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
 <input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
 <button class="btn btn-sm" type="submit">
 $$(
@@ -5725,23 +5751,24 @@ _EOF_
 #### {{{4 $(PUBLISH)-nav-top
 ########################################
 
-# 1 $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 c_logo
+# 1 $(PUBLISH)-nav-begin 2		$(PUBLISH)-brand 1 c_logo
 
 # x $(PUBLISH)-nav-begin 1		top || bottom
-# x $(PUBLISH)-nav-begin 2		true = brand
 # x $(PUBLISH)-nav-top-list 1		$(PUBLISH)-nav-top.[*]
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
-# x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-top {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	$(PUBLISH)-nav-begin "top" "1" "$${1}"					|| return 1
-#>	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]"
-	COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" 2>/dev/null \\
-		| while read -r MENU; do
-			$(PUBLISH)-nav-top-list "nav-top.[\"$${MENU}\"]"	|| return 1
-		done
-	$(PUBLISH)-nav-end "top" "1"						|| return 1
+	$(PUBLISH)-nav-begin "top" "$${1}"						|| return 1
+	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-top)" ]; then
+		COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" \\
+			| while read -r MENU; do
+				$(PUBLISH)-nav-top-list "nav-top.[\"$${MENU}\"]"	|| return 1
+			done
+	else
+		$(PUBLISH)-marker $${FUNCNAME} skip nav-top
+	fi
+	$(PUBLISH)-nav-end "top"							|| return 1
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -5756,6 +5783,7 @@ function $(PUBLISH)-nav-top {
 
 function $(PUBLISH)-nav-top-list {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
 	local ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -5776,7 +5804,13 @@ function $(PUBLISH)-nav-top-list {
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} override $${FILE}
-			$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
+			if [ -n "$${ROOT}" ]; then
+#>				$${ECHO} "<li class=\"nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\"></li>\\n"
+				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\"></li>\\n"
+			else
+#>				$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
+				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none\"><hr class=\"dropdown-divider\"></li>\\n"
+			fi
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
@@ -5812,7 +5846,7 @@ $${CAT} <<_EOF_
 	$${ECHO} "$${LINK}" \\
 	| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 )" data-bs-toggle="dropdown">$${FILE}</a>
-<ul class="$${COMPOSER_TINYNAME}-menu-$$(COMPOSER_YML_DATA_VAL config.cols_break) dropdown-menu">
+<ul class="$${COMPOSER_TINYNAME}-menu-$${COLS_BREAK} dropdown-menu">
 _EOF_
 			else
 $${CAT} <<_EOF_
@@ -5885,37 +5919,23 @@ _EOF_
 ########################################
 
 # x $(PUBLISH)-nav-begin 1		top || bottom
-# x $(PUBLISH)-nav-begin 2		true = brand
-# x $(PUBLISH)-nav-begin 3		$(PUBLISH)-brand 1 c_logo
+# x $(PUBLISH)-nav-begin 2		$(PUBLISH)-brand 1 c_logo
 # x $(PUBLISH)-nav-bottom-list 1	$(PUBLISH)-nav-bottom.[*]
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
-# x $(PUBLISH)-nav-end 2		$(PUBLISH)-search true = search
 
 function $(PUBLISH)-nav-bottom {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	$(PUBLISH)-nav-begin "bottom" "" ""						|| return 1
-	COPY="$$(COMPOSER_YML_DATA_VAL config.copyright)"
-	if [ -n "$${COPY}" ]; then
-$${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">
-$$(
-	$${ECHO} "$${COPY}\\n" \\
-	| $(PUBLISH)-parse icon
-)
-</li>
-_EOF_
-	fi
+	$(PUBLISH)-nav-begin "bottom" ""						|| return 1
 $${CAT} <<_EOF_
 <li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
-#><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="$${COMPOSER_TINYNAME}-breadcrumb breadcrumb">
+#><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="breadcrumb">
 $${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3"><ol class="$${COMPOSER_TINYNAME}-breadcrumb breadcrumb">
+<li class="$${COMPOSER_TINYNAME}-link nav-item me-3"><ol class="breadcrumb">
 <li class="breadcrumb-item"></li>
 _EOF_
-#>		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]"
-		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" 2>/dev/null \\
+		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]"	|| return 1
 			done
@@ -5923,8 +5943,10 @@ $${CAT} <<_EOF_
 <li class="breadcrumb-item"></li>
 </ol></li>
 _EOF_
+	else
+		$(PUBLISH)-marker $${FUNCNAME} skip nav-bottom
 	fi
-	$(PUBLISH)-nav-end "bottom" ""							|| return 1
+	$(PUBLISH)-nav-end "bottom"							|| return 1
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -6007,14 +6029,13 @@ function $(PUBLISH)-nav-side {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-$${1})" ]; then
 		$(PUBLISH)-column-begin "$${1}"						|| return 1
-#>		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]"
-		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" 2>/dev/null \\
+		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-side-list "nav-$${1}.[\"$${MENU}\"]"	|| return 1
 			done
 		$(PUBLISH)-column-end							|| return 1
 	else
-		$(PUBLISH)-marker $${FUNCNAME} skip $${1}
+		$(PUBLISH)-marker $${FUNCNAME} skip nav-$${1}
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -6043,7 +6064,7 @@ function $(PUBLISH)-nav-side-list {
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
-			$(PUBLISH)-$${FILE} || return 1
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
 			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
@@ -6102,6 +6123,8 @@ function $(PUBLISH)-nav-side-list {
 #### {{{4 $(PUBLISH)-nav-side-library
 ########################################
 
+#WORKING:NOW:NOW:FIX consolidate top-library and side-library into a single function...
+
 # 1 titles || authors || dates || tags
 
 function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; return 0; }
@@ -6146,17 +6169,12 @@ _EOF_
 function $(PUBLISH)-info-data {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL info-$${1})" ]; then
-$${CAT} <<_EOF_
-<ul class="navbar-nav navbar-nav-scroll">
-_EOF_
-#>		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]"
-		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" 2>/dev/null \\
+		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" \\
 			| while read -r MENU; do
 				$(PUBLISH)-info-data-list "info-$${1}.[\"$${MENU}\"]" || return 1
 			done
-$${CAT} <<_EOF_
-</ul>
-_EOF_
+	else
+		$(PUBLISH)-marker $${FUNCNAME} skip info-$${1}
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -6174,7 +6192,7 @@ function $(PUBLISH)-info-data-list {
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(PUBLISH)-marker $${FUNCNAME} start $${1}[$${NUM}]
 $${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3">
+<p class="$${COMPOSER_TINYNAME}-link navbar-text me-3">
 _EOF_
 		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
@@ -6184,9 +6202,12 @@ _EOF_
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
 			$(PUBLISH)-$${FILE} || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
-			$(PUBLISH)-$${FILE} || return 1
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metainfo/p")" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
+				$${ECHO} "$${FILE}" \\
+				| $${SED} "s|^metainfo|metainfo-list|g"
+			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^creators/p")" ]; then
@@ -6207,14 +6228,12 @@ _EOF_
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		else
-			$${ECHO} "\\n"
 			$${ECHO} "$${FILE}" \\
-				| $${SED} "s|^|  |g" \\
 				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 			$${ECHO} "\\n"
 		fi
 $${CAT} <<_EOF_
-</li>
+</p>
 _EOF_
 		$(PUBLISH)-marker $${FUNCNAME} finish $${1}[$${NUM}]
 		NUM="$$($${EXPR} $${NUM} + 1)"
@@ -6232,8 +6251,7 @@ _EOF_
 ########################################
 
 # 1 top || bottom
-# 2 true = brand
-# 3 $(PUBLISH)-brand 1			c_logo
+# 2 $(PUBLISH)-brand 1			c_logo
 
 function $(PUBLISH)-nav-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -6245,10 +6263,10 @@ $${CAT} <<_EOF_
 <span class="navbar-toggler-icon"></span>
 </button>
 _EOF_
-	if [ -n "$${2}" ]; then
-		$(PUBLISH)-brand "$${3}" || return 1
+	if [ "$${1}" = "top" ]; then
+		$(PUBLISH)-brand "$${2}" || return 1
 	else
-		$(PUBLISH)-marker $${FUNCNAME} skip brand
+		$(PUBLISH)-copyright || return 1
 	fi
 $${CAT} <<_EOF_
 <div class="navbar-collapse collapse" id="navbar-fixed-$${1}">
@@ -6263,7 +6281,6 @@ _EOF_
 ########################################
 
 # 1 $(PUBLISH)-info-data 1		top || bottom
-# 2 $(PUBLISH)-search			true = search
 
 function $(PUBLISH)-nav-end {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -6271,10 +6288,8 @@ $${CAT} <<_EOF_
 </ul>
 _EOF_
 	$(PUBLISH)-info-data "$${1}" || return 1
-	if [ -n "$${2}" ]; then
+	if [ "$${1}" = "top" ]; then
 		$(PUBLISH)-search || return 1
-	else
-		$(PUBLISH)-marker $${FUNCNAME} skip search
 	fi
 $${CAT} <<_EOF_
 </div>
@@ -6795,6 +6810,7 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 :root {
 	--bs-scroll-height:		60vh;
 	--bs-breadcrumb-divider:	"/";
+	--$(COMPOSER_TINYNAME)-menu-div:		var(--bs-breadcrumb-divider);
 }
 
 /* ################################## */
@@ -6821,6 +6837,12 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 .nav-link:hover,
 .navbar-brand:hover {
 	text-decoration:		none;
+}
+
+.breadcrumb,
+.navbar-text {
+	margin:				0px;
+	padding:			0px;
 }
 
 /* ########################################################################## */
@@ -6937,18 +6959,6 @@ html {
 	}
 }
 
-.$(COMPOSER_TINYNAME)-menu-list {
-	list-style:			none;
-	list-style-type:		none;
-	list-style-position:		none;
-	list-style-image:		none;
-}
-
-.$(COMPOSER_TINYNAME)-breadcrumb {
-	margin:				0px;
-	padding:			0px;
-}
-
 /* ################################## */
 
 .$(COMPOSER_TINYNAME)-logo {
@@ -6959,6 +6969,17 @@ html {
 .$(COMPOSER_TINYNAME)-icon {
 	height:				24px;
 	width:				auto;
+}
+
+.$(COMPOSER_TINYNAME)-menu-div::before {
+	content:			var(--$(COMPOSER_TINYNAME)-menu-div);
+}
+
+.$(COMPOSER_TINYNAME)-menu-list {
+	list-style:			none;
+	list-style-type:		none;
+	list-style-position:		none;
+	list-style-image:		none;
 }
 
 .$(COMPOSER_TINYNAME)-header {
@@ -7228,6 +7249,7 @@ pre code {
 .navbar-brand:active,
 .navbar-brand:link,
 .navbar-brand:visited,
+.navbar-text,
 .navbar-toggler,
 .navbar-toggler-icon {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
@@ -7399,6 +7421,7 @@ body {
 .navbar-brand:hover,
 .navbar-brand:link,
 .navbar-brand:visited,
+.navbar-text,
 .navbar-toggler,
 .navbar-toggler-icon,
 .table {
@@ -7467,7 +7490,6 @@ $(if $(1),$(1),body) {
 	text-rendering:			optimizeLegibility;
 	vertical-align:			text-top;
 	text-align:			left;
-	block-align:			left;
 	word-wrap:			normal;
 }
 
