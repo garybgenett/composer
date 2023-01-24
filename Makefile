@@ -5926,6 +5926,7 @@ _EOF_
 function $(PUBLISH)-nav-bottom {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-nav-begin "bottom" ""						|| return 1
+#WORKING:NOW:NOW:FIX let's make the tagline less conspicuous, if we can...?
 $${CAT} <<_EOF_
 <li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a></li>
 _EOF_
@@ -6988,6 +6989,8 @@ html {
 	margin-bottom:			0px;
 }
 
+.$(COMPOSER_TINYNAME)-table td,
+.$(COMPOSER_TINYNAME)-table tr,
 .$(COMPOSER_TINYNAME)-table {
 	border:				0px;
 }
@@ -7008,6 +7011,12 @@ h3					{ font-size: 1.3rem; }
 h4					{ font-size: 1.2rem; }
 h5					{ font-size: 1.1rem; }
 h6					{ font-size: 1rem; }
+
+dl,
+ol,
+ul {
+	margin:				0px;
+}
 
 /* #############################################################################
 # End Of File
