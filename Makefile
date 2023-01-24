@@ -5559,6 +5559,10 @@ function $(PUBLISH)-parse {
 	return 0
 }
 
+################################################################################
+### {{{3 Functions (Metadata)
+################################################################################
+
 ########################################
 #### {{{4 $(PUBLISH)-metainfo-block
 ########################################
@@ -5662,6 +5666,58 @@ function $(PUBLISH)-metainfo-block {
 				-e "s|<G>|$${TAGS}|g" \\
 				-e "s|<[|]>|$${HTML_HIDE}|g"
 	fi
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-library-block
+########################################
+
+# 1 menu || list
+# 2 titles || authors || dates || tags
+
+function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-block menu "$${@}" || return 1; return 0; }
+function $(PUBLISH)-list-library	{ $(PUBLISH)-library-block list "$${@}" || return 1; return 0; }
+function $(PUBLISH)-library		{ $(PUBLISH)-library-block list "$${@}" || return 1; return 0; }
+
+function $(PUBLISH)-library-block {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	if [ ! -f "$${COMPOSER_LIBRARY_INDEX}" ]; then
+		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
+	else
+		if [ "$${1}" = "list" ]; then
+$${CAT} <<_EOF_
+<table class="$${COMPOSER_TINYNAME}-table table table-borderless align-top">
+_EOF_
+		fi
+#>		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX}
+		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
+			| $${SED} "/^null$$/d" \\
+			| while read -r FILE; do
+				HREF="$${COMPOSER_LIBRARY_PATH}/$${2}-$$(
+					$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
+				).$(EXTN_HTML)"
+				TOTL="$$(
+					$${YQ_WRITE} ".$${2}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
+					| $${SED} "/^null$$/d"
+				)"
+				if [ "$${1}" = "menu" ]; then
+$${CAT} <<_EOF_
+<li><a class="dropdown-item" href="$${HREF}">$${FILE} ($${TOTL})</a></li>
+_EOF_
+				else
+$${CAT} <<_EOF_
+<tr><td><a href="$${HREF}">$${FILE}</a></td><td class="text-end">$${TOTL}</td></tr>
+_EOF_
+				fi
+			done
+		if [ "$${1}" = "list" ]; then
+$${CAT} <<_EOF_
+</table>
+_EOF_
+		fi
+	fi
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
 
@@ -5779,7 +5835,7 @@ function $(PUBLISH)-nav-top {
 
 # 1 $(PUBLISH)-nav-top.[*]
 
-# x $(PUBLISH)-nav-top-library 1	titles || authors || dates || tags
+# x $(PUBLISH)-menu-library 1		titles || authors || dates || tags
 
 function $(PUBLISH)-nav-top-list {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -5833,7 +5889,7 @@ function $(PUBLISH)-nav-top-list {
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
-			$(PUBLISH)-nav-top-$${FILE} || return 1
+			$(PUBLISH)-menu-$${FILE} || return 1
 		elif [ -n "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0]")" ]; then
 			LINK="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${FILE}\"][0].[\"$${MENU_SELF}\"]")"
 			if [ -z "$${LINK}" ]; then
@@ -5881,35 +5937,6 @@ _EOF_
 		$(PUBLISH)-marker $${FUNCNAME} finish $${1}[$${NUM}]
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-nav-top-library
-########################################
-
-# 1 titles || authors || dates || tags
-
-function $(PUBLISH)-nav-top-library {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	if [ ! -f "$${COMPOSER_LIBRARY_INDEX}" ]; then
-		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
-	else
-#>		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX}
-		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
-			| while read -r FILE; do
-$${CAT} <<_EOF_
-<li><a class="dropdown-item" href="$${COMPOSER_LIBRARY_PATH}/$${1}-$$(
-	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
-).$(EXTN_HTML)">$${FILE} ($$(
-	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
-	| $${SED} "/^null$$/d" \\
-))</a></li>
-_EOF_
-			done
-	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -6049,7 +6076,7 @@ function $(PUBLISH)-nav-side {
 # 1 $(PUBLISH)-nav-left.[*] || $(PUBLISH)-nav-right.[*]
 
 # x $(PUBLISH)-spacer
-# x $(PUBLISH)-nav-side-library 1	titles || authors || dates || tags
+# x $(PUBLISH)-list-library 1		titles || authors || dates || tags
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
 
 function $(PUBLISH)-nav-side-list {
@@ -6102,7 +6129,7 @@ function $(PUBLISH)-nav-side-list {
 			) $${PUBLISH_CMD_END}\\n"
 			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
-			$(PUBLISH)-nav-side-$${FILE} || return 1
+			$(PUBLISH)-list-$${FILE} || return 1
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
@@ -6116,45 +6143,6 @@ function $(PUBLISH)-nav-side-list {
 		$(PUBLISH)-marker $${FUNCNAME} finish $${1}[$${NUM}]
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-nav-side-library
-########################################
-
-#WORKING:NOW:NOW:FIX consolidate top-library and side-library into a single function...
-
-# 1 titles || authors || dates || tags
-
-function $(PUBLISH)-library { $(PUBLISH)-nav-side-library "$${@}" || return 1; return 0; }
-
-function $(PUBLISH)-nav-side-library {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	if [ ! -f "$${COMPOSER_LIBRARY_INDEX}" ]; then
-		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
-	else
-$${CAT} <<_EOF_
-<table class="$${COMPOSER_TINYNAME}-table table table-borderless align-top">
-_EOF_
-#>		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX}
-		$${YQ_WRITE} ".$${1} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
-			| while read -r FILE; do
-$${CAT} <<_EOF_
-<tr><td><a href="$${COMPOSER_LIBRARY_PATH}/$${1}-$$(
-	$(HELPOUT)-$(DOFORCE)-$(TARGETS)-FORMAT "$${FILE}"
-).$(EXTN_HTML)">$${FILE}</a></td><td class="text-end">$$(
-	$${YQ_WRITE} ".$${1}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
-	| $${SED} "/^null$$/d" \\
-)</td></tr>
-_EOF_
-			done
-$${CAT} <<_EOF_
-</table>
-_EOF_
-	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
