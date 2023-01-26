@@ -5143,6 +5143,8 @@ variables:
       - Formats:
         - Example Website: $(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))
         - spacer$(foreach FILE,$(COMPOSER_TARGETS),$(call NEWLINE)        - $(FILE): $(FILE))
+    SPACE:
+      - spacer
     CONTENTS:
       - contents
 
@@ -5684,17 +5686,17 @@ function $(PUBLISH)-metainfo-block {
 }
 
 ########################################
-#### {{{4 $(PUBLISH)-library-block
+#### {{{4 $(PUBLISH)-library-shelf
 ########################################
 
 # 1 menu || list
 # 2 titles || authors || dates || tags
 
-function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-block menu "$${@}" || return 1; return 0; }
-function $(PUBLISH)-list-library	{ $(PUBLISH)-library-block list "$${@}" || return 1; return 0; }
-function $(PUBLISH)-library		{ $(PUBLISH)-library-block list "$${@}" || return 1; return 0; }
+function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-shelf menu "$${@}" || return 1; return 0; }
+function $(PUBLISH)-list-library	{ $(PUBLISH)-library-shelf list "$${@}" || return 1; return 0; }
+function $(PUBLISH)-library		{ $(PUBLISH)-library-shelf list "$${@}" || return 1; return 0; }
 
-function $(PUBLISH)-library-block {
+function $(PUBLISH)-library-shelf {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ ! -f "$${COMPOSER_LIBRARY_INDEX}" ]; then
 		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} library index missing"
@@ -5796,7 +5798,7 @@ function $(PUBLISH)-search {
 	NAME="$$(COMPOSER_YML_DATA_VAL config.search_name)"
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
-<form class="nav-item d-flex" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
+<form class="nav-item d-flex form-inline" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
 <input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
 <button class="btn btn-sm" type="submit">
 $$(
@@ -5830,6 +5832,9 @@ _EOF_
 function $(PUBLISH)-nav-top {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-nav-begin "top" "$${1}"						|| return 1
+$${CAT} <<_EOF_
+<ul class="navbar-nav navbar-nav-scroll me-auto">
+_EOF_
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-top)" ]; then
 		COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" \\
 			| while read -r MENU; do
@@ -5838,6 +5843,9 @@ function $(PUBLISH)-nav-top {
 	else
 		$(PUBLISH)-marker $${FUNCNAME} skip nav-top
 	fi
+$${CAT} <<_EOF_
+</ul>
+_EOF_
 	$(PUBLISH)-nav-end "top"							|| return 1
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -5873,10 +5881,9 @@ function $(PUBLISH)-nav-top-list {
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
-			$(PUBLISH)-marker $${FUNCNAME} override $${FILE}
 			if [ -n "$${ROOT}" ]; then
-#>				$${ECHO} "<li class=\"nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\"></li>\\n"
-				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\"></li>\\n"
+#>				$${ECHO} "<li class=\"nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\">$${HTML_HIDE}</li>\\n"
+				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\">$${HTML_HIDE}</li>\\n"
 			else
 #>				$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
 				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none\"><hr class=\"dropdown-divider\"></li>\\n"
@@ -5967,23 +5974,26 @@ _EOF_
 function $(PUBLISH)-nav-bottom {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-nav-begin "bottom" ""						|| return 1
-	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
-#><li class="$${COMPOSER_TINYNAME}-link nav-item me-3">$${DIVIDE}$${HTML_SPACE}<ol class="breadcrumb">
 $${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-link nav-item me-3"><ol class="breadcrumb">
-<li class="breadcrumb-item"></li>
+<ol class="$${COMPOSER_TINYNAME}-link nav-item breadcrumb me-auto">
+_EOF_
+	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-bottom)" ]; then
+$${CAT} <<_EOF_
+<li class="breadcrumb-item">$${HTML_HIDE}</li>
 _EOF_
 		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]"	|| return 1
 			done
 $${CAT} <<_EOF_
-<li class="breadcrumb-item"></li>
-</ol></li>
+<li class="breadcrumb-item">$${HTML_HIDE}</li>
 _EOF_
 	else
 		$(PUBLISH)-marker $${FUNCNAME} skip nav-bottom
 	fi
+$${CAT} <<_EOF_
+</ol>
+_EOF_
 	$(PUBLISH)-nav-end "bottom"							|| return 1
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -6269,7 +6279,6 @@ _EOF_
 	fi
 $${CAT} <<_EOF_
 <div class="navbar-collapse collapse" id="navbar-fixed-$${1}">
-<ul class="navbar-nav navbar-nav-scroll me-auto">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -6283,15 +6292,12 @@ _EOF_
 
 function $(PUBLISH)-nav-end {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-$${CAT} <<_EOF_
-</ul>
-_EOF_
 	$(PUBLISH)-info-data "$${1}" || return 1
 	if [ "$${1}" = "top" ]; then
 		$(PUBLISH)-search || return 1
 	else
 $${CAT} <<_EOF_
-<p class="$${COMPOSER_TINYNAME}-link navbar-text me-3">
+<p class="$${COMPOSER_TINYNAME}-link navbar-text me-1">
 $${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a>
 </p>
 _EOF_
@@ -7423,6 +7429,8 @@ body {
 .dropdown-item:visited,
 .dropdown-menu,
 .dropdown-toggle,
+.form-control,
+.form-inline,
 .nav-item,
 .nav-link,
 .nav-link:active,
