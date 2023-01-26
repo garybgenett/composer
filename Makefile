@@ -380,7 +380,8 @@ override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 #WORKING:NOW:NOW:FIX
 #	make this a generic setting for the entire library?
-#	or, another one for digest?  and, rename current to...?
+#		or, another one for digest?  and, rename current to...?
+#	also, add a setting for hiding menu spacers in mobile or not...?
 override LIBRARY_SITEMAP_EXPANDED	:= 1
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 
