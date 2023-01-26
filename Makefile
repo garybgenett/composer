@@ -11175,6 +11175,7 @@ endif
 
 #> update: COMPOSER_OPTIONS
 
+$(COMPOSER_LIBRARY)/$(MAKEFILE): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-library)
 	@$(ECHO) "$(_S)"
