@@ -291,7 +291,8 @@ override COMPOSER_ICON_VER		:= v1.0
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
-override HTML_HIDE			:= <br hidden>
+#>override HTML_HIDE			:= <br hidden>
+override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
 override MENU_SELF			:= _
 
 override PUBLISH_HEADER			:= null
@@ -3852,9 +3853,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 | | | |
 |:---|:---|---:|
-| `brand` (`homepage`) | `nav-top`              | `info-top` / `search_*`
-| `nav-left`           | **`c_list` / `$$(+)`** | `nav-right`
-| `copyright`          | `nav-bottom`           | `info-bottom`
+| `brand` (`homepage`) | `nav-top`    | `info-top` / `search_*`
+| `nav-left`           | **`c_list`** | `nav-right`
+| `copyright`          | `nav-bottom` | `info-bottom` / *($(COMPOSER_TINYNAME))*
 
 # Folds
 
