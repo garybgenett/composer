@@ -8512,13 +8512,14 @@ endef
 #> validate: grep -E "[.]set_title" Makefile
 .PHONY: .set_title-%
 .set_title-%:
+ifeq ($(MAKELEVEL),0)
 ifneq ($(COMPOSER_DOCOLOR),)
 #>	@$(ECHO) "\e]0;$(MARKER) $(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
 #>	@$(ECHO) "\e]0;$(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(call $(HEADERS)-path-root,$(CURDIR))\a"
 	@$(ECHO) "\e]0;$(COMPOSER_FULLNAME) ($(*)) $(DIVIDE) $(CURDIR)\a"
-else
-	@$(ECHO) ""
 endif
+endif
+	@$(ECHO) ""
 
 ########################################
 ## {{{2 $(HEADERS)
@@ -8541,9 +8542,8 @@ override $(HEADERS)-path-list := \
 
 .PHONY: $(HEADERS)
 $(HEADERS): .set_title-$(HEADERS)
-$(HEADERS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(HEADERS)
 $(HEADERS):
-	@$(ECHO) ""
+	@$(MAKE) $(NOTHING)-$(NOTHING)-$(TARGETS)-$(HEADERS)
 
 ########################################
 ### {{{3 $(HEADERS)-$(EXAMPLE)
@@ -8595,6 +8595,8 @@ endif
 
 #> update: COMPOSER_OPTIONS
 
+#> validate: grep -oE "[$][(]HEADERS[)]-[^[:space:],]+" Makefile | sort -u
+
 .PHONY: $(HEADERS)-%
 $(HEADERS)-%:
 	@$(call $(HEADERS),,$(*))
@@ -8644,10 +8646,15 @@ override define $(HEADERS)-run =
 endef
 
 override define $(HEADERS)-$(SUBDIRS) =
-	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
-		$(call $(HEADERS)-dir,$(CURDIR)); \
-	else \
-		$(call $(HEADERS),1,$(1)); \
+	if [ "$(MAKELEVEL)" = "0" ]; then \
+		$(call $(HEADERS)); \
+	fi; \
+	if [ -n "$(COMPOSER_DOITALL_$(@))" ]; then \
+		if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
+			$(call $(HEADERS)-dir,$(CURDIR)); \
+		else \
+			$(call $(HEADERS),1); \
+		fi; \
 	fi
 endef
 override define $(HEADERS)-$(COMPOSER_PANDOC) =
@@ -8762,6 +8769,7 @@ override NOTHING_IGNORES := \
 #>	COMPOSER_EXT \
 
 .PHONY: $(NOTHING)
+#>	@$(MAKE) $(NOTHING)-$(NOTHING)-$(TARGETS)-$(NOTHING)
 $(NOTHING): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(NOTHING)
 $(NOTHING):
 	@$(ECHO) ""
@@ -9079,9 +9087,9 @@ export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 endif
 .PHONY: $(DEBUGIT)-file
 $(DEBUGIT)-file: .set_title-$(DEBUGIT)-file
-$(DEBUGIT)-file: $(HEADERS)-$(DEBUGIT)
-$(DEBUGIT)-file: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-file:
+	@$(MAKE) $(HEADERS)-$(DEBUGIT)
+	@$(MAKE) $(DEBUGIT)-$(HEADERS)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
@@ -9187,9 +9195,9 @@ export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 endif
 .PHONY: $(TESTING)-file
 $(TESTING)-file: .set_title-$(TESTING)-file
-$(TESTING)-file: $(HEADERS)-$(TESTING)
-$(TESTING)-file: $(TESTING)-$(HEADERS)
 $(TESTING)-file:
+	@$(MAKE) $(HEADERS)-$(TESTING)
+	@$(MAKE) $(TESTING)-$(HEADERS)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
@@ -10720,13 +10728,14 @@ endif
 ########################################
 
 .PHONY: $(PUBLISH)-$(CLEANER)
-ifeq ($(MAKELEVEL),0)
 $(PUBLISH)-$(CLEANER): .set_title-$(PUBLISH)-$(CLEANER)
-$(PUBLISH)-$(CLEANER): $(HEADERS)-$(PUBLISH)-$(CLEANER)
-endif
-$(PUBLISH)-$(CLEANER): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-$(PUBLISH)-$(CLEANER): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(PUBLISH)-$(CLEANER):
+ifeq ($(MAKELEVEL),0)
+	@$(call $(HEADERS))
+endif
+	@$(MAKE) \
+		$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
+		$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 	@if	[ -n "$(COMPOSER_LIBRARY)" ] && \
 		[ -d "$(COMPOSER_LIBRARY)" ] && \
 		[ "$(COMPOSER_LIBRARY_ROOT)" = "$(CURDIR)" ]; \
@@ -11136,17 +11145,16 @@ $($(PUBLISH)-caches) \
 endif
 
 .PHONY: $(PUBLISH)-library
-ifeq ($(MAKELEVEL),0)
 $(PUBLISH)-library: .set_title-$(PUBLISH)-library
-$(PUBLISH)-library: $(HEADERS)-$(PUBLISH)-library
+$(PUBLISH)-library:
+ifeq ($(MAKELEVEL),0)
+	@$(call $(HEADERS))
 endif
 ifneq ($(COMPOSER_LIBRARY),)
-$(PUBLISH)-library: $($(PUBLISH)-library)
+	@$(MAKE) $($(PUBLISH)-library)
 else
-$(PUBLISH)-library: $(NOTHING)-$(PUBLISH)-library
+	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
 endif
-$(PUBLISH)-library:
-	@$(ECHO) ""
 
 ########################################
 #### {{{4 $(PUBLISH)-library-$(DOITALL)
@@ -12144,10 +12152,10 @@ endif
 ########################################
 
 .PHONY: $(INSTALL)
-#>$(INSTALL): .set_title-$(INSTALL)
-$(INSTALL): $(INSTALL)-$(SUBDIRS)-$(HEADERS)
+$(INSTALL): .set_title-$(INSTALL)
 $(INSTALL):
 #>	@$(call $(HEADERS))
+	@$(call $(HEADERS)-$(SUBDIRS))
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 else
@@ -12206,10 +12214,10 @@ endef
 ########################################
 
 .PHONY: $(CLEANER)
-#>$(CLEANER): .set_title-$(CLEANER)
-$(CLEANER): $(CLEANER)-$(SUBDIRS)-$(HEADERS)
+$(CLEANER): .set_title-$(CLEANER)
 $(CLEANER):
 #>	@$(call $(HEADERS))
+	@$(call $(HEADERS)-$(SUBDIRS))
 	@$(call $(CLEANER)-logs,$(SPECIAL_VAL))
 #>ifneq ($(c_site),)
 	@$(MAKE) c_site="1" $(PUBLISH)-$(CLEANER)
@@ -12298,10 +12306,10 @@ endef
 ########################################
 
 .PHONY: $(DOITALL)
-#>$(DOITALL): .set_title-$(DOITALL)
-$(DOITALL): $(DOITALL)-$(SUBDIRS)-$(HEADERS)
+$(DOITALL): .set_title-$(DOITALL)
 $(DOITALL):
 #>	@$(call $(HEADERS))
+	@$(call $(HEADERS)-$(SUBDIRS))
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
 	@$(MAKE) $(DOITALL)-$(SUBDIRS)
@@ -12350,22 +12358,10 @@ $(DOITALL)-$(TARGETS):
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS): .set_title-$(SUBDIRS)
-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
 $(SUBDIRS):
-	@$(ECHO) ""
+	@$(MAKE) $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
 
 override define $(SUBDIRS)-$(EXAMPLE) =
-.PHONY: $(1)-$(SUBDIRS)-$(HEADERS)
-ifeq ($(MAKELEVEL),0)
-$(1)-$(SUBDIRS)-$(HEADERS): .set_title-$(1)
-$(1)-$(SUBDIRS)-$(HEADERS): $(HEADERS)-$(1)
-endif
-$(1)-$(SUBDIRS)-$(HEADERS):
-ifneq ($(COMPOSER_DOITALL_$(1)),)
-	@$(call $(HEADERS)-$(SUBDIRS),$(1))
-endif
-	@$(ECHO) ""
-
 .PHONY: $(1)-$(SUBDIRS)
 ifeq ($(COMPOSER_SUBDIRS),)
 $(1)-$(SUBDIRS): $(NOTHING)-$(SUBDIRS)
@@ -12398,10 +12394,9 @@ $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 
 .PHONY: $(PRINTER)
 $(PRINTER): .set_title-$(PRINTER)
-$(PRINTER): $(HEADERS)-$(PRINTER)
-$(PRINTER): $(PRINTER)-$(PRINTER)
 $(PRINTER):
-	@$(ECHO) ""
+	@$(call $(HEADERS))
+	@$(MAKE) $(PRINTER)-$(PRINTER)
 
 #WORK document?  do we really need to document every last target...?
 .PHONY: $(PRINTER)-$(PRINTER)
