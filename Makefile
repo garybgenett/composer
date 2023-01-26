@@ -153,6 +153,20 @@ override VIM_FOLDING := {{{1
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
+#WORK 2023-01-24 make J=12 _test-speed
+# >> DONE [_test-speed]
+# | >> Directories      | 1972
+# | >> Files            | 8913
+# | >> Output           | 17757
+# | >> Jobs             | 12
+# # MAKECMDGOALS        [install-force] (install-force)
+# # MAKECMDGOALS        [all-all] (all-all)
+# # MAKECMDGOALS        [clean-all] (clean-all)
+# # MAKECMDGOALS        [site-force] (site-force)
+# real    1m18.352s
+# real    8m19.510s
+# real    4m6.619s
+# real    63m45.692s
 ################################################################################
 # }}}1
 ################################################################################
