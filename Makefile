@@ -447,7 +447,7 @@ $(if $(wildcard $(1)/$(COMPOSER_SETTINGS)),\
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE			[$(1)/$(COMPOSER_SETTINGS)])) \
 $(foreach FILE,\
 	$(shell \
-		$(SED) -n "/^$(call COMPOSER_REGEX_OVERRIDE).*$$/p" $(1)/$(COMPOSER_SETTINGS) \
+		$(SED) -n "/^$(call COMPOSER_REGEX_OVERRIDE,COMPOSER_INCLUDE).*$$/p" $(1)/$(COMPOSER_SETTINGS) \
 		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
 	),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE			[$(subst $(TOKEN), ,$(FILE))])) \
