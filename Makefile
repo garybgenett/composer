@@ -12186,7 +12186,8 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME)_Directory)
 else
 	@if	[ "$(MAKELEVEL)" = "0" ] || \
-		[ "$(CURDIR)" = "$(COMPOSER_ROOT)" ]; \
+		[ "$(CURDIR)" = "$(COMPOSER_ROOT)" ] || \
+		[ ! -f "$(CURDIR)/$(MAKEFILE)" ]; \
 	then \
 		if [ "$(CURDIR)" = "$(COMPOSER_ROOT)" ]; then \
 			$(call $(HEADERS)-note,$(CURDIR),$(_H)Main_$(MAKEFILE)); \
