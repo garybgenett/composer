@@ -11677,7 +11677,7 @@ $($(PUBLISH)-library-sitemap-src): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-sitemap-src):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
-	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-group $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
+	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-list $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
 	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		shopt -s lastpipe; PRINT=; \
@@ -11691,7 +11691,7 @@ $($(PUBLISH)-library-sitemap-src):
 					$(ECHO) "$(_D)"; \
 					$(call $(HEADERS)-note,$(@),$(patsubst $(COMPOSER_ROOT),/,$(patsubst $(COMPOSER_ROOT)/%,%,$(FILE))),$(PUBLISH)-sitemap); \
 					$(ECHO) "$(_E)"; \
-					$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${SITEMAP_EXPANDED} sitemap-group $$( \
+					$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${SITEMAP_EXPANDED} sitemap-list $$( \
 							$(ECHO) "$(FILE)" \
 							| $(SED) \
 								-e "s|$(COMPOSER_ROOT_REGEX)[/]||g" \
