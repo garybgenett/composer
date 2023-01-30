@@ -1628,18 +1628,17 @@ override COMPOSER_OPTIONS_PUBLISH_ENV := \
 	MAKEJOBS \
 	COMPOSER_DOCOLOR \
 	COMPOSER_DEBUGIT \
+	c_base \
+	c_list \
 
 override COMPOSER_OPTIONS_PUBLISH := \
 	COMPOSER_INCLUDE$(TOKEN) \
 	COMPOSER_DEPENDS$(TOKEN) \
+	COMPOSER_EXT$(TOKEN)$(COMPOSER_EXT_DEFAULT) \
 	COMPOSER_TARGETS$(TOKEN) \
 	COMPOSER_SUBDIRS$(TOKEN) \
-	COMPOSER_EXPORTS$(TOKEN) \
-	COMPOSER_IGNORES$(TOKEN) \
 	c_site$(TOKEN)1 \
 	c_type$(TOKEN)$(EXTN_HTML) \
-#>	c_base$(TOKEN) \
-#>	c_list$(TOKEN) \
 
 $(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
@@ -11226,11 +11225,11 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 $(PUBLISH)-$(COMPOSER_SETTINGS):
 	@$(foreach FILE,$(filter-out $(COMPOSER_OPTIONS_PUBLISH_ENV),$(COMPOSER_OPTIONS)),\
 		$(if $(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH)),\
-			$(ECHO) "override $(FILE) := $(word 2,$(subst $(TOKEN), ,$(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH))))\n"; \
-			$(call NEWLINE) \
+			$(ECHO) "override $(FILE) := $(word 2,$(subst $(TOKEN), ,$(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH))))\n"; ,\
+			$(ECHO) "override $(FILE) := $(patsubst $(COMPOSER_ROOT)/%,\$$(COMPOSER_ROOT)/%,$($(FILE)))\n"; \
 		) \
+		$(call NEWLINE) \
 	)
-	@$(ECHO) "\n"
 	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-digest))): $(notdir $($(PUBLISH)-library-digest-src))\n"
 	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-sitemap))): $(notdir $($(PUBLISH)-library-sitemap-src))\n"
 
