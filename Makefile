@@ -6883,10 +6883,6 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 
 /* ########################################################################## */
 
-html {
-	font-size:			12px;
-}
-
 body {
 	min-width:			100%;
 	margin:				0px;
@@ -7533,6 +7529,10 @@ override define HEREDOC_CUSTOM_HTML_CSS =
 /* #############################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) HTML CSS
 ############################################################################# */
+
+html {
+	font-size:			14px;
+}
 
 $(if $(1),$(1),body) {
 	text-rendering:			optimizeLegibility;
