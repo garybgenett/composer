@@ -443,16 +443,16 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 #>include $(1)/$(COMPOSER_SETTINGS)
 
 override define SOURCE_INCLUDES =
-$(if $(wildcard $(1)/$(COMPOSER_SETTINGS)),\
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE			[$(1)/$(COMPOSER_SETTINGS)])) \
-$(foreach FILE,\
-	$(shell \
-		$(SED) -n "/^$(call COMPOSER_REGEX_OVERRIDE,COMPOSER_INCLUDE).*$$/p" $(1)/$(COMPOSER_SETTINGS) \
-		| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
-	),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE			[$(subst $(TOKEN), ,$(FILE))])) \
-	$(eval $(subst $(TOKEN), ,$(FILE))) \
-))
+	$(if $(wildcard $(1)/$(COMPOSER_SETTINGS)),\
+	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> SOURCE			[$(1)/$(COMPOSER_SETTINGS)])) \
+	$(foreach FILE,\
+		$(shell \
+			$(SED) -n "/^$(call COMPOSER_REGEX_OVERRIDE,COMPOSER_INCLUDE).*$$/p" $(1)/$(COMPOSER_SETTINGS) \
+			| $(SED) -e "s|[[:space:]]+|$(TOKEN)|g" -e "s|$$| |g" \
+		),\
+		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> OVERRIDE			[$(subst $(TOKEN), ,$(FILE))])) \
+		$(eval $(subst $(TOKEN), ,$(FILE))) \
+	))
 endef
 
 $(call SOURCE_INCLUDES,$(COMPOSER_DIR))
@@ -11659,16 +11659,27 @@ $($(PUBLISH)-library-sitemap): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 #>$($(PUBLISH)-library-sitemap): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-sitemap): $($(PUBLISH)-library-sitemap-src)
 $($(PUBLISH)-library-sitemap):
-	@{	$(ECHO) "---\n"; \
+	@$(call $(PUBLISH)-library-sitemap-create) >$(@)
+
+override define $(PUBLISH)-library-sitemap-create =
+	{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.sitemap_title)\n"; \
 		$(ECHO) "date: $(DATEMARK)\n"; \
 		$(ECHO) "---\n"; \
 		$(ECHO) "$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-library-sitemap-src)) $(PUBLISH_CMD_END)\n"; \
-	} >$(@)
+	}
+endef
 
 ########################################
 ##### {{{5 $(PUBLISH)-library-sitemap-src
 ########################################
+
+override define $(PUBLISH)-library-sitemap-src-create =
+	$(call $(PUBLISH)-library-sitemap-create) >$($(PUBLISH)-library-sitemap); \
+	$(TOUCH) \
+		$($(PUBLISH)-library-sitemap) \
+		$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))
+endef
 
 $($(PUBLISH)-library-sitemap-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-src): $(COMPOSER_LIBRARY)/$(MAKEFILE)
@@ -11676,6 +11687,7 @@ $($(PUBLISH)-library-sitemap-src): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 #>$($(PUBLISH)-library-sitemap-src): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-sitemap-src):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)
+	@$(call $(PUBLISH)-library-sitemap-src-create)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-list $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
 	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
