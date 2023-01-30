@@ -1806,6 +1806,10 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOFORCE)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
+export override COMPOSER_DOITALL_$(DOITALL) := $(COMPOSER_DOITALL_$(PUBLISH))
+endif
+
 ########################################
 ## {{{2 Testing
 ########################################
@@ -2055,6 +2059,16 @@ ifneq ($(and \
 override COMPOSER_LIBRARY_AUTO_UPDATE	:= 1
 endif
 
+ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
+$(c_base).$(EXTENSION) \
+$(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
+$(DOITALL)-$(SUBDIRS) $(COMPOSER_SUBDIRS) $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)) \
+$($(PUBLISH)-cache) \
+$($(PUBLISH)-caches) \
+	: \
+	$($(PUBLISH)-library)
+endif
+
 ########################################
 ## {{{2 Filesystem
 ########################################
@@ -2189,6 +2203,17 @@ override define $(COMPOSER_TINYNAME)-mkdir =
 		$(call $(HEADERS)-file,$(CURDIR),$(1),$(@)); \
 		$(ECHO) "$(_S)"; \
 		$(MKDIR) $(1) $($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
+endef
+
+override define $(COMPOSER_TINYNAME)-ln =
+	if	[ -d "$(1)" ] || \
+		[ -f "$(1)" ]; \
+	then \
+		$(call $(HEADERS)-file,$(CURDIR),$(_E)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
+		$(ECHO) "$(_S)"; \
+		$(LN) $(1) $(2) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
 endef
@@ -10703,25 +10728,11 @@ endef
 ## {{{2 $(PUBLISH)
 ########################################
 
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
-export override COMPOSER_DOITALL_$(DOITALL) := $(COMPOSER_DOITALL_$(PUBLISH))
-endif
-
 .PHONY: $(PUBLISH)
 $(PUBLISH): .set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
-
-#WORK document?
-.PHONY: $(PUBLISH)-post
-$(PUBLISH)-post:
-ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-ifeq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(PUBLISH)-post="$(DOFORCE)" $(PUBLISH)-library
-endif
-endif
-	@$(ECHO) ""
 
 ########################################
 ### {{{3 $(PUBLISH)-$(CLEANER)
@@ -10733,9 +10744,7 @@ $(PUBLISH)-$(CLEANER):
 ifeq ($(MAKELEVEL),0)
 	@$(call $(HEADERS))
 endif
-	@$(MAKE) \
-		$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
-		$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+	@$(MAKE) $(PUBLISH)-$(CLEANER)-$(TARGETS)
 	@if	[ -n "$(COMPOSER_LIBRARY)" ] && \
 		[ -d "$(COMPOSER_LIBRARY)" ] && \
 		[ "$(COMPOSER_LIBRARY_ROOT)" = "$(CURDIR)" ]; \
@@ -10746,7 +10755,12 @@ endif
 		$(ECHO) "$(_D)"; \
 	fi
 
-#WORK document!
+.PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+$(PUBLISH)-$(CLEANER)-$(TARGETS):
+	@$(ECHO) ""
+
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
@@ -11134,16 +11148,6 @@ $($(PUBLISH)-caches):
 ### {{{3 $(PUBLISH)-library
 ########################################
 
-ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-$(c_base).$(EXTENSION) \
-$(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
-$(DOITALL)-$(SUBDIRS) $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)) \
-$($(PUBLISH)-cache) \
-$($(PUBLISH)-caches) \
-	: \
-	$($(PUBLISH)-library)
-endif
-
 .PHONY: $(PUBLISH)-library
 $(PUBLISH)-library: .set_title-$(PUBLISH)-library
 $(PUBLISH)-library:
@@ -11151,29 +11155,40 @@ ifeq ($(MAKELEVEL),0)
 	@$(call $(HEADERS))
 endif
 ifneq ($(COMPOSER_LIBRARY),)
-	@$(MAKE) $($(PUBLISH)-library)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" COMPOSER_DOITALL_$(PUBLISH)-library="$(DOITALL)" $(PUBLISH)-library-$(TARGETS)
 else
 	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
 endif
 
-########################################
-#### {{{4 $(PUBLISH)-library-$(DOITALL)
-########################################
+.PHONY: $(PUBLISH)-library-$(DOITALL)
+$(PUBLISH)-library-$(DOITALL):
+ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
+ifeq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" COMPOSER_DOITALL_$(PUBLISH)-library="$(DOFORCE)" $(PUBLISH)-library-$(TARGETS)
+endif
+endif
+	@$(ECHO) ""
+
+.PHONY: $(PUBLISH)-library-$(TARGETS)
+$(PUBLISH)-library-$(TARGETS): $($(PUBLISH)-library)
+$(PUBLISH)-library-$(TARGETS):
+	@$(ECHO) ""
 
 $($(PUBLISH)-library): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library): $($(PUBLISH)-library-digest)
-ifeq ($(MAKELEVEL),0)
-$($(PUBLISH)-library): $($(PUBLISH)-library-sitemap)
-endif
-ifeq ($($(PUBLISH)-post),$(DOFORCE))
+ifneq ($(or \
+	$(filter 0,$(MAKELEVEL)) ,\
+	$(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)) ,\
+	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-library)) \
+),)
 $($(PUBLISH)-library): $($(PUBLISH)-library-sitemap)
 endif
 $($(PUBLISH)-library):
-	@$(MAKE) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
-ifeq ($($(PUBLISH)-post),)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-library),$(DOFORCE))
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
 endif
 
@@ -12336,7 +12351,7 @@ endif
 endif
 #>ifneq ($(c_site),)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
-	@$(MAKE) $(PUBLISH)-post
+	@$(MAKE) $(PUBLISH)-library-$(DOITALL)
 endif
 #>endif
 
