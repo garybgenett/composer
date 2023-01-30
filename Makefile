@@ -139,6 +139,8 @@ override VIM_FOLDING := {{{1
 #	only one build at a time...
 # other
 #	verify test suite...
+#	some form of "env -" or "prompt -z" test, to make sure local environment is not inadvertently supporting success...
+#		same with ".vimrc", etc... maybe test with "null" account...?
 #	epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
 #	--resource-path = something like COMPOSER_CSS?
 #	so many c_list/+ tests... really...?  probably...
@@ -1808,6 +1810,7 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
 export override COMPOSER_DOITALL_$(DOITALL) := $(COMPOSER_DOITALL_$(PUBLISH))
 endif
+export COMPOSER_DOITALL_$(PUBLISH)-library
 
 ########################################
 ## {{{2 Testing
@@ -11154,7 +11157,7 @@ ifeq ($(MAKELEVEL),0)
 	@$(call $(HEADERS))
 endif
 ifneq ($(COMPOSER_LIBRARY),)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" COMPOSER_DOITALL_$(PUBLISH)-library="$(DOITALL)" $(PUBLISH)-library-$(TARGETS)
+	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-library="$(DOITALL)" c_site="1" $(PUBLISH)-library-$(TARGETS)
 else
 	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
 endif
@@ -11163,7 +11166,7 @@ endif
 $(PUBLISH)-library-$(DOITALL):
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
 ifeq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" COMPOSER_DOITALL_$(PUBLISH)-library="$(DOFORCE)" $(PUBLISH)-library-$(TARGETS)
+	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-library="$(DOFORCE)" c_site="1" $(PUBLISH)-library-$(TARGETS)
 endif
 endif
 	@$(ECHO) ""
@@ -11186,7 +11189,7 @@ ifneq ($(or \
 $($(PUBLISH)-library): $($(PUBLISH)-library-sitemap)
 endif
 $($(PUBLISH)-library):
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
+	@$(MAKE) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-library),$(DOFORCE))
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-library)
 endif
