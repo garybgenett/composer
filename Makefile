@@ -323,7 +323,7 @@ override PUBLISH_COLS_REORDER_R		:= 2
 override PUBLISH_COLS_ORDER_L_ALT	:= 1
 override PUBLISH_COLS_ORDER_C_ALT	:= 3
 override PUBLISH_COLS_ORDER_R_ALT	:= 2
-override PUBLISH_COLS_REORDER_L_ALT_MOD	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_REORDER_L_MOD	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_REORDER_L_ALT	:= 2
 override PUBLISH_COLS_REORDER_C_ALT	:= 3
 override PUBLISH_COLS_REORDER_R_ALT	:= 1
@@ -340,7 +340,7 @@ override PUBLISH_COLS_SIZE_C_ALT	:= 9
 override PUBLISH_COLS_SIZE_R_ALT	:= 3
 override PUBLISH_COLS_RESIZE_L_ALT	:= 12
 override PUBLISH_COLS_RESIZE_C_ALT	:= 12
-override PUBLISH_COLS_RESIZE_R_ALT_MOD	:= 12
+override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
@@ -376,6 +376,7 @@ override LIBRARY_DIGEST_COUNT		:= 10
 override LIBRARY_DIGEST_COUNT_ALT	:= 20
 override LIBRARY_DIGEST_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_DIGEST_EXPANDED_ALT	:= null
+override LIBRARY_DIGEST_EXPANDED_MOD	:= 2
 override LIBRARY_DIGEST_SPACER		:= 1
 override LIBRARY_DIGEST_SPACER_ALT	:= null
 
@@ -383,11 +384,13 @@ override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
+override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
 override LIBRARY_SITEMAP_SPACER		:= 1
 override LIBRARY_SITEMAP_SPACER_ALT	:= null
 
 override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
 override LIBRARY_LISTS_EXPANDED_ALT	:= null
+override LIBRARY_LISTS_EXPANDED_MOD	:= 2
 override LIBRARY_LISTS_SPACER		:= 1
 override LIBRARY_LISTS_SPACER_ALT	:= null
 
@@ -12079,12 +12082,15 @@ endif
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_YML)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(SED) -i \
+		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
+		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_MOD) ]|g" \
 		-e "s|^(.+metainfo[:].*[<]A)[|][^>]*(.*)$$|\1\2|g" \
 		-e "s|^(.+metainfo[:].*[<]G)[|][^>]*(.*)$$|\1\2|g" \
 		-e "s|^(.+creators[:]).*$$|\1|g" \
 		-e "s|^(.+tagslist[:]).*$$|\1|g" \
-		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_ALT_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
-		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT_MOD) ]|g" \
+		-e "s|^(.+digest_expanded.+)$(LIBRARY_DIGEST_EXPANDED_ALT)$$|\1$(LIBRARY_DIGEST_EXPANDED_MOD)|g" \
+		-e "s|^(.+sitemap_expanded.+)$(LIBRARY_SITEMAP_EXPANDED_ALT)$$|\1$(LIBRARY_SITEMAP_EXPANDED_MOD)|g" \
+		-e "s|^(.+lists_expanded.+)$(LIBRARY_LISTS_EXPANDED_ALT)$$|\1$(LIBRARY_LISTS_EXPANDED_MOD)|g" \
 									$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 endif
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_CSS))
