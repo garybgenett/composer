@@ -5657,9 +5657,9 @@ function $(PUBLISH)-metainfo-block {
 			$${SED} -n "1,/^---$$/p" $${3}
 		)"
 	fi
-	if [ -z "$${META}" ]; then
-		return 0
-	fi
+#>	if [ -z "$${META}" ]; then
+#>		return 0
+#>	fi
 	TITL="$$(
 		$${ECHO} "$${META}" \\
 		| $${YQ_WRITE} ".title" 2>/dev/null \\
@@ -7564,7 +7564,9 @@ html {
 	font-size:			14px;
 }
 
-$(if $(1),$(1),body) {
+$(if $(1),$(1),body),
+table,
+tr {
 	text-rendering:			optimizeLegibility;
 	vertical-align:			text-top;
 	text-align:			left;
@@ -12267,13 +12269,10 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
 
-#WORKING:NOW:NOW
+#WORKING:NOW:NOW:FIX
 #	titles & headers
 #		HTML_HIDE _site/_library/authors-gary-b-genett.html#2023-02-03--main-pagespan-hiddenspan----gary-b-genett
-#		<title>EXAMPLE SITE – README.html.20230204-003221-0800</title>
-#	why are tables still vertically centered when using custom theme/shade?
-#		does this happen with water.css, also, or is it getting missed because of configuration...?
-#		set sitemap table class to ".table", just like the library "panels"...
+#WORKING:NOW:NOW
 #	site
 #		add a setting for hiding menu spacers in mobile or not...?
 #		add a sitemap symlink test... maybe themes/index.html...?
