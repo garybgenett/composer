@@ -295,7 +295,8 @@ override COMPOSER_ICON_VER		:= v1.0
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
 #>override HTML_HIDE			:= <br hidden>
-override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
+#>override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
+override HTML_HIDE			:= &\#0000;
 override MENU_SELF			:= _
 
 override PUBLISH_HEADER			:= null
@@ -3991,9 +3992,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) icon cc-by-nc-nd $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) icon gpl < composer_root >/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) icon gpl $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) icon gpl <composer_root>/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) icon gpl $(PUBLISH_CMD_ROOT)/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
 
@@ -4003,9 +4004,13 @@ $(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLI
 
 $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author < composer_root >/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
+#WORK comment readme.site.html
 
-$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author <composer_root>/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/../$(PUBLISH_INDEX).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
 
 ## Form
 
@@ -4017,7 +4022,7 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 
 ## Include
 
-`$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLES)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
@@ -4146,7 +4151,10 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
     * #WORKING:NOW
     * #WORKING:NOW
 
+#WORK comment readme.site.html
+
   * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
+  * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML))
   * [Introduction]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
   * [Default Site]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
   * [Configured Site]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
@@ -5025,7 +5033,8 @@ $(_S)########################################$(_D)
     $(_M)MENU$(_D):
       - $(_M)MAIN$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
       - $(_M)PAGES$(_D):
-        - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
+$(_S)#$(MARKER)$(_D)     - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
+        - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
         - $(_C)spacer$(_D)
         - $(_M)Introduction$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
         - $(_M)Default Site$(_D):
@@ -5516,6 +5525,8 @@ HTML_BREAK="$(HTML_BREAK)"
 HTML_HIDE="$(HTML_HIDE)"
 MENU_SELF="$(MENU_SELF)"
 
+SED_ESCAPE_LIST="$(SED_ESCAPE_LIST)"
+
 PUBLISH_CMD_ROOT="$(PUBLISH_CMD_ROOT)"
 PUBLISH_CMD_BEG="$(PUBLISH_CMD_BEG)"
 PUBLISH_CMD_END="$(PUBLISH_CMD_END)"
@@ -5736,7 +5747,10 @@ function $(PUBLISH)-metainfo-block {
 				-e "s|<D>|$${DATE}|g" \\
 				-e "s|<G[^>]*>|$$($${ECHO} "$${TAGS}" | $${SED} "s|[;][ ]|$${TAGS_SEP}|g")|g" \\
 				-e "s|<G>|$${TAGS}|g" \\
-				-e "s|<[|]>|$${HTML_HIDE}|g"
+				-e "s|<[|]>|$$(
+						$(ECHO) "$${HTML_HIDE}" \\
+						| $(SED) "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g"
+					)|g"
 	fi
 	return 0
 }
@@ -11036,7 +11050,10 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"		>>$(1).contents-menu; \
 			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-menu; \
 			fi; \
-			MENU_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
+			MENU_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$$( \
+					$(ECHO) "$(HTML_HIDE)" \
+					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+				)(.*)$$|\1|g")"; \
 			$(ECHO) " [$${MENU_TXT}](#$${LNK}){.dropdown-item}"			>>$(1).contents-menu; \
 			$(ECHO) "\n"								>>$(1).contents-menu; \
 			$(ECHO) " menu" $($(DEBUGIT)-output); \
@@ -11051,7 +11068,10 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			elif [ "$${LVL}" = "5" ]; then	$(ECHO) "                *"		>>$(1).contents-list; \
 			elif [ "$${LVL}" = "6" ]; then	$(ECHO) "                    *"		>>$(1).contents-list; \
 			fi; \
-			LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
+			LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$$( \
+					$(ECHO) "$(HTML_HIDE)" \
+					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+				)(.*)$$|\1|g")"; \
 			$(ECHO) " [$${LIST_TXT}](#$${LNK})"					>>$(1).contents-list; \
 			$(ECHO) "\n"								>>$(1).contents-list; \
 			$(ECHO) " list" $($(DEBUGIT)-output); \
@@ -12269,9 +12289,6 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
 
-#WORKING:NOW:NOW:FIX
-#	titles & headers
-#		HTML_HIDE _site/_library/authors-gary-b-genett.html#2023-02-03--main-pagespan-hiddenspan----gary-b-genett
 #WORKING:NOW:NOW
 #	site
 #		add a setting for hiding menu spacers in mobile or not...?
