@@ -352,9 +352,9 @@ override PUBLISH_METAINFO_ALT		:= <T>$(HTML_SPACE)$(HTML_SPACE)*(<D>)*<|><br>*--
 #>override PUBLISH_CONTENTS		:=
 #>override PUBLISH_CONTENTS_ALT		:=
 override PUBLISH_CREATORS		:= *Authors: <|>, <|>*
-override PUBLISH_CREATORS_ALT		:= *<|> / <|>*
+override PUBLISH_CREATORS_ALT		:= *<|> / <|> .*
 override PUBLISH_TAGSLIST		:= *Tags: <|>, <|>*
-override PUBLISH_TAGSLIST_ALT		:= *<|> / <|>*
+override PUBLISH_TAGSLIST_ALT		:= *<|> / <|> .*
 override PUBLISH_READTIME		:= *Reading time: <W> words, <T> minutes*
 override PUBLISH_READTIME_ALT		:= *Words: <W> / Minutes: <T>*
 override PUBLISH_READTIME_WPM		:= 220
@@ -4434,6 +4434,7 @@ $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -10671,7 +10672,7 @@ endef
 #>		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\)
 #>			-o \( -path $(COMPOSER_LIBRARY) -prune \)
 override define $(EXPORTS)-find =
-	eval $(FIND_ALL) $(1) \
+	eval $(FIND_ALL) $(1) -regextype sed \
 		\\\( -path $(COMPOSER_DIR) -prune \\\) \
 		-o \\\( -path $(COMPOSER_TMP) -prune \\\) \
 		-o \\\( -path \"\*/$(notdir $(COMPOSER_TMP))\" -prune \\\) \
@@ -10686,9 +10687,9 @@ override define $(EXPORTS)-find =
 					$(call ENV_MAKE) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
 						| $(SORT) \
 						| while read -r EFIL; do \
-							$(ECHO) " -o \\\( -path \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
+							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
 						done; \
-				done \
+				done; \
 		fi) \
 		$(if $(2),-o \\\( -path /dev/null -print \\\))
 endef
@@ -12290,7 +12291,13 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 
 #WORKING:NOW:NOW
+#	checkit
+#		add links for gnu tools...
+#		rsync is present in more than just testing now...
+#			same with git...
+#		are all tools listed...?
 #	site
+#		similar to site-library, add a list of run options for site-template...
 #		add a setting for hiding menu spacers in mobile or not...?
 #		add a sitemap symlink test... maybe themes/index.html...?
 #			they likely break when used across directories, when "composer_root" is used...
