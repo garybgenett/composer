@@ -2835,11 +2835,16 @@ $(_S)[$(COMPOSER_BASENAME) Screenshot]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSE
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
-$(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
 $(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown -->$(_D)
 $(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org -->$(_D)
 $(_E)[Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown$(_D)
 $(_E)[GitHub]: https://github.com$(_D)
+
+$(_E)[GNU Bash]: http://www.gnu.org/software/bash$(_D)
+$(_E)[GNU Coreutils]: http://www.gnu.org/software/coreutils$(_D)
+$(_E)[GNU Findutils]: http://www.gnu.org/software/findutils$(_D)
+$(_E)[GNU Sed]: http://www.gnu.org/software/sed$(_D)
+$(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
 
 $(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
 $(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
@@ -10312,10 +10317,10 @@ $(CHECKIT):
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
 	@$(TABLE_M2) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"
 	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"
-	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"
-	@$(TABLE_M2) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"
-	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"
+	@$(TABLE_M2) "$(_C)[GNU Bash]"			"$(_M)$(BASH_VER)"
+	@$(TABLE_M2) "- $(_C)[GNU Coreutils]"		"$(_M)$(COREUTILS_VER)"
+	@$(TABLE_M2) "- $(_C)[GNU Findutils]"		"$(_M)$(FINDUTILS_VER)"
+	@$(TABLE_M2) "- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"
 	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_M)$(MAKE_VER)"
 	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(_M)$(PANDOC_VER)"
 	@$(TABLE_M2) "- $(_C)[YQ]"			"$(_M)$(YQ_VER)"
@@ -10323,10 +10328,10 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
 else
 	@$(TABLE_M3) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_C)GNU Bash"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)GNU Coreutils"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)GNU Findutils"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)GNU Sed"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)[GNU Bash]"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)[GNU Coreutils]"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)[GNU Findutils]"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)[GNU Make]"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)[Pandoc]"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "- $(_C)[YQ]"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
@@ -10348,10 +10353,10 @@ endif
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"			"$(_H)Location & Options"
 	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)GNU Bash"			"$(_D)$(BASH)"
-	@$(TABLE_M2) "- $(_C)GNU Coreutils"		"$(_D)$(LS)"
-	@$(TABLE_M2) "- $(_C)GNU Findutils"		"$(_D)$(FIND)"
-	@$(TABLE_M2) "- $(_C)GNU Sed"			"$(_D)$(SED)"
+	@$(TABLE_M2) "$(_C)[GNU Bash]"			"$(_D)$(BASH)"
+	@$(TABLE_M2) "- $(_C)[GNU Coreutils]"		"$(_D)$(LS)"
+	@$(TABLE_M2) "- $(_C)[GNU Findutils]"		"$(_D)$(FIND)"
+	@$(TABLE_M2) "- $(_C)[GNU Sed]"			"$(_D)$(SED)"
 	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_D)$(REALMAKE)"
 	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(PANDOC))"
 	@$(TABLE_M2) "- $(_C)[YQ]"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
@@ -12292,7 +12297,6 @@ endif
 
 #WORKING:NOW:NOW
 #	checkit
-#		add links for gnu tools...
 #		rsync is present in more than just testing now...
 #			same with git...
 #		are all tools listed...?
