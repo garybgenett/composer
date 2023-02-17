@@ -892,14 +892,14 @@ override YQ_VER				:= $(YQ_VER)
 override TEX_PDF_VER			:= 2021 3.141592653-2.6-1.40.22
 
 override GIT_VER			:= 2.37.4
+override DIFFUTILS_VER			:= 3.8
+override RSYNC_VER			:= 3.2.4
+
 override WGET_VER			:= 1.21.3
 override TAR_VER			:= 1.34
 override GZIP_VER			:= 1.12
 override 7Z_VER				:= 16.02
 override NPM_VER			:= 8.19.2
-
-override DIFFUTILS_VER			:= 3.8
-override RSYNC_VER			:= 3.2.4
 
 ################################################################################
 # {{{1 Tooling Options
@@ -10302,78 +10302,74 @@ endif
 $(CHECKIT): .set_title-$(CHECKIT)
 $(CHECKIT):
 	@$(call $(HEADERS))
-	@$(TABLE_M3) "$(_H)Repository"			"$(_H)Commit"				"$(_H)License"
-	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_E)[Pandoc]"			"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
-	@$(TABLE_M3) "$(_E)[YQ]"			"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
-	@$(TABLE_M3) "$(_E)[Bootstrap]"			"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
-	@$(TABLE_M3) "$(_E)[Bootswatch]"		"$(_E)$(BOOTSWATCH_CMT)"		"$(_N)$(BOOTSWATCH_LIC)"
-	@$(TABLE_M3) "$(_E)[Font-Awesome]"		"$(_E)$(FONTAWES_CMT)"			"$(_N)$(FONTAWES_LIC)"
-	@$(TABLE_M3) "$(_E)[Water.css]"			"$(_E)$(WATERCSS_CMT)"			"$(_N)$(WATERCSS_LIC)"
-	@$(TABLE_M3) "$(_E)[Markdown Viewer]"		"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
-	@$(TABLE_M3) "$(_E)[Markdown Themes]"		"$(_E)$(MDTHEMES_CMT)"			"$(_N)$(MDTHEMES_LIC)"
-	@$(TABLE_M3) "$(_E)[Reveal.js]"			"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
+	@$(TABLE_M3) "$(_H)Repository"				"$(_H)Commit"				"$(_H)License"
+	@$(TABLE_M3) ":---"					":---"					":---"
+	@$(TABLE_M3) "$(_E)[Pandoc]"				"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
+	@$(TABLE_M3) "$(_E)[YQ]"				"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
+	@$(TABLE_M3) "$(_E)[Bootstrap]"				"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
+	@$(TABLE_M3) "$(_E)[Bootswatch]"			"$(_E)$(BOOTSWATCH_CMT)"		"$(_N)$(BOOTSWATCH_LIC)"
+	@$(TABLE_M3) "$(_E)[Font-Awesome]"			"$(_E)$(FONTAWES_CMT)"			"$(_N)$(FONTAWES_LIC)"
+	@$(TABLE_M3) "$(_E)[Water.css]"				"$(_E)$(WATERCSS_CMT)"			"$(_N)$(WATERCSS_LIC)"
+	@$(TABLE_M3) "$(_E)[Markdown Viewer]"			"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
+	@$(TABLE_M3) "$(_E)[Markdown Themes]"			"$(_E)$(MDTHEMES_CMT)"			"$(_N)$(MDTHEMES_LIC)"
+	@$(TABLE_M3) "$(_E)[Reveal.js]"				"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
 	@$(ENDOLINE)
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(DOFORCE))
-	@$(TABLE_M2) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"
-	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)[GNU Bash]"			"$(_M)$(BASH_VER)"
-	@$(TABLE_M2) "- $(_C)[GNU Coreutils]"		"$(_M)$(COREUTILS_VER)"
-	@$(TABLE_M2) "- $(_C)[GNU Findutils]"		"$(_M)$(FINDUTILS_VER)"
-	@$(TABLE_M2) "- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"
-	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_M)$(MAKE_VER)"
-	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(_M)$(PANDOC_VER)"
-	@$(TABLE_M2) "- $(_C)[YQ]"			"$(_M)$(YQ_VER)"
-	@$(TABLE_M2) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"
+	@$(TABLE_M2) "$(_H)Project"				"$(_H)$(COMPOSER_BASENAME) Version"
+	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)[GNU Bash]"				"$(_M)$(BASH_VER)"
+	@$(TABLE_M2) "-- $(_C)[GNU Coreutils]"			"$(_M)$(COREUTILS_VER)"
+	@$(TABLE_M2) "-- $(_C)[GNU Findutils]"			"$(_M)$(FINDUTILS_VER)"
+	@$(TABLE_M2) "-- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"
+	@$(TABLE_M2) "$(_C)[GNU Make]"				"$(_M)$(MAKE_VER)"
+	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER)"
+	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"
+	@$(TABLE_M2) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"
 else
-	@$(TABLE_M3) "$(_H)Project"			"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
-	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_C)[GNU Bash]"			"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)[GNU Coreutils]"		"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)[GNU Findutils]"		"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_C)[GNU Make]"			"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)[Pandoc]"			"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)[YQ]"			"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Project"				"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
+	@$(TABLE_M3) ":---"					":---"					":---"
+	@$(TABLE_M3) "$(_C)[GNU Bash]"				"$(_M)$(BASH_VER)"			"$(_D)$(shell $(BASH) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[GNU Coreutils]"			"$(_M)$(COREUTILS_VER)"			"$(_D)$(shell $(LS) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[GNU Findutils]"			"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)[GNU Make]"				"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
-	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
-	@$(TABLE_M3) "- $(_E)Git SCM"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Wget"			"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Tar"			"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)GNU Gzip"			"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)7z"			"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(TABLE_M3) "- $(_E)Node.js (npm)"		"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
-endif
-	@$(TABLE_M3) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
-	@$(TABLE_M3) "- $(_E)GNU Diffutils"		"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "- $(_E)Rsync"			"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
+	@$(TABLE_M3) "-- $(_E)Git SCM"				"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)GNU Diffutils"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)Rsync"				"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
+	@$(TABLE_M3) "-- $(_E)Wget"				"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)GNU Tar"				"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)GNU Gzip"				"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)7z"				"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_M3) "-- $(_E)Node.js (npm)"			"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(ENDOLINE)
-	@$(TABLE_M2) "$(_H)Project"			"$(_H)Location & Options"
-	@$(TABLE_M2) ":---"				":---"
-	@$(TABLE_M2) "$(_C)[GNU Bash]"			"$(_D)$(BASH)"
-	@$(TABLE_M2) "- $(_C)[GNU Coreutils]"		"$(_D)$(LS)"
-	@$(TABLE_M2) "- $(_C)[GNU Findutils]"		"$(_D)$(FIND)"
-	@$(TABLE_M2) "- $(_C)[GNU Sed]"			"$(_D)$(SED)"
-	@$(TABLE_M2) "$(_C)[GNU Make]"			"$(_D)$(REALMAKE)"
-	@$(TABLE_M2) "- $(_C)[Pandoc]"			"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(PANDOC))"
-	@$(TABLE_M2) "- $(_C)[YQ]"			"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
-	@$(TABLE_M2) "- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
+	@$(TABLE_M2) "$(_H)Project"				"$(_H)Location & Options"
+	@$(TABLE_M2) ":---"					":---"
+	@$(TABLE_M2) "$(_C)[GNU Bash]"				"$(_D)$(BASH)"
+	@$(TABLE_M2) "-- $(_C)[GNU Coreutils]"			"$(_D)$(LS)"
+	@$(TABLE_M2) "-- $(_C)[GNU Findutils]"			"$(_D)$(FIND)"
+	@$(TABLE_M2) "-- $(_C)[GNU Sed]"			"$(_D)$(SED)"
+	@$(TABLE_M2) "$(_C)[GNU Make]"				"$(_D)$(REALMAKE)$(if $(COMPOSER_DOITALL_$(CHECKIT)), $(_H)$(MAKEFLAGS))"
+	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(PANDOC))"
+	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
+	@$(TABLE_M2) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
-	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"		"$(_H)$(MARKER)"
-	@$(TABLE_M2) "- $(_E)Git SCM"			"$(_N)$(GIT)"
-	@$(TABLE_M2) "- $(_E)Wget"			"$(_N)$(WGET)"
-	@$(TABLE_M2) "- $(_E)GNU Tar"			"$(_N)$(TAR)"
-	@$(TABLE_M2) "- $(_E)GNU Gzip"			"$(_N)$(GZIP_BIN)"
-	@$(TABLE_M2) "- $(_E)7z"			"$(_N)$(7Z)"
-ifneq ($(wildcard $(firstword $(NPM))),)
-	@$(TABLE_M2) "- $(_E)Node.js (npm)"		"$(_N)$(NPM)"
-endif
-	@$(TABLE_M2) "$(_H)Target: $(TESTING)"		"$(_H)$(MARKER)"
-	@$(TABLE_M2) "- $(_E)GNU Diffutils"		"$(_N)$(DIFF)"
-	@$(TABLE_M2) "- $(_E)Rsync"			"$(_N)$(RSYNC)"
+	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
+	@$(TABLE_M2) "-- $(_E)Git SCM"				"$(_N)$(GIT)"
+	@$(TABLE_M2) "-- $(_E)GNU Diffutils"			"$(_N)$(DIFF)"
+	@$(TABLE_M2) "-- $(_E)Rsync"				"$(_N)$(RSYNC)"
+	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"			"$(_H)$(MARKER)"
+	@$(TABLE_M2) "-- $(_E)Wget"				"$(_N)$(WGET)"
+	@$(TABLE_M2) "-- $(_E)GNU Tar"				"$(_N)$(TAR)"
+	@$(TABLE_M2) "-- $(_E)GNU Gzip"				"$(_N)$(GZIP_BIN)"
+	@$(TABLE_M2) "-- $(_E)7z"				"$(_N)$(7Z)"
+	@$(TABLE_M2) "-- $(_E)Node.js (npm)"			"$(_N)$(NPM)"
 endif
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(ENDOLINE)
@@ -10527,18 +10523,22 @@ endif
 		fi; \
 		$(call NEWLINE) \
 	)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER_DOSETUP_DIR)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP)))); \
-		$(ECHO) "$(_M)"; \
-		$(CAT) $(CURDIR)/Makefile | $(SED) "/^$$/d"; \
-		$(ECHO) "$(_D)"
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER_DOSETUP_DIR)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP))))
+	@$(ECHO) "$(_M)"
+	@$(CAT) $(CURDIR)/Makefile | $(SED) "/^$$/d"
+	@$(ECHO) "$(_D)"
 	@if [ ! -e "$(CURDIR)/.gitignore" ]; then \
 		$(ECHO) "$(_E)"; \
 		$(CP) $(COMPOSER_DOSETUP_DIR)/.gitignore $(CURDIR)/.gitignore; \
 		$(ECHO) "$(_D)"; \
-	fi; \
-		$(ECHO) "$(_C)"; \
-		$(DIFF) $(COMPOSER_DOSETUP_DIR)/.gitignore $(CURDIR)/.gitignore 2>/dev/null || $(TRUE); \
-		$(ECHO) "$(_D)"
+	fi
+ifeq ($(wildcard $(firstword $(DIFF))),)
+	@$(MAKE) $(NOTHING)-diff
+else
+	@$(ECHO) "$(_C)"
+	@$(DIFF) $(COMPOSER_DOSETUP_DIR)/.gitignore $(CURDIR)/.gitignore 2>/dev/null || $(TRUE)
+	@$(ECHO) "$(_D)"
+endif
 	@$(LS) $(COMPOSER_DOSETUP_DIR)
 
 ########################################
@@ -10555,12 +10555,16 @@ override GIT_OPTS_CONVICT		:= --verbose $(if \
 $(CONVICT): .set_title-$(CONVICT)
 $(CONVICT):
 	@$(call $(HEADERS))
+ifeq ($(wildcard $(firstword $(GIT))),)
+	@$(MAKE) $(NOTHING)-git
+else
 	@$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	@$(call GIT_RUN_COMPOSER,commit \
 		$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(CONVICT))),,--edit) \
 		--message='$(call COMPOSER_TIMESTAMP)' \
 		$(GIT_OPTS_CONVICT) \
 	)
+endif
 
 ########################################
 ## {{{2 $(EXPORTS)
@@ -10573,6 +10577,9 @@ $(CONVICT):
 $(EXPORTS): .set_title-$(EXPORTS)
 $(EXPORTS):
 	@$(call $(HEADERS))
+ifeq ($(wildcard $(firstword $(RSYNC))),)
+	@$(MAKE) $(NOTHING)-rsync
+else
 	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		$(ENDOLINE); \
@@ -10608,6 +10615,7 @@ $(EXPORTS):
 			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
 			-e "/[.][/]$$/d"
 	@$(ECHO) "$(_D)"
+endif
 
 ########################################
 ### {{{3 $(EXPORTS)-git
@@ -10621,6 +10629,9 @@ $(EXPORTS)-git: .set_title-$(EXPORTS)-git
 $(EXPORTS)-git:
 	@$(call $(HEADERS))
 	@$(call $(EXPORTS)-$(CONFIGS),1)
+ifeq ($(wildcard $(firstword $(GIT))),)
+	@$(MAKE) $(NOTHING)-git
+else
 #>	$(_EXPORT_DIRECTORY)
 ifneq ($(and \
 	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) ,\
@@ -10634,6 +10645,7 @@ ifneq ($(and \
 	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BRANCH)")
 else
 	@$(MAKE) $(NOTHING)-$(EXPORTS)
+endif
 endif
 
 #>		[ -n "$(_EXPORT_DIRECTORY)" ] ||
@@ -12030,6 +12042,13 @@ endif
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE):
+ifneq ($(and \
+	$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)) ,\
+	$(filter $(TOKEN),$(TOKEN)$(wildcard $(firstword $(RSYNC)))) \
+),)
+	@$(call $(HEADERS))
+	@$(MAKE) $(NOTHING)-rsync
+else
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
@@ -12294,12 +12313,9 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		2>&1 | $(TEE) --append $(PUBLISH_LOG); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
+endif
 
 #WORKING:NOW:NOW
-#	checkit
-#		rsync is present in more than just testing now...
-#			same with git...
-#		are all tools listed...?
 #	site
 #		similar to site-library, add a list of run options for site-template...
 #		add a setting for hiding menu spacers in mobile or not...?
