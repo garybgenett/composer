@@ -1826,6 +1826,13 @@ endif
 ########################################
 
 override TESTING_MAKEJOBS		:= 8
+ifneq ($(and \
+	$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)) ,\
+	$(filter $(MAKEJOBS_DEFAULT),$(MAKEJOBS)) \
+),)
+override MAKEFLAGS			:= $(subst --jobs=$(MAKEJOBS),--jobs=$(TESTING_MAKEJOBS),$(MAKEFLAGS))
+override MAKEJOBS			:= $(TESTING_MAKEJOBS)
+endif
 
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
 override TESTING_COMPOSER_DIR		:= .$(COMPOSER_BASENAME)
@@ -12039,17 +12046,9 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
-.PHONY: $(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE):
-ifneq ($(and \
-	$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)) ,\
-	$(filter $(TOKEN),$(TOKEN)$(wildcard $(firstword $(RSYNC)))) \
-),)
-	@$(call $(HEADERS))
-	@$(MAKE) $(NOTHING)-rsync
-else
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+#>$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL): .set_title-$(PUBLISH)-$(EXAMPLE)
+$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL):
+ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
 	@$(ECHO) "$(_S)"
 	@$(RM) --recursive			$(PUBLISH_ROOT)/.$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
@@ -12082,12 +12081,31 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 		$(BOOTSTRAP_DIR)/		$(PUBLISH_ROOT)/$(notdir $(BOOTSTRAP_DIR))
 	@$(SED) -i "s|^[#]{1}||g"		$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$(PUBLISH_FILES)))
 #>		--makefile $(COMPOSER)
-	@$(call ENV_MAKE,$(TESTING_MAKEJOBS),$(COMPOSER_DOCOLOR)) \
+	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 		--makefile $(PUBLISH_ROOT)/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
 		--directory $(PUBLISH_ROOT) \
 		$(INSTALL)-$(DOFORCE)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
+else
+	@$(ECHO) ""
+endif
+
+.PHONY: $(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL)
+$(PUBLISH)-$(EXAMPLE):
+ifeq ($(wildcard $(firstword $(RSYNC))),)
+	@$(call $(HEADERS))
+	@$(MAKE) $(NOTHING)-rsync
+else
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(ECHO) "$(_S)"
+	@$(RM) $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(MAKE) $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL)
 endif
 	@$(call $(HEADERS))
+	@$(ECHO) "" >$(PUBLISH_LOG)
 	@$(foreach FILE,\
 		$(PUBLISH_DIRS) \
 		$(PUBLISH_PAGES) \
@@ -12237,6 +12255,21 @@ ifeq ($(COMPOSER_DEBUGIT),)
 	)
 endif
 endif
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+	@$(foreach FILE,\
+		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY))/$(notdir $($(PUBLISH)-library)) \
+		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT))/$(notdir $($(PUBLISH)-library)) \
+		,\
+		if [ ! -f "$(FILE)" ]; then \
+			$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
+				--directory $(abspath $(dir $(FILE))) \
+				$(PUBLISH)-library \
+				2>&1 | $(TEE) --append $(PUBLISH_LOG); \
+				if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+		fi; \
+		$(call NEWLINE) \
+	)
+endif
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
@@ -12251,7 +12284,6 @@ ifneq ($(COMPOSER_RELEASE),)
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
-	@$(ECHO) "" >$(PUBLISH_LOG)
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$(PUBLISH_DIRS) \
@@ -12282,7 +12314,7 @@ endif
 		$(PUBLISH_SOURCE).$(EXTN_HTML) \
 		$(PUBLISH_THEMES)/$(DOITALL) \
 		,\
-		time $(call ENV_MAKE,$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS)),$(COMPOSER_DOCOLOR),$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(COMPOSER_DEBUGIT))) \
+		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(COMPOSER_DEBUGIT))) \
 			--directory $(abspath $(dir $(PUBLISH_ROOT)/$(FILE))) \
 			$(if $(filter %/$(DOITALL),$(FILE)),\
 				$(DOITALL) ,\
@@ -12295,10 +12327,10 @@ endif
 else
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
-		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
+		$(PUBLISH)-$(DOFORCE) \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		,\
-		time $(call ENV_MAKE,$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING_MAKEJOBS)),$(COMPOSER_DOCOLOR)) \
+		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 			--directory $(PUBLISH_ROOT) \
 			$(FILE) \
 			2>&1 | $(TEE) --append $(PUBLISH_LOG); \
@@ -12307,7 +12339,7 @@ else
 	)
 endif
 ifeq ($(COMPOSER_DEBUGIT),)
-	@time $(ENV_MAKE) \
+	@time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 		--directory $(PUBLISH_ROOT) \
 		$(EXPORTS) \
 		2>&1 | $(TEE) --append $(PUBLISH_LOG); \
@@ -12315,9 +12347,35 @@ ifeq ($(COMPOSER_DEBUGIT),)
 endif
 endif
 
+#WORKING:NOW:NOW:FIX
+#	ifneq && testing_makejobs || makejobs
+#	ifneq || !_site-all
+#		rsync
+#	ifneq
+#		composer_depends = 1
+#		sed hacks = configuration tests
+#		library css switch
+#	ifeq || debugit
+#		reset auto_update
+#		!debugit
+#			touch composer.{mk,yml} = WORKING: what was this for...?
+#	ifeq
+#		!site-library
+#			site-library
+#		!site-library (config)
+#			site-library (config)
+#	debugit
+#		composer_release && heredoc_custom_publish
+#		foreach ... env_make
+#			ifneq && composer_debugit
+#	|| !debugit
+#		ifeq && (site-force x 2)
+#	!debugit
+#		exports
+#WORKING:NOW:NOW:FIX
+
 #WORKING:NOW:NOW
 #	site
-#		similar to site-library, add a list of run options for site-template...
 #		add a setting for hiding menu spacers in mobile or not...?
 #		add a sitemap symlink test... maybe themes/index.html...?
 #			they likely break when used across directories, when "composer_root" is used...
