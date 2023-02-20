@@ -12284,10 +12284,10 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOFORCE))
 else
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(foreach FILE,\
-		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY))/$(notdir $($(PUBLISH)-library)) \
-		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT))/$(notdir $($(PUBLISH)-library)) \
+		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)) \
+		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)) \
 		,\
-		if [ ! -f "$(FILE)" ]; then \
+		if [ ! -f "$(FILE)/$(notdir $($(PUBLISH)-library))" ]; then \
 			$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 				--directory $(abspath $(dir $(FILE))) \
 				$(PUBLISH)-library \
@@ -12341,7 +12341,7 @@ endif
 		$(PUBLISH_SOURCE).$(EXTN_HTML) \
 		$(PUBLISH_THEMES)/$(DOITALL) \
 		,\
-		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(COMPOSER_DEBUGIT))) \
+		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(COMPOSER_DEBUGIT))) \
 			--directory $(abspath $(dir $(PUBLISH_ROOT)/$(FILE))) \
 			$(if $(filter %/$(DOITALL),$(FILE)),\
 				$(DOITALL) ,\
@@ -12355,7 +12355,7 @@ else
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
 		$(PUBLISH)-$(DOFORCE) \
-		$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),,$(PUBLISH)-$(DOFORCE)) \
+		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
 		,\
 		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 			--directory $(PUBLISH_ROOT) \
