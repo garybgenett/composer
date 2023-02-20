@@ -11811,7 +11811,7 @@ $($(PUBLISH)-library-sitemap-src):
 	)
 	@$(ECHO) "" >$(@).$(PUBLISH)
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-list $(PUBLISH_CMD_END)\n" >>$(@).$(PUBLISH)
-	@$(call $(PUBLISH)-library-sitemap-done,$(@).$(PUBLISH))
+	@$(call $(PUBLISH)-library-sitemap-done,$(@).$(COMPOSER_BASENAME),$(@).$(PUBLISH))
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-end group $(PUBLISH_CMD_END)\n" >>$(@).$(PUBLISH)
 	@$(ECHO) "$(_S)"
 	@$(RM) $(@).$(COMPOSER_BASENAME)	$($(DEBUGIT)-output)
@@ -11829,12 +11829,12 @@ override define $(PUBLISH)-library-sitemap-vars =
 endef
 
 override define $(PUBLISH)-library-sitemap-done =
-	$(CAT) $(@).$(COMPOSER_BASENAME) \
+	$(CAT) $(1) \
 		| $(filter-out --strip-comments,$(PANDOC_MD_TO_HTML)) \
-		>>$(@).$(PUBLISH); \
-	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(@).$(PUBLISH); \
-	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(@).$(PUBLISH); \
-	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(@).$(PUBLISH)
+		>>$(2); \
+	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
+	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
+	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2)
 endef
 
 override define $(PUBLISH)-library-sitemap-create =
@@ -12258,6 +12258,7 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOFORCE))
 		$(PUBLISH_DIRS) \
 		$(PUBLISH_PAGES) \
 		$(PUBLISH_THEMES) \
+		$(PUBLISH_TESTING_TREE) \
 		,\
 		$(foreach TIME,\
 			$(COMPOSER_SETTINGS) \
@@ -12269,6 +12270,17 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOFORCE))
 			$(call NEWLINE) \
 		) \
 	)
+	@$(ECHO) "$(_E)"
+	@$(LL) $$( \
+			$(FIND) $(PUBLISH_ROOT) \
+				\( -name "$(COMPOSER_SETTINGS)" -print \) \
+				-o \( -name "$(COMPOSER_YML)" -print \) \
+		) \
+		| $(SED) -n "s|([[:space:]])$$( \
+				$(ECHO) "$(PUBLISH_ROOT)" \
+				| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+			)[/]|\1|gp"
+	@$(ECHO) "$(_D)"
 else
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(foreach FILE,\
