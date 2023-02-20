@@ -4699,20 +4699,26 @@ $(_S)###########################################################################
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Wildcards$(_D)
 
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_D)
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_D)
 $(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc		:= $(SPECIAL_VAL)$(_D)
 
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Settings$(_D)
 
-$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_list	:= $(_E)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_D)override $(_C)$(OUT_README).$(PUBLISH).$(EXTN_HTML)-c_list$(_D)	:= $(_M)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D):			$(_E)$$($(OUT_README).$(PUBLISH).$(EXTN_HTML)-c_list)$(_D)
+$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_list	:= $$($(OUT_README).$(PUBLISH).$(EXTN_HTML)-c_list)$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_site	:= 1$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_toc	:=$(_D)
 
-$(_M)$(OUT_README).$(EXTN_LPDF)$(_D): $(_E)override c_list		:= $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_D)override $(_C)$(OUT_README).$(EXTN_LPDF)-c_list$(_D)		:= $(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_M)$(OUT_README).$(EXTN_LPDF)$(_D):				$(_E)$$($(OUT_README).$(EXTN_LPDF)-c_list)$(_D)
+$(_M)$(OUT_README).$(EXTN_LPDF)$(_D): $(_E)override c_list		:= $$($(OUT_README).$(EXTN_LPDF)-c_list)$(_D)
 
-$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_list	:= $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_D)override $(_C)$(OUT_README).$(EXTN_PRES)-c_list$(_D)	:= $(_M)$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_M)$(OUT_README).$(EXTN_PRES)$(_D):			$(_E)$$($(OUT_README).$(EXTN_PRES)-c_list)$(_D)
+$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_list	:= $$($(OUT_README).$(EXTN_PRES)-c_list)$(_D)
 $(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc	:=$(_D)
 
 $(_S)################################################################################$(_D)
@@ -11243,8 +11249,10 @@ ifneq ($(COMPOSER_LIBRARY),)
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-library),,COMPOSER_DOITALL_$(PUBLISH)-library="$(DOFORCE)") \
 		c_site="1" \
 		$(PUBLISH)-library-$(TARGETS)
-else
+else ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
 	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
+else
+	@$(ECHO) ""
 endif
 
 .PHONY: $(PUBLISH)-library-$(TARGETS)
@@ -12143,7 +12151,6 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOITALL))
 	@$(MAKE) $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL)
 endif
 	@$(call $(HEADERS))
-	@$(ECHO) "" >$(PUBLISH_LOG)
 	@$(foreach FILE,\
 		$(PUBLISH_DIRS) \
 		$(PUBLISH_PAGES) \
@@ -12209,7 +12216,7 @@ endif
 	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"					>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML)\n"			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML): override c_list := \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) 'override $(notdir $(PUBLISH_EXAMPLES))-c_list := \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-features$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach YEAR,202 203,\
 		$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
@@ -12227,7 +12234,11 @@ endif
 		}									>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGES))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
-	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-comments$(COMPOSER_EXT_SPECIAL)\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\t$(notdir $(PUBLISH_EXAMPLES))-comments$(COMPOSER_EXT_SPECIAL)\n"	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML):"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) " override c_list := \$$($(notdir $(PUBLISH_EXAMPLES))-c_list)\n"	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML):"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) " \$$($(notdir $(PUBLISH_EXAMPLES))-c_list)\n"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"								>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach FILE,$(call CSS_THEMES),\
 		$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
@@ -12282,6 +12293,7 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOFORCE))
 			)[/]|\1|gp"
 	@$(ECHO) "$(_D)"
 else
+	@$(ECHO) "" >$(PUBLISH_LOG)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(foreach FILE,\
 		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)) \
