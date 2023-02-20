@@ -12055,7 +12055,7 @@ endif
 
 #> $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
 #	$(CONFIGS)
-#		[[ $(MAKEJOBS) == $(MAKEJOBS_DEFAULT) ]] && MAKEJOBS="$(TESTING_MAKEJOBS)"
+#		[ $(MAKEJOBS) == $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #		$(COMPOSER_SETTINGS)
 #			$(*_MOD)
 #			COMPOSER_DEPENDS="1"
@@ -12070,8 +12070,8 @@ endif
 #		exit 0
 #> $(PUBLISH)-$(EXAMPLE)
 #	$(SHELL)
-#		[[ ! -f $(notdir $(PUBLISH_ROOT))-$(INSTALL) ]] && $(notdir $(PUBLISH_ROOT))-$(INSTALL)
-#		[[ ! -f $(PUBLISH)-library ]] && $(PUBLISH)-library
+#		[ ! -f $(notdir $(PUBLISH_ROOT))-$(INSTALL) ] && $(notdir $(PUBLISH_ROOT))-$(INSTALL)
+#		[ ! -f $(PUBLISH)-library ] && $(PUBLISH)-library
 #			$(word 1,$(PUBLISH_DIRS))
 #			$(word 3,$(PUBLISH_DIRS))
 #		$(PUBLISH)-$(DOFORCE) [x2]
@@ -12080,9 +12080,9 @@ endif
 #		$(COMPOSER_YML)
 #			auto_update: null
 #	$(SHELL)
-#		[[ -n $(COMPOSER_RELEASE) ]] && HEREDOC_CUSTOM_PUBLISH
+#		[ -n $(COMPOSER_RELEASE) ] && HEREDOC_CUSTOM_PUBLISH
 #		$(foreach FILE,*,$(call ENV_MAKE))
-#			[[ -n $(PUBLISH)-$(EXAMPLE)-$(DOITALL) ]] && COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)"
+#			[ -n $(PUBLISH)-$(EXAMPLE)-$(DOITALL) ] && COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)"
 
 #>$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL): .set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL):
