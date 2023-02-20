@@ -95,6 +95,8 @@ override VIM_FOLDING := {{{1
 ################################################################################
 # {{{1 TODO
 ################################################################################
+# CODE
+#	remove MDVIEWER_CMT_SASS_VER once fixed in upstream
 # HTML
 #	metadata / keywords
 # PDF / EPUB / DOCX
@@ -349,12 +351,15 @@ override PUBLISH_METAINFO_NULL		:= *(none)*
 override PUBLISH_METAINFO_NULL_ALT	:= null
 override PUBLISH_METAINFO		:= <D> $(DIVIDE) <T><|> -- <A|; >
 override PUBLISH_METAINFO_ALT		:= <T>$(HTML_SPACE)$(HTML_SPACE)*(<D>)*<|><br>*-- <A| -- >*<br>*. <G| . >*
+override PUBLISH_METAINFO_MOD		:= <T>$(HTML_SPACE)$(HTML_SPACE)*(<D>)*<|><br>*-- <A>*<br>*. <G>*
 #>override PUBLISH_CONTENTS		:=
 #>override PUBLISH_CONTENTS_ALT		:=
 override PUBLISH_CREATORS		:= *Authors: <|>, <|>*
 override PUBLISH_CREATORS_ALT		:= *<|> / <|> .*
+override PUBLISH_CREATORS_MOD		:= #> null
 override PUBLISH_TAGSLIST		:= *Tags: <|>, <|>*
 override PUBLISH_TAGSLIST_ALT		:= *<|> / <|> .*
+override PUBLISH_TAGSLIST_MOD		:= #> null
 override PUBLISH_READTIME		:= *Reading time: <W> words, <T> minutes*
 override PUBLISH_READTIME_ALT		:= *Words: <W> / Minutes: <T>*
 override PUBLISH_READTIME_WPM		:= 220
@@ -1816,6 +1821,7 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(patsubst .%,%,$(
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOFORCE)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOITALL)))
+$(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(DOFORCE)))
 
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
 export override COMPOSER_DOITALL_$(DOITALL) := $(COMPOSER_DOITALL_$(PUBLISH))
@@ -2479,6 +2485,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 # $(PUBLISH)-$(COMPOSER_YML)
 # $(PUBLISH)-$(EXAMPLE)
 # $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
+# $(PUBLISH)-$(EXAMPLE)-$(DOFORCE)
 #WORK
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
@@ -3810,6 +3817,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONF
 # $(PUBLISH)-$(COMPOSER_YML)
 # $(PUBLISH)-$(EXAMPLE)
 # $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
+# $(PUBLISH)-$(EXAMPLE)-$(DOFORCE)
 
   * Useful targets for validating tooling and configurations.
   * Use $(_C)[$(CHECKIT)]$(_D) to see the list of components and their versions, in relation to
@@ -5289,7 +5297,7 @@ variables:
 
   $(PUBLISH)-library:
     folder:				$(PUBLISH_LIBRARY)
-    auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
+    auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_AUTO_UPDATE_ALT),$(LIBRARY_AUTO_UPDATE)))
 
 ################################################################################
 # End Of File
@@ -5333,30 +5341,30 @@ variables:
     cols_break:				$(PUBLISH_COLS_BREAK_ALT)
     cols_sticky:			$(PUBLISH_COLS_STICKY_ALT)
     cols_order:				[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
-    cols_reorder:			[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
+    cols_reorder:			[ $(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_L_MOD),$(PUBLISH_COLS_REORDER_L_ALT)), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
-    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]
+    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_R_MOD),$(PUBLISH_COLS_RESIZE_R_ALT)) ]
     metainfo_null:			"$(PUBLISH_METAINFO_NULL_ALT)"
-    metainfo:				"$(PUBLISH_METAINFO_ALT)"
-    creators:				"$(PUBLISH_CREATORS_ALT)"
-    tagslist:				"$(PUBLISH_TAGSLIST_ALT)"
+    metainfo:				"$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_METAINFO_MOD),$(PUBLISH_METAINFO_ALT))"
+    creators:				"$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_CREATORS_MOD),$(PUBLISH_CREATORS_ALT))"
+    tagslist:				"$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_TAGSLIST_MOD),$(PUBLISH_TAGSLIST_ALT))"
     readtime:				"$(PUBLISH_READTIME_ALT)"
     readtime_wpm:			$(PUBLISH_READTIME_WPM_ALT)
 
   $(PUBLISH)-library:
     folder:				$(PUBLISH_LIBRARY_ALT)
-    auto_update:			$(LIBRARY_AUTO_UPDATE_ALT)
+    auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE_ALT))
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
-    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED_ALT)
+    digest_expanded:			$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
-    sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED_ALT)
+    sitemap_expanded:			$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
-    lists_expanded:			$(LIBRARY_LISTS_EXPANDED_ALT)
+    lists_expanded:			$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
 
 ########################################
@@ -8928,7 +8936,6 @@ ifeq ($(wildcard $(firstword $(NPM))),)
 else
 #WORK document
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(DOFORCE))
-#WORK submit fix upstream, update WATERCSS_CMT, and remove
 	@$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/package.json
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
@@ -11245,9 +11252,9 @@ $(PUBLISH)-library-$(TARGETS): $($(PUBLISH)-library)
 $(PUBLISH)-library-$(TARGETS):
 	@$(ECHO) ""
 
-#> all		make $(PUBLISH)-library
-#> not sitemap	make c_site="1" *.$(EXTN_HTML)		+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
-#> sitemap only	make $(PUBLISH)-library-$(DOITALL)	+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
+#> all		$(PUBLISH)-library
+#> not sitemap	c_site="1" *.$(EXTN_HTML)	+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
+#> sitemap only	$(PUBLISH)-library-$(DOITALL)	+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
 
 ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
 $($(PUBLISH)-library): $($(PUBLISH)-library)-$(TARGETS)
@@ -12046,6 +12053,37 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
+#> $(PUBLISH)-$(EXAMPLE)-$(DOITALL)
+#	$(CONFIGS)
+#		[[ $(MAKEJOBS) == $(MAKEJOBS_DEFAULT) ]] && MAKEJOBS="$(TESTING_MAKEJOBS)"
+#		$(COMPOSER_SETTINGS)
+#			$(*_MOD)
+#			COMPOSER_DEPENDS="1"
+#		$(COMPOSER_YML)
+#			auto_update: 1
+#		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS)
+#	$(SHELL)
+#		$(notdir $(PUBLISH_ROOT))-$(INSTALL)
+#> $(PUBLISH)-$(EXAMPLE)-$(DOFORCE)
+#	$(SHELL)
+#		$(TOUCH) $(COMPOSER_SETTINGS) $(COMPOSER_YML)
+#		exit 0
+#> $(PUBLISH)-$(EXAMPLE)
+#	$(SHELL)
+#		[[ ! -f $(notdir $(PUBLISH_ROOT))-$(INSTALL) ]] && $(notdir $(PUBLISH_ROOT))-$(INSTALL)
+#		[[ ! -f $(PUBLISH)-library ]] && $(PUBLISH)-library
+#			$(word 1,$(PUBLISH_DIRS))
+#			$(word 3,$(PUBLISH_DIRS))
+#		$(PUBLISH)-$(DOFORCE) [x2]
+#> $(COMPOSER_DEBUGIT)
+#	$(CONFIGS)
+#		$(COMPOSER_YML)
+#			auto_update: null
+#	$(SHELL)
+#		[[ -n $(COMPOSER_RELEASE) ]] && HEREDOC_CUSTOM_PUBLISH
+#		$(foreach FILE,*,$(call ENV_MAKE))
+#			[[ -n $(PUBLISH)-$(EXAMPLE)-$(DOITALL) ]] && COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)"
+
 #>$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL): .set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL):
 ifneq ($(wildcard $(firstword $(RSYNC))),)
@@ -12098,7 +12136,7 @@ ifeq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
 	@$(MAKE) $(NOTHING)-rsync
 else
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOITALL))
 	@$(ECHO) "$(_S)"
 	@$(RM) $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
@@ -12124,7 +12162,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PAGES)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGES)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_THEMES)		>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_SETTINGS)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_SETTINGS)
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOITALL))
 	@$(foreach FILE,\
 		$(PUBLISH_DIRS) \
 		$(PUBLISH_PAGES) \
@@ -12145,26 +12183,13 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGES)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGES)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_THEMES)		>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_YML)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_YML)
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
-	@$(SED) -i \
-		-e "s|^(.+cols_reorder.+)[[].+$$|\1[ $(PUBLISH_COLS_REORDER_L_MOD), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]|g" \
-		-e "s|^(.+cols_resize.+)[[].+$$|\1[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_MOD) ]|g" \
-		-e "s|^(.+metainfo[:].*[<]A)[|][^>]*(.*)$$|\1\2|g" \
-		-e "s|^(.+metainfo[:].*[<]G)[|][^>]*(.*)$$|\1\2|g" \
-		-e "s|^(.+creators[:]).*$$|\1|g" \
-		-e "s|^(.+tagslist[:]).*$$|\1|g" \
-		-e "s|^(.+digest_expanded.+)$(LIBRARY_DIGEST_EXPANDED_ALT)$$|\1$(LIBRARY_DIGEST_EXPANDED_MOD)|g" \
-		-e "s|^(.+sitemap_expanded.+)$(LIBRARY_SITEMAP_EXPANDED_ALT)$$|\1$(LIBRARY_SITEMAP_EXPANDED_MOD)|g" \
-		-e "s|^(.+lists_expanded.+)$(LIBRARY_LISTS_EXPANDED_ALT)$$|\1$(LIBRARY_LISTS_EXPANDED_MOD)|g" \
-									$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-endif
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_CSS))
 	@$(ECHO) "$(_S)"
 	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 	@$(MKDIR)							$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
-ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOITALL))
 	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
 else
 	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
@@ -12227,16 +12252,7 @@ endif
 			-e "s|^page(title[:].+)$$|\1|g" \
 			-e "/^$(PUBLISH_CMD_BEG)/d" \
 											>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
-ifneq ($(or \
-	$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,1) ,\
-	$(COMPOSER_DEBUGIT) ,\
-),)
-	@$(SED) -i "s|^(.+auto_update.+)$(LIBRARY_AUTO_UPDATE_ALT)$$|\1$(LIBRARY_AUTO_UPDATE)|g" \
-		$(PUBLISH_ROOT)/$(COMPOSER_YML) \
-		$(if $(COMPOSER_DEBUGIT),\
-			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML) \
-		)
-ifeq ($(COMPOSER_DEBUGIT),)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(DOFORCE))
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$(PUBLISH_DIRS) \
@@ -12253,8 +12269,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 			$(call NEWLINE) \
 		) \
 	)
-endif
-endif
+else
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),)
 	@$(foreach FILE,\
 		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY))/$(notdir $($(PUBLISH)-library)) \
@@ -12314,7 +12329,7 @@ endif
 		$(PUBLISH_SOURCE).$(EXTN_HTML) \
 		$(PUBLISH_THEMES)/$(DOITALL) \
 		,\
-		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(COMPOSER_DEBUGIT))) \
+		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(COMPOSER_DEBUGIT))) \
 			--directory $(abspath $(dir $(PUBLISH_ROOT)/$(FILE))) \
 			$(if $(filter %/$(DOITALL),$(FILE)),\
 				$(DOITALL) ,\
@@ -12328,7 +12343,7 @@ else
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
 		$(PUBLISH)-$(DOFORCE) \
-		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),,$(PUBLISH)-$(DOFORCE)) \
+		$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),,$(PUBLISH)-$(DOFORCE)) \
 		,\
 		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 			--directory $(PUBLISH_ROOT) \
@@ -12337,8 +12352,6 @@ else
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 			$(call NEWLINE) \
 	)
-endif
-ifeq ($(COMPOSER_DEBUGIT),)
 	@time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 		--directory $(PUBLISH_ROOT) \
 		$(EXPORTS) \
@@ -12346,33 +12359,7 @@ ifeq ($(COMPOSER_DEBUGIT),)
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endif
 endif
-
-#WORKING:NOW:NOW:FIX
-#	ifneq && testing_makejobs || makejobs
-#	ifneq || !_site-all
-#		rsync
-#	ifneq
-#		composer_depends = 1
-#		sed hacks = configuration tests
-#		library css switch
-#	ifeq || debugit
-#		reset auto_update
-#		!debugit
-#			touch composer.{mk,yml} = WORKING: what was this for...?
-#	ifeq
-#		!site-library
-#			site-library
-#		!site-library (config)
-#			site-library (config)
-#	debugit
-#		composer_release && heredoc_custom_publish
-#		foreach ... env_make
-#			ifneq && composer_debugit
-#	|| !debugit
-#		ifeq && (site-force x 2)
-#	!debugit
-#		exports
-#WORKING:NOW:NOW:FIX
+endif
 
 #WORKING:NOW:NOW
 #	site
