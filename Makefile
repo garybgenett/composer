@@ -3059,6 +3059,11 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
+#	add a setting for hiding menu spacers in mobile or not...?
+#	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
+#		index.html with only/all sub-folders as best-practice?
+#		this is a real pain when using COMPOSER_INCLUDE...
+#WORKING:NOW:NOW
 #	make demo = peek = replace screenshot with a gif
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
@@ -3921,6 +3926,24 @@ endef
 $(PUBLISH)-$(EXAMPLE)-%:
 	@$(call TITLE_LN ,2,$(*) Recommended Workflow)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
+
+#WORKING:NOW:NOW:FIX
+#	$(word 1,$(PUBLISH_FILES))		index.html
+#	$(word 2,$(PUBLISH_FILES))		null/index.html
+#	$(word 3,$(PUBLISH_FILES))		config/index.html
+#	$(word 4,$(PUBLISH_FILES))		pandoc/MANUAL.html
+#	$(word 5,$(PUBLISH_FILES))		bootstrap/site/content/docs/5.1/getting-started/introduction.html
+#	$(PUBLISH_INCLUDE).$(EXTN_HTML)		index-digest.html
+#	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)	config/index-digest.html
+#	$(PUBLISH_EXAMPLES).$(EXTN_HTML)	config/examples.html
+#	$(PUBLISH_SOURCE).$(EXTN_HTML)		config/pages/####-##-##+template_##.html
+#	$(PUBLISH_THEMES)/$(DOITALL)		themes/*.html
+#WORKING:NOW:NOW:FIX
+#	add a sitemap symlink test... maybe themes/index.html...?
+#		they likely break when used across directories, when "composer_root" is used...
+#	main/themes pages
+#		split these, so that the examples are in an include file that main/themes pull in
+#		main should be split into an introduction page and an examples page
 
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
@@ -12435,19 +12458,6 @@ else
 endif
 endif
 endif
-
-#WORKING:NOW:NOW
-#	site
-#		add a setting for hiding menu spacers in mobile or not...?
-#		add a sitemap symlink test... maybe themes/index.html...?
-#			they likely break when used across directories, when "composer_root" is used...
-#		solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
-#			index.html with only/all sub-folders as best-practice?
-#			this is a real pain when using COMPOSER_INCLUDE...
-#		add tests for all 6 composer_root: top button, top menu, top nav tree, top nav branch, bottom, html[include]
-#		main/themes pages
-#			split these, so that the examples are in an include file that main/themes pull in
-#			main should be split into an introduction page and an examples page
 
 ########################################
 ## {{{2 $(INSTALL)
