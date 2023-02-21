@@ -3928,16 +3928,28 @@ $(PUBLISH)-$(EXAMPLE)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 
 #WORKING:NOW:NOW:FIX
+#	add a header to each which describes what to test for that page...
+#WORKING:NOW:NOW:FIX
 #	$(word 1,$(PUBLISH_FILES))		index.html
+#		introduction & framework & config table
 #	$(word 2,$(PUBLISH_FILES))		null/index.html
+#		document blank page
 #	$(word 3,$(PUBLISH_FILES))		config/index.html
+#		mostly, as it is, with config table
 #	$(word 4,$(PUBLISH_FILES))		pandoc/MANUAL.html
+#		as it is
 #	$(word 5,$(PUBLISH_FILES))		bootstrap/site/content/docs/5.1/getting-started/introduction.html
+#		as it is
 #	$(PUBLISH_INCLUDE).$(EXTN_HTML)		index-digest.html
+#		as it is, after fixing the library/contents conundrum...
 #	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)	config/index-digest.html
+#		as it is, after fixing the library/contents conundrum...
 #	$(PUBLISH_EXAMPLES).$(EXTN_HTML)	config/examples.html
+#		this is where the real work is... what are we trying to demonstrate here, now...?
 #	$(PUBLISH_SOURCE).$(EXTN_HTML)		config/pages/####-##-##+template_##.html
+#		as it is
 #	$(PUBLISH_THEMES)/$(DOITALL)		themes/*.html
+#		as it is, this is *the* examples/demo page...
 #WORKING:NOW:NOW:FIX
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used...
