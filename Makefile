@@ -3067,7 +3067,8 @@ endef
 #	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #		index.html with only/all sub-folders as best-practice?
 #		this is a real pain when using COMPOSER_INCLUDE...
-#WORKING:NOW:NOW
+
+#WORKING:NOW
 #	make demo = peek = replace screenshot with a gif
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
@@ -3158,7 +3159,7 @@ endef
 #		add $(CLEANER)/$(DOITALL) for a vary large directory of files
 #	document c_list_var
 
-#WORK
+#WORKING:NOW
 #	features
 #		100% configurable using simple plain-text files
 #		extremely flexible, complete control over page layout and elements
@@ -3185,7 +3186,7 @@ endef
 #		other?
 #			$(_C)[DATEMARK]$(_D)
 
-#WORK
+#WORKING:NOW
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
 
@@ -3933,34 +3934,28 @@ $(PUBLISH)-$(EXAMPLE)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
 
 #WORKING:NOW:NOW:FIX
-#	add a header to each which describes what to test for that page...
-#WORKING:NOW:NOW:FIX
-#	$(word 1,$(PUBLISH_FILES))		index.html
-#		introduction & framework & config table
-#	$(word 2,$(PUBLISH_FILES))		null/index.html
-#		document blank page
-#	$(word 3,$(PUBLISH_FILES))		config/index.html
-#		mostly, as it is, with config table
-#	$(word 4,$(PUBLISH_FILES))		pandoc/MANUAL.html
-#		as it is
-#	$(word 5,$(PUBLISH_FILES))		bootstrap/site/content/docs/5.1/getting-started/introduction.html
-#		as it is
-#	$(PUBLISH_INCLUDE).$(EXTN_HTML)		index-digest.html
-#		as it is, after fixing the library/contents conundrum...
-#	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)	config/index-digest.html
-#		as it is, after fixing the library/contents conundrum...
-#	$(PUBLISH_EXAMPLES).$(EXTN_HTML)	config/examples.html
-#		this is where the real work is... what are we trying to demonstrate here, now...?
-#	$(PUBLISH_SOURCE).$(EXTN_HTML)		config/pages/####-##-##+template_##.html
-#		as it is
-#	$(PUBLISH_THEMES)/$(DOITALL)		themes/*.html
-#		as it is, this is *the* examples/demo page...
-#WORKING:NOW:NOW:FIX
-#	add a sitemap symlink test... maybe themes/index.html...?
-#		they likely break when used across directories, when "composer_root" is used...
+#	add a header/box to each which describes what to test for that page...
 #	main/themes pages
 #		split these, so that the examples are in an include file that main/themes pull in
 #		main should be split into an introduction page and an examples page
+#	add a sitemap symlink test... maybe themes/index.html...?
+#		they likely break when used across directories, when "composer_root" is used... document!
+
+#	Introduction			$(word 1,$(PUBLISH_FILES))		PUBLISH_EXAMPLE_PAGE		index.html			introduction & framework & config table
+#	Default Site			$(word 2,$(PUBLISH_FILES))		PUBLISH_NOTHING_PAGE		null/index.html			document blank page
+#	Configured Site			$(word 3,$(PUBLISH_FILES))		PUBLISH_CONFIGS_PAGE		config/index.html		mostly, as it is, with config table
+#	Default Digest Page		$(PUBLISH_INCLUDE)			PUBLISH_INCLUDE_PAGE		index-digest.html		as it is, after fixing the library/contents conundrum...
+#	Configured Digest Page		$(PUBLISH_INCLUDE_ALT)			PUBLISH_INCLUDE_PAGE_ALT	config/index-digest.html	as it is, after fixing the library/contents conundrum...
+#	Default Markdown File		$(word 4,$(PUBLISH_FILES))/_header	PUBLISH_METAINFO_PAGE		pandoc/MANUAL.html		as it is
+#	Configured Markdown File	$(word 5,$(PUBLISH_FILES))/_header	PUBLISH_TESTING_PAGE		bootstrap/site/content/docs/5.1/getting-started/introduction.html	as it is
+#	Elements & Includes		$(PUBLISH_EXAMPLES)			#WORK				config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
+#	#WORK "combined" page		#WORK					$(foreach)			#WORK				move from current "examples"
+#	Metainfo File			$(PUBLISH_SOURCE)			$(PUBLISH)-$(EXAMPLE)-%		config/pages/####-##-##+template_##.html	as it is
+#	Themes & Shades			$(PUBLISH_THEMES)			PUBLISH_THEMES_PAGE		themes/*.html			as it is, this is *the* examples/demo page...
+
+#	PUBLISH_HEADER_PAGE		$(PUBLISH_EXAMPLES)-header
+#	PUBLISH_FOOTER_PAGE		$(PUBLISH_EXAMPLES)-footer
+#	PUBLISH_FEATURES_PAGE		$(PUBLISH_EXAMPLES)-begin/end	split into example/theme/showcase and a separate "combined" page...
 
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
@@ -3988,25 +3983,27 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 | `nav-left`           | **`c_list`** | `nav-right`
 | `copyright`          | `nav-bottom` | `info-bottom` / *($(COMPOSER_TINYNAME))*
 
-# Folds
+# Elements
 
-`$(PUBLISH_CMD_BEG) fold-begin 2 . $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)`
+## Folds
 
-$(PUBLISH_CMD_BEG) fold-begin 2 . $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) fold-begin 3 . $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)`
 
-`$(PUBLISH_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)`
+$(PUBLISH_CMD_BEG) fold-begin 3 . $(SPECIAL_VAL) Open Fold $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) fold-begin 2 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) fold-begin 3 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)`
 
-`$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
-
-$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) fold-begin 3 $(SPECIAL_VAL) $(SPECIAL_VAL) Closed Fold $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) header 2 Non-Header Fold $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) header 3 Non-Header Fold $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) . $(SPECIAL_VAL) Generic Fold $(PUBLISH_CMD_END)`
 
@@ -4016,25 +4013,25 @@ $(PUBLISH_CMD_BEG) fold-begin $(SPECIAL_VAL) . $(SPECIAL_VAL) Generic Fold $(PUB
 
 $(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)
 
-# Boxes
+## Boxes
 
-`$(PUBLISH_CMD_BEG) box-begin 2 Box $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-begin 3 Box $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) box-begin 2 Box $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 3 Box $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-begin 3 Nested Box $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) box-begin 2 Nested Box $(PUBLISH_CMD_END)
-
-`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
-
-$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 3 Nested Box $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) header 2 Non-Header Box $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) header 3 Non-Header Box $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)`
 
@@ -4043,6 +4040,38 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
+## Grids
+
+`$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)`
+
+#WORK this is some content
+
+`$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)`
+
+#WORK this is some content
+
+`$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
+
+#WORK see another example in [Library] beloww...
 
 # Tokens
 
@@ -4184,23 +4213,45 @@ $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 # Library
 
-$(PUBLISH_CMD_BEG) header 2 Authors $(PUBLISH_CMD_END)
+#WORK another example of [Grids] elements...
 
-`$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)`
+
+`$(PUBLISH_CMD_BEG) column-begin col-4/col-3/col-3 $(PUBLISH_CMD_END)`
+
+`$(PUBLISH_CMD_BEG) library authors/dates/tags $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-4 $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) header 2 Authors $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) header 2 Dates $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)`
+$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) header 2 Dates $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)
 
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
+
 $(PUBLISH_CMD_BEG) header 2 Tags $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)`
-
 $(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
+
+`$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
 
 # Introduction
 
@@ -4457,51 +4508,16 @@ endef
 ### {{{3 $(PUBLISH) Example: Features
 ########################################
 
-override define PUBLISH_FEATURES_PAGE =
+override define PUBLISH_FEATURES_HEADER_PAGE =
 ---
 title: Site Features Page
 author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
 tags: [Main]
 ---
-$(PUBLISH_CMD_BEG) box-begin 1 Elements $(PUBLISH_CMD_END)
-
-	$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
-	$(PUBLISH_CMD_BEG) column-begin col-4/col-3/col-3 $(PUBLISH_CMD_END)
-	$(PUBLISH_CMD_BEG) library authors/dates/tags $(PUBLISH_CMD_END)
-	$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
-	$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) column-begin col-4 $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) library authors $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) library dates $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) library tags $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
-########################################
-### {{{3 $(PUBLISH) Example: Comments
-########################################
-
-override define PUBLISH_COMMENTS_PAGE =
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) COMMENT $(PUBLISH_CMD_END)
-COMMENT
-$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) REPLY $(PUBLISH_CMD_END)
-REPLY
-$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+override define PUBLISH_FEATURES_FOOTER_PAGE =
 endef
 
 ########################################
@@ -4526,7 +4542,26 @@ $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 endef
 
 ########################################
-### {{{3 $(PUBLISH) Script: Themes
+### {{{3 $(PUBLISH) Example: Default
+########################################
+
+override define PUBLISH_TESTING_PAGE =
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
+
+#WORK
+
+  * what notes go here?
+
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+endef
+
+########################################
+### {{{3 $(PUBLISH) Example: Themes
 ########################################
 
 override define PUBLISH_THEMES_PAGE =
@@ -5543,6 +5578,7 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_TESTING =
 variables:
 
   $(PUBLISH)-config:
+    header:				$(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
     css_shade:				null
 
 ################################################################################
@@ -12326,14 +12362,15 @@ endif
 	@$(call DO_HEREDOC,PUBLISH_INCLUDE_PAGE_ALT)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,PUBLISH_HEADER_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_FOOTER_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-footer$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_FEATURES_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-features$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_COMMENTS_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-comments$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_FEATURES_HEADER_PAGE)				>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-begin$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_FEATURES_FOOTER_PAGE)				>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-end$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_METAINFO_PAGE)					>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_TESTING_PAGE)					>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"					>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) " $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML)\n"			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) 'override $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML) := \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-features$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-begin$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach YEAR,202 203,\
 		$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
 		$(eval override MARK := $(YEAR)$(NUM)-01-01) \
@@ -12350,7 +12387,7 @@ endif
 		}									>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGES))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
-	@$(ECHO) "\t$(notdir $(PUBLISH_EXAMPLES))-comments$(COMPOSER_EXT_SPECIAL)\n"	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\t$(notdir $(PUBLISH_EXAMPLES))-end$(COMPOSER_EXT_SPECIAL)\n"		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"								>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach FILE,$(call CSS_THEMES),\
 		$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
@@ -12369,12 +12406,10 @@ endif
 	@$(LN)										$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES))) \
 											$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT) \
 											$($(DEBUGIT)-output)
+	@$(LN)										$(COMPOSER_ART)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
+											$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call DO_HEREDOC,PUBLISH_EXAMPLE_PAGE) \
-		| $(SED) \
-			-e "s|^page(title[:].+)$$|\1|g" \
-			-e "/^$(PUBLISH_CMD_BEG)/d" \
-											>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
