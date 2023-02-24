@@ -314,9 +314,9 @@ override HTML_HIDE			:= &\#0000;
 override MENU_SELF			:= _
 
 override PUBLISH_HEADER			:= null
-override PUBLISH_HEADER_ALT		= $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES)-header$(COMPOSER_EXT_SPECIAL)
+override PUBLISH_HEADER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FOOTER			:= null
-override PUBLISH_FOOTER_ALT		= $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES)-footer$(COMPOSER_EXT_SPECIAL)
+override PUBLISH_FOOTER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_footer$(COMPOSER_EXT_SPECIAL)
 
 override PUBLISH_CSS_SHADE		:= dark
 override PUBLISH_CSS_SHADE_ALT		:= null
@@ -2076,13 +2076,13 @@ override PUBLISH_INDEX			:= index
 override PUBLISH_LIBRARY		:= $(LIBRARY_FOLDER_ALT)
 override PUBLISH_LIBRARY_ALT		:= $(PUBLISH_LIBRARY)-$(CONFIGS)
 
-override PUBLISH_TESTING_TREE		:= $(notdir $(BOOTSTRAP_DIR))/site/content
+override PUBLISH_BOOTSTRAP_TREE		:= $(notdir $(BOOTSTRAP_DIR))/site/content
 override PUBLISH_DIRS := \
 	. \
 	$(patsubst .%,%,$(NOTHING)) \
 	$(CONFIGS) \
 	$(notdir $(PANDOC_DIR)) \
-	$(PUBLISH_TESTING_TREE)/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
+	$(PUBLISH_BOOTSTRAP_TREE)/docs/$(BOOTSTRAP_DOC_VER)/getting-started \
 
 override PUBLISH_FILES := \
 	$(PUBLISH_INDEX).$(EXTN_HTML) \
@@ -2093,11 +2093,11 @@ override PUBLISH_FILES := \
 
 override PUBLISH_INCLUDE		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_INDEX)-digest)
 override PUBLISH_INCLUDE_ALT		:= $(word 3,$(PUBLISH_DIRS))/$(notdir $(PUBLISH_INCLUDE))
-override PUBLISH_EXAMPLES		:= $(word 3,$(PUBLISH_DIRS))/examples
-override PUBLISH_PAGES			:= $(word 3,$(PUBLISH_DIRS))/pages
-override PUBLISH_THEMES			:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/themes)
+override PUBLISH_EXAMPLE		:= $(word 3,$(PUBLISH_DIRS))/examples
+override PUBLISH_PAGEDIR		:= $(word 3,$(PUBLISH_DIRS))/pages
+override PUBLISH_SHOWDIR		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/themes)
 
-override PUBLISH_SOURCE			:= $(PUBLISH_PAGES)/2020-01-01+$(EXAMPLE)_00
+override PUBLISH_TESTING		:= $(PUBLISH_PAGEDIR)/2020-01-01+$(EXAMPLE)_00
 
 ########################################
 
@@ -3938,31 +3938,39 @@ $(PUBLISH)-$(EXAMPLE)-%:
 #	main/themes pages
 #		split these, so that the examples are in an include file that main/themes pull in
 #		main should be split into an introduction page and an examples page
+#		split example into example/theme/showcase and a separate "combined" page...
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used... document!
 
-#	Introduction			$(word 1,$(PUBLISH_FILES))		PUBLISH_EXAMPLE_PAGE		index.html			introduction & framework & config table
-#	Default Site			$(word 2,$(PUBLISH_FILES))		PUBLISH_NOTHING_PAGE		null/index.html			document blank page
-#	Configured Site			$(word 3,$(PUBLISH_FILES))		PUBLISH_CONFIGS_PAGE		config/index.html		mostly, as it is, with config table
-#	Default Digest Page		$(PUBLISH_INCLUDE)			PUBLISH_INCLUDE_PAGE		index-digest.html		as it is, after fixing the library/contents conundrum...
-#	Configured Digest Page		$(PUBLISH_INCLUDE_ALT)			PUBLISH_INCLUDE_PAGE_ALT	config/index-digest.html	as it is, after fixing the library/contents conundrum...
-#	Default Markdown File		$(word 4,$(PUBLISH_FILES))/_header	PUBLISH_METAINFO_PAGE		pandoc/MANUAL.html		as it is
-#	Configured Markdown File	$(word 5,$(PUBLISH_FILES))/_header	PUBLISH_TESTING_PAGE		bootstrap/site/content/docs/5.1/getting-started/introduction.html	as it is
-#	Elements & Includes		$(PUBLISH_EXAMPLES)			#WORK				config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
+#	Introduction			$(word 1,$(PUBLISH_FILES))		PUBLISH_PAGE_1			index.html			introduction & framework & config table
+#	Default Site			$(word 2,$(PUBLISH_FILES))		PUBLISH_PAGE_2			null/index.html			document blank page
+#	Configured Site			$(word 3,$(PUBLISH_FILES))		PUBLISH_PAGE_3			config/index.html		mostly, as it is, with config table
+#	Default Digest Page		$(PUBLISH_INCLUDE)			PUBLISH_PAGE_INCLUDE		index-digest.html		as it is, after fixing the library/contents conundrum...
+#	Configured Digest Page		$(PUBLISH_INCLUDE_ALT)			PUBLISH_PAGE_INCLUDE_ALT	config/index-digest.html	as it is, after fixing the library/contents conundrum...
+#	Default Markdown File		$(word 4,$(PUBLISH_FILES))		#WORK				pandoc/MANUAL.html		as it is
+#	Configured Markdown File	$(word 5,$(PUBLISH_FILES))		#WORK				bootstrap/site/content/docs/5.1/getting-started/introduction.html	as it is
+#	Elements & Includes		$(PUBLISH_EXAMPLE)			PUBLISH_PAGE_EXAMPLE		config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
 #	#WORK "combined" page		#WORK					$(foreach)			#WORK				move from current "examples"
-#	Metainfo File			$(PUBLISH_SOURCE)			$(PUBLISH)-$(EXAMPLE)-%		config/pages/####-##-##+template_##.html	as it is
-#	Themes & Shades			$(PUBLISH_THEMES)			PUBLISH_THEMES_PAGE		themes/*.html			as it is, this is *the* examples/demo page...
+#	Metainfo File			$(PUBLISH_TESTING)			$(PUBLISH)-$(EXAMPLE)-%		config/pages/####-##-##+template_##.html	as it is
+#	Themes & Shades			$(PUBLISH_SHOWDIR)			PUBLISH_SHOWDIR_PAGE		themes/*.html			as it is, this is *the* examples/demo page...
 
-#	PUBLISH_HEADER_PAGE		$(PUBLISH_EXAMPLES)-header
-#	PUBLISH_FOOTER_PAGE		$(PUBLISH_EXAMPLES)-footer
-#	PUBLISH_FEATURES_PAGE		$(PUBLISH_EXAMPLES)-begin/end	split into example/theme/showcase and a separate "combined" page...
+#	#WORK				$(word 3,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_3_HEADER		config/_header.md.cms
+#	#WORK				$(word 3,$(PUBLISH_FILES))/_footer	PUBLISH_PAGE_3_FOOTER		config/_footer.md.cms
+#	#WORK				$(word 4,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_4_HEADER		pandoc/_header.md.cms
+#	#WORK				$(word 5,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_5_HEADER		bootstrap/_header.md.cms
+#	#WORK				$(PUBLISH_EXAMPLE)-header		PUBLISH_PAGE_EXAMPLE_HEADER	config/examples-header.md.cms
+#	#WORK				$(PUBLISH_EXAMPLE)-footer		PUBLISH_PAGE_EXAMPLE_FOOTER	config/examples-footer.md.cms
 
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
 ########################################
 
+#WORKING:NOW:NOW:FIX
+override define PUBLISH_PAGE_EXAMPLE =
+endef
+
 #WORKING put tags here?  is the metadata in these pages getting put in the library?
-override define PUBLISH_EXAMPLE_PAGE =
+override define PUBLISH_PAGE_1 =
 ---
 title: Main Page
 author: $(COMPOSER_COMPOSER)
@@ -3971,7 +3979,7 @@ tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
@@ -4139,9 +4147,11 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 
 ## Include
 
-`$(PUBLISH_CMD_BEG) $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLES)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
+#WORKING:NOW:NOW:FIX
 
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
+
+`$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
 
 # Helpers
 
@@ -4157,8 +4167,8 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
     * [Introduction]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
     * [Configured Site]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
   * `$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)`
-    * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES).$(EXTN_HTML))
-    * [Metainfo File]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SOURCE).$(EXTN_HTML))
+    * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
+    * [Metainfo File]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
   * `$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
     * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
 
@@ -4277,7 +4287,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
   * [$(word 3,$(PUBLISH_FILES))]($(word 3,$(PUBLISH_FILES))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))))*
     * Written for $(COMPOSER_BASENAME), manual titles and formatting
     * All settings changed, with changed configuration of top menu
-  * [$(PUBLISH_EXAMPLES).$(EXTN_HTML)]($($(PUBLISH)-$(EXMPLAE)-examples).$(EXTN_HTML)) *([$(word 3,$(PUBLISH_FILES))/$(COMPOSER_SETTINGS)]($(word 3,$(PUBLISH_FILES))/$(COMPOSER_SETTINGS)))*
+  * [$(PUBLISH_EXAMPLE).$(EXTN_HTML)]($(PUBLISH_EXAMPLE).$(EXTN_HTML)) *([$(word 3,$(PUBLISH_FILES))/$(COMPOSER_SETTINGS)]($(word 3,$(PUBLISH_FILES))/$(COMPOSER_SETTINGS)))*
     * #WORKING:NOW
     * #WORKING:NOW
   * [$(word 2,$(PUBLISH_FILES))]($(word 2,$(PUBLISH_FILES))) *([$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$(PUBLISH_FILES)))]($(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$(PUBLISH_FILES)))))*
@@ -4301,9 +4311,9 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
   * [Configured Digest Page]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
   * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
   * [Configured Markdown File]($(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES)))
-  * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES).$(EXTN_HTML))
-  * [Metainfo File]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SOURCE).$(EXTN_HTML))
-  * [Themes & Shades]($(PUBLISH_CMD_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX).$(EXTN_HTML))
+  * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
+  * [Metainfo File]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
+  * [Themes & Shades]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
 
@@ -4364,7 +4374,7 @@ endef
 ########################################
 
 #>$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
-override define PUBLISH_NOTHING_PAGE =
+override define PUBLISH_PAGE_2 =
 ---
 title: Empty Configuration
 author: $(COMPOSER_COMPOSER)
@@ -4380,7 +4390,7 @@ endef
 ### {{{3 $(PUBLISH) Page: Config
 ########################################
 
-override define PUBLISH_CONFIGS_PAGE =
+override define PUBLISH_PAGE_3 =
 ---
 title: Configuration Testing
 author:
@@ -4448,7 +4458,7 @@ endef
 ### {{{3 $(PUBLISH) Include: Digest
 ########################################
 
-override define PUBLISH_INCLUDE_PAGE =
+override define PUBLISH_PAGE_INCLUDE =
 ---
 title: $(LIBRARY_DIGEST_TITLE)
 author: $(COMPOSER_COMPOSER)
@@ -4467,7 +4477,7 @@ endef
 ### {{{3 $(PUBLISH) Include: Digest (Config)
 ########################################
 
-override define PUBLISH_INCLUDE_PAGE_ALT =
+override define PUBLISH_PAGE_INCLUDE_ALT =
 ---
 title: $(LIBRARY_DIGEST_TITLE_ALT)
 author: $(COMPOSER_COMPOSER)
@@ -4486,7 +4496,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Header / Footer
 ########################################
 
-override define PUBLISH_HEADER_PAGE =
+override define PUBLISH_PAGE_3_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Header $(PUBLISH_CMD_END)
 
 This is a header include from the `$(COMPOSER_YML)` file.
@@ -4495,7 +4505,7 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 endef
 
-override define PUBLISH_FOOTER_PAGE =
+override define PUBLISH_PAGE_3_FOOTER =
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Footer $(PUBLISH_CMD_END)
 
@@ -4508,7 +4518,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Features
 ########################################
 
-override define PUBLISH_FEATURES_HEADER_PAGE =
+override define PUBLISH_PAGE_EXAMPLE_HEADER =
 ---
 title: Site Features Page
 author: $(COMPOSER_COMPOSER)
@@ -4517,14 +4527,14 @@ tags: [Main]
 ---
 endef
 
-override define PUBLISH_FEATURES_FOOTER_PAGE =
+override define PUBLISH_PAGE_EXAMPLE_FOOTER =
 endef
 
 ########################################
 ### {{{3 $(PUBLISH) Example: Metainfo
 ########################################
 
-override define PUBLISH_METAINFO_PAGE =
+override define PUBLISH_PAGE_4_HEADER =
 $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
@@ -4545,7 +4555,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Default
 ########################################
 
-override define PUBLISH_TESTING_PAGE =
+override define PUBLISH_PAGE_5_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
@@ -4564,7 +4574,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Themes
 ########################################
 
-override define PUBLISH_THEMES_PAGE =
+override define PUBLISH_SHOWDIR_PAGE =
 $(strip \
 $(foreach FILE,$(call CSS_THEMES),\
 	$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
@@ -4579,7 +4589,7 @@ $(foreach FILE,$(call CSS_THEMES),\
 		<N><N> \
 	) \
 	$(if $(filter-out $(TOKEN),$(SHADE)),\
-		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_THEMES)/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
+		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
 		$(if $(filter-out $(TOKEN),$(DEFLT)),\
 			**(default: `$(DEFLT)`)** \
 		) \
@@ -4921,10 +4931,10 @@ endif
 endef
 
 ########################################
-### {{{3 Heredoc: composer_mk ($(PUBLISH) $(PANDOC))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(PANDOC_DIR))
 ########################################
 
-override define HEREDOC_COMPOSER_MK_PUBLISH_PANDOC =
+override define HEREDOC_COMPOSER_MK_PUBLISH_PANDOC_DIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PANDOC_DIR)))
 ################################################################################
@@ -4941,12 +4951,12 @@ endif
 endef
 
 ########################################
-### {{{3 Heredoc: composer_mk ($(PUBLISH) $(TESTING))
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(BOOTSTRAP_DIR))
 ########################################
 
-override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING =
+override define HEREDOC_COMPOSER_MK_PUBLISH_BOOTSTRAP_DIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(BOOTSTRAP_DIR)))
 ################################################################################
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
@@ -4963,9 +4973,9 @@ endif
 ################################################################################
 endef
 
-override define HEREDOC_COMPOSER_MK_PUBLISH_TESTING_TREE =
+override define HEREDOC_COMPOSER_MK_PUBLISH_BOOTSTRAP_TREE =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(BOOTSTRAP_DIR)))
 ################################################################################
 #>ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
@@ -4983,7 +4993,7 @@ endef
 ### {{{3 Heredoc: composer_mk ($(PUBLISH) pages)
 ########################################
 
-override define HEREDOC_COMPOSER_MK_PUBLISH_PAGES =
+override define HEREDOC_COMPOSER_MK_PUBLISH_PAGEDIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) pages)
 ################################################################################
@@ -5000,7 +5010,7 @@ endef
 ### {{{3 Heredoc: composer_mk ($(PUBLISH) themes)
 ########################################
 
-override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES =
+override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
 ################################################################################
@@ -5039,7 +5049,7 @@ themes-%:
 		$(word 4,$(subst :, ,$(FILE))) \
 	),\
 	$(call NEWLINE)$(call NEWLINE)$(call \
-		HEREDOC_COMPOSER_MK_PUBLISH_THEMES_TARGET,$(strip \
+		HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET,$(strip \
 		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
 ))))
 
@@ -5054,7 +5064,7 @@ endif
 ################################################################################
 endef
 
-override define HEREDOC_COMPOSER_MK_PUBLISH_THEMES_TARGET =
+override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET =
 override COMPOSER_TARGETS += $(1).done
 $(1).done: $$(COMPOSER_YML)
 $(1).done:
@@ -5175,9 +5185,9 @@ $(_S)#$(MARKER)$(_D)     - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES))$(_D)
           - $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES))$(_D)
         - $(_M)Elements & Includes$(_D):
-          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLES).$(EXTN_HTML)$(_D)
-          - $(_M)Metainfo File$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_SOURCE).$(EXTN_HTML)$(_D)
-        - $(_M)Themes & Shades$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
+          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML)$(_D)
+          - $(_M)Metainfo File$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML)$(_D)
+        - $(_M)Themes & Shades$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
         - $(_C)contents$(_D)
@@ -5533,10 +5543,10 @@ variables:
 endef
 
 ########################################
-### {{{3 Heredoc: composer_yml ($(PUBLISH) $(PANDOC))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(PANDOC_DIR))
 ########################################
 
-override define HEREDOC_COMPOSER_YML_PUBLISH_PANDOC =
+override define HEREDOC_COMPOSER_YML_PUBLISH_PANDOC_DIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PANDOC_DIR)))
 ################################################################################
@@ -5567,12 +5577,12 @@ variables:
 endef
 
 ########################################
-### {{{3 Heredoc: composer_yml ($(PUBLISH) $(TESTING))
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(BOOTSTRAP_DIR))
 ########################################
 
-override define HEREDOC_COMPOSER_YML_PUBLISH_TESTING =
+override define HEREDOC_COMPOSER_YML_PUBLISH_BOOTSTRAP_DIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(BOOTSTRAP_DIR)))
 ################################################################################
 
 variables:
@@ -5590,7 +5600,7 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) pages)
 ########################################
 
-override define HEREDOC_COMPOSER_YML_PUBLISH_PAGES =
+override define HEREDOC_COMPOSER_YML_PUBLISH_PAGEDIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) pages)
 ################################################################################
@@ -5606,7 +5616,7 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) themes)
 ########################################
 
-override define HEREDOC_COMPOSER_YML_PUBLISH_THEMES =
+override define HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes)
 ################################################################################
@@ -12227,14 +12237,14 @@ endif
 #			auto_update: 1
 #		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS)
 #	$(SHELL)
-#		#> $(notdir $(PUBLISH_ROOT))-$(INSTALL)
+#		#> .$(PUBLISH)-$(INSTALL)
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
 #	$(SHELL)
 #		$(TOUCH) $(COMPOSER_SETTINGS) $(COMPOSER_YML)
 #		exit 0
 #> $(PUBLISH)-$(EXAMPLE)
 #	$(SHELL)
-#		#> [ ! -f $(notdir $(PUBLISH_ROOT))-$(INSTALL) ] && $(notdir $(PUBLISH_ROOT))-$(INSTALL)
+#		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
 #		[ ! -f $(PUBLISH)-library ] && $(PUBLISH)-library
 #			$(word 1,$(PUBLISH_DIRS))
 #			$(word 3,$(PUBLISH_DIRS))
@@ -12249,15 +12259,18 @@ endif
 
 #> update: $(NOTHING)-%
 
-#>$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL): .set_title-$(PUBLISH)-$(EXAMPLE)
-$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL):
+#>$(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL): .set_title-$(PUBLISH)-$(EXAMPLE)
+$(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL):
 ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
+	@$(ECHO) "$(_S)"
+	@$(MKDIR)				$(PUBLISH_ROOT) $($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 	@$(MAKE) --directory			$(PUBLISH_ROOT) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
 	@$(MKDIR) \
 						$(addprefix $(PUBLISH_ROOT)/,$(PUBLISH_DIRS)) \
-						$(PUBLISH_ROOT)/$(PUBLISH_PAGES) \
-						$(PUBLISH_ROOT)/$(PUBLISH_THEMES) \
+						$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR) \
+						$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR) \
 						$($(DEBUGIT)-output)
 	@$(RSYNC) \
 		--delete-excluded \
@@ -12290,7 +12303,7 @@ endif
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL)
+$(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
 $(PUBLISH)-$(EXAMPLE):
 ifeq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
@@ -12298,15 +12311,15 @@ ifeq ($(wildcard $(firstword $(RSYNC))),)
 else
 #>ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 #>	@$(ECHO) "$(_S)"
-#>	@$(RM) $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL) $($(DEBUGIT)-output)
+#>	@$(RM) $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL) $($(DEBUGIT)-output)
 #>	@$(ECHO) "$(_D)"
-#>	@$(MAKE) $(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT))-$(INSTALL)
+#>	@$(MAKE) $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
 #>endif
 	@$(call $(HEADERS))
 	@$(foreach FILE,\
 		$(PUBLISH_DIRS) \
-		$(PUBLISH_PAGES) \
-		$(PUBLISH_THEMES) \
+		$(PUBLISH_PAGEDIR) \
+		$(PUBLISH_SHOWDIR) \
 		,\
 		$(call $(HEADERS)-note,$(PUBLISH_ROOT),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
 	)
@@ -12315,17 +12328,17 @@ else
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE)		>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_NOTHING)		>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PANDOC)		>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING)		>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_TESTING_TREE)	>$(PUBLISH_ROOT)/$(PUBLISH_TESTING_TREE)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PAGES)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGES)/$(COMPOSER_SETTINGS)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_THEMES)		>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_SETTINGS)
-	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PANDOC_DIR)	>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_BOOTSTRAP_DIR)	>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_BOOTSTRAP_TREE)	>$(PUBLISH_ROOT)/$(PUBLISH_BOOTSTRAP_TREE)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_PAGEDIR)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR)		>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_SETTINGS)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_SETTINGS)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(foreach FILE,\
 		$(PUBLISH_DIRS) \
-		$(PUBLISH_PAGES) \
-		$(PUBLISH_THEMES) \
+		$(PUBLISH_PAGEDIR) \
+		$(PUBLISH_SHOWDIR) \
 		,\
 		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_SETTINGS); \
 	)
@@ -12337,11 +12350,11 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC)		>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_TESTING)	>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGES)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGES)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_THEMES)		>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_YML)
-	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC_DIR)	>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_BOOTSTRAP_DIR)	>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGEDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_CSS))
 	@$(ECHO) "$(_S)"
 	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
@@ -12355,26 +12368,27 @@ else
 endif
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/*$(COMPOSER_EXT_DEFAULT))
-	@$(call DO_HEREDOC,PUBLISH_EXAMPLE_PAGE)					>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES)))
-	@$(call DO_HEREDOC,PUBLISH_NOTHING_PAGE)					>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$(PUBLISH_FILES)))
-	@$(call DO_HEREDOC,PUBLISH_CONFIGS_PAGE)					>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))
-	@$(call DO_HEREDOC,PUBLISH_INCLUDE_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,PUBLISH_INCLUDE_PAGE_ALT)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)
-	@$(call DO_HEREDOC,PUBLISH_HEADER_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-header$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_FOOTER_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-footer$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_FEATURES_HEADER_PAGE)				>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-begin$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_FEATURES_FOOTER_PAGE)				>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLES)-end$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_METAINFO_PAGE)					>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_TESTING_PAGE)					>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
+#WORKING:NOW:NOW:FIX
+	@$(call DO_HEREDOC,PUBLISH_PAGE_1)						>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES)))
+	@$(call DO_HEREDOC,PUBLISH_PAGE_2)						>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 2,$(PUBLISH_FILES)))
+	@$(call DO_HEREDOC,PUBLISH_PAGE_3)						>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))
+	@$(call DO_HEREDOC,PUBLISH_PAGE_INCLUDE)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_INCLUDE_ALT)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_3_HEADER)					>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_3_FOOTER)					>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_footer$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_4_HEADER)					>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_5_HEADER)					>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_HEADER)					>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)-header$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_FOOTER)					>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)-footer$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"					>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) " $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML)\n"			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) 'override $(notdir $(PUBLISH_EXAMPLES)).$(EXTN_HTML) := \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLES))-begin$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) " $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML)\n"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) 'override $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML) := \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) '\t$(notdir $(PUBLISH_EXAMPLE))-header$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach YEAR,202 203,\
 		$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
 		$(eval override MARK := $(YEAR)$(NUM)-01-01) \
-		$(eval override FILE := $(PUBLISH_ROOT)/$(PUBLISH_PAGES)/$(MARK)+$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
+		$(eval override FILE := $(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(MARK)+$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
 		{	$(ECHO) "---\n"; \
 			$(ECHO) "title: Number 0$(NUM) in $(patsubst %-01-01,%,$(MARK))\n"; \
@@ -12385,38 +12399,38 @@ endif
 			$(ECHO) "$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)\n"; \
 			$(call ENV_MAKE) $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
 		}									>$(FILE); \
-		$(ECHO) '\t$(notdir $(PUBLISH_PAGES))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
+		$(ECHO) '\t$(notdir $(PUBLISH_PAGEDIR))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
-	@$(ECHO) "\t$(notdir $(PUBLISH_EXAMPLES))-end$(COMPOSER_EXT_SPECIAL)\n"		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "\t$(notdir $(PUBLISH_EXAMPLE))-footer$(COMPOSER_EXT_SPECIAL)\n"	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"								>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach FILE,$(call CSS_THEMES),\
 		$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
 		$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
 		$(if $(filter-out $(TOKEN),$(SHADE)),\
-			$(call $(HEADERS)-file,$(PUBLISH_ROOT)/$(PUBLISH_THEMES),$(THEME)$(_D) $(_C)($(SHADE))); \
+			$(call $(HEADERS)-file,$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR),$(THEME)$(_D) $(_C)($(SHADE))); \
 			$(call NEWLINE) \
 		) \
 	)
-	@$(call DO_HEREDOC,PUBLISH_THEMES_PAGE)						>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)				>>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
-	@$(ECHO) "\n"									>>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)				>>$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
-	@$(SED) -i -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"				$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_SHOWDIR_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)				>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+	@$(ECHO) "\n"									>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)				>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+	@$(SED) -i -e "s|[[:space:]]*$$||g" -e "s|\\t| |g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "$(_E)"
 	@$(LN)										$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES))) \
-											$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT) \
+											$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT) \
 											$($(DEBUGIT)-output)
 	@$(LN)										$(COMPOSER_ART)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
-											$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+											$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
 											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$(PUBLISH_DIRS) \
-		$(PUBLISH_PAGES) \
-		$(PUBLISH_THEMES) \
-		$(PUBLISH_TESTING_TREE) \
+		$(PUBLISH_PAGEDIR) \
+		$(PUBLISH_SHOWDIR) \
+		$(PUBLISH_BOOTSTRAP_TREE) \
 		,\
 		$(foreach TIME,\
 			$(COMPOSER_SETTINGS) \
@@ -12428,8 +12442,7 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 			$(call NEWLINE) \
 		) \
 	)
-	@$(ECHO) "$(_E)"
-	@$(LL) $$( \
+	@$(LS) $$( \
 			$(FIND) $(PUBLISH_ROOT) \
 				\( -name "$(COMPOSER_SETTINGS)" -print \) \
 				-o \( -name "$(COMPOSER_YML)" -print \) \
@@ -12438,7 +12451,6 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 				$(ECHO) "$(PUBLISH_ROOT)" \
 				| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 			)[/]|\1|gp"
-	@$(ECHO) "$(_D)"
 else
 	@$(ECHO) "" >$(PUBLISH_LOG)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
@@ -12472,8 +12484,8 @@ endif
 	@$(foreach FILE,\
 		.$(COMPOSER_BASENAME) \
 		$(PUBLISH_DIRS) \
-		$(PUBLISH_PAGES) \
-		$(PUBLISH_THEMES) \
+		$(PUBLISH_PAGEDIR) \
+		$(PUBLISH_SHOWDIR) \
 		,{	$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
 			$(ECHO) "$(_M)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_SETTINGS)	|| $(TRUE); \
 			$(ECHO) "$(_C)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_YML)	|| $(TRUE); \
@@ -12481,12 +12493,13 @@ endif
 				$(ECHO) "$(_E)"; $(CAT)	$(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY).yml; fi; \
 			if [ -f				"$(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY_ALT).yml" ]; then \
 				$(ECHO) "$(_E)"; $(CAT)	$(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY_ALT).yml; fi; \
-			if [ "$(FILE)" =		"$(PUBLISH_THEMES)" ]; then \
-				$(ECHO) "$(_E)"; $(CAT)	$(PUBLISH_ROOT)/$(PUBLISH_THEMES)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL); fi; \
+			if [ "$(FILE)" =		"$(PUBLISH_SHOWDIR)" ]; then \
+				$(ECHO) "$(_E)"; $(CAT)	$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL); fi; \
 			$(ECHO) "$(_D)"; \
 		} 2>&1 | $(TEE) --append $(PUBLISH_LOG); \
 		$(call NEWLINE) \
 	)
+#WORKING:NOW:NOW:FIX
 	@$(foreach FILE,\
 		$(word 1,$(PUBLISH_FILES)) \
 		$(word 2,$(PUBLISH_FILES)) \
@@ -12495,9 +12508,9 @@ endif
 		$(word 5,$(PUBLISH_FILES)) \
 		$(PUBLISH_INCLUDE).$(EXTN_HTML) \
 		$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
-		$(PUBLISH_EXAMPLES).$(EXTN_HTML) \
-		$(PUBLISH_SOURCE).$(EXTN_HTML) \
-		$(PUBLISH_THEMES)/$(DOITALL) \
+		$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
+		$(PUBLISH_TESTING).$(EXTN_HTML) \
+		$(PUBLISH_SHOWDIR)/$(DOITALL) \
 		,\
 		time $(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) \
 			--directory $(abspath $(dir $(PUBLISH_ROOT)/$(FILE))) \
