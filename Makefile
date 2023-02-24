@@ -3952,7 +3952,7 @@ $(PUBLISH)-$(EXAMPLE)-%:
 #	Elements & Includes		$(PUBLISH_EXAMPLE)			PUBLISH_PAGE_EXAMPLE		config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
 #	#WORK "combined" page		#WORK					$(foreach)			#WORK				move from current "examples"
 #	Metainfo File			$(PUBLISH_TESTING)			$(PUBLISH)-$(EXAMPLE)-%		config/pages/####-##-##+template_##.html	as it is
-#	Themes & Shades			$(PUBLISH_SHOWDIR)			PUBLISH_SHOWDIR_PAGE		themes/*.html			as it is, this is *the* examples/demo page...
+#	Themes & Shades			$(PUBLISH_SHOWDIR)			PUBLISH_PAGE_SHOWDIR		themes/*.html			as it is, this is *the* examples/demo page...
 
 #	#WORK				$(word 3,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_3_HEADER		config/_header.md.cms
 #	#WORK				$(word 3,$(PUBLISH_FILES))/_footer	PUBLISH_PAGE_3_FOOTER		config/_footer.md.cms
@@ -4574,7 +4574,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Themes
 ########################################
 
-override define PUBLISH_SHOWDIR_PAGE =
+override define PUBLISH_PAGE_SHOWDIR =
 $(strip \
 $(foreach FILE,$(call CSS_THEMES),\
 	$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
@@ -4666,8 +4666,8 @@ $(EXAMPLE)-md-file:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))'
 	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n' \
-		| $(YQ_WRITE_OUT) 2>/dev/null
-		| $(call YQ_WRITE_OUT_COLOR) \
+		| $(YQ_WRITE_OUT) 2>/dev/null \
+			$(call YQ_WRITE_OUT_COLOR) \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
 
 .PHONY: .$(EXAMPLE)-md
@@ -8713,7 +8713,7 @@ endef
 
 override YQ_WRITE_OUT_COLOR		:= \
 	$(if $(COMPOSER_DOCOLOR),\
-		$(SED) \
+		| $(SED) \
 			$(foreach FILE,null true false,\
 				-e "s|([[:space:]]+)[\"]?($(FILE))[\"]?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?$$|\1[_N]\2|g" \
 			) \
@@ -8721,8 +8721,6 @@ override YQ_WRITE_OUT_COLOR		:= \
 			$(foreach FILE,_D _N,\
 				-e "s|[[]$(FILE)[]]|$(shell $(ECHO) "$($(FILE))")|g" \
 			) \
-	,\
-		$(ECHO) "" \
 	)
 
 ################################################################################
@@ -10581,7 +10579,7 @@ ifneq ($(COMPOSER_YML_LIST),)
 #>		| $(YQ_WRITE_OUT) 2>/dev/null
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) \
-		| $(YQ_WRITE_OUT_COLOR)
+			$(YQ_WRITE_OUT_COLOR)
 endif
 ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
 	@$(LINERULE)
@@ -12129,7 +12127,7 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(patsubst .%,%,$(NOTHING))
 			| .[].[] |= sort_by(.) \
 			| .[] |= .null \
 		" $($(PUBLISH)-library-index) \
-		| $(YQ_WRITE_OUT_COLOR)
+			$(YQ_WRITE_OUT_COLOR)
 else ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),)
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
 	@$(YQ_WRITE_OUT) " \
@@ -12138,7 +12136,7 @@ else ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),)
 			| .[].[] |= del(select(length == 0)) \
 			| .[] |= [ (to_entries | .[].key) ] \
 		" $($(PUBLISH)-library-index) \
-		| $(YQ_WRITE_OUT_COLOR)
+			$(YQ_WRITE_OUT_COLOR)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 	@$(LINERULE)
 	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))"
@@ -12148,7 +12146,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 			del(.\".$(COMPOSER_BASENAME)\") \
 			| with_entries(select(.key | $(METATEST))) \
 		" $($(PUBLISH)-library-metadata) \
-		| $(YQ_WRITE_OUT_COLOR)
+			$(YQ_WRITE_OUT_COLOR)
 	@$(LINERULE)
 	@$(PRINT) "$(_M)$(MARKER) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))"
 	@$(LINERULE)
@@ -12160,7 +12158,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 			| .[].[] |= [ (to_entries | .[].value) ] \
 			| .[].[] |= sort_by(.) \
 		" $($(PUBLISH)-library-index) \
-		| $(YQ_WRITE_OUT_COLOR)
+			$(YQ_WRITE_OUT_COLOR)
 	@TREE=; $(call $(EXPORTS)-find,$(CURDIR),\
 			-type f -name \"*$(COMPOSER_EXT)\" \
 		) \
@@ -12187,7 +12185,7 @@ else
 			| .[].[] |= del(select(length == 0)) \
 			| .[] |= [ (to_entries | .[].key) ] \
 		" $($(PUBLISH)-library-index) \
-		| $(YQ_WRITE_OUT_COLOR)
+			$(YQ_WRITE_OUT_COLOR)
 #>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
 #>			" $($(PUBLISH)-library-index) 2>/dev/null;
 	@$(foreach FILE,$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
@@ -12201,7 +12199,7 @@ else
 				| .\"$(METACDIR)$(FILE)\" \
 				| del(.\"path\") \
 			" $($(PUBLISH)-library-metadata) \
-			| $(YQ_WRITE_OUT_COLOR); \
+				$(YQ_WRITE_OUT_COLOR); \
 		$(ECHO) "$(_E)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-index))$(_D)\n"; \
 		$(YQ_WRITE_OUT) " \
 				del(.\".$(COMPOSER_BASENAME)\") \
@@ -12213,7 +12211,7 @@ else
 				| .[] |= [ (to_entries | .[].key) ] \
 				| .titles |= (to_entries | .[0].value) \
 			" $($(PUBLISH)-library-index) \
-			| $(YQ_WRITE_OUT_COLOR); \
+				$(YQ_WRITE_OUT_COLOR); \
 		$(call NEWLINE) \
 	)
 	@$(if $(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),$(LINERULE))
@@ -12411,7 +12409,7 @@ endif
 			$(call NEWLINE) \
 		) \
 	)
-	@$(call DO_HEREDOC,PUBLISH_SHOWDIR_PAGE)					>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_SHOWDIR)					>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)				>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"									>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)				>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
