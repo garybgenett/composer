@@ -3928,11 +3928,6 @@ endef
 ## {{{2 $(PUBLISH) Pages
 ########################################
 
-.PHONY: $(PUBLISH)-$(EXAMPLE)-%
-$(PUBLISH)-$(EXAMPLE)-%:
-	@$(call TITLE_LN ,2,$(*) Recommended Workflow)
-	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)
-
 #WORKING:NOW:NOW:FIX
 #	add a header/box to each which describes what to test for that page...
 #	main/themes pages
@@ -3942,17 +3937,17 @@ $(PUBLISH)-$(EXAMPLE)-%:
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used... document!
 
-#	Introduction			$(word 1,$(PUBLISH_FILES))		PUBLISH_PAGE_1			index.html			introduction & framework & config table
-#	Default Site			$(word 2,$(PUBLISH_FILES))		PUBLISH_PAGE_2			null/index.html			document blank page
-#	Configured Site			$(word 3,$(PUBLISH_FILES))		PUBLISH_PAGE_3			config/index.html		mostly, as it is, with config table
-#	Default Digest Page		$(PUBLISH_INCLUDE)			PUBLISH_PAGE_INCLUDE		index-digest.html		as it is, after fixing the library/contents conundrum...
-#	Configured Digest Page		$(PUBLISH_INCLUDE_ALT)			PUBLISH_PAGE_INCLUDE_ALT	config/index-digest.html	as it is, after fixing the library/contents conundrum...
-#	Default Markdown File		$(word 4,$(PUBLISH_FILES))		#WORK				pandoc/MANUAL.html		as it is
-#	Configured Markdown File	$(word 5,$(PUBLISH_FILES))		#WORK				bootstrap/site/content/docs/5.1/getting-started/introduction.html	as it is
-#	Elements & Includes		$(PUBLISH_EXAMPLE)			PUBLISH_PAGE_EXAMPLE		config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
+#	PUBLISH_PAGE_1_NAME		$(word 1,$(PUBLISH_FILES))		PUBLISH_PAGE_1			index.html			introduction & framework & config table
+#	PUBLISH_PAGE_2_NAME		$(word 2,$(PUBLISH_FILES))		PUBLISH_PAGE_2			null/index.html			document blank page
+#	PUBLISH_PAGE_3_NAME		$(word 3,$(PUBLISH_FILES))		PUBLISH_PAGE_3			config/index.html		mostly, as it is, with config table
+#	PUBLISH_PAGE_INCLUDE_NAME	$(PUBLISH_INCLUDE)			PUBLISH_PAGE_INCLUDE		index-digest.html		as it is, after fixing the library/contents conundrum...
+#	PUBLISH_PAGE_INCLUDE_ALT_NAME	$(PUBLISH_INCLUDE_ALT)			PUBLISH_PAGE_INCLUDE_ALT	config/index-digest.html	as it is, after fixing the library/contents conundrum...
+#	PUBLISH_PAGE_4_NAME		$(word 4,$(PUBLISH_FILES))		#WORK				pandoc/MANUAL.html		as it is
+#	PUBLISH_PAGE_5_NAME		$(word 5,$(PUBLISH_FILES))		#WORK				bootstrap/site/content/docs/5.1/getting-started/introduction.html	as it is
+#	PUBLISH_PAGE_EXAMPLE_NAME	$(PUBLISH_EXAMPLE)			PUBLISH_PAGE_EXAMPLE		config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
 #	#WORK "combined" page		#WORK					$(foreach)			#WORK				move from current "examples"
-#	Metainfo File			$(PUBLISH_TESTING)			$(PUBLISH)-$(EXAMPLE)-%		config/pages/####-##-##+template_##.html	as it is
-#	Themes & Shades			$(PUBLISH_SHOWDIR)			PUBLISH_PAGE_SHOWDIR		themes/*.html			as it is, this is *the* examples/demo page...
+#	PUBLISH_PAGE_TESTING_NAME	$(PUBLISH_TESTING)			PUBLISH_PAGE_TESTING		config/pages/####-##-##+template_##.html	as it is
+#	PUBLISH_PAGE_SHOWDIR_NAME	$(PUBLISH_SHOWDIR)			PUBLISH_PAGE_SHOWDIR		themes/*.html			as it is, this is *the* examples/demo page...
 
 #	#WORK				$(word 3,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_3_HEADER		config/_header.md.cms
 #	#WORK				$(word 3,$(PUBLISH_FILES))/_footer	PUBLISH_PAGE_3_FOOTER		config/_footer.md.cms
@@ -3966,8 +3961,12 @@ $(PUBLISH)-$(EXAMPLE)-%:
 ########################################
 
 #WORKING:NOW:NOW:FIX
+override PUBLISH_PAGE_EXAMPLE_NAME := Elements & Includes
+
 override define PUBLISH_PAGE_EXAMPLE =
 endef
+
+override PUBLISH_PAGE_1_NAME := Introduction
 
 #WORKING put tags here?  is the metadata in these pages getting put in the library?
 override define PUBLISH_PAGE_1 =
@@ -3977,7 +3976,7 @@ author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
 tags: [Main]
 ---
-$(PUBLISH_CMD_BEG) box-begin 1 Themes & Shades $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 1 $(PUBLISH_PAGE_SHOWDIR_NAME) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 
@@ -4164,13 +4163,13 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 #WORK demonstrated elsewhere...
 
   * `$(PUBLISH)-nav-left: { metainfo }` + `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
-    * [Introduction]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
-    * [Configured Site]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_3_NAME)]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
   * `$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)`
-    * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
-    * [Metainfo File]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
+    * [$(PUBLISH_PAGE_EXAMPLE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
+    * [$(PUBLISH_PAGE_TESTING_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
   * `$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
-    * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_4_NAME)]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
 
 ## Contents
 
@@ -4304,16 +4303,16 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
 
   * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
   * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML))
-  * [Introduction]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
-  * [Default Site]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
-  * [Configured Site]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
-  * [Default Digest Page]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
-  * [Configured Digest Page]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
-  * [Default Markdown File]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
-  * [Configured Markdown File]($(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES)))
-  * [Elements & Includes]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
-  * [Metainfo File]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
-  * [Themes & Shades]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML))
+  * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
+  * [$(PUBLISH_PAGE_2_NAME)]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
+  * [$(PUBLISH_PAGE_3_NAME)]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
+  * [$(PUBLISH_PAGE_INCLUDE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
+  * [$(PUBLISH_PAGE_INCLUDE_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
+  * [$(PUBLISH_PAGE_4_NAME)]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
+  * [$(PUBLISH_PAGE_5_NAME)]($(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES)))
+  * [$(PUBLISH_PAGE_EXAMPLE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
+  * [$(PUBLISH_PAGE_TESTING_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
+  * [$(PUBLISH_PAGE_SHOWDIR_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
 
@@ -4373,6 +4372,8 @@ endef
 ### {{{3 $(PUBLISH) Page: Nothing
 ########################################
 
+override PUBLISH_PAGE_2_NAME := Default Site
+
 #>$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define PUBLISH_PAGE_2 =
 ---
@@ -4389,6 +4390,8 @@ endef
 ########################################
 ### {{{3 $(PUBLISH) Page: Config
 ########################################
+
+override PUBLISH_PAGE_3_NAME := Configured Site
 
 override define PUBLISH_PAGE_3 =
 ---
@@ -4458,6 +4461,8 @@ endef
 ### {{{3 $(PUBLISH) Include: Digest
 ########################################
 
+override PUBLISH_PAGE_INCLUDE_NAME := Default Digest Page
+
 override define PUBLISH_PAGE_INCLUDE =
 ---
 title: $(LIBRARY_DIGEST_TITLE)
@@ -4476,6 +4481,8 @@ endef
 ########################################
 ### {{{3 $(PUBLISH) Include: Digest (Config)
 ########################################
+
+override PUBLISH_PAGE_INCLUDE_ALT_NAME := Configured Digest Page
 
 override define PUBLISH_PAGE_INCLUDE_ALT =
 ---
@@ -4534,6 +4541,8 @@ endef
 ### {{{3 $(PUBLISH) Example: Metainfo
 ########################################
 
+override PUBLISH_PAGE_4_NAME := Default Markdown File
+
 override define PUBLISH_PAGE_4_HEADER =
 $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -4555,6 +4564,8 @@ endef
 ### {{{3 $(PUBLISH) Example: Default
 ########################################
 
+override PUBLISH_PAGE_5_NAME := Configured Markdown File
+
 override define PUBLISH_PAGE_5_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -4571,8 +4582,23 @@ $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 endef
 
 ########################################
+### {{{3 $(PUBLISH) Example: Testing
+########################################
+
+#WORKING:NOW:NOW:FIX
+override PUBLISH_PAGE_TESTING_NAME := Metainfo File
+
+override define PUBLISH_PAGE_TESTING =
+	$(eval $(call COMPOSER_NOCOLOR)) \
+	$(call TITLE_LN ,2,$(1) Recommended Workflow); \
+	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW,1)
+endef
+
+########################################
 ### {{{3 $(PUBLISH) Example: Themes
 ########################################
+
+override PUBLISH_PAGE_SHOWDIR_NAME := Themes & Shades
 
 override define PUBLISH_PAGE_SHOWDIR =
 $(strip \
@@ -5174,20 +5200,20 @@ $(_S)########################################$(_D)
 $(_S)#$(MARKER)$(_D)     - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)
         - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
         - $(_C)spacer$(_D)
-        - $(_M)Introduction$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
-        - $(_M)Default Site$(_D):
+        - $(_M)$(PUBLISH_PAGE_1_NAME)$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
+        - $(_M)$(PUBLISH_PAGE_2_NAME)$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES))$(_D)
-          - $(_M)Configured Site$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES))$(_D)
-        - $(_M)Default Digest Page$(_D):
+          - $(_M)$(PUBLISH_PAGE_3_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES))$(_D)
+        - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
-          - $(_M)Configured Digest Page$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
-        - $(_M)Default Markdown File$(_D):
+          - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
+        - $(_M)$(PUBLISH_PAGE_4_NAME)$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES))$(_D)
-          - $(_M)Configured Markdown File$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES))$(_D)
-        - $(_M)Elements & Includes$(_D):
+          - $(_M)$(PUBLISH_PAGE_5_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES))$(_D)
+        - $(_M)$(PUBLISH_PAGE_EXAMPLE_NAME)$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML)$(_D)
-          - $(_M)Metainfo File$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML)$(_D)
-        - $(_M)Themes & Shades$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
+          - $(_M)$(PUBLISH_PAGE_TESTING_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML)$(_D)
+        - $(_M)$(PUBLISH_PAGE_SHOWDIR_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
         - $(_C)contents$(_D)
@@ -12395,7 +12421,7 @@ endif
 			$(ECHO) "tags: [Tag $(NUM), Tag 1, Tag 2, Tag 3]\n"; \
 			$(ECHO) "---\n"; \
 			$(ECHO) "$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)\n"; \
-			$(call ENV_MAKE) $(PUBLISH)-$(EXAMPLE)-$(YEAR)$(NUM); \
+			$(call PUBLISH_PAGE_TESTING,$(YEAR)$(NUM)); \
 		}									>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGEDIR))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
@@ -12418,6 +12444,7 @@ endif
 	@$(LN)										$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES))) \
 											$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT) \
 											$($(DEBUGIT)-output)
+#WORKING:NOW:NOW:FIX
 	@$(LN)										$(COMPOSER_ART)/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
 											$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT) \
 											$($(DEBUGIT)-output)
