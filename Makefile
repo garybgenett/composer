@@ -3961,12 +3961,16 @@ endef
 #	#WORK				$(PUBLISH_PAGEDIR)-header		PUBLISH_PAGE_PAGEDIR_HEADER	config/examples-header.md.cms
 #	#WORK				$(PUBLISH_PAGEDIR)-footer		PUBLISH_PAGE_PAGEDIR_FOOTER	config/examples-footer.md.cms
 
+override PUBLISH_PAGE_GROUP_1		:= PUBLISH_PAGE_GROUP_1
+override PUBLISH_PAGE_GROUP_2		:= PUBLISH_PAGE_GROUP_2
+override PUBLISH_PAGE_GROUP_3		:= PUBLISH_PAGE_GROUP_3
+
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
 ########################################
 
 #WORKING:NOW:NOW:FIX
-override PUBLISH_PAGE_1_NAME := Introduction
+override PUBLISH_PAGE_1_NAME		:= Introduction
 
 #WORKING put tags here?  is the metadata in these pages getting put in the library?
 override define PUBLISH_PAGE_1 =
@@ -4301,21 +4305,22 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Example Pages $(PUBLISH_CMD_END)
 
 #WORK comment readme.site.html
 
-#WORKING:NOW:NOW:FIX
-
   * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
   * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML))
-  * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
-  * [$(PUBLISH_PAGE_2_NAME)]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
-  * [$(PUBLISH_PAGE_3_NAME)]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
-  * [$(PUBLISH_PAGE_4_NAME)]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
-  * [$(PUBLISH_PAGE_5_NAME)]($(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES)))
-  * [$(PUBLISH_PAGE_INCLUDE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
-  * [$(PUBLISH_PAGE_INCLUDE_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
-  * [$(PUBLISH_PAGE_EXAMPLE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
-  * [$(PUBLISH_PAGE_PAGEDIR_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_PAGEDIR).$(EXTN_HTML))
-  * [$(PUBLISH_PAGE_TESTING_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
-  * [$(PUBLISH_PAGE_SHOWDIR_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML))
+  * $(PUBLISH_PAGE_GROUP_1)
+    * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_2_NAME)]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_3_NAME)]($(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_4_NAME)]($(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES)))
+    * [$(PUBLISH_PAGE_5_NAME)]($(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES)))
+  * $(PUBLISH_PAGE_GROUP_2)
+    * [$(PUBLISH_PAGE_INCLUDE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
+    * [$(PUBLISH_PAGE_INCLUDE_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
+  * $(PUBLISH_PAGE_GROUP_3)
+    * [$(PUBLISH_PAGE_EXAMPLE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML))
+    * [$(PUBLISH_PAGE_PAGEDIR_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_PAGEDIR).$(EXTN_HTML))
+    * [$(PUBLISH_PAGE_TESTING_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML))
+    * [$(PUBLISH_PAGE_SHOWDIR_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML))
 
 #WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
 
@@ -4375,7 +4380,7 @@ endef
 ### {{{3 $(PUBLISH) Page: Nothing
 ########################################
 
-override PUBLISH_PAGE_2_NAME := Default Site
+override PUBLISH_PAGE_2_NAME		:= Default Site
 
 #>$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define PUBLISH_PAGE_2 =
@@ -4394,7 +4399,7 @@ endef
 ### {{{3 $(PUBLISH) Page: Config
 ########################################
 
-override PUBLISH_PAGE_3_NAME := Configured Site
+override PUBLISH_PAGE_3_NAME		:= Configured Site
 
 override define PUBLISH_PAGE_3_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Header $(PUBLISH_CMD_END)
@@ -4482,7 +4487,7 @@ endef
 ### {{{3 $(PUBLISH) Page: Pandoc
 ########################################
 
-override PUBLISH_PAGE_4_NAME := Pandoc Markdown
+override PUBLISH_PAGE_4_NAME		:= Pandoc Markdown
 
 override define PUBLISH_PAGE_4_HEADER =
 $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
@@ -4505,7 +4510,7 @@ endef
 ### {{{3 $(PUBLISH) Page: Bootstrap
 ########################################
 
-override PUBLISH_PAGE_5_NAME := Bootstrap Default
+override PUBLISH_PAGE_5_NAME		:= Bootstrap Default
 
 override define PUBLISH_PAGE_5_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
@@ -4526,7 +4531,7 @@ endef
 ### {{{3 $(PUBLISH) Include: Digest
 ########################################
 
-override PUBLISH_PAGE_INCLUDE_NAME := Default Digest Page
+override PUBLISH_PAGE_INCLUDE_NAME	:= Default Digest Page
 
 override define PUBLISH_PAGE_INCLUDE =
 ---
@@ -4547,7 +4552,7 @@ endef
 ### {{{3 $(PUBLISH) Include: Digest (Config)
 ########################################
 
-override PUBLISH_PAGE_INCLUDE_ALT_NAME := Configured Digest Page
+override PUBLISH_PAGE_INCLUDE_ALT_NAME	:= Configured Digest Page
 
 override define PUBLISH_PAGE_INCLUDE_ALT =
 ---
@@ -4569,7 +4574,7 @@ endef
 ########################################
 
 #WORKING:NOW:NOW:FIX
-override PUBLISH_PAGE_EXAMPLE_NAME := Elements & Includes
+override PUBLISH_PAGE_EXAMPLE_NAME	:= Elements & Includes
 
 override define PUBLISH_PAGE_EXAMPLE =
 endef
@@ -4578,7 +4583,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Pages
 ########################################
 
-override PUBLISH_PAGE_PAGEDIR_NAME := Metainfo Page
+override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
@@ -4596,7 +4601,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Testing
 ########################################
 
-override PUBLISH_PAGE_TESTING_NAME := Metainfo File
+override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
 
 override define PUBLISH_PAGE_TESTING =
 	$(eval $(call COMPOSER_NOCOLOR)) \
@@ -4608,7 +4613,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Themes
 ########################################
 
-override PUBLISH_PAGE_SHOWDIR_NAME := Themes & Shades
+override PUBLISH_PAGE_SHOWDIR_NAME	:= Themes & Shades
 
 override define PUBLISH_PAGE_SHOWDIR =
 $(strip \
@@ -5205,6 +5210,7 @@ $(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
 
+#WORKING:NOW:NOW:FIX
     $(_M)MENU$(_D):
       - $(_M)MAIN$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
       - $(_M)PAGES$(_D):
@@ -5212,16 +5218,15 @@ $(_S)#$(MARKER)$(_D)     - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$
         - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
         - $(_C)spacer$(_D)
         - $(_M)$(PUBLISH_PAGE_1_NAME)$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
-#WORKING:NOW:NOW:FIX
-        - $(_C)WORKING:NOW:NOW:FIX$(_D):
+        - $(_C)$(PUBLISH_PAGE_GROUP_1)$(_D):
           - $(_M)$(PUBLISH_PAGE_2_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES))$(_D)
           - $(_M)$(PUBLISH_PAGE_3_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_FILES))$(_D)
           - $(_M)$(PUBLISH_PAGE_4_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 4,$(PUBLISH_FILES))$(_D)
           - $(_M)$(PUBLISH_PAGE_5_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(word 5,$(PUBLISH_FILES))$(_D)
-        - $(_C)WORKING:NOW:NOW:FIX$(_D):
+        - $(_C)$(PUBLISH_PAGE_GROUP_2)$(_D):
           - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
           - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
-        - $(_C)WORKING:NOW:NOW:FIX$(_D):
+        - $(_C)$(PUBLISH_PAGE_GROUP_3)$(_D):
           - $(_M)$(PUBLISH_PAGE_EXAMPLE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML)$(_D)
           - $(_M)$(PUBLISH_PAGE_PAGEDIR_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_PAGEDIR).$(EXTN_HTML)$(_D)
           - $(_M)$(PUBLISH_PAGE_TESTING_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML)$(_D)
