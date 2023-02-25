@@ -4604,8 +4604,8 @@ endef
 override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
 
 override define PUBLISH_PAGE_TESTING =
-	$(eval $(call COMPOSER_NOCOLOR)) \
-	$(call TITLE_LN ,2,$(1) Recommended Workflow); \
+	{ $(call TITLE_LN ,2,$(1) Recommended Workflow); } \
+		$(if $(COMPOSER_DOCOLOR),| $(SED) "s|$(SED_ESCAPE_COLOR)||g"); \
 	$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW,1)
 endef
 
