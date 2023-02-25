@@ -3184,6 +3184,7 @@ endef
 #	$(TESTING)-speed -> $(TESTING)-stress
 #		add $(CLEANER)/$(DOITALL) for a vary large directory of files
 #	document c_list_var
+#	site-include files will not be parsed into digests, to avoid mangled output...
 
 #WORKING:NOW
 #	features
@@ -3954,9 +3955,6 @@ endef
 ## {{{2 $(PUBLISH) Pages
 ########################################
 
-#WORKING:NOW:NOW:FIX
-#	now "&" is not working in page titles in the library/sitemap/metainfo...
-#		additionally, the PUBLISH_PAGE_EXAMPLE page "include" is not being pulled into the digest...?
 #WORKING:NOW:NOW:FIX
 #	add a header/box to each which describes what to test for that page...
 #	main/themes pages
@@ -6012,15 +6010,11 @@ function $(PUBLISH)-metainfo-block {
 		if [ -z "$${TAGS}" ]; then TAGS="$${NULL_TXT}"; fi
 		$${ECHO} "$${META_TXT}" \\
 			| $${SED} \\
-				-e "s|<T>|$${TITL}|g" \\
-				-e "s|<A[^>]*>|$$($${ECHO} "$${AUTH}" | $${SED} "s|[;][ ]|$${AUTH_SEP}|g")|g" \\
-				-e "s|<D>|$${DATE}|g" \\
-				-e "s|<G[^>]*>|$$($${ECHO} "$${TAGS}" | $${SED} "s|[;][ ]|$${TAGS_SEP}|g")|g" \\
-				-e "s|<G>|$${TAGS}|g" \\
-				-e "s|<[|]>|$$(
-						$(ECHO) "$${HTML_HIDE}" \\
-						| $(SED) "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g"
-					)|g"
+				-e "s|<T>|$$(		$${ECHO} "$${TITL}"		| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g" \\
+				-e "s|<A[^>]*>|$$(	$${ECHO} "$${AUTH}"		| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g" | $${SED} "s|[;][ ]|$${AUTH_SEP}|g")|g" \\
+				-e "s|<D>|$$(		$${ECHO} "$${DATE}"		| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g" \\
+				-e "s|<G[^>]*>|$$(	$${ECHO} "$${TAGS}"		| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g" | $${SED} "s|[;][ ]|$${TAGS_SEP}|g")|g" \\
+				-e "s|<[|]>|$$(		$${ECHO} "$${HTML_HIDE}"	| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g"
 	fi
 	return 0
 }
@@ -12570,15 +12564,6 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 			$(call NEWLINE) \
 		) \
 	)
-	@$(LS) $$( \
-			$(FIND) $(PUBLISH_ROOT) \
-				\( -name "$(COMPOSER_SETTINGS)" -print \) \
-				-o \( -name "$(COMPOSER_YML)" -print \) \
-		) \
-		| $(SED) -n "s|([[:space:]])$$( \
-				$(ECHO) "$(PUBLISH_ROOT)" \
-				| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-			)[/]|\1|gp"
 else
 	@$(ECHO) "" >$(PUBLISH_LOG)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
