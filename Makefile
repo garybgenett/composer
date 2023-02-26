@@ -320,8 +320,8 @@ override PUBLISH_FOOTER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_fo
 
 override PUBLISH_CSS_SHADE		:= dark
 override PUBLISH_CSS_SHADE_ALT		:= null
-override PUBLISH_COPY_PROTECT		:= 1
-override PUBLISH_COPY_PROTECT_ALT	:= null
+override PUBLISH_COPY_PROTECT		:= null
+override PUBLISH_COPY_PROTECT_ALT	:= 1
 
 override PUBLISH_COLS_BREAK		:= lg
 override PUBLISH_COLS_BREAK_ALT		:= md
@@ -3964,35 +3964,14 @@ endef
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used... document!
 
-#	PUBLISH_PAGE_1_NAME		$(word 1,$(PUBLISH_FILES))		PUBLISH_PAGE_1			index.html			introduction & framework & config table
-#	PUBLISH_PAGE_2_NAME		$(word 2,$(PUBLISH_FILES))		PUBLISH_PAGE_2			null/index.html			document blank page
-#	PUBLISH_PAGE_3_NAME		$(word 3,$(PUBLISH_FILES))		PUBLISH_PAGE_3			config/index.html		mostly, as it is, with config table
-#	PUBLISH_PAGE_4_NAME		$(word 4,$(PUBLISH_FILES))		#WORK				pandoc/MANUAL.html		as it is
-#	PUBLISH_PAGE_5_NAME		$(word 5,$(PUBLISH_FILES))		#WORK				bootstrap/site/content/docs/5.1/getting-started/introduction.html	as it is
-#	PUBLISH_PAGE_EXAMPLE_NAME	$(PUBLISH_EXAMPLE)			PUBLISH_PAGE_EXAMPLE		config/examples.html		this is where the real work is... what are we trying to demonstrate here, now...?
-#	PUBLISH_PAGE_PAGEDIR_NAME	$(PUBLISH_PAGEDIR)			$(foreach)			config/pages.html		move from current "examples"
-#	PUBLISH_PAGE_TESTING_NAME	$(PUBLISH_TESTING)			PUBLISH_PAGE_TESTING		config/pages/####-##-##+template_##.html	as it is
-#	PUBLISH_PAGE_SHOWDIR_NAME	$(PUBLISH_SHOWDIR)			PUBLISH_PAGE_SHOWDIR		themes/*.html			as it is, this is *the* examples/demo page...
-#	PUBLISH_PAGE_LIBRARY_NAME	#WORK: library index			PUBLISH_PAGE_LIBRARY		_library/index.html		as it is, after fixing the library/contents conundrum...
-#	PUBLISH_PAGE_LIBRARY_ALT_NAME	#WORK: library index			PUBLISH_PAGE_LIBRARY_ALT	config/_library-config/index.html	as it is, after fixing the library/contents conundrum...
-#	PUBLISH_PAGE_INCLUDE_NAME	$(PUBLISH_INCLUDE)			PUBLISH_PAGE_INCLUDE		index-digest.html		as it is, after fixing the library/contents conundrum...
-#	PUBLISH_PAGE_INCLUDE_ALT_NAME	$(PUBLISH_INCLUDE_ALT)			PUBLISH_PAGE_INCLUDE_ALT	config/index-digest.html	as it is, after fixing the library/contents conundrum...
-
-#	#WORK				$(word 3,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_3_HEADER		config/_header.md.cms
-#	#WORK				$(word 3,$(PUBLISH_FILES))/_footer	PUBLISH_PAGE_3_FOOTER		config/_footer.md.cms
-#	#WORK				$(word 4,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_4_HEADER		pandoc/_header.md.cms
-#	#WORK				$(word 5,$(PUBLISH_FILES))/_header	PUBLISH_PAGE_5_HEADER		bootstrap/_header.md.cms
-#	#WORK				$(PUBLISH_PAGEDIR)-header		PUBLISH_PAGE_PAGEDIR_HEADER	config/examples-header.md.cms
-#	#WORK				$(PUBLISH_PAGEDIR)-footer		PUBLISH_PAGE_PAGEDIR_FOOTER	config/examples-footer.md.cms
+#WORKING:DOCS
 
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
 ########################################
 
-#WORKING:NOW:NOW:FIX
 override PUBLISH_PAGE_1_NAME		:= Introduction
 
-#WORKING put tags here?  is the metadata in these pages getting put in the library?
 override define PUBLISH_PAGE_1 =
 ---
 title: Main Page
@@ -4002,10 +3981,8 @@ tags: [Main]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Introduction $(PUBLISH_CMD_END)
 
-#WORKING:NOW introduction
-# add $(PUBLISH_CMD_ROOT) to all links
-# add date, pagetitle (not title) and no author to config/index.html
-# note on example page about logo/icon
+#WORKING:DOCS
+#	introduction
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -4017,9 +3994,16 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) box-begin 1 Default Configuration $(PUBLISH_CMD_END)
 
-#WORKING:NOW default css
-#WORKING:NOW integrate this (and as much of the rest as makes sense) into $(HELPOUT), and back-port as $(MAKE) / DO_HEREDOC
+$(call PUBLISH_PAGE_1_CONFIGS)
 
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+endef
+
+#WORKING:DOCS
+#	integrate this in $(HELPOUT)
+#	default css (see "themes" page)
+#	note on example page about logo/icon
+override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config | defaults
 |:---|:---|
 | header        | `$(PUBLISH_HEADER)`
@@ -4057,10 +4041,11 @@ $(PUBLISH_CMD_BEG) box-begin 1 Default Configuration $(PUBLISH_CMD_END)
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`
 
 *(For this test site, the library has been enabled as: `$(PUBLISH_LIBRARY)`)*
-
-$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
+#> update: $(PUBLISH) Pages
+
+#WORKING:DOCS
 override define PUBLISH_PAGE_1_INCLUDE =
   * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) *([$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)]($(PUBLISH_CMD_ROOT)/../$(notdir $(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)))*
     * An interactive '$(PUBLISH)' rendered version of the $(COMPOSER_BASENAME) $(OUT_README)$(COMPOSER_EXT_DEFAULT) file
@@ -4090,11 +4075,7 @@ override define PUBLISH_PAGE_1_INCLUDE =
     * #WORKING:NOW
     * #WORKING:NOW
 
-#WORK comment readme.site.html
-
-#WORKING:NOW:NOW:FIX
-
-  * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML))
+<!-- #> * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)) -->
   * [$(COMPOSER_BASENAME) $(OUT_README)]($(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML))
   * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
     * [$(PUBLISH_PAGE_2_NAME)]($(PUBLISH_CMD_ROOT)/$(word 2,$(PUBLISH_FILES)))
@@ -4107,14 +4088,8 @@ override define PUBLISH_PAGE_1_INCLUDE =
     * [$(PUBLISH_PAGE_SHOWDIR_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML))
   * [$(PUBLISH_PAGE_LIBRARY_NAME)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))))
     * [$(PUBLISH_PAGE_LIBRARY_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))))
-    * [$(PUBLISH_PAGE_INCLUDE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
-    * [$(PUBLISH_PAGE_INCLUDE_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
-
-#WORKING:NOW swap out the config/index, which is a test of a composer.mk page build, with the nav-*/spacer tokens
-
-The rest below is an example "digest" page, created from the most recent pages, in reverse chronological order.
-
-At the very bottom of the page is an example of including a file to emulate a comments section.
+<!-- #> * [$(PUBLISH_PAGE_INCLUDE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)) -->
+<!-- #> * [$(PUBLISH_PAGE_INCLUDE_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)) -->
 endef
 
 ########################################
@@ -4132,6 +4107,12 @@ date: 1970-01-01
 tags: [Main]
 ---
 This is a default page, where all menus and settings are empty.  All aspects of `c_site` pages are configurable using `$(COMPOSER_YML)` files.
+
+$(call PUBLISH_PAGE_EXAMPLE_LAYOUT)
+
+In the layout, this frame is `c_list`, and the default `cols_size` for the center column is `$(PUBLISH_COLS_SIZE_C)` and `cols_resize` for the mobile view is `$(PUBLISH_COLS_RESIZE_C)`.  Since `nav-left` and `nav-right` are both empty, this frame is positioned at the left edge.
+
+----------------------------------------
 
 Return to one of the other example pages:
 
@@ -4173,9 +4154,9 @@ author:
 date: $(DATEMARK)
 tags: [Main]
 ---
-$(PUBLISH_CMD_BEG) box-begin 1 #WORKING:NOW $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 1 #WORKING:DOCS $(PUBLISH_CMD_END)
 
-#WORKING
+#WORKING:DOCS
 
 `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
 
@@ -4185,6 +4166,12 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) box-begin 1 Configuration Settings $(PUBLISH_CMD_END)
 
+$(call PUBLISH_PAGE_3_CONFIGS)
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+endef
+
+override define PUBLISH_PAGE_3_CONFIGS =
 | $(PUBLISH)-config | defaults | values
 |:---|:---|:---|
 | header        | `$(PUBLISH_HEADER)`        | `$(PUBLISH_HEADER_ALT)`
@@ -4222,8 +4209,6 @@ $(PUBLISH_CMD_BEG) box-begin 1 Configuration Settings $(PUBLISH_CMD_END)
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 
 *(For this test site, the default library has been enabled as: `$(PUBLISH_LIBRARY)`)*
-
-$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -4237,7 +4222,7 @@ $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
 
-#WORK
+#WORKING:DOCS
 
   * metainfo box
   * unformatted markdown file
@@ -4260,7 +4245,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
 
-#WORK
+#WORKING:DOCS
 
   * what notes go here?
 
@@ -4274,7 +4259,6 @@ endef
 ### {{{3 $(PUBLISH) Example: Features
 ########################################
 
-#WORKING:NOW:NOW:FIX
 override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
 
 override define PUBLISH_PAGE_EXAMPLE =
@@ -4287,14 +4271,21 @@ tags: [Main]
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
 
-override define PUBLISH_PAGE_EXAMPLE_INCLUDE =
-# Page Layout
-
+#WORKING:DOCS
+#	include in documentation as HEREDOC_*
+override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
 | | | |
 |:---|:---|---:|
 | `brand` (`homepage`) | `nav-top`    | `info-top` / `search_*`
 | `nav-left`           | **`c_list`** | `nav-right`
 | `copyright`          | `nav-bottom` | `info-bottom` / *($(COMPOSER_TINYNAME))*
+endef
+
+#WORKING:DOCS
+override define PUBLISH_PAGE_EXAMPLE_INCLUDE =
+# Page Layout
+
+$(call PUBLISH_PAGE_EXAMPLE_LAYOUT)
 
 # Elements
 
@@ -4364,7 +4355,8 @@ $(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)`
 
-#WORK this is some content
+#WORKING:DOCS
+#	some clever content goes here
 
 `$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
 
@@ -4374,7 +4366,8 @@ $(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)`
 
-#WORK this is some content
+#WORKING:DOCS
+#	some clever content goes here
 
 `$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
 
@@ -4384,7 +4377,8 @@ $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 
-#WORK see another example in [Library] beloww...
+#WORKING:DOCS
+#	see another example in [Library] beloww...
 
 # Tokens
 
@@ -4416,13 +4410,15 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 ## Icon
 
-#WORK icon list: $(foreach CSS_ICON,$(call CSS_ICONS),$(word 1,$(subst ;, ,$(CSS_ICON))))
+#WORKING:DOCS
+#	icon list: $(foreach CSS_ICON,$(call CSS_ICONS),$(word 1,$(subst ;, ,$(CSS_ICON))))
+#	note about PUBLISH_CMD_ROOT {} escaping
 
 `$(PUBLISH_CMD_BEG) icon cc-by-nc-nd $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) icon cc-by-nc-nd $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) icon gpl $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) icon gpl $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) icon gpl $(PUBLISH_CMD_ROOT)/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
 
@@ -4434,12 +4430,10 @@ $(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLI
 
 $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)
 
-#WORK comment readme.site.html
+<!-- #> $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(PUBLISH_INDEX).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
 
-`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
-`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/../$(PUBLISH_INDEX).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)`
-
-$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
+<!-- #> $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
 
 ## Form
@@ -4448,15 +4442,19 @@ $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)
 
 $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 
-#WORK results in: `<input type="hidden" name="sites" value="$(COMPOSER_CNAME)">`
+#WORKING:DOCS
+#	this results in:
+
+	<input type="hidden" name="sites" value="$(COMPOSER_CNAME)">
 
 ## Include
 
-#WORKING:NOW:NOW:FIX
+#WORKING:DOCS
+#	note about PUBLISH_CMD_ROOT {} escaping
 
-`$(PUBLISH_CMD_BEG) $(patsubst <%>,\<%\>,$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_SPECIAL),$(word 1,$(PUBLISH_FILES))) $(PUBLISH_CMD_END)`
 
-`$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)-comments$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)`
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_SPECIAL),$(word 1,$(PUBLISH_FILES))) $(PUBLISH_CMD_END)
 
 # Helpers
 
@@ -4466,7 +4464,8 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 
-#WORK demonstrated elsewhere...
+#WORKING:DOCS
+#	demonstrated elsewhere...
 
   * `$(PUBLISH)-nav-left: { metainfo }` + `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
     * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
@@ -4479,7 +4478,8 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 
 ## Contents
 
-#WORK this section is broken:
+#WORKING:DOCS
+#	this section is broken:
 
   * there is already a "CONTENTS" panel on the left, which is grabbing the `<id>` link
   * the "CONTENTS" helper on the left is also setting the argument for all the rest *(they will also stomp on each other)*
@@ -4487,7 +4487,8 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
     * only use right pane in `$(COMPOSER_YML)` file
     * duplicates of this page, and use `#contents` to link to them
 
-#WORK notes:
+#WORKING:DOCS
+#	notes:
 
   * no argument does `$(DEPTH_MAX)`
   * `$(SPECIAL_VAL)`
@@ -4528,7 +4529,8 @@ $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 # Library
 
-#WORK another example of [Grids] elements...
+#WORKING:DOCS
+#	another example of [Grids] elements...
 
 `$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)`
 
@@ -4658,18 +4660,12 @@ endef
 ### {{{3 $(PUBLISH) Include: Library
 ########################################
 
-#WORKING:NOW:NOW:FIX
-# $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))
-# $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))
-# $(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)
-# $(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)
-
 override PUBLISH_PAGE_LIBRARY_NAME	:= Default Library Page
 override PUBLISH_PAGE_INCLUDE_NAME	:= Default Digest Page
 
 override define PUBLISH_PAGE_LIBRARY =
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
-#WORKING
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:DOCS $(PUBLISH_CMD_END)
+#WORKING:DOCS
 Library Include Page: [$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -4682,8 +4678,8 @@ author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
 tags: [Main]
 ---
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
-#WORKING
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:DOCS $(PUBLISH_CMD_END)
+#WORKING:DOCS
 Library Index Page: [$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))))
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -4698,8 +4694,8 @@ override PUBLISH_PAGE_LIBRARY_ALT_NAME	:= Configured Library Page
 override PUBLISH_PAGE_INCLUDE_ALT_NAME	:= Configured Digest Page
 
 override define PUBLISH_PAGE_LIBRARY_ALT =
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
-#WORKING
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:DOCS $(PUBLISH_CMD_END)
+#WORKING:DOCS
 Library Include Page ($(CONFIGS)): [$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -4712,8 +4708,8 @@ author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
 tags: [Main]
 ---
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING $(PUBLISH_CMD_END)
-#WORKING
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:DOCS $(PUBLISH_CMD_END)
+#WORKING:DOCS
 Library Index Page ($(CONFIGS)): [$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))))
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -5197,6 +5193,8 @@ endef
 ### {{{3 Heredoc: composer_yml
 ########################################
 
+#> update: $(PUBLISH) Pages
+
 override define HEREDOC_COMPOSER_YML =
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)$(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration$(_D)
@@ -5279,7 +5277,6 @@ $(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
 
-#WORKING:NOW:NOW:FIX
     $(_M)MENU$(_D):
       - $(_M)MAIN$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))$(_D)
       - $(_M)PAGES$(_D):
@@ -5300,8 +5297,8 @@ $(_S)#$(MARKER)$(_D)     - $(_M)$(COMPOSER_BASENAME) $(OUT_README)$(_D):		$(_E)$
         - $(_M)$(PUBLISH_PAGE_LIBRARY_NAME)$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))$(_D)
           - $(_M)$(PUBLISH_PAGE_LIBRARY_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))$(_D)
-          - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
-          - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
+$(_S)#$(MARKER)$(D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
+$(_S)#$(MARKER)$(D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
         - $(_C)contents$(_D)
@@ -5444,7 +5441,6 @@ variables:
       $(PUBLISH_CMD_BEG) icon gpl $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
       $(COPYRIGHT_SHORT)
 
-    copy_protect:			null
     cols_break:				md
     cols_size:				[ 4, 8, $(SPECIAL_VAL) ]
     cols_resize:			[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
@@ -12487,7 +12483,6 @@ else
 endif
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/*$(COMPOSER_EXT_DEFAULT))
-#WORKING:NOW:NOW:FIX
 	@$(call DO_HEREDOC,PUBLISH_PAGE_1)						>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES)))
 	@$(call DO_HEREDOC,PUBLISH_PAGE_1_INCLUDE)					>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_SPECIAL),$(word 1,$(PUBLISH_FILES)))
 	@$(call DO_HEREDOC,PUBLISH_PAGE_1)						>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 1,$(PUBLISH_FILES)))
