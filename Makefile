@@ -1253,14 +1253,20 @@ endif
 ########################################
 
 override CSS_ICON_MENU			:= $(FONTAWES_DIR)/svgs/solid/list-ul.svg
-override CSS_ICON_TOGGLE		:= $(FONTAWES_DIR)/svgs/solid/chevron-down.svg
+override CSS_ICON_ARROW_U		:= $(FONTAWES_DIR)/svgs/solid/chevron-up.svg
+override CSS_ICON_ARROW_D		:= $(FONTAWES_DIR)/svgs/solid/chevron-down.svg
+override CSS_ICON_ARROW_L		:= $(FONTAWES_DIR)/svgs/solid/chevron-left.svg
+override CSS_ICON_ARROW_R		:= $(FONTAWES_DIR)/svgs/solid/chevron-right.svg
 override CSS_ICON_SEARCH		:= $(FONTAWES_DIR)/svgs/solid/magnifying-glass.svg
 override CSS_ICON_COPYRIGHT		:= $(FONTAWES_DIR)/svgs/regular/copyright.svg
 override CSS_ICON_GITHUB		:= $(FONTAWES_DIR)/svgs/brands/github.svg
 
 override CSS_ICONS = $(subst |, ,$(subst $(NULL) ,,$(strip \
 	|menu		;svg	;$(CSS_ICON_MENU)	;$(TOKEN)	;Menu \
-	|toggle		;svg	;$(CSS_ICON_TOGGLE)	;$(TOKEN)	;Toggle \
+	|arrow-up	;svg	;$(CSS_ICON_ARROW_U)	;$(TOKEN)	;Arrow$(TOKEN)Up \
+	|arrow-down	;svg	;$(CSS_ICON_ARROW_D)	;$(TOKEN)	;Arrow$(TOKEN)Down \
+	|arrow-left	;svg	;$(CSS_ICON_ARROW_L)	;$(TOKEN)	;Arrow$(TOKEN)Left \
+	|arrow-right	;svg	;$(CSS_ICON_ARROW_R)	;$(TOKEN)	;Arrow$(TOKEN)Right \
 	|search		;svg	;$(CSS_ICON_SEARCH)	;search		;Search \
 	|gpl		;png	;$(EXT_ICON_GPL)	;license	;GPL$(TOKEN)License			;https://www.gnu.org/licenses/gpl-3.0.html \
 	|cc-by-nc-nd	;png	;$(EXT_ICON_CC)		;license	;CC$(TOKEN)License			;https://creativecommons.org/licenses/by-nc-nd/4.0 \
@@ -2110,17 +2116,21 @@ override PUBLISH_DIRS_CONFIGS := \
 
 #>	$(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
 override PUBLISH_DIRS_DEBUGIT := \
-	$(word 1,$(PUBLISH_FILES)) \
-	$(word 2,$(PUBLISH_FILES)) \
-	$(word 3,$(PUBLISH_FILES)) \
-	$(word 4,$(PUBLISH_FILES)) \
-	$(word 5,$(PUBLISH_FILES)) \
 	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
-	$(PUBLISH_PAGEDIR).$(EXTN_HTML) \
-	$(PUBLISH_TESTING).$(EXTN_HTML) \
-	$(PUBLISH_INCLUDE).$(EXTN_HTML) \
-	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
-	$(PUBLISH_SHOWDIR)/$(DOITALL) \
+
+#WORKING:NOW:NOW:FIX:SLIDE
+#WORKING:NOW:NOW:FIX
+#	$(word 1,$(PUBLISH_FILES)) \
+#	$(word 2,$(PUBLISH_FILES)) \
+#	$(word 3,$(PUBLISH_FILES)) \
+#	$(word 4,$(PUBLISH_FILES)) \
+#	$(word 5,$(PUBLISH_FILES)) \
+#	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
+#	$(PUBLISH_PAGEDIR).$(EXTN_HTML) \
+#	$(PUBLISH_TESTING).$(EXTN_HTML) \
+#	$(PUBLISH_INCLUDE).$(EXTN_HTML) \
+#	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
+#	$(PUBLISH_SHOWDIR)/$(DOITALL) \
 
 ########################################
 
@@ -2899,7 +2909,7 @@ $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst
 
 $(_S)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
 $(_S)[$(COMPOSER_BASENAME) Icon]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/icon-v1.0.png$(_D)
-$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v3.0.png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v4.0.png$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
@@ -2961,7 +2971,7 @@ and prettifies the output formats, all in one place.  It also serves as a build
 system, so that large repositories can be managed as documentation archives or
 published as $(_C)[Static Websites]$(_D).
 
-$(_E)![$(COMPOSER_BASENAME) Screenshot]($(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v3.0.png)$(_S)\\$(_D)
+$(_E)![$(COMPOSER_BASENAME) Screenshot]($(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_IMAGES))/screenshot-v4.0.png)$(_S)\\$(_D)
 endef
 
 ########################################
@@ -3960,10 +3970,6 @@ endef
 
 #WORKING:NOW:NOW:FIX
 #	add a header/box to each which describes what to test for that page...
-#	main/themes pages
-#		split these, so that the examples are in an include file that main/themes pull in
-#		main should be split into an introduction page and an examples page
-#		split example into example/theme/showcase and a separate "combined" page...
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used... document!
 
@@ -4280,7 +4286,7 @@ $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 endef
 
 ########################################
-### {{{3 $(PUBLISH) Example: Features
+### {{{3 $(PUBLISH) Example: Elements
 ########################################
 
 override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
@@ -4405,6 +4411,28 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 
 #WORKING:DOCS
 #	see another example in [Library] beloww...
+
+## Slides
+
+#WORKING:NOW:NOW:FIX:SLIDE
+
+$(PUBLISH_CMD_BEG) slide-begin 3 Slides Example $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) slide-item-begin $(MENU_SELF) $(SPECIAL_VAL) $(SPECIAL_VAL) $(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png Slide #1 $(PUBLISH_CMD_END)
+
+<h5>First slide label</h5>
+<p>Some representative placeholder content for the first slide.</p>
+
+$(PUBLISH_CMD_BEG) slide-item-end $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) slide-item-begin 3 $(SPECIAL_VAL) $(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png Slide #2 $(PUBLISH_CMD_END)
+
+<h5>Second slide label</h5>
+<p>Some representative placeholder content for the second slide.</p>
+
+$(PUBLISH_CMD_BEG) slide-item-end $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) slide-item-begin 1 . $(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png Slide #3 $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) slide-item-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) slide-end Slides Example $(PUBLISH_CMD_END)
 
 # Tokens
 
@@ -4852,6 +4880,7 @@ override DIST_LOGO_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJ
 override DIST_ICON_v1.0			:= $(DIST_LOGO_v1.0)
 override DIST_SCREENSHOT_v1.0		:= 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
 override DIST_SCREENSHOT_v3.0		:= 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
+override DIST_SCREENSHOT_v4.0		:= $(DIST_SCREENSHOT_v3.0)
 
 # https://www.gnu.org/graphics/license-logos.html
 # https://creativecommons.org/licenses/by-nc-nd
@@ -6155,7 +6184,7 @@ function $(PUBLISH)-search {
 $${CAT} <<_EOF_
 <form class="nav-item d-flex form-inline" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
 <input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
-<button class="btn btn-sm" type="submit">
+<button type="submit" class="btn btn-sm">
 $$(
 	$${ECHO} "$${NAME}\\n" \\
 	| $(PUBLISH)-parse icon
@@ -6623,7 +6652,7 @@ $${CAT} <<_EOF_
 <div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}"></div>
 <nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols_break) fixed-$${1}">
 <div class="container-fluid">
-<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}">
+<button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}">
 <span class="navbar-toggler-icon"></span>
 </button>
 _EOF_
@@ -6884,6 +6913,107 @@ function $(PUBLISH)-box-end {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
 </div>
+</div>
+_EOF_
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-slide-begin
+########################################
+
+function $(PUBLISH)-slide-begin {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+$${CAT} <<_EOF_
+<div class="carousel slide" data-bs-ride="carousel" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+<div class="carousel-indicators">
+_EOF_
+	NUM="0"
+	while [ "$${NUM}" -lt "$${1}" ]; do
+$${CAT} <<_EOF_
+<button type="button" data-bs-slide-to="$${NUM}" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
+	if [ "$${NUM}" = "0" ]; then
+		$${ECHO} " class=\"active\""
+	fi
+)></button>
+_EOF_
+		NUM="$$($${EXPR} $${NUM} + 1)"
+	done
+$${CAT} <<_EOF_
+</div>
+<div class="carousel-inner">
+_EOF_
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-slide-item-begin
+########################################
+
+#WORKING:NOW:NOW:FIX:SLIDE add breakpoint at "carousel-caption d-block" here...?
+
+function $(PUBLISH)-slide-item-begin {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	MAIN=
+	if [ "$${1}" = "$${MENU_SELF}" ]; then
+		MAIN="$${SPECIAL_VAL}"
+		shift
+	fi
+$${CAT} <<_EOF_
+<div class="carousel-item$$(
+	if [ -n "$${MAIN}" ]; then
+		$${ECHO} " active"
+	fi
+)"$$(
+	if [ "$${1}" != "$${SPECIAL_VAL}" ]; then
+		$${ECHO} " data-bs-interval=\"$${1}000\""
+	fi
+)>
+<img class="d-block w-100" alt="$${@:4}" src="$${3}">
+_EOF_
+	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then
+$${CAT} <<_EOF_
+<div class="carousel-caption d-block">
+_EOF_
+	fi
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-slide-item-end
+########################################
+
+function $(PUBLISH)-slide-item-end {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
+$${CAT} <<_EOF_
+</div>
+_EOF_
+	fi
+$${CAT} <<_EOF_
+</div>
+_EOF_
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-slide-end
+########################################
+
+function $(PUBLISH)-slide-end {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+$${CAT} <<_EOF_
+</div>
+<button type="button" class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:1}")">
+<span class="carousel-control-prev-icon"></span>
+</button>
+<button type="button" class="carousel-control-next" data-bs-slide="next" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:1}")">
+<span class="carousel-control-next-icon"></span>
+</button>
 </div>
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
@@ -7184,9 +7314,16 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS =
 	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.menu.svg");
 }
 
+.carousel-control-prev-icon {
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.arrow-left.svg");
+}
+.carousel-control-next-icon {
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.arrow-right.svg");
+}
+
 .accordion-button::after,
 .accordion-button:not(.collapsed)::after {
-	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.toggle.svg");
+	background-image:		url("$(shell $(REALPATH) $(abspath $(dir $(CUSTOM_PUBLISH_CSS))) $(COMPOSER_IMAGES))/icon.arrow-down.svg");
 }
 
 .navbar-toggler:focus,
@@ -9335,6 +9472,7 @@ endif
 											$($(DEBUGIT)-output)
 	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
 	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v4.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
 		$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
 		$(eval override TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
@@ -12412,11 +12550,12 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(MKDIR)				$(PUBLISH_ROOT) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(MAKE) --directory			$(PUBLISH_ROOT) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
-	@$(MKDIR) \
-						$(addprefix $(PUBLISH_ROOT)/,$(PUBLISH_DIRS)) \
-						$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR) \
-						$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR) \
-						$($(DEBUGIT)-output)
+	@$(ECHO) "$(_S)"
+	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
+		$(MKDIR)			$(PUBLISH_ROOT)/$(FILE) $($(DEBUGIT)-output); \
+		$(call NEWLINE) \
+	)
+	@$(ECHO) "$(_D)"
 	@$(RSYNC) \
 		--delete-excluded \
 		--prune-empty-dirs \
