@@ -2118,7 +2118,6 @@ override PUBLISH_DIRS_CONFIGS := \
 override PUBLISH_DIRS_DEBUGIT := \
 	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
 
-#WORKING:NOW:NOW:FIX:SLIDE
 #WORKING:NOW:NOW:FIX
 #	$(word 1,$(PUBLISH_FILES)) \
 #	$(word 2,$(PUBLISH_FILES)) \
@@ -4412,27 +4411,17 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 #WORKING:DOCS
 #	see another example in [Library] beloww...
 
-## Slides
+## Displays
 
-#WORKING:NOW:NOW:FIX:SLIDE
+#WORKING:NOW:NOW:FIX:DISPLAY
 
-$(PUBLISH_CMD_BEG) slide-begin 3 Slides Example $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) slide-item-begin $(MENU_SELF) $(SPECIAL_VAL) $(SPECIAL_VAL) $(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png Slide #1 $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) display $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE).yml Example Banner $(PUBLISH_CMD_END)`
 
-<h5>First slide label</h5>
-<p>Some representative placeholder content for the first slide.</p>
+$(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Banner $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) slide-item-end $(SPECIAL_VAL) $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) slide-item-begin 3 $(SPECIAL_VAL) $(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png Slide #2 $(PUBLISH_CMD_END)
+`$(PUBLISH_CMD_BEG) display $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)`
 
-<h5>Second slide label</h5>
-<p>Some representative placeholder content for the second slide.</p>
-
-$(PUBLISH_CMD_BEG) slide-item-end $(SPECIAL_VAL) $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) slide-item-begin 1 . $(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png Slide #3 $(PUBLISH_CMD_END)
-
-$(PUBLISH_CMD_BEG) slide-item-end $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) slide-end Slides Example $(PUBLISH_CMD_END)
+# $(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)
 
 # Tokens
 
@@ -4623,6 +4612,48 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
 
 `$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
+endef
+
+override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
+"Example Banner":
+  type:					banner
+  tint:					dark
+  images:
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
+      link:				null
+      time:				null
+      name:				"Banner #1"
+      $(MENU_SELF):				null
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+      link:				"#displays"
+      time:				3
+      name:				"Banner #2"
+      $(MENU_SELF): |
+        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+      link:				"#displays"
+      time:				1
+      name:				"Banner #3"
+      $(MENU_SELF): |
+        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+
+"Example Shelf":
+  type:					shelf
+  images:
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
+      link:				null
+      name:				"Shelf #1"
+      $(MENU_SELF):				null
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+      link:				"#displays"
+      name:				"Shelf #2"
+      $(MENU_SELF): |
+        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+      link:				"#displays"
+      name:				"Shelf #3"
+      $(MENU_SELF): |
+        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
 endef
 
 ########################################
@@ -5038,7 +5069,8 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT
 
 ########################################
 
-$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML): $(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
+$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
+$(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
 
 ################################################################################
 endif
@@ -5060,6 +5092,10 @@ ifneq ($$(COMPOSER_CURDIR),)
 
 override c_logo				:=
 override c_icon				:=
+
+########################################
+
+$(notdir $(word 3,$(PUBLISH_FILES))):				../$(PUBLISH_EXAMPLE).yml
 
 ################################################################################
 endif
@@ -5083,7 +5119,7 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE_ALT))$(COMPOSER_EXT_DEF
 
 ########################################
 
-$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML): $(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
+$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
 
 ################################################################################
 endif
@@ -5202,9 +5238,9 @@ themes-done:
 
 .PHONY: themes-%
 themes-%:
-	@$$(call $$(COMPOSER_TINYNAME)-note,$$(*))
-	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $$(COMPOSER_YML)
-	@$$(TOUCH) $$(COMPOSER_YML)
+	@$$(call $(COMPOSER_TINYNAME)-note,$$(*))
+	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $(COMPOSER_YML)
+	@$$(TOUCH) $(COMPOSER_YML)
 
 ########################################$(foreach FILE,$(call CSS_THEMES),\
 	$(if $(filter-out $(TOKEN),\
@@ -5228,7 +5264,8 @@ endef
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET =
 override COMPOSER_TARGETS += $(1).done
-$(1).done: $$(COMPOSER_YML)
+$(1).done: $(COMPOSER_YML)
+$(1).done: ../$(PUBLISH_EXAMPLE).yml
 $(1).done:
 	@$$(MAKE) themes-$(word 2,$(subst +, ,$(1)))
 	@$$(MAKE) \\
@@ -5236,7 +5273,7 @@ $(1).done:
 		c_base="$(1)" \\
 		c_list="$(PUBLISH_INDEX)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)" \\
 		c_css="$(word 1,$(subst +, ,$(1)))" \\
-		$$(COMPOSER_PANDOC)
+		$(COMPOSER_PANDOC)
 	@$$(ECHO) "" >$$(@)
 endef
 
@@ -6090,7 +6127,6 @@ $${CAT} <<_EOF_
 <table class="$${COMPOSER_TINYNAME}-table table table-borderless align-top">
 _EOF_
 		fi
-#>		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX}
 		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
 			| $${SED} "/^null$$/d" \\
 			| while read -r FILE; do
@@ -6098,7 +6134,7 @@ _EOF_
 					$(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${FILE}"
 				).$(EXTN_HTML)"
 				TOTL="$$(
-					$${YQ_WRITE} ".$${2}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
+					$${YQ_WRITE} ".$${2}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
 					| $${SED} "/^null$$/d"
 				)"
 				if [ "$${1}" = "menu" ]; then
@@ -6919,18 +6955,65 @@ _EOF_
 	return 0
 }
 
+#WORKING:NOW:NOW:FIX:DISPLAY
+
 ########################################
-#### {{{4 $(PUBLISH)-slide-begin
+#### {{{4 $(PUBLISH)-display
 ########################################
 
-function $(PUBLISH)-slide-begin {
+# 1 file path
+# 2 name				$${@:2} = $${2}++
+
+function $(PUBLISH)-display {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	DISP="$${@:2}"
+	FILE="$$(
+		$${ECHO} "$${1}" \\
+		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+	)"
+	if [ ! -f "$${FILE}" ]; then
+		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} display file missing"
+	else
+		TYPE="$$(
+			$${YQ_WRITE} ".[\"$${DISP}\"].[\"type\"]" $${FILE} 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		if [ -z "$${TYPE}" ]; then
+			$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} display type missing"
+		else
+			$(PUBLISH)-display-$${TYPE} $${@} || return 1
+		fi
+	fi
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-display-banner
+########################################
+
+# 1 file path
+# 2 name				$${@:2} = $${2}++
+
+function $(PUBLISH)-display-banner {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	DISP="$${@:2}"
+	FILE="$$(
+		$${ECHO} "$${1}" \\
+		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+	)"
+	local TINT="$$($${YQ_WRITE} ".[\"$${DISP}\"].[\"tint\"]" $${FILE} 2>/dev/null | $${SED} "/^null$$/d")"
+	local IMGS="$$($${YQ_WRITE} ".[\"$${DISP}\"].[\"images\"]" $${FILE} 2>/dev/null)"
+	local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} "length" 2>/dev/null)"
 $${CAT} <<_EOF_
-<div class="carousel slide" data-bs-ride="carousel" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+<div class="carousel$$(
+	if [ -n "$${TINT}" ]; then
+		$${ECHO} " carousel-$${TINT}"
+	fi
+) slide" data-bs-ride="carousel" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <div class="carousel-indicators">
 _EOF_
-	NUM="0"
-	while [ "$${NUM}" -lt "$${1}" ]; do
+	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 $${CAT} <<_EOF_
 <button type="button" data-bs-slide-to="$${NUM}" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
 	if [ "$${NUM}" = "0" ]; then
@@ -6944,74 +7027,66 @@ $${CAT} <<_EOF_
 </div>
 <div class="carousel-inner">
 _EOF_
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-slide-item-begin
-########################################
-
-#WORKING:NOW:NOW:FIX:SLIDE add breakpoint at "carousel-caption d-block" here...?
-
-function $(PUBLISH)-slide-item-begin {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	MAIN=
-	if [ "$${1}" = "$${MENU_SELF}" ]; then
-		MAIN="$${SPECIAL_VAL}"
-		shift
-	fi
+	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		FILE="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[$${NUM}].[\"file\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d" \\
+			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+		)"
+		LINK="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[$${NUM}].[\"link\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d" \\
+			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+		)"
+		TIME="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[$${NUM}].[\"time\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		NAME="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[$${NUM}].[\"name\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		if [ -z "$${LINK}" ]; then
+			LINK="#"
+		fi
 $${CAT} <<_EOF_
 <div class="carousel-item$$(
-	if [ -n "$${MAIN}" ]; then
+	if [ "$${NUM}" = "0" ]; then
 		$${ECHO} " active"
 	fi
 )"$$(
-	if [ "$${1}" != "$${SPECIAL_VAL}" ]; then
-		$${ECHO} " data-bs-interval=\"$${1}000\""
+	if [ -n "$${TIME}" ]; then
+		$${ECHO} " data-bs-interval=\"$${TIME}000\""
 	fi
 )>
-<img class="d-block w-100" alt="$${@:4}" src="$${3}">
-_EOF_
-	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then
-$${CAT} <<_EOF_
+<a href="$${LINK}">
+<img class="d-block w-100" alt="$${NAME}" src="$${FILE}">
 <div class="carousel-caption d-block">
 _EOF_
-	fi
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-slide-item-end
-########################################
-
-function $(PUBLISH)-slide-item-end {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
+		$${ECHO} "\\n"
+		$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d" \\
+			| $${SED} "s|^|  |g" \\
+			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+		$${ECHO} "\\n"
 $${CAT} <<_EOF_
+</div>
+</a>
 </div>
 _EOF_
-	fi
+		NUM="$$($${EXPR} $${NUM} + 1)"
+	done
 $${CAT} <<_EOF_
 </div>
-_EOF_
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-slide-end
-########################################
-
-function $(PUBLISH)-slide-end {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-$${CAT} <<_EOF_
-</div>
-<button type="button" class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:1}")">
+<button type="button" class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <span class="carousel-control-prev-icon"></span>
 </button>
-<button type="button" class="carousel-control-next" data-bs-slide="next" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:1}")">
+<button type="button" class="carousel-control-next" data-bs-slide="next" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <span class="carousel-control-next-icon"></span>
 </button>
 </div>
@@ -12159,7 +12234,7 @@ override define $(PUBLISH)-library-digest-create =
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
 		$(PANDOC_MD_TO_JSON) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-		| $(YQ_WRITE) ".blocks | length" \
+		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
 	)"; \
 	SIZ="0"; BLK="0"; \
 	while \
@@ -12170,7 +12245,7 @@ override define $(PUBLISH)-library-digest-create =
 			$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
-				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
+				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
 				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 				| $(PANDOC_JSON_TO_LINT) \
 			; \
@@ -12180,7 +12255,7 @@ override define $(PUBLISH)-library-digest-create =
 				$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
-				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
+				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
 				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 				| $(PANDOC_JSON_TO_LINT) \
 				| $(TEE) --append $(1) \
@@ -12659,6 +12734,7 @@ endif
 	@$(call DO_HEREDOC,PUBLISH_PAGE_5_HEADER)					>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE)					>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_INCLUDE)				>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)				>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE).yml
 	@$(call DO_HEREDOC,PUBLISH_PAGE_PAGEDIR_HEADER)					>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)-header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_PAGEDIR_FOOTER)					>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)-footer$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"					>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
