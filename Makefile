@@ -2116,9 +2116,10 @@ override PUBLISH_DIRS_CONFIGS := \
 
 #>	$(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
 override PUBLISH_DIRS_DEBUGIT := \
+	$(word 1,$(PUBLISH_FILES)) \
 	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
 
-#WORKING:NOW:NOW:FIX
+#WORKING:NOW:NOW:DOCS
 #	$(word 1,$(PUBLISH_FILES)) \
 #	$(word 2,$(PUBLISH_FILES)) \
 #	$(word 3,$(PUBLISH_FILES)) \
@@ -3967,7 +3968,7 @@ endef
 ## {{{2 $(PUBLISH) Pages
 ########################################
 
-#WORKING:NOW:NOW:FIX
+#WORKING:NOW:NOW
 #	add a header/box to each which describes what to test for that page...
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used... document!
@@ -4404,9 +4405,9 @@ $(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
-
 $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
 
 #WORKING:DOCS
 #	see another example in [Library] beloww...
@@ -4622,7 +4623,8 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
       link:				"#displays"
       name:				"Banner #1"
-      $(MENU_SELF):				null
+#>    $(MENU_SELF): |
+#>      <p style="background-color: gray; color: black;">Lorem Ipsum</p>
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
       link:				"#displays"
       name:				"Banner #2"
@@ -6758,8 +6760,6 @@ $${CAT} <<_EOF_
 		$${ECHO} " user-select-none"
 	fi
 )">
-#WORKING:NOW:NOW:FIX
-#	test wrapping with col-(++)...
 <div class="d-flex flex-row flex-wrap">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
