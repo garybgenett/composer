@@ -4419,8 +4419,6 @@ $(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Ba
 
 `$(PUBLISH_CMD_BEG) display $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)`
 
-#WORKING:NOW:NOW:FIX:DISPLAY
-
 $(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)
 
 # Tokens
@@ -4618,52 +4616,59 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
 "Example Banner":
   type:					banner
   tint:					dark
+  auto:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1,null)
+  time:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),3,null)
   list:
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
-      link:				null
-      time:				null
+      link:				"#displays"
       name:				"Banner #1"
       $(MENU_SELF):				null
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
       link:				"#displays"
-      time:				3
       name:				"Banner #2"
       $(MENU_SELF): |
         <p style="background-color: gray; color: black;">Lorem Ipsum</p>
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
       link:				"#displays"
-      time:				1
       name:				"Banner #3"
       $(MENU_SELF): |
         <p style="background-color: gray; color: black;">Lorem Ipsum</p>
 
-#WORKING:NOW:NOW:FIX:DISPLAY
 "Example Shelf":
   type:					shelf
   tint:					null
-  show:					3
+  auto:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1,null)
+  time:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),3,null)
+  show:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),5,3)
   list:
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon-v1.0.png
-      link:				null
+      link:				"#displays"
       name:				"Shelf #1"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.gpl.png
       link:				"#displays"
       name:				"Shelf #2"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.cc-by-nc-nd.png
       link:				"#displays"
       name:				"Shelf #3"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.copyright.svg
       link:				"#displays"
       name:				"Shelf #4"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.github.svg
       link:				"#displays"
       name:				"Shelf #5"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.menu.svg
       link:				"#displays"
       name:				"Shelf #6"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.search.svg
       link:				"#displays"
       name:				"Shelf #7"
+      size:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1024px,null)
 endef
 
 ########################################
@@ -6753,6 +6758,8 @@ $${CAT} <<_EOF_
 		$${ECHO} " user-select-none"
 	fi
 )">
+#WORKING:NOW:NOW:FIX
+#	test wrapping with col-(++)...
 <div class="d-flex flex-row flex-wrap">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
@@ -6993,31 +7000,68 @@ function $(PUBLISH)-display {
 			| $${YQ_WRITE} ".[\"tint\"]" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)"
+		AUTO="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[\"auto\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		TIME="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[\"time\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		SHOW="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[\"show\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		if [ -z "$${SHOW}" ]; then
+			SHOW="1"
+		fi
+		COLS="$$($${EXPR} 12 / $${SHOW})"
 		local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} ".[\"list\"] | length" 2>/dev/null)"
 $${CAT} <<_EOF_
 <div class="carousel$$(
 	if [ -n "$${TINT}" ]; then
 		$${ECHO} " carousel-$${TINT}"
 	fi
-) slide" data-bs-ride="carousel" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+) slide" data-bs-ride="$$(
+	if [ -n "$${AUTO}" ]; then
+		$${ECHO} "carousel"
+	else
+		$${ECHO} "true"
+	fi
+)" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <div class="carousel-indicators">
 _EOF_
-#WORKING:NOW:NOW:FIX:DISPLAY
-		local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		local NUM="0"; local SHW="0"; local SLD="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+			if [ "$${SHW}" -ge "$${SHOW}" ]; then
+				SHW="0"
+			fi
+			if {
+				[ "$${TYPE}" = "banner" ] ||
+				{ [ "$${TYPE}" = "shelf" ] && [ "$${SHW}" = "0" ]; };
+			}; then
 $${CAT} <<_EOF_
-<button type="button" data-bs-slide-to="$${NUM}" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
+<button type="button" data-bs-slide-to="$${SLD}" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
 	if [ "$${NUM}" = "0" ]; then
 		$${ECHO} " class=\"active\""
 	fi
 )></button>
 _EOF_
+				SLD="$$($${EXPR} $${SLD} + 1)"
+			fi
+			SHW="$$($${EXPR} $${SHW} + 1)"
 			NUM="$$($${EXPR} $${NUM} + 1)"
 		done
 $${CAT} <<_EOF_
 </div>
 <div class="carousel-inner">
 _EOF_
-		local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+		local NUM="0"; local SHW="0"; local SLD="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+			if [ "$${SHW}" -ge "$${SHOW}" ]; then
+				SHW="0"
+			fi
 			FILE="$$(
 				$${ECHO} "$${IMGS}" \\
 				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"file\"]" 2>/dev/null \\
@@ -7030,19 +7074,22 @@ _EOF_
 				| $${SED} "/^null$$/d" \\
 				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
 			)"
-			TIME="$$(
-				$${ECHO} "$${IMGS}" \\
-				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"time\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d"
-			)"
 			NAME="$$(
 				$${ECHO} "$${IMGS}" \\
 				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"name\"]" 2>/dev/null \\
 				| $${SED} "/^null$$/d"
 			)"
+			WIDE="$$(
+				$${ECHO} "$${IMGS}" \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"size\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d"
+			)"
 			if [ -z "$${LINK}" ]; then
 				LINK="#"
 			fi
+			if {	[ "$${TYPE}" = "banner" ] ||
+				{ [ "$${TYPE}" = "shelf" ] && [ "$${SHW}" = "0" ]; };
+			}; then
 $${CAT} <<_EOF_
 <div class="carousel-item$$(
 	if [ "$${NUM}" = "0" ]; then
@@ -7053,23 +7100,68 @@ $${CAT} <<_EOF_
 		$${ECHO} " data-bs-interval=\"$${TIME}000\""
 	fi
 )>
+_EOF_
+			fi
+			if [ "$${TYPE}" = "banner" ]; then
+$${CAT} <<_EOF_
 <a href="$${LINK}">
-<img class="d-block w-100" alt="$${NAME}" src="$${FILE}">
+<img class="$${COMPOSER_TINYNAME}-display" alt="$${NAME}" src="$${FILE}">
 <div class="carousel-caption d-block">
 _EOF_
-			$${ECHO} "\\n"
-			$${ECHO} "$${IMGS}" \\
-				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
-				| $${SED} "/^null$$/d" \\
-				| $${SED} "s|^|  |g" \\
-				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-			$${ECHO} "\\n"
+				$${ECHO} "\\n"
+				$${ECHO} "$${IMGS}" \\
+					| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
+					| $${SED} "/^null$$/d" \\
+					| $${SED} "s|^|  |g" \\
+					| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+				$${ECHO} "\\n"
 $${CAT} <<_EOF_
 </div>
 </a>
+_EOF_
+			elif [ "$${TYPE}" = "shelf" ]; then
+				SLD="$$($${EXPR} $${SLD} + 1)"
+				if [ "$${SHW}" = "0" ]; then
+$${CAT} <<_EOF_
+<div class="container-fluid">
+<div class="d-flex flex-row ps-5 pe-5">
+_EOF_
+				fi
+$${CAT} <<_EOF_
+<div class="d-flex flex-column col-$${COLS} d-block p-2">
+<div class="text-center">
+<a href="$${LINK}">
+<img class="$${COMPOSER_TINYNAME}-display-item"$$(
+	if [ -n "$${WIDE}" ]; then
+		$${ECHO} " style=\"width: $${WIDE}\""
+	fi
+) alt="$${NAME}" src="$${FILE}">
+</a>
+</div>
 </div>
 _EOF_
+			fi
+			SHW="$$($${EXPR} $${SHW} + 1)"
 			NUM="$$($${EXPR} $${NUM} + 1)"
+			if [ "$${TYPE}" = "shelf" ] && {
+				[ "$${SHW}" -ge "$${SHOW}" ] ||
+				[ "$${SLD}" -ge "$${SIZE}" ];
+			}; then
+$${CAT} <<_EOF_
+</div>
+</div>
+_EOF_
+			fi
+			if {	[ "$${TYPE}" = "banner" ] ||
+				{ [ "$${TYPE}" = "shelf" ] && {
+					[ "$${SHW}" -ge "$${SHOW}" ] ||
+					[ "$${SLD}" -ge "$${SIZE}" ];
+				}; };
+			}; then
+$${CAT} <<_EOF_
+</div>
+_EOF_
+			fi
 		done
 $${CAT} <<_EOF_
 </div>
@@ -7538,6 +7630,17 @@ html {
 	height:				24px;
 	width:				auto;
 }
+
+.$(COMPOSER_TINYNAME)-display {
+	height:				auto;
+	width:				100%;
+}
+.$(COMPOSER_TINYNAME)-display-item {
+	height:				auto;
+	max-width:			128px;
+}
+
+/* ################################## */
 
 .$(COMPOSER_TINYNAME)-menu-div::before {
 	content:			var(--bs-breadcrumb-divider);
