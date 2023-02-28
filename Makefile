@@ -4369,9 +4369,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) header 3 Non-Header Box $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Generic Box $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Title $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Generic Box $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
 
@@ -4424,11 +4424,11 @@ $(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Sh
 
 # Tokens
 
-<!-- ## Header -->
+## Header
 
-$(PUBLISH_CMD_BEG) header 2 Header $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) header 3 Non-Header $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) header 2 Header $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) header 3 Non-Header $(PUBLISH_CMD_END)`
 
 **This Is An Embedded Link Only -- There Is No HTML Header Here**
 
