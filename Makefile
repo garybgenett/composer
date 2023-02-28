@@ -4413,15 +4413,15 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 
 ## Displays
 
-#WORKING:NOW:NOW:FIX:DISPLAY
-
 `$(PUBLISH_CMD_BEG) display $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE).yml Example Banner $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Banner $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) display $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)`
 
-# $(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)
+#WORKING:NOW:NOW:FIX:DISPLAY
+
+$(PUBLISH_CMD_BEG) display $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE).yml Example Shelf $(PUBLISH_CMD_END)
 
 # Tokens
 
@@ -4618,7 +4618,7 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
 "Example Banner":
   type:					banner
   tint:					dark
-  images:
+  list:
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
       link:				null
       time:				null
@@ -4637,23 +4637,33 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
       $(MENU_SELF): |
         <p style="background-color: gray; color: black;">Lorem Ipsum</p>
 
+#WORKING:NOW:NOW:FIX:DISPLAY
 "Example Shelf":
   type:					shelf
-  images:
-    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
+  tint:					null
+  show:					3
+  list:
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon-v1.0.png
       link:				null
       name:				"Shelf #1"
-      $(MENU_SELF):				null
-    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.gpl.png
       link:				"#displays"
       name:				"Shelf #2"
-      $(MENU_SELF): |
-        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
-    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.cc-by-nc-nd.png
       link:				"#displays"
       name:				"Shelf #3"
-      $(MENU_SELF): |
-        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.copyright.svg
+      link:				"#displays"
+      name:				"Shelf #4"
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.github.svg
+      link:				"#displays"
+      name:				"Shelf #5"
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.menu.svg
+      link:				"#displays"
+      name:				"Shelf #6"
+    - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/icon.search.svg
+      link:				"#displays"
+      name:				"Shelf #7"
 endef
 
 ########################################
@@ -6113,9 +6123,9 @@ function $(PUBLISH)-metainfo-block {
 # 1 menu || list
 # 2 titles || authors || dates || tags
 
-function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-shelf menu "$${@}" || return 1; return 0; }
-function $(PUBLISH)-list-library	{ $(PUBLISH)-library-shelf list "$${@}" || return 1; return 0; }
-function $(PUBLISH)-library		{ $(PUBLISH)-library-shelf list "$${@}" || return 1; return 0; }
+function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-shelf menu $${@} || return 1; return 0; }
+function $(PUBLISH)-list-library	{ $(PUBLISH)-library-shelf list $${@} || return 1; return 0; }
+function $(PUBLISH)-library		{ $(PUBLISH)-library-shelf list $${@} || return 1; return 0; }
 
 function $(PUBLISH)-library-shelf {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -6490,8 +6500,8 @@ _EOF_
 
 # x $(PUBLISH)-column-end
 
-function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side left "$${@}" || return 1; return 0; }
-function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right "$${@}" || return 1; return 0; }
+function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side left $${@} || return 1; return 0; }
+function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right $${@} || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -6672,7 +6682,7 @@ _EOF_
 }
 
 ################################################################################
-### {{{3 Functions (Framework)
+### {{{3 Functions (Elements)
 ################################################################################
 
 ########################################
@@ -6955,8 +6965,6 @@ _EOF_
 	return 0
 }
 
-#WORKING:NOW:NOW:FIX:DISPLAY
-
 ########################################
 #### {{{4 $(PUBLISH)-display
 ########################################
@@ -6966,7 +6974,6 @@ _EOF_
 
 function $(PUBLISH)-display {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	DISP="$${@:2}"
 	FILE="$$(
 		$${ECHO} "$${1}" \\
 		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
@@ -6974,37 +6981,19 @@ function $(PUBLISH)-display {
 	if [ ! -f "$${FILE}" ]; then
 		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} display file missing"
 	else
+		DISP="$${@:2}"
+		local IMGS="$$($${YQ_WRITE} ".[\"$${DISP}\"]" $${FILE} 2>/dev/null)"
 		TYPE="$$(
-			$${YQ_WRITE} ".[\"$${DISP}\"].[\"type\"]" $${FILE} 2>/dev/null \\
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[\"type\"]" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)"
-		if [ -z "$${TYPE}" ]; then
-			$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} display type missing"
-		else
-			$(PUBLISH)-display-$${TYPE} $${@} || return 1
-		fi
-	fi
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
-########################################
-#### {{{4 $(PUBLISH)-display-banner
-########################################
-
-# 1 file path
-# 2 name				$${@:2} = $${2}++
-
-function $(PUBLISH)-display-banner {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	DISP="$${@:2}"
-	FILE="$$(
-		$${ECHO} "$${1}" \\
-		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-	)"
-	local TINT="$$($${YQ_WRITE} ".[\"$${DISP}\"].[\"tint\"]" $${FILE} 2>/dev/null | $${SED} "/^null$$/d")"
-	local IMGS="$$($${YQ_WRITE} ".[\"$${DISP}\"].[\"images\"]" $${FILE} 2>/dev/null)"
-	local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} "length" 2>/dev/null)"
+		TINT="$$(
+			$${ECHO} "$${IMGS}" \\
+			| $${YQ_WRITE} ".[\"tint\"]" 2>/dev/null \\
+			| $${SED} "/^null$$/d"
+		)"
+		local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} ".[\"list\"] | length" 2>/dev/null)"
 $${CAT} <<_EOF_
 <div class="carousel$$(
 	if [ -n "$${TINT}" ]; then
@@ -7013,7 +7002,8 @@ $${CAT} <<_EOF_
 ) slide" data-bs-ride="carousel" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <div class="carousel-indicators">
 _EOF_
-	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+#WORKING:NOW:NOW:FIX:DISPLAY
+		local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 $${CAT} <<_EOF_
 <button type="button" data-bs-slide-to="$${NUM}" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
 	if [ "$${NUM}" = "0" ]; then
@@ -7021,38 +7011,38 @@ $${CAT} <<_EOF_
 	fi
 )></button>
 _EOF_
-		NUM="$$($${EXPR} $${NUM} + 1)"
-	done
+			NUM="$$($${EXPR} $${NUM} + 1)"
+		done
 $${CAT} <<_EOF_
 </div>
 <div class="carousel-inner">
 _EOF_
-	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
-		FILE="$$(
-			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[$${NUM}].[\"file\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
-			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
-		)"
-		LINK="$$(
-			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[$${NUM}].[\"link\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
-			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
-		)"
-		TIME="$$(
-			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[$${NUM}].[\"time\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-		NAME="$$(
-			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[$${NUM}].[\"name\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
-		if [ -z "$${LINK}" ]; then
-			LINK="#"
-		fi
+		local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
+			FILE="$$(
+				$${ECHO} "$${IMGS}" \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"file\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d" \\
+				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+			)"
+			LINK="$$(
+				$${ECHO} "$${IMGS}" \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"link\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d" \\
+				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+			)"
+			TIME="$$(
+				$${ECHO} "$${IMGS}" \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"time\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d"
+			)"
+			NAME="$$(
+				$${ECHO} "$${IMGS}" \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"name\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d"
+			)"
+			if [ -z "$${LINK}" ]; then
+				LINK="#"
+			fi
 $${CAT} <<_EOF_
 <div class="carousel-item$$(
 	if [ "$${NUM}" = "0" ]; then
@@ -7067,20 +7057,20 @@ $${CAT} <<_EOF_
 <img class="d-block w-100" alt="$${NAME}" src="$${FILE}">
 <div class="carousel-caption d-block">
 _EOF_
-		$${ECHO} "\\n"
-		$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d" \\
-			| $${SED} "s|^|  |g" \\
-			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-		$${ECHO} "\\n"
+			$${ECHO} "\\n"
+			$${ECHO} "$${IMGS}" \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
+				| $${SED} "/^null$$/d" \\
+				| $${SED} "s|^|  |g" \\
+				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+			$${ECHO} "\\n"
 $${CAT} <<_EOF_
 </div>
 </a>
 </div>
 _EOF_
-		NUM="$$($${EXPR} $${NUM} + 1)"
-	done
+			NUM="$$($${EXPR} $${NUM} + 1)"
+		done
 $${CAT} <<_EOF_
 </div>
 <button type="button" class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
@@ -7091,12 +7081,13 @@ $${CAT} <<_EOF_
 </button>
 </div>
 _EOF_
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
 
 ################################################################################
-### {{{3 Functions (Helpers)
+### {{{3 Functions (Tokens)
 ################################################################################
 
 ########################################
