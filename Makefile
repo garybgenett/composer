@@ -3102,7 +3102,6 @@ endef
 #			Starring: stars
 #			etc.
 #		standardize naming convention(s), and port over Tags/tags as default...
-#	add a setting for hiding menu spacers in mobile or not...?
 #	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #		index.html with only/all sub-folders as best-practice?
 #		this is a real pain when using COMPOSER_INCLUDE...
@@ -4110,13 +4109,13 @@ override define PUBLISH_PAGE_1_INCLUDE =
 [$(PUBLISH_PAGE_LIBRARY_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))))
 :   Same as above, for a version of the library specific to the `$(word 3,$(PUBLISH_DIRS))` directory.
 
-<!-- #>
+<!-- #$(MARKER)
 [$(PUBLISH_PAGE_INCLUDE_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML))
 :   Demonstration of using the library digest include file.
 
 [$(PUBLISH_PAGE_INCLUDE_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML))
 :   Same as above, for the version of the library specific to the `$(word 3,$(PUBLISH_DIRS))` directory.
-#> -->
+#$(MARKER) -->
 endef
 
 ########################################
@@ -4472,10 +4471,8 @@ $(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLI
 
 $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)
 
-<!-- #> $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(subst <,{,$(subst >,},$(PUBLISH_OUT_README))) Gary B. Genett $(PUBLISH_CMD_END)`
 
-<!-- #> $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML) Gary B. Genett $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_OUT_README) Gary B. Genett $(PUBLISH_CMD_END)
 
 ## Form
@@ -4623,18 +4620,18 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
       link:				"#displays"
       name:				"Banner #1"
-#>    $(MENU_SELF): |
-#>      <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+#$(MARKER)   $(MENU_SELF): |
+#$(MARKER)       <p style="background-color: gray; color: black;">Lorem Ipsum</p>
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
       link:				"#displays"
       name:				"Banner #2"
       $(MENU_SELF): |
-        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+          <p style="background-color: gray; color: black;">Lorem Ipsum</p>
     - file:				$(patsubst $(COMPOSER_DIR)/%,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
       link:				"#displays"
       name:				"Banner #3"
       $(MENU_SELF): |
-        <p style="background-color: gray; color: black;">Lorem Ipsum</p>
+          <p style="background-color: gray; color: black;">Lorem Ipsum</p>
 
 "Example Shelf":
   type:					shelf
@@ -4679,6 +4676,8 @@ endef
 
 override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 
+#WORKING:DOCS
+#	also needs a different name...
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
 title: Site Features Page
@@ -4686,8 +4685,6 @@ author: $(COMPOSER_COMPOSER)
 date: $(DATEMARK)
 tags: [Main]
 ---
-#WORKING:DOCS
-#	also needs a different name...
 endef
 
 override define PUBLISH_PAGE_PAGEDIR_FOOTER =
@@ -5192,13 +5189,13 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_BOOTSTRAP_TREE =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(BOOTSTRAP_DIR)))
 ################################################################################
-#>ifneq ($$(COMPOSER_CURDIR),)
+#$(MARKER)ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override COMPOSER_IGNORES		:= *$(COMPOSER_EXT_DEFAULT) *.$(EXTN_HTML)
 
 ################################################################################
-#>endif
+#$(MARKER)endif
 ################################################################################
 # End Of File
 ################################################################################
@@ -5334,7 +5331,7 @@ $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
     $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
     $(_C)search_call$(_D):			$(_M)q$(_D)
     $(_C)search_form$(_D): $(_N)|$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)sites$(_D) $(_E)$(COMPOSER_CNAME)$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)sites $(COMPOSER_CNAME)$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ia web$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kae d$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ko 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
@@ -5509,10 +5506,13 @@ $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
       - $(_C)icon github$(_D) $(_M)$(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME)$(_D)
+$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))   - $(_N)|$(_D)
+$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon gpl$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon cc-by-nc-nd$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon copyright$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
-
 
     $(_M)TEXT$(_D):
       - BOTTOM TEXT
@@ -6004,11 +6004,12 @@ function $(PUBLISH)-parse {
 #>			FILE="$$($${ECHO} "$${FILE}" | $${SED} "s|^$${PUBLISH_CMD_BEG} (.+) $${PUBLISH_CMD_END}$$|\\1|g")"
 			FILE="$${FILE/#$${PUBLISH_CMD_BEG} }"
 			FILE="$${FILE/% $${PUBLISH_CMD_END}}"
-			$(PUBLISH)-$${FILE}
+			$(PUBLISH)-$${FILE} || return 1
 		else
 			$${ECHO} "$${FILE}\\n" \\
-			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
-			| $${SED} "s|$${COMPOSER_ROOT_REGEX}|$${COMPOSER_ROOT_PATH}|g"
+			| $${SED} \\
+				-e "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+				-e "s|$${COMPOSER_ROOT_REGEX}|$${COMPOSER_ROOT_PATH}|g"
 		fi
 	done
 	return 0
@@ -6318,13 +6319,7 @@ function $(PUBLISH)-nav-top-list {
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
-			if [ -n "$${ROOT}" ]; then
-#>				$${ECHO} "<li class=\"nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\">$${HTML_HIDE}</li>\\n"
-				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none nav-item nav-link $${COMPOSER_TINYNAME}-menu-div\">$${HTML_HIDE}</li>\\n"
-			else
-#>				$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
-				$${ECHO} "<li class=\"d-$${COLS_BREAK}-block d-none\"><hr class=\"dropdown-divider\"></li>\\n"
-			fi
+			$(PUBLISH)-nav-divider top$$(if [ -n "$${ROOT}" ]; then $${ECHO} "-menu"; fi) || return 1
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^icon/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^form/p")" ]; then
@@ -6615,6 +6610,7 @@ function $(PUBLISH)-nav-side-list {
 function $(PUBLISH)-info-data {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL info-$${1})" ]; then
+		$(PUBLISH)-nav-divider $${1}-info || return 1
 		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" \\
 			| while read -r MENU; do
 				$(PUBLISH)-info-data-list "info-$${1}.[\"$${MENU}\"]" || return 1
@@ -6674,9 +6670,9 @@ _EOF_
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		else
-			$${ECHO} "$${FILE}" \\
-				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-			$${ECHO} "\\n"
+			$${ECHO} "$${FILE}\\n" \\
+				| $(PUBLISH)-parse icon \\
+				| $(PUBLISH)-parse form
 		fi
 $${CAT} <<_EOF_
 </p>
@@ -6684,6 +6680,29 @@ _EOF_
 		$(PUBLISH)-marker $${FUNCNAME} finish $${1}[$${NUM}]
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-nav-divider
+########################################
+
+# 1 *-menu || * || *-info		* = top || bottom
+
+function $(PUBLISH)-nav-divider {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
+	if [ "$${1}" = "top-menu" ]; then
+		$${ECHO} "<li class=\"$${COMPOSER_TINYNAME}-menu-div nav-item nav-link d-$${COLS_BREAK}-block d-none\">$${HTML_HIDE}</li>\\n"
+		$${ECHO} "<li class=\"nav-item d-$${COLS_BREAK}-none d-block\"><hr class=\"dropdown-divider\"></li>\\n"
+	elif [ "$${1}" = "top" ]; then
+		$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
+	elif [ "$${1}" = "top-info" ]; then
+		$${ECHO} "<p class=\"navbar-text d-$${COLS_BREAK}-none d-block\"><hr class=\"dropdown-divider\"></p>\\n"
+	else
+		$(PUBLISH)-marker $${FUNCNAME} skip nav-divider-$${1}
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -7307,6 +7326,7 @@ function $(PUBLISH)-file {
 		$(PUBLISH)-$${META_BLD} $$(
 			$(PUBLISH)-metainfo-block . . $${1}
 		) || return 1
+		$${ECHO} "\\n"
 	fi
 	if [ -n "$$(
 		$${SED} -n "1{/^---$$/p}" $${1}
@@ -7567,7 +7587,7 @@ html {
 @media (min-width: 1400px) {
 	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-xxl {
 		display:		block;
-#>		margin-top:		0;
+#$(MARKER)		margin-top:		0;
 	}
 	.$(COMPOSER_TINYNAME)-menu-xxl {
 		max-height:		var(--bs-scroll-height);
@@ -7578,7 +7598,7 @@ html {
 @media (min-width: 1200px) {
 	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-xl {
 		display:		block;
-#>		margin-top:		0;
+#$(MARKER)		margin-top:		0;
 	}
 	.$(COMPOSER_TINYNAME)-menu-xl {
 		max-height:		var(--bs-scroll-height);
@@ -7589,7 +7609,7 @@ html {
 @media (min-width: 992px) {
 	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-lg {
 		display:		block;
-#>		margin-top:		0;
+#$(MARKER)		margin-top:		0;
 	}
 	.$(COMPOSER_TINYNAME)-menu-lg {
 		max-height:		var(--bs-scroll-height);
@@ -7600,7 +7620,7 @@ html {
 @media (min-width: 768px) {
 	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-md {
 		display:		block;
-#>		margin-top:		0;
+#$(MARKER)		margin-top:		0;
 	}
 	.$(COMPOSER_TINYNAME)-menu-md {
 		max-height:		var(--bs-scroll-height);
@@ -7611,7 +7631,7 @@ html {
 @media (min-width: 576px) {
 	.dropdown:hover .$(COMPOSER_TINYNAME)-menu-sm {
 		display:		block;
-#>		margin-top:		0;
+#$(MARKER)		margin-top:		0;
 	}
 	.$(COMPOSER_TINYNAME)-menu-sm {
 		max-height:		var(--bs-scroll-height);
@@ -7735,7 +7755,7 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_THEME =
 # $(COMPOSER_TECHNAME) $(DIVIDE) Bootstrap CSS (Theme)
 ############################################################################# */
 
-/* #> @import url("$(shell $(REALPATH) $(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,custom))) $(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))"); */
+/* #$(MARKER) @import url("$(shell $(REALPATH) $(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,custom))) $(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))"); */
 
 /* ########################################################################## */
 
@@ -7744,12 +7764,12 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 
 	/* colors */
 	--$(COMPOSER_TINYNAME)-back:		#000000; // black;	// var(--solarized-dark3);
-#>	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
+#$(MARKER)	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-dark2);
 	--$(COMPOSER_TINYNAME)-menu:		#202020; // slategray;	// var(--solarized-bs-dark);
 	--$(COMPOSER_TINYNAME)-line:		#404040; // darkgray;	// var(--solarized-dark1);
 	--$(COMPOSER_TINYNAME)-text:		#c0c0c0; // white;	// var(--solarized-light1);
 	--$(COMPOSER_TINYNAME)-link:		#c00000; // red;	// var(--solarized-red);
-#>	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
+#$(MARKER)	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-cyan);
 	--$(COMPOSER_TINYNAME)-done:		#800000; // darkred;	// var(--solarized-orange);
 
 	/* layout */
@@ -7794,14 +7814,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-#>	background-color:		var(--composer-menu);
+#$(MARKER)	background-color:		var(--composer-menu);
 	background-color:		var(--composer-back);
 }
 ::-webkit-scrollbar-thumb {
 	background-color:		var(--composer-line);
 }
 body {
-#>	scrollbar-color:		var(--composer-line) var(--composer-menu);
+#$(MARKER)	scrollbar-color:		var(--composer-line) var(--composer-menu);
 	scrollbar-color:		var(--composer-line) var(--composer-back);
 }
 
@@ -7861,7 +7881,7 @@ th {
 	padding:			var(--$(COMPOSER_TINYNAME)-padd);
 }
 tbody tr:nth-child(even) {
-#>	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+#$(MARKER)	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
 	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
 }
@@ -7875,7 +7895,7 @@ pre {
 }
 code,
 pre {
-#>	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+#$(MARKER)	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-done);
 }
 pre code {
@@ -11530,11 +11550,11 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 			| $(PANDOC_MD_TO_HTML) \
 			>$(1).$(2)-menu.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-			$(call $(PUBLISH)-$(TARGETS)-$(2)-done,$(1).$(2)-menu.done); \
 		$(call PUBLISH_SH_RUN) $(1).$(2)-list \
 			| $(SED) "/[/]$(notdir $(1).$(2)-list) -->$$/d" \
 			>$(1).$(2)-list.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+		$(call $(PUBLISH)-$(TARGETS)-$(2)-done,$(1)); \
 		$(ECHO) "$(_S)"; \
 		$(MV) $(1).$(2)-menu.done $(1).$(2)-menu $($(DEBUGIT)-output); \
 		$(MV) $(1).$(2)-list.done $(1).$(2)-list $($(DEBUGIT)-output); \
@@ -11597,7 +11617,7 @@ override define $(PUBLISH)-$(TARGETS)-metalist-done =
 		-e "1d" \
 		-e '$$d' \
 		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
-		$(1)
+		$(1).$(2)-menu.done
 endef
 
 ########################################
@@ -11742,21 +11762,21 @@ endef
 override define $(PUBLISH)-$(TARGETS)-contents-done =
 	if [ -n "$${ROOT}" ]; then \
 		if [ -n "$(COMPOSER_RELEASE)" ]; then \
-			$(SED) -i "s|$(COMPOSER_BASENAME) ||g" $(1); \
+			$(SED) -i "s|$(COMPOSER_BASENAME) ||g" $(1).contents-menu.done; \
 		fi; \
 		R_DD="<li class=\"nav-item dropdown\">"; \
 		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols_break) dropdown-menu\">"; \
 		R_CL="class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\""; \
-		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1); \
-		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1); \
-		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1); \
-		$(ECHO) "</li>\n\n" >>$(1); \
+		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
+		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
+		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
+		$(ECHO) "</li>\n\n" >>$(1).contents-menu.done; \
 	fi; \
 	$(SED) -i \
 		-e "1d" \
 		-e '$$d' \
 		-e "s|^([<]ul)([>])$$|\1 class=\"$(COMPOSER_TINYNAME)-menu-list\"\2|g" \
-		$(1)
+		$(1).contents-menu.done
 endef
 
 ########################################
@@ -11768,7 +11788,7 @@ override define $(PUBLISH)-$(TARGETS)-creators =
 endef
 
 override define $(PUBLISH)-$(TARGETS)-creators-done =
-	$(call $(PUBLISH)-$(TARGETS)-metalist-done,$(1))
+	$(call $(PUBLISH)-$(TARGETS)-metalist-done,$(1),creators,author)
 endef
 
 ########################################
@@ -11780,7 +11800,7 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 endef
 
 override define $(PUBLISH)-$(TARGETS)-tagslist-done =
-	$(call $(PUBLISH)-$(TARGETS)-metalist-done,$(1))
+	$(call $(PUBLISH)-$(TARGETS)-metalist-done,$(1),tagslist,tags)
 endef
 
 ########################################
@@ -12876,6 +12896,21 @@ endif
 	@$(call DO_HEREDOC,PUBLISH_PAGE_LIBRARY_ALT)					>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_INCLUDE)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_INCLUDE_ALT)					>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)
+ifneq ($(COMPOSER_RELEASE),)
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
+#> update: HEREDOC_CUSTOM_PUBLISH
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
+											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+#> update: HEREDOC_CUSTOM_PUBLISH
+endif
+endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(foreach TIME,\
@@ -12889,7 +12924,6 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 		) \
 	)
 else
-	@$(ECHO) "" >$(PUBLISH_LOG)
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(foreach FILE,\
 		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)) \
@@ -12904,20 +12938,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 		$(call NEWLINE) \
 	)
 endif
+	@$(ECHO) "" >$(PUBLISH_LOG)
 ifneq ($(COMPOSER_DEBUGIT),)
-ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
-#> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
-											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
-#> update: HEREDOC_CUSTOM_PUBLISH
-endif
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		{	$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
 			$(ECHO) "$(_M)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_SETTINGS)		2>/dev/null || $(TRUE); \
