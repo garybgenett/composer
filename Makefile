@@ -12574,9 +12574,6 @@ $(PUBLISH)-$(PRINTER)-%:
 $(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER): override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
 $(PUBLISH)-$(PRINTER): override METAFILE := $(filter-out $(patsubst .%,%,$(NOTHING)),$(filter-out $(DOITALL),$(filter-out $(PRINTER),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))))
-#>$(PUBLISH)-$(PRINTER): override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-#>$(PUBLISH)-$(PRINTER): override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-#>$(PUBLISH)-$(PRINTER): override METATEST := $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
 $(PUBLISH)-$(PRINTER): override METACRGX = $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 $(PUBLISH)-$(PRINTER): override METAFRGX = $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 $(PUBLISH)-$(PRINTER): override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
@@ -12633,23 +12630,20 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 			| .[].[] |= sort_by(.) \
 		" $($(PUBLISH)-library-index) \
 			$(YQ_WRITE_OUT_COLOR)
-	@TREE=; $(call $(EXPORTS)-find,$(CURDIR),\
+	@$(LINERULE)
+	@$(PRINT) "$(_M)$(MARKER) COMPOSER_IGNORES"
+	@$(LINERULE)
+	@$(ECHO) "$(_N)"
+	@$(call $(EXPORTS)-find,$(CURDIR),\
 			-type f -name \"*$(COMPOSER_EXT)\" \
 		) \
 		$(if $(METAFILE),| $(SED) -n -e "/^$(METAFRGX)$$/p" -e "/[/]$(METAFRGX)$$/p") \
 		| $(SED) "s|^$(CURDIR)[/]||g" \
 		| $(SORT) \
 		| while read -r FILE; do \
-			if [ -z "$${TREE}" ]; then \
-				TREE="$(SPECIAL_VAL)"; \
-				$(LINERULE); \
-				$(PRINT) "$(_M)$(MARKER) COMPOSER_IGNORES"; \
-				$(LINERULE); \
-				$(ECHO) "$(_N)"; \
-			fi; \
 			$(ECHO) "$${FILE}\n"; \
-		done; \
-		$(ECHO) "$(_D)"
+		done
+	@$(ECHO) "$(_D)"
 endif
 else
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
