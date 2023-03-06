@@ -3998,7 +3998,7 @@ override PUBLISH_PAGE_1_NAME		:= Introduction
 
 override define PUBLISH_PAGE_1 =
 ---
-title: Main Page
+title: $(PUBLISH_PAGE_1_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_TAGSLIST): [Main]
@@ -4143,7 +4143,7 @@ override PUBLISH_PAGE_2_NAME		:= Default Site
 #>$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define PUBLISH_PAGE_2 =
 ---
-title: Empty Configuration
+title: $(PUBLISH_PAGE_2_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_TAGSLIST): [Main]
@@ -4190,7 +4190,7 @@ endef
 
 override define PUBLISH_PAGE_3 =
 ---
-title: Configuration Testing
+title: $(PUBLISH_PAGE_3_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_TAGSLIST): [Main]
@@ -4688,13 +4688,13 @@ endef
 ### {{{3 $(PUBLISH) Example: Pages
 ########################################
 
+#WORKING:DOCS
+#	also needs a different name...?
 override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 
-#WORKING:DOCS
-#	also needs a different name...
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
-title: Site Features Page
+title: $(PUBLISH_PAGE_PAGEDIR_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_TAGSLIST): [Main]
