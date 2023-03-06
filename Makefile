@@ -4002,7 +4002,7 @@ override define PUBLISH_PAGE_1 =
 title: $(PUBLISH_PAGE_1_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Introduction $(PUBLISH_CMD_END)
 
@@ -4147,7 +4147,7 @@ override define PUBLISH_PAGE_2 =
 title: $(PUBLISH_PAGE_2_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -4194,7 +4194,7 @@ override define PUBLISH_PAGE_3 =
 title: $(PUBLISH_PAGE_3_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 #WORKING:DOCS $(PUBLISH_CMD_END)
 
@@ -4308,7 +4308,7 @@ override define PUBLISH_PAGE_EXAMPLE =
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
@@ -4698,7 +4698,7 @@ override define PUBLISH_PAGE_PAGEDIR_HEADER =
 title: $(PUBLISH_PAGE_PAGEDIR_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 endef
 
@@ -4736,7 +4736,7 @@ override define PUBLISH_PAGE_SHOWDIR =
 title: $(PUBLISH_PAGE_SHOWDIR_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 $(PUBLISH_PAGE_SHOWDIR_NAME) $(PUBLISH_CMD_END)
 
@@ -4816,7 +4816,7 @@ override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 title: $(LIBRARY_DIGEST_TITLE$(2))
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [Main]
+$(PUBLISH_TAGSLIST): [ Main ]
 ---
 $(call PUBLISH_PAGE_LIBRARY$(2))
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src))) $(PUBLISH_CMD_END)
@@ -5125,10 +5125,6 @@ ifneq ($$(COMPOSER_CURDIR),)
 override c_logo				:=
 override c_icon				:=
 
-########################################
-
-$(notdir $(word 3,$(PUBLISH_FILES))):				../$(PUBLISH_EXAMPLE).yml
-
 ################################################################################
 endif
 ################################################################################
@@ -5426,8 +5422,8 @@ $(_S)########################################$(_D)
         - $(_M)$(PUBLISH_PAGE_LIBRARY_NAME)$(_D):
           - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))$(_D)
           - $(_M)$(PUBLISH_PAGE_LIBRARY_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))$(_D)
-$(_S)#$(MARKER)$(D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
-$(_S)#$(MARKER)$(D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
+$(_S)#$(MARKER)$(_D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
+$(_S)#$(MARKER)$(_D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
       - $(_M)CONTENTS$(_D):
         - $(_C)contents$(_D)
@@ -5447,7 +5443,7 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
     $(_M)PATH$(_D):
-      - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_LIBRARY)%,$(PUBLISH_LIBRARY)%,$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap)))$(_D)
+      - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))))$(_D)
     $(_M)INFO$(_D):
       - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
       - $(_C)tagslist$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
@@ -5738,14 +5734,14 @@ variables:
 ########################################
 
   $(PUBLISH)-nav-top:
-    LIBRARY:
+    LIBRARY:				null
     CHAINED:
       - CHAINED:
         - CHAINING:			$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))
 
   $(PUBLISH)-nav-bottom:
     PATH:
-      - SITEMAP:			$(PUBLISH_CMD_ROOT)/$(patsubst $(COMPOSER_LIBRARY)%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)%,$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap)))
+      - SITEMAP:			$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))))
     CHAINED:
       - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))
 
@@ -5852,7 +5848,7 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_BOOTSTRAP_TREE =
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(BOOTSTRAP_DIR)))
 ################################################################################
 
-variables:				{}
+variables: {}
 
 ################################################################################
 # End Of File
