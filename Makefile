@@ -11883,10 +11883,15 @@ ifneq ($(COMPOSER_LIBRARY),)
 		c_site="1" \
 		$(PUBLISH)-library-$(TARGETS)
 else ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
-	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
+#>	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
+	@$(MAKE) $(PUBLISH)-library-$(NOTHING)
 else
 	@$(ECHO) ""
 endif
+
+.PHONY: $(PUBLISH)-library-$(NOTHING)
+$(PUBLISH)-library-$(NOTHING):
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_YML)$(_D) $(MARKER) $(_H)$(PUBLISH)-library.folder,$(NOTHING))
 
 .PHONY: $(PUBLISH)-library-$(TARGETS)
 $(PUBLISH)-library-$(TARGETS): $($(PUBLISH)-library)
@@ -12578,13 +12583,14 @@ $(PUBLISH)-$(PRINTER): override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)
 $(PUBLISH)-$(PRINTER):
 	@$(call $(HEADERS))
 ifeq ($(COMPOSER_LIBRARY),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_YML)$(_D) $(MARKER) $(_H)$(PUBLISH)-library.folder,$(NOTHING))
+#>	@$(MAKE) $(NOTHING)-$(PUBLISH)-library
+	@$(MAKE) $(PUBLISH)-library-$(NOTHING)
 else ifeq ($(and \
 	$(wildcard $($(PUBLISH)-library-metadata)) ,\
 	$(wildcard $($(PUBLISH)-library-index)) \
 ),)
-	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-metadata)),$(NOTHING)))
-	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$(patsubst $(CURDIR)/%,%,$($(PUBLISH)-library-index)),$(NOTHING)))
+	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-metadata),$(NOTHING)))
+	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-index),$(NOTHING)))
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(patsubst .%,%,$(NOTHING)))
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
 	@$(YQ_WRITE_OUT) " \
