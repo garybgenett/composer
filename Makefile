@@ -73,6 +73,7 @@ override VIM_FOLDING := {{{1
 #				* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
 #		* Test: Performance
 #			* `time make COMPOSER_DEBUGIT="0" FAIL`
+#				* `time make COMPOSER_DEBUGIT="0" FAIL 2>&1 | grep -E "^[+]"`
 #				* Make sure '--trace' debug output is identical
 #				* Minimize '$(shell)' and '/: override .* $(shell' calls
 #				* With and without 'c_site' enabled
@@ -184,6 +185,20 @@ override VIM_FOLDING := {{{1
 # real    8m19.510s
 # real    4m6.619s
 # real    63m45.692s
+#WORK 2023-03-06 make J=12 _test-speed
+# >> DONE [_test-speed]
+# | >> Directories      | 1972
+# | >> Files            | 8913
+# | >> Output           | 17757
+# | >> Jobs             | 12
+# # MAKECMDGOALS        [install-force] (install-force)
+# # MAKECMDGOALS        [all-all] (all-all)
+# # MAKECMDGOALS        [clean-all] (clean-all)
+# # MAKECMDGOALS        [site-force] (site-force)
+# real    1m41.679s
+# real    11m46.653s
+# real    6m13.204s
+# real    78m31.194s
 ################################################################################
 # }}}1
 ################################################################################
