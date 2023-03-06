@@ -5206,13 +5206,13 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_BOOTSTRAP_TREE =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(BOOTSTRAP_DIR)))
 ################################################################################
-#$(MARKER)ifneq ($$(COMPOSER_CURDIR),)
+#$(MARKER) ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
 override COMPOSER_IGNORES		:= *$(COMPOSER_EXT_DEFAULT) *.$(EXTN_HTML)
 
 ################################################################################
-#$(MARKER)endif
+#$(MARKER) endif
 ################################################################################
 # End Of File
 ################################################################################
@@ -5249,7 +5249,7 @@ ifneq ($$(COMPOSER_CURDIR),)
 override MAKEJOBS			:=
 
 override COMPOSER_TARGETS		:= $(PUBLISH_INDEX).$(EXTN_HTML)
-override COMPOSER_IGNORES		:= $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)) $(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+override COMPOSER_IGNORES		:= $(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)) $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 
 ################################################################################
 
