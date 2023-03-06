@@ -3120,6 +3120,7 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
+#	test using a "broken token:" for "tagslist", to make sure everything is quoted properly...
 #	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #		index.html with only/all sub-folders as best-practice?
 #		this is a real pain when using COMPOSER_INCLUDE...
@@ -12165,8 +12166,8 @@ override define $(PUBLISH)-library-indexer =
 					else				$(YQ_WRITE) "map(select(.date == \"$${FILE}*\" or .date == \"*$${FILE}\"))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
 					fi; \
 			else \
-				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.$(1) == null))"							$($(PUBLISH)-library-metadata) 2>/dev/null; \
-					else				$(YQ_WRITE) "map(select((.$(1) == \"$${FILE}\") or (.$(1) | .[] | contains(\"$${FILE}\"))))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
+				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(1)\" == null))"								$($(PUBLISH)-library-metadata) 2>/dev/null; \
+					else				$(YQ_WRITE) "map(select((.\"$(1)\" == \"$${FILE}\") or (.\"$(1)\" | .[] | contains(\"$${FILE}\"))))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
 					fi; \
 			fi \
 				| $(YQ_WRITE) "$(call $(PUBLISH)-library-sort-yq) | .[].path" 2>/dev/null \
