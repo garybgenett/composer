@@ -11567,7 +11567,7 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 	then \
 		MENU="$$($(ECHO) "$${MENU}" | $(SED) "s|^$(HELPER)-menu[[:space:]]*||g")"; \
 		LIST="$$($(ECHO) "$${LIST}" | $(SED) "s|^$(HELPER)-list[[:space:]]*||g")"; \
-		$(call $(HEADERS)-note,$(1),$(patsubst tagslist-%,tagslist [%],$(2)),$(PUBLISH)); \
+		$(call $(HEADERS)-note,$(1),$(patsubst tagslist-%,tagslist (%),$(2)),$(PUBLISH)); \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "" >$(DOFILE)-menu; \
 		$(ECHO) "" >$(DOFILE)-list; \
@@ -11619,7 +11619,7 @@ endef
 
 #>			LIST_TXT="$${TXT}"; \
 #>			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then \
-#>				LIST_TXT="$$($(ECHO) "$${TXT}" | $(SED) "s|^(.*)$(HTML_HIDE)(.*)$$|\1|g")"; \
+#>				LIST_TXT="$$( ... )"; \
 #>			fi
 override define $(PUBLISH)-$(TARGETS)-contents =
 	PAST="$$( \
@@ -12143,7 +12143,7 @@ override define $(PUBLISH)-library-indexer =
 			$(call $(HEADERS)-note,$(@),$$( \
 					if [ "$(1)" = "title" ]; then		$(ECHO) "Title"; \
 					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date"; \
-					else					$(ECHO) "Tag [$(1)]"; \
+					else					$(ECHO) "Tag ($(1))"; \
 					fi \
 				): $${FILE},$(PUBLISH)-index); \
 			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
@@ -12277,7 +12277,7 @@ $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
-#>					else					$(ECHO) "Tag [$(TYPE)]";
+#>					else					$(ECHO) "Tag ($(TYPE))";
 	@	$(eval TYPE := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")) \
 		$(eval NAME := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")) \
 		{	$(ECHO) "---\n"; \
