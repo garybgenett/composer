@@ -604,8 +604,6 @@ endif
 
 ########################################
 
-#WORKING:NOW add a $(TESTING) for these...
-
 ifneq ($(origin _EXPORT_DIRECTORY),override)
 override _EXPORT_DIRECTORY		:= $(COMPOSER_EXPORT_DEFAULT)
 else ifneq ($(_EXPORT_DIRECTORY),)
@@ -744,10 +742,6 @@ else ifeq ($(OS_TYPE),Darwin)
 override PANDOC_BIN			:= $(PANDOC_DIR)/$(PANDOC_MAC_BIN)
 endif
 
-#WORKING
-# https://github.com/vim-pandoc/vim-pandoc
-# https://github.com/vim-pandoc/vim-pandoc-syntax
-
 ########################################
 
 # https://mikefarah.gitbook.io/yq
@@ -797,8 +791,14 @@ override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
 override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
 override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
-#WORKING
 # https://github.com/twbs/bootlint
+# https://github.com/twbs/bootlint/blob/master/LICENSE
+ifneq ($(origin BOOTLINT_CMT),override)
+override BOOTLINT_CMT			:= v1.1.0
+endif
+override BOOTLINT_LIC			:= MIT
+override BOOTLINT_SRC			:= https://github.com/twbs/bootlint.git
+override BOOTLINT_DIR			:= $(COMPOSER_DIR)/bootlint
 
 ########################################
 
@@ -2911,6 +2911,7 @@ $(_E)[GNU Make]: http://www.gnu.org/software/make$(_D)
 $(_E)[Pandoc]: http://www.johnmacfarlane.net/pandoc$(_D)
 $(_E)[YQ]: https://mikefarah.gitbook.io/yq$(_D)
 $(_E)[Bootstrap]: https://getbootstrap.com$(_D)
+$(_E)[Bootlint]: https://github.com/twbs/bootlint$(_D)
 $(_E)[Bootswatch]: https://bootswatch.com$(_D)
 $(_E)[Font-Awesome]: https://fontawesome.com$(_D)
 $(_E)[Markdown Viewer]: https://github.com/simov/markdown-viewer$(_D)
@@ -3249,6 +3250,7 @@ $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(call CUSTOM_PUBLISH_
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(COMPOSER_LOGO))$(_D)
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(COMPOSER_ICON))$(_D)
 
+$(_C)[Bootlint]$(_D)
 $(_C)[Bootswatch]$(_D)
 
 #WORK
@@ -3460,6 +3462,7 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)YQ_VER$(_D)` $(_E)(must be a binary version number)$(_D)
   * `$(_C)YQ_CMT$(_D)` $(_E)(defaults to `YQ_VER`)$(_D)
   * `$(_C)BOOTSTRAP_CMT$(_D)`
+  * `$(_C)BOOTLINT_CMT$(_D)`
   * `$(_C)BOOTSWATCH_CMT$(_D)`
   * `$(_C)FONTAWES_CMT$(_D)`
   * `$(_C)WATERCSS_CMT$(_D)`
@@ -3913,6 +3916,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT) / $(CONVICT)-$(DOITALL))
 
 #WORKING
 #	new $(CONVICT) -> $(PRINTER)/c_list hack
+#		add a test...?
 
   * Using the directory structure in $(_C)[Recommended Workflow]$(_D), `$(_M)$(EXPAND)/$(_D)` is
     considered the top-level directory.  Meaning, it is the last directory
@@ -9530,6 +9534,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
+	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR)),$(BOOTLINT_SRC),$(BOOTLINT_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(FONTAWES_DIR)),$(FONTAWES_SRC),$(FONTAWES_CMT))
 	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),$(WATERCSS_SRC),$(WATERCSS_CMT))
@@ -9555,6 +9560,7 @@ else
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/package.json
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR)),bootlint)
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),yarn)
@@ -10843,6 +10849,7 @@ $(TESTING)-other:
 		Miscellaneous test cases ,\
 		\n\t * Check binary files \
 		\n\t * Repository versions variables \
+		\n\t * Git export variables \
 		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
 	)
@@ -10857,6 +10864,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "override PANDOC_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override BOOTSTRAP_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override BOOTLINT_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override BOOTSWATCH_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override FONTAWES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override WATERCSS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -10868,6 +10876,12 @@ $(TESTING)-other-init:
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	#> export
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_DIRECTORY := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_GIT_REPO := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_GIT_BRANCH := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
@@ -10879,7 +10893,7 @@ $(TESTING)-other-init:
 		&& $(GIT) config --local user.email "$(COMPOSER_BASENAME)@example.com"
 	@$(call $(TESTING)-run) $(CONVICT)-$(DOITALL)
 	@cd $(call $(TESTING)-pwd) \
-		&& $(GIT) log
+		&& GIT_PAGER= $(GIT) log
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
@@ -10894,9 +10908,12 @@ $(TESTING)-other-done:
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,20,$(NOTHING))
+	$(call $(TESTING)-count,26,$(NOTHING))
 	$(call $(TESTING)-count,3,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
+	#> export
+	$(call $(TESTING)-count,3,_EXPORT_)
+	$(call $(TESTING)-count,26,$(NOTHING))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -10958,6 +10975,7 @@ $(CHECKIT):
 	@$(TABLE_M3) "$(_E)[Pandoc]"				"$(_E)$(PANDOC_CMT_DISPLAY)"		"$(_N)$(PANDOC_LIC)"
 	@$(TABLE_M3) "$(_E)[YQ]"				"$(_E)$(YQ_CMT_DISPLAY)"		"$(_N)$(YQ_LIC)"
 	@$(TABLE_M3) "$(_E)[Bootstrap]"				"$(_E)$(BOOTSTRAP_CMT)"			"$(_N)$(BOOTSTRAP_LIC)"
+	@$(TABLE_M3) "$(_E)[Bootlint]"				"$(_E)$(BOOTLINT_CMT)"			"$(_N)$(BOOTLINT_LIC)"
 	@$(TABLE_M3) "$(_E)[Bootswatch]"			"$(_E)$(BOOTSWATCH_CMT)"		"$(_N)$(BOOTSWATCH_LIC)"
 	@$(TABLE_M3) "$(_E)[Font-Awesome]"			"$(_E)$(FONTAWES_CMT)"			"$(_N)$(FONTAWES_LIC)"
 	@$(TABLE_M3) "$(_E)[Water.css]"				"$(_E)$(WATERCSS_CMT)"			"$(_N)$(WATERCSS_LIC)"
@@ -11162,6 +11180,7 @@ endif
 		$(PANDOC_DIR) \
 		$(YQ_DIR) \
 		$(BOOTSTRAP_DIR) \
+		$(BOOTLINT_DIR) \
 		$(BOOTSWATCH_DIR) \
 		$(FONTAWES_DIR) \
 		$(WATERCSS_DIR) \
