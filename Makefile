@@ -108,7 +108,15 @@ override VIM_FOLDING := {{{1
 ################################################################################
 # {{{1 TODO
 ################################################################################
+# WORK
+#	some form of "env -" or "prompt -z" test, to make sure local environment is not inadvertently supporting success...
+#		same with ".vimrc", etc... maybe test with "null" account...?
+#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins.
+#	--resource-path = something like COMPOSER_CSS?
 # CODE
+#	add aria information back in, because we are good people...
+#		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
+#		https://getbootstrap.com/docs/4.5/utilities/screen-readers
 #	remove MDVIEWER_CMT_SASS_VER once fixed in upstream
 # HTML
 #	metadata / keywords
@@ -136,69 +144,6 @@ override VIM_FOLDING := {{{1
 #	--from "docx+styles"
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
-#WORKING:NOW
-# document
-#	change in behavior... particularly yml files...
-#		$(c_base).$(EXTENSION): $(COMPOSER) $(COMPOSER_YML_LIST) $($(PUBLISH)-cache) $($(PUBLISH)-library)
-#		$(COMPOSER) upgrade = use $(PRINTER) to check files to update...
-#	$(COMPOSER_YML) and note that it is now an override for everything
-#		expected behavior = *+ = https://mikefarah.gitbook.io/yq/operators/multiply-merge
-#		hashes will overlap, and arrays will append
-#		best practice is to put permanent site menus at the top, and maybe a sidebar or two, and then use sidebars and bottom nav for per-* use
-#		probably not a bad idea to also do COMPOSER_INCLUDE globally...
-#	if brand is empty or logo.img doesn't exist, they will be skipped
-#		side note to remove revealjs per-directory hack...
-#	if site_search_name is empty, it disables it
-#	new $(CONVICT) -> $(PRINTER)/c_list hack
-#	COMPOSER_TMP needs a mention, at this point...
-#	everything stems from the Makefile, so that is the only place to check for changes...
-#	only one build at a time...
-# other
-#	verify test suite...
-#	some form of "env -" or "prompt -z" test, to make sure local environment is not inadvertently supporting success...
-#		same with ".vimrc", etc... maybe test with "null" account...?
-#	epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
-#	--resource-path = something like COMPOSER_CSS?
-#	so many c_list/+ tests... really...?  probably...
-#			3 = markdown/wildcard/list + book/page + empty c_type/c_base/c_list
-#		documentation can be as simple as "+ > c_list" in precedence...?  probably...
-#		release notes, now...?  meh...
-#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins.
-#		header-includes?  leave it to c_options?  maybe c_header?
-#			only an issue for c_site, so maybe an array option in $(COMPOSER_YML)
-#	COMPOSER_KEEPING test & document
-#	$(CLEANER)-logs test & document
-#	add aria information back in, because we are good people...
-#		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
-#		https://getbootstrap.com/docs/4.5/utilities/screen-readers
-#WORK 2023-01-24 make J=12 _test-speed
-# >> DONE [_test-speed]
-# | >> Directories      | 1972
-# | >> Files            | 8913
-# | >> Output           | 17757
-# | >> Jobs             | 12
-# # MAKECMDGOALS        [install-force] (install-force)
-# # MAKECMDGOALS        [all-all] (all-all)
-# # MAKECMDGOALS        [clean-all] (clean-all)
-# # MAKECMDGOALS        [site-force] (site-force)
-# real    1m18.352s
-# real    8m19.510s
-# real    4m6.619s
-# real    63m45.692s
-#WORK 2023-03-06 make J=12 _test-speed
-# >> DONE [_test-speed]
-# | >> Directories      | 1972
-# | >> Files            | 8913
-# | >> Output           | 17757
-# | >> Jobs             | 12
-# # MAKECMDGOALS        [install-force] (install-force)
-# # MAKECMDGOALS        [all-all] (all-all)
-# # MAKECMDGOALS        [clean-all] (clean-all)
-# # MAKECMDGOALS        [site-force] (site-force)
-# real    1m41.679s
-# real    11m46.653s
-# real    6m13.204s
-# real    78m31.194s
 ################################################################################
 # }}}1
 ################################################################################
@@ -3081,6 +3026,11 @@ endef
 #	see config files for examples (unchanged composer.yml will impact websites created from this instance)
 # non-single-user use is not recommended
 #	parallel processing = [MAKEJOBS]
+#	only one build at a time...
+# COMPOSER_TMP needs a mention, at this point...
+# everything stems from the Makefile, so that is the only place to check for changes...
+# epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
+# header-includes
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
@@ -3341,6 +3291,9 @@ traditional and readable end result.  The customized version is at:
 
 $(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(CUSTOM_REVEALJS_CSS))$(_D)
 
+#WORKING
+#	rework this
+
 It links in a default theme from the `$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(REVEALJS_DIR))/dist/theme$(_D)` directory.  Edit
 the location in the file, or use $(_C)[c_css]$(_D) to select a different theme.
 
@@ -3373,6 +3326,13 @@ endef
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS
 ########################################
+
+#WORKING
+#	change in behavior... particularly yml files...
+#		$(c_base).$(EXTENSION): $(COMPOSER) $(COMPOSER_YML_LIST) $($(PUBLISH)-cache) $($(PUBLISH)-library)
+#		$(COMPOSER) upgrade = use $(PRINTER) to check files to update...
+#	create "upgrades/updates" section...
+#		duplicate or reference this
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
@@ -3411,6 +3371,8 @@ endef
 #	note about global/local variables, and config/$(MARKER)
 #		add a link to this section at the top of both variable sections
 #		denote each variable
+#	$(COMPOSER_YML) and note that it is now an override for everything
+#		hashes will overlap, and arrays will append
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
 The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is global-to-local $(_E)(see
@@ -3729,6 +3691,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_KEEPING)
 
 #WORK $(SPECIAL_VAL) deletes all...
+#	COMPOSER_KEEPING test & document
+#	$(CLEANER)-logs test & document
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LOG)
 
@@ -3946,6 +3910,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DOSETUP) / $(DOSETUP)-$(DOFORCE))
 #WORKING
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT) / $(CONVICT)-$(DOITALL))
+
+#WORKING
+#	new $(CONVICT) -> $(PRINTER)/c_list hack
 
   * Using the directory structure in $(_C)[Recommended Workflow]$(_D), `$(_M)$(EXPAND)/$(_D)` is
     considered the top-level directory.  Meaning, it is the last directory
