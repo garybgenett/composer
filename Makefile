@@ -837,8 +837,6 @@ override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
 
 ########################################
 
-#WORK document replacement/enhancement with water.css
-
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 ifneq ($(origin MDVIEWER_CMT),override)
@@ -952,8 +950,6 @@ override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
 override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 
 #> update: $(NOTHING)-%
-
-#WORK document these additional (potential) requirements...
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
@@ -1273,7 +1269,6 @@ override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
 override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
 
-#WORKING document
 override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
 override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 	$(foreach FILE,\
@@ -2164,7 +2159,6 @@ else
 override COMPOSER_TARGETS_AUTO		:= $(addsuffix .$(EXTENSION),$(filter-out %.$(EXTENSION),$(COMPOSER_CONTENTS_FILES)))
 endif
 
-#WORKING document!
 override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO),$(COMPOSER_TARGETS))
 override COMPOSER_SUBDIRS		:= $(patsubst .$(TARGETS),$(COMPOSER_CONTENTS_DIRS),$(COMPOSER_SUBDIRS))
 override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
@@ -2236,18 +2230,6 @@ endif
 
 #> update: $(HEADERS)-$(EXAMPLE)
 
-#WORK
-#	switch to $(COMPOSER_TINY)-* helpers?
-#		add cp, ln, etc.
-#	document!
-#	use "+" to maintain MAKEJOBS...
-#	test? = yes.
-#	also document command variables?  maybe another "reserved"-style section that parses them out?
-#		$(SED), $(PRINT), etc., etc.
-#		colors?  $(_F), etc.
-#	DO_HEREDOC
-#	$($(DEBUGIT)-output)
-
 override define $(COMPOSER_TINYNAME)-note =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),note,$(@))
 endef
@@ -2256,7 +2238,6 @@ override define $(COMPOSER_TINYNAME)-makefile =
 	$(call $(INSTALL)-$(MAKEFILE),$(1),-$(INSTALL),,$(2))
 endef
 
-#WORK would be nice to verify that doing $$(MAKE) instead of just $(MAKE) preserves @+/MAKEJOBS...
 override define $(COMPOSER_TINYNAME)-make =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),$(notdir $(MAKE)),$(@)); \
 	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(1)
@@ -3009,6 +2990,11 @@ versions of external tools for this iteration of $(_C)[$(COMPOSER_BASENAME)]$(_D
 validate your system.
 endef
 
+#WORK document these additional (potential) requirements...
+# GIT
+# DIFF
+# RSYNC
+
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, follow the
@@ -3421,6 +3407,22 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-CUSTOM
 ########################################
 
+#WORK
+# $(COMPOSER_TINYNAME)-note
+# $(COMPOSER_TINYNAME)-makefile
+# $(COMPOSER_TINYNAME)-make
+# $(COMPOSER_TINYNAME)-mkdir
+# $(COMPOSER_TINYNAME)-ln
+# $(COMPOSER_TINYNAME)-cp
+# $(COMPOSER_TINYNAME)-mv
+# $(COMPOSER_TINYNAME)-rm
+#WORK
+# = Tooling Options
+# command variables?  $(SED), $(PRINT), etc., etc.
+# colors?  $(_F), etc.
+# DO_HEREDOC?
+# $($(DEBUGIT)-output)?
+
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
 [Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
@@ -3530,6 +3532,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_icon)
 #WORKING
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
+
+#WORKING document $(COMPOSER_ART)/theme
+
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(abspath $(dir $(call CSS_THEME,$(HELPOUT)))))$(_D)
 
   * By default, a $(_M)CSS$(_D) stylesheet from $(_C)[Markdown Viewer]$(_D) is used for $(_C)[HTML]$(_D) and
     $(_C)[EPUB]$(_D), and one of the $(_C)[Reveal.js]$(_D) themes is used for $(_C)[Reveal.js
@@ -3719,6 +3725,13 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
     processed, because it becomes the wildcard `$(_N)*$(_D)`, so use with care.  It is
     likely best to use $(_C)[COMPOSER_TARGETS]$(_D) to explicitly set the targets list in
     these situations.
+
+#WORKING document!
+# .$(TARGETS)
+# COMPOSER_TARGETS
+# COMPOSER_SUBDIRS
+# COMPOSER_EXPORTS
+# COMPOSER_IGNORES
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
