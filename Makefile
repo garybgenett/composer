@@ -2590,10 +2590,9 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(MAKE_DB)]"			"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
-	@$(LINERULE); $(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(TESTING)]"		"#WORK"
-	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(TESTING)]"		"Skip download steps in $(_C)[$(UPGRADE)]$(_D), and only do builds"
+	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Does $(_C)[$(CREATOR)]$(_D), and builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(HELPOUT)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
@@ -3783,7 +3782,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
     $(_C)[COMPOSER_TARGETS]$(_D) or $(_C)[COMPOSER_SUBDIRS]$(_D) it will display a message and
     do nothing.  A side-effect of this target is that an actual file or
     directory named `$(_M)$(NOTHING)$(_D)` will never be created or removed by $(_C)[$(COMPOSER_BASENAME)]$(_D).
-  * An empty value triggers auto-detection
+  * An empty value triggers auto-detection.
   * Use $(_C)[$(CONFIGS)]$(_D) or $(_C)[$(TARGETS)]$(_D) to check the current value.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
@@ -3792,7 +3791,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
     $(_C)[$(DOITALL)]$(_D).  The behavior and configuration is identical to $(_C)[COMPOSER_TARGETS]$(_D)
     above, including auto-detection and the `$(_M)$(NOTHING)$(_D)` target.  Hidden directories
     that start with `$(_M).$(_D)` are skipped.
-  * An empty value triggers auto-detection
+  * An empty value triggers auto-detection.
   * Use $(_C)[$(CONFIGS)]$(_D) or $(_C)[$(TARGETS)]$(_D) to check the current value.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
