@@ -399,7 +399,6 @@ endif
 
 override COMPOSER_REGEX_OVERRIDE	= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
 override COMPOSER_REGEX_DEFINE		= override[[:space:]]+(define[[:space:]]+)?($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[=]
-override COMPOSER_REGEX_EVAL		= [$$][(]eval[[:space:]]+(export[[:space:]]+)?$(call COMPOSER_REGEX_OVERRIDE,$(1),$(2))
 
 override COMPOSER_FIND			= $(firstword $(wildcard $(abspath $(addsuffix /$(2),$(1)))))
 
@@ -1830,7 +1829,6 @@ $(foreach FILE,$(filter-out \
 	$(NOTHING) \
 	$(SUBDIRS) \
 ,$(COMPOSER_RESERVED)),\
-	$(eval export override COMPOSER_DOITALL_$(FILE) ?=) \
 	$(foreach MOD,\
 		$(DOITALL) \
 		$(DOFORCE) \
@@ -2659,7 +2657,6 @@ $(HELPOUT)-$(HEADERS)-%:
 		@$(call TITLE_END)
 #>	@$(call TITLE_END)
 
-export override COMPOSER_DOITALL_$(HELPOUT) ?=
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
 	@$(if $(and $(c_site),$(filter $(HELPOUT),$(*))),\
@@ -2768,7 +2765,6 @@ $(HELPOUT)-$(HELPOUT)-$(PRINTER):
 				-e "s|^$(call COMPOSER_REGEX_OVERRIDE).*$$|\1|gp" \
 				-e "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" \
 				-e "s|^$(call COMPOSER_REGEX_DEFINE).*$$|\2|gp" \
-				-e "s|^$(call COMPOSER_REGEX_EVAL,,1).*$$|\2|gp" \
 				$(COMPOSER) \
 			| $(SORT) \
 		))$(foreach FILE,$(LIST),\
