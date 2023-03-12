@@ -512,7 +512,7 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]
 #> update: READ_ALIASES
 
 #>override c_css			?=
-#>$(call READ_ALIASES,s,s,c_css)
+#>$(call READ_ALIASES,c,c,c_css)
 ifneq ($(origin c_css),override)
 $(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS			[$(FILE)])) \
@@ -667,11 +667,11 @@ $(call READ_ALIASES,S,S,c_site)
 $(call READ_ALIASES,T,T,c_type)
 $(call READ_ALIASES,B,B,c_base)
 $(call READ_ALIASES,L,L,c_list)
-$(call READ_ALIASES,g,g,c_lang)
-$(call READ_ALIASES,b,b,c_logo)
+$(call READ_ALIASES,a,a,c_lang)
+$(call READ_ALIASES,g,g,c_logo)
 $(call READ_ALIASES,i,i,c_icon)
-$(call READ_ALIASES,s,s,c_css)
-$(call READ_ALIASES,c,c,c_toc)
+$(call READ_ALIASES,c,c,c_css)
+$(call READ_ALIASES,t,t,c_toc)
 $(call READ_ALIASES,l,l,c_level)
 $(call READ_ALIASES,m,m,c_margin)
 $(call READ_ALIASES,mt,mt,c_margin_top)
@@ -840,13 +840,17 @@ override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
 # https://github.com/simov/markdown-viewer
 # https://github.com/simov/markdown-viewer/blob/master/LICENSE
 ifneq ($(origin MDVIEWER_CMT),override)
-#>override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776478ea221d586480e7fa7
-override MDVIEWER_CMT			:= 059f3192d4ebf5fa9776
+#>override MDVIEWER_CMT			:= 3bd40d84c071379440b3dd94e2a48fbbbb03829f
+override MDVIEWER_CMT			:= 3bd40d84c071379440b3
 override MDVIEWER_CMT_SASS_VER		:= ^1.0.0
 endif
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
+
+#> update: MDVIEWER_MODULES
+override MDVIEWER_MODULES		:= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
+override MDVIEWER_MANIFEST		:= manifest.firefox.json
 
 # https://github.com/simov/markdown-themes
 ifneq ($(origin MDTHEMES_CMT),override)
@@ -1041,8 +1045,7 @@ override GIT_LOG_COUNT			:= 10
 
 override GIT_RUN			= cd $(1) && $(GIT) --no-pager --git-dir="$(2)" --work-tree="$(1)" $(3)
 override define GIT_RUN_COMPOSER =
-	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(1)"; \
+	$(call $(HEADERS)-action,$(1)); \
 	$(call GIT_RUN,$(COMPOSER_ROOT),$(strip $(if \
 		$(wildcard $(COMPOSER_ROOT).git),\
 		$(COMPOSER_ROOT).git ,\
@@ -1053,8 +1056,7 @@ endef
 #>	$(RM) $(1)/.git
 override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
 override define GIT_REPO_DO =
-	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)$(3)$(_D))"; \
+	$(call $(HEADERS)-action,$(1),$(3)); \
 	$(MKDIR) $(abspath $(dir $(5))) $(1); \
 	if [ ! -d "$(5)" ] && [ -d "$(1).git"  ]; then $(MV) $(1).git  $(5); fi; \
 	if [ ! -d "$(5)" ] && [ -d "$(1)/.git" ]; then $(MV) $(1)/.git $(5); fi; \
@@ -1080,8 +1082,7 @@ endef
 
 override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_PKG))
 override define WGET_PACKAGE_DO =
-	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(5)"; \
+	$(call $(HEADERS)-action,$(5)); \
 	$(MKDIR) $(8); \
 	$(WGET) --directory-prefix $(8) $(2)/$(3); \
 	$(RM) --recursive $(8)/$(7); \
@@ -1101,25 +1102,56 @@ endef
 
 ########################################
 
+override NPM_NAME			= $(subst /,-,$(patsubst $(COMPOSER_DIR)/%,%,$(1)))
+
 override define NPM_RUN =
 	cd $(1) && \
-		PATH="$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin:$(PATH)" \
+		PATH="$(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/node_modules/.bin:$(PATH)" \
 		$(if $(3),\
-			$(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules/.bin/$(3) ,\
+			$(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/node_modules/.bin/$(3) \
+		,\
 			$(NPM) \
-				$(if $(2),,--prefix $(COMPOSER_PKG)/$(notdir $(1)).npm) \
-				--cache $(COMPOSER_PKG)/$(notdir $(1)).npm \
+				$(if $(2),,--prefix $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm) \
+				--cache $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm \
 				$(2) \
 		)
 endef
 
+override define NPM_SETUP =
+	$(MKDIR) $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm; \
+	$(RM) --recursive $(1)/node_modules; \
+	$(LN) $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/node_modules $(1)/; \
+	$(RM) $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/package.json; \
+	$(LN) $(1)/package.json $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/; \
+	$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(1)/package.json
+endef
+
 override define NPM_INSTALL =
-	$(ENDOLINE); \
-	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(1))$(_D) ($(_E)npm$(_D)$(if $(2), $(MARKER) $(_E)$(2)$(_D)))"; \
-	$(MKDIR) $(COMPOSER_PKG)/$(notdir $(1)).npm; \
-	$(RM) $(1)/node_modules;				$(LN) $(COMPOSER_PKG)/$(notdir $(1)).npm/node_modules $(1)/; \
-	$(RM) $(COMPOSER_PKG)/$(notdir $(1)).npm/package.json;	$(LN) $(1)/package.json $(COMPOSER_PKG)/$(notdir $(1)).npm/; \
-	$(call NPM_RUN,$(1)) install $(2)
+	$(call $(HEADERS)-action,$(1),npm,$(2)); \
+	if [ -f "$(1)/package.json" ]; then \
+		$(call NPM_SETUP,$(1)); \
+		$(call NPM_RUN,$(1)) install $(2); \
+	fi
+endef
+
+#> update: MDVIEWER_MODULES
+override define NPM_BUILD =
+	$(call $(HEADERS)-action,$(1),npm,build); \
+	$(RM) --recursive \
+		$(1)/cleanrmd \
+		$(1)/tmp \
+		; \
+	$(SED) -i \
+		-e "s|^[^[:space:]]*(npm install)|#$(MARKER)\1|g" \
+		-e "s|^[^[:space:]]*(rm -rf)|#$(MARKER)\1|g" \
+		$(1)/build.sh; \
+	if [ -f "$(1)/package.json" ]; then \
+		$(YQ_WRITE_JSON) --inplace ". += { \"scripts\": { \"build\": \"./build.sh\" } }" $(1)/package.json; \
+		$(call NPM_SETUP,$(1)); \
+		$(call NPM_RUN,$(1),run-script) build; \
+	else \
+		(cd $(1) && $(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(1)/build.sh); \
+	fi
 endef
 
 ################################################################################
@@ -2044,7 +2076,7 @@ override PUBLISH_SH_RUN = \
 	COMPOSER_LIBRARY_METADATA="$($(PUBLISH)-library-metadata)" \
 	COMPOSER_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
 	\
-	$(BASH) $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
+	$(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 endif
 
 override PUBLISH_SH_HELPERS := \
@@ -2412,21 +2444,20 @@ $(HELPOUT)-VARIABLES_TITLE_%:
 .PHONY: $(HELPOUT)-VARIABLES_FORMAT_%
 $(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
-	@$(TABLE_M3) ":---"				":---"					":---"
-#WORK	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"$(_C)[Static Websites]$(_D) ($(_C)[HTML]$(_D))"	"$(_M)$(c_site)"
-	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Enable $(_C)[Static Websites]$(_D)"	"$(_M)$(c_site)"
-	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
-	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
-	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
-	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ $(_E)g"	"Language for document headers"		"$(_M)$(c_lang)"
-	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ $(_E)b"	"#WORKING"				"$(_M)$(notdir $(c_logo))"
-	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ $(_E)i"	"#WORKING"				"$(_M)$(notdir $(c_icon))"
-	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)s"	"Location of CSS file"			"$(_M)$(notdir $(call c_css_select))$(_D)"
-	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ $(_E)c"	"Table of contents depth"		"$(_M)$(c_toc)"
-	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
-	@$(TABLE_M3) "$(_C)[c_margin]$(_D)  ~ $(_E)m"	"Size of margins ($(_C)[PDF]$(_D))"	"$(_M)$(c_margin)"
-	@$(TABLE_M3) "$(_C)[c_options]$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
+	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"						"$(_H)Value"
+	@$(TABLE_M3) ":---"				":---"							":---"
+	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"$(_C)[Static Websites]$(_D) ($(_C)[HTML]$(_D))"	"$(_M)$(c_site)"
+	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ $(_E)T"	"Desired output format"					"$(_M)$(c_type)"
+	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"					"$(_M)$(c_base)"
+	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"				"$(_M)$(notdir $(c_list))$(_D)"
+	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ $(_E)a"	"Language for document headers"				"$(_M)$(c_lang)"
+	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ $(_E)g"	"Logo image ($(_C)[HTML]$(_D) formats)"			"$(_M)$(notdir $(c_logo))"
+	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ $(_E)i"	"Icon image ($(_C)[HTML]$(_D) formats)"			"$(_M)$(notdir $(c_icon))"
+	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)c"	"Location of CSS file"					"$(_M)$(notdir $(call c_css_select))$(_D)"
+	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ $(_E)t"	"Table of contents depth"				"$(_M)$(c_toc)"
+	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ $(_E)l"	"Chapter/slide header level"				"$(_M)$(c_level)"
+	@$(TABLE_M3) "$(_C)[c_margin]$(_D)  ~ $(_E)m"	"Size of margins ($(_C)[PDF]$(_D))"			"$(_M)$(c_margin)"
+	@$(TABLE_M3) "$(_C)[c_options]$(_D) ~ $(_E)o"	"Custom Pandoc options"					"$(_M)$(c_options)"
 	@$(ENDOLINE)
 	@$(TABLE_M3) "$(_H)Values$(_D) ($(_C)c_type$(_D))"	"$(_H)Format"	"$(_H)Extension"
 	@$(TABLE_M3) ":---"					":---"		":---"
@@ -2467,9 +2498,8 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXT]"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_TARGETS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_D)"				"$(_C)[$(CONFIGS)]$(_E)/$(_C)[$(TARGETS)]"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_SUBDIRS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_E)/$(_C)[$(INSTALL)]$(_D)"	"$(_C)[$(CONFIGS)]$(_E)/$(_C)[$(TARGETS)]"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
-#WORKING this one will be complicated... maybe?
-	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_E)/$(_C)[$(INSTALL)]$(_D)"	"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_EXPORTS),$(_M)$(COMPOSER_EXPORTS))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_E)/$(_C)[$(INSTALL)]$(_D)"	"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"See also: $(_C)[c_site]$(_E)/$(_C)[$(EXPORTS)]$(_D)"				"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_EXPORTS),$(_M)$(COMPOSER_EXPORTS))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"See also: $(_C)[c_site]$(_E)/$(_C)[$(EXPORTS)]$(_D)"				"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *$(_C)[MAKEJOBS]$(_D)         ~ \`$(_E)c_jobs$(_D)\`  ~ \`$(_E)J$(_D)\`*"
 	@$(PRINT) "  * *$(_C)[COMPOSER_DOCOLOR]$(_D) ~ \`$(_E)c_color$(_D)\` ~ \`$(_E)C$(_D)\`*"
@@ -2498,10 +2528,10 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"$(_C)[Static Websites]$(_D) from all $(_C)[Markdown]$(_D) files"
-#WORK
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Recursively create $(_C)[Static Websites]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Recursively create $(_C)[Static Websites]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively $(_E)(rebuild #WORK[library])$(_D)"
+	@$(LINERULE); $(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
 # $(PUBLISH)-$(CLEANER)
 # $(PUBLISH)-$(PRINTER)
 # $(PUBLISH)-$(PRINTER)-$(PRINTER)
@@ -2514,16 +2544,15 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 # $(PUBLISH)-$(EXAMPLE)
 # $(PUBLISH)-$(EXAMPLE)-$(TESTING)
 # $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
-#WORK
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOFORCE)]"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
 	@$(TABLE_M2) "$(_C)[$(CLEANER)]"			"Remove output files: $(_C)[COMPOSER_TARGETS]$(_D) $(_E)$(DIVIDE)$(_D) $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CLEANER)-$(DOITALL)]"		"Do $(_C)[$(CLEANER)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
-	@$(TABLE_M2) "$(_N)[*$(_C)-$(CLEANER)]"			"Any targets named this way will also be run by $(_C)[$(CLEANER)]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(CLEANER)]"		"Any targets named this way will also be run by $(_C)[$(CLEANER)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DOITALL)]"			"Create output files: $(_C)[COMPOSER_TARGETS]$(_D) $(_E)$(DIVIDE)$(_D) $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DOITALL)-$(DOITALL)]"		"Do $(_C)[$(DOITALL)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
-	@$(TABLE_M2) "$(_N)[*$(_C)-$(DOITALL)]"			"Any targets named this way will also be run by $(_C)[$(DOITALL)]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(DOITALL)]"		"Any targets named this way will also be run by $(_C)[$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Show updated files: \`$(_N)*$(_D)\`$(_C)[COMPOSER_EXT]$(_D) $(_E)$(MARKER)$(_D) $(_C)[COMPOSER_LOG]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_ADDITIONAL_%
@@ -2541,11 +2570,11 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)]"			"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(DOITALL)]"		"Complete $(_C)[$(CONFIGS)]$(_D), including environment variables"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
-	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"#WORK"
-	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M).$(COMPOSER_BASENAME)$(_D)\` in current directory"
+	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M).$(COMPOSER_BASENAME)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)"'$$EDITOR'"$(_D)\` step"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"#WORK"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of #WORK$(_C)[COMPOSER_ROOT]$(_D)"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
@@ -2561,6 +2590,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(MAKE_DB)]"			"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
+	@$(LINERULE); $(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(TESTING)]"		"#WORK"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`, and does $(_C)[$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"#WORK"
@@ -2639,6 +2669,8 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
+#WORKING:NOW:NOW:FIX
+# move this to a separate "Composer Formats" section, after "Composer Operation"
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)	; $(call TITLE_END)
@@ -2895,9 +2927,9 @@ $(_E)[Bootstrap]: https://getbootstrap.com$(_D)
 $(_E)[Bootlint]: https://github.com/twbs/bootlint$(_D)
 $(_E)[Bootswatch]: https://bootswatch.com$(_D)
 $(_E)[Font-Awesome]: https://fontawesome.com$(_D)
+$(_E)[Water.css]: https://watercss.kognise.dev$(_D)
 $(_E)[Markdown Viewer]: https://github.com/simov/markdown-viewer$(_D)
 $(_E)[Markdown Themes]: https://github.com/simov/markdown-themes$(_D)
-$(_E)[Water.css]: https://watercss.kognise.dev$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
@@ -3526,6 +3558,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_lang)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_logo)
 
 #WORKING
+
+#WORKING document $(COMPOSER_ART)/images
+
+$(CODEBLOCK)$(patsubst $(COMPOSER_DIR)/%,$(EXPAND)/$(_M)%,$(COMPOSER_IMAGES))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_icon)
 
@@ -9389,6 +9425,10 @@ override define $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS =
 	)
 endef
 
+override define $(HEADERS)-action =
+	$(ENDOLINE); \
+	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(_E)$(3)$(_D))))"
+endef
 override define $(HEADERS)-note =
 	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-path-root,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)] $(_C)$(call $(HEADERS)-path-root,$(2))"
 endef
@@ -9569,28 +9609,27 @@ ifeq ($(wildcard $(firstword $(NPM))),)
 	@$(ENDOLINE)
 	@$(MAKE) $(NOTHING)-npm
 else
-#WORK document
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
-	@$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/package.json
-#> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR)),bootlint)
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
+	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR)))
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
 	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),yarn)
+#>	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
+	@$(MDVIEWER_MODULES) | while read -r FILE; do \
+		$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/build/$${FILE}); \
+	done
 endif
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(MDVIEWER_DIR))$(_D) ($(_E)build$(_D))"
-	@$(foreach FILE,\
-		mdc \
-		prism \
-		remark \
-		themes \
-		,\
-		$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),run-script) build:$(FILE); \
-		$(call NEWLINE) \
-	)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(notdir $(WATERCSS_DIR))$(_D) ($(_E)build$(_D))"
+#> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
+	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
+	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR))/src/cli-main.js \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR))/bootlint
+	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
+	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/vendor
+	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
+											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.json
+	@$(MDVIEWER_MODULES) | while read -r FILE; do \
+		$(call NPM_BUILD,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/build/$${FILE}); \
+	done
+	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
 	@$(SED) -i \
 		-e "/^dist[/]$$/d" \
 		-e "/^out[/]$$/d" \
@@ -11173,6 +11212,13 @@ endef
 $(DOSETUP): .set_title-$(DOSETUP)
 $(DOSETUP):
 	@$(call $(HEADERS))
+ifneq ($(or \
+	$(COMPOSER_RELEASE) ,\
+	$(filter $(COMPOSER),$(COMPOSER_DOSETUP_DIR)/$(MAKEFILE)) \
+),)
+#>	@$(MAKE) $(NOTHING)-$(MAKEFILE)
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)--makefile $(EXPAND)/$(MAKEFILE),$(NOTHING))
+else
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_DOSETUP_DIR)
 ifeq ($(COMPOSER_DOITALL_$(DOSETUP)),$(DOFORCE))
@@ -11225,6 +11271,7 @@ else
 	@$(ECHO) "$(_D)"
 endif
 	@$(LS) $(COMPOSER_DOSETUP_DIR)
+endif
 
 ########################################
 ## {{{2 $(CONVICT)
@@ -11268,8 +11315,7 @@ ifeq ($(wildcard $(firstword $(RSYNC))),)
 else
 	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
 	@$(foreach FILE,$(sort $(TREE)),\
-		$(ENDOLINE); \
-		$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(FILE))"; \
+		$(call $(HEADERS)-action,$(FILE)); \
 		$(RSYNC) \
 			--copy-links \
 			--delete-excluded \
@@ -11278,8 +11324,7 @@ else
 			$(COMPOSER_EXPORT)$(patsubst $(COMPOSER_ROOT)%,%,$(FILE)); \
 		$(call NEWLINE) \
 	)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D) $(MARKER) $(_E)directories$(_D))"
+	$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories)
 	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
 		| while read -r FILE; do \
@@ -11293,8 +11338,7 @@ else
 			$(ECHO) "$(_D)"; \
 		done; \
 	done
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(COMPOSER_EXPORT))$(_D) ($(_E)empty$(_D) $(MARKER) $(_E)files$(_D))"
+	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files)
 	@$(ECHO) "$(_C)"
 	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
 		| $(SED) \
