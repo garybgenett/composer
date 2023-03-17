@@ -225,6 +225,7 @@ override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),
 ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
+override CURDIR_CONV			= $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(1))
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
 override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
@@ -9579,25 +9580,25 @@ ifeq ($(and \
 	@$(if $(wildcard $(firstword $(7Z))),,		$(MAKE) $(NOTHING)-7z)
 else
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_SRC),$(PANDOC_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_SRC),$(YQ_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DIR)),$(BOOTSTRAP_SRC),$(BOOTSTRAP_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR)),$(BOOTLINT_SRC),$(BOOTLINT_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSWATCH_DIR)),$(BOOTSWATCH_SRC),$(BOOTSWATCH_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(FONTAWES_DIR)),$(FONTAWES_SRC),$(FONTAWES_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),$(WATERCSS_SRC),$(WATERCSS_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)),$(MDVIEWER_SRC),$(MDVIEWER_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDTHEMES_DIR)),$(MDTHEMES_SRC),$(MDTHEMES_CMT))
-	@$(call GIT_REPO,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(REVEALJS_DIR)),$(REVEALJS_SRC),$(REVEALJS_CMT))
+	@$(call GIT_REPO,$(CURDIR_CONV,$(PANDOC_DIR)),		$(PANDOC_SRC),		$(PANDOC_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(YQ_DIR)),		$(YQ_SRC),		$(YQ_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(BOOTSTRAP_DIR)),	$(BOOTSTRAP_SRC),	$(BOOTSTRAP_CMT)	)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(BOOTLINT_DIR)),	$(BOOTLINT_SRC),	$(BOOTLINT_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(BOOTSWATCH_DIR)),	$(BOOTSWATCH_SRC),	$(BOOTSWATCH_CMT)	)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(FONTAWES_DIR)),	$(FONTAWES_SRC),	$(FONTAWES_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(WATERCSS_DIR)),	$(WATERCSS_SRC),	$(WATERCSS_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(MDVIEWER_DIR)),	$(MDVIEWER_SRC),	$(MDVIEWER_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(MDTHEMES_DIR)),	$(MDTHEMES_SRC),	$(MDTHEMES_CMT)		)
+	@$(call GIT_REPO,$(CURDIR_CONV,$(REVEALJS_DIR)),	$(REVEALJS_SRC),	$(REVEALJS_CMT)		)
 endif
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
-	@$(call WGET_PACKAGE,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
+	@$(call WGET_PACKAGE,$(CURDIR_CONV,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_LNX_SRC),$(PANDOC_LNX_DST),$(PANDOC_LNX_BIN))
+	@$(call WGET_PACKAGE,$(CURDIR_CONV,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_WIN_SRC),$(PANDOC_WIN_DST),$(PANDOC_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(CURDIR_CONV,$(PANDOC_DIR)),$(PANDOC_URL),$(PANDOC_MAC_SRC),$(PANDOC_MAC_DST),$(PANDOC_MAC_BIN),1)
+	@$(call WGET_PACKAGE,$(CURDIR_CONV,$(YQ_DIR)),$(YQ_URL),$(YQ_LNX_SRC),$(YQ_LNX_DST),$(YQ_LNX_BIN))
+	@$(call WGET_PACKAGE,$(CURDIR_CONV,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
+	@$(call WGET_PACKAGE,$(CURDIR_CONV,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
 #WORK document
 ifeq ($(wildcard $(firstword $(NPM))),)
@@ -9605,42 +9606,42 @@ ifeq ($(wildcard $(firstword $(NPM))),)
 	@$(MAKE) $(NOTHING)-npm
 else
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR)))
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)))
-	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),yarn)
-#>	@$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR)))
+	@$(call NPM_INSTALL,$(call CURDIR_CONV,$(BOOTLINT_DIR)))
+	@$(call NPM_INSTALL,$(call CURDIR_CONV,$(WATERCSS_DIR)))
+	@$(call NPM_INSTALL,$(call CURDIR_CONV,$(WATERCSS_DIR)),yarn)
+#>	@$(call NPM_INSTALL,$(call CURDIR_CONV,$(MDVIEWER_DIR)))
 	@$(MDVIEWER_MODULES) | while read -r FILE; do \
-		$(call NPM_INSTALL,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/build/$${FILE}); \
+		$(call NPM_INSTALL,$(call CURDIR_CONV,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 endif
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
-	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR))/src/cli-main.js \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTLINT_DIR))/bootlint
+	@$(LN)										$(call CURDIR_CONV,$(BOOTLINT_DIR))/src/cli-main.js \
+											$(call CURDIR_CONV,$(BOOTLINT_DIR))/bootlint
 	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
-	@$(MKDIR)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/vendor
-	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/manifest.json
+	@$(MKDIR)									$(call CURDIR_CONV,$(MDVIEWER_DIR))/vendor
+	@$(LN)										$(call CURDIR_CONV,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
+											$(call CURDIR_CONV,$(MDVIEWER_DIR))/manifest.json
 	@$(MDVIEWER_MODULES) | while read -r FILE; do \
-		$(call NPM_BUILD,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(MDVIEWER_DIR))/build/$${FILE}); \
+		$(call NPM_BUILD,$(call CURDIR_CONV,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
 	@$(SED) -i \
 		-e "/^dist[/]$$/d" \
 		-e "/^out[/]$$/d" \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/.gitignore
-	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/parts/*.css
+											$(call CURDIR_CONV,$(WATERCSS_DIR))/.gitignore
+	@$(call HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK)					$(call CURDIR_CONV,$(WATERCSS_DIR))/src/parts/*.css
 	@$(foreach FILE,light dark,\
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-$(FILE).css; \
-		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/variables-solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,$(FILE))	>$(call CURDIR_CONV,$(WATERCSS_DIR))/src/builds/solarized-$(FILE).css; \
+		$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR,,$(FILE))	>$(call CURDIR_CONV,$(WATERCSS_DIR))/src/variables-solarized-$(FILE).css; \
 		$(call NEWLINE) \
 	)
-	@$(CP)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water.css \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/water-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR))/src/builds/solarized-shade.css
-	@$(call NPM_RUN,$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(WATERCSS_DIR)),,yarn) build
+	@$(CP)										$(call CURDIR_CONV,$(WATERCSS_DIR))/src/builds/water.css \
+											$(call CURDIR_CONV,$(WATERCSS_DIR))/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE)			>>$(call CURDIR_CONV,$(WATERCSS_DIR))/src/builds/water-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(call CURDIR_CONV,$(WATERCSS_DIR))/src/builds/solarized-shade.css
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(call CURDIR_CONV,$(WATERCSS_DIR))/src/builds/solarized-shade.css
+	@$(call NPM_RUN,$(call CURDIR_CONV,$(WATERCSS_DIR)),,yarn) build
 endif
 endif
 endif
@@ -9663,13 +9664,13 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA)) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(BOOTSTRAP_DEF_JS)))) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(COMPOSER_CUSTOM)))) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,$(CREATOR))))) \
-		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(abspath $(dir $(call CSS_THEME,$(CREATOR))))) \
+		$(call CURDIR_CONV,$(COMPOSER_ART)) \
+		$(call CURDIR_CONV,$(COMPOSER_IMAGES)) \
+		$(call CURDIR_CONV,$(PANDOC_DATA)) \
+		$(call CURDIR_CONV,$(abspath $(dir $(BOOTSTRAP_DEF_JS)))) \
+		$(call CURDIR_CONV,$(abspath $(dir $(COMPOSER_CUSTOM)))) \
+		$(call CURDIR_CONV,$(abspath $(dir $(call CUSTOM_PUBLISH_CSS_SHADE,$(CREATOR))))) \
+		$(call CURDIR_CONV,$(abspath $(dir $(call CSS_THEME,$(CREATOR))))) \
 		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
@@ -9691,79 +9692,79 @@ ifeq ($(COMPOSER_DEBUGIT),)
 ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
-	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(PUBLISH)		| $(SED) "/^[#][>]/d" >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
+	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(PUBLISH)		| $(SED) "/^[#][>]/d" >$(call CURDIR_CONV,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
-	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(TYPE_PRES)		| $(SED) "/^[#][>]/d" >$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
+	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(TYPE_PRES)		| $(SED) "/^[#][>]/d" >$(call CURDIR_CONV,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 endif
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_LICENSE)						>$(CURDIR)/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 endif
 	@$(call $(HEADERS)-file,$(CURDIR),$(patsubst $(COMPOSER_DIR)/%,%,$(COMPOSER_ART)))
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)					>$(call CURDIR_CONV,$(COMPOSER_ART))/$(COMPOSER_YML)
 ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(call CURDIR_CONV,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
 endif
 endif
 	@$(ECHO) "$(_E)"
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_LOGO))
-	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"			| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
-	@$(ECHO) ""									>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_ICON))
-#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"			| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
-	@$(LN)										$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
+	@$(ECHO) ""									>$(call CURDIR_CONV,$(COMPOSER_LOGO))
+	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"			| $(BASE64)	>$(call CURDIR_CONV,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
+	@$(ECHO) ""									>$(call CURDIR_CONV,$(COMPOSER_ICON))
+#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"			| $(BASE64)	>$(call CURDIR_CONV,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
+	@$(LN)										$(call CURDIR_CONV,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
+											$(call CURDIR_CONV,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
 											$($(DEBUGIT)-output)
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v3.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v4.0)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/screenshot-v4.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"				| $(BASE64)	>$(call CURDIR_CONV,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"				| $(BASE64)	>$(call CURDIR_CONV,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+	@$(ECHO) "$(DIST_SCREENSHOT_v4.0)"				| $(BASE64)	>$(call CURDIR_CONV,$(COMPOSER_IMAGES))/screenshot-v4.0.png
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
 		$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
 		$(eval override TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
 		$(eval override FILE := $(word 3,$(subst ;, ,$(CSS_ICON)))) \
 		$(call NEWLINE) \
 		if [ -f "$(FILE)" ]; then \
-			$(LN) $(FILE)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE) $($(DEBUGIT)-output); \
+			$(LN) $(FILE)							$(call CURDIR_CONV,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE) $($(DEBUGIT)-output); \
 		else \
-			$(ECHO) "$(FILE)"				| $(BASE64)	>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
+			$(ECHO) "$(FILE)"				| $(BASE64)	>$(call CURDIR_CONV,$(COMPOSER_IMAGES))/icon.$(NAME).$(TYPE); \
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(call CURDIR_CONV,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(call CURDIR_CONV,$(CUSTOM_PUBLISH_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
-											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+											>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_REVEALJS_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(PUBLISH).css $($(DEBUGIT)-output)
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_HTML_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_HTML).css $($(DEBUGIT)-output)
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PDF_LATEX))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
-	@$(LN) $(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_REVEALJS_CSS))		$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%-pre.js,$(BOOTSTRAP_ART_JS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.js,%-post.js,$(BOOTSTRAP_ART_JS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%-pre.css,$(BOOTSTRAP_ART_CSS)))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(patsubst %.css,%-post.css,$(BOOTSTRAP_ART_CSS)))
-	@$(LN) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
-	@$(CP) $(BOOTSTRAP_DIR_JS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
-	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
-	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
-	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(BOOTSTRAP_ART_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS)					>$(call CURDIR_CONV,$(CUSTOM_HTML_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PDF_LATEX)					>$(call CURDIR_CONV,$(CUSTOM_PDF_LATEX))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_REVEALJS_CSS)					>$(call CURDIR_CONV,$(CUSTOM_REVEALJS_CSS))
+	@$(LN) $(call CURDIR_CONV,$(CUSTOM_PUBLISH_CSS))				$(call CURDIR_CONV,$(COMPOSER_CUSTOM))-$(PUBLISH).css $($(DEBUGIT)-output)
+	@$(LN) $(call CURDIR_CONV,$(CUSTOM_HTML_CSS))					$(call CURDIR_CONV,$(COMPOSER_CUSTOM))-$(TYPE_HTML).css $($(DEBUGIT)-output)
+	@$(LN) $(call CURDIR_CONV,$(CUSTOM_PDF_LATEX))					$(call CURDIR_CONV,$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header $($(DEBUGIT)-output)
+	@$(LN) $(call CURDIR_CONV,$(CUSTOM_REVEALJS_CSS))				$(call CURDIR_CONV,$(COMPOSER_CUSTOM))-$(TYPE_PRES).css $($(DEBUGIT)-output)
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_PRE)				>$(call CURDIR_CONV,$(patsubst %.js,%-pre.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_JS_POST)				>$(call CURDIR_CONV,$(patsubst %.js,%-post.js,$(BOOTSTRAP_ART_JS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_PRE)				>$(call CURDIR_CONV,$(patsubst %.css,%-pre.css,$(BOOTSTRAP_ART_CSS)))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_POST)				>$(call CURDIR_CONV,$(patsubst %.css,%-post.css,$(BOOTSTRAP_ART_CSS)))
+	@$(LN) $(BOOTSTRAP_DIR_JS)							$(call CURDIR_CONV,$(BOOTSTRAP_DEF_JS)) $($(DEBUGIT)-output)
+	@$(CP) $(BOOTSTRAP_DIR_JS)							$(call CURDIR_CONV,$(BOOTSTRAP_ART_JS)) $($(DEBUGIT)-output)
+	@$(LN) $(BOOTSTRAP_DIR_CSS)							$(call CURDIR_CONV,$(BOOTSTRAP_DEF_CSS)) $($(DEBUGIT)-output)
+	@$(CP) $(BOOTSTRAP_DIR_CSS)							$(call CURDIR_CONV,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
+	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)					$(call CURDIR_CONV,$(BOOTSTRAP_ART_CSS))
 	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
 		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
 		) $(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(BOOTSTRAP_ART_CSS))&g' \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light)) \
-											$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+											$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,light)) \
+											$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
 	@$(foreach FILE,$(call CSS_THEMES),$(if $(filter-out $(TOKEN):%,$(FILE)),\
 		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
 			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
 			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
-		)									$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE))))) \
+		)									$(call CURDIR_CONV,$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE))))) \
 											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	))
@@ -9773,20 +9774,20 @@ endif
 			reference \
 			,\
 			$(PANDOC_BIN) --verbose \
-				--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" \
+				--output="$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" \
 				$(if $(filter $(FILE),template),--print-default-template="$(TMPL_$(TYPE))" ,\
 								--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
 				) 2>/dev/null || $(TRUE); \
-			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
-				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE))" ]; then \
+			if	[   -f "$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
+				[ ! -f "$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE))" ]; then \
 				if [ "$(FILE).$(TMPL_$(TYPE))" = "template.$(TMPL_HTML)" ]; then \
 					$(SED) "/IE 9/,/endif/d" \
-						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
-						>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)); \
+						$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+						>$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)); \
 				else \
 					$(LN) \
-						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
-						$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
+						$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE)-default.$(TMPL_$(TYPE)) \
+						$(call CURDIR_CONV,$(PANDOC_DATA))/$(FILE).$(TMPL_$(TYPE)) \
 						$($(DEBUGIT)-output); \
 				fi; \
 			fi; \
@@ -9798,14 +9799,14 @@ endif
 		epub.css \
 		,\
 		$(PANDOC_BIN) --verbose \
-			--output="$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" \
+			--output="$(call CURDIR_CONV,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" \
 			--print-default-data-file="$(FILE)" \
 			2>/dev/null; \
-			if	[   -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
-				[ ! -f "$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE))" ]; then \
+			if	[   -f "$(call CURDIR_CONV,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
+				[ ! -f "$(call CURDIR_CONV,$(PANDOC_DATA))/$(notdir $(FILE))" ]; then \
 				$(LN) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE))) \
-					$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(PANDOC_DATA))/$(notdir $(FILE)) \
+					$(call CURDIR_CONV,$(PANDOC_DATA))/$(subst .,-default.,$(notdir $(FILE))) \
+					$(call CURDIR_CONV,$(PANDOC_DATA))/$(notdir $(FILE)) \
 					$($(DEBUGIT)-output); \
 			fi; \
 		$(call NEWLINE) \
@@ -12944,14 +12945,14 @@ ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_SH))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(CUSTOM_PUBLISH_CSS))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(call CURDIR_CONV,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(call CURDIR_CONV,$(CUSTOM_PUBLISH_CSS))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,custom))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_THEME)				| $(SED) "s|^(.*--$(COMPOSER_TINYNAME)-[^:]+[:][[:space:]]+).*(var[(]--solarized.+)$$|\1\2|g" \
-											>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(patsubst $(COMPOSER_DIR)%,$(CURDIR)%,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
+											>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,custom-solar))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_TESTING)				>$(call CURDIR_CONV,$(call CUSTOM_PUBLISH_CSS_SHADE,$(TESTING)))
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
 endif
