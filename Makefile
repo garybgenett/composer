@@ -3998,6 +3998,22 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
 ########################################
 
+#WORK document?
+#	do we really need to document every last target...?
+#	if so, need to do a quick scour through the makefile to track down them all...
+# $(TESTING)-dir
+# $(TESTING)-$(PRINTER)
+# $(CONFIGS)-%
+# $(CONFIGS)-yml
+# $(INSTALL)-$(TARGETS)
+# $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
+# $(CLEANER)-%
+# $(CLEANER)-$(TARGETS)
+# $(addprefix $(CLEANER)-,$(COMPOSER_TARGETS))
+# $(DOITALL)-%
+# $(DOITALL)-$(TARGETS)
+# $(PRINTER)-$(PRINTER)
+
 override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
 $(_S)[$(HELPOUT)-$(HELPOUT)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)-$(INSTALL)]: #internal-targets$(_D)
@@ -10070,13 +10086,11 @@ $(TESTING)-$(HEADERS)-%:
 	@$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $($(*)) ]$(MARKER))
 	@$(MAKE) $($(*)) 2>&1
 
-#WORK document!
 .PHONY: $(TESTING)-dir
 $(TESTING)-dir: $(TESTING)-$(DISTRIB)
 $(TESTING)-dir:
 	@$(ECHO) ""
 
-#WORK document!
 .PHONY: $(TESTING)-$(PRINTER)
 $(TESTING)-$(PRINTER):
 	@$(MAKE) $(LISTING) | $(SED) -n "s|[:][ ]$(TESTING)-Think||gp" | $(SORT)
@@ -11142,7 +11156,6 @@ endif
 $(CONFIGS)-env:
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
 
-#WORK document?
 .PHONY: $(CONFIGS)-%
 $(CONFIGS)-%:
 	@$(ECHO) "$($(*))\n" \
@@ -11152,7 +11165,6 @@ $(CONFIGS)-%:
 
 #>		| $(SORT)
 
-#WORK document?  what is this for, at this point... counterpart to CONFIGS-% ...?
 .PHONY: $(CONFIGS)-yml
 $(CONFIGS)-yml:
 ifneq ($(COMPOSER_YML_LIST),)
@@ -12623,8 +12635,6 @@ endef
 ### {{{3 $(PUBLISH)-$(PRINTER)
 ########################################
 
-#WORK document
-
 .PHONY: $(PUBLISH)-$(PRINTER)-%
 $(PUBLISH)-$(PRINTER)-%:
 	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
@@ -13071,13 +13081,11 @@ else
 endif
 endif
 
-#WORK document!
 .PHONY: $(INSTALL)-$(TARGETS)
 $(INSTALL)-$(TARGETS): $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
 $(INSTALL)-$(TARGETS):
 	@$(ECHO) ""
 
-#WORK document!
 .PHONY: $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS)):
 	@$(eval override $(@) := $(patsubst $(INSTALL)-%,%,$(@)))
@@ -13129,19 +13137,16 @@ ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@$(MAKE) $(CLEANER)-$(SUBDIRS)
 endif
 
-#WORK document!
 .PHONY: $(CLEANER)-%
 $(CLEANER)-%:
 	@$(call $(HEADERS)-note,$(CURDIR),$(*),$(CLEANER))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(*)
 
-#WORK document!
 .PHONY: $(CLEANER)-$(TARGETS)
 $(CLEANER)-$(TARGETS): $(addprefix $(CLEANER)-,$(COMPOSER_TARGETS))
 $(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
-#WORK document!
 .PHONY: $(addprefix $(CLEANER)-,$(COMPOSER_TARGETS))
 $(addprefix $(CLEANER)-,$(COMPOSER_TARGETS)):
 	@$(eval override $(@) := $(patsubst $(CLEANER)-%,%,$(@)))
@@ -13228,13 +13233,11 @@ endif
 	@$(MAKE) c_site="1" $(PUBLISH)-library-$(DOITALL)
 #>endif
 
-#WORK document!
 .PHONY: $(DOITALL)-%
 $(DOITALL)-%:
 	@$(call $(HEADERS)-note,$(CURDIR),$(*),$(DOITALL))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(*)
 
-#WORK document!
 .PHONY: $(DOITALL)-$(TARGETS)
 $(DOITALL)-$(TARGETS): $(COMPOSER_TARGETS)
 $(DOITALL)-$(TARGETS):
@@ -13286,7 +13289,6 @@ $(PRINTER):
 	@$(call $(HEADERS))
 	@$(MAKE) $(PRINTER)-$(PRINTER)
 
-#WORK document?  do we really need to document every last target...?
 .PHONY: $(PRINTER)-$(PRINTER)
 $(PRINTER)-$(PRINTER): $(if $(COMPOSER_LOG),\
 	$(COMPOSER_LOG) ,\
