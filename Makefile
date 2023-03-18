@@ -2387,7 +2387,8 @@ endef
 
 .PHONY: $(HELPOUT)-TITLE_%
 $(HELPOUT)-TITLE_%:
-	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
+#>	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
+	@$(call TITLE_LN,-1,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
 
 .PHONY: $(HELPOUT)-USAGE
 $(HELPOUT)-USAGE:
@@ -2512,22 +2513,20 @@ $(HELPOUT)-VARIABLES_CONTROL_%:
 
 .PHONY: $(HELPOUT)-VARIABLES_HELPER_%
 $(HELPOUT)-VARIABLES_HELPER_%:
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
-	@$(PRINT) "$(_F)################################################################################"
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Helper Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
-	@$(TABLE_M3) ":---"			":---"						":---"
-	@$(TABLE_M3) "$(_C)[CURDIR]"		"#WORK"						"\`$(_C)\$$PWD$(_D)\` $(_E)$(MARKER)$(_D) \`$(_M)$(DOMAKE)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_CURDIR]"	"#WORK"						"$(_H)\$$(CURDIR)$(_D) $(_E)$(MARKER)$(_D) \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"#WORK"						"$(_M)$$($(REALPATH) $(CURDIR) $(COMPOSER_DIR))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_ROOT]"	"#WORK"						"$(_H)$(EXPAND)$(_D) $(_E)$(MARKER)$(_D) $(_M)$$($(REALPATH) $(CURDIR) $(COMPOSER_ROOT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"#WORK"						"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)$(EXPAND)$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(*)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"#WORK"						"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)$(EXPAND)$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(*)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_PKG]"	"#WORK"						"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_PKG))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_ART]"	"#WORK"						"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))"
-#>	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"#WORK"						"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_DAT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"#WORK"						"$(_H)\$$(COMPOSER_ART)$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"#WORK"						"$(_H)\$$(CURDIR)$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
+	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"							"$(_H)Value"
+	@$(TABLE_M3) ":---"			":---"								":---"
+	@$(TABLE_M3) "$(_C)[CURDIR]"		"$(_C)[GNU Make]$(_D) current directory"			"\`$(_C)\$$PWD$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_M)$(DOMAKE)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_CURDIR]"	"Detects $(_C)[COMPOSER_INCLUDE]$(_D)"				"$(_H)\$$(CURDIR)$(_D) $(_E)$(DIVIDE)$(_D) \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$$($(REALPATH) $(CURDIR) $(COMPOSER_DIR))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_ROOT]"	"Topmost level of current tree"					"$(_H)$(EXPAND)$(_D) $(_E)$(MARKER)$(_D) $(_M)$$($(REALPATH) $(CURDIR) $(COMPOSER_ROOT))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"Target: $(_C)[$(EXPORTS)]$(_D)"				"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)$(EXPAND)$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(*)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"Target: $(_C)[$(PUBLISH)]$(_E)/$(_C)[$(PUBLISH)-library]$(_D)"	"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)$(EXPAND)$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(*)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_PKG]"	"Repositories and downloads"					"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_PKG))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_ART]"	"$(_C)[$(COMPOSER_BASENAME)]$(_D) supporting files"		"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))"
+#>	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_DAT))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)\$$(COMPOSER_ART)$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"Cache and working directory"					"$(_H)\$$(CURDIR)$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *\`$(_N)(*)$(_D)\` = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` or \`$(_M)$(COMPOSER_YML)$(_D)\`*"
 	@$(ENDOLINE)
