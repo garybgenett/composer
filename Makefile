@@ -68,7 +68,7 @@ override VIM_FOLDING := {{{1
 #					* `make site-list-all`
 #					* `make site-list-index.md`
 #			* Paths
-#				* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/$(COMPOSER_BASENAME)+$(EXPORTS)`
+#				* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)`
 #				* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
 #				* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
 #		* Test: Performance
@@ -231,7 +231,7 @@ override COMPOSER_CONV			= $(if $(filter $(COMPOSER_DIR)/%,$(2)),$(patsubst $(CO
 override EXPORTS			:= export
 override PUBLISH			:= site
 
-override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/$(COMPOSER_BASENAME).$(EXPORTS)
+override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
 override COMPOSER_LIBRARY_ROOT		:=
