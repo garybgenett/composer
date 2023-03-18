@@ -2517,16 +2517,17 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"							"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"								":---"
 	@$(TABLE_M3) "$(_C)[CURDIR]"		"$(_C)[GNU Make]$(_D) current directory"			"\`$(_C)\$$PWD$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_M)$(DOMAKE)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_CURDIR]"	"Detects $(_C)[COMPOSER_INCLUDE]$(_D)"				"$(_H)\$$(CURDIR)$(_D) $(_E)$(DIVIDE)$(_D) \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$$($(REALPATH) $(CURDIR) $(COMPOSER_DIR))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_ROOT]"	"Topmost level of current tree"					"$(_H)$(EXPAND)$(_D) $(_E)$(MARKER)$(_D) $(_M)$$($(REALPATH) $(CURDIR) $(COMPOSER_ROOT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"Target: $(_C)[$(EXPORTS)]$(_D)"				"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)$(EXPAND)$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(*)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"Target: $(_C)[$(PUBLISH)]$(_E)/$(_C)[$(PUBLISH)-library]$(_D)"	"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)$(EXPAND)$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(*)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_PKG]"	"Repositories and downloads"					"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_PKG))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_ART]"	"$(_C)[$(COMPOSER_BASENAME)]$(_D) supporting files"		"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))"
-#>	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)\$$(COMPOSER_DIR)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_DAT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)\$$(COMPOSER_ART)$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"Cache and working directory"					"$(_H)\$$(CURDIR)$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_CURDIR]"	"Detects $(_C)[COMPOSER_INCLUDE]$(_D)"				"$(_H)[CURDIR]$(_D) $(_E)$(DIVIDE)$(_D) \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+#>	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$(call $(HEADERS)-path-dir,$(COMPOSER_DIR))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_ROOT]"	"Topmost level of current tree"					"$(_M)$(call $(HEADERS)-path-root,$(COMPOSER_ROOT))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"Target: $(_C)[$(EXPORTS)]$(_D)"				"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(*)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"Target: $(_C)[$(PUBLISH)]$(_E)/$(_C)[$(PUBLISH)-library]$(_D)"	"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(*)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_PKG]"	"Repositories and downloads"					"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_PKG))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_ART]"	"$(_C)[$(COMPOSER_BASENAME)]$(_D) supporting files"		"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))"
+#>	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_DAT))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_ART]$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"Cache and working directory"					"$(_H)[CURDIR]$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *\`$(_N)(*)$(_D)\` = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` or \`$(_M)$(COMPOSER_YML)$(_D)\`*"
 	@$(ENDOLINE)
@@ -2555,8 +2556,10 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: including $(_C)[COMPOSER_LIBRARY]$(_D)"
+	@$(ENDOLINE)
 	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
 	@$(PRINT) "$(_F)################################################################################"
+	@$(ENDOLINE)
 # $(PUBLISH)-$(CLEANER)
 # $(PUBLISH)-$(PRINTER)
 # $(PUBLISH)-$(PRINTER)-$(PRINTER)
@@ -2695,8 +2698,10 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
+	@$(ENDOLINE)
 	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
 	@$(PRINT) "$(_F)################################################################################"
+	@$(ENDOLINE)
 # move this to a separate "Composer Formats" section, after "Composer Operation"
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
