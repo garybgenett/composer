@@ -237,7 +237,7 @@ override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 override COMPOSER_LIBRARY_ROOT		:=
 override COMPOSER_LIBRARY		:=
 
-override COMPOSER_PKG			:= $(COMPOSER_DIR)/.sources
+override COMPOSER_SRC			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
 override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
 
@@ -1056,7 +1056,7 @@ override define GIT_RUN_COMPOSER =
 endef
 
 #>	$(RM) $(1)/.git
-override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(strip $(3)),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
+override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(strip $(3)),$(4),$(COMPOSER_SRC)/$(notdir $(1)).git)
 override define GIT_REPO_DO =
 	$(call $(HEADERS)-action,$(1),$(3)); \
 	$(MKDIR) $(abspath $(dir $(5))) $(1); \
@@ -1082,7 +1082,7 @@ endef
 
 #> update: $(NOTHING)-%
 
-override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_PKG))
+override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_SRC))
 override define WGET_PACKAGE_DO =
 	$(call $(HEADERS)-action,$(5)); \
 	$(MKDIR) $(8); \
@@ -1108,23 +1108,23 @@ override NPM_NAME			= $(subst /,-,$(call COMPOSER_CONV,,$(1)))
 
 override define NPM_RUN =
 	cd $(1) && \
-		PATH="$(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/node_modules/.bin:$(PATH)" \
+		PATH="$(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules/.bin:$(PATH)" \
 		$(if $(3),\
-			$(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/node_modules/.bin/$(3) \
+			$(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules/.bin/$(3) \
 		,\
 			$(NPM) \
-				$(if $(2),,--prefix $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm) \
-				--cache $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm \
+				$(if $(2),,--prefix $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm) \
+				--cache $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm \
 				$(2) \
 		)
 endef
 
 override define NPM_SETUP =
-	$(MKDIR) $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm; \
+	$(MKDIR) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm; \
 	$(RM) --recursive $(1)/node_modules; \
-	$(LN) $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/node_modules $(1)/; \
-	$(RM) $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/package.json; \
-	$(LN) $(1)/package.json $(COMPOSER_PKG)/$(call NPM_NAME,$(1)).npm/; \
+	$(LN) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules $(1)/; \
+	$(RM) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/package.json; \
+	$(LN) $(1)/package.json $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/; \
 	$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(1)/package.json
 endef
 
@@ -2523,7 +2523,7 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_ROOT]"	"Topmost level of current tree"					"$(_M)$(call $(HEADERS)-path-root,$(COMPOSER_ROOT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"Target: $(_C)[$(EXPORTS)]$(_D)"				"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(*)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"Target: $(_C)[$(PUBLISH)]$(_E)/$(_C)[$(PUBLISH)-library]$(_D)"	"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(*)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_PKG]"	"Repositories and downloads"					"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_PKG))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_SRC]"	"Repositories and downloads"					"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_SRC))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_ART]"	"$(_C)[$(COMPOSER_BASENAME)]$(_D) supporting files"		"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))"
 #>	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_DAT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_ART]$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
@@ -2556,22 +2556,27 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: including $(_C)[COMPOSER_LIBRARY]$(_D)"
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CLEANER)]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-%]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"#WORK"
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_SETTINGS)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_YML)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(DOFORCE)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(DOITALL)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(NOTHING)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(TARGETS)]"	"#WORK"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-digest-files]"	"#WORK"
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
 	@$(ENDOLINE)
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
-	@$(PRINT) "$(_F)################################################################################"
-	@$(ENDOLINE)
-# $(PUBLISH)-$(CLEANER)
-# $(PUBLISH)-$(PRINTER)
-# $(PUBLISH)-$(PRINTER)-$(PRINTER)
-# $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))
-# $(PUBLISH)-$(PRINTER)-$(DOITALL)
-# $(PUBLISH)-$(PRINTER)-%
-# $(PUBLISH)-library
-# $(PUBLISH)-$(COMPOSER_SETTINGS)
-# $(PUBLISH)-$(COMPOSER_YML)
-# $(PUBLISH)-$(EXAMPLE)
-# $(PUBLISH)-$(EXAMPLE)-$(TESTING)
-# $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOFORCE)]"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
@@ -2698,10 +2703,7 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX"
-	@$(PRINT) "$(_F)################################################################################"
-	@$(ENDOLINE)
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
 # move this to a separate "Composer Formats" section, after "Composer Operation"
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
@@ -3869,7 +3871,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LIBRARY)
 
 #WORK
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_PKG)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SRC)
 
 #WORK
 
@@ -4078,6 +4080,9 @@ endef
 # $(TESTING)-$(PRINTER)
 # $(CONFIGS)-%
 # $(CONFIGS)-yml
+# $(PUBLISH)-$(CLEANER)-$(TARGETS)
+# $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+# $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 # $(INSTALL)-$(TARGETS)
 # $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
 # $(CLEANER)-%
@@ -5131,7 +5136,7 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(UPGRADE)
 
-/$(call COMPOSER_CONV,,$(COMPOSER_PKG))/
+/$(call COMPOSER_CONV,,$(COMPOSER_SRC))/
 **/.git
 **/node_modules/
 
