@@ -1056,7 +1056,7 @@ override define GIT_RUN_COMPOSER =
 endef
 
 #>	$(RM) $(1)/.git
-override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(3),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
+override GIT_REPO			= $(call GIT_REPO_DO,$(1),$(2),$(strip $(3)),$(4),$(COMPOSER_PKG)/$(notdir $(1)).git)
 override define GIT_REPO_DO =
 	$(call $(HEADERS)-action,$(1),$(3)); \
 	$(MKDIR) $(abspath $(dir $(5))) $(1); \
@@ -9673,16 +9673,16 @@ ifeq ($(and \
 	@$(if $(wildcard $(firstword $(7Z))),,		$(MAKE) $(NOTHING)-7z)
 else
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(PANDOC_DIR)),	$(PANDOC_SRC),		$(PANDOC_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),		$(YQ_SRC),		$(YQ_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_DIR)),	$(BOOTSTRAP_SRC),	$(BOOTSTRAP_CMT)	)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR)),	$(BOOTLINT_SRC),	$(BOOTLINT_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSWATCH_DIR)),	$(BOOTSWATCH_SRC),	$(BOOTSWATCH_CMT)	)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(FONTAWES_DIR)),	$(FONTAWES_SRC),	$(FONTAWES_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),	$(WATERCSS_SRC),	$(WATERCSS_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR)),	$(MDVIEWER_SRC),	$(MDVIEWER_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(MDTHEMES_DIR)),	$(MDTHEMES_SRC),	$(MDTHEMES_CMT)		)
-	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(REVEALJS_DIR)),	$(REVEALJS_SRC),	$(REVEALJS_CMT)		)
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(PANDOC_DIR)),	$(PANDOC_SRC),		$(PANDOC_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),		$(YQ_SRC),		$(YQ_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_DIR)),	$(BOOTSTRAP_SRC),	$(BOOTSTRAP_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR)),	$(BOOTLINT_SRC),	$(BOOTLINT_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSWATCH_DIR)),	$(BOOTSWATCH_SRC),	$(BOOTSWATCH_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(FONTAWES_DIR)),	$(FONTAWES_SRC),	$(FONTAWES_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),	$(WATERCSS_SRC),	$(WATERCSS_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR)),	$(MDVIEWER_SRC),	$(MDVIEWER_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(MDTHEMES_DIR)),	$(MDTHEMES_SRC),	$(MDTHEMES_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(REVEALJS_DIR)),	$(REVEALJS_SRC),	$(REVEALJS_CMT))
 endif
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
