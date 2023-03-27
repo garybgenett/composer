@@ -15,6 +15,7 @@ override VIM_FOLDING := {{{1
 #	* Verify
 #		* `make COMPOSER_DEBUGIT="1" _release`
 #			* `make _test-dir`
+#			* `make _test-list`
 #			* `make _test-file`
 #		* `make COMPOSER_DEBUGIT="check config targets" _debug | less -rX`
 #			* `rm Composer-*._debug-*.txt`
@@ -126,7 +127,7 @@ override VIM_FOLDING := {{{1
 #		Some document formats also include a unique identifier.  For EPUB, this can be set explicitly by setting the identifier metadata field (see EPUB Metadata, above).
 # PDF
 #	two different templates, with an option, for left/right versus left-only headers/footers
-#		maybe also a customizable version, akin to the resume format i use
+#		maybe also a customizable version, akin to the resume and agreement formats i use
 #	https://github.com/alexeygumirov/pandoc-for-pdf-how-to
 #		https://github.com/Wandmalfarbe/pandoc-latex-template
 #		https://learnbyexample.github.io/customizing-pandoc
@@ -2548,7 +2549,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)]"			"Basic $(HELPOUT) overview $(_E)(default)$(_D)"
-	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(mostly identical)$(_D)"
+	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(no reference sections)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
@@ -2556,27 +2557,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: including $(_C)[COMPOSER_LIBRARY]$(_D)"
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CLEANER)]"		"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))]"		"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-%]"		"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"#WORK"
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_SETTINGS)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_YML)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(DOFORCE)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(DOITALL)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(NOTHING)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-$(TARGETS)]"	"#WORK"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library-digest-files]"	"#WORK"
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
-	@$(ENDOLINE)
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CLEANER)]"		"Remove $(_C)[c_site]$(_D) only: $(_C)[COMPOSER_LIBRARY]$(_E)/$(_C)[COMPOSER_TMP]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOFORCE)]"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
@@ -2602,12 +2583,21 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOITALL)]"		"Complete $(_C)[$(CHECKIT)]$(_D) package list, and system information"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)]"			"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(DOITALL)]"		"Complete $(_C)[$(CONFIGS)]$(_D), including environment variables"
+	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(_N)*$(_C)]"		"Export individual $(_C)[Composer Variables]$(_D) values"
+	@$(TABLE_M2) "$(_C)[$(CONFIGS)-yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M).$(COMPOSER_BASENAME)$(_D)\` in current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M).$(COMPOSER_BASENAME)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_C)[COMPOSER_ROOT]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-git]"			"Commit \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` to $(_N)[Git]$(_D) branch, and push upstream"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_C)[COMPOSER_LIBRARY]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_C)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))]"	"List files which are missing metadata fields"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
@@ -2628,11 +2618,16 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Does $(_C)[$(CREATOR)]$(_D), and builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
+	@$(TABLE_M2) "$(_C)[$(TESTING)-dir]"			"Only create directory structure, and do $(_C)[$(DISTRIB)]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(TESTING)-$(PRINTER)]"		"Output available test cases, for running directly"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(HELPOUT)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_SETTINGS)]"	"$(_C)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_YML)]"	"$(_C)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"$(_C)[Static Websites]$(_D) example \`$(_M)$(notdir $(PUBLISH_ROOT))$(_D)\` in $(_C)[COMPOSER_DIR]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"Only create directory structure and source files"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]"	"Version configured to test specific variations"
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
-	@$(ENDOLINE)
-	@$(PRINT) "$(_N)*None of these are intended to be run directly during normal use.*"
-	@$(PRINT) "$(_N)*They are only listed here for completeness.*"
+	@$(TABLE_M2) "$(_C)[$(PRINTER)-$(PRINTER)]"		"Same as $(_C)[$(PRINTER)]$(_D), but only lists the files $(_E)(no headers)"
 
 ########################################
 ### {{{3 $(HELPOUT)-EXAMPLES
@@ -3413,7 +3408,7 @@ endef
 #		hashes will overlap, and arrays will append
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
-The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is global-to-local $(_E)(see
+The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is local-to-global $(_E)(see
 [COMPOSER_INCLUDE] in [Control Variables])$(_D).  This means that the values in the
 most local file override all others.
 
@@ -3903,7 +3898,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE) / $(EXAMPLE)-yml / $(EXAMPLE)-md
 
   * Prints useful templates for creating new files $(_E)(see [Templates])$(_D):
       * $(_C)[$(COMPOSER_BASENAME)]$(_D) `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Configuration Settings])$(_D)
-      * $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_C)[$(PUBLISH)]$(_D) and $(_C)[Pandoc]$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)(see [$(PUBLISH)])$(_D)
+      * $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_C)[c_site]$(_D) and $(_C)[Pandoc]$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)(see [Static Websites])$(_D)
       * $(_C)[Pandoc]$(_D) `$(_C)$(INPUT)$(_D)`
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
@@ -3912,9 +3907,13 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
     $(_C)[Pandoc]$(_D) conversion.  Details are in the $(_C)[c_type / c_base / c_list]$(_D) section
     of $(_C)[Formatting Variables]$(_D).
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH) / $(PUBLISH)-$(DOITALL) / $(PUBLISH)-$(DOFORCE))
 
-#WORK $(PUBLISH) rebuilds indexes, force recursively
+#WORKING $(PUBLISH) rebuilds indexes, force recursively
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-$(CLEANER))
+
+#WORKING
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(INSTALL) / $(INSTALL)-$(DOITALL) / $(INSTALL)-$(DOFORCE))
 
@@ -3961,8 +3960,6 @@ endef
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL))
 
-#WORKING break this section up
-
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and install all external components.
   * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
@@ -3997,32 +3994,21 @@ For example:
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(OUT_README).$(EXTN_DEFAULT) $(OUT_MANUAL).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL) / $(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(TARGETS))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL))
 
-#WORKING break this section up
-
-#WORK $(PUBLISH)
-#WORK $(PUBLISH)-$(DOITALL)
-#WORK $(PUBLISH)-$(DOFORCE)
-# $(PUBLISH)-$(CLEANER)
-# $(PUBLISH)-$(PRINTER)
-# $(PUBLISH)-$(PRINTER)-$(PRINTER)
-# $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))
-# $(PUBLISH)-$(PRINTER)-$(DOITALL)
-# $(PUBLISH)-$(PRINTER)-%
-# $(PUBLISH)-library
-# $(PUBLISH)-$(COMPOSER_SETTINGS)
-# $(PUBLISH)-$(COMPOSER_YML)
-# $(PUBLISH)-$(EXAMPLE)
-# $(PUBLISH)-$(EXAMPLE)-$(TESTING)
-# $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
-
-  * Useful targets for validating tooling and configurations.
   * Use $(_C)[$(CHECKIT)]$(_D) to see the list of components and their versions, in relation to
     the system installed versions.  Doing $(_C)[$(CHECKIT)-$(DOITALL)]$(_D) will show the complete
     list of tools that are used by $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONFIGS)-\* / $(CONFIGS)-yml / $(TARGETS))
+
   * The current values of all $(_C)[Composer Variables]$(_D) is output by $(_C)[$(CONFIGS)]$(_D), and
     $(_C)[$(CONFIGS)-$(DOITALL)]$(_D) will additionally output all environment variables.
+  * Individual $(_C)[Composer Variables]$(_D) can be exported with $(_C)[$(CONFIGS)-$(_N)*$(_C)]$(_D).  This is
+    useful for scripting in `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D).
+  * A JSON version of the `$(_M)$(COMPOSER_YML)$(_D)` configuration is exported with
+    $(_C)[$(CONFIGS)-yml]$(_D).  This is available for any external scripting, such as in
+    `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D), and is parseable with $(_C)[YQ]$(_D).
   * A structured list of detected targets, $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) targets,
     $(_C)[COMPOSER_TARGETS]$(_D), and $(_C)[COMPOSER_SUBDIRS]$(_D) is printed by $(_C)[$(TARGETS)]$(_D).
   * Together, $(_C)[$(CONFIGS)]$(_D) and $(_C)[$(TARGETS)]$(_D) reveal the entire internal state of
@@ -4064,7 +4050,15 @@ Example using $(_C)[$(CONVICT)-$(PRINTER)]$(_D) with $(_C)[c_list]$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)-$(PRINTER)$(_D) $(_E)c_list="$(MAKEFILE) $(call COMPOSER_CONV,,$(COMPOSER_ART))"$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-git)
+
+#WORKING
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-library)
+
+#WORKING
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DOITALL) / $(PUBLISH)-$(PRINTER)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING)) / $(PUBLISH)-$(PRINTER)-\*)
 
 #WORKING
 endef
@@ -4073,26 +4067,10 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL
 ########################################
 
-#WORK document?
-#	do we really need to document every last target...?
-#	if so, need to do a quick scour through the makefile to track down them all...
-# $(TESTING)-dir
-# $(TESTING)-$(PRINTER)
-# $(CONFIGS)-%
-# $(CONFIGS)-yml
-# $(PUBLISH)-$(CLEANER)-$(TARGETS)
-# $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-# $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-# $(INSTALL)-$(TARGETS)
-# $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
-# $(CLEANER)-%
-# $(CLEANER)-$(TARGETS)
-# $(addprefix $(CLEANER)-,$(COMPOSER_TARGETS))
-# $(DOITALL)-%
-# $(DOITALL)-$(TARGETS)
-# $(PRINTER)-$(PRINTER)
-
 override define $(HELPOUT)-$(DOITALL)-TARGETS_INTERNAL =
+$(_N)*None of these are intended to be run directly during normal use.*$(_D)
+$(_N)*They are only listed here for completeness.*$(_D)
+
 $(_S)[$(HELPOUT)-$(HELPOUT)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)-$(INSTALL)]: #internal-targets$(_D)
 $(_S)[.$(EXAMPLE)]: #internal-targets$(_D)
@@ -4107,8 +4085,16 @@ $(_S)[$(CREATOR)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(TESTING)]: #internal-targets$(_D)
 $(_S)[$(TESTING)-file]: #internal-targets$(_D)
+$(_S)[$(TESTING)-dir]: #internal-targets$(_D)
+$(_S)[$(TESTING)-$(PRINTER)]: #internal-targets$(_D)
 $(_S)[$(CHECKIT)-$(HELPOUT)]: #internal-targets$(_D)
+$(_S)[$(PUBLISH)-$(COMPOSER_SETTINGS)]: #internal-targets$(_D)
+$(_S)[$(PUBLISH)-$(COMPOSER_YML)]: #internal-targets$(_D)
+$(_S)[$(PUBLISH)-$(EXAMPLE)]: #internal-targets$(_D)
+$(_S)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]: #internal-targets$(_D)
+$(_S)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]: #internal-targets$(_D)
 $(_S)[$(SUBDIRS)]: #internal-targets$(_D)
+$(_S)[$(PRINTER)-$(PRINTER)]: #internal-targets$(_D)
 endef
 
 ########################################
@@ -4974,7 +4960,7 @@ $(EXAMPLE)-md \
 :
 	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= .$(@)
 
-#WORKING keep this?  can it be improved?
+#WORKING keep this?  can it be improved?  document!
 .PHONY: $(EXAMPLE)-md-file
 $(EXAMPLE)-md-file:
 	@$(call ENV_MAKE) $(EXAMPLE)-md >$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
@@ -9431,7 +9417,7 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 endif
 endif
 	@$(LINERULE)
-	@$(call ENV_MAKE) $(HEADERS)-colors
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) $(HEADERS)-colors
 
 ########################################
 ### {{{3 $(HEADERS)-%
