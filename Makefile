@@ -2531,9 +2531,6 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"Cache and working directory"					"$(_H)[CURDIR]$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *\`$(_N)(*)$(_D)\` = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` or \`$(_M)$(COMPOSER_YML)$(_D)\`*"
-	@$(ENDOLINE)
-	@$(PRINT) "$(_N)*These are internal variables only exposed within \`$(COMPOSER_SETTINGS)\` files.*"
-	@$(PRINT) "$(_N)*See [Configuration Settings] and [Custom Targets] for more details.*"
 
 ########################################
 ### {{{3 $(HELPOUT)-TARGETS
@@ -2698,8 +2695,6 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-WORKFLOW)	; $(call TITLE_END)
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIX############################################################"
-# move this to a separate "Composer Formats" section, after "Composer Operation"
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FORMAT)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-SETTINGS)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-ORDERS)	; $(call TITLE_END)
@@ -2754,7 +2749,6 @@ $(HELPOUT)-$(HELPOUT)-$(PRINTER):
 	@$(call TITLE_LN,1,Reference)
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HELPOUT)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
-#WORKING reference this somewhere...
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Pandoc Extensions)"
 	@$(ENDOLINE); $(PRINT) "$(_C)[$(COMPOSER_BASENAME)]$(_D) uses the \`$(_C)$(INPUT)$(_D)\` input format, with these extensions:"
 	@$(ENDOLINE); $(foreach FILE,$(sort $(subst +,,$(PANDOC_EXTENSIONS))),\
@@ -2783,7 +2777,6 @@ $(HELPOUT)-$(HELPOUT)-$(PRINTER):
 	@$(call TITLE_LN,2,Reserved,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Target Names)"
 	@$(ENDOLINE); $(PRINT) "Do not create targets which match these, or use them as prefixes:"
-#WORKING maybe just do: $(call ENV_MAKE) $(LISTING) | $(SED) -e "/^[#]/d" -e "s|^([^:]+).*$|\1|g" | $(SORT)
 	@$(ENDOLINE); $(eval override LIST := $(shell \
 			$(ECHO) "$(COMPOSER_RESERVED)" \
 			| $(TR) ' ' '\n' \
@@ -2928,6 +2921,10 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 #WORKING these links need to be variables
 #WORKING create an [Install] link to a new section = download [Makefile](github raw) into dedicated directory (see [Recommended Workflow]) and `make $(DISTRIB)`
 override define $(HELPOUT)-$(DOITALL)-LINKS =
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/master/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
@@ -3252,11 +3249,14 @@ this, and yet its primary focus is document conversion, not document formatting.
 $(_C)[$(COMPOSER_BASENAME)]$(_D) fills this gap by specifically tuning a select list of the most
 commonly used document formats.
 
+The input $(_C)[Markdown]$(_D) format used by $(_C)[$(COMPOSER_BASENAME)]$(_D) is the $(_C)[Pandoc]$(_D) default.
+However, the $(_C)[Pandoc Extensions]$(_D) list has been modified slightly.  See that
+section and the $(_C)[Pandoc]$(_D) $(_C)[Markdown]$(_D) documentation for the exact list and details
+for each.
+
 Further options for each document type are in $(_C)[Formatting Variables]$(_D).  All
 improvements not exposed as variables will apply to all documents created with a
 given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
-
-#WORK remove heredoc...
 
 Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
 and '$(_E)Heredoc$(_D)' sections of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the
@@ -3829,6 +3829,9 @@ endef
 #	DATEMARK
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_HELPER =
+$(_N)*These are internal variables only exposed within \`$(COMPOSER_SETTINGS)\` files.*$(_D)
+$(_N)*See [Configuration Settings] and [Custom Targets] for more details.*$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,CURDIR)
 
 #WORK
@@ -3964,8 +3967,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOIT
     and install all external components.
   * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
     whereas $(_C)[$(UPGRADE)]$(_D) only fetches the repositories.
-  * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) performs the steps necessary
-    to turn the current directory into a complete clone of $(_C)[$(COMPOSER_BASENAME)]$(_D).
+  * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) runs $(_C)[$(CREATOR)-$(DOITALL)]$(_D), which
+    performs the steps necessary to turn the current directory into a complete
+    clone of $(_C)[$(COMPOSER_BASENAME)]$(_D), including overwriting all supporting files.
   * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
     compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
 
