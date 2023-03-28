@@ -2918,13 +2918,7 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[License: GPL]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
-#WORKING these links need to be variables
-#WORKING create an [Install] link to a new section = download [Makefile](github raw) into dedicated directory (see [Recommended Workflow]) and `make $(DISTRIB)`
 override define $(HELPOUT)-$(DOITALL)-LINKS =
-$(_F)
-#WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
-$(_D)
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/master/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
@@ -3002,9 +2996,6 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-GOALS
 ########################################
 
-#WORK the file beats the directory, which beats the tree
-#WORK the file beats the command line, which beats the environment
-
 override define $(HELPOUT)-$(DOITALL)-GOALS =
 The guiding principles of $(_C)[$(COMPOSER_BASENAME)]$(_D):
 
@@ -3029,8 +3020,6 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-REQUIRE
 ########################################
 
-#WORK update this... the "bin" directory fixed this...
-
 override define $(HELPOUT)-$(DOITALL)-REQUIRE =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
 integrated directly into the repository, including $(_C)[Pandoc]$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) does
@@ -3047,11 +3036,6 @@ Below are the versions of the components in the repository, and the tested
 versions of external tools for this iteration of $(_C)[$(COMPOSER_BASENAME)]$(_D).  Use $(_C)[$(CHECKIT)]$(_D) to
 validate your system.
 endef
-
-#WORK document these additional (potential) requirements...
-# GIT
-# DIFF
-# RSYNC
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
@@ -3400,6 +3384,8 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-ORDERS
 ########################################
 
+#WORK the file beats the directory, which beats the tree
+#WORK the file beats the command line, which beats the environment
 #WORKING
 #	note about global/local variables, and config/$(MARKER)
 #		add a link to this section at the top of both variable sections
@@ -3408,6 +3394,10 @@ endef
 #		hashes will overlap, and arrays will append
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is local-to-global $(_E)(see
 [COMPOSER_INCLUDE] in [Control Variables])$(_D).  This means that the values in the
 most local file override all others.
@@ -11128,6 +11118,10 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER)"
 	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"
 	@$(TABLE_M2) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"
+	@$(TABLE_M2) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
+	@$(TABLE_M2) "-- $(_E)Git SCM"				"$(_E)$(GIT_VER)"
+	@$(TABLE_M2) "-- $(_E)GNU Diffutils"			"$(_E)$(DIFFUTILS_VER)"
+	@$(TABLE_M2) "-- $(_E)Rsync"				"$(_E)$(RSYNC_VER)"
 else
 	@$(TABLE_M3) "$(_H)Project"				"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"					":---"					":---"
@@ -11139,11 +11133,11 @@ else
 	@$(TABLE_M3) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
-ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "-- $(_E)Git SCM"				"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_E)GNU Diffutils"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_E)Rsync"				"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "-- $(_E)Wget"				"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_E)GNU Tar"				"$(_E)$(TAR_VER)"			"$(_N)$(shell $(TAR) --version			2>/dev/null | $(HEAD) -n1)"
@@ -11162,11 +11156,11 @@ endif
 	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(PANDOC))"
 	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
 	@$(TABLE_M2) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
-ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
 	@$(TABLE_M2) "-- $(_E)Git SCM"				"$(_N)$(GIT)"
 	@$(TABLE_M2) "-- $(_E)GNU Diffutils"			"$(_N)$(DIFF)"
 	@$(TABLE_M2) "-- $(_E)Rsync"				"$(_N)$(RSYNC)"
+ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"			"$(_H)$(MARKER)"
 	@$(TABLE_M2) "-- $(_E)Wget"				"$(_N)$(WGET)"
 	@$(TABLE_M2) "-- $(_E)GNU Tar"				"$(_N)$(TAR)"
