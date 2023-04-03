@@ -896,6 +896,7 @@ override TAR_VER			:= 1.34
 override GZIP_VER			:= 1.12
 override 7Z_VER				:= 16.02
 override NPM_VER			:= 8.19.2
+override CURL_VER			:= 7.85.0
 
 ################################################################################
 # {{{1 Tooling Options
@@ -967,6 +968,7 @@ override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
 override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --verbose
+override CURL				:= $(call COMPOSER_FIND,$(PATH_LIST),curl)
 
 override DOMAKE				:= $(notdir $(MAKE))
 export GZIP				:=
@@ -2536,6 +2538,8 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 ### {{{3 $(HELPOUT)-TARGETS
 ########################################
 
+#WORK grep set_title Makefile
+
 .PHONY: $(HELPOUT)-TARGETS_TITLE_%
 $(HELPOUT)-TARGETS_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,1)
@@ -3062,6 +3066,10 @@ endef
 # header-includes
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory tree you want to manage, creating a structure similar to this:
 
@@ -3255,7 +3263,10 @@ host, and are extremely responsive compared to truly dynamic webpages.
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of simple text files into
 a modern website, with the appearance and behavior of dynamically indexed pages.
 
-#WORKING
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSTRAP_ART_JS))$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSTRAP_ART_CSS))$(_D)
@@ -3268,11 +3279,17 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ICON))$(_D)
 $(_C)[Bootlint]$(_D)
 $(_C)[Bootswatch]$(_D)
 
-#WORK
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.html$(_D)
 
-#WORK
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
 
@@ -3308,8 +3325,11 @@ traditional and readable end result.  The customized version is at:
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_REVEALJS_CSS))$(_D)
 
-#WORKING
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
 #	rework this
+$(_D)
 
 It links in a default theme from the `$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(REVEALJS_DIR))/dist/theme$(_D)` directory.  Edit
 the location in the file, or use $(_C)[c_css]$(_D) to select a different theme.
@@ -3352,6 +3372,10 @@ endef
 #		duplicate or reference this
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
+$(_F)
+#WORKING:NOW:NOW:FIX############################################################
+--------------------------------------------------------------------------------
+$(_D)
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
 $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
 [COMPOSER_INCLUDE] in [Control Variables])$(_D).  A `$(_M)$(COMPOSER_SETTINGS)$(_D)` in the main
@@ -3819,7 +3843,7 @@ endef
 #	DATEMARK
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_HELPER =
-$(_N)*These are internal variables only exposed within \`$(COMPOSER_SETTINGS)\` files.*$(_D)
+$(_N)*These are internal variables only exposed within `$(COMPOSER_SETTINGS)` files.*$(_D)
 $(_N)*See [Configuration Settings] and [Custom Targets] for more details.*$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,CURDIR)
@@ -5148,6 +5172,11 @@ $(_S)#$(_D) $(_H)$(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration$(_D)
 $(_S)################################################################################$(_D)
 $(_N)ifneq$(_D) ($(_E)$$(COMPOSER_CURDIR)$(_D),)
 $(_S)################################################################################$(_D)
+
+$(_S)########################################$(_D)
+$(_S)#$(_D) $(_H)Settings$(_D)
+
+$(_N)override$(_D) $(_C)COMPOSER_SUBDIRS$(_D)		:= $(_M)$(NOTHING)$(_D)
 
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Wildcards$(_D)
@@ -9646,16 +9675,20 @@ $(UPGRADE):
 	@$(call $(HEADERS))
 ifeq ($(and \
 	$(wildcard $(firstword $(GIT))) ,\
-	$(wildcard $(firstword $(WGET))), \
-	$(wildcard $(firstword $(TAR))), \
-	$(wildcard $(firstword $(GZIP_BIN))), \
-	$(wildcard $(firstword $(7Z))) \
+	$(wildcard $(firstword $(WGET))) ,\
+	$(wildcard $(firstword $(TAR))) ,\
+	$(wildcard $(firstword $(GZIP_BIN))) ,\
+	$(wildcard $(firstword $(7Z))) ,\
+	$(wildcard $(firstword $(NPM))) ,\
+	$(wildcard $(firstword $(CURL))) \
 ),)
 	@$(if $(wildcard $(firstword $(GIT))),,		$(MAKE) $(NOTHING)-git)
 	@$(if $(wildcard $(firstword $(WGET))),,	$(MAKE) $(NOTHING)-wget)
 	@$(if $(wildcard $(firstword $(TAR))),,		$(MAKE) $(NOTHING)-tar)
 	@$(if $(wildcard $(firstword $(GZIP_BIN))),,	$(MAKE) $(NOTHING)-gzip)
 	@$(if $(wildcard $(firstword $(7Z))),,		$(MAKE) $(NOTHING)-7z)
+	@$(if $(wildcard $(firstword $(NPM))),,		$(MAKE) $(NOTHING)-npm)
+	@$(if $(wildcard $(firstword $(CURL))),,	$(MAKE) $(NOTHING)-curl)
 else
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(PANDOC_DIR)),	$(PANDOC_SRC),		$(PANDOC_CMT))
@@ -9678,11 +9711,12 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call WGET_PACKAGE,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
+	@$(MAKE) $(UPGRADE)-$(INSTALL)
+endif
+endif
+
 #WORK document
-ifeq ($(wildcard $(firstword $(NPM))),)
-	@$(ENDOLINE)
-	@$(MAKE) $(NOTHING)-npm
-else
+$(UPGRADE)-$(INSTALL):
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR)))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)))
@@ -9720,9 +9754,6 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-shade.css
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-shade.css
 	@$(call NPM_RUN,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),,yarn) build
-endif
-endif
-endif
 
 ########################################
 ## {{{2 $(CREATOR)
@@ -11144,6 +11175,7 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "-- $(_E)GNU Gzip"				"$(_E)$(GZIP_VER)"			"$(_N)$(shell $(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_E)7z"				"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_M3) "-- $(_E)Node.js (npm)"			"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)Curl"				"$(_E)$(CURL_VER)"			"$(_N)$(shell $(CURL) --version			2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"				"$(_H)Location & Options"
@@ -11167,6 +11199,7 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "-- $(_E)GNU Gzip"				"$(_N)$(GZIP_BIN)"
 	@$(TABLE_M2) "-- $(_E)7z"				"$(_N)$(7Z)"
 	@$(TABLE_M2) "-- $(_E)Node.js (npm)"			"$(_N)$(NPM)"
+	@$(TABLE_M3) "-- $(_E)Curl"				"$(_N)$(CURL)"
 endif
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(ENDOLINE)
@@ -12852,7 +12885,6 @@ endif
 
 #> update: $(NOTHING)-%
 
-#>$(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL): .set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL):
 ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
@@ -13156,7 +13188,7 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(call ENV_MAKE) --makefile $(COMPOSER) .$(EXAMPLE)$(2) >$(1); \
+		$(call ENV_MAKE) --directory $(abspath $(dir $(1))) --makefile $(COMPOSER) .$(EXAMPLE)$(2) >$(1); \
 	fi; \
 	if [ -n "$(3)" ]; then \
 		$(SED) -i \
