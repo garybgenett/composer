@@ -2449,31 +2449,31 @@ $(HELPOUT)-VARIABLES_TITLE_%:
 .PHONY: $(HELPOUT)-VARIABLES_FORMAT_%
 $(HELPOUT)-VARIABLES_FORMAT_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Formatting Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"			"$(_H)Purpose"				"$(_H)Value"
-	@$(TABLE_M3) ":---"				":---"					":---"
-	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ $(_E)S"	"Enable $(_C)[Static Websites]$(_D)"	"$(_M)$(c_site)"
-	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ $(_E)T"	"Desired output format"			"$(_M)$(c_type)"
-	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ $(_E)B"	"Base of output file"			"$(_M)$(c_base)"
-	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ $(_E)L"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
-	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ $(_E)a"	"Language for document headers"		"$(_M)$(c_lang)"
-	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ $(_E)g"	"Logo image ($(_C)[HTML]$(_D) formats)"	"$(_M)$(notdir $(c_logo))"
-	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ $(_E)i"	"Icon image ($(_C)[HTML]$(_D) formats)"	"$(_M)$(notdir $(c_icon))"
-	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ $(_E)c"	"Location of CSS file"			"$(_M)$(notdir $(call c_css_select))$(_D)"
-	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ $(_E)t"	"Table of contents depth"		"$(_M)$(c_toc)"
-	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ $(_E)l"	"Chapter/slide header level"		"$(_M)$(c_level)"
-	@$(TABLE_M3) "$(_C)[c_margin]$(_D)  ~ $(_E)m"	"Size of margins ($(_C)[PDF]$(_D))"	"$(_M)$(c_margin)"
-	@$(TABLE_M3) "$(_C)[c_options]$(_D) ~ $(_E)o"	"Custom Pandoc options"			"$(_M)$(c_options)"
+	@$(TABLE_M3) "$(_H)Variable"				"$(_H)Purpose"				"$(_H)Value"
+	@$(TABLE_M3) ":---"					":---"					":---"
+	@$(TABLE_M3) "$(_C)[c_site]$(_D)    ~ \`$(_E)S$(_D)\`"	"Enable $(_C)[Static Websites]$(_D)"	"$(_M)$(c_site)"
+	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ \`$(_E)T$(_D)\`"	"Desired output format"			"$(_M)$(c_type)"
+	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ \`$(_E)B$(_D)\`"	"Base of output file"			"$(_M)$(c_base)"
+	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ \`$(_E)L$(_D)\`"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
+	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ \`$(_E)a$(_D)\`"	"Language for document headers"		"$(_M)$(c_lang)"
+	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ \`$(_E)g$(_D)\`"	"Logo image ($(_C)[HTML]$(_D) formats)"	"$(_M)$(notdir $(c_logo))"
+	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ \`$(_E)i$(_D)\`"	"Icon image ($(_C)[HTML]$(_D) formats)"	"$(_M)$(notdir $(c_icon))"
+	@$(TABLE_M3) "$(_C)[c_css]$(_D)     ~ \`$(_E)c$(_D)\`"	"Location of CSS file"			"$(_M)$(notdir $(call c_css_select))$(_D)"
+	@$(TABLE_M3) "$(_C)[c_toc]$(_D)     ~ \`$(_E)t$(_D)\`"	"Table of contents depth"		"$(_M)$(c_toc)"
+	@$(TABLE_M3) "$(_C)[c_level]$(_D)   ~ \`$(_E)l$(_D)\`"	"Chapter/slide header level"		"$(_M)$(c_level)"
+	@$(TABLE_M3) "$(_C)[c_margin]$(_D)  ~ \`$(_E)m$(_D)\`"	"Size of margins ($(_C)[PDF]$(_D))"	"$(_M)$(c_margin)"
+	@$(TABLE_M3) "$(_C)[c_options]$(_D) ~ \`$(_E)o$(_D)\`"	"Custom Pandoc options"			"$(_M)$(c_options)"
 	@$(ENDOLINE)
-	@$(TABLE_M3) "$(_H)Values$(_D) ($(_C)c_type$(_D))"	"$(_H)Format"	"$(_H)Extension"
-	@$(TABLE_M3) ":---"					":---"		":---"
-	@$(TABLE_M3) "$(_M)$(TYPE_HTML)"			"$(DESC_HTML)"	"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
-	@$(TABLE_M3) "$(_M)$(TYPE_LPDF)"			"$(DESC_LPDF)"	"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
-	@$(TABLE_M3) "$(_M)$(TYPE_EPUB)"			"$(DESC_EPUB)"	"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
-	@$(TABLE_M3) "$(_M)$(TYPE_PRES)"			"$(DESC_PRES)"	"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
-	@$(TABLE_M3) "$(_M)$(TYPE_DOCX)"			"$(DESC_DOCX)"	"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
-	@$(TABLE_M3) "$(_M)$(TYPE_PPTX)"			"$(DESC_PPTX)"	"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
-	@$(TABLE_M3) "$(_M)$(TYPE_TEXT)"			"$(DESC_TEXT)"	"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
-	@$(TABLE_M3) "$(_M)$(TYPE_LINT)"			"$(DESC_LINT)"	"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
+	@$(TABLE_M3) "$(_H)Values$(_D) ($(_C)[c_type]$(_D))"	"$(_H)Format"		"$(_H)Extension"
+	@$(TABLE_M3) ":---"					":---"			":---"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_HTML)$(_D)\`"		"[$(DESC_HTML)]"	"$(_N)*$(_D).$(_E)$(EXTN_HTML)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_LPDF)$(_D)\`"		"[$(DESC_LPDF)]"	"$(_N)*$(_D).$(_E)$(EXTN_LPDF)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_EPUB)$(_D)\`"		"[$(DESC_EPUB)]"	"$(_N)*$(_D).$(_E)$(EXTN_EPUB)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_PRES)$(_D)\`"		"[$(DESC_PRES)]"	"$(_N)*$(_D).$(_E)$(EXTN_PRES)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_DOCX)$(_D)\`"		"[$(DESC_DOCX)]"	"$(_N)*$(_D).$(_E)$(EXTN_DOCX)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_PPTX)$(_D)\`"		"[$(DESC_PPTX)]"	"$(_N)*$(_D).$(_E)$(EXTN_PPTX)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_TEXT)$(_D)\`"		"[$(DESC_TEXT)]"	"$(_N)*$(_D).$(_E)$(EXTN_TEXT)"
+	@$(TABLE_M3) "\`$(_M)$(TYPE_LINT)$(_D)\`"		"[$(DESC_LINT)]"	"$(_N)*$(_D).$(_E)$(EXTN_LINT)"
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other $(_C)[c_type]$(_D) values will be passed directly to $(_C)[Pandoc]$(_D)*"
 	@$(PRINT) "  * *Special $(_C)[c_css]$(_D) values:*"
@@ -2481,7 +2481,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(COLUMN_2) "      * *\`$(_N)$(CSS_ALT)$(_D)\`"					"= Use the alternate default stylesheet*"
 	@$(COLUMN_2) "      * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"					"= Revert to the $(_C)[Pandoc]$(_D) default*"
 	@$(COLUMN_2) "  * *Special $(_C)[c_toc]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= List all headers, and number sections*"
-	@$(COLUMN_2) "  * *Special $(_C)[c_level]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= Varies by $(_C)[c_type]$(_D) $(_E)(see [$(HELPOUT)-$(DOITALL)])$(_D)*"
+	@$(COLUMN_2) "  * *Special $(_C)[c_level]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= Varies by $(_C)[c_type]$(_D) $(_E)(see [c_level])$(_D)*"
 	@$(PRINT) "  * *An empty $(_C)[c_margin]$(_D) value enables individual margins:*"
 	@$(PRINT) "      * *\`$(_C)c_margin_top$(_D)\`    ~ \`$(_E)mt$(_D)\`*"
 	@$(PRINT) "      * *\`$(_C)c_margin_bottom$(_D)\` ~ \`$(_E)mb$(_D)\`*"
@@ -2554,7 +2554,7 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [Formatting Variables])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [c_type])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: including $(_C)[COMPOSER_LIBRARY]$(_D)"
@@ -2924,11 +2924,11 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 
 override define $(HELPOUT)-$(DOITALL)-LINKS =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
+$(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
 $(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/master/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
 $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
-$(_S)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
 $(_S)[$(COMPOSER_BASENAME) Icon]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-v1.0.png$(_D)
 $(_S)[$(COMPOSER_BASENAME) Screenshot]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png$(_D)
 endef
@@ -2957,11 +2957,24 @@ $(_E)[Markdown Themes]: https://github.com/simov/markdown-themes$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
+$(_S)[Git]: https://git-scm.com$(_D)
+$(_S)[Git SCM]: https://git-scm.com$(_D)
+$(_S)[GNU Diffutils]: http://www.gnu.org/software/diffutils$(_D)
+$(_S)[Rsync]: https://rsync.samba.org$(_D)
+
 $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
 $(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
 $(_S)[MacPorts]: https://www.macports.org$(_D)
-$(_S)[Git]: https://git-scm.com$(_D)
+
+$(_S)[$(DESC_HTML)]: #html$(_D)
+$(_S)[$(DESC_LPDF)]: #pdf$(_D)
+$(_S)[$(DESC_EPUB)]: #epub$(_D)
+$(_S)[$(DESC_PRES)]: #revealjs-presentations$(_D)
+$(_S)[$(DESC_DOCX)]: #microsoft-word--powerpoint$(_D)
+$(_S)[$(DESC_PPTX)]: #microsoft-word--powerpoint$(_D)
+$(_S)[$(DESC_TEXT)]: #plain-text$(_D)
+$(_S)[$(DESC_LINT)]: #pandoc-markdown$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-SECTION =
@@ -3066,10 +3079,8 @@ endef
 # header-includes
 
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
-$(_F)
-#WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
-$(_D)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Directory Tree)
+
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M).$(COMPOSER_BASENAME)$(_D)` for each
 directory tree you want to manage, creating a structure similar to this:
 
@@ -3078,11 +3089,18 @@ $(CODEBLOCK)$(EXPAND)/
 $(CODEBLOCK)$(EXPAND)/tld/
 $(CODEBLOCK)$(EXPAND)/tld/sub/
 
-Then, it can be converted to a $(_C)[$(COMPOSER_BASENAME)]$(_D) documentation archive $(_E)([Quick Start]
-example)$(_D):
+To save on disk space, using a central $(_C)[$(COMPOSER_BASENAME)]$(_D) install for multiple directory
+trees, the $(_C)[$(DOSETUP)]$(_D) target can be used to create a linked `$(_M).$(COMPOSER_BASENAME)$(_D)` directory:
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(MAKEFILE)$(_D) $(_M)$(DOSETUP)$(_D)
+
+The directory tree can then be converted to a $(_C)[$(COMPOSER_BASENAME)]$(_D) documentation archive
+$(_E)([Quick Start] example)$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f .$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Customization)
 
 If specific settings need to be used, either globally or per-directory,
 `$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see [Configuration Settings], [Quick Start]
@@ -3093,6 +3111,8 @@ $(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
 
 Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax $(_E)(see
 [Custom Targets])$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Important Notes)
 
 $(_C)[GNU Make]$(_D) does not support file and directory names with spaces in them, and
 neither does $(_C)[$(COMPOSER_BASENAME)]$(_D).  Documentation archives which have such files or
@@ -3105,9 +3125,19 @@ $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/tld$(_D)
 $(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D) $(_M)./$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)$(_D)
 
-Finally, it is best practice to $(_C)[$(INSTALL)-$(DOFORCE)]$(_D) after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade,
-in case there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Primary
-Targets])$(_D).
+$(_F)
+#WORKING:NOW:NOW:DOCS###########################################################
+--------------------------------------------------------------------------------
+$(_D)
+Similarly to source code, $(_C)[GNU Make]$(_D) is meant to only run one instance within
+the directory at a time, and $(_C)[$(COMPOSER_BASENAME)]$(_D) shares this requirement.  It should be
+run as a single user, to avoid duplication and conflicts, and concurrent runs
+will produce unexpected results.
+
+It is best practice to $(_C)[$(INSTALL)-$(DOFORCE)]$(_D) after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade, in case
+there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Primary Targets])$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Next Steps)
 
 The archive is ready, and each directory is both a part of the collective and
 its own individual instance.  Targets can be run per-file, per-directory, or
@@ -3358,6 +3388,24 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART))/reference.$(EX
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART))/reference.$(EXTN_PPTX)$(_D)
 
 They are not currently modified by $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Plain Text)
+
+This output format is still parseable by $(_C)[Pandoc]$(_D) as valid $(_C)[Markdown]$(_D), but is
+formatted to read as pure plain text that is only `$(_M)$(COLUMNS)$(_D)` columns wide.  There are
+cases where this conversion is desireable, such as technical documentation,
+where it is easier to write and format as $(_C)[Pandoc]$(_D) $(_C)[Markdown]$(_D) but the output
+needs to be in a universally accepted text layout and presentation.
+
+$(_C)[$(COMPOSER_BASENAME)]$(_D) currently does not modify this format, other than using the
+`$(_M)--columns=$(COLUMNS)$(_D)` and `$(_M)--wrap=auto$(_D)` options to $(_C)[Pandoc]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Pandoc Markdown)
+
+Output $(_C)[Markdown]$(_D) that is specific to $(_C)[Pandoc]$(_D).  This is for linting or creating
+standardized versions of source files for shared archives.
+
+Due to the expressed purposes of this format, $(_C)[$(COMPOSER_BASENAME)]$(_D) will never modify it.
 endef
 
 ########################################
@@ -11150,9 +11198,9 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"
 	@$(TABLE_M2) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"
 	@$(TABLE_M2) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
-	@$(TABLE_M2) "-- $(_E)Git SCM"				"$(_E)$(GIT_VER)"
-	@$(TABLE_M2) "-- $(_E)GNU Diffutils"			"$(_E)$(DIFFUTILS_VER)"
-	@$(TABLE_M2) "-- $(_E)Rsync"				"$(_E)$(RSYNC_VER)"
+	@$(TABLE_M2) "-- $(_E)[Git SCM]"			"$(_E)$(GIT_VER)"
+	@$(TABLE_M2) "-- $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"
+	@$(TABLE_M2) "-- $(_E)[Rsync]"				"$(_E)$(RSYNC_VER)"
 else
 	@$(TABLE_M3) "$(_H)Project"				"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3) ":---"					":---"					":---"
@@ -11165,9 +11213,9 @@ else
 	@$(TABLE_M3) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
-	@$(TABLE_M3) "-- $(_E)Git SCM"				"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "-- $(_E)GNU Diffutils"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "-- $(_E)Rsync"				"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)[Git SCM]"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$(shell $(DIFF) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_E)[Rsync]"				"$(_E)$(RSYNC_VER)"			"$(_N)$(shell $(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: $(UPGRADE)"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "-- $(_E)Wget"				"$(_E)$(WGET_VER)"			"$(_N)$(shell $(WGET) --version			2>/dev/null | $(HEAD) -n1)"
@@ -11189,9 +11237,9 @@ endif
 	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
 	@$(TABLE_M2) "-- $(_C)[TeX Live] ($(TYPE_LPDF))"	"$(_D)$(TEX_PDF)"
 	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
-	@$(TABLE_M2) "-- $(_E)Git SCM"				"$(_N)$(GIT)"
-	@$(TABLE_M2) "-- $(_E)GNU Diffutils"			"$(_N)$(DIFF)"
-	@$(TABLE_M2) "-- $(_E)Rsync"				"$(_N)$(RSYNC)"
+	@$(TABLE_M2) "-- $(_E)[Git SCM]"			"$(_N)$(GIT)"
+	@$(TABLE_M2) "-- $(_E)[GNU Diffutils]"			"$(_N)$(DIFF)"
+	@$(TABLE_M2) "-- $(_E)[Rsync]"				"$(_N)$(RSYNC)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: $(UPGRADE)"			"$(_H)$(MARKER)"
 	@$(TABLE_M2) "-- $(_E)Wget"				"$(_N)$(WGET)"
