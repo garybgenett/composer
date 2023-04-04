@@ -3135,7 +3135,7 @@ run as a single user, to avoid duplication and conflicts, and concurrent runs
 will produce unexpected results.
 
 It is best practice to $(_C)[$(INSTALL)-$(DOFORCE)]$(_D) after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade, in case
-there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Primary Targets])$(_D).
+there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Templates])$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Next Steps)
 
@@ -3502,8 +3502,7 @@ $(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DO
 This would require `$(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)`, and for
 `$(_E)$(notdir $(PANDOC_DIR))$(_D)` to be processed before `$(_M)$(notdir $(COMPOSER_ART))$(_D)`.  Directories need to be specified
 with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with target names
-$(_E)(see [Custom Targets])$(_D).  A good examples of this is the internal $(_C)[$(TESTING)]$(_D) target,
-which is a common directory name.
+$(_E)(see [Custom Targets])$(_D).
 
 Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
 support.  Note that if a file or directory is set to depend on a target, that
@@ -3535,7 +3534,7 @@ If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D
 [Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
 $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) or $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) will include them in runs of the respective targets.
 Targets with any other names will need to be run manually, or included in
-$(_C)[COMPOSER_TARGETS]$(_D) $(_E)(see [Control Variables])$(_D).
+$(_C)[COMPOSER_TARGETS]$(_D).
 
 #WORK ...or, via [Specifying Dependencies]
 
@@ -3581,9 +3580,8 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
-$(_C)[$(UPGRADE)-$(DOITALL)]$(_D) $(_E)(see [Additional Targets])$(_D), the system versions will be used
-instead.  This will work as long as the commit versions match, so that
-supporting files are in alignment.
+$(_C)[$(UPGRADE)-$(DOITALL)]$(_D), the system versions will be used instead.  This will work as long
+as the commit versions match, so that supporting files are in alignment.
 
 It is possible that changing the versions will introduce incompatibilities with
 $(_C)[$(COMPOSER_BASENAME)]$(_D), which are usually impacts to the prettification of output files
@@ -3963,7 +3961,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE) / $(EXAMPLE)-yml / $(EXAMPLE)-md
 
   * Prints useful templates for creating new files $(_E)(see [Templates])$(_D):
       * $(_C)[$(COMPOSER_BASENAME)]$(_D) `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Configuration Settings])$(_D)
-      * $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_C)[c_site]$(_D) and $(_C)[Pandoc]$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)(see [Static Websites])$(_D)
+      * $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_C)[c_site]$(_D) and $(_C)[Pandoc]$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)(see [Static Websites]
+        and [Configuration Settings])$(_D)
       * $(_C)[Pandoc]$(_D) `$(_C)$(INPUT)$(_D)`
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
@@ -4009,8 +4008,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DOITALL) / $(DOITALL)-$(DOITALL) / \*-$(D
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PRINTER))
 
   * Outputs all the $(_C)[COMPOSER_EXT]$(_D) files that have been modified since
-    $(_C)[COMPOSER_LOG]$(_D) was last updated $(_E)(see both in [Control Variables])$(_D).  Acts as
-    a quick reference to see if anything has changed.
+    $(_C)[COMPOSER_LOG]$(_D) was last updated.  Acts as a quick reference to see if
+    anything has changed.
   * Since the $(_C)[COMPOSER_LOG]$(_D) file is updated whenever $(_C)[Pandoc]$(_D) is executed, this
     target will primarily be useful when $(_C)[$(DOITALL)]$(_D) is the only target used to create
     files in the directory.
