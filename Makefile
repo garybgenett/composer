@@ -2524,15 +2524,16 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 #>	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$(call $(HEADERS)-path-dir,$(COMPOSER_DIR))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_ROOT]"	"Topmost level of current tree"					"$(_M)$(call $(HEADERS)-path-root,$(COMPOSER_ROOT))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"Target: $(_C)[$(EXPORTS)]$(_D)"				"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(*)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"Target: $(_C)[$(PUBLISH)]$(_E)/$(_C)[$(PUBLISH)-library]$(_D)"	"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(*)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORT]"	"Target: $(_C)[$(EXPORTS)]$(_D)"				"$(if $(COMPOSER_EXPORT),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_EXPORT))$(_D) )\`$(_N)(mk)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_LIBRARY]"	"Target: $(_C)[$(PUBLISH)]$(_E)/$(_C)[$(PUBLISH)-library]$(_D)"	"$(if $(COMPOSER_LIBRARY),$(_M)$(patsubst $(COMPOSER_ROOT)/%,$(_H)[COMPOSER_ROOT]$(_D)/$(_M)%,$(COMPOSER_LIBRARY))$(_D) )\`$(_N)(yml)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_SRC]"	"Repositories and downloads"					"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_SRC))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_ART]"	"$(_C)[$(COMPOSER_BASENAME)]$(_D) supporting files"		"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))"
 #>	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_DIR]$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_DAT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_ART]$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"Cache and working directory"					"$(_H)[CURDIR]$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *\`$(_N)(*)$(_D)\` = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` or \`$(_M)$(COMPOSER_YML)$(_D)\`*"
+	@$(PRINT) "  * *\`$(_N)(mk)$(_D)\` = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`*"
+	@$(PRINT) "  * *\`$(_N)(yml)$(_D)\` = configurable in \`$(_M)$(COMPOSER_YML)$(_D)\`*"
 
 ########################################
 ### {{{3 $(HELPOUT)-TARGETS
@@ -3103,17 +3104,21 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Customization)
 
 If specific settings need to be used, either globally or per-directory,
-`$(_M)$(COMPOSER_SETTINGS)$(_D)` files can be created $(_E)(see [Configuration Settings], [Quick Start]
-example)$(_D):
+`$(_M)$(COMPOSER_SETTINGS)$(_D)` and `$(_M)$(COMPOSER_YML)$(_D)` files can be created $(_E)(see [Configuration
+Settings], [Quick Start] example)$(_D):
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
-$(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)-yml$(_D) >$(_M)$(COMPOSER_YML)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_YML)$(_D)")
 
 Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax $(_E)(see
 [Custom Targets])$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Important Notes)
 
+$(_F)
+#WORKING:NOW:NOW:DOCS###########################################################
+--------------------------------------------------------------------------------
+$(_D)
 $(_C)[GNU Make]$(_D) does not support file and directory names with spaces in them, and
 neither does $(_C)[$(COMPOSER_BASENAME)]$(_D).  Documentation archives which have such files or
 directories will produce unexpected results.
@@ -3125,14 +3130,10 @@ $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/tld$(_D)
 $(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D) $(_M)./$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)$(_D)
 
-$(_F)
-#WORKING:NOW:NOW:DOCS###########################################################
---------------------------------------------------------------------------------
-$(_D)
 Similarly to source code, $(_C)[GNU Make]$(_D) is meant to only run one instance within
 the directory at a time, and $(_C)[$(COMPOSER_BASENAME)]$(_D) shares this requirement.  It should be
-run as a single user, to avoid duplication and conflicts, and concurrent runs
-will produce unexpected results.
+run as a single user, to avoid duplication and conflicts.  Concurrent runs will
+produce unexpected results.
 
 It is best practice to $(_C)[$(INSTALL)-$(DOFORCE)]$(_D) after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade, in case
 there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Templates])$(_D).
@@ -3430,11 +3431,11 @@ $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they a
 $(_C)[$(COMPOSER_BASENAME)]$(_D) directory will be global to all directories.  The targets and
 settings in the most local file override all others $(_E)(see [Precedence Rules])$(_D).
 
-The easiest way to create a new `$(_M)$(COMPOSER_SETTINGS)$(_D)` is with the $(_C)[$(EXAMPLE)]$(_D) target
-$(_E)([Quick Start] example)$(_D):
+The easiest way to create new `$(_M)$(COMPOSER_SETTINGS)$(_D)` and `$(_M)$(COMPOSER_YML)$(_D)` files is with
+the $(_C)[$(EXAMPLE)]$(_D) and $(_C)[$(EXAMPLE)-yml]$(_D) targets $(_E)([Quick Start] example)$(_D):
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)
-$(CODEBLOCK)$(_C)$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)-yml$(_D) >$(_M)$(COMPOSER_YML)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_YML)$(_D)")
 
 All variable definitions must be in the `$(_N)override [variable] := [value]$(_D)` format
 from the $(_C)[$(EXAMPLE)]$(_D) target.  Doing otherwise will result in unexpected behavior,
@@ -3450,6 +3451,12 @@ $(CODEBLOCK)$(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc :=$(_D)
 In this case, there are multiple definitions that could apply to
 `$(_M)$(OUT_README).$(EXTN_PRES)$(_D)`, due to the `$(_N)%$(_D)` wildcard.  Since the most specific target
 match is used, the final value for $(_C)[c_toc]$(_D) would be empty.
+
+Example configuration files:
+
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(COMPOSER_SETTINGS))$(_D)
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(COMPOSER_YML))$(_D)
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
 endef
 
 ########################################
