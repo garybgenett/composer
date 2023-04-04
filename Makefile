@@ -3068,17 +3068,6 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-WORKFLOW
 ########################################
 
-#WORK
-# note that main directory is usable right away, without $(INSTALL)
-#	see config files for examples (unchanged composer.yml will impact websites created from this instance)
-# non-single-user use is not recommended
-#	parallel processing = [MAKEJOBS]
-#	only one build at a time...
-# COMPOSER_TMP needs a mention, at this point...
-# everything stems from the Makefile, so that is the only place to check for changes...
-# epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
-# header-includes
-
 override define $(HELPOUT)-$(DOITALL)-WORKFLOW =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Directory Tree)
 
@@ -3115,10 +3104,6 @@ Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax $
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Important Notes)
 
-$(_F)
-#WORKING:NOW:NOW:DOCS###########################################################
---------------------------------------------------------------------------------
-$(_D)
 $(_C)[GNU Make]$(_D) does not support file and directory names with spaces in them, and
 neither does $(_C)[$(COMPOSER_BASENAME)]$(_D).  Documentation archives which have such files or
 directories will produce unexpected results.
@@ -3133,10 +3118,13 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(OUT_README).$(EXTN_DEFAULT)$(_D)
 Similarly to source code, $(_C)[GNU Make]$(_D) is meant to only run one instance within
 the directory at a time, and $(_C)[$(COMPOSER_BASENAME)]$(_D) shares this requirement.  It should be
 run as a single user, to avoid duplication and conflicts.  Concurrent runs will
-produce unexpected results.
+produce unexpected results.  It is highly recommended to set $(_C)[MAKEJOBS]$(_D) to a
+value greater than the default, to speed up processing.
 
 It is best practice to $(_C)[$(INSTALL)-$(DOFORCE)]$(_D) after every $(_C)[$(COMPOSER_BASENAME)]$(_D) upgrade, in case
-there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Templates])$(_D).
+there are any changes to the `$(_M)$(MAKEFILE)$(_D)` template $(_E)(see [Templates])$(_D).  Everything
+in $(_C)[$(COMPOSER_BASENAME)]$(_D) sources from the main `$(_M)$(MAKEFILE)$(_D)`, so that is the only file which
+requires review to see what changes have been made between versions.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Next Steps)
 
@@ -3265,7 +3253,15 @@ endef
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
 
+#WORK
+# epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
+# header-includes
+
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
+$(_F)
+#WORKING:NOW:NOW:DOCS###########################################################
+--------------------------------------------------------------------------------
+$(_D)
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
 produce beautiful and professional output.  $(_C)[Pandoc]$(_D) does reasonably well at
 this, and yet its primary focus is document conversion, not document formatting.
