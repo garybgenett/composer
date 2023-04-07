@@ -3259,7 +3259,7 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 $(_F)
-#WORKING:NOW:NOW:DOCS###########################################################
+#WORKING:NOW:NOW:DOCS:FIX#######################################################
 --------------------------------------------------------------------------------
 $(_D)
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
@@ -6786,6 +6786,9 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-list-$${FILE} || return 1
+#WORKING:NOW:NOW:FIX
+#	some way to remove MENU_SELF requirement...?  otherwise, do we standardize on this?
+#	add a test/example for nav-*: - file ...?
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
@@ -7518,27 +7521,31 @@ _EOF_
 
 function $(PUBLISH)-file {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	FILE_PATH="$$(
+		$${ECHO} "$${1}" \\
+		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+	)"
 	META_BEG=
 	META_BLD=
 	META_END=
-	if [ -n "$$($${SED} -n "/^$${PUBLISH_CMD_BEG} metainfo $${MENU_SELF}/p" $${1})" ]; then
-		META_BEG="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\1|gp" $${1} | $${HEAD} -n1)"
-		META_BLD="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\2|gp" $${1} | $${HEAD} -n1)"
-		META_END="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\3|gp" $${1} | $${HEAD} -n1)"
+	if [ -n "$$($${SED} -n "/^$${PUBLISH_CMD_BEG} metainfo $${MENU_SELF}/p" $${FILE_PATH})" ]; then
+		META_BEG="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\1|gp" $${FILE_PATH} | $${HEAD} -n1)"
+		META_BLD="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\2|gp" $${FILE_PATH} | $${HEAD} -n1)"
+		META_END="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\3|gp" $${FILE_PATH} | $${HEAD} -n1)"
 	fi
 	if [ -n "$${META_BLD}" ]; then
 		$${ECHO} "$${META_BEG}-start $${1} $${META_END}\\n"
 		$(PUBLISH)-$${META_BLD} $$(
-			$(PUBLISH)-metainfo-block . . $${1}
+			$(PUBLISH)-metainfo-block . . $${FILE_PATH}
 		) || return 1
 		$${ECHO} "\\n"
 	fi
 	if [ -n "$$(
-		$${SED} -n "1{/^---$$/p}" $${1}
+		$${SED} -n "1{/^---$$/p}" $${FILE_PATH}
 	)" ]; then
-		$${SED} "1,/^---$$/d" $${1}
+		$${SED} "1,/^---$$/d" $${FILE_PATH}
 	else
-		$${CAT} $${1}
+		$${CAT} $${FILE_PATH}
 	fi \\
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
