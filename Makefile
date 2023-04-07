@@ -6455,7 +6455,7 @@ function $(PUBLISH)-search {
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
 <form class="nav-item d-flex form-inline" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
-<input class="form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
+<input class="$${COMPOSER_TINYNAME}-form form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
 <button type="submit" class="btn btn-sm">
 $$(
 	$${ECHO} "$${NAME}\\n" \\
@@ -7465,8 +7465,14 @@ _EOF_
 	fi
 $${CAT} <<_EOF_
 <img class="$${COMPOSER_TINYNAME}-icon" alt="$${TEXT}" src="$$(
-	$${ECHO} "$${COMPOSER_DIR}/$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/$${ICON}" \\
-	| $${SED} "s|$${COMPOSER_ROOT_REGEX}|$${COMPOSER_ROOT_PATH}|g"
+	if [ -f "$${COMPOSER_DIR}/$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/$${ICON}" ]; then
+		$${ECHO} "$${COMPOSER_DIR}/$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/$${ICON}"
+	else
+		$${ECHO} "$${ICON}"
+	fi \\
+	| $${SED} \\
+		-e "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+		-e "s|$${COMPOSER_ROOT_REGEX}|$${COMPOSER_ROOT_PATH}|g"
 )">
 _EOF_
 	if	[ -n "$${LREL}" ] &&
@@ -7921,6 +7927,12 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_SHADE =
 
 /* ########################################################################## */
 
+.$(COMPOSER_TINYNAME)-form {
+	background-color:		rgba(var(--bs-$(1)-rgb));
+	color:				rgba(var(--bs-secondary-rgb));
+	border:				1px solid rgba(var(--bs-secondary-rgb));
+}
+
 .navbar,
 .dropdown-menu,
 .accordion-button,
@@ -7980,6 +7992,13 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 }
 
 /* ################################## */
+
+.$(COMPOSER_TINYNAME)-form {
+#$(MARKER)	background-color:		var(--$(COMPOSER_TINYNAME)-back);
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	color:				var(--$(COMPOSER_TINYNAME)-text);
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
+}
 
 .$(COMPOSER_TINYNAME)-header {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
@@ -8260,6 +8279,7 @@ body {
 
 /* ################################## */
 
+.$(COMPOSER_TINYNAME)-form,
 .$(COMPOSER_TINYNAME)-link a,
 .$(COMPOSER_TINYNAME)-link a:active,
 .$(COMPOSER_TINYNAME)-link a:hover,
@@ -8436,6 +8456,11 @@ $(eval override PRFRS := $(word 2,$(subst :, ,$(1))))
 endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SHADE =
+.$(COMPOSER_TINYNAME)-form {
+	background-color:		var(--background);
+	color:				var(--text-main);
+	border:				1px solid var(--border);
+}
 .navbar,
 .dropdown-menu,
 .accordion-button,
