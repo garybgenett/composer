@@ -645,11 +645,11 @@ override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 
 #> talk: 183 / read: 234
-override PUBLISH_METAINFO_NULL		:= *(none)*
-override PUBLISH_METAINFO_NULL_ALT	:= null
 override PUBLISH_METAINFO		:= <date> $(DIVIDE) <title><|> -- <author|; >
 override PUBLISH_METAINFO_ALT		:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author| -- >*<br>*. <tags| . >*
 override PUBLISH_METAINFO_MOD		:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author>*<br>*. <tags>*
+override PUBLISH_METAINFO_NULL		:= *(none)*
+override PUBLISH_METAINFO_NULL_ALT	:= null
 #>override PUBLISH_CONTENTS		:=
 #>override PUBLISH_CONTENTS_ALT		:=
 override PUBLISH_CREATORS		:= author
@@ -1174,6 +1174,7 @@ override EXTENSION			:= $(c_type)
 
 #> update: TYPE_TARGETS
 
+override DESC_SITE			:= #WORKING:NOW:NOW:DOCS:FIX
 override DESC_HTML			:= HyperText Markup Language
 override DESC_LPDF			:= Portable Document Format
 override DESC_EPUB			:= Electronic Publication
@@ -1906,8 +1907,8 @@ override define COMPOSER_YML_DATA_SKEL =
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
 
-    metainfo_null:			"$(PUBLISH_METAINFO_NULL)",
     metainfo:				"$(PUBLISH_METAINFO)",
+    metainfo_null:			"$(PUBLISH_METAINFO_NULL)",
     tagslist: {
       $(PUBLISH_CREATORS): {
         title:				"$(PUBLISH_CREATORS_TITLE)",
@@ -1966,8 +1967,6 @@ override COMPOSER_YML_DATA_VAL = $(shell \
 	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" \
 	| $(SED) "/^null$$/d" \
 )
-
-#> update: COMPOSER_YML_DATA_TAGSLIST
 
 ########################################
 
@@ -2037,7 +2036,6 @@ endif
 
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
-#> update: COMPOSER_YML_DATA_TAGSLIST
 override COMPOSER_YML_DATA_TAGSLIST := $(shell \
 	$(ECHO) '$(call COMPOSER_YML_DATA_VAL,config.tagslist)' \
 	| $(YQ_WRITE) "keys | .[]" 2>/dev/null \
@@ -4231,8 +4229,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
 | cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
 | cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
-| metainfo_null | `$(PUBLISH_METAINFO_NULL)`
 | metainfo      | `$(PUBLISH_METAINFO)`
+| metainfo_null | `$(PUBLISH_METAINFO_NULL)`
 | tagslist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)`
 | tagslist $(DIVIDE) $(PUBLISH_TAGSLIST) | *title:* `$(PUBLISH_TAGSLIST_TITLE)` <br> *display:* `$(PUBLISH_TAGSLIST_PRINT)`
 | readtime      | `$(PUBLISH_READTIME)`
@@ -4409,8 +4407,8 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]` | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
 | cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`          | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
 | cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`    | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
-| metainfo_null | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
 | metainfo      | `$(PUBLISH_METAINFO)`      | `$(PUBLISH_METAINFO_ALT)`
+| metainfo_null | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
 | tagslist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)` | title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_PRINT_ALT)`
 | tagslist $(DIVIDE) $(PUBLISH_TAGSLIST) | *title:* `$(PUBLISH_TAGSLIST_TITLE)` <br> *display:* `$(PUBLISH_TAGSLIST_PRINT)` | title: `$(PUBLISH_TAGSLIST_TITLE_ALT)` <br> display: `$(PUBLISH_TAGSLIST_PRINT_ALT)`
 | readtime      | `$(PUBLISH_READTIME)`      | `$(PUBLISH_READTIME_ALT)`
@@ -5554,8 +5552,8 @@ $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_R
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)metainfo_null$(_D):			$(_N)"$(_M)$(PUBLISH_METAINFO_NULL)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)metainfo$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)metainfo_null$(_D):			$(_N)"$(_M)$(PUBLISH_METAINFO_NULL)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):
 $(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_CREATORS)$(_D):
 $(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS_TITLE)$(_N)"$(_D)
@@ -5891,8 +5889,8 @@ variables:
     cols_reorder:			[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_L_MOD),$(PUBLISH_COLS_REORDER_L_ALT)), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_R_MOD),$(PUBLISH_COLS_RESIZE_R_ALT)) ]
-    metainfo_null:			"$(PUBLISH_METAINFO_NULL_ALT)"
     metainfo:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_METAINFO_MOD),$(PUBLISH_METAINFO_ALT))"
+    metainfo_null:			"$(PUBLISH_METAINFO_NULL_ALT)"
     tagslist:
       $(PUBLISH_CREATORS):
         title:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_CREATORS_TITLE_MOD),$(PUBLISH_CREATORS_TITLE_ALT))"
@@ -6314,8 +6312,8 @@ function $(PUBLISH)-metainfo-block {
 		done
 		$${ECHO} "---\\n"
 	else
-		NULL_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo_null)"
 		META_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo)"
+		NULL_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo_null)"
 		if [ -z "$${TITL}" ]; then TITL="$${NULL_TXT}"; fi
 		if [ -z "$${DATE}" ]; then DATE="$${NULL_TXT}"; fi
 		$${ECHO} "$${META_TXT}" \\
