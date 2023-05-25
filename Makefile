@@ -7461,7 +7461,12 @@ $(TOKEN)
 		[ -n "$${LLOC}" ]
 	then
 $${CAT} <<_EOF_
-<a rel="$${LREL}" href="$${LLOC}">
+<a rel="$${LREL}" href="$$(
+	$${ECHO} "$${LLOC}" \\
+	| $${SED} \\
+		-e "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g" \\
+		-e "s|$${COMPOSER_ROOT_REGEX}|$${COMPOSER_ROOT_PATH}|g"
+)">
 _EOF_
 	fi
 $${CAT} <<_EOF_
