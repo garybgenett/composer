@@ -3235,6 +3235,8 @@ endef
 #		add $(CLEANER)/$(DOITALL) for a vary large directory of files
 #	document c_list_var
 #	site-include files will not be parsed into digests, to avoid mangled output...
+#	leading numeric [0-9] in $(PUBLISH)-display name in yml file causes them to break...?
+#		only for "banner"...?
 
 #WORKING:NOW
 #	features
@@ -6196,7 +6198,7 @@ function $(PUBLISH)-marker {
 ########################################
 
 function $(PUBLISH)-error {
-	$${ECHO} "$${MARKER} ERROR [$${0/#*\/}] ($${1}):$$(
+	$${ECHO} "$${MARKER} ERROR [$${0/#*\\/}] ($${1}):$$(
 		if [ -n "$${2}" ]; then
 			$${ECHO} " $${@:2}" \\
 			| $${SED} "s|$${COMPOSER_ROOT_REGEX}|$${EXPAND}|g"
@@ -7305,6 +7307,9 @@ _EOF_
 			)"
 			if [ -z "$${LINK}" ]; then
 				LINK="#"
+			fi
+			if [ -z "$${NAME}" ]; then
+				NAME="$${FILE/#*\\/}"
 			fi
 			if {	[ "$${TYPE}" = "banner" ] ||
 				{ [ "$${TYPE}" = "shelf" ] && [ "$${SHW}" = "0" ]; };
