@@ -3139,6 +3139,9 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
+#	make sure all elements have an "id=" attached...
+#		id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@}")"
+#		add a documentation note that these can be used for css "#..." selection...
 #	test using a "broken token:" for "tagslist", to make sure everything is quoted properly...
 #	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #		index.html with only/all sub-folders as best-practice?
@@ -4681,6 +4684,19 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 #	this results in:
 
 	<input type="hidden" name="sites" value="$(COMPOSER_CNAME)">
+
+## Frame
+
+#WORK these produce frames which potentially have their own scrollbars and/or player controls that can go fullscreen...
+#WORK the example is the first youtube video ever posted...
+
+`$(PUBLISH_CMD_BEG) frame $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(EXTN_HTML) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) frame $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(EXTN_HTML) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) frame youtube jNQXAC9IVRw $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) frame youtube jNQXAC9IVRw $(PUBLISH_CMD_END)
 
 ## Include
 
@@ -7513,6 +7529,35 @@ _EOF_
 	return 0
 }
 
+########################################
+#### {{{4 $(PUBLISH)-frame
+########################################
+
+# 1 type || url
+# 2 identifier (1=type) || name		$${@:2} = $${2}++
+
+function $(PUBLISH)-frame {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+$${CAT} <<_EOF_
+<iframe data-external="1" class="$${COMPOSER_TINYNAME}-frame$$(
+	if [ "$${1}" = "youtube" ]; then
+		$${ECHO} " $${COMPOSER_TINYNAME}-frame-youtube"
+	fi
+)" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")" $$(
+	if [ "$${1}" = "youtube" ]; then
+		$${ECHO} "title=\\"YouTube: $${@:2}\\""
+		$${ECHO} "src=\\"https://www.youtube-nocookie.com/embed/$${@:2}\\""
+	else
+		$${ECHO} "title=\\"$${@:2}\\""
+		$${ECHO} "src=\\"$${1}\\""
+	fi
+)>
+</iframe>
+_EOF_
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
 ################################################################################
 ### {{{3 Functions (Script)
 ################################################################################
@@ -7871,11 +7916,28 @@ html {
 
 .$(COMPOSER_TINYNAME)-display {
 	height:				auto;
-	width:				100%;
+	max-width:			100%;
 }
 .$(COMPOSER_TINYNAME)-display-item {
 	height:				auto;
 	max-width:			128px;
+}
+
+.$(COMPOSER_TINYNAME)-frame {
+#${MARKER}	height:				auto;
+	max-height:			70vh;
+	height:				512px;
+	max-width:			90%;
+	width:				90%;
+	frameborder:			0;
+}
+.$(COMPOSER_TINYNAME)-frame-youtube {
+#${MARKER}	height:				315px;
+#${MARKER}	width:				560px;
+	height:				384px;
+#${MARKER}	allow:				"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;";
+	allow:				"accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;";
+	allowfullscreen;
 }
 
 /* ################################## */
@@ -8443,8 +8505,8 @@ tr {
 
 img,
 video {
-	max-width:			100%;
 	height:				auto;
+	max-width:			100%;
 }
 
 /* #############################################################################
