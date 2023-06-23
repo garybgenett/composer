@@ -682,6 +682,12 @@ override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
+override LIBRARY_DIGEST_HEADER		:= null
+override LIBRARY_DIGEST_HEADER_ALT	:= null
+override LIBRARY_DIGEST_HEADER_MOD	:= 1
+override LIBRARY_DIGEST_FOOTER		:= null
+override LIBRARY_DIGEST_FOOTER_ALT	:= null
+override LIBRARY_DIGEST_FOOTER_MOD	:= 1
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_COUNT		:= 10
@@ -700,6 +706,12 @@ override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
 override LIBRARY_SITEMAP_SPACER		:= 1
 override LIBRARY_SITEMAP_SPACER_ALT	:= null
 
+override LIBRARY_LISTS_HEADER		:= null
+override LIBRARY_LISTS_HEADER_ALT	:= null
+override LIBRARY_LISTS_HEADER_MOD	:= 1
+override LIBRARY_LISTS_FOOTER		:= null
+override LIBRARY_LISTS_FOOTER_ALT	:= null
+override LIBRARY_LISTS_FOOTER_MOD	:= 1
 override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
 override LIBRARY_LISTS_EXPANDED_ALT	:= null
 override LIBRARY_LISTS_EXPANDED_MOD	:= 2
@@ -1931,6 +1943,8 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_title:			"$(LIBRARY_DIGEST_TITLE)",
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
+    digest_header:			$(LIBRARY_DIGEST_HEADER),
+    digest_footer:			$(LIBRARY_DIGEST_FOOTER),
     digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
     digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
@@ -1940,6 +1954,8 @@ override define COMPOSER_YML_DATA_SKEL =
     sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED),
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER),
 
+    lists_header:			$(LIBRARY_LISTS_HEADER),
+    lists_footer:			$(LIBRARY_LISTS_FOOTER),
     lists_expanded:			$(LIBRARY_LISTS_EXPANDED),
     lists_spacer:			$(LIBRARY_LISTS_SPACER),
   },
@@ -4248,6 +4264,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)`
+| digest_header    | `$(LIBRARY_DIGEST_HEADER)`
+| digest_footer    | `$(LIBRARY_DIGEST_FOOTER)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`
@@ -4255,6 +4273,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
 | sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)`
 | sitemap_spacer   | `$(LIBRARY_SITEMAP_SPACER)`
+| lists_header     | `$(LIBRARY_LISTS_HEADER)`
+| lists_footer     | `$(LIBRARY_LISTS_FOOTER)`
 | lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`
 
@@ -4426,6 +4446,8 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`  | `$(LIBRARY_DIGEST_CONTINUE_ALT)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)` | `$(LIBRARY_DIGEST_PERMALINK_ALT)`
+| digest_header    | `$(LIBRARY_DIGEST_HEADER)`    | `$(LIBRARY_DIGEST_HEADER_ALT)`
+| digest_footer    | `$(LIBRARY_DIGEST_FOOTER)`    | `$(LIBRARY_DIGEST_FOOTER_ALT)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`  | `$(LIBRARY_DIGEST_EXPANDED_ALT)`
@@ -4433,6 +4455,8 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
 | sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 | sitemap_spacer   | `$(LIBRARY_SITEMAP_SPACER)`   | `$(LIBRARY_SITEMAP_SPACER_ALT)`
+| lists_header     | `$(LIBRARY_LISTS_HEADER)`     | `$(LIBRARY_LISTS_HEADER_ALT)`
+| lists_footer     | `$(LIBRARY_LISTS_FOOTER)`     | `$(LIBRARY_LISTS_FOOTER_ALT)`
 | lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`   | `$(LIBRARY_LISTS_EXPANDED_ALT)`
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 
@@ -5592,6 +5616,8 @@ $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_header$(_D):			$(_M)$(LIBRARY_DIGEST_HEADER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_footer$(_D):			$(_M)$(LIBRARY_DIGEST_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
@@ -5601,6 +5627,8 @@ $(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TIT
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_expanded$(_D):			$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_spacer$(_D):			$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)lists_header$(_D):			$(_M)$(LIBRARY_LISTS_HEADER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)lists_footer$(_D):			$(_M)$(LIBRARY_LISTS_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
@@ -5925,6 +5953,8 @@ variables:
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
+    digest_header:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_HEADER_MOD),$(LIBRARY_DIGEST_HEADER_ALT))
+    digest_footer:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_FOOTER_MOD),$(LIBRARY_DIGEST_FOOTER_ALT))
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
@@ -5932,6 +5962,8 @@ variables:
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
     sitemap_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
+    lists_header:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_HEADER_MOD),$(LIBRARY_LISTS_HEADER_ALT))
+    lists_footer:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_FOOTER_MOD),$(LIBRARY_LISTS_FOOTER_ALT))
     lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
 
@@ -12633,7 +12665,25 @@ override define $(PUBLISH)-library-digest-vars =
 	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
 	DIGEST_COUNT="$(call COMPOSER_YML_DATA_VAL,library.digest_count)"; \
 	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.$(1)_expanded)"; \
-	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1)_spacer)"
+	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1)_spacer)"; \
+	DIGEST_HEADER="$$( \
+		if [ -n "$(call COMPOSER_YML_DATA_VAL,library.$(1)_header)" ]; then \
+			$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.header)" \
+				| $(SED) \
+					-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT_PATH)|g" \
+					-e "s|$(COMPOSER_ROOT_REGEX)|$(COMPOSER_ROOT_PATH)|g" \
+			; \
+		fi \
+	)"; \
+	DIGEST_FOOTER="$$( \
+		if [ -n "$(call COMPOSER_YML_DATA_VAL,library.$(1)_footer)" ]; then \
+			$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.footer)" \
+				| $(SED) \
+					-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT_PATH)|g" \
+					-e "s|$(COMPOSER_ROOT_REGEX)|$(COMPOSER_ROOT_PATH)|g" \
+			; \
+		fi \
+	)"
 endef
 
 override define $(PUBLISH)-library-digest-create =
@@ -12660,7 +12710,10 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
-		$(PANDOC_MD_TO_JSON) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+		$(PANDOC_MD_TO_JSON) \
+			$${DIGEST_HEADER} \
+			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+			$${DIGEST_FOOTER} \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
 	)"; \
 	SIZ="0"; BLK="0"; \
@@ -12669,7 +12722,10 @@ override define $(PUBLISH)-library-digest-create =
 		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
 		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
-			$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+			$(CAT) \
+					$${DIGEST_HEADER} \
+					$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+					$${DIGEST_FOOTER} \
 				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
@@ -12679,7 +12735,10 @@ override define $(PUBLISH)-library-digest-create =
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
-				$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+				$(CAT) \
+					$${DIGEST_HEADER} \
+					$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+					$${DIGEST_FOOTER} \
 				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 				| $(PANDOC_MD_TO_JSON) \
 				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
