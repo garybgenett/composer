@@ -1998,12 +1998,6 @@ override $(PUBLISH)-caches-end := \
 	nav-right \
 	row-end \
 	nav-bottom
-override $(PUBLISH)-caches-token := \
-	$(foreach FILE,\
-		null \
-		,\
-		$($(PUBLISH)-cache).$(FILE)$(COMPOSER_EXT_DEFAULT) \
-	)
 override $(PUBLISH)-caches := \
 	$(foreach FILE,\
 		$($(PUBLISH)-caches-begin) \
@@ -2039,6 +2033,7 @@ override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
 override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
 override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library-digest-null	:= $(COMPOSER_LIBRARY)/index-null$(COMPOSER_EXT_SPECIAL)
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
 
@@ -2363,10 +2358,11 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip \
 		$(if $(filter-out $(CURDIR),$(COMPOSER_LIBRARY)),\
 			$(COMPOSER_CONTENTS_EXT) \
 		) \
-		$($(PUBLISH)-caches-token) \
 	) \
-	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
-		$($(PUBLISH)-cache) \
+	$(if $(filter $(1),$(TYPE_HTML)),\
+		$(if $(c_site),\
+			$($(PUBLISH)-cache) \
+		) \
 	) \
 )
 
@@ -11874,16 +11870,13 @@ endif
 
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches-token))
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches-token))
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
-$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches-token)) \
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
@@ -12220,27 +12213,19 @@ endef
 
 #>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
-$($(PUBLISH)-cache): $($(PUBLISH)-caches-token)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
-#>:	$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-caches-token) \
-$($(PUBLISH)-caches) \
-:	$(call $(COMPOSER_PANDOC)-dependencies)
-$($(PUBLISH)-caches-token) \
-$($(PUBLISH)-caches) \
-:
-	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%$(COMPOSER_EXT_DEFAULT),%,$(@)))
-	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$($(@))))
+#>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
+$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
+$($(PUBLISH)-caches):
+	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
-	@if [ "$($(@))" = "null" ]; then \
-		$(ECHO) "\n"; \
-	elif [ "$($(@))" = "nav-top" ]; then \
+	@if [ "$($(@))" = "nav-top" ]; then \
 		$(call PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
 		$(call PUBLISH_SH_RUN) "$($(@))" "center"; \
@@ -12356,6 +12341,7 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
+	@$(ECHO) "\n" >$($(PUBLISH)-library-digest-null)
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -12719,12 +12705,12 @@ override define $(PUBLISH)-library-digest-vars =
 					-e "s|$(COMPOSER_ROOT_REGEX)|$(COMPOSER_ROOT_PATH)|g" \
 			; \
 			$(ECHO) " "; \
-			$(ECHO) "$($(PUBLISH)-cache).null$(COMPOSER_EXT_DEFAULT)"; \
+			$(ECHO) "$($(PUBLISH)-library-digest-null)"; \
 		fi \
 	)"; \
 	DIGEST_FOOTER="$$( \
 		if [ -n "$(call COMPOSER_YML_DATA_VAL,library.$(1)_footer)" ]; then \
-			$(ECHO) "$($(PUBLISH)-cache).null$(COMPOSER_EXT_DEFAULT)"; \
+			$(ECHO) "$($(PUBLISH)-library-digest-null)"; \
 			$(ECHO) " "; \
 			$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.footer)" \
 				| $(SED) \
