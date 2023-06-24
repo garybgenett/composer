@@ -5766,7 +5766,8 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-top$(_D):
 
     $(_M)TEXT$(_D):
-      - TOP TEXT
+      - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
+          TOP TEXT
     $(_M)INFO$(_D):
 $(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
@@ -5774,7 +5775,7 @@ $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
       - $(_C)icon github$(_D) $(_M)$(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME)$(_D)
-$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))   - $(_N)|$(_D)
+$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))   - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
 $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon gpl$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon cc-by-nc-nd$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),   ,$(_S)#$(MARKER)$(_D))       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon copyright$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
@@ -5783,7 +5784,8 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-info-bottom$(_D):
 
     $(_M)TEXT$(_D):
-      - BOTTOM TEXT
+      - $(_C)$(MENU_SELF)$(_D): $(_N)|$(_D)
+          BOTTOM TEXT
     $(_M)INFO$(_D):
 $(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
@@ -6030,11 +6032,11 @@ variables:
 
   $(PUBLISH)-info-top:
     CHAINED:
-      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))'
+      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))'
 
   $(PUBLISH)-info-bottom:
     CHAINED:
-      - '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))'
+      - $(MENU_SELF): '[CHAINED]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))'
 
 ################################################################################
 # End Of File
@@ -6501,7 +6503,7 @@ $${CAT} <<_EOF_
 <p class="$${COMPOSER_TINYNAME}-link navbar-text me-3">
 $$(
 	COMPOSER_YML_DATA_VAL config.copyright \\
-	| $(PUBLISH)-parse icon
+	| $(PUBLISH)-parse
 )
 </p>
 _EOF_
@@ -6523,12 +6525,12 @@ $${CAT} <<_EOF_
 <button type="submit" class="btn btn-sm">
 $$(
 	$${ECHO} "$${NAME}\\n" \\
-	| $(PUBLISH)-parse icon
+	| $(PUBLISH)-parse
 )
 </button>
 $$(
 	COMPOSER_YML_DATA_VAL config.search_form \\
-	| $(PUBLISH)-parse form
+	| $(PUBLISH)-parse
 )
 </form>
 _EOF_
@@ -6850,9 +6852,6 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-list-$${FILE} || return 1
-#WORKING:NOW:NOW:FIX
-#	some way to remove MENU_SELF requirement...?  otherwise, do we standardize on this?
-#	add a test/example for nav-*: - file ...?
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
@@ -6935,10 +6934,15 @@ _EOF_
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+#>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
+		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
+			$${ECHO} "\\n"
+			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
+				| $${SED} "s|^|  |g" \\
+				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+			$${ECHO} "\\n"
 		else
-			$${ECHO} "$${FILE}\\n" \\
-				| $(PUBLISH)-parse icon \\
-				| $(PUBLISH)-parse form
+			$(PUBLISH)-select $${FILE} || return 1
 		fi
 $${CAT} <<_EOF_
 </p>
@@ -13117,6 +13121,7 @@ endif
 #			COMPOSER_DEPENDS="1"
 #		$(COMPOSER_YML)
 #			auto_update: 1
+#			$(PUBLISH)-info-top: ICON
 #		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS)
 #	$(SHELL)
 #		#> .$(PUBLISH)-$(INSTALL)
