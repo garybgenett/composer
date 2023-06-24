@@ -6936,11 +6936,12 @@ _EOF_
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
-			$${ECHO} "\\n"
+#>			$${ECHO} "\\n"
+#>				| $${SED} "s|^|  |g" \\
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
-				| $${SED} "s|^|  |g" \\
+				| $${SED} "/^$$/d" \\
 				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-			$${ECHO} "\\n"
+#>			$${ECHO} "\\n"
 		else
 			$(PUBLISH)-select $${FILE} || return 1
 		fi
