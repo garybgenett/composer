@@ -1998,6 +1998,12 @@ override $(PUBLISH)-caches-end := \
 	nav-right \
 	row-end \
 	nav-bottom
+override $(PUBLISH)-caches-token := \
+	$(foreach FILE,\
+		null \
+		,\
+		$($(PUBLISH)-cache).$(FILE)$(COMPOSER_EXT_DEFAULT) \
+	)
 override $(PUBLISH)-caches := \
 	$(foreach FILE,\
 		$($(PUBLISH)-caches-begin) \
@@ -2353,8 +2359,11 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip \
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
 	$(COMPOSER_YML_LIST) \
-	$(if $(and $(filter-out $(CURDIR),$(COMPOSER_LIBRARY)),$(filter $(1),$(PUBLISH))),\
-		$(COMPOSER_CONTENTS_EXT) \
+	$(if $(filter $(1),$(PUBLISH)),\
+		$(if $(filter-out $(CURDIR),$(COMPOSER_LIBRARY)),\
+			$(COMPOSER_CONTENTS_EXT) \
+		) \
+		$($(PUBLISH)-caches-token) \
 	) \
 	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
 		$($(PUBLISH)-cache) \
@@ -3256,6 +3265,9 @@ endef
 #	site-include files will not be parsed into digests, to avoid mangled output...
 #	leading numeric [0-9] in $(PUBLISH)-display name in yml file causes them to break...?
 #		only for "banner"...?
+#	based on the "for" loop in the code, header/footer could be a list of files...
+#		see: define $(PUBLISH)-$(TARGETS)-file
+#		document this...?
 
 #WORKING:NOW
 #	features
@@ -4671,6 +4683,10 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
+## Break
+
+#WORKING:DOCS need to demonstrate this, somehow...
 
 ## Icon
 
@@ -7483,6 +7499,17 @@ function $(PUBLISH)-spacer {
 }
 
 ########################################
+#### {{{4 $(PUBLISH)-break
+########################################
+
+function $(PUBLISH)-break {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	$${ECHO} ""
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
 #### {{{4 $(PUBLISH)-icon
 ########################################
 
@@ -7623,8 +7650,8 @@ function $(PUBLISH)-file {
 		$(PUBLISH)-$${META_BLD} $$(
 			$(PUBLISH)-metainfo-block . . $${FILE_PATH}
 		) || return 1
-		$${ECHO} "\\n"
 	fi
+	$${ECHO} "\\n"
 	if [ -n "$$(
 		$${SED} -n "1{/^---$$/p}" $${FILE_PATH}
 	)" ]; then
@@ -7646,8 +7673,8 @@ function $(PUBLISH)-file {
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then return 1; fi
 		done \\
 		|| return 1
+	$${ECHO} "\\n"
 	if [ -n "$${META_BLD}" ]; then
-		$${ECHO} "\\n"
 		$${ECHO} "$${META_BEG}-finish $${1} $${META_END}\\n"
 		$(PUBLISH)-$$($${ECHO} "$${META_BLD}" | $${SED} "s|[-]begin|-end|g") || return 1
 	fi
@@ -11840,13 +11867,16 @@ endif
 
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches-token))
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches-token))
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
+$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches-token)) \
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
@@ -12183,19 +12213,27 @@ endef
 
 #>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
+$($(PUBLISH)-cache): $($(PUBLISH)-caches-token)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$($(PUBLISH)-cache)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
-#>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
-$($(PUBLISH)-caches):
-	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
+#>:	$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
+$($(PUBLISH)-caches-token) \
+$($(PUBLISH)-caches) \
+:	$(call $(COMPOSER_PANDOC)-dependencies)
+$($(PUBLISH)-caches-token) \
+$($(PUBLISH)-caches) \
+:
+	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%$(COMPOSER_EXT_DEFAULT),%,$(@)))
+	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$($(@))))
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
-	@if [ "$($(@))" = "nav-top" ]; then \
+	@if [ "$($(@))" = "null" ]; then \
+		$(ECHO) "\n"; \
+	elif [ "$($(@))" = "nav-top" ]; then \
 		$(call PUBLISH_SH_RUN) "$($(@))" "$(c_logo)"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
 		$(call PUBLISH_SH_RUN) "$($(@))" "center"; \
@@ -12673,10 +12711,14 @@ override define $(PUBLISH)-library-digest-vars =
 					-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT_PATH)|g" \
 					-e "s|$(COMPOSER_ROOT_REGEX)|$(COMPOSER_ROOT_PATH)|g" \
 			; \
+			$(ECHO) " "; \
+			$(ECHO) "$($(PUBLISH)-cache).null$(COMPOSER_EXT_DEFAULT)"; \
 		fi \
 	)"; \
 	DIGEST_FOOTER="$$( \
 		if [ -n "$(call COMPOSER_YML_DATA_VAL,library.$(1)_footer)" ]; then \
+			$(ECHO) "$($(PUBLISH)-cache).null$(COMPOSER_EXT_DEFAULT)"; \
+			$(ECHO) " "; \
 			$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.footer)" \
 				| $(SED) \
 					-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT_PATH)|g" \
@@ -12710,10 +12752,12 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
-		$(PANDOC_MD_TO_JSON) \
+		$(CAT) \
 			$${DIGEST_HEADER} \
 			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 			$${DIGEST_FOOTER} \
+		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
+		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
 	)"; \
 	SIZ="0"; BLK="0"; \
@@ -12721,29 +12765,28 @@ override define $(PUBLISH)-library-digest-create =
 		[ "$${BLK}" -lt "$${LEN}" ] && \
 		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
-		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
+		TEXT="$$( \
 			$(CAT) \
-					$${DIGEST_HEADER} \
-					$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-					$${DIGEST_FOOTER} \
-				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
-				| $(PANDOC_MD_TO_JSON) \
-				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
-				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
-				| $(PANDOC_JSON_TO_LINT) \
-			; \
+				$${DIGEST_HEADER} \
+				$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+				$${DIGEST_FOOTER} \
+			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
+			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
+			| $(PANDOC_MD_TO_JSON) \
+			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
+			| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
+			| $(PANDOC_JSON_TO_LINT) \
+		)"; \
+		if [ "$${TEXT}" = "$(COMPOSER_TINYNAME)$(DIVIDE)break" ]; then \
+			$(ECHO) "$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)\n" \
+				| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+			$(ECHO) "\n" \
+				| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+			break; \
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
-				$(CAT) \
-					$${DIGEST_HEADER} \
-					$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-					$${DIGEST_FOOTER} \
-				| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
-				| $(PANDOC_MD_TO_JSON) \
-				| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
-				| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
-				| $(PANDOC_JSON_TO_LINT) \
+				$(ECHO) "$${TEXT}\n" \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
 				| $(WC_CHAR) \
