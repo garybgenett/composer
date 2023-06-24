@@ -12786,7 +12786,7 @@ override define $(PUBLISH)-library-digest-create =
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
-				$(ECHO) "$${TEXT}\n" \
+				$(word 1,$(ECHO)) "$${TEXT}" \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
 				| $(WC_CHAR) \
