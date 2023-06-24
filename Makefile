@@ -7650,8 +7650,8 @@ function $(PUBLISH)-file {
 		$(PUBLISH)-$${META_BLD} $$(
 			$(PUBLISH)-metainfo-block . . $${FILE_PATH}
 		) || return 1
-		$${ECHO} "\\n"
 	fi
+	$${ECHO} "\\n"
 	if [ -n "$$(
 		$${SED} -n "1{/^---$$/p}" $${FILE_PATH}
 	)" ]; then
@@ -7673,8 +7673,8 @@ function $(PUBLISH)-file {
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then return 1; fi
 		done \\
 		|| return 1
+	$${ECHO} "\\n"
 	if [ -n "$${META_BLD}" ]; then
-		$${ECHO} "\\n"
 		$${ECHO} "$${META_BEG}-finish $${1} $${META_END}\\n"
 		$(PUBLISH)-$$($${ECHO} "$${META_BLD}" | $${SED} "s|[-]begin|-end|g") || return 1
 	fi
@@ -12204,7 +12204,7 @@ override define $(PUBLISH)-$(TARGETS)-readtime =
 endef
 
 override define $(PUBLISH)-$(TARGETS)-readtime-done =
-	$(ECHO) ""
+	$(SED) -i "/^$$/d" $(1).readtime-list.done
 endef
 
 ########################################
