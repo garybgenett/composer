@@ -4961,7 +4961,7 @@ $(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)
 
 ## $(word 2,$(1)) Lorem Ipsum
 
-$(eval $(call COMPOSER_NOCOLOR))$(call $(HELPOUT)-$(DOITALL)-WORKFLOW)$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR)))
+$(call $(HELPOUT)-$(DOITALL)-WORKFLOW)
 endef
 
 ########################################
@@ -9446,6 +9446,7 @@ endef
 
 #>override _D				:= \e[0;37m
 override define COMPOSER_COLOR =
+override SED_ESCAPE_CONTROL		:= [[:cntrl:]][[][0-9]+[DC]
 override SED_ESCAPE_COLOR		:= [[:cntrl:]][[][0-9]{1,2}([;][0-9]{2})?m
 override _D				:= \e[0m
 override _H				:= \e[0;32m
@@ -9458,6 +9459,7 @@ override _F				:= \e[41;37m
 endef
 
 override define COMPOSER_NOCOLOR =
+override SED_ESCAPE_CONTROL		:=
 override SED_ESCAPE_COLOR		:=
 override _D				:=
 override _H				:=
@@ -12786,7 +12788,7 @@ override define $(PUBLISH)-library-digest-create =
 		fi; \
 		SIZ="$$( \
 			$(EXPR) $${SIZ} + $$( \
-				$(word 1,$(ECHO)) "$${TEXT}" \
+				$(ECHO) "$${TEXT}\n" \
 				| $(TEE) --append $(1) \
 				| $(SED) "/^[[:space:]-]+$$/d" \
 				| $(WC_CHAR) \
@@ -13268,7 +13270,11 @@ endif
 		$(eval override MARK := $(YEAR)$(NUM)-01-01) \
 		$(eval override FILE := $(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(MARK)+$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
-		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,,$(NUM) $(YEAR)$(NUM) $(MARK))	>$(FILE); \
+		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(NUM) $(YEAR)$(NUM) $(MARK)) \
+			| $(SED) \
+				-e "s|$(SED_ESCAPE_CONTROL)||g" \
+				-e "s|$(SED_ESCAPE_COLOR)||g" \
+											>$(FILE); \
 		$(ECHO) '\t$(notdir $(PUBLISH_PAGEDIR))/$(notdir $(FILE)) \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 	))
 	@$(ECHO) "\t$(notdir $(PUBLISH_PAGEDIR))-footer$(COMPOSER_EXT_SPECIAL)\n"	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
