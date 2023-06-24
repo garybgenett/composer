@@ -9945,7 +9945,7 @@ endif
 	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
 		$(call NPM_BUILD,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
-	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
+	@$(call $(HEADERS)-action,$(WATERCSS_DIR),build)
 	@$(SED) -i \
 		-e "/^dist[/]$$/d" \
 		-e "/^out[/]$$/d" \
