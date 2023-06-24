@@ -864,7 +864,7 @@ override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 
 #> update: MDVIEWER_MODULES
-override MDVIEWER_MODULES		:= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
+override MDVIEWER_MODULES		= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
 override MDVIEWER_MANIFEST		:= manifest.firefox.json
 
 # https://github.com/simov/markdown-themes
@@ -9925,18 +9925,12 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call WGET_PACKAGE,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),$(YQ_URL),$(YQ_WIN_SRC),$(YQ_WIN_DST),$(YQ_WIN_BIN),1)
 	@$(call WGET_PACKAGE,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),$(YQ_URL),$(YQ_MAC_SRC),$(YQ_MAC_DST),$(YQ_MAC_BIN))
 endif
-	@$(MAKE) $(UPGRADE)-$(INSTALL)
-endif
-endif
-
-#WORK document
-$(UPGRADE)-$(INSTALL):
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR)))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),yarn)
 #>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR)))
-	@$(MDVIEWER_MODULES) | while read -r FILE; do \
+	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
 		$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 endif
@@ -9948,7 +9942,7 @@ endif
 	@$(MKDIR)									$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
 	@$(LN)										$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
 											$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/manifest.json
-	@$(MDVIEWER_MODULES) | while read -r FILE; do \
+	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
 		$(call NPM_BUILD,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
@@ -9968,6 +9962,8 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-shade.css
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-shade.css
 	@$(call NPM_RUN,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),,yarn) build
+endif
+endif
 
 ########################################
 ## {{{2 $(CREATOR)
