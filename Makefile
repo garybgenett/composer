@@ -12788,7 +12788,7 @@ override define $(PUBLISH)-library-digest-create =
 	if [ "$${BLK}" -lt "$${LEN}" ]; then \
 		$(ECHO) "$${DIGEST_CONTINUE}" | $(SED) -e "s|^[\"]||g" -e "s|[\"]$$||g" \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-		$(ECHO) " " \
+		$(ECHO) "\n\n" \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	fi; \
 	{	$(ECHO) "["; \
