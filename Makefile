@@ -12916,17 +12916,6 @@ override define $(PUBLISH)-library-sitemap-create =
 			$(ECHO) "\n|||\n|:---|:---|\n" \
 				| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		fi; \
-		{	$(ECHO) "| ["; \
-			$(ECHO) "$${FILE}" \
-				| $(SED) \
-					-e "s|^.*[/]([^/]+)$$|\1|g"; \
-			$(ECHO) "]("; \
-			$(ECHO) "$${FILE}" \
-				| $(SED) \
-					-e "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
-			$(ECHO) ") | "; \
-		} \
-			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		INFO=; \
 		$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 			if	[ "$${FILE/%\.$(EXTN_$(TYPE))/$(COMPOSER_EXT)}" != "$${FILE}" ] && \
@@ -12952,6 +12941,17 @@ override define $(PUBLISH)-library-sitemap-create =
 		else \
 			$(ECHO) "--"; \
 		fi \
+			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		{	$(ECHO) "| ["; \
+			$(ECHO) "$${FILE}" \
+				| $(SED) \
+					-e "s|^.*[/]([^/]+)$$|\1|g"; \
+			$(ECHO) "]("; \
+			$(ECHO) "$${FILE}" \
+				| $(SED) \
+					-e "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
+			$(ECHO) ") | "; \
+		} \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		$(ECHO) "\n" \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
