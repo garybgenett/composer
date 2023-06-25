@@ -12503,6 +12503,7 @@ $($(PUBLISH)-library-index):
 
 #> update: title / date / tagslist:*
 
+#>					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date";
 override define $(PUBLISH)-library-indexer =
 	$(ECHO) "$(1): {\n" >>$(@).$(COMPOSER_BASENAME); \
 	if [ "$(1)" = "title" ]; then \
@@ -12520,7 +12521,7 @@ override define $(PUBLISH)-library-indexer =
 		| while read -r FILE; do \
 			$(call $(HEADERS)-note,$(@),$$( \
 					if [ "$(1)" = "title" ]; then		$(ECHO) "Title"; \
-					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date"; \
+					elif [ "$(1)" = "date" ]; then		$(ECHO) "Year"; \
 					else					$(ECHO) "Tag ($(1))"; \
 					fi \
 				): $${FILE},$(PUBLISH)-index); \
@@ -12649,6 +12650,7 @@ $($(PUBLISH)-library-digest-src):
 
 #> update: title / date / tagslist:*
 
+#>					elif [ "$(TYPE)" = "date" ]; then	$(ECHO) "Date";
 $($(PUBLISH)-library-digest-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest-files): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
@@ -12661,7 +12663,7 @@ $($(PUBLISH)-library-digest-files):
 		{	$(ECHO) "---\n"; \
 			$(ECHO) "pagetitle: \"$$( \
 					if [ "$(TYPE)" = "title" ]; then	$(ECHO) "Title"; \
-					elif [ "$(TYPE)" = "date" ]; then	$(ECHO) "Date"; \
+					elif [ "$(TYPE)" = "date" ]; then	$(ECHO) "Year"; \
 					else					$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.tagslist.[\"$(TYPE)\"].title)"; \
 					fi \
 				): $(NAME)\"\n"; \
