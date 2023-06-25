@@ -12360,6 +12360,7 @@ $(PUBLISH)-$(COMPOSER_YML):
 			| .variables.$(PUBLISH)-library.auto_update = null \
 			" 2>/dev/null
 
+#WORK reverse is also reversing title/(&path?) when date is identical...?
 override define $(PUBLISH)-library-sort-yq =
 	sort_by(.path) \
 	| sort_by(.title) \
