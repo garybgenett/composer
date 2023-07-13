@@ -1822,6 +1822,23 @@ override COMPOSER_RESERVED := \
 	$(SUBDIRS) \
 	$(PRINTER) \
 
+override COMPOSER_RESERVED_SKIP := \
+	$(COMPOSER_PANDOC) \
+	\
+	$(HELPOUT) \
+	$(EXAMPLE) \
+	\
+	$(HEADERS) \
+	\
+	$(MAKE_DB) \
+	$(LISTING) \
+	$(NOTHING) \
+	\
+	$(DEBUGIT) \
+	$(TESTING) \
+	\
+	$(SUBDIRS) \
+
 ########################################
 
 override DOFORCE			:= force
@@ -1838,15 +1855,8 @@ $(1)-$(2):
 	@$(ECHO) ""
 endef
 
-$(foreach FILE,$(filter-out \
-	$(HELPOUT) \
-	$(EXAMPLE) \
-	$(HEADERS) \
-	$(MAKE_DB) \
-	$(LISTING) \
-	$(NOTHING) \
-	$(SUBDIRS) \
-,$(COMPOSER_RESERVED)),\
+$(foreach FILE,\
+	$(filter-out $(COMPOSER_RESERVED_SKIP),$(COMPOSER_RESERVED)),\
 	$(foreach MOD,\
 		$(DOITALL) \
 		$(DOFORCE) \
@@ -11398,7 +11408,7 @@ endif
 	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(if $(filter $(PANDOC),$(PANDOC_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(PANDOC))"
 	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(if $(filter $(YQ),$(YQ_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(YQ))"
 	@$(TABLE_M2) "-- $(_C)[TeX Live]$(_D) $(_C)[PDF]"	"$(_D)$(TEX_PDF)"
-	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
+	@$(TABLE_M2) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
 	@$(TABLE_M2) "-- $(_E)[Git SCM]"			"$(_N)$(GIT)"
 	@$(TABLE_M2) "-- $(_E)[GNU Diffutils]"			"$(_N)$(DIFF)"
 	@$(TABLE_M2) "-- $(_E)[Rsync]"				"$(_N)$(RSYNC)"
@@ -11409,7 +11419,7 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "-- $(_E)GNU Gzip"				"$(_N)$(GZIP_BIN)"
 	@$(TABLE_M2) "-- $(_E)7z"				"$(_N)$(7Z)"
 	@$(TABLE_M2) "-- $(_E)Node.js (npm)"			"$(_N)$(NPM)"
-	@$(TABLE_M3) "-- $(_E)Curl"				"$(_N)$(CURL)"
+	@$(TABLE_M2) "-- $(_E)Curl"				"$(_N)$(CURL)"
 endif
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(ENDOLINE)
