@@ -11651,7 +11651,7 @@ else
 			$(COMPOSER_EXPORT)$(patsubst $(COMPOSER_ROOT)%,%,$(FILE)); \
 		$(call NEWLINE) \
 	)
-	$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories)
+	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories)
 	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
 		| while read -r FILE; do \
