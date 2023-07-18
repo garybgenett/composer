@@ -599,6 +599,10 @@ override c_list_file			:=
 
 ########################################
 
+override PUBLISH_COMPOSER		:= 1
+override PUBLISH_COMPOSER_ALT		:= $(PUBLISH_COMPOSER)
+override PUBLISH_COMPOSER_MOD		:= null
+
 override PUBLISH_HEADER			:= null
 override PUBLISH_HEADER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FOOTER			:= null
@@ -1910,6 +1914,7 @@ override define COMPOSER_YML_DATA_SKEL =
     homepage:				null,
     brand:				null,
     copyright:				null,
+    $(COMPOSER_TINYNAME):		$(PUBLISH_COMPOSER),
 
     search_name:			null,
     search_site:			null,
@@ -3274,6 +3279,7 @@ endef
 #	based on the "for" loop in the code, header/footer could be a list of files...
 #		see: define $(PUBLISH)-$(TARGETS)-file
 #		document this...?
+#	document "config.composer" option
 
 #WORKING:NOW
 #	features
@@ -4549,7 +4555,7 @@ override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
 |:---|:---|:---|---:|
 | Top Bar    | `brand` (`homepage`) | `nav-top` | `info-top` / `search_*`
 | Main Page  | `nav-left` | **`c_list`** | `nav-right`
-| Bottom Bar | `copyright` | `nav-bottom` | `info-bottom` / *($(COMPOSER_TINYNAME))*
+| Bottom Bar | `copyright` | `nav-bottom` | `info-bottom` / *(`$(COMPOSER_TINYNAME)`)*
 endef
 
 #WORKING:DOCS
@@ -5588,6 +5594,7 @@ $(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon cc-by-nc-nd$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon copyright$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_M)COPYRIGHT$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)$(COMPOSER_TINYNAME)$(_D):				$(_M)$(PUBLISH_COMPOSER)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
     $(_C)search_name$(_D): $(_N)|$(_D)
@@ -5949,6 +5956,7 @@ variables:
 ########################################
 
   $(PUBLISH)-config:
+    $(COMPOSER_TINYNAME):				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COMPOSER_MOD),$(PUBLISH_COMPOSER_ALT))
     header:				$(PUBLISH_HEADER_ALT)
     footer:				$(PUBLISH_FOOTER_ALT)
     css_shade:				$(PUBLISH_CSS_SHADE_ALT)
@@ -7029,11 +7037,13 @@ function $(PUBLISH)-nav-end {
 	if [ "$${1}" = "top" ]; then
 		$(PUBLISH)-search || return 1
 	else
+		if [ -n "$$(COMPOSER_YML_DATA_VAL config.$${COMPOSER_TINYNAME})" ]; then
 $${CAT} <<_EOF_
 <p class="$${COMPOSER_TINYNAME}-link navbar-text me-1">
 $${DIVIDE}$${HTML_SPACE}<a href="$${COMPOSER_HOMEPAGE}">$${CREATED_TAGLINE}</a>
 </p>
 _EOF_
+		fi
 	fi
 $${CAT} <<_EOF_
 </div>
