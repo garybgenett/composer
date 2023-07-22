@@ -3847,6 +3847,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_KEEPING)
 #WORK $(SPECIAL_VAL) deletes all...
 #	COMPOSER_KEEPING test & document
 #	$(CLEANER)-logs test & document
+#	$(CLEANER)-logs only runs on $(DOITALL), so single files could go forever...?
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LOG)
 
@@ -13738,8 +13739,10 @@ endif
 ifeq ($(c_type),$(TYPE_HTML))
 	@$(SED) -i "s|([>])[[:space:]]*([<][!])|\1\n\2|g" $(CURDIR)/$(@)
 endif
+ifneq ($(COMPOSER_KEEPING),$(SPECIAL_VAL))
 ifneq ($(COMPOSER_LOG),)
 	@$(call $(COMPOSER_PANDOC)-log) >>$(CURDIR)/$(COMPOSER_LOG)
+endif
 endif
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
