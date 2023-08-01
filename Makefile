@@ -6614,7 +6614,7 @@ function $(PUBLISH)-nav-top-list {
 			LINK="#"
 		fi
 		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
-			$${ECHO} ""
+			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
@@ -6872,7 +6872,7 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "\\n"
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
 				| $${SED} "s|^|  |g" \\
-				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+				| $(PUBLISH)-parse
 			$${ECHO} "\\n"
 		else
 			$(PUBLISH)-select $${FILE} || return 1
@@ -6955,7 +6955,7 @@ _EOF_
 #>				| $${SED} "s|^|  |g" \\
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
 				| $${SED} "/^$$/d" \\
-				| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+				| $(PUBLISH)-parse
 #>			$${ECHO} "\\n"
 		else
 			$(PUBLISH)-select $${FILE} || return 1
@@ -7423,7 +7423,7 @@ _EOF_
 					| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
 					| $${SED} "/^null$$/d" \\
 					| $${SED} "s|^|  |g" \\
-					| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+					| $(PUBLISH)-parse
 				$${ECHO} "\\n"
 $${CAT} <<_EOF_
 </div>
