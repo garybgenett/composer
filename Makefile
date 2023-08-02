@@ -11810,43 +11810,42 @@ endef
 override define $(EXPORTS)-filter =
 	if [ -z "$(1)" ]; then \
 		$(ECHO) "-mindepth 1 -maxdepth 1 \\\( -type d -prune \\\)"; \
+		$(ECHO) " -o \\( -path \"$(3)/.*\" -prune \\\)"; \
 	fi; \
 	{ $(ECHO) ""; \
 		$(foreach SAFE,$(patsubst $(3)/%,%,$(filter $(3)/%,$(2))),\
 			$(if $(1),		$(ECHO) "--filter=P_/$$( \
-								$(ECHO) "$(word 1,$(subst /, ,$(SAFE)))" \
-								| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-								| $(SED) "s|\[\*\]|*|g" \
-							)\n"; \
+							$(ECHO) "$(word 1,$(subst /, ,$(SAFE)))" \
+							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+							| $(SED) "s|\[\*\]|*|g" \
+						)\n"; \
 			) \
 		) } \
 		| $(SORT); \
 	$(call ENV_MAKE) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
-		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$$( \
-								$(ECHO) "$${FILE}" \
-								| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-								| $(SED) "s|\[\*\]|*|g" \
-							)\n"; \
-			else			$(ECHO) " -o \\( -path \"$${FILE}\" -prune \\\)"; \
+							$(ECHO) "$${FILE}" \
+							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+							| $(SED) "s|\[\*\]|*|g" \
+						)\n"; \
+			else			$(ECHO) " -o \\( -path \"$(3)/$${FILE}\" -prune \\\)"; \
 			fi; \
 		done \
 		| $(SORT); \
 	$(call ENV_MAKE) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS 2>/dev/null \
-		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$$( \
-								$(ECHO) "$${FILE}" \
-								| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-								| $(SED) "s|\[\*\]|*|g" \
-							)\n"; \
-			else			$(ECHO) " -o \\( -path \"$${FILE}\" -print \\\)"; \
+							$(ECHO) "$${FILE}" \
+							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+							| $(SED) "s|\[\*\]|*|g" \
+						)\n"; \
+			else			$(ECHO) " -o \\( -path \"$(3)/$${FILE}\" -print \\\)"; \
 			fi; \
 		done \
 		| $(SORT); \
-	if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/*"; \
-	else			$(ECHO) " -o -prune"; \
+	if [ -n "$(1)" ]; then			$(ECHO) "--filter=-_/*"; \
+	else					$(ECHO) " -o -prune"; \
 	fi
 endef
 
