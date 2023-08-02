@@ -6614,7 +6614,8 @@ function $(PUBLISH)-nav-top-list {
 			LINK="#"
 		fi
 		if [ "$${FILE}" = "$${MENU_SELF}" ]; then
-			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+#>			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
+			$${ECHO} ""
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^header/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^spacer/p")" ]; then
