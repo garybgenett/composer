@@ -2249,7 +2249,7 @@ override COMPOSER_SUBDIRS		:= $(NOTHING)-$(CONFIGS)-$(SUBDIRS)
 endif
 endif
 
-#> update: $(CLEANER) > $(DOITALL)
+#> update: $(EXPORTS) > $(CLEANER) > $(DOITALL)
 ifneq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
@@ -2260,6 +2260,12 @@ ifneq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(filter-out %-$(CLEANER),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
+endif
+endif
+ifneq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(filter-out %-$(EXPORTS),$(COMPOSER_TARGETS))
+ifeq ($(COMPOSER_TARGETS),)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(EXPORTS)
 endif
 endif
 
@@ -2627,7 +2633,10 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_C)[COMPOSER_ROOT]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)-git]"			"Commit \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` to $(_N)[Git]$(_D) branch, and push upstream"
+#WORK	@$(TABLE_M2) "$(_C)[$(EXPORTS)-git]"			"Commit \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` to $(_N)[Git]$(_D) branch, and push upstream"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"#WORKING:DOCS"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"#WORKING:DOCS"
+	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_C)[COMPOSER_LIBRARY]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_C)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
@@ -3578,9 +3587,9 @@ endef
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
 [Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Naming them as
-$(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) or $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) will include them in runs of the respective targets.
-Targets with any other names will need to be run manually, or included in
-$(_C)[COMPOSER_TARGETS]$(_D).
+$(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) or $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) will include them in runs of the respective
+targets.  Targets with any other names will need to be run manually, or included
+in $(_C)[COMPOSER_TARGETS]$(_D).
 
 #WORK ...or, via [Specifying Dependencies]
 
@@ -3595,7 +3604,7 @@ case of conflicting targets, $(_C)[GNU Make]$(_D) will produce warning messages.
 Variables will have their values changed silently.  Changing the values of
 internal $(_C)[$(COMPOSER_BASENAME)]$(_D) variables is not recommended or supported.
 
-A final note is that $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) targets are stripped from
+A final note is that $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) targets are stripped from
 $(_C)[COMPOSER_TARGETS]$(_D).  In cases where this results in an empty $(_C)[COMPOSER_TARGETS]$(_D),
 there will be a message and no actions will be taken.
 endef
@@ -3920,10 +3929,12 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
 #WORK either remove $(PUBLISH) here, or add it to the ones above...
+#WORK also, there are also implications for $(PUBLISH)-library...
 
-  * The list of $(_C)[COMPOSER_TARGETS]$(_D) and $(_C)[COMPOSER_SUBDIRS]$(_D) to skip with $(_C)[$(PUBLISH)]$(_D),
-    $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and $(_C)[$(DOITALL)]$(_D).  This allows for selective auto-detection,
-    when the list of items to process is larger than those to leave alone.
+  * The list of $(_C)[COMPOSER_TARGETS]$(_D), $(_C)[COMPOSER_SUBDIRS]$(_D) and $(_C)[COMPOSER_EXPORTS]$(_D) to
+    skip with $(_C)[$(EXPORTS)]$(_D), $(_C)[$(PUBLISH)]$(_D), $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and $(_C)[$(DOITALL)]$(_D).  This allows for
+    selective auto-detection, when the list of items to process is larger than
+    those to leave alone.
   * Use $(_C)[$(CONFIGS)]$(_D) to check the current value.
 endef
 
@@ -3944,6 +3955,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,CURDIR)
 #WORK
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_CURDIR)
+
+#WORKING:DOCS can also be used to detect first pass, using "ifeq", to prevent "warning: overriding recipe for target" warnings...
 
   * This is set to `$(_C)$$CURDIR$(_D)` when reading in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file in the `$(_C)$(DOMAKE)$(_D)`
     running directory, and is empty otherwise.  This provides a way to limit
@@ -4121,8 +4134,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONF
   * A JSON version of the `$(_M)$(COMPOSER_YML)$(_D)` configuration is exported with
     $(_C)[$(CONFIGS)-yml]$(_D).  This is available for any external scripting, such as in
     `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D), and is parseable with $(_C)[YQ]$(_D).
-  * A structured list of detected targets, $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D) targets,
-    $(_C)[COMPOSER_TARGETS]$(_D), and $(_C)[COMPOSER_SUBDIRS]$(_D) is printed by $(_C)[$(TARGETS)]$(_D).
+  * A structured list of detected targets, $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)
+    targets, $(_C)[COMPOSER_TARGETS]$(_D), and $(_C)[COMPOSER_SUBDIRS]$(_D) is printed by $(_C)[$(TARGETS)]$(_D).
   * Together, $(_C)[$(CONFIGS)]$(_D) and $(_C)[$(TARGETS)]$(_D) reveal the entire internal state of
     $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
@@ -4162,9 +4175,9 @@ Example using $(_C)[$(CONVICT)-$(PRINTER)]$(_D) with $(_C)[c_list]$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)-$(PRINTER)$(_D) $(_E)c_list="$(MAKEFILE) $(call COMPOSER_CONV,,$(COMPOSER_ART))"$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-git)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPORTS)-$(DOFORCE) / \*-$(EXPORTS))
 
-#WORKING
+#WORKING ... and then runs all $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D) targets.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-library)
 
@@ -9850,6 +9863,7 @@ override NOTHING_IGNORES := \
 
 #>	$(CONFIGS)-$(TARGETS) \
 #>	$(CONFIGS)-$(SUBDIRS) \
+#>	$(TARGETS)-$(EXPORTS) \
 #>	$(TARGETS)-$(CLEANER) \
 #>	$(TARGETS)-$(DOITALL) \
 #>	$(NOTHING)-$(TARGETS)-$(HEADERS) \
@@ -11064,6 +11078,10 @@ $(TESTING)-COMPOSER_EXPORTS:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
+#WORKING:NOW see $(TESTING)-$(CLEANER)-$(DOITALL)
+#		\n\t * Verify '$(_N)*$(_C)-$(EXPORTS)$(_D)' targets \
+#	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
+
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-init
 $(TESTING)-COMPOSER_EXPORTS-init:
 	@$(ECHO) ""													>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -11510,6 +11528,7 @@ $(TARGETS):
 		$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
 	)
 	@$(LINERULE)
+	@$(PRINT) "$(_H)$(MARKER) $(EXPORTS)"; $(strip $(call $(TARGETS)-$(PRINTER),$(EXPORTS)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(CLEANER)"; $(strip $(call $(TARGETS)-$(PRINTER),$(CLEANER)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(DOITALL)"; $(strip $(call $(TARGETS)-$(PRINTER),$(DOITALL)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(PRINT) "$(_H)$(MARKER) $(TARGETS)"; $(ECHO) "$(COMPOSER_TARGETS)"				| $(SED) "s|[ ]+|\n|g" | $(SORT)
@@ -11532,6 +11551,7 @@ override define $(TARGETS)-$(PRINTER) =
 			| $(SED) -n "/[-]$(1)$$/p" \
 			| $(SORT) \
 		,\
+			-e "/^[^:]+[-]$(EXPORTS)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
 			-e "s|[:]+[[:space:]]*$$||g" \
@@ -11649,9 +11669,15 @@ endif
 $(EXPORTS): .set_title-$(EXPORTS)
 $(EXPORTS):
 	@$(call $(HEADERS))
-ifeq ($(wildcard $(firstword $(RSYNC))),)
+	@$(call $(EXPORTS)-$(CONFIGS),1)
+ifeq ($(and \
+	$(wildcard $(firstword $(GIT))) ,\
+	$(wildcard $(firstword $(RSYNC))) \
+),)
+	@$(MAKE) $(NOTHING)-git
 	@$(MAKE) $(NOTHING)-rsync
 else
+ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 	@$(eval override TREE := $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
 	@$(foreach FILE,$(sort $(TREE)),\
 		$(call $(HEADERS)-action,$(FILE)); \
@@ -11684,22 +11710,13 @@ else
 			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
 			-e "/[.][/]$$/d"
 	@$(ECHO) "$(_D)"
+	@$(eval override $(TARGETS)-$(PRINTER)-$(EXPORTS) := $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(EXPORTS)))))
+	@if [ -n "$($(TARGETS)-$(PRINTER)-$(EXPORTS))" ]; then \
+		$(ECHO) "\n"; \
+		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(EXPORTS)-,$($(TARGETS)-$(PRINTER)-$(EXPORTS))); \
+	fi
 endif
-
-########################################
-### {{{3 $(EXPORTS)-git
-########################################
-
-#> update: $(NOTHING)-%
-
-.PHONY: $(EXPORTS)-git
-$(EXPORTS)-git: .set_title-$(EXPORTS)-git
-$(EXPORTS)-git:
-	@$(call $(HEADERS))
-	@$(call $(EXPORTS)-$(CONFIGS),1)
-ifeq ($(wildcard $(firstword $(GIT))),)
-	@$(MAKE) $(NOTHING)-git
-else
+ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),)
 #>	$(_EXPORT_DIRECTORY)
 ifneq ($(and \
 	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) ,\
@@ -11712,9 +11729,19 @@ ifneq ($(and \
 	@$(ENDOLINE)
 	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BRANCH)")
 else
-	@$(MAKE) $(NOTHING)-$(EXPORTS)
+	@$(MAKE) $(NOTHING)-$(EXPORTS)-git
 endif
 endif
+endif
+
+.PHONY: $(EXPORTS)-%
+$(EXPORTS)-%:
+	@$(call $(HEADERS)-note,$(CURDIR),$(*),$(EXPORTS))
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(*)
+
+########################################
+### {{{3 $(EXPORTS)-$(CONFIGS)
+########################################
 
 #>		[ -n "$(_EXPORT_DIRECTORY)" ] ||
 override define $(EXPORTS)-$(CONFIGS) =
@@ -13066,10 +13093,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 		) \
 		$(if $(METAFILE),| $(SED) -n -e "/^$(METAFRGX)$$/p" -e "/[/]$(METAFRGX)$$/p") \
 		| $(SED) "s|^$(CURDIR)[/]||g" \
-		| $(SORT) \
-		| while read -r FILE; do \
-			$(ECHO) "$${FILE}\n"; \
-		done
+		| $(SORT)
 	@$(ECHO) "$(_D)"
 endif
 else
