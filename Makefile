@@ -12931,6 +12931,10 @@ override define $(PUBLISH)-library-sitemap-done =
 	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2)
 endef
 
+#WORKING:NOW:NOW:DOCS:FIX
+#	items like README.site.html aren't getting metadata, because it is only looking for *.md...
+#	maybe we can somehow check for $(word 1,$(README.site.html)) variable and use that...?
+
 override define $(PUBLISH)-library-sitemap-create =
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(patsubst $(COMPOSER_ROOT),/,$(patsubst $(COMPOSER_ROOT)/%,%,$(FILE))),$(PUBLISH)-sitemap); \
 	if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
