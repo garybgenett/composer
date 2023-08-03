@@ -11997,7 +11997,7 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 			>$(DOFILE)-menu.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call PUBLISH_SH_RUN) $(DOFILE)-list \
-			| $(SED) "/[/]$(notdir $(DOFILE)-list) -->$$/d" \
+			| $(SED) "/[/]$$($(ECHO) "$(notdir $(DOFILE)-list)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g") -->$$/d" \
 			>$(DOFILE)-list.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call $(PUBLISH)-$(TARGETS)-$(HELPER)-done,$(1),$(TAGGER)); \
