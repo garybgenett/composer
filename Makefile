@@ -11729,6 +11729,9 @@ ifneq ($(and \
 	@$(ENDOLINE)
 	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BRANCH)")
 else
+ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
+	@$(ENDOLINE)
+endif
 	@$(MAKE) $(NOTHING)-$(EXPORTS)-git
 endif
 endif
