@@ -11689,6 +11689,11 @@ ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 			$(COMPOSER_EXPORT)$(patsubst $(COMPOSER_ROOT)%,%,$(FILE)); \
 		$(call NEWLINE) \
 	)
+	@$(eval override $(TARGETS)-$(PRINTER)-$(EXPORTS) := $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(EXPORTS)))))
+	@if [ -n "$($(TARGETS)-$(PRINTER)-$(EXPORTS))" ]; then \
+		$(call $(HEADERS)-action,*-$(EXPORTS)); \
+		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(EXPORTS)-,$($(TARGETS)-$(PRINTER)-$(EXPORTS))); \
+	fi
 	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories)
 	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
@@ -11710,11 +11715,6 @@ ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
 			-e "/[.][/]$$/d"
 	@$(ECHO) "$(_D)"
-	@$(eval override $(TARGETS)-$(PRINTER)-$(EXPORTS) := $(shell $(strip $(call $(TARGETS)-$(PRINTER),$(EXPORTS)))))
-	@if [ -n "$($(TARGETS)-$(PRINTER)-$(EXPORTS))" ]; then \
-		$(ECHO) "\n"; \
-		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(addprefix $(EXPORTS)-,$($(TARGETS)-$(PRINTER)-$(EXPORTS))); \
-	fi
 endif
 ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),)
 #>	$(_EXPORT_DIRECTORY)
