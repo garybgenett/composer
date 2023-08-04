@@ -499,15 +499,23 @@ endif
 ########################################
 
 ifneq ($(origin _EXPORT_DIRECTORY),override)
-override _EXPORT_DIRECTORY		:= $(COMPOSER_EXPORT_DEFAULT)
-else ifneq ($(_EXPORT_DIRECTORY),)
+override _EXPORT_DIRECTORY		:= $(COMPOSER_EXPORT)
+else
 override COMPOSER_EXPORT		:= $(_EXPORT_DIRECTORY)
 endif
+
 ifneq ($(origin _EXPORT_GIT_REPO),override)
 override _EXPORT_GIT_REPO		:=
 endif
 ifneq ($(origin _EXPORT_GIT_BRANCH),override)
 override _EXPORT_GIT_BRANCH		:=
+endif
+
+ifneq ($(origin _EXPORT_FIRE_ACCOUNT),override)
+override _EXPORT_FIRE_ACCOUNT		:=
+endif
+ifneq ($(origin _EXPORT_FIRE_PROJECT),override)
+override _EXPORT_FIRE_PROJECT		:=
 endif
 
 ########################################
@@ -893,6 +901,19 @@ override REVEALJS_DIR			:= $(COMPOSER_DIR)/reveal.js
 
 ########################################
 
+# https://firebase.google.com/docs/hosting/quickstart
+
+# https://github.com/firebase/firebase-tools
+# https://github.com/firebase/firebase-tools/blob/master/LICENSE
+ifneq ($(origin FIREBASE_CMT),override)
+override FIREBASE_CMT			:= v12.4.6
+endif
+override FIREBASE_LIC			:= MIT
+override FIREBASE_SRC			:= https://github.com/firebase/firebase-tools.git
+override FIREBASE_DIR			:= $(COMPOSER_DIR)/firebase
+
+########################################
+
 override BASH_VER			:= 5.1.16
 override COREUTILS_VER			:= 8.32
 override FINDUTILS_VER			:= 4.9.0
@@ -1124,6 +1145,11 @@ endef
 ########################################
 
 override NPM_NAME			= $(subst /,-,$(call COMPOSER_CONV,,$(1)))
+override NPM_FIREBASE			= \
+	$(subst cd $(FIREBASE_DIR),cd $(COMPOSER_ROOT),\
+	$(subst PATH=,HOME="$(COMPOSER_ROOT)" PATH=,\
+		$(call NPM_RUN,$(FIREBASE_DIR),,firebase) \
+	))
 
 override define NPM_RUN =
 	cd $(1) && \
@@ -3632,6 +3658,7 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)MDVIEWER_CMT$(_D)`
   * `$(_C)MDTHEMES_CMT$(_D)`
   * `$(_C)REVEALJS_CMT$(_D)`
+  * `$(_C)FIREBASE_CMT$(_D)`
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
@@ -3925,6 +3952,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
 #		$(_EXPORT_DIRECTORY)
 #		$(_EXPORT_GIT_REPO)
 #		$(_EXPORT_GIT_BRANCH)
+#		$(_EXPORT_FIRE_ACCOUNT)
+#		$(_EXPORT_FIRE_PROJECT)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
@@ -3984,6 +4013,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORT)
   * [_EXPORT_DIRECTORY]
   * [_EXPORT_GIT_REPO]
   * [_EXPORT_GIT_BRANCH]
+  * [_EXPORT_FIRE_ACCOUNT]
+  * [_EXPORT_FIRE_PROJECT]
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LIBRARY)
 
@@ -5284,6 +5315,14 @@ override define HEREDOC_GITIGNORE =
 
 /.$(COMPOSER_BASENAME)-**
 /$(COMPOSER_BASENAME)-**
+
+########################################
+# $(EXPORTS)
+
+/.config/configstore/*firebase*
+/.firebase/
+/.firebaserc
+/firebase.json
 
 ################################################################################
 # End Of File
@@ -9951,6 +9990,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR)),	$(MDVIEWER_SRC),	$(MDVIEWER_CMT))
 	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(MDTHEMES_DIR)),	$(MDTHEMES_SRC),	$(MDTHEMES_CMT))
 	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(REVEALJS_DIR)),	$(REVEALJS_SRC),	$(REVEALJS_CMT))
+	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),	$(FIREBASE_SRC),	$(FIREBASE_CMT))
 endif
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),)
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
@@ -9969,6 +10009,9 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
 		$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
+#>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)))
+	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),firebase-tools)
+	@$(call NPM_FIREBASE) --version
 endif
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
@@ -11276,6 +11319,7 @@ $(TESTING)-other-init:
 	@$(ECHO) "override MDVIEWER_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override MDTHEMES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override FIREBASE_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CHECKIT)
 	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -11286,6 +11330,8 @@ $(TESTING)-other-init:
 	@$(ECHO) "override _EXPORT_DIRECTORY := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override _EXPORT_GIT_REPO := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override _EXPORT_GIT_BRANCH := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_FIRE_ACCOUNT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_FIRE_PROJECT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
@@ -11313,12 +11359,12 @@ $(TESTING)-other-done:
 	#> versions
 	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
 	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,26,$(NOTHING))
+	$(call $(TESTING)-count,30,$(NOTHING))
 	$(call $(TESTING)-count,3,$(notdir $(PANDOC_BIN)))
 	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
 	#> export
-	$(call $(TESTING)-count,3,_EXPORT_)
-	$(call $(TESTING)-count,26,$(NOTHING))
+	$(call $(TESTING)-count,5,_EXPORT_)
+	$(call $(TESTING)-count,30,$(NOTHING))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -11387,6 +11433,7 @@ $(CHECKIT):
 	@$(TABLE_M3) "$(_E)[Markdown Viewer]"			"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(TABLE_M3) "$(_E)[Markdown Themes]"			"$(_E)$(MDTHEMES_CMT)"			"$(_N)$(MDTHEMES_LIC)"
 	@$(TABLE_M3) "$(_E)[Reveal.js]"				"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
+	@$(TABLE_M3) "$(_E)[Google Firebase]"			"$(_E)$(FIREBASE_CMT)"			"$(_N)$(FIREBASE_LIC)"
 	@$(ENDOLINE)
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "$(_H)Project"				"$(_H)$(COMPOSER_BASENAME) Version"
@@ -11605,6 +11652,7 @@ endif
 		$(MDVIEWER_DIR) \
 		$(MDTHEMES_DIR) \
 		$(REVEALJS_DIR) \
+		$(FIREBASE_DIR) \
 		,\
 		if [ ! -e "$(COMPOSER_DOSETUP_DIR)/$(notdir $(FILE))" ]; then \
 			$(ECHO) "$(_E)"; \
@@ -11716,10 +11764,12 @@ ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 			-e "/[.][/]$$/d"
 	@$(ECHO) "$(_D)"
 endif
-ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),)
 #>	$(_EXPORT_DIRECTORY)
 ifneq ($(and \
-	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) ,\
+	$(COMPOSER_DOITALL_$(EXPORTS)) ,\
+	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) \
+),)
+ifneq ($(and \
 	$(_EXPORT_GIT_REPO) ,\
 	$(_EXPORT_GIT_BRANCH) \
 ),)
@@ -11733,6 +11783,41 @@ ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 	@$(ENDOLINE)
 endif
 	@$(MAKE) $(NOTHING)-$(EXPORTS)-git
+endif
+ifneq ($(and \
+	$(_EXPORT_FIRE_ACCOUNT) ,\
+	$(_EXPORT_FIRE_PROJECT) \
+),)
+ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init)
+	@$(call NPM_FIREBASE) \
+		--interactive \
+		login
+	@$(call NPM_FIREBASE) \
+		--account $(_EXPORT_FIRE_ACCOUNT) \
+		--project $(_EXPORT_FIRE_PROJECT) \
+		--interactive \
+		init hosting
+endif
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase)
+	@$(call NPM_FIREBASE) \
+		--config $(COMPOSER_ROOT)/firebase.json \
+		--account $(_EXPORT_FIRE_ACCOUNT) \
+		--project $(_EXPORT_FIRE_PROJECT) \
+		--non-interactive \
+		projects:list
+	@$(call NPM_FIREBASE) \
+		--config $(COMPOSER_ROOT)/firebase.json \
+		--public $(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT)) \
+		--account $(_EXPORT_FIRE_ACCOUNT) \
+		--project $(_EXPORT_FIRE_PROJECT) \
+		--non-interactive \
+		deploy --only hosting
+else
+ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
+	@$(ENDOLINE)
+endif
+	@$(MAKE) $(NOTHING)-$(EXPORTS)-firebase
 endif
 endif
 endif
@@ -11751,12 +11836,16 @@ override define $(EXPORTS)-$(CONFIGS) =
 	if	[ "$(COMPOSER_EXPORT)" != "$(COMPOSER_EXPORT_DEFAULT)" ] || \
 		[ -n "$(_EXPORT_GIT_REPO)" ] || \
 		[ -n "$(_EXPORT_GIT_BRANCH)" ] || \
+		[ -n "$(_EXPORT_FIRE_ACCOUNT)" ] || \
+		[ -n "$(_EXPORT_FIRE_PROJECT)" ] || \
 		[ -n "$(1)" ]; \
 	then \
 		$(foreach FILE,\
 			_EXPORT_DIRECTORY \
 			_EXPORT_GIT_REPO \
 			_EXPORT_GIT_BRANCH \
+			_EXPORT_FIRE_ACCOUNT \
+			_EXPORT_FIRE_PROJECT \
 			,\
 			$(TABLE_M2) "$(_C)$(FILE)" "$(strip \
 				$(if $(filter $(FILE),_EXPORT_DIRECTORY),\
