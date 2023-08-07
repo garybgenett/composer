@@ -118,7 +118,9 @@ override VIM_FOLDING := {{{1
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
-#	remove MDVIEWER_CMT_SASS_VER once fixed in upstream
+#	remove once fixed in upstream
+#		$(MKDIR) $(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
+#		MDVIEWER_FIX_SASS_VER
 # HTML
 #	metadata / keywords
 # PDF / EPUB / DOCX
@@ -226,7 +228,7 @@ override COMPOSER_ROOT			:= $(abspath $(dir $(lastword $(filter-out $(COMPOSER),
 ifeq ($(COMPOSER_ROOT),)
 override COMPOSER_ROOT			:= $(CURDIR)
 endif
-override COMPOSER_CONV			= $(if $(filter $(COMPOSER_DIR)/%,$(2)),$(patsubst $(COMPOSER_DIR)/%,$(1)%,$(2)),$(2))
+override COMPOSER_CONV			= $(patsubst $(COMPOSER_DIR)/%,$(1)%,$(patsubst $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/%,$(1)%,$(2)))
 
 #> update: includes duplicates
 override EXPORTS			:= export
@@ -740,9 +742,10 @@ override LIBRARY_LISTS_SPACER_ALT	:= null
 
 # https://github.com/jgm/pandoc
 # https://github.com/jgm/pandoc/blob/master/COPYING.md
-#>override PANDOC_VER			:= 2.18
+#>override PANDOC_VER_COMPOSER		:= 2.18
+override PANDOC_VER_COMPOSER		:= 2.18
 ifneq ($(origin PANDOC_VER),override)
-override PANDOC_VER			:= 2.18
+override PANDOC_VER			:= $(PANDOC_VER_COMPOSER)
 endif
 ifneq ($(origin PANDOC_CMT),override)
 override PANDOC_CMT			:= $(PANDOC_VER)
@@ -750,7 +753,7 @@ endif
 override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
-override PANDOC_TEX_PDF			:= pdflatex
+
 override PANDOC_URL			:= https://github.com/jgm/pandoc/releases/download/$(PANDOC_VER)
 override PANDOC_LNX_SRC			:= pandoc-$(PANDOC_VER)-linux-amd64.tar.gz
 override PANDOC_WIN_SRC			:= pandoc-$(PANDOC_VER)-windows-x86_64.zip
@@ -769,14 +772,17 @@ else ifeq ($(OS_TYPE),Darwin)
 override PANDOC_BIN			:= $(PANDOC_DIR)/$(PANDOC_MAC_BIN)
 endif
 
+override PANDOC_TEX_PDF			:= pdflatex
+
 ########################################
 
 # https://mikefarah.gitbook.io/yq
 # https://github.com/mikefarah/yq
 # https://github.com/mikefarah/yq/blob/master/LICENSE
-#>override YQ_VER			:= 3.1.0
+#>override YQ_VER_COMPOSER		:= 3.1.0
+override YQ_VER_COMPOSER		:= 4.24.2
 ifneq ($(origin YQ_VER),override)
-override YQ_VER				:= 4.24.2
+override YQ_VER				:= $(YQ_VER_COMPOSER)
 endif
 ifneq ($(origin YQ_CMT),override)
 override YQ_CMT				:= v$(YQ_VER)
@@ -784,6 +790,7 @@ endif
 override YQ_LIC				:= MIT
 override YQ_SRC				:= https://github.com/mikefarah/yq.git
 override YQ_DIR				:= $(COMPOSER_DIR)/yq
+
 override YQ_URL				:= https://github.com/mikefarah/yq/releases/download/v$(YQ_VER)
 override YQ_LNX_SRC			:= yq_linux_amd64.tar.gz
 override YQ_WIN_SRC			:= yq_windows_amd64.zip
@@ -811,10 +818,11 @@ endif
 ifneq ($(origin BOOTSTRAP_CMT),override)
 override BOOTSTRAP_CMT			:= v5.1.3
 endif
-override BOOTSTRAP_DOC_VER		:= 5.1
 override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
+
+override BOOTSTRAP_DOC_VER		:= 5.1
 override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
 override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
@@ -869,7 +877,6 @@ override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
 ifneq ($(origin MDVIEWER_CMT),override)
 #>override MDVIEWER_CMT			:= 3bd40d84c071379440b3dd94e2a48fbbbb03829f
 override MDVIEWER_CMT			:= 3bd40d84c071379440b3
-override MDVIEWER_CMT_SASS_VER		:= ^1.0.0
 endif
 override MDVIEWER_LIC			:= MIT
 override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
@@ -878,6 +885,7 @@ override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 #> update: MDVIEWER_MODULES
 override MDVIEWER_MODULES		= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
 override MDVIEWER_MANIFEST		:= manifest.firefox.json
+override MDVIEWER_FIX_SASS_VER		:= ^1.0.0
 
 # https://github.com/simov/markdown-themes
 ifneq ($(origin MDTHEMES_CMT),override)
@@ -901,16 +909,27 @@ override REVEALJS_DIR			:= $(COMPOSER_DIR)/reveal.js
 
 ########################################
 
-# https://firebase.google.com/docs/hosting/quickstart
-
+# https://firebase.google.com
 # https://github.com/firebase/firebase-tools
 # https://github.com/firebase/firebase-tools/blob/master/LICENSE
+override FIREBASE_VER_COMPOSER		:= 12.4.7
+ifneq ($(origin FIREBASE_VER),override)
+override FIREBASE_VER			:= $(FIREBASE_VER_COMPOSER)
+endif
 ifneq ($(origin FIREBASE_CMT),override)
-override FIREBASE_CMT			:= v12.4.6
+override FIREBASE_CMT			:= v$(FIREBASE_VER)
 endif
 override FIREBASE_LIC			:= MIT
 override FIREBASE_SRC			:= https://github.com/firebase/firebase-tools.git
-override FIREBASE_DIR			:= $(COMPOSER_DIR)/firebase
+override FIREBASE_DIR			:= $(COMPOSER_DIR)/firebase-tools
+
+override FIREBASE_BIN			:= $(FIREBASE_DIR)/node_modules/.bin/firebase
+
+override define FIREBASE_IGNORE =
+/.firebase*
+/firebase*
+**firebase**.json
+endef
 
 ########################################
 
@@ -934,6 +953,8 @@ override GZIP_VER			:= 1.12
 override 7Z_VER				:= 16.02
 override NPM_VER			:= 8.19.2
 override CURL_VER			:= 7.85.0
+
+override FIREBASE_VER			:= $(FIREBASE_VER)
 
 ################################################################################
 # {{{1 Tooling Options
@@ -1007,6 +1028,8 @@ override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --verbose
 override CURL				:= $(call COMPOSER_FIND,$(PATH_LIST),curl)
 
+override FIREBASE			:= $(call COMPOSER_FIND,$(PATH_LIST),firebase)
+
 override DOMAKE				:= $(notdir $(MAKE))
 export GZIP				:=
 
@@ -1038,6 +1061,9 @@ override PANDOC				:= $(PANDOC_BIN)
 endif
 ifneq ($(wildcard $(YQ_BIN)),)
 override YQ				:= $(YQ_BIN)
+endif
+ifneq ($(wildcard $(FIREBASE_BIN)),)
+override FIREBASE			:= $(FIREBASE_BIN)
 endif
 
 ########################################
@@ -1145,11 +1171,6 @@ endef
 ########################################
 
 override NPM_NAME			= $(subst /,-,$(call COMPOSER_CONV,,$(1)))
-override NPM_FIREBASE			= \
-	$(subst cd $(FIREBASE_DIR),cd $(COMPOSER_ROOT),\
-	$(subst PATH=,HOME="$(COMPOSER_ROOT)" PATH=,\
-		$(call NPM_RUN,$(FIREBASE_DIR),,firebase) \
-	))
 
 override define NPM_RUN =
 	cd $(1) && \
@@ -1170,7 +1191,7 @@ override define NPM_SETUP =
 	$(LN) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules $(1)/; \
 	$(RM) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/package.json; \
 	$(LN) $(1)/package.json $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/; \
-	$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_CMT_SASS_VER)\4|g" $(1)/package.json
+	$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_FIX_SASS_VER)\4|g" $(1)/package.json
 endef
 
 override define NPM_INSTALL =
@@ -1199,6 +1220,21 @@ override define NPM_BUILD =
 	else \
 		(cd $(1) && $(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(1)/build.sh); \
 	fi
+endef
+
+########################################
+
+override define FIREBASE_RUN =
+	$(if $(filter $(FIREBASE),$(FIREBASE_BIN)),\
+		$(subst cd $(FIREBASE_DIR),cd $(COMPOSER_ROOT),\
+		$(subst PATH=,HOME="$(COMPOSER_ROOT)" PATH=,\
+			$(call NPM_RUN,$(FIREBASE_DIR),,firebase) \
+		)) \
+	,\
+		cd $(COMPOSER_ROOT) && \
+			HOME="$(COMPOSER_ROOT)" \
+			firebase \
+	)
 endef
 
 ################################################################################
@@ -3025,6 +3061,7 @@ $(_E)[Water.css]: https://watercss.kognise.dev$(_D)
 $(_E)[Markdown Viewer]: https://github.com/simov/markdown-viewer$(_D)
 $(_E)[Markdown Themes]: https://github.com/simov/markdown-themes$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
+$(_S)[Google Firebase]: https://firebase.google.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
 $(_S)[Git]: https://git-scm.com$(_D)
@@ -3125,6 +3162,8 @@ validate your system.
 endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
+#WORKING:FIREBASE $(_C)[Google Firebase]$(_D) is only for $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) / DOFORCE?
+
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, follow the
 instructions in the `$(_M)README.md$(_D)`.
@@ -3658,7 +3697,10 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)MDVIEWER_CMT$(_D)`
   * `$(_C)MDTHEMES_CMT$(_D)`
   * `$(_C)REVEALJS_CMT$(_D)`
-  * `$(_C)FIREBASE_CMT$(_D)`
+  * `$(_C)FIREBASE_VER$(_D)` $(_E)(must be a binary version number)$(_D)
+  * `$(_C)FIREBASE_CMT$(_D)` $(_E)(defaults to `FIREBASE_VER`)$(_D)
+
+#WORKING:FIREBASE $(_C)[Google Firebase]$(_D) is only for $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) / DOFORCE?
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
@@ -5310,19 +5352,18 @@ override define HEREDOC_GITIGNORE =
 /$(call COMPOSER_CONV,,$(PANDOC_DIR))/pandoc-*
 /$(call COMPOSER_CONV,,$(YQ_DIR))/yq_*
 
+/$(call COMPOSER_CONV,,$(FIREBASE_DIR))/
+
 ########################################
 # $(DEBUGIT) / $(TESTING)
 
-/.$(COMPOSER_BASENAME)-**
-/$(COMPOSER_BASENAME)-**
+/.$(COMPOSER_BASENAME)-*
+/$(COMPOSER_BASENAME)-*
 
 ########################################
 # $(EXPORTS)
 
-/.config/configstore/*firebase*
-/.firebase/
-/.firebaserc
-/firebase.json
+$(call FIREBASE_IGNORE)
 
 ################################################################################
 # End Of File
@@ -10010,8 +10051,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 		$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 #>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)))
-	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),firebase-tools)
-	@$(call NPM_FIREBASE) --version
+	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),$(notdir $(FIREBASE_DIR)))
 endif
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
@@ -10513,7 +10553,8 @@ override define $(TESTING)-load =
 			--filter="-_/$(PANDOC_LNX_BIN)" \
 			--filter="-_/$(PANDOC_WIN_BIN)" \
 			--filter="-_/$(PANDOC_MAC_BIN)" \
-			$(PANDOC_DIR)/ $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
+			$(PANDOC_DIR)/ \
+			$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
 	$(ECHO) "override COMPOSER_IGNORES := test\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
@@ -10638,15 +10679,20 @@ $(TESTING)-$(DISTRIB)-init:
 #>	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) $(DISTRIB)
 	@$(call $(TESTING)-run,$(TESTING_COMPOSER_DIR)) --makefile $(COMPOSER) $(DISTRIB)
 
-.PHONY: $(TESTING)-$(DISTRIB)-done
-$(TESTING)-$(DISTRIB)-done:
+.PHONY: $(TESTING)-$(DISTRIB)-done-env
+$(TESTING)-$(DISTRIB)-done-env:
 	@$(LS) \
 		$(PANDOC_DIR)/$(PANDOC_LNX_BIN) \
 		$(PANDOC_DIR)/$(PANDOC_WIN_BIN) \
 		$(PANDOC_DIR)/$(PANDOC_MAC_BIN) \
 		$(YQ_DIR)/$(YQ_LNX_BIN) \
 		$(YQ_DIR)/$(YQ_WIN_BIN) \
-		$(YQ_DIR)/$(YQ_MAC_BIN)
+		$(YQ_DIR)/$(YQ_MAC_BIN) \
+		$(FIREBASE_BIN)
+
+.PHONY: $(TESTING)-$(DISTRIB)-done
+$(TESTING)-$(DISTRIB)-done:
+	@$(call $(TESTING)-run) $(@)-env
 
 ########################################
 ### {{{3 $(TESTING)-heredoc
@@ -11320,10 +11366,11 @@ $(TESTING)-other-init:
 	@$(ECHO) "override MDTHEMES_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override REVEALJS_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override FIREBASE_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CHECKIT)
+	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
 	@$(ECHO) "override PANDOC_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override YQ_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CHECKIT)
+	@$(ECHO) "override FIREBASE_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	#> export
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -11346,25 +11393,42 @@ $(TESTING)-other-init:
 	@cd $(call $(TESTING)-pwd) \
 		&& GIT_PAGER= $(GIT) log
 
-.PHONY: $(TESTING)-other-done
-$(TESTING)-other-done:
-	#> binaries
-	@$(PRINT) "$(_C)Pandoc: $(PANDOC_BIN) = $(PANDOC)"
-	@$(PRINT) "$(_C)YQ: $(YQ_BIN) = $(YQ)"
+.PHONY: $(TESTING)-other-done-env
+$(TESTING)-other-done-env:
+	@$(ECHO) "$(_C)"
+	@$(ECHO) "Pandoc:\n"; \
+		$(ECHO) "\t$(PANDOC_BIN)\n"; \
+		$(ECHO) "\t$(PANDOC)\n"
+	@$(ECHO) "YQ:\n"; \
+		$(ECHO) "\t$(YQ_BIN)\n"; \
+		$(ECHO) "\t$(YQ)\n"
+	@$(ECHO) "Firebase:\n"; \
+		$(ECHO) "\t$(FIREBASE_BIN)\n"; \
+		$(ECHO) "\t$(FIREBASE)\n"
+	@$(ECHO) "$(_D)"
 	@if	[ "$(PANDOC)" != "$(PANDOC_BIN)" ] || \
-		[ "$(YQ)" != "$(YQ_BIN)" ]; \
+		[ "$(YQ)" != "$(YQ_BIN)" ] || \
+		[ "$(FIREBASE)" != "$(FIREBASE_BIN)" ]; \
 	then \
 		$(call $(TESTING)-fail); \
 	fi
+
+.PHONY: $(TESTING)-other-done
+$(TESTING)-other-done:
+	#> binaries
+	@$(call $(TESTING)-run) $(@)-env
 	#> versions
-	$(call $(TESTING)-find,[(].*$(PANDOC_VER).*[)])
-	$(call $(TESTING)-find,[(].*$(YQ_VER).*[)])
-	$(call $(TESTING)-count,30,$(NOTHING))
-	$(call $(TESTING)-count,3,$(notdir $(PANDOC_BIN)))
-	$(call $(TESTING)-count,1,$(notdir $(YQ_BIN)))
+	$(call $(TESTING)-find,[(].*$(PANDOC_VER_COMPOSER).*[)])
+	$(call $(TESTING)-find,[(].*$(YQ_VER_COMPOSER).*[)])
+	$(call $(TESTING)-find,[(].*$(FIREBASE_VER_COMPOSER).*[)])
+	$(call $(TESTING)-count,28,$(NOTHING))
+	$(call $(TESTING)-count,2,$(subst /,[/],$(call COMPOSER_CONV,,$(PANDOC_BIN))))
+	$(call $(TESTING)-count,1,$(subst /,[/],$(call COMPOSER_CONV,,$(YQ_BIN))))
+#>	$(call $(TESTING)-count,1,$(subst /,[/],$(call COMPOSER_CONV,,$(FIREBASE_BIN))))
+	$(call $(TESTING)-count,2,$(subst /,[/],$(call COMPOSER_CONV,,$(FIREBASE_BIN))))
 	#> export
 	$(call $(TESTING)-count,5,_EXPORT_)
-	$(call $(TESTING)-count,30,$(NOTHING))
+	$(call $(TESTING)-count,28,$(NOTHING))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -11409,11 +11473,15 @@ $(TESTING)-$(EXAMPLE)-done:
 
 override PANDOC_CMT_DISPLAY := $(PANDOC_CMT)
 override YQ_CMT_DISPLAY := $(YQ_CMT)
-ifneq ($(PANDOC_CMT),$(PANDOC_VER))
+override FIREBASE_CMT_DISPLAY := $(FIREBASE_CMT)
+ifneq ($(patsubst v%,%,$(PANDOC_CMT)),$(PANDOC_VER))
 override PANDOC_CMT_DISPLAY := $(PANDOC_CMT)$(_D) ($(_N)$(PANDOC_VER)$(_D))
 endif
 ifneq ($(patsubst v%,%,$(YQ_CMT)),$(YQ_VER))
 override YQ_CMT_DISPLAY := $(YQ_CMT)$(_D) ($(_N)$(YQ_VER)$(_D))
+endif
+ifneq ($(patsubst v%,%,$(FIREBASE_CMT)),$(FIREBASE_VER))
+override FIREBASE_CMT_DISPLAY := $(FIREBASE_CMT)$(_D) ($(_N)$(FIREBASE_VER)$(_D))
 endif
 
 #> update: Tooling Versions
@@ -11433,7 +11501,7 @@ $(CHECKIT):
 	@$(TABLE_M3) "$(_E)[Markdown Viewer]"			"$(_E)$(MDVIEWER_CMT)"			"$(_N)$(MDVIEWER_LIC)"
 	@$(TABLE_M3) "$(_E)[Markdown Themes]"			"$(_E)$(MDTHEMES_CMT)"			"$(_N)$(MDTHEMES_LIC)"
 	@$(TABLE_M3) "$(_E)[Reveal.js]"				"$(_E)$(REVEALJS_CMT)"			"$(_N)$(REVEALJS_LIC)"
-	@$(TABLE_M3) "$(_E)[Google Firebase]"			"$(_E)$(FIREBASE_CMT)"			"$(_N)$(FIREBASE_LIC)"
+	@$(TABLE_M3) "$(_E)[Google Firebase]"			"$(_E)$(FIREBASE_CMT_DISPLAY)"		"$(_N)$(FIREBASE_LIC)"
 	@$(ENDOLINE)
 ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "$(_H)Project"				"$(_H)$(COMPOSER_BASENAME) Version"
@@ -11443,8 +11511,8 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "-- $(_C)[GNU Findutils]"			"$(_M)$(FINDUTILS_VER)"
 	@$(TABLE_M2) "-- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"
 	@$(TABLE_M2) "$(_C)[GNU Make]"				"$(_M)$(MAKE_VER)"
-	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER)"
-	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"
+	@$(TABLE_M2) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER_COMPOSER)"
+	@$(TABLE_M2) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER_COMPOSER)"
 	@$(TABLE_M2) "-- $(_C)[TeX Live]$(_D) $(_C)[PDF]"	"$(_M)$(TEX_PDF_VER)"
 	@$(TABLE_M2) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"
 	@$(TABLE_M2) "-- $(_E)[Git SCM]"			"$(_E)$(GIT_VER)"
@@ -11458,8 +11526,8 @@ else
 	@$(TABLE_M3) "-- $(_C)[GNU Findutils]"			"$(_M)$(FINDUTILS_VER)"			"$(_D)$(shell $(FIND) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_C)[GNU Sed]"			"$(_M)$(SED_VER)"			"$(_D)$(shell $(SED) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_C)[GNU Make]"				"$(_M)$(MAKE_VER)"			"$(_D)$(shell $(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER)"			"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER)"			"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[Pandoc]"				"$(_M)$(PANDOC_VER_COMPOSER)"		"$(_D)$(shell $(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "-- $(_C)[YQ]"				"$(_M)$(YQ_VER_COMPOSER)"		"$(_D)$(shell $(YQ) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_C)[TeX Live]$(_D) $(_C)[PDF]"	"$(_M)$(TEX_PDF_VER)"			"$(_D)$(shell $(TEX_PDF) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_H)Supporting Tools:"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
 	@$(TABLE_M3) "-- $(_E)[Git SCM]"			"$(_E)$(GIT_VER)"			"$(_N)$(shell $(GIT) --version			2>/dev/null | $(HEAD) -n1)"
@@ -11473,6 +11541,8 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "-- $(_E)7z"				"$(_E)$(7Z_VER)"			"$(_N)$(shell $(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
 	@$(TABLE_M3) "-- $(_E)Node.js (npm)"			"$(_E)$(NPM_VER)"			"$(_N)$(shell $(NPM) --version			2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "-- $(_E)Curl"				"$(_E)$(CURL_VER)"			"$(_N)$(shell $(CURL) --version			2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_H)Target: $(EXPORTS)"			"$(_H)$(MARKER)"			"$(_H)$(MARKER)"
+	@$(TABLE_M3) "-- $(_E)[Google Firebase]"		"$(_E)$(FIREBASE_VER_COMPOSER)"		"$(_N)$(shell $(call FIREBASE_RUN) --version	2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"				"$(_H)Location & Options"
@@ -11497,6 +11567,8 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "-- $(_E)7z"				"$(_N)$(7Z)"
 	@$(TABLE_M2) "-- $(_E)Node.js (npm)"			"$(_N)$(NPM)"
 	@$(TABLE_M2) "-- $(_E)Curl"				"$(_N)$(CURL)"
+	@$(TABLE_M2) "$(_H)Target: $(EXPORTS)"			"$(_H)$(MARKER)"
+	@$(TABLE_M2) "-- $(_E)[Google Firebase]"		"$(if $(filter $(FIREBASE),$(FIREBASE_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(FIREBASE))"
 endif
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(ENDOLINE)
@@ -11640,6 +11712,7 @@ endif
 	@$(foreach FILE,\
 		$(COMPOSER) \
 		$(COMPOSER_DIR)/.gitignore \
+		$(COMPOSER_SRC) \
 		$(COMPOSER_ART) \
 		\
 		$(PANDOC_DIR) \
@@ -11790,23 +11863,23 @@ ifneq ($(and \
 ),)
 ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init)
-	@$(call NPM_FIREBASE) \
+	@$(call FIREBASE_RUN) \
 		--interactive \
 		login
-	@$(call NPM_FIREBASE) \
+	@$(call FIREBASE_RUN) \
 		--account $(_EXPORT_FIRE_ACCOUNT) \
 		--project $(_EXPORT_FIRE_PROJECT) \
 		--interactive \
 		init hosting
 endif
 	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase)
-	@$(call NPM_FIREBASE) \
+	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
 		--account $(_EXPORT_FIRE_ACCOUNT) \
 		--project $(_EXPORT_FIRE_PROJECT) \
 		--non-interactive \
 		projects:list
-	@$(call NPM_FIREBASE) \
+	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
 		--public $(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT)) \
 		--account $(_EXPORT_FIRE_ACCOUNT) \
@@ -11868,6 +11941,7 @@ endef
 ### {{{3 $(EXPORTS)-%
 ########################################
 
+#>		-o \\\( -path \"$(1)/.*\" -prune \\\)
 override define $(EXPORTS)-tree =
 	$(call $(EXPORTS)-find,$(1)) \
 		-o \\\( -type d -print \\\)
@@ -11927,10 +12001,10 @@ override define $(EXPORTS)-library =
 	fi
 endef
 
+#>		$(ECHO) " -o \\\( -path \"$(3)/.*\" -prune \\\)";
 override define $(EXPORTS)-filter =
 	if [ -z "$(1)" ]; then \
 		$(ECHO) "-mindepth 1 -maxdepth 1 \\\( -type d -prune \\\)"; \
-		$(ECHO) " -o \\( -path \"$(3)/.*\" -prune \\\)"; \
 	fi; \
 	{ $(ECHO) ""; \
 		$(foreach SAFE,$(patsubst $(3)/%,%,$(filter $(3)/%,$(2))),\
@@ -11949,7 +12023,7 @@ override define $(EXPORTS)-filter =
 							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 							| $(SED) "s|\[\*\]|*|g" \
 						)\n"; \
-			else			$(ECHO) " -o \\( -path \"$(3)/$${FILE}\" -prune \\\)"; \
+			else			$(ECHO) " -o \\\( -path \"$(3)/$${FILE}\" -prune \\\)"; \
 			fi; \
 		done \
 		| $(SORT); \
@@ -11960,12 +12034,13 @@ override define $(EXPORTS)-filter =
 							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 							| $(SED) "s|\[\*\]|*|g" \
 						)\n"; \
-			else			$(ECHO) " -o \\( -path \"$(3)/$${FILE}\" -print \\\)"; \
+			else			$(ECHO) " -o \\\( -path \"$(3)/$${FILE}\" -print \\\)"; \
 			fi; \
 		done \
 		| $(SORT); \
 	if [ -n "$(1)" ]; then			$(ECHO) "--filter=-_/*"; \
-	else					$(ECHO) " -o -prune"; \
+	else					$(ECHO) " -o \\\( -path /dev/null -print \\\)"; \
+						$(ECHO) " -o -prune"; \
 	fi
 endef
 
