@@ -3377,7 +3377,6 @@ endef
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 $(_F)
 #WORKING:NOW:NOW:DOCS:FIX#######################################################
---------------------------------------------------------------------------------
 $(_D)
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
 produce beautiful and professional output.  $(_C)[Pandoc]$(_D) does reasonably well at
@@ -3409,7 +3408,6 @@ a modern website, with the appearance and behavior of dynamically indexed pages.
 
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
 $(_D)
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSTRAP_ART_JS))$(_D)
@@ -3425,14 +3423,12 @@ $(_C)[Bootswatch]$(_D)
 
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
 $(_D)
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.html$(_D)
 
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
 $(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
@@ -3471,7 +3467,6 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_REVEALJS_CSS))$(_D)
 
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
 #	rework this
 $(_D)
 
@@ -3536,7 +3531,6 @@ endef
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
 $(_D)
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
 $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
@@ -3588,7 +3582,6 @@ endef
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
---------------------------------------------------------------------------------
 $(_D)
 The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is local-to-global $(_E)(see
 [COMPOSER_INCLUDE] in [Control Variables])$(_D).  This means that the values in the
