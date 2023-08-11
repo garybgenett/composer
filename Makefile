@@ -509,15 +509,15 @@ endif
 ifneq ($(origin _EXPORT_GIT_REPO),override)
 override _EXPORT_GIT_REPO		:=
 endif
-ifneq ($(origin _EXPORT_GIT_BRANCH),override)
-override _EXPORT_GIT_BRANCH		:=
+ifneq ($(origin _EXPORT_GIT_BNCH),override)
+override _EXPORT_GIT_BNCH		:=
 endif
 
-ifneq ($(origin _EXPORT_FIRE_ACCOUNT),override)
-override _EXPORT_FIRE_ACCOUNT		:=
+ifneq ($(origin _EXPORT_FIRE_ACCT),override)
+override _EXPORT_FIRE_ACCT		:=
 endif
-ifneq ($(origin _EXPORT_FIRE_PROJECT),override)
-override _EXPORT_FIRE_PROJECT		:=
+ifneq ($(origin _EXPORT_FIRE_PROJ),override)
+override _EXPORT_FIRE_PROJ		:=
 endif
 
 ########################################
@@ -3986,9 +3986,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
 #	hidden variables...
 #		$(_EXPORT_DIRECTORY)
 #		$(_EXPORT_GIT_REPO)
-#		$(_EXPORT_GIT_BRANCH)
-#		$(_EXPORT_FIRE_ACCOUNT)
-#		$(_EXPORT_FIRE_PROJECT)
+#		$(_EXPORT_GIT_BNCH)
+#		$(_EXPORT_FIRE_ACCT)
+#		$(_EXPORT_FIRE_PROJ)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
@@ -4047,9 +4047,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORT)
 
   * [_EXPORT_DIRECTORY]
   * [_EXPORT_GIT_REPO]
-  * [_EXPORT_GIT_BRANCH]
-  * [_EXPORT_FIRE_ACCOUNT]
-  * [_EXPORT_FIRE_PROJECT]
+  * [_EXPORT_GIT_BNCH]
+  * [_EXPORT_FIRE_ACCT]
+  * [_EXPORT_FIRE_PROJ]
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LIBRARY)
 
@@ -11369,9 +11369,9 @@ $(TESTING)-other-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override _EXPORT_DIRECTORY := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override _EXPORT_GIT_REPO := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_GIT_BRANCH := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_FIRE_ACCOUNT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_FIRE_PROJECT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_GIT_BNCH := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_FIRE_ACCT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_FIRE_PROJ:= $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	#> pandoc
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
@@ -11837,13 +11837,13 @@ ifneq ($(and \
 ),)
 ifneq ($(and \
 	$(_EXPORT_GIT_REPO) ,\
-	$(_EXPORT_GIT_BRANCH) \
+	$(_EXPORT_GIT_BNCH) \
 ),)
-#>	@$(call GIT_RUN_COMPOSER,subtree split -d --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BRANCH)")
-	@$(call GIT_RUN_COMPOSER,subtree split --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BRANCH)") || $(TRUE)
-	@$(call GIT_RUN_COMPOSER,log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(_EXPORT_GIT_BRANCH)")
+#>	@$(call GIT_RUN_COMPOSER,subtree split -d --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BNCH)")
+	@$(call GIT_RUN_COMPOSER,subtree split --prefix "$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT))" --branch "$(_EXPORT_GIT_BNCH)") || $(TRUE)
+	@$(call GIT_RUN_COMPOSER,log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(_EXPORT_GIT_BNCH)")
 	@$(ENDOLINE)
-	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BRANCH)")
+	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BNCH)")
 else
 ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 	@$(ENDOLINE)
@@ -11851,8 +11851,8 @@ endif
 	@$(MAKE) $(NOTHING)-$(EXPORTS)-git
 endif
 ifneq ($(and \
-	$(_EXPORT_FIRE_ACCOUNT) ,\
-	$(_EXPORT_FIRE_PROJECT) \
+	$(_EXPORT_FIRE_ACCT) ,\
+	$(_EXPORT_FIRE_PROJ) \
 ),)
 ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init)
@@ -11860,23 +11860,23 @@ ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 		--interactive \
 		login
 	@$(call FIREBASE_RUN) \
-		--account $(_EXPORT_FIRE_ACCOUNT) \
-		--project $(_EXPORT_FIRE_PROJECT) \
+		--account $(_EXPORT_FIRE_ACCT) \
+		--project $(_EXPORT_FIRE_PROJ) \
 		--interactive \
 		init hosting
 endif
 	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase)
 	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
-		--account $(_EXPORT_FIRE_ACCOUNT) \
-		--project $(_EXPORT_FIRE_PROJECT) \
+		--account $(_EXPORT_FIRE_ACCT) \
+		--project $(_EXPORT_FIRE_PROJ) \
 		--non-interactive \
 		projects:list
 	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
 		--public $(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT)) \
-		--account $(_EXPORT_FIRE_ACCOUNT) \
-		--project $(_EXPORT_FIRE_PROJECT) \
+		--account $(_EXPORT_FIRE_ACCT) \
+		--project $(_EXPORT_FIRE_PROJ) \
 		--non-interactive \
 		deploy --only hosting
 else
@@ -11901,17 +11901,17 @@ $(EXPORTS)-%:
 override define $(EXPORTS)-$(CONFIGS) =
 	if	[ "$(COMPOSER_EXPORT)" != "$(COMPOSER_EXPORT_DEFAULT)" ] || \
 		[ -n "$(_EXPORT_GIT_REPO)" ] || \
-		[ -n "$(_EXPORT_GIT_BRANCH)" ] || \
-		[ -n "$(_EXPORT_FIRE_ACCOUNT)" ] || \
-		[ -n "$(_EXPORT_FIRE_PROJECT)" ] || \
+		[ -n "$(_EXPORT_GIT_BNCH)" ] || \
+		[ -n "$(_EXPORT_FIRE_ACCT)" ] || \
+		[ -n "$(_EXPORT_FIRE_PROJ)" ] || \
 		[ -n "$(1)" ]; \
 	then \
 		$(foreach FILE,\
 			_EXPORT_DIRECTORY \
 			_EXPORT_GIT_REPO \
-			_EXPORT_GIT_BRANCH \
-			_EXPORT_FIRE_ACCOUNT \
-			_EXPORT_FIRE_PROJECT \
+			_EXPORT_GIT_BNCH \
+			_EXPORT_FIRE_ACCT \
+			_EXPORT_FIRE_PROJ \
 			,\
 			$(TABLE_M2) "$(_C)$(FILE)" "$(strip \
 				$(if $(filter $(FILE),_EXPORT_DIRECTORY),\
