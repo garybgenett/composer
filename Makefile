@@ -12333,6 +12333,7 @@ override define $(PUBLISH)-$(TARGETS)-contents-done =
 		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols_break) dropdown-menu\">"; \
 		R_CL="class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\""; \
 		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
+		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
 		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
 		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
 		$(ECHO) "</li>\n\n" >>$(1).contents-menu.done; \
@@ -13098,6 +13099,7 @@ override define $(PUBLISH)-library-sitemap-done =
 		| $(filter-out --strip-comments,$(PANDOC_MD_TO_HTML)) \
 		>>$(2); \
 	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
+	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
 	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
 	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2)
 endef
