@@ -5199,24 +5199,24 @@ $(EXAMPLE)-md-file:
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
-	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-	@$(call $(EXAMPLE)-print,1,$(_H)Global)
-	@$(ENDOLINE)
+#>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
+#>	@$(call $(EXAMPLE)-print,1,$(_H)Global)
+#>	@$(ENDOLINE)
 	@$(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
 	)
 	@$(ENDOLINE)
-	@$(call $(EXAMPLE)-print,,$(_S)########################################)
+#>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_N)ifneq$(_D) ($(_E)\$$(COMPOSER_CURDIR)$(_D),))
 	@$(ENDOLINE)
-	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-	@$(call $(EXAMPLE)-print,1,$(_H)Local)
-	@$(ENDOLINE)
+#>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
+#>	@$(call $(EXAMPLE)-print,1,$(_H)Local)
+#>	@$(ENDOLINE)
 	@$(foreach FILE,$(COMPOSER_OPTIONS_LOCAL),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
 	)
 	@$(ENDOLINE)
-	@$(call $(EXAMPLE)-print,,$(_S)########################################)
+#>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,1,$(_N)endif$(_D))
 
 .PHONY: .$(EXAMPLE)-yml
