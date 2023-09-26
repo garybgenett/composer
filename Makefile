@@ -2267,7 +2267,9 @@ override COMPOSER_DOSETUP_DIR		:= $(CURDIR)/.$(COMPOSER_BASENAME)
 
 override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
 ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
+ifeq ($(filter $(notdir $(COMPOSER_EXPORT)),$(COMPOSER_IGNORES)),)
 override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT))$(if $(COMPOSER_IGNORES), $(COMPOSER_IGNORES))
+endif
 endif
 
 ########################################
