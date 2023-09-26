@@ -586,7 +586,7 @@ $(call READ_ALIASES,o,o,c_options)
 
 #>override c_base			?= $(OUT_README)
 #>override c_list			?= $(c_base)$(COMPOSER_EXT)
-#>override c_css			?= $(call COMPOSER_FIND,$(dir $(MAKEFILE_LIST)),$(COMPOSER_CSS))
+
 override c_site				?=
 override c_type				?= $(TYPE_DEFAULT)
 override c_base				?=
@@ -604,7 +604,7 @@ override c_margin_left			?=
 override c_margin_right			?=
 override c_options			?=
 
-override c_list_var			= $(if $($(c_base).$(EXTENSION)),$($(c_base).$(EXTENSION)),$(c_list))
+override c_list_var			= $(if $($(c_base).$(EXTENSION)),$($(c_base).$(EXTENSION)),$(if $($(c_base).*),$($(c_base).*),$(c_list)))
 override c_list_file			:=
 
 ########################################
@@ -2754,6 +2754,7 @@ $(HELPOUT)-EXAMPLES_%:
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)"
+#>	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_N)override$(_D) $(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D) := $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)"
 	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)override c_list := $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
@@ -3354,6 +3355,7 @@ endef
 #		see: define $(PUBLISH)-$(TARGETS)-file
 #		document this...?
 #	document "config.composer" option
+#	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 
 #WORKING:NOW
 #	features
@@ -10801,6 +10803,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
 		\n\t * Variable alias precedence \
 		\n\t * Automatic input file detection \
+		\n\t\t * Variable-defined '$(_C)c_list$(_D)' override $(_E)(plus wildcard)$(_D) \
 		\n\t\t * Command-line '$(_C)c_list$(_D)' shortcut \
 		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
@@ -10820,10 +10823,16 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run,,$(NOTHING)) c_jobs="100" J="10" $(CONFIGS)
 	@$(call $(TESTING)-run,,$(NOTHING)) J="10" $(CONFIGS)
 	#> input
-	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
+	@$(ECHO) "override $(OUT_README).* := $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override $(OUT_README).$(EXTN_DEFAULT) := $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)\n"				>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) $(OUT_README).$(EXTN_LINT)
 	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
-	@$(SED) -n "/$(COMPOSER_LICENSE)/p" $(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
+	@$(SED) -n "/$(COMPOSER_LICENSE)/p" \
+		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT) \
+		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LINT) \
+		$(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 	#> margins
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> options
@@ -10837,7 +10846,6 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> values
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
@@ -10853,9 +10861,10 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,1,MAKEJOBS.+100[^0])
 	$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
 	#> input
-	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_LINT))
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,$(COMPOSER_LICENSE))
+	$(call $(TESTING)-count,4,$(COMPOSER_LICENSE))
 	#> margins
 	$(call $(TESTING)-count,17,\|.+c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
