@@ -1538,6 +1538,7 @@ override PANDOC_OPTIONS			= $(strip \
 	$(if $(wildcard $(COMPOSER_DAT)/template.$(OUTPUT)),	--template="$(COMPOSER_DAT)/template.$(OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_DAT)/reference.$(OUTPUT)),	--reference-doc="$(COMPOSER_DAT)/reference.$(OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).header),	--include-in-header="$(COMPOSER_CUSTOM)-$(c_type).header") \
+	$(if $(wildcard $(c_base).$(EXTENSION).header),		--include-in-header="$(c_base).$(EXTENSION).header") \
 	\
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),\
 						--include-in-header="$(patsubst %.js,%-pre.js,$(BOOTSTRAP_ART_JS))" \
@@ -1576,6 +1577,9 @@ override PANDOC_OPTIONS			= $(strip \
 	,\
 		$(if $(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),\
 			--css="$(COMPOSER_CUSTOM)-$(c_type).css" \
+		) \
+		$(if $(wildcard $(c_base).$(EXTENSION).css),\
+			--css="$(c_base).$(EXTENSION).css" \
 		) \
 	)) \
 	\
@@ -2460,6 +2464,11 @@ $($(PUBLISH)-caches) \
 	: \
 	$($(PUBLISH)-library)
 endif
+
+$(COMPOSER_TARGETS): $(wildcard $(addsuffix .header,$(COMPOSER_TARGETS)))
+$(COMPOSER_TARGETS): $(wildcard $(addsuffix .css,$(COMPOSER_TARGETS)))
+
+########################################
 
 #>		[ -z "$(c_list)" ];
 override define $(COMPOSER_PANDOC)-$(NOTHING) =
@@ -3358,6 +3367,7 @@ endef
 #		document this...?
 #	document "config.composer" option
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
+#	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
 
 #WORKING:NOW
 #	features
