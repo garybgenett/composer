@@ -613,8 +613,8 @@ override c_margin_left			?=
 override c_margin_right			?=
 override c_options			?=
 
-override c_list_var			= $(if $($(c_base).$(EXTENSION)),$($(c_base).$(EXTENSION)),$(if $($(c_base).*),$($(c_base).*),$(c_list)))
-override c_list_var_source		= $(if $($(c_base).$(EXTENSION)),$(if $(1),\$$$$,\$$)($(c_base).$(EXTENSION)),$(if $($(c_base).*),$(if $(1),\$$$$,\$$)($(c_base).*)))
+override c_list_var			= $(strip $(if $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTENSION))),                   $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTENSION))),$(if $($(if $(1),$(1),$(c_base)).*),                   $($(if $(1),$(1),$(c_base)).*),$(c_list))))
+override c_list_var_source		= $(strip $(if $($(if $(2),$(2),$(c_base)).$(if $(3),$(3),$(EXTENSION))),$(if $(1),\$$$$,\$$)($(if $(2),$(2),$(c_base)).$(if $(3),$(3),$(EXTENSION))),$(if $($(if $(2),$(2),$(c_base)).*),$(if $(1),\$$$$,\$$)($(if $(2),$(2),$(c_base)).*))))
 override c_list_file			:=
 
 ########################################
@@ -1440,8 +1440,6 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 
 ########################################
 
-#WORKING:FIXIT:DEPS
-
 override c_css_select_theme = $(strip \
 $(subst $(NULL) ,,\
 $(call CSS_THEME,\
@@ -1522,8 +1520,6 @@ override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
-
-#WORKING:FIXIT:DEPS
 
 override PANDOC_FILES_MAIN = $(strip \
 	$(wildcard $(COMPOSER_DAT)/template.$(2)) \
@@ -2488,23 +2484,31 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip \
 	) \
 )
 
-#WORKING:FIXIT:DEPS
-#	need to document... per-file override variables will not automatically factor into dependencies!
-
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
+override PANDOC_FILES_LIST = $(strip \
+	$(filter-out \
+		$(if $(filter $(1),HTML),%.$(EXTN_PRES)) \
+		,\
+		$(filter %.$(EXTN_$(1)),$(2)) \
+	) \
+)
+override PANDOC_FILES_SPLIT = $(strip \
+	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+		$(foreach SPLIT,$(call PANDOC_FILES_LIST,$(TYPE),$(1)),\
+			$(patsubst %.$(EXTN_$(TYPE)),%,$(SPLIT))$(TOKEN)$(EXTN_$(TYPE)) \
+		) \
+	) \
+)
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
-	$(foreach FILE,\
-		$(filter-out \
-			$(if $(filter $(TYPE),HTML),%.$(EXTN_PRES)) \
-			,\
-			$(filter %.$(EXTN_$(TYPE)),$(COMPOSER_TARGETS)) \
-		),\
+	$(foreach FILE,$(call PANDOC_FILES_LIST,$(TYPE),$(COMPOSER_TARGETS)),\
 		$(eval $(FILE): \
 			$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
 			$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE)),$(FILE),header) \
 			$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE)),$(FILE),css) \
-			$($(FILE)) \
+			$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
+			$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
+			$(call c_list_var,$(BASE),$(EXTN)) \
 		) \
 	) \
 )
@@ -8854,8 +8858,6 @@ endef
 ## {{{2 Heredoc: custom_pdf_latex
 ########################################
 
-#WORKING:FIXIT:DEPS move header/footer to left-only... option...?
-
 override define HEREDOC_CUSTOM_PDF_LATEX =
 % ##############################################################################
 % $(COMPOSER_TECHNAME) $(DIVIDE) $(DESC_LPDF) (TeX Live)
@@ -8872,12 +8874,16 @@ override define HEREDOC_CUSTOM_PDF_LATEX =
   \\renewcommand{\\headrulewidth}{0pt}
 }
 
-\\fancyhead[EL,OR]{\\nouppercase{\\firstleftmark}}
-\\fancyhead[OL,ER]{}
+% \\fancyhead[EL,OR]{\\nouppercase{\\firstleftmark}}
+% \\fancyhead[OL,ER]{}
+\\fancyhead[EL,OL]{\\nouppercase{\\firstleftmark}}
+\\fancyhead[ER,OR]{}
 \\renewcommand{\\headrulewidth}{0.1pt}
 
-\\fancyfoot[EL,OR]{\\nouppercase{\\thepage}}
-\\fancyfoot[OL,ER]{}
+% \\fancyfoot[EL,OR]{\\nouppercase{\\thepage}}
+% \\fancyfoot[OL,ER]{}
+\\fancyfoot[EL,OL]{\\nouppercase{\\thepage}}
+\\fancyfoot[ER,OR]{}
 \\renewcommand{\\footrulewidth}{0.1pt}
 
 % ######################################
@@ -11738,9 +11744,17 @@ $(TARGETS):
 	@$(call $(HEADERS))
 #>	@$(LINERULE)
 	@$(foreach FILE,$(shell $(strip $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT)))),\
-		$(if $(COMPOSER_DEBUGIT),	$(PRINT) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst ",\",$(subst $(TOKEN),\n\t,$(FILE))))"; ,\
-						$(PRINT) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst ",\",$(subst $(TOKEN),\n\t,$(FILE))))"; ,\
+						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
 		) \
+		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
+		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
+		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
+		$(if $(call c_list_var_source,,$(BASE),$(EXTN)),\
+			$(ECHO) "$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
+		) \
+		$(ENDOLINE); \
+		$(call NEWLINE) \
 	)
 	@$(LINERULE)
 	@$(PRINT) "$(_H)$(MARKER) $(EXPORTS)"; $(strip $(call $(TARGETS)-$(PRINTER),,$(EXPORTS)))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
@@ -11750,10 +11764,6 @@ $(TARGETS):
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"				| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
 	@$(MAKE) $(PRINTER)-$(PRINTER)
-
-#WORKING:FIXIT:DEPS
-#	the new override system is growing a life of its own... need to now parse out all the dependant files...
-#	although, now is a good opportunity to leave/pull in $($(file)) files...
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
