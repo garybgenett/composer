@@ -113,9 +113,8 @@ override VIM_FOLDING := {{{1
 # WORK
 #	some form of "env -" or "prompt -z" test, to make sure local environment is not inadvertently supporting success...
 #		same with ".vimrc", etc... maybe test with "null" account...?
-#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins.
-#	--resource-path = something like COMPOSER_CSS?
 # CODE
+#	--resource-path = integrate with COMPOSER_ART, COMPOSER_INCLUDES_TREE, etc...?
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
@@ -203,13 +202,8 @@ override DEPTH_MAX			:= 6
 
 ########################################
 
-#WORKING:FIXIT:DEPS
-#	completely remove COMPOSER_CSS... it has been replaced by the new override system...
-#	also need to replace the testing with verification for the new system...
-
 override COMPOSER_SETTINGS		:= .$(COMPOSER_TINYNAME).mk
 override COMPOSER_YML			:= .$(COMPOSER_TINYNAME).yml
-override COMPOSER_CSS			:= .$(COMPOSER_TINYNAME).css
 
 override COMPOSER_LOG_DEFAULT		:= .composed
 override COMPOSER_EXT_DEFAULT		:= .md
@@ -287,6 +281,13 @@ override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
 override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTENSION).$(DATENAME)
+
+#> update: includes duplicates
+override TYPE_HTML			:= html
+override PUBLISH			:= site
+
+override COMPOSER_CSS_PUBLISH		:= .$(notdir $(COMPOSER_CUSTOM))-$(PUBLISH).css
+override COMPOSER_CSS			:= .$(notdir $(COMPOSER_CUSTOM))-$(TYPE_HTML).css
 
 ########################################
 
@@ -397,10 +398,6 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES		[$(COMPOSER_INCLUDES)]
 
 ########################################
 
-#WORKING:FIXIT:DEPS
-#	add per-file *.yml override... like the rest of the new override system...
-#	test!
-
 override COMPOSER_YML_LIST		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(FILE)])) \
@@ -410,24 +407,6 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
 	) \
 )
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]))
-
-########################################
-
-#> update: includes duplicates
-#> update: READ_ALIASES
-
-#>override c_css			?=
-#>$(call READ_ALIASES,c,c,c_css)
-ifneq ($(origin c_css),override)
-$(foreach FILE,$(addsuffix /$(COMPOSER_CSS),$(COMPOSER_INCLUDES_LIST)),\
-	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_CSS			[$(FILE)])) \
-	$(if $(wildcard $(FILE)),\
-		$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_CSS			[$(FILE)])) \
-		$(eval override c_css := $(FILE)) \
-	) \
-)
-endif
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> CSS				[$(c_css)]))
 
 ################################################################################
 # {{{1 Make Settings
@@ -1272,6 +1251,7 @@ override DESC_PPTX			:= Microsoft PowerPoint
 override DESC_TEXT			:= Plain Text (well-formatted)
 override DESC_LINT			:= Markdown (for testing)
 
+#> update: includes duplicates
 override TYPE_HTML			:= html
 override TYPE_LPDF			:= pdf
 override TYPE_EPUB			:= epub
@@ -1534,8 +1514,8 @@ override PANDOC_FILES_MAIN = $(strip \
 )
 
 override PANDOC_FILES_OVERRIDE = $(strip \
-	$(wildcard			$(COMPOSER_CUSTOM)-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3)) \
-	$(wildcard $(CURDIR)/.$(notdir	$(COMPOSER_CUSTOM))-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3)) \
+	$(wildcard				$(COMPOSER_CUSTOM)-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3)) \
+	$(wildcard $(addsuffix /.$(notdir	$(COMPOSER_CUSTOM))-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3),$(COMPOSER_INCLUDES_TREE))) \
 	$(wildcard $(CURDIR)/$(2).$(3)) \
 )
 
@@ -2653,7 +2633,6 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *Other $(_C)[c_type]$(_D) values will be passed directly to $(_C)[Pandoc]$(_D)*"
 	@$(PRINT) "  * *Special $(_C)[c_css]$(_D) values:*"
-	@$(COLUMN_2) "      * *\`$(_M)$(COMPOSER_CSS)$(_D)\`"					"= Filesystem override of variable value*"
 	@$(COLUMN_2) "      * *\`$(_N)$(CSS_ALT)$(_D)\`"					"= Use the alternate default stylesheet*"
 	@$(COLUMN_2) "      * *\`$(_N)$(SPECIAL_VAL)$(_D)\`"					"= Revert to the $(_C)[Pandoc]$(_D) default*"
 	@$(COLUMN_2) "  * *Special $(_C)[c_toc]$(_D) value: \`$(_N)$(SPECIAL_VAL)$(_D)\`"	"= List all headers, and number sections*"
@@ -3569,9 +3548,10 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_LOGO))$(_D)
 To have different logos for different directories $(_E)(using [Recommended Workflow],
 [Configuration Settings] and [Precedence Rules])$(_D):
 
+#WORK no longer the best way to do this...
 $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/presentations$(_D)
 $(CODEBLOCK)$(_C)cp$(_D) $(_N)$(EXPAND)/$(notdir $(COMPOSER_LOGO))$(_D) $(_M)./$(_D)
-$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/.$(COMPOSER_BASENAME)/$(call COMPOSER_CONV,,$(CUSTOM_REVEALJS_CSS))$(_D) $(_M)./$(COMPOSER_CSS)$(_D)
+$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/.$(COMPOSER_BASENAME)/$(call COMPOSER_CONV,,$(CUSTOM_REVEALJS_CSS))$(_D) $(_M)./.$(notdir $(COMPOSER_CUSTOM))-$(TYPE_PRES).css$(_D)
 $(CODEBLOCK)$(_C)echo$(_D) $(_N)'$(_E)override c_type := $(TYPE_PRES)'$(_D) >>$(_M)./$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)$(_D)
 
@@ -3619,6 +3599,11 @@ override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
 $(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,GNU Make ($(COMPOSER_SETTINGS)))
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Pandoc & Bootstrap ($(COMPOSER_YML)))
+
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
 $(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
 [COMPOSER_INCLUDE] in [Control Variables])$(_D).  A `$(_M)$(COMPOSER_SETTINGS)$(_D)` in the main
@@ -3667,24 +3652,57 @@ endef
 #		hashes will overlap, and arrays will append
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
+All processing in $(_C)[$(COMPOSER_BASENAME)]$(_D) is done in global-to-local order, so that the most
+local file or value always takes precedence.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Configuration Files)
+
+Both `$(_M)$(COMPOSER_SETTINGS)$(_D)` and `$(_M)$(COMPOSER_YML)$(_D)` files follow the model illustrated in
+$(_C)[COMPOSER_INCLUDE]$(_D) under $(_C)[Control Variables]$(_D).  This means that the values in the
+most local file override all others.
+
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
 $(_D)
-The order of precedence for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files is local-to-global $(_E)(see
-[COMPOSER_INCLUDE] in [Control Variables])$(_D).  This means that the values in the
-most local file override all others.
+#WORK composer.yml handling for arrays and keys...
+
+All values in `$(_M)$(COMPOSER_SETTINGS)$(_D)` take precedence over everything else, including
+environment variables.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Header & CSS Files)
+
+#WORK the same for all...
+
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header$(_D)
+$(CODEBLOCK)$(EXPAND)/$(_M).$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header$(_D)
+$(CODEBLOCK)./$(_M)$(OUT_README).$(EXTN_LPDF).header$(_D)
+
+#WORK the same for all...
+
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_DEFAULT).css$(_D)
+$(CODEBLOCK)$(EXPAND)/$(_M).$(notdir $(COMPOSER_CUSTOM))-$(TYPE_DEFAULT).css$(_D)
+$(CODEBLOCK)./$(_M)$(OUT_README).$(EXTN_DEFAULT).css$(_D)
+
+#WORK the $(_C)[c_css]$(_D) layering...
+
+  1. $(_C)[c_site]$(_D) $(MARKER) $(_C)[Bootstrap]$(_D)
+  1. $(_C)[c_css]$(_D)
+  1. $(_C)[c_site]$(_D) $(MARKER) `$(_M)$(COMPOSER_YML)$(_D)` $(DIVIDE) $(_C)[$(PUBLISH)-config]$(_D).$(_C)[css_shade]$(_D)
+  1. $(call COMPOSER_CONV,$(_C)[COMPOSER_DIR]$(_D)/$(_M),$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
+  1. $(_C)[COMPOSER_INCLUDE]$(_D)/$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
+  1. $(_C)[CURDIR]$(_D)/$(_C)[c_base]$(_D).`$(_M)<extension>$(_D)`.css
+
+The first four are core to $(_C)[$(COMPOSER_BASENAME)]$(_D), and are always included.
+$(_C)[COMPOSER_INCLUDE]$(_D) and $(_C)[CURDIR]$(_D) files are optional, and only used if they exist.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Variables & Aliases)
 
 Variable aliases, such as `$(_C)COMPOSER_DEBUGIT$(_D)`/`$(_E)c_debug$(_D)`/`$(_E)V$(_D)` are prioritized in
 the order shown, with `$(_C)COMPOSER_*$(_D)` taking precedence over `$(_E)c_*$(_D)`, over the short
 alias.
 
-Selection of the $(_M)CSS$(_D) file can be done using `$(_M)$(COMPOSER_CSS)$(_D)` or the $(_C)[c_css]$(_D)
-variable, with `$(_M)$(COMPOSER_CSS)$(_D)` taking precedence $(_E)(unless [c_css] comes from
-`$(COMPOSER_SETTINGS)`)$(_D).  The process for `$(_M)$(COMPOSER_CSS)$(_D)` files is identical to
-`$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [COMPOSER_INCLUDE] in [Control Variables])$(_D).
-
-All values in `$(_M)$(COMPOSER_SETTINGS)$(_D)` take precedence over everything else, including
-`$(_M)$(COMPOSER_CSS)$(_D)` and environment variables.
+Full `$(_C)COMPOSER_*$(_D)` variable names should always be used in `$(_M)$(COMPOSER_SETTINGS)$(_D)` files,
+to avoid being overwritten by recursive environment persistence.
 endef
 
 ########################################
@@ -3860,8 +3878,9 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(abspath $(dir $(call CSS_THEM
     all cases.
   * The special value `$(_N)$(CSS_ALT)$(_D)` selects the alternate default stylesheet.  Using
     `$(_N)$(SPECIAL_VAL)$(_D)` reverts to the $(_C)[Pandoc]$(_D) default.
-  * This value can be overridden by the presence of `$(_M)$(COMPOSER_CSS)$(_D)` files.  See
-    $(_C)[Precedence Rules]$(_D) for details.
+  * $(_C)[$(COMPOSER_BASENAME)]$(_D) includes several different $(_M)CSS$(_D) files, depending on the $(_C)[c_type]$(_D)
+    of the file being built.  See $(_C)[Header & CSS Files]$(_D) under $(_C)[Precedence Rules]$(_D)
+    for details on how they are layered together.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_toc)
 
@@ -3978,8 +3997,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D).  They will be propagated down the tree, which
     is generally not desired except in very specific cases.  Using
     $(_C)[COMPOSER_CURDIR]$(_D) to limit their scope is recommended.
-  * This setting also causes `$(_M)$(COMPOSER_YML)$(_D)` and `$(_M)$(COMPOSER_CSS)$(_D)` files to be
-    processed in an identical manner $(_E)(see [Precedence Rules])$(_D).
+  * This setting also causes `$(_M)$(COMPOSER_YML)$(_D)` and `$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_N)*$(_D)` files to be
+    processed in an identical manner $(_E)(see [Configuration Files] and [Header &
+    CSS Files] under [Precedence Rules])$(_D).
 
 Example directory tree $(_E)(see [Recommended Workflow])$(_D):
 
@@ -5424,7 +5444,6 @@ override define HEREDOC_GITIGNORE =
 
 #$(MARKER) **/$(COMPOSER_SETTINGS)
 #$(MARKER) **/$(COMPOSER_YML)
-#$(MARKER) **/$(COMPOSER_CSS)
 
 **/$(COMPOSER_LOG_DEFAULT)
 **/$(patsubst $(CURDIR)/%,%,$(COMPOSER_TMP))/
@@ -10213,7 +10232,6 @@ ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(ECHO) "$(_E)"
 	@$(RM) \
 											$(CURDIR)/$(COMPOSER_YML) \
-											$(CURDIR)/$(COMPOSER_CSS) \
 											$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
@@ -11123,7 +11141,9 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
 ########################################
 
-#WORK COMPOSER_YML
+#WORK COMPOSER_YML...?
+#	handled sufficiently by $(PUBLISH)-$(EXAMPLE)...?
+#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins?
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
@@ -11144,6 +11164,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-init
 $(TESTING)-COMPOSER_INCLUDE-init:
+	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-make)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
@@ -11165,44 +11186,28 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 endef
 
 override define $(TESTING)-COMPOSER_INCLUDE-done =
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_CURDIR/p" \
-		-e "/COMPOSER_DEPENDS/p" \
-		-e "/c_css/p" \
-		; \
-	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-	$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS); \
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_CURDIR/p" \
-		-e "/COMPOSER_DEPENDS/p" \
-		-e "/c_css/p" \
-		; \
-	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(RM) $(call $(TESTING)-pwd,/)/$(COMPOSER_CSS); \
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_CURDIR/p" \
-		-e "/COMPOSER_DEPENDS/p" \
-		-e "/c_css/p" \
-		; \
-	$(SED) -i "/COMPOSER_DEPENDS/d" $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
-	$(RM) $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_CSS); \
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_CURDIR/p" \
-		-e "/COMPOSER_DEPENDS/p" \
-		-e "/c_css/p" \
-		; \
-	$(call $(TESTING)-run,/) $(CONFIGS) | $(SED) -n \
-		-e "/COMPOSER_CURDIR/p"
+	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
+	$(SED) -i "/COMPOSER_DEPENDS/d"	$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(RM)				$(call $(TESTING)-pwd)/$(COMPOSER_CSS); \
+	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
+	$(SED) -i "/COMPOSER_DEPENDS/d"	$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(RM)				$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS); \
+	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
+	$(SED) -i "/COMPOSER_DEPENDS/d"	$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS); \
+	$(RM)				$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_CSS); \
+	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
+	$(call $(TESTING)-run,/) $(CONFIGS) | $(SED) -n "/COMPOSER_CURDIR/p"
 endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
-	$(call $(TESTING)-count,2,\|.+COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd))))
-	$(call $(TESTING)-count,2,\|.+c_css.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd)/$(COMPOSER_CSS))))
-	$(call $(TESTING)-count,1,\|.+COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd,/))$(SED_ESCAPE_COLOR)$$))
-	$(call $(TESTING)-count,1,\|.+c_css.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd,/)/$(COMPOSER_CSS))))
-	$(call $(TESTING)-count,3,\|.+COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))))
-	$(call $(TESTING)-count,3,\|.+c_css.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)/$(COMPOSER_CSS)))))
+	$(call $(TESTING)-count,2,COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd))$(SED_ESCAPE_COLOR)[]]))
+	$(call $(TESTING)-count,2,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,1,COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd,/))$(SED_ESCAPE_COLOR)[]]))
+	$(call $(TESTING)-count,4,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,3,COMPOSER_DEPENDS.+$(subst /,[/],$(patsubst $(COMPOSER_DIR)%,$(EXPAND)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))$(SED_ESCAPE_COLOR)[]]))
+	$(call $(TESTING)-count,6,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,20,--css.+$(COMPOSER_CSS))
 	$(call $(TESTING)-count,2,^COMPOSER_CURDIR)
 
 ########################################
@@ -11377,7 +11382,6 @@ $(TESTING)-CSS:
 		\n\t * Environment: '$(_C)$(CSS_ALT)$(_D)' alias $(_E)(and '$(TYPE_EPUB)' use of '$(TYPE_HTML)')$(_D) \
 		\n\t * Environment: '$(_C)$(TYPE_PRES).$(CSS_ALT)$(_D)' alias $(_E)(and cross-type theme selection)$(_D) \
 		\n\t * Environment: '$(_C)$(SPECIAL_VAL)$(_D)' Pandoc default \
-		\n\t * File: '$(_C)$(COMPOSER_CSS)$(_D)' $(_E)(precedence over environment)$(_D) \
 		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' $(_E)(precedence over everything, and direct file path)$(_D) \
 		\n\t * File: '$(_C)$(COMPOSER_SETTINGS)$(_D)' per-target $(_E)(precedence over everything)$(_D) \
 		\n\t * Default: '$(_C)$(TYPE_LPDF)$(_D)' $(_E)(solely for 'header' selection)$(_D) \
@@ -11390,14 +11394,11 @@ $(TESTING)-CSS:
 .PHONY: $(TESTING)-CSS-init
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)	>/dev/null
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_CSS)		>/dev/null
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_site="1" $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_PRES)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(TYPE_PRES).$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_CSS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))%,$(CUSTOM_PUBLISH_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -11422,10 +11423,9 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES),$(CSS_ALT))));	$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_ALT)))
 	$(call $(TESTING)-count,3,c_css[^/]+$$)
-	$(call $(TESTING)-count,2,$(notdir $(COMPOSER_CSS)))
 	$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(BOOTSWATCH_CSS_ALT)))
-	$(call $(TESTING)-count,15,--css=)
+	$(call $(TESTING)-count,14,--css=)
 	$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header)
 	$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
 
@@ -12666,15 +12666,15 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS)	>$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
 	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_YML)		>$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
-	@if [ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS)" ]; then \
-		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
+	@if [ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH)" ]; then \
+		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS_PUBLISH)); \
 		$(ECHO) "$(_E)"; \
-		$(CP) $(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
+		$(CP) $(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
-	elif [ -f "$(COMPOSER_LIBRARY)/$(COMPOSER_CSS)" ]; then \
-		$(call $(HEADERS)-rm,$(COMPOSER_LIBRARY),$(COMPOSER_CSS)); \
+	elif [ -f "$(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH)" ]; then \
+		$(call $(HEADERS)-rm,$(COMPOSER_LIBRARY),$(COMPOSER_CSS_PUBLISH)); \
 		$(ECHO) "$(_S)"; \
-		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS) $($(DEBUGIT)-output); \
+		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
 	@$(ECHO) "\n" >$($(PUBLISH)-library-digest-null)
@@ -13451,7 +13451,7 @@ endif
 #		$(COMPOSER_YML)
 #			auto_update: 1
 #			$(PUBLISH)-info-top: ICON
-#		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS)
+#		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
 #	$(SHELL)
 #		#> .$(PUBLISH)-$(INSTALL)
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
@@ -13567,16 +13567,16 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGEDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
-	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_CSS))
+	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_CSS_PUBLISH))
 	@$(ECHO) "$(_S)"
-	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
-	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
+	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
 	@$(MKDIR)							$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
 else
-	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS) $($(DEBUGIT)-output)
+	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
 endif
 	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/*$(COMPOSER_EXT_DEFAULT))
