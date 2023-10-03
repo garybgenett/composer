@@ -2,10 +2,50 @@
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
-override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 foldmethod=marker foldlevel=0 foldtext=printf('%1s\ [%4s\ %5s-%5s]\ %-0.1s\ %s\ ',v\:foldlevel,(v\:foldend\ \-\ v\:foldstart\ \+\ 1),v\:foldstart,v\:foldend,v\:folddashes,substitute(getline(v\:foldstart),'\ \{\{\{\\d\\\+\ \\\|\\s\\\+','\ ','g'))
+override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list listchars=tab\:,.,trail\:=,extends\:>,precedes\:< foldmethod=marker foldlevel=0 foldtext=printf('%1s\ [%4s\ %5s-%5s]\ %-0.9s\ %s\ ',v\:foldlevel,(v\:foldend\ \-\ v\:foldstart\ \+\ 1),v\:foldstart,v\:foldend,v\:folddashes,substitute(getline(v\:foldstart),'\ \{\{\{\\d\\\+\ \\\|\\s\\\+','\ ','g'))
+################################################################################
+# IMPORTANT NOTES FOR REVIEWING AND EDITING THIS FILE:
+#
+# This Makefile is the very heart of Composer CMS.  All the other files in the
+# repository are sourced from it.  It is the only file needed to re-create the
+# entire directory.  This one file *IS* Composer CMS.
+#
+# The author of Composer CMS uses the Vim editor, because it is the bestest text
+# editor in the whole wide world.  You should consider using it, too.  ;^}
+#
+# If you are not, this file will likely appear as one big long stream of text,
+# which is perfectly fine... I guess.  It has been structured and formatted in
+# such a way as to to support this.
+#
+# However... if you are an awesome Vim user like me, it is highly recommended
+# that you enable "modeline", which will use the optimized settings above.  The
+# "folding" feature has been used extensively, which makes this monstrosity much
+# easier to work with, and the folding headers have also been prettified in the
+# "modeline" above.  Other touches, such as "nowrap" and "tabstop" will also
+# preserve your sanity when wading into this behemoth.  The quickest way to
+# purchase these options, and a whole lot more, is to run the following Vim
+# commands (or, better yet, put them in your ".vimrc"):
+#
+#   * `:set modeline`
+#   * `:set modelineexpr`
+#   * `:syntax on`
+#   * `:highlight comment ctermfg=darkgreen` (easier to read and differentiate)
+#
+# Whatever editor you are using... if you are not using a "tabstop" of "8", this
+# file will absolutely make your eyes bleed.  You have been warned.  I'm
+# honestly amazed you are reading it in the first place.  <^D
+#
+# With all sincerity, though, thank you for your interest in Composer CMS.  It
+# has been a labor of love, and I believe it is an extraordinarily powerful
+# toolkit for text-based command-line warriors like us.  I hope it serves you as
+# well as it serves me.
+#
+# Happy Hacking!
+################################################################################
 override VIM_FOLDING := {{{1
 ################################################################################
-# Release Checklist:
+# {{{1 Release Checklist
+################################################################################
 #	* Update
 #		* Tooling Versions
 #		* Pandoc Options
@@ -13,6 +53,8 @@ override VIM_FOLDING := {{{1
 #			* `PANDOC_OPTIONS`
 #			* `PANDOC_OPTIONS_ERROR`
 #	* Verify
+#		* `env - USER="${USER}" HOME="${HOME}" PATH="${PATH}" make _setup-all`
+#			* `rm ~/.vimrc; vi Makefile`
 #		* `make COMPOSER_DEBUGIT="1" _release`
 #			* `make _test-dir`
 #			* `make _test-list`
@@ -101,18 +143,15 @@ override VIM_FOLDING := {{{1
 #				* Review each, including CSS
 #				* Create screenshot
 #	* Publish
-#		* Check: `git diff master Makefile`
+#		* Check: `git diff main Makefile`
 #		* Update: COMPOSER_VERSION
 #		* Release: `rm -frv {.[^.],}*; make _release`
-#		* Verify: `git diff master`
+#		* Verify: `git diff main`
 #		* Commit: `git commit`, `git tag`
-#		* Branch: `git branch -D master`, `git checkout -B master`, `git checkout devel`
+#		* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
 ################################################################################
 # {{{1 TODO
 ################################################################################
-# WORK
-#	some form of "env -" or "prompt -z" test, to make sure local environment is not inadvertently supporting success...
-#		same with ".vimrc", etc... maybe test with "null" account...?
 # CODE
 #	--resource-path = integrate with COMPOSER_ART, COMPOSER_INCLUDES_TREE, etc...?
 #	add aria information back in, because we are good people...
@@ -3086,7 +3125,7 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 override define $(HELPOUT)-$(DOITALL)-LINKS =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
-$(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/master/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
 $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
