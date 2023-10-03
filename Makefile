@@ -1280,7 +1280,6 @@ override EXTENSION			:= $(c_type)
 
 #> update: TYPE_TARGETS
 
-override DESC_SITE			:= #WORKING:NOW:NOW:DOCS:FIX
 override DESC_HTML			:= HyperText Markup Language
 override DESC_LPDF			:= Portable Document Format
 override DESC_EPUB			:= Electronic Publication
@@ -2733,8 +2732,6 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 ### {{{3 $(HELPOUT)-TARGETS
 ########################################
 
-#WORK grep set_title Makefile
-
 .PHONY: $(HELPOUT)-TARGETS_TITLE_%
 $(HELPOUT)-TARGETS_TITLE_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,1)
@@ -2787,9 +2784,8 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_C)[COMPOSER_ROOT]$(_D)"
-#WORK	@$(TABLE_M2) "$(_C)[$(EXPORTS)-git]"			"Commit \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` to $(_N)[Git]$(_D) branch, and push upstream"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"#WORKING:DOCS"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"#WORKING:DOCS"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` upstream: $(_N)[Git]$(_D)/$(_N)[Firebase]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_C)[COMPOSER_LIBRARY]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_C)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
@@ -3155,6 +3151,7 @@ $(_E)[Water.css]: https://watercss.kognise.dev$(_D)
 $(_E)[Markdown Viewer]: https://github.com/simov/markdown-viewer$(_D)
 $(_E)[Markdown Themes]: https://github.com/simov/markdown-themes$(_D)
 $(_E)[Reveal.js]: https://revealjs.com$(_D)
+$(_S)[Firebase]: https://firebase.google.com$(_D)
 $(_S)[Google Firebase]: https://firebase.google.com$(_D)
 $(_E)[TeX Live]: https://tug.org/texlive$(_D)
 
@@ -3256,11 +3253,12 @@ validate your system.
 endef
 
 override define $(HELPOUT)-$(DOITALL)-REQUIRE_POST =
-#WORKING:FIREBASE $(_C)[Google Firebase]$(_D) is only for $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) / DOFORCE?
-
 $(_C)[Markdown Viewer]$(_D) is included both for its $(_M)CSS$(_D) stylesheets, and for real-time
 rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, follow the
 instructions in the `$(_M)README.md$(_D)`.
+
+$(_C)[Google Firebase]$(_D) is only necessary for uploading via the $(_C)[$(EXPORTS)-$(DOITALL)]$(_D) and
+$(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.
 
 The versions of the integrated repositories can be changed, if desired $(_E)(see
 [Repository Versions])$(_D).
@@ -3703,7 +3701,6 @@ most local file override all others.
 $(_F)
 #WORKING:NOW:NOW:FIX############################################################
 $(_D)
-#WORK composer.yml handling for arrays and keys...
 
 All values in `$(_M)$(COMPOSER_SETTINGS)$(_D)` take precedence over everything else, including
 environment variables.
@@ -3836,8 +3833,6 @@ exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
   * `$(_C)REVEALJS_CMT$(_D)`
   * `$(_C)FIREBASE_VER$(_D)` $(_E)(must be a binary version number)$(_D)
   * `$(_C)FIREBASE_CMT$(_D)` $(_E)(defaults to `FIREBASE_VER`)$(_D)
-
-#WORKING:FIREBASE $(_C)[Google Firebase]$(_D) is only for $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) / DOFORCE?
 
 Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
 By moving or removing them, or changing the version number and foregoing
