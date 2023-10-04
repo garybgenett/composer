@@ -27,9 +27,11 @@ override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list lis
 # commands (or, better yet, put them in your ".vimrc"):
 #
 #   * `:set modeline`
+#   * `:set modelines=5`
 #   * `:set modelineexpr`
 #   * `:syntax on`
 #   * `:highlight comment ctermfg=darkgreen` (easier to read and differentiate)
+#   * `:highlight folded ctermfg=darkmagenta` (brighter text)
 #
 # Whatever editor you are using... if you are not using a "tabstop" of "8", this
 # file will absolutely make your eyes bleed.  You have been warned.  I'm
@@ -2868,6 +2870,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-TITLE)
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOITALL)-HEADER
+		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-FILES)
 		@if [ "$(*)" = "$(HELPOUT)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS); \
 		fi
@@ -3104,6 +3107,8 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-TITLE
 ########################################
 
+#> update: COMPOSER_TARGETS.*=
+
 override define $(HELPOUT)-$(DOITALL)-TITLE =
 $(_M)---$(_D)
 $(_M)title: "$(COMPOSER_HEADLINE)"$(_D)
@@ -3119,6 +3124,16 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[License: GPL]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
+override define $(HELPOUT)-$(DOITALL)-FILES =
+Formats:
+      $(_S)[[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))]$(_D)
+         $(_S)[[$(_N)$(EXTN_HTML)$(_S)]($(_N)$(OUT_README).$(EXTN_HTML)$(_S))]$(_D)
+          $(_S)[[$(_N)$(EXTN_LPDF)$(_S)]($(_N)$(OUT_README).$(EXTN_LPDF)$(_S))]$(_D)
+         $(_S)[[$(_N)$(EXTN_EPUB)$(_S)]($(_N)$(OUT_README).$(EXTN_EPUB)$(_S))]$(_D)
+$(_S)[[$(_N)$(EXTN_PRES)$(_S)]($(_N)$(OUT_README).$(EXTN_PRES)$(_S))]$(_D)
+         $(_S)[[$(_N)$(EXTN_DOCX)$(_S)]($(_N)$(OUT_README).$(EXTN_DOCX)$(_S))]$(_D)
+endef
+
 override define $(HELPOUT)-$(DOITALL)-LINKS =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
@@ -3128,6 +3143,15 @@ $(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst
 
 $(_S)[$(COMPOSER_BASENAME) Icon]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-v1.0.png$(_D)
 $(_S)[$(COMPOSER_BASENAME) Screenshot]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png$(_D)
+
+$(_S)[$(DESC_HTML)]: #html$(_D)
+$(_S)[$(DESC_LPDF)]: #pdf$(_D)
+$(_S)[$(DESC_EPUB)]: #epub$(_D)
+$(_S)[$(DESC_PRES)]: #revealjs-presentations$(_D)
+$(_S)[$(DESC_DOCX)]: #microsoft-word--powerpoint$(_D)
+$(_S)[$(DESC_PPTX)]: #microsoft-word--powerpoint$(_D)
+$(_S)[$(DESC_TEXT)]: #plain-text$(_D)
+$(_S)[$(DESC_LINT)]: #pandoc-markdown$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
@@ -3165,15 +3189,6 @@ $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
 $(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
 $(_S)[MacPorts]: https://www.macports.org$(_D)
-
-$(_S)[$(DESC_HTML)]: #html$(_D)
-$(_S)[$(DESC_LPDF)]: #pdf$(_D)
-$(_S)[$(DESC_EPUB)]: #epub$(_D)
-$(_S)[$(DESC_PRES)]: #revealjs-presentations$(_D)
-$(_S)[$(DESC_DOCX)]: #microsoft-word--powerpoint$(_D)
-$(_S)[$(DESC_PPTX)]: #microsoft-word--powerpoint$(_D)
-$(_S)[$(DESC_TEXT)]: #plain-text$(_D)
-$(_S)[$(DESC_LINT)]: #pandoc-markdown$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-SECTION =
@@ -3449,6 +3464,7 @@ endef
 #	document "config.composer" option
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
+#	firebase is not included in the repository...?  need to note this...
 
 #WORKING:NOW
 #	features
@@ -3469,6 +3485,12 @@ endef
 # styles.html = https://github.com/jgm/pandoc/blob/main/data/templates/styles.html = $(COMPOSER_DAT)
 # epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_DAT)
 # header-includes
+
+#> update: COMPOSER_TARGETS.*=
+
+#>$(_N)-- Example: [$(OUT_README).$(EXTN_PPTX)]($(OUT_README).$(EXTN_PPTX))$(_D)
+#>$(_N)-- Example: [$(OUT_README).$(EXTN_TEXT)]($(OUT_README).$(EXTN_TEXT))$(_D)
+#>$(_N)-- Example: [$(OUT_README).$(EXTN_LINT)]($(OUT_README).$(EXTN_LINT))$(_D)
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 $(_F)
@@ -3534,6 +3556,10 @@ $(_F)
 #WORKING:NOW:NOW:FIX############################################################
 $(_D)
 
+$(_N)-- Examples:
+[Example Website]($(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES)))
+/ [$(OUT_README).$(PUBLISH).$(EXTN_HTML)]($(OUT_README).$(PUBLISH).$(EXTN_HTML))$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,HTML)
 
 In addition to being a helpful real-time rendering tool, $(_C)[Markdown Viewer]$(_D)
@@ -3543,6 +3569,8 @@ for all $(_C)[HTML]$(_D)-based document types, including $(_C)[EPUB]$(_D).
 
 Information on installing $(_C)[Markdown Viewer]$(_D) for use as a $(_C)[Markdown]$(_D) rendering
 tool is in $(_C)[Requirements]$(_D).
+
+$(_N)-- Example: [$(OUT_README).$(EXTN_HTML)]($(OUT_README).$(EXTN_HTML))$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,PDF)
 
@@ -3557,10 +3585,14 @@ final output:
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header$(_D)
 #WORK $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_PDF_LATEX))$(_D)
 
+$(_N)-- Example: [$(OUT_README).$(EXTN_LPDF)]($(OUT_README).$(EXTN_LPDF))$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,EPUB)
 
 The $(_C)[EPUB]$(_D) format is essentially packaged $(_C)[HTML]$(_D), so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses the same
 $(_C)[Markdown Viewer]$(_D) $(_M)CSS$(_D) stylesheets for it.
+
+$(_N)-- Example: [$(OUT_README).$(EXTN_EPUB)]($(OUT_README).$(EXTN_EPUB))$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Reveal.js Presentations)
 
@@ -3594,6 +3626,8 @@ $(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/.$(COMPOSER_BASENAME)/$(call COMPOSE
 $(CODEBLOCK)$(_C)echo$(_D) $(_N)'$(_E)override c_type := $(TYPE_PRES)'$(_D) >>$(_M)./$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)$(_D)
 
+$(_N)-- Example: [$(OUT_README).$(EXTN_PRES)]($(OUT_README).$(EXTN_PRES))$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Microsoft Word & PowerPoint)
 
 The internal $(_C)[Pandoc]$(_D) templates for these are exported by $(_C)[$(COMPOSER_BASENAME)]$(_D), so they
@@ -3603,6 +3637,8 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/reference.$(EX
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/reference.$(EXTN_PPTX)$(_D)
 
 They are not currently modified by $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+$(_N)-- Example: [$(OUT_README).$(EXTN_DOCX)]($(OUT_README).$(EXTN_DOCX))$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Plain Text)
 
@@ -4329,6 +4365,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOIT
 Creating a development clone:
 
 #WORK should create a "development/contributing/support" section, and reference this...
+#	also: https://github.com/garybgenett/gary-os/blob/main/.vimrc
 
 $(CODEBLOCK)$(_C)mkdir$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
 $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
@@ -5554,14 +5591,14 @@ $(_S)#$(_D) $(_H)Settings$(_D)
 $(_N)override$(_D) $(_C)COMPOSER_SUBDIRS$(_D)		:= $(_M)$(NOTHING)$(_D)
 
 $(_S)########################################$(_D)
-$(_S)#$(_D) $(_H)Wildcards$(_D)
+$(_S)#$(_D) $(_H)Defaults$(_D)
 
 $(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_D)
 $(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_D)
 $(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc		:= $(SPECIAL_VAL)$(_D)
 
 $(_S)########################################$(_D)
-$(_S)#$(_D) $(_H)Settings$(_D)
+$(_S)#$(_D) $(_H)Files$(_D)
 
 $(_N)override$(_D) $(_C)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D)		:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D): $(_E)override c_site	:= 1$(_D)
