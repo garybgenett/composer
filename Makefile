@@ -169,6 +169,7 @@ override VIM_FOLDING := {{{1
 # PDF
 #	two different templates, with an option, for left/right versus left-only headers/footers
 #		maybe also a customizable version, akin to the resume and agreement formats i use
+#		these can live in an "artifacts/templates" directory, and can be "ln" as ".composer-pdf.header" or "file.pdf.header", as desired
 #	https://github.com/alexeygumirov/pandoc-for-pdf-how-to
 #		https://github.com/Wandmalfarbe/pandoc-latex-template
 #		https://learnbyexample.github.io/customizing-pandoc
@@ -2712,7 +2713,6 @@ $(HELPOUT)-VARIABLES_HELPER_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Helper Variables); fi
 	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"							"$(_H)Value"
 	@$(TABLE_M3) ":---"			":---"								":---"
-	@$(PRINT) "#WORKING:NOW:NOW:DOCS:FIX#######################################################"
 	@$(TABLE_M3) "$(_C)[CURDIR]"		"$(_C)[GNU Make]$(_D) current directory"			"\`$(_C)\$$PWD$(_D)\` $(_E)$(DIVIDE)$(_D) \`$(_M)$(DOMAKE)$(_D)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_CURDIR]"	"Detects $(_C)[COMPOSER_INCLUDE]$(_D)"				"$(_H)[CURDIR]$(_D) $(_E)$(DIVIDE)$(_D) \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 #>	@$(TABLE_M3) "$(_C)[COMPOSER_DIR]"	"Location of $(_C)[$(COMPOSER_BASENAME)]$(_D)"			"$(_M)$(call $(HEADERS)-path-dir,$(COMPOSER_DIR))"
@@ -2750,8 +2750,8 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [c_type])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: including $(_C)[COMPOSER_LIBRARY]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CLEANER)]"		"Remove $(_C)[c_site]$(_D) only: $(_C)[COMPOSER_LIBRARY]$(_E)/$(_C)[COMPOSER_TMP]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOFORCE)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: including $(_H)[COMPOSER_LIBRARY]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(CLEANER)]"		"Remove $(_C)[c_site]$(_D) only: $(_H)[COMPOSER_LIBRARY]$(_E)/$(_H)[COMPOSER_TMP]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)]"			"Current directory initialization: \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOITALL)]"		"Do $(_C)[$(INSTALL)]$(_D) recursively $(_E)(no overwrite)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(INSTALL)-$(DOFORCE)]"		"Recursively force overwrite of \`$(_M)$(MAKEFILE)$(_D)\` files"
@@ -2784,12 +2784,12 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M).$(COMPOSER_BASENAME)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_C)[COMPOSER_ROOT]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` upstream: $(_N)[Git]$(_D)/$(_N)[Firebase]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_C)[COMPOSER_LIBRARY]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_C)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_H)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))]"	"List files which are missing metadata fields"
@@ -2817,9 +2817,9 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(TESTING)-dir]"			"Only create directory structure, and do $(_C)[$(DISTRIB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-$(PRINTER)]"		"Output available test cases, for running directly"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(HELPOUT)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_SETTINGS)]"	"$(_C)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_YML)]"	"$(_C)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"$(_C)[Static Websites]$(_D) example \`$(_M)$(notdir $(PUBLISH_ROOT))$(_D)\` in $(_C)[COMPOSER_DIR]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_SETTINGS)]"	"$(_H)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_YML)]"	"$(_H)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"$(_C)[Static Websites]$(_D) example \`$(_M)$(notdir $(PUBLISH_ROOT))$(_D)\` in $(_H)[COMPOSER_DIR]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"Only create directory structure and source files"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]"	"Version configured to test specific variations"
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
@@ -3466,7 +3466,8 @@ endef
 #	make sure all the level2 sections have links to the sub-sections...
 
 #WORK
-# epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_ART)
+# styles.html = https://github.com/jgm/pandoc/blob/main/data/templates/styles.html = $(COMPOSER_DAT)
+# epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_DAT)
 # header-includes
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
@@ -3722,15 +3723,16 @@ $(CODEBLOCK)./$(_M)$(OUT_README).$(EXTN_DEFAULT).css$(_D)
 
 #WORK the $(_C)[c_css]$(_D) layering...
 
-  1. $(_C)[c_site]$(_D) $(MARKER) $(_C)[Bootstrap]$(_D)
+  1. $(_C)[c_site]$(_D) $(_E)$(MARKER)$(_D) $(_C)[Bootstrap]$(_D)
   1. $(_C)[c_css]$(_D)
-  1. $(_C)[c_site]$(_D) $(MARKER) `$(_M)$(COMPOSER_YML)$(_D)` $(DIVIDE) $(_C)[$(PUBLISH)-config]$(_D).$(_C)[css_shade]$(_D)
-  1. $(call COMPOSER_CONV,$(_C)[COMPOSER_DIR]$(_D)/$(_M),$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
-  1. $(_C)[COMPOSER_INCLUDE]$(_D)/$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
-  1. $(_C)[CURDIR]$(_D)/$(_C)[c_base]$(_D).`$(_M)<extension>$(_D)`.css
+  1. $(_C)[c_site]$(_D) $(_E)$(MARKER)$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)$(DIVIDE)$(_D) $(_C)[$(PUBLISH)-config]$(_D).$(_C)[css_shade]$(_D)
+#WORK comment 1. $(call COMPOSER_CONV,$(_H)[COMPOSER_DIR]$(_D)/$(_M),$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
+  1. $(patsubst $(COMPOSER_ART)/%,$(_H)[COMPOSER_ART]$(_D)/$(_M)%,$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
+  1. $(_C)[COMPOSER_INCLUDE]$(_D) $(_E)$(MARKER)$(_D) $(_D)$(EXPAND)/$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
+  1. $(_H)[CURDIR]$(_D)/$(_C)[c_base]$(_D).`$(_M)<extension>$(_D)`.css
 
 The first four are core to $(_C)[$(COMPOSER_BASENAME)]$(_D), and are always included.
-$(_C)[COMPOSER_INCLUDE]$(_D) and $(_C)[CURDIR]$(_D) files are optional, and only used if they exist.
+$(_C)[COMPOSER_INCLUDE]$(_D) and $(_H)[CURDIR]$(_D) files are optional, and only used if they exist.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Variables & Aliases)
 
@@ -3740,6 +3742,12 @@ alias.
 
 Full `$(_C)COMPOSER_*$(_D)` variable names should always be used in `$(_M)$(COMPOSER_SETTINGS)$(_D)` files,
 to avoid being overwritten by recursive environment persistence.
+
+$(call $(HELPOUT)-$(DOITALL)-SECTION,Pandoc Options)
+
+#WORK
+#	does not seem to be documented anywhere... test it, with examples here, regardless...
+#	seems to be: yaml_metadata, --defaults, --metadata*, etc.
 endef
 
 ########################################
@@ -4031,7 +4039,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
   * When using this option, care should be taken with "$(_N)Local$(_D)" variables from
     $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D).  They will be propagated down the tree, which
     is generally not desired except in very specific cases.  Using
-    $(_C)[COMPOSER_CURDIR]$(_D) to limit their scope is recommended.
+    $(_H)[COMPOSER_CURDIR]$(_D) to limit their scope is highly recommended.
   * This setting also causes `$(_M)$(COMPOSER_YML)$(_D)` and `$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_N)*$(_D)` files to be
     processed in an identical manner $(_E)(see [Configuration Files] and [Header &
     CSS Files] under [Precedence Rules])$(_D).
@@ -4088,6 +4096,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
     processed, because it becomes the wildcard `$(_N)*$(_D)`, so use with care.  It is
     likely best to use $(_C)[COMPOSER_TARGETS]$(_D) to explicitly set the targets list in
     these situations.
+
+#WORK
+#	add a note that a per-target "override README.html :=" is probably best...
+#	come to think of it, probably should just go back to not allowing an empty value...
 
 #WORKING document!
 # .$(TARGETS)
@@ -4168,10 +4180,16 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_CURDIR)
 
 #WORKING:DOCS can also be used to detect first pass, using "ifeq", to prevent "warning: overriding recipe for target" warnings...
 
-  * This is set to `$(_C)$$CURDIR$(_D)` when reading in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file in the `$(_C)$(DOMAKE)$(_D)`
-    running directory, and is empty otherwise.  This provides a way to limit
-    particular portions of the file to the local directory, regardless of
-    whether $(_C)[COMPOSER_INCLUDE]$(_D) is set or not.
+  * This is set to $(_H)[CURDIR]$(_D) when reading in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file in the
+    $(_C)[GNU Make]$(_D) running directory, and is empty otherwise.  This provides a way
+    to limit particular portions of the file to the local directory, regardless
+    of whether $(_C)[COMPOSER_INCLUDE]$(_D) is set or not.
+  * Uses for this are to limit the availability of targets to the local
+    directory, or to prevent variable values from recursing down to
+    sub-directories.
+  * Generally speaking, it is best practice to completely encapsulate all
+    `$(_M)$(COMPOSER_SETTINGS)$(_D)` files with this, except for the specific portions that need
+    to be passed down, similar to $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D).
 
 Example usage in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file:
 
@@ -4191,11 +4209,11 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORT)
 
 #WORK hidden variables...
 
-  * [_EXPORT_DIRECTORY]
-  * [_EXPORT_GIT_REPO]
-  * [_EXPORT_GIT_BNCH]
-  * [_EXPORT_FIRE_ACCT]
-  * [_EXPORT_FIRE_PROJ]
+  * $(_H)[_EXPORT_DIRECTORY]$(_D)
+  * $(_H)[_EXPORT_GIT_REPO]$(_D)
+  * $(_H)[_EXPORT_GIT_BNCH]$(_D)
+  * $(_H)[_EXPORT_FIRE_ACCT]$(_D)
+  * $(_H)[_EXPORT_FIRE_PROJ]$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_LIBRARY)
 
@@ -5342,24 +5360,24 @@ $(EXAMPLE)-md-file:
 .$(EXAMPLE):
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-#>	@$(call $(EXAMPLE)-print,1,$(_H)Global)
+	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global Variables)
 #>	@$(ENDOLINE)
 	@$(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
 	)
 	@$(ENDOLINE)
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-	@$(call $(EXAMPLE)-print,1,$(_N)ifneq$(_D) ($(_E)\$$(COMPOSER_CURDIR)$(_D),))
+	@$(call $(EXAMPLE)-print,,$(_N)ifneq$(_D) ($(_E)\$$(COMPOSER_CURDIR)$(_D),))
 	@$(ENDOLINE)
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-#>	@$(call $(EXAMPLE)-print,1,$(_H)Local)
+	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Local Variables)
 #>	@$(ENDOLINE)
 	@$(foreach FILE,$(COMPOSER_OPTIONS_LOCAL),\
 		$(call $(EXAMPLE)-var,1,$(FILE)); \
 	)
 	@$(ENDOLINE)
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
-	@$(call $(EXAMPLE)-print,1,$(_N)endif$(_D))
+	@$(call $(EXAMPLE)-print,,$(_N)endif$(_D))
 
 .PHONY: .$(EXAMPLE)-yml
 .$(EXAMPLE)-yml:
