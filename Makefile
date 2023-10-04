@@ -3497,8 +3497,8 @@ improvements not exposed as variables will apply to all documents created with a
 given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
 Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
-and '$(_E)Heredoc$(_D)' sections of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the
-$(_C)[$(DISTRIB)]$(_D) target, and will be overwritten whenever it is run.
+section of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the $(_C)[$(DISTRIB)]$(_D) target, and will
+be overwritten whenever it is run.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Static Websites)
 
@@ -4316,18 +4316,22 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOIT
 
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and install all external components.
-  * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries,
-    whereas $(_C)[$(UPGRADE)]$(_D) only fetches the repositories.
+  * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries, along
+    with running the builds for each repository, whereas $(_C)[$(UPGRADE)]$(_D) only fetches
+    the source code.
   * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) runs $(_C)[$(CREATOR)-$(DOITALL)]$(_D), which
-    performs the steps necessary to turn the current directory into a complete
-    clone of $(_C)[$(COMPOSER_BASENAME)]$(_D), including overwriting all supporting files.
+    performs the steps necessary to turn the current directory into a
+    development clone of $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_E)(except for [site-template])$(_D), including
+    overwriting all supporting files.
   * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
     compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
 
-Rapid cloning:
+Creating a development clone:
 
-$(CODEBLOCK)$(_C)mkdir$(_D) $(_M)$(EXPAND)/clone$(_D)
-$(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/clone$(_D)
+#WORK should create a "development/contributing/support" section, and reference this...
+
+$(CODEBLOCK)$(_C)mkdir$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
+$(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/.$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT) / $(DEBUGIT)-file)
