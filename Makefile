@@ -3125,13 +3125,13 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
 override define $(HELPOUT)-$(DOITALL)-FILES =
-Formats:
-      $(_S)[[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))]$(_D)
-         $(_S)[[$(_N)$(EXTN_HTML)$(_S)]($(_N)$(OUT_README).$(EXTN_HTML)$(_S))]$(_D)
-          $(_S)[[$(_N)$(EXTN_LPDF)$(_S)]($(_N)$(OUT_README).$(EXTN_LPDF)$(_S))]$(_D)
-         $(_S)[[$(_N)$(EXTN_EPUB)$(_S)]($(_N)$(OUT_README).$(EXTN_EPUB)$(_S))]$(_D)
-$(_S)[[$(_N)$(EXTN_PRES)$(_S)]($(_N)$(OUT_README).$(EXTN_PRES)$(_S))]$(_D)
-         $(_S)[[$(_N)$(EXTN_DOCX)$(_S)]($(_N)$(OUT_README).$(EXTN_DOCX)$(_S))]$(_D)
+$(_S)-- $(_N)Formats$(_S):$(_D)
+        $(_S)[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
+         $(_S)/ [$(_N)$(EXTN_HTML)$(_S)]($(_N)$(OUT_README).$(EXTN_HTML)$(_S))$(_D)
+          $(_S)/ [$(_N)$(EXTN_LPDF)$(_S)]($(_N)$(OUT_README).$(EXTN_LPDF)$(_S))$(_D)
+         $(_S)/ [$(_N)$(EXTN_EPUB)$(_S)]($(_N)$(OUT_README).$(EXTN_EPUB)$(_S))$(_D)
+$(_S)/ [$(_N)$(EXTN_PRES)$(_S)]($(_N)$(OUT_README).$(EXTN_PRES)$(_S))$(_D)
+         $(_S)/ [$(_N)$(EXTN_DOCX)$(_S)]($(_N)$(OUT_README).$(EXTN_DOCX)$(_S))$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS =
@@ -3220,7 +3220,7 @@ and prettifies the output formats, all in one place.  It also serves as a build
 system, so that large repositories can be managed as documentation archives or
 published as $(_C)[Static Websites]$(_D).
 
-$(_E)![$(COMPOSER_BASENAME) Screenshot]($(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png)$(_S)\\$(_D)
+$(_N)![$(COMPOSER_BASENAME) Screenshot]($(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png)$(_S)\\$(_D)
 endef
 
 ########################################
