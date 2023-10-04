@@ -3,9 +3,10 @@
 # Composer CMS :: Primary Makefile
 ################################################################################
 override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list listchars=tab\:,.,trail\:=,extends\:>,precedes\:< foldmethod=marker foldlevel=0 foldtext=printf('%1s\ [%4s\ %5s-%5s]\ %-0.9s\ %s\ ',v\:foldlevel,(v\:foldend\ \-\ v\:foldstart\ \+\ 1),v\:foldstart,v\:foldend,v\:folddashes,substitute(getline(v\:foldstart),'\ \{\{\{\\d\\\+\ \\\|\\s\\\+','\ ','g'))
+override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ################################################################################
-# IMPORTANT NOTES FOR REVIEWING AND EDITING THIS FILE:
-#
+# {{{1 IMPORTANT NOTES
+################################################################################
 # This Makefile is the very heart of Composer CMS.  All the other files in the
 # repository are sourced from it.  It is the only file needed to re-create the
 # entire directory.  This one file *IS* Composer CMS.
@@ -26,12 +27,12 @@ override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list lis
 # purchase these options, and a whole lot more, is to run the following Vim
 # commands (or, better yet, put them in your ".vimrc"):
 #
-#   * `:set modeline`
-#   * `:set modelines=5`
-#   * `:set modelineexpr`
-#   * `:syntax on`
-#   * `:highlight comment ctermfg=darkgreen` (easier to read and differentiate)
-#   * `:highlight folded ctermfg=darkmagenta` (brighter text)
+#	:set modeline
+#	:set modelines=5
+#	:set modelineexpr
+#	:syntax on
+#	:highlight comment guibg=black ctermbg=none guifg=darkgreen ctermfg=darkgreen
+#	:highlight folded guibg=darkblue ctermbg=darkblue guifg=darkcyan ctermfg=darkcyan
 #
 # Whatever editor you are using... if you are not using a "tabstop" of "8", this
 # file will absolutely make your eyes bleed.  You have been warned.  I'm
@@ -44,9 +45,7 @@ override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list lis
 #
 # Happy Hacking!
 ################################################################################
-override VIM_FOLDING := {{{1
-################################################################################
-# {{{1 Release Checklist
+# {{{1 RELEASE PROCESS
 ################################################################################
 #	* Update
 #		* Tooling Versions
@@ -10577,22 +10576,22 @@ $(DEBUGIT)-$(HEADERS):
 .PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
 	@if [ "$(*)" = "$(patsubst MARKER-%,%,$(*))" ]; then \
-		$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $(*) $(DIVIDE) $($(*)) ]$(MARKER)); \
+		$(call TITLE_LN ,1,$(call VIM_FOLDING) $(MARKER)[ $(*) $(DIVIDE) $($(*)) ]$(MARKER)); \
 	fi
 	@if [ "$(*)" != "$(patsubst MARKER-%,%,$(*))" ]; then \
 		$(ENDOLINE); \
 		$(LINERULE); \
 		$(ENDOLINE); \
-		$(PRINT) "# $(subst {,},$(VIM_FOLDING)) $(*)"; \
+		$(PRINT) "# $(call VIM_FOLDING,,1) $(*)"; \
 	elif [ "$(*)" = "COMPOSER_DEBUGIT" ]; then \
 		$(MAKE) $(NOFAIL) COMPOSER_DEBUGIT="$(SPECIAL_VAL)" $($(*)) 2>&1 || $(TRUE); \
 	else \
 		for FILE in $($(*)); do \
 			if [ -d "$${FILE}" ]; then \
-				$(call TITLE_LN ,2,$(patsubst %1,%2,$(VIM_FOLDING)) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
+				$(call TITLE_LN ,2,$(call VIM_FOLDING,2) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
 				$(LS) --recursive $${FILE}; \
 			elif [ -f "$${FILE}" ]; then \
-				$(call TITLE_LN ,2,$(patsubst %1,%2,$(VIM_FOLDING)) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
+				$(call TITLE_LN ,2,$(call VIM_FOLDING,2) $(MARKER)[ $(*) $(DIVIDE) $${FILE} ]$(MARKER)); \
 				$(CAT) $${FILE}; \
 			else \
 				$(MAKE) $(NOFAIL) COMPOSER_DEBUGIT= $${FILE} 2>&1 || $(TRUE); \
@@ -10703,7 +10702,7 @@ $(TESTING)-$(HEADERS):
 
 .PHONY: $(TESTING)-$(HEADERS)-%
 $(TESTING)-$(HEADERS)-%:
-	@$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $($(*)) ]$(MARKER))
+	@$(call TITLE_LN ,1,$(call VIM_FOLDING) $(MARKER)[ $($(*)) ]$(MARKER))
 	@$(MAKE) $($(*)) 2>&1
 
 .PHONY: $(TESTING)-dir
@@ -10725,7 +10724,7 @@ override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,
 override $(TESTING)-run			= $(call ENV_MAKE,$(2),$(COMPOSER_DOCOLOR),,COMPOSER_DOITALL_$(TESTING)) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
-	$(call TITLE_LN ,1,$(VIM_FOLDING) $(MARKER)[ $(patsubst $(TESTING)-%,%,$(@)) ]$(MARKER)); \
+	$(call TITLE_LN ,1,$(call VIM_FOLDING) $(MARKER)[ $(patsubst $(TESTING)-%,%,$(@)) ]$(MARKER)); \
 	$(ECHO) "$(_M)$(MARKER) PURPOSE:$(_D) $(strip $(1))$(_D)\n"; \
 	$(ECHO) "$(_M)$(MARKER) RESULTS:$(_D) $(strip $(2))$(_D)\n"; \
 	if [ -z "$(1)" ]; then exit 1; fi; \
