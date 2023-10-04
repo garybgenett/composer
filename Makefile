@@ -131,8 +131,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* '#>[ ]'
 #				* '#>[^ ]'
 #		* Update: README.md
-#			* `make COMPOSER_DEBUGIT="1" help-force | less -rX`
-#				* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-force | less -rX`
+#			* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
+#				* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-help | less -rX`
 #				* `override INPUT := commonmark`
 #					* `PANDOC_EXTENSIONS`
 #				* Verify
@@ -1047,7 +1047,7 @@ override TEX_PDF			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_TEX_PDF))
 
 #> update: $(NOTHING)-%
 
-override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git)
+override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git) --no-pager
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
 
@@ -1149,6 +1149,12 @@ override define GIT_RUN_COMPOSER =
 		$(COMPOSER_ROOT).git ,\
 		$(COMPOSER_ROOT)/.git \
 	)),$(1))
+endef
+override define GIT_RUN_REPO =
+	$(call $(HEADERS)-action,$(2),$(notdir $(1))); \
+	$(call GIT_RUN,$(1),$(strip \
+		$(COMPOSER_SRC)/$(notdir $(1)).git \
+	),$(2))
 endef
 
 #>	$(RM) $(1)/.git
@@ -1985,6 +1991,7 @@ $(foreach FILE,\
 
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(HEADERS)-$(EXAMPLE),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(UPGRADE),$(TESTING)))
+$(eval $(call COMPOSER_RESERVED_DOITALL,$(UPGRADE),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CHECKIT),$(HELPOUT)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CONVICT),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-library,$(DOITALL)))
@@ -2811,6 +2818,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(TESTING)]"		"Skip download steps in $(_C)[$(UPGRADE)]$(_D), and only do builds"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes to each repository $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Does $(_C)[$(CREATOR)]$(_D), and builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
@@ -4213,7 +4221,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,CURDIR)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_CURDIR)
 
-#WORKING:DOCS can also be used to detect first pass, using "ifeq", to prevent "warning: overriding recipe for target" warnings...
+#WORKING can also be used to detect first pass, using "ifeq", to prevent "warning: overriding recipe for target" warnings...
 
   * This is set to $(_H)[CURDIR]$(_D) when reading in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file in the
     $(_C)[GNU Make]$(_D) running directory, and is empty otherwise.  This provides a way
@@ -4476,6 +4484,7 @@ $(_S)[$(MAKE_DB)]: #internal-targets$(_D)
 $(_S)[$(LISTING)]: #internal-targets$(_D)
 $(_S)[$(NOTHING)]: #internal-targets$(_D)
 $(_S)[$(UPGRADE)-$(TESTING)]: #internal-targets$(_D)
+$(_S)[$(UPGRADE)-$(PRINTER)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(TESTING)]: #internal-targets$(_D)
@@ -10064,7 +10073,7 @@ override define $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS =
 endef
 
 override define $(HEADERS)-action =
-	$(ENDOLINE); \
+	$(LINERULE); \
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(_E)$(3)$(_D))))"
 endef
 override define $(HEADERS)-note =
@@ -10226,6 +10235,24 @@ ifeq ($(and \
 	@$(if $(wildcard $(firstword $(NPM))),,		$(MAKE) $(NOTHING)-npm)
 	@$(if $(wildcard $(firstword $(CURL))),,	$(MAKE) $(NOTHING)-curl)
 else
+ifeq ($(COMPOSER_DOITALL_$(UPGRADE)),$(PRINTER))
+	@$(foreach FILE,\
+		$(PANDOC_DIR) \
+		$(YQ_DIR) \
+		$(BOOTSTRAP_DIR) \
+		$(BOOTLINT_DIR) \
+		$(BOOTSWATCH_DIR) \
+		$(FONTAWES_DIR) \
+		$(WATERCSS_DIR) \
+		$(MDVIEWER_DIR) \
+		$(MDTHEMES_DIR) \
+		$(REVEALJS_DIR) \
+		$(FIREBASE_DIR) \
+		,\
+		$(call GIT_RUN_REPO,$(FILE),diff); \
+		$(call NEWLINE) \
+	)
+else
 ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(PANDOC_DIR)),	$(PANDOC_SRC),		$(PANDOC_CMT))
 	@$(call GIT_REPO,$(call COMPOSER_CONV,$(CURDIR)/,$(YQ_DIR)),		$(YQ_SRC),		$(YQ_CMT))
@@ -10257,7 +10284,7 @@ ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(TESTING))
 		$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 #>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)))
-	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),$(notdir $(FIREBASE_DIR)))
+	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),$(notdir $(FIREBASE_DIR))@$(FIREBASE_VER))
 endif
 #> update: $(WATERCSS_DIR) > $(MDVIEWER_DIR)
 	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
@@ -10287,6 +10314,7 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,light)		>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-shade.css
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-shade.css
 	@$(call NPM_RUN,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),,yarn) build
+endif
 endif
 endif
 
@@ -11581,7 +11609,7 @@ $(TESTING)-other-init:
 		&& $(GIT) config --local user.email "$(COMPOSER_BASENAME)@example.com"
 	@$(call $(TESTING)-run) $(CONVICT)-$(DOITALL)
 	@cd $(call $(TESTING)-pwd) \
-		&& GIT_PAGER= $(GIT) log
+		&& $(GIT) log
 
 .PHONY: $(TESTING)-other-done-env
 $(TESTING)-other-done-env:
