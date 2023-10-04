@@ -2657,7 +2657,7 @@ $(HELPOUT)-VARIABLES_FORMAT_%:
 	@$(TABLE_M3) "$(_C)[c_type]$(_D)    ~ \`$(_E)T$(_D)\`"	"Desired output format"			"$(_M)$(c_type)"
 	@$(TABLE_M3) "$(_C)[c_base]$(_D)    ~ \`$(_E)B$(_D)\`"	"Base of output file"			"$(_M)$(c_base)"
 #>	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ \`$(_E)L$(_D)\`"	"List of input files(s)"		"$(_M)$(notdir $(c_list))$(_D)"
-	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ \`$(_E)L$(_D)\`"	"List of input files(s)"		"$(_M)$(notdir $(call c_list_var))$(_D)$(if $(call c_list_var_source), $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source)$(_D))"
+	@$(TABLE_M3) "$(_C)[c_list]$(_D)    ~ \`$(_E)L$(_D)\`"	"List of input files(s)"		"$(_M)$(notdir $(call c_list_var))$(_D)$(if $(call c_list_var_source), $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source)$(_D))"
 	@$(TABLE_M3) "$(_C)[c_lang]$(_D)    ~ \`$(_E)a$(_D)\`"	"Language for document headers"		"$(_M)$(c_lang)"
 	@$(TABLE_M3) "$(_C)[c_logo]$(_D)    ~ \`$(_E)g$(_D)\`"	"Logo image ($(_C)[HTML]$(_D) formats)"	"$(_M)$(notdir $(c_logo))"
 	@$(TABLE_M3) "$(_C)[c_icon]$(_D)    ~ \`$(_E)i$(_D)\`"	"Icon image ($(_C)[HTML]$(_D) formats)"	"$(_M)$(notdir $(c_icon))"
@@ -3831,6 +3831,16 @@ endef
 # colors?  $(_F), etc.
 # DO_HEREDOC?
 # $($(DEBUGIT)-output)?
+#WORK
+# it's just basic shell scripting...
+#	@command1
+#	@command2
+#	@if ; then ...
+#	exits on fail = $(TRUE)
+#	helper targets and variables
+# migrate to *-target-[pre|post]
+#	update "targets:" filter
+#	sorted? use numbers, like udev, etc... 00-*, 10-*, etc.
 
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
@@ -11878,7 +11888,7 @@ $(TARGETS):
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(if $(call c_list_var_source,,$(BASE),$(EXTN)),\
-			$(ECHO) "$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
+			$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
 		) \
 		$(ENDOLINE); \
 		$(call NEWLINE) \
@@ -11919,14 +11929,14 @@ override define $(TARGETS)-$(PRINTER) =
 		$(if $(2),\
 			-e "s|[:].*$$||g" \
 			| $(SED) -n "/[-]$(2)$$/p" \
-			| $(SORT) \
 		,\
 			-e "/^[^:]+[-]$(EXPORTS)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
 			-e "s|[:]+[[:space:]]*$$||g" \
 			-e "s|[[:space:]]+|$(TOKEN)|g" \
-		)
+		) \
+		| $(SORT)
 endef
 
 ################################################################################
