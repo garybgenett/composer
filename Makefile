@@ -3364,9 +3364,6 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
-#	make sure all elements have an "id=" attached...
-#		id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@}")"
-#		add a documentation note that these can be used for css "#..." selection...
 #	test using a "broken token:" for "tagslist", to make sure everything is quoted properly...
 #	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #		index.html with only/all sub-folders as best-practice?
@@ -7282,12 +7279,18 @@ function $(PUBLISH)-nav-divider {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
 	if [ "$${1}" = "top-menu" ]; then
-		$${ECHO} "<li class=\"$${COMPOSER_TINYNAME}-menu-div nav-item nav-link d-$${COLS_BREAK}-block d-none\">$${HTML_HIDE}</li>\\n"
-		$${ECHO} "<li class=\"nav-item d-$${COLS_BREAK}-none d-block\"><hr class=\"dropdown-divider\"></li>\\n"
+$${CAT} <<_EOF_
+<li class="$${COMPOSER_TINYNAME}-menu-div nav-item nav-link d-$${COLS_BREAK}-block d-none">$${HTML_HIDE}</li>
+<li class="nav-item d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></li>
+_EOF_
 	elif [ "$${1}" = "top" ]; then
-		$${ECHO} "<li><hr class=\"dropdown-divider\"></li>\\n"
+$${CAT} <<_EOF_
+<li><hr class="dropdown-divider"></li>
+_EOF_
 	elif [ "$${1}" = "top-info" ]; then
-		$${ECHO} "<p class=\"navbar-text d-$${COLS_BREAK}-none d-block\"><hr class=\"dropdown-divider\"></p>\\n"
+$${CAT} <<_EOF_
+<p class="navbar-text d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></p>
+_EOF_
 	else
 		$(PUBLISH)-marker $${FUNCNAME} skip nav-divider-$${1}
 	fi
@@ -7466,7 +7469,7 @@ _EOF_
 # 4 title				$${@:4} = $${4}++
 
 # 1 $(PUBLISH)-header 1			header level
-# 3 $(PUBLISH)-header 2			title
+# 4 $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-fold-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -7916,8 +7919,11 @@ _EOF_
 #### {{{4 $(PUBLISH)-frame
 ########################################
 
-# 1 type || url
-# 2 identifier (1=type) || name		$${@:2} = $${2}++
+# 1 type				youtube || [...]
+# 2 identifier				$${@:2} = $${2}++
+
+# 1 url
+# 2 name				$${@:2} = $${2}++
 
 function $(PUBLISH)-frame {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
