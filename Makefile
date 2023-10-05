@@ -2201,37 +2201,82 @@ override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
 override PUBLISH_CMD_BEG		:= <!-- $(COMPOSER_TINYNAME) $(MARKER)
 override PUBLISH_CMD_END		:= $(MARKER) -->
 
-ifeq ($(c_site),)
 override COMPOSER_ROOT_PATH		:=
 override COMPOSER_LIBRARY_PATH		:=
-override PUBLISH_SH_RUN			=
-else
+ifneq ($(c_site),)
 override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT))
+ifneq ($(COMPOSER_LIBRARY),)
 override COMPOSER_LIBRARY_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_LIBRARY) 2>/dev/null)
-override PUBLISH_SH_RUN = \
-	SED="$(SED)" \
-	\
-	CAT="$(CAT)" \
-	ECHO="$(ECHO)" \
-	EXPR="$(EXPR)" \
-	HEAD="$(HEAD)" \
-	PRINTF="$(PRINTF)" \
-	TR="$(TR)" \
-	\
-	YQ_WRITE="$(subst ",,$(YQ_WRITE))" \
-	COMPOSER_YML_DATA='$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
-	COMPOSER_YML_DATA_TAGSLIST='$(COMPOSER_YML_DATA_TAGSLIST)' \
-	\
-	COMPOSER_DIR="$(COMPOSER_DIR)" \
-	COMPOSER_ROOT="$(COMPOSER_ROOT)" \
-	COMPOSER_ROOT_REGEX="$(COMPOSER_ROOT_REGEX)" \
-	COMPOSER_ROOT_PATH="$(COMPOSER_ROOT_PATH)" \
-	COMPOSER_LIBRARY_PATH="$(COMPOSER_LIBRARY_PATH)" \
-	COMPOSER_LIBRARY_METADATA="$($(PUBLISH)-library-metadata)" \
-	COMPOSER_LIBRARY_INDEX="$($(PUBLISH)-library-index)" \
-	\
-	$(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 endif
+endif
+
+override PUBLISH_SH_GLOBAL := \
+	COMPOSER_HOMEPAGE \
+	COMPOSER_TINYNAME \
+	CREATED_TAGLINE \
+	$(TOKEN) \
+	\
+	MARKER \
+	DIVIDE \
+	EXPAND \
+	TOKEN \
+	$(TOKEN) \
+	\
+	SPECIAL_VAL \
+	DEPTH_MAX \
+	$(TOKEN) \
+	\
+	HTML_SPACE \
+	HTML_BREAK \
+	HTML_HIDE \
+	MENU_SELF \
+	$(TOKEN) \
+	\
+	SED_ESCAPE_LIST \
+	$(TOKEN) \
+	\
+	PUBLISH_CMD_ROOT \
+	PUBLISH_CMD_BEG \
+	PUBLISH_CMD_END \
+
+override PUBLISH_SH_LOCAL := \
+	SED \
+	$(TOKEN) \
+	\
+	CAT \
+	ECHO \
+	EXPR \
+	HEAD \
+	PRINTF \
+	TR \
+	$(TOKEN) \
+	\
+	YQ_WRITE \
+	COMPOSER_YML_DATA \
+	COMPOSER_YML_DATA_TAGSLIST \
+	$(TOKEN) \
+	\
+	COMPOSER_DIR \
+	COMPOSER_ROOT \
+	COMPOSER_ROOT_REGEX \
+	COMPOSER_ROOT_PATH \
+	COMPOSER_LIBRARY_PATH \
+	COMPOSER_LIBRARY_METADATA \
+	COMPOSER_LIBRARY_INDEX \
+
+#>		$(filter-out $(TOKEN),$(PUBLISH_SH_GLOBAL))
+override PUBLISH_SH_RUN = \
+	$(foreach FILE,\
+		$(filter-out $(TOKEN),$(PUBLISH_SH_LOCAL)) \
+		,\
+		$(if $(filter $(FILE),YQ_WRITE),			$(FILE)="$(subst ",,$($(FILE)))" ,\
+		$(if $(filter $(FILE),COMPOSER_YML_DATA),		$(FILE)='$(call YQ_EVAL_DATA_FORMAT,$($(FILE)))' ,\
+		$(if $(filter $(FILE),COMPOSER_LIBRARY_METADATA),	$(FILE)="$($(PUBLISH)-library-metadata)" ,\
+		$(if $(filter $(FILE),COMPOSER_LIBRARY_INDEX),		$(FILE)="$($(PUBLISH)-library-index)" ,\
+		$(FILE)="$($(FILE))" \
+		)))) \
+	) \
+	$(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 
 override PUBLISH_SH_HELPERS := \
 	metainfo \
@@ -3370,7 +3415,11 @@ endef
 #		this is a real pain when using COMPOSER_INCLUDE...
 
 #WORKING:NOW
-#	make demo = peek = replace screenshot with a gif
+#	add "demo" target
+#		slowly, sleep 0.1 per character, print a series of commands and then run them
+#		add to help and/or quick start
+#		comment/renove cruft from setup-all, such as clean and keeping=0
+#		make demo = peek = replace screenshot with a gif
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
 #	note that they are intentionally reversed
@@ -6483,54 +6532,12 @@ set -e
 ########################################
 ### {{{3 Globals
 ########################################
-
-COMPOSER_HOMEPAGE="$(COMPOSER_HOMEPAGE)"
-COMPOSER_TINYNAME="$(COMPOSER_TINYNAME)"
-CREATED_TAGLINE="$(CREATED_TAGLINE)"
-
-MARKER="$(MARKER)"
-DIVIDE="$(DIVIDE)"
-EXPAND="$(EXPAND)"
-TOKEN="$(TOKEN)"
-
-SPECIAL_VAL="$(SPECIAL_VAL)"
-DEPTH_MAX="$(DEPTH_MAX)"
-
-HTML_SPACE="$(HTML_SPACE)"
-HTML_BREAK="$(HTML_BREAK)"
-HTML_HIDE="$(HTML_HIDE)"
-MENU_SELF="$(MENU_SELF)"
-
-SED_ESCAPE_LIST="$(SED_ESCAPE_LIST)"
-
-PUBLISH_CMD_ROOT="$(PUBLISH_CMD_ROOT)"
-PUBLISH_CMD_BEG="$(PUBLISH_CMD_BEG)"
-PUBLISH_CMD_END="$(PUBLISH_CMD_END)"
+$(foreach FILE,$(PUBLISH_SH_GLOBAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)),,$(FILE)="$($(FILE))"))
 
 ########################################
 ### {{{3 Variables
 ########################################
-
-SED="$${SED}"
-
-CAT="$${CAT}"
-ECHO="$${ECHO}"
-EXPR="$${EXPR}"
-HEAD="$${HEAD}"
-PRINTF="$${PRINTF}"
-TR="$${TR}"
-
-YQ_WRITE="$${YQ_WRITE}"
-COMPOSER_YML_DATA="$${COMPOSER_YML_DATA}"
-COMPOSER_YML_DATA_TAGSLIST="$${COMPOSER_YML_DATA_TAGSLIST}"
-
-COMPOSER_DIR="$${COMPOSER_DIR}"
-COMPOSER_ROOT="$${COMPOSER_ROOT}"
-COMPOSER_ROOT_REGEX="$${COMPOSER_ROOT_REGEX}"
-COMPOSER_ROOT_PATH="$${COMPOSER_ROOT_PATH}"
-COMPOSER_LIBRARY_PATH="$${COMPOSER_LIBRARY_PATH}"
-COMPOSER_LIBRARY_METADATA="$${COMPOSER_LIBRARY_METADATA}"
-COMPOSER_LIBRARY_INDEX="$${COMPOSER_LIBRARY_INDEX}"
+$(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)),,$(FILE)="$${$(FILE)}"))
 
 ################################################################################
 ### {{{3 Functions (Global)
@@ -10417,7 +10424,7 @@ endif
 		fi; $(call NEWLINE) \
 	)
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(call COMPOSER_CONV,$(CURDIR)/,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "s|[[:space:]]+$$||g"	| $(SED) "/$(TOKEN)$$/d" >$(call COMPOSER_CONV,$(CURDIR)/,$(CUSTOM_PUBLISH_SH))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(call COMPOSER_CONV,$(CURDIR)/,$(CUSTOM_PUBLISH_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
@@ -13784,7 +13791,7 @@ ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-file,$(abspath $(dir $(CUSTOM_PUBLISH_SH))),$(notdir $(CUSTOM_PUBLISH_SH)),$(DEBUGIT))
 #> update: HEREDOC_CUSTOM_PUBLISH
-	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "/$(TOKEN)$$/d"		>$(call COMPOSER_CONV,$(CURDIR)/,$(CUSTOM_PUBLISH_SH))
+	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_SH) | $(SED) "s|[[:space:]]+$$||g"	| $(SED) "/$(TOKEN)$$/d" >$(call COMPOSER_CONV,$(CURDIR)/,$(CUSTOM_PUBLISH_SH))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS)					>$(call COMPOSER_CONV,$(CURDIR)/,$(CUSTOM_PUBLISH_CSS))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,light)			>$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_SHADE,light))
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_PUBLISH_CSS_SHADE,,dark)			>$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
