@@ -102,6 +102,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #						* `make COMPOSER_DEBUGIT="1" site-template`
 #					* `make site-template-_test`
 #						* `make COMPOSER_DEBUGIT="1" site-template-_test`
+#						* `make site-list`
 #					* `make site-template-config`
 #						* `make --directory _site site-all`
 #						* `make --directory _site site-force`
@@ -703,13 +704,13 @@ override PUBLISH_CREATORS_TITLE_MOD	:= #> null
 override PUBLISH_CREATORS_PRINT		:= *Authors: <|>, <|>*
 override PUBLISH_CREATORS_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_CREATORS_PRINT_MOD	:= #> null
-override PUBLISH_TAGSLIST		:= tags
-override PUBLISH_TAGSLIST_TITLE		:= Tag
-override PUBLISH_TAGSLIST_TITLE_ALT	:= Mark
-override PUBLISH_TAGSLIST_TITLE_MOD	:= #> null
-override PUBLISH_TAGSLIST_PRINT		:= *Tags: <|>, <|>*
-override PUBLISH_TAGSLIST_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
-override PUBLISH_TAGSLIST_PRINT_MOD	:= #> null
+override PUBLISH_METALIST		:= tags
+override PUBLISH_METALIST_TITLE		:= Tag
+override PUBLISH_METALIST_TITLE_ALT	:= Mark
+override PUBLISH_METALIST_TITLE_MOD	:= #> null
+override PUBLISH_METALIST_PRINT		:= *Tags: <|>, <|>*
+override PUBLISH_METALIST_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
+override PUBLISH_METALIST_PRINT_MOD	:= #> null
 override PUBLISH_READTIME		:= *Reading time: <word> words, <time> minutes*
 override PUBLISH_READTIME_ALT		:= *Words: <word> / Minutes: <time>*
 override PUBLISH_READTIME_WPM		:= 220
@@ -2057,14 +2058,14 @@ override define COMPOSER_YML_DATA_SKEL =
 
     metainfo:				"$(PUBLISH_METAINFO)",
     metainfo_null:			"$(PUBLISH_METAINFO_NULL)",
-    tagslist: {
+    metalist: {
       $(PUBLISH_CREATORS): {
         title:				"$(PUBLISH_CREATORS_TITLE)",
         display:			"$(PUBLISH_CREATORS_PRINT)",
       },
-      $(PUBLISH_TAGSLIST): {
-        title:				"$(PUBLISH_TAGSLIST_TITLE)",
-        display:			"$(PUBLISH_TAGSLIST_PRINT)",
+      $(PUBLISH_METALIST): {
+        title:				"$(PUBLISH_METALIST_TITLE)",
+        display:			"$(PUBLISH_METALIST_PRINT)",
       },
     },
 
@@ -2106,10 +2107,10 @@ override define COMPOSER_YML_DATA_SKEL =
 }}
 endef
 
-override define COMPOSER_YML_DATA_TAGSLIST_SKEL =
+override define COMPOSER_YML_DATA_METALIST_SKEL =
 { .$(COMPOSER_BASENAME):				{},
   title:				{ null: [] },
-  date:					{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_TAGSLIST),$(NEWLINE)  $(FILE): { null: [] },)
+  date:					{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),$(NEWLINE)  $(FILE): { null: [] },)
 }
 endef
 
@@ -2189,8 +2190,8 @@ endif
 
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
-override COMPOSER_YML_DATA_TAGSLIST := $(shell \
-	$(ECHO) '$(call COMPOSER_YML_DATA_VAL,config.tagslist)' \
+override COMPOSER_YML_DATA_METALIST := $(shell \
+	$(ECHO) '$(call COMPOSER_YML_DATA_VAL,config.metalist)' \
 	| $(YQ_WRITE) "keys | .[]" 2>/dev/null \
 	| $(SED) "/^null$$/d" \
 )
@@ -2253,7 +2254,7 @@ override PUBLISH_SH_LOCAL := \
 	\
 	YQ_WRITE \
 	COMPOSER_YML_DATA \
-	COMPOSER_YML_DATA_TAGSLIST \
+	COMPOSER_YML_DATA_METALIST \
 	$(TOKEN) \
 	\
 	COMPOSER_DIR \
@@ -2281,7 +2282,7 @@ override PUBLISH_SH_RUN = \
 override PUBLISH_SH_HELPERS := \
 	metainfo \
 	contents \
-	$(addprefix tagslist-,$(COMPOSER_YML_DATA_TAGSLIST)) \
+	$(addprefix metalist-,$(COMPOSER_YML_DATA_METALIST)) \
 	readtime \
 
 ########################################
@@ -3409,7 +3410,6 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
-#	test using a "broken token:" for "tagslist", to make sure everything is quoted properly...
 #	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
 #		index.html with only/all sub-folders as best-practice?
 #		this is a real pain when using COMPOSER_INCLUDE...
@@ -4578,7 +4578,7 @@ override define PUBLISH_PAGE_1 =
 title: $(PUBLISH_PAGE_1_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Introduction $(PUBLISH_CMD_END)
 
@@ -4626,8 +4626,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
 | metainfo      | `$(PUBLISH_METAINFO)`
 | metainfo_null | `$(PUBLISH_METAINFO_NULL)`
-| tagslist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)`
-| tagslist $(DIVIDE) $(PUBLISH_TAGSLIST) | *title:* `$(PUBLISH_TAGSLIST_TITLE)` <br> *display:* `$(PUBLISH_TAGSLIST_PRINT)`
+| metalist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)`
+| metalist $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)`
 | readtime      | `$(PUBLISH_READTIME)`
 | readtime_wpm  | `$(PUBLISH_READTIME_WPM)`
 
@@ -4727,7 +4727,7 @@ override define PUBLISH_PAGE_2 =
 title: $(PUBLISH_PAGE_2_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -4774,7 +4774,7 @@ override define PUBLISH_PAGE_3 =
 title: $(PUBLISH_PAGE_3_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 #WORKING:DOCS $(PUBLISH_CMD_END)
 
@@ -4808,8 +4808,8 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`    | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
 | metainfo      | `$(PUBLISH_METAINFO)`      | `$(PUBLISH_METAINFO_ALT)`
 | metainfo_null | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
-| tagslist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)` | title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_PRINT_ALT)`
-| tagslist $(DIVIDE) $(PUBLISH_TAGSLIST) | *title:* `$(PUBLISH_TAGSLIST_TITLE)` <br> *display:* `$(PUBLISH_TAGSLIST_PRINT)` | title: `$(PUBLISH_TAGSLIST_TITLE_ALT)` <br> display: `$(PUBLISH_TAGSLIST_PRINT_ALT)`
+| metalist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)` | title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_PRINT_ALT)`
+| metalist $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)` | title: `$(PUBLISH_METALIST_TITLE_ALT)` <br> display: `$(PUBLISH_METALIST_PRINT_ALT)`
 | readtime      | `$(PUBLISH_READTIME)`      | `$(PUBLISH_READTIME_ALT)`
 | readtime_wpm  | `$(PUBLISH_READTIME_WPM)`  | `$(PUBLISH_READTIME_WPM_ALT)`
 
@@ -4892,7 +4892,7 @@ override define PUBLISH_PAGE_EXAMPLE =
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
@@ -5167,13 +5167,13 @@ $(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)
 #WORKING:DOCS
 #	also, refer to [Library] below...
 
-`$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_CREATORS) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) metalist $(PUBLISH_CREATORS) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_CREATORS) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) metalist $(PUBLISH_CREATORS) $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_TAGSLIST) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) metalist $(PUBLISH_METALIST) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) tagslist $(PUBLISH_TAGSLIST) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) metalist $(PUBLISH_METALIST) $(PUBLISH_CMD_END)
 
 ## Read Time
 
@@ -5191,7 +5191,7 @@ $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) column-begin col-3/col-4/col-3 $(PUBLISH_CMD_END)`
 
-`$(PUBLISH_CMD_BEG) library date/$(PUBLISH_CREATORS)/$(PUBLISH_TAGSLIST) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) library date/$(PUBLISH_CREATORS)/$(PUBLISH_METALIST) $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
 
@@ -5215,7 +5215,7 @@ $(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) header 2 Tags $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) library $(PUBLISH_TAGSLIST) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library $(PUBLISH_METALIST) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
@@ -5299,7 +5299,7 @@ override define PUBLISH_PAGE_PAGEDIR_HEADER =
 title: $(PUBLISH_PAGE_PAGEDIR_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 endef
 
@@ -5317,7 +5317,7 @@ override define PUBLISH_PAGE_TESTING =
 title: Number 0$(word 1,$(1)) in $(word 2,$(1))
 date: $(word 3,$(1))
 $(PUBLISH_CREATORS): [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]
-$(PUBLISH_TAGSLIST): [Tag $(word 1,$(1)), Tag 1, Tag 2, Tag 3]
+$(PUBLISH_METALIST): [Tag $(word 1,$(1)), Tag 1, Tag 2, Tag 3]
 ---
 $(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)
 
@@ -5337,7 +5337,7 @@ override define PUBLISH_PAGE_SHOWDIR =
 title: $(PUBLISH_PAGE_SHOWDIR_NAME)
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 $(PUBLISH_PAGE_SHOWDIR_NAME) $(PUBLISH_CMD_END)
 
@@ -5417,7 +5417,7 @@ override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 title: $(LIBRARY_DIGEST_TITLE$(2))
 date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_TAGSLIST): [ Main ]
+$(PUBLISH_METALIST): [ Main ]
 ---
 $(call PUBLISH_PAGE_LIBRARY$(2))
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src))) $(PUBLISH_CMD_END)
@@ -5499,7 +5499,7 @@ $(EXAMPLE)-md-file:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$(COMPOSER_HEADLINE)$(_N)\")
 	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(DATEMARK))
-	@$(foreach FILE,$(COMPOSER_YML_DATA_TAGSLIST),\
+	@$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),\
 		$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D):); \
 		if [ "$(FILE)" = "$(PUBLISH_CREATORS)" ]; then \
 			FILE="$$($(GIT) config --get user.name 2>/dev/null)"; \
@@ -5984,13 +5984,13 @@ $(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RE
 
 $(_S)#$(MARKER)$(_D) $(_C)metainfo$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)metainfo_null$(_D):			$(_N)"$(_M)$(PUBLISH_METAINFO_NULL)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)tagslist$(_D):
+$(_S)#$(MARKER)$(_D) $(_C)metalist$(_D):
 $(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_CREATORS)$(_D):
 $(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_CREATORS_PRINT))$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_TAGSLIST)$(_D):
-$(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_TAGSLIST_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_TAGSLIST_PRINT))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_METALIST)$(_D):
+$(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_METALIST_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METALIST_PRINT))$(_N)"$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_READTIME))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
@@ -6057,7 +6057,7 @@ $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
       - $(_M)AUTHORS$(_D):
         - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
       - $(_M)TAGS$(_D):
-        - $(_C)library$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
+        - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
@@ -6065,8 +6065,8 @@ $(_S)########################################$(_D)
     $(_M)PATH$(_D):
       - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))))$(_D)
     $(_M)INFO$(_D):
-      - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
-      - $(_C)tagslist$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-left$(_D):
@@ -6094,8 +6094,8 @@ $(_S)########################################$(_D)
       - $(_C)contents$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(DEPTH_MAX)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
-      - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
-      - $(_C)tagslist$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
       - $(_C)readtime$(_D)
       - $(_C)box-end$(_D)
     $(_M)END$(_D):
@@ -6129,7 +6129,7 @@ $(_S)########################################$(_D)
       - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . fold-library TAGS$(_D)
-      - $(_C)library$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
+      - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-end group$(_D)
     $(_M)END$(_D):
@@ -6142,8 +6142,8 @@ $(_S)########################################$(_D)
           TOP TEXT
     $(_M)INFO$(_D):
 $(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
       - $(_C)icon github$(_D) $(_M)$(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME)$(_D)
@@ -6160,8 +6160,8 @@ $(_S)########################################$(_D)
           BOTTOM TEXT
     $(_M)INFO$(_D):
 $(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
-$(_S)#$(MARKER)$(_D)   - $(_C)tagslist$(_D) $(_M)$(PUBLISH_TAGSLIST)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
       - $(_C)readtime$(_D)
     $(_M)ICON$(_D):
 
@@ -6328,13 +6328,13 @@ variables:
     cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_R_MOD),$(PUBLISH_COLS_RESIZE_R_ALT)) ]
     metainfo:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_METAINFO_MOD),$(PUBLISH_METAINFO_ALT))"
     metainfo_null:			"$(PUBLISH_METAINFO_NULL_ALT)"
-    tagslist:
+    metalist:
       $(PUBLISH_CREATORS):
         title:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_CREATORS_TITLE_MOD),$(PUBLISH_CREATORS_TITLE_ALT))"
         display:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_CREATORS_PRINT_MOD),$(PUBLISH_CREATORS_PRINT_ALT))"
-      $(PUBLISH_TAGSLIST):
-        title:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_TAGSLIST_TITLE_MOD),$(PUBLISH_TAGSLIST_TITLE_ALT))"
-        display:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_TAGSLIST_PRINT_MOD),$(PUBLISH_TAGSLIST_PRINT_ALT))"
+      $(PUBLISH_METALIST):
+        title:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_METALIST_TITLE_MOD),$(PUBLISH_METALIST_TITLE_ALT))"
+        display:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_METALIST_PRINT_MOD),$(PUBLISH_METALIST_PRINT_ALT))"
     readtime:				"$(PUBLISH_READTIME_ALT)"
     readtime_wpm:			$(PUBLISH_READTIME_WPM_ALT)
 
@@ -6440,8 +6440,8 @@ variables:
       - box-begin $(SPECIAL_VAL) CONTENTS
 #$(MARKER)   - metainfo
       - contents 3
-      - tagslist $(PUBLISH_CREATORS)
-      - tagslist $(PUBLISH_TAGSLIST)
+      - metalist $(PUBLISH_CREATORS)
+      - metalist $(PUBLISH_METALIST)
       - readtime
       - box-end
 
@@ -6678,7 +6678,7 @@ function $(PUBLISH)-metainfo-block {
 		| $${SED} "/^null$$/d"
 	)"
 	TAGS=()
-	NUM="0"; for FILE in $${COMPOSER_YML_DATA_TAGSLIST}; do
+	NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 		LIST="$$(
 			$${ECHO} "$${META}" \\
 			| $${YQ_WRITE} ".$${FILE}" 2>/dev/null \\
@@ -6701,7 +6701,7 @@ function $(PUBLISH)-metainfo-block {
 		$${ECHO} "---\\n"
 		$${ECHO} "pagetitle: \"$${TITL}\"\\n"
 		$${ECHO} "date: $${DATE}\\n"
-		NUM="0"; for FILE in $${COMPOSER_YML_DATA_TAGSLIST}; do
+		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 			$${ECHO} "$${FILE}:\\n"
 			if [ -n "$${TAGS[$${NUM}]}" ]; then
 				$${ECHO} "  - \"$${TAGS[$${NUM}]}\"\\n" \
@@ -6721,7 +6721,7 @@ function $(PUBLISH)-metainfo-block {
 				-e "\\"s|<title>|$$(	$${ECHO} "$${TITL}"		| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g\\"" \\
 				-e "\\"s|<date>|$$(	$${ECHO} "$${DATE}"		| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g\\"" \\
 				$$(
-					NUM="0"; for FILE in $${COMPOSER_YML_DATA_TAGSLIST}; do
+					NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 						SEP="$$($${ECHO} "$${META_TXT}" | $${SED} -n "s|^.*<$${FILE}[|]([^>]*)>.*$$|\\1|gp")"
 						if [ -z "$${TAGS[$${NUM}]}" ]; then TAGS[$${NUM}]="$${NULL_TXT}"; fi
 						if [ -z "$${SEP}" ]; then SEP=" "; fi
@@ -6741,10 +6741,10 @@ function $(PUBLISH)-metainfo-block {
 #### {{{4 $(PUBLISH)-library-shelf
 ########################################
 
-#> update: title / date / tagslist:*
+#> update: title / date / metalist:*
 
 # 1 menu || list
-# 2 title || date || tagslist:*
+# 2 title || date || metalist:*
 
 function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-shelf menu $${@} || return 1; return 0; }
 function $(PUBLISH)-list-library	{ $(PUBLISH)-library-shelf list $${@} || return 1; return 0; }
@@ -6910,7 +6910,7 @@ _EOF_
 
 # 1 $(PUBLISH)-nav-top.[*]
 
-# x $(PUBLISH)-menu-library 1		title || date || tagslist:*
+# x $(PUBLISH)-menu-library 1		title || date || metalist:*
 
 function $(PUBLISH)-nav-top-list {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -6951,7 +6951,7 @@ function $(PUBLISH)-nav-top-list {
 					$${SED} "s|^contents|contents-menu|g"
 				fi
 			) $${PUBLISH_CMD_END}\\n"
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metalist/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
@@ -7078,10 +7078,10 @@ function $(PUBLISH)-nav-bottom-list {
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metalist/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
-				| $${SED} "s|^tagslist|tagslist-menu|g"
+				| $${SED} "s|^metalist|metalist-menu|g"
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
@@ -7137,7 +7137,7 @@ function $(PUBLISH)-nav-side {
 # 1 $(PUBLISH)-nav-left.[*] || $(PUBLISH)-nav-right.[*]
 
 # x $(PUBLISH)-spacer
-# x $(PUBLISH)-list-library 1		title || date || tagslist:*
+# x $(PUBLISH)-list-library 1		title || date || metalist:*
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
 
 function $(PUBLISH)-nav-side-list {
@@ -7168,11 +7168,11 @@ function $(PUBLISH)-nav-side-list {
 				| $${SED} "s|^contents|contents-list|g"
 			) $${PUBLISH_CMD_END}\\n"
 			$${ECHO} "\\n"
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metalist/p")" ]; then
 			$${ECHO} "\\n"
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
-				| $${SED} "s|^tagslist|tagslist-list|g"
+				| $${SED} "s|^metalist|metalist-list|g"
 			) $${PUBLISH_CMD_END}\\n"
 			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
@@ -7254,10 +7254,10 @@ _EOF_
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^contents/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
-		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^tagslist/p")" ]; then
+		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^metalist/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
 				$${ECHO} "$${FILE}" \\
-				| $${SED} "s|^tagslist|tagslist-list|g"
+				| $${SED} "s|^metalist|metalist-list|g"
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^readtime/p")" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $$(
@@ -8045,7 +8045,7 @@ function $(PUBLISH)-select {
 	if
 		[ "$${ACTION}" = "metainfo" ] ||
 		[ "$${ACTION}" = "contents" ] ||
-		[ "$${ACTION}" = "tagslist" ] ||
+		[ "$${ACTION}" = "metalist" ] ||
 		[ "$${ACTION}" = "readtime" ];
 	then
 		if [ "$${ACTION}" = "metainfo" ] && [ "$${1}" = "$${MENU_SELF}" ]; then
@@ -8065,7 +8065,7 @@ function $(PUBLISH)-select {
 	elif
 		[ "$${ACTION}" = "metainfo-menu" ] || [ "$${ACTION}" = "metainfo-list" ] ||
 		[ "$${ACTION}" = "contents-menu" ] || [ "$${ACTION}" = "contents-list" ] ||
-		[ "$${ACTION}" = "tagslist-menu" ] || [ "$${ACTION}" = "tagslist-list" ] ||
+		[ "$${ACTION}" = "metalist-menu" ] || [ "$${ACTION}" = "metalist-list" ] ||
 		[ "$${ACTION}" = "readtime-menu" ] || [ "$${ACTION}" = "readtime-list" ];
 	then
 		$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}$$(
@@ -12413,8 +12413,8 @@ endef
 ########################################
 
 override define $(PUBLISH)-$(TARGETS)-helpers =
-	$(eval HELPER := $(if $(filter tagslist-%,$(2)),tagslist,$(2))) \
-	$(eval TAGGER := $(if $(filter tagslist-%,$(2)),$(patsubst tagslist-%,%,$(2)),$(NULL))) \
+	$(eval HELPER := $(if $(filter metalist-%,$(2)),metalist,$(2))) \
+	$(eval TAGGER := $(if $(filter metalist-%,$(2)),$(patsubst metalist-%,%,$(2)),$(NULL))) \
 	$(eval DOFILE := $(1).$(HELPER)$(if $(TAGGER),-$(TAGGER))) \
 	MENU="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-menu$(if $(TAGGER),$(NULL) $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
 	LIST="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-list$(if $(TAGGER),$(NULL) $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
@@ -12423,7 +12423,7 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 	then \
 		MENU="$$($(ECHO) "$${MENU}" | $(SED) "s|^$(HELPER)-menu[[:space:]]*||g")"; \
 		LIST="$$($(ECHO) "$${LIST}" | $(SED) "s|^$(HELPER)-list[[:space:]]*||g")"; \
-		$(call $(HEADERS)-note,$(1),$(patsubst tagslist-%,tagslist (%),$(2)),$(PUBLISH)); \
+		$(call $(HEADERS)-note,$(1),$(patsubst metalist-%,metalist (%),$(2)),$(PUBLISH)); \
 		$(ECHO) "$(_E)"; \
 		$(ECHO) "" >$(DOFILE)-menu; \
 		$(ECHO) "" >$(DOFILE)-list; \
@@ -12611,18 +12611,18 @@ override define $(PUBLISH)-$(TARGETS)-contents-done =
 endef
 
 ########################################
-#### {{{4 $(PUBLISH)-$(TARGETS)-tagslist
+#### {{{4 $(PUBLISH)-$(TARGETS)-metalist
 ########################################
 
-override define $(PUBLISH)-$(TARGETS)-tagslist =
-	META="$(call COMPOSER_YML_DATA_VAL,config.tagslist.[\"$(2)\"].display)"; \
+override define $(PUBLISH)-$(TARGETS)-metalist =
+	META="$(call COMPOSER_YML_DATA_VAL,config.metalist.[\"$(2)\"].display)"; \
 	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\1|g")"; \
 	META_SEP="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\2|g")"; \
 	META_END="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\3|g")"; \
 	if [ -z "$${META_SEP}" ]; then \
 		META_SEP=" "; \
 	fi; \
-	$(ECHO) "$${META_BEG}" >>$(1).tagslist-$(2)-list; \
+	$(ECHO) "$${META_BEG}" >>$(1).metalist-$(2)-list; \
 	for META in $(c_list); do \
 		if [ -n "$$( \
 			$(SED) -n "1{/^---$$/p}" $${META} \
@@ -12638,12 +12638,12 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 			LINK="$(COMPOSER_LIBRARY_PATH)/$(2)-$$( \
 					$(call $(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT,$${FILE}) \
 				).$(EXTN_HTML)"; \
-			$(ECHO) "  * [$${FILE}]($${LINK}){.breadcrumb-item}\n"	>>$(1).tagslist-$(2)-menu; \
-			$(ECHO) "$${META_SEP}[$${FILE}]($${LINK})"		>>$(1).tagslist-$(2)-list; \
+			$(ECHO) "  * [$${FILE}]($${LINK}){.breadcrumb-item}\n"	>>$(1).metalist-$(2)-menu; \
+			$(ECHO) "$${META_SEP}[$${FILE}]($${LINK})"		>>$(1).metalist-$(2)-list; \
 		done; \
-	$(ECHO) "$${META_END}\n" >>$(1).tagslist-$(2)-list; \
-	if [ ! -s "$(1).tagslist-$(2)-menu" ]; then \
-		$(ECHO) ""							>$(1).tagslist-$(2)-list; \
+	$(ECHO) "$${META_END}\n" >>$(1).metalist-$(2)-list; \
+	if [ ! -s "$(1).metalist-$(2)-menu" ]; then \
+		$(ECHO) ""							>$(1).metalist-$(2)-list; \
 	fi; \
 	$(SED) -i "s|^($$( \
 			$(ECHO) "$${META_BEG}" \
@@ -12651,15 +12651,15 @@ override define $(PUBLISH)-$(TARGETS)-tagslist =
 		))$$( \
 			$(ECHO) "$${META_SEP}" \
 			| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-		)|\1|g" $(1).tagslist-$(2)-list
+		)|\1|g" $(1).metalist-$(2)-list
 endef
 
-override define $(PUBLISH)-$(TARGETS)-tagslist-done =
+override define $(PUBLISH)-$(TARGETS)-metalist-done =
 	$(SED) -i \
 		-e "1d" \
 		-e '$$d' \
 		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
-		$(1).tagslist-$(2)-menu.done
+		$(1).metalist-$(2)-menu.done
 endef
 
 ########################################
@@ -12948,7 +12948,7 @@ $($(PUBLISH)-library-index): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-index): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
-	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_TAGSLIST_SKEL))\n' >$(@).$(PRINTER)
+	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_METALIST_SKEL))\n' >$(@).$(PRINTER)
 	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_N)"
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
@@ -12957,7 +12957,7 @@ $($(PUBLISH)-library-index):
 	@$(foreach FILE,\
 		title \
 		date \
-		$(COMPOSER_YML_DATA_TAGSLIST) \
+		$(COMPOSER_YML_DATA_METALIST) \
 		,\
 		$(call $(PUBLISH)-library-indexer,$(FILE)); \
 		$(call NEWLINE) \
@@ -12987,7 +12987,7 @@ $($(PUBLISH)-library-index):
 ##### {{{5 $(PUBLISH)-library-indexer
 ########################################
 
-#> update: title / date / tagslist:*
+#> update: title / date / metalist:*
 
 #>					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date";
 override define $(PUBLISH)-library-indexer =
@@ -13051,7 +13051,7 @@ endef
 override define $(PUBLISH)-library-digest-list =
 	for TYPE in \
 		date \
-		$(COMPOSER_YML_DATA_TAGSLIST) \
+		$(COMPOSER_YML_DATA_METALIST) \
 	; do \
 		$(YQ_WRITE) ".$${TYPE} | keys | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
 			| $(SED) "/^null$$/d" \
@@ -13134,7 +13134,7 @@ $($(PUBLISH)-library-digest-src):
 ##### {{{5 $(PUBLISH)-library-digest-files
 ########################################
 
-#> update: title / date / tagslist:*
+#> update: title / date / metalist:*
 
 #>					elif [ "$(TYPE)" = "date" ]; then	$(ECHO) "Date";
 $($(PUBLISH)-library-digest-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
@@ -13150,7 +13150,7 @@ $($(PUBLISH)-library-digest-files):
 			$(ECHO) "pagetitle: \"$$( \
 					if [ "$(TYPE)" = "title" ]; then	$(ECHO) "Title"; \
 					elif [ "$(TYPE)" = "date" ]; then	$(ECHO) "Year"; \
-					else					$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.tagslist.[\"$(TYPE)\"].title)"; \
+					else					$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.metalist.[\"$(TYPE)\"].title)"; \
 					fi \
 				): $(NAME)\"\n"; \
 			$(ECHO) "date: $(DATEMARK)\n"; \
@@ -13597,6 +13597,7 @@ endif
 #			auto_update: 1
 #			$(PUBLISH)-info-top: ICON
 #		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
+#		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_DEFAULT)
 #	$(SHELL)
 #		#> .$(PUBLISH)-$(INSTALL)
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
@@ -13616,7 +13617,7 @@ endif
 #			auto_update: null
 #	$(SHELL)
 #		[ -n $(COMPOSER_RELEASE) ] && HEREDOC_CUSTOM_PUBLISH
-#		$(foreach FILE,*,$(call ENV_MAKE))
+#		$(foreach FILE,$(PUBLISH_DIRS_DEBUGIT),$(call ENV_MAKE))
 
 #> update: $(NOTHING)-%
 
@@ -13831,6 +13832,13 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	)
 endif
 	@$(ECHO) "" >$(PUBLISH_LOG)
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+	@$(ECHO) "$(_E)"
+	@$(LN)	$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_DEFAULT) \
+		$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_DEFAULT) \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+endif
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		{	$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
@@ -13871,6 +13879,12 @@ else
 		$(EXPORTS) \
 		2>&1 | $(TEE) --append $(PUBLISH_LOG); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
+endif
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+	@$(ECHO) "$(_S)"
+	@$(RM)	$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_DEFAULT) \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 endif
 endif
 endif
