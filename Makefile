@@ -103,9 +103,10 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #					* `make site-template-_test`
 #						* `make COMPOSER_DEBUGIT="1" site-template-_test`
 #						* `make site-list`
+#						* `make site-list-null.md`
 #					* `make site-template-config`
-#						* `make --directory _site site-all`
-#						* `make --directory _site site-force`
+#						* `make site-all`
+#						* `make site-force`
 #					* `make MAKEJOBS="0" site-template`
 #				* _site
 #					* `make site-list`
@@ -13597,7 +13598,7 @@ endif
 #			auto_update: 1
 #			$(PUBLISH)-info-top: ICON
 #		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
-#		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_DEFAULT)
+#		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
 #	$(SHELL)
 #		#> .$(PUBLISH)-$(INSTALL)
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS)
@@ -13882,7 +13883,7 @@ else
 endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(ECHO) "$(_S)"
-	@$(RM)	$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_DEFAULT) \
+	@$(RM)	$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(patsubst .%,%,$(NOTHING)).* \
 		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
