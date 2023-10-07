@@ -3422,6 +3422,9 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
+#	gah! site-config.(header|footer) should create automatic dependencies...?
+#		same for library.*_header...
+#WORKING:NOW:NOW
 #	add "demo" target
 #		slowly, sleep 0.1 per character, print a series of commands and then run them
 #		add to help and/or quick start
