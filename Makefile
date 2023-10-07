@@ -441,6 +441,8 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES		[$(COMPOSER_INCLUDES)]
 
 ########################################
 
+#> update: WILDCARD_YML
+
 override COMPOSER_YML_LIST		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_LIST)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(FILE)])) \
@@ -2189,6 +2191,15 @@ endif
 endif
 endif
 
+#> update: WILDCARD_YML
+override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
+ifneq ($(COMPOSER_YML_LIST_FILE),)
+override COMPOSER_YML_LIST		:= $(strip $(COMPOSER_YML_LIST) $(COMPOSER_YML_LIST_FILE))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(COMPOSER_YML_LIST_FILE)]))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST_FILE)))
+endif
+
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
 override COMPOSER_YML_DATA_METALIST := $(shell \
@@ -3411,11 +3422,6 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
-#	solve the "$(LIBRARY_FOLDER)" include file "contents" menu conundrum...
-#		index.html with only/all sub-folders as best-practice?
-#		this is a real pain when using COMPOSER_INCLUDE...
-
-#WORKING:NOW
 #	add "demo" target
 #		slowly, sleep 0.1 per character, print a series of commands and then run them
 #		add to help and/or quick start
@@ -3779,7 +3785,11 @@ endef
 #		add a link to this section at the top of both variable sections
 #		denote each variable
 #	$(COMPOSER_YML) and note that it is now an override for everything
+#		except, a $(COMPOSER_SETTINGS) c_options --defaults...
 #		hashes will overlap, and arrays will append
+#	since $(COMPOSER_SETTINGS) is neither c_type or c_base specific, there is only a per-directory version
+#		since $(COMPOSER_YML) is not c_type specific, there is only per-directory and c_base versions
+#		all others (header, css, etc.) are directory, c_type and c_base applicable, so all three...
 
 override define $(HELPOUT)-$(DOITALL)-ORDERS =
 All processing in $(_C)[$(COMPOSER_BASENAME)]$(_D) is done in global-to-local order, so that the most
@@ -5486,6 +5496,7 @@ $(EXAMPLE)-md-file:
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,,$(_N)endif$(_D))
 
+#WORK add *-$(DOITALL) to this, to get the commented/full version instead...?
 .PHONY: .$(EXAMPLE)-yml
 .$(EXAMPLE)-yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
