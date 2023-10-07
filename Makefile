@@ -1564,8 +1564,10 @@ override PANDOC_FILES_MAIN = $(strip \
 )
 
 override PANDOC_FILES_OVERRIDE = $(strip \
-	$(wildcard				$(COMPOSER_CUSTOM)-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3)) \
-	$(wildcard $(addsuffix /.$(notdir	$(COMPOSER_CUSTOM))-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3),$(COMPOSER_INCLUDES_TREE))) \
+	$(if $(1),\
+		$(wildcard				$(COMPOSER_CUSTOM)-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3)) \
+		$(wildcard $(addsuffix /.$(notdir	$(COMPOSER_CUSTOM))-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3),$(COMPOSER_INCLUDES_TREE))) \
+	) \
 	$(wildcard $(CURDIR)/$(2).$(3)) \
 )
 
@@ -3422,6 +3424,8 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
+#	finish fixing library/contents...
+#		and in reference/personal sites...
 #	gah! site-config.(header|footer) should create automatic dependencies...?
 #		same for library.*_header...
 #WORKING:NOW:NOW
