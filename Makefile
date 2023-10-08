@@ -13627,7 +13627,7 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
-#> $(PUBLISH)-$(EXAMPLE)-$(TESTING)
+#> $(PUBLISH)-$(EXAMPLE)-$(TESTING) = $(TESTING).*COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
 #	$(CONFIGS)
 #		[ $(MAKEJOBS) == $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #		$(COMPOSER_SETTINGS)
