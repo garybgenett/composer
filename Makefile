@@ -11861,9 +11861,9 @@ endif
 $(CONFIGS): .set_title-$(CONFIGS)
 $(CONFIGS):
 	@$(call $(HEADERS))
+	@$(call $(EXPORTS)-$(CONFIGS))
 #>	@$(TABLE_M2) "$(_H)Variable"		"$(_H)Value"
 #>	@$(TABLE_M2) ":---"			":---"
-	@$(call $(EXPORTS)-$(CONFIGS))
 #> $(c_list)
 #>			$(if $(filter c_list,$(FILE)),$(call $(HEADERS)-path-root,$(call c_list_var)) ,
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
@@ -12221,7 +12221,7 @@ override define $(EXPORTS)-$(CONFIGS) =
 			_EXPORT_FIRE_ACCT \
 			_EXPORT_FIRE_PROJ \
 			,\
-			$(TABLE_M2) "$(_C)$(FILE)" "$(strip \
+			$(TABLE_C2) "$(_C)$(FILE)" "[$(strip \
 				$(if $(filter $(FILE),_EXPORT_DIRECTORY),\
 					$(if $(filter $(COMPOSER_EXPORT),$(COMPOSER_EXPORT_DEFAULT)),	$(_H)$(COMPOSER_EXPORT) ,\
 					$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$(_H)$(COMPOSER_ROOT)$(_D)/$(_M)$(patsubst $(COMPOSER_ROOT)/%,%,$(COMPOSER_EXPORT)) ,\
@@ -12232,9 +12232,9 @@ override define $(EXPORTS)-$(CONFIGS) =
 					$(_N)$($(FILE)) \
 					) \
 				) \
-			)"; \
+			)$(_D)]"; \
 		) \
-		$(LINERULE); \
+		$(HEADER_L); \
 	fi
 endef
 
