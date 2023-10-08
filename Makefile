@@ -2134,18 +2134,25 @@ override $(PUBLISH)-caches-begin := \
 	nav-top \
 	row-begin \
 	nav-left \
-	column-begin
+	column-begin \
+
 override $(PUBLISH)-caches-end := \
 	column-end \
 	nav-right \
 	row-end \
-	nav-bottom
+	nav-bottom \
+
+#> update: WILDCARD_YML
+#> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
+override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
+
+#>		$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)
 override $(PUBLISH)-caches := \
 	$(foreach FILE,\
 		$($(PUBLISH)-caches-begin) \
 		$($(PUBLISH)-caches-end) \
 		,\
-		$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML) \
+		$($(PUBLISH)-cache).$(FILE)$(if $(COMPOSER_YML_LIST_FILE),.$(c_base).$(EXTENSION)).$(EXTN_HTML) \
 	)
 
 ########################################
@@ -12367,16 +12374,20 @@ endif
 		$(ECHO) "$(_D)"; \
 	fi
 
+#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $(addsuffix *,$(patsubst %.$(EXTN_HTML),%,$($(PUBLISH)-caches)))))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $(addsuffix *,$(patsubst %.$(EXTN_HTML),%,$($(PUBLISH)-caches)))))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
-$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
+$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $(addsuffix *,$(patsubst %.$(EXTN_HTML),%,$($(PUBLISH)-caches))))) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
 	@if [ -f "$($(@))" ]; then \
@@ -12407,11 +12418,12 @@ override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "$(_D)"
 endef
 
+#>		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)
 override define $(PUBLISH)-$(TARGETS)-cache =
 	for FILE in $(2); do \
 		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML) -->\n" \
 			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
-		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
+		$(CAT) $($(PUBLISH)-cache).$${FILE}$(if $(COMPOSER_YML_LIST_FILE),.$(c_base).$(EXTENSION)).$(EXTN_HTML); \
 	done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -12718,9 +12730,10 @@ $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
 #>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
+#>	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 $($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-caches):
-	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
+	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%$(if $(COMPOSER_YML_LIST_FILE),.$(c_base).$(EXTENSION)).$(EXTN_HTML),%,$(@)))
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
@@ -13732,6 +13745,14 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGEDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
+	@$(ECHO) "$(_E)"
+	@$(LN)								$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY).yml \
+									$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML).yml \
+									$($(DEBUGIT)-output)
+	@$(LN)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT).yml \
+									$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML).yml \
+									$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_CSS_PUBLISH))
 	@$(ECHO) "$(_S)"
 	@$(RM)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
