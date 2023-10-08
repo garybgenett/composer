@@ -2128,13 +2128,14 @@ override COMPOSER_YML_DATA_VAL = $(shell \
 
 ########################################
 
-override $(PUBLISH)-cache		:= $(COMPOSER_TMP)/$(PUBLISH)-cache
+override $(PUBLISH)-cache-root		:= $(COMPOSER_TMP)/$(PUBLISH)-cache
+override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)
 
 #> update: WILDCARD_YML
 #> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
 override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
 ifneq ($(COMPOSER_YML_LIST_FILE),)
-override $(PUBLISH)-cache		:= $($(PUBLISH)-cache)-file.$(c_base).$(EXTENSION)
+override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)-file.$(c_base).$(EXTENSION)
 endif
 
 override $(PUBLISH)-caches-begin := \
@@ -5742,7 +5743,7 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT
 
 ########################################
 
-$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
+$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src)))
 $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
 
 ################################################################################
@@ -5788,7 +5789,7 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE_ALT))$(COMPOSER_EXT_DEF
 
 ########################################
 
-$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
+$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-digest-src)))
 
 ################################################################################
 endif
@@ -12734,7 +12735,9 @@ $($(PUBLISH)-cache):
 $($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
-	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache)
+#> update: WILDCARD_YML
+	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache,$(strip \
+		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root)-file.%.$($(@)).$(EXTN_HTML),%,$(@)))))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
