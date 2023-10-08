@@ -2130,6 +2130,13 @@ override COMPOSER_YML_DATA_VAL = $(shell \
 
 override $(PUBLISH)-cache		:= $(COMPOSER_TMP)/$(PUBLISH)-cache
 
+#> update: WILDCARD_YML
+#> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
+override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
+ifneq ($(COMPOSER_YML_LIST_FILE),)
+override $(PUBLISH)-cache		:= $($(PUBLISH)-cache)-file.$(c_base).$(EXTENSION)
+endif
+
 override $(PUBLISH)-caches-begin := \
 	nav-top \
 	row-begin \
@@ -2142,17 +2149,12 @@ override $(PUBLISH)-caches-end := \
 	row-end \
 	nav-bottom \
 
-#> update: WILDCARD_YML
-#> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
-override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
-
-#>		$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML)
 override $(PUBLISH)-caches := \
 	$(foreach FILE,\
 		$($(PUBLISH)-caches-begin) \
 		$($(PUBLISH)-caches-end) \
 		,\
-		$($(PUBLISH)-cache).$(FILE)$(if $(COMPOSER_YML_LIST_FILE),.$(c_base).$(EXTENSION)).$(EXTN_HTML) \
+		$($(PUBLISH)-cache).$(FILE).$(EXTN_HTML) \
 	)
 
 ########################################
@@ -3431,8 +3433,6 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
-#	finish fixing library/contents...
-#		and in reference/personal sites...
 #	gah! site-config.(header|footer) should create automatic dependencies...?
 #		same for library.*_header...
 #WORKING:NOW:NOW
@@ -5437,6 +5437,7 @@ override define PUBLISH_PAGE_LIBRARY_ALT =
 $(call PUBLISH_PAGE_LIBRARY_EXAMPLE,3,_ALT)
 endef
 
+#>$(call PUBLISH_PAGE_LIBRARY$(2))
 override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 ---
 title: $(LIBRARY_DIGEST_TITLE$(2))
@@ -5444,7 +5445,6 @@ date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
-$(call PUBLISH_PAGE_LIBRARY$(2))
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src))) $(PUBLISH_CMD_END)
 endef
 
@@ -12374,20 +12374,22 @@ endif
 		$(ECHO) "$(_D)"; \
 	fi
 
-#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+#> update: WILDCARD_YML
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*))
 
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $(addsuffix *,$(patsubst %.$(EXTN_HTML),%,$($(PUBLISH)-caches)))))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $(addsuffix *,$(patsubst %.$(EXTN_HTML),%,$($(PUBLISH)-caches)))))
+.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
-$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $(addsuffix *,$(patsubst %.$(EXTN_HTML),%,$($(PUBLISH)-caches))))) \
+$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
+$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
 	@if [ -f "$($(@))" ]; then \
@@ -12418,12 +12420,11 @@ override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "$(_D)"
 endef
 
-#>		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML)
 override define $(PUBLISH)-$(TARGETS)-cache =
 	for FILE in $(2); do \
 		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML) -->\n" \
 			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
-		$(CAT) $($(PUBLISH)-cache).$${FILE}$(if $(COMPOSER_YML_LIST_FILE),.$(c_base).$(EXTENSION)).$(EXTN_HTML); \
+		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 	done \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -12730,10 +12731,9 @@ $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
 #>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-#>	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 $($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-caches):
-	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%$(if $(COMPOSER_YML_LIST_FILE),.$(c_base).$(EXTENSION)).$(EXTN_HTML),%,$(@)))
+	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
