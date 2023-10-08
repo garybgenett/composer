@@ -3787,6 +3787,7 @@ Example configuration files:
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(COMPOSER_SETTINGS))$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(COMPOSER_YML))$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML).yml)$(_D)
 endef
 
 ########################################
@@ -10427,6 +10428,11 @@ endif
 ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml
+	@$(ECHO) "$(_E)"
+	@$(LN)										$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml \
+											$(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML).yml \
+											$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 endif
 endif
 	@$(ECHO) "$(_E)"
@@ -10536,7 +10542,6 @@ endif
 	@$(ECHO) "$(_D)"
 ifneq ($(COMPOSER_RELEASE),)
 ifneq ($(COMPOSER_DOITALL_$(CREATOR)),)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) | $(SED) "s|[[:space:]]+$$||g"	>$(CURDIR)/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DEBUGIT),)
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(CLEANER)
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(DOITALL)
@@ -10544,8 +10549,6 @@ else
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(OUT_README).$(PUBLISH).$(EXTN_HTML)
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR),$(COMPOSER_DEBUGIT)) $(OUT_README).$(EXTN_HTML)
 endif
-	@$(ECHO) "$(_S)"
-	@$(RM)										$(CURDIR)/$(COMPOSER_YML) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
 	@$(LN)										$(CURDIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML) \
 											$(CURDIR)/$(PUBLISH_INDEX).$(EXTN_HTML) \
@@ -11542,6 +11545,8 @@ $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
 ########################################
 ### {{{3 $(TESTING)-CSS
 ########################################
+
+#WORK add a test for file.ext.yml, akin to 'header' selection
 
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
