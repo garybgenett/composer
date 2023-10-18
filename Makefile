@@ -47,111 +47,111 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ################################################################################
 # {{{1 RELEASE PROCESS
 ################################################################################
-#	* Update
-#		* Tooling Versions
-#		* Pandoc Options
-#			* `TYPE_TARGETS`
-#			* `PANDOC_OPTIONS`
-#			* `PANDOC_OPTIONS_ERROR`
-#	* Verify
-#		* `env - USER="${USER}" HOME="${HOME}" PATH="${PATH}" make _setup-all`
-#			* `rm ~/.vimrc; vi Makefile`
-#		* `make COMPOSER_DEBUGIT="1" _release`
-#			* `make _test-dir`
-#			* `make _test-list`
-#			* `make _test-file`
-#		* `make COMPOSER_DEBUGIT="check config targets" _debug | less -rX`
-#			* `rm Composer-*._debug-*.txt`
-#			* `make COMPOSER_DEBUGIT="help" _debug-file`
-#			* `mv Composer-*._debug-*.txt artifacts/`
-#			* `make COMPOSER_DEBUGIT="1" targets
-#		* `make headers-template`
-#			* `make COMPOSER_DEBUGIT="1" headers-template`
-#			* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
-#			* `make headers-template-all`
-#		* `make _test-targets`
-#			* README.html.0.0.html
-#			* README.html.1.1.html
-#			* README.html.x.x.html
-#			* README.pdf.0.0.pdf
-#			* README.pdf.2.2.pdf
-#			* README.pdf.x.1.pdf
-#			* README.pdf.x.x.pdf
-#			* README.epub.0.0.epub
-#			* README.epub.x.1.epub
-#			* README.epub.x.2.epub
-#			* README.epub.x.3.epub
-#			* README.epub.x.x.epub
-#			* README.revealjs.html.0.0.revealjs.html
-#			* README.revealjs.html.1.1.revealjs.html
-#			* README.revealjs.html.x.x.revealjs.html
-#			* README.docx.0.0.docx
-#			* README.docx.1.1.docx
-#			* README.docx.x.x.docx
-#		* Test: Bootstrap
-#			* Browsers
-#				* Desktop
-#				* Mobile
-#				* Text-based
-#			* Pages
-#				* README.site.html
-#					* `make _setup-all`
-#						* `make COMPOSER_DEBUGIT="1" _setup-all`
-#				* _site/index.html
-#					* `make site-template`
-#						* `make COMPOSER_DEBUGIT="1" site-template`
-#					* `make site-template-_test`
-#						* `make COMPOSER_DEBUGIT="1" site-template-_test`
-#						* `make site-list`
-#						* `make site-list-null.md`
-#					* `make site-template-config`
-#						* `make site-all`
-#						* `make site-force`
-#					* `make MAKEJOBS="0" site-template`
-#				* _site
+# UPDATE
+#	* Tooling Versions
+#	* Pandoc Options
+#		* `TYPE_TARGETS`
+#		* `PANDOC_OPTIONS`
+#		* `PANDOC_OPTIONS_ERROR`
+# VERIFY
+#	* `env - USER="${USER}" HOME="${HOME}" PATH="${PATH}" make _setup-all`
+#		* `rm ~/.vimrc; vi Makefile`
+#	* `make COMPOSER_DEBUGIT="1" _release`
+#		* `make _test-dir`
+#		* `make _test-list`
+#		* `make _test-file`
+#	* `make COMPOSER_DEBUGIT="check config targets" _debug | less -rX`
+#		* `rm Composer-*._debug-*.txt`
+#		* `make COMPOSER_DEBUGIT="help" _debug-file`
+#		* `mv Composer-*._debug-*.txt artifacts/`
+#		* `make COMPOSER_DEBUGIT="1" targets
+#	* `make headers-template`
+#		* `make COMPOSER_DEBUGIT="1" headers-template`
+#		* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
+#		* `make headers-template-all`
+#	* `make _test-targets`
+#		* README.html.0.0.html
+#		* README.html.1.1.html
+#		* README.html.x.x.html
+#		* README.pdf.0.0.pdf
+#		* README.pdf.2.2.pdf
+#		* README.pdf.x.1.pdf
+#		* README.pdf.x.x.pdf
+#		* README.epub.0.0.epub
+#		* README.epub.x.1.epub
+#		* README.epub.x.2.epub
+#		* README.epub.x.3.epub
+#		* README.epub.x.x.epub
+#		* README.revealjs.html.0.0.revealjs.html
+#		* README.revealjs.html.1.1.revealjs.html
+#		* README.revealjs.html.x.x.revealjs.html
+#		* README.docx.0.0.docx
+#		* README.docx.1.1.docx
+#		* README.docx.x.x.docx
+#	* Test: Bootstrap
+#		* Browsers
+#			* Desktop
+#			* Mobile
+#			* Text-based
+#		* Pages
+#			* README.site.html
+#				* `make _setup-all`
+#					* `make COMPOSER_DEBUGIT="1" _setup-all`
+#			* _site/index.html
+#				* `make site-template`
+#					* `make COMPOSER_DEBUGIT="1" site-template`
+#				* `make site-template-_test`
+#					* `make COMPOSER_DEBUGIT="1" site-template-_test`
 #					* `make site-list`
-#					* `make site-list-list`
-#					* `make site-list-null`
-#					* `make site-list-all`
-#					* `make site-list-index.md`
-#			* Paths
-#				* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)`
-#				* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
-#				* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
-#		* Test: Performance
-#			* `time make COMPOSER_DEBUGIT="0" FAIL`
-#				* `time make COMPOSER_DEBUGIT="0" FAIL 2>&1 | grep -E "^[+]"`
-#				* Make sure '--trace' debug output is identical
-#				* Minimize '$(shell)' and '/: override .* $(shell' calls
-#				* With and without 'c_site' enabled
-#			* `make MAKEJOBS="[X]" _test-speed`
-#	* Prepare
-#		* Verify
-#			* Formatting
-#				* `make _test-heredoc`
-#			* Markers
-#				* '#>[ ]'
-#				* '#>[^ ]'
-#		* Update: README.md
-#			* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
-#				* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-help | less -rX`
-#				* `override INPUT := commonmark`
-#					* `PANDOC_EXTENSIONS`
-#				* Verify
-#					* Fits in $(COLUMNS) characters
-#					* Mouse select color handling
-#					* Test all "Reference" links in browser
-#					* Spell check
-#			* `make _setup-all`
-#				* Review each, including CSS
-#				* Create screenshot
-#	* Publish
-#		* Check: `git diff main Makefile`
-#		* Update: COMPOSER_VERSION
-#		* Release: `rm -frv {.[^.],}*; make _release`
-#		* Verify: `git diff main`
-#		* Commit: `git commit`, `git tag`
-#		* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
+#					* `make site-list-null.md`
+#				* `make site-template-config`
+#					* `make site-all`
+#					* `make site-force`
+#				* `make MAKEJOBS="0" site-template`
+#			* _site
+#				* `make site-list`
+#				* `make site-list-list`
+#				* `make site-list-null`
+#				* `make site-list-all`
+#				* `make site-list-index.md`
+#		* Paths
+#			* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)`
+#			* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
+#			* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
+#	* Test: Performance
+#		* `time make COMPOSER_DEBUGIT="0" FAIL`
+#			* `time make COMPOSER_DEBUGIT="0" FAIL 2>&1 | grep -E "^[+]"`
+#			* Make sure '--trace' debug output is identical
+#			* Minimize '$(shell)' and '/: override .* $(shell' calls
+#			* With and without 'c_site' enabled
+#		* `make MAKEJOBS="[X]" _test-speed`
+# PREPARE
+#	* Update: Makefile
+#		* Formatting
+#			* `make _test-heredoc`
+#		* Markers
+#			* '#>[ ]'
+#			* '#>[^ ]'
+#	* Update: README.md
+#		* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
+#			* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-help | less -rX`
+#			* `override INPUT := commonmark`
+#				* `PANDOC_EXTENSIONS`
+#			* Output
+#				* Fits in $(COLUMNS) characters
+#				* Mouse select color handling
+#				* Test all "Reference" links in browser
+#				* Spell check
+#		* `make _setup-all`
+#			* Review each, including CSS
+#			* Create screenshot
+# PUBLISH
+#	* Check: `git diff main Makefile`
+#	* Update: COMPOSER_VERSION
+#	* Release: `rm -frv {.[^.],}*; make _release`
+#	* Verify: `git diff main`
+#	* Commit: `git commit`, `git tag`
+#	* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
 ################################################################################
 # {{{1 TODO
 ################################################################################
@@ -730,12 +730,6 @@ override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
-override LIBRARY_DIGEST_HEADER		:= null
-override LIBRARY_DIGEST_HEADER_ALT	:= null
-override LIBRARY_DIGEST_HEADER_MOD	:= 1
-override LIBRARY_DIGEST_FOOTER		:= null
-override LIBRARY_DIGEST_FOOTER_ALT	:= null
-override LIBRARY_DIGEST_FOOTER_MOD	:= 1
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_COUNT		:= 10
@@ -754,12 +748,6 @@ override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
 override LIBRARY_SITEMAP_SPACER		:= 1
 override LIBRARY_SITEMAP_SPACER_ALT	:= null
 
-override LIBRARY_LISTS_HEADER		:= null
-override LIBRARY_LISTS_HEADER_ALT	:= null
-override LIBRARY_LISTS_HEADER_MOD	:= 1
-override LIBRARY_LISTS_FOOTER		:= null
-override LIBRARY_LISTS_FOOTER_ALT	:= null
-override LIBRARY_LISTS_FOOTER_MOD	:= 1
 override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
 override LIBRARY_LISTS_EXPANDED_ALT	:= null
 override LIBRARY_LISTS_EXPANDED_MOD	:= 2
@@ -2085,8 +2073,6 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_title:			"$(LIBRARY_DIGEST_TITLE)",
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
-    digest_header:			$(LIBRARY_DIGEST_HEADER),
-    digest_footer:			$(LIBRARY_DIGEST_FOOTER),
     digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
     digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
@@ -2096,8 +2082,6 @@ override define COMPOSER_YML_DATA_SKEL =
     sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED),
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER),
 
-    lists_header:			$(LIBRARY_LISTS_HEADER),
-    lists_footer:			$(LIBRARY_LISTS_FOOTER),
     lists_expanded:			$(LIBRARY_LISTS_EXPANDED),
     lists_spacer:			$(LIBRARY_LISTS_SPACER),
   },
@@ -2185,7 +2169,6 @@ override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
 override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
 override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
-override $(PUBLISH)-library-digest-null	:= $(COMPOSER_LIBRARY)/index-null$(COMPOSER_EXT_SPECIAL)
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
 
@@ -3536,6 +3519,7 @@ endef
 #	based on the "for" loop in the code, header/footer could be a list of files...
 #		see: define $(PUBLISH)-$(TARGETS)-file
 #		document this...?
+#		test as an array...? could just do a "metalist" on it, to be sure...
 #	document "config.composer" option
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
@@ -4665,8 +4649,6 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)`
-| digest_header    | `$(LIBRARY_DIGEST_HEADER)`
-| digest_footer    | `$(LIBRARY_DIGEST_FOOTER)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`
@@ -4674,8 +4656,6 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
 | sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)`
 | sitemap_spacer   | `$(LIBRARY_SITEMAP_SPACER)`
-| lists_header     | `$(LIBRARY_LISTS_HEADER)`
-| lists_footer     | `$(LIBRARY_LISTS_FOOTER)`
 | lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`
 
@@ -4847,8 +4827,6 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`  | `$(LIBRARY_DIGEST_CONTINUE_ALT)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)` | `$(LIBRARY_DIGEST_PERMALINK_ALT)`
-| digest_header    | `$(LIBRARY_DIGEST_HEADER)`    | `$(LIBRARY_DIGEST_HEADER_ALT)`
-| digest_footer    | `$(LIBRARY_DIGEST_FOOTER)`    | `$(LIBRARY_DIGEST_FOOTER_ALT)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`  | `$(LIBRARY_DIGEST_EXPANDED_ALT)`
@@ -4856,8 +4834,6 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
 | sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 | sitemap_spacer   | `$(LIBRARY_SITEMAP_SPACER)`   | `$(LIBRARY_SITEMAP_SPACER_ALT)`
-| lists_header     | `$(LIBRARY_LISTS_HEADER)`     | `$(LIBRARY_LISTS_HEADER_ALT)`
-| lists_footer     | `$(LIBRARY_LISTS_FOOTER)`     | `$(LIBRARY_LISTS_FOOTER_ALT)`
 | lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`   | `$(LIBRARY_LISTS_EXPANDED_ALT)`
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 
@@ -5189,7 +5165,7 @@ $(PUBLISH_CMD_BEG) contents $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)
 
-## Tags List
+## Metalist
 
 #WORKING:DOCS
 #	also, refer to [Library] below...
@@ -5212,7 +5188,7 @@ $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 #WORKING:DOCS
 #	another example of [Grids] elements...
-#	also, refer to [Tags List] above...
+#	also, refer to [Metalist] above...
 
 `$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)`
 
@@ -5240,7 +5216,7 @@ $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
 
-$(PUBLISH_CMD_BEG) header 2 Tags $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) header 2 Metalist $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) library $(PUBLISH_METALIST) $(PUBLISH_CMD_END)
 
@@ -6032,8 +6008,6 @@ $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_header$(_D):			$(_M)$(LIBRARY_DIGEST_HEADER)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_footer$(_D):			$(_M)$(LIBRARY_DIGEST_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
@@ -6043,8 +6017,6 @@ $(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TIT
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_expanded$(_D):			$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_spacer$(_D):			$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)lists_header$(_D):			$(_M)$(LIBRARY_LISTS_HEADER)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)lists_footer$(_D):			$(_M)$(LIBRARY_LISTS_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
@@ -6372,8 +6344,6 @@ variables:
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
-    digest_header:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_HEADER_MOD),$(LIBRARY_DIGEST_HEADER_ALT))
-    digest_footer:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_FOOTER_MOD),$(LIBRARY_DIGEST_FOOTER_ALT))
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
@@ -6381,8 +6351,6 @@ variables:
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
     sitemap_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
-    lists_header:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_HEADER_MOD),$(LIBRARY_LISTS_HEADER_ALT))
-    lists_footer:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_FOOTER_MOD),$(LIBRARY_LISTS_FOOTER_ALT))
     lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
 
@@ -6551,7 +6519,7 @@ endef
 
 override define HEREDOC_CUSTOM_PUBLISH_SH =
 #!$(BASH)
-# $(patsubst filetype=make,filetype=sh,$(patsubst foldlevel=0,foldlevel=2,$(subst \,\\,$(VIM_OPTIONS))))
+# $(patsubst filetype=make,filetype=sh,$(patsubst foldlevel=%,foldlevel=2,$(subst \,\\,$(VIM_OPTIONS))))
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(notdir $(CUSTOM_PUBLISH_SH))
 ################################################################################
@@ -7315,35 +7283,6 @@ _EOF_
 	return 0
 }
 
-########################################
-#### {{{4 $(PUBLISH)-nav-divider
-########################################
-
-# 1 *-menu || * || *-info		* = top || bottom
-
-function $(PUBLISH)-nav-divider {
-	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
-	if [ "$${1}" = "top-menu" ]; then
-$${CAT} <<_EOF_
-<li class="$${COMPOSER_TINYNAME}-menu-div nav-item nav-link d-$${COLS_BREAK}-block d-none">$${HTML_HIDE}</li>
-<li class="nav-item d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></li>
-_EOF_
-	elif [ "$${1}" = "top" ]; then
-$${CAT} <<_EOF_
-<li><hr class="dropdown-divider"></li>
-_EOF_
-	elif [ "$${1}" = "top-info" ]; then
-$${CAT} <<_EOF_
-<p class="navbar-text d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></p>
-_EOF_
-	else
-		$(PUBLISH)-marker $${FUNCNAME} skip nav-divider-$${1}
-	fi
-	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
-	return 0
-}
-
 ################################################################################
 ### {{{3 Functions (Elements)
 ################################################################################
@@ -7373,6 +7312,35 @@ _EOF_
 $${CAT} <<_EOF_
 <div class="navbar-collapse collapse" id="navbar-fixed-$${1}">
 _EOF_
+	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
+	return 0
+}
+
+########################################
+#### {{{4 $(PUBLISH)-nav-divider
+########################################
+
+# 1 *-menu || * || *-info		* = top || bottom
+
+function $(PUBLISH)-nav-divider {
+	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
+	if [ "$${1}" = "top-menu" ]; then
+$${CAT} <<_EOF_
+<li class="$${COMPOSER_TINYNAME}-menu-div nav-item nav-link d-$${COLS_BREAK}-block d-none">$${HTML_HIDE}</li>
+<li class="nav-item d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></li>
+_EOF_
+	elif [ "$${1}" = "top" ]; then
+$${CAT} <<_EOF_
+<li><hr class="dropdown-divider"></li>
+_EOF_
+	elif [ "$${1}" = "top-info" ]; then
+$${CAT} <<_EOF_
+<p class="navbar-text d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></p>
+_EOF_
+	else
+		$(PUBLISH)-marker $${FUNCNAME} skip nav-divider-$${1}
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -12466,8 +12434,7 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 		$(ECHO) "" >$(DOFILE)-menu; \
 		$(ECHO) "" >$(DOFILE)-list; \
 		$(call $(PUBLISH)-$(TARGETS)-$(HELPER),$(1),$(TAGGER)); \
-		$(CAT) $(DOFILE)-menu \
-			| $(PANDOC_MD_TO_HTML) \
+		$(PANDOC_MD_TO_HTML) $(DOFILE)-menu \
 			>$(DOFILE)-menu.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call PUBLISH_SH_RUN) $(DOFILE)-list \
@@ -12862,7 +12829,6 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
-	@$(ECHO) "\n" >$($(PUBLISH)-library-digest-null)
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -13048,7 +13014,7 @@ override define $(PUBLISH)-library-indexer =
 			$(call $(HEADERS)-note,$(@),$$( \
 					if [ "$(1)" = "title" ]; then		$(ECHO) "Title"; \
 					elif [ "$(1)" = "date" ]; then		$(ECHO) "Year"; \
-					else					$(ECHO) "Tag ($(1))"; \
+					else					$(ECHO) "Metalist ($(1))"; \
 					fi \
 				): $${FILE},$(PUBLISH)-index); \
 			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
@@ -13183,7 +13149,7 @@ $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
-#>					else					$(ECHO) "Tag ($(TYPE))";
+#>					else					$(ECHO) "Metalist ($(TYPE))";
 	@	$(eval TYPE := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")) \
 		$(eval NAME := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")) \
 		{	$(ECHO) "---\n"; \
@@ -13220,30 +13186,14 @@ override define $(PUBLISH)-library-digest-vars =
 	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
 	DIGEST_COUNT="$(call COMPOSER_YML_DATA_VAL,library.digest_count)"; \
 	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.$(1)_expanded)"; \
-	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1)_spacer)"; \
-	DIGEST_HEADER="$$( \
-		if [ -n "$(call COMPOSER_YML_DATA_VAL,library.$(1)_header)" ]; then \
-			$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.header)" \
-				| $(SED) \
-					-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT_PATH)|g" \
-					-e "s|$(COMPOSER_ROOT_REGEX)|$(COMPOSER_ROOT_PATH)|g" \
-			; \
-			$(ECHO) " "; \
-			$(ECHO) "$($(PUBLISH)-library-digest-null)"; \
-		fi \
-	)"; \
-	DIGEST_FOOTER="$$( \
-		if [ -n "$(call COMPOSER_YML_DATA_VAL,library.$(1)_footer)" ]; then \
-			$(ECHO) "$($(PUBLISH)-library-digest-null)"; \
-			$(ECHO) " "; \
-			$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.footer)" \
-				| $(SED) \
-					-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT_PATH)|g" \
-					-e "s|$(COMPOSER_ROOT_REGEX)|$(COMPOSER_ROOT_PATH)|g" \
-			; \
-		fi \
-	)"
+	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1)_spacer)"
 endef
+
+#WORKING:NOW:NOW:DOCS:FIXIT /PANDOC_.*_TO_
+#	is there a way to do header/footer...? checking for file.yml for each file feels like a non-start...
+#	the library is pretty much a best-effort feature at this point... eh?
+#	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.header)"
+#	$(PUBLISH_SH_RUN) $(COMPOSER_LIBRARY_ROOT)/$${FILE}
 
 override define $(PUBLISH)-library-digest-create =
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$${FILE},$(PUBLISH)-digest); \
@@ -13269,10 +13219,7 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
-		$(CAT) \
-			$${DIGEST_HEADER} \
-			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-			$${DIGEST_FOOTER} \
+		$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
@@ -13283,10 +13230,7 @@ override define $(PUBLISH)-library-digest-create =
 		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
 		TEXT="$$( \
-			$(CAT) \
-				$${DIGEST_HEADER} \
-				$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-				$${DIGEST_FOOTER} \
+			$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 			| $(PANDOC_MD_TO_JSON) \
@@ -13400,9 +13344,7 @@ override define $(PUBLISH)-library-sitemap-vars =
 endef
 
 override define $(PUBLISH)-library-sitemap-done =
-	$(CAT) $(1) \
-		| $(filter-out --strip-comments,$(PANDOC_MD_TO_HTML)) \
-		>>$(2); \
+	$(filter-out --strip-comments,$(PANDOC_MD_TO_HTML)) $(1) >>$(2); \
 	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
 	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
 	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
@@ -13477,13 +13419,9 @@ override define $(PUBLISH)-library-sitemap-create =
 		fi \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		{	$(ECHO) "| ["; \
-			$(ECHO) "$${FILE}" \
-				| $(SED) \
-					-e "s|^.*[/]([^/]+)$$|\1|g"; \
+			$(ECHO) "$${FILE}" | $(SED) "s|^.*[/]([^/]+)$$|\1|g"; \
 			$(ECHO) "]("; \
-			$(ECHO) "$${FILE}" \
-				| $(SED) \
-					-e "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
+			$(ECHO) "$${FILE}" | $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
 			$(ECHO) ") | "; \
 		} \
 			| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
