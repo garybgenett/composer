@@ -730,6 +730,10 @@ override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
+#WORKING:NOW:NOW:DOCS:FIXIT
+override LIBRARY_DIGEST_INCLUDE		:= null
+override LIBRARY_DIGEST_INCLUDE_ALT	:= null
+override LIBRARY_DIGEST_INCLUDE_MOD	:= $(PUBLISH_HEADER_ALT)
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_COUNT		:= 10
@@ -740,6 +744,15 @@ override LIBRARY_DIGEST_EXPANDED_MOD	:= 2
 override LIBRARY_DIGEST_SPACER		:= 1
 override LIBRARY_DIGEST_SPACER_ALT	:= null
 
+override LIBRARY_LISTS_INCLUDE		:= null
+override LIBRARY_LISTS_INCLUDE_ALT	:= null
+override LIBRARY_LISTS_INCLUDE_MOD	:= $(PUBLISH_HEADER_ALT)
+override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
+override LIBRARY_LISTS_EXPANDED_ALT	:= null
+override LIBRARY_LISTS_EXPANDED_MOD	:= 2
+override LIBRARY_LISTS_SPACER		:= 1
+override LIBRARY_LISTS_SPACER_ALT	:= null
+
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
@@ -747,12 +760,6 @@ override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
 override LIBRARY_SITEMAP_SPACER		:= 1
 override LIBRARY_SITEMAP_SPACER_ALT	:= null
-
-override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
-override LIBRARY_LISTS_EXPANDED_ALT	:= null
-override LIBRARY_LISTS_EXPANDED_MOD	:= 2
-override LIBRARY_LISTS_SPACER		:= 1
-override LIBRARY_LISTS_SPACER_ALT	:= null
 
 ################################################################################
 # }}}1
@@ -2073,17 +2080,19 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_title:			"$(LIBRARY_DIGEST_TITLE)",
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
+    digest_include:			$(LIBRARY_DIGEST_INCLUDE),
     digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
     digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
     digest_spacer:			$(LIBRARY_DIGEST_SPACER),
 
+    lists_include:			$(LIBRARY_LISTS_INCLUDE),
+    lists_expanded:			$(LIBRARY_LISTS_EXPANDED),
+    lists_spacer:			$(LIBRARY_LISTS_SPACER),
+
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE)",
     sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED),
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER),
-
-    lists_expanded:			$(LIBRARY_LISTS_EXPANDED),
-    lists_spacer:			$(LIBRARY_LISTS_SPACER),
   },
 
   $(PUBLISH)-nav-top:				null,
@@ -2169,6 +2178,7 @@ override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
 override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
 override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library-digest-null	:= $(COMPOSER_LIBRARY)/index-null$(COMPOSER_EXT_SPECIAL)
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
 
@@ -3520,6 +3530,7 @@ endef
 #		see: define $(PUBLISH)-$(TARGETS)-file
 #		document this...?
 #		test as an array...? could just do a "metalist" on it, to be sure...
+#		duplicate all of this for digest_include + lists_include
 #	document "config.composer" option
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
@@ -4649,15 +4660,17 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)`
+| digest_include   | `$(LIBRARY_DIGEST_INCLUDE)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`
 | digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`
+| lists_include    | `$(LIBRARY_LISTS_INCLUDE)`
+| lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`
+| lists_spacer     | `$(LIBRARY_LISTS_SPACER)`
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
 | sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)`
 | sitemap_spacer   | `$(LIBRARY_SITEMAP_SPACER)`
-| lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`
-| lists_spacer     | `$(LIBRARY_LISTS_SPACER)`
 
 *(For this test site, the library has been enabled as: `$(PUBLISH_LIBRARY)`)*
 endef
@@ -4827,15 +4840,17 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`  | `$(LIBRARY_DIGEST_CONTINUE_ALT)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)` | `$(LIBRARY_DIGEST_PERMALINK_ALT)`
+| digest_include   | `$(LIBRARY_DIGEST_INCLUDE)`   | `$(LIBRARY_DIGEST_INCLUDE_ALT)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`  | `$(LIBRARY_DIGEST_EXPANDED_ALT)`
 | digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`    | `$(LIBRARY_DIGEST_SPACER_ALT)`
+| lists_include    | `$(LIBRARY_LISTS_INCLUDE)`    | `$(LIBRARY_LISTS_INCLUDE_ALT)`
+| lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`   | `$(LIBRARY_LISTS_EXPANDED_ALT)`
+| lists_spacer     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
 | sitemap_expanded | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 | sitemap_spacer   | `$(LIBRARY_SITEMAP_SPACER)`   | `$(LIBRARY_SITEMAP_SPACER_ALT)`
-| lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`   | `$(LIBRARY_LISTS_EXPANDED_ALT)`
-| lists_spacer     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 
 *(For this test site, the default library has been enabled as: `$(PUBLISH_LIBRARY)`)*
 endef
@@ -6008,17 +6023,19 @@ $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_include$(_D):			$(_M)$(LIBRARY_DIGEST_INCLUDE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
 
+$(_S)#$(MARKER)$(_D) $(_C)lists_include$(_D):			$(_M)$(LIBRARY_LISTS_INCLUDE)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
+
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_expanded$(_D):			$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_spacer$(_D):			$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
-
-$(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
@@ -6344,15 +6361,17 @@ variables:
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
+    digest_include:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_INCLUDE_MOD),$(LIBRARY_DIGEST_INCLUDE_ALT))
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
+    lists_include:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_INCLUDE_MOD),$(LIBRARY_LISTS_INCLUDE_ALT))
+    lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
+    lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
     sitemap_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
-    lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
-    lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
 
 ########################################
 
@@ -12829,6 +12848,7 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
+	@$(ECHO) "\n" >$($(PUBLISH)-library-digest-null)
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -12996,6 +13016,7 @@ $($(PUBLISH)-library-index):
 #> update: title / date / metalist:*
 
 #>					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date";
+#>					else					$(ECHO) "Metalist ($(1))";
 override define $(PUBLISH)-library-indexer =
 	$(ECHO) "$(1): {\n" >>$(@).$(COMPOSER_BASENAME); \
 	if [ "$(1)" = "title" ]; then \
@@ -13014,7 +13035,7 @@ override define $(PUBLISH)-library-indexer =
 			$(call $(HEADERS)-note,$(@),$$( \
 					if [ "$(1)" = "title" ]; then		$(ECHO) "Title"; \
 					elif [ "$(1)" = "date" ]; then		$(ECHO) "Year"; \
-					else					$(ECHO) "Metalist ($(1))"; \
+					else					$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.metalist.[\"$(1)\"].title)"; \
 					fi \
 				): $${FILE},$(PUBLISH)-index); \
 			if [ -n "$(COMPOSER_DEBUGIT)" ]; then	$(ECHO) "$(_E)"; \
@@ -13143,13 +13164,13 @@ $($(PUBLISH)-library-digest-src):
 #> update: title / date / metalist:*
 
 #>					elif [ "$(TYPE)" = "date" ]; then	$(ECHO) "Date";
+#>					else					$(ECHO) "Metalist ($(TYPE))";
 $($(PUBLISH)-library-digest-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest-files): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-digest-files): $($(PUBLISH)-library-index)
 $($(PUBLISH)-library-digest-files):
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
-#>					else					$(ECHO) "Metalist ($(TYPE))";
 	@	$(eval TYPE := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")) \
 		$(eval NAME := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")) \
 		{	$(ECHO) "---\n"; \
@@ -13183,17 +13204,15 @@ $($(PUBLISH)-library-digest-files):
 override define $(PUBLISH)-library-digest-vars =
 	DIGEST_CONTINUE="$(call COMPOSER_YML_DATA_VAL,library.digest_continue)"; \
 	DIGEST_PERMALINK="$(call COMPOSER_YML_DATA_VAL,library.digest_permalink)"; \
+	DIGEST_INCLUDE="$$( \
+		$(ECHO) "$(call COMPOSER_YML_DATA_VAL,library.$(1)_include)" \
+		| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT)|g" \
+	)"; \
 	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
 	DIGEST_COUNT="$(call COMPOSER_YML_DATA_VAL,library.digest_count)"; \
 	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.$(1)_expanded)"; \
 	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1)_spacer)"
 endef
-
-#WORKING:NOW:NOW:DOCS:FIXIT /PANDOC_.*_TO_
-#	is there a way to do header/footer...? checking for file.yml for each file feels like a non-start...
-#	the library is pretty much a best-effort feature at this point... eh?
-#	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.header)"
-#	$(PUBLISH_SH_RUN) $(COMPOSER_LIBRARY_ROOT)/$${FILE}
 
 override define $(PUBLISH)-library-digest-create =
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$${FILE},$(PUBLISH)-digest); \
@@ -13219,7 +13238,10 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "\n" \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 	LEN="$$( \
-		$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+		$(CAT) \
+			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+			$($(PUBLISH)-library-digest-null) \
+			$${DIGEST_INCLUDE} \
 		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
@@ -13230,7 +13252,10 @@ override define $(PUBLISH)-library-digest-create =
 		[ "$${SIZ}" -le "$${DIGEST_CHARS}" ]; \
 	do \
 		TEXT="$$( \
-			$(CAT) $(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+			$(CAT) \
+				$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
+				$($(PUBLISH)-library-digest-null) \
+				$${DIGEST_INCLUDE} \
 			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 			| $(PANDOC_MD_TO_JSON) \
