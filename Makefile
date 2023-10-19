@@ -730,10 +730,10 @@ override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
-#WORKING:NOW:NOW:DOCS:FIXIT
+#WORKING:NOW:NOW:DOCS:FIXIT need a test for this...
 override LIBRARY_DIGEST_INCLUDE		:= null
 override LIBRARY_DIGEST_INCLUDE_ALT	:= null
-override LIBRARY_DIGEST_INCLUDE_MOD	:= $(PUBLISH_HEADER_ALT)
+override LIBRARY_DIGEST_INCLUDE_MOD	= $(PUBLISH_HEADER_ALT)
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_COUNT		:= 10
@@ -746,7 +746,7 @@ override LIBRARY_DIGEST_SPACER_ALT	:= null
 
 override LIBRARY_LISTS_INCLUDE		:= null
 override LIBRARY_LISTS_INCLUDE_ALT	:= null
-override LIBRARY_LISTS_INCLUDE_MOD	:= $(PUBLISH_HEADER_ALT)
+override LIBRARY_LISTS_INCLUDE_MOD	= $(PUBLISH_HEADER_ALT)
 override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
 override LIBRARY_LISTS_EXPANDED_ALT	:= null
 override LIBRARY_LISTS_EXPANDED_MOD	:= 2
@@ -1813,8 +1813,8 @@ override COMPOSER_OPTIONS_PUBLISH_ENV := \
 	c_base \
 	c_list \
 
+#>	COMPOSER_INCLUDE$(TOKEN)
 override COMPOSER_OPTIONS_PUBLISH := \
-	COMPOSER_INCLUDE$(TOKEN) \
 	COMPOSER_DEPENDS$(TOKEN) \
 	COMPOSER_EXT$(TOKEN)$(COMPOSER_EXT_DEFAULT) \
 	COMPOSER_TARGETS$(TOKEN) \
@@ -2016,8 +2016,8 @@ ifneq ($(and \
 	$(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))) ,\
 	$(filter $(MAKEJOBS_DEFAULT),$(MAKEJOBS)) \
 ),)
-override MAKEFLAGS			:= $(subst --jobs=$(MAKEJOBS),--jobs=$(TESTING_MAKEJOBS),$(MAKEFLAGS))
 override MAKEJOBS			:= $(TESTING_MAKEJOBS)
+override MAKEFLAGS			:= $(subst --jobs=$(MAKEJOBS_DEFAULT),--jobs=$(MAKEJOBS),$(MAKEFLAGS))
 endif
 
 override TESTING_LOGFILE		:= .$(COMPOSER_BASENAME).$(TESTING).log
@@ -3535,7 +3535,6 @@ endef
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
 #	firebase is not included in the repository...?  need to note this...
-#	$(COMPOSER_CSS_PUBLISH) and the library...
 
 #WORKING:NOW
 #	features
@@ -12837,7 +12836,9 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS)	>$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
 	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
 	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_YML)		>$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
-	@if [ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH)" ]; then \
+	@if	[ -z "$$($(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(CONFIGS)-COMPOSER_INCLUDE)" ] && \
+		[ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH)" ]; \
+	then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS_PUBLISH)); \
 		$(ECHO) "$(_E)"; \
 		$(CP) $(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
@@ -13376,7 +13377,7 @@ override define $(PUBLISH)-library-sitemap-done =
 	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2)
 endef
 
-#WORKING:NOW:NOW:DOCS:FIX
+#WORKING:NOW:NOW:DOCS:FIXIT
 #	items like README.site.html aren't getting metadata, because it is only looking for *.md...
 #	maybe we can somehow check for $(word 1,$(README.site.html)) variable and use that...?
 
@@ -13592,9 +13593,10 @@ endif
 
 #> $(PUBLISH)-$(EXAMPLE)-$(TESTING) = $(TESTING).*COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
 #	$(CONFIGS)
-#		[ $(MAKEJOBS) == $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
+#		[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #		$(COMPOSER_SETTINGS)
 #			$(*_MOD)
+#			$(word 3,$(PUBLISH_DIRS)) > COMPOSER_INCLUDE=""
 #			COMPOSER_DEPENDS="1"
 #		$(COMPOSER_YML)
 #			auto_update: 1
@@ -13697,6 +13699,7 @@ else
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR)		>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_SETTINGS)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_SETTINGS)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+	@$(ECHO) "override COMPOSER_INCLUDE :=\n"			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(ECHO) "override COMPOSER_DEPENDS := 1\n"		>>$(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_SETTINGS); \
 	)
