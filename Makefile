@@ -2178,9 +2178,9 @@ override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
 override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
 override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
-override $(PUBLISH)-library-digest-null	:= $(COMPOSER_LIBRARY)/index-null$(COMPOSER_EXT_SPECIAL)
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library-spacer	:= $(COMPOSER_LIBRARY)/$(PUBLISH)-$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_SPECIAL)
 
 ########################################
 
@@ -12849,7 +12849,7 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
-	@$(ECHO) "\n" >$($(PUBLISH)-library-digest-null)
+	@$(ECHO) "\n" >$($(PUBLISH)-library-spacer)
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -13241,7 +13241,7 @@ override define $(PUBLISH)-library-digest-create =
 	LEN="$$( \
 		$(CAT) \
 			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-			$($(PUBLISH)-library-digest-null) \
+			$($(PUBLISH)-library-spacer) \
 			$${DIGEST_INCLUDE} \
 		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 		| $(PANDOC_MD_TO_JSON) \
@@ -13255,7 +13255,7 @@ override define $(PUBLISH)-library-digest-create =
 		TEXT="$$( \
 			$(CAT) \
 				$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
-				$($(PUBLISH)-library-digest-null) \
+				$($(PUBLISH)-library-spacer) \
 				$${DIGEST_INCLUDE} \
 			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
