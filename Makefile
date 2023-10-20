@@ -11093,14 +11093,18 @@ override define $(TESTING)-speed-init =
 		$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	fi; \
 	for TLD in {1..3}; do \
-		$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
+		if [ -z "$(1)" ]; then \
+			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
+		fi; \
 		if [ -n "$(1)" ]; then \
 			$(call DO_HEREDOC,$(1)) >$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		else \
 			$(RM) $(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		fi; \
 		for SUB in {1..3}; do \
-			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
+			if [ -z "$(1)" ]; then \
+				$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
+			fi; \
 		done; \
 	done; \
 	$(CAT) \
@@ -11129,7 +11133,7 @@ $(TESTING)-speed-init:
 #>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
-	@									time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
+	@$(call $(TESTING)-speed-init);						time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 	@$(call $(TESTING)-speed-init,HEREDOC_COMPOSER_YML_TESTING);		time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 	@$(call $(TESTING)-speed-init,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE);	time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 
