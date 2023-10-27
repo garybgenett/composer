@@ -2,7 +2,7 @@
 ################################################################################
 # Composer CMS :: Primary Makefile
 ################################################################################
-override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list listchars=tab\:,.,trail\:=,extends\:>,precedes\:< foldmethod=marker foldlevel=0 foldtext=printf('%1s\ [%4s\ %5s-%5s]\ %-0.9s\ %s\ ',v\:foldlevel,(v\:foldend\ \-\ v\:foldstart\ \+\ 1),v\:foldstart,v\:foldend,v\:folddashes,substitute(getline(v\:foldstart),'\ \{\{\{\\d\\\+\ \\\|\\s\\\+','\ ','g'))
+override VIM_OPTIONS := vim: filetype=make nowrap noexpandtab tabstop=8 list listchars=tab\:,.,trail\:=,extends\:>,precedes\:< foldenable foldmethod=marker foldlevel=0 foldtext=printf('%1s\ [%4s\ %5s-%5s]\ %-0.1s\ %s\ ',v\:foldlevel,(v\:foldend\ \-\ v\:foldstart\ \+\ 1),v\:foldstart,v\:foldend,v\:folddashes,substitute(getline(v\:foldstart),'\ \{\{\{\\d\\\+\ \\\|\\s\\\+','\ ','g'))
 override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ################################################################################
 # {{{1 IMPORTANT NOTES
@@ -124,7 +124,13 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* Make sure '--trace' debug output is identical
 #			* Minimize '$(shell)' and '/: override .* $(shell' calls
 #			* With and without 'c_site' enabled
-#		* `make MAKEJOBS="[X]" _test-speed`
+#		* `time make README.site.html`
+#			* `time make -C _site/config config`
+#			* `time make -C _site/config/_library-config config`
+#		* `make _test-speed`
+#			* `make MAKEJOBS="[X]" _test-speed`
+#			* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" _test-speed`
+#			* Update comments
 # PREPARE
 #	* Update: Makefile
 #		* Formatting
@@ -2104,10 +2110,8 @@ override define COMPOSER_YML_DATA_SKEL =
 endef
 
 override define COMPOSER_YML_DATA_METALIST_SKEL =
-{ .$(COMPOSER_BASENAME):				{},
   title:				{ null: [] },
-  date:					{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),$(NEWLINE)  $(FILE): { null: [] },)
-}
+  date:				{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),$(NEWLINE)  $(FILE): { null: [] },)
 endef
 
 #>	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null
@@ -2185,22 +2189,26 @@ override $(PUBLISH)-library-spacer	:= $(COMPOSER_LIBRARY)/$(PUBLISH)-$(patsubst 
 override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
 ifneq ($(COMPOSER_YML_LIST),)
 override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST)))
+endif
+
+#> update: WILDCARD_YML
+ifneq ($(and $(c_base),$(EXTENSION)),)
+override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(COMPOSER_YML_LIST_FILE)]))
+ifneq ($(COMPOSER_YML_LIST_FILE),)
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> INCLUDE_YML			[$(COMPOSER_YML_LIST_FILE)]))
+override COMPOSER_YML_LIST		:= $(strip $(COMPOSER_YML_LIST) $(COMPOSER_YML_LIST_FILE))
+$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST_FILE)))
+endif
+endif
+
 ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
 ifneq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
 override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) $(CONFIGS)-COMPOSER_YML_LIST),library))
 endif
 endif
-endif
-endif
-
-#> update: WILDCARD_YML
-override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
-ifneq ($(COMPOSER_YML_LIST_FILE),)
-override COMPOSER_YML_LIST		:= $(strip $(COMPOSER_YML_LIST) $(COMPOSER_YML_LIST_FILE))
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(COMPOSER_YML_LIST_FILE)]))
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]))
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_YML_LIST_FILE)))
 endif
 
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
@@ -3537,6 +3545,10 @@ endef
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
 #	firebase is not included in the repository...?  need to note this...
+#	try to remove "manual review of output throughout $(TESTING)...
+#	add $(TESTING)-$(DOSETUP)
+#		integrate with $(TESTING)-$(DISTRIB), so they clean up after each other...
+#		add to documentation, along with $(TESTING)-speed...
 
 #WORKING:NOW
 #	features
@@ -5513,7 +5525,7 @@ $(EXAMPLE)-md-file:
 .$(EXAMPLE)-yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))'
-	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))\n' \
+	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
 		| $(YQ_WRITE_OUT) 2>/dev/null \
 			$(call YQ_WRITE_OUT_COLOR) \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
@@ -6193,45 +6205,6 @@ $(_S)###########################################################################
 endef
 
 ########################################
-### {{{3 Heredoc: composer_yml ($(TESTING))
-########################################
-
-override define HEREDOC_COMPOSER_YML_TESTING =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(TESTING))
-################################################################################
-
-variables:
-
-########################################
-
-  site-nav-top:
-    CONTENTS:				null
-    LIBRARY:				null
-
-  site-nav-bottom:
-    INFO:				null
-
-  site-nav-left:
-    CONTENTS:				null
-    LIBRARY:				null
-
-  site-nav-right:
-    CONTENTS:				null
-    LIBRARY:				null
-
-  site-info-top:
-    INFO:				null
-
-  site-info-bottom:
-    INFO:				null
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
 ### {{{3 Heredoc: composer_yml ($(OUT_README))
 ########################################
 
@@ -6331,6 +6304,45 @@ variables:
 endef
 
 ########################################
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(TESTING))
+########################################
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_TESTING =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(TESTING))
+################################################################################
+
+variables:
+
+########################################
+
+  site-nav-top:
+    CONTENTS:				null
+    LIBRARY:				null
+
+  site-nav-bottom:
+    INFO:				null
+
+  site-nav-left:
+    CONTENTS:				null
+    LIBRARY:				null
+
+  site-nav-right:
+    CONTENTS:				null
+    LIBRARY:				null
+
+  site-info-top:
+    INFO:				null
+
+  site-info-bottom:
+    INFO:				null
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
 ########################################
 
@@ -6362,6 +6374,10 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 ################################################################################
 
 $(call COMPOSER_YML_DATA_SKEL)
+
+#>metalist: {
+#>$(subst $(NEWLINE),$(NEWLINE)#>,$(call COMPOSER_YML_DATA_METALIST_SKEL))
+#>}
 
 ################################################################################
 # End Of File
@@ -10883,15 +10899,17 @@ override define $(TESTING)-load =
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	if [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
 		$(RSYNC) \
+			--delete-excluded \
 			--filter="-_/$(TESTING_LOGFILE)" \
+			--filter="P_/$(TESTING_LOGFILE)" \
 			--filter="-_/$(PANDOC_LNX_BIN)" \
 			--filter="-_/$(PANDOC_WIN_BIN)" \
 			--filter="-_/$(PANDOC_MAC_BIN)" \
+			--filter="-_/test" \
 			$(PANDOC_DIR)/ \
 			$(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 		$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_COMPOSER_MAKEFILE)); \
 	fi; \
-	$(ECHO) "override COMPOSER_IGNORES := test\n" >$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@)),$(TESTING_MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 endef
 
@@ -10901,6 +10919,11 @@ override define $(TESTING)-init =
 	$(PRINT) "$(_M)$(MARKER) INIT [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
 	$(ECHO) "" >$(call $(TESTING)-log,$(if $(1),$(1),$(@))); \
+	if [ -n "$(COMPOSER_DEBUGIT)" ]; then \
+		$(TOUCH) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/.$(DEBUGIT); \
+	else \
+		$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/.$(DEBUGIT); \
+	fi; \
 	if [ "$(@)" = "$(TESTING)-Think" ]; then \
 		$(MKDIR) $(abspath $(dir $(TESTING_COMPOSER_MAKEFILE))); \
 		$(CP) $(COMPOSER) $(TESTING_COMPOSER_MAKEFILE); \
@@ -11073,59 +11096,106 @@ $(TESTING)-heredoc-done:
 ### {{{3 $(TESTING)-speed
 ########################################
 
+#> uname -a
+#>	Linux phoenix 5.10.154-gentoo.gary-os #1 SMP PREEMPT Mon Jan 2 10:51:39 -00 2023 x86_64 Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz GenuineIntel GNU/Linux
+#> grep -i -e "^model name" -e "^siblings" /proc/cpuinfo | head -n2
+#>	model name: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+#>	siblings: 20
+#> grep -i "^memtotal" /proc/meminfo
+#>	MemTotal: 65739512 kB
+
+#> DEBUGIT=""
+#>	Directories:		( 17 * 13 )		=   221
+#>	Makefiles:		( . + 3 )		=   224
+#>	Sources:		( 117 * 13 )		=  1521
+#>	Outputs:		( . * 4 ) + ( 8 * 3 )	=  6108
+#>				( . * 5 ) + ( 8 * 3 )	=  7629
+#> DEBUGIT="1"
+#>	Directories:		( . + ( 6 * 13 ) )	=   299
+#>	Makefiles:		( . + ( 6 * 13 ) )	=   302
+#>	Sources:		( 836 * 13 )		= 10868
+#>	Outputs:		( . * 4 ) + ( 8 * 3 )	= 43496
+#>				( . * 5 ) + ( 8 * 3 )	= 54364
+#> MAKEJOBS: 20 / DEBUGIT: -
+#>	install:		~ <1m
+#>	all:			~  2m
+#>	clean:			~ <1m
+#>	site (null):		~  8m
+#>	site (testing):		~ 12m
+#>	site (showdir):		~ 21m
+#>	site (example):		~ 25m
+#> MAKEJOBS: 20 / DEBUGIT: 1
+#>	install:		~  <1m
+#>	all:			~   7m
+#>	clean:			~   1m
+#>	site (null):		~ 212m
+#>	site (testing):		~ 223m
+#>	site (showdir):		~ 249m
+#>	site (example):		~ 276m
+
 .PHONY: $(TESTING)-speed
 $(TESTING)-speed: $(TESTING)-Think
 $(TESTING)-speed:
 	@$(call $(TESTING)-$(HEADERS),\
-		Performance test of the speed processing a large directory ,\
-		\n\t * $(_H)For general information and fun only$(_D) \
+		Measure processing speed with a large directory \
+		\n\t $(_N)$(MARKER) For performance testing and fun$(_D) \
+		\n\t $(_N)$(MARKER) Tool to determine appropriate '$(_C)MAKEJOBS$(_N)' value for system$(_D) \
+		,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+		\n\t * Test runs: \
+		\n\t\t * '$(INSTALL)-$(DOFORCE)' \
+		\n\t\t * '$(DOITALL)-$(DOITALL)' \
+		\n\t\t * '$(CLEANER)-$(DOITALL)' \
+		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(no configuration)$(_D) \
+		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_TESTING)$(_D) \
+		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_SHOWDIR)$(_D) \
+		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_EXAMPLE)$(_D) \
 	)
-	@$(call $(TESTING)-speed-init)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
+#> update: $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
 override define $(TESTING)-speed-init =
-	$(MKDIR) $(call $(TESTING)-pwd); \
-	if [ -n "$(1)" ]; then \
-		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1) >$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
-	else \
+	if [ -z "$(1)" ]; then \
+		$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(call $(TESTING)-pwd),$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))); \
 		$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_YML); \
+	else \
+		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1) >$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	fi; \
+	$(RM) --recursive $(call $(TESTING)-pwd)/$(PUBLISH_LIBRARY); \
 	for TLD in {1..3}; do \
 		if [ -z "$(1)" ]; then \
-			$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}); \
-		fi; \
-		if [ -n "$(1)" ]; then \
-			$(call DO_HEREDOC,$(1)) >$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
-		else \
+			$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(call $(TESTING)-pwd)/tld$${TLD},$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))); \
 			$(RM) $(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
+		else \
+			$(call DO_HEREDOC,$(1)) >$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		fi; \
+		$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/$(PUBLISH_LIBRARY); \
 		for SUB in {1..3}; do \
 			if [ -z "$(1)" ]; then \
-				$(call $(TESTING)-speed-init-load,$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}); \
+				$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB},$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))); \
 			fi; \
+			$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}/$(PUBLISH_LIBRARY); \
 		done; \
-	done; \
+	done
+endef
+
+override define $(TESTING)-speed-init-$(PUBLISH) =
+	$(call $(TESTING)-speed-init,$(1)); \
+	FILE="$$($(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"; \
+	$(call $(HEADERS)-note,$(PUBLISH)-$(DOFORCE),$(if $(1),$(1),$(NOTHING)),$${FILE}); \
 	$(CAT) \
 		$(call $(TESTING)-pwd)/$(COMPOSER_YML) \
 		$(call $(TESTING)-pwd)/tld*/$(COMPOSER_YML) \
-		|| $(TRUE)
-endef
-
-override define $(TESTING)-speed-init-load =
-	$(MKDIR) $(1); \
-	$(RSYNC) \
-		--filter="-_/$(notdir $(PANDOC_LNX_BIN))" \
-		--filter="-_/$(notdir $(PANDOC_WIN_BIN))" \
-		--filter="-_/$(notdir $(PANDOC_MAC_BIN))" \
-		--filter="-_/sub**" \
-		$(PANDOC_DIR)/ \
-		$(1)
+		$(call $(TESTING)-pwd)/tld*/sub*/$(COMPOSER_YML) \
+		|| $(TRUE); \
+	time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 endef
 
 .PHONY: $(TESTING)-speed-init
 $(TESTING)-speed-init:
+	@$(call $(TESTING)-speed-init)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 #> update: $(PUBLISH) > $(CLEANER) > $(DOITALL)
@@ -11133,17 +11203,21 @@ $(TESTING)-speed-init:
 #>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
-	@$(call $(TESTING)-speed-init);						time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
-	@$(call $(TESTING)-speed-init,HEREDOC_COMPOSER_YML_TESTING);		time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
-	@$(call $(TESTING)-speed-init,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE);	time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
+	@$(call $(TESTING)-speed-init-$(PUBLISH))
+	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_TESTING)
+#>	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)
+	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)
 
 .PHONY: $(TESTING)-speed-done
 $(TESTING)-speed-done:
-	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type d -print \) | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Files"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Output"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(MAKEJOBS)"
 	@$(call $(TESTING)-find,MAKECMDGOALS)
+	@$(call $(TESTING)-find,$(PUBLISH)-$(DOFORCE).+$(DIVIDE))
+	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(PUBLISH_LIBRARY) -prune \) -o \( -type d -print \) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) $(MAKEFILE)s"	"$(_C)$(shell $(SED) -n "/Creating.+$(MAKEFILE)/p" $(call $(TESTING)-log) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Sources"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(PUBLISH_LIBRARY) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Outputs"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(MAKEJOBS)"
+	@$(TABLE_M2) "$(_H)$(MARKER) Debug"		"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
 #>	@$(call $(TESTING)-find,[0-9]s$$)
 	@$(call $(TESTING)-find,^real)
 
@@ -11346,7 +11420,6 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' detection \
 	)
 	@$(call $(TESTING)-load)
-	@$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
@@ -13053,8 +13126,13 @@ $($(PUBLISH)-library-index): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-index): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-index): $($(PUBLISH)-library-metadata)
 $($(PUBLISH)-library-index):
-	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_METALIST_SKEL))\n' >$(@).$(PRINTER)
-	@$(ECHO) "{\n" >$(@).$(COMPOSER_BASENAME)
+#>		$(ECHO) "\n";
+	@{	$(ECHO) "{"; \
+		$(ECHO) "\".$(COMPOSER_BASENAME)\": {},\n"; \
+		$(ECHO) '$(strip $(call COMPOSER_YML_DATA_METALIST_SKEL))'; \
+		$(ECHO) "}"; \
+	} >$(@).$(PRINTER)
+	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_N)"
 	@$(ECHO) "\".$(COMPOSER_BASENAME)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
@@ -13667,38 +13745,38 @@ endif
 
 #WORKING:NOW once finalizing #WORK markers gets to here, do a final double-check of this list...
 #> $(PUBLISH)-$(EXAMPLE)-$(TESTING) > COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
-#	$(CONFIGS)
-#		[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
-#		$(COMPOSER_SETTINGS)
-#			$(*_MOD)
-#			$(word 3,$(PUBLISH_DIRS)) > COMPOSER_INCLUDE=""
-#			COMPOSER_DEPENDS="1"
-#		$(COMPOSER_YML)
-#			auto_update: $(LIBRARY_AUTO_UPDATE_ALT)
-#			$(PUBLISH)-info-top: ICON
-#		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
-#		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
-#	$(SHELL)
-#		#> .$(PUBLISH)-$(INSTALL)
-#		sitemap: $(RM) $(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT)
+#>	$(CONFIGS)
+#>		[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
+#>		$(COMPOSER_SETTINGS)
+#>			$(*_MOD)
+#>			$(word 3,$(PUBLISH_DIRS)) > COMPOSER_INCLUDE=""
+#>			COMPOSER_DEPENDS="1"
+#>		$(COMPOSER_YML)
+#>			auto_update: $(LIBRARY_AUTO_UPDATE_ALT)
+#>			$(PUBLISH)-info-top: ICON
+#>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
+#>		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
+#>	$(SHELL)
+#>		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL) > --filter="-_/test/**"
+#>		sitemap: $(RM) $(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT)
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) > COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
-#	$(SHELL)
-#		$(TOUCH) $(COMPOSER_SETTINGS) $(COMPOSER_YML)
-#		exit 0
+#>	$(SHELL)
+#>		$(TOUCH) $(COMPOSER_SETTINGS) $(COMPOSER_YML)
+#>		exit 0
 #> $(PUBLISH)-$(EXAMPLE)
-#	$(SHELL)
-#		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
-#		[ ! -f $(PUBLISH)-library ] && $(TOUCH) $($(PUBLISH)-library-digest-src)
-#			$(word 1,$(PUBLISH_DIRS))
-#			$(word 3,$(PUBLISH_DIRS))
-#		$(PUBLISH)-$(DOFORCE) [x2]
+#>	$(SHELL)
+#>		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
+#>		[ ! -f $(PUBLISH)-library ] && $(TOUCH) $($(PUBLISH)-library-digest-src)
+#>			$(word 1,$(PUBLISH_DIRS))
+#>			$(word 3,$(PUBLISH_DIRS))
+#>		$(PUBLISH)-$(DOFORCE) [x2]
 #> $(COMPOSER_DEBUGIT)
-#	$(CONFIGS)
-#		$(COMPOSER_YML)
-#			auto_update: null
-#	$(SHELL)
-#		[ -n $(COMPOSER_RELEASE) ] && HEREDOC_CUSTOM_PUBLISH
-#		$(foreach FILE,$(PUBLISH_DIRS_DEBUGIT),$(call ENV_MAKE))
+#>	$(CONFIGS)
+#>		$(COMPOSER_YML)
+#>			auto_update: null
+#>	$(SHELL)
+#>		[ -n $(COMPOSER_RELEASE) ] && HEREDOC_CUSTOM_PUBLISH
+#>		$(foreach FILE,$(PUBLISH_DIRS_DEBUGIT),$(call ENV_MAKE))
 
 #> update: $(NOTHING)-%
 
@@ -13715,27 +13793,7 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(_D)"
-	@$(RSYNC) \
-		--delete-excluded \
-		--prune-empty-dirs \
-		--filter="+_/**/" \
-		--filter="-_/test/**" \
-		--filter="+_/**$(COMPOSER_EXT_DEFAULT)" \
-		--filter="-_/**" \
-		$(PANDOC_DIR)/			$(PUBLISH_ROOT)/$(notdir $(PANDOC_DIR))
-	@$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 4,$(PUBLISH_FILES)))
-	@$(RSYNC) \
-		--delete-excluded \
-		--prune-empty-dirs \
-		--filter="+_/site" \
-		--filter="+_/site/content" \
-		--filter="-_/site/content/docs/*/about" \
-		--filter="-_/site/content/docs/*/examples" \
-		--filter="-_/site/*" \
-		--filter="-_/*" \
-		$(BOOTSTRAP_DIR)/		$(PUBLISH_ROOT)/$(notdir $(BOOTSTRAP_DIR))
-	@$(SED) -i "s|^[#]{1}||g"		$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$(PUBLISH_FILES))) \
-						$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/*$(COMPOSER_EXT_DEFAULT)
+	@$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(PUBLISH_ROOT),$(COMPOSER_DEBUGIT))
 	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DOCOLOR)) \
 		--makefile $(PUBLISH_ROOT)/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
 		--directory $(PUBLISH_ROOT) \
@@ -13744,6 +13802,49 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 else
 	@$(ECHO) ""
 endif
+
+#> update: $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
+override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
+	$(MKDIR) $(1); \
+	if [ -z "$(2)" ]; then \
+		$(RM) --recursive		$(1)/$(notdir $(PANDOC_DIR))/test; \
+	fi; \
+	$(RSYNC) \
+		--delete-excluded \
+		--prune-empty-dirs \
+		--filter="-_/.**" \
+		--filter="-_/**/.**" \
+		--filter="-_/$(MAKEFILE)" \
+		--filter="P_/$(MAKEFILE)" \
+		--filter="-_/**/$(MAKEFILE)" \
+		--filter="P_/**/$(MAKEFILE)" \
+		\
+		--filter="+_/**/" \
+		$(if $(2),,--filter="-_/test/**") \
+		--filter="+_/**$(COMPOSER_EXT_DEFAULT)" \
+		--filter="-_/**" \
+		$(PANDOC_DIR)/			$(1)/$(notdir $(PANDOC_DIR)); \
+	$(RSYNC) $(PANDOC_DIR)/MANUAL.txt	$(1)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 4,$(PUBLISH_FILES))); \
+	$(RSYNC) \
+		--delete-excluded \
+		--prune-empty-dirs \
+		--filter="-_/.**" \
+		--filter="-_/**/.**" \
+		--filter="-_/$(MAKEFILE)" \
+		--filter="P_/$(MAKEFILE)" \
+		--filter="-_/**/$(MAKEFILE)" \
+		--filter="P_/**/$(MAKEFILE)" \
+		\
+		--filter="+_/site" \
+		--filter="+_/site/content" \
+		--filter="-_/site/content/docs/*/about" \
+		--filter="-_/site/content/docs/*/examples" \
+		--filter="-_/site/*" \
+		--filter="-_/*" \
+		$(BOOTSTRAP_DIR)/		$(1)/$(notdir $(BOOTSTRAP_DIR)); \
+	$(SED) -i "s|^[#]{1}||g"		$(1)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$(PUBLISH_FILES))) \
+						$(1)/$(word 5,$(PUBLISH_DIRS))/*$(COMPOSER_EXT_DEFAULT)
+endef
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
