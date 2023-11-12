@@ -737,8 +737,8 @@ override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
-override LIBRARY_DIGEST_INCLUDE		:= null
-override LIBRARY_DIGEST_INCLUDE_ALT	= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
+override LIBRARY_DIGEST_APPEND		:= null
+override LIBRARY_DIGEST_APPEND_ALT	= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
 override LIBRARY_DIGEST_COUNT		:= 10
@@ -749,8 +749,8 @@ override LIBRARY_DIGEST_EXPANDED_MOD	:= 2
 override LIBRARY_DIGEST_SPACER		:= 1
 override LIBRARY_DIGEST_SPACER_ALT	:= null
 
-override LIBRARY_LISTS_INCLUDE		:= null
-override LIBRARY_LISTS_INCLUDE_ALT	= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
+override LIBRARY_LISTS_APPEND		:= null
+override LIBRARY_LISTS_APPEND_ALT	= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 override LIBRARY_LISTS_EXPANDED		:= $(SPECIAL_VAL)
 override LIBRARY_LISTS_EXPANDED_ALT	:= null
 override LIBRARY_LISTS_EXPANDED_MOD	:= 2
@@ -2084,13 +2084,13 @@ override define COMPOSER_YML_DATA_SKEL =
     digest_title:			"$(LIBRARY_DIGEST_TITLE)",
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
-    digest_include:			$(LIBRARY_DIGEST_INCLUDE),
+    digest_append:			$(LIBRARY_DIGEST_APPEND),
     digest_chars:			$(LIBRARY_DIGEST_CHARS),
     digest_count:			$(LIBRARY_DIGEST_COUNT),
     digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
     digest_spacer:			$(LIBRARY_DIGEST_SPACER),
 
-    lists_include:			$(LIBRARY_LISTS_INCLUDE),
+    lists_append:			$(LIBRARY_LISTS_APPEND),
     lists_expanded:			$(LIBRARY_LISTS_EXPANDED),
     lists_spacer:			$(LIBRARY_LISTS_SPACER),
 
@@ -2223,7 +2223,8 @@ override COMPOSER_YML_DATA_METALIST := $(shell \
 
 override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
 override PUBLISH_CMD_BEG		:= <!-- $(COMPOSER_TINYNAME) $(MARKER)
-override PUBLISH_CMD_END		:= $(MARKER) -->
+#>override PUBLISH_CMD_END		:= $(MARKER) -->
+override PUBLISH_CMD_END		:= -->
 
 override COMPOSER_ROOT_PATH		:=
 override COMPOSER_LIBRARY_PATH		:=
@@ -3201,13 +3202,13 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
 override define $(HELPOUT)-$(DOITALL)-FILES =
-$(_S)-- $(_N)Formats$(_S):$(_D)
-        $(_S)[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
-         $(_S)/ [$(_N)$(EXTN_HTML)$(_S)]($(_N)$(OUT_README).$(EXTN_HTML)$(_S))$(_D)
-          $(_S)/ [$(_N)$(EXTN_LPDF)$(_S)]($(_N)$(OUT_README).$(EXTN_LPDF)$(_S))$(_D)
-         $(_S)/ [$(_N)$(EXTN_EPUB)$(_S)]($(_N)$(OUT_README).$(EXTN_EPUB)$(_S))$(_D)
-$(_S)/ [$(_N)$(EXTN_PRES)$(_S)]($(_N)$(OUT_README).$(EXTN_PRES)$(_S))$(_D)
-         $(_S)/ [$(_N)$(EXTN_DOCX)$(_S)]($(_N)$(OUT_README).$(EXTN_DOCX)$(_S))$(_D)
+$(_S)-- $(_N)Formats:$(_D)
+              $(_S)[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
+$(_S)/$(_D)                $(_S)[$(_N)$(EXTN_HTML)$(_S)]($(_N)$(OUT_README).$(EXTN_HTML)$(_S))$(_D)
+$(_S)/$(_D)                 $(_S)[$(_N)$(EXTN_LPDF)$(_S)]($(_N)$(OUT_README).$(EXTN_LPDF)$(_S))$(_D)
+$(_S)/$(_D)                $(_S)[$(_N)$(EXTN_EPUB)$(_S)]($(_N)$(OUT_README).$(EXTN_EPUB)$(_S))$(_D)
+$(_S)/$(_D)       $(_S)[$(_N)$(EXTN_PRES)$(_S)]($(_N)$(OUT_README).$(EXTN_PRES)$(_S))$(_D)
+$(_S)/$(_D)                $(_S)[$(_N)$(EXTN_DOCX)$(_S)]($(_N)$(OUT_README).$(EXTN_DOCX)$(_S))$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS =
@@ -3231,8 +3232,8 @@ $(_S)[$(DESC_LINT)]: #pandoc-markdown$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-LINKS_EXT =
-$(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown -->$(_D)
-$(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org -->$(_D)
+$(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown$(_D) $(_S)-->$(_D)
+$(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org$(_D) $(_S)-->$(_D)
 $(_E)[Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown$(_D)
 $(_E)[GitHub]: https://github.com$(_D)
 
@@ -3461,8 +3462,8 @@ endef
 #		https://getbootstrap.com/docs/5.2/utilities/flex
 #	any simple css should do...
 #		https://getbootstrap.com/docs/5.2/utilities/colors
-#	$(PUBLISH_CMD_BEG) fold-begin . $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)<!-- -->
-#		(the ' as a blank placeholder)
+#	$(PUBLISH_CMD_BEG) fold-begin . $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
+#		(the . as a blank placeholder)
 #	$(DO_PAGE)-% must end in $(EXTN_HTML)...
 #		$(PUBLISH) requires $(EXTN_HTML) to work... hard-change it if required...
 #	$(PUBLISH) rebuilds indexes, force recursively
@@ -3540,7 +3541,7 @@ endef
 #		see: define $(PUBLISH)-$(TARGETS)-file
 #		document this...?
 #		test as an array...? could just do a "metalist" on it, to be sure...
-#		duplicate all of this for digest_include + lists_include
+#		duplicate all of this for digest_append + lists_append
 #	document "config.composer" option
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTENSION).header" and "$(c_base).$(EXTENSION).css" special files, and add to testing
@@ -4673,12 +4674,12 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)`
-| digest_include   | `$(LIBRARY_DIGEST_INCLUDE)`
+| digest_append    | `$(LIBRARY_DIGEST_APPEND)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`
 | digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`
-| lists_include    | `$(LIBRARY_LISTS_INCLUDE)`
+| lists_append     | `$(LIBRARY_LISTS_APPEND)`
 | lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`
@@ -4857,12 +4858,12 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | digest_title     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
 | digest_continue  | `$(LIBRARY_DIGEST_CONTINUE)`  | `$(LIBRARY_DIGEST_CONTINUE_ALT)`
 | digest_permalink | `$(LIBRARY_DIGEST_PERMALINK)` | `$(LIBRARY_DIGEST_PERMALINK_ALT)`
-| digest_include   | `$(LIBRARY_DIGEST_INCLUDE)`   | `$(LIBRARY_DIGEST_INCLUDE_ALT)`
+| digest_append    | `$(LIBRARY_DIGEST_APPEND)`    | `$(LIBRARY_DIGEST_APPEND_ALT)`
 | digest_chars     | `$(LIBRARY_DIGEST_CHARS)`     | `$(LIBRARY_DIGEST_CHARS_ALT)`
 | digest_count     | `$(LIBRARY_DIGEST_COUNT)`     | `$(LIBRARY_DIGEST_COUNT_ALT)`
 | digest_expanded  | `$(LIBRARY_DIGEST_EXPANDED)`  | `$(LIBRARY_DIGEST_EXPANDED_ALT)`
 | digest_spacer    | `$(LIBRARY_DIGEST_SPACER)`    | `$(LIBRARY_DIGEST_SPACER_ALT)`
-| lists_include    | `$(LIBRARY_LISTS_INCLUDE)`    | `$(LIBRARY_LISTS_INCLUDE_ALT)`
+| lists_append     | `$(LIBRARY_LISTS_APPEND)`     | `$(LIBRARY_LISTS_APPEND_ALT)`
 | lists_expanded   | `$(LIBRARY_LISTS_EXPANDED)`   | `$(LIBRARY_LISTS_EXPANDED_ALT)`
 | lists_spacer     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 | sitemap_title    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
@@ -6040,13 +6041,13 @@ $(_S)#$(MARKER)$(_D) $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_include$(_D):			$(_M)$(LIBRARY_DIGEST_INCLUDE)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest_append$(_D):			$(_M)$(LIBRARY_DIGEST_APPEND)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)lists_include$(_D):			$(_M)$(LIBRARY_LISTS_INCLUDE)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)lists_append$(_D):			$(_M)$(LIBRARY_LISTS_APPEND)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
@@ -6429,12 +6430,12 @@ variables:
     digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
-    digest_include:			$(LIBRARY_DIGEST_INCLUDE_ALT)
+    digest_append:			$(LIBRARY_DIGEST_APPEND_ALT)
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
-    lists_include:			$(LIBRARY_LISTS_INCLUDE_ALT)
+    lists_append:			$(LIBRARY_LISTS_APPEND_ALT)
     lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
@@ -6614,7 +6615,7 @@ endef
 
 override define HEREDOC_CUSTOM_PUBLISH_SH =
 #!$(BASH)
-# $(patsubst filetype=make,filetype=sh,$(patsubst foldlevel=%,foldlevel=2,$(subst \,\\,$(VIM_OPTIONS))))
+# $(patsubst filetype=%,filetype=sh,$(patsubst foldlevel=%,foldlevel=2,$(subst \,\\,$(VIM_OPTIONS))))
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(notdir $(CUSTOM_PUBLISH_SH))
 ################################################################################
@@ -10223,19 +10224,21 @@ ifneq ($(COMPOSER_RELEASE),)
 endif
 
 .DEFAULT:
-	@{ $(call $(HEADERS)); }										>&2
-	@{ $(LINERULE); }											>&2
-	@$(PRINT) "$(_H)$(MARKER) ERROR"									>&2
-	@$(ENDOLINE)												>&2
-	@$(PRINT) "  * $(_N)Target '$(_C)$(@)$(_N)' is not defined"						>&2
-	@$(ENDOLINE)												>&2
-	@$(PRINT) "$(_H)$(MARKER) DETAILS"									>&2
-	@$(ENDOLINE)												>&2
-	@$(PRINT) "  * This may be the result of a missing input file"						>&2
-	@$(PRINT) "  * New targets can be defined in '$(_M)$(COMPOSER_SETTINGS)$(_D)'"				>&2
-	@$(PRINT) "  * Use '$(_C)$(TARGETS)$(_D)' to get a list of available targets"				>&2
-	@$(PRINT) "  * See '$(_C)$(HELPOUT)$(_D)' or '$(_C)$(HELPOUT)-$(DOITALL)$(_D)' for more information"	>&2
-	@{ $(LINERULE); }											>&2
+#>	@$(call $(HEADERS))
+	@{ $(call $(HEADERS)); } >&2
+	@{	$(LINERULE); \
+		$(PRINT) "$(_H)$(MARKER) ERROR"; \
+		$(ENDOLINE); \
+		$(PRINT) "  * $(_N)Target '$(_C)$(@)$(_N)' is not defined"; \
+		$(ENDOLINE); \
+		$(PRINT) "$(_H)$(MARKER) DETAILS"; \
+		$(ENDOLINE); \
+		$(PRINT) "  * This may be the result of a missing input file"; \
+		$(PRINT) "  * New targets can be defined in '$(_M)$(COMPOSER_SETTINGS)$(_D)'"; \
+		$(PRINT) "  * Use '$(_C)$(TARGETS)$(_D)' to get a list of available targets"; \
+		$(PRINT) "  * See '$(_C)$(HELPOUT)$(_D)' or '$(_C)$(HELPOUT)-$(DOITALL)$(_D)' for more information"; \
+		$(LINERULE); \
+	} >&2
 	@exit 1
 
 ########################################
@@ -10705,18 +10708,19 @@ $(DEBUGIT):
 
 .PHONY: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(HEADERS):
-	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) DEBUGIT"
-	@$(ENDOLINE)
-	@$(PRINT) "  * $(_N)This is the output of the '$(_C)$(DEBUGIT)$(_N)' target"
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) DETAILS"
-	@$(ENDOLINE)
-	@$(PRINT) "  * It runs several targets and diagnostic commands"
-	@$(PRINT) "  * All information needed for troubleshooting is included"
-	@$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"
-	@$(PRINT) "  * Use '$(_C)$(DEBUGIT)-file$(_D)' to create a text file with the results"
-	@$(LINERULE)
+	@{	$(LINERULE); \
+		$(PRINT) "$(_H)$(MARKER) DEBUGIT"; \
+		$(ENDOLINE); \
+		$(PRINT) "  * $(_N)This is the output of the '$(_C)$(DEBUGIT)$(_N)' target"; \
+		$(ENDOLINE); \
+		$(PRINT) "$(_H)$(MARKER) DETAILS"; \
+		$(ENDOLINE); \
+		$(PRINT) "  * It runs several targets and diagnostic commands"; \
+		$(PRINT) "  * All information needed for troubleshooting is included"; \
+		$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"; \
+		$(PRINT) "  * Use '$(_C)$(DEBUGIT)-file$(_D)' to create a text file with the results"; \
+		$(LINERULE); \
+	}
 
 .PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
@@ -10832,18 +10836,19 @@ $(TESTING):
 
 .PHONY: $(TESTING)-$(HEADERS)
 $(TESTING)-$(HEADERS):
-	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) TESTING"
-	@$(ENDOLINE)
-	@$(PRINT) "  * $(_N)This is the output of the '$(_C)$(TESTING)$(_N)' target"
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) DETAILS"
-	@$(ENDOLINE)
-	@$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"
-	@$(PRINT) "  * All cases are run in the '$(_M)$(patsubst $(COMPOSER_DIR)/%,%,$(TESTING_DIR))$(_D)' directory"
-	@$(PRINT) "  * It has a dedicated '$(_M)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(DOMAKE)$(_D)' can be run anywhere in the tree"
-	@$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"
-	@$(LINERULE)
+	@{	$(LINERULE); \
+		$(PRINT) "$(_H)$(MARKER) TESTING"; \
+		$(ENDOLINE); \
+		$(PRINT) "  * $(_N)This is the output of the '$(_C)$(TESTING)$(_N)' target"; \
+		$(ENDOLINE); \
+		$(PRINT) "$(_H)$(MARKER) DETAILS"; \
+		$(ENDOLINE); \
+		$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"; \
+		$(PRINT) "  * All cases are run in the '$(_M)$(patsubst $(COMPOSER_DIR)/%,%,$(TESTING_DIR))$(_D)' directory"; \
+		$(PRINT) "  * It has a dedicated '$(_M)$(TESTING_COMPOSER_DIR)$(_D)', and '$(_C)$(DOMAKE)$(_D)' can be run anywhere in the tree"; \
+		$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"; \
+		$(LINERULE); \
+	}
 
 .PHONY: $(TESTING)-$(HEADERS)-%
 $(TESTING)-$(HEADERS)-%:
@@ -13361,8 +13366,8 @@ $($(PUBLISH)-library-digest-files):
 override define $(PUBLISH)-library-digest-vars =
 	DIGEST_CONTINUE="$(call COMPOSER_YML_DATA_VAL,library.digest_continue)"; \
 	DIGEST_PERMALINK="$(call COMPOSER_YML_DATA_VAL,library.digest_permalink)"; \
-	DIGEST_INCLUDE="$$( \
-		$(ECHO) "$(call COMPOSER_YML_DATA_VAL,library.$(1)_include)" \
+	DIGEST_APPEND="$$( \
+		$(ECHO) "$(call COMPOSER_YML_DATA_VAL,library.$(1)_append)" \
 		| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT)|g" \
 	)"; \
 	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
@@ -13398,7 +13403,7 @@ override define $(PUBLISH)-library-digest-create =
 		$(CAT) \
 			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 			$($(PUBLISH)-library-spacer) \
-			$${DIGEST_INCLUDE} \
+			$${DIGEST_APPEND} \
 		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
@@ -13412,7 +13417,7 @@ override define $(PUBLISH)-library-digest-create =
 			$(CAT) \
 				$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 				$($(PUBLISH)-library-spacer) \
-				$${DIGEST_INCLUDE} \
+				$${DIGEST_APPEND} \
 			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 			| $(PANDOC_MD_TO_JSON) \
@@ -14216,7 +14221,9 @@ $(addprefix $(CLEANER)-,$(sort \
 	$(wildcard $(COMPOSER_FILENAME).*) \
 )):
 	@$(eval override $(@) := $(patsubst $(CLEANER)-%,%,$(@)))
-	@if [ -f "$(CURDIR)/$($(@))" ]; then \
+	@if	[ "$($(@))" != "$(NOTHING)" ] && \
+		[ -f "$(CURDIR)/$($(@))" ]; \
+	then \
 		$(call $(HEADERS)-rm,$(CURDIR),$($(@))); \
 		$(ECHO) "$(_S)"; \
 		$(RM) $(CURDIR)/$($(@)) $($(DEBUGIT)-output); \
