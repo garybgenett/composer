@@ -1424,6 +1424,7 @@ override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
 override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
 
+#> update: FILE.*CSS_THEMES
 override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
 override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 	$(foreach FILE,\
@@ -5384,13 +5385,17 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
 
+#> update: FILE.*CSS_THEMES
 override define PUBLISH_PAGE_SHOWDIR_INCLUDE =
 $(strip \
 $(foreach FILE,$(call CSS_THEMES),\
-	$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+	$(eval override FTYPE := $(word 1,$(subst :, ,$(FILE)))) \
+	$(eval override THEME := $(word 2,$(subst :, ,$(FILE)))) \
+	$(eval override SFILE := $(word 3,$(subst :, ,$(FILE)))) \
 	$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
 	$(eval override TITLE := $(word 5,$(subst :, ,$(FILE)))) \
 	$(eval override DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+	$(eval override FEXTN := $(if $(filter $(FTYPE),$(TYPE_PRES)),$(EXTN_PRES),$(EXTN_HTML))) \
 	$(if $(filter-out $(TOKEN),$(TITLE)),\
 		<N>**$(subst $(TOKEN), ,$(TITLE))** \
 		$(if $(filter [$(COMPOSER_BASENAME)],$(TITLE)),\
@@ -5399,16 +5404,16 @@ $(foreach FILE,$(call CSS_THEMES),\
 		<N><N> \
 	) \
 	$(if $(filter-out $(TOKEN),$(SHADE)),\
-		\t* [Theme: $(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(THEME)+$(SHADE).$(if $(filter $(TYPE_PRES).%,$(THEME)),$(EXTN_PRES),$(EXTN_HTML))) \
+		\t* [Theme: $(FTYPE).$(THEME) -- Shade: $(SHADE)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(SHADE).$(FEXTN)) \
 		$(if $(filter-out $(TOKEN),$(DEFLT)),\
 			**(default: `$(DEFLT)`)** \
 		) \
-		$(if $(filter $(PUBLISH).solar-light,$(THEME)),\
-			<N>\t\t\t\t*(same as `$(PUBLISH).solar-dark`)* \
+		$(if $(filter $(FTYPE).$(THEME),$(PUBLISH).solar-light),\
+			<N>\t\t\t\t* *(same as `$(PUBLISH).solar-dark`)* \
 		) \
 		$(if $(or \
-			$(filter $(TYPE_HTML).$(CSS_ALT),$(THEME)) ,\
-			$(filter $(TYPE_HTML).solar-$(CSS_ALT),$(THEME)) ,\
+			$(filter $(FTYPE).$(THEME),$(TYPE_HTML).$(CSS_ALT)) ,\
+			$(filter $(FTYPE).$(THEME),$(TYPE_HTML).solar-$(CSS_ALT)) ,\
 		),\
 			<N>\t\t\t\t* *(automatic `prefers-color-scheme` color selection)* \
 		) \
@@ -5888,6 +5893,8 @@ endef
 ### {{{3 Heredoc: composer_mk ($(PUBLISH) themes)
 ########################################
 
+#> update: FILE.*CSS_THEMES
+
 override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
@@ -5895,45 +5902,21 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR =
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
-override MAKEJOBS			:=
-
 override COMPOSER_TARGETS		:= $(PUBLISH_INDEX).$(EXTN_HTML)
 override COMPOSER_IGNORES		:= $(call COMPOSER_CONV,,$(COMPOSER_ART)) $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
 
-################################################################################
-
-.PHONY: themes-$(CLEANER)
-themes-$(CLEANER):
-	@$$(foreach FILE,$$(filter %.done,$$(COMPOSER_TARGETS)),\\
-		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_HTML),$$(FILE))); \\
-		$$(call $(COMPOSER_TINYNAME)-rm,$$(patsubst %.done,%.$(EXTN_PRES),$$(FILE))); \\
-		$$(call NEWLINE) \\
-	)
-	@$$(ECHO) ""
-
-.PHONY: themes-done
-themes-done: themes-$(PUBLISH_CSS_SHADE)
-themes-done:
-	@$$(ECHO) ""
-
-.PHONY: themes-%
-themes-%:
-	@$$(call $(COMPOSER_TINYNAME)-note,$$(*))
-	@$$(SED) -i "s|^(.+css_shade[:]).+$$$$|\\1 $$(*)|g" $(COMPOSER_YML)
-	@$$(TOUCH) $(COMPOSER_YML)
-
-########################################$(foreach FILE,$(call CSS_THEMES),\
-	$(if $(filter-out $(TOKEN),\
-		$(word 4,$(subst :, ,$(FILE))) \
-	),\
-	$(call NEWLINE)$(call NEWLINE)$(call \
-		HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET,$(strip \
-		$(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))+$(word 4,$(subst :, ,$(FILE))) \
-))))
-
-########################################
-
-override COMPOSER_TARGETS += themes-done
+################################################################################$(foreach FILE,$(call CSS_THEMES),\
+	$(eval override FTYPE := $(word 1,$(subst :, ,$(FILE)))) \
+	$(eval override THEME := $(word 2,$(subst :, ,$(FILE)))) \
+	$(eval override SFILE := $(word 3,$(subst :, ,$(FILE)))) \
+	$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+	$(eval override TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+	$(eval override DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+	$(eval override FEXTN := $(if $(filter $(FTYPE),$(TYPE_PRES)),$(EXTN_PRES),$(EXTN_HTML))) \
+	$(if $(filter-out $(TOKEN),$(SHADE)),\
+		$(call NEWLINE)$(call NEWLINE)$(call HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET,$(FTYPE),$(THEME),$(SHADE),$(FEXTN)) \
+	) \
+)
 
 ################################################################################
 endif
@@ -5943,18 +5926,9 @@ endif
 endef
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET =
-override COMPOSER_TARGETS += $(1).done
-$(1).done: $(COMPOSER_YML)
-$(1).done: ../$(PUBLISH_EXAMPLE).yml
-$(1).done:
-	@$$(MAKE) themes-$(word 2,$(subst +, ,$(1)))
-	@$$(MAKE) \\
-		c_type="$(if $(filter $(TYPE_PRES).%,$(1)),$(TYPE_PRES),$(TYPE_HTML))" \\
-		c_base="$(1)" \\
-		c_list="$(PUBLISH_INDEX)$(if $(filter $(TYPE_PRES).%,$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)" \\
-		c_css="$(word 1,$(subst +, ,$(1)))" \\
-		$(COMPOSER_PANDOC)
-	@$$(ECHO) "" >$$(@)
+override COMPOSER_TARGETS += $(1).$(2)+$(3).$(4)
+override $(1).$(2)+$(3).$(4) := $(PUBLISH_INDEX)$(if $(filter $(TYPE_PRES),$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)
+$(1).$(2)+$(3).$(4): override c_css := $(1).$(2)
 endef
 
 ########################################
@@ -6594,7 +6568,7 @@ endef
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes)
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes$(if $(1), $(MARKER) $(1)))
 ################################################################################
 
 variables:
@@ -6602,7 +6576,7 @@ variables:
 ########################################
 
   $(PUBLISH)-config:
-    css_shade:				$(PUBLISH_CSS_SHADE)
+    css_shade:				$(if $(1),$(1),$(PUBLISH_CSS_SHADE))
 
 ################################################################################
 # End Of File
@@ -10554,11 +10528,19 @@ endif
 		) $(call COMPOSER_CONV,$(EXPAND)/,$(BOOTSTRAP_ART_CSS))&g' \
 											$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_SHADE,light)) \
 											$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_SHADE,dark))
+#> update: FILE.*CSS_THEMES
 	@$(foreach FILE,$(call CSS_THEMES),$(if $(filter-out $(TOKEN):%,$(FILE)),\
-		$(if $(filter $(SPECIAL_VAL),$(word 2,$(subst :, ,$(FILE)))),\
-			$(filter-out --relative,$(LN))					$(notdir $(word 3,$(subst :, ,$(FILE)))) ,\
-			$(LN)								$(word 3,$(subst :, ,$(FILE))) \
-		)									$(call COMPOSER_CONV,$(CURDIR)/,$(call CSS_THEME,$(word 1,$(subst :, ,$(FILE))),$(word 2,$(subst :, ,$(FILE))))) \
+		$(eval override FTYPE := $(word 1,$(subst :, ,$(FILE)))) \
+		$(eval override THEME := $(word 2,$(subst :, ,$(FILE)))) \
+		$(eval override SFILE := $(word 3,$(subst :, ,$(FILE)))) \
+		$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+		$(eval override TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+		$(eval override DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+		$(eval override FEXTN := $(if $(filter $(FTYPE),$(TYPE_PRES)),$(EXTN_PRES),$(EXTN_HTML))) \
+		$(if $(filter $(SPECIAL_VAL),$(THEME)),\
+			$(filter-out --relative,$(LN))					$(notdir $(SFILE)) ,\
+			$(LN)								$(SFILE) \
+		)									$(call COMPOSER_CONV,$(CURDIR)/,$(call CSS_THEME,$(FTYPE),$(THEME))) \
 											$($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	))
@@ -13977,11 +13959,24 @@ else
 											$($(DEBUGIT)-output)
 endif
 	@$(ECHO) "$(_D)"
+#> update: FILE.*CSS_THEMES
 	@$(foreach FILE,$(call CSS_THEMES),\
-		$(eval override THEME := $(word 1,$(subst :, ,$(FILE))).$(word 2,$(subst :, ,$(FILE)))) \
+		$(eval override FTYPE := $(word 1,$(subst :, ,$(FILE)))) \
+		$(eval override THEME := $(word 2,$(subst :, ,$(FILE)))) \
+		$(eval override SFILE := $(word 3,$(subst :, ,$(FILE)))) \
 		$(eval override SHADE := $(word 4,$(subst :, ,$(FILE)))) \
+		$(eval override TITLE := $(word 5,$(subst :, ,$(FILE)))) \
+		$(eval override DEFLT := $(word 6,$(subst :, ,$(FILE)))) \
+		$(eval override FEXTN := $(if $(filter $(FTYPE),$(TYPE_PRES)),$(EXTN_PRES),$(EXTN_HTML))) \
 		$(if $(filter-out $(TOKEN),$(SHADE)),\
-			$(call $(HEADERS)-file,$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR),$(THEME)$(_D) $(_C)($(SHADE))); \
+			$(call $(HEADERS)-file,$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR),$(FTYPE).$(THEME)$(_D) $(_C)($(SHADE))); \
+			$(ECHO) "$(_E)"; \
+			$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR,,$(SHADE)) \
+											>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)-$(SHADE); \
+			$(LN)								$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)-$(SHADE) \
+											$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(SHADE).$(FEXTN).yml \
+											$($(DEBUGIT)-output); \
+			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
 		) \
 	)
