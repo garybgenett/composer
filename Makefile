@@ -13620,7 +13620,7 @@ override define $(PUBLISH)-library-digest-create =
 			$${DIGEST_APPEND} \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
-	))"; \
+	))" || $(TRUE); \
 	SIZ="0"; BLK="0"; \
 	while \
 		[ "$${BLK}" -lt "$${LEN}" ] && \
