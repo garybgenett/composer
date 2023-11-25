@@ -1016,7 +1016,6 @@ else ifeq ($(OS_TYPE),Darwin)
 override FIREBASE_BIN			:= $(FIREBASE_DIR)/$(FIREBASE_MAC_BIN)
 endif
 
-#WORKING:NOW:NOW:FIXIT
 override FIREBASE_BIN_NPM		:= $(FIREBASE_DIR)/node_modules/.bin/firebase
 ifneq ($(wildcard $(FIREBASE_BIN_NPM)),)
 override FIREBASE_BIN			:= $(FIREBASE_BIN_NPM)
@@ -2898,8 +2897,8 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Full upgrade to current release, repository preparation"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)]"			"Update all included components $(_E)(see [Requirements])$(_D)"
-#WORKING:NOW:NOW:FIXIT
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Complete $(_C)[$(UPGRADE)]$(_D), including binaries: $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D)"
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIXIT"; $(LINERULE)
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Complete $(_C)[$(UPGRADE)]$(_D), including Node.js (npm) builds"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)]"			"Diagnostics, tests targets list in $(_C)[COMPOSER_DEBUGIT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)-file]"			"Export $(_C)[$(DEBUGIT)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)]"			"List system packages and versions $(_E)(see [Requirements])$(_D)"
@@ -2914,7 +2913,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
-#WORKING:NOW:NOW:FIXIT
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIXIT"; $(LINERULE)
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` upstream: $(_N)[Git]$(_D)/$(_N)[Firebase]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
@@ -2939,7 +2938,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(MAKE_DB)]"			"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
-#WORKING:NOW:NOW:FIXIT
+	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIXIT"; $(LINERULE)
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(_N)*$(_C)]"		"$(_F)#WORK$(_D) Skip download steps in $(_C)[$(UPGRADE)]$(_D), and only do builds"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes to each repository $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`"
@@ -4018,15 +4017,15 @@ $(call NEWLINE)  * `$(_C)$(FILE)_CMT$(_D)` $(_E)(defaults to `$(FILE)_VER`)$(_D)
 $(call NEWLINE)  * `$(_C)$(FILE)_CMT$(_D)` \
 ))
 
-#WORKING:NOW:NOW:FIXIT
-Binaries for $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) are installed in their respective directories.
-By moving or removing them, or changing the version number and foregoing
-$(_C)[$(UPGRADE)-$(DOITALL)]$(_D), the system versions will be used instead.  This will work as long
-as the commit versions match, so that supporting files are in alignment.
+Binaries for $(_C)[Pandoc]$(_D), $(_C)[YQ]$(_D) and $(_C)[Google Firebase]$(_D) are installed in their
+respective directories.  By moving or removing them, or changing the version
+numbers and foregoing all relevant variations of $(_C)[$(UPGRADE)]$(_D), the system versions
+will be used instead.  This will work as long as the commit versions match, so
+that supporting files are in alignment, particularly for $(_C)[Pandoc]$(_D).
 
 It is possible that changing the versions will introduce incompatibilities with
 $(_C)[$(COMPOSER_BASENAME)]$(_D), which are usually impacts to the prettification of output files
-$(_E)(see [Document Formatting])$(_D).
+$(_E)(see [Document Formatting])$(_D).  Command-line options may also be affected.
 endef
 
 ########################################
@@ -4494,10 +4493,11 @@ endef
 
 #> update: $(DEBUGIT): targets list
 
-#WORKING:NOW:NOW:FIXIT
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL))
 
+################################################################################
+#WORKING:NOW:NOW:FIXIT
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and install all external components.
   * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries, along
@@ -12010,6 +12010,14 @@ $(TESTING)-other:
 
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
+	#> binaries
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_BIN_NPM),\
+			if [ -f "$($(FILE)_BIN_NPM)" ]; then \
+				$(MV) $($(FILE)_BIN_NPM) $($(FILE)_BIN_NPM).$(COMPOSER_BASENAME); \
+			fi \
+		) \
+	)
 	#> versions
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
@@ -12051,10 +12059,13 @@ $(TESTING)-other-done-env:
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN),\
 			$(ECHO) "$($(FILE)_NAME):\n"; \
-				$(ECHO) "\t$($(FILE)_BIN)\n"; \
-				$(ECHO) "\t$($(FILE))\n"; \
-			$(call NEWLINE) \
+			$(ECHO) "\tfile:\t$($(FILE))\n"; \
+			$(ECHO) "\tbin:\t$($(FILE)_BIN)\n"; \
+			$(if $($(FILE)_BIN_NPM),\
+				$(ECHO) "\tnpm:\t$($(FILE)_BIN_NPM)\n"; \
+			) \
 		) \
+		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(_D)"
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
@@ -12062,23 +12073,40 @@ $(TESTING)-other-done-env:
 			if [ "$($(FILE))" != "$($(FILE)_BIN)" ]; then \
 				$(call $(TESTING)-fail); \
 			fi; \
-			$(call NEWLINE) \
+			$(if $($(FILE)_BIN_NPM),\
+				if [ ! -f "$($(FILE)_BIN_NPM).$(COMPOSER_BASENAME)" ]; then \
+					$(call $(TESTING)-fail); \
+				fi; \
+			) \
 		) \
+		$(call NEWLINE) \
 	)
 
 .PHONY: $(TESTING)-other-done
 $(TESTING)-other-done:
 	#> binaries
 	@$(call $(TESTING)-run) $(@)-env
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_BIN_NPM),\
+			if [ -f "$($(FILE)_BIN_NPM).$(COMPOSER_BASENAME)" ]; then \
+				$(MV) $($(FILE)_BIN_NPM).$(COMPOSER_BASENAME) $($(FILE)_BIN_NPM); \
+			fi \
+		) \
+	)
 	#> versions
-	$(call $(TESTING)-find,[(].*$(PANDOC_VER_COMPOSER).*[)])
-	$(call $(TESTING)-find,[(].*$(YQ_VER_COMPOSER).*[)])
-	$(call $(TESTING)-find,[(].*$(FIREBASE_VER_COMPOSER).*[)])
+	$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_VER),\
+			$(call $(TESTING)-find,[(].*$($(FILE)_VER_COMPOSER).*[)]); \
+			$(call NEWLINE) \
+		) \
+	)
 	$(call $(TESTING)-count,28,$(NOTHING))
-	$(call $(TESTING)-count,2,$(subst /,[/],$(call COMPOSER_CONV,,$(PANDOC_BIN))))
-	$(call $(TESTING)-count,1,$(subst /,[/],$(call COMPOSER_CONV,,$(YQ_BIN))))
-#>	$(call $(TESTING)-count,1,$(subst /,[/],$(call COMPOSER_CONV,,$(FIREBASE_BIN))))
-	$(call $(TESTING)-count,2,$(subst /,[/],$(call COMPOSER_CONV,,$(FIREBASE_BIN))))
+	$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_BIN),\
+			$(call $(TESTING)-count,$(if $(filter PANDOC,$(FILE)),2,1),$(subst /,[/],$(call COMPOSER_CONV,,$($(FILE)_BIN)))); \
+			$(call NEWLINE) \
+		) \
+	)
 	#> export
 	$(call $(TESTING)-count,5,_EXPORT_)
 	$(call $(TESTING)-count,28,$(NOTHING))
