@@ -10221,7 +10221,7 @@ override define $(HEADERS)-$(COMPOSER_PANDOC)-PANDOC_OPTIONS =
 endef
 
 override define $(HEADERS)-action =
-	$(LINERULE); \
+	$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),$(LINERULE);) \
 	$(PRINT) "$(_H)$(MARKER) $(@)$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(_E)$(3)$(_D))))"
 endef
 override define $(HEADERS)-note =
@@ -12322,7 +12322,6 @@ endif
 $(TARGETS): .set_title-$(TARGETS)
 $(TARGETS):
 	@$(call $(HEADERS))
-#>	@$(LINERULE)
 	@$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT))),\
 		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst ",\",$(subst $(TOKEN),\n\t,$(FILE))))"; ,\
 						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
