@@ -1772,7 +1772,7 @@ override ENV_MAKE			= $(ENV) $(REALMAKE) $(call MAKEFLAGS_ENV) \
 override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
 
-override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9_.-]*
+override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9+_.-]*
 override COMPOSER_REGEX_PREFIX		:= [_.]
 override SED_ESCAPE_LIST		:= ^[:alnum:]
 
@@ -3971,6 +3971,7 @@ endef
 # migrate to *-target-[pre|post]
 #	update "targets:" filter
 #	sorted? use numbers, like udev, etc... 00-*, 10-*, etc.
+# a note about $(COMPOSER_REGEX) matching for custom targets...
 
 override define $(HELPOUT)-$(DOITALL)-CUSTOM =
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
@@ -12322,7 +12323,6 @@ $(TARGETS): .set_title-$(TARGETS)
 $(TARGETS):
 	@$(call $(HEADERS))
 #>	@$(LINERULE)
-#WORKING:NOW:NOW:FIXIT
 	@$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT))),\
 		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst ",\",$(subst $(TOKEN),\n\t,$(FILE))))"; ,\
 						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
@@ -12331,7 +12331,7 @@ $(TARGETS):
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(if $(call c_list_var_source,,$(BASE),$(EXTN)),\
-			$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
+			$(ECHO) "$(_D)$(if $(COMPOSER_DEBUGIT),\n\t, )$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
 		) \
 		$(ENDOLINE); \
 		$(call NEWLINE) \
@@ -12344,6 +12344,9 @@ $(TARGETS):
 	@$(PRINT) "$(_H)$(MARKER) $(SUBDIRS)"; $(ECHO) "$(COMPOSER_SUBDIRS)"			| $(SED) "s|[ ]+|\n|g" | $(SORT)
 	@$(LINERULE)
 	@$(MAKE) $(PRINTER)-$(PRINTER)
+
+#WORKING:NOW:NOW:FIXIT
+# + character, and others... == | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" ... test!
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
@@ -12358,7 +12361,7 @@ override define $(TARGETS)-$(PRINTER) =
 					$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
 					$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE)),,header) \
 					$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE)),,css) \
-					$(call COMPOSER_TMP_FILE).css \
+					$(call COMPOSER_TMP_FILE).css	$(COMPOSER_TMP)/[^[:space:]]+ \
 					,\
 					-e "s|$(FILE)||g" \
 				) \
@@ -12377,6 +12380,7 @@ override define $(TARGETS)-$(PRINTER) =
 			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
 			-e "s|[:]+[[:space:]]*$$||g" \
+			-e "s|([=])+[[:space:]]*$$|\\1|g" \
 			-e "s|[[:space:]]+|$(TOKEN)|g" \
 		) \
 		| $(SORT)
