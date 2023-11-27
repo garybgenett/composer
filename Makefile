@@ -777,7 +777,7 @@ override REPOSITORIES_LIST		:=
 override OS_VAR_LIST			:= LNX WIN MAC
 override OS_VAR_LNX			:= linux
 override OS_VAR_WIN			:= windows
-override OS_VAR_MAC			:= darwin
+override OS_VAR_MAC			:= macos
 
 ########################################
 
@@ -1016,9 +1016,9 @@ else ifeq ($(OS_TYPE),Darwin)
 override FIREBASE_BIN			:= $(FIREBASE_DIR)/$(FIREBASE_MAC_BIN)
 endif
 
-override FIREBASE_BIN_NPM		:= $(FIREBASE_DIR)/node_modules/.bin/firebase
-ifneq ($(wildcard $(FIREBASE_BIN_NPM)),)
-override FIREBASE_BIN			:= $(FIREBASE_BIN_NPM)
+override FIREBASE_BIN_BLD		:= $(FIREBASE_DIR)/node_modules/.bin/firebase
+ifneq ($(wildcard $(FIREBASE_BIN_BLD)),)
+override FIREBASE_BIN			:= $(FIREBASE_BIN_BLD)
 endif
 
 override define FIREBASE_IGNORE =
@@ -1316,7 +1316,7 @@ endef
 ########################################
 
 override define FIREBASE_RUN =
-	$(if $(filter $(FIREBASE),$(FIREBASE_BIN_NPM)),\
+	$(if $(filter $(FIREBASE),$(FIREBASE_BIN_BLD)),\
 		$(subst cd $(FIREBASE_DIR),cd $(COMPOSER_ROOT),\
 		$(subst PATH=,HOME="$(COMPOSER_ROOT)" PATH=,\
 			$(call NPM_RUN,$(FIREBASE_DIR),,firebase) \
@@ -2401,7 +2401,7 @@ override PUBLISH_DIRS_CONFIGS := \
 	$(PUBLISH_PAGEDIR) \
 	$(PUBLISH_SHOWDIR) \
 
-#>	$(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
+#> update: $(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
 override PUBLISH_DIRS_DEBUGIT := \
 	$(word 1,$(PUBLISH_FILES)) \
 	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
@@ -2495,11 +2495,10 @@ override COMPOSER_SUBDIRS		:= $(NOTHING)-$(CONFIGS)-$(SUBDIRS)
 endif
 endif
 
-#> update: $(EXPORTS) > $(CLEANER) > $(DOITALL)
 ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
+override COMPOSER_TARGETS		:= $(filter-out %-$(EXPORTS),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(DOITALL)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(EXPORTS)
 endif
 endif
 ifneq ($(COMPOSER_TARGETS),)
@@ -2509,9 +2508,9 @@ override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(CLEANER)
 endif
 endif
 ifneq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(filter-out %-$(EXPORTS),$(COMPOSER_TARGETS))
+override COMPOSER_TARGETS		:= $(filter-out %-$(DOITALL),$(COMPOSER_TARGETS))
 ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(EXPORTS)
+override COMPOSER_TARGETS		:= $(NOTHING)-$(TARGETS)-$(DOITALL)
 endif
 endif
 
@@ -2897,8 +2896,9 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Full upgrade to current release, repository preparation"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)]"			"Update all included components $(_E)(see [Requirements])$(_D)"
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIXIT"; $(LINERULE)
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Complete $(_C)[$(UPGRADE)]$(_D), including Node.js (npm) builds"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Also perform all source code builds"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes made to each $(_E)(see [Repository Versions])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(_N)*$(_C)]"		"Complete fetch and build for a specific component"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)]"			"Diagnostics, tests targets list in $(_C)[COMPOSER_DEBUGIT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)-file]"			"Export $(_C)[$(DEBUGIT)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)]"			"List system packages and versions $(_E)(see [Requirements])$(_D)"
@@ -2913,9 +2913,8 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIXIT"; $(LINERULE)
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` upstream: $(_N)[Git]$(_D)/$(_N)[Firebase]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` first"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish to upstream hosting providers"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_H)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
@@ -2938,9 +2937,6 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(MAKE_DB)]"			"Complete contents of $(_C)[GNU Make]$(_D) internal state"
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
-	@$(PRINT) "$(_F)#WORKING:NOW:NOW:FIXIT"; $(LINERULE)
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(_N)*$(_C)]"		"$(_F)#WORK$(_D) Skip download steps in $(_C)[$(UPGRADE)]$(_D), and only do builds"
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes to each repository $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Does $(_C)[$(CREATOR)]$(_D), and builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
@@ -2951,8 +2947,8 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_SETTINGS)]"	"$(_H)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(COMPOSER_YML)]"	"$(_H)[COMPOSER_LIBRARY]$(_D) configured template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"$(_C)[Static Websites]$(_D) example \`$(_M)$(notdir $(PUBLISH_ROOT))$(_D)\` in $(_H)[COMPOSER_DIR]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"Only create directory structure and source files"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]"	"Version configured to test specific variations"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"Only create directory structure and source files"
 	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
 	@$(TABLE_M2) "$(_C)[$(PRINTER)-$(PRINTER)]"		"Same as $(_C)[$(PRINTER)]$(_D), but only lists the files $(_E)(no headers)"
 
@@ -4494,21 +4490,26 @@ endef
 #> update: $(DEBUGIT): targets list
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL) / $(UPGRADE)-$(PRINTER) / $(UPGRADE)-\*)
 
-################################################################################
-#WORKING:NOW:NOW:FIXIT
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
-    and install all external components.
-  * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target also fetches the $(_C)[Pandoc]$(_D) and $(_C)[YQ]$(_D) binaries, along
-    with running the builds for each repository, whereas $(_C)[$(UPGRADE)]$(_D) only fetches
-    the source code.
-  * In addition to doing $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), $(_C)[$(DISTRIB)]$(_D) runs $(_C)[$(CREATOR)-$(DOITALL)]$(_D), which
-    performs the steps necessary to turn the current directory into a
-    development clone of $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_E)(except for [site-template])$(_D), including
-    overwriting all supporting files.
+    and build all external components.
+  * Simply doing $(_C)[$(UPGRADE)]$(_D) will fetch all source repositories and pre-built
+    binaries.
+  * The $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) target additionally performs all relevant source code
+    builds.  For some repositories, this is necessary to create the final output
+    files used by $(_C)[$(COMPOSER_BASENAME)]$(_D), and in other cases this builds local binaries
+    which replace the included ones.  Additional external tools may be required
+    to perform these steps $(_E)(see [$(CHECKIT)-$(DOITALL)])$(_D).
+  * To review the resulting differences between upstream sources and the local
+    directories, use $(_C)[$(UPGRADE)-$(PRINTER)]$(_D).
+  * Each component directory has a corresponding $(_C)[$(UPGRADE)-$(_N)*$(_C)]$(_D) target which
+    performs the equivalent of $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) for only that component.
+  * Finally, $(_C)[$(DISTRIB)]$(_D) runs $(_C)[$(CREATOR)-$(DOITALL)]$(_D), $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), and $(_C)[$(PUBLISH)-$(EXAMPLE)]$(_D),
+    which collectively turn the current directory into a complete clone of
+    $(_C)[$(COMPOSER_BASENAME)]$(_D), including overwriting all supporting files.
   * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
-    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`.
+    compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`, so it is fully self-contained.
 
 Creating a development clone:
 
@@ -4540,9 +4541,10 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(OUT_README).$(EXTN_DEFA
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL))
 
-  * Use $(_C)[$(CHECKIT)]$(_D) to see the list of components and their versions, in relation to
-    the system installed versions.  Doing $(_C)[$(CHECKIT)-$(DOITALL)]$(_D) will show the complete
-    list of tools that are used by $(_C)[$(COMPOSER_BASENAME)]$(_D).
+  * Use $(_C)[$(CHECKIT)]$(_D) to see the minimum list of required external components and
+    their versions, in relation to the system installed versions.
+  * Doing $(_C)[$(CHECKIT)-$(DOITALL)]$(_D) will show the complete list of tools that are used by
+    $(_C)[$(COMPOSER_BASENAME)]$(_D), along with which targets they are needed by.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONFIGS)-\* / $(CONFIGS)-yml / $(TARGETS))
 
@@ -4597,6 +4599,12 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)-$(PRINTER)$(_D) $(_E)c_list="$(M
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPORTS)-$(DOFORCE) / \*-$(EXPORTS))
 
 #WORKING ... and then runs all $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D) targets.
+#	hidden variables...
+#		$(_EXPORT_DIRECTORY)
+#		$(_EXPORT_GIT_REPO)
+#		$(_EXPORT_GIT_BNCH)
+#		$(_EXPORT_FIRE_ACCT)
+#		$(_EXPORT_FIRE_PROJ)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-library)
 
@@ -4624,9 +4632,6 @@ $(_S)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(MAKE_DB)]: #internal-targets$(_D)
 $(_S)[$(LISTING)]: #internal-targets$(_D)
 $(_S)[$(NOTHING)]: #internal-targets$(_D)
-#WORKING:NOW:NOW:FIXIT
-$(_S)[$(UPGRADE)-*]: #internal-targets$(_D)
-$(_S)[$(UPGRADE)-$(PRINTER)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(TESTING)]: #internal-targets$(_D)
@@ -4637,8 +4642,8 @@ $(_S)[$(CHECKIT)-$(HELPOUT)]: #internal-targets$(_D)
 $(_S)[$(PUBLISH)-$(COMPOSER_SETTINGS)]: #internal-targets$(_D)
 $(_S)[$(PUBLISH)-$(COMPOSER_YML)]: #internal-targets$(_D)
 $(_S)[$(PUBLISH)-$(EXAMPLE)]: #internal-targets$(_D)
-$(_S)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]: #internal-targets$(_D)
 $(_S)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]: #internal-targets$(_D)
+$(_S)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]: #internal-targets$(_D)
 $(_S)[$(SUBDIRS)]: #internal-targets$(_D)
 $(_S)[$(PRINTER)-$(PRINTER)]: #internal-targets$(_D)
 endef
@@ -7453,7 +7458,10 @@ _EOF_
 $${CAT} <<_EOF_
 <li><hr class="dropdown-divider"></li>
 _EOF_
-	elif [ "$${1}" = "top-info" ]; then
+	elif {
+		[ "$${1}" = "top-info" ] ||
+		[ "$${1}" = "bottom-info" ];
+	}; then
 $${CAT} <<_EOF_
 <p class="navbar-text d-$${COLS_BREAK}-none d-block"><hr class="dropdown-divider"></p>
 _EOF_
@@ -10351,6 +10359,7 @@ $(DISTRIB):
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
 	@$(MAKE) --makefile $(COMPOSER) $(UPGRADE)-$(DOITALL)
 	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)-$(DOITALL)
+	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)
 
 ########################################
 ## {{{2 $(UPGRADE)
@@ -10386,18 +10395,18 @@ ifeq ($(COMPOSER_DOITALL_$(UPGRADE)),$(PRINTER))
 	)
 else
 	@$(MAKE) --makefile $(COMPOSER) \
-		$(UPGRADE)-git \
-		$(UPGRADE)-wget \
+		$(UPGRADE)-src \
+		$(UPGRADE)-bin \
 		$(if $(COMPOSER_DOITALL_$(UPGRADE)),\
-			$(UPGRADE)-npm \
+			$(UPGRADE)-bld \
 		)
 endif
 endif
 
 override $(UPGRADE)-commands := \
-	git \
-	wget \
-	npm \
+	src \
+	bin \
+	bld \
 
 ########################################
 ### {{{3 $(UPGRADE)-$(NOTHING)
@@ -10447,88 +10456,88 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 )
 
 ########################################
-### {{{3 $(UPGRADE)-git
+### {{{3 $(UPGRADE)-src
 ########################################
 
-override define $(UPGRADE)-git =
-.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-git
-$(UPGRADE)-$(notdir $($(1)_DIR))-git:
+override define $(UPGRADE)-src =
+.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-src
+$(UPGRADE)-$(notdir $($(1)_DIR))-src:
 	@$$(call GIT_REPO,$$(call COMPOSER_CONV,$$(CURDIR)/,$$($(1)_DIR)),$$($(1)_SRC),$$($(1)_CMT))
 endef
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
 	$(if $($(FILE)_CMT),\
-		$(eval $(call $(UPGRADE)-git,$(FILE))) ,\
-		$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),git)) \
+		$(eval $(call $(UPGRADE)-src,$(FILE))) ,\
+		$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),src)) \
 	) \
 )
 
 ########################################
-### {{{3 $(UPGRADE)-wget
+### {{{3 $(UPGRADE)-bin
 ########################################
 
-override define $(UPGRADE)-wget =
-.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-wget
-$(UPGRADE)-$(notdir $($(1)_DIR))-wget: \
+override define $(UPGRADE)-bin =
+.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-bin
+$(UPGRADE)-$(notdir $($(1)_DIR))-bin: \
 	$(foreach FILE,$(OS_VAR_LIST),\
-		$(UPGRADE)-$(notdir $($(1)_DIR))-wget-$(OS_VAR_$(FILE)) \
+		$(UPGRADE)-$(notdir $($(1)_DIR))-bin-$(OS_VAR_$(FILE)) \
 	)
-$(UPGRADE)-$(notdir $($(1)_DIR))-wget:
+$(UPGRADE)-$(notdir $($(1)_DIR))-bin:
 	@$$(ECHO) ""
 endef
 
-override define $(UPGRADE)-wget-os =
-.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-wget-$(OS_VAR_$(2))
-#>$(UPGRADE)-$(notdir $($(1)_DIR))-wget-$(OS_VAR_$(2)): $(UPGRADE)-$(notdir $($(1)_DIR))-git
-$(UPGRADE)-$(notdir $($(1)_DIR))-wget-$(OS_VAR_$(2)):
+override define $(UPGRADE)-bin-os =
+.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-bin-$(OS_VAR_$(2))
+#>$(UPGRADE)-$(notdir $($(1)_DIR))-bin-$(OS_VAR_$(2)): $(UPGRADE)-$(notdir $($(1)_DIR))-src
+$(UPGRADE)-$(notdir $($(1)_DIR))-bin-$(OS_VAR_$(2)):
 	@$$(call WGET_PACKAGE,$$(call COMPOSER_CONV,$$(CURDIR)/,$$($(1)_DIR)),$$($(1)_URL),$$($(1)_$(2)_SRC),$$($(1)_$(2)_DST),$$($(1)_$(2)_BIN),$$($(1)_$(2)_ZIP))
 endef
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
-	$(eval $(call $(UPGRADE)-wget,$(FILE))) \
+	$(eval $(call $(UPGRADE)-bin,$(FILE))) \
 	$(foreach VAR,$(OS_VAR_LIST),\
 		$(if $($(FILE)_$(VAR)_SRC),\
-			$(eval $(call $(UPGRADE)-wget-os,$(FILE),$(VAR))) ,\
-			$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),wget-$(OS_VAR_$(VAR)))) \
+			$(eval $(call $(UPGRADE)-bin-os,$(FILE),$(VAR))) ,\
+			$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),bin-$(OS_VAR_$(VAR)))) \
 		) \
 	) \
 )
 
 ########################################
-### {{{3 $(UPGRADE)-npm
+### {{{3 $(UPGRADE)-bld
 ########################################
 
-override define $(UPGRADE)-npm =
-.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-npm
-#>$(UPGRADE)-$(notdir $($(1)_DIR))-npm: $(UPGRADE)-$(notdir $($(1)_DIR))-git
-$(UPGRADE)-$(notdir $($(1)_DIR))-npm:
-	@$$(MAKE) --makefile $(COMPOSER) $$(UPGRADE)-$$(notdir $$($(1)_DIR))-npm-install
-	@$$(MAKE) --makefile $(COMPOSER) $$(UPGRADE)-$$(notdir $$($(1)_DIR))-npm-build
+override define $(UPGRADE)-bld =
+.PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-bld
+#>$(UPGRADE)-$(notdir $($(1)_DIR))-bld: $(UPGRADE)-$(notdir $($(1)_DIR))-src
+$(UPGRADE)-$(notdir $($(1)_DIR))-bld:
+	@$$(MAKE) --makefile $(COMPOSER) $$(UPGRADE)-$$(notdir $$($(1)_DIR))-bld-fetch
+	@$$(MAKE) --makefile $(COMPOSER) $$(UPGRADE)-$$(notdir $$($(1)_DIR))-bld-build
 endef
 
-override $(UPGRADE)-npm-list :=
+override $(UPGRADE)-bld-list :=
 
-override $(UPGRADE)-npm-list += BOOTLINT
+override $(UPGRADE)-bld-list += BOOTLINT
 
-.PHONY: $(UPGRADE)-$(notdir $(BOOTLINT_DIR))-npm-install
-$(UPGRADE)-$(notdir $(BOOTLINT_DIR))-npm-install:
+.PHONY: $(UPGRADE)-$(notdir $(BOOTLINT_DIR))-bld-fetch
+$(UPGRADE)-$(notdir $(BOOTLINT_DIR))-bld-fetch:
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR)))
 
-.PHONY: $(UPGRADE)-$(notdir $(BOOTLINT_DIR))-npm-build
-$(UPGRADE)-$(notdir $(BOOTLINT_DIR))-npm-build:
+.PHONY: $(UPGRADE)-$(notdir $(BOOTLINT_DIR))-bld-build
+$(UPGRADE)-$(notdir $(BOOTLINT_DIR))-bld-build:
 	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
 	@$(LN)										$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR))/src/cli-main.js \
 											$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR))/bootlint
 
-override $(UPGRADE)-npm-list += WATERCSS
+override $(UPGRADE)-bld-list += WATERCSS
 
-.PHONY: $(UPGRADE)-$(notdir $(WATERCSS_DIR))-npm-install
-$(UPGRADE)-$(notdir $(WATERCSS_DIR))-npm-install:
+.PHONY: $(UPGRADE)-$(notdir $(WATERCSS_DIR))-bld-fetch
+$(UPGRADE)-$(notdir $(WATERCSS_DIR))-bld-fetch:
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),yarn)
 
-.PHONY: $(UPGRADE)-$(notdir $(WATERCSS_DIR))-npm-build
-$(UPGRADE)-$(notdir $(WATERCSS_DIR))-npm-build:
+.PHONY: $(UPGRADE)-$(notdir $(WATERCSS_DIR))-bld-build
+$(UPGRADE)-$(notdir $(WATERCSS_DIR))-bld-build:
 	@$(call $(HEADERS)-action,$(WATERCSS_DIR),build)
 	@$(SED) -i \
 		-e "/^dist[/]$$/d" \
@@ -10547,17 +10556,17 @@ $(UPGRADE)-$(notdir $(WATERCSS_DIR))-npm-build:
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-all.css
 	@$(call NPM_RUN,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),,yarn) build
 
-override $(UPGRADE)-npm-list += MDVIEWER
+override $(UPGRADE)-bld-list += MDVIEWER
 
-.PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-npm-install
-$(UPGRADE)-$(notdir $(MDVIEWER_DIR))-npm-install:
+.PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-fetch
+$(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-fetch:
 #>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR)))
 	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
 		$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 
-.PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-npm-build
-$(UPGRADE)-$(notdir $(MDVIEWER_DIR))-npm-build:
+.PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build
+$(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build:
 	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
 	@$(MKDIR)									$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
 	@$(LN)										$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
@@ -10566,25 +10575,25 @@ $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-npm-build:
 		$(call NPM_BUILD,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 
-override $(UPGRADE)-npm-list += FIREBASE
+override $(UPGRADE)-bld-list += FIREBASE
 
-.PHONY: $(UPGRADE)-$(notdir $(FIREBASE_DIR))-npm-install
-$(UPGRADE)-$(notdir $(FIREBASE_DIR))-npm-install:
+.PHONY: $(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-fetch
+$(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-fetch:
 #>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)))
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(FIREBASE_DIR)),$(notdir $(FIREBASE_DIR))@$(FIREBASE_VER))
 
-.PHONY: $(UPGRADE)-$(notdir $(FIREBASE_DIR))-npm-build
-$(UPGRADE)-$(notdir $(FIREBASE_DIR))-npm-build: $(NOTHING)-$(notdir $(FIREBASE_DIR))-npm-build
-$(UPGRADE)-$(notdir $(FIREBASE_DIR))-npm-build:
+.PHONY: $(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-build
+$(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-build: $(NOTHING)-$(notdir $(FIREBASE_DIR))-bld-build
+$(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-build:
 	@$(ECHO) ""
 
-override $(UPGRADE)-npm-list +=
+override $(UPGRADE)-bld-list +=
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
-	$(eval $(call $(UPGRADE)-npm,$(FILE))) \
-	$(if $(filter $(FILE),$($(UPGRADE)-npm-list)),,\
-		$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),npm-install)) \
-		$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),npm-build)) \
+	$(eval $(call $(UPGRADE)-bld,$(FILE))) \
+	$(if $(filter $(FILE),$($(UPGRADE)-bld-list)),,\
+		$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),bld-fetch)) \
+		$(eval $(call $(UPGRADE)-$(NOTHING),$(notdir $($(FILE)_DIR)),bld-build)) \
 	) \
 )
 
@@ -11676,10 +11685,9 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(DOITALL))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-#> update: $(CLEANER) > $(DOITALL)
-#>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
-	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(CLEANER)" $(CLEANER)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(DOITALL)" $(DOITALL)
+#> update: $(CLEANER) > $(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 
@@ -12012,9 +12020,9 @@ $(TESTING)-other:
 $(TESTING)-other-init:
 	#> binaries
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_BIN_NPM),\
-			if [ -f "$($(FILE)_BIN_NPM)" ]; then \
-				$(MV) $($(FILE)_BIN_NPM) $($(FILE)_BIN_NPM).$(COMPOSER_BASENAME); \
+		$(if $($(FILE)_BIN_BLD),\
+			if [ -f "$($(FILE)_BIN_BLD)" ]; then \
+				$(MV) $($(FILE)_BIN_BLD) $($(FILE)_BIN_BLD).$(COMPOSER_BASENAME); \
 			fi \
 		) \
 	)
@@ -12061,8 +12069,8 @@ $(TESTING)-other-done-env:
 			$(ECHO) "$($(FILE)_NAME):\n"; \
 			$(ECHO) "\tfile:\t$($(FILE))\n"; \
 			$(ECHO) "\tbin:\t$($(FILE)_BIN)\n"; \
-			$(if $($(FILE)_BIN_NPM),\
-				$(ECHO) "\tnpm:\t$($(FILE)_BIN_NPM)\n"; \
+			$(if $($(FILE)_BIN_BLD),\
+				$(ECHO) "\tbuild:\t$($(FILE)_BIN_BLD)\n"; \
 			) \
 		) \
 		$(call NEWLINE) \
@@ -12073,8 +12081,8 @@ $(TESTING)-other-done-env:
 			if [ "$($(FILE))" != "$($(FILE)_BIN)" ]; then \
 				$(call $(TESTING)-fail); \
 			fi; \
-			$(if $($(FILE)_BIN_NPM),\
-				if [ ! -f "$($(FILE)_BIN_NPM).$(COMPOSER_BASENAME)" ]; then \
+			$(if $($(FILE)_BIN_BLD),\
+				if [ ! -f "$($(FILE)_BIN_BLD).$(COMPOSER_BASENAME)" ]; then \
 					$(call $(TESTING)-fail); \
 				fi; \
 			) \
@@ -12087,9 +12095,9 @@ $(TESTING)-other-done:
 	#> binaries
 	@$(call $(TESTING)-run) $(@)-env
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_BIN_NPM),\
-			if [ -f "$($(FILE)_BIN_NPM).$(COMPOSER_BASENAME)" ]; then \
-				$(MV) $($(FILE)_BIN_NPM).$(COMPOSER_BASENAME) $($(FILE)_BIN_NPM); \
+		$(if $($(FILE)_BIN_BLD),\
+			if [ -f "$($(FILE)_BIN_BLD).$(COMPOSER_BASENAME)" ]; then \
+				$(MV) $($(FILE)_BIN_BLD).$(COMPOSER_BASENAME) $($(FILE)_BIN_BLD); \
 			fi \
 		) \
 	)
@@ -12100,7 +12108,7 @@ $(TESTING)-other-done:
 			$(call NEWLINE) \
 		) \
 	)
-	$(call $(TESTING)-count,28,$(NOTHING))
+	$(call $(TESTING)-count,28,$(subst .,[.],$(NOTHING)))
 	$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN),\
 			$(call $(TESTING)-count,$(if $(filter PANDOC,$(FILE)),2,1),$(subst /,[/],$(call COMPOSER_CONV,,$($(FILE)_BIN)))); \
@@ -12109,7 +12117,7 @@ $(TESTING)-other-done:
 	)
 	#> export
 	$(call $(TESTING)-count,5,_EXPORT_)
-	$(call $(TESTING)-count,28,$(NOTHING))
+	$(call $(TESTING)-count,28,$(subst .,[.],$(NOTHING)))
 	#> pandoc
 	$(call $(TESTING)-find,pandoc-api-version)
 	#> git
@@ -13990,12 +13998,12 @@ endif
 ########################################
 
 #WORKING:NOW once finalizing #WORK markers gets to here, do a final double-check of this list...
-#> $(PUBLISH)-$(EXAMPLE)-$(TESTING) > COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
+#> $(PUBLISH)-$(EXAMPLE)-$(TESTING) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
 #>	$(CONFIGS)
 #>		[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #>		$(COMPOSER_SETTINGS)
 #>			$(*_MOD)
-#>			$(word 3,$(PUBLISH_DIRS)) > COMPOSER_INCLUDE=""
+#>			$(word 3,$(PUBLISH_DIRS)) == COMPOSER_INCLUDE=""
 #>			COMPOSER_DEPENDS="1"
 #>		$(COMPOSER_YML)
 #>			auto_update: $(LIBRARY_AUTO_UPDATE_ALT)
@@ -14003,9 +14011,9 @@ endif
 #>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
 #>		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
 #>	$(SHELL)
-#>		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL) > --filter="-_/test/**"
+#>		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL) == --filter="-_/test/**"
 #>		sitemap: $(RM) $(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT)
-#> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) > COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
+#> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
 #>	$(SHELL)
 #>		$(TOUCH) $(COMPOSER_SETTINGS) $(COMPOSER_YML)
 #>		exit 0
