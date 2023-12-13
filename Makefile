@@ -14058,9 +14058,11 @@ endif
 ########################################
 
 #WORKING:NOW once finalizing #WORK markers gets to here, do a final double-check of this list...
+#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
+#>	[ -n $(COMPOSER_DEBUGIT) ] || --filter="-_/test/**"
 #> $(PUBLISH)-$(EXAMPLE)-$(TESTING) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
+#>	[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #>	$(CONFIGS)
-#>		[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #>		$(COMPOSER_SETTINGS)
 #>			$(*_MOD)
 #>			$(word 3,$(PUBLISH_DIRS)) == COMPOSER_INCLUDE=""
@@ -14069,28 +14071,21 @@ endif
 #>			auto_update: $(LIBRARY_AUTO_UPDATE_ALT)
 #>			$(PUBLISH)-info-top: ICON
 #>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
-#>		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
+#>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
 #>	$(SHELL)
-#>		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL) == --filter="-_/test/**"
-#>		sitemap: $(RM) $(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT)
+#>		$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT)
+#>		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
+#>		$(PUBLISH)-$(DOFORCE) [x1]
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
 #>	$(SHELL)
-#>		$(TOUCH) $(COMPOSER_SETTINGS) $(COMPOSER_YML)
 #>		exit 0
-#> $(PUBLISH)-$(EXAMPLE)
-#>	$(SHELL)
-#>		#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
-#>		[ ! -f $(PUBLISH)-library ] && $(TOUCH) $($(PUBLISH)-library-digest-src)
-#>			$(word 1,$(PUBLISH_DIRS))
-#>			$(word 3,$(PUBLISH_DIRS))
-#>		$(PUBLISH)-$(DOFORCE) [x2]
 #> $(COMPOSER_DEBUGIT)
 #>	$(CONFIGS)
 #>		$(COMPOSER_YML)
 #>			auto_update: null
 #>	$(SHELL)
-#>		[ -n $(COMPOSER_RELEASE) ] && HEREDOC_CUSTOM_PUBLISH
-#>		$(foreach FILE,$(PUBLISH_DIRS_DEBUGIT),$(call ENV_MAKE))
+#>		[ -n $(COMPOSER_RELEASE) ] && "#> update: HEREDOC_CUSTOM_PUBLISH"
+#>		$(PUBLISH_DIRS_DEBUGIT)
 
 $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL):
 ifneq ($(wildcard $(firstword $(RSYNC))),)
@@ -14168,12 +14163,6 @@ ifeq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
 	@$(MAKE) $(NOTHING)-rsync
 else
-#>ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-#>	@$(ECHO) "$(_S)"
-#>	@$(RM) $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL) $($(DEBUGIT)-output)
-#>	@$(ECHO) "$(_D)"
-#>	@$(MAKE) $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
-#>endif
 	@$(call $(HEADERS))
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(call $(HEADERS)-note,$(PUBLISH_ROOT),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
@@ -14441,39 +14430,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
 endif
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
-	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
-		$(foreach TIME,\
-			$(COMPOSER_SETTINGS) \
-			$(COMPOSER_YML) \
-			,\
-			if [ -f "$(PUBLISH_ROOT)/$(FILE)/$(TIME)" ]; then \
-				$(TOUCH) $(PUBLISH_ROOT)/$(FILE)/$(TIME); \
-			fi; \
-			$(call NEWLINE) \
-		) \
-	)
-else
-#WORKING:NOW:NOW:FIXIT
-#	no longer needed?  what was the thought/goal...?
-#	the makefile dependency is taking care of it...?
-#	is this how we want to demonstrate publish-template...?
-#	does it matter...?
-#	do we even need to do a double-run anymore...?
-#ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-#	@$(foreach FILE,\
-#		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)) \
-#		$(PUBLISH_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)) \
-#		,\
-#		if [ ! -f "$(FILE)/$(notdir $($(PUBLISH)-library-digest-src))" ]; then \
-#			$(ECHO) "$(_S)"; \
-#			$(MKDIR) $(FILE) $($(DEBUGIT)-output); \
-#			$(ECHO) "$(_D)"; \
-#			$(TOUCH) $(FILE)/$(notdir $($(PUBLISH)-library-digest-src)); \
-#		fi; \
-#		$(call NEWLINE) \
-#	)
-#endif
+ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(ECHO) "$(_E)"
 	@$(LN)	$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_DEFAULT) \
@@ -14522,6 +14479,8 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
+else
+	@$(ECHO) ""
 endif
 
 ########################################
