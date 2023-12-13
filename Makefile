@@ -170,6 +170,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	remove once fixed in upstream
 #		$(MKDIR) $(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
 #		MDVIEWER_FIX_SASS_VER
+#	$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_EXT_DEFAULT)
+#		$(SED) -i "/^[[][_]/d" $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 # HTML
 #	metadata / keywords
 # PDF / EPUB / DOCX
@@ -767,11 +769,6 @@ override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
 override LIBRARY_SITEMAP_SPACER		:= 1
 override LIBRARY_SITEMAP_SPACER_ALT	:= null
-
-#WORKING:NOW:NOW:FIXIT
-#	the include makes the config digest files take forever...?
-override LIBRARY_DIGEST_APPEND_ALT	= null
-override LIBRARY_LISTS_APPEND_ALT	= null
 
 ################################################################################
 # }}}1
@@ -14293,7 +14290,6 @@ $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_EXT_DEFAULT):
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3)			>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_HEADER)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_FOOTER)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_footer$(COMPOSER_EXT_SPECIAL)
-#WORKING:NOW:NOW:FIXIT
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_INCLUDE)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
@@ -14302,6 +14298,7 @@ $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_EXT_DEFAULT):
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(call ENV_MAKE) $(HELPOUT)-$(HELPOUT)-$(TARGETS)	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(SED) -i -e "/^[#][>]/d" -e "s|[[:space:]]+$$||g"	$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
+	@$(SED) -i "/^[[][_]/d"					$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_4_HEADER)		>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_5_HEADER)		>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE)		>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_DEFAULT)
