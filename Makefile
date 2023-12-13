@@ -651,6 +651,8 @@ override c_list_file			:=
 
 ########################################
 
+override PUBLISH_KEEPING		:= 256
+
 override PUBLISH_COMPOSER		:= 1
 override PUBLISH_COMPOSER_ALT		:= $(PUBLISH_COMPOSER)
 override PUBLISH_COMPOSER_MOD		:= null
@@ -765,6 +767,11 @@ override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
 override LIBRARY_SITEMAP_SPACER		:= 1
 override LIBRARY_SITEMAP_SPACER_ALT	:= null
+
+#WORKING:NOW:NOW:FIXIT
+#	the include makes the config digest files take forever...?
+override LIBRARY_DIGEST_APPEND_ALT	= null
+override LIBRARY_LISTS_APPEND_ALT	= null
 
 ################################################################################
 # }}}1
@@ -1620,7 +1627,9 @@ override PANDOC_FILES_OVERRIDE = $(strip \
 		$(wildcard				$(COMPOSER_CUSTOM)-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3)) \
 		$(wildcard $(addsuffix /.$(notdir	$(COMPOSER_CUSTOM))-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3),$(COMPOSER_INCLUDES_TREE))) \
 	) \
-	$(wildcard $(CURDIR)/$(2).$(3)) \
+	$(if $(2),\
+		$(wildcard $(CURDIR)/$(2).$(3)) \
+	) \
 )
 
 override PANDOC_FILES_HEADER = $(strip \
@@ -1654,7 +1663,12 @@ override PANDOC_FILES_CSS = $(strip \
 			) \
 		) \
 	) \
-	$(if $(filter $(1),$(TYPE_PRES)),\
+	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
+		$(if $(call COMPOSER_YML_DATA_VAL,config.css_overlay),\
+			$(call CUSTOM_PUBLISH_CSS_OVERLAY,$(call COMPOSER_YML_DATA_VAL,config.css_overlay)) \
+		) \
+	) \
+	$(if $(and $(3),$(filter $(1),$(TYPE_PRES))),\
 		$(patsubst \
 			$(COMPOSER_CUSTOM)-$(TYPE_PRES).css ,\
 			$(call COMPOSER_TMP_FILE).css \
@@ -1663,11 +1677,6 @@ override PANDOC_FILES_CSS = $(strip \
 		) \
 	,\
 		$(call PANDOC_FILES_OVERRIDE,$(1),$(2),css) \
-	) \
-	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
-		$(if $(call COMPOSER_YML_DATA_VAL,config.css_overlay),\
-			$(call CUSTOM_PUBLISH_CSS_OVERLAY,$(call COMPOSER_YML_DATA_VAL,config.css_overlay)) \
-		) \
 	) \
 )
 
@@ -1703,8 +1712,8 @@ override PANDOC_OPTIONS = $(strip \
 	$(if $(wildcard $(COMPOSER_DAT)/template.$(OUTPUT)),	--template="$(COMPOSER_DAT)/template.$(OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_DAT)/reference.$(OUTPUT)),	--reference-doc="$(COMPOSER_DAT)/reference.$(OUTPUT)") \
 	\
-	$(foreach FILE,$(call PANDOC_FILES_HEADER,	$(c_type),$(c_base).$(EXTENSION)),--include-in-header="$(FILE)") \
-	$(foreach FILE,$(call PANDOC_FILES_CSS,		$(c_type),$(c_base).$(EXTENSION)),--css="$(FILE)") \
+	$(foreach FILE,$(call PANDOC_FILES_HEADER,	$(c_type),$(c_base).$(EXTENSION),1),--include-in-header="$(FILE)") \
+	$(foreach FILE,$(call PANDOC_FILES_CSS,		$(c_type),$(c_base).$(EXTENSION),1),--css="$(FILE)") \
 	\
 	$(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)") \
 	\
@@ -2651,8 +2660,8 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	$(foreach FILE,$(call PANDOC_FILES_LIST,$(TYPE),$(COMPOSER_TARGETS)),\
 		$(eval $(FILE): \
 			$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-			$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE)),$(FILE),header) \
-			$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE)),$(FILE),css) \
+			$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE)),$(FILE)) \
+			$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE)),$(FILE)) \
 			$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
 			$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
 			$(call c_list_var,$(BASE),$(EXTN)) \
@@ -3476,6 +3485,8 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
+#	make scrollbar sticky configurable per-mobile
+#		leave settings as is, but do a mixed-version in _test
 #	make it so that an empty digest_title/sitemap_title disables/removes them...
 #	gah! site-config.(header|footer) should create automatic dependencies...?
 #		same for library.*_append...
@@ -5925,12 +5936,12 @@ override COMPOSER_IGNORES		:= *$(COMPOSER_EXT_DEFAULT) *.$(EXTN_HTML)
 endef
 
 ########################################
-### {{{3 Heredoc: composer_mk ($(PUBLISH) pages)
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(PUBLISH_PAGEDIR))
 ########################################
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_PAGEDIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) pages)
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PUBLISH_PAGEDIR)))
 ################################################################################
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
@@ -5942,17 +5953,19 @@ endif
 endef
 
 ########################################
-### {{{3 Heredoc: composer_mk ($(PUBLISH) themes)
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(PUBLISH_SHOWDIR))
 ########################################
 
 #> update: FILE.*CSS_THEMES
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) themes)
+# $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PUBLISH_SHOWDIR)))
 ################################################################################
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
+
+override COMPOSER_KEEPING		:= $(PUBLISH_KEEPING)
 
 override COMPOSER_TARGETS		:= $(PUBLISH_INDEX).$(EXTN_HTML)
 override COMPOSER_IGNORES		:= $(call COMPOSER_CONV,,$(COMPOSER_ART)) $(PUBLISH_INDEX).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)
@@ -11707,6 +11720,10 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
+#WORKING:NOW:NOW:FIXIT
+#	add *-export to _test-clean-all
+#		parallel?  headers with linerule versus not...?
+
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
@@ -12374,6 +12391,7 @@ $(TARGETS):
 	@$(MAKE) $(PRINTER)-$(PRINTER)
 
 #WORKING:NOW:NOW:FIXIT
+#	turn the $(foreach ... shell) into a $(make), like $(sitemap) and $(exports)
 #	override COMPOSER_YML_LIST_FILE := $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
 #	+ character, and others... == | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" ... test!
 #	always showing the $(file.ext) now...?
@@ -12390,8 +12408,8 @@ override define $(TARGETS)-$(PRINTER) =
 			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 				$(foreach FILE,\
 					$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-					$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE)),,header) \
-					$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE)),,css) \
+					$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE))) \
+					$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE))) \
 					$(call COMPOSER_TMP_FILE).css \
 					,\
 					-e "s|$(FILE)||g" \
@@ -14177,6 +14195,13 @@ override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) :=
 #### {{{4 $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)
 ########################################
 
+#WORKING:NOW:NOW:FIXIT
+#	add *-doitall and *-export to site-template, to do: $(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
+#		will this even work?
+#		remove from _test
+#		update site-template comments
+#		update release checklist commands
+
 override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)
@@ -14268,6 +14293,7 @@ $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_EXT_DEFAULT):
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3)			>$(PUBLISH_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 3,$(PUBLISH_FILES)))
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_HEADER)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_FOOTER)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_footer$(COMPOSER_EXT_SPECIAL)
+#WORKING:NOW:NOW:FIXIT
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_INCLUDE)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS,1)	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
@@ -14275,19 +14301,6 @@ $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_EXT_DEFAULT):
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-LINKS_EXT,1)	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(call ENV_MAKE) $(HELPOUT)-$(HELPOUT)-$(TARGETS)	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
-#WORKING:NOW:NOW:FIXIT
-#	the include makes the config digest files take forever...?
-#	why does the themes directory always rebuild...?
-#	add *-doitall and *-export to site-template
-#		will this even work?
-#		remove from _test
-#		update site-template comments
-#		update release checklist commands
-#	add *-export to _test-clean-all
-#		parallel?  headers with linerule versus not...?
-#	there was one more ???
-#	make scrollbar sticky configurable per-mobile
-#		leave settings as is, but do a mixed-version in _test
 	@$(SED) -i -e "/^[#][>]/d" -e "s|[[:space:]]+$$||g"	$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/_include$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_4_HEADER)		>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_5_HEADER)		>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/_header$(COMPOSER_EXT_SPECIAL)
