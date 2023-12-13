@@ -2923,7 +2923,6 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
 #> update: $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING)) > $(PUBLISH)-$(PRINTER)-$(DOITALL)
-#>	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_H)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
@@ -10994,6 +10993,10 @@ endif
 $(DEBUGIT):
 	@$(ECHO) ""
 
+########################################
+### {{{3 $(DEBUGIT)-$(@)
+########################################
+
 .PHONY: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(HEADERS):
 	@{	$(LINERULE); \
@@ -11122,6 +11125,10 @@ endif
 $(TESTING):
 	@$(ECHO) ""
 
+########################################
+### {{{3 $(TESTING)-$(@)
+########################################
+
 .PHONY: $(TESTING)-$(HEADERS)
 $(TESTING)-$(HEADERS):
 	@{	$(LINERULE); \
@@ -11150,10 +11157,12 @@ $(TESTING)-dir:
 
 .PHONY: $(TESTING)-$(PRINTER)
 $(TESTING)-$(PRINTER):
-	@$(MAKE) $(LISTING) | $(SED) -n "s|[:][ ]$(TESTING)-Think||gp" | $(SORT)
+	@$(MAKE) $(LISTING) \
+		| $(SED) -n "s|[:][ ]$(TESTING)-Think||gp" \
+		| $(SORT)
 
 ########################################
-### {{{3 $(TESTING) Functions
+### {{{3 $(TESTING)-%
 ########################################
 
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
@@ -11493,7 +11502,6 @@ $(TESTING)-speed-init:
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 #> update: $(PUBLISH) > $(CLEANER) > $(DOITALL)
 #>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
-#>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
 	@$(call $(TESTING)-speed-init-$(PUBLISH))
@@ -11717,21 +11725,23 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
-#WORKING:NOW:NOW:FIXIT
-#	add *-export to _test-clean-all
-#		parallel?  headers with linerule versus not...?
-
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(EXPORTS))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(EXPORTS):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(CLEANER))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(DOITALL))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+#>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(EXPORTS) $(TESTING)-2-$(EXPORTS)" $(EXPORTS)
+	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(EXPORTS) $(TESTING)-2-$(EXPORTS)" $(CONFIGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(DOITALL)" $(DOITALL)
-#> update: $(CLEANER) > $(DOITALL)
+#> update: $(EXPORTS) > $(CLEANER) > $(DOITALL)
+#>	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(EXPORTS)-$(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) --directory $(call $(TESTING)-pwd)/data $(EXPORTS)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
@@ -11741,8 +11751,11 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+changelog.html)
 	$(call $(TESTING)-find,Removing.+getting-started.html)
 	$(call $(TESTING)-count,2,$(CLEANER)-logs.+$(COMPOSER_LOG_DEFAULT))
+	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
+#>	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(EXPORTS)))
+	$(call $(TESTING)-count,2,$(patsubst _%,%,$(TESTING)-1-$(EXPORTS)))
 	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(CLEANER)))
 	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(DOITALL)))
 
