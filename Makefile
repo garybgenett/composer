@@ -2242,6 +2242,12 @@ override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
 override $(PUBLISH)-library-append	:= $(COMPOSER_LIBRARY)/$(PUBLISH)-$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_SPECIAL)
 
+override define $(PUBLISH)-library-append-src =
+$(NULL)
+$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)
+$(NULL)
+endef
+
 ########################################
 
 override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
@@ -4864,7 +4870,11 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 override define PUBLISH_PAGE_3_INCLUDE =
-$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Append $(PUBLISH_CMD_END)
+
+This is an append include from the `$(COMPOSER_YML)` file.
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 override define PUBLISH_PAGE_3 =
@@ -13311,12 +13321,12 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_LIBRARY) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-#>	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
-	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_SETTINGS))
-	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_SETTINGS)	>$(COMPOSER_LIBRARY)/$(COMPOSER_SETTINGS)
-	@$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_YML))
-	@$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_YML)		>$(COMPOSER_LIBRARY)/$(COMPOSER_YML)
-#>		$(CP) $(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output);
+	@$(foreach FILE,SETTINGS YML,\
+		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_$(FILE))); \
+		$(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(PUBLISH)-$(COMPOSER_$(FILE)) \
+			>$(COMPOSER_LIBRARY)/$(COMPOSER_$(FILE)); \
+		$(call NEWLINE) \
+	)
 	@if	[ -z "$$($(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(CONFIGS)-COMPOSER_INCLUDE)" ] && \
 		[ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH)" ]; \
 	then \
@@ -13330,7 +13340,7 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
-	@$(ECHO) "\n" >$($(PUBLISH)-library-append)
+	@$(call DO_HEREDOC,$(PUBLISH)-library-append-src) >$($(PUBLISH)-library-append)
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
@@ -14204,13 +14214,6 @@ override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) :=
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)
 ########################################
-
-#WORKING:NOW:NOW:FIXIT
-#	add *-doitall and *-export to site-template, to do: $(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
-#		will this even work?
-#		remove from _test
-#		update site-template comments
-#		update release checklist commands
 
 override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)-$(COMPOSER_SETTINGS)
 
