@@ -1709,8 +1709,8 @@ override PANDOC_OPTIONS = $(strip \
 	$(if $(wildcard $(COMPOSER_DAT)/template.$(OUTPUT)),	--template="$(COMPOSER_DAT)/template.$(OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_DAT)/reference.$(OUTPUT)),	--reference-doc="$(COMPOSER_DAT)/reference.$(OUTPUT)") \
 	\
-	$(foreach FILE,$(call PANDOC_FILES_HEADER,	$(c_type),$(c_base).$(EXTENSION),1),--include-in-header="$(FILE)") \
-	$(foreach FILE,$(call PANDOC_FILES_CSS,		$(c_type),$(c_base).$(EXTENSION),1),--css="$(FILE)") \
+	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTENSION),1),--include-in-header="$(FILE)") \
+	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTENSION),1),--css="$(FILE)") \
 	\
 	$(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)") \
 	\
@@ -2659,24 +2659,27 @@ override PANDOC_FILES_SPLIT = $(strip \
 		) \
 	) \
 )
+#> update: WILDCARD_YML
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	$(foreach FILE,$(call PANDOC_FILES_LIST,$(TYPE),$(COMPOSER_TARGETS)),\
 		$(eval $(FILE): \
-			$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-			$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE)),$(FILE)) \
-			$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE)),$(FILE)) \
 			$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
 			$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
-			$(call c_list_var,$(BASE),$(EXTN)) \
+			$(call $(COMPOSER_PANDOC)-dependencies	,$(TYPE_$(TYPE))) \
+			$(call PANDOC_FILES_OVERRIDE		,,$(BASE).$(EXTN),yml) \
+			$(call PANDOC_FILES_MAIN		,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
+			$(call PANDOC_FILES_HEADER		,$(TYPE_$(TYPE)),$(FILE)) \
+			$(call PANDOC_FILES_CSS			,$(TYPE_$(TYPE)),$(FILE)) \
+			$(call c_list_var			,$(BASE),$(EXTN)) \
 		) \
 	) \
 )
-$(sort \
-	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-			$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-			$(call COMPOSER_TMP_FILE).css \
-	) \
-): ;
+#WORKING:NOW:NOW:FIXIT
+#$(sort \
+#	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+#			$(call PANDOC_FILES_MAIN		,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
+#	) \
+#): ;
 
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
 $(c_base).$(EXTENSION) \
@@ -6877,8 +6880,8 @@ function $(PUBLISH)-metainfo-block {
 						if [ -z "$${SEP}" ]; then SEP=" "; fi
 						$${ECHO} " -e \\"s|<$${FILE}[^>]*>|$$(
 							$${ECHO} "$${TAGS[$${NUM}]}" \\
-								| $${SED} "s|$${TOKEN}|$${SEP}|g" \\
-								| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g"
+							| $${SED} "s|$${TOKEN}|$${SEP}|g" \\
+							| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g"
 						)|g\\""
 						NUM="$$($${EXPR} $${NUM} + 1)"
 					done
@@ -12387,7 +12390,93 @@ endif
 $(TARGETS): .set_title-$(TARGETS)
 $(TARGETS):
 	@$(call $(HEADERS))
-	@$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT))),\
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(TARGETS)-$(TARGETS)
+	@$(LINERULE)
+	@$(foreach FILE,TARGETS SUBDIRS,\
+		$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE)"; \
+		$(ECHO) "$(COMPOSER_$(FILE))" \
+			| $(SED) "s|[ ]+|\n|g" \
+			| $(SORT); \
+		$(call NEWLINE) \
+	)
+	@$(LINERULE)
+	@$(foreach FILE,EXPORTS CLEANER DOITALL,\
+		$(PRINT) "$(_H)$(MARKER) *-$($(FILE))"; \
+		$(call $(TARGETS)-$(PRINTER),,$($(FILE))) \
+			| $(SED) "s|[ ]+|\n|g" \
+			| $(SORT); \
+		$(call NEWLINE) \
+	)
+	@$(LINERULE)
+	@$(MAKE) $(PRINTER)-$(PRINTER)
+
+########################################
+### {{{3 $(TARGETS)-$(PRINTER)
+########################################
+
+#WORKING:NOW:NOW:FIXIT
+#	+ character, and others... test!
+#					-e "s|$(FILE)||g" \
+#					-e "s|$$( \
+#						$(ECHO) "$(FILE)" \
+#						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+#					)||g" \
+#	it would be great to somehow $(EXPAND) filter the output...?
+
+#> update: $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
+
+#> update: TYPE_TARGETS
+#> update: PANDOC_FILES
+override define $(TARGETS)-$(PRINTER) =
+	$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
+		-e "/^$(MAKEFILE)[:]/d" \
+		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
+		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
+		$(foreach FILE,$(COMPOSER_SUBDIRS),-e "/^$(FILE)[:]/d") \
+		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
+		$(if $(1),,\
+			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+				$(foreach FILE,\
+					$(call $(COMPOSER_PANDOC)-dependencies	,$(TYPE_$(TYPE))) \
+					$(call PANDOC_FILES_MAIN		,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
+					$(call PANDOC_FILES_HEADER		,$(TYPE_$(TYPE))) \
+					$(call PANDOC_FILES_CSS			,$(TYPE_$(TYPE))) \
+					$(if $(and $(c_site),$(filter $(TYPE_HTML),$(TYPE_$(TYPE)))),\
+						$($(PUBLISH)-cache) \
+						$($(PUBLISH)-library) \
+					) \
+					,\
+					-e "s|$(FILE)||g" \
+				) \
+			) \
+		) \
+		$(if $(2),\
+			-e "s|[:]+.*$$||g" \
+			| $(SED) -n "/[-]$(2)$$/p" \
+		,\
+			-e "/^[^:]+[-]$(EXPORTS)[:]+.*$$/d" \
+			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
+			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
+			-e "s|[:]+[[:space:]]*$$||g" \
+			-e "s|([=])+[[:space:]]*$$|\\1|g" \
+			-e "s|[[:space:]]+|$(TOKEN)|g" \
+		)
+endef
+
+########################################
+### {{{3 $(TARGETS)-$(TARGETS)
+########################################
+
+#> update: $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
+
+override $(TARGETS)-$(TARGETS) :=
+ifneq ($(filter $(TARGETS)-$(TARGETS),$(MAKECMDGOALS)),)
+override $(TARGETS)-$(TARGETS) := $(sort $(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT))))
+endif
+
+.PHONY: $(TARGETS)-$(TARGETS)
+$(TARGETS)-$(TARGETS):
+	@$(foreach FILE,$($(TARGETS)-$(TARGETS)),\
 		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst ",\",$(subst $(TOKEN),\n\t,$(FILE))))"; ,\
 						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
 		) \
@@ -12400,60 +12489,7 @@ $(TARGETS):
 		$(ENDOLINE); \
 		$(call NEWLINE) \
 	)
-	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) COMPOSER_TARGETS"; $(ECHO) "$(COMPOSER_TARGETS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) COMPOSER_SUBDIRS"; $(ECHO) "$(COMPOSER_SUBDIRS)"		| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(LINERULE)
-	@$(PRINT) "$(_H)$(MARKER) *-$(EXPORTS)"; $(call $(TARGETS)-$(PRINTER),,$(EXPORTS))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) *-$(CLEANER)"; $(call $(TARGETS)-$(PRINTER),,$(CLEANER))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(PRINT) "$(_H)$(MARKER) *-$(DOITALL)"; $(call $(TARGETS)-$(PRINTER),,$(DOITALL))	| $(SED) "s|[ ]+|\n|g" | $(SORT)
-	@$(LINERULE)
-	@$(MAKE) $(PRINTER)-$(PRINTER)
-
-#WORKING:NOW:NOW:FIXIT
-#	turn the $(foreach ... shell) into a $(make), like $(sitemap) and $(exports)
-#	override COMPOSER_YML_LIST_FILE := $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTENSION),yml)
-#	+ character, and others... == | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" ... test!
-#	always showing the $(file.ext) now...?
-
-#> update: TYPE_TARGETS
-#> update: PANDOC_FILES
-override define $(TARGETS)-$(PRINTER) =
-	$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
-		-e "/^$(MAKEFILE)[:]/d" \
-		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
-		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
-		-e "s|$(COMPOSER_TMP)/[^[:space:]]+||g" \
-		$(if $(1),,\
-			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-				$(foreach FILE,\
-					$(call PANDOC_FILES_MAIN,	$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-					$(call PANDOC_FILES_HEADER,	$(TYPE_$(TYPE))) \
-					$(call PANDOC_FILES_CSS,	$(TYPE_$(TYPE))) \
-					$(call COMPOSER_TMP_FILE).css \
-					,\
-					-e "s|$(FILE)||g" \
-				) \
-			) \
-		) \
-		$(if $(c_site),\
-			-e "s|$(patsubst $(COMPOSER_ROOT)/%,$(COMPOSER_ROOT_REGEX)/%,$($(PUBLISH)-cache))||g" \
-			-e "s|$(patsubst $(COMPOSER_ROOT)/%,$(COMPOSER_ROOT_REGEX)/%,$($(PUBLISH)-library))||g" \
-		) \
-		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
-		$(if $(2),\
-			-e "s|[:]+.*$$||g" \
-			| $(SED) -n "/[-]$(2)$$/p" \
-		,\
-			-e "/^[^:]+[-]$(EXPORTS)[:]+.*$$/d" \
-			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
-			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
-			-e "s|[:]+[[:space:]]*$$||g" \
-			-e "s|([=])+[[:space:]]*$$|\\1|g" \
-			-e "s|[[:space:]]+|$(TOKEN)|g" \
-		) \
-		| $(SORT)
-endef
+	@$(ECHO) ""
 
 ################################################################################
 # {{{1 Repository Targets
@@ -12682,11 +12718,19 @@ endef
 
 #> update: $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
 
+########################################
+#### {{{4 $(EXPORTS)-tree
+########################################
+
 #>		-o \\\( -path \"$(1)/.*\" -prune \\\)
 override define $(EXPORTS)-tree =
 	$(call $(EXPORTS)-find,$(1)) \
 		-o \\\( -type d -print \\\)
 endef
+
+########################################
+#### {{{4 $(EXPORTS)-find
+########################################
 
 #>		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\)
 #>			-o \( -path $(COMPOSER_LIBRARY) -prune \)
@@ -12713,6 +12757,10 @@ override define $(EXPORTS)-find =
 		$(if $(2),-o \\\( -path /dev/null -print \\\))
 endef
 
+########################################
+#### {{{4 $(EXPORTS)-libraries
+########################################
+
 override define $(EXPORTS)-libraries =
 	if [ "$(1)" = "$(COMPOSER_ROOT)" ]; then \
 		$(call $(EXPORTS)-library,$(COMPOSER_DIR),$(COMPOSER_ROOT)); \
@@ -12729,6 +12777,10 @@ override define $(EXPORTS)-libraries =
 			done
 endef
 
+########################################
+#### {{{4 $(EXPORTS)-library
+########################################
+
 override define $(EXPORTS)-library =
 	LFIL="$$( \
 		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $(1)/$(COMPOSER_YML) 2>/dev/null \
@@ -12741,6 +12793,10 @@ override define $(EXPORTS)-library =
 		) -prune \\\)\n"; \
 	fi
 endef
+
+########################################
+#### {{{4 $(EXPORTS)-filter
+########################################
 
 #>		$(ECHO) " -o \\\( -path \"$(3)/.*\" -prune \\\)";
 override define $(EXPORTS)-filter =
@@ -12942,7 +12998,10 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 			>$(DOFILE)-menu.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call PUBLISH_SH_RUN) $(DOFILE)-list \
-			| $(SED) "/[/]$$($(ECHO) "$(notdir $(DOFILE)-list)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g") -->$$/d" \
+			| $(SED) "/[/]$$( \
+					$(ECHO) "$(notdir $(DOFILE)-list)" \
+					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+				) -->$$/d" \
 			>$(DOFILE)-list.done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call $(PUBLISH)-$(TARGETS)-$(HELPER)-done,$(1),$(TAGGER)); \
@@ -13160,7 +13219,8 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 		))$$( \
 			$(ECHO) "$${META_SEP}" \
 			| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-		)|\1|g" $(1).metalist-$(2)-list
+		)|\1|g" \
+		$(1).metalist-$(2)-list
 endef
 
 override define $(PUBLISH)-$(TARGETS)-metalist-done =
@@ -13841,15 +13901,15 @@ $($(PUBLISH)-library-sitemap-src): $(COMPOSER_LIBRARY)/$(MAKEFILE)
 $($(PUBLISH)-library-sitemap-src):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)
 	@$(call $(PUBLISH)-library-sitemap-src-file)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(PUBLISH)-library-sitemap-$(PRINTER)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(PUBLISH)-library-sitemap-$(TARGETS)
 
 override $(PUBLISH)-library-sitemap-$(TARGETS) :=
-ifneq ($(filter $(PUBLISH)-library-sitemap-$(PRINTER),$(MAKECMDGOALS)),)
+ifneq ($(filter $(PUBLISH)-library-sitemap-$(TARGETS),$(MAKECMDGOALS)),)
 override $(PUBLISH)-library-sitemap-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
 endif
 
-.PHONY: $(PUBLISH)-library-sitemap-$(PRINTER)
-$(PUBLISH)-library-sitemap-$(PRINTER):
+.PHONY: $(PUBLISH)-library-sitemap-$(TARGETS)
+$(PUBLISH)-library-sitemap-$(TARGETS):
 	@$(eval override $(@) := $($(PUBLISH)-library-sitemap-src))
 	@$(ECHO) "" >$($(@)).$(COMPOSER_BASENAME)
 	@$(eval override NUM := 0) \
@@ -14844,6 +14904,8 @@ ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 #> update: PANDOC_FILES
 	@$(CP) $(COMPOSER_CUSTOM)-$(c_type).css $(call COMPOSER_TMP_FILE).css $($(DEBUGIT)-output)
+#WORKING:NOW:NOW:FIXIT
+#	turn this into a *_HACK variable...
 	@$(SED) -i "s|^(.+background[:].+url[(][\"])[^\"]+([\"].+)$$|\1$(abspath $(c_logo))\2|g" $(call COMPOSER_TMP_FILE).css
 	@$(ECHO) "$(_D)"
 endif
