@@ -1656,7 +1656,10 @@ override PANDOC_FILES_CSS = $(strip \
 		),\
 			$(if \
 				$(wildcard $(call c_css_select,$(1))) ,\
-				$(realpath $(call c_css_select,$(1))) ,\
+				$(if $(3),\
+					$(realpath $(call c_css_select,$(1))) ,\
+					$(call c_css_select,$(1)) \
+				) ,\
 				$(call c_css_select,$(1)) \
 			) \
 		) \
@@ -12416,15 +12419,6 @@ $(TARGETS):
 ### {{{3 $(TARGETS)-$(PRINTER)
 ########################################
 
-#WORKING:NOW:NOW:FIXIT
-#	+ character, and others... test!
-#					-e "s|$(FILE)||g" \
-#					-e "s|$$( \
-#						$(ECHO) "$(FILE)" \
-#						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-#					)||g" \
-#	it would be great to somehow $(EXPAND) filter the output...?
-
 #> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
 
 #> update: TYPE_TARGETS
@@ -12447,7 +12441,10 @@ override define $(TARGETS)-$(PRINTER) =
 						$($(PUBLISH)-library) \
 					) \
 					,\
-					-e "s|$(FILE)||g" \
+					-e "s|$(shell \
+						$(ECHO) "$(FILE)" \
+						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+					)||g" \
 				) \
 			) \
 		) \
@@ -12477,16 +12474,17 @@ endif
 
 .PHONY: $(TARGETS)-$(TARGETS)
 $(TARGETS)-$(TARGETS):
-	@$(foreach FILE,$($(TARGETS)-$(TARGETS)),\
-		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst ",\",$(subst $(TOKEN),\n\t,$(FILE))))"; ,\
-						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst ",\",$(subst $(TOKEN), ,$(FILE))))"; \
-		) \
+	@$(foreach FILE,$(call $(HEADERS)-path-root,$($(TARGETS)-$(TARGETS))),\
 		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
-		$(if $(call c_list_var_source,,$(BASE),$(EXTN)),\
-			$(ECHO) "$(_D)$(if $(COMPOSER_DEBUGIT),\n\t, )$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst $(TOKEN),\n\t,$(subst ",\",$(FILE))))"; ,\
+						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(subst ",\",$(FILE))))"; \
 		) \
+		$(if $(call c_list_var_source,,$(BASE),$(EXTN)),\
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_D)\n\t$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; ,\
+						$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
+		)) \
 		$(ENDOLINE); \
 		$(call NEWLINE) \
 	)
