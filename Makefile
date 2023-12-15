@@ -63,9 +63,10 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `make _test-file`
 #	* `make COMPOSER_DEBUGIT="check config targets" _debug | less -rX`
 #		* `rm Composer-*._debug-*.txt`
-#		* `make COMPOSER_DEBUGIT="help" _debug-file`
-#		* `mv Composer-*._debug-*.txt artifacts/`
+#			* `make COMPOSER_DEBUGIT="help" _debug-file`
+#			* `mv Composer-*._debug-*.txt artifacts/`
 #		* `make COMPOSER_DEBUGIT="1" targets
+#			* `make COMPOSER_DEBUGIT="1" c_base="README.site" targets
 #	* `make headers-template`
 #		* `make COMPOSER_DEBUGIT="1" headers-template`
 #		* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
@@ -2627,8 +2628,6 @@ endef
 ## {{{2 $(COMPOSER_PANDOC)
 ########################################
 
-#WORKING:NOW:NOW:FIXIT
-
 override $(COMPOSER_PANDOC)-dependencies = $(strip \
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
@@ -2671,18 +2670,19 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 			$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
 			$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))) \
 			$(call $(COMPOSER_PANDOC)-dependencies	,$(TYPE_$(TYPE))) \
-			$(call PANDOC_FILES_OVERRIDE		,,$(BASE).$(EXTN),yml) \
 			$(call PANDOC_FILES_MAIN		,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
 			$(call PANDOC_FILES_HEADER		,$(TYPE_$(TYPE)),$(FILE)) \
 			$(call PANDOC_FILES_CSS			,$(TYPE_$(TYPE)),$(FILE)) \
+			$(call PANDOC_FILES_OVERRIDE		,,$(BASE).$(EXTN),yml) \
 			$(call c_list_var			,$(BASE),$(EXTN)) \
 		) \
 	) \
 )
 
+#> $(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
 #> $(SUBDIRS)-$(DOITALL) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS))
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-$(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
+$(DOITALL)-$(TARGETS) \
 $(SUBDIRS)-$(DOITALL) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS)) \
 	: \
 	$($(PUBLISH)-library)
@@ -14868,8 +14868,8 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 ifneq ($(c_base),)
-$(c_base).$(EXTENSION): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type))
-$(c_base).$(EXTENSION): $(call c_list_var) #> $(c_list)
+#>$(c_base).$(EXTENSION): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type))
+#>$(c_base).$(EXTENSION): $(call c_list_var) #> $(c_list)
 $(c_base).$(EXTENSION):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
@@ -14944,19 +14944,22 @@ override define TYPE_TARGETS_OPTIONS =
 endef
 
 override define TYPE_TARGETS =
-%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) %$(COMPOSER_EXT)
+#>%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) %$(COMPOSER_EXT)
+%.$(2): %$(COMPOSER_EXT)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_EXT))
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),extension)
 endif
 
-%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) %
+#>%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) %
+%.$(2): %
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),wildcard)
 endif
 
-%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) $(c_list)
+#>%.$(2): $(call $(COMPOSER_PANDOC)-dependencies,$(1)) $(c_list)
+%.$(2): $(c_list)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),list)
