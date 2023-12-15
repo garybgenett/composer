@@ -2412,7 +2412,7 @@ override PUBLISH_DIRS_CONFIGS := \
 	$(PUBLISH_PAGEDIR) \
 	$(PUBLISH_SHOWDIR) \
 
-#> update: $(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
+#> $(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
 override PUBLISH_DIRS_DEBUGIT := \
 	$(word 1,$(PUBLISH_FILES)) \
 	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
@@ -2627,6 +2627,8 @@ endef
 ## {{{2 $(COMPOSER_PANDOC)
 ########################################
 
+#WORKING:NOW:NOW:FIXIT
+
 override $(COMPOSER_PANDOC)-dependencies = $(strip \
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
@@ -2639,6 +2641,9 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip \
 	$(if $(filter $(1),$(TYPE_HTML)),\
 		$(if $(c_site),\
 			$($(PUBLISH)-cache) \
+			$(if $(COMPOSER_LIBRARY_AUTO_UPDATE),\
+				$($(PUBLISH)-library) \
+			) \
 		) \
 	) \
 )
@@ -2674,19 +2679,11 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		) \
 	) \
 )
-#WORKING:NOW:NOW:FIXIT
-#$(sort \
-#	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-#			$(call PANDOC_FILES_MAIN		,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-#	) \
-#): ;
 
+#> $(SUBDIRS)-$(DOITALL) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS))
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-$(c_base).$(EXTENSION) \
 $(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
-$(DOITALL)-$(SUBDIRS) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS)) \
-$($(PUBLISH)-cache) \
-$($(PUBLISH)-caches) \
+$(SUBDIRS)-$(DOITALL) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS)) \
 	: \
 	$($(PUBLISH)-library)
 endif
@@ -2931,7 +2928,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
-#> update: $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING)) > $(PUBLISH)-$(PRINTER)-$(DOITALL)
+#> $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING)) > $(PUBLISH)-$(PRINTER)-$(DOITALL)
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_H)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
@@ -11518,7 +11515,7 @@ $(TESTING)-speed-init:
 	@$(call $(TESTING)-speed-init)
 	@$(ECHO) "override COMPOSER_INCLUDE := 1\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
-#> update: $(PUBLISH) > $(CLEANER) > $(DOITALL)
+#> $(PUBLISH) > $(CLEANER) > $(DOITALL)
 #>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
@@ -11756,7 +11753,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(EXPORTS) $(TESTING)-2-$(EXPORTS)" $(CONFIGS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(CLEANER) $(TESTING)-2-$(CLEANER)" $(CLEANER)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(DOITALL) $(TESTING)-2-$(DOITALL)" $(DOITALL)
-#> update: $(EXPORTS) > $(CLEANER) > $(DOITALL)
+#> $(EXPORTS) > $(CLEANER) > $(DOITALL)
 #>	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(EXPORTS)-$(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) --directory $(call $(TESTING)-pwd)/data $(EXPORTS)
@@ -12428,7 +12425,7 @@ $(TARGETS):
 #					)||g" \
 #	it would be great to somehow $(EXPAND) filter the output...?
 
-#> update: $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
+#> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
@@ -12471,7 +12468,7 @@ endef
 ### {{{3 $(TARGETS)-$(TARGETS)
 ########################################
 
-#> update: $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
+#> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
 
 override $(TARGETS)-$(TARGETS) :=
 ifneq ($(filter $(TARGETS)-$(TARGETS),$(MAKECMDGOALS)),)
@@ -12720,7 +12717,7 @@ endef
 ### {{{3 $(EXPORTS)-%
 ########################################
 
-#> update: $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
+#> $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
 
 ########################################
 #### {{{4 $(EXPORTS)-tree
@@ -12849,7 +12846,7 @@ endef
 ### {{{3 $(EXPORTS)-$(TARGETS)
 ########################################
 
-#> update: $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
+#> $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
 
 override $(EXPORTS)-$(TARGETS) :=
 ifneq ($(or \
@@ -13907,6 +13904,7 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(call $(PUBLISH)-library-sitemap-src-file)
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(PUBLISH)-library-sitemap-$(TARGETS)
 
+#> $(PUBLISH)-library-sitemap-$(TARGETS) >> $(PUBLISH)-library-sitemap-$(PRINTER)
 override $(PUBLISH)-library-sitemap-$(PRINTER) :=
 ifneq ($(filter $(PUBLISH)-library-sitemap-$(TARGETS),$(MAKECMDGOALS)),)
 override $(PUBLISH)-library-sitemap-$(PRINTER) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
@@ -14604,7 +14602,7 @@ else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),)
 	@$(MAKE) $(COMPOSER_SUBDIRS)
 else
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(INSTALL)-$(TARGETS)
-	@$(MAKE) $(INSTALL)-$(SUBDIRS)
+	@$(MAKE) $(SUBDIRS)-$(INSTALL)
 endif
 endif
 
@@ -14658,7 +14656,7 @@ else
 endif
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(TARGETS)-$(CLEANER)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@$(MAKE) $(CLEANER)-$(SUBDIRS)
+	@$(MAKE) $(SUBDIRS)-$(CLEANER)
 endif
 
 #> update: OUTPUT_FILENAME
@@ -14736,7 +14734,7 @@ $(DOITALL):
 	@$(call $(HEADERS)-$(SUBDIRS))
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(DOITALL)-$(SUBDIRS)
+	@$(MAKE) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 ifeq ($(COMPOSER_TARGETS),)
@@ -14752,7 +14750,7 @@ endif
 	@$(call $(CLEANER)-logs)
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(DOITALL)-$(SUBDIRS)
+	@$(MAKE) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 #>ifneq ($(c_site),)
@@ -14774,17 +14772,17 @@ $(SUBDIRS):
 	@$(MAKE) $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
 
 override define $(SUBDIRS)-$(EXAMPLE) =
-.PHONY: $(1)-$(SUBDIRS)
+.PHONY: $(SUBDIRS)-$(1)
 ifeq ($(COMPOSER_SUBDIRS),)
-$(1)-$(SUBDIRS): $(NOTHING)-$(SUBDIRS)
+$(SUBDIRS)-$(1): $(NOTHING)-$(SUBDIRS)
 else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
-$(1)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(SUBDIRS)
+$(SUBDIRS)-$(1): $(NOTHING)-$(NOTHING)-$(SUBDIRS)
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),)
-$(1)-$(SUBDIRS): $(COMPOSER_SUBDIRS)
+$(SUBDIRS)-$(1): $(COMPOSER_SUBDIRS)
 else
-$(1)-$(SUBDIRS): $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
+$(SUBDIRS)-$(1): $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
 endif
-$(1)-$(SUBDIRS):
+$(SUBDIRS)-$(1):
 	@$$(ECHO) ""
 
 .PHONY: $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
