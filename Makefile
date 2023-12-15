@@ -2684,7 +2684,7 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
 $(c_base).$(EXTENSION) \
 $(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
-$(DOITALL)-$(SUBDIRS) $(COMPOSER_SUBDIRS) $(addprefix $(DOITALL)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)) \
+$(DOITALL)-$(SUBDIRS) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS)) \
 $($(PUBLISH)-cache) \
 $($(PUBLISH)-caches) \
 	: \
@@ -2964,7 +2964,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)]"		"$(_C)[Static Websites]$(_D) example \`$(_M)$(notdir $(PUBLISH_ROOT))$(_D)\` in $(_H)[COMPOSER_DIR]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(TESTING)]"	"Version configured to test specific variations"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(EXAMPLE)-$(CONFIGS)]"	"Only create directory structure and source files"
-	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_N)*$(_C)-$(SUBDIRS)-$(_N)*$(_D)\` targets"
+	@$(TABLE_M2) "$(_C)[$(SUBDIRS)]"			"Expands $(_C)[COMPOSER_SUBDIRS]$(_D) into \`$(_C)$(SUBDIRS)-$(_N)*$(_C)-$(_N)*$(_D)\` targets"
 	@$(TABLE_M2) "$(_C)[$(PRINTER)-$(PRINTER)]"		"Same as $(_C)[$(PRINTER)]$(_D), but only lists the files $(_E)(no headers)"
 
 ########################################
@@ -3944,11 +3944,11 @@ directories being processed first, this can be done simply using $(_C)[GNU Make]
 syntax in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 
 $(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)
-$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(PANDOC_DIR))$(_D)
+$(CODEBLOCK)$(_M)$(SUBDIRS)-$(DOITALL)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(SUBDIRS)-$(DOITALL)-$(notdir $(PANDOC_DIR))$(_D)
 
 This would require `$(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)`, and for
 `$(_E)$(notdir $(PANDOC_DIR))$(_D)` to be processed before `$(_M)$(notdir $(COMPOSER_ART))$(_D)`.  Directories need to be specified
-with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with target names
+with the `$(_C)$(SUBDIRS)-$(DOITALL)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with target names
 $(_E)(see [Custom Targets])$(_D).
 
 Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
@@ -9222,6 +9222,11 @@ endef
 ## {{{2 Heredoc: custom_revealjs_css
 ########################################
 
+override define HEREDOC_CUSTOM_REVEALJS_CSS_HACK =
+	$(SED) -i \
+		"s|^(.+background[:].+url[(][\"])[^\"]+([\"].+)$$|\1$(abspath $(c_logo))\2|g"
+endef
+
 override define HEREDOC_CUSTOM_REVEALJS_CSS =
 /* #############################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) $(DESC_PRES)
@@ -11872,14 +11877,14 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(SUBDIRS)-$(DOITALL)-docx: $(SUBDIRS)-$(DOITALL)-templates\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(sort \
-		$(filter-out $(DOITALL)-$(SUBDIRS)-docx,\
-		$(filter-out $(DOITALL)-$(SUBDIRS)-templates,\
-		$(addprefix $(DOITALL)-$(SUBDIRS)-,\
+		$(filter-out $(SUBDIRS)-$(DOITALL)-docx,\
+		$(filter-out $(SUBDIRS)-$(DOITALL)-templates,\
+		$(addprefix $(SUBDIRS)-$(DOITALL)-,\
 		$(notdir \
 		$(patsubst %/.,%,$(wildcard $(addsuffix /.,$(call $(TESTING)-pwd)/data/*))) \
-		))))): $(DOITALL)-$(SUBDIRS)-docx\n" \
+		))))): $(SUBDIRS)-$(DOITALL)-docx\n" \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 
@@ -12432,7 +12437,6 @@ override define $(TARGETS)-$(PRINTER) =
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
-		$(foreach FILE,$(COMPOSER_SUBDIRS),-e "/^$(FILE)[:]/d") \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
 		$(if $(1),,\
 			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
@@ -13903,9 +13907,9 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(call $(PUBLISH)-library-sitemap-src-file)
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(PUBLISH)-library-sitemap-$(TARGETS)
 
-override $(PUBLISH)-library-sitemap-$(TARGETS) :=
+override $(PUBLISH)-library-sitemap-$(PRINTER) :=
 ifneq ($(filter $(PUBLISH)-library-sitemap-$(TARGETS),$(MAKECMDGOALS)),)
-override $(PUBLISH)-library-sitemap-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
+override $(PUBLISH)-library-sitemap-$(PRINTER) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_LIBRARY_ROOT))))
 endif
 
 .PHONY: $(PUBLISH)-library-sitemap-$(TARGETS)
@@ -13914,7 +13918,7 @@ $(PUBLISH)-library-sitemap-$(TARGETS):
 	@$(ECHO) "" >$($(@)).$(COMPOSER_BASENAME)
 	@$(eval override NUM := 0) \
 		$(call $(PUBLISH)-library-sitemap-vars) \
-		$(foreach FILE,$($(PUBLISH)-library-sitemap-$(TARGETS)),\
+		$(foreach FILE,$($(PUBLISH)-library-sitemap-$(PRINTER)),\
 			$(call $(PUBLISH)-library-sitemap-create,$($(@)).$(COMPOSER_BASENAME)); \
 			$(call NEWLINE) \
 			$(eval override NUM := $(shell $(EXPR) $(NUM) + 1)) \
@@ -13966,7 +13970,7 @@ override define $(PUBLISH)-library-sitemap-create =
 	fi; \
 	shopt -s lastpipe; \
 		PRINT=; \
-	eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,,$($(PUBLISH)-library-sitemap-$(TARGETS)),$(FILE))) \
+	eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,,$($(PUBLISH)-library-sitemap-$(PRINTER)),$(FILE))) \
 		| $(SORT) \
 	| while read -r FILE; do \
 		if [ -z "$${PRINT}" ]; then \
@@ -14778,14 +14782,14 @@ $(1)-$(SUBDIRS): $(NOTHING)-$(NOTHING)-$(SUBDIRS)
 else ifeq ($(filter-out $(NOTHING)-%,$(COMPOSER_SUBDIRS)),)
 $(1)-$(SUBDIRS): $(COMPOSER_SUBDIRS)
 else
-$(1)-$(SUBDIRS): $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
+$(1)-$(SUBDIRS): $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
 endif
 $(1)-$(SUBDIRS):
 	@$$(ECHO) ""
 
-.PHONY: $(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS))
-$(addprefix $(1)-$(SUBDIRS)-,$(COMPOSER_SUBDIRS)):
-	@$$(eval override $$(@) := $$(CURDIR)/$$(patsubst $(1)-$$(SUBDIRS)-%,%,$$(@)))
+.PHONY: $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
+$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)):
+	@$$(eval override $$(@) := $$(CURDIR)/$$(patsubst $$(SUBDIRS)-$(1)-%,%,$$(@)))
 	@$$(if $$(wildcard $$($$(@))/$$(MAKEFILE)),\
 		$$(MAKE) --directory $$($$(@)) $(1) ,\
 		$$(MAKE) --directory $$($$(@)) --makefile $$(COMPOSER) $$(NOTHING)-$$(MAKEFILE) \
@@ -14802,11 +14806,11 @@ $(SUBDIRS)-$(TARGETS)-$(1):
 	@$$(eval override $$(TARGETS)-$$(PRINTER)-$(1) := $$(shell $$(call $$(TARGETS)-$$(PRINTER),,$(1))))
 	@if [ -n "$$($$(TARGETS)-$$(PRINTER)-$(1))" ]; then \
 		$$(call $$(HEADERS)-action,*-$(1),,,$(1),1); \
-		$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(addprefix $$(SUBDIRS)-$(1)-,$$($$(TARGETS)-$$(PRINTER)-$(1))); \
+		$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(addprefix $$(SUBDIRS)-$$(TARGETS)-$(1)-,$$($$(TARGETS)-$$(PRINTER)-$(1))); \
 	fi
 
-.PHONY: $(SUBDIRS)-$(1)-%
-$(SUBDIRS)-$(1)-%:
+.PHONY: $(SUBDIRS)-$(TARGETS)-$(1)-%
+$(SUBDIRS)-$(TARGETS)-$(1)-%:
 	@$$(call $$(HEADERS)-note,$$(CURDIR),$$(*),$(1))
 	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(*)
 endef
@@ -14904,9 +14908,7 @@ ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 #> update: PANDOC_FILES
 	@$(CP) $(COMPOSER_CUSTOM)-$(c_type).css $(call COMPOSER_TMP_FILE).css $($(DEBUGIT)-output)
-#WORKING:NOW:NOW:FIXIT
-#	turn this into a *_HACK variable...
-	@$(SED) -i "s|^(.+background[:].+url[(][\"])[^\"]+([\"].+)$$|\1$(abspath $(c_logo))\2|g" $(call COMPOSER_TMP_FILE).css
+	@$(call HEREDOC_CUSTOM_REVEALJS_CSS_HACK) $(call COMPOSER_TMP_FILE).css
 	@$(ECHO) "$(_D)"
 endif
 endif
