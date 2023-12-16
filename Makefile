@@ -1652,11 +1652,8 @@ override PANDOC_FILES_CSS = $(strip \
 			$(filter $(1),$(TYPE_PRES)) ,\
 		),\
 			$(if \
-				$(wildcard $(call c_css_select,$(1))) ,\
-				$(if $(3),\
-					$(realpath $(call c_css_select,$(1))) ,\
-					$(call c_css_select,$(1)) \
-				) ,\
+				$(and $(3),$(wildcard $(call c_css_select,$(1)))) ,\
+				$(realpath $(call c_css_select,$(1))) ,\
 				$(call c_css_select,$(1)) \
 			) \
 		) \
@@ -2661,7 +2658,7 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 			$(COMPOSER_CONTENTS_EXT) \
 		) \
 	) \
-	$(if $(filter $(1),$(TYPE_HTML)),\
+	$(if $(filter $(1),HTML),\
 		$(if $(c_site),\
 			$($(PUBLISH)-cache) \
 			$(if $(COMPOSER_LIBRARY_AUTO_UPDATE),\
@@ -2669,18 +2666,20 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 			) \
 		) \
 	) \
-	$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
-	$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
-	$(call PANDOC_FILES_MAIN	,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
-	$(call PANDOC_FILES_HEADER	,$(TYPE_$(TYPE)),$(2)) \
-	$(call PANDOC_FILES_CSS		,$(TYPE_$(TYPE)),$(2)) \
-	$(call PANDOC_FILES_OVERRIDE	,,$(BASE).$(EXTN),yml) \
-	$(call c_list_var		,$(BASE),$(EXTN)) \
+	$(if $(and $(1),$(filter-out $(1),$(PUBLISH))),\
+		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
+		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
+		$(call PANDOC_FILES_MAIN	,$(TYPE_$(1)),$(TMPL_$(1))) \
+		$(call PANDOC_FILES_HEADER	,$(TYPE_$(1)),$(2)) \
+		$(call PANDOC_FILES_CSS		,$(TYPE_$(1)),$(2)) \
+		$(call PANDOC_FILES_OVERRIDE	,,$(BASE).$(EXTN),yml) \
+		$(call c_list_var		,$(BASE),$(EXTN)) \
+	) \
 ))
 
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	$(foreach FILE,$(call PANDOC_FILES_LIST,$(TYPE),$(COMPOSER_TARGETS)),\
-		$(eval $(FILE): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_$(TYPE)),$(FILE))) \
+		$(eval $(FILE): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE),$(FILE))) \
 	) \
 )
 
@@ -12389,7 +12388,10 @@ $(TARGETS):
 	@$(call $(HEADERS))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(TARGETS)-$(TARGETS)
 	@$(LINERULE)
-	@$(foreach FILE,TARGETS SUBDIRS,\
+	@$(foreach FILE,\
+		TARGETS \
+		SUBDIRS \
+		,\
 		$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE)"; \
 		$(ECHO) "$(COMPOSER_$(FILE))" \
 			| $(SED) "s|[ ]+|\n|g" \
@@ -12397,7 +12399,11 @@ $(TARGETS):
 		$(call NEWLINE) \
 	)
 	@$(LINERULE)
-	@$(foreach FILE,EXPORTS CLEANER DOITALL,\
+	@$(foreach FILE,\
+		EXPORTS \
+		CLEANER \
+		DOITALL \
+		,\
 		$(PRINT) "$(_H)$(MARKER) *-$($(FILE))"; \
 		$(call $(TARGETS)-$(PRINTER),,$($(FILE))) \
 			| $(SED) "s|[ ]+|\n|g" \
@@ -12423,7 +12429,7 @@ override define $(TARGETS)-$(PRINTER) =
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
 		$(if $(1),,\
 			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-				$(foreach FILE,$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_$(TYPE))),\
+				$(foreach FILE,$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE)),\
 					-e "s|$(shell \
 						$(ECHO) "$(FILE)" \
 						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
@@ -13244,7 +13250,7 @@ endef
 ########################################
 
 #>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),,\
+$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,HTML,,\
 	$($(PUBLISH)-cache) \
 )
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
@@ -13252,7 +13258,7 @@ $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
 #>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),,\
+$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,HTML,,\
 	$($(PUBLISH)-cache) \
 )
 $($(PUBLISH)-caches):
@@ -13319,10 +13325,8 @@ $(PUBLISH)-library-$(TARGETS):
 #### {{{4 $(PUBLISH)-library-$(@)
 ########################################
 
-$($(PUBLISH)-library):
 ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $($(PUBLISH)-library)-$(TARGETS)
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
+$($(PUBLISH)-library): $($(PUBLISH)-library)-$(TARGETS)
 endif
 ifneq ($(or \
 	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-library)) ,\
@@ -13332,9 +13336,14 @@ ifneq ($(or \
 		$(COMPOSER_LIBRARY_AUTO_UPDATE) \
 	) \
 ),)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $($(PUBLISH)-library)-$(DOITALL)
+$($(PUBLISH)-library): $($(PUBLISH)-library)-$(DOITALL)
 endif
+$($(PUBLISH)-library):
+ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
+else
 	@$(ECHO) ""
+endif
 
 $($(PUBLISH)-library)-$(TARGETS): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library)-$(TARGETS): $($(PUBLISH)-library-digest)
