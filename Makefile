@@ -13319,8 +13319,10 @@ $(PUBLISH)-library-$(TARGETS):
 #### {{{4 $(PUBLISH)-library-$(@)
 ########################################
 
+$($(PUBLISH)-library):
 ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
-$($(PUBLISH)-library): $($(PUBLISH)-library)-$(TARGETS)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $($(PUBLISH)-library)-$(TARGETS)
+	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 endif
 ifneq ($(or \
 	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-library)) ,\
@@ -13330,14 +13332,9 @@ ifneq ($(or \
 		$(COMPOSER_LIBRARY_AUTO_UPDATE) \
 	) \
 ),)
-$($(PUBLISH)-library): $($(PUBLISH)-library)-$(DOITALL)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $($(PUBLISH)-library)-$(DOITALL)
 endif
-$($(PUBLISH)-library):
-ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
-else
 	@$(ECHO) ""
-endif
 
 $($(PUBLISH)-library)-$(TARGETS): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library)-$(TARGETS): $($(PUBLISH)-library-digest)
@@ -13345,7 +13342,6 @@ $($(PUBLISH)-library)-$(TARGETS):
 	@$(MAKE) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
-#WORKING:NOW:NOW:FIXIT
 $($(PUBLISH)-library)-$(DOITALL): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library)-$(DOITALL): $($(PUBLISH)-library-sitemap)
 $($(PUBLISH)-library)-$(DOITALL):
