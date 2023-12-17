@@ -150,6 +150,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* Mouse select color handling
 #				* Test all "Reference" links in browser
 #				* Spell check
+#		* `make README.html`
+#			* Minimize: `<col style="width: *%" />`
 #		* `make _setup-all`
 #			* Review each, including CSS
 #			* Create screenshot
@@ -2655,6 +2657,8 @@ override PANDOC_FILES_SPLIT = $(strip \
 	) \
 )
 
+#WORKING:NOW:NOW:FIXIT
+
 #> update: WILDCARD_YML
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER) \
@@ -2944,7 +2948,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Upgrade all tools and supporting files to next versions"
-	@$(TABLE_M2) "$(_C)[$(DISTRIB)-$(DOITALL)]"		"Also make example \`$(_M)$(OUT_README).$(_N)*$(_D)\` files and $(_C)[Static Websites]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(DISTRIB)-$(DOITALL)]"		"Also make \`$(_M)$(OUT_README).$(_N)*$(_D)\` files and $(_C)[Static Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)]"			"Update all included components $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Additionally perform all source code builds"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes made to each $(_E)(see [Repository Versions])$(_D)"
@@ -3652,6 +3656,7 @@ endef
 #		integrate with $(TESTING)-$(DISTRIB), so they clean up after each other...
 #		add to documentation, along with $(TESTING)-speed...
 #	note: never run in the "/" directory
+#	document test case of proper PUBLISH_PAGE_TESTING sorting in $(CONFIGS) library
 
 #WORKING:NOW
 #	features
@@ -5468,9 +5473,11 @@ endef
 
 override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
 
+#> update: $(PUBLISH)-library-sort-yq
+#>title: Number 0$(word 1,$(1)) in $(word 2,$(1))
 override define PUBLISH_PAGE_TESTING =
 ---
-title: Number 0$(word 1,$(1)) in $(word 2,$(1))
+title: Page Number 0$(word 1,$(1))
 date: $(word 3,$(1))
 $(PUBLISH_CREATORS): [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]
 $(PUBLISH_METALIST): [Tag $(word 1,$(1)), Tag 1, Tag 2, Tag 3]
@@ -13457,11 +13464,12 @@ $(PUBLISH)-$(COMPOSER_YML):
 			| .variables.$(PUBLISH)-library.auto_update = null \
 			" 2>/dev/null
 
-#WORK reverse is also reversing title/(&path?) when date is identical...?
+#> update: $(PUBLISH)-library-sort-yq
+#>	sort_by(.path) \
+#>	| sort_by(.title) \
+#>	| (sort_by(.date) | reverse)
 override define $(PUBLISH)-library-sort-yq =
-	sort_by(.path) \
-	| sort_by(.title) \
-	| (sort_by(.date) | reverse)
+	sort_by(.date, .title, .path) | reverse
 endef
 
 override define $(PUBLISH)-library-sort-sh =
@@ -14182,6 +14190,7 @@ endif
 ########################################
 
 #WORKING:NOW once finalizing #WORK markers gets to here, do a final double-check of this list...
+
 #> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
 #>	[ -n $(COMPOSER_DEBUGIT) ] || --filter="-_/test/**"
 #> $(PUBLISH)-$(EXAMPLE)-$(TESTING) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
@@ -14213,7 +14222,7 @@ endif
 
 $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL):
 ifneq ($(wildcard $(firstword $(RSYNC))),)
-	@$(call $(HEADERS))
+	@$(call $(HEADERS),,$(PUBLISH)-$(EXAMPLE))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR)				$(PUBLISH_ROOT) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
@@ -14428,12 +14437,16 @@ endif
 #>	@$(ECHO) 'override $(notdir $(PUBLISH_PAGEDIR)).$(EXTN_HTML) := \\\n'		>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) 'override $(notdir $(PUBLISH_PAGEDIR)).* := \\\n'			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) '\t$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL) \\\n'	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(foreach YEAR,202 203,\
+#> update: $(PUBLISH)-library-sort-yq
+#>	@$(foreach YEAR,202 203,
+#>		$(eval override MARK := $(YEAR)$(NUM)-01-01)
+#>		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(NUM) $(YEAR)$(NUM) $(MARK))
+	@$(foreach YEAR,2022 2023 2024,\
 		$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
-		$(eval override MARK := $(YEAR)$(NUM)-01-01) \
+		$(eval override MARK := $(YEAR)-01-01) \
 		$(eval override FILE := $(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(MARK)+$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
-		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(NUM) $(YEAR)$(NUM) $(MARK)) \
+		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(NUM) $(YEAR) $(MARK)) \
 			| $(SED) \
 				-e "s|$(SED_ESCAPE_CONTROL)||g" \
 				-e "s|$(SED_ESCAPE_COLOR)||g" \
