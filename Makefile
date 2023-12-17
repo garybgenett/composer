@@ -2684,6 +2684,9 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(eval $(FILE): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE),$(FILE))) \
 	) \
 )
+$(if $(filter-out $(c_base).$(EXTENSION),$(COMPOSER_TARGETS)),\
+	$(eval $(c_base).$(EXTENSION): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTENSION))) \
+)
 
 #> $(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
 #> $(SUBDIRS)-$(DOITALL) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS))
@@ -2922,9 +2925,10 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Additional Targets); fi
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
-	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Full upgrade to current release, repository preparation"
+	@$(TABLE_M2) "$(_C)[$(DISTRIB)]"			"Upgrade all tools and supporting files to next versions"
+	@$(TABLE_M2) "$(_C)[$(DISTRIB)-$(DOITALL)]"		"Also make example \`$(_M)$(OUT_README).$(_N)*$(_D)\` files and $(_C)[Static Websites]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)]"			"Update all included components $(_E)(see [Requirements])$(_D)"
-	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Also perform all source code builds"
+	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(DOITALL)]"		"Additionally perform all source code builds"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes made to each $(_E)(see [Repository Versions])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(_N)*$(_C)]"		"Complete fetch and build for a specific component"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)]"			"Diagnostics, tests targets list in $(_C)[COMPOSER_DEBUGIT]$(_D)"
@@ -2967,7 +2971,7 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_C)[$(LISTING)]"			"Extracted list of all targets from $(_C)[$(MAKE_DB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(NOTHING)]"			"Placeholder to specify or detect empty values"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Does $(_C)[$(CREATOR)]$(_D), and builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
+	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Also builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-dir]"			"Only create directory structure, and do $(_C)[$(DISTRIB)]$(_D)"
@@ -3684,8 +3688,8 @@ improvements not exposed as variables will apply to all documents created with a
 given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
 Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
-section of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the $(_C)[$(DISTRIB)]$(_D) target, and will
-be overwritten whenever it is run.
+section of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the $(_C)[$(DISTRIB)]$(_D) target $(_E)(using
+[$(CREATOR)])$(_D), and will be overwritten whenever it is run.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Static Websites)
 
@@ -4527,7 +4531,7 @@ endef
 #> update: $(DEBUGIT): targets list
 
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOITALL) / $(UPGRADE)-$(PRINTER) / $(UPGRADE)-\*)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(DISTRIB)-$(DOITALL) / $(UPGRADE) / $(UPGRADE)-$(DOITALL) / $(UPGRADE)-$(PRINTER) / $(UPGRADE)-\*)
 
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and build all external components.
@@ -4542,9 +4546,12 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(UPGRADE) / $(UPGRADE)-$(DOIT
     directories, use $(_C)[$(UPGRADE)-$(PRINTER)]$(_D).
   * Each component directory has a corresponding $(_C)[$(UPGRADE)-$(_N)*$(_C)]$(_D) target which
     performs the equivalent of $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) for only that component.
-  * Finally, $(_C)[$(DISTRIB)]$(_D) runs $(_C)[$(CREATOR)-$(DOITALL)]$(_D), $(_C)[$(UPGRADE)-$(DOITALL)]$(_D), and $(_C)[$(PUBLISH)-$(EXAMPLE)]$(_D),
-    which collectively turn the current directory into a complete clone of
-    $(_C)[$(COMPOSER_BASENAME)]$(_D), including overwriting all supporting files.
+  * Finally, $(_C)[$(DISTRIB)]$(_D) runs $(_C)[$(UPGRADE)-$(DOITALL)]$(_D) and $(_C)[$(CREATOR)]$(_D), which together turn the
+    current directory into a functional clone of $(_C)[$(COMPOSER_BASENAME)]$(_D), including
+    overwriting all supporting files.
+  * Beyond this, $(_C)[$(DISTRIB)-$(DOITALL)]$(_D) also uses $(_C)[$(CREATOR)-$(DOITALL)]$(_D) and $(_C)[$(PUBLISH)-$(EXAMPLE)]$(_D) to
+    build the `$(_M)$(OUT_README).$(_N)*$(_D)` files and create an example $(_C)[Static Websites]$(_D) in the
+    `$(_M)$(notdir $(PUBLISH_ROOT))$(_D)` directory.
   * One of the unique features of $(_C)[$(COMPOSER_BASENAME)]$(_D) is that everything needed to
     compose itself is embedded in the `$(_M)$(MAKEFILE)$(_D)`, so it is fully self-contained.
 
@@ -10426,8 +10433,12 @@ $(DISTRIB):
 	fi
 	@$(CHMOD) $(CURDIR)/$(MAKEFILE)
 	@$(MAKE) --makefile $(COMPOSER) $(UPGRADE)-$(DOITALL)
+ifeq ($(COMPOSER_DOITALL_$(DISTRIB)),$(DOITALL))
 	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)-$(DOITALL)
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)
+else
+	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)
+endif
 
 ########################################
 ## {{{2 $(UPGRADE)
