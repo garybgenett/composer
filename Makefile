@@ -10963,11 +10963,9 @@ $(DEBUGIT)-file:
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
 	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(DEBUGIT_FILE)
-	@$(call ENV_MAKE) \
+	@$(call ENV_MAKE,,,$(COMPOSER_DEBUGIT)) \
 		COMPOSER_DOITALL_$(DEBUGIT)="$(COMPOSER_DOITALL_$(DEBUGIT))" \
 		COMPOSER_DOITALL_$(TESTING)="$(DEBUGIT)" \
-		COMPOSER_DOCOLOR= \
-		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 		$(DEBUGIT) 2>&1 \
 		| $(TEE) --append $(DEBUGIT_FILE) \
 		| $(SED) "s|^.*$$||g" \
@@ -11088,11 +11086,9 @@ $(TESTING)-file:
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
 	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(TESTING_FILE)
-	@$(call ENV_MAKE) \
+	@$(call ENV_MAKE,,,$(COMPOSER_DEBUGIT)) \
 		COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)" \
 		COMPOSER_DOITALL_$(TESTING)="$(COMPOSER_DOITALL_$(TESTING))" \
-		COMPOSER_DOCOLOR= \
-		COMPOSER_DEBUGIT="$(COMPOSER_DEBUGIT)" \
 		$(TESTING) 2>&1 \
 		| $(TEE) --append $(TESTING_FILE) \
 		| $(SED) "s|^.*$$||g" \
