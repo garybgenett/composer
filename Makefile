@@ -11119,8 +11119,8 @@ $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
 $(TESTING): $(TESTING)-COMPOSER_EXPORTS
 $(TESTING): $(TESTING)-COMPOSER_IGNORES
-$(TESTING): $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING): $(TESTING)-CSS
+$(TESTING): $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)
 $(TESTING): $(TESTING)-other
 $(TESTING): $(TESTING)-$(EXAMPLE)
 ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
@@ -11963,44 +11963,6 @@ $(TESTING)-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-count,1,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
 
 ########################################
-### {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
-########################################
-
-.PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)
-$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT): $(TESTING)-Think
-$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT):
-	@$(call $(TESTING)-$(HEADERS),\
-		Proper operation of '$(_C)COMPOSER_LOG$(_D)' and '$(_C)COMPOSER_EXT$(_D)' ,\
-		\n\t * Build '$(_C)$(DOITALL)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
-		\n\t * Do '$(_C)$(CLEANER)$(_D)' with both empty \
-		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_LOG$(_D)' \
-		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
-		\n\t * Detect updated files with '$(_C)$(PRINTER)$(_D)' \
-	)
-	@$(call $(TESTING)-mark,,1)
-	@$(call $(TESTING)-init)
-	@$(call $(TESTING)-done)
-
-.PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-init
-$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-init:
-	@$(call $(TESTING)-run) COMPOSER_EXT= $(DOITALL)
-	@$(call $(TESTING)-run) COMPOSER_LOG= COMPOSER_EXT= $(CLEANER)
-	@$(call $(TESTING)-run) COMPOSER_LOG= $(PRINTER)
-	@$(call $(TESTING)-run) COMPOSER_EXT= $(PRINTER)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(patsubst .%,%,$(COMPOSER_LOG_DEFAULT))$(COMPOSER_EXT_DEFAULT)
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_LOG_DEFAULT)
-	@$(call $(TESTING)-run) $(PRINTER)
-
-.PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done
-$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Removing.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_LOG)
-	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_EXT)
-	$(call $(TESTING)-find, $(subst .,[.],$(COMPOSER_LOG_DEFAULT))$$)
-	$(call $(TESTING)-find, $(patsubst .%,%,$(COMPOSER_LOG_DEFAULT))$(subst .,[.],$(COMPOSER_EXT_DEFAULT))[*]?$$)
-
-########################################
 ### {{{3 $(TESTING)-CSS
 ########################################
 
@@ -12063,6 +12025,44 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,14,--css=)
 	$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header)
 	$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
+
+########################################
+### {{{3 $(TESTING)-$(COMPOSER_LOG)$(COMPOSER_EXT)
+########################################
+
+.PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)
+$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT): $(TESTING)-Think
+$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT):
+	@$(call $(TESTING)-$(HEADERS),\
+		Proper operation of '$(_C)COMPOSER_LOG$(_D)' and '$(_C)COMPOSER_EXT$(_D)' ,\
+		\n\t * Build '$(_C)$(DOITALL)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
+		\n\t * Do '$(_C)$(CLEANER)$(_D)' with both empty \
+		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_LOG$(_D)' \
+		\n\t * Do '$(_C)$(PRINTER)$(_D)' with empty '$(_C)COMPOSER_EXT$(_D)' \
+		\n\t * Detect updated files with '$(_C)$(PRINTER)$(_D)' \
+	)
+	@$(call $(TESTING)-mark,,1)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+
+.PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-init
+$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-init:
+	@$(call $(TESTING)-run) COMPOSER_EXT= $(DOITALL)
+	@$(call $(TESTING)-run) COMPOSER_LOG= COMPOSER_EXT= $(CLEANER)
+	@$(call $(TESTING)-run) COMPOSER_LOG= $(PRINTER)
+	@$(call $(TESTING)-run) COMPOSER_EXT= $(PRINTER)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(patsubst .%,%,$(COMPOSER_LOG_DEFAULT))$(COMPOSER_EXT_DEFAULT)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_LOG_DEFAULT)
+	@$(call $(TESTING)-run) $(PRINTER)
+
+.PHONY: $(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done
+$(TESTING)-$(COMPOSER_LOG_DEFAULT)$(COMPOSER_EXT_DEFAULT)-done:
+	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Removing.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_LOG)
+	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_EXT)
+	$(call $(TESTING)-find, $(subst .,[.],$(COMPOSER_LOG_DEFAULT))$$)
+	$(call $(TESTING)-find, $(patsubst .%,%,$(COMPOSER_LOG_DEFAULT))$(subst .,[.],$(COMPOSER_EXT_DEFAULT))[*]?$$)
 
 ########################################
 ### {{{3 $(TESTING)-other
