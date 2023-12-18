@@ -2242,7 +2242,7 @@ override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DE
 override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
 override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
 override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
-override $(PUBLISH)-library-append	:= $(COMPOSER_LIBRARY)/$(PUBLISH)-$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library-append	:= $(COMPOSER_LIBRARY)/$(PUBLISH)-append$(COMPOSER_EXT_SPECIAL)
 
 override define $(PUBLISH)-library-append-src =
 $(NULL)
@@ -2656,8 +2656,6 @@ override PANDOC_FILES_SPLIT = $(strip \
 		) \
 	) \
 )
-
-#WORKING:NOW:NOW:FIXIT
 
 #> update: WILDCARD_YML
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
@@ -5475,6 +5473,7 @@ override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
 
 #> update: $(PUBLISH)-library-sort-yq
 #>title: Number 0$(word 1,$(1)) in $(word 2,$(1))
+#>## $(word 2,$(1)) Lorem Ipsum
 override define PUBLISH_PAGE_TESTING =
 ---
 title: Page Number 0$(word 1,$(1))
@@ -5484,7 +5483,7 @@ $(PUBLISH_METALIST): [Tag $(word 1,$(1)), Tag 1, Tag 2, Tag 3]
 ---
 $(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)
 
-## $(word 2,$(1)) Lorem Ipsum
+## $(word 2,$(1)) Lorem Ipsum #$(word 1,$(1))
 
 $(call $(HELPOUT)-$(DOITALL)-WORKFLOW)
 endef
@@ -13016,9 +13015,9 @@ endef
 ########################################
 
 override define $(PUBLISH)-$(TARGETS)-helpers =
-	$(eval HELPER := $(if $(filter metalist-%,$(2)),metalist,$(2))) \
-	$(eval TAGGER := $(if $(filter metalist-%,$(2)),$(patsubst metalist-%,%,$(2)),$(NULL))) \
-	$(eval DOFILE := $(1).$(HELPER)$(if $(TAGGER),-$(TAGGER))) \
+	$(eval override HELPER := $(if $(filter metalist-%,$(2)),metalist,$(2))) \
+	$(eval override TAGGER := $(if $(filter metalist-%,$(2)),$(patsubst metalist-%,%,$(2)),$(NULL))) \
+	$(eval override DOFILE := $(1).$(HELPER)$(if $(TAGGER),-$(TAGGER))) \
 	MENU="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-menu$(if $(TAGGER),$(NULL) $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
 	LIST="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-list$(if $(TAGGER),$(NULL) $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
 	if	[ -n "$${MENU}" ] || \
@@ -13299,17 +13298,13 @@ endef
 ########################################
 
 #>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),,\
-	$($(PUBLISH)-cache) \
-)
+$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
 #>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),,\
-	$($(PUBLISH)-cache) \
-)
+$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
 $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 #> update: WILDCARD_YML
@@ -13763,8 +13758,8 @@ $($(PUBLISH)-library-digest-src):
 $($(PUBLISH)-library-digest-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest-files):
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
-	@	$(eval TYPE := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")) \
-		$(eval NAME := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")) \
+	@	$(eval override TYPE := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")) \
+		$(eval override NAME := $(shell $(call $(PUBLISH)-library-digest-list,$(@).$(COMPOSER_BASENAME)) | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")) \
 		{	$(ECHO) "---\n"; \
 			$(ECHO) "pagetitle: \"$$( \
 					if [ "$(TYPE)" = "title" ]; then	$(ECHO) "Title"; \
