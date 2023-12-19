@@ -2662,6 +2662,11 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
 	$(COMPOSER_YML_LIST) \
+	$(if $(filter $(1),$(PUBLISH)-cache),\
+		$(if $(COMPOSER_LIBRARY_AUTO_UPDATE),\
+			$($(PUBLISH)-library) \
+		) \
+	) \
 	$(if $(filter $(1),$(PUBLISH)),\
 		$(COMPOSER_LIBRARY)/$(MAKEFILE) \
 		$($(PUBLISH)-library-metadata) \
@@ -2673,12 +2678,14 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(if $(filter $(1),$(TYPE_HTML)),\
 		$(if $(c_site),\
 			$($(PUBLISH)-cache) \
-			$(if $(COMPOSER_LIBRARY_AUTO_UPDATE),\
-				$($(PUBLISH)-library) \
-			) \
 		) \
 	) \
-	$(if $(and $(1),$(filter-out $(1),$(PUBLISH))),\
+	$(if $(and $(1),\
+		$(filter-out $(PUBLISH)-cache,\
+		$(filter-out $(PUBLISH),\
+		$(1) \
+		)) \
+	),\
 		$(eval override NAME := $(call PANDOC_FILES_TYPE,$(1))) \
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
@@ -13297,14 +13304,12 @@ endef
 ### {{{3 $(PUBLISH)-cache
 ########################################
 
-#>$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies)
+$($(PUBLISH)-cache): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)-cache)
 $($(PUBLISH)-cache): $($(PUBLISH)-caches)
 $($(PUBLISH)-cache):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
-#>$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
-$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies)
+$($(PUBLISH)-caches): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)-cache)
 $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 #> update: WILDCARD_YML
@@ -13352,9 +13357,8 @@ ifneq ($(COMPOSER_LIBRARY),)
 		$(PUBLISH)-library-$(TARGETS)
 else ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
 	@$(MAKE) $(PUBLISH)-library-$(NOTHING)
-else
-	@$(ECHO) ""
 endif
+	@$(ECHO) ""
 
 .PHONY: $(PUBLISH)-library-$(NOTHING)
 $(PUBLISH)-library-$(NOTHING):
@@ -13385,9 +13389,8 @@ endif
 $($(PUBLISH)-library):
 ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
-else
-	@$(ECHO) ""
 endif
+	@$(ECHO) ""
 
 $($(PUBLISH)-library)-$(TARGETS): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library)-$(TARGETS): $($(PUBLISH)-library-digest)
@@ -13400,6 +13403,11 @@ $($(PUBLISH)-library)-$(DOITALL): $($(PUBLISH)-library-sitemap)
 $($(PUBLISH)-library)-$(DOITALL):
 	@$(MAKE) --directory $(COMPOSER_LIBRARY) c_site="1" $(DOITALL)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
+
+$($(PUBLISH)-library-sitemap) \
+$($(PUBLISH)-library-sitemap-src) \
+	: \
+	$($(PUBLISH)-library)-$(TARGETS)
 
 ########################################
 #### {{{4 $(PUBLISH)-library-$(MAKEFILE)
@@ -14234,9 +14242,8 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 		--makefile $(PUBLISH_ROOT)/.$(COMPOSER_BASENAME)/$(notdir $(COMPOSER)) \
 		$(INSTALL)-$(DOFORCE)
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
-else
-	@$(ECHO) ""
 endif
+	@$(ECHO) ""
 
 #> update: $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
 override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
@@ -14599,9 +14606,8 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 		$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
-else
-	@$(ECHO) ""
 endif
+	@$(ECHO) ""
 
 ########################################
 ## {{{2 $(INSTALL)
