@@ -171,6 +171,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
 #		https://getbootstrap.com/docs/4.5/utilities/screen-readers
 #	remove once fixed in upstream
+#		[Google Firebase] = $(UPGRADE)-$(notdir $(FIREBASE_DIR))
 #		$(MKDIR) $(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
 #		MDVIEWER_FIX_SASS_VER
 #	$(PUBLISH)-$(EXAMPLE)-$(COMPOSER_EXT_DEFAULT)
@@ -2677,7 +2678,10 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	) \
 	$(if $(filter $(1),$(TYPE_HTML)),\
 		$(if $(c_site),\
-			$($(PUBLISH)-cache) \
+			$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml) ,\
+				$($(PUBLISH)-cache-root)-file.$(2) ,\
+				$($(PUBLISH)-cache) \
+			) \
 		) \
 	) \
 	$(if $(and $(1),\
@@ -3366,6 +3370,7 @@ $(_S)[Git]: https://git-scm.com$(_D)
 $(_S)[Git SCM]: https://git-scm.com$(_D)
 $(_S)[GNU Diffutils]: http://www.gnu.org/software/diffutils$(_D)
 $(_S)[Rsync]: https://rsync.samba.org$(_D)
+$(_S)[NPM]: https://www.npmjs.com$(_D)
 
 $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
@@ -3456,10 +3461,10 @@ rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, 
 instructions in the `$(_M)README.md$(_D)`.
 
 $(_C)[Google Firebase]$(_D) is only necessary for uploading via the $(_C)[$(EXPORTS)-$(DOITALL)]$(_D) and
-$(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.
-
-#WORK it needs to be installed already, or downloaded with: $(_C)[$(UPGRADE)-$(notdir $(FIREBASE_DIR))]$(_D)
-#WORK [$(UPGRADE)-$(notdir $(FIREBASE_DIR))]: #internal-targets
+$(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.  Binaries are included in the repository, but do not
+seem to work with all versions of their respective operating systems.  If the
+included binary fails, use $(_M)`$(UPGRADE)-$(notdir $(FIREBASE_DIR))`$(_D) to build a local version
+$(_E)(see [_update-*])$(_D).
 
 The versions of the integrated repositories can be changed, if desired $(_E)(see
 [Repository Versions])$(_D).
@@ -4591,6 +4596,9 @@ Creating a development clone:
 $(CODEBLOCK)$(_C)mkdir$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
 $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/.$(COMPOSER_BASENAME)/$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
+
+Note that some additional external tools may be required to perform the builds,
+such as $(_C)[NPM]$(_D) $(_E)(see [$(CHECKIT)-$(DOITALL)])$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DEBUGIT) / $(DEBUGIT)-file)
 
@@ -12957,16 +12965,16 @@ endif
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-file.*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*))
+.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-file.*))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
 $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
-$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache)-file.*)) \
+$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-file.*)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
 	@if [ -f "$($(@))" ]; then \
