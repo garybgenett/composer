@@ -5798,6 +5798,7 @@ endef
 ## {{{2 Heredoc: gitignore
 ########################################
 
+#> $(UPGRADE) > $(DEBUGIT) > $(TESTING)
 override define HEREDOC_GITIGNORE =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) Git Exclusions
@@ -5806,11 +5807,14 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(COMPOSER_BASENAME)
 
-#$(MARKER) **/$(COMPOSER_SETTINGS)
-#$(MARKER) **/$(COMPOSER_YML)
-
 **/$(COMPOSER_LOG_DEFAULT)
 **/$(patsubst $(CURDIR)/%,%,$(COMPOSER_TMP))/
+
+########################################
+# $(DEBUGIT) / $(TESTING)
+
+/.$(COMPOSER_BASENAME)-*
+/$(COMPOSER_BASENAME)-*
 
 ########################################
 # $(UPGRADE)
@@ -5821,12 +5825,6 @@ override define HEREDOC_GITIGNORE =
 $(foreach FILE,$(REPOSITORIES_LIST),\
 $(if $($(FILE)_BIN),$(call NEWLINE)/$(call COMPOSER_CONV,,$($(FILE)_DIR))/$(notdir $($(FILE)_DIR))-*) \
 )
-
-########################################
-# $(DEBUGIT) / $(TESTING)
-
-/.$(COMPOSER_BASENAME)-*
-/$(COMPOSER_BASENAME)-*
 
 ########################################
 # $(EXPORTS)
