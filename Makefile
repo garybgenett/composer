@@ -678,8 +678,23 @@ override PUBLISH_COPY_PROTECT_ALT	:= 1
 
 override PUBLISH_COLS_BREAK		:= lg
 override PUBLISH_COLS_BREAK_ALT		:= md
-override PUBLISH_COLS_STICKY		:= 1
-override PUBLISH_COLS_STICKY_ALT	:= null
+
+override PUBLISH_COLS_STICKY_L		:= 1
+override PUBLISH_COLS_STICKY_C		:= 1
+override PUBLISH_COLS_STICKY_R		:= 1
+override PUBLISH_COLS_RESTICKY_L	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESTICKY_C	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESTICKY_R	:= $(SPECIAL_VAL)
+
+override PUBLISH_COLS_STICKY_L_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_STICKY_C_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_STICKY_R_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESTICKY_L_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESTICKY_L_MOD	:= 1
+override PUBLISH_COLS_RESTICKY_C_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESTICKY_C_MOD	:= 1
+override PUBLISH_COLS_RESTICKY_R_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESTICKY_R_MOD	:= 1
 
 override PUBLISH_COLS_ORDER_L		:= 1
 override PUBLISH_COLS_ORDER_C		:= 2
@@ -691,10 +706,12 @@ override PUBLISH_COLS_REORDER_R		:= 2
 override PUBLISH_COLS_ORDER_L_ALT	:= 1
 override PUBLISH_COLS_ORDER_C_ALT	:= 3
 override PUBLISH_COLS_ORDER_R_ALT	:= 2
-override PUBLISH_COLS_REORDER_L_MOD	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_REORDER_L_ALT	:= 2
+override PUBLISH_COLS_REORDER_L_MOD	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_REORDER_C_ALT	:= 3
+override PUBLISH_COLS_REORDER_C_MOD	:= $(PUBLISH_COLS_REORDER_C_ALT)
 override PUBLISH_COLS_REORDER_R_ALT	:= 1
+override PUBLISH_COLS_REORDER_R_MOD	:= $(PUBLISH_COLS_REORDER_R_ALT)
 
 override PUBLISH_COLS_SIZE_L		:= 3
 override PUBLISH_COLS_SIZE_C		:= 7
@@ -707,9 +724,11 @@ override PUBLISH_COLS_SIZE_L_ALT	:= 12
 override PUBLISH_COLS_SIZE_C_ALT	:= 9
 override PUBLISH_COLS_SIZE_R_ALT	:= 3
 override PUBLISH_COLS_RESIZE_L_ALT	:= 12
+override PUBLISH_COLS_RESIZE_L_MOD	:= $(PUBLISH_COLS_RESIZE_L_ALT)
 override PUBLISH_COLS_RESIZE_C_ALT	:= 12
-override PUBLISH_COLS_RESIZE_R_MOD	:= 12
+override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 
 #> talk: 183 / read: 234
 override PUBLISH_METAINFO		:= <date> $(DIVIDE) <title><|> -- <author|; >
@@ -2116,7 +2135,8 @@ override define COMPOSER_YML_DATA_SKEL =
     copy_protect:			$(PUBLISH_COPY_PROTECT),
 
     cols_break:				$(PUBLISH_COLS_BREAK),
-    cols_sticky:			$(PUBLISH_COLS_STICKY),
+    cols_sticky:			[ $(PUBLISH_COLS_STICKY_L), $(PUBLISH_COLS_STICKY_C), $(PUBLISH_COLS_STICKY_R) ],
+    cols_resticky:			[ $(PUBLISH_COLS_RESTICKY_L), $(PUBLISH_COLS_RESTICKY_C), $(PUBLISH_COLS_RESTICKY_R) ],
     cols_order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ],
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
@@ -3555,8 +3575,6 @@ endef
 ########################################
 
 #WORKING:NOW:NOW
-#	make scrollbar sticky configurable per-mobile
-#		leave settings as is, but do a mixed-version in _test
 #	make it so that an empty digest_title/sitemap_title disables/removes them...
 #	gah! site-config.(header|footer) should create automatic dependencies...?
 #		same for library.*_append...
@@ -4797,7 +4815,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | css_overlay   | `$(PUBLISH_CSS_OVERLAY)`
 | copy_protect  | `$(PUBLISH_COPY_PROTECT)`
 | cols_break    | `$(PUBLISH_COLS_BREAK)`
-| cols_sticky   | `$(PUBLISH_COLS_STICKY)`
+| cols_sticky   | `[ $(PUBLISH_COLS_STICKY_L), $(PUBLISH_COLS_STICKY_C), $(PUBLISH_COLS_STICKY_R) ]`
+| cols_resticky | `[ $(PUBLISH_COLS_RESTICKY_L), $(PUBLISH_COLS_RESTICKY_C), $(PUBLISH_COLS_RESTICKY_R) ]`
 | cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
 | cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
 | cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
@@ -4985,11 +5004,12 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | css_overlay   | `$(PUBLISH_CSS_OVERLAY)`   | `$(PUBLISH_CSS_OVERLAY_ALT)`
 | copy_protect  | `$(PUBLISH_COPY_PROTECT)`  | `$(PUBLISH_COPY_PROTECT_ALT)`
 | cols_break    | `$(PUBLISH_COLS_BREAK)`    | `$(PUBLISH_COLS_BREAK_ALT)`
-| cols_sticky   | `$(PUBLISH_COLS_STICKY)`   | `$(PUBLISH_COLS_STICKY_ALT)`
-| cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`       | `[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]`
-| cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]` | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
-| cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`          | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
-| cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`    | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
+| cols_sticky   | `[ $(PUBLISH_COLS_STICKY_L), $(PUBLISH_COLS_STICKY_C), $(PUBLISH_COLS_STICKY_R) ]`       | `[ $(PUBLISH_COLS_STICKY_L_ALT), $(PUBLISH_COLS_STICKY_C_ALT), $(PUBLISH_COLS_STICKY_R_ALT) ]`
+| cols_resticky | `[ $(PUBLISH_COLS_RESTICKY_L), $(PUBLISH_COLS_RESTICKY_C), $(PUBLISH_COLS_RESTICKY_R) ]` | `[ $(PUBLISH_COLS_RESTICKY_L_ALT), $(PUBLISH_COLS_RESTICKY_C_ALT), $(PUBLISH_COLS_RESTICKY_R_ALT) ]`
+| cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`          | `[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]`
+| cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`    | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
+| cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`             | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
+| cols_resize   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`       | `[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(PUBLISH_COLS_RESIZE_R_ALT) ]`
 | metainfo      | `$(PUBLISH_METAINFO)`      | `$(PUBLISH_METAINFO_ALT)`
 | metainfo_null | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
 | metalist $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)` | title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_PRINT_ALT)`
@@ -6134,7 +6154,8 @@ $(_S)#$(MARKER)$(_D) $(_C)css_overlay$(_D):			$(_M)$(PUBLISH_CSS_OVERLAY)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_sticky$(_D):			$(_M)$(PUBLISH_COLS_STICKY)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_sticky$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_STICKY_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_STICKY_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_STICKY_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols_resticky$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESTICKY_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESTICKY_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESTICKY_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_order$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_ORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
@@ -6526,11 +6547,12 @@ variables:
     css_overlay:			$(PUBLISH_CSS_OVERLAY_ALT)
     copy_protect:			$(PUBLISH_COPY_PROTECT_ALT)
     cols_break:				$(PUBLISH_COLS_BREAK_ALT)
-    cols_sticky:			$(PUBLISH_COLS_STICKY_ALT)
+    cols_sticky:			[ $(PUBLISH_COLS_STICKY_L_ALT), $(PUBLISH_COLS_STICKY_C_ALT), $(PUBLISH_COLS_STICKY_R_ALT) ]
+    cols_resticky:			[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESTICKY_L_MOD),$(PUBLISH_COLS_RESTICKY_L_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESTICKY_C_MOD),$(PUBLISH_COLS_RESTICKY_C_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESTICKY_R_MOD),$(PUBLISH_COLS_RESTICKY_R_ALT)) ]
     cols_order:				[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]
-    cols_reorder:			[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_L_MOD),$(PUBLISH_COLS_REORDER_L_ALT)), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]
+    cols_reorder:			[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_L_MOD),$(PUBLISH_COLS_REORDER_L_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_C_MOD),$(PUBLISH_COLS_REORDER_C_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_R_MOD),$(PUBLISH_COLS_REORDER_R_ALT)) ]
     cols_size:				[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]
-    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L_ALT), $(PUBLISH_COLS_RESIZE_C_ALT), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_R_MOD),$(PUBLISH_COLS_RESIZE_R_ALT)) ]
+    cols_resize:			[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_L_MOD),$(PUBLISH_COLS_RESIZE_L_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_C_MOD),$(PUBLISH_COLS_RESIZE_C_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESIZE_R_MOD),$(PUBLISH_COLS_RESIZE_R_ALT)) ]
     metainfo:				"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_METAINFO_MOD),$(PUBLISH_METAINFO_ALT))"
     metainfo_null:			"$(PUBLISH_METAINFO_NULL_ALT)"
     metalist:
@@ -7669,10 +7691,20 @@ $${CAT} <<_EOF_
 		elif [ "$${1}" = "right" ]; then	NUM="2"
 		fi
 		COLS_BREAK="$$(		COMPOSER_YML_DATA_VAL config.cols_break)"
+		COLS_STICKY="$$(	COMPOSER_YML_DATA_VAL config.cols_sticky[$${NUM}])"
+		COLS_RESTICKY="$$(	COMPOSER_YML_DATA_VAL config.cols_resticky[$${NUM}])"
 		COLS_ORDER="$$(		COMPOSER_YML_DATA_VAL config.cols_order[$${NUM}])"
 		COLS_REORDER="$$(	COMPOSER_YML_DATA_VAL config.cols_reorder[$${NUM}])"
 		COLS_SIZE="$$(		COMPOSER_YML_DATA_VAL config.cols_size[$${NUM}])"
 		COLS_RESIZE="$$(	COMPOSER_YML_DATA_VAL config.cols_resize[$${NUM}])"
+		if	[ "$${COLS_STICKY}"	!= "$${SPECIAL_VAL}" ];
+		then	$${ECHO} " $${COMPOSER_TINYNAME}-sticky d-$${COLS_BREAK}-sticky"
+		else	$${ECHO} " d-$${COLS_BREAK}-static"
+		fi
+		if	[ "$${COLS_RESTICKY}"	!= "$${SPECIAL_VAL}" ];
+		then	$${ECHO} " $${COMPOSER_TINYNAME}-sticky d-sticky"
+		else	$${ECHO} " d-static"
+		fi
 		$${ECHO} " order-$${COLS_BREAK}-$${COLS_ORDER} order-$${COLS_REORDER}"
 		$${ECHO} " col-$${COLS_BREAK}-$${COLS_SIZE} col-$${COLS_RESIZE}"
 		if	[ "$${COLS_ORDER}"	!= "$${SPECIAL_VAL}" ] &&
@@ -7684,9 +7716,6 @@ $${CAT} <<_EOF_
 			[ "$${COLS_RESIZE}"	!= "$${SPECIAL_VAL}" ];
 		then	$${ECHO} " d-block"
 		else	$${ECHO} " d-none"
-		fi
-		if [ -n "$$(COMPOSER_YML_DATA_VAL config.cols_sticky)" ]; then
-			$${ECHO} " $${COMPOSER_TINYNAME}-sticky"
 		fi
 	else
 		if [ -n "$${1}" ]; then
