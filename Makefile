@@ -489,7 +489,8 @@ override MAKEFLAGS_ENV			= --no-builtin-rules --no-builtin-variables $(if $(1),-
 override NOFAIL				:= --keep-going
 
 override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,$(COMPOSER_DEBUGIT_ALL)) $(if $(filter k%,$(MAKEFLAGS)),$(NOFAIL),--stop)
-ifneq ($(COMPOSER_DEBUGIT_ALL),)
+#>ifneq ($(COMPOSER_DEBUGIT_ALL),)
+ifneq ($(COMPOSER_DEBUGIT),)
 #>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose --trace
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
 else
@@ -654,7 +655,7 @@ override c_margin_right			?=
 override c_options			?=
 
 override c_list_var			= $(strip $(if $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),                   $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $($(if $(1),$(1),$(c_base)).*),                   $($(if $(1),$(1),$(c_base)).*),$(c_list))))
-override c_list_var_source		= $(strip $(if $($(if $(2),$(2),$(c_base)).$(if $(3),$(3),$(EXTN_OUTPUT))),$(if $(1),\$$$$,\$$)($(if $(2),$(2),$(c_base)).$(if $(3),$(3),$(EXTN_OUTPUT))),$(if $($(if $(2),$(2),$(c_base)).*),$(if $(1),\$$$$,\$$)($(if $(2),$(2),$(c_base)).*))))
+override c_list_var_source		= $(strip $(if $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $(3),\$$$$,\$$)($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $($(if $(1),$(1),$(c_base)).*),$(if $(3),\$$$$,\$$)($(if $(1),$(1),$(c_base)).*))))
 override c_list_file			:=
 
 ########################################
@@ -2191,7 +2192,7 @@ override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)
 #> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
 override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTN_OUTPUT),yml)
 ifneq ($(COMPOSER_YML_LIST_FILE),)
-override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)-file.$(c_base).$(EXTN_OUTPUT)
+override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)-$(c_base).$(EXTN_OUTPUT)
 endif
 
 override $(PUBLISH)-caches-begin := \
@@ -2259,7 +2260,7 @@ override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),
 endif
 
 #> update: WILDCARD_YML
-ifneq ($(and $(c_base),$(EXTN_OUTPUT)),)
+ifneq ($(c_base),)
 override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTN_OUTPUT),yml)
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(COMPOSER_YML_LIST_FILE)]))
 ifneq ($(COMPOSER_YML_LIST_FILE),)
@@ -2678,8 +2679,8 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	) \
 	$(if $(filter $(1),$(TYPE_HTML)),\
 		$(if $(c_site),\
-			$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml) ,\
-				$($(PUBLISH)-cache-root)-file.$(2) ,\
+			$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml),\
+				$($(PUBLISH)-cache-root)-$(2) ,\
 				$($(PUBLISH)-cache) \
 			) \
 		) \
@@ -2696,7 +2697,7 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 		$(call PANDOC_FILES_MAIN	,$(TYPE_$(NAME)),$(TMPL_$(NAME))) \
 		$(call PANDOC_FILES_HEADER	,$(TYPE_$(NAME)),$(2)) \
 		$(call PANDOC_FILES_CSS		,$(TYPE_$(NAME)),$(2)) \
-		$(call PANDOC_FILES_OVERRIDE	,,$(BASE).$(EXTN),yml) \
+		$(call PANDOC_FILES_OVERRIDE	,,$(2),yml) \
 		$(call c_list_var		,$(BASE),$(EXTN)) \
 	) \
 ))
@@ -2711,6 +2712,13 @@ endif
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	$(foreach FILE,$(call PANDOC_FILES_LIST,$(TYPE_$(TYPE)),$(COMPOSER_TARGETS)),\
 		$(eval $(FILE): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_$(TYPE)),$(FILE))) \
+		$(if $(and \
+			$(filter-out $(c_base).$(EXTN_OUTPUT),$(FILE)) ,\
+			$(call PANDOC_FILES_OVERRIDE,,$(FILE),yml) \
+		),\
+			$(eval $($(PUBLISH)-cache-root)-$(FILE): $($(PUBLISH)-cache-root)) \
+			$(eval $($(PUBLISH)-cache-root)-$(FILE): ;) \
+		) \
 	) \
 )
 $(sort \
@@ -2719,10 +2727,10 @@ $(sort \
 	) \
 ): ;
 
-#> $(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
-#> $(SUBDIRS)-$(DOITALL) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS))
+#>$(DOITALL)-$(TARGETS) $(COMPOSER_TARGETS) \
+#>$(SUBDIRS)-$(DOITALL) $(COMPOSER_SUBDIRS) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS))
 ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-$(DOITALL)-$(TARGETS) \
+$(DOITALL)-$(TARGETS) $(filter %.$(EXTN_HTML),$(COMPOSER_TARGETS)) \
 $(SUBDIRS)-$(DOITALL) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS)) \
 	: \
 	$($(PUBLISH)-library)
@@ -5711,7 +5719,7 @@ endef
 #> update: $(HEADERS)-run
 override define $(EXAMPLE)-var =
 	$(eval override OUT := $(strip \
-		$(if $(filter c_list,$(2)),$(call COMPOSER_CONV,$(TOKEN)/,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,1)) ,\
+		$(if $(filter c_list,$(2)),$(call COMPOSER_CONV,$(TOKEN)/,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,,1)) ,\
 		$(if $(filter c_css,$(2)),$(call COMPOSER_CONV,$(TOKEN)/,$(call c_css_select,$(c_type))) ,\
 		$(subst ",\",$(call COMPOSER_CONV,$(TOKEN)/,$($(2)))) \
 		)) \
@@ -10295,7 +10303,7 @@ override define $(HEADERS)-run =
 	$(TABLE_M2) "$(_E)MAKELEVEL"		"$(_N)$(MAKELEVEL)"; \
 	$(foreach FILE,$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(COMPOSER_OPTIONS_PANDOC)),\
 		$(eval override OUT := $(strip \
-			$(if $(filter c_list,$(FILE)),$(call $(HEADERS)-path-root,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,1)) ,\
+			$(if $(filter c_list,$(FILE)),$(call $(HEADERS)-path-root,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,,1)) ,\
 			$(if $(filter c_css,$(FILE)),$(call $(HEADERS)-path-root,$(call c_css_select,$(c_type))) ,\
 			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
 			)) \
@@ -12398,7 +12406,7 @@ $(CONFIGS):
 #>	@$(TABLE_M2) ":---"			":---"
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(eval override OUT := $(strip \
-			$(if $(filter c_list,$(FILE)),$(call $(HEADERS)-path-root,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,1)) ,\
+			$(if $(filter c_list,$(FILE)),$(call $(HEADERS)-path-root,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,,1)) ,\
 			$(if $(filter c_css,$(FILE)),$(call $(HEADERS)-path-root,$(call c_css_select,$(c_type))) ,\
 			$(subst ",\",$(call $(HEADERS)-path-root,$($(FILE)))) \
 			)) \
@@ -12533,9 +12541,9 @@ $(TARGETS)-$(TARGETS):
 		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst $(TOKEN),\n\t,$(subst ",\",$(FILE))))"; ,\
 						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(subst ",\",$(FILE))))"; \
 		) \
-		$(if $(call c_list_var_source,,$(BASE),$(EXTN)),\
-		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_D)\n\t$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; ,\
-						$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,$(BASE),$(EXTN))"; \
+		$(if $(call c_list_var_source,$(BASE),$(EXTN)),\
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_D)\n\t$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; ,\
+						$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; \
 		)) \
 		$(ENDOLINE); \
 		$(call NEWLINE) \
@@ -12963,18 +12971,21 @@ endif
 #> update: WILDCARD_YML
 
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-file.*))
+#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-*))
+$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-file.*))
-$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache)) \
-$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches)) \
-$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-file.*)) \
+#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-*))
+.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*))
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-*))
+$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
 	@if [ -f "$($(@))" ]; then \
@@ -13322,7 +13333,7 @@ $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 #> update: WILDCARD_YML
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache,$(strip \
-		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root)-file.%.$($(@)).$(EXTN_HTML),%,$(@)))))
+		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root)-%.$($(@)).$(EXTN_HTML),%,$(@)))))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
