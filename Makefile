@@ -5680,9 +5680,7 @@ $(EXAMPLE) \
 $(EXAMPLE).yml \
 $(EXAMPLE).md \
 :
-	@$(call ENV_MAKE,,,,\
-			COMPOSER_DOITALL_$(EXAMPLE).yml \
-		) \
+	@$(call ENV_MAKE,,,,COMPOSER_DOITALL_$(@)) \
 		$(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOCOLOR= \
 		.$(@)
@@ -5734,7 +5732,7 @@ $(EXAMPLE).md \
 .$(EXAMPLE).yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>		| $(YQ_WRITE_OUT) 2>/dev/null
-	@$(if $(COMPOSER_DOITALL_$(EXAMPLE).yml),\
+	@$(if $(COMPOSER_DOITALL_$(patsubst .%,%,$(@))),\
 			$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
 			$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
 		) \
@@ -5744,12 +5742,9 @@ $(EXAMPLE).md \
 
 .PHONY: .$(EXAMPLE).yml-$(DOITALL)
 .$(EXAMPLE).yml-$(DOITALL): override COMPOSER_DOITALL_$(EXAMPLE).yml := $(DOITALL)
+.$(EXAMPLE).yml-$(DOITALL): .$(EXAMPLE).yml
 .$(EXAMPLE).yml-$(DOITALL):
-	@$(call ENV_MAKE,,,,\
-			COMPOSER_DOITALL_$(EXAMPLE).yml \
-		) \
-		$(call COMPOSER_OPTIONS_EXPORT) \
-		$(patsubst %-$(DOITALL),%,$(@))
+	@$(ECHO) ""
 
 ########################################
 ### {{{3 $(EXAMPLE).md
@@ -12583,7 +12578,7 @@ override define $(TARGETS)-$(PRINTER) =
 	$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
-		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:-]/d") \
+		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:.-]/d") \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
 		$(if $(1),,\
 			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
