@@ -488,8 +488,14 @@ override MAKEFILE			:= Makefile
 override MAKEFLAGS_ENV			= --no-builtin-rules --no-builtin-variables $(if $(1),--print-directory,--no-print-directory)
 override NOFAIL				:= --keep-going
 
+#> update: includes duplicates
+override TARGETS			:= targets
+
 override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,$(COMPOSER_DEBUGIT_ALL)) $(if $(filter k%,$(MAKEFLAGS)),$(NOFAIL),--stop)
-ifneq ($(COMPOSER_DEBUGIT_ALL),)
+ifneq ($(or \
+	$(COMPOSER_DEBUGIT_ALL) ,\
+	$(filter .$(TARGETS),$(COMPOSER_DEBUGIT)) ,\
+),)
 #>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose --trace
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
 else
@@ -3666,6 +3672,7 @@ endef
 #	document .$(TARGETS) special value
 #		all four of: TARGETS, SUBDIRS, EXPORTS, IGNORES
 #		wildcards work, as "*", but only once is allowed
+#		also, the COMPOSER_DEBUGIT=.$(TARGETS) MAKEFLAGS hack...
 #	document template.*/reference.* and $(COMPOSER_CUSTOM)-header.*/$(COMPOSER_CUSTOM)-css.* files
 #	maybe a note that all files also "depend" on Makefile, so they will all update along with it?
 #	includes tree is based off of makefile list, so need to $(INSTALL) in order to get $(COMPOSER_SETTINGS/YML)
@@ -12527,7 +12534,7 @@ override define $(TARGETS)-$(PRINTER) =
 					-e "s|$(shell \
 						$(ECHO) "$(FILE)" \
 						| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-					)||g" \
+					)[^[:space:]]*||g" \
 				) \
 			) \
 		) \
