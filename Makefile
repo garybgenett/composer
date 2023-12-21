@@ -2084,7 +2084,7 @@ $(foreach FILE,\
 	) \
 )
 
-$(eval $(call COMPOSER_RESERVED_DOITALL,.$(EXAMPLE).yml,$(DOITALL)))
+$(eval $(call COMPOSER_RESERVED_DOITALL,$(EXAMPLE).yml,$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(HEADERS)-$(EXAMPLE),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(UPGRADE),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CHECKIT),$(HELPOUT)))
@@ -3042,6 +3042,9 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(HELPOUT)]"		"Complete \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` content $(_E)(similar to [$(HELPOUT)-$(DOITALL)])$(_D)"
+#WORK
+#	keep these...?
+#	if not, also remove "[*]: #internal-targets" links...
 	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)-$(INSTALL)]"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by $(_C)[$(INSTALL)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)]"			"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)]"			"Series of targets that handle all informational output"
@@ -3740,9 +3743,7 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/template.$(_N)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/reference.$(_N)*$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(PUBLISH).css$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_HTML).css$(_D)
-$(_F)
-#WORKING:DOCS###################################################################
-$(_D)
+
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
 produce beautiful and professional output.  $(_C)[Pandoc]$(_D) does reasonably well at
 this, and yet its primary focus is document conversion, not document formatting.
@@ -3786,15 +3787,7 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ICON))$(_D)
 $(_C)[Bootlint]$(_D)
 $(_C)[Bootswatch]$(_D)
 
-$(_F)
-#WORKING:DOCS###################################################################
-$(_D)
-
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.html$(_D)
-
-$(_F)
-#WORKING:DOCS###################################################################
-$(_D)
 
 $(_N)-- Examples:
 [Example Website]($(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES)))
@@ -3844,10 +3837,8 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_PRES
 #WORK
 #	$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_REVEALJS_CSS))$(_D)
 
-$(_F)
-#WORKING:DOCS###################################################################
+#WORK
 #	rework this
-$(_D)
 
 It links in a default theme from the `$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(REVEALJS_DIR))/dist/theme$(_D)` directory.  Edit
 the location in the file, or use $(_C)[c_css]$(_D) to select a different theme.
@@ -5689,7 +5680,12 @@ $(EXAMPLE) \
 $(EXAMPLE).yml \
 $(EXAMPLE).md \
 :
-	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= .$(@)
+	@$(call ENV_MAKE,,,,\
+			COMPOSER_DOITALL_$(EXAMPLE).yml \
+		) \
+		$(call COMPOSER_OPTIONS_EXPORT) \
+		COMPOSER_DOCOLOR= \
+		.$(@)
 
 ########################################
 ### {{{3 $(EXAMPLE)-$(INSTALL)
@@ -5738,17 +5734,22 @@ $(EXAMPLE).md \
 .$(EXAMPLE).yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>		| $(YQ_WRITE_OUT) 2>/dev/null
-	@$(if $(COMPOSER_DOITALL_.$(EXAMPLE).yml),\
-		$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
-		$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
+	@$(if $(COMPOSER_DOITALL_$(EXAMPLE).yml),\
+			$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
+			$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
 		) \
 		| $(YQ_WRITE_OUT) \
 			$(call YQ_WRITE_OUT_COLOR) \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
 
-.PHONY: $(EXAMPLE).yml-$(DOITALL)
-$(EXAMPLE).yml-$(DOITALL):
-	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= .$(@)
+.PHONY: .$(EXAMPLE).yml-$(DOITALL)
+.$(EXAMPLE).yml-$(DOITALL): override COMPOSER_DOITALL_$(EXAMPLE).yml := $(DOITALL)
+.$(EXAMPLE).yml-$(DOITALL):
+	@$(call ENV_MAKE,,,,\
+			COMPOSER_DOITALL_$(EXAMPLE).yml \
+		) \
+		$(call COMPOSER_OPTIONS_EXPORT) \
+		$(patsubst %-$(DOITALL),%,$(@))
 
 ########################################
 ### {{{3 $(EXAMPLE).md
