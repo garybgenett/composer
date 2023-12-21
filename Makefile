@@ -105,7 +105,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* `make site-template-_test`
 #					* `make COMPOSER_DEBUGIT="1" site-template-_test`
 #					* `make site-list`
-#					* `make site-list-null.md`
+#					* `make site-list.null.md`
 #				* `make site-template-config`
 #					* `make site-all`
 #					* `make site-force`
@@ -115,7 +115,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* `make site-list-list`
 #				* `make site-list-null`
 #				* `make site-list-all`
-#				* `make site-list-index.md`
+#				* `make site-list.index.md`
 #		* Paths
 #			* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #			* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -2084,6 +2084,7 @@ $(foreach FILE,\
 	) \
 )
 
+$(eval $(call COMPOSER_RESERVED_DOITALL,.$(EXAMPLE).yml,$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(HEADERS)-$(EXAMPLE),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(UPGRADE),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CHECKIT),$(HELPOUT)))
@@ -2220,7 +2221,7 @@ override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)
 #> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
 override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTN_OUTPUT),yml)
 ifneq ($(COMPOSER_YML_LIST_FILE),)
-override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)-$(c_base).$(EXTN_OUTPUT)
+override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root).$(c_base).$(EXTN_OUTPUT)
 endif
 
 override $(PUBLISH)-caches-begin := \
@@ -2302,7 +2303,7 @@ endif
 ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
 ifneq ($(COMPOSER_LIBRARY_ROOT),$(CURDIR))
-override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) $(CONFIGS)-COMPOSER_YML_LIST),library))
+override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(shell $(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) $(CONFIGS).COMPOSER_YML_LIST),library))
 endif
 endif
 endif
@@ -2449,7 +2450,7 @@ override PUBLISH_DIRS_DEBUGIT := \
 	$(word 1,$(PUBLISH_FILES)) \
 	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
 
-#WORKING:NOW:NOW:DOCS
+#WORKING:DOCS
 #	$(word 1,$(PUBLISH_FILES)) \
 #	$(word 2,$(PUBLISH_FILES)) \
 #	$(word 3,$(PUBLISH_FILES)) \
@@ -2717,7 +2718,7 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(if $(filter $(1),$(TYPE_HTML)),\
 		$(if $(c_site),\
 			$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml),\
-				$($(PUBLISH)-cache-root)-$(2) ,\
+				$($(PUBLISH)-cache-root).$(2) ,\
 				$($(PUBLISH)-cache) \
 			) \
 			$(INCLUDE_FILE_HEADER) \
@@ -2755,8 +2756,8 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 			$(filter-out $(c_base).$(EXTN_OUTPUT),$(FILE)) ,\
 			$(call PANDOC_FILES_OVERRIDE,,$(FILE),yml) \
 		),\
-			$(eval $($(PUBLISH)-cache-root)-$(FILE): $($(PUBLISH)-cache-root)) \
-			$(eval $($(PUBLISH)-cache-root)-$(FILE): ;) \
+			$(eval $($(PUBLISH)-cache-root).$(FILE): $($(PUBLISH)-cache-root)) \
+			$(eval $($(PUBLISH)-cache-root).$(FILE): ;) \
 		) \
 	) \
 )
@@ -2981,8 +2982,8 @@ $(HELPOUT)-TARGETS_PRIMARY_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)]"			"Basic $(HELPOUT) overview $(_E)(default)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(no reference sections)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(EXAMPLE)-md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
+	@$(TABLE_M2) "$(_C)[$(EXAMPLE).yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
+	@$(TABLE_M2) "$(_C)[$(EXAMPLE).md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [c_type])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
@@ -3016,8 +3017,8 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOITALL)]"		"Complete $(_C)[$(CHECKIT)]$(_D) package list, and system information"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)]"			"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(DOITALL)]"		"Complete $(_C)[$(CONFIGS)]$(_D), including environment variables"
-	@$(TABLE_M2) "$(_C)[$(CONFIGS)-$(_N)*$(_C)]"		"Export individual $(_C)[Composer Variables]$(_D) values"
-	@$(TABLE_M2) "$(_C)[$(CONFIGS)-yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
+	@$(TABLE_M2) "$(_C)[$(CONFIGS).$(_N)*$(_C)]"		"Export individual $(_C)[Composer Variables]$(_D) values"
+	@$(TABLE_M2) "$(_C)[$(CONFIGS).yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M).$(COMPOSER_BASENAME)$(_D)\` in current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M).$(COMPOSER_BASENAME)$(_D)\`"
@@ -3033,7 +3034,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))]"	"List files which are missing metadata fields"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER).$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
 
 .PHONY: $(HELPOUT)-TARGETS_INTERNAL_%
 $(HELPOUT)-TARGETS_INTERNAL_%:
@@ -3209,13 +3210,13 @@ $(HELPOUT)-$(HELPOUT)-$(PRINTER):
 	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
 	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
-	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)-yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
+	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE).yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
 	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-yml		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
-	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)-md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE).yml		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
+	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE).md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
 #>	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
 	@$(ENDOLINE); $(ENDOLINE)
-	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-md		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
+	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE).md		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Defaults)"
 	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
 	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
@@ -3551,7 +3552,7 @@ If specific settings need to be used, either globally or per-directory,
 Settings], [Quick Start] example)$(_D):
 
 $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)")
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)-yml$(_D) >$(_M)$(COMPOSER_YML)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_YML)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE).yml$(_D) >$(_M)$(COMPOSER_YML)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_YML)$(_D)")
 
 Custom targets can also be defined, using standard $(_C)[GNU Make]$(_D) syntax $(_E)(see
 [Custom Targets])$(_D).
@@ -3594,7 +3595,7 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-FORMAT
 ########################################
 
-#WORKING:NOW:NOW
+#WORKING
 #	make it so that an empty digest_title/sitemap_title disables/removes them...
 #	leading numeric [0-9] in $(PUBLISH)-display name in yml file causes them to break...?
 #		only for "banner"...?
@@ -3606,7 +3607,9 @@ endef
 #	items like README.site.html aren't getting metadata, because sitemap is only looking for *.md...
 #		maybe we can somehow check for $(word 1,$(README.site.html)) variable and use that...?
 #		naw, just document... example of proper use is: _site/config/pages*
-#WORKING:NOW:NOW
+#	add further header divisions to break folding into smaller and smaller chunks...
+
+#WORKING
 #	try to remove "manual review of output throughout $(TESTING)...
 #	add $(TESTING)-$(DOSETUP)
 #		integrate with $(TESTING)-$(DISTRIB), so they clean up after each other...
@@ -3619,7 +3622,8 @@ endef
 #		add to help and/or quick start
 #		comment/remove cruft from setup-all, such as clean and keeping=0
 #		make demo = peek = replace screenshot with a gif
-#WORKING:NOW:NOW
+
+#WORKING
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
 #	note that they are intentionally reversed
@@ -3699,8 +3703,10 @@ endef
 #	document "$(c_base).$(EXTN_OUTPUT).header" and "$(c_base).$(EXTN_OUTPUT).css" special files, and add to testing
 #	note: never run in the "/" directory
 #	document test case of proper PUBLISH_PAGE_TESTING sorting in $(CONFIGS) library
+#	document $(EXAMPLE).md-file and $(EXAMPLE).yml-$(DOITALL)
+#	document all the possible quoting options for c_options...?  see: $(TESTING)-$(COMPOSER_BASENAME)
 
-#WORKING:NOW
+#WORKING
 #	features
 #		100% configurable using simple plain-text files
 #		extremely flexible, complete control over page layout and elements
@@ -3711,7 +3717,7 @@ endef
 #		the trade-off is that the computational horsepower is spent as capital rather than operational cost
 #		best practice is to have an overnight $(PUBLISH)-$(DOFORCE) process...
 
-#WORKING:NOW
+#WORK
 #	add a list of the formats here...
 #	make sure all the level2 sections have links to the sub-sections...
 
@@ -3728,14 +3734,14 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-FORMAT =
 $(_F)
-#WORKING:NOW:NOW:DOCS:FIX#######################################################
+#WORKING:DOCS###################################################################
 $(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/template.$(_N)*$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/reference.$(_N)*$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(PUBLISH).css$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_HTML).css$(_D)
 $(_F)
-#WORKING:NOW:NOW:DOCS:FIX#######################################################
+#WORKING:DOCS###################################################################
 $(_D)
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
 produce beautiful and professional output.  $(_C)[Pandoc]$(_D) does reasonably well at
@@ -3766,7 +3772,7 @@ $(_C)[$(COMPOSER_BASENAME)]$(_D) uses this framework to transform an archive of 
 a modern website, with the appearance and behavior of dynamically indexed pages.
 
 $(_F)
-#WORKING:NOW:NOW:FIX############################################################
+#WORKING:DOCS###################################################################
 $(_D)
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSTRAP_ART_JS))$(_D)
@@ -3781,13 +3787,13 @@ $(_C)[Bootlint]$(_D)
 $(_C)[Bootswatch]$(_D)
 
 $(_F)
-#WORKING:NOW:NOW:FIX############################################################
+#WORKING:DOCS###################################################################
 $(_D)
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.html$(_D)
 
 $(_F)
-#WORKING:NOW:NOW:FIX############################################################
+#WORKING:DOCS###################################################################
 $(_D)
 
 $(_N)-- Examples:
@@ -3817,7 +3823,8 @@ convert into the final $(_C)[PDF]$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) insert
 final output:
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header$(_D)
-#WORK $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_PDF_LATEX))$(_D)
+#WORK
+#	$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_PDF_LATEX))$(_D)
 
 $(_N)-- Example: [$(OUT_README).$(EXTN_LPDF)]($(OUT_README).$(EXTN_LPDF))$(_D)
 
@@ -3834,10 +3841,11 @@ The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to c
 traditional and readable end result.  The customized version is at:
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_PRES).css$(_D)
-#WORK $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_REVEALJS_CSS))$(_D)
+#WORK
+#	$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_REVEALJS_CSS))$(_D)
 
 $(_F)
-#WORKING:NOW:NOW:FIX############################################################
+#WORKING:DOCS###################################################################
 #	rework this
 $(_D)
 
@@ -3853,7 +3861,8 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_LOGO))$(_D)
 To have different logos for different directories $(_E)(using [Recommended Workflow],
 [Configuration Settings] and [Precedence Rules])$(_D):
 
-#WORK no longer the best way to do this...
+#WORK
+#	no longer the best way to do this...
 $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/presentations$(_D)
 $(CODEBLOCK)$(_C)cp$(_D) $(_N)$(EXPAND)/$(notdir $(COMPOSER_LOGO))$(_D) $(_M)./$(_D)
 $(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/.$(COMPOSER_BASENAME)/$(call COMPOSER_CONV,,$(CUSTOM_REVEALJS_CSS))$(_D) $(_M)./.$(notdir $(COMPOSER_CUSTOM))-$(TYPE_PRES).css$(_D)
@@ -3897,7 +3906,7 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-SETTINGS
 ########################################
 
-#WORKING
+#WORK
 #	change in behavior... particularly yml files...
 #		$(c_base).$(EXTN_OUTPUT): $(COMPOSER) $(COMPOSER_YML_LIST) $($(PUBLISH)-cache) $($(PUBLISH)-library)
 #		$(COMPOSER) upgrade = use $(PRINTER) to check files to update...
@@ -3906,7 +3915,7 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-SETTINGS =
 $(_F)
-#WORKING:NOW:NOW:FIX############################################################
+#WORKING:DOCS###################################################################
 $(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,GNU Make ($(COMPOSER_SETTINGS)))
@@ -3920,10 +3929,10 @@ $(_C)[$(COMPOSER_BASENAME)]$(_D) directory will be global to all directories.  T
 settings in the most local file override all others $(_E)(see [Precedence Rules])$(_D).
 
 The easiest way to create new `$(_M)$(COMPOSER_SETTINGS)$(_D)` and `$(_M)$(COMPOSER_YML)$(_D)` files is with
-the $(_C)[$(EXAMPLE)]$(_D) and $(_C)[$(EXAMPLE)-yml]$(_D) targets $(_E)([Quick Start] example)$(_D):
+the $(_C)[$(EXAMPLE)]$(_D) and $(_C)[$(EXAMPLE).yml]$(_D) targets $(_E)([Quick Start] example)$(_D):
 
 $(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)$(_D)")
-$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)-yml$(_D) >$(_M)$(COMPOSER_YML)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_YML)$(_D)")
+$(shell $(COLUMN_2) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE).yml$(_D) >$(_M)$(COMPOSER_YML)$(_D)"	"$(_E)&&$(_D) $(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_YML)$(_D)")
 
 All variable definitions must be in the `$(_N)override [variable] := [value]$(_D)` format
 from the $(_C)[$(EXAMPLE)]$(_D) target.  Doing otherwise will result in unexpected behavior,
@@ -3952,9 +3961,11 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-ORDERS
 ########################################
 
-#WORK the file beats the directory, which beats the tree
-#WORK the file beats the command line, which beats the environment
-#WORKING
+#WORK
+#	the file beats the directory, which beats the tree
+#	the file beats the command line, which beats the environment
+
+#WORK
 #	note about global/local variables, and config/$(MARKER)
 #		add a link to this section at the top of both variable sections
 #		denote each variable
@@ -3976,7 +3987,7 @@ $(_C)[COMPOSER_INCLUDE]$(_D) under $(_C)[Control Variables]$(_D).  This means th
 most local file override all others.
 
 $(_F)
-#WORKING:NOW:NOW:FIX############################################################
+#WORKING:DOCS###################################################################
 $(_D)
 
 All values in `$(_M)$(COMPOSER_SETTINGS)$(_D)` take precedence over everything else, including
@@ -3984,23 +3995,27 @@ environment variables.
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Header & CSS Files)
 
-#WORK the same for all...
+#WORK
+#	the same for all...
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_LPDF).header$(_D)
 $(CODEBLOCK)$(EXPAND)/$(_M).$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header$(_D)
 $(CODEBLOCK)./$(_M)$(OUT_README).$(EXTN_LPDF).header$(_D)
 
-#WORK the same for all...
+#WORK
+#	the same for all...
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_DEFAULT).css$(_D)
 $(CODEBLOCK)$(EXPAND)/$(_M).$(notdir $(COMPOSER_CUSTOM))-$(TYPE_DEFAULT).css$(_D)
 $(CODEBLOCK)./$(_M)$(OUT_README).$(EXTN_DEFAULT).css$(_D)
 
-#WORK the $(_C)[c_css]$(_D) layering...
+#WORK
+#	the $(_C)[c_css]$(_D) layering...
 
   1. $(_C)[c_site]$(_D) $(_E)$(MARKER)$(_D) $(_C)[Bootstrap]$(_D)
   1. $(_C)[c_css]$(_D)
-#WORK comment 1. $(call COMPOSER_CONV,$(_H)[COMPOSER_DIR]$(_D)/$(_M),$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
+#WORK
+#	comment 1. $(call COMPOSER_CONV,$(_H)[COMPOSER_DIR]$(_D)/$(_M),$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
   1. $(patsubst $(COMPOSER_ART)/%,$(_H)[COMPOSER_ART]$(_D)/$(_M)%,$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
   1. $(_C)[COMPOSER_INCLUDE]$(_D) $(_E)$(MARKER)$(_D) $(_D)$(EXPAND)/$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
   1. $(_H)[CURDIR]$(_D)/$(_C)[c_base]$(_D).`$(_M)<extension>$(_D)`.css
@@ -4060,12 +4075,14 @@ endef
 # $(COMPOSER_TINYNAME)-cp
 # $(COMPOSER_TINYNAME)-mv
 # $(COMPOSER_TINYNAME)-rm
+
 #WORK
 # = Tooling Options
 # command variables?  $(SED), $(PRINT), etc., etc.
 # colors?  $(_F), etc.
 # DO_HEREDOC?
 # $($(DEBUGIT)-output)?
+
 #WORK
 # it's just basic shell scripting...
 #	@command1
@@ -4085,7 +4102,8 @@ $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) or $(_C)[
 targets.  Targets with any other names will need to be run manually, or included
 in $(_C)[COMPOSER_TARGETS]$(_D).
 
-#WORK ...or, via [Specifying Dependencies]
+#WORK
+#	...or, via [Specifying Dependencies]
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
@@ -4172,23 +4190,25 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,c_lang)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_logo)
 
-#WORKING
+#WORK
 # $(c_site)
 # $(TYPE_PRES)
 
-#WORKING document $(COMPOSER_ART)/images
+#WORK
+#	document $(COMPOSER_ART)/images
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_IMAGES))$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_icon)
 
-#WORKING
+#WORK
 # $(TYPE_HTML)
 # $(TYPE_PRES)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,c_css)
 
-#WORKING document $(COMPOSER_ART)/theme
+#WORK
+#	document $(COMPOSER_ART)/theme
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(abspath $(dir $(call CSS_THEME,$(HELPOUT)))))$(_D)
 
@@ -4263,12 +4283,13 @@ endef
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_CONTROL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,MAKEJOBS)
 
-#WORK a small number of large directories will process faster than a large number of small ones, especially with $(PUBLISH)
-#WORK windows subsystem for linux (increase memory...): /mnt/c/Users/*/.wslconfig
-#	[wsl2]
-#	processors=2
-#	memory=2GB
-#	swap=0
+#WORK
+#	a small number of large directories will process faster than a large number of small ones, especially with $(PUBLISH)
+#	windows subsystem for linux (increase memory...): /mnt/c/Users/*/.wslconfig
+#		[wsl2]
+#		processors=2
+#		memory=2GB
+#		swap=0
 
   * By default, $(_C)[$(COMPOSER_BASENAME)]$(_D) progresses linearly, doing one task at a time.  If
     there are dependencies between items, this can be beneficial, since it
@@ -4353,7 +4374,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_DEPENDS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_KEEPING)
 
-#WORK $(SPECIAL_VAL) deletes all...
+#WORK
+#	$(SPECIAL_VAL) deletes all...
 #	COMPOSER_KEEPING test & document
 #	$(CLEANER)-$(CLEANER) test & document
 #	$(CLEANER)-$(CLEANER) only runs on $(DOITALL), so single files could go forever...?
@@ -4385,16 +4407,18 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXT)
 #	add a note that a per-target "override README.html :=" is probably best...
 #	come to think of it, probably should just go back to not allowing an empty value...
 
-#WORKING document!
-# .$(TARGETS)
-# COMPOSER_TARGETS
-# COMPOSER_SUBDIRS
-# COMPOSER_EXPORTS
-# COMPOSER_IGNORES
+#WORK
+#	document!
+#	.$(TARGETS)
+#	COMPOSER_TARGETS
+#	COMPOSER_SUBDIRS
+#	COMPOSER_EXPORTS
+#	COMPOSER_IGNORES
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_TARGETS)
 
-#WORK does not pick up .* files/directories
+#WORK
+#	does not pick up .* files/directories
 
   * The list of output files to create or delete with $(_C)[$(CLEANER)]$(_D) and $(_C)[$(DOITALL)]$(_D).
     $(_C)[$(COMPOSER_BASENAME)]$(_D) does auto-detection using $(_C)[c_type]$(_D) and $(_C)[COMPOSER_EXT]$(_D), so this
@@ -4420,7 +4444,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_SUBDIRS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
 
-#WORKING
+#WORK
 #	this one will be complicated... maybe?
 #	has, effectively, the same `$(_M)$(NOTHING)$(_D)` behavior as above...
 #	also overridden by $(_C)[COMPOSER_IGNORES]$(_D)
@@ -4434,8 +4458,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORTS)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_IGNORES)
 
-#WORK either remove $(PUBLISH) here, or add it to the ones above...
-#WORK also, there are also implications for $(PUBLISH)-library...
+#WORK
+#	either remove $(PUBLISH) here, or add it to the ones above...
+#	also, there are also implications for $(PUBLISH)-library...
 
   * The list of $(_C)[COMPOSER_TARGETS]$(_D), $(_C)[COMPOSER_SUBDIRS]$(_D) and $(_C)[COMPOSER_EXPORTS]$(_D) to
     skip with $(_C)[$(EXPORTS)]$(_D), $(_C)[$(PUBLISH)]$(_D), $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and $(_C)[$(DOITALL)]$(_D).  This allows for
@@ -4449,8 +4474,7 @@ endef
 ########################################
 
 #WORK
-# other?
-#	DATEMARK
+#	other?  DATEMARK, etc.
 
 override define $(HELPOUT)-$(DOITALL)-VARIABLES_HELPER =
 $(_N)*These are internal variables only exposed within `$(COMPOSER_SETTINGS)` files.*$(_D)
@@ -4462,7 +4486,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,CURDIR)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_CURDIR)
 
-#WORKING can also be used to detect first pass, using "ifeq", to prevent "warning: overriding recipe for target" warnings...
+#WORK
+#	can also be used to detect first pass, using "ifeq", to prevent "warning: overriding recipe for target" warnings...
 
   * This is set to $(_H)[CURDIR]$(_D) when reading in a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file in the
     $(_C)[GNU Make]$(_D) running directory, and is empty otherwise.  This provides a way
@@ -4491,7 +4516,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_ROOT)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_EXPORT)
 
-#WORK hidden variables...
+#WORK
+#	hidden variables...
 
   * $(_H)[_EXPORT_DIRECTORY]$(_D)
   * $(_H)[_EXPORT_GIT_REPO]$(_D)
@@ -4531,7 +4557,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(HELPOUT) / $(HELPOUT)-$(DOITALL))
     extra sections covering internal targets, along with reserved target and
     variable names, but is otherwise identical to the $(_C)[$(HELPOUT)-$(DOITALL)]$(_D) output.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE) / $(EXAMPLE)-yml / $(EXAMPLE)-md)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXAMPLE) / $(EXAMPLE).yml / $(EXAMPLE).md)
 
   * Prints useful templates for creating new files $(_E)(see [Templates])$(_D):
       * $(_C)[$(COMPOSER_BASENAME)]$(_D) `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Configuration Settings])$(_D)
@@ -4547,11 +4573,12 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(COMPOSER_PANDOC))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH) / $(PUBLISH)-$(DOITALL) / $(PUBLISH)-$(DOFORCE))
 
-#WORKING $(PUBLISH) rebuilds indexes, force recursively
+#WORK
+#	$(PUBLISH) rebuilds indexes, force recursively
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-$(CLEANER))
 
-#WORKING
+#WORK
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(INSTALL) / $(INSTALL)-$(DOITALL) / $(INSTALL)-$(DOFORCE))
 
@@ -4622,7 +4649,8 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(DISTRIB)-$(DOITALL) / $(UPGR
 
 Creating a development clone:
 
-#WORK should create a "development/contributing/support" section, and reference this...
+#WORK
+#	should create a "development/contributing/support" section, and reference this...
 #	also: https://github.com/garybgenett/gary-os/blob/main/.vimrc
 
 $(CODEBLOCK)$(_C)mkdir$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
@@ -4658,14 +4686,14 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL))
   * Doing $(_C)[$(CHECKIT)-$(DOITALL)]$(_D) will show the complete list of tools that are used by
     $(_C)[$(COMPOSER_BASENAME)]$(_D), along with which targets they are needed by.
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONFIGS)-\* / $(CONFIGS)-yml / $(TARGETS))
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONFIGS).\* / $(CONFIGS).yml / $(TARGETS))
 
   * The current values of all $(_C)[Composer Variables]$(_D) is output by $(_C)[$(CONFIGS)]$(_D), and
     $(_C)[$(CONFIGS)-$(DOITALL)]$(_D) will additionally output all environment variables.
-  * Individual $(_C)[Composer Variables]$(_D) can be exported with $(_C)[$(CONFIGS)-$(_N)*$(_C)]$(_D).  This is
+  * Individual $(_C)[Composer Variables]$(_D) can be exported with $(_C)[$(CONFIGS).$(_N)*$(_C)]$(_D).  This is
     useful for scripting in `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D).
   * A JSON version of the `$(_M)$(COMPOSER_YML)$(_D)` configuration is exported with
-    $(_C)[$(CONFIGS)-yml]$(_D).  This is available for any external scripting, such as in
+    $(_C)[$(CONFIGS).yml]$(_D).  This is available for any external scripting, such as in
     `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D), and is parseable with $(_C)[YQ]$(_D).
   * A structured list of detected targets, $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)
     targets, $(_C)[COMPOSER_TARGETS]$(_D), and $(_C)[COMPOSER_SUBDIRS]$(_D) is printed by $(_C)[$(TARGETS)]$(_D).
@@ -4674,7 +4702,7 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONF
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DOSETUP) / $(DOSETUP)-$(DOFORCE))
 
-#WORKING
+#WORK
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONVICT) / $(CONVICT)-$(DOITALL) / $(CONVICT)-$(PRINTER))
 
@@ -4710,7 +4738,8 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)-$(PRINTER)$(_D) $(_E)c_list="$(M
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPORTS)-$(DOFORCE) / \*-$(EXPORTS))
 
-#WORKING ... and then runs all $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D) targets.
+#WORK
+#	... and then runs all $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D) targets.
 #	hidden variables...
 #		$(_EXPORT_DIRECTORY)
 #		$(_EXPORT_GIT_REPO)
@@ -4720,11 +4749,11 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPO
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-library)
 
-#WORKING
+#WORK
 
-$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DOITALL) / $(PUBLISH)-$(PRINTER)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING)) / $(PUBLISH)-$(PRINTER)-\*)
+$(call $(HELPOUT)-$(DOITALL)-SECTION,$(PUBLISH)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DOITALL) / $(PUBLISH)-$(PRINTER)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING)) / $(PUBLISH)-$(PRINTER).\*)
 
-#WORKING
+#WORK
 endef
 
 ########################################
@@ -4764,7 +4793,7 @@ endef
 ## {{{2 $(PUBLISH) Pages
 ########################################
 
-#WORKING:NOW:NOW:DOCS
+#WORK
 #	add a header/box to each which describes what to test for that page...
 #	add a sitemap symlink test... maybe themes/index.html...?
 #		they likely break when used across directories, when "composer_root" is used... document!
@@ -4784,7 +4813,7 @@ $(PUBLISH_METALIST): [ Main ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Introduction $(PUBLISH_CMD_END)
 
-#WORKING:DOCS
+#WORK
 #	introduction
 
 $(call PUBLISH_PAGE_EXAMPLE_LAYOUT)
@@ -4808,7 +4837,7 @@ $(call PUBLISH_PAGE_1_CONFIGS)
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
-#WORKING:DOCS
+#WORK
 #	integrate this in $(HELPOUT)
 #	default css (see "themes" page)
 #	note on example page about logo/icon
@@ -4857,7 +4886,7 @@ endef
 
 #> update: $(PUBLISH) Pages
 
-#WORKING:DOCS
+#WORK
 #	README: `$(call COMPOSER_CONV,$(EXPAND)/,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml`
 #	PAGE_3: `$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)`
 #	PAGE_5: `$(PUBLISH_BOOTSTRAP_TREE)` / `$(word 5,$(PUBLISH_DIRS))`
@@ -4984,9 +5013,9 @@ date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
-$(PUBLISH_CMD_BEG) box-begin 1 #WORKING:DOCS $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 1 #WORK $(PUBLISH_CMD_END)
 
-#WORKING:DOCS
+#WORK
 
 `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
 
@@ -5054,7 +5083,7 @@ $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
 
-#WORKING:DOCS
+#WORK
 
   * metainfo box
   * unformatted markdown file
@@ -5077,7 +5106,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
 
-#WORKING:DOCS
+#WORK
 
   * what notes go here?
 
@@ -5103,7 +5132,7 @@ $(PUBLISH_METALIST): [ Main ]
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
 
-#WORKING:DOCS
+#WORK
 #	include in documentation as HEREDOC_*
 
 override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
@@ -5114,7 +5143,7 @@ override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
 | Bottom Bar | `copyright` | `nav-bottom` | `info-bottom` / *(`$(COMPOSER_TINYNAME)`)*
 endef
 
-#WORKING:DOCS
+#WORK
 
 override define PUBLISH_PAGE_EXAMPLE_INCLUDE =
 # Page Layout
@@ -5189,7 +5218,7 @@ $(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)`
 
-#WORKING:DOCS
+#WORK
 #	some clever content goes here
 
 `$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
@@ -5200,7 +5229,7 @@ $(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) column-begin col-6 $(PUBLISH_CMD_END)`
 
-#WORKING:DOCS
+#WORK
 #	some clever content goes here
 
 `$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)`
@@ -5211,7 +5240,7 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
 
-#WORKING:DOCS
+#WORK
 #	see another example in [Library] beloww...
 
 ## Displays
@@ -5254,11 +5283,12 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 ## Break
 
-#WORKING:DOCS need to demonstrate this, somehow...
+#WORK
+#	need to demonstrate this, somehow...
 
 ## Icon
 
-#WORKING:DOCS
+#WORK
 #	icon list: $(foreach CSS_ICON,$(call CSS_ICONS),$(word 1,$(subst ;, ,$(CSS_ICON))))
 #	note about PUBLISH_CMD_ROOT {} escaping
 
@@ -5288,15 +5318,16 @@ $(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_OUT_READM
 
 $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 
-#WORKING:DOCS
+#WORK
 #	this results in:
 
 	<input type="hidden" name="sites" value="$(COMPOSER_CNAME)">
 
 ## Frame
 
-#WORK these produce frames which potentially have their own scrollbars and/or player controls that can go fullscreen...
-#WORK the example is the first youtube video ever posted...
+#WORK
+#	these produce frames which potentially have their own scrollbars and/or player controls that can go fullscreen...
+#	the example is the first youtube video ever posted...
 
 `$(PUBLISH_CMD_BEG) frame $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(EXTN_HTML) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
 
@@ -5308,7 +5339,7 @@ $(PUBLISH_CMD_BEG) frame youtube jNQXAC9IVRw $(PUBLISH_CMD_END)
 
 ## Include
 
-#WORKING:DOCS
+#WORK
 #	note about PUBLISH_CMD_ROOT {} escaping
 
 `$(PUBLISH_CMD_BEG) $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_SPECIAL),$(word 1,$(PUBLISH_FILES))) $(PUBLISH_CMD_END)`
@@ -5323,7 +5354,7 @@ $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT
 
 $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 
-#WORKING:DOCS
+#WORK
 #	demonstrated elsewhere...
 
   * `$(PUBLISH)-nav-left: { metainfo }` + `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
@@ -5337,7 +5368,7 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 
 ## Contents
 
-#WORKING:DOCS
+#WORK
 #	this section is broken:
 
   * there is already a "CONTENTS" panel on the left, which is grabbing the `<id>` link
@@ -5346,7 +5377,7 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
     * only use right pane in `$(COMPOSER_YML)` file
     * duplicates of this page, and use `#contents` to link to them
 
-#WORKING:DOCS
+#WORK
 #	notes:
 
   * no argument does `$(DEPTH_MAX)`
@@ -5370,7 +5401,7 @@ $(PUBLISH_CMD_BEG) contents 1 $(PUBLISH_CMD_END)
 
 ## Metalist
 
-#WORKING:DOCS
+#WORK
 #	also, refer to [Library] below...
 
 `$(PUBLISH_CMD_BEG) metalist $(PUBLISH_CREATORS) $(PUBLISH_CMD_END)`
@@ -5389,7 +5420,7 @@ $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 # Library
 
-#WORKING:DOCS
+#WORK
 #	another example of [Grids] elements...
 #	also, refer to [Metalist] above...
 
@@ -5496,7 +5527,7 @@ endef
 ### {{{3 $(PUBLISH) Example: Pages
 ########################################
 
-#WORKING:DOCS
+#WORK
 #	also needs a different name...?
 override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 
@@ -5604,9 +5635,10 @@ override PUBLISH_PAGE_LIBRARY_ALT_NAME	:= Configured Library Page
 override PUBLISH_PAGE_INCLUDE_ALT_NAME	:= Configured Digest Page
 
 override define PUBLISH_PAGE_LIBRARY_EXAMPLE =
-$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORKING:DOCS $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORK $(PUBLISH_CMD_END)
 
-#WORKING:DOCS
+#WORK
+
 : `$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src)))`
 : `$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-sitemap-src)))`
 
@@ -5650,21 +5682,17 @@ endef
 
 .PHONY: $(EXAMPLE)-install
 .PHONY: $(EXAMPLE)
-.PHONY: $(EXAMPLE)-yml
-.PHONY: $(EXAMPLE)-md
+.PHONY: $(EXAMPLE).yml
+.PHONY: $(EXAMPLE).md
 $(EXAMPLE)-install \
 $(EXAMPLE) \
-$(EXAMPLE)-yml \
-$(EXAMPLE)-md \
+$(EXAMPLE).yml \
+$(EXAMPLE).md \
 :
 	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= .$(@)
 
-#WORKING keep this?  can it be improved?  document!
-.PHONY: $(EXAMPLE)-md-file
-$(EXAMPLE)-md-file:
-	@$(call ENV_MAKE) $(EXAMPLE)-md >$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
-	@$(EDITOR) $(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
-
+########################################
+### {{{3 $(EXAMPLE)-$(INSTALL)
 ########################################
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
@@ -5673,6 +5701,10 @@ $(EXAMPLE)-md-file:
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER,1)
+
+########################################
+### {{{3 $(EXAMPLE)
+########################################
 
 #> update: COMPOSER_OPTIONS
 .PHONY: .$(EXAMPLE)
@@ -5698,18 +5730,32 @@ $(EXAMPLE)-md-file:
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 	@$(call $(EXAMPLE)-print,,$(_N)endif$(_D))
 
-#WORK add *-$(DOITALL) to this, to get the commented/full version instead...?
-.PHONY: .$(EXAMPLE)-yml
-.$(EXAMPLE)-yml:
+########################################
+### {{{3 $(EXAMPLE).yml
+########################################
+
+.PHONY: .$(EXAMPLE).yml
+.$(EXAMPLE).yml:
 	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
-#>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))'
-	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
-		| $(YQ_WRITE_OUT) 2>/dev/null \
+#>		| $(YQ_WRITE_OUT) 2>/dev/null
+	@$(if $(COMPOSER_DOITALL_.$(EXAMPLE).yml),\
+		$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
+		$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
+		) \
+		| $(YQ_WRITE_OUT) \
 			$(call YQ_WRITE_OUT_COLOR) \
 		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
 
-.PHONY: .$(EXAMPLE)-md
-.$(EXAMPLE)-md:
+.PHONY: $(EXAMPLE).yml-$(DOITALL)
+$(EXAMPLE).yml-$(DOITALL):
+	@$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) COMPOSER_DOCOLOR= .$(@)
+
+########################################
+### {{{3 $(EXAMPLE).md
+########################################
+
+.PHONY: .$(EXAMPLE).md
+.$(EXAMPLE).md:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$(COMPOSER_HEADLINE)$(_N)\")
 	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(DATEMARK))
@@ -5727,6 +5773,13 @@ $(EXAMPLE)-md-file:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(COMPOSER_TAGLINE))
 
+.PHONY: $(EXAMPLE).md-file
+$(EXAMPLE).md-file:
+	@$(call ENV_MAKE) $(EXAMPLE).md	>$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
+	@$(EDITOR)			$(CURDIR)/$(DATENAME)$(COMPOSER_EXT)
+
+########################################
+### {{{3 $(EXAMPLE)-%
 ########################################
 
 override define $(EXAMPLE)-print =
@@ -10191,10 +10244,10 @@ endef
 override YQ_WRITE_OUT_COLOR := \
 	$(if $(COMPOSER_DOCOLOR),\
 		| $(SED) \
+			-e "s|([:]?)$$|[_D]\1|g" \
 			$(foreach FILE,null true false,\
 				-e "s|([[:space:]]+)[\"]?($(FILE))[\"]?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?$$|\1[_N]\2|g" \
 			) \
-			-e "s|([:]?)$$|[_D]\1|g" \
 			$(foreach FILE,_D _N,\
 				-e "s|[[]$(FILE)[]]|$(shell $(ECHO) "$($(FILE))")|g" \
 			) \
@@ -11635,7 +11688,8 @@ $(TESTING)-speed-done:
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
-#WORK COMPOSER_YML
+#WORK
+#	COMPOSER_YML
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
@@ -11678,7 +11732,6 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	#> margins
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> options
-#WORK document these quoting options, somewhere...
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CONFIGS)
@@ -11776,7 +11829,7 @@ $(TESTING)-$(TARGETS)-done:
 ### {{{3 $(TESTING)-$(INSTALL)
 ########################################
 
-#WORKING
+#WORK
 #	this should test $(INSTALL) specifically, including $(DOFORCE) versus not
 #	parallel/linear $(CLEANER)/$(DOITALL) should be below...
 
@@ -11875,7 +11928,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
 ########################################
 
-#WORK COMPOSER_YML...?
+#WORK
+#	COMPOSER_YML...?
 #	handled sufficiently by $(PUBLISH)-$(EXAMPLE)...?
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins?
 
@@ -12003,7 +12057,8 @@ $(TESTING)-COMPOSER_EXPORTS:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING:NOW see $(TESTING)-$(CLEANER)-$(DOITALL)
+#WORK
+#	see $(TESTING)-$(CLEANER)-$(DOITALL)
 #		\n\t * Verify '$(_N)*$(_C)-$(EXPORTS)$(_D)' targets \
 #	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
 
@@ -12067,7 +12122,8 @@ $(TESTING)-COMPOSER_IGNORES-done:
 ### {{{3 $(TESTING)-CSS
 ########################################
 
-#WORK add a test for file.ext.yml, akin to 'header' selection
+#WORK
+#	add a test for file.ext.yml, akin to 'header' selection
 
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
@@ -12461,8 +12517,8 @@ endif
 $(CONFIGS)-env:
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
 
-.PHONY: $(CONFIGS)-%
-$(CONFIGS)-%:
+.PHONY: $(CONFIGS).%
+$(CONFIGS).%:
 	@$(ECHO) "$($(*))\n" \
 		| $(SED) \
 			-e "s|[[:space:]]+|\n|g" \
@@ -12470,8 +12526,8 @@ $(CONFIGS)-%:
 
 #>		| $(SORT)
 
-.PHONY: $(CONFIGS)-yml
-$(CONFIGS)-yml:
+.PHONY: $(CONFIGS).yml
+$(CONFIGS).yml:
 ifneq ($(COMPOSER_YML_LIST),)
 #>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE) 2>/dev/null
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE)
@@ -12836,7 +12892,7 @@ override define $(EXPORTS)-find =
 			-o \( -path $(COMPOSER_EXPORT) -prune \) \
 			-o \( -type d -print \) \
 				| while read -r EDIR; do \
-					$(call ENV_MAKE) --directory $${EDIR} $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
+					$(call ENV_MAKE) --directory $${EDIR} $(CONFIGS).COMPOSER_IGNORES 2>/dev/null \
 						| $(SORT) \
 						| while read -r EFIL; do \
 							$(ECHO) " -o \\\( -regex \"$${EDIR}/$${EFIL/\*/[^/]*}\" $(if $(2),$(2) -print,-prune) \\\)"; \
@@ -12902,7 +12958,7 @@ override define $(EXPORTS)-filter =
 						)\n"; \
 			fi; \
 		done; \
-	$(call ENV_MAKE) --directory $(3) $(CONFIGS)-COMPOSER_IGNORES 2>/dev/null \
+	$(call ENV_MAKE) --directory $(3) $(CONFIGS).COMPOSER_IGNORES 2>/dev/null \
 		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$$( \
@@ -12913,7 +12969,7 @@ override define $(EXPORTS)-filter =
 			else			$(ECHO) " -o \\\( -path \"$(3)/$${FILE}\" -prune \\\)"; \
 			fi; \
 		done; \
-	$(call ENV_MAKE) --directory $(3) $(CONFIGS)-COMPOSER_EXPORTS 2>/dev/null \
+	$(call ENV_MAKE) --directory $(3) $(CONFIGS).COMPOSER_EXPORTS 2>/dev/null \
 		| $(SORT) \
 		| while read -r FILE; do \
 			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$$( \
@@ -13003,18 +13059,18 @@ endif
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 #>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 #>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-*))
+#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root).*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 #>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 #>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-*))
+#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root).*))
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*))
 #>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 #>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)-*))
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root).*))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
@@ -13363,7 +13419,7 @@ $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 #> update: WILDCARD_YML
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache,$(strip \
-		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root)-%.$($(@)).$(EXTN_HTML),%,$(@)))))
+		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root).%.$($(@)).$(EXTN_HTML),%,$(@)))))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
@@ -13480,7 +13536,7 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 			>$(COMPOSER_LIBRARY)/$(COMPOSER_$(FILE)); \
 		$(call NEWLINE) \
 	)
-	@if	[ -z "$$($(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(CONFIGS)-COMPOSER_INCLUDE)" ] && \
+	@if	[ -z "$$($(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(CONFIGS).COMPOSER_INCLUDE)" ] && \
 		[ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH)" ]; \
 	then \
 		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS_PUBLISH)); \
@@ -14118,8 +14174,8 @@ endef
 ### {{{3 $(PUBLISH)-$(PRINTER)
 ########################################
 
-.PHONY: $(PUBLISH)-$(PRINTER)-%
-$(PUBLISH)-$(PRINTER)-%:
+.PHONY: $(PUBLISH)-$(PRINTER).%
+$(PUBLISH)-$(PRINTER).%:
 	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
 
 .PHONY: $(PUBLISH)-$(PRINTER)
@@ -14241,7 +14297,8 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
-#WORKING:NOW once finalizing #WORK markers gets to here, do a final double-check of this list...
+#WORK
+#	do a final double-check of this list...
 
 #> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
 #>	[ -n $(COMPOSER_DEBUGIT) ] || --filter="-_/test/**"
