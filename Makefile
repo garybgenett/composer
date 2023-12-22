@@ -689,12 +689,8 @@ override PUBLISH_COLS_BREAK		:= lg
 override PUBLISH_COLS_BREAK_ALT		:= md
 
 override PUBLISH_COLS_SCROLL		:= 1
-override PUBLISH_COLS_RESCROLL		:= null
-
 override PUBLISH_COLS_SCROLL_ALT	:= null
-override PUBLISH_COLS_SCROLL_MOD	:= null
-override PUBLISH_COLS_RESCROLL_ALT	:= null
-override PUBLISH_COLS_RESCROLL_MOD	:= 1
+override PUBLISH_COLS_SCROLL_MOD	:= $(SPECIAL_VAL)
 
 override PUBLISH_COLS_ORDER_L		:= 1
 override PUBLISH_COLS_ORDER_C		:= 2
@@ -2142,7 +2138,6 @@ override define COMPOSER_YML_DATA_SKEL =
 
     cols_break:				$(PUBLISH_COLS_BREAK),
     cols_scroll:			$(PUBLISH_COLS_SCROLL),
-    cols_rescroll:			$(PUBLISH_COLS_RESCROLL),
     cols_order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ],
     cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
     cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
@@ -4839,7 +4834,6 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | copy_protect  | `$(PUBLISH_COPY_PROTECT)`
 | cols_break    | `$(PUBLISH_COLS_BREAK)`
 | cols_scroll   | `$(PUBLISH_COLS_SCROLL)`
-| cols_rescroll | `$(PUBLISH_COLS_RESCROLL)`
 | cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
 | cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
 | cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
@@ -5027,7 +5021,6 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | copy_protect  | `$(PUBLISH_COPY_PROTECT)`  | `$(PUBLISH_COPY_PROTECT_ALT)`
 | cols_break    | `$(PUBLISH_COLS_BREAK)`    | `$(PUBLISH_COLS_BREAK_ALT)`
 | cols_scroll   | `$(PUBLISH_COLS_SCROLL)`   | `$(PUBLISH_COLS_SCROLL_ALT)`
-| cols_rescroll | `$(PUBLISH_COLS_RESCROLL)` | `$(PUBLISH_COLS_RESCROLL_ALT)`
 | cols_order    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`       | `[ $(PUBLISH_COLS_ORDER_L_ALT), $(PUBLISH_COLS_ORDER_C_ALT), $(PUBLISH_COLS_ORDER_R_ALT) ]`
 | cols_reorder  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]` | `[ $(PUBLISH_COLS_REORDER_L_ALT), $(PUBLISH_COLS_REORDER_C_ALT), $(PUBLISH_COLS_REORDER_R_ALT) ]`
 | cols_size     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`          | `[ $(PUBLISH_COLS_SIZE_L_ALT), $(PUBLISH_COLS_SIZE_C_ALT), $(PUBLISH_COLS_SIZE_R_ALT) ]`
@@ -6203,7 +6196,6 @@ $(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_scroll$(_D):			$(_M)$(PUBLISH_COLS_SCROLL)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_rescroll$(_D):			$(_M)$(PUBLISH_COLS_RESCROLL)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_order$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_ORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
@@ -6596,7 +6588,6 @@ variables:
     copy_protect:			$(PUBLISH_COPY_PROTECT_ALT)
     cols_break:				$(PUBLISH_COLS_BREAK_ALT)
     cols_scroll:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_SCROLL_MOD),$(PUBLISH_COLS_SCROLL_ALT))
-    cols_rescroll:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_RESCROLL_MOD),$(PUBLISH_COLS_RESCROLL_ALT))
     cols_order:				[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_ORDER_L_MOD),$(PUBLISH_COLS_ORDER_L_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_ORDER_C_MOD),$(PUBLISH_COLS_ORDER_C_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_ORDER_R_MOD),$(PUBLISH_COLS_ORDER_R_ALT)) ]
     cols_reorder:			[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_L_MOD),$(PUBLISH_COLS_REORDER_L_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_C_MOD),$(PUBLISH_COLS_REORDER_C_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_REORDER_R_MOD),$(PUBLISH_COLS_REORDER_R_ALT)) ]
     cols_size:				[ $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_SIZE_L_MOD),$(PUBLISH_COLS_SIZE_L_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_SIZE_C_MOD),$(PUBLISH_COLS_SIZE_C_ALT)), $(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COLS_SIZE_R_MOD),$(PUBLISH_COLS_SIZE_R_ALT)) ]
@@ -7739,16 +7730,12 @@ $${CAT} <<_EOF_
 		fi
 		COLS_BREAK="$$(		COMPOSER_YML_DATA_VAL config.cols_break)"
 		COLS_SCROLL="$$(	COMPOSER_YML_DATA_VAL config.cols_scroll)"
-		COLS_RESCROLL="$$(	COMPOSER_YML_DATA_VAL config.cols_rescroll)"
 		COLS_ORDER="$$(		COMPOSER_YML_DATA_VAL config.cols_order[$${NUM}])"
 		COLS_REORDER="$$(	COMPOSER_YML_DATA_VAL config.cols_reorder[$${NUM}])"
 		COLS_SIZE="$$(		COMPOSER_YML_DATA_VAL config.cols_size[$${NUM}])"
 		COLS_RESIZE="$$(	COMPOSER_YML_DATA_VAL config.cols_resize[$${NUM}])"
-		if [ -n "$${COLS_SCROLL}" ]; then
-			$${ECHO} " $${COMPOSER_TINYNAME}-scroll-$${COLS_BREAK}"
-		fi
-		if [ -n "$${COLS_RESCROLL}" ]; then
-			$${ECHO} " $${COMPOSER_TINYNAME}-scroll"
+		if [ "$${COLS_SCROLL}" = "$${SPECIAL_VAL}" ]; then	$${ECHO} " $${COMPOSER_TINYNAME}-scroll"
+		elif [ -n "$${COLS_SCROLL}" ]; then			$${ECHO} " $${COMPOSER_TINYNAME}-scroll-$${COLS_BREAK}"
 		fi
 		$${ECHO} " order-$${COLS_BREAK}-$${COLS_ORDER} order-$${COLS_REORDER}"
 		$${ECHO} " col-$${COLS_BREAK}-$${COLS_SIZE} col-$${COLS_RESIZE}"
