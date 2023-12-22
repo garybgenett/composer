@@ -7960,7 +7960,7 @@ function $(PUBLISH)-display {
 		COLS="$$($${EXPR} 12 / $${SHOW})"
 		local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} ".[\"list\"] | length" 2>/dev/null)"
 $${CAT} <<_EOF_
-<div class="carousel$$(
+<div class="$${COMPOSER_TINYNAME}-display carousel$$(
 	if [ -n "$${TINT}" ]; then
 		$${ECHO} " carousel-$${TINT}"
 	fi
@@ -7982,7 +7982,7 @@ _EOF_
 				{ [ "$${TYPE}" = "shelf" ] && [ "$${SHW}" = "0" ]; };
 			}; then
 $${CAT} <<_EOF_
-<button type="button" data-bs-slide-to="$${SLD}" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
+<button type="button" data-bs-slide-to="$${SLD}" data-bs-target="#$${COMPOSER_TINYNAME}-display-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")"$$(
 	if [ "$${NUM}" = "0" ]; then
 		$${ECHO} " class=\"active\""
 	fi
@@ -8047,7 +8047,7 @@ _EOF_
 			if [ "$${TYPE}" = "banner" ]; then
 $${CAT} <<_EOF_
 <a href="$${LINK}">
-<img class="$${COMPOSER_TINYNAME}-display" alt="$${NAME}" src="$${FILE}">
+<img class="$${COMPOSER_TINYNAME}-display-banner" alt="$${NAME}" src="$${FILE}">
 <div class="carousel-caption d-block">
 _EOF_
 				$${ECHO} "\\n"
@@ -8073,7 +8073,7 @@ $${CAT} <<_EOF_
 <div class="d-flex flex-column col-$${COLS} d-block p-2">
 <div class="text-center">
 <a href="$${LINK}">
-<img class="$${COMPOSER_TINYNAME}-display-item"$$(
+<img class="$${COMPOSER_TINYNAME}-display-shelf"$$(
 	if [ -n "$${WIDE}" ]; then
 		$${ECHO} " style=\"width: $${WIDE}\""
 	fi
@@ -8107,10 +8107,10 @@ _EOF_
 		done
 $${CAT} <<_EOF_
 </div>
-<button type="button" class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+<button type="button" class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#$${COMPOSER_TINYNAME}-display-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <span class="carousel-control-prev-icon"></span>
 </button>
-<button type="button" class="carousel-control-next" data-bs-slide="next" data-bs-target="#$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+<button type="button" class="carousel-control-next" data-bs-slide="next" data-bs-target="#$${COMPOSER_TINYNAME}-display-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <span class="carousel-control-next-icon"></span>
 </button>
 </div>
@@ -8676,11 +8676,29 @@ html {
 	width:				auto;
 }
 
-.$(COMPOSER_TINYNAME)-display {
+.$(COMPOSER_TINYNAME)-display .carousel-control-prev,
+.$(COMPOSER_TINYNAME)-display .carousel-control-next {
+	height:				64px;
+	width:				64px;
+	opacity:			1;
+}
+.$(COMPOSER_TINYNAME)-display .carousel-control-prev-icon,
+.$(COMPOSER_TINYNAME)-display .carousel-control-next-icon {
+	height:				32px;
+	width:				32px;
+}
+.$(COMPOSER_TINYNAME)-display .carousel-indicators {
+	margin-bottom:			2px;
+}
+.$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
+	height:				6px;
+	width:				32px;
+}
+.$(COMPOSER_TINYNAME)-display-banner {
 	height:				auto;
 	max-width:			100%;
 }
-.$(COMPOSER_TINYNAME)-display-item {
+.$(COMPOSER_TINYNAME)-display-shelf {
 	height:				auto;
 	max-width:			128px;
 }
