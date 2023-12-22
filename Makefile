@@ -8521,49 +8521,49 @@ body {
 	min-width:			100%;
 	margin:				0px;
 	padding:			0px;
-	padding-top:			70px;
-	padding-bottom:			70px;
+	padding-top:			60px;
+	padding-bottom:			60px;
 }
 
 /* ################################## */
 
 @media (min-width: 1400px) {
 	.$(COMPOSER_TINYNAME)-scroll-xxl {
-		max-height:		calc(100vh - 70px - 70px);
+		max-height:		calc(100vh - 60px - 60px);
 		overflow:		auto;
 	}
 }
 
 @media (min-width: 1200px) {
 	.$(COMPOSER_TINYNAME)-scroll-xl {
-		max-height:		calc(100vh - 70px - 70px);
+		max-height:		calc(100vh - 60px - 60px);
 		overflow:		auto;
 	}
 }
 
 @media (min-width: 992px) {
 	.$(COMPOSER_TINYNAME)-scroll-lg {
-		max-height:		calc(100vh - 70px - 70px);
+		max-height:		calc(100vh - 60px - 60px);
 		overflow:		auto;
 	}
 }
 
 @media (min-width: 768px) {
 	.$(COMPOSER_TINYNAME)-scroll-md {
-		max-height:		calc(100vh - 70px - 70px);
+		max-height:		calc(100vh - 60px - 60px);
 		overflow:		auto;
 	}
 }
 
 @media (min-width: 576px) {
 	.$(COMPOSER_TINYNAME)-scroll-sm {
-		max-height:		calc(100vh - 70px - 70px);
+		max-height:		calc(100vh - 60px - 60px);
 		overflow:		auto;
 	}
 }
 
 .$(COMPOSER_TINYNAME)-scroll {
-	max-height:			calc(100vh - 70px - 70px);
+	max-height:			calc(100vh - 60px - 60px);
 	overflow:			auto;
 }
 
