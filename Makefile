@@ -5309,8 +5309,9 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 #WORK
 #	these produce frames which potentially have their own scrollbars and/or player controls that can go fullscreen...
 #	the example is the first youtube video ever posted...
+#	note about PUBLISH_CMD_ROOT {} escaping
 
-`$(PUBLISH_CMD_BEG) frame $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(EXTN_HTML) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) frame $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(OUT_README).$(EXTN_HTML) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) frame $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(EXTN_HTML) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
 
@@ -5352,8 +5353,7 @@ $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 #WORK
 #	this section is broken:
 
-  * there is already a "CONTENTS" panel on the left, which is grabbing the `<id>` link
-  * the "CONTENTS" helper on the left is also setting the argument for all the rest *(they will also stomp on each other)*
+  * the "CONTENTS" helper on the left is setting the argument for all the rest *(they will also stomp on each other)*
   * probably can fix this with `contents-\*` files in an `examples` sub-directory:
     * only use right pane in `$(COMPOSER_YML)` file
     * duplicates of this page, and use `#contents` to link to them
@@ -6338,14 +6338,14 @@ $(_S)########################################$(_D)
     $(_M)SPACE$(_D):
       - $(_C)spacer$(_D)
     $(_M)LIBRARY$(_D):
-      - $(_C)fold-begin group$(_D) $(_M)fold-library$(_D)
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) fold-library DATES$(_D)
+      - $(_C)fold-begin group$(_D) $(_M)library$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) library DATES$(_D)
       - $(_C)library$(_D) $(_M)date$(_D)
       - $(_C)fold-end$(_D)
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) fold-library AUTHORS$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) library AUTHORS$(_D)
       - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
       - $(_C)fold-end$(_D)
-      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . fold-library TAGS$(_D)
+      - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . library TAGS$(_D)
       - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-end group$(_D)
@@ -7592,10 +7592,10 @@ _EOF_
 function $(PUBLISH)-nav-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
-<div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}"></div>
+<div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#cms-nav-$${1}"></div>
 <nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols_break) fixed-$${1}">
 <div class="container-fluid">
-<button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-fixed-$${1}">
+<button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#cms-nav-$${1}">
 <span class="navbar-toggler-icon"></span>
 </button>
 _EOF_
@@ -7605,7 +7605,7 @@ _EOF_
 		$(PUBLISH)-copyright || return 1
 	fi
 $${CAT} <<_EOF_
-<div class="navbar-collapse collapse" id="navbar-fixed-$${1}">
+<div class="navbar-collapse collapse" id="cms-nav-$${1}">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -7754,7 +7754,14 @@ $${CAT} <<_EOF_
 			$${ECHO} " $${@}"
 		fi
 	fi
-) p-2">
+) p-2"$$(
+	if	[ "$${1}" = "left" ] ||
+		[ "$${1}" = "center" ] ||
+		[ "$${1}" = "right" ];
+	then
+		$${ECHO} " id=\"cms-nav-$${1}\""
+	fi
+)>
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -7794,7 +7801,7 @@ function $(PUBLISH)-fold-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ "$${1}" = "group" ]; then
 $${CAT} <<_EOF_
-<div class="accordion" id="$${2}">
+<div class="accordion" id="cms-fold-group-$${2}">
 _EOF_
 		$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 		return 0
@@ -7803,28 +7810,26 @@ _EOF_
 	if [ "$${HLVL}" = "$${SPECIAL_VAL}" ]; then
 		HLVL="$${DEPTH_MAX}"
 	fi
-$${CAT} <<_EOF_
-<div class="accordion">
-<div class="accordion-item">
-<div class="accordion-header" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")">
-<button class="accordion-button$$(
-	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then $${ECHO} " collapsed"; fi
-)" type="button" data-bs-toggle="collapse" data-bs-target="#toggle-$$($${ECHO} "$${@:4}" | $${SED} "s|[^[:alnum:]_-]||g")">
-_EOF_
 	if [ "$${1}" != "$${SPECIAL_VAL}" ] && [ -n "$${4}" ]; then
 		$(PUBLISH)-header $${1} $${@:4} || return 1
 	fi
 $${CAT} <<_EOF_
+<div class="accordion">
+<div class="accordion-item">
+<div class="accordion-header" id="cms-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")">
+<button class="accordion-button$$(
+	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then $${ECHO} " collapsed"; fi
+)" type="button" data-bs-toggle="collapse" data-bs-target="#cms-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")-target">
 <h$${HLVL} class="$${COMPOSER_TINYNAME}-header">
 $${@:4}
 </h$${HLVL}>
 </button>
 </div>
-<div id="toggle-$$($${ECHO} "$${@:4}" | $${SED} "s|[^[:alnum:]_-]||g")" class="accordion-collapse collapse$$(
+<div class="accordion-collapse collapse$$(
 	if [ "$${2}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " show"; fi
 )"$$(
-	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\\"#$${3}\\""; fi
-)>
+	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\\"#cms-fold-group-$${3}\\""; fi
+) id="cms-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")-target">
 <div class="accordion-body">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
@@ -7871,14 +7876,12 @@ function $(PUBLISH)-box-begin {
 	if [ "$${HLVL}" = "$${SPECIAL_VAL}" ]; then
 		HLVL="$${DEPTH_MAX}"
 	fi
-$${CAT} <<_EOF_
-<div class="card">
-<div class="card-header" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
-_EOF_
 	if [ "$${1}" != "$${SPECIAL_VAL}" ] && [ -n "$${2}" ]; then
 		$(PUBLISH)-header $${1} $${@:2} || return 1
 	fi
 $${CAT} <<_EOF_
+<div class="card">
+<div class="card-header" id="cms-box-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <h$${HLVL} class="$${COMPOSER_TINYNAME}-header">
 $${@:2}
 </h$${HLVL}>
@@ -7964,7 +7967,7 @@ $${CAT} <<_EOF_
 	else
 		$${ECHO} "true"
 	fi
-)" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+)" id="cms-display-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <div class="carousel-indicators">
 _EOF_
 		local NUM="0"; local SHW="0"; local SLD="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -8125,6 +8128,7 @@ _EOF_
 # 1 header level
 # 2 title				$${@:2} = $${2}++
 
+#><div id="cms-header-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 function $(PUBLISH)-header {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
@@ -8257,7 +8261,7 @@ $${CAT} <<_EOF_
 	if [ "$${1}" = "youtube" ]; then
 		$${ECHO} " $${COMPOSER_TINYNAME}-frame-youtube"
 	fi
-)" id="$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")" $$(
+)" id="cms-frame-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")" $$(
 	if [ "$${1}" = "youtube" ]; then
 		$${ECHO} "title=\\"YouTube: $${@:2}\\""
 		$${ECHO} "src=\\"https://www.youtube-nocookie.com/embed/$${@:2}\\""
@@ -14077,7 +14081,7 @@ $(PUBLISH)-library-sitemap-$(TARGETS):
 			$(eval override NUM := $(shell $(EXPR) $(NUM) + 1)) \
 		)
 	@$(ECHO) "" >$($(@)).$(PUBLISH)
-	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group sitemap-list $(PUBLISH_CMD_END)\n" >>$($(@)).$(PUBLISH)
+	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-sitemap $(PUBLISH_CMD_END)\n" >>$($(@)).$(PUBLISH)
 	@$(call $(PUBLISH)-library-sitemap-done,$($(@)).$(COMPOSER_BASENAME),$($(@)).$(PUBLISH))
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-end group $(PUBLISH_CMD_END)\n" >>$($(@)).$(PUBLISH)
 	@$(ECHO) "$(_S)"
