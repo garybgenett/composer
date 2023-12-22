@@ -7595,10 +7595,10 @@ _EOF_
 function $(PUBLISH)-nav-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
-<div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#cms-nav-$${1}"></div>
+<div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#$${COMPOSER_TINYNAME}-nav-$${1}"></div>
 <nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols_break) fixed-$${1}">
 <div class="container-fluid">
-<button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#cms-nav-$${1}">
+<button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#$${COMPOSER_TINYNAME}-nav-$${1}">
 <span class="navbar-toggler-icon"></span>
 </button>
 _EOF_
@@ -7608,7 +7608,7 @@ _EOF_
 		$(PUBLISH)-copyright || return 1
 	fi
 $${CAT} <<_EOF_
-<div class="navbar-collapse collapse" id="cms-nav-$${1}">
+<div class="navbar-collapse collapse" id="$${COMPOSER_TINYNAME}-nav-$${1}">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -7762,7 +7762,7 @@ $${CAT} <<_EOF_
 		[ "$${1}" = "center" ] ||
 		[ "$${1}" = "right" ];
 	then
-		$${ECHO} " id=\"cms-nav-$${1}\""
+		$${ECHO} " id=\"$${COMPOSER_TINYNAME}-nav-$${1}\""
 	fi
 )>
 _EOF_
@@ -7804,7 +7804,7 @@ function $(PUBLISH)-fold-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ "$${1}" = "group" ]; then
 $${CAT} <<_EOF_
-<div class="accordion" id="cms-fold-group-$${2}">
+<div class="accordion" id="$${COMPOSER_TINYNAME}-fold-group-$${2}">
 _EOF_
 		$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 		return 0
@@ -7819,10 +7819,10 @@ _EOF_
 $${CAT} <<_EOF_
 <div class="accordion">
 <div class="accordion-item">
-<div class="accordion-header" id="cms-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")">
+<div class="accordion-header" id="$${COMPOSER_TINYNAME}-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")">
 <button class="accordion-button$$(
 	if [ "$${2}" = "$${SPECIAL_VAL}" ]; then $${ECHO} " collapsed"; fi
-)" type="button" data-bs-toggle="collapse" data-bs-target="#cms-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")-target">
+)" type="button" data-bs-toggle="collapse" data-bs-target="#$${COMPOSER_TINYNAME}-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")-target">
 <h$${HLVL} class="$${COMPOSER_TINYNAME}-header">
 $${@:4}
 </h$${HLVL}>
@@ -7831,8 +7831,8 @@ $${@:4}
 <div class="accordion-collapse collapse$$(
 	if [ "$${2}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " show"; fi
 )"$$(
-	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\\"#cms-fold-group-$${3}\\""; fi
-) id="cms-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")-target">
+	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\\"#$${COMPOSER_TINYNAME}-fold-group-$${3}\\""; fi
+) id="$${COMPOSER_TINYNAME}-fold-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:4}")-target">
 <div class="accordion-body">
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
@@ -7884,7 +7884,7 @@ function $(PUBLISH)-box-begin {
 	fi
 $${CAT} <<_EOF_
 <div class="card">
-<div class="card-header" id="cms-box-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+<div class="card-header" id="$${COMPOSER_TINYNAME}-box-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <h$${HLVL} class="$${COMPOSER_TINYNAME}-header">
 $${@:2}
 </h$${HLVL}>
@@ -7970,7 +7970,7 @@ $${CAT} <<_EOF_
 	else
 		$${ECHO} "true"
 	fi
-)" id="cms-display-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+)" id="$${COMPOSER_TINYNAME}-display-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 <div class="carousel-indicators">
 _EOF_
 		local NUM="0"; local SHW="0"; local SLD="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -8131,7 +8131,7 @@ _EOF_
 # 1 header level
 # 2 title				$${@:2} = $${2}++
 
-#><div id="cms-header-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
+#><div id="$${COMPOSER_TINYNAME}-header-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")">
 function $(PUBLISH)-header {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
@@ -8268,7 +8268,7 @@ $${CAT} <<_EOF_
 	if [ "$${1}" = "youtube" ]; then
 		$${ECHO} " $${COMPOSER_TINYNAME}-frame-youtube"
 	fi
-)" id="cms-frame-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")" $$(
+)" id="$${COMPOSER_TINYNAME}-frame-$$($(HELPOUT)-$(HELPOUT)-$(TARGETS)-FORMAT "$${@:2}")" $$(
 	if [ "$${1}" = "youtube" ]; then
 		$${ECHO} "title=\\"YouTube: $${@:2}\\""
 		$${ECHO} "src=\\"https://www.youtube-nocookie.com/embed/$${@:2}\\""
