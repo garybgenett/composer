@@ -4608,6 +4608,8 @@ endef
 override define $(HELPOUT)-$(DOITALL)-TARGETS_ADDITIONAL =
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(DISTRIB) / $(DISTRIB)-$(DOITALL) / $(UPGRADE) / $(UPGRADE)-$(DOITALL) / $(UPGRADE)-$(PRINTER) / $(UPGRADE)-\*)
 
+#WORK break this up into two sections...
+
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and build all external components.
   * Simply doing $(_C)[$(UPGRADE)]$(_D) will fetch all source repositories and pre-built
@@ -5308,6 +5310,7 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_CNAME) $(PUBLISH_CMD_END)
 
 #WORK
 #	these produce frames which potentially have their own scrollbars and/or player controls that can go fullscreen...
+#		fullscreen not working, now...?
 #	the example is the first youtube video ever posted...
 #	note about PUBLISH_CMD_ROOT {} escaping
 
@@ -8206,7 +8209,11 @@ $${CAT} <<_EOF_
 _EOF_
 	fi
 $${CAT} <<_EOF_
-<img class="$${COMPOSER_TINYNAME}-icon" alt="$${TEXT}" src="$$(
+<img class="$${COMPOSER_TINYNAME}-icon"$$(
+	if [ -n "$${TEXT}" ]; then
+		$${ECHO} " alt=\"$${TEXT}\""
+	fi
+) src="$$(
 	if [ -f "$${COMPOSER_DIR}/$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/$${ICON}" ]; then
 		$${ECHO} "$${COMPOSER_DIR}/$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/$${ICON}"
 	else
