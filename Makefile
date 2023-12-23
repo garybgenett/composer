@@ -150,6 +150,10 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* Mouse select color handling
 #				* Test all "Reference" links in browser
 #				* Spell check
+#					* `make COMPOSER_DOCOLOR= help-all | aspell list | tr 'A-Z' 'a-z' | sort -u >.aspell.txt`
+#					* `${EDITOR} .aspell.txt`
+#					* `cat .aspell.txt | aspell --dict-dir="/usr/lib64/aspell-0.60" --lang="en" create master ${PWD}/.aspell.dat`
+#					* `make C= help-all | aspell list --suggest --ignore-case --extra-dicts="${PWD}/.aspell.dat"`
 #		* `make README.html`
 #			* Minimize: `<col style="width: *%" />`
 #		* `make _setup-all`
@@ -583,7 +587,7 @@ $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 
 override COMPOSER_DOCOLOR		?= 1
 override COMPOSER_DEBUGIT		?=
-override COMPOSER_INCLUDE		?=
+override COMPOSER_INCLUDE		?= 1
 override COMPOSER_DEPENDS		?=
 override COMPOSER_KEEPING		?= 100
 
@@ -1900,8 +1904,8 @@ override COMPOSER_OPTIONS_PUBLISH_ENV := \
 	c_base \
 	c_list \
 
-#>	COMPOSER_INCLUDE$(TOKEN)
 override COMPOSER_OPTIONS_PUBLISH := \
+	COMPOSER_INCLUDE$(TOKEN) \
 	COMPOSER_DEPENDS$(TOKEN) \
 	COMPOSER_EXT$(TOKEN)$(COMPOSER_EXT_DEFAULT) \
 	COMPOSER_TARGETS$(TOKEN) \
@@ -3016,6 +3020,7 @@ $(HELPOUT)-TARGETS_ADDITIONAL_%:
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M).$(COMPOSER_BASENAME)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
+	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(PRINTER)]"		"Use $(_C)[c_list]$(_D) to select and commit only specific files"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish to upstream hosting providers"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
@@ -3659,7 +3664,7 @@ endef
 #	booleans are true with 1, disabled with any other value (0 recommended), and otherwise default
 #	library folder can not be "null", and will be shortened to basename
 #		note about how yml processing for this one is special
-#	COMPOSER_INCLUDE + c_site = for the win?
+#	COMPOSER_INCLUDE + c_site = for the win!
 #	note: a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 #	need to document "header 0" for fold-begin and box-begin
@@ -3700,6 +3705,8 @@ endef
 #	document test case of proper PUBLISH_PAGE_TESTING sorting in $(CONFIGS) library
 #	document $(EXAMPLE).md-file and $(EXAMPLE).yml-$(DOITALL)
 #	document all the possible quoting options for c_options...?  see: $(TESTING)-$(COMPOSER_BASENAME)
+#	COMPOSER_DEPENDS and the library... library rebuild will happen before subdirs, so any *.md targets may be missed or outdated
+#		if they are built on the fly, they will likely re-trigger the library, which will wreak havoc with MAKEJOBS
 
 #WORKING
 #	features
@@ -3868,11 +3875,11 @@ $(_N)-- Example: [$(OUT_README).$(EXTN_DOCX)]($(OUT_README).$(EXTN_DOCX))$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Plain Text)
 
-This output format is still parseable by $(_C)[Pandoc]$(_D) as valid $(_C)[Markdown]$(_D), but is
+This output format is still parsable by $(_C)[Pandoc]$(_D) as valid $(_C)[Markdown]$(_D), but is
 formatted to read as pure plain text that is only `$(_M)$(COLUMNS)$(_D)` columns wide.  There are
-cases where this conversion is desireable, such as technical documentation,
-where it is easier to write and format as $(_C)[Pandoc]$(_D) $(_C)[Markdown]$(_D) but the output
-needs to be in a universally accepted text layout and presentation.
+cases where this conversion is desirable, such as technical documentation, where
+it is easier to write and format as $(_C)[Pandoc]$(_D) $(_C)[Markdown]$(_D) but the output needs to
+be in a universally accepted text layout and presentation.
 
 $(_C)[$(COMPOSER_BASENAME)]$(_D) currently does not modify this format, other than using the
 `$(_M)--columns=$(COLUMNS)$(_D)` and `$(_M)--wrap=auto$(_D)` options to $(_C)[Pandoc]$(_D).
@@ -3906,9 +3913,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,GNU Make ($(COMPOSER_SETTINGS)))
 $(call $(HELPOUT)-$(DOITALL)-SECTION,Pandoc & Bootstrap ($(COMPOSER_YML)))
 
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
-$(_C)[Custom Targets]$(_D).  By default, they only apply to the directory they are in $(_E)(see
-[COMPOSER_INCLUDE] in [Control Variables])$(_D).  A `$(_M)$(COMPOSER_SETTINGS)$(_D)` in the main
-$(_C)[$(COMPOSER_BASENAME)]$(_D) directory will be global to all directories.  The targets and
+$(_C)[Custom Targets]$(_D).  By default, they are chained together across their `$(_M)$(MAKEFILE)$(_D)`
+tree $(_E)(see [COMPOSER_INCLUDE] in [Control Variables])$(_D).  A `$(_M)$(COMPOSER_SETTINGS)$(_D)` in the
+main $(_C)[$(COMPOSER_BASENAME)]$(_D) directory will be global to all directories.  The targets and
 settings in the most local file override all others $(_E)(see [Precedence Rules])$(_D).
 
 The easiest way to create new `$(_M)$(COMPOSER_SETTINGS)$(_D)` and `$(_M)$(COMPOSER_YML)$(_D)` files is with
@@ -4311,8 +4318,9 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
 
   * On every run, $(_C)[$(COMPOSER_BASENAME)]$(_D) walks through the `$(_M)MAKEFILE_LIST$(_D)`, all the way back
     to the main `$(_M)$(MAKEFILE)$(_D)`, looking for `$(_M)$(COMPOSER_SETTINGS)$(_D)` files in each directory.
-    By default, it only reads the ones in the main $(_C)[$(COMPOSER_BASENAME)]$(_D) directory and the
-    current directory, in that order.  This option enables reading all of them.
+    By default, it reads all of them in order starting from the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
+    directory.  When this option is disabled, only $(_C)[$(COMPOSER_BASENAME)]$(_D) and the current
+    directory will be used.
   * In the example directory tree below, normally the `$(_M)$(COMPOSER_SETTINGS)$(_D)` in
     `$(_M).$(COMPOSER_BASENAME)$(_D)` is read first, and then `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this
     enabled, it will read all of them in order from top to bottom:
@@ -4322,10 +4330,10 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,COMPOSER_INCLUDE)
     level for each documentation archive $(_E)(see [Recommended Workflow])$(_D).  Not only
     does it allow for strict version control of $(_C)[$(COMPOSER_BASENAME)]$(_D) per-archive, it also
     provides a mechanism for setting $(_C)[$(COMPOSER_BASENAME) Variables]$(_D) globally.
-  * When using this option, care should be taken with variables that are
-    generally specific to a particular directory or file, and are not meant to
-    be applicable globally.  They will be propagated down the tree, which is
-    generally not desired except in very specific cases.  Using
+  * This option is enabled by default, so care should be taken with variables
+    that are generally specific to a particular directory or file, and are not
+    meant to be applicable globally.  They will be propagated down the tree,
+    which is generally not desired except in very specific cases.  Using
     $(_H)[COMPOSER_CURDIR]$(_D) to limit their scope is highly recommended, similar to
     $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D).
   * This setting also causes `$(_M)$(COMPOSER_YML)$(_D)` and `$(_M).$(notdir $(COMPOSER_CUSTOM))$(_D)-$(_N)*$(_D)` files to be
@@ -4673,13 +4681,15 @@ $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CHECKIT) / $(CHECKIT)-$(DOITALL))
 
 $(call $(HELPOUT)-$(DOITALL)-SECTION,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONFIGS).\* / $(CONFIGS).yml / $(TARGETS))
 
+#WORK break this up into two sections...
+
   * The current values of all $(_C)[Composer Variables]$(_D) is output by $(_C)[$(CONFIGS)]$(_D), and
     $(_C)[$(CONFIGS)-$(DOITALL)]$(_D) will additionally output all environment variables.
   * Individual $(_C)[Composer Variables]$(_D) can be exported with $(_C)[$(CONFIGS).$(_N)*$(_C)]$(_D).  This is
     useful for scripting in `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D).
   * A JSON version of the `$(_M)$(COMPOSER_YML)$(_D)` configuration is exported with
     $(_C)[$(CONFIGS).yml]$(_D).  This is available for any external scripting, such as in
-    `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D), and is parseable with $(_C)[YQ]$(_D).
+    `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Custom Targets])$(_D), and is parsable with $(_C)[YQ]$(_D).
   * A structured list of detected targets, $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D) and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)
     targets, $(_C)[COMPOSER_TARGETS]$(_D), and $(_C)[COMPOSER_SUBDIRS]$(_D) is printed by $(_C)[$(TARGETS)]$(_D).
   * Together, $(_C)[$(CONFIGS)]$(_D) and $(_C)[$(TARGETS)]$(_D) reveal the entire internal state of
@@ -5939,8 +5949,6 @@ override define HEREDOC_COMPOSER_MK_PUBLISH =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration ($(PUBLISH))
 ################################################################################
-
-override COMPOSER_INCLUDE		:= 1
 
 override c_site				:= 1
 override c_logo				:= $(call COMPOSER_CONV,$$(COMPOSER_DIR)/,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
@@ -11704,7 +11712,6 @@ endef
 .PHONY: $(TESTING)-speed-init
 $(TESTING)-speed-init:
 	@$(call $(TESTING)-speed-init)
-	@$(ECHO) "override COMPOSER_INCLUDE := 1\n" >$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR))/$(COMPOSER_SETTINGS)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 #> $(PUBLISH) > $(CLEANER) > $(DOITALL)
 #>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
@@ -12728,7 +12735,7 @@ endif
 	)
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(COMPOSER_DOSETUP_DIR)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP))))
 	@$(ECHO) "$(_M)"
-	@$(CAT) $(CURDIR)/Makefile | $(SED) "/^$$/d"
+	@$(CAT) $(CURDIR)/$(MAKEFILE) | $(SED) "/^$$/d"
 	@$(ECHO) "$(_D)"
 	@if [ ! -e "$(CURDIR)/.gitignore" ]; then \
 		$(ECHO) "$(_E)"; \
