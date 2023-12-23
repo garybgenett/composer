@@ -145,15 +145,12 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-help | less -rX`
 #			* `override INPUT := commonmark`
 #				* `PANDOC_EXTENSIONS`
+#			* Spell check
+#				* `make _test-heredoc`
 #			* Output
 #				* Fits in $(COLUMNS) characters
 #				* Mouse select color handling
 #				* Test all "Reference" links in browser
-#				* Spell check
-#					* `make COMPOSER_DOCOLOR= help-all | aspell list | tr 'A-Z' 'a-z' | sort -u >.aspell.txt`
-#					* `${EDITOR} .aspell.txt`
-#					* `cat .aspell.txt | aspell --dict-dir="/usr/lib64/aspell-0.60" --lang="en" create master ${PWD}/.aspell.dat`
-#					* `make C= help-all | aspell list --suggest --ignore-case --extra-dicts="${PWD}/.aspell.dat"`
 #		* `make README.html`
 #			* Minimize: `<col style="width: *%" />`
 #		* `make _setup-all`
@@ -1160,6 +1157,9 @@ override CURL				:= $(call COMPOSER_FIND,$(PATH_LIST),curl)
 
 override FIREBASE			:= $(call COMPOSER_FIND,$(PATH_LIST),firebase)
 
+override ASPELL				:= $(call COMPOSER_FIND,$(PATH_LIST),aspell)
+override ASPELL_DIR			:= /usr/lib*/aspell*
+
 override DOMAKE				:= $(notdir $(MAKE))
 export GZIP				:=
 
@@ -1266,8 +1266,6 @@ override define GIT_REPO_DO =
 endef
 
 ########################################
-
-#> update: $(NOTHING)-%
 
 override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_SRC))
 override define WGET_PACKAGE_DO =
@@ -8136,6 +8134,10 @@ _EOF_
 #### {{{4 $(PUBLISH)-header
 ########################################
 
+#WORKING:FIX
+#	contents titles are including the HTML_HIDE character...
+#	<li><a href="#2023-12-20--themes--overlays0000----gary-b-genett">2023-12-20 :: Themes &amp; Overlays</a></li>
+
 # 1 header level
 # 2 title				$${@:2} = $${2}++
 
@@ -10174,6 +10176,196 @@ Public License instead of this License.  But first, please read
 *End Of File*
 endef
 
+########################################
+## {{{2 Heredoc: wordlist
+########################################
+
+override define HEREDOC_SPELL_WORDLIST =
+#> targets
+checkit
+config
+configs
+coreutils
+debugit
+distrib
+doforce
+doitall
+dosetup
+helpout
+init
+subdirs
+
+#> options
+codeblock
+css
+docolor
+docx
+eol
+epub
+extn
+gpl
+html
+hypertext
+js
+lang
+latex
+lpdf
+makeflags
+makejobs
+pdf
+powerpoint
+pptx
+readme
+revealjs
+tex
+tmpl
+toc
+
+#> commands
+bootlint
+bootswatch
+chmod
+cp
+datemark
+datename
+datestamp
+diffutils
+domake
+endoline
+env
+eval
+expr
+findutils
+firebase
+fontawes
+gzip
+linerule
+ln
+mdthemes
+mdviewer
+mkdir
+mv
+npm
+pandoc
+printf
+realmake
+realpath
+rsync
+sed
+solarized
+uname
+watercss
+wget
+yq
+
+#> variables
+basename
+bld
+bnch
+cmd
+cmt
+cname
+conv
+curdir
+dat
+desc
+dir
+dirs
+fullname
+gitattributes
+gitignore
+heredoc
+lic
+lnx
+logfile
+nocolor
+nofail
+os
+pagedir
+proj
+repo
+repopage
+showdir
+skel
+src
+techname
+tinyname
+tmp
+ver
+wordlist
+
+#> examples
+abspath
+ascii
+cd
+divs
+endif
+gfm
+ia
+ifeq
+ifneq
+img
+intraword
+json
+kae
+ko
+kp
+kv
+kz
+lastword
+makefile
+metainfo
+metalist
+mnt
+nav
+nc
+nd
+permalink
+pwd
+readtime
+wsl
+wslconfig
+
+#> text
+cms
+composermk
+composeryml
+configyml
+garybgenett
+genett
+github
+linux
+macos
+macports
+mb
+md
+microsoft
+mk
+mr
+pre
+scm
+templatemd
+templateyml
+txt
+yaml
+yml
+
+#> exceptions
+parsable
+prettification
+recurse
+recursing
+relink
+stylesheet
+stylesheets
+subdirectory
+webpages
+
+#> fragments
+bd
+cbc
+endef
+
 ################################################################################
 # }}}1
 ################################################################################
@@ -11604,9 +11796,59 @@ $(TESTING)-heredoc-init:
 		| $(SORT) \
 		>$(call $(TESTING)-pwd)/.DO_HEREDOC.$(EXTN_TEXT)
 
+#> update: $(NOTHING)-%
+
 .PHONY: $(TESTING)-heredoc-done
 $(TESTING)-heredoc-done:
 	@$(CAT) $(call $(TESTING)-pwd)/.DO_HEREDOC.$(EXTN_TEXT)
+ifeq ($(and \
+	$(wildcard $(firstword $(ASPELL))) ,\
+	$(word 1,$(wildcard $(ASPELL_DIR))) \
+),)
+	@$(if $(wildcard $(firstword $(ASPELL))),,$(MAKE) $(NOTHING)-aspell)
+	@$(if $(word 1,$(wildcard $(ASPELL_DIR))),,$(MAKE) $(NOTHING)-$(subst /,_,$(ASPELL_DIR)))
+else
+	@$(CAT) $(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.txt \
+		| $(SED) \
+			-e "/^[#][>]/d" \
+			-e "/^$$/d" \
+		| $(SORT) \
+		>$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.diff
+	@$(CAT) $(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.diff \
+		| $(ASPELL) \
+			--dict-dir="$(word 1,$(wildcard $(ASPELL_DIR)))" \
+			--lang="en" \
+			create master \
+			$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.dat
+	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(HELPOUT) \
+		| $(ASPELL) list \
+		| tr 'A-Z' 'a-z' \
+		| $(SORT) \
+		>$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.out
+ifeq ($(wildcard $(firstword $(DIFF))),)
+	@$(if $(wildcard $(firstword $(DIFF))),,$(MAKE) $(NOTHING)-diff)
+else
+	@$(ECHO) "$(_C)"
+	@$(DIFF) \
+		$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.diff \
+		$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.out \
+		|| $(TRUE)
+	@$(ECHO) "$(_D)"
+endif
+	@$(ECHO) "$(_M)"
+	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(HELPOUT) \
+		| $(ASPELL) list \
+			--suggest \
+			--ignore-case \
+			--extra-dicts="$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.dat" \
+		| tr 'A-Z' 'a-z' \
+		| $(SORT) \
+		| while read -r FILE; do \
+			$(call $(HEADERS)-action,$${FILE},,,heredoc); \
+			$(MAKE) $(HELPOUT)-$(HELPOUT) | $(SED) -n "/$${FILE}/I p"; \
+		done
+	@$(ECHO) "$(_D)"
+endif
 
 ########################################
 ### {{{3 $(TESTING)-speed
@@ -12743,7 +12985,7 @@ endif
 		$(ECHO) "$(_D)"; \
 	fi
 ifeq ($(wildcard $(firstword $(DIFF))),)
-	@$(MAKE) $(NOTHING)-diff
+	@$(if $(wildcard $(firstword $(DIFF))),,$(MAKE) $(NOTHING)-diff)
 else
 	@$(ECHO) "$(_C)"
 	@$(DIFF) $(COMPOSER_DOSETUP_DIR)/.gitignore $(CURDIR)/.gitignore 2>/dev/null || $(TRUE)
@@ -12769,7 +13011,7 @@ $(CONVICT): .set_title-$(CONVICT)
 $(CONVICT):
 	@$(call $(HEADERS))
 ifeq ($(wildcard $(firstword $(GIT))),)
-	@$(MAKE) $(NOTHING)-git
+	@$(if $(wildcard $(firstword $(GIT))),,$(MAKE) $(NOTHING)-git)
 else
 	@$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	@$(call GIT_RUN_COMPOSER,commit \
@@ -12794,8 +13036,8 @@ ifeq ($(and \
 	$(wildcard $(firstword $(GIT))) ,\
 	$(wildcard $(firstword $(RSYNC))) \
 ),)
-	@$(MAKE) $(NOTHING)-git
-	@$(MAKE) $(NOTHING)-rsync
+	@$(if $(wildcard $(firstword $(GIT))),,		$(MAKE) $(NOTHING)-git)
+	@$(if $(wildcard $(firstword $(RSYNC))),,	$(MAKE) $(NOTHING)-rsync)
 else
 ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(EXPORTS)-$(TARGETS)
@@ -14380,6 +14622,8 @@ endif
 #>		[ -n $(COMPOSER_RELEASE) ] && "#> update: HEREDOC_CUSTOM_PUBLISH"
 #>		$(PUBLISH_DIRS_DEBUGIT)
 
+#> update: $(NOTHING)-%
+
 $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL):
 ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS),,$(PUBLISH)-$(EXAMPLE))
@@ -14445,15 +14689,13 @@ override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
 						$(1)/$(word 5,$(PUBLISH_DIRS))/*$(COMPOSER_EXT_DEFAULT)
 endef
 
-#> update: $(NOTHING)-%
-
 .PHONY: $(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
 $(PUBLISH)-$(EXAMPLE):
 ifeq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
-	@$(MAKE) $(NOTHING)-rsync
+	@$(if $(wildcard $(firstword $(RSYNC))),,$(MAKE) $(NOTHING)-rsync)
 else
 	@$(call $(HEADERS))
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
@@ -14997,8 +15239,8 @@ override define $(SUBDIRS)-$(TARGETS) =
 .PHONY: $(SUBDIRS)-$(TARGETS)-$(1)
 $(SUBDIRS)-$(TARGETS)-$(1):
 	@$$(eval override $$(TARGETS)-$$(PRINTER)-$(1) := $$(shell $$(call $$(TARGETS)-$$(PRINTER),,$(1))))
+#>		$$(call $$(HEADERS)-action,*-$(1),,,$(1),1);
 	@if [ -n "$$($$(TARGETS)-$$(PRINTER)-$(1))" ]; then \
-		$$(call $$(HEADERS)-action,*-$(1),,,$(1),1); \
 		$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(addprefix $$(SUBDIRS)-$$(TARGETS)-$(1)-,$$($$(TARGETS)-$$(PRINTER)-$(1))); \
 	fi
 
