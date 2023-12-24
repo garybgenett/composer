@@ -8691,11 +8691,15 @@ html {
 	height:				32px;
 	width:				32px;
 }
-.$(COMPOSER_TINYNAME)-display .carousel-indicators {
+.$(COMPOSER_TINYNAME)-display .carousel-indicators,
+.$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	background-color:		rgba(var(--bs-secondary-rgb));
-	height:				calc(6px + (1px * 2) + (2px * 2) + (1px * 1));
 	border:				1px solid black;
 	border-radius:			12px;
+}
+.$(COMPOSER_TINYNAME)-display .carousel-indicators {
+	height:				calc(6px + (1px * 2) + (2px * 2) + (1px * 2));
+	width:				auto;
 	margin-left:			20%;
 	margin-right:			20%;
 	opacity:			0.8;
@@ -8703,8 +8707,6 @@ html {
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	height:				6px;
 	width:				32px;
-	border:				1px solid black;
-	border-radius:			12px;
 	margin-top:			2px;
 	margin-bottom:			2px;
 	opacity:			1;
@@ -8803,12 +8805,6 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_OVERLAY =
 
 /* ########################################################################## */
 
-.$(COMPOSER_TINYNAME)-form {
-	background-color:		rgba(var(--bs-$(1)-rgb));
-	color:				rgba(var(--bs-secondary-rgb));
-	border:				1px solid rgba(var(--bs-secondary-rgb));
-}
-
 .navbar,
 .dropdown-menu,
 .accordion-button,
@@ -8823,6 +8819,14 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_OVERLAY =
 
 .accordion-item,
 .card {
+	border:				1px solid rgba(var(--bs-secondary-rgb));
+}
+
+/* ################################## */
+
+.$(COMPOSER_TINYNAME)-form {
+	background-color:		rgba(var(--bs-$(1)-rgb));
+	color:				rgba(var(--bs-secondary-rgb));
 	border:				1px solid rgba(var(--bs-secondary-rgb));
 }
 
