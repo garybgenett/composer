@@ -8679,9 +8679,11 @@ html {
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev,
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
 	background-color:		rgba(var(--bs-secondary-rgb));
-	height:				32px;
-	width:				32px;
+	height:				calc(32px + (1px * 2));
+	width:				calc(32px + (1px * 2));
+	border:				1px solid black;
 	border-radius:			8px;
+	margin:				0px;
 	opacity:			0.8;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev-icon,
@@ -8691,7 +8693,8 @@ html {
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators {
 	background-color:		rgba(var(--bs-secondary-rgb));
-	height:				12px;
+	height:				calc(6px + (1px * 2) + (2px * 2) + (1px * 2));
+	border:				1px solid black;
 	border-radius:			12px;
 	margin-left:			20%;
 	margin-right:			20%;
