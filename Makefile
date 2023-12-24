@@ -8705,7 +8705,7 @@ html {
 	width:				32px;
 	border:				1px solid black;
 	border-radius:			12px;
-	margin-top:			calc(2px +1px);
+	margin-top:			calc(2px + 1px);
 	margin-bottom:			2px;
 	opacity:			1;
 }
