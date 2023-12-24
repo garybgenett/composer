@@ -8693,7 +8693,7 @@ html {
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators {
 	background-color:		rgba(var(--bs-secondary-rgb));
-	height:				calc(6px + (1px * 2) + (2px * 2) + (1px * 2));
+	height:				calc(6px + (1px * 2) + (2px * 2) + (1px * 1));
 	border:				1px solid black;
 	border-radius:			12px;
 	margin-left:			20%;
@@ -8705,7 +8705,7 @@ html {
 	width:				32px;
 	border:				1px solid black;
 	border-radius:			12px;
-	margin-top:			calc(2px + 1px);
+	margin-top:			2px;
 	margin-bottom:			2px;
 	opacity:			1;
 }
