@@ -5458,7 +5458,6 @@ endef
 override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
 "Example Banner":
   type:					banner
-  tint:					dark
   auto:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1,null)
   time:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),3,null)
   list:
@@ -5480,7 +5479,6 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
 
 "Example Shelf":
   type:					shelf
-  tint:					null
   auto:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),1,null)
   time:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),3,null)
   show:					$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),5,3)
@@ -7940,11 +7938,6 @@ function $(PUBLISH)-display {
 			| $${YQ_WRITE} ".[\"type\"]" 2>/dev/null \\
 			| $${SED} "/^null$$/d"
 		)"
-		TINT="$$(
-			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[\"tint\"]" 2>/dev/null \\
-			| $${SED} "/^null$$/d"
-		)"
 		AUTO="$$(
 			$${ECHO} "$${IMGS}" \\
 			| $${YQ_WRITE} ".[\"auto\"]" 2>/dev/null \\
@@ -7966,11 +7959,7 @@ function $(PUBLISH)-display {
 		COLS="$$($${EXPR} 12 / $${SHOW})"
 		local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} ".[\"list\"] | length" 2>/dev/null)"
 $${CAT} <<_EOF_
-<div class="$${COMPOSER_TINYNAME}-display carousel$$(
-	if [ -n "$${TINT}" ]; then
-		$${ECHO} " carousel-$${TINT}"
-	fi
-) slide" data-bs-ride="$$(
+<div class="$${COMPOSER_TINYNAME}-display carousel slide" data-bs-ride="$$(
 	if [ -n "$${AUTO}" ]; then
 		$${ECHO} "carousel"
 	else
@@ -8687,13 +8676,13 @@ html {
 	width:				auto;
 }
 
-/* #WORKING:FIX */
-
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev,
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
-	height:				64px;
-	width:				64px;
-	opacity:			1;
+	background-color:		rgba(var(--bs-secondary-rgb));
+	height:				32px;
+	width:				32px;
+	border-radius:			8px;
+	opacity:			0.8;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev-icon,
 .$(COMPOSER_TINYNAME)-display .carousel-control-next-icon {
@@ -8701,11 +8690,25 @@ html {
 	width:				32px;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators {
-	margin-bottom:			2px;
+	background-color:		rgba(var(--bs-secondary-rgb));
+	height:				12px;
+	border-radius:			12px;
+	margin-left:			20%;
+	margin-right:			20%;
+	opacity:			0.8;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	height:				6px;
 	width:				32px;
+	border:				1px solid black;
+	border-radius:			12px;
+	margin-top:			2px;
+	margin-bottom:			2px;
+	opacity:			1;
+}
+.$(COMPOSER_TINYNAME)-display .carousel-indicators .active {
+	background-color:		black;
+	opacity:			1;
 }
 .$(COMPOSER_TINYNAME)-display-banner {
 	height:				auto;
@@ -9191,6 +9194,8 @@ body {
 .carousel-control-prev,
 .carousel-control-prev-icon,
 .carousel-dark,
+.carousel-indicators .active,
+.carousel-indicators [data-bs-target],
 .carousel-indicators,
 .carousel-inner,
 .carousel-item,
