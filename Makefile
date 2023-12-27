@@ -8678,7 +8678,6 @@ html {
 
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev,
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
-	background-color:		rgba(var(--bs-secondary-rgb));
 	height:				calc(32px + (1px * 2));
 	width:				calc(32px + (1px * 2));
 	border:				1px solid black;
@@ -8693,12 +8692,11 @@ html {
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators,
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
-	background-color:		rgba(var(--bs-secondary-rgb));
 	border:				1px solid black;
 	border-radius:			12px;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators {
-	height:				calc(6px + (1px * 2) + (2px * 2) + (1px * 2));
+	height:				calc(6px + (2px * 2) + ((1px * 2) * 2));
 	width:				auto;
 	margin-left:			20%;
 	margin-right:			20%;
@@ -8805,6 +8803,23 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_OVERLAY =
 
 /* ########################################################################## */
 
+.$(COMPOSER_TINYNAME)-form {
+	background-color:		rgba(var(--bs-$(1)-rgb));
+	color:				rgba(var(--bs-secondary-rgb));
+	border:				1px solid rgba(var(--bs-secondary-rgb));
+}
+
+.$(COMPOSER_TINYNAME)-display .carousel-control-prev,
+.$(COMPOSER_TINYNAME)-display .carousel-control-next {
+	background-color:		rgba(var(--bs-secondary-rgb));
+}
+.$(COMPOSER_TINYNAME)-display .carousel-indicators,
+.$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
+	background-color:		rgba(var(--bs-secondary-rgb));
+}
+
+/* ################################## */
+
 .navbar,
 .dropdown-menu,
 .accordion-button,
@@ -8819,14 +8834,6 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_OVERLAY =
 
 .accordion-item,
 .card {
-	border:				1px solid rgba(var(--bs-secondary-rgb));
-}
-
-/* ################################## */
-
-.$(COMPOSER_TINYNAME)-form {
-	background-color:		rgba(var(--bs-$(1)-rgb));
-	color:				rgba(var(--bs-secondary-rgb));
 	border:				1px solid rgba(var(--bs-secondary-rgb));
 }
 
@@ -8883,6 +8890,15 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 .$(COMPOSER_TINYNAME)-header {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
 	color:				var(--$(COMPOSER_TINYNAME)-text);
+}
+
+.$(COMPOSER_TINYNAME)-display .carousel-control-prev,
+.$(COMPOSER_TINYNAME)-display .carousel-control-next {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+}
+.$(COMPOSER_TINYNAME)-display .carousel-indicators,
+.$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
+	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
 }
 
 .$(COMPOSER_TINYNAME)-link a,
