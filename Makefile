@@ -8680,7 +8680,8 @@ html {
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
 	height:				calc(32px + (1px * 2));
 	width:				calc(32px + (1px * 2));
-	border:				1px solid black;
+	border-style:			solid;
+	border-width:			1px;
 	border-radius:			8px;
 	margin:				0px;
 	opacity:			0.8;
@@ -8692,7 +8693,8 @@ html {
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators,
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
-	border:				1px solid black;
+	border-style:			solid;
+	border-width:			1px;
 	border-radius:			12px;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators {
@@ -8705,6 +8707,7 @@ html {
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	height:				6px;
 	width:				32px;
+	border-color:			black;
 	margin-top:			2px;
 	margin-bottom:			2px;
 	opacity:			1;
@@ -8812,10 +8815,12 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_OVERLAY =
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev,
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
 	background-color:		rgba(var(--bs-secondary-rgb));
+	border-color:			rgba(var(--bs-$(1)-rgb));
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators,
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	background-color:		rgba(var(--bs-secondary-rgb));
+	border-color:			rgba(var(--bs-$(1)-rgb));
 }
 
 /* ################################## */
@@ -8895,10 +8900,12 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 .$(COMPOSER_TINYNAME)-display .carousel-control-prev,
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators,
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	border:				var(--$(COMPOSER_TINYNAME)-bord) solid var(--$(COMPOSER_TINYNAME)-line);
 }
 
 .$(COMPOSER_TINYNAME)-link a,
