@@ -1427,28 +1427,6 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	) \
 )
 
-#> update: includes duplicates
-override PUBLISH			:= site
-
-#> update: COMPOSER_TARGETS.*=
-ifneq ($(COMPOSER_RELEASE),)
-ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(strip \
-	$(OUT_README).$(PUBLISH).$(EXTN_HTML) \
-	$(OUT_README).$(EXTN_HTML) \
-	$(OUT_README).$(EXTN_LPDF) \
-	$(OUT_README).$(EXTN_EPUB) \
-	$(OUT_README).$(EXTN_PRES) \
-	$(OUT_README).$(EXTN_DOCX) \
-)
-#>
-#>	$(OUT_README).$(EXTN_PPTX) \
-#>	$(OUT_README).$(EXTN_TEXT) \
-#>	$(OUT_README).$(EXTN_LINT) \
-#>)
-endif
-endif
-
 ########################################
 ## {{{2 CSS
 ########################################
@@ -3338,9 +3316,9 @@ endef
 override define $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
 	$(if $(1),,| $(SED) \
 		-e "/^[#]{$(DEPTH_MAX)}.+[[:space:]]/d" \
+		-e "s|^[\t]+|$(CODEBLOCK)|g" \
 		-e "s|[\t]+| |g" \
 		-e "s|^|$(CODEBLOCK)|g" \
-		-e "s|^[[:space:]]+$$||g" \
 		-e "s|[[:space:]]+$$||g" \
 	)
 endef
@@ -5899,6 +5877,9 @@ endef
 ### {{{3 Heredoc: composer_mk
 ########################################
 
+#> update: COMPOSER_TARGETS.*=
+#> update: COMPOSER_SUBDIRS.*=
+
 override define HEREDOC_COMPOSER_MK =
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)$(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration$(_D)
@@ -5908,6 +5889,18 @@ $(_S)###########################################################################
 
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Settings$(_D)
+
+$(_N)override$(_D) $(_C)COMPOSER_TARGETS$(_D)		:= $(_N)\\$(_D)
+	$(_M)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_D) $(_N)\\$(_D)
+	$(_M)$(OUT_README).$(EXTN_HTML)$(_D) $(_N)\\$(_D)
+	$(_M)$(OUT_README).$(EXTN_LPDF)$(_D) $(_N)\\$(_D)
+	$(_M)$(OUT_README).$(EXTN_EPUB)$(_D) $(_N)\\$(_D)
+	$(_M)$(OUT_README).$(EXTN_PRES)$(_D) $(_N)\\$(_D)
+	$(_M)$(OUT_README).$(EXTN_DOCX)$(_D) $(_N)\\$(_D)
+
+$(_S)#$(MARKER)$(_D)	$(_M)$(OUT_README).$(EXTN_PPTX)$(_D) $(_N)\\$(_D)
+$(_S)#$(MARKER)$(_D)	$(_M)$(OUT_README).$(EXTN_TEXT)$(_D) $(_N)\\$(_D)
+$(_S)#$(MARKER)$(_D)	$(_M)$(OUT_README).$(EXTN_LINT)$(_D) $(_N)\\$(_D)
 
 $(_N)override$(_D) $(_C)COMPOSER_SUBDIRS$(_D)		:= $(_M)$(NOTHING)$(_D)
 
