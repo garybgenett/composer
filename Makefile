@@ -5232,7 +5232,7 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
 
 #WORK
-#	see another example in [Library] beloww...
+#	see another example in [Library] below...
 
 ## Displays
 
@@ -8680,7 +8680,6 @@ html {
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
 	height:				calc(32px + (1px * 2));
 	width:				calc(32px + (1px * 2));
-	border-style:			solid;
 	border-width:			1px;
 	border-radius:			8px;
 	margin:				0px;
@@ -8693,7 +8692,6 @@ html {
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators,
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
-	border-style:			solid;
 	border-width:			1px;
 	border-radius:			12px;
 }
@@ -8816,11 +8814,13 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_OVERLAY =
 .$(COMPOSER_TINYNAME)-display .carousel-control-next {
 	background-color:		rgba(var(--bs-secondary-rgb));
 	border-color:			rgba(var(--bs-$(1)-rgb));
+	border-style:			solid;
 }
 .$(COMPOSER_TINYNAME)-display .carousel-indicators,
 .$(COMPOSER_TINYNAME)-display .carousel-indicators [data-bs-target] {
 	background-color:		rgba(var(--bs-secondary-rgb));
 	border-color:			rgba(var(--bs-$(1)-rgb));
+	border-style:			solid;
 }
 
 /* ################################## */
@@ -12019,9 +12019,6 @@ $(TESTING)-speed-done:
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
-#WORK
-#	COMPOSER_YML
-
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 $(TESTING)-$(COMPOSER_BASENAME):
@@ -12263,6 +12260,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-done:
 #	COMPOSER_YML...?
 #	handled sufficiently by $(PUBLISH)-$(EXAMPLE)...?
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins?
+#	add a test for file.ext.yml, akin to 'header' selection
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
@@ -12452,9 +12450,6 @@ $(TESTING)-COMPOSER_IGNORES-done:
 ########################################
 ### {{{3 $(TESTING)-CSS
 ########################################
-
-#WORK
-#	add a test for file.ext.yml, akin to 'header' selection
 
 .PHONY: $(TESTING)-CSS
 $(TESTING)-CSS: $(TESTING)-Think
