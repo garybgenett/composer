@@ -142,7 +142,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* '#>[^ ]'
 #	* Update: README.md
 #		* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
-#			* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-help | less -rX`
+#			* `make COMPOSER_DEBUGIT="1" c_site= help-help | less -rX`
+#				* `make COMPOSER_DOCOLOR= COMPOSER_DEBUGIT="1" help-help | less -rX`
 #			* `override INPUT := commonmark`
 #				* `PANDOC_EXTENSIONS`
 #			* Spell check
@@ -3315,7 +3316,7 @@ endef
 
 override define $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
 	$(if $(1),,| $(SED) \
-		-e "/^[#]{$(DEPTH_MAX)}.+[[:space:]]/d" \
+		-e "/^[#]{$(DEPTH_MAX)}[[:space:]]/d" \
 		-e "s|^[\t]+|$(CODEBLOCK)|g" \
 		-e "s|[\t]+| |g" \
 		-e "s|^|$(CODEBLOCK)|g" \
