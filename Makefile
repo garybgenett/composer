@@ -3181,24 +3181,19 @@ $(HELPOUT)-$(HELPOUT)-$(PRINTER):
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 	)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Templates)"
-	@$(ENDOLINE); $(ECHO) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
-	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
-	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
-	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
-	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE).yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
-	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE).yml		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
-	@$(ENDOLINE); $(ECHO) "Use the $(_C)[$(EXAMPLE).md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
-#>	@$(if $(COMPOSER_DOCOLOR),$(ENDOLINE); $(ENDOLINE))
-	@$(ENDOLINE); $(ENDOLINE)
-	@$(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE).md		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE),$(COMPOSER_DOCOLOR))
+	@$(ENDOLINE); $(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
+	@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
+	@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE)			$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE).yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
+	@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE).yml		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE).md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
+	@$(ENDOLINE); $(call ENV_MAKE,,$(COMPOSER_DOCOLOR)) .$(EXAMPLE).md		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Defaults)"
 	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
-	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)				$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "The template \`$(_M)$(COMPOSER_YML)$(_D)\` in the \`$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))$(_D)\` directory:"
-	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML)		$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML)				$(call $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(call TITLE_END)
 	@$(call TITLE_LN,2,Reserved,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-SECTION,Target Names)"
@@ -3316,7 +3311,6 @@ endef
 
 override define $(HELPOUT)-$(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
 	$(if $(1),,| $(SED) \
-		-e "/^[#]{$(DEPTH_MAX)}[[:space:]]/d" \
 		-e "s|^[\t]+|$(CODEBLOCK)|g" \
 		-e "s|[\t]+| |g" \
 		-e "s|^|$(CODEBLOCK)|g" \
@@ -5658,6 +5652,9 @@ $(EXAMPLE) \
 $(EXAMPLE).yml \
 $(EXAMPLE).md \
 :
+	@$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR))) \
+		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
+		$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR)))
 	@$(call ENV_MAKE,,,,COMPOSER_DOITALL_$(@)) \
 		$(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOCOLOR= \
@@ -5669,7 +5666,6 @@ $(EXAMPLE).md \
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER,1)
@@ -5681,7 +5677,6 @@ $(EXAMPLE).md \
 #> update: COMPOSER_OPTIONS
 .PHONY: .$(EXAMPLE)
 .$(EXAMPLE):
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 #>	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global Variables)
 #>	@$(ENDOLINE)
@@ -5708,7 +5703,6 @@ $(EXAMPLE).md \
 
 .PHONY: .$(EXAMPLE).yml
 .$(EXAMPLE).yml:
-	@$(if $(COMPOSER_DOCOLOR),,$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)))
 #>		| $(YQ_WRITE_OUT) 2>/dev/null
 	@$(if $(COMPOSER_DOITALL_$(patsubst .%,%,$(@))),\
 			$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
@@ -5716,7 +5710,7 @@ $(EXAMPLE).md \
 		) \
 		| $(YQ_WRITE_OUT) \
 			$(call YQ_WRITE_OUT_COLOR) \
-		| $(SED) "s|^|$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(shell $(ECHO) "$(COMMENTED)")|g"
+		| $(SED) "s|^|$(shell $(ECHO) "$(COMMENTED)")|g"
 
 .PHONY: .$(EXAMPLE).yml-$(DOITALL)
 .$(EXAMPLE).yml-$(DOITALL): override COMPOSER_DOITALL_$(EXAMPLE).yml := $(DOITALL)
@@ -5757,7 +5751,7 @@ $(EXAMPLE).md-file:
 ########################################
 
 override define $(EXAMPLE)-print =
-	$(PRINT) "$(if $(COMPOSER_DOCOLOR),$(CODEBLOCK))$(if $(1),$(COMMENTED))$(2)"
+	$(PRINT) "$(if $(1),$(COMMENTED))$(2)"
 endef
 
 override define $(EXAMPLE)-var-static =
@@ -10477,13 +10471,14 @@ endif
 
 #>		if	[ "$(1)" = "-1" ]; \
 #>		then	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	1	1		$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
-#.		else	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	$(1)	$(SPECIAL_VAL)	$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
+#>		else	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	$(1)	$(SPECIAL_VAL)	$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
 #>		fi;
 override define TITLE_LN =
 	if	[ "$(COMPOSER_DOITALL_$(HELPOUT))" = "$(PUBLISH)" ] && \
 		[ "$(1)" != "-1" ] && \
 		[ "$(1)" != "1" ] && \
-		[ "$(1)" != "$(DEPTH_MAX)" ]; then \
+		[ "$(1)" != "$(DEPTH_MAX)" ]; \
+	then \
 		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(_D)\n\n"; \
 		$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) box-begin $(1) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
 	else \
@@ -10518,15 +10513,14 @@ endef
 ########################################
 
 override YQ_WRITE_OUT_COLOR := \
-	$(if $(COMPOSER_DOCOLOR),\
-		| $(SED) \
-			-e "s|([:]?)$$|[_D]\1|g" \
-			$(foreach FILE,null true false,\
-				-e "s|([[:space:]]+)[\"]?($(FILE))[\"]?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?$$|\1[_N]\2|g" \
-			) \
-			$(foreach FILE,_D _N,\
-				-e "s|[[]$(FILE)[]]|$(shell $(ECHO) "$($(FILE))")|g" \
-			) \
+	$(if $(COMPOSER_DOCOLOR),| $(SED) \
+		$(foreach FILE,null true false,\
+			-e "s|([[:space:]]+)[\"]?($(FILE))[\"]?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?$$|\1[_N]\2|g" \
+		) \
+		-e "s|$$|[_D]|g" \
+		$(foreach FILE,_D _N,\
+			-e "s|[[]$(FILE)[]]|$(shell $(ECHO) "$($(FILE))")|g" \
+		) \
 	)
 
 ################################################################################
