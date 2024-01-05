@@ -11537,7 +11537,7 @@ $(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-speed
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
-$(TESTING): $(TESTING)-$(INSTALL)
+$(TESTING): $(TESTING)-$(INSTALL)-MAKEJOBS
 $(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
@@ -12142,16 +12142,12 @@ $(TESTING)-$(TARGETS)-done:
 	)
 
 ########################################
-### {{{3 $(TESTING)-$(INSTALL)
+### {{{3 $(TESTING)-$(INSTALL)-MAKEJOBS
 ########################################
 
-#WORK
-#	this should test $(INSTALL) specifically, including $(DOFORCE) versus not
-#	parallel/linear $(CLEANER)/$(DOITALL) should be below...
-
-.PHONY: $(TESTING)-$(INSTALL)
-$(TESTING)-$(INSTALL): $(TESTING)-Think
-$(TESTING)-$(INSTALL):
+.PHONY: $(TESTING)-$(INSTALL)-MAKEJOBS
+$(TESTING)-$(INSTALL)-MAKEJOBS: $(TESTING)-Think
+$(TESTING)-$(INSTALL)-MAKEJOBS:
 	@$(call $(TESTING)-$(HEADERS),\
 		Test '$(_C)$(INSTALL)$(_D)' in an existing directory ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
@@ -12170,8 +12166,8 @@ $(TESTING)-$(INSTALL):
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
-.PHONY: $(TESTING)-$(INSTALL)-init
-$(TESTING)-$(INSTALL)-init:
+.PHONY: $(TESTING)-$(INSTALL)-MAKEJOBS-init
+$(TESTING)-$(INSTALL)-MAKEJOBS-init:
 	@$(RM) $(call $(TESTING)-pwd)/data/*/$(MAKEFILE)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
@@ -12179,8 +12175,8 @@ $(TESTING)-$(INSTALL)-init:
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run) $(CLEANER)-$(DOITALL)
 
-.PHONY: $(TESTING)-$(INSTALL)-done
-$(TESTING)-$(INSTALL)-done:
+.PHONY: $(TESTING)-$(INSTALL)-MAKEJOBS-done
+$(TESTING)-$(INSTALL)-MAKEJOBS-done:
 	$(call $(TESTING)-find,Processing.+$(NOTHING).+$(MAKEFILE))
 
 ########################################
