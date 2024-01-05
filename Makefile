@@ -2545,9 +2545,9 @@ ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
 override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
 endif
 
-#> update: $(TESTING)-Think
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
+#> update: $(TESTING)-Think
 ifeq ($(notdir $(TESTING_DIR)),$(notdir $(CURDIR)))
 ifneq ($(COMPOSER_TARGETS),$(NOTHING))
 override COMPOSER_TARGETS		:=
@@ -3334,6 +3334,9 @@ $(HELPOUT)-$(DOITALL)-HEADER:
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[License: GPL]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[composer@garybgenett.net]"
 
+#>$(_S)/$(_D)                $(_S)[$(_N)$(EXTN_PPTX)$(_S)]($(_N)$(OUT_README).$(EXTN_PPTX)$(_S))$(_D)
+#>$(_S)/$(_D)                 $(_S)[$(_N)$(EXTN_TEXT)$(_S)]($(_N)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
+#>$(_S)/$(_D)              $(_S)[$(_N)$(EXTN_LINT)$(_S)]($(_N)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
 override define $(HELPOUT)-$(DOITALL)-FILES =
 $(_S)-- $(_N)Formats:$(_D)
               $(_S)[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
@@ -12535,9 +12538,9 @@ $(TESTING)-other:
 		Miscellaneous test cases ,\
 		\n\t * Check binary files \
 		\n\t * Repository versions variables \
-		\n\t * Git export variables \
-		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 		\n\t * Git '$(_C)$(CONVICT)$(_D)' target \
+		\n\t * Upstream '$(_C)$(EXPORTS)$(_D)' variables \
+		\n\t * Pandoc '$(_C)c_type$(_D)' pass-through \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -12567,18 +12570,7 @@ $(TESTING)-other-init:
 		) \
 	)
 	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
-	#> export
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_DIRECTORY := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_GIT_REPO := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_GIT_BNCH := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_FIRE_ACCT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override _EXPORT_FIRE_PROJ:= $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CONFIGS)
-	#> pandoc
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
-	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"
-	#> git
+	#> convict
 	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) init \
@@ -12587,6 +12579,19 @@ $(TESTING)-other-init:
 	@$(call $(TESTING)-run) $(CONVICT)-$(DOITALL)
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) log
+	#> exports
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_DIRECTORY := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_GIT_REPO := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_GIT_BNCH := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_FIRE_ACCT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override _EXPORT_FIRE_PROJ:= $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) $(CONFIGS)
+	#> c_type
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).json
+	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
+	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"; \
+		$(ENDOLINE)
 
 .PHONY: $(TESTING)-other-done-env
 $(TESTING)-other-done-env:
@@ -12642,14 +12647,14 @@ $(TESTING)-other-done:
 			$(call NEWLINE) \
 		) \
 	)
-	#> export
-	$(call $(TESTING)-count,5,_EXPORT_)
-	$(call $(TESTING)-count,28,$(subst .,[.],$(NOTHING)))
-	#> pandoc
-	$(call $(TESTING)-find,pandoc-api-version)
-	#> git
+	#> convict
 	$(call $(TESTING)-find,create mode.+$(TESTING_LOGFILE))
 	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
+	#> exports
+	$(call $(TESTING)-count,5,_EXPORT_)
+	$(call $(TESTING)-count,28,$(subst .,[.],$(NOTHING)))
+	#> c_type
+	$(call $(TESTING)-find,pandoc-api-version)
 
 ########################################
 ### {{{3 $(TESTING)-$(EXAMPLE)
