@@ -3016,11 +3016,6 @@ $(HELPOUT)-TARGETS_INTERNAL_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2) ":---"					":---"
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(HELPOUT)]"		"Complete \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` content $(_E)(similar to [$(HELPOUT)-$(DOITALL)])$(_D)"
-#WORK
-#	keep these...?
-#	if not, also remove "[*]: #internal-targets" links...
-	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)-$(INSTALL)]"		"The \`$(_M)$(MAKEFILE)$(_D)\` used by $(_C)[$(INSTALL)]$(_D) $(_E)(see [Templates])$(_D)"
-	@$(TABLE_M2) "$(_C)[.$(EXAMPLE)]"			"The \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` used by $(_C)[$(EXAMPLE)]$(_D) $(_E)(see [Templates])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)]"			"Series of targets that handle all informational output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)]"		"For testing default $(_C)[$(HEADERS)]$(_D) output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]"	"For testing complete $(_C)[$(HEADERS)]$(_D) output"
@@ -4731,8 +4726,6 @@ $(_N)*None of these are intended to be run directly during normal use.*$(_D)
 $(_N)*They are only listed here for completeness.*$(_D)
 
 $(_S)[$(HELPOUT)-$(HELPOUT)]: #internal-targets$(_D)
-$(_S)[.$(EXAMPLE)-$(INSTALL)]: #internal-targets$(_D)
-$(_S)[.$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]: #internal-targets$(_D)
@@ -12245,7 +12238,7 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-done:
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
 ########################################
 
-#WORK
+#WORKING:FIX
 #	COMPOSER_YML...?
 #	handled sufficiently by $(PUBLISH)-$(EXAMPLE)...?
 #	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins?
@@ -14613,7 +14606,7 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
-#WORK
+#WORKING:FIX
 #	do a final double-check of this list...
 
 #> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
