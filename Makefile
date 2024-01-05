@@ -11538,7 +11538,7 @@ $(TESTING): $(TESTING)-$(DISTRIB)
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
 $(TESTING): $(TESTING)-$(INSTALL)
-$(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)
+$(TESTING): $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
 $(TESTING): $(TESTING)-COMPOSER_EXPORTS
@@ -12158,12 +12158,12 @@ $(TESTING)-$(INSTALL):
 		\n\t * Missing '$(_C)$(MAKEFILE)$(_D)' detection \
 		\n\t * Ensure threading is working properly \
 		\n\t * Test runs: \
-		\n\t\t * Parallel '$(INSTALL)-$(DOFORCE)' $(_E)(from '$(TESTING)-load')$(_D) \
-		\n\t\t * Parallel '$(DOITALL)' \
-		\n\t\t * Parallel '$(CLEANER)' \
-		\n\t\t * Linear '$(INSTALL)' \
-		\n\t\t * Linear '$(DOITALL)' \
-		\n\t\t * Linear '$(CLEANER)' \
+		\n\t\t * Parallel '$(_C)$(INSTALL)-$(DOFORCE)$(_D)' $(_E)(from '$(TESTING)-load')$(_D) \
+		\n\t\t * Parallel '$(_C)$(DOITALL)$(_D)' \
+		\n\t\t * Parallel '$(_C)$(CLEANER)$(_D)' \
+		\n\t\t * Linear '$(_C)$(INSTALL)$(_D)' \
+		\n\t\t * Linear '$(_C)$(DOITALL)$(_D)' \
+		\n\t\t * Linear '$(_C)$(CLEANER)$(_D)' \
 	)
 	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
@@ -12184,18 +12184,22 @@ $(TESTING)-$(INSTALL)-done:
 	$(call $(TESTING)-find,Processing.+$(NOTHING).+$(MAKEFILE))
 
 ########################################
-### {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)
+### {{{3 $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)
 ########################################
 
-.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)
-$(TESTING)-$(CLEANER)-$(DOITALL): $(TESTING)-Think
-$(TESTING)-$(CLEANER)-$(DOITALL):
+#> $(EXPORTS) > $(CLEANER) > $(DOITALL)
+
+.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)
+$(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS): $(TESTING)-Think
+$(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS):
 	@$(call $(TESTING)-$(HEADERS),\
 		Test '$(_C)$(CLEANER)-$(DOITALL)$(_D)' and '$(_C)$(DOITALL)-$(DOITALL)$(_D)' behavior ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 		\n\t * Creation and deletion of files \
-		\n\t * Verify '$(_N)*$(_C)-$(DOITALL)$(_D)' and '$(_N)*$(_C)-$(CLEANER)$(_D)' targets \
-		\n\t\t * Also with parallel execution \
+		\n\t * Verify user-defined targets $(_E)(also with parallel execution)$(_D): \
+		\n\t\t * '$(_N)*$(_C)-$(EXPORTS)$(_D)' \
+		\n\t\t * '$(_N)*$(_C)-$(CLEANER)$(_D)' \
+		\n\t\t * '$(_N)*$(_C)-$(DOITALL)$(_D)' \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' detection \
 	)
 	@$(call $(TESTING)-load)
@@ -12203,10 +12207,11 @@ $(TESTING)-$(CLEANER)-$(DOITALL):
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
-.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-init
-$(TESTING)-$(CLEANER)-$(DOITALL)-init:
+.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init
+$(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_KEEPING := $(SPECIAL_VAL)\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_INCLUDE :=\n"			>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_KEEPING := $(SPECIAL_VAL)\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(EXPORTS))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(EXPORTS):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(CLEANER))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
@@ -12224,8 +12229,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-init:
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) --directory $(call $(TESTING)-pwd)/data $(EXPORTS)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 
-.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-done
-$(TESTING)-$(CLEANER)-$(DOITALL)-done:
+.PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-done
+$(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-done:
 	$(call $(TESTING)-find,Creating.+changelog.html)
 	$(call $(TESTING)-find,Creating.+getting-started.html)
 	$(call $(TESTING)-find,Removing.+changelog.html)
@@ -12373,11 +12378,6 @@ $(TESTING)-COMPOSER_EXPORTS:
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
-
-#WORK
-#	see $(TESTING)-$(CLEANER)-$(DOITALL)
-#		\n\t * Verify '$(_N)*$(_C)-$(EXPORTS)$(_D)' targets \
-#	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
 
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-init
 $(TESTING)-COMPOSER_EXPORTS-init:
