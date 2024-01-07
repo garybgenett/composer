@@ -12264,7 +12264,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
 		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(COMPOSER_CMS)))$(_D)' \
 		\n\t * Verify '$(_C)$(COMPOSER_YML)$(_D)' and '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
-		\n\t * Ensure Pandoc precedence $(_E)(using 'title-prefix')$(_D) \
+		\n\t * Ensure Pandoc precedence $(_E)(using 'title-prefix' and 'css')$(_D) \
 		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
 	)
 #WORKING:FIX
@@ -12287,17 +12287,27 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 		$(ECHO) "override COMPOSER_DEPENDS := $(FILE)\n"	>$(FILE)/$(COMPOSER_SETTINGS); \
 		{	$(ECHO) "{\n"; \
 			$(ECHO) "title-prefix: \".defaults\",\n"; \
-			$(ECHO) "variables: { title-prefix: \".variables\" },\n"; \
-			$(ECHO) "metadata: { title: \"$(FILE)\" }\n"; \
+			$(ECHO) "css: \"$(call $(TESTING)-pwd)/.defaults.css\",\n"; \
+			$(ECHO) "variables: {\n"; \
+				$(ECHO) " title-prefix: \".variables\",\n"; \
+				$(ECHO) " css: \"$(call $(TESTING)-pwd)/.variables.css\",\n"; \
+				$(ECHO) "},\n"; \
+			$(ECHO) "metadata: { title: \"$(FILE)\" },\n"; \
 			$(ECHO) "}\n"; \
 		}							>$(FILE)/$(COMPOSER_YML); \
 		$(ECHO) "<!-- css: $(FILE) -->\n"			>$(FILE)/$(COMPOSER_CSS); \
 	) \
 	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n"			>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "override c_options := --title-prefix=\".options\"\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	{	$(ECHO) "override c_options := \\\\\n"; \
+		$(ECHO) " --title-prefix=\".options\" \\\\\n"; \
+		$(ECHO) " --css=\"$(call $(TESTING)-pwd)/.options.css\"\n"; \
+	}								>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"			>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "\$$(info COMPOSER_CURDIR)\n"				>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "endif\n"						>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(foreach FILE,.defaults .variables .options,\
+		$(ECHO) "<!-- css: $(FILE) -->\n"			>$(call $(TESTING)-pwd)/$(FILE).css; \
+	) \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"; \
 	$(foreach FILE,\
 		$(call $(TESTING)-pwd) \
@@ -12323,7 +12333,6 @@ override define $(TESTING)-COMPOSER_INCLUDE-init-run =
 endef
 
 #WORKING:FIX
-#	test that c_css overrides --defaults --css
 #	add a test for file.ext.yml, akin to 'header' selection
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
@@ -12344,10 +12353,13 @@ $(TESTING)-COMPOSER_INCLUDE-done:
 	      $(call $(TESTING)-count,6,--defaults.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_YML)))
 	           $(call $(TESTING)-count,6,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_CSS)))
 	$(call $(TESTING)-count,2,<title>.+$(COMPOSER_HEADLINE)[<])
+	$(call $(TESTING)-count,2,<title>[.]options[[:space:]])
 	$(call $(TESTING)-count,6,<title>[.]variables[.]options[.]defaults[[:space:]])
 	$(call $(TESTING)-count,10,--defaults)
-	$(call $(TESTING)-count,26,--css)
+#>	$(call $(TESTING)-count,26,--css)
+	$(call $(TESTING)-count,50,--css)
 	$(call $(TESTING)-count,2,^COMPOSER_CURDIR)
+	@$(call $(TESTING)-find,^[[:space:]]*(<title>|<!-- css))
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_DEPENDS
