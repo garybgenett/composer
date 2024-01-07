@@ -12267,7 +12267,6 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t * Ensure Pandoc precedence $(_E)(using 'title-prefix' and 'css')$(_D) \
 		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
 	)
-#WORKING:FIX
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -12331,9 +12330,6 @@ override define $(TESTING)-COMPOSER_INCLUDE-init-run =
 	$(RM)				$(1)/$(COMPOSER_YML); \
 	$(RM)				$(1)/$(COMPOSER_CSS)
 endef
-
-#WORKING:FIX
-#	add a test for file.ext.yml, akin to 'header' selection
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
