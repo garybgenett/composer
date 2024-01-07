@@ -1687,6 +1687,8 @@ override PANDOC_FILES_CSS = $(strip \
 override PANDOC_OPTIONS = $(strip \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
 	\
+	$(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)") \
+	\
 	--standalone \
 	--self-contained \
 	--columns="$(COLUMNS)" \
@@ -1713,8 +1715,6 @@ override PANDOC_OPTIONS = $(strip \
 	\
 	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--include-in-header="$(FILE)") \
 	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--css="$(FILE)") \
-	\
-	$(foreach FILE,$(COMPOSER_YML_LIST),--defaults="$(FILE)") \
 	\
 	$(if $(c_lang),\
 		--variable=lang="$(c_lang)" \
@@ -3934,6 +3934,7 @@ endef
 #	$(COMPOSER_YML) and note that it is now an override for everything
 #		except, a $(COMPOSER_SETTINGS) c_options --defaults...
 #		hashes will overlap, and arrays will append
+#		actually... this has been reversed, with --defaults being at the beginning of PANDOC_OPTIONS, now... composer options *will* win over --defaults files...
 #	since $(COMPOSER_SETTINGS) is neither c_type or c_base specific, there is only a per-directory version
 #		since $(COMPOSER_YML) is not c_type specific, there is only per-directory and c_base versions
 #		all others (header, css, etc.) are directory, c_type and c_base applicable, so all three...
@@ -12268,6 +12269,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 		\n\t * Verify '$(_C)$(COMPOSER_YML)$(_D)' and '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
 		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
 	)
+#WORKING:FIX
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -12276,9 +12278,7 @@ $(TESTING)-COMPOSER_INCLUDE:
 $(TESTING)-COMPOSER_INCLUDE-init:
 	@$(call $(TESTING)-make)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
-	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
-	@$(call $(TESTING)-COMPOSER_INCLUDE-done)
 
 override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(foreach FILE,\
@@ -12287,66 +12287,60 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 		$(realpath $(call $(TESTING)-pwd)) \
 		,\
 		$(ECHO) "override COMPOSER_DEPENDS := $(FILE)\n"	>$(FILE)/$(COMPOSER_SETTINGS); \
-		$(ECHO) "variables: { title-prefix: \"$(FILE)\" }\n"	>$(FILE)/$(COMPOSER_YML); \
-		$(ECHO) "<!-- css $(DIVIDE) $(FILE) -->\n"		>$(FILE)/$(COMPOSER_CSS); \
+		$(ECHO) "metadata: { title: \"$(FILE)\" }\n"		>$(FILE)/$(COMPOSER_YML); \
+		$(ECHO) "<!-- css: $(FILE) -->\n"			>$(FILE)/$(COMPOSER_CSS); \
 	) \
 	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"	>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "\$$(info COMPOSER_CURDIR)\n"		>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
 	$(ECHO) "endif\n"				>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"
-endef
-
-override define $(TESTING)-COMPOSER_INCLUDE-done =
+	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"; \
 	$(foreach FILE,\
 		$(call $(TESTING)-pwd) \
 		$(call $(TESTING)-pwd,/) \
 		$(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)) \
+		$(call $(TESTING)-pwd) \
 		,\
-		$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
-		$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
-		$(SED) -n \
-			-e "/<title>/p" \
-			-e "/<!-- css $(DIVIDE)/p" \
-			$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
-		$(SED) -i "/COMPOSER_DEPENDS/d"	$(FILE)/$(COMPOSER_SETTINGS); \
-		$(RM)				$(FILE)/$(COMPOSER_YML); \
-		$(RM)				$(FILE)/$(COMPOSER_CSS); \
+		$(call $(TESTING)-COMPOSER_INCLUDE-init-run,$(FILE)); \
 	) \
-	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
-	$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
 	$(call $(TESTING)-run,/) $(CONFIGS) | $(SED) -n "/COMPOSER_CURDIR/p"
 endef
 
+override define $(TESTING)-COMPOSER_INCLUDE-init-run =
+	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
+	$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
+	$(SED) -n \
+		-e "/<title>/p" \
+		-e "/<!-- css/p" \
+		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
+	$(SED) -i "/COMPOSER_DEPENDS/d"	$(1)/$(COMPOSER_SETTINGS); \
+	$(RM)				$(1)/$(COMPOSER_YML); \
+	$(RM)				$(1)/$(COMPOSER_CSS)
+endef
+
 #WORKING:FIX
-#	what happens if a page/post file variable conflicts with a $(COMPOSER_YML)?  --defaults wins?
+#	does --title-prefix override --defaults variable: title-prefix?
+#	test that c_css overrides --defaults --css
 #	add a test for file.ext.yml, akin to 'header' selection
-
-#1 all		dir	3	5
-#1 rm dir	root	2	4
-#1 rm root	cms	1	3
-#1 rm cms	-	0	2
-
-#0 all		dir	2	5	bug!
-#0 rm dir	cms	1	4	bug!
-#0 rm root	cms	1	3
-#0 rm cms	-	0	2
-
-#WORKING:FIX
-#			-e "/<title>/p" \
-#			-e "/<!-- css $(DIVIDE)/p" \
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
 	$(call $(TESTING)-count,2,COMPOSER_DEPENDS.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd))$(SED_ESCAPE_COLOR)[]]))
+	           $(call $(TESTING)-count,2,<title>$(subst /,[/],$(realpath $(call $(TESTING)-pwd))[<]))
+	        $(call $(TESTING)-count,2,<!-- css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd))[[:space:]]))
 	      $(call $(TESTING)-count,2,--defaults.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_YML)))
 	           $(call $(TESTING)-count,2,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_CSS)))
 	$(call $(TESTING)-count,1,COMPOSER_DEPENDS.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))$(SED_ESCAPE_COLOR)[]]))
+	           $(call $(TESTING)-count,1,<title>$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))[<]))
+	        $(call $(TESTING)-count,2,<!-- css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))[[:space:]]))
 	      $(call $(TESTING)-count,2,--defaults.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_YML)))
 	           $(call $(TESTING)-count,2,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_CSS)))
 	$(call $(TESTING)-count,3,COMPOSER_DEPENDS.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))$(SED_ESCAPE_COLOR)[]]))
+	           $(call $(TESTING)-count,3,<title>$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))[<]))
+	        $(call $(TESTING)-count,6,<!-- css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))[[:space:]]))
 	      $(call $(TESTING)-count,6,--defaults.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))/$(COMPOSER_YML)))
 	           $(call $(TESTING)-count,6,--css.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(TESTING_COMPOSER_DIR)))/$(COMPOSER_CSS)))
+	$(call $(TESTING)-count,2,<title>$(COMPOSER_HEADLINE)[<])
 	$(call $(TESTING)-count,10,--defaults)
 	$(call $(TESTING)-count,26,--css)
 	$(call $(TESTING)-count,2,^COMPOSER_CURDIR)
