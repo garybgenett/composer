@@ -394,8 +394,7 @@ override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
 
 override PATH_LIST			:= $(subst :, ,$(PATH))
-override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOSER_DEBUGIT_ALL),-x)
-export SHELL
+export SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOSER_DEBUGIT_ALL),-x)
 
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
@@ -1088,9 +1087,9 @@ override FIREBASE_VER			:= $(FIREBASE_VER)
 #> update: includes duplicates
 
 override PATH_LIST			:= $(subst :, ,$(PATH))
-override SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOSER_DEBUGIT_ALL),-x)
-export SHELL
+export SHELL				:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOSER_DEBUGIT_ALL),-x)
 
+export HOME				:= $(COMPOSER_DIR)
 export LC_ALL				:=
 export LC_COLLATE			:= C
 
@@ -12283,29 +12282,14 @@ override define $(TESTING)-COMPOSER_INCLUDE-init =
 		$(realpath $(call $(TESTING)-pwd,/)) \
 		$(realpath $(call $(TESTING)-pwd)) \
 		,\
-		$(ECHO) "override COMPOSER_DEPENDS := $(FILE)\n"	>$(FILE)/$(COMPOSER_SETTINGS); \
-		{	$(ECHO) "{\n"; \
-			$(ECHO) "title-prefix: \".defaults\",\n"; \
-			$(ECHO) "css: \"$(call $(TESTING)-pwd)/.defaults.css\",\n"; \
-			$(ECHO) "variables: {\n"; \
-				$(ECHO) " title-prefix: \".variables\",\n"; \
-				$(ECHO) " css: \"$(call $(TESTING)-pwd)/.variables.css\",\n"; \
-				$(ECHO) "},\n"; \
-			$(ECHO) "metadata: { title: \"$(FILE)\" },\n"; \
-			$(ECHO) "}\n"; \
-		}							>$(FILE)/$(COMPOSER_YML); \
-		$(ECHO) "<!-- css: $(FILE) -->\n"			>$(FILE)/$(COMPOSER_CSS); \
+		$(ECHO) "override COMPOSER_DEPENDS := $(FILE)\n"			>$(FILE)/$(COMPOSER_SETTINGS); \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML),,$(FILE))	>$(FILE)/$(COMPOSER_YML); \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS),,$(FILE))	>$(FILE)/$(COMPOSER_CSS); \
 	) \
-	$(ECHO) "override COMPOSER_INCLUDE := $(1)\n"			>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-	{	$(ECHO) "override c_options := \\\\\n"; \
-		$(ECHO) " --title-prefix=\".options\" \\\\\n"; \
-		$(ECHO) " --css=\"$(call $(TESTING)-pwd)/.options.css\"\n"; \
-	}								>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"			>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "\$$(info COMPOSER_CURDIR)\n"				>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(ECHO) "endif\n"						>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS)-/)		>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS),,$(1))	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(foreach FILE,.defaults .variables .options,\
-		$(ECHO) "<!-- css: $(FILE) -->\n"			>$(call $(TESTING)-pwd)/$(FILE).css; \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS),,$(FILE))	>$(call $(TESTING)-pwd)/$(FILE).css; \
 	) \
 	$(call $(TESTING)-run) $(CONFIGS) | $(SED) -n "/COMPOSER_INCLUDES/p"; \
 	$(foreach FILE,\
@@ -12329,6 +12313,37 @@ override define $(TESTING)-COMPOSER_INCLUDE-init-run =
 	$(SED) -i "/COMPOSER_DEPENDS/d"	$(1)/$(COMPOSER_SETTINGS); \
 	$(RM)				$(1)/$(COMPOSER_YML); \
 	$(RM)				$(1)/$(COMPOSER_CSS)
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS)-/ =
+ifneq ($$(COMPOSER_CURDIR),)
+$$(info COMPOSER_CURDIR)
+endif
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS) =
+override COMPOSER_INCLUDE := $(1)
+override c_options := \\
+	--title-prefix=".options" \\
+	--css="$(call $(TESTING)-pwd)/.options.css"
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML) =
+{
+	title-prefix: ".defaults",
+	css: "$(call $(TESTING)-pwd)/.defaults.css",
+	variables: {
+		title-prefix: ".variables",
+		css: "$(call $(TESTING)-pwd)/.variables.css",
+	},
+	metadata: {
+		title: "$(1)",
+	},
+}
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS) =
+<!-- css: $(1) -->
 endef
 
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
