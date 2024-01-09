@@ -14671,28 +14671,25 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
-#WORKING:FIX
-#	do a final double-check of this list...
-
-#> [ ! -f .$(PUBLISH)-$(INSTALL) ] && .$(PUBLISH)-$(INSTALL)
-#>	[ -n $(COMPOSER_DEBUGIT) ] || --filter="-_/test/**"
-#> $(PUBLISH)-$(EXAMPLE)-$(TESTING) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
-#>	[ $(MAKEJOBS) = $(MAKEJOBS_DEFAULT) ] && MAKEJOBS="$(TESTING_MAKEJOBS)"
+#> $(PUBLISH)-$(EXAMPLE): .$(PUBLISH)-$(INSTALL)
+#>	$(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(COMPOSER_DEBUGIT) || --filter="-_/test/**"
+#> $(PUBLISH)-$(EXAMPLE)-$(TESTING) = COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
+#>	$(MAKEJOBS),$(MAKEJOBS_DEFAULT) && MAKEJOBS="$(TESTING_MAKEJOBS)"
 #>	$(CONFIGS)
 #>		$(COMPOSER_SETTINGS)
-#>			$(*_MOD)
 #>			$(word 3,$(PUBLISH_DIRS)) == COMPOSER_INCLUDE=""
 #>			COMPOSER_DEPENDS="1"
 #>		$(COMPOSER_YML)
+#>			$(*_MOD)
 #>			auto_update: $(LIBRARY_AUTO_UPDATE_ALT)
 #>			$(PUBLISH)-info-top: ICON
 #>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
 #>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
 #>	$(SHELL)
-#>		$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT)
-#>		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
+#>		$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT) + $(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+#>		$(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING))$(COMPOSER_EXT_DEFAULT) + $(dir $(PUBLISH_EXAMPLE))/$(patsubst .%,%,$(NOTHING)).*
 #>		$(PUBLISH)-$(DOFORCE) [x1]
-#> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) == COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
+#> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) = COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
 #>	$(SHELL)
 #>		exit 0
 #> $(COMPOSER_DEBUGIT)
@@ -14700,8 +14697,8 @@ endif
 #>		$(COMPOSER_YML)
 #>			auto_update: null
 #>	$(SHELL)
-#>		[ -n $(COMPOSER_RELEASE) ] && "#> update: HEREDOC_CUSTOM_PUBLISH"
-#>		$(PUBLISH_DIRS_DEBUGIT)
+#>		$(COMPOSER_RELEASE) && "#> update: HEREDOC_CUSTOM_PUBLISH"
+#>		$(PUBLISH_DIRS_CONFIGS) + $(PUBLISH_DIRS_DEBUGIT)
 
 #> update: $(NOTHING)-%
 
