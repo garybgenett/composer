@@ -3564,9 +3564,7 @@ endef
 ########################################
 
 #WORKING
-#	make it so that an empty digest_title/sitemap_title disables/removes them...
-#	leading numeric [0-9] in $(PUBLISH)-display name in yml file causes them to break...?
-#		only for "banner"...?
+#	make it so that an empty digest_title/sitemap_title disables/removes them...?
 #	based on the "for" loop in the code, header/footer could be a list of files...
 #		see: define $(PUBLISH)-$(TARGETS)-file
 #		document this...?
@@ -6746,12 +6744,12 @@ variables: {}
 endef
 
 ########################################
-### {{{3 Heredoc: composer_yml ($(PUBLISH) pages)
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(PUBLISH_PAGEDIR))
 ########################################
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_PAGEDIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) pages)
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PUBLISH_PAGEDIR)))
 ################################################################################
 
 variables: {}
@@ -6762,12 +6760,12 @@ variables: {}
 endef
 
 ########################################
-### {{{3 Heredoc: composer_yml ($(PUBLISH) themes)
+### {{{3 Heredoc: composer_yml ($(PUBLISH) $(PUBLISH_SHOWDIR))
 ########################################
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) themes$(if $(1), $(MARKER) $(1)))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PUBLISH_SHOWDIR))$(if $(1), $(MARKER) $(1)))
 ################################################################################
 
 variables:
