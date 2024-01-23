@@ -306,8 +306,8 @@ override PUBLISH			:= site
 override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
-override COMPOSER_LIBRARY_ROOT		:= $(COMPOSER_ROOT)
-override COMPOSER_LIBRARY		:= $(patsubst $(CURDIR),$(COMPOSER_ROOT),$(COMPOSER_TMP))
+override COMPOSER_LIBRARY_ROOT		:=
+override COMPOSER_LIBRARY		:=
 
 override COMPOSER_SRC			:= $(COMPOSER_DIR)/.sources
 override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
@@ -1264,6 +1264,10 @@ override define GIT_REPO_DO =
 	fi
 endef
 
+override define SRC_IGNORE =
+**/.git
+endef
+
 ########################################
 
 override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_SRC))
@@ -1286,6 +1290,10 @@ override define WGET_PACKAGE_DO =
 	$(MKDIR) $(COMPOSER_BIN); \
 	$(RM) $(COMPOSER_BIN)/$(notdir $(5)).*; \
 	$(SPLIT) $(1)/$(5) $(COMPOSER_BIN)/$(notdir $(5)).
+endef
+
+override define BIN_IGNORE =
+/.wget-hsts
 endef
 
 ########################################
@@ -1342,7 +1350,7 @@ override define NPM_BUILD =
 	fi
 endef
 
-override define NPM_IGNORE =
+override define BLD_IGNORE =
 **/node_modules/
 /.npm/
 /.cache/
@@ -2265,14 +2273,14 @@ override COMPOSER_LIBRARY_ROOT		:= $(COMPOSER_ROOT)
 override COMPOSER_LIBRARY		:= $(COMPOSER_LIBRARY_ROOT)/$(notdir $(COMPOSER_LIBRARY))
 endif
 
-override $(PUBLISH)-library		:= $(COMPOSER_LIBRARY)/$(PUBLISH)-library
-override $(PUBLISH)-library-metadata	:= $(COMPOSER_LIBRARY)/_metadata.yml
-override $(PUBLISH)-library-index	:= $(COMPOSER_LIBRARY)/_index.yml
-override $(PUBLISH)-library-digest	:= $(COMPOSER_LIBRARY)/index$(COMPOSER_EXT_DEFAULT)
-override $(PUBLISH)-library-digest-src	:= $(COMPOSER_LIBRARY)/index-include$(COMPOSER_EXT_SPECIAL)
-override $(PUBLISH)-library-sitemap	:= $(COMPOSER_LIBRARY)/sitemap$(COMPOSER_EXT_DEFAULT)
-override $(PUBLISH)-library-sitemap-src	:= $(COMPOSER_LIBRARY)/sitemap-include$(COMPOSER_EXT_SPECIAL)
-override $(PUBLISH)-library-append	:= $(COMPOSER_LIBRARY)/$(PUBLISH)-append$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library		:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/$(PUBLISH)-library
+override $(PUBLISH)-library-metadata	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/_metadata.yml
+override $(PUBLISH)-library-index	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/_index.yml
+override $(PUBLISH)-library-digest	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/index$(COMPOSER_EXT_DEFAULT)
+override $(PUBLISH)-library-digest-src	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/index-include$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library-sitemap	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/sitemap$(COMPOSER_EXT_DEFAULT)
+override $(PUBLISH)-library-sitemap-src	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/sitemap-include$(COMPOSER_EXT_SPECIAL)
+override $(PUBLISH)-library-append	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/$(PUBLISH)-append$(COMPOSER_EXT_SPECIAL)
 
 override define $(PUBLISH)-library-append-src =
 $(NULL)
@@ -4833,8 +4841,8 @@ endef
 #	note on example page about logo/icon
 
 override define PUBLISH_PAGE_1_CONFIGS =
-| $(PUBLISH)-config | defaults | values
-|:---|:------|:------|
+| $(PUBLISH)-config | defaults
+|:---|:------|
 | [header]        | `$(PUBLISH_HEADER)`
 | [footer]        | `$(PUBLISH_FOOTER)`
 | [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`
@@ -4852,8 +4860,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [readtime]      | `$(PUBLISH_READTIME)`
 | [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`
 
-| $(PUBLISH)-library | defaults | values
-|:---|:------|:------|
+| $(PUBLISH)-library | defaults
+|:---|:------|
 | [folder]           | `$(LIBRARY_FOLDER)`
 | [auto_update]      | `$(LIBRARY_AUTO_UPDATE)`
 | [append]           | `$(LIBRARY_APPEND)`
@@ -4907,7 +4915,7 @@ $(foreach FILE,\
 	sitemap_title \
 	sitemap_expanded \
 	sitemap_spacer \
-,$(call NEWLINE)[$(FILE)]: $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(EXTN_HTML)#$(FILE))
+,$(call NEWLINE)[$(FILE)]: $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)#$(FILE))
 endef
 
 #> update: $(PUBLISH) Pages
@@ -5940,13 +5948,20 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(UPGRADE)
 
-/$(call COMPOSER_CONV,,$(COMPOSER_SRC))/
-**/.git
-
-$(call NPM_IGNORE)
+#>/$(call COMPOSER_CONV,,$(COMPOSER_SRC))/
+/$(call COMPOSER_CONV,,$(COMPOSER_SRC))
 $(foreach FILE,$(REPOSITORIES_LIST),\
 $(if $($(FILE)_BIN),$(call NEWLINE)/$(call COMPOSER_CONV,,$($(FILE)_DIR))/$(notdir $($(FILE)_DIR))-*) \
 )
+
+# src
+$(call SRC_IGNORE)
+
+# bin
+$(call BIN_IGNORE)
+
+# bld
+$(call BLD_IGNORE)
 
 ########################################
 # $(EXPORTS)
@@ -7605,7 +7620,8 @@ function $(PUBLISH)-nav-side-list {
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
-				| $(PUBLISH)-parse
+				| $(PUBLISH)-parse \\
+				| $${SED} "s|^|  |g"
 			$${ECHO} "\\n"
 		else
 			$(PUBLISH)-select $${FILE} || return 1
@@ -7685,6 +7701,7 @@ _EOF_
 #>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
 		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
 #>			$${ECHO} "\\n"
+#>				| $${SED} "s|^|  |g" \\
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
 				| $(PUBLISH)-parse \\
 				| $${SED} "/^$$/d"
@@ -8163,7 +8180,8 @@ _EOF_
 				$${ECHO} "\\n"
 				$${ECHO} "$${IMGS}" \\
 					| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
-					| $(PUBLISH)-parse
+					| $(PUBLISH)-parse \\
+					| $${SED} "s|^|  |g"
 				$${ECHO} "\\n"
 $${CAT} <<_EOF_
 </div>
@@ -11601,7 +11619,7 @@ ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),)
 $(DEBUGIT): $(DEBUGIT)-MARKER-FOOTER
 endif
 ifneq ($(COMPOSER_DOITALL_$(DEBUGIT)),$(TESTING))
-$(DEBUGIT): $(HELPOUT)-FOOTER
+$(DEBUGIT): $(HELPOUT)-footer
 endif
 endif
 $(DEBUGIT):
@@ -11731,7 +11749,7 @@ ifneq ($(COMPOSER_DOITALL_$(TESTING)),)
 $(TESTING): $(DEBUGIT)-MARKER-FOOTER
 endif
 ifneq ($(COMPOSER_DOITALL_$(TESTING)),$(DEBUGIT))
-$(TESTING): $(HELPOUT)-FOOTER
+$(TESTING): $(HELPOUT)-footer
 endif
 endif
 $(TESTING):
@@ -11780,7 +11798,7 @@ $(TESTING)-$(PRINTER):
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE),-$(INSTALL),$(2),1)
-override $(TESTING)-run			= $(call ENV_MAKE,$(2),,$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(TESTING)) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
+override $(TESTING)-run			= $(call ENV_MAKE,$(2),$(3),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(TESTING)) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
 override define $(TESTING)-$(HEADERS) =
 	$(call TITLE_LN ,1,$(call VIM_FOLDING) $(MARKER)[ $(patsubst $(TESTING)-%,%,$(@)) ]$(MARKER)); \
@@ -12242,16 +12260,16 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LINT) \
 		$(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
 	#> margins
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
+	@$(call $(TESTING)-run,,,1) c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> options
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run,,,1) c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
+	@$(call $(TESTING)-run,,,1) c_options="--variable='$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run,,,1) c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CONFIGS)
+	@$(call $(TESTING)-run,,,1) c_options="--variable=\"$(TESTING)=$(DEBUGIT)\"" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run,,,1) c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CONFIGS)
+	@$(call $(TESTING)-run,,,1) c_options='--variable="$(TESTING)=$(DEBUGIT)"' $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run,,,1) c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CONFIGS)
+	@$(call $(TESTING)-run,,,1) c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> values
 	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_SUBDIRS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -12495,7 +12513,7 @@ endef
 
 override define $(TESTING)-COMPOSER_INCLUDE-init-run =
 	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
-	$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
+	$(call $(TESTING)-run,,,1) $(CONFIGS) $(OUT_README).$(EXTN_HTML); \
 	$(SED) -n \
 		-e "/<title>/p" \
 		-e "/<!-- css/p" \
@@ -12704,19 +12722,19 @@ $(TESTING)-CSS:
 .PHONY: $(TESTING)-CSS-init
 $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)	>/dev/null
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_site="1" $(OUT_README).$(EXTN_HTML)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_HTML)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_PRES)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(TYPE_PRES).$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run,,,1) c_site="1" $(OUT_README).$(EXTN_HTML)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_HTML)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_PRES)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run,,,1) c_css="$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run,,,1) c_css="$(TYPE_PRES).$(CSS_ALT)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run,,,1) c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override c_css := $(patsubst $(COMPOSER_DIR)%,$(call $(TESTING)-pwd,$(COMPOSER_CMS))%,$(CUSTOM_PUBLISH_CSS))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run,,,1) c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
 	@$(ECHO) "$(OUT_README).$(EXTN_EPUB): override c_css := $(PUBLISH).$(CSS_ALT)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LPDF); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_LPDF)
-	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DOCX); $(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(OUT_README).$(EXTN_DOCX)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_EPUB); $(call $(TESTING)-run,,,1) c_css="$(SPECIAL_VAL)" $(OUT_README).$(EXTN_EPUB)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LPDF); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_LPDF)
+	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DOCX); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_DOCX)
 
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
@@ -12839,7 +12857,7 @@ $(TESTING)-other-init:
 	@$(call $(TESTING)-run) $(CONFIGS)
 	#> c_type
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).json
-	@$(call $(TESTING)-run) COMPOSER_DEBUGIT="1" $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
+	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type="json" c_base="$(OUT_README)" c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT)"
 	@$(CAT) $(call $(TESTING)-pwd)/$(OUT_README).json | $(SED) "s|[]][}][,].+$$||g"; \
 		$(ENDOLINE)
 
