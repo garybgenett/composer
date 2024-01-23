@@ -14850,11 +14850,31 @@ else
 			$(YQ_WRITE_OUT_COLOR)
 #>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
 #>			" $($(PUBLISH)-library-index) 2>/dev/null;
-	@$(foreach FILE,$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+	@$(foreach FILE,$(sort \
+		$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)) \
+		$(shell $(YQ_WRITE) " \
+			del(.\"$(COMPOSER_CMS)\") \
+			| keys \
+			| .[] \
+			| select(test(\"^$(METACRGX)[^/]+$$\")) \
+			" $($(PUBLISH)-library-metadata) 2>/dev/null \
+		) \
+		$(shell $(YQ_WRITE) " \
+			del(.\"$(COMPOSER_CMS)\") \
+			| .[].[] \
+			| .[] \
+			| select(test(\"^$(METACRGX)[^/]+$$\")) \
+			" $($(PUBLISH)-library-index) 2>/dev/null \
+		) \
+		),\
 		$(LINERULE); \
-		$(ECHO) "$(_M)$(MARKER) "; \
-		$(LS) --color=none $(FILE); \
-		$(ECHO) "$(_D)"; \
+		$(PRINT) "$(_M)$(MARKER) $(FILE)"; \
+		$(ECHO) "$(_N)$(DIVIDE) "; \
+		{	$(LS) --color=none $(FILE) 2>/dev/null && \
+			$(ECHO) "$(_D)" && \
+			$(YQ_READ) $(FILE) 2>/dev/null | $(YQ_WRITE_OUT); \
+		} || \
+			$(PRINT) "$(_F)$(EXPAND)"; \
 		$(ECHO) "$(_E)$(DIVIDE) $(call $(HEADERS)-path-root,$($(PUBLISH)-library-metadata))$(_D)\n"; \
 		$(YQ_WRITE_OUT) " \
 				del(.\"$(COMPOSER_CMS)\") \
