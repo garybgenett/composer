@@ -762,10 +762,10 @@ override LIBRARY_FOLDER_ALT		:= _library
 override LIBRARY_AUTO_UPDATE		:= null
 override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
-#WORKING:FIX how do we test the array version of this...?
 override LIBRARY_APPEND			:= null
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
-override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
+#>override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
+override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
@@ -5020,7 +5020,7 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Header $(PUBLISH_CMD_END)
 This is a header include from the `$(COMPOSER_YML)` file.
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
-$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(call NEWLINE)$(call NEWLINE)[$(PUBLISH)-library.append = LIBRARY_APPEND_MOD]: #)
 endef
 
 override define PUBLISH_PAGE_3_FOOTER =
@@ -5047,7 +5047,7 @@ date: $(DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
-$(PUBLISH_CMD_BEG) box-begin 1 #WORK $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) box-begin 1 #WORK $(PUBLISH_CMD_END)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(call NEWLINE)$(call NEWLINE)[$(PUBLISH)-library.append = LIBRARY_APPEND_MOD])
 
 #WORK
 
