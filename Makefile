@@ -14161,11 +14161,11 @@ $(PUBLISH)-$(COMPOSER_YML):
 			" 2>/dev/null
 
 #> update: $(PUBLISH)-library-sort-yq
-#>	sort_by(.path) \
-#>	| sort_by(.title) \
-#>	| (sort_by(.date) | reverse)
+#>	sort_by(.date, .title, .path) | reverse
 override define $(PUBLISH)-library-sort-yq =
-	sort_by(.date, .title, .path) | reverse
+	sort_by(.path) \
+	| sort_by(.title) \
+	| (sort_by(.date) | reverse)
 endef
 
 override define $(PUBLISH)-library-sort-sh =
