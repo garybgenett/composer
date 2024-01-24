@@ -7,6 +7,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ################################################################################
 # {{{1 IMPORTANT NOTES
 ################################################################################
+#
 # This Makefile is the very heart of Composer CMS.  All the other files in the
 # repository are sourced from it.  It is the only file needed to re-create the
 # entire directory.  This one file *IS* Composer CMS.
@@ -44,16 +45,23 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 # well as it serves me.
 #
 # Happy Hacking!
+#
 ################################################################################
 # {{{1 RELEASE PROCESS
 ################################################################################
-# UPDATE
+#
+## {{{2 UPDATE
+#
 #	* Tooling Versions
 #	* Pandoc Options
 #		* `TYPE_TARGETS`
 #		* `PANDOC_OPTIONS`
 #		* `PANDOC_OPTIONS_ERROR`
-# VERIFY
+#
+## {{{2 VERIFY
+#
+### {{{3 CORE
+#
 #	* `env - USER="${USER}" HOME="${HOME}" PATH="${PATH}" make _setup-all`
 #		* `rm ~/.vimrc; vi Makefile`
 #	* `make COMPOSER_DEBUGIT="1" _release`
@@ -90,84 +98,98 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* README.docx.0.0.docx
 #		* README.docx.1.1.docx
 #		* README.docx.x.x.docx
-#	* Test: Bootstrap
-#		* Browsers
-#			* Desktop
-#			* Mobile
-#			* Text-based
-#		* Pages
-#			* README.site.html
-#				* `make _setup-all`
-#					* `make COMPOSER_DEBUGIT="1" _setup-all`
-#			* _site/index.html
-#				* `make site-template`
-#					* `make COMPOSER_DEBUGIT="1" site-template`
-#				* `make site-template-_test`
-#					* `make COMPOSER_DEBUGIT="1" site-template-_test`
-#					* `make site-list`
-#					* `make site-list.null.md`
-#				* `make site-template-config`
-#					* `make site-all`
-#					* `make site-force`
-#				* `make MAKEJOBS="0" site-template`
-#			* _site
+#
+### {{{3 SITE
+#
+#	* Browsers
+#		* Desktop
+#		* Mobile
+#		* Text-based
+#	* Pages
+#		* README.site.html
+#			* `make _setup-all`
+#				* `make COMPOSER_DEBUGIT="1" _setup-all`
+#		* _site/index.html
+#			* `make site-template`
+#				* `make COMPOSER_DEBUGIT="1" site-template`
+#			* `make site-template-_test`
+#				* `make COMPOSER_DEBUGIT="1" site-template-_test`
 #				* `make site-list`
-#				* `make site-list-list`
-#				* `make site-list-null`
-#				* `make site-list-all`
-#				* `make site-list.index.md`
-#		* Paths
-#			* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
-#			* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
-#			* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
-#	* Test: Performance
-#		* `time make COMPOSER_DEBUGIT="0" FAIL`
-#			* `time make COMPOSER_DEBUGIT="0" FAIL 2>&1 | grep -E "^[+]"`
-#			* Make sure '--trace' debug output is identical
-#			* Minimize '$(shell)' and '/: override .* $(shell' calls
-#			* With and without 'c_site' enabled
-#		* `time make README.site.html`
-#			* `time make -C _site/config config`
-#			* `time make -C _site/config/_library-config config`
-#		* `make _test-speed`
-#			* `make MAKEJOBS="[X]" _test-speed`
-#			* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" _test-speed`
-#			* Update comments
-# PREPARE
-#	* Update: Makefile
-#		* Formatting
+#				* `make site-list.null.md`
+#			* `make site-template-config`
+#				* `make site-all`
+#				* `make site-force`
+#			* `make MAKEJOBS="0" site-template`
+#		* _site
+#			* `make site-list`
+#			* `make site-list-list`
+#			* `make site-list-null`
+#			* `make site-list-all`
+#			* `make site-list.index.md`
+#	* Paths
+#		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
+#		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
+#		* `override PUBLISH_DIRS := [...] +$(CONFIGS)`
+#
+### {{{3 PERFORMANCE
+#
+#	* `time make COMPOSER_DEBUGIT="0" FAIL`
+#		* `time make COMPOSER_DEBUGIT="0" FAIL 2>&1 | grep -E "^[+]"`
+#		* Make sure '--trace' debug output is identical
+#		* Minimize '$(shell)' and '/: override .* $(shell' calls
+#		* With and without 'c_site' enabled
+#	* `time make README.site.html`
+#		* `time make -C _site/config config`
+#		* `time make -C _site/config/_library-config config`
+#	* `make _test-speed`
+#		* `make MAKEJOBS="[X]" _test-speed`
+#		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" _test-speed`
+#		* Update comments
+#
+## {{{2 PREPARE
+#
+### {{{3 MAKEFILE
+#
+#	* Formatting
+#		* `make _test-heredoc`
+#	* Markers
+#		* '#>[ ]'
+#		* '#>[^ ]'
+#
+### {{{3 README
+#
+#	* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
+#		* `make COMPOSER_DEBUGIT="1" c_site= help-help | less -rX`
+#			* `make COMPOSER_DEBUGIT="1" COMPOSER_DOCOLOR= help-help | less -rX`
+#		* `override INPUT := commonmark`
+#			* `PANDOC_EXTENSIONS`
+#		* Spell check
 #			* `make _test-heredoc`
-#		* Markers
-#			* '#>[ ]'
-#			* '#>[^ ]'
-#	* Update: README.md
-#		* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
-#			* `make COMPOSER_DEBUGIT="1" c_site= help-help | less -rX`
-#				* `make COMPOSER_DEBUGIT="1" COMPOSER_DOCOLOR= help-help | less -rX`
-#			* `override INPUT := commonmark`
-#				* `PANDOC_EXTENSIONS`
-#			* Spell check
-#				* `make _test-heredoc`
-#			* Output
-#				* Fits in $(COLUMNS) characters
-#				* Mouse select color handling
-#				* Test all "Reference" links in browser
-#		* `make README.html`
-#			* Minimize: `<col style="width: *%" />`
-#		* `make _setup-all`
-#			* Review each, including CSS
-#			* Create screenshot
-# PUBLISH
+#		* Output
+#			* Fits in $(COLUMNS) characters
+#			* Mouse select color handling
+#			* Test all "Reference" links in browser
+#	* `make README.html`
+#		* Minimize: `<col style="width: *%" />`
+#	* `make _setup-all`
+#		* Review each, including CSS
+#		* Create screenshot
+#
+## {{{2 PUBLISH
+#
 #	* Check: `git diff main Makefile`
 #	* Update: COMPOSER_VERSION
 #	* Release: `rm -frv {.[^.],}*; make _release`
 #	* Verify: `git diff main`
 #	* Commit: `git commit`, `git tag`
 #	* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
+#
 ################################################################################
 # {{{1 TODO
 ################################################################################
-# CODE
+#
+## {{{2 CODE
+#
 #	--resource-path = integrate with COMPOSER_ART, COMPOSER_INCLUDES_DIRS, etc...?
 #	add aria information back in, because we are good people...
 #		https://getbootstrap.com/docs/5.2/components/dropdowns/#accessibility
@@ -179,13 +201,19 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	$(PUBLISH)-$(EXAMPLE).$(COMPOSER_EXT_DEFAULT)
 #		$(SED) -i "/^[[][_]/d" $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 #	*_HACK
-# HTML
+#
+## {{{2 HTML
+#
 #	metadata / keywords
-# PDF / EPUB / DOCX
+#
+## {{{2 PDF / EPUB / DOCX
+#
 #	man pandoc = REPRODUCIBLE BUILDS = https://pandoc.org/MANUAL.html#reproducible-builds
 #		Some of the document formats pandoc targets (such as EPUB, docx, and ODT) include build timestamps in the generated document.  That means that the files generated on successive builds will differ, even if the source does not.  To avoid this, set the SOURCE_DATE_EPOCH environment variable, and the timestamp will be taken from it instead of the current time.  SOURCE_DATE_EPOCH should contain an integer unix timestamp (specifying the number of second since midnight UTC January 1, 1970).
 #		Some document formats also include a unique identifier.  For EPUB, this can be set explicitly by setting the identifier metadata field (see EPUB Metadata, above).
-# PDF
+#
+## {{{2 PDF
+#
 #	two different templates, with an option, for left/right versus left-only headers/footers
 #		maybe also a customizable version, akin to the resume and agreement formats i use
 #		these can live in an "artifacts/templates" directory, and can be "ln" as ".composer-pdf.header" or "file.pdf.header", as desired
@@ -199,13 +227,18 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		--variable="documentclass=book" \
 #		--variable="classoption=twosides" \
 #		--variable="classoption=draft"
-# EPUB
+#
+## {{{2 EPUB
+#
 #	--epub-metadata="[...]" --epub-cover-image="[...]" --epub-embed-font="[...]"
-# DOCX
+#
+## {{{2 DOCX
+#
 #	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
 #	--from "docx+styles"
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
+#
 ################################################################################
 # }}}1
 ################################################################################
