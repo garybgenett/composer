@@ -366,7 +366,7 @@ override MENU_SELF			:= _
 ################################################################################
 
 ########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+## {{{2 Macros
 ########################################
 
 override COMPOSER_REGEX_OVERRIDE	= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
@@ -389,6 +389,8 @@ override define READ_ALIASES =
 endef
 
 ########################################
+## {{{2 Duplicates
+########################################
 
 #> update: includes duplicates
 #> update: READ_ALIASES
@@ -404,6 +406,8 @@ export override SHELL			:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOS
 
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
+########################################
+## {{{2 Source Files
 ########################################
 
 #>include $(1)/$(COMPOSER_SETTINGS)
@@ -429,6 +433,8 @@ endif
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDE		[$(COMPOSER_INCLUDE)]))
 
 ########################################
+## {{{2 Directory Tree
+########################################
 
 override COMPOSER_INCLUDES_DIRS		:=
 $(foreach FILE,$(abspath $(dir $(MAKEFILE_LIST))),\
@@ -445,6 +451,8 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES_DIRS	[$(COMPOSER_INCLUDES_DIRS)]))
 
 ########################################
+## {{{2 Configuration Files
+########################################
 
 override COMPOSER_INCLUDES		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_DIRS)),\
@@ -459,10 +467,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_DIRS)),\
 )
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES		[$(COMPOSER_INCLUDES)]))
 
-########################################
-
 #> update: WILDCARD_YML
-
 override COMPOSER_YML_LIST		:=
 $(foreach FILE,$(addsuffix /$(COMPOSER_YML),$(COMPOSER_INCLUDES_DIRS)),\
 	$(if $(COMPOSER_DEBUGIT_ALL),$(info #> WILDCARD_YML			[$(FILE)])) \
@@ -476,6 +481,10 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]
 ################################################################################
 # {{{1 Make Settings
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 .POSIX:
 .SUFFIXES:
