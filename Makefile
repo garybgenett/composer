@@ -1131,11 +1131,6 @@ ifneq ($(wildcard $(FIREBASE_BIN_BLD)),)
 override FIREBASE_BIN			:= $(FIREBASE_BIN_BLD)
 endif
 
-override define FIREBASE_IGNORE =
-/.firebase*
-**firebase**.json
-endef
-
 ########################################
 ## {{{2 External Tools
 ########################################
@@ -1166,10 +1161,6 @@ override FIREBASE_VER			:= $(FIREBASE_VER)
 ################################################################################
 # {{{1 Tooling Options
 ################################################################################
-
-########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
-########################################
 
 #> update: includes duplicates
 
@@ -1221,7 +1212,9 @@ override WC_CHAR			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --bytes
 override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --words
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
-override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),make)
+override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),$(MAKE))
+override DOMAKE				:= $(notdir $(MAKE))
+
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
 override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
 override PDF_LATEX			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PDF_LATEX))
@@ -1238,15 +1231,15 @@ override GZIP_BIN			:= $(call COMPOSER_FIND,$(PATH_LIST),gzip)
 override 7Z				:= $(call COMPOSER_FIND,$(PATH_LIST),7z) x -aoa
 override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --verbose
 override CURL				:= $(call COMPOSER_FIND,$(PATH_LIST),curl)
+export override GZIP			:=
 
 override FIREBASE			:= $(call COMPOSER_FIND,$(PATH_LIST),firebase)
 
 override ASPELL				:= $(call COMPOSER_FIND,$(PATH_LIST),aspell)
 override ASPELL_DIR			:= /usr/lib*/aspell*
 
-override DOMAKE				:= $(notdir $(MAKE))
-export override GZIP			:=
-
+########################################
+## {{{2 Binaries
 ########################################
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
@@ -1278,6 +1271,8 @@ override DATENAME			:= $(shell $(DATE) | $(SED) \
 override DATEMARK			:= $(firstword $(subst T, ,$(DATESTAMP)))
 
 ########################################
+### {{{3 YQ
+########################################
 
 override YQ_READ			:= $(YQ) --no-colors --no-doc --header-preprocess --front-matter "extract" --input-format "yaml" --output-format "json"
 override YQ_WRITE			:= $(subst --front-matter "extract" ,,$(subst --output-format "json",--output-format "yaml",$(YQ_READ)))
@@ -1305,6 +1300,8 @@ override define YQ_EVAL_DATA =
 	)
 endef
 
+########################################
+### {{{3 Git SCM
 ########################################
 
 override GIT_LOG_FORMAT			:= %ai %H %s %d
@@ -1349,10 +1346,12 @@ override define GIT_REPO_DO =
 	fi
 endef
 
-override define SRC_IGNORE =
+override define GIT_IGNORE =
 **/.git
 endef
 
+########################################
+### {{{3 Wget
 ########################################
 
 override WGET_PACKAGE			= $(call WGET_PACKAGE_DO,$(1),$(2),$(3),$(4),$(5),$(6),$(firstword $(subst /, ,$(4))),$(COMPOSER_SRC))
@@ -1377,10 +1376,12 @@ override define WGET_PACKAGE_DO =
 	$(SPLIT) $(1)/$(5) $(COMPOSER_BIN)/$(notdir $(5)).
 endef
 
-override define BIN_IGNORE =
+override define WGET_IGNORE =
 /.wget-hsts
 endef
 
+########################################
+### {{{3 Node.js (npm)
 ########################################
 
 override NPM_NAME			= $(subst /,-,$(patsubst $(CURDIR)/%,%,$(patsubst $(COMPOSER_DIR)/%,%,$(1))))
@@ -1435,12 +1436,14 @@ override define NPM_BUILD =
 	fi
 endef
 
-override define BLD_IGNORE =
+override define NPM_IGNORE =
 **/node_modules/
 /.npm/
 /.cache/
 endef
 
+########################################
+### {{{3 Google Firebase
 ########################################
 
 override define FIREBASE_RUN =
@@ -1454,9 +1457,18 @@ override define FIREBASE_RUN =
 	)
 endef
 
+override define FIREBASE_IGNORE =
+/.firebase*
+**firebase**.json
+endef
+
 ################################################################################
 # {{{1 Pandoc Options
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 #>override INPUT			:= commonmark
 override INPUT				:= markdown
@@ -3512,7 +3524,7 @@ $(_S)[Git]: https://git-scm.com$(_D)
 $(_S)[Git SCM]: https://git-scm.com$(_D)
 $(_S)[GNU Diffutils]: http://www.gnu.org/software/diffutils$(_D)
 $(_S)[Rsync]: https://rsync.samba.org$(_D)
-$(_S)[NPM]: https://www.npmjs.com$(_D)
+$(_S)[npm]: https://www.npmjs.com$(_D)
 
 $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
@@ -4741,7 +4753,7 @@ $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/$(COMPOSER_TINYNAME)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(DISTRIB)$(_D)
 
 Note that some additional external tools may be required to perform the builds,
-such as $(_C)[NPM]$(_D) $(_E)(see [$(CHECKIT)-$(DOITALL)])$(_D).
+such as $(_C)[npm]$(_D) $(_E)(see [$(CHECKIT)-$(DOITALL)])$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(DEBUGIT) / $(DEBUGIT)-file)
 
@@ -6035,22 +6047,24 @@ override define HEREDOC_GITIGNORE =
 
 #>/$(call COMPOSER_CONV,,$(COMPOSER_SRC))/
 /$(call COMPOSER_CONV,,$(COMPOSER_SRC))
-$(foreach FILE,$(REPOSITORIES_LIST),\
+
+# binaries$(foreach FILE,$(REPOSITORIES_LIST),\
 $(if $($(FILE)_BIN),$(call NEWLINE)/$(call COMPOSER_CONV,,$($(FILE)_DIR))/$(notdir $($(FILE)_DIR))-*) \
 )
 
-# src
-$(call SRC_IGNORE)
+# git
+$(call GIT_IGNORE)
 
-# bin
-$(call BIN_IGNORE)
+# wget
+$(call WGET_IGNORE)
 
-# bld
-$(call BLD_IGNORE)
+# npm
+$(call NPM_IGNORE)
 
 ########################################
 # $(EXPORTS)
 
+# firebase
 $(call FIREBASE_IGNORE)
 
 ################################################################################
@@ -13107,7 +13121,7 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)GNU Tar"				"$(_E)$(TAR_VER)"			"$(_N)$$($(TAR) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)GNU Gzip"				"$(_E)$(GZIP_VER)"			"$(_N)$$($(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)7z"					"$(_E)$(7Z_VER)"			"$(_N)$$($(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Node.js (npm)"				"$(_E)$(NPM_VER)"			"$(_N)$$($(NPM) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Node.js ([npm])"			"$(_E)$(NPM_VER)"			"$(_N)$$($(NPM) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Curl"					"$(_E)$(CURL_VER)"			"$(_N)$$($(CURL) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_H)Target:$(_D) $(_S)[$(_H)$(EXPORTS)$(_S)]"		"$(_S)--"				"$(_S)--"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Google Firebase]"			"$(_E)$(FIREBASE_VER_COMPOSER)"		"$(_N)$$($(call FIREBASE_RUN) --version	2>/dev/null | $(HEAD) -n1)"
@@ -13133,7 +13147,7 @@ ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)GNU Tar"				"$(_N)$(TAR)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)GNU Gzip"				"$(_N)$(GZIP_BIN)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)7z"					"$(_N)$(7Z)"
-	@$(TABLE_M2) "$(_S)--$(_D) $(_E)Node.js (npm)"				"$(_N)$(NPM)"
+	@$(TABLE_M2) "$(_S)--$(_D) $(_E)Node.js ([npm])"			"$(_N)$(NPM)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)Curl"					"$(_N)$(CURL)"
 	@$(TABLE_M3) "$(_H)Target:$(_D) $(_S)[$(_H)$(EXPORTS)$(_S)]"		"$(_S)--"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Google Firebase]"			"$(if $(filter $(FIREBASE),$(FIREBASE_BIN)),$(_M),$(_E))$(call $(HEADERS)-path-dir,$(FIREBASE))"
