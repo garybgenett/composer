@@ -212,6 +212,10 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 # {{{1 Composer Globals
 ################################################################################
 
+########################################
+## {{{2 Heart & Soul
+########################################
+
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TINYNAME		:= composer
 override COMPOSER_VERSION		:= v3.1
@@ -240,48 +244,14 @@ override CREATED_TAGLINE		:= Composed with $(COMPOSER_TECHNAME)
 override COMPOSER_CMS			:= .$(COMPOSER_BASENAME)
 override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
 
-########################################
-
-override MARKER				:= >>
-override DIVIDE				:= ::
-override EXPAND				:= ...
-override TOKEN				:= ~---~
-override NULL				:=
-
-override define NEWLINE =
-$(NULL)
-$(NULL)
-endef
-
-########################################
-
-override SPECIAL_VAL			:= 0
-override CSS_ALT			:= css_alt
-
-override COLUMNS			:= 80
-override EOL				:= lf
-
-override HEAD_MAIN			:= 1
-override DEPTH_DEFAULT			:= 2
-override DEPTH_MAX			:= 6
-
-########################################
-
 override COMPOSER_SETTINGS		:= .$(COMPOSER_TINYNAME).mk
 override COMPOSER_YML			:= .$(COMPOSER_TINYNAME).yml
-
 override COMPOSER_LOG_DEFAULT		:= .$(COMPOSER_TINYNAME).log
 override COMPOSER_EXT_DEFAULT		:= .md
 override COMPOSER_EXT_SPECIAL		:= $(COMPOSER_EXT_DEFAULT).cms
 
-#> update: TYPE_TARGETS
-override TYPE_DEFAULT			:= html
-override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
-
-override OUT_README			:= README
-override OUT_LICENSE			:= LICENSE
-override OUT_MANUAL			:= $(COMPOSER_FILENAME).Manual
-
+########################################
+## {{{2 Locations
 ########################################
 
 override MAKEFILE_LIST			:= $(abspath $(MAKEFILE_LIST))
@@ -337,7 +307,52 @@ override BOOTSTRAP_DEF_CSS		:= $(COMPOSER_ART)/bootstrap/bootstrap-default.css
 override BOOTSTRAP_ART_JS		:= $(COMPOSER_ART)/bootstrap/bootstrap.js
 override BOOTSTRAP_ART_CSS		:= $(COMPOSER_ART)/bootstrap/bootstrap.css
 
+#> update: OUTPUT_FILENAME
+#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
+override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(DATENAME).$(EXTN_TEXT)
+override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
+
 ########################################
+## {{{2 Values
+########################################
+
+override COMPOSER_RELEASE		:=
+ifeq ($(COMPOSER_DIR),$(CURDIR))
+override COMPOSER_RELEASE		:= 1
+endif
+
+#> update: TYPE_TARGETS
+override TYPE_DEFAULT			:= html
+override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
+
+override OUT_README			:= README
+override OUT_LICENSE			:= LICENSE
+override OUT_MANUAL			:= $(COMPOSER_FILENAME).Manual
+
+override SPECIAL_VAL			:= 0
+override CSS_ALT			:= css_alt
+
+override COLUMNS			:= 80
+override EOL				:= lf
+
+override HEAD_MAIN			:= 1
+override DEPTH_DEFAULT			:= 2
+override DEPTH_MAX			:= 6
+
+########################################
+## {{{2 Tokens
+########################################
+
+override MARKER				:= >>
+override DIVIDE				:= ::
+override EXPAND				:= ...
+override TOKEN				:= ~---~
+override NULL				:=
+
+override define NEWLINE =
+$(NULL)
+$(NULL)
+endef
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
@@ -346,23 +361,13 @@ override HTML_BREAK			:= <p></p>
 override HTML_HIDE			:= &\#0000;
 override MENU_SELF			:= _
 
-########################################
-
-#> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-#> update: OUTPUT_FILENAME
-override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(DATENAME).$(EXTN_TEXT)
-override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
-
-########################################
-
-override COMPOSER_RELEASE		:=
-ifeq ($(COMPOSER_DIR),$(CURDIR))
-override COMPOSER_RELEASE		:= 1
-endif
-
 ################################################################################
 # {{{1 Include Files
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 override COMPOSER_REGEX_OVERRIDE	= override[[:space:]]+($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[$(if $(2),?,:)][=]
 override COMPOSER_REGEX_DEFINE		= override[[:space:]]+(define[[:space:]]+)?($(if $(1),$(1),[^[:space:]]+))[[:space:]]+[=]
@@ -2347,14 +2352,14 @@ override PUBLISH_SH_GLOBAL := \
 	CREATED_TAGLINE \
 	$(TOKEN) \
 	\
+	SPECIAL_VAL \
+	DEPTH_MAX \
+	$(TOKEN) \
+	\
 	MARKER \
 	DIVIDE \
 	EXPAND \
 	TOKEN \
-	$(TOKEN) \
-	\
-	SPECIAL_VAL \
-	DEPTH_MAX \
 	$(TOKEN) \
 	\
 	HTML_SPACE \
@@ -3602,13 +3607,13 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-format
 ########################################
 
-#WORKING
+#WORKING:FIX
+#	includes duplicates
 #	why all the duplication in water.css for custom builds...?
 #		is this happening for the defaults as well...?
 #	items like README.site.html aren't getting metadata, because sitemap is only looking for *.md...
 #		maybe we can somehow check for $(word 1,$(README.site.html)) variable and use that...?
 #		naw, just document... example of proper use is: _site/config/pages*
-#	add further header divisions to break folding into smaller and smaller chunks...
 
 #WORKING
 #	try to remove "manual review of output throughout $(TESTING)...
