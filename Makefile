@@ -303,7 +303,6 @@ override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP
 
 #> update: includes duplicates
 override TYPE_HTML			:= html
-override EXPORTS			:= export
 override PUBLISH			:= site
 
 override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)
@@ -531,6 +530,7 @@ override NOFAIL				:= --keep-going
 #> update: includes duplicates
 override TARGETS			:= targets
 
+#> update: [.]$(TARGETS)
 override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,$(COMPOSER_DEBUGIT_ALL)) $(if $(filter k%,$(MAKEFLAGS)),$(NOFAIL),--stop)
 ifneq ($(or \
 	$(COMPOSER_DEBUGIT_ALL) ,\
@@ -596,13 +596,11 @@ endif
 # {{{1 Composer Options
 ################################################################################
 
-########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
-########################################
-
 #> update: includes duplicates
 #> update: COMPOSER_OPTIONS
 
+########################################
+## {{{2 Export
 ########################################
 
 ifneq ($(origin _EXPORT_DIRECTORY),override)
@@ -626,6 +624,8 @@ override _EXPORT_FIRE_PROJ		:=
 endif
 
 ########################################
+## {{{2 Control
+########################################
 
 #> update: READ_ALIASES
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
@@ -636,23 +636,18 @@ override COMPOSER_DOCOLOR		?= 1
 override COMPOSER_INCLUDE		?= 1
 override COMPOSER_DEPENDS		?=
 override COMPOSER_KEEPING		?= 100
+override COMPOSER_LOG			?= $(COMPOSER_LOG_DEFAULT)
+override COMPOSER_EXT			?= $(COMPOSER_EXT_DEFAULT)
 
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),$(SPECIAL_VAL))
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
 endif
 
-########################################
-
-override COMPOSER_LOG			?= $(COMPOSER_LOG_DEFAULT)
-
-override COMPOSER_EXT			?= $(COMPOSER_EXT_DEFAULT)
 #>ifeq ($(COMPOSER_EXT),)
 #>override COMPOSER_EXT			:= $(COMPOSER_EXT_DEFAULT)
 #>endif
 override COMPOSER_EXT			:= $(notdir $(COMPOSER_EXT))
-
-########################################
 
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
@@ -662,6 +657,8 @@ override COMPOSER_SUBDIRS		?=
 override COMPOSER_EXPORTS		?=
 override COMPOSER_IGNORES		?=
 
+########################################
+## {{{2 Formatting
 ########################################
 
 #> update: READ_ALIASES
@@ -707,6 +704,8 @@ override c_list_var_source		= $(strip $(if $($(if $(1),$(1),$(c_base)).$(if $(2)
 override c_list_file			:=
 
 ########################################
+## {{{2 Publish
+########################################
 
 override PUBLISH_KEEPING		:= 256
 
@@ -714,6 +713,8 @@ override PUBLISH_FILE_HEADER		:= _header$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_FOOTER		:= _footer$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
 
+########################################
+### {{{3 Config
 ########################################
 
 override PUBLISH_COMPOSER		:= 1
@@ -807,6 +808,8 @@ override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 
 ########################################
+### {{{3 Library
+########################################
 
 override LIBRARY_FOLDER			:= null
 override LIBRARY_FOLDER_ALT		:= _library
@@ -855,6 +858,10 @@ override LIBRARY_SITEMAP_SPACER_ALT	:= null
 ################################################################################
 # {{{1 Tooling Versions
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 override REPOSITORIES_LIST		:=
 
@@ -2573,6 +2580,7 @@ else
 override COMPOSER_TARGETS_AUTO		:= $(addsuffix .$(EXTN_OUTPUT),$(filter-out %.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_FILES)))
 endif
 
+#> update: [.]$(TARGETS)
 override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO),$(COMPOSER_TARGETS))
 override COMPOSER_SUBDIRS		:= $(patsubst .$(TARGETS),$(COMPOSER_CONTENTS_DIRS),$(COMPOSER_SUBDIRS))
 override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
@@ -3131,6 +3139,8 @@ $(HELPOUT)-targets_internal_%:
 ### {{{3 $(HELPOUT)-examples
 ########################################
 
+#> update: [.]$(TARGETS)
+
 .PHONY: $(HELPOUT)-examples_%
 $(HELPOUT)-examples_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
@@ -3654,7 +3664,6 @@ endef
 ########################################
 
 #WORKING:FIX
-#	includes duplicates
 #	why all the duplication in water.css for custom builds...?
 #		is this happening for the defaults as well...?
 #	items like README.site.html aren't getting metadata, because sitemap is only looking for *.md...
@@ -12273,6 +12282,8 @@ $(TESTING)-speed-done:
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
+#> update: [.]$(TARGETS)
+
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-Think
 $(TESTING)-$(COMPOSER_BASENAME):
@@ -12678,6 +12689,8 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS
 ########################################
 
+#> update: [.]$(TARGETS)
+
 .PHONY: $(TESTING)-COMPOSER_EXPORTS
 $(TESTING)-COMPOSER_EXPORTS: $(TESTING)-Think
 $(TESTING)-COMPOSER_EXPORTS:
@@ -12713,6 +12726,8 @@ $(TESTING)-COMPOSER_EXPORTS-done:
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_IGNORES
 ########################################
+
+#> update: [.]$(TARGETS)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-Think
@@ -15197,6 +15212,8 @@ $(PUBLISH)-$(EXAMPLE).$(COMPOSER_EXT_DEFAULT):
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE).$(PUBLISH_PAGEDIR)
 ########################################
+
+#> update: [.]$(TARGETS)
 
 override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE).$(notdir $(PUBLISH_PAGEDIR))
 
