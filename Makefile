@@ -769,6 +769,7 @@ override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
+override LIBRARY_DIGEST_TITLE_MOD	:=
 override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
 override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
@@ -791,6 +792,7 @@ override LIBRARY_LISTS_SPACER_ALT	:= null
 
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
+override LIBRARY_SITEMAP_TITLE_MOD	:=
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
@@ -3603,7 +3605,6 @@ endef
 #WORKING
 #	why all the duplication in water.css for custom builds...?
 #		is this happening for the defaults as well...?
-#	make it so that an empty digest_title/sitemap_title disables/removes them...?
 #	items like README.site.html aren't getting metadata, because sitemap is only looking for *.md...
 #		maybe we can somehow check for $(word 1,$(README.site.html)) variable and use that...?
 #		naw, just document... example of proper use is: _site/config/pages*
@@ -6733,7 +6734,7 @@ variables:
     folder:				$(PUBLISH_LIBRARY_ALT)
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE_ALT))
     append:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_APPEND_MOD),$(LIBRARY_APPEND_ALT))
-    digest_title:			"$(LIBRARY_DIGEST_TITLE_ALT)"
+    digest_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_TITLE_MOD),$(LIBRARY_DIGEST_TITLE_ALT))"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
     digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
@@ -6742,7 +6743,7 @@ variables:
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
     lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
-    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE_ALT)"
+    digest_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_TITLE_MOD),$(LIBRARY_SITEMAP_TITLE_ALT))"
     sitemap_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
 
