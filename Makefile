@@ -515,17 +515,11 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]
 # {{{1 Make Settings
 ################################################################################
 
-########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
-########################################
-
 .POSIX:
 .SUFFIXES:
 
 ########################################
-
-export MAKEFLAGS
-
+## {{{2 Flags
 ########################################
 
 #>override MAKEFILE			:= $(notdir $(firstword $(MAKEFILE_LIST)))
@@ -549,6 +543,10 @@ else
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=none
 endif
 
+export override MAKEFLAGS		:= $(MAKEFLAGS)
+
+########################################
+## {{{2 Jobs
 ########################################
 
 override MAKEJOBS_DEFAULT		:= 1
@@ -575,8 +573,10 @@ ifeq ($(MAKEJOBS),$(SPECIAL_VAL))
 override MAKEJOBS_OPTS			:= $(subst --jobs=$(MAKEJOBS),--jobs,$(MAKEJOBS_OPTS))
 endif
 
-override MAKEFLAGS			:= $(MAKEFLAGS) $(MAKEJOBS_OPTS)
+export override MAKEFLAGS		:= $(MAKEFLAGS) $(MAKEJOBS_OPTS)
 
+########################################
+## {{{2 System
 ########################################
 
 #> update: includes duplicates
@@ -595,6 +595,10 @@ endif
 ################################################################################
 # {{{1 Composer Options
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 #> update: includes duplicates
 #> update: COMPOSER_OPTIONS
@@ -2151,7 +2155,7 @@ ifneq ($(and \
 	$(filter $(MAKEJOBS_DEFAULT),$(MAKEJOBS)) \
 ),)
 override MAKEJOBS			:= $(TESTING_MAKEJOBS)
-override MAKEFLAGS			:= $(subst --jobs=$(MAKEJOBS_DEFAULT),--jobs=$(MAKEJOBS),$(MAKEFLAGS))
+export override MAKEFLAGS		:= $(subst --jobs=$(MAKEJOBS_DEFAULT),--jobs=$(MAKEJOBS),$(MAKEFLAGS))
 endif
 
 override TESTING_LOGFILE		:= $(COMPOSER_CMS)-$(TESTING).log
