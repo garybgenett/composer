@@ -3601,7 +3601,6 @@ endef
 ########################################
 
 #WORKING
-#	note: $(HEADERS)-note.*$(_H)
 #	why all the duplication in water.css for custom builds...?
 #		is this happening for the defaults as well...?
 #	make it so that an empty digest_title/sitemap_title disables/removes them...?
@@ -11262,6 +11261,7 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ########################################
 
 #> update: TYPE_TARGETS
+#> update: $(HEADERS)-note.*$(_H)
 
 .PHONY: $(CREATOR)
 $(CREATOR): .set_title-$(CREATOR)
@@ -13221,6 +13221,7 @@ $(TARGETS)-$(TARGETS):
 ########################################
 
 #> update: $(NOTHING)-%
+#> update: $(HEADERS)-note.*$(_H)
 
 .PHONY: $(DOSETUP)
 $(DOSETUP): .set_title-$(DOSETUP)
@@ -14053,6 +14054,7 @@ else ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
 endif
 	@$(ECHO) ""
 
+#> update: $(HEADERS)-note.*$(_H)
 .PHONY: $(PUBLISH)-library-$(NOTHING)
 $(PUBLISH)-library-$(NOTHING):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_YML)$(_D) $(MARKER) $(_H)$(PUBLISH)-library.folder,$(NOTHING))
@@ -14107,6 +14109,7 @@ $($(PUBLISH)-library-sitemap-src) \
 ########################################
 
 #> update: COMPOSER_OPTIONS
+#> update: $(HEADERS)-note.*$(_H)
 
 $(COMPOSER_LIBRARY)/$(MAKEFILE): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH),,\
 	$(COMPOSER_LIBRARY)/$(MAKEFILE) \
@@ -14182,6 +14185,7 @@ endef
 
 #> update: YQ_WRITE.*title
 #> update: join(.*)
+#> update: $(HEADERS)-note.*$(_H)
 
 $($(PUBLISH)-library-metadata): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH),,\
 	$($(PUBLISH)-library-metadata) \
@@ -14630,6 +14634,7 @@ override define $(PUBLISH)-library-sitemap-src-file =
 		$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))
 endef
 
+#> update: $(HEADERS)-note.*$(_H)
 $($(PUBLISH)-library-sitemap-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-src):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)
@@ -14783,6 +14788,7 @@ else ifeq ($(and \
 	$(wildcard $($(PUBLISH)-library-metadata)) ,\
 	$(wildcard $($(PUBLISH)-library-index)) \
 ),)
+#> update: $(HEADERS)-note.*$(_H)
 	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-metadata),$(NOTHING)))
 	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-index),$(NOTHING)))
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(patsubst .%,%,$(NOTHING)))
@@ -15331,6 +15337,8 @@ endif
 ########################################
 ## {{{2 $(INSTALL)
 ########################################
+
+#> update: $(HEADERS)-note.*$(_H)
 
 .PHONY: $(INSTALL)
 $(INSTALL): .set_title-$(INSTALL)
