@@ -1466,10 +1466,6 @@ endef
 # {{{1 Pandoc Options
 ################################################################################
 
-########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
-########################################
-
 #>override INPUT			:= commonmark
 override INPUT				:= markdown
 override TMPL_OUTPUT			:= $(c_type)
@@ -1539,6 +1535,10 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 ## {{{2 CSS
 ########################################
 
+########################################
+### {{{3 Icons
+########################################
+
 override CSS_ICON_MENU			:= $(FONTAWES_DIR)/svgs/solid/list-ul.svg
 override CSS_ICON_ARROW_U		:= $(FONTAWES_DIR)/svgs/solid/chevron-up.svg
 override CSS_ICON_ARROW_D		:= $(FONTAWES_DIR)/svgs/solid/chevron-down.svg
@@ -1561,6 +1561,8 @@ override CSS_ICONS = $(subst |, ,$(subst $(NULL) ,,$(strip \
 	|github		;svg	;$(CSS_ICON_GITHUB)	;author		;GitHub					;https://github.com \
 )))
 
+########################################
+### {{{3 Themes
 ########################################
 
 override BOOTSWATCH_CSS_LIGHT		:= $(BOOTSWATCH_DIR)/dist/flatly/bootstrap.css
@@ -1637,6 +1639,8 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 )))
 
 ########################################
+### {{{3 CSS Selector
+########################################
 
 override c_css_select_theme = $(strip \
 $(subst $(NULL) ,,\
@@ -1708,12 +1712,18 @@ endif
 ## {{{2 Command
 ########################################
 
+########################################
+### {{{3 Converters
+########################################
+
 override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
 override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_HTML)"
 override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_TEXT)"
 override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json"
 override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
+########################################
+### {{{3 Macros
 ########################################
 
 #> update: TYPE_TARGETS
@@ -1789,6 +1799,8 @@ override PANDOC_FILES_CSS = $(strip \
 	) \
 )
 
+########################################
+### {{{3 Options
 ########################################
 
 #> update: TYPE_TARGETS
@@ -1874,12 +1886,18 @@ override PANDOC_OPTIONS = $(strip \
 )
 
 ########################################
+### {{{3 Error
+########################################
 
 override PANDOC_OPTIONS_ERROR		:=
 
 ################################################################################
 # {{{1 Composer Operation
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 override ENV_MAKE			= $(ENV) $(REALMAKE) $(call MAKEFLAGS_ENV) \
 	$(if $(filter $(NOTHING),$(1)),,MAKEJOBS="$(1)") \
