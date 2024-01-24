@@ -859,10 +859,6 @@ override LIBRARY_SITEMAP_SPACER_ALT	:= null
 # {{{1 Tooling Versions
 ################################################################################
 
-########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
-########################################
-
 override REPOSITORIES_LIST		:=
 
 override OS_VAR_LIST			:= LNX WIN MAC
@@ -870,6 +866,8 @@ override OS_VAR_LNX			:= linux
 override OS_VAR_WIN			:= windows
 override OS_VAR_MAC			:= macos
 
+########################################
+## {{{2 Pandoc
 ########################################
 
 override REPOSITORIES_LIST		+= PANDOC
@@ -912,7 +910,10 @@ endif
 override PDF_LATEX_NAME			:= TeX Live
 override PDF_LATEX_HOME			:= https://tug.org/texlive
 override PDF_LATEX			:= pdflatex
+override PDF_LATEX_VER			:= 2021 3.141592653-2.6-1.40.22
 
+########################################
+## {{{2 YQ
 ########################################
 
 override REPOSITORIES_LIST		+= YQ
@@ -954,6 +955,8 @@ override YQ_BIN				:= $(YQ_DIR)/$(YQ_MAC_BIN)
 endif
 
 ########################################
+## {{{2 Bootstrap
+########################################
 
 override REPOSITORIES_LIST		+= BOOTSTRAP
 override BOOTSTRAP_NAME			:= Bootstrap
@@ -971,6 +974,8 @@ override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
 override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
 ########################################
+## {{{2 Bootlint
+########################################
 
 override REPOSITORIES_LIST		+= BOOTLINT
 override BOOTLINT_NAME			:= Bootlint
@@ -983,6 +988,8 @@ override BOOTLINT_LIC			:= MIT
 override BOOTLINT_SRC			:= https://github.com/twbs/bootlint.git
 override BOOTLINT_DIR			:= $(COMPOSER_DIR)/bootlint
 
+########################################
+## {{{2 Bootswatch
 ########################################
 
 override REPOSITORIES_LIST		+= BOOTSWATCH
@@ -997,9 +1004,11 @@ override BOOTSWATCH_SRC			:= https://github.com/thomaspark/bootswatch.git
 override BOOTSWATCH_DIR			:= $(COMPOSER_DIR)/bootswatch
 
 ########################################
+## {{{2 Font Awesome
+########################################
 
 override REPOSITORIES_LIST		+= FONTAWES
-override FONTAWES_NAME			:= Font-Awesome
+override FONTAWES_NAME			:= Font Awesome
 override FONTAWES_HOME			:= https://fontawesome.com
 
 ifneq ($(origin FONTAWES_CMT),override)
@@ -1009,6 +1018,8 @@ override FONTAWES_LIC			:= MIT / CC-BY
 override FONTAWES_SRC			:= https://github.com/FortAwesome/Font-Awesome.git
 override FONTAWES_DIR			:= $(COMPOSER_DIR)/font-awesome
 
+########################################
+## {{{2 Water.css
 ########################################
 
 override REPOSITORIES_LIST		+= WATERCSS
@@ -1023,6 +1034,8 @@ override WATERCSS_LIC			:= MIT
 override WATERCSS_SRC			:= https://github.com/kognise/water.css.git
 override WATERCSS_DIR			:= $(COMPOSER_DIR)/water.css
 
+########################################
+## {{{2 Markdown Viewer
 ########################################
 
 override REPOSITORIES_LIST		+= MDVIEWER
@@ -1043,6 +1056,8 @@ override MDVIEWER_MANIFEST		:= manifest.firefox.json
 override MDVIEWER_FIX_SASS_VER		:= ^1.0.0
 
 ########################################
+## {{{2 Markdown Viewer (Themes)
+########################################
 
 override REPOSITORIES_LIST		+= MDTHEMES
 override MDTHEMES_NAME			:= Markdown Themes
@@ -1057,6 +1072,8 @@ override MDTHEMES_SRC			:= https://github.com/simov/markdown-themes.git
 override MDTHEMES_DIR			:= $(COMPOSER_DIR)/markdown-themes
 
 ########################################
+## {{{2 Reveal.js
+########################################
 
 override REPOSITORIES_LIST		+= REVEALJS
 override REVEALJS_NAME			:= Reveal.js
@@ -1069,6 +1086,8 @@ override REVEALJS_LIC			:= MIT
 override REVEALJS_SRC			:= https://github.com/hakimel/reveal.js.git
 override REVEALJS_DIR			:= $(COMPOSER_DIR)/reveal.js
 
+########################################
+## {{{2 Google Firebase
 ########################################
 
 override REPOSITORIES_LIST		+= FIREBASE
@@ -1118,6 +1137,8 @@ override define FIREBASE_IGNORE =
 endef
 
 ########################################
+## {{{2 External Tools
+########################################
 
 override BASH_VER			:= 5.1.16
 override COREUTILS_VER			:= 8.32
@@ -1127,7 +1148,7 @@ override SED_VER			:= 4.8
 override MAKE_VER			:= 4.3
 override PANDOC_VER			:= $(PANDOC_VER)
 override YQ_VER				:= $(YQ_VER)
-override PDF_LATEX_VER			:= 2021 3.141592653-2.6-1.40.22
+override PDF_LATEX_VER			:= $(PDF_LATEX_VER)
 
 override GIT_VER			:= 2.37.4
 override DIFFUTILS_VER			:= 3.8
@@ -1145,6 +1166,10 @@ override FIREBASE_VER			:= $(FIREBASE_VER)
 ################################################################################
 # {{{1 Tooling Options
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+########################################
 
 #> update: includes duplicates
 
