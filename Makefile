@@ -2973,38 +2973,12 @@ endef
 ################################################################################
 
 ########################################
-## {{{2 WORKING:FIX
+## {{{2 #WORKING:FIX
 ########################################
+#	*-$(@) / *-% = standardize labeling and order...
 
 ########################################
 ## {{{2 $(HELPOUT)
-########################################
-
-.PHONY: $(HELPOUT)-title_%
-$(HELPOUT)-title_%:
-#>	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
-	@$(call TITLE_LN,-1,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
-
-.PHONY: $(HELPOUT)-closing_title_%
-$(HELPOUT)-closing_title_%:
-	@$(call TITLE_LN,$(*),Final Notes,1)
-
-.PHONY: $(HELPOUT)-usage
-$(HELPOUT)-usage:
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f $(EXPAND)/$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<filename>.<extension>"
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f $(EXPAND)/$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<target>"
-
-.PHONY: $(HELPOUT)-footer
-$(HELPOUT)-footer:
-ifeq ($(COMPOSER_DOITALL_$(HELPOUT)),$(TYPE_PRES))
-	@$(call TITLE_LN,2,$(COMPOSER_CLOSING))
-else
-	@$(ENDOLINE)
-	@$(LINERULE)
-	@$(ENDOLINE)
-endif
-	@$(PRINT) "$(_H)$(COMPOSER_TAGLINE)$(_D)"
-
 ########################################
 
 .PHONY: $(HELPOUT)
@@ -3037,6 +3011,35 @@ endif
 $(HELPOUT): $(HELPOUT)-footer
 $(HELPOUT):
 	@$(ECHO) ""
+
+########################################
+### {{{3 $(HELPOUT)-$(@)
+########################################
+
+.PHONY: $(HELPOUT)-title_%
+$(HELPOUT)-title_%:
+#>	@$(call TITLE_LN,0,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
+	@$(call TITLE_LN,-1,$(COMPOSER_FULLNAME) $(DIVIDE) $(*))
+
+.PHONY: $(HELPOUT)-closing_title_%
+$(HELPOUT)-closing_title_%:
+	@$(call TITLE_LN,$(*),Final Notes,1)
+
+.PHONY: $(HELPOUT)-usage
+$(HELPOUT)-usage:
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f $(EXPAND)/$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<filename>.<extension>"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)[-f $(EXPAND)/$(MAKEFILE)]$(_D) $(_E)[variables]$(_D) $(_M)<target>"
+
+.PHONY: $(HELPOUT)-footer
+$(HELPOUT)-footer:
+ifeq ($(COMPOSER_DOITALL_$(HELPOUT)),$(TYPE_PRES))
+	@$(call TITLE_LN,2,$(COMPOSER_CLOSING))
+else
+	@$(ENDOLINE)
+	@$(LINERULE)
+	@$(ENDOLINE)
+endif
+	@$(PRINT) "$(_H)$(COMPOSER_TAGLINE)$(_D)"
 
 ########################################
 ### {{{3 $(HELPOUT)-variables
@@ -3308,7 +3311,7 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(HEADERS)-$(*)
 	@$(call TITLE_LN,1,$(COMPOSER_BASENAME) Operation,1)
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-workflow)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-format)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-formatting)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-settings)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-orders)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Specifying Dependencies)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-depends)	; $(call TITLE_END)
@@ -3361,8 +3364,10 @@ $(HELPOUT)-$(TYPE_PRES):
 		| $(SED) "/^[-][-][-][-]/,+1d"
 
 ########################################
-### {{{3 $(HELPOUT)-$(HELPOUT)
+### {{{3 $(HELPOUT)-$(PRINTER)
 ########################################
+
+#> $(HELPOUT)-$(TARGETS) > $(HELPOUT)-$(PRINTER)
 
 .PHONY: $(HELPOUT)-$(PRINTER)
 $(HELPOUT)-$(PRINTER):
@@ -3414,6 +3419,12 @@ $(HELPOUT)-$(PRINTER):
 		)
 	@$(call TITLE_END)
 #>	@$(call TITLE_END)
+
+########################################
+### {{{3 $(HELPOUT)-$(TARGETS)
+########################################
+
+#> $(HELPOUT)-$(TARGETS) > $(HELPOUT)-$(PRINTER)
 
 .PHONY: $(HELPOUT)-$(TARGETS)
 $(HELPOUT)-$(TARGETS):
@@ -3469,6 +3480,10 @@ ifneq ($(COMPOSER_DEBUGIT),)
 		)
 endif
 
+########################################
+#### {{{4 $(HELPOUT)-$(TARGETS)-%
+########################################
+
 override define $(HELPOUT)-$(TARGETS)-titles =
 	$(SED) -n -e "s|^.+TITLE_LN[,][^,]+[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
 	| $(SED) \
@@ -3512,7 +3527,7 @@ override define $(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-title
+### {{{3 $(HELPOUT)-$(DOITALL)-%
 ########################################
 
 #> update: COMPOSER_TARGETS.*=
@@ -3759,7 +3774,7 @@ $(_H)**Welcome to [$(COMPOSER_BASENAME)].  $(COMPOSER_TAGLINE)**$(_D)
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-format
+### {{{3 $(HELPOUT)-$(DOITALL)-formatting
 ########################################
 
 #WORKING:FIX
@@ -3890,13 +3905,11 @@ endef
 # epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_DAT)
 # header-includes
 
+################################################################################
+
 #> update: COMPOSER_TARGETS.*=
 
-#>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_PPTX)$(_S)]($(_S)$(OUT_README).$(EXTN_PPTX)$(_S))$(_D)
-#>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_TEXT)$(_S)]($(_S)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
-#>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_LINT)$(_S)]($(_S)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
-
-override define $(HELPOUT)-$(DOITALL)-format =
+override define $(HELPOUT)-$(DOITALL)-formatting =
 $(_F)
 #WORKING:DOCS###################################################################
 $(_D)
@@ -3922,8 +3935,24 @@ given instance of $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
 Note that all the files referenced below are embedded in the '$(_E)Embedded Files$(_D)'
 section of the `$(_M)$(MAKEFILE)$(_D)`.  They are exported by the $(_C)[$(DISTRIB)]$(_D) target $(_E)(using
-[$(CREATOR)])$(_D), and will be overwritten whenever it is run.
+[$(CREATOR)])$(_D), and will be overwritten whenever it is run.$(foreach FILE,\
+websites \
+html \
+pdf \
+epub \
+revealjs \
+office \
+text \
+pandoc \
+,\
+$(call NEWLINE)$(call NEWLINE)$(call $(HELPOUT)-$(DOITALL)-formatting-$(FILE)))
+endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-websites
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-websites =
 $(call $(HELPOUT)-$(DOITALL)-section,Static Websites)
 
 $(_C)[Bootstrap]$(_D) is a leading web development framework, capable of building static
@@ -3953,7 +3982,13 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.h
 $(_S)--$(_D) $(_N)Examples:$(_D)
     $(_S)[$(_N)Example Website$(_S)]($(_E)$(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))$(_S))$(_D)
   $(_S)/$(_D) $(_S)[$(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S)]($(_S)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
+endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-html
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-html =
 $(call $(HELPOUT)-$(DOITALL)-section,HTML)
 
 In addition to being a helpful real-time rendering tool, $(_C)[Markdown Viewer]$(_D)
@@ -3965,7 +4000,13 @@ Information on installing $(_C)[Markdown Viewer]$(_D) for use as a $(_C)[Markdow
 tool is in $(_C)[Requirements]$(_D).
 
 $(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_HTML)$(_S)]($(_S)$(OUT_README).$(EXTN_HTML)$(_S))$(_D)
+endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-pdf
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-pdf =
 $(call $(HELPOUT)-$(DOITALL)-section,PDF)
 
 The default formatting for $(_C)[PDF]$(_D) is geared towards academic papers and the
@@ -3981,14 +4022,26 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_LPDF
 #	$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(CUSTOM_LPDF_LATEX))$(_D)
 
 $(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_LPDF)$(_S)]($(_S)$(OUT_README).$(EXTN_LPDF)$(_S))$(_D)
+endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-epub
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-epub =
 $(call $(HELPOUT)-$(DOITALL)-section,EPUB)
 
 The $(_C)[EPUB]$(_D) format is essentially packaged $(_C)[HTML]$(_D), so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses the same
 $(_C)[Markdown Viewer]$(_D) $(_M)CSS$(_D) stylesheets for it.
 
 $(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_EPUB)$(_S)]($(_S)$(OUT_README).$(EXTN_EPUB)$(_S))$(_D)
+endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-revealjs
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-revealjs =
 $(call $(HELPOUT)-$(DOITALL)-section,Reveal.js Presentations)
 
 The $(_M)CSS$(_D) for $(_C)[Reveal.js]$(_D) presentations has been modified to create a more
@@ -4022,7 +4075,13 @@ $(CODEBLOCK)$(_C)echo$(_D) $(_N)'$(_E)override c_type := $(TYPE_PRES)'$(_D) >>$(
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)$(_D)
 
 $(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_PRES)$(_S)]($(_S)$(OUT_README).$(EXTN_PRES)$(_S))$(_D)
+endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-office
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-office =
 $(call $(HELPOUT)-$(DOITALL)-section,Microsoft Word & PowerPoint)
 
 The internal $(_C)[Pandoc]$(_D) templates for these are exported by $(_C)[$(COMPOSER_BASENAME)]$(_D), so they
@@ -4034,7 +4093,14 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/reference.$(EX
 They are not currently modified by $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
 $(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_DOCX)$(_S)]($(_S)$(OUT_README).$(EXTN_DOCX)$(_S))$(_D)
+endef
+#>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_PPTX)$(_S)]($(_S)$(OUT_README).$(EXTN_PPTX)$(_S))$(_D)
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-text
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-text =
 $(call $(HELPOUT)-$(DOITALL)-section,Plain Text)
 
 This output format is still parsable by $(_C)[Pandoc]$(_D) as valid $(_C)[Markdown]$(_D), but is
@@ -4045,7 +4111,14 @@ be in a universally accepted text layout and presentation.
 
 $(_C)[$(COMPOSER_BASENAME)]$(_D) currently does not modify this format, other than using the
 `$(_M)--columns=$(COLUMNS)$(_D)` and `$(_M)--wrap=auto$(_D)` options to $(_C)[Pandoc]$(_D).
+endef
+#>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_TEXT)$(_S)]($(_S)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting-pandoc
+########################################
+
+override define $(HELPOUT)-$(DOITALL)-formatting-pandoc =
 $(call $(HELPOUT)-$(DOITALL)-section,Pandoc Markdown)
 
 Output $(_C)[Markdown]$(_D) that is specific to $(_C)[Pandoc]$(_D).  This is for linting or creating
@@ -4053,6 +4126,7 @@ standardized versions of source files for shared archives.
 
 Due to the expressed purposes of this format, $(_C)[$(COMPOSER_BASENAME)]$(_D) will never modify it.
 endef
+#>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_LINT)$(_S)]($(_S)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-settings
@@ -4064,6 +4138,9 @@ endef
 #		$(COMPOSER) upgrade = use $(PRINTER) to check files to update...
 #	create "upgrades/updates" section...
 #		duplicate or reference this
+
+#WORK
+#	break this up into \{\{\{4 sections, like *-formatting
 
 override define $(HELPOUT)-$(DOITALL)-settings =
 $(_F)
@@ -4957,6 +5034,10 @@ endef
 
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
+########################################
+
+########################################
+#### {{{4 #WORKING:FIX
 ########################################
 
 override PUBLISH_PAGE_1_NAME		:= Introduction
@@ -6017,6 +6098,10 @@ endef
 ################################################################################
 # {{{1 Embedded Files
 ################################################################################
+
+########################################
+## {{{2 #WORKING:FIX
+########################################
 
 override DIST_LOGO_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==
 override DIST_ICON_v1.0			:= $(DIST_LOGO_v1.0)
@@ -11117,6 +11202,9 @@ $(LISTING):
 ########################################
 ## {{{2 $(NOTHING)
 ########################################
+
+#WORK
+#	move NOTHING_IGNORES to elsewhere...?
 
 #> validate: grep -E "[$][(]NOTHING[)][-]" Makefile
 override NOTHING_IGNORES := \
