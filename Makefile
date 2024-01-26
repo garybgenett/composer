@@ -1931,6 +1931,10 @@ override $(PUBLISH)-$(DEBUGIT)-output	:= $(if $(COMPOSER_DEBUGIT),$(if $(COMPOSE
 
 #> update: COMPOSER_OPTIONS
 
+########################################
+### {{{3 Global / Local
+########################################
+
 override COMPOSER_OPTIONS_GLOBAL := \
 	MAKEJOBS \
 	COMPOSER_DEBUGIT \
@@ -1962,6 +1966,10 @@ override COMPOSER_OPTIONS_LOCAL := \
 	c_margin_left \
 	c_margin_right \
 	c_options \
+
+########################################
+### {{{3 Make / Pandoc
+########################################
 
 override COMPOSER_OPTIONS_MAKE := \
 	MAKEJOBS \
@@ -2005,6 +2013,10 @@ override COMPOSER_OPTIONS_PANDOC := \
 	) \
 	c_options \
 
+########################################
+### {{{3 Publish
+########################################
+
 override COMPOSER_OPTIONS_PUBLISH_ENV := \
 	MAKEJOBS \
 	COMPOSER_DEBUGIT \
@@ -2021,12 +2033,9 @@ override COMPOSER_OPTIONS_PUBLISH := \
 	c_site$(TOKEN)1 \
 	c_type$(TOKEN)$(EXTN_HTML) \
 
-$(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
-$(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
-$(if $(COMPOSER_DEBUGIT_ALL),\
-	$(info #> COMPOSER_OPTIONS_GLOBAL	[$(strip $(COMPOSER_OPTIONS_GLOBAL))]) \
-	$(info #> COMPOSER_OPTIONS_LOCAL	[$(strip $(COMPOSER_OPTIONS_LOCAL))]) \
-)
+########################################
+### {{{3 List & Export
+########################################
 
 override COMPOSER_OPTIONS := \
 	$(shell $(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE,,1).*$$|\1|gp" $(COMPOSER) \
@@ -2043,20 +2052,6 @@ override COMPOSER_OPTIONS := \
 			"/^c_margin_.+$$/d" \
 	) \
 )
-$(foreach FILE,$(COMPOSER_OPTIONS),\
-	$(if $(or \
-		$(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)) ,\
-		$(filter $(FILE),$(COMPOSER_OPTIONS_LOCAL)) ,\
-		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS (scope): $(FILE)) \
-	) \
-)
-$(foreach FILE,$(COMPOSER_OPTIONS),\
-	$(if $(or \
-		$(filter $(FILE),$(COMPOSER_OPTIONS_MAKE)) ,\
-		$(filter $(FILE),$(COMPOSER_OPTIONS_PANDOC)) ,\
-		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS (headers): $(FILE)) \
-	) \
-)
 
 #>		$(FILE)="$($(FILE))"
 override COMPOSER_OPTIONS_EXPORT = \
@@ -2068,8 +2063,37 @@ override COMPOSER_OPTIONS_EXPORT = \
 	)
 
 ########################################
+### {{{3 Verify
+########################################
+
+$(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
+$(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
+$(if $(COMPOSER_DEBUGIT_ALL),\
+	$(info #> COMPOSER_OPTIONS_GLOBAL	[$(strip $(COMPOSER_OPTIONS_GLOBAL))]) \
+	$(info #> COMPOSER_OPTIONS_LOCAL	[$(strip $(COMPOSER_OPTIONS_LOCAL))]) \
+)
+
+$(foreach FILE,$(COMPOSER_OPTIONS),\
+	$(if $(or \
+		$(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)) ,\
+		$(filter $(FILE),$(COMPOSER_OPTIONS_LOCAL)) ,\
+		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS (scope): $(FILE)) \
+	) \
+)
+
+$(foreach FILE,$(COMPOSER_OPTIONS),\
+	$(if $(or \
+		$(filter $(FILE),$(COMPOSER_OPTIONS_MAKE)) ,\
+		$(filter $(FILE),$(COMPOSER_OPTIONS_PANDOC)) ,\
+		),,$(error #> $(COMPOSER_FULLNAME): COMPOSER_OPTIONS (headers): $(FILE)) \
+	) \
+)
+
+########################################
 ## {{{2 Targets
 ########################################
+
+#WORKING:FIX \{\{\{ verification pass...
 
 #> update: includes duplicates
 
