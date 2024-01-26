@@ -1212,8 +1212,8 @@ override WC_CHAR			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --bytes
 override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --words
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
-override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),$(MAKE))
 override DOMAKE				:= $(notdir $(MAKE))
+override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),$(DOMAKE))
 
 override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
 override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
@@ -1896,7 +1896,7 @@ override PANDOC_OPTIONS_ERROR		:=
 ################################################################################
 
 ########################################
-## {{{2 WORKING:FIX add further header divisions to break folding into smaller and smaller chunks...
+## {{{2 Macros
 ########################################
 
 override ENV_MAKE			= $(ENV) $(REALMAKE) $(call MAKEFLAGS_ENV) \
@@ -2109,6 +2109,8 @@ override DOITALL			:= all
 override SUBDIRS			:= subdirs
 override PRINTER			:= list
 
+override DOFORCE			:= force
+
 #> validate: grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> validate: grep -E "[)]-[a-z]+" Makefile
 #> validate: make .all_targets | sed -r "s|[:].*$||g" | sort -u
@@ -2164,9 +2166,7 @@ override COMPOSER_RESERVED_SKIP := \
 	$(SUBDIRS) \
 
 ########################################
-
-override DOFORCE			:= force
-
+## {{{2 Reserved
 ########################################
 
 override define COMPOSER_RESERVED_DOITALL =
@@ -2225,6 +2225,10 @@ override TESTING_MAKEFILE		:= $(TESTING_DIR)/$(COMPOSER_CMS)/$(MAKEFILE)
 
 ########################################
 ## {{{2 Publish
+########################################
+
+########################################
+### {{{3 YAML Macros
 ########################################
 
 override define COMPOSER_YML_DATA_SKEL =
@@ -2335,6 +2339,10 @@ override define COMPOSER_YML_DATA_PARSE =
 endef
 
 ########################################
+### {{{3 Caches
+########################################
+
+#> COMPOSER_YML_DATA > $(PUBLISH)-cache > $(PUBLISH)-library > COMPOSER_LIBRARY_AUTO_UPDATE
 
 override $(PUBLISH)-cache-root		:= $(COMPOSER_TMP)/$(PUBLISH)-cache
 override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)
@@ -2367,6 +2375,10 @@ override $(PUBLISH)-caches := \
 	)
 
 ########################################
+### {{{3 Library
+########################################
+
+#> COMPOSER_YML_DATA > $(PUBLISH)-cache > $(PUBLISH)-library > COMPOSER_LIBRARY_AUTO_UPDATE
 
 ifneq ($(COMPOSER_YML_LIST),)
 override COMPOSER_LIBRARY_DIR		:=
@@ -2404,6 +2416,10 @@ $(NULL)
 endef
 
 ########################################
+### {{{3 YAML Data
+########################################
+
+#> COMPOSER_YML_DATA > $(PUBLISH)-cache > $(PUBLISH)-library > COMPOSER_LIBRARY_AUTO_UPDATE
 
 override COMPOSER_YML_DATA		:= $(strip $(call COMPOSER_YML_DATA_SKEL))
 ifneq ($(COMPOSER_YML_LIST),)
@@ -2438,7 +2454,28 @@ override COMPOSER_YML_DATA_METALIST := $(shell \
 	| $(SED) "/^null$$/d" \
 )
 
+########################################
+### {{{3 Library Auto Update
+########################################
+
+#> COMPOSER_YML_DATA > $(PUBLISH)-cache > $(PUBLISH)-library > COMPOSER_LIBRARY_AUTO_UPDATE
+
+override COMPOSER_LIBRARY_AUTO_UPDATE	:=
+ifneq ($(and \
+	$(c_site) ,\
+	$(COMPOSER_LIBRARY) ,\
+	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) ,\
+	$(or \
+		$(call COMPOSER_YML_DATA_VAL,library.auto_update) ,\
+		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
+	) \
+),)
+override COMPOSER_LIBRARY_AUTO_UPDATE	:= 1
+endif
+
 #######################################
+### {{{3 Build Script
+########################################
 
 override PUBLISH_CMD_ROOT		:= <$(COMPOSER_TINYNAME)_root>
 override PUBLISH_CMD_BEG		:= <!-- $(COMPOSER_TINYNAME) $(MARKER)
@@ -2529,6 +2566,8 @@ override PUBLISH_SH_HELPERS := \
 	readtime \
 
 ########################################
+### {{{3 Example Site
+########################################
 
 override PUBLISH_ROOT			:= $(CURDIR)/_$(PUBLISH)
 override PUBLISH_INDEX			:= index
@@ -2587,29 +2626,16 @@ override PUBLISH_DIRS_DEBUGIT := \
 #	$(PUBLISH_SHOWDIR)/$(DOITALL) \
 
 ########################################
-
-override COMPOSER_LIBRARY_AUTO_UPDATE	:=
-ifneq ($(and \
-	$(c_site) ,\
-	$(COMPOSER_LIBRARY) ,\
-	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) ,\
-	$(or \
-		$(call COMPOSER_YML_DATA_VAL,library.auto_update) ,\
-		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
-	) \
-),)
-override COMPOSER_LIBRARY_AUTO_UPDATE	:= 1
-endif
+## {{{2 Filesystem
+########################################
 
 ########################################
-## {{{2 Filesystem
+### {{{3 Setup
 ########################################
 
 override COMPOSER_ROOT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_ROOT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 override COMPOSER_EXPORT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_EXPORT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 override COMPOSER_LIBRARY_ROOT_REGEX	:= $(shell $(ECHO) "$(COMPOSER_LIBRARY_ROOT)"	| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-
-########################################
 
 #> update: TYPE_TARGETS
 override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
@@ -2619,6 +2645,8 @@ override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT))$(if $(COMPOSER_IGNORE
 endif
 endif
 
+########################################
+### {{{3 Targets
 ########################################
 
 #> update: COMPOSER_TARGETS.*=
@@ -2684,6 +2712,8 @@ ifeq ($(COMPOSER_EXPORTS),)
 override COMPOSER_EXPORTS		:= $(COMPOSER_EXPORTS_DEFAULT)
 endif
 
+########################################
+### {{{3 Testing
 ########################################
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
@@ -2782,8 +2812,9 @@ endef
 ## {{{2 $(COMPOSER_PANDOC)
 ########################################
 
-#> update: TYPE_TARGETS
-#> update: PANDOC_FILES
+########################################
+### {{{3 Files
+########################################
 
 #> update: join(.*)
 override INCLUDE_FILE_HEADER		:=
@@ -2796,6 +2827,9 @@ override INCLUDE_FILE_FOOTER		:= $(call COMPOSER_YML_DATA_VAL,config.footer,$(SP
 override INCLUDE_FILE_APPEND		:= $(call COMPOSER_YML_DATA_VAL,library.append,$(SPECIAL_VAL), $(NULL))
 endif
 endif
+
+#> update: TYPE_TARGETS
+#> update: PANDOC_FILES
 
 override PANDOC_FILES_TYPE = $(strip \
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
@@ -2821,6 +2855,10 @@ override PANDOC_FILES_SPLIT = $(strip \
 		) \
 	) \
 )
+
+########################################
+### {{{3 Dependencies
+########################################
 
 #> update: WILDCARD_YML
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
@@ -2905,6 +2943,8 @@ $(SUBDIRS)-$(DOITALL) $(addprefix $(SUBDIRS)-$(DOITALL)-,$(COMPOSER_SUBDIRS)) \
 endif
 
 ########################################
+### {{{3 $(COMPOSER_PANDOC)-%
+########################################
 
 override define $(COMPOSER_PANDOC)-$(NOTHING) =
 	if	[ -z "$(c_type)" ] || \
@@ -2931,6 +2971,10 @@ endef
 ################################################################################
 # {{{1 Documentation
 ################################################################################
+
+########################################
+## {{{2 WORKING:FIX
+########################################
 
 ########################################
 ## {{{2 $(HELPOUT)
