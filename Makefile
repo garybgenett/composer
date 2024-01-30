@@ -716,7 +716,7 @@ override PUBLISH_FILE_FOOTER		:= _footer$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
 
 ########################################
-### {{{3 Config
+### {{{3 Configuration
 ########################################
 
 override PUBLISH_COMPOSER		:= 1
@@ -2252,7 +2252,7 @@ endif
 ########################################
 
 ########################################
-### {{{3 YAML Macros
+### {{{3 YAML Configuration
 ########################################
 
 override define COMPOSER_YML_DATA_SKEL =
@@ -2332,10 +2332,14 @@ override define COMPOSER_YML_DATA_SKEL =
 }}
 endef
 
-override define COMPOSER_YML_DATA_METALIST_SKEL =
+override define COMPOSER_YML_DATA_SKEL_METALIST =
   title:				{ null: [] },
   date:				{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),$(NEWLINE)  $(FILE): { null: [] },)
 endef
+
+########################################
+### {{{3 YAML Macros
+########################################
 
 #> update: COMPOSER_YML_DATA_VAL
 #>	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null
@@ -2653,8 +2657,6 @@ override PUBLISH_DIRS_DEBUGIT := \
 ## {{{2 Filesystem
 ########################################
 
-#WORKING:FIX
-
 ########################################
 ### {{{3 Setup
 ########################################
@@ -2664,39 +2666,32 @@ override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$
 override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
 override COMPOSER_CONTENTS_EXT		:= $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))
 
+ifneq ($(COMPOSER_EXT),)
+override COMPOSER_TARGETS_DEFAULT	:= $(patsubst %$(COMPOSER_EXT),%.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_EXT))
+else
+override COMPOSER_TARGETS_DEFAULT	:= $(addsuffix .$(EXTN_OUTPUT),$(filter-out %.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_FILES)))
+endif
+override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
+
 override COMPOSER_ROOT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_ROOT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 override COMPOSER_EXPORT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_EXPORT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 override COMPOSER_LIBRARY_ROOT_REGEX	:= $(shell $(ECHO) "$(COMPOSER_LIBRARY_ROOT)"	| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 
-#> update: TYPE_TARGETS
-override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
-ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
-ifeq ($(filter $(notdir $(COMPOSER_EXPORT)),$(COMPOSER_IGNORES)),)
-override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT))$(if $(COMPOSER_IGNORES), $(COMPOSER_IGNORES))
-endif
-endif
-
 ########################################
-### {{{3 Targets
+### {{{3 Configuration
 ########################################
 
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
 
-ifneq ($(COMPOSER_EXT),)
-override COMPOSER_TARGETS_AUTO		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_EXT))
-else
-override COMPOSER_TARGETS_AUTO		:= $(addsuffix .$(EXTN_OUTPUT),$(filter-out %.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_FILES)))
-endif
-
 #> update: [.]$(TARGETS)
-override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO),$(COMPOSER_TARGETS))
+override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_DEFAULT),$(COMPOSER_TARGETS))
 override COMPOSER_SUBDIRS		:= $(patsubst .$(TARGETS),$(COMPOSER_CONTENTS_DIRS),$(COMPOSER_SUBDIRS))
 override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
-override COMPOSER_IGNORES		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_AUTO) $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_IGNORES))
+override COMPOSER_IGNORES		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_DEFAULT) $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_IGNORES))
 
 ifeq ($(COMPOSER_TARGETS),)
-override COMPOSER_TARGETS		:= $(COMPOSER_TARGETS_AUTO)
+override COMPOSER_TARGETS		:= $(COMPOSER_TARGETS_DEFAULT)
 endif
 ifeq ($(COMPOSER_SUBDIRS),)
 override COMPOSER_SUBDIRS		:= $(COMPOSER_CONTENTS_DIRS)
@@ -2736,6 +2731,13 @@ endif
 
 ifeq ($(COMPOSER_EXPORTS),)
 override COMPOSER_EXPORTS		:= $(COMPOSER_EXPORTS_DEFAULT)
+endif
+
+#> update: TYPE_TARGETS
+ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
+ifeq ($(filter $(notdir $(COMPOSER_EXPORT)),$(COMPOSER_IGNORES)),)
+override COMPOSER_IGNORES		:= $(notdir $(COMPOSER_EXPORT))$(if $(COMPOSER_IGNORES), $(COMPOSER_IGNORES))
+endif
 endif
 
 ########################################
@@ -6965,7 +6967,7 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 $(call COMPOSER_YML_DATA_SKEL)
 
 #>metalist: {
-#>$(subst $(NEWLINE),$(NEWLINE)#>,$(call COMPOSER_YML_DATA_METALIST_SKEL))
+#>$(subst $(NEWLINE),$(NEWLINE)#>,$(call COMPOSER_YML_DATA_SKEL_METALIST))
 #>}
 
 ################################################################################
@@ -14571,7 +14573,7 @@ $($(PUBLISH)-library-index):
 #>		$(ECHO) "\n";
 	@{	$(ECHO) "{"; \
 		$(ECHO) "\"$(COMPOSER_CMS)\": {},\n"; \
-		$(ECHO) '$(strip $(call COMPOSER_YML_DATA_METALIST_SKEL))'; \
+		$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL_METALIST))'; \
 		$(ECHO) "}"; \
 	} >$(@).$(PRINTER)
 	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
