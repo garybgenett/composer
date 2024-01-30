@@ -2103,7 +2103,9 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 ## {{{2 Targets
 ########################################
 
-#WORKING:FIX \{\{\{ verification pass...
+########################################
+### {{{3 Names
+########################################
 
 #> update: includes duplicates
 
@@ -2144,6 +2146,10 @@ override SUBDIRS			:= subdirs
 override PRINTER			:= list
 
 override DOFORCE			:= force
+
+########################################
+### {{{3 Reserved
+########################################
 
 #> validate: grep -E -e "[{][{][{][0-9]+" -e "^([#][>])?[.]PHONY[:]" Makefile
 #> validate: grep -E "[)]-[a-z]+" Makefile
@@ -2200,7 +2206,7 @@ override COMPOSER_RESERVED_SKIP := \
 	$(SUBDIRS) \
 
 ########################################
-## {{{2 Reserved
+### {{{3 Modifiers
 ########################################
 
 override define COMPOSER_RESERVED_DOITALL =
@@ -2240,22 +2246,6 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(EXAMPLE),$(CONFIGS)))
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)),)
 export override COMPOSER_DOITALL_$(DOITALL) := $(COMPOSER_DOITALL_$(PUBLISH))
 endif
-
-########################################
-## {{{2 Testing
-########################################
-
-override TESTING_MAKEJOBS		:= 8
-ifneq ($(and \
-	$(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))) ,\
-	$(filter $(MAKEJOBS_DEFAULT),$(MAKEJOBS)) \
-),)
-override MAKEJOBS			:= $(TESTING_MAKEJOBS)
-export override MAKEFLAGS		:= $(subst --jobs=$(MAKEJOBS_DEFAULT),--jobs=$(MAKEJOBS),$(MAKEFLAGS))
-endif
-
-override TESTING_LOGFILE		:= $(COMPOSER_CMS)-$(TESTING).log
-override TESTING_MAKEFILE		:= $(TESTING_DIR)/$(COMPOSER_CMS)/$(MAKEFILE)
 
 ########################################
 ## {{{2 Publish
@@ -2663,9 +2653,16 @@ override PUBLISH_DIRS_DEBUGIT := \
 ## {{{2 Filesystem
 ########################################
 
+#WORKING:FIX
+
 ########################################
 ### {{{3 Setup
 ########################################
+
+override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
+override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
+override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
+override COMPOSER_CONTENTS_EXT		:= $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))
 
 override COMPOSER_ROOT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_ROOT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 override COMPOSER_EXPORT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_EXPORT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
@@ -2685,11 +2682,6 @@ endif
 
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
-
-override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
-override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
-override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
-override COMPOSER_CONTENTS_EXT		:= $(filter %$(COMPOSER_EXT),$(COMPOSER_CONTENTS_FILES))
 
 ifneq ($(COMPOSER_EXT),)
 override COMPOSER_TARGETS_AUTO		:= $(patsubst %$(COMPOSER_EXT),%.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_EXT))
@@ -2747,7 +2739,7 @@ override COMPOSER_EXPORTS		:= $(COMPOSER_EXPORTS_DEFAULT)
 endif
 
 ########################################
-### {{{3 Testing
+## {{{2 Testing
 ########################################
 
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
@@ -2756,6 +2748,18 @@ override TESTING_DIR			:= $(COMPOSER_ROOT)
 endif
 ifeq ($(notdir $(abspath $(dir $(COMPOSER_ROOT)))),$(notdir $(TESTING_DIR)))
 override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
+endif
+
+override TESTING_MAKEFILE		:= $(TESTING_DIR)/$(COMPOSER_CMS)/$(MAKEFILE)
+override TESTING_LOGFILE		:= $(COMPOSER_CMS)-$(TESTING).log
+
+override TESTING_MAKEJOBS		:= 8
+ifneq ($(and \
+	$(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))) ,\
+	$(filter $(MAKEJOBS_DEFAULT),$(MAKEJOBS)) \
+),)
+override MAKEJOBS			:= $(TESTING_MAKEJOBS)
+export override MAKEFLAGS		:= $(subst --jobs=$(MAKEJOBS_DEFAULT),--jobs=$(MAKEJOBS),$(MAKEFLAGS))
 endif
 
 #> update: COMPOSER_TARGETS.*=
@@ -2940,8 +2944,6 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 		$(call c_list_var		,$(BASE),$(EXTN)) \
 	) \
 ))
-
-########################################
 
 ifneq ($(c_base),)
 ifeq ($(filter $(c_base).$(EXTN_OUTPUT),$(COMPOSER_TARGETS)),)
