@@ -197,7 +197,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	remove once fixed in upstream
 #		[Google Firebase] = $(UPGRADE)-$(notdir $(FIREBASE_DIR))
 #		$(MKDIR) $(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
-#		MDVIEWER_FIX_SASS_VER
+#		MDVIEWER_SASS_VER
 #	$(PUBLISH)-$(EXAMPLE).$(COMPOSER_EXT_DEFAULT)
 #		$(SED) -i "/^[[][_]/d" $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 #	*_HACK
@@ -1055,7 +1055,12 @@ override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 #> update: MDVIEWER_MODULES
 override MDVIEWER_MODULES		= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
 override MDVIEWER_MANIFEST		:= manifest.firefox.json
-override MDVIEWER_FIX_SASS_VER		:= ^1.0.0
+
+override MDVIEWER_SASS_VER		:= ^1.0.0
+override define MDVIEWER_SASS_VER_HACK =
+	$(SED) -i \
+		"s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_SASS_VER)\4|g"
+endef
 
 ########################################
 ## {{{2 Markdown Viewer (Themes)
@@ -1288,6 +1293,7 @@ override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
 override YQ_EVAL			:= . *
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; $(YQ_EVAL) $$file)'
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
+
 #>				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null
 #>			)) }}' 2>/dev/null
 #>			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null
@@ -1388,7 +1394,7 @@ endef
 ### {{{3 Node.js (npm)
 ########################################
 
-override NPM_NAME			= $(subst /,-,$(patsubst $(CURDIR)/%,%,$(patsubst $(COMPOSER_DIR)/%,%,$(1))))
+override NPM_NAME			= $(subst /,-,$(patsubst $(CURDIR)/%,%,$(call COMPOSER_CONV,,$(1))))
 
 override define NPM_RUN =
 	cd $(1) && $(ENV) \
@@ -1409,7 +1415,7 @@ override define NPM_SETUP =
 	$(LN) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules $(1)/; \
 	$(RM) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/package.json; \
 	$(LN) $(1)/package.json $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/; \
-	$(SED) -i "s|^(.+[\"])(node-)?(sass[\"].+[\"]).+([\"].*)$$|\1\3$(MDVIEWER_FIX_SASS_VER)\4|g" $(1)/package.json
+	$(call MDVIEWER_SASS_VER_HACK) $(1)/package.json
 endef
 
 override define NPM_INSTALL =
@@ -1643,7 +1649,7 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 )))
 
 ########################################
-### {{{3 CSS Selector
+### {{{3 Selector
 ########################################
 
 override c_css_select_theme = $(strip \
