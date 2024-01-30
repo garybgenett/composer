@@ -275,7 +275,7 @@ override COPYRIGHT_SHORT		:= Copyright (c) 2022, $(COMPOSER_COMPOSER)
 override CREATED_TAGLINE		:= Composed with $(COMPOSER_TECHNAME)
 
 override COMPOSER_CMS			:= .$(COMPOSER_BASENAME)
-override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(DATESTAMP)]
+override COMPOSER_TIMESTAMP		= [$(COMPOSER_FULLNAME) $(DIVIDE) $(call DATESTAMP)]
 
 override COMPOSER_SETTINGS		:= .$(COMPOSER_TINYNAME).mk
 override COMPOSER_YML			:= .$(COMPOSER_TINYNAME).yml
@@ -299,7 +299,7 @@ endif
 override COMPOSER_CURDIR		:=
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
-override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTN_OUTPUT).$(DATENAME)
+override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTN_OUTPUT).$(call DATESTRING)
 
 #> update: includes duplicates
 override TYPE_HTML			:= html
@@ -341,7 +341,7 @@ override BOOTSTRAP_ART_CSS		:= $(COMPOSER_ART)/bootstrap/bootstrap.css
 
 #> update: OUTPUT_FILENAME
 #> update: $(TESTING_DIR).*$(COMPOSER_ROOT)
-override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(DATENAME).$(EXTN_TEXT)
+override OUTPUT_FILENAME		= $(COMPOSER_FILENAME).$(1)-$(call DATESTRING).$(EXTN_TEXT)
 override TESTING_DIR			:= $(COMPOSER_DIR)/.$(COMPOSER_FILENAME)
 
 ########################################
@@ -374,6 +374,8 @@ override DEPTH_MAX			:= 6
 ########################################
 ## {{{2 Tokens
 ########################################
+
+override KEY_UPDATED			:= .updated
 
 override MARKER				:= >>
 override DIVIDE				:= ::
@@ -1262,13 +1264,15 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ## {{{2 Wrappers
 ########################################
 
-override DATESTAMP			:= $(shell $(DATE))
-override DATENAME			:= $(shell $(DATE) | $(SED) \
-	-e "s|[-]([0-9]{2}[:]?[0-9]{2})$$|T\1|g" \
-	-e "s|[-:]||g" \
-	-e "s|T|-|g" \
-)
-override DATEMARK			:= $(firstword $(subst T, ,$(DATESTAMP)))
+########################################
+### {{{3 Date
+########################################
+
+override DATENOW			:= $(shell $(firstword $(DATE)) +%s)
+
+override DATESTAMP			= $(shell $(DATE) --date="@$(DATENOW)")
+override DATEMARK			= $(shell $(firstword $(DATE)) --date="@$(DATENOW)" +%Y-%m-%d)
+override DATESTRING			= $(shell $(firstword $(DATE)) --date="@$(DATENOW)" +%Y%m%d-%H%M%S%z)
 
 ########################################
 ### {{{3 YQ
@@ -3559,7 +3563,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-title =
 $(_M)---$(_D)
 $(_M)title: "$(COMPOSER_HEADLINE)"$(_D)
-$(_M)date: $(COMPOSER_VERSION) ($(DATEMARK))$(_D)
+$(_M)date: $(COMPOSER_VERSION) ($(call DATEMARK))$(_D)
 $(_M)$(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)$(_D)
 $(_M)---$(_D)
 endef
@@ -5069,7 +5073,7 @@ override PUBLISH_PAGE_1_NAME		:= Introduction
 override define PUBLISH_PAGE_1 =
 ---
 title: $(PUBLISH_PAGE_1_NAME)
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5252,7 +5256,7 @@ override PUBLISH_PAGE_2_NAME		:= Default Site
 override define PUBLISH_PAGE_2 =
 ---
 title: $(PUBLISH_PAGE_2_NAME)
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5307,7 +5311,7 @@ endef
 override define PUBLISH_PAGE_3 =
 ---
 title: $(PUBLISH_PAGE_3_NAME)
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5423,7 +5427,7 @@ override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
 override define PUBLISH_PAGE_EXAMPLE =
 ---
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5831,7 +5835,7 @@ override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
 title: $(PUBLISH_PAGE_PAGEDIR_NAME)
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5872,7 +5876,7 @@ override PUBLISH_PAGE_SHOWDIR_NAME	:= Themes & Overlays
 override define PUBLISH_PAGE_SHOWDIR =
 ---
 title: $(PUBLISH_PAGE_SHOWDIR_NAME)
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5958,7 +5962,7 @@ endef
 override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 ---
 title: $(LIBRARY_DIGEST_TITLE$(2))
-date: $(DATEMARK)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -6068,7 +6072,7 @@ $(EXAMPLE).md \
 				$(ECHO) "$(COMPOSER_HEADLINE)"; \
 			fi; \
 		)$(_N)\")
-	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(DATEMARK))
+	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(call DATEMARK))
 	@$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),\
 		$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D):); \
 		if [ "$(FILE)" = "$(PUBLISH_CREATORS)" ]; then \
@@ -6089,7 +6093,7 @@ $(EXAMPLE).md-file:
 		read -p "$(COMPOSER_FULLNAME) $(DIVIDE) $(EXAMPLE).md $(MARKER) " FILE; \
 		$(ECHO) "$${FILE}" \
 	))
-	@FILE="$(CURDIR)/$(DATEMARK)-$(shell $(call $(HELPOUT)-$(TARGETS)-format,$(COMPOSER_DOITALL_$(EXAMPLE).md)))$(COMPOSER_EXT)"; \
+	@FILE="$(CURDIR)/$(call DATEMARK)-$(shell $(call $(HELPOUT)-$(TARGETS)-format,$(COMPOSER_DOITALL_$(EXAMPLE).md)))$(COMPOSER_EXT)"; \
 		$(call ENV_MAKE,,,,COMPOSER_DOITALL_$(EXAMPLE).md) .$(EXAMPLE).md >$${FILE}; \
 		$(EDITOR) $${FILE}
 
@@ -14475,7 +14479,7 @@ $($(PUBLISH)-library-metadata):
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-metadata)
 	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_N)"
-	@$(ECHO) "\"$(COMPOSER_CMS)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
+	@$(ECHO) "\"$(COMPOSER_CMS)\": { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 #>	@$(call $(EXPORTS)-find,$(COMPOSER_LIBRARY_ROOT),,1)
@@ -14516,7 +14520,7 @@ $($(PUBLISH)-library-metadata):
 						$(ECHO) "$${FILE}" \
 						| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 					)\" }" 2>/dev/null \
-				| $(YQ_WRITE) ". += { \".updated\": \"$(DATESTAMP)\" }" 2>/dev/null \
+				| $(YQ_WRITE) ". += { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" }" 2>/dev/null \
 				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
 			$(ECHO) "," >>$(@).$(COMPOSER_BASENAME); \
 			$(ECHO) "$(_D)"; \
@@ -14564,7 +14568,7 @@ $($(PUBLISH)-library-index):
 	} >$(@).$(PRINTER)
 	@$(ECHO) "{" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_N)"
-	@$(ECHO) "\"$(COMPOSER_CMS)\": { \".updated\": \"$(DATESTAMP)\" },\n" \
+	@$(ECHO) "\"$(COMPOSER_CMS)\": { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(foreach FILE,\
@@ -14708,7 +14712,7 @@ $($(PUBLISH)-library-digest):
 	@$(MAKE) c_site="1" $(PUBLISH)-library-digest-files
 	@{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest_title)\n"; \
-		$(ECHO) "date: $(DATEMARK)\n"; \
+		$(ECHO) "date: $(call DATEMARK)\n"; \
 		$(ECHO) "---\n"; \
 		$(ECHO) "$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)\n"; \
 	} >$(@)
@@ -14761,7 +14765,7 @@ $($(PUBLISH)-library-digest-files):
 					else					$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.metalist.[\"$(TYPE)\"].title)"; \
 					fi \
 				): $(NAME)\"\n"; \
-			$(ECHO) "date: $(DATEMARK)\n"; \
+			$(ECHO) "date: $(call DATEMARK)\n"; \
 			$(ECHO) "---\n"; \
 		} >>$(@).$(COMPOSER_BASENAME); \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME); \
@@ -14897,7 +14901,7 @@ $($(PUBLISH)-library-sitemap):
 override define $(PUBLISH)-library-sitemap-file =
 	{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.sitemap_title)\n"; \
-		$(ECHO) "date: $(DATEMARK)\n"; \
+		$(ECHO) "date: $(call DATEMARK)\n"; \
 		$(ECHO) "---\n"; \
 		$(ECHO) "$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-library-sitemap-src)) $(PUBLISH_CMD_END)\n"; \
 	}
