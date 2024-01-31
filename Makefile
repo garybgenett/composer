@@ -1447,7 +1447,8 @@ override define NPM_BUILD =
 endef
 
 override define NPM_IGNORE =
-**/node_modules/
+#$(MARKER)**/node_modules/
+**/node_modules
 /.npm/
 /.cache/
 endef
@@ -6274,26 +6275,26 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(UPGRADE)
 
-#>/$(call COMPOSER_CONV,,$(COMPOSER_SRC))/
+#$(MARKER)/$(call COMPOSER_CONV,,$(COMPOSER_SRC))/
 /$(call COMPOSER_CONV,,$(COMPOSER_SRC))
 
-# binaries$(foreach FILE,$(REPOSITORIES_LIST),\
+#$(DIVIDE) binaries$(foreach FILE,$(REPOSITORIES_LIST),\
 $(if $($(FILE)_BIN),$(call NEWLINE)/$(call COMPOSER_CONV,,$($(FILE)_DIR))/$(notdir $($(FILE)_DIR))-*) \
 )
 
-# git
+#$(DIVIDE) git
 $(call GIT_IGNORE)
 
-# wget
+#$(DIVIDE) wget
 $(call WGET_IGNORE)
 
-# npm
+#$(DIVIDE) npm
 $(call NPM_IGNORE)
 
 ########################################
 # $(EXPORTS)
 
-# firebase
+#$(DIVIDE) firebase
 $(call FIREBASE_IGNORE)
 
 ################################################################################
