@@ -6183,7 +6183,7 @@ endef
 ################################################################################
 
 ########################################
-## {{{2 #WORKING:FIX
+## {{{2 Images
 ########################################
 
 override DIST_LOGO_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==
@@ -8883,10 +8883,12 @@ endef
 ## {{{2 Heredoc: custom_$(PUBLISH)_css **
 ########################################
 
+#WORKING:FIX
+
 #> validate: sed -nr "s|^.*[[:space:]]class[=]||gp" Makefile | sed -r "s|[[:space:]]+|\n|g" | sort -u
 
 ########################################
-### {{{3 Heredoc: custom_$(PUBLISH)_css
+### {{{3 Hacks
 ########################################
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
@@ -9391,15 +9393,15 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-#$(MARKER)	background-color:		var(--composer-menu);
-	background-color:		var(--composer-back);
+#$(MARKER)	background-color:		var(--$(COMPOSER_TINYNAME)-menu);
+	background-color:		var(--$(COMPOSER_TINYNAME)-back);
 }
 ::-webkit-scrollbar-thumb {
-	background-color:		var(--composer-line);
+	background-color:		var(--$(COMPOSER_TINYNAME)-line);
 }
 body {
-#$(MARKER)	scrollbar-color:		var(--composer-line) var(--composer-menu);
-	scrollbar-color:		var(--composer-line) var(--composer-back);
+#$(MARKER)	scrollbar-color:		var(--$(COMPOSER_TINYNAME)-line) var(--$(COMPOSER_TINYNAME)-menu);
+	scrollbar-color:		var(--$(COMPOSER_TINYNAME)-line) var(--$(COMPOSER_TINYNAME)-back);
 }
 
 a,
@@ -9737,6 +9739,10 @@ endef
 ## {{{2 Heredoc: custom_$(TYPE_HTML)_css **
 ########################################
 
+########################################
+### {{{3 Hacks
+########################################
+
 override define HEREDOC_CUSTOM_HTML_TEMPLATE_HACK =
 	$(SED) -i \
 		"/if .+ IE/,/endif/d"
@@ -9748,7 +9754,7 @@ override define HEREDOC_CUSTOM_HTML_PANDOC_HACK =
 endef
 
 ########################################
-### {{{3 Heredoc: custom_$(TYPE_HTML)_css
+### {{{3 Solarized
 ########################################
 
 override define HEREDOC_CUSTOM_HTML_CSS_SOLARIZED =
@@ -9814,19 +9820,19 @@ endef
 ### {{{3 Heredoc: custom_$(TYPE_HTML)_css (Water.css)
 ########################################
 
+########################################
+#### {{{4 Hacks
+########################################
+
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_CSS_HACK =
 	$(SED) -i \
 		-e "/^a.href.=/,/^}/d" \
 		-e "/^.+table-layout[:]/d"
 endef
 
-override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
-$(eval override OVRLY := $(word 1,$(subst :, ,$(1))))
-$(eval override PRFRS := $(word 2,$(subst :, ,$(1))))
-@import '../variables-$(OVRLY).css'		$(if $(PRFRS), (prefers-color-scheme: $(OVRLY)));
-@import '../variables-solarized-$(OVRLY).css'	$(if $(PRFRS), (prefers-color-scheme: $(OVRLY)));
-@import '../parts/_core.css';
-endef
+########################################
+#### {{{4 Overlay
+########################################
 
 #> update: *_OVERLAY
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_OVERLAY =
@@ -9861,6 +9867,18 @@ override define HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_OVERLAY =
 .card {
 	border:				1px solid var(--border);
 }
+endef
+
+########################################
+#### {{{4 Solarized
+########################################
+
+override define HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR =
+$(eval override OVRLY := $(word 1,$(subst :, ,$(1))))
+$(eval override PRFRS := $(word 2,$(subst :, ,$(1))))
+@import '../variables-$(OVRLY).css'		$(if $(PRFRS), (prefers-color-scheme: $(OVRLY)));
+@import '../variables-solarized-$(OVRLY).css'	$(if $(PRFRS), (prefers-color-scheme: $(OVRLY)));
+@import '../parts/_core.css';
 endef
 
 override define HEREDOC_CUSTOM_HTML_CSS_WATER_VAR_SOLAR =
@@ -10704,7 +10722,9 @@ endef
 ########################################
 
 override define HEREDOC_SPELL_WORDLIST =
-#> targets
+########################################
+# targets
+
 checkit
 config
 configs
@@ -10718,7 +10738,9 @@ helpout
 init
 subdirs
 
-#> options
+########################################
+# options
+
 codeblock
 css
 docolor
@@ -10744,14 +10766,17 @@ tex
 tmpl
 toc
 
-#> commands
+########################################
+# commands
+
 bootlint
 bootswatch
 chmod
 cp
 datemark
-datename
+datenow
 datestamp
+datestring
 diffutils
 domake
 endoline
@@ -10781,13 +10806,14 @@ watercss
 wget
 yq
 
-#> variables
+########################################
+# variables
+
 basename
 bld
 bnch
 cmd
 cmt
-cname
 conv
 curdir
 dat
@@ -10796,6 +10822,7 @@ dir
 dirs
 fullname
 gitattributes
+gitconfig
 gitignore
 heredoc
 lic
@@ -10817,7 +10844,9 @@ tmp
 ver
 wordlist
 
-#> examples
+########################################
+# examples
+
 abspath
 ascii
 cd
@@ -10849,7 +10878,9 @@ readtime
 wsl
 wslconfig
 
-#> text
+########################################
+# text
+
 cms
 composermk
 composeryml
@@ -10873,7 +10904,9 @@ txt
 yaml
 yml
 
-#> exceptions
+########################################
+# exceptions
+
 parsable
 prettification
 recurse
@@ -10884,7 +10917,9 @@ stylesheets
 subdirectory
 webpages
 
-#> fragments
+########################################
+# fragments
+
 bd
 cbc
 endef
@@ -12448,7 +12483,7 @@ ifeq ($(and \
 else
 	@$(CAT) $(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.txt \
 		| $(SED) \
-			-e "/^[#][>]/d" \
+			-e "/^[#]/d" \
 			-e "/^$$/d" \
 		| $(SORT) \
 		>$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.diff
@@ -14358,7 +14393,9 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 			$(SED) -n "1,/^---$$/p" $${META} \
 			| $(YQ_WRITE) ".$(2)" \
 			| $(call COMPOSER_YML_DATA_PARSE,,$(TOKEN)) \
-			| $(SED) "s|$(TOKEN)|\n|g"; \
+			| $(SED) \
+				-e "s|$(TOKEN)|\n|g"; \
+				-e "/^$$/d" \
 		fi; \
 	done \
 		| $(call $(PUBLISH)-library-sort-sh,$(2)) \
