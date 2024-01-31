@@ -2513,7 +2513,7 @@ override PUBLISH_CMD_END		:= -->
 override COMPOSER_ROOT_PATH		:=
 override COMPOSER_LIBRARY_PATH		:=
 ifneq ($(c_site),)
-override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT))
+override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT) 2>/dev/null)
 ifneq ($(COMPOSER_LIBRARY),)
 override COMPOSER_LIBRARY_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_LIBRARY) 2>/dev/null)
 endif
@@ -2919,23 +2919,24 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 			$(COMPOSER_CONTENTS_EXT) \
 		) \
 	) \
-	$(if $(filter $(1),$(TYPE_HTML)),\
-		$(if $(c_site),\
-			$(CUSTOM_PUBLISH_SH) \
-			$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml),\
-				$($(PUBLISH)-cache-root).$(2) ,\
-				$($(PUBLISH)-cache) \
-			) \
-			$(INCLUDE_FILE_HEADER) \
-			$(INCLUDE_FILE_FOOTER) \
+	$(if $(and \
+		$(c_site) ,\
+		$(filter $(1),$(TYPE_HTML)) \
+	),\
+		$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml),\
+			$($(PUBLISH)-cache-root).$(2) ,\
+			$($(PUBLISH)-cache) \
 		) \
+		$(INCLUDE_FILE_HEADER) \
+		$(INCLUDE_FILE_FOOTER) \
+		$(CUSTOM_PUBLISH_SH) \
 	) \
-	$(if $(and $(1),\
+	$(if \
 		$(filter-out $(PUBLISH)-cache,\
 		$(filter-out $(PUBLISH),\
 		$(1) \
 		)) \
-	),\
+	,\
 		$(eval override NAME := $(call PANDOC_FILES_TYPE,$(1))) \
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
@@ -14465,7 +14466,9 @@ $($(PUBLISH)-caches):
 #> sitemap only	$(PUBLISH)-library-$(DOITALL)	+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
 
 .PHONY: $(PUBLISH)-library
+ifeq ($(filter $(DOITALL),$(COMPOSER_DOITALL_$(PUBLISH)-library)),)
 $(PUBLISH)-library: .set_title-$(PUBLISH)-library
+endif
 $(PUBLISH)-library:
 ifeq ($(MAKELEVEL),0)
 	@$(call $(HEADERS))
@@ -14826,7 +14829,6 @@ override define $(PUBLISH)-library-digest-list =
 endef
 
 ifneq ($(and \
-	$(c_site) ,\
 	$(COMPOSER_LIBRARY_AUTO_UPDATE) ,\
 	$(wildcard $($(PUBLISH)-library-index)) \
 ),)
