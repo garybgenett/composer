@@ -3011,12 +3011,11 @@ endef
 ################################################################################
 
 ########################################
-## {{{2 #WORKING:FIX
+## {{{2 $(HELPOUT)
 ########################################
-#	*-$(@) / *-% = standardize labeling and order...
 
 ########################################
-## {{{2 $(HELPOUT)
+### {{{3 $(HELPOUT)
 ########################################
 
 .PHONY: $(HELPOUT)
@@ -3083,9 +3082,17 @@ endif
 ### {{{3 $(HELPOUT)-variables
 ########################################
 
+########################################
+#### {{{4 $(HELPOUT)-variables-title
+########################################
+
 .PHONY: $(HELPOUT)-variables_title_%
 $(HELPOUT)-variables_title_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Variables,1)
+
+########################################
+#### {{{4 $(HELPOUT)-variables-format
+########################################
 
 #> update: TYPE_TARGETS
 #> update: READ_ALIASES
@@ -3130,6 +3137,10 @@ $(HELPOUT)-variables_format_%:
 	@$(PRINT) "      * *\`$(_C)c_margin_left$(_D)\`   ~ \`$(_E)ml$(_D)\`*"
 	@$(PRINT) "      * *\`$(_C)c_margin_right$(_D)\`  ~ \`$(_E)mr$(_D)\`*"
 
+########################################
+#### {{{4 $(HELPOUT)-variables-control
+########################################
+
 .PHONY: $(HELPOUT)-variables_control_%
 $(HELPOUT)-variables_control_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
@@ -3156,6 +3167,10 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number to keep / \`$(_N)0$(_D)\` is none*"
 	@$(PRINT) "  * *\`$(_N)(boolean)$(_D)\`  = empty is disabled / any value enables*"
 
+########################################
+#### {{{4 $(HELPOUT)-variables-helper
+########################################
+
 .PHONY: $(HELPOUT)-variables_helper_%
 $(HELPOUT)-variables_helper_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Helper Variables); fi
@@ -3181,9 +3196,17 @@ $(HELPOUT)-variables_helper_%:
 ### {{{3 $(HELPOUT)-targets
 ########################################
 
+########################################
+#### {{{4 $(HELPOUT)-targets-title
+########################################
+
 .PHONY: $(HELPOUT)-targets_title_%
 $(HELPOUT)-targets_title_%:
 	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Targets,1)
+
+########################################
+#### {{{4 $(HELPOUT)-targets-primary
+########################################
 
 .PHONY: $(HELPOUT)-targets_primary_%
 $(HELPOUT)-targets_primary_%:
@@ -3210,6 +3233,10 @@ $(HELPOUT)-targets_primary_%:
 	@$(TABLE_M2) "$(_C)[$(DOITALL)-$(DOITALL)]"		"Do $(_C)[$(DOITALL)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(DOITALL)]"		"Any targets named this way will also be run by $(_C)[$(DOITALL)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PRINTER)]"			"Show updated files: \`$(_N)*$(_D)\`$(_C)[COMPOSER_EXT]$(_D) $(_E)$(MARKER)$(_D) $(_C)[COMPOSER_LOG]$(_D)"
+
+########################################
+#### {{{4 $(HELPOUT)-targets-additional
+########################################
 
 .PHONY: $(HELPOUT)-targets_additional_%
 $(HELPOUT)-targets_additional_%:
@@ -3247,6 +3274,10 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(patsubst .%,%,$(NOTHING))]"	"List files which are missing metadata fields"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER).$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
+
+########################################
+#### {{{4 $(HELPOUT)-targets-internal
+########################################
 
 .PHONY: $(HELPOUT)-targets_internal_%
 $(HELPOUT)-targets_internal_%:
@@ -3312,7 +3343,41 @@ $(HELPOUT)-examples_%:
 	@$(PRINT) "See \`$(_C)$(HELPOUT)-$(DOITALL)$(_D)\` for full details and additional targets."
 
 ########################################
+## {{{2 $(HELPOUT)-$(HELPOUT)
+########################################
+
+########################################
+### {{{3 $(HELPOUT)-$(PUBLISH)
+########################################
+
+.PHONY: $(HELPOUT)-$(PUBLISH)
+$(HELPOUT)-$(PUBLISH):
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
+		c_site="1" \
+		$(HELPOUT)-$(HELPOUT)
+
+########################################
+### {{{3 $(HELPOUT)-$(TYPE_PRES)
+########################################
+
+.PHONY: $(HELPOUT)-$(TYPE_PRES)
+$(HELPOUT)-$(TYPE_PRES):
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
+		$(HELPOUT)-$(HEADERS)-$(TYPE_PRES) \
+		| $(SED) "/^[-][-][-][-]/,+1d"
+#>	@$(ENDOLINE)
+#>	@$(LINERULE)
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
+		COMPOSER_DOITALL_$(HELPOUT)="$(TYPE_PRES)" \
+		$(HELPOUT) \
+		| $(SED) "/^[-][-][-][-]/,+1d"
+
+########################################
 ## {{{2 $(HELPOUT)-$(DOITALL)
+########################################
+
+########################################
+### {{{3 $(HELPOUT)-$(DOITALL)
 ########################################
 
 .PHONY: $(HELPOUT)-$(HEADERS)-%
@@ -3376,32 +3441,6 @@ $(HELPOUT)-%:
 	fi
 
 ########################################
-### {{{3 $(HELPOUT)-$(PUBLISH)
-########################################
-
-.PHONY: $(HELPOUT)-$(PUBLISH)
-$(HELPOUT)-$(PUBLISH):
-	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
-		c_site="1" \
-		$(HELPOUT)-$(HELPOUT)
-
-########################################
-### {{{3 $(HELPOUT)-$(TYPE_PRES)
-########################################
-
-.PHONY: $(HELPOUT)-$(TYPE_PRES)
-$(HELPOUT)-$(TYPE_PRES):
-	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
-		$(HELPOUT)-$(HEADERS)-$(TYPE_PRES) \
-		| $(SED) "/^[-][-][-][-]/,+1d"
-#>	@$(ENDOLINE)
-#>	@$(LINERULE)
-	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
-		COMPOSER_DOITALL_$(HELPOUT)="$(TYPE_PRES)" \
-		$(HELPOUT) \
-		| $(SED) "/^[-][-][-][-]/,+1d"
-
-########################################
 ### {{{3 $(HELPOUT)-$(PRINTER)
 ########################################
 
@@ -3457,6 +3496,18 @@ $(HELPOUT)-$(PRINTER):
 		)
 	@$(call TITLE_END)
 #>	@$(call TITLE_END)
+
+########################################
+### {{{3 $(HELPOUT)-$(PRINTER)-%
+########################################
+
+override define $(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
+	| $(SED) \
+		-e "s|^[\t]+|$(CODEBLOCK)|g" \
+		-e "s|[\t]+| |g" \
+		-e "s|^|$(CODEBLOCK)|g" \
+		-e "s|[[:space:]]+$$||g"
+endef
 
 ########################################
 ### {{{3 $(HELPOUT)-$(TARGETS)
@@ -3519,7 +3570,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 ########################################
-#### {{{4 $(HELPOUT)-$(TARGETS)-%
+### {{{3 $(HELPOUT)-$(TARGETS)-%
 ########################################
 
 override define $(HELPOUT)-$(TARGETS)-titles =
@@ -3556,16 +3607,8 @@ override define $(HELPOUT)-$(TARGETS)-format =
 		-e "s|UNDER|_|g"
 endef
 
-override define $(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
-	| $(SED) \
-		-e "s|^[\t]+|$(CODEBLOCK)|g" \
-		-e "s|[\t]+| |g" \
-		-e "s|^|$(CODEBLOCK)|g" \
-		-e "s|[[:space:]]+$$||g"
-endef
-
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-%
+### {{{3 $(HELPOUT)-$(DOITALL)-$(@)
 ########################################
 
 #> update: COMPOSER_TARGETS.*=
@@ -6122,7 +6165,7 @@ override define $(EXAMPLE)-var-static =
 	)
 endef
 
-#> update: $(HEADERS)-run
+#> update: $(HEADERS)-$(HEADERS)
 override define $(EXAMPLE)-var =
 	$(eval override OUT := $(strip \
 		$(if $(filter c_list,$(2)),$(call COMPOSER_CONV,$(TOKEN)/,$(call c_list_var))$(if $(call c_list_var_source),$(_D) $(_S)\#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,,1)) ,\
@@ -10850,6 +10893,10 @@ endef
 # {{{1 Composer Output
 ################################################################################
 
+########################################
+## {{{2 Colors
+########################################
+
 # https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 
 #>override _D				:= \e[0;37m
@@ -10897,6 +10944,8 @@ $(eval $(call COMPOSER_NOCOLOR))
 endif
 
 ########################################
+## {{{2 Formatting
+########################################
 
 #> TITLE_LN := ENDOLINE LINERULE
 override COMMENTED			:= $(_S)\#$(_D) $(NULL)
@@ -10923,6 +10972,8 @@ endif
 override TABLE_M2_HEADER_L		:= $(TABLE_M2) "$(_S):---" "$(_S):---"
 override TABLE_M3_HEADER_L		:= $(TABLE_M3) "$(_S):---" "$(_S):---" "$(_S):---"
 
+########################################
+## {{{2 Titles
 ########################################
 
 #> TITLE_LN := ENDOLINE LINERULE
@@ -10969,6 +11020,8 @@ override define TITLE_END =
 endef
 
 ########################################
+## {{{2 YQ Colors
+########################################
 
 override YQ_WRITE_OUT_COLOR := \
 	$(if $(COMPOSER_DOCOLOR),| $(SED) \
@@ -11003,6 +11056,12 @@ endif
 
 ########################################
 ## {{{2 $(HEADERS)
+########################################
+
+#> validate: grep -oE "[$][(]HEADERS[)]-[^[:space:],]+" Makefile | sort -u
+
+########################################
+### {{{3 $(HEADERS)
 ########################################
 
 ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
@@ -11047,8 +11106,8 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 endif
 	@$(call $(HEADERS))
 	@$(call $(HEADERS),1)
-	@$(call $(HEADERS)-run)
-	@$(call $(HEADERS)-run,1)
+	@$(call $(HEADERS)-$(HEADERS))
+	@$(call $(HEADERS)-$(HEADERS),1)
 	@	$(eval override c_base := $(@)) \
 		$(eval override c_list := $(@)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-$(COMPOSER_PANDOC),$(notdir $(PANDOC)),$(COMPOSER_DEBUGIT_ALL))
@@ -11073,20 +11132,18 @@ endif
 	@$(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(HEADERS)-colors
 
 ########################################
-### {{{3 $(HEADERS)-%
+### {{{3 $(HEADERS)-$(HEADERS)
 ########################################
 
 #> update: COMPOSER_OPTIONS
-
-#> validate: grep -oE "[$][(]HEADERS[)]-[^[:space:],]+" Makefile | sort -u
 
 .PHONY: $(HEADERS)-%
 $(HEADERS)-%:
 	@$(call $(HEADERS),,$(*))
 
-.PHONY: $(HEADERS)-run-%
-$(HEADERS)-run-%:
-	@$(call $(HEADERS)-run,,$(*))
+.PHONY: $(HEADERS)-$(HEADERS)-%
+$(HEADERS)-$(HEADERS)-%:
+	@$(call $(HEADERS)-$(HEADERS),,$(*))
 
 #>	$(TABLE_C2) "$(_H)$(COMPOSER_FULLNAME)"	"[$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))$(_D)]";
 override define $(HEADERS) =
@@ -11106,9 +11163,9 @@ override define $(HEADERS) =
 	$(HEADER_L)
 endef
 
-#> update: $(HEADERS)-run
+#> update: $(HEADERS)-$(HEADERS)
 #>	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(call $(HEADERS)-path-root,$(COMPOSER_DIR))";
-override define $(HEADERS)-run =
+override define $(HEADERS)-$(HEADERS) =
 	$(LINERULE); \
 	$(TABLE_M2) "$(_H)$(COMPOSER_FULLNAME)"	"$(_N)$(COMPOSER_DIR)"; \
 	$(TABLE_M2_HEADER_L); \
@@ -11131,6 +11188,10 @@ override define $(HEADERS)-run =
 	$(LINERULE)
 endef
 
+########################################
+### {{{3 $(HEADERS)-$(SUBDIRS)
+########################################
+
 override define $(HEADERS)-$(SUBDIRS) =
 	if [ "$(MAKELEVEL)" = "0" ]; then \
 		$(call $(HEADERS)); \
@@ -11143,16 +11204,22 @@ override define $(HEADERS)-$(SUBDIRS) =
 		fi; \
 	fi
 endef
+
+########################################
+### {{{3 $(HEADERS)-$(COMPOSER_PANDOC)
+########################################
+
 override define $(HEADERS)-$(COMPOSER_PANDOC) =
 	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
 		$(call $(HEADERS)-file,$(CURDIR),$(1)); \
 	else \
-		$(call $(HEADERS)-run,1,$(1)); \
+		$(call $(HEADERS)-$(HEADERS),1,$(1)); \
 		$(ECHO) "$(_H)$(MARKER)$(_D) $(_C)"; \
 		$(call $(HEADERS)-$(COMPOSER_PANDOC)-options,$(2)); \
 		$(ECHO) "$(_D)\n"; \
 	fi
 endef
+
 override define $(HEADERS)-$(COMPOSER_PANDOC)-options =
 	$(if $(1),\
 		$(ECHO) "$(PANDOC) $(subst --,\\\\\n$(CODEBLOCK)--,$(subst ",\",$(subst \,\\\\,$(call PANDOC_OPTIONS)))) \\\\\n$(CODEBLOCK)$(subst $(NULL) , \\\\\n$(CODEBLOCK),$(call c_list_var))" ,\
@@ -11160,25 +11227,20 @@ override define $(HEADERS)-$(COMPOSER_PANDOC)-options =
 	)
 endef
 
+########################################
+### {{{3 $(HEADERS)-%
+########################################
+
 override define $(HEADERS)-action =
 	$(if $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);) \
 	$(PRINT) "$(_H)$(MARKER) $(if $(4),$(4),$(@))$(_D) $(DIVIDE) $(_M)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(_E)$(3)$(_D))))"
 endef
-override define $(HEADERS)-note =
-	$(TABLE_M2) "$(_M)$(MARKER) Processing" "$(_E)$(call $(HEADERS)-path-root,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)]$(if $(2), $(_C)$(call $(HEADERS)-path-root,$(2)))"
-endef
-override define $(HEADERS)-dir =
-	$(TABLE_M2) "$(_C)$(MARKER) Directory" "$(_E)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
-endef
-override define $(HEADERS)-file =
-	$(TABLE_M2) "$(_H)$(MARKER) Creating" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
-endef
-override define $(HEADERS)-skip =
-	$(TABLE_M2) "$(_H)$(MARKER) Skipping" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(call $(HEADERS)-path-root,$(2)))"
-endef
-override define $(HEADERS)-rm =
-	$(TABLE_M2) "$(_N)$(MARKER) Removing" "$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
-endef
+
+override $(HEADERS)-note	= $(TABLE_M2) "$(_M)$(MARKER) Processing"	"$(_E)$(call $(HEADERS)-path-root,$(1))$(_D) $(DIVIDE) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)]$(if $(2), $(_C)$(call $(HEADERS)-path-root,$(2)))"
+override $(HEADERS)-dir		= $(TABLE_M2) "$(_C)$(MARKER) Directory"	"$(_E)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
+override $(HEADERS)-file	= $(TABLE_M2) "$(_H)$(MARKER) Creating"		"$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
+override $(HEADERS)-skip	= $(TABLE_M2) "$(_H)$(MARKER) Skipping"		"$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(call $(HEADERS)-path-root,$(2)))"
+override $(HEADERS)-rm		= $(TABLE_M2) "$(_N)$(MARKER) Removing"		"$(_N)$(call $(HEADERS)-path-root,$(1))$(if $(2),$(_D) $(DIVIDE) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call $(HEADERS)-path-root,$(2)))"
 
 ################################################################################
 # }}}1
@@ -11310,6 +11372,10 @@ endif
 
 ########################################
 ## {{{2 $(UPGRADE)
+########################################
+
+########################################
+### {{{3 $(UPGRADE)
 ########################################
 
 #> update: $(NOTHING)-%
@@ -11454,6 +11520,10 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ### {{{3 $(UPGRADE)-bld
 ########################################
 
+########################################
+#### {{{4 $(UPGRADE)-bld
+########################################
+
 override define $(UPGRADE)-bld =
 .PHONY: $(UPGRADE)-$(notdir $($(1)_DIR))-bld
 $(UPGRADE)-$(notdir $($(1)_DIR))-bld: $(UPGRADE)-$(notdir $($(1)_DIR))-src
@@ -11463,6 +11533,10 @@ $(UPGRADE)-$(notdir $($(1)_DIR))-bld:
 endef
 
 override $(UPGRADE)-bld-list :=
+
+########################################
+#### {{{4 $(UPGRADE)-bld-$(BOOTLINT_DIR)
+########################################
 
 override $(UPGRADE)-bld-list += BOOTLINT
 
@@ -11475,6 +11549,10 @@ $(UPGRADE)-$(notdir $(BOOTLINT_DIR))-bld-build:
 	@$(call $(HEADERS)-action,$(BOOTLINT_DIR),build)
 	@$(LN)										$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR))/src/cli-main.js \
 											$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTLINT_DIR))/bootlint
+
+########################################
+#### {{{4 $(UPGRADE)-bld-$(WATERCSS_DIR)
+########################################
 
 override $(UPGRADE)-bld-list += WATERCSS
 
@@ -11503,6 +11581,10 @@ $(UPGRADE)-$(notdir $(WATERCSS_DIR))-bld-build:
 	@$(call DO_HEREDOC,HEREDOC_CUSTOM_HTML_CSS_WATER_SRC_SOLAR,,dark:1)		>>$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR))/src/builds/solarized-all.css
 	@$(call NPM_RUN,$(call COMPOSER_CONV,$(CURDIR)/,$(WATERCSS_DIR)),,yarn) build
 
+########################################
+#### {{{4 $(UPGRADE)-bld-$(MDVIEWER_DIR)
+########################################
+
 override $(UPGRADE)-bld-list += MDVIEWER
 
 .PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-fetch
@@ -11522,6 +11604,10 @@ $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build:
 		$(call NPM_BUILD,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 
+########################################
+#### {{{4 $(UPGRADE)-bld-$(FIREBASE_DIR)
+########################################
+
 override $(UPGRADE)-bld-list += FIREBASE
 
 .PHONY: $(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-fetch
@@ -11534,7 +11620,9 @@ $(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-build: $(NOTHING)-$(notdir $(FIREBASE_D
 $(UPGRADE)-$(notdir $(FIREBASE_DIR))-bld-build:
 	@$(ECHO) ""
 
-override $(UPGRADE)-bld-list +=
+########################################
+#### {{{4 $(UPGRADE)-bld-$(NOTHING)
+########################################
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
 	$(eval $(call $(UPGRADE)-bld,$(FILE))) \
@@ -11546,6 +11634,10 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 
 ########################################
 ## {{{2 $(CREATOR)
+########################################
+
+########################################
+### {{{3 $(CREATOR)
 ########################################
 
 #> update: TYPE_TARGETS
@@ -11840,30 +11932,9 @@ endif
 ## {{{2 $(DEBUGIT)
 ########################################
 
-ifneq ($(filter $(DEBUGIT)-file,$(MAKECMDGOALS)),)
-export override COMPOSER_DOITALL_$(DEBUGIT) := file
-export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
-endif
-.PHONY: $(DEBUGIT)-file
-$(DEBUGIT)-file: .set_title-$(DEBUGIT)-file
-$(DEBUGIT)-file:
-	@$(MAKE) $(HEADERS)-$(DEBUGIT)
-	@$(MAKE) $(DEBUGIT)-$(HEADERS)
-	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
-	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
-	@$(ENDOLINE)
-	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(DEBUGIT_FILE)
-	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT)) \
-		COMPOSER_DOITALL_$(DEBUGIT)="$(COMPOSER_DOITALL_$(DEBUGIT))" \
-		COMPOSER_DOITALL_$(TESTING)="$(DEBUGIT)" \
-		$(DEBUGIT) 2>&1 \
-		| $(TEE) --append $(DEBUGIT_FILE) \
-		| $(SED) "s|^.*$$||g" \
-		| $(TR) '\n' '.'
-	@$(ENDOLINE)
-	@$(TAIL) -n10 $(DEBUGIT_FILE)
-	@$(LS) $(DEBUGIT_FILE)
+########################################
+### {{{3 $(DEBUGIT)
+########################################
 
 #> update: $(NOTHING)-%
 #> update: $(DEBUGIT): targets list
@@ -11960,33 +12031,41 @@ $(DEBUGIT)-%:
 	fi
 
 ########################################
-## {{{2 $(TESTING)
+### {{{3 $(DEBUGIT)-file
 ########################################
 
-ifneq ($(filter $(TESTING)-file,$(MAKECMDGOALS)),)
-export override COMPOSER_DOITALL_$(TESTING) := file
-export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
+ifneq ($(filter $(DEBUGIT)-file,$(MAKECMDGOALS)),)
+export override COMPOSER_DOITALL_$(DEBUGIT) := file
+export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 endif
-.PHONY: $(TESTING)-file
-$(TESTING)-file: .set_title-$(TESTING)-file
-$(TESTING)-file:
-	@$(MAKE) $(HEADERS)-$(TESTING)
-	@$(MAKE) $(TESTING)-$(HEADERS)
+.PHONY: $(DEBUGIT)-file
+$(DEBUGIT)-file: .set_title-$(DEBUGIT)-file
+$(DEBUGIT)-file:
+	@$(MAKE) $(HEADERS)-$(DEBUGIT)
+	@$(MAKE) $(DEBUGIT)-$(HEADERS)
 	@$(ENDOLINE)
-	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
+	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
-	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(TESTING_FILE)
+	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(DEBUGIT_FILE)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT)) \
-		COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)" \
-		COMPOSER_DOITALL_$(TESTING)="$(COMPOSER_DOITALL_$(TESTING))" \
-		$(TESTING) 2>&1 \
-		| $(TEE) --append $(TESTING_FILE) \
+		COMPOSER_DOITALL_$(DEBUGIT)="$(COMPOSER_DOITALL_$(DEBUGIT))" \
+		COMPOSER_DOITALL_$(TESTING)="$(DEBUGIT)" \
+		$(DEBUGIT) 2>&1 \
+		| $(TEE) --append $(DEBUGIT_FILE) \
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
 	@$(ENDOLINE)
-	@$(TAIL) -n10 $(TESTING_FILE)
-	@$(LS) $(TESTING_FILE)
+	@$(TAIL) -n10 $(DEBUGIT_FILE)
+	@$(LS) $(DEBUGIT_FILE)
+
+########################################
+## {{{2 $(TESTING)
+########################################
+
+########################################
+### {{{3 $(TESTING)
+########################################
 
 #> update: $(NOTHING)-%
 #> update: $(TESTING): targets list
@@ -12078,6 +12157,35 @@ $(TESTING)-$(PRINTER):
 	@$(MAKE) $(LISTING) \
 		| $(SED) -n "s|[:][ ]$(TESTING)-Think||gp" \
 		| $(SORT)
+
+########################################
+### {{{3 $(TESTING)-file
+########################################
+
+ifneq ($(filter $(TESTING)-file,$(MAKECMDGOALS)),)
+export override COMPOSER_DOITALL_$(TESTING) := file
+export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
+endif
+.PHONY: $(TESTING)-file
+$(TESTING)-file: .set_title-$(TESTING)-file
+$(TESTING)-file:
+	@$(MAKE) $(HEADERS)-$(TESTING)
+	@$(MAKE) $(TESTING)-$(HEADERS)
+	@$(ENDOLINE)
+	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
+	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
+	@$(ENDOLINE)
+	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(TESTING_FILE)
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT)) \
+		COMPOSER_DOITALL_$(DEBUGIT)="$(TESTING)" \
+		COMPOSER_DOITALL_$(TESTING)="$(COMPOSER_DOITALL_$(TESTING))" \
+		$(TESTING) 2>&1 \
+		| $(TEE) --append $(TESTING_FILE) \
+		| $(SED) "s|^.*$$||g" \
+		| $(TR) '\n' '.'
+	@$(ENDOLINE)
+	@$(TAIL) -n10 $(TESTING_FILE)
+	@$(LS) $(TESTING_FILE)
 
 ########################################
 ### {{{3 $(TESTING)-%
@@ -13350,8 +13458,12 @@ endif
 ## {{{2 $(CONFIGS)
 ########################################
 
+########################################
+### {{{3 $(CONFIGS)
+########################################
+
 #> update: COMPOSER_OPTIONS
-#> update: $(HEADERS)-run
+#> update: $(HEADERS)-$(HEADERS)
 
 .PHONY: $(CONFIGS)
 $(CONFIGS): .set_title-$(CONFIGS)
@@ -13383,6 +13495,10 @@ ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
 	@$(call ENV_MAKE) $(CONFIGS)-env
 endif
 
+########################################
+### {{{3 $(CONFIGS)-$(@)
+########################################
+
 .PHONY: $(CONFIGS)-env
 $(CONFIGS)-env:
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
@@ -13407,6 +13523,10 @@ endif
 
 ########################################
 ## {{{2 $(TARGETS)
+########################################
+
+########################################
+### {{{3 $(TARGETS)
 ########################################
 
 .PHONY: $(TARGETS)
@@ -13604,6 +13724,10 @@ endif
 
 ########################################
 ## {{{2 $(EXPORTS)
+########################################
+
+########################################
+### {{{3 $(EXPORTS)
 ########################################
 
 #> update: $(NOTHING)-%
@@ -13899,6 +14023,10 @@ $(addprefix $(EXPORTS)-$(TARGETS)-,$($(EXPORTS)-$(TARGETS))):
 
 ########################################
 ## {{{2 $(PUBLISH)
+########################################
+
+########################################
+### {{{3 $(PUBLISH)
 ########################################
 
 .PHONY: $(PUBLISH)
@@ -14328,6 +14456,10 @@ $($(PUBLISH)-caches):
 ### {{{3 $(PUBLISH)-library
 ########################################
 
+########################################
+#### {{{4 $(PUBLISH)-library
+########################################
+
 #> all		$(PUBLISH)-library
 #> not sitemap	c_site="1" *.$(EXTN_HTML)	+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
 #> sitemap only	$(PUBLISH)-library-$(DOITALL)	+ $(COMPOSER_LIBRARY_AUTO_UPDATE)
@@ -14457,22 +14589,6 @@ $(PUBLISH)-$(COMPOSER_YML):
 			| .variables.$(PUBLISH)-library.auto_update = null \
 			" 2>/dev/null
 
-#> update: $(PUBLISH)-library-sort-yq
-#>	sort_by(.date, .title, .path) | reverse
-override define $(PUBLISH)-library-sort-yq =
-	sort_by(.path) \
-	| sort_by(.title) \
-	| (sort_by(.date) | reverse)
-endef
-
-override define $(PUBLISH)-library-sort-sh =
-	if [ "$(1)" = "date" ]; then \
-		$(SORT) --reverse; \
-	else \
-		$(SORT); \
-	fi
-endef
-
 ########################################
 #### {{{4 $(PUBLISH)-library-metadata
 ########################################
@@ -14564,6 +14680,10 @@ $($(PUBLISH)-library-metadata):
 
 ########################################
 #### {{{4 $(PUBLISH)-library-index
+########################################
+
+########################################
+##### {{{5 $(PUBLISH)-library-index
 ########################################
 
 $($(PUBLISH)-library-index): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH),,\
@@ -14676,6 +14796,12 @@ endef
 #### {{{4 $(PUBLISH)-library-digest
 ########################################
 
+########################################
+##### {{{5 $(PUBLISH)-library-digest-list
+########################################
+
+#> $(PUBLISH)-library-digest > $(PUBLISH)-library-digest-src > $(PUBLISH)-library-digest-list > $(PUBLISH)-library-digest-files
+
 #>		title
 override define $(PUBLISH)-library-digest-list =
 	for TYPE in \
@@ -14701,6 +14827,7 @@ endef
 
 ifneq ($(and \
 	$(c_site) ,\
+	$(COMPOSER_LIBRARY_AUTO_UPDATE) ,\
 	$(wildcard $($(PUBLISH)-library-index)) \
 ),)
 override $(PUBLISH)-library-digest-files := $(shell $(call $(PUBLISH)-library-digest-list))
@@ -14712,8 +14839,10 @@ $(PUBLISH)-library-digest-files:
 	@$(ECHO) ""
 
 ########################################
-##### {{{5 $(PUBLISH)-library-digest-file
+##### {{{5 $(PUBLISH)-library-digest
 ########################################
+
+#> $(PUBLISH)-library-digest > $(PUBLISH)-library-digest-src > $(PUBLISH)-library-digest-list > $(PUBLISH)-library-digest-files
 
 $($(PUBLISH)-library-digest): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
@@ -14730,6 +14859,8 @@ $($(PUBLISH)-library-digest):
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-src
 ########################################
+
+#> $(PUBLISH)-library-digest > $(PUBLISH)-library-digest-src > $(PUBLISH)-library-digest-list > $(PUBLISH)-library-digest-files
 
 #> update: YQ_WRITE.*title
 
@@ -14758,6 +14889,8 @@ $($(PUBLISH)-library-digest-src):
 ########################################
 ##### {{{5 $(PUBLISH)-library-digest-files
 ########################################
+
+#> $(PUBLISH)-library-digest > $(PUBLISH)-library-digest-src > $(PUBLISH)-library-digest-list > $(PUBLISH)-library-digest-files
 
 #> update: title / date / metalist:*
 
@@ -14901,6 +15034,10 @@ endef
 
 ########################################
 #### {{{4 $(PUBLISH)-library-sitemap
+########################################
+
+########################################
+##### {{{5 $(PUBLISH)-library-sitemap
 ########################################
 
 $($(PUBLISH)-library-sitemap): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
@@ -15060,6 +15197,26 @@ override define $(PUBLISH)-library-sitemap-create =
 endef
 
 ########################################
+#### {{{4 $(PUBLISH)-library-%
+########################################
+
+#> update: $(PUBLISH)-library-sort-yq
+#>	sort_by(.date, .title, .path) | reverse
+override define $(PUBLISH)-library-sort-yq =
+	sort_by(.path) \
+	| sort_by(.title) \
+	| (sort_by(.date) | reverse)
+endef
+
+override define $(PUBLISH)-library-sort-sh =
+	if [ "$(1)" = "date" ]; then \
+		$(SORT) --reverse; \
+	else \
+		$(SORT); \
+	fi
+endef
+
+########################################
 ### {{{3 $(PUBLISH)-$(PRINTER)
 ########################################
 
@@ -15207,6 +15364,10 @@ endif
 ### {{{3 $(PUBLISH)-$(EXAMPLE)
 ########################################
 
+########################################
+#### {{{4 $(PUBLISH)-$(EXAMPLE)
+########################################
+
 #> $(PUBLISH)-$(EXAMPLE): .$(PUBLISH)-$(INSTALL)
 #>	$(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(COMPOSER_DEBUGIT) || --filter="-_/test/**"
 #> $(PUBLISH)-$(EXAMPLE)-$(TESTING) = COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
@@ -15235,6 +15396,30 @@ endif
 #>	$(SHELL)
 #>		$(COMPOSER_RELEASE) && "#> update: HEREDOC_CUSTOM_PUBLISH"
 #>		$(PUBLISH_DIRS_CONFIGS) + $(PUBLISH_DIRS_DEBUGIT)
+
+#> update: $(NOTHING)-%
+
+.PHONY: $(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
+$(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
+$(PUBLISH)-$(EXAMPLE):
+ifeq ($(wildcard $(firstword $(RSYNC))),)
+	@$(call $(HEADERS))
+	@$(if $(wildcard $(firstword $(RSYNC))),,$(MAKE) $(NOTHING)-rsync)
+else
+	@$(call $(HEADERS))
+	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
+		$(call $(HEADERS)-note,$(PUBLISH_ROOT),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
+	)
+	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)) \
+		$($(PUBLISH)-$(EXAMPLE)-$(TARGETS))
+endif
+
+override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) :=
+
+########################################
+#### {{{4 $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
+########################################
 
 #> update: $(NOTHING)-%
 
@@ -15302,24 +15487,6 @@ override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
 	$(SED) -i "s|^[#]{1}||g"		$(1)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$(PUBLISH_FILES))) \
 						$(1)/$(word 5,$(PUBLISH_DIRS))/*$(COMPOSER_EXT_DEFAULT)
 endef
-
-.PHONY: $(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE): .set_title-$(PUBLISH)-$(EXAMPLE)
-$(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
-$(PUBLISH)-$(EXAMPLE):
-ifeq ($(wildcard $(firstword $(RSYNC))),)
-	@$(call $(HEADERS))
-	@$(if $(wildcard $(firstword $(RSYNC))),,$(MAKE) $(NOTHING)-rsync)
-else
-	@$(call $(HEADERS))
-	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
-		$(call $(HEADERS)-note,$(PUBLISH_ROOT),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
-	)
-	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)) \
-		$($(PUBLISH)-$(EXAMPLE)-$(TARGETS))
-endif
-
-override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) :=
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE).$(COMPOSER_SETTINGS)
@@ -15634,6 +15801,10 @@ endif
 ## {{{2 $(INSTALL)
 ########################################
 
+########################################
+### {{{3 $(INSTALL)
+########################################
+
 #> update: $(HEADERS)-note.*$(_H)
 
 .PHONY: $(INSTALL)
@@ -15666,6 +15837,10 @@ else
 endif
 endif
 
+########################################
+### {{{3 $(INSTALL)-$(TARGETS)
+########################################
+
 .PHONY: $(INSTALL)-$(TARGETS)
 $(INSTALL)-$(TARGETS): $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
 $(INSTALL)-$(TARGETS):
@@ -15675,6 +15850,10 @@ $(INSTALL)-$(TARGETS):
 $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS)):
 	@$(eval override $(@) := $(patsubst $(INSTALL)-%,%,$(@)))
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$($(@))/$(MAKEFILE),-$(INSTALL),,$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))))
+
+########################################
+### {{{3 $(INSTALL)-%
+########################################
 
 override define $(INSTALL)-$(MAKEFILE) =
 	if	[ -f "$(1)" ] && \
@@ -15694,6 +15873,10 @@ endef
 
 ########################################
 ## {{{2 $(CLEANER)
+########################################
+
+########################################
+### {{{3 $(CLEANER)
 ########################################
 
 .PHONY: $(CLEANER)
@@ -15718,6 +15901,10 @@ endif
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
 	@$(MAKE) $(SUBDIRS)-$(CLEANER)
 endif
+
+########################################
+### {{{3 $(CLEANER)-$(TARGETS)
+########################################
 
 #> update: OUTPUT_FILENAME
 
@@ -15745,6 +15932,10 @@ $(addprefix $(CLEANER)-,$(sort \
 		$(RM) $(CURDIR)/$($(@)) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
+
+########################################
+### {{{3 $(CLEANER)-$(CLEANER)
+########################################
 
 override define $(CLEANER)-$(CLEANER) =
 	COMPOSER_KEEPING="$(if $(1),$(1),$(COMPOSER_KEEPING))"; \
@@ -15787,6 +15978,10 @@ endef
 ## {{{2 $(DOITALL)
 ########################################
 
+########################################
+### {{{3 $(DOITALL)
+########################################
+
 .PHONY: $(DOITALL)
 $(DOITALL): .set_title-$(DOITALL)
 $(DOITALL):
@@ -15817,6 +16012,10 @@ endif
 	@$(MAKE) c_site="1" $(PUBLISH)-library-$(DOITALL)
 #>endif
 
+########################################
+### {{{3 $(DOITALL)-$(TARGETS)
+########################################
+
 .PHONY: $(DOITALL)-$(TARGETS)
 $(DOITALL)-$(TARGETS): $(COMPOSER_TARGETS)
 $(DOITALL)-$(TARGETS):
@@ -15826,10 +16025,18 @@ $(DOITALL)-$(TARGETS):
 ## {{{2 $(SUBDIRS)
 ########################################
 
+########################################
+### {{{3 $(SUBDIRS)
+########################################
+
 .PHONY: $(SUBDIRS)
 $(SUBDIRS): .set_title-$(SUBDIRS)
 $(SUBDIRS):
 	@$(MAKE) $(NOTHING)-$(NOTHING)-$(TARGETS)-$(SUBDIRS)
+
+########################################
+### {{{3 $(SUBDIRS)-$(EXAMPLE)
+########################################
 
 override define $(SUBDIRS)-$(EXAMPLE) =
 .PHONY: $(SUBDIRS)-$(1)
@@ -15857,6 +16064,10 @@ endef
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
+
+########################################
+### {{{3 $(SUBDIRS)-$(TARGETS)
+########################################
 
 override define $(SUBDIRS)-$(TARGETS) =
 .PHONY: $(SUBDIRS)-$(TARGETS)-$(1)
@@ -15894,20 +16105,6 @@ $(PRINTER)-$(PRINTER): $(if $(COMPOSER_LOG),\
 )
 $(PRINTER)-$(PRINTER):
 	@$(ECHO) ""
-
-$(COMPOSER_LOG): $(if $(COMPOSER_EXT),\
-	$(COMPOSER_CONTENTS_EXT) ,\
-	$(NOTHING)-COMPOSER_EXT \
-)
-$(COMPOSER_LOG): $(if $(wildcard $(COMPOSER_LOG)),,\
-	$(NOTHING)-$(COMPOSER_LOG) \
-)
-$(COMPOSER_LOG):
-	@$(LS) --directory \
-		$(COMPOSER_LOG) \
-		$(?) \
-		2>/dev/null \
-		|| $(TRUE)
 
 ################################################################################
 # {{{1 Pandoc Targets
@@ -15987,6 +16184,24 @@ else
 endif
 endif
 endif
+
+########################################
+## {{{2 $(COMPOSER_LOG)
+########################################
+
+$(COMPOSER_LOG): $(if $(COMPOSER_EXT),\
+	$(COMPOSER_CONTENTS_EXT) ,\
+	$(NOTHING)-COMPOSER_EXT \
+)
+$(COMPOSER_LOG): $(if $(wildcard $(COMPOSER_LOG)),,\
+	$(NOTHING)-$(COMPOSER_LOG) \
+)
+$(COMPOSER_LOG):
+	@$(LS) --directory \
+		$(COMPOSER_LOG) \
+		$(?) \
+		2>/dev/null \
+		|| $(TRUE)
 
 ########################################
 ## {{{2 $(COMPOSER_EXT)
