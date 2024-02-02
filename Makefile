@@ -2417,6 +2417,9 @@ $(if $(wildcard $(FILE)),\
 		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder" $(FILE) 2>/dev/null \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 	)) \
+	$(if $(filter usage:%,$(subst $(NULL) ,,$(strip $(COMPOSER_LIBRARY_DIR)))),\
+		$(eval override COMPOSER_LIBRARY_DIR :=) \
+	) \
 	$(if $(COMPOSER_LIBRARY_DIR),\
 		$(eval override COMPOSER_LIBRARY_ROOT	:= $(abspath $(dir $(FILE)))) \
 		$(eval override COMPOSER_LIBRARY	:= $(COMPOSER_LIBRARY_ROOT)/$(notdir $(COMPOSER_LIBRARY_DIR))) \
@@ -2754,7 +2757,8 @@ override TESTING_DIR			:= $(abspath $(dir $(COMPOSER_ROOT)))
 endif
 
 override TESTING_MAKEFILE		:= $(TESTING_DIR)/$(COMPOSER_CMS)/$(MAKEFILE)
-override TESTING_LOGFILE		:= $(COMPOSER_CMS)-$(TESTING).log
+#>override TESTING_LOGFILE		:= $(COMPOSER_CMS)-$(TESTING).log
+override TESTING_LOGFILE		:= +$(COMPOSER_BASENAME)-$(TESTING).log
 
 override TESTING_MAKEJOBS		:= 8
 ifneq ($(and \
@@ -3647,8 +3651,8 @@ override define $(HELPOUT)-$(DOITALL)-links =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
 $(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
-$(_E)[$(COMPOSER_COMPOSER)]: http://www.garybgenett.net/projects/composer$(_D)
-$(_E)[composer@garybgenett.net]: mailto:composer@garybgenett.net?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
+$(_E)[$(COMPOSER_COMPOSER)]: $(COMPOSER_HOMEPAGE)$(_D)
+$(_E)[$(COMPOSER_CONTACT)]: mailto:$(COMPOSER_CONTACT)?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
 $(_S)[$(COMPOSER_BASENAME) Icon]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-v1.0.png$(_D)
 $(_S)[$(COMPOSER_BASENAME) Screenshot]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png$(_D)
@@ -4980,7 +4984,7 @@ such as $(_C)[npm]$(_D) $(_E)(see [$(CHECKIT)-$(DOITALL)])$(_D).
 $(call $(HELPOUT)-$(DOITALL)-section,$(DEBUGIT) / $(DEBUGIT)-file)
 
   * This is the tool to use for any support issues.  Submit the output file to:
-    $(_E)[composer@garybgenett.net]$(_D)
+    $(_E)[$(COMPOSER_CONTACT)]$(_D)
   * Internally, it also runs:
       * $(_C)[$(TESTING)]$(_D)
       * $(_C)[$(CHECKIT)-$(DOITALL)]$(_D)
@@ -6254,7 +6258,10 @@ endef
 ## {{{2 Heredoc: gitignore
 ########################################
 
+#WORKING:FIX
+
 #> $(UPGRADE) > $(DEBUGIT) > $(TESTING)
+
 override define HEREDOC_GITIGNORE =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) Git Exclusions
@@ -8882,8 +8889,6 @@ endef
 ########################################
 ## {{{2 Heredoc: custom_$(PUBLISH)_css **
 ########################################
-
-#WORKING:FIX
 
 #> validate: sed -nr "s|^.*[[:space:]]class[=]||gp" Makefile | sed -r "s|[[:space:]]+|\n|g" | sort -u
 
@@ -11713,6 +11718,7 @@ override $(CREATOR)-$(TARGETS) += $(CREATOR).$(CONFIGS)
 endif
 endif
 
+#> update: HEREDOC_GITIGNORE
 .PHONY: $(CREATOR).$(CONFIGS)
 $(CREATOR).$(CONFIGS):
 	@$(call $(HEADERS)-file,$(CURDIR),$(CONFIGS))
@@ -11733,7 +11739,6 @@ $(CREATOR).$(CONFIGS):
 override $(CREATOR)-$(TARGETS) += $(CREATOR).$(OUT_README)
 
 .PHONY: $(CREATOR).$(OUT_README)
-$(CREATOR).$(OUT_README): $(CREATOR).$(CONFIGS)
 $(CREATOR).$(OUT_README):
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README)$(COMPOSER_EXT_DEFAULT))
 	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(HELPOUT) \
@@ -11753,7 +11758,6 @@ endif
 endif
 
 .PHONY: $(CREATOR).$(OUT_README).$(PUBLISH)
-$(CREATOR).$(OUT_README).$(PUBLISH): $(CREATOR).$(CONFIGS)
 $(CREATOR).$(OUT_README).$(PUBLISH):
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(PUBLISH)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_README) \
@@ -11781,7 +11785,6 @@ endif
 endif
 
 .PHONY: $(CREATOR).$(OUT_README).$(TYPE_PRES)
-$(CREATOR).$(OUT_README).$(TYPE_PRES): $(CREATOR).$(CONFIGS)
 $(CREATOR).$(OUT_README).$(TYPE_PRES):
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT))
 	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(TYPE_PRES) \
@@ -11797,7 +11800,6 @@ $(CREATOR).$(OUT_README).$(TYPE_PRES):
 override $(CREATOR)-$(TARGETS) += $(CREATOR).$(OUT_LICENSE)
 
 .PHONY: $(CREATOR).$(OUT_LICENSE)
-$(CREATOR).$(OUT_LICENSE): $(CREATOR).$(CONFIGS)
 $(CREATOR).$(OUT_LICENSE):
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
 	@$(call DO_HEREDOC,HEREDOC_LICENSE) \
@@ -11813,7 +11815,6 @@ $(CREATOR).$(OUT_LICENSE):
 override $(CREATOR)-$(TARGETS) += $(CREATOR).$(notdir $(COMPOSER_ART))
 
 .PHONY: $(CREATOR).$(notdir $(COMPOSER_ART))
-$(CREATOR).$(notdir $(COMPOSER_ART)): $(CREATOR).$(CONFIGS)
 $(CREATOR).$(notdir $(COMPOSER_ART)):
 	@$(call $(HEADERS)-file,$(CURDIR),$(call COMPOSER_CONV,,$(COMPOSER_ART)))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(COMPOSER_YML)
@@ -12133,7 +12134,8 @@ $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 #>$(TESTING): $(TESTING)-$(HEADERS)-DEBUGIT
 #>endif
 #>endif
-$(TESTING): $(TESTING)-Think
+#> $(TESTING)-Think > $(TESTING)-$(DISTRIB)
+#>$(TESTING): $(TESTING)-Think
 $(TESTING): $(TESTING)-$(DISTRIB)
 #>$(TESTING): $(TESTING)-heredoc
 #>$(TESTING): $(TESTING)-speed
@@ -12228,11 +12230,14 @@ $(TESTING)-file:
 ### {{{3 $(TESTING)-%
 ########################################
 
+#> $(TESTING)-* > $(TESTING)-%
+
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@)))))
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(TESTING_LOGFILE)
 override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(MAKEFILE),-$(INSTALL),$(2),1)
 override $(TESTING)-run			= $(call ENV_MAKE,$(2),$(3),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(TESTING)) --directory $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))
 
+#> $(TESTING)-Think > $(TESTING)-$(DISTRIB)
 override define $(TESTING)-$(HEADERS) =
 	$(call TITLE_LN ,1,$(call VIM_FOLDING) $(MARKER)[ $(patsubst $(TESTING)-%,%,$(@)) ]$(MARKER)); \
 	$(ECHO) "$(_M)$(MARKER) PURPOSE:$(_D) $(strip $(1))$(_D)\n"; \
@@ -12240,7 +12245,9 @@ override define $(TESTING)-$(HEADERS) =
 	if [ -z "$(1)" ]; then exit 1; fi; \
 	if [ -z "$(2)" ]; then exit 1; fi; \
 	$(ENDOLINE); \
-	if [ "$(@)" != "$(TESTING)-Think" ]; then \
+	if	[ "$(@)" != "$(TESTING)-Think" ] && \
+		[ "$(@)" != "$(TESTING)-$(DISTRIB)" ]; \
+	then \
 		$(DIFF) $(COMPOSER) $(TESTING_MAKEFILE); \
 	fi
 endef
@@ -12249,6 +12256,8 @@ override define $(TESTING)-mark =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) MARK [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
+	$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
+	$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_YML); \
 	$(call $(TESTING)-make,$(if $(1),$(1),$(@)),$(TESTING_MAKEFILE)); \
 	$(call $(TESTING)-run,$(if $(1),$(1),$(@))) $(CREATOR); \
 	if [ -n "$(2)" ]; then \
@@ -12262,6 +12271,8 @@ override define $(TESTING)-load =
 	$(ENDOLINE); \
 	$(PRINT) "$(_M)$(MARKER) LOAD [$(@)]:"; \
 	$(MKDIR) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@))); \
+	$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_SETTINGS); \
+	$(RM) $(call $(TESTING)-pwd,$(if $(1),$(1),$(@)))/$(COMPOSER_YML); \
 	if [ "$(COMPOSER_ROOT)" != "$(TESTING_DIR)" ] && [ "$(abspath $(dir $(COMPOSER_ROOT)))" != "$(TESTING_DIR)" ]; then \
 		$(RSYNC) \
 			--delete-excluded \
@@ -12342,9 +12353,12 @@ endef
 ### {{{3 $(TESTING)-Think
 ########################################
 
+#> $(TESTING)-Think > $(TESTING)-$(DISTRIB)
+
 #> update: $(TESTING)-Think
 
 .PHONY: $(TESTING)-Think
+#>$(TESTING)-Think: $(TESTING)-$(DISTRIB)
 $(TESTING)-Think:
 	@$(call $(TESTING)-$(HEADERS),\
 		Install the '$(_C)$(COMPOSER_CMS)$(_D)' directory ,\
@@ -12352,18 +12366,10 @@ $(TESTING)-Think:
 		\n\t * Top-level '$(_C)$(notdir $(TESTING_DIR))$(_D)' directory ready for direct use \
 	)
 	@$(call $(TESTING)-init)
-#> update: $(TESTING)-$(DISTRIB)-$(INSTALL)
-ifneq ($(wildcard $(call $(TESTING)-pwd,$(COMPOSER_CMS))/.$(DISTRIB)-$(INSTALL)),)
 	@$(call $(TESTING)-done)
-endif
 
-#> update: $(TESTING)-Think
 .PHONY: $(TESTING)-Think-init
 $(TESTING)-Think-init:
-#> update: $(TESTING)-$(DISTRIB)-$(INSTALL)
-ifeq ($(wildcard $(call $(TESTING)-pwd,$(COMPOSER_CMS))/.$(DISTRIB)-$(INSTALL)),)
-	@$(ECHO) ""
-else
 	@$(call $(TESTING)-make,/,$(TESTING_MAKEFILE))
 	@$(call $(TESTING)-run) --makefile $(TESTING_MAKEFILE) $(INSTALL)-$(DOFORCE)
 	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS),,,1)
@@ -12386,7 +12392,6 @@ else
 #>	@$(CAT) \
 #>		$(call $(TESTING)-pwd,$(COMPOSER_CMS))/$(COMPOSER_YML) \
 #>		$(call $(TESTING)-pwd,/)/$(COMPOSER_YML)
-endif
 
 .PHONY: $(TESTING)-Think-done
 $(TESTING)-Think-done:
@@ -12397,8 +12402,10 @@ $(TESTING)-Think-done:
 ### {{{3 $(TESTING)-$(DISTRIB)
 ########################################
 
+#> $(TESTING)-Think > $(TESTING)-$(DISTRIB)
+
 .PHONY: $(TESTING)-$(DISTRIB)
-$(TESTING)-$(DISTRIB): $(TESTING)-Think
+#>$(TESTING)-$(DISTRIB): $(TESTING)-Think
 $(TESTING)-$(DISTRIB):
 	@$(call $(TESTING)-$(HEADERS),\
 		Install '$(_C)$(COMPOSER_CMS)$(_D)' using '$(_C)$(DISTRIB)$(_D)' ,\
@@ -12410,6 +12417,7 @@ $(TESTING)-$(DISTRIB):
 
 .PHONY: $(TESTING)-$(DISTRIB)-init
 $(TESTING)-$(DISTRIB)-init:
+	@$(MKDIR) $(call $(TESTING)-pwd,$(COMPOSER_CMS))
 #>	@$(call $(TESTING)-run,$(COMPOSER_CMS)) $(DISTRIB)
 	@$(call $(TESTING)-run,$(COMPOSER_CMS)) --makefile $(COMPOSER) $(DISTRIB)
 
@@ -12428,8 +12436,6 @@ $(TESTING)-$(DISTRIB)-done-env:
 
 .PHONY: $(TESTING)-$(DISTRIB)-done
 $(TESTING)-$(DISTRIB)-done:
-#> update: $(TESTING)-$(DISTRIB)-$(INSTALL)
-	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(call $(TESTING)-pwd,$(COMPOSER_CMS))/.$(DISTRIB)-$(INSTALL)
 	@$(call $(TESTING)-run) $(@)-env
 
 ########################################
@@ -12586,6 +12592,19 @@ $(TESTING)-speed:
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
+.PHONY: $(TESTING)-speed-init
+$(TESTING)-speed-init:
+	@$(call $(TESTING)-speed-init)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
+#> $(PUBLISH) > $(CLEANER) > $(DOITALL)
+#>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
+	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
+	@$(call $(TESTING)-speed-init-$(PUBLISH))
+	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_TESTING)
+#>	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)
+	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)
+
 #> update: $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
 override define $(TESTING)-speed-init =
 	if [ -z "$(1)" ]; then \
@@ -12623,19 +12642,6 @@ override define $(TESTING)-speed-init-$(PUBLISH) =
 		|| $(TRUE); \
 	time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 endef
-
-.PHONY: $(TESTING)-speed-init
-$(TESTING)-speed-init:
-	@$(call $(TESTING)-speed-init)
-	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
-#> $(PUBLISH) > $(CLEANER) > $(DOITALL)
-#>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
-	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
-	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
-	@$(call $(TESTING)-speed-init-$(PUBLISH))
-	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_TESTING)
-#>	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)
-	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)
 
 .PHONY: $(TESTING)-speed-done
 $(TESTING)-speed-done:
@@ -13278,6 +13284,11 @@ $(TESTING)-other-init:
 	)
 	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
 	#> convict
+#> update: HEREDOC_GITIGNORE
+#>	@$(RSYNC) \
+#>		$(call $(TESTING)-pwd,$(COMPOSER_CMS))/.gitignore \
+#>		$(call $(TESTING)-pwd)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE) | $(SED) "s|[[:space:]]+$$||g" >$(call $(TESTING)-pwd)/.gitignore
 	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) init \
@@ -14394,8 +14405,9 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 			| $(YQ_WRITE) ".$(2)" \
 			| $(call COMPOSER_YML_DATA_PARSE,,$(TOKEN)) \
 			| $(SED) \
-				-e "s|$(TOKEN)|\n|g"; \
+				-e "s|$(TOKEN)|\n|g" \
 				-e "/^$$/d" \
+				; \
 		fi; \
 	done \
 		| $(call $(PUBLISH)-library-sort-sh,$(2)) \
@@ -14788,7 +14800,8 @@ override define $(PUBLISH)-library-index-create =
 		$(YQ_WRITE_FILE) ".[].date" $($(PUBLISH)-library-metadata) 2>/dev/null \
 		| $(SED) \
 			-e "s|^([0-9]{4}).*$$|\1|g" \
-			-e "s|^.*([0-9]{4})$$|\1|g"; \
+			-e "s|^.*([0-9]{4})$$|\1|g" \
+			; \
 	else \
 		if [ -n "$$($(YQ_WRITE) "map(select(.\"$(1)\" == null))" $($(PUBLISH)-library-metadata) 2>/dev/null)" ]; then \
 			$(ECHO) "null\n"; \
