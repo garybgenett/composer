@@ -1269,6 +1269,8 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ## {{{2 Wrappers
 ########################################
 
+override GITIGNORE_LIST			:=
+
 ########################################
 ### {{{3 Date
 ########################################
@@ -1356,7 +1358,8 @@ override define GIT_REPO_DO =
 	fi
 endef
 
-override define GIT_IGNORE =
+override GITIGNORE_LIST			+= GIT
+override define GITIGNORE_GIT =
 **/.git
 endef
 
@@ -1386,7 +1389,8 @@ override define WGET_PACKAGE_DO =
 	$(SPLIT) $(1)/$(5) $(COMPOSER_BIN)/$(notdir $(5)).
 endef
 
-override define WGET_IGNORE =
+override GITIGNORE_LIST			+= WGET
+override define GITIGNORE_WGET =
 /.wget-hsts
 endef
 
@@ -1446,7 +1450,8 @@ override define NPM_BUILD =
 	fi
 endef
 
-override define NPM_IGNORE =
+override GITIGNORE_LIST			+= NPM
+override define GITIGNORE_NPM =
 #$(MARKER)**/node_modules/
 **/node_modules
 /.npm/
@@ -1468,7 +1473,9 @@ override define FIREBASE_RUN =
 	)
 endef
 
-override define FIREBASE_IGNORE =
+override GITIGNORE_LIST			+= FIREBASE
+#WORKING:FIX best way to do... /.config/ ?
+override define GITIGNORE_FIREBASE =
 /.firebase*
 **firebase**.json
 endef
@@ -4796,6 +4803,10 @@ endef
 
 #WORK
 #	other?  DATEMARK, etc.
+#		$(COMPOSER_SETTINGS) == Composer Globals
+#		everything == .PHONY
+#			supported == Tooling Options
+#		create an automated list in this section
 
 override define $(HELPOUT)-$(DOITALL)-variables_helper =
 $(_N)*These are internal variables only exposed within `$(COMPOSER_SETTINGS)` files.*$(_D)
@@ -6294,23 +6305,23 @@ override define HEREDOC_GITIGNORE =
 /$(call COMPOSER_CONV,,$(COMPOSER_SRC))
 
 #$(DIVIDE) binaries$(foreach FILE,$(REPOSITORIES_LIST),\
-$(if $($(FILE)_BIN),$(call NEWLINE)/$(call COMPOSER_CONV,,$($(FILE)_DIR))/$(notdir $($(FILE)_DIR))-*) \
+	$(if $($(FILE)_BIN),$(call NEWLINE)/$(call COMPOSER_CONV,,$($(FILE)_DIR))/$(notdir $($(FILE)_DIR))-*) \
+)$(foreach FILE,$(filter-out \
+		FIREBASE \
+		,\
+		$(GITIGNORE_LIST) \
+	),\
+	$(call NEWLINE)$(call NEWLINE)#$(DIVIDE) $(notdir $(word 1,$($(FILE))))$(call NEWLINE)$(call GITIGNORE_$(FILE)) \
 )
 
-#$(DIVIDE) git
-$(call GIT_IGNORE)
-
-#$(DIVIDE) wget
-$(call WGET_IGNORE)
-
-#$(DIVIDE) npm
-$(call NPM_IGNORE)
-
 ########################################
-# $(EXPORTS)
-
-#$(DIVIDE) firebase
-$(call FIREBASE_IGNORE)
+# $(EXPORTS)$(foreach FILE,$(filter \
+		FIREBASE \
+		,\
+		$(GITIGNORE_LIST) \
+	),\
+	$(call NEWLINE)$(call NEWLINE)#$(DIVIDE) $(notdir $(word 1,$($(FILE))))$(call NEWLINE)$(call GITIGNORE_$(FILE)) \
+)
 
 ################################################################################
 # End Of File
@@ -13936,6 +13947,11 @@ endef
 #>		-o \\\( -path \"$(1)/.*\" -prune \\\)
 override define $(EXPORTS)-tree =
 	$(call $(EXPORTS)-find,$(1)) \
+		$(foreach FILE,$(GITIGNORE_LIST),\
+			$(foreach IGNORE,$(filter-out #%,$(GITIGNORE_$(FILE))),\
+				-o \\\( -path $(1)/$(subst *,\\\*,$(patsubst /%,%,$(patsubst %/,%,$(IGNORE)))) -prune \\\) \
+			) \
+		) \
 		-o \\\( -type d -print \\\)
 endef
 
