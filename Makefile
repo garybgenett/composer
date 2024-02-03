@@ -265,7 +265,7 @@ override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
-override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME) License
+override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME): License
 #>override COMPOSER_CLOSING		:= Go Do A Thing
 override COMPOSER_CLOSING		:= Go Make A Thing
 override COMPOSER_TAGLINE		:= *Happy Making!*
@@ -3647,10 +3647,12 @@ endef
 #>$(_S)/$(_D)                 $(_S)[$(_N)$(EXTN_TEXT)$(_S)]($(_N)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
 #>$(_S)/$(_D)              $(_S)[$(_N)$(EXTN_LINT)$(_S)]($(_N)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
 
+#WORKING:FIX license gpl -> variable
 override define $(HELPOUT)-$(DOITALL)-links =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
-$(_E)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
+$(_S)<!-- #$(MARKER)$(_D) $(_S)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D) $(_S)-->$(_D)
+$(_E)[License: GPL]: $(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_CONTACT)]: mailto:$(COMPOSER_CONTACT)?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
@@ -4067,7 +4069,7 @@ $(_C)[Bootswatch]$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.html$(_D)
 
 $(_S)--$(_D) $(_N)Examples:$(_D)
-    $(_S)[$(_N)Example Website$(_S)]($(_E)$(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))$(_S))$(_D)
+    $(_S)[$(_N)Example Website$(_S)]($(_E)$(call COMPOSER_CONV,,$(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))$(_S))$(_D)
   $(_S)/$(_D) $(_S)[$(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S)]($(_S)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
 endef
 
@@ -5657,9 +5659,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) icon cc-by-nc-nd $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) icon gpl $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) icon gpl $(patsubst <%>,{%},$(PUBLISH_CMD_ROOT))/../$(OUT_LICENSE).$(EXTN_DEFAULT) $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) icon gpl $(PUBLISH_CMD_ROOT)/../$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) icon gpl $(PUBLISH_CMD_ROOT)/../$(OUT_LICENSE).$(EXTN_DEFAULT) $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)`
 
@@ -6187,6 +6189,10 @@ endef
 ################################################################################
 
 ########################################
+### {{{3 #WORKING:FIX
+########################################
+
+########################################
 ## {{{2 Images
 ########################################
 
@@ -6215,7 +6221,11 @@ override define DO_HEREDOC =
 endef
 
 ########################################
-## {{{2 Heredoc: gitattributes
+## {{{2 Heredoc: git **
+########################################
+
+########################################
+### {{{3 Heredoc: gitattributes
 ########################################
 
 override define HEREDOC_GITATTRIBUTES =
@@ -6237,7 +6247,7 @@ override define HEREDOC_GITATTRIBUTES =
 endef
 
 ########################################
-## {{{2 Heredoc: gitconfig
+### {{{3 Heredoc: gitconfig
 ########################################
 
 override define HEREDOC_GITCONFIG =
@@ -6255,10 +6265,8 @@ email					= $(COMPOSER_CONTACT)
 endef
 
 ########################################
-## {{{2 Heredoc: gitignore
+### {{{3 Heredoc: gitignore
 ########################################
-
-#WORKING:FIX
 
 #> $(UPGRADE) > $(DEBUGIT) > $(TESTING)
 
@@ -6337,6 +6345,7 @@ $(_N)override$(_D) $(_C)COMPOSER_TARGETS$(_D)		:= $(_N)\\$(_D)
 	$(_M)$(OUT_README).$(EXTN_EPUB)$(_D) $(_N)\\$(_D)
 	$(_M)$(OUT_README).$(EXTN_PRES)$(_D) $(_N)\\$(_D)
 	$(_M)$(OUT_README).$(EXTN_DOCX)$(_D) $(_N)\\$(_D)
+	$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)
 
 $(_S)#$(MARKER)$(_D)	$(_M)$(OUT_README).$(EXTN_PPTX)$(_D) $(_N)\\$(_D)
 $(_S)#$(MARKER)$(_D)	$(_M)$(OUT_README).$(EXTN_TEXT)$(_D) $(_N)\\$(_D)
@@ -6347,9 +6356,9 @@ $(_N)override$(_D) $(_C)COMPOSER_SUBDIRS$(_D)		:= $(_M)$(NOTHING)$(_D)
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Defaults$(_D)
 
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_logo		:= $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_D)
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_icon		:= $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_D)
-$(_M)$(OUT_README).$(_N)%$(_D): $(_E)override c_toc		:= $(SPECIAL_VAL)$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D) $(_M)$(OUT_LICENSE).$(_N)%$(_D): $(_E)override c_logo	:= $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D) $(_M)$(OUT_LICENSE).$(_N)%$(_D): $(_E)override c_icon	:= $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_D)
+$(_M)$(OUT_README).$(_N)%$(_D) $(_M)$(OUT_LICENSE).$(_N)%$(_D): $(_E)override c_toc	:= $(SPECIAL_VAL)$(_D)
 
 $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Files$(_D)
@@ -6362,6 +6371,9 @@ $(_N)override$(_D) $(_C)$(OUT_README).$(EXTN_LPDF)$(_D)			:= $(_M)$(OUT_README)$
 
 $(_N)override$(_D) $(_C)$(OUT_README).$(EXTN_PRES)$(_D)		:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_EXT_DEFAULT)$(_D)
 $(_M)$(OUT_README).$(EXTN_PRES)$(_D): $(_E)override c_toc	:=$(_D)
+
+$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)override c_site		:= 1$(_D)
+$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)override c_toc		:=$(_D)
 
 $(_S)################################################################################$(_D)
 $(_N)endif$(_D)
@@ -6833,6 +6845,12 @@ endef
 
 #> update: COMPOSER_TARGETS.*=
 
+override define HEREDOC_COMPOSER_YML_README_HACK =
+	$(SED) -i \
+		-e "s|$(COMPOSER_TECHNAME)[:] |$(patsubst $(COMPOSER_BASENAME) ,,$(COMPOSER_TECHNAME)) |g" \
+		-e "s|$(COMPOSER_BASENAME) ||g"
+endef
+
 override define HEREDOC_COMPOSER_YML_README =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(OUT_README))
@@ -6847,7 +6865,7 @@ variables:
     homepage:				$(COMPOSER_HOMEPAGE)
     brand:				$(COMPOSER_TECHNAME)
     copyright: |
-      $(PUBLISH_CMD_BEG) icon gpl $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(PUBLISH_CMD_END)
+      $(PUBLISH_CMD_BEG) icon gpl $(OUT_LICENSE).$(EXTN_HTML) $(PUBLISH_CMD_END)
       $(COPYRIGHT_SHORT)
 
     cols_break:				md
@@ -6858,9 +6876,10 @@ variables:
 
   $(PUBLISH)-nav-top:
     MENU:
-      - Top: $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+      - $(OUT_README): $(OUT_README).$(PUBLISH).$(EXTN_HTML)
+      - $(OUT_LICENSE): $(OUT_LICENSE).$(EXTN_HTML)
       - Formats:
-        - Example Website: $(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))
+        - Example Website: $(call COMPOSER_CONV,,$(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))
         - spacer
         - $(OUT_README).$(PUBLISH).$(EXTN_HTML): $(OUT_README).$(PUBLISH).$(EXTN_HTML)
         - $(OUT_README).$(EXTN_HTML): $(OUT_README).$(EXTN_HTML)
@@ -6880,7 +6899,7 @@ variables:
     MENU:
       - box-begin $(SPECIAL_VAL) Formats
       - $(MENU_SELF): |
-          * [Example Website]($(notdir $(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES)))
+          * [Example Website]($(call COMPOSER_CONV,,$(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES)))
       - spacer
       - $(MENU_SELF): |
           * [$(OUT_README).$(PUBLISH).$(EXTN_HTML)]($(OUT_README).$(PUBLISH).$(EXTN_HTML))
@@ -10030,18 +10049,18 @@ endef
 ########################################
 
 override define HEREDOC_LICENSE =
-# $(COMPOSER_LICENSE)
+---
+title: "$(COMPOSER_LICENSE)"
+---
 
---------------------------------------------------------------------------------
+# $(COMPOSER_LICENSE)
 
 ## Copyright
 
 	$(COPYRIGHT_FULL)
 	All rights reserved.
 
---------------------------------------------------------------------------------
-
-## License
+# GNU GPL
 
 *Source: <https://www.gnu.org/licenses/gpl-3.0.html>*
 
@@ -10052,7 +10071,7 @@ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
 Everyone is permitted to copy and distribute verbatim copies
 of this license document, but changing it is not allowed.
 
-### Preamble
+## Preamble
 
 The GNU General Public License is a free, copyleft license for
 software and other kinds of works.
@@ -10115,9 +10134,9 @@ patents cannot be used to render the program non-free.
 The precise terms and conditions for copying, distribution and
 modification follow.
 
-### TERMS AND CONDITIONS
+## TERMS AND CONDITIONS
 
-#### 0. Definitions.
+### 0. Definitions.
 
 "This License" refers to version 3 of the GNU General Public License.
 
@@ -10156,7 +10175,7 @@ work under this License, and how to view a copy of this License.  If
 the interface presents a list of user commands or options, such as a
 menu, a prominent item in the list meets this criterion.
 
-#### 1. Source Code.
+### 1. Source Code.
 
 The "source code" for a work means the preferred form of the work
 for making modifications to it.  "Object code" means any non-source
@@ -10198,7 +10217,7 @@ Source.
 The Corresponding Source for a work in source code form is that
 same work.
 
-#### 2. Basic Permissions.
+### 2. Basic Permissions.
 
 All rights granted under this License are granted for the term of
 copyright on the Program, and are irrevocable provided the stated
@@ -10223,7 +10242,7 @@ Conveying under any other circumstances is permitted solely under
 the conditions stated below.  Sublicensing is not allowed; section 10
 makes it unnecessary.
 
-#### 3. Protecting Users' Legal Rights From Anti-Circumvention Law.
+### 3. Protecting Users' Legal Rights From Anti-Circumvention Law.
 
 No covered work shall be deemed part of an effective technological
 measure under any applicable law fulfilling obligations under article
@@ -10239,7 +10258,7 @@ modification of the work as a means of enforcing, against the work's
 users, your or third parties' legal rights to forbid circumvention of
 technological measures.
 
-#### 4. Conveying Verbatim Copies.
+### 4. Conveying Verbatim Copies.
 
 You may convey verbatim copies of the Program's source code as you
 receive it, in any medium, provided that you conspicuously and
@@ -10252,7 +10271,7 @@ recipients a copy of this License along with the Program.
 You may charge any price or no price for each copy that you convey,
 and you may offer support or warranty protection for a fee.
 
-#### 5. Conveying Modified Source Versions.
+### 5. Conveying Modified Source Versions.
 
 You may convey a work based on the Program, or the modifications to
 produce it from the Program, in the form of source code under the
@@ -10289,7 +10308,7 @@ beyond what the individual works permit.  Inclusion of a covered work
 in an aggregate does not cause this License to apply to the other
 parts of the aggregate.
 
-#### 6. Conveying Non-Source Forms.
+### 6. Conveying Non-Source Forms.
 
 You may convey a covered work in object code form under the terms
 of sections 4 and 5, provided that you also convey the
@@ -10387,7 +10406,7 @@ documented (and with an implementation available to the public in
 source code form), and must require no special password or key for
 unpacking, reading or copying.
 
-#### 7. Additional Terms.
+### 7. Additional Terms.
 
 "Additional permissions" are terms that supplement the terms of this
 License by making exceptions from one or more of its conditions.
@@ -10451,7 +10470,7 @@ Additional terms, permissive or non-permissive, may be stated in the
 form of a separately written license, or stated as exceptions;
 the above requirements apply either way.
 
-#### 8. Termination.
+### 8. Termination.
 
 You may not propagate or modify a covered work except as expressly
 provided under this License.  Any attempt otherwise to propagate or
@@ -10479,7 +10498,7 @@ this License.  If your rights have been terminated and not permanently
 reinstated, you do not qualify to receive new licenses for the same
 material under section 10.
 
-#### 9. Acceptance Not Required for Having Copies.
+### 9. Acceptance Not Required for Having Copies.
 
 You are not required to accept this License in order to receive or
 run a copy of the Program.  Ancillary propagation of a covered work
@@ -10490,7 +10509,7 @@ modify any covered work.  These actions infringe copyright if you do
 not accept this License.  Therefore, by modifying or propagating a
 covered work, you indicate your acceptance of this License to do so.
 
-#### 10. Automatic Licensing of Downstream Recipients.
+### 10. Automatic Licensing of Downstream Recipients.
 
 Each time you convey a covered work, the recipient automatically
 receives a license from the original licensors, to run, modify and
@@ -10515,7 +10534,7 @@ rights granted under this License, and you may not initiate litigation
 any patent claim is infringed by making, using, selling, offering for
 sale, or importing the Program or any portion of it.
 
-#### 11. Patents.
+### 11. Patents.
 
 A "contributor" is a copyright holder who authorizes use under this
 License of the Program or a work on which the Program is based.  The
@@ -10584,7 +10603,7 @@ Nothing in this License shall be construed as excluding or limiting
 any implied license or other defenses to infringement that may
 otherwise be available to you under applicable patent law.
 
-#### 12. No Surrender of Others' Freedom.
+### 12. No Surrender of Others' Freedom.
 
 If conditions are imposed on you (whether by court order, agreement or
 otherwise) that contradict the conditions of this License, they do not
@@ -10596,7 +10615,7 @@ to collect a royalty for further conveying from those to whom you convey
 the Program, the only way you could satisfy both those terms and this
 License would be to refrain entirely from conveying the Program.
 
-#### 13. Use with the GNU Affero General Public License.
+### 13. Use with the GNU Affero General Public License.
 
 Notwithstanding any other provision of this License, you have
 permission to link or combine any covered work with a work licensed
@@ -10607,7 +10626,7 @@ but the special requirements of the GNU Affero General Public License,
 section 13, concerning interaction through a network will apply to the
 combination as such.
 
-#### 14. Revised Versions of this License.
+### 14. Revised Versions of this License.
 
 The Free Software Foundation may publish revised and/or new versions of
 the GNU General Public License from time to time.  Such new versions will
@@ -10633,7 +10652,7 @@ permissions.  However, no additional obligations are imposed on any
 author or copyright holder as a result of your choosing to follow a
 later version.
 
-#### 15. Disclaimer of Warranty.
+### 15. Disclaimer of Warranty.
 
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
 APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
@@ -10644,7 +10663,7 @@ PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
 IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
 ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
 
-#### 16. Limitation of Liability.
+### 16. Limitation of Liability.
 
 IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
 WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
@@ -10653,7 +10672,7 @@ GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
 USE OR INABILITY TO USE THE PROGRAM (ITHER PARTY HAS BEEN ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGES.
 
-#### 17. Interpretation of Sections 15 and 16.
+### 17. Interpretation of Sections 15 and 16.
 
 If the disclaimer of warranty and limitation of liability provided
 above cannot be given local legal effect according to their terms,
@@ -10664,7 +10683,7 @@ copy of the Program in return for a fee.
 
 ### END OF TERMS AND CONDITIONS
 
-How to Apply These Terms to Your New Programs
+## How to Apply These Terms to Your New Programs
 
 If you develop a new program, and you want it to be of the greatest
 possible use to the public, the best way to achieve this is to make it
@@ -10716,10 +10735,6 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
-
---------------------------------------------------------------------------------
-
-*End Of File*
 endef
 
 ########################################
@@ -11802,6 +11817,11 @@ override $(CREATOR)-$(TARGETS) += $(CREATOR).$(OUT_LICENSE)
 .PHONY: $(CREATOR).$(OUT_LICENSE)
 $(CREATOR).$(OUT_LICENSE):
 	@$(call $(HEADERS)-file,$(CURDIR),$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT))
+	@$(ECHO) "$(_E)"
+	@$(LN)	$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(OUT_README).$(PUBLISH).yml \
+		$(CURDIR)/$(OUT_LICENSE).$(EXTN_HTML).yml \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 	@$(call DO_HEREDOC,HEREDOC_LICENSE) \
 		| $(SED) \
 			-e "/^[#][>]/d" \
@@ -14043,7 +14063,8 @@ ifneq ($(or \
 	$(filter $(EXPORTS)-$(TARGETS),$(MAKECMDGOALS)) ,\
 	$(filter $(EXPORTS)-$(TARGETS)-%,$(MAKECMDGOALS)) ,\
 ),)
-override $(EXPORTS)-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
+#>override $(EXPORTS)-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
+override $(EXPORTS)-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(CURDIR))))
 endif
 
 .PHONY: $(EXPORTS)-$(TARGETS)
@@ -14363,9 +14384,7 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-contents-done =
 	if [ -n "$${ROOT}" ]; then \
-		if [ -n "$(COMPOSER_RELEASE)" ]; then \
-			$(SED) -i "s|$(COMPOSER_BASENAME) ||g" $(1).contents-menu.done; \
-		fi; \
+		$(call HEREDOC_COMPOSER_YML_README_HACK) $(1).contents-menu.done; \
 		R_DD="<li class=\"nav-item dropdown\">"; \
 		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols_break) dropdown-menu\">"; \
 		R_CL="class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\""; \
