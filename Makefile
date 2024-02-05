@@ -2161,6 +2161,7 @@ override SUBDIRS			:= subdirs
 override PRINTER			:= list
 
 override DOFORCE			:= force
+override TOAFILE			:= file
 
 ########################################
 ### {{{3 Reserved
@@ -2245,7 +2246,6 @@ $(foreach FILE,\
 )
 
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(EXAMPLE).yml,$(DOITALL)))
-$(eval $(call COMPOSER_RESERVED_DOITALL,$(EXAMPLE).md,$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(HEADERS)-$(EXAMPLE),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(UPGRADE),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CHECKIT),$(HELPOUT)))
@@ -3271,7 +3271,7 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(PRINTER)]"		"Show changes made to each $(_E)(see [Repository Versions])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(UPGRADE)-$(_N)*$(_C)]"		"Complete fetch and build for a specific component"
 	@$(TABLE_M2) "$(_C)[$(DEBUGIT)]"			"Diagnostics, tests targets list in $(_C)[COMPOSER_DEBUGIT]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(DEBUGIT)-file]"			"Export $(_C)[$(DEBUGIT)]$(_D) results to a plain text file"
+	@$(TABLE_M2) "$(_C)[$(DEBUGIT)-$(TOAFILE)]"		"Export $(_C)[$(DEBUGIT)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)]"			"List system packages and versions $(_E)(see [Requirements])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(DOITALL)]"		"Complete $(_C)[$(CHECKIT)]$(_D) package list, and system information"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)]"			"Show values of all $(_C)[$(COMPOSER_BASENAME) Variables]$(_D)"
@@ -3315,7 +3315,7 @@ $(HELPOUT)-targets_internal_%:
 	@$(TABLE_M2) "$(_C)[$(CREATOR)]"			"Extracts embedded files from \`$(_M)$(MAKEFILE)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CREATOR)-$(DOITALL)]"		"Also builds all \`$(_M)$(OUT_README).$(_N)*$(_D)\` output files"
 	@$(TABLE_M2) "$(_C)[$(TESTING)]"			"Test suite, validates all supported features"
-	@$(TABLE_M2) "$(_C)[$(TESTING)-file]"			"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
+	@$(TABLE_M2) "$(_C)[$(TESTING)-$(TOAFILE)]"		"Export $(_C)[$(TESTING)]$(_D) results to a plain text file"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-dir]"			"Only create directory structure, and do $(_C)[$(DISTRIB)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(TESTING)-$(PRINTER)]"		"Output available test cases, for running directly"
 	@$(TABLE_M2) "$(_C)[$(CHECKIT)-$(HELPOUT)]"		"Minimized $(_C)[$(CHECKIT)]$(_D) output $(_E)(used for [Requirements])$(_D)"
@@ -3982,7 +3982,7 @@ endef
 #	document "$(c_base).$(EXTN_OUTPUT).header" and "$(c_base).$(EXTN_OUTPUT).css" special files, and add to testing
 #	note: never run in the "/" directory
 #	document test case of proper PUBLISH_PAGE_TESTING sorting in $(CONFIGS) library
-#	document $(EXAMPLE).md-file and $(EXAMPLE).yml-$(DOITALL)
+#	document $(EXAMPLE).md-$(TOAFILE) and $(EXAMPLE).yml-$(DOITALL)
 #	document all the possible quoting options for c_options...?  see: $(TESTING)-$(COMPOSER_BASENAME)
 #	COMPOSER_DEPENDS and the library... library rebuild will happen before subdirs, so any *.md targets may be missed or outdated
 #		if they are built on the fly, they will likely re-trigger the library, which will wreak havoc with MAKEJOBS
@@ -4656,7 +4656,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_DOCOLOR)
     The escape sequences used to accomplish this can create mixed results when
     reading in an output file or a `$(_C)$$PAGER$(_D)`, or just make it harder to read for
     some.
-  * This is also used internally for targets like $(_C)[$(DEBUGIT)-file]$(_D) and $(_C)[$(EXAMPLE)]$(_D),
+  * This is also used internally for targets like $(_C)[$(DEBUGIT)-$(TOAFILE)]$(_D) and $(_C)[$(EXAMPLE)]$(_D),
     where plain text is required.
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_INCLUDE)
@@ -5002,7 +5002,7 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_
 Note that some additional external tools may be required to perform the builds,
 such as $(_C)[npm]$(_D) $(_E)(see [$(CHECKIT)-$(DOITALL)])$(_D).
 
-$(call $(HELPOUT)-$(DOITALL)-section,$(DEBUGIT) / $(DEBUGIT)-file)
+$(call $(HELPOUT)-$(DOITALL)-section,$(DEBUGIT) / $(DEBUGIT)-$(TOAFILE))
 
   * This is the tool to use for any support issues.  Submit the output file to:
     $(_E)[$(COMPOSER_CONTACT)]$(_D)
@@ -5019,7 +5019,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(DEBUGIT) / $(DEBUGIT)-file)
 
 For example:
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(OUT_README).$(EXTN_DEFAULT) $(OUT_MANUAL).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-file$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_E)COMPOSER_DEBUGIT="$(OUT_README).$(EXTN_DEFAULT) $(OUT_MANUAL).$(EXTN_DEFAULT)"$(_D) $(_M)$(DEBUGIT)-$(TOAFILE)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(CHECKIT) / $(CHECKIT)-$(DOITALL))
 
@@ -5118,7 +5118,7 @@ $(_S)[$(NOTHING)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(TESTING)]: #internal-targets$(_D)
-$(_S)[$(TESTING)-file]: #internal-targets$(_D)
+$(_S)[$(TESTING)-$(TOAFILE)]: #internal-targets$(_D)
 $(_S)[$(TESTING)-dir]: #internal-targets$(_D)
 $(_S)[$(TESTING)-$(PRINTER)]: #internal-targets$(_D)
 $(_S)[$(CHECKIT)-$(HELPOUT)]: #internal-targets$(_D)
@@ -6108,7 +6108,7 @@ $(EXAMPLE).md \
 	@$(MAKE) \
 		--directory $(abspath $(dir $(COMPOSER_SELF))) \
 		--makefile $(COMPOSER_SELF) \
-		COMPOSER_DOITALL_$(@)="COMPOSER_DOITALL_$(@)" \
+		COMPOSER_DOITALL_$(@)="$(COMPOSER_DOITALL_$(@))" \
 		COMPOSER_DOCOLOR= \
 		.$(@)
 
@@ -6181,13 +6181,11 @@ $(EXAMPLE).md \
 .PHONY: .$(EXAMPLE).md
 .$(EXAMPLE).md:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
-	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$$( \
-			if [ -n "$(COMPOSER_DOITALL_$(EXAMPLE).md)" ]; then \
-				$(ECHO) "$(COMPOSER_DOITALL_$(EXAMPLE).md)"; \
-			else \
-				$(ECHO) "$(COMPOSER_HEADLINE)"; \
-			fi; \
-		)$(_N)\")
+	@$(call $(EXAMPLE)-print,,$(_C)title$(_D): $(_N)\"$(_M)$(strip $(if \
+			$(COMPOSER_DOITALL_$(EXAMPLE).md) ,\
+			$(subst ",\\\",$(COMPOSER_DOITALL_$(EXAMPLE).md)) ,\
+			$(COMPOSER_HEADLINE) \
+		))$(_N)\")
 	@$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$(call DATEMARK))
 	@$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),\
 		$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D):); \
@@ -6203,14 +6201,26 @@ $(EXAMPLE).md \
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(COMPOSER_TAGLINE))
 
-.PHONY: $(EXAMPLE).md-file
-$(EXAMPLE).md-file:
+.PHONY: $(EXAMPLE).md-$(TOAFILE)
+$(EXAMPLE).md-$(TOAFILE): .$(EXAMPLE).md-$(TOAFILE)
+$(EXAMPLE).md-$(TOAFILE):
+	@$(ECHO) ""
+
+.PHONY: .$(EXAMPLE).md-$(TOAFILE)
+.$(EXAMPLE).md-$(TOAFILE):
+#>		read -p "$(COMPOSER_FULLNAME) $(DIVIDE) $(EXAMPLE).md $(MARKER) " FILE;
 	@$(eval override COMPOSER_DOITALL_$(EXAMPLE).md := $(shell \
-		read -p "$(COMPOSER_FULLNAME) $(DIVIDE) $(EXAMPLE).md $(MARKER) " FILE; \
+		read -p "title $(MARKER) " FILE; \
 		$(ECHO) "$${FILE}" \
 	))
 	@FILE="$(CURDIR)/$(call DATEMARK)-$(shell $(call $(HELPOUT)-$(TARGETS)-format,$(COMPOSER_DOITALL_$(EXAMPLE).md)))$(COMPOSER_EXT)"; \
-		$(call ENV_MAKE,,,,COMPOSER_DOITALL_$(EXAMPLE).md) .$(EXAMPLE).md >$${FILE}; \
+		$(MAKE) \
+			--directory $(abspath $(dir $(COMPOSER_SELF))) \
+			--makefile $(COMPOSER_SELF) \
+			COMPOSER_DOITALL_$(EXAMPLE).md="$(subst ",\",$(COMPOSER_DOITALL_$(EXAMPLE).md))" \
+			COMPOSER_DOCOLOR= \
+			.$(EXAMPLE).md \
+			>$${FILE}; \
 		$(EDITOR) $${FILE}
 
 ########################################
@@ -12123,7 +12133,7 @@ $(DEBUGIT)-$(HEADERS):
 		$(PRINT) "  * It runs several targets and diagnostic commands"; \
 		$(PRINT) "  * All information needed for troubleshooting is included"; \
 		$(PRINT) "  * Use '$(_C)COMPOSER_DEBUGIT$(_D)' to test a list of targets $(_E)(they may be run)$(_D)"; \
-		$(PRINT) "  * Use '$(_C)$(DEBUGIT)-file$(_D)' to create a text file with the results"; \
+		$(PRINT) "  * Use '$(_C)$(DEBUGIT)-$(TOAFILE)$(_D)' to create a text file with the results"; \
 		$(LINERULE); \
 	}
 
@@ -12154,16 +12164,16 @@ $(DEBUGIT)-%:
 	fi
 
 ########################################
-### {{{3 $(DEBUGIT)-file
+### {{{3 $(DEBUGIT)-$(TOAFILE)
 ########################################
 
-ifneq ($(filter $(DEBUGIT)-file,$(MAKECMDGOALS)),)
+ifneq ($(filter $(DEBUGIT)-$(TOAFILE),$(MAKECMDGOALS)),)
 export override COMPOSER_DOITALL_$(DEBUGIT) := file
 export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 endif
-.PHONY: $(DEBUGIT)-file
-$(DEBUGIT)-file: .set_title-$(DEBUGIT)-file
-$(DEBUGIT)-file:
+.PHONY: $(DEBUGIT)-$(TOAFILE)
+$(DEBUGIT)-$(TOAFILE): .set_title-$(DEBUGIT)-$(TOAFILE)
+$(DEBUGIT)-$(TOAFILE):
 	@$(MAKE) $(HEADERS)-$(DEBUGIT)
 	@$(MAKE) $(DEBUGIT)-$(HEADERS)
 	@$(ENDOLINE)
@@ -12262,7 +12272,7 @@ $(TESTING)-$(HEADERS):
 		$(PRINT) "  * It runs test cases for all supported functionality $(_E)(some are interactive)$(_D)"; \
 		$(PRINT) "  * All cases are run in the '$(_M)$(patsubst $(COMPOSER_DIR)/%,%,$(TESTING_DIR))$(_D)' directory"; \
 		$(PRINT) "  * It has a dedicated '$(_M)$(COMPOSER_CMS)$(_D)', and '$(_C)$(DOMAKE)$(_D)' can be run anywhere in the tree"; \
-		$(PRINT) "  * Use '$(_C)$(TESTING)-file$(_D)' to create a text file with the results"; \
+		$(PRINT) "  * Use '$(_C)$(TESTING)-$(TOAFILE)$(_D)' to create a text file with the results"; \
 		$(LINERULE); \
 	}
 
@@ -12283,16 +12293,16 @@ $(TESTING)-$(PRINTER):
 		| $(SORT)
 
 ########################################
-### {{{3 $(TESTING)-file
+### {{{3 $(TESTING)-$(TOAFILE)
 ########################################
 
-ifneq ($(filter $(TESTING)-file,$(MAKECMDGOALS)),)
+ifneq ($(filter $(TESTING)-$(TOAFILE),$(MAKECMDGOALS)),)
 export override COMPOSER_DOITALL_$(TESTING) := file
 export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 endif
-.PHONY: $(TESTING)-file
-$(TESTING)-file: .set_title-$(TESTING)-file
-$(TESTING)-file:
+.PHONY: $(TESTING)-$(TOAFILE)
+$(TESTING)-$(TOAFILE): .set_title-$(TESTING)-$(TOAFILE)
+$(TESTING)-$(TOAFILE):
 	@$(MAKE) $(HEADERS)-$(TESTING)
 	@$(MAKE) $(TESTING)-$(HEADERS)
 	@$(ENDOLINE)
