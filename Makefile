@@ -6299,6 +6299,24 @@ override define HEREDOC_GITATTRIBUTES =
 endef
 
 ########################################
+### {{{3 Heredoc: gitconfig
+########################################
+
+override define HEREDOC_GITCONFIG =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) Git Configuration
+################################################################################
+
+[user]
+name					= $(COMPOSER_COMPOSER)
+email					= $(COMPOSER_CONTACT)
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
 ### {{{3 Heredoc: gitignore
 ########################################
 
@@ -10889,6 +10907,7 @@ dir
 dirs
 fullname
 gitattributes
+gitconfig
 gitignore
 heredoc
 lic
@@ -11784,6 +11803,7 @@ endif
 $(CREATOR).$(CONFIGS):
 	@$(call $(HEADERS)-file,$(CURDIR),$(CONFIGS))
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitattributes
+	@$(call DO_HEREDOC,HEREDOC_GITCONFIG)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitconfig
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_E)"
