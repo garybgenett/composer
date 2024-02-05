@@ -444,7 +444,7 @@ override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 ## {{{2 Source Files
 ########################################
 
-#>include $(1)/$(COMPOSER_SETTINGS)
+#> update: COMPOSER_INCLUDE[^S]
 
 override define SOURCE_INCLUDES =
 	$(if $(wildcard $(1)/$(COMPOSER_SETTINGS)),\
@@ -470,15 +470,25 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDE		[$(COMPOSER_INCLUDE)]))
 ## {{{2 Directory Tree
 ########################################
 
+#> update: COMPOSER_INCLUDE[^S]
+
 override COMPOSER_INCLUDES_DIRS		:=
 $(foreach FILE,$(abspath $(dir $(MAKEFILE_LIST))),\
 	$(eval override COMPOSER_INCLUDES_DIRS := $(FILE) $(COMPOSER_INCLUDES_DIRS)) \
 )
+
+ifneq ($(CURDIR),$(lastword $(COMPOSER_INCLUDES_DIRS)))
+override COMPOSER_INCLUDES_DIRS		:= $(COMPOSER_INCLUDES_DIRS) $(CURDIR)
+endif
+
+ifneq ($(origin COMPOSER_INCLUDE),undefined)
 ifeq ($(COMPOSER_INCLUDE),)
-ifneq ($(CURDIR),$(COMPOSER_DIR))
+ifneq ($(firstword $(COMPOSER_INCLUDES_DIRS)),$(lastword $(COMPOSER_INCLUDES_DIRS)))
 override COMPOSER_INCLUDES_DIRS		:= $(firstword $(COMPOSER_INCLUDES_DIRS)) $(lastword $(COMPOSER_INCLUDES_DIRS))
 endif
 endif
+endif
+
 override COMPOSER_INCLUDES_DIRS		:= $(strip $(COMPOSER_INCLUDES_DIRS))
 
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> MAKEFILE_LIST		[$(MAKEFILE_LIST)]))
@@ -633,6 +643,7 @@ endif
 $(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
 $(call READ_ALIASES,C,c_color,COMPOSER_DOCOLOR)
 
+#> update: COMPOSER_INCLUDE[^S]
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_DOCOLOR		?= 1
 override COMPOSER_INCLUDE		?= 1
@@ -1921,11 +1932,7 @@ override ENV_MAKE			= $(ENV) $(REALMAKE) $(call MAKEFLAGS_ENV) \
 	$(if $(filter $(NOTHING),$(1)),,MAKEJOBS="$(1)") \
 	$(if $(filter $(NOTHING),$(3)),,COMPOSER_DEBUGIT="$(2)") \
 	$(if $(filter $(NOTHING),$(2)),,COMPOSER_DOCOLOR="$(3)") \
-	$(foreach FILE,$(4),$(FILE)="$($(FILE))") \
-	$(if $(5),\
-		--directory $(abspath $(dir $(COMPOSER_SELF))) \
-		--makefile $(COMPOSER_SELF) \
-	)
+	$(foreach FILE,$(4),$(FILE)="$($(FILE))")
 
 override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
@@ -2268,15 +2275,16 @@ override define COMPOSER_YML_DATA_SKEL =
   title-prefix:				null,
 
   $(PUBLISH)-config: {
-    homepage:				null,
     brand:				null,
+    homepage:				null,
+    search: {
+      name:				null,
+      site:				null,
+      call:				null,
+      form:				null,
+    },
     copyright:				null,
     $(COMPOSER_TINYNAME):				$(PUBLISH_COMPOSER),
-
-    search_name:			null,
-    search_site:			null,
-    search_call:			null,
-    search_form:			null,
 
     header:				null,
     footer:				null,
@@ -5183,6 +5191,14 @@ endef
 override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config | defaults
 |:---|:------|
+| [brand]                 | null
+| [homepage]              | null
+| [search] $(DIVIDE) name | null
+| [search] $(DIVIDE) site | null
+| [search] $(DIVIDE) call | null
+| [search] $(DIVIDE) form | null
+| [copyright]             | null
+| [$(COMPOSER_TINYNAME)]  | `$(PUBLISH_COMPOSER)`
 | [header]        | `$(PUBLISH_HEADER)`
 | [footer]        | `$(PUBLISH_FOOTER)`
 | [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`
@@ -5199,6 +5215,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)`
 | [readtime]      | `$(PUBLISH_READTIME)`
 | [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`
+
+*(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured)*
 
 | $(PUBLISH)-library | defaults
 |:---|:------|
@@ -5218,12 +5236,17 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)`
 | [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`
 
-*(For this test site, the library has been enabled as: `$(PUBLISH_LIBRARY)`)*
+*(For this test site, the library [folder] has been enabled as: `$(PUBLISH_LIBRARY)`)*
 $(call PUBLISH_PAGE_1_CONFIGS_LINKS)
 endef
 
 override define PUBLISH_PAGE_1_CONFIGS_LINKS =
 $(foreach FILE,\
+	brand \
+	homepage \
+	search \
+	copyright \
+	$(COMPOSER_TINYNAME) \
 	header \
 	footer \
 	css_overlay \
@@ -5236,7 +5259,6 @@ $(foreach FILE,\
 	cols_resize \
 	metainfo \
 	metainfo_null \
-	metalist \
 	metalist \
 	readtime \
 	readtime_wpm \
@@ -5255,7 +5277,7 @@ $(foreach FILE,\
 	sitemap_title \
 	sitemap_expanded \
 	sitemap_spacer \
-,$(call NEWLINE)[$(FILE)]: $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)#$(FILE))
+,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(FILE))
 endef
 
 #> update: $(PUBLISH) Pages
@@ -5407,6 +5429,14 @@ endef
 override define PUBLISH_PAGE_3_CONFIGS =
 | $(PUBLISH)-config | defaults | values
 |:---|:------|:------|
+| [brand]                 | null | null
+| [homepage]              | null | null
+| [search] $(DIVIDE) name | null | null
+| [search] $(DIVIDE) site | null | null
+| [search] $(DIVIDE) call | null | null
+| [search] $(DIVIDE) form | null | null
+| [copyright]             | null | null
+| [$(COMPOSER_TINYNAME)]  | `$(PUBLISH_COMPOSER)` | `$(PUBLISH_COMPOSER_ALT)`
 | [header]        | `$(PUBLISH_HEADER)`        | `$(PUBLISH_HEADER_ALT)`
 | [footer]        | `$(PUBLISH_FOOTER)`        | `$(PUBLISH_FOOTER_ALT)`
 | [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`   | `$(PUBLISH_CSS_OVERLAY_ALT)`
@@ -5423,6 +5453,8 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)` | title: `$(PUBLISH_METALIST_TITLE_ALT)` <br> display: `$(PUBLISH_METALIST_PRINT_ALT)`
 | [readtime]      | `$(PUBLISH_READTIME)`      | `$(PUBLISH_READTIME_ALT)`
 | [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`  | `$(PUBLISH_READTIME_WPM_ALT)`
+
+*(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured)*
 
 | $(PUBLISH)-library | defaults | values
 |:---|:------|:------|
@@ -5442,7 +5474,7 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 | [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`   | `$(LIBRARY_SITEMAP_SPACER_ALT)`
 
-*(For this test site, the default library has been enabled as: `$(PUBLISH_LIBRARY)`)*
+*(For this test site, the default library [folder] has been enabled as: `$(PUBLISH_LIBRARY)`)*
 $(call PUBLISH_PAGE_1_CONFIGS_LINKS)
 endef
 
@@ -5512,7 +5544,7 @@ endef
 override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
 | | | | |
 |:---|:---|:---|---:|
-| Top Bar    | `brand` (`homepage`) | `nav-top` | `info-top` / `search_*`
+| Top Bar    | `brand` (`homepage`) | `nav-top` | `info-top` / `search.*`
 | Main Page  | `nav-left` | **`c_list`** | `nav-right`
 | Bottom Bar | `copyright` | `nav-bottom` | `info-bottom` / *(`$(COMPOSER_TINYNAME)`)*
 endef
@@ -6053,6 +6085,12 @@ endef
 ## {{{2 $(EXAMPLE)
 ########################################
 
+########################################
+### {{{3 $(EXAMPLE)-$(@)
+########################################
+
+#> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
+
 .PHONY: $(EXAMPLE)-install
 .PHONY: $(EXAMPLE)
 .PHONY: $(EXAMPLE).yml
@@ -6067,14 +6105,18 @@ $(EXAMPLE).md \
 		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
 		$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR))) \
 	)
-	@$(call ENV_MAKE,,,,COMPOSER_DOITALL_$(@),1) \
-		$(call COMPOSER_OPTIONS_EXPORT) \
+	@$(MAKE) \
+		--directory $(abspath $(dir $(COMPOSER_SELF))) \
+		--makefile $(COMPOSER_SELF) \
+		COMPOSER_DOITALL_$(@)="COMPOSER_DOITALL_$(@)" \
 		COMPOSER_DOCOLOR= \
 		.$(@)
 
 ########################################
 ### {{{3 $(EXAMPLE)-$(INSTALL)
 ########################################
+
+#> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
 .PHONY: .$(EXAMPLE)-$(INSTALL)
 .$(EXAMPLE)-$(INSTALL):
@@ -6085,6 +6127,8 @@ $(EXAMPLE).md \
 ########################################
 ### {{{3 $(EXAMPLE)
 ########################################
+
+#> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
 #> update: COMPOSER_OPTIONS
 .PHONY: .$(EXAMPLE)
@@ -6184,6 +6228,7 @@ override define $(EXAMPLE)-var-static =
 	)
 endef
 
+#WORKING:FIX COMPOSER_DIR -> COMPOSER_ROOT ... right?
 #> update: $(HEADERS)-$(HEADERS)
 override define $(EXAMPLE)-var =
 	$(eval override OUT := $(strip \
@@ -6198,10 +6243,6 @@ endef
 ################################################################################
 # {{{1 Embedded Files
 ################################################################################
-
-########################################
-### {{{3 #WORKING:FIX
-########################################
 
 ########################################
 ## {{{2 Images
@@ -6251,24 +6292,6 @@ override define HEREDOC_GITATTRIBUTES =
 
 /$(MAKEFILE)				!linguist-vendored
 /$(call COMPOSER_CONV,,$(COMPOSER_ART))/				!linguist-vendored
-
-################################################################################
-# End Of File
-################################################################################
-endef
-
-########################################
-### {{{3 Heredoc: gitconfig
-########################################
-
-override define HEREDOC_GITCONFIG =
-################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) Git Configuration
-################################################################################
-
-[user]
-name					= $(COMPOSER_COMPOSER)
-email					= $(COMPOSER_CONTACT)
 
 ################################################################################
 # End Of File
@@ -6627,8 +6650,22 @@ $(_S)#$(_D) $(_H)$(PUBLISH)$(_D)
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-config$(_D):
 
-    $(_C)homepage$(_D):				$(_M)$(COMPOSER_HOMEPAGE)$(_D)
     $(_C)brand$(_D):				$(_M)LOGO / BRAND$(_D)
+    $(_C)homepage$(_D):				$(_M)$(COMPOSER_HOMEPAGE)$(_D)
+    $(_C)search$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)name$(_D):				$(_M)SEARCH$(_D)
+      $(_C)name$(_D): $(_N)|$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon search$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+      $(_C)site$(_D):				$(_M)https://duckduckgo.com$(_D)
+      $(_C)call$(_D):				$(_M)q$(_D)
+      $(_C)form$(_D): $(_N)|$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)sites $(COMPOSER_DOMAIN)$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ia web$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kae d$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ko 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kp -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kv 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
+        $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kz -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
     $(_C)copyright$(_D): $(_N)|$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon gpl$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
@@ -6636,20 +6673,6 @@ $(_S)#$(MARKER)$(_D) $(_C)copyright$(_D):				$(_M)COPYRIGHT$(_D)
       $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon copyright$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
       $(_M)COPYRIGHT$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)$(COMPOSER_TINYNAME)$(_D):				$(_M)$(PUBLISH_COMPOSER)$(_D)
-
-$(_S)#$(MARKER)$(_D) $(_C)search_name$(_D):			$(_M)SEARCH$(_D)
-    $(_C)search_name$(_D): $(_N)|$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)icon search$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-    $(_C)search_site$(_D):			$(_M)https://duckduckgo.com$(_D)
-    $(_C)search_call$(_D):			$(_M)q$(_D)
-    $(_C)search_form$(_D): $(_N)|$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)sites $(COMPOSER_DOMAIN)$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ia web$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kae d$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)ko 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kp -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kv 1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
-      $(_N)$(PUBLISH_CMD_BEG)$(_D) $(_C)form$(_D) $(_M)kz -1$(_D) $(_N)$(PUBLISH_CMD_END)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)header$(_D):				$(_M)$(PUBLISH_HEADER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)footer$(_D):				$(_M)$(PUBLISH_FOOTER)$(_D)
@@ -6873,8 +6896,8 @@ variables:
 
   $(PUBLISH)-config:
 
-    homepage:				$(COMPOSER_HOMEPAGE)
     brand:				$(COMPOSER_TECHNAME)
+    homepage:				$(COMPOSER_HOMEPAGE)
     copyright: |
       $(PUBLISH_CMD_BEG) icon gpl $(OUT_LICENSE).$(EXTN_HTML) $(PUBLISH_CMD_END)
       $(COPYRIGHT_SHORT)
@@ -7071,6 +7094,14 @@ variables:
 ########################################
 
   $(PUBLISH)-config:
+#$(MARKER) brand:				null,
+#$(MARKER) homepage:				null,
+#$(MARKER) search:
+#$(MARKER)   name:				null,
+#$(MARKER)   site:				null,
+#$(MARKER)   call:				null,
+#$(MARKER)   form:				null,
+#$(MARKER) copyright:				null,
     $(COMPOSER_TINYNAME):				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_COMPOSER_MOD),$(PUBLISH_COMPOSER_ALT))
     header:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_HEADER_MOD),$(PUBLISH_HEADER_ALT))
     footer:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(PUBLISH_FOOTER_MOD),$(PUBLISH_FOOTER_ALT))
@@ -7282,6 +7313,10 @@ endef
 
 ########################################
 ## {{{2 Heredoc: custom_$(PUBLISH)_sh
+########################################
+
+########################################
+### {{{3 #WORKING:FIX
 ########################################
 
 override define HEREDOC_CUSTOM_PUBLISH_SH =
@@ -7644,11 +7679,11 @@ _EOF_
 
 function $(PUBLISH)-search {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	NAME="$$(COMPOSER_YML_DATA_VAL config.search_name)"
+	NAME="$$(COMPOSER_YML_DATA_VAL config.search.name)"
 	if [ -n "$${NAME}" ]; then
 $${CAT} <<_EOF_
-<form class="nav-item d-flex form-inline" action="$$(COMPOSER_YML_DATA_VAL config.search_site)">
-<input class="$${COMPOSER_TINYNAME}-form form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search_call)">
+<form class="nav-item d-flex form-inline" action="$$(COMPOSER_YML_DATA_VAL config.search.site)">
+<input class="$${COMPOSER_TINYNAME}-form form-control form-control-sm me-1" type="text" name="$$(COMPOSER_YML_DATA_VAL config.search.call)">
 <button type="submit" class="btn btn-sm">
 $$(
 	$${ECHO} "$${NAME}\\n" \\
@@ -7656,7 +7691,7 @@ $$(
 )
 </button>
 $$(
-	COMPOSER_YML_DATA_VAL config.search_form \\
+	COMPOSER_YML_DATA_VAL config.search.form \\
 	| $(PUBLISH)-parse
 )
 </form>
@@ -8926,12 +8961,6 @@ endef
 ### {{{3 Hacks
 ########################################
 
-override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
-	$(SED) -i \
-		-e "s|([^-])background-color[:][^;]+[;]|\\1|g" \
-		-e "s|([^-])color[:][^;]+[;]|\\1|g"
-endef
-
 override define HEREDOC_CUSTOM_PUBLISH_JS_PRE =
 <script>
 endef
@@ -8941,6 +8970,7 @@ endef
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_PRE =
 endef
+#WORKING:FIX re-validate this...
 override define HEREDOC_CUSTOM_PUBLISH_CSS_POST =
 ::-webkit-scrollbar-track {
 	background-color:		transparent;
@@ -8951,6 +8981,12 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_POST =
 body {
 	scrollbar-color:		rgba(var(--bs-secondary-rgb)) transparent;
 }
+endef
+
+override define HEREDOC_CUSTOM_PUBLISH_CSS_HACK =
+	$(SED) -i \
+		-e "s|([^-])background-color[:][^;]+[;]|\\1|g" \
+		-e "s|([^-])color[:][^;]+[;]|\\1|g"
 endef
 
 ########################################
@@ -10853,7 +10889,6 @@ dir
 dirs
 fullname
 gitattributes
-gitconfig
 gitignore
 heredoc
 lic
@@ -11749,7 +11784,6 @@ endif
 $(CREATOR).$(CONFIGS):
 	@$(call $(HEADERS)-file,$(CURDIR),$(CONFIGS))
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitattributes
-	@$(call DO_HEREDOC,HEREDOC_GITCONFIG)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitconfig
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_E)"
@@ -12931,6 +12965,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-done:
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
 ########################################
 
+#WORKING:FIX add to release checklist to run this manually and review/verify the defaults/variables/options orders in documentation
+
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-Think
 $(TESTING)-COMPOSER_INCLUDE:
@@ -13943,6 +13979,8 @@ endef
 ########################################
 #### {{{4 $(EXPORTS)-tree
 ########################################
+
+#WORKING:FIX somehow base on actual gitignore...?  otherwise, need to document...
 
 #>		-o \\\( -path \"$(1)/.*\" -prune \\\)
 override define $(EXPORTS)-tree =
@@ -16298,7 +16336,7 @@ $(COMPOSER_LOG):
 #> update: TYPE_TARGETS
 
 override define TYPE_TARGETS_OPTIONS =
-	$(if $(wildcard $(CURDIR)/$(MAKEFILE)),,--makefile $(COMPOSER)) \
+	$(if $(wildcard $(CURDIR)/$(MAKEFILE)),,--makefile $(COMPOSER_SELF)) \
 	$(call COMPOSER_OPTIONS_EXPORT) \
 	$(COMPOSER_PANDOC) \
 	c_type="$(1)" c_base="$(*)" c_list="$(2)"
