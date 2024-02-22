@@ -16439,9 +16439,9 @@ endif
 endif
 ifneq ($(COMPOSER_DEBUGIT),)
 ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
-	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type) ($(PUBLISH)),$(if $(c_list_file),$(c_list_file),$(c_list)),pandoc)
+	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type) ($(PUBLISH)),$(if $(c_list_file),$(c_list_file),$(c_list)))
 else
-	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type),$(if $(c_list_file),$(c_list_file),$(c_list)),pandoc)
+	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type),$(if $(c_list_file),$(c_list_file),$(c_list)))
 endif
 endif
 endif
