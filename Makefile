@@ -201,8 +201,6 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		[Google Firebase] = $(UPGRADE)-$(notdir $(FIREBASE_DIR))
 #		$(MKDIR) $(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
 #		MDVIEWER_SASS_VER
-#	$(PUBLISH)-$(EXAMPLE).$(COMPOSER_EXT_DEFAULT)
-#		$(SED) -i "/^[[][_]/d" $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 #	*_HACK
 #
 ## {{{2 HTML
@@ -378,6 +376,7 @@ override DEPTH_MAX			:= 6
 ## {{{2 Tokens
 ########################################
 
+override _				:= +
 override KEY_UPDATED			:= .updated
 
 override MARKER				:= >>
@@ -1948,11 +1947,11 @@ override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
 
 override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9+_.-]*
-override COMPOSER_REGEX_PREFIX		:= [_.]
+override COMPOSER_REGEX_PREFIX		:= [$(_).]
 override SED_ESCAPE_LIST		:= ^[:alnum:]
 
 #> update: includes duplicates
-override DEBUGIT			:= _debug
+override DEBUGIT			:= $(_)debug
 override PUBLISH			:= site
 
 override $(DEBUGIT)-output		:= $(if $(COMPOSER_DEBUGIT),,>/dev/null)
@@ -2142,16 +2141,16 @@ override EXAMPLE			:= template
 
 override HEADERS			:= .headers
 
-override MAKE_DB			:= .make_database
-override LISTING			:= .all_targets
+override MAKE_DB			:= .make
+override LISTING			:= .targets
 override NOTHING			:= .null
 
-override DISTRIB			:= _release
-override UPGRADE			:= _update
-override CREATOR			:= _setup
+override DISTRIB			:= $(_)release
+override UPGRADE			:= $(_)update
+override CREATOR			:= $(_)setup
 
-override DEBUGIT			:= _debug
-override TESTING			:= _test
+override DEBUGIT			:= $(_)debug
+override TESTING			:= $(_)test
 
 override CHECKIT			:= check
 override CONFIGS			:= config
@@ -3731,7 +3730,7 @@ $(_S)[MacPorts]: https://www.macports.org$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-section =
-$(_S)###$(_D) $(_H)$(patsubst _%,\_%,$(1))$(_D) $(_S)###$(_D)
+$(_S)###$(_D) $(_H)$(1)$(_D) $(_S)###$(_D)
 endef
 
 ########################################
@@ -11102,13 +11101,13 @@ override HEADER_L			:= $(ECHO) "$(_S)";	$(PRINTF) "\#%.0s" {1..$(COLUMNS)}	; $(E
 
 # https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
 ifneq ($(COMPOSER_DOCOLOR),)
-override TABLE_C2			:= $(PRINTF) "$(_D)$(COMMENTED)%b$(_D)\e[128D\e[22C%b$(_D)\n"
+override TABLE_C2			:= $(PRINTF) "$(_D)$(COMMENTED)%b$(_D)\e[128D\e[22C$(COMMENTED)%b$(_D)\n"
 override TABLE_M2			:= $(PRINTF) "$(_S)|$(_D) %b$(_D)\e[128D\e[22C$(_S)|$(_D) %b$(_D)\n"
 override TABLE_M3			:= $(PRINTF) "$(_S)|$(_D) %b$(_D)\e[128D\e[22C$(_S)|$(_D) %b$(_D)\e[128D\e[54C$(_S)|$(_D) %b$(_D)\n"
 override COLUMN_2			:= $(PRINTF) "$(_D)%b$(_D)\e[128D\e[39C %b$(_D)\n"
 override PRINT				:= $(PRINTF) "$(_D)%b$(_D)\n"
 else
-override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%-20s%s\n"
+override TABLE_C2			:= $(PRINTF) "$(COMMENTED)%-20s$(COMMENTED)%s\n"
 override TABLE_M2			:= $(PRINTF) "| %-20s| %s\n"
 override TABLE_M3			:= $(PRINTF) "| %-20s| %-30s| %s\n"
 override COLUMN_2			:= $(PRINTF) "%-39s %s\n"
@@ -12502,7 +12501,7 @@ override define $(TESTING)-hold =
 	$(ENDOLINE); \
 	if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
 		$(PRINT) "$(_H)$(MARKER) ENTER TO CONTINUE"; \
-		read $(TESTING); \
+		read $(patsubst $(_)%,%,$(TESTING)); \
 	else \
 		$(PRINT) "$(_H)$(MARKER) PAUSE TO REVIEW"; \
 	fi
@@ -13028,11 +13027,11 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_INCLUDE :=\n"			>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_KEEPING := $(SPECIAL_VAL)\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(EXPORTS))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(EXPORTS):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst $(_)%,%,$(TESTING)-$(FILE)-$(EXPORTS))\n$(patsubst $(_)%,%,$(TESTING))-$(FILE)-$(EXPORTS):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(CLEANER))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst $(_)%,%,$(TESTING)-$(FILE)-$(CLEANER))\n$(patsubst $(_)%,%,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst _%,%,$(TESTING)-$(FILE)-$(DOITALL))\n$(patsubst _%,%,$(TESTING))-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
+	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(patsubst $(_)%,%,$(TESTING)-$(FILE)-$(DOITALL))\n$(patsubst $(_)%,%,$(TESTING))-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(MKDIR) $(call $(TESTING)-pwd)/data/$(notdir $(COMPOSER_TMP))
 #>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(EXPORTS) $(TESTING)-2-$(EXPORTS)" $(EXPORTS)
@@ -13051,15 +13050,16 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-done:
 	$(call $(TESTING)-find,Creating.+getting-started.html)
 	$(call $(TESTING)-find,Removing.+changelog.html)
 	$(call $(TESTING)-find,Removing.+getting-started.html)
-	$(call $(TESTING)-count,2,[[].*$(CLEANER).*[]].+$(COMPOSER_LOG_DEFAULT))
-	$(call $(TESTING)-count,1,[[].*$(CLEANER).*[]].+$(notdir $(COMPOSER_TMP)))
+	$(call $(TESTING)-count,2,$(CLEANER).+$(COMPOSER_LOG_DEFAULT))
+#>	$(call $(TESTING)-count,1,$(CLEANER).+$(notdir $(COMPOSER_TMP)))
+	$(call $(TESTING)-count,2,$(CLEANER).+$(notdir $(COMPOSER_TMP)))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
-#>	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(EXPORTS)))
-	$(call $(TESTING)-count,2,$(patsubst _%,%,$(TESTING)-1-$(EXPORTS)))
-	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(CLEANER)))
-	$(call $(TESTING)-count,4,$(patsubst _%,%,$(TESTING)-1-$(DOITALL)))
+#>	$(call $(TESTING)-count,4,$(patsubst $(_)%,%,$(TESTING)-1-$(EXPORTS)))
+	$(call $(TESTING)-count,2,$(patsubst $(_)%,%,$(TESTING)-1-$(EXPORTS)))
+	$(call $(TESTING)-count,4,$(patsubst $(_)%,%,$(TESTING)-1-$(CLEANER)))
+	$(call $(TESTING)-count,4,$(patsubst $(_)%,%,$(TESTING)-1-$(DOITALL)))
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
@@ -13782,7 +13782,12 @@ override define $(TARGETS)-$(PRINTER) =
 	$(call ENV_MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
-		$(foreach FILE,$(COMPOSER_RESERVED),-e "/^$(FILE)[:.-]/d") \
+		$(foreach FILE,$(COMPOSER_RESERVED),\
+			-e "/^$(shell \
+				$(ECHO) "$(FILE)" \
+				| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+			)[:.-]/d" \
+		) \
 		$(if $(COMPOSER_EXT),-e "/^[^:]+$(subst .,[.],$(COMPOSER_EXT))[:]/d") \
 		$(if $(1),,\
 			$(foreach TYPE,$(TYPE_TARGETS_LIST),\
@@ -15855,7 +15860,6 @@ $(PUBLISH)-$(EXAMPLE).$(COMPOSER_EXT_DEFAULT):
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 	@$(call ENV_MAKE) $(HELPOUT)-$(TARGETS)			>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 	@$(SED) -i -e "/^[#][>]/d" -e "s|[[:space:]]+$$||g"	$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
-	@$(SED) -i "/^[[][_]/d"					$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_4_HEADER)		>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_5_HEADER)		>$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE)		>$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_DEFAULT)
