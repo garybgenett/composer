@@ -140,6 +140,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* Minimize '$(shell)' and '/: override .* $(shell' calls
 #		* With and without 'c_site' enabled
 #	* `time make README.site.html`
+#		* `time make README.html`
+#		* `time make -C _site config`
 #		* `time make -C _site/config config`
 #		* `time make -C _site/config/_library-config config`
 #	* `make _test-speed`
@@ -15458,13 +15460,16 @@ endef
 $(PUBLISH)-$(PRINTER).%:
 	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
 
-.PHONY: $(PUBLISH)-$(PRINTER)
-$(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
+ifneq ($(filter $(PUBLISH)-$(PRINTER),$(MAKECMDGOALS)),)
 $(PUBLISH)-$(PRINTER): override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
 $(PUBLISH)-$(PRINTER): override METAFILE := $(filter-out $(patsubst .%,%,$(NOTHING)) $(DOITALL) $(PRINTER),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))
 $(PUBLISH)-$(PRINTER): override METACRGX = $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 $(PUBLISH)-$(PRINTER): override METAFRGX = $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 $(PUBLISH)-$(PRINTER): override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)\"))
+endif
+
+.PHONY: $(PUBLISH)-$(PRINTER)
+$(PUBLISH)-$(PRINTER): .set_title-$(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER):
 	@$(call $(HEADERS))
 ifeq ($(COMPOSER_LIBRARY),)
