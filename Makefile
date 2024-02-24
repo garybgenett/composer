@@ -1361,23 +1361,23 @@ override YQ_WRITE_JSON			:= $(subst --front-matter "extract" ,,$(YQ_READ))
 override YQ_WRITE_FILE			:= $(YQ_WRITE) --prettyPrint
 override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
 
-#>override YQ_EVAL			:= . *+
-override YQ_EVAL			:= . *
-override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; $(YQ_EVAL) $$file)'
+override YQ_EVAL			:= *
+override YQ_EVAL_MERGE			:= *+
+override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . $(YQ_EVAL) $$file)'
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
 
 #>				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null
 #>			)) }}' 2>/dev/null
-#>			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' 2>/dev/null
+#>			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' 2>/dev/null
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
 	$(foreach FILE,$(wildcard $(2)),\
 		$(if $(3),\
-			| $(YQ_WRITE_JSON) '$(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
+			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
 				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) \
 			)) }}' \
 		,\
-			| $(YQ_WRITE_JSON) '$(YQ_EVAL) load("$(FILE)")' \
+			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' \
 		) \
 	)
 endef
@@ -15572,7 +15572,9 @@ $(PUBLISH)-$(PRINTER)$(.)%:
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
 		$(PUBLISH)-$(PRINTER)
 
-#WORKING:FIX:NOW:METAFILE rename META* variables...?
+#WORKING:FIX:NOW:METAFILE
+#	test c_list when there is a matching file and metalist at the same time...
+#	rename META* variables...?
 
 ifneq ($(or \
 	$(filter $(PUBLISH)-$(PRINTER),$(MAKECMDGOALS)) ,\
@@ -15632,15 +15634,13 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 #>		" $($(PUBLISH)-library-index)
 #>		" 2>/dev/null
-#WORKING:FIX:NOW:METAFILE
-#% site-list-all c_list="Tag 0"
 	@$(YQ_WRITE_JSON) "$$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .[] |= with_entries(select(.key | $(METATEST))) \
 		| .[] |= del(select(length == 0)) \
 		" $($(PUBLISH)-library-index) 2>/dev/null \
-	) *+ $$( \
+	) $(YQ_EVAL_MERGE) $$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .[].[] |= with_entries(select(.value | $(METATEST))) \
@@ -15685,11 +15685,16 @@ ifneq ($(c_list),)
 		$(YQ_WRITE_OUT_COLOR)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
-	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
-		| while read -r FILE; do \
-			$(LINERULE); \
-			$(call $(PUBLISH)-$(PRINTER)-$(TARGETS),$${FILE}); \
-		done
+#>	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
+#>		| while read -r FILE; do \
+#>		done
+#WORKING:FIX:NOW:METAFILE
+#% site-list
+	@$(foreach FILE,$(shell $(call $(PUBLISH)-$(PRINTER)-$(LISTING))),\
+		$(LINERULE); \
+		$(call $(PUBLISH)-$(PRINTER)-$(TARGETS),$(FILE)); \
+		$(call NEWLINE) \
+	)
 	@$(LINERULE)
 	@$(ECHO) "$(_N)"
 	@$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
