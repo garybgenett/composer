@@ -15685,16 +15685,10 @@ ifneq ($(c_list),)
 		$(YQ_WRITE_OUT_COLOR)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
-#>	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
-#>		| while read -r FILE; do \
-#>		done
-#WORKING:FIX:NOW:METAFILE
-#% site-list
-	@$(foreach FILE,$(shell $(call $(PUBLISH)-$(PRINTER)-$(LISTING))),\
-		$(LINERULE); \
-		$(call $(PUBLISH)-$(PRINTER)-$(TARGETS),$(FILE)); \
-		$(call NEWLINE) \
-	)
+	@$(MAKE) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+		c_list="$(c_list)" \
+		$(PUBLISH)-$(PRINTER)-$(TARGETS)
 	@$(LINERULE)
 	@$(ECHO) "$(_N)"
 	@$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
@@ -15718,8 +15712,28 @@ endif
 endif
 
 ########################################
+#### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
+########################################
+
+#> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
+
+#>	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
+#>		| while read -r FILE; do \
+#>		done
+
+.PHONY: $(PUBLISH)-$(PRINTER)-$(TARGETS)
+$(PUBLISH)-$(PRINTER)-$(TARGETS):
+	@$(foreach FILE,$(shell $(call $(PUBLISH)-$(PRINTER)-$(LISTING))),\
+		$(LINERULE); \
+		$(call $(PUBLISH)-$(PRINTER)-$(EXPORTS),$(FILE)); \
+		$(call NEWLINE) \
+	)
+
+########################################
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(LISTING)
 ########################################
+
+#> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
 
 override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 	{ \
@@ -15755,10 +15769,12 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 endef
 
 ########################################
-#### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
+#### {{{4 $(PUBLISH)-$(PRINTER)-$(EXPORTS)
 ########################################
 
-override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
+#> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
+
+override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
 	{	cd $(COMPOSER_LIBRARY_ROOT) && \
@@ -15773,7 +15789,7 @@ override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 	}; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
 	$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)= \
 		c_list="$(1)" \
 		$(PUBLISH)-$(PRINTER)$(.)metadata \
 		| $(YQ_WRITE_OUT) " \
@@ -15784,7 +15800,7 @@ override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 		$(YQ_WRITE_OUT_COLOR); \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-index),1,1)"; \
 	$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)= \
 		c_list="$(1)" \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 		| $(YQ_WRITE_OUT) " \
