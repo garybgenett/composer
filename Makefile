@@ -130,12 +130,15 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #
 #WORKING:FIX:NOW:METAFILE
 	#_site/pandoc:
+	#% site-list c_list="John MacFarlane"
 	#% site-list c_list="../pandoc/README.md"
-#% site-list c_list="index.md"
+	#% site-list c_list="index.md"
 	#% site-list-list c_list="index.md"
 	#% site-list-all c_list="index.md"
 	#% site-list.index c_list="index.md"
+	#% site-list.index c_list="John MacFarlane"
 	#% site-list.metadata c_list="index.md"
+	#% site-list.metadata c_list="John MacFarlane"
 #WORKING:FIX:NOW:METAFILE
 #
 # cd coding/composer ; while :; do inotifywait Makefile ; sed -n "s|^#% ||gp" Makefile | while read -r file ; do eval make -C _site ${file} ; sleep 2 ; done ; done
@@ -2443,6 +2446,8 @@ override define COMPOSER_YML_DATA_PARSE =
 	$(SED) \
 		-e "/^$$/d" \
 		-e "/^null$$/d" \
+		-e "/^[{][}]$$/d" \
+		-e "/^.*[\"][\"].*[:].*[[][]].*$$/d" \
 		$(if $(filter $(1),$(SPECIAL_VAL)),\
 			-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT)|g" \
 			,\
@@ -7459,6 +7464,8 @@ function COMPOSER_YML_DATA_PARSE {
 	$${SED} \\
 		-e "/^$$/d" \\
 		-e "/^null$$/d" \\
+		-e "/^[{][}]$$/d" \\
+		-e "/^.*[\\"][\\"].*[:].*[[][]].*$$/d" \\
 		| if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
 			$${SED} \\
 				-e "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT}|g"
@@ -15560,18 +15567,19 @@ export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.) ?=
 $(PUBLISH)-$(PRINTER)$(.)%:
 	@$(MAKE) \
 		$(call COMPOSER_OPTIONS_EXPORT) \
+		COMPOSER_DOCOLOR= \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),1,$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
 		$(PUBLISH)-$(PRINTER)
 
-#WORKING:FIX:NOW:METAFILE
+#WORKING:FIX:NOW:METAFILE rename META* variables...?
 
 ifneq ($(or \
 	$(filter $(PUBLISH)-$(PRINTER),$(MAKECMDGOALS)) ,\
 	$(filter $(PUBLISH)-$(PRINTER)-%,$(MAKECMDGOALS)) ,\
 ),)
 override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
-override METAFILE := $(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list))
+override METAFILE := $(if $(c_list),$(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list)))
 override METAFILE := $(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%,$(METAFILE))
 override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
 override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
@@ -15600,7 +15608,7 @@ ifeq ($(or \
 	$(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index) ,\
 ),)
 	@$(call $(HEADERS))
-ifneq ($(METAFILE),)
+ifneq ($(c_list),)
 	@$(call $(HEADERS)-options,c_list,1)
 	@$(call $(HEADERS)-line)
 endif
@@ -15616,37 +15624,37 @@ else ifeq ($(and \
 	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-index),$(NOTHING)))
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
-	@$(YQ_WRITE_OUT) " \
+	@$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| with_entries(select(.key | $(METATEST))) \
-		" $($(PUBLISH)-library-metadata) \
-		$(YQ_WRITE_OUT_COLOR)
+		| with_entries(select(.key | $(METACTST))) \
+		" $($(PUBLISH)-library-metadata)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
-#>		" $($(PUBLISH)-library-index) 2>/dev/null
+#>		" $($(PUBLISH)-library-index)
+#>		" 2>/dev/null
 #WORKING:FIX:NOW:METAFILE
-	@\
-	ATTR="$$($(YQ_WRITE_JSON) " \
+#% site-list-all c_list="Tag 0"
+	@$(YQ_WRITE_JSON) "$$( \
+		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| .[] |= with_entries(select(.key | test(\"^$(METAFRGX)$$\"))) \
+		| .[] |= with_entries(select(.key | $(METATEST))) \
 		| .[] |= del(select(length == 0)) \
-		| .[].[] |= with_entries(select(.value | $(METACTST))) \
-		" $($(PUBLISH)-library-index) \
-		)"; \
-	NAME="$$($(YQ_WRITE_JSON) " \
+		" $($(PUBLISH)-library-index) 2>/dev/null \
+	) *+ $$( \
+		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .[].[] |= with_entries(select(.value | $(METATEST))) \
 		| .[].[] |= del(select(length == 0)) \
-		" $($(PUBLISH)-library-index) \
-		)"; \
-	$(YQ_WRITE_OUT) "$${ATTR} *+ $${NAME} \
+		" $($(PUBLISH)-library-index) 2>/dev/null \
+	) \
+		| .[].[] |= with_entries(select(.value | $(METACTST))) \
+		| .[].[] |= del(select(length == 0)) \
 		| .[] |= del(select(length == 0)) \
 		| .[].[] |= [ (to_entries | .[].value) ] \
 		| .[].[] |= sort_by(.) \
-		" \
-		$(YQ_WRITE_OUT_COLOR)
+		"
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 	@$(MAKE) \
-		COMPOSER_DOCOLOR= \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
 		c_list= \
 		$(PUBLISH)-$(PRINTER)$(.)index \
@@ -15657,9 +15665,8 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 else
 #>		| .[] |= [ (to_entries | .[].key) ]
 	@$(MAKE) \
-		COMPOSER_DOCOLOR= \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-		c_list="$(METAFILE)" \
+		c_list="$(c_list)" \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 	| $(YQ_WRITE_OUT) " \
 		.[].[] |= length \
@@ -15668,12 +15675,14 @@ else
 			) \
 		" \
 		$(YQ_WRITE_OUT_COLOR)
-ifneq ($(METAFILE),)
+ifneq ($(c_list),)
 	@$(LINERULE)
 	@$(MAKE) \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-		c_list="$(METAFILE)" \
-		$(PUBLISH)-$(PRINTER)$(.)index
+		c_list="$(c_list)" \
+		$(PUBLISH)-$(PRINTER)$(.)index \
+	| $(YQ_WRITE_OUT) \
+		$(YQ_WRITE_OUT_COLOR)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
@@ -15689,8 +15698,14 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 			) \
 			$(call $(PUBLISH)-$(PRINTER)-output) \
 	,\
-		$(foreach FILE,$(filter $(METAFILE),$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
-			$(ECHO) "$(FILE)\n"; \
+		$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+			$(if $(METAFILE),\
+				$(if $(filter $(METAFILE),$(FILE)),\
+					$(ECHO) "$(FILE)\n"; \
+				) \
+			,\
+				$(ECHO) "$(FILE)\n"; \
+			) \
 		) \
 	)
 	@$(ECHO) "$(_D)"
@@ -15707,31 +15722,29 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 			$(call $(PUBLISH)-library-metadata-find,$(CURDIR)) \
 				$(call $(PUBLISH)-$(PRINTER)-output); \
 		,\
-			$(foreach FILE,$(filter $(METAFILE),$(addprefix $(METACDIR),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)))),\
-				$(ECHO) "$(FILE)\n"; \
+			$(foreach FILE,$(addprefix $(METACDIR),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
+				$(if $(METAFILE),\
+					$(if $(filter $(METAFILE),$(FILE)),\
+						$(ECHO) "$(FILE)\n"; \
+					) \
+				,\
+					$(ECHO) "$(FILE)\n"; \
+				) \
 			) \
+			$(ECHO) ""; \
 		) \
-		$(YQ_WRITE) " \
-			del(.\"$(COMPOSER_CMS)\") \
-			| keys \
-			| .[] \
-			| select($(METATEST)) \
-			" $($(PUBLISH)-library-metadata) 2>/dev/null \
-		; \
-		$(YQ_WRITE) " \
-			del(.\"$(COMPOSER_CMS)\") \
-			| .[].[] \
-			| .[] \
-			| select($(METATEST)) \
-			" $($(PUBLISH)-library-index) 2>/dev/null \
-		; \
-		$(if $(METAFILE),$(MAKE) \
-			COMPOSER_DOCOLOR= \
+		$(MAKE) \
 			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-			c_list="$(METAFILE)" \
+			c_list="$(c_list)" \
+			$(PUBLISH)-$(PRINTER)$(.)metadata \
+			| $(YQ_WRITE) ".[].\"path\"" \
+			| $(call COMPOSER_YML_DATA_PARSE); \
+		$(MAKE) \
+			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+			c_list="$(c_list)" \
 			$(PUBLISH)-$(PRINTER)$(.)index \
 			| $(YQ_WRITE) ".[].[].[]" \
-		;) \
+			| $(call COMPOSER_YML_DATA_PARSE); \
 	} \
 	| $(SORT)
 endef
@@ -15740,8 +15753,6 @@ endef
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
 ########################################
 
-#>			" $($(PUBLISH)-library-metadata) 2>/dev/null;
-#>			" $($(PUBLISH)-library-index) 2>/dev/null;
 override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
@@ -15752,45 +15763,32 @@ override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 			| $(YQ_WRITE_OUT) \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 			$(YQ_WRITE_OUT_COLOR); \
-	} || \
+	} || { \
 		$(PRINT) "$(_F)$(EXPAND)"; \
+	}; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
-	if [ -n "$$( \
-		$(YQ_READ) " \
-			.\"$(1)\" \
-			" $($(PUBLISH)-library-metadata) 2>/dev/null \
-			| $(call COMPOSER_YML_DATA_PARSE) \
-	)" ]; then \
-		$(YQ_WRITE_OUT) " \
-			del(.\"$(COMPOSER_CMS)\") \
-			| .\"$(1)\" \
+	$(MAKE) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
+		c_list="$(1)" \
+		$(PUBLISH)-$(PRINTER)$(.)metadata \
+		| $(YQ_WRITE_OUT) " \
+			.[] \
 			| del(.\"path\") \
-			" $($(PUBLISH)-library-metadata) \
-			$(YQ_WRITE_OUT_COLOR); \
-	fi; \
+			" \
+		| $(call COMPOSER_YML_DATA_PARSE) \
+		$(YQ_WRITE_OUT_COLOR); \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-index),1,1)"; \
-	if [ -n "$$( \
-		$(YQ_READ) " \
-			.[].[].[] \
-			| select(test(\"^$$( \
-					$(ECHO) "$(1)" \
-					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-				)$$\")) \
-			" $($(PUBLISH)-library-index) 2>/dev/null \
-			| $(call COMPOSER_YML_DATA_PARSE) \
-	)" ]; then \
-		$(YQ_WRITE_OUT) " \
-			del(.\"$(COMPOSER_CMS)\") \
-			| .[].[] |= with_entries(select(.value | test(\"^$$( \
-					$(ECHO) "$(1)" \
-					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-				)$$\"))) \
-			| .[].[] |= del(select(length == 0)) \
-			| .[] |= [ (to_entries | .[].key) ] \
+	$(MAKE) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
+		c_list="$(1)" \
+		$(PUBLISH)-$(PRINTER)$(.)index \
+		| $(YQ_WRITE_OUT) " \
+			.[] |= [ (to_entries | .[].key) ] \
 			| .title |= (to_entries | .[0].value) \
-			" $($(PUBLISH)-library-index) \
-			$(YQ_WRITE_OUT_COLOR); \
-	fi
+			" \
+		| $(call COMPOSER_YML_DATA_PARSE) \
+		$(YQ_WRITE_OUT_COLOR); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
