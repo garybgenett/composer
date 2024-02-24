@@ -116,17 +116,68 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* `make site-template-_test`
 #				* `make COMPOSER_DEBUGIT="1" site-template-_test`
 #				* `make site-list`
-#				* `make site-list.null.md`
+#				* `make site-list c_list="null.md"`
 #			* `make site-template-config`
 #				* `make site-all`
 #				* `make site-force`
 #			* `make MAKEJOBS="0" site-template`
 #		* _site
 #			* `make site-list`
+#			* `make site-list-all`
 #			* `make site-list-list`
 #			* `make site-list-null`
-#			* `make site-list-all`
-#			* `make site-list.index.md`
+#			* `make site-list c_list="index.md"`
+#
+#WORKING:FIX:NOW:METAFILE
+	#_site/pandoc:
+	#% site-list c_list="../pandoc/README.md"
+#% site-list c_list="index.md"
+	#% site-list-list c_list="index.md"
+	#% site-list-all c_list="index.md"
+	#% site-list.index c_list="index.md"
+	#% site-list.metadata c_list="index.md"
+#WORKING:FIX:NOW:METAFILE
+#
+# cd coding/composer ; while :; do inotifywait Makefile ; sed -n "s|^#% ||gp" Makefile | while read -r file ; do eval make -C _site ${file} ; sleep 2 ; done ; done
+#
+	#% site-list
+	#% site-list c_list="Gary B. Genett"
+	#% site-list c_list="Tag 0"
+	#% site-list c_list="null"
+	#% site-list c_list="index.md"
+	#% site-list c_list="index-digest.md"
+	#% site-list c_list="README.md"
+	#% site-list c_list="faqs.md"
+#
+	#% site-list-list
+	#% site-list-list c_list="Gary B. Genett"
+	#% site-list-list c_list="Tag 0"
+	#% site-list-list c_list="null"
+	#% site-list-list c_list="index.md"
+	#% site-list-list c_list="index-digest.md"
+	#% site-list-list c_list="README.md"
+	#% site-list-list c_list="faqs.md"
+#
+	#% site-list-all
+	#% site-list-all c_list="Gary B. Genett"
+	#% site-list-all c_list="Tag 0"
+	#% site-list-all c_list="null"
+	#% site-list-all c_list="index.md"
+	#% site-list-all c_list="index-digest.md"
+	#% site-list-all c_list="README.md"
+	#% site-list-all c_list="faqs.md"
+#
+	#% site-list-null
+#
+	#% site-list.index
+	#% site-list.index c_list="Gary B. Genett"
+	#% site-list.index c_list="index.md"
+	#% site-list.metadata
+	#% site-list.metadata c_list="Gary B. Genett"
+	#% site-list.metadata c_list="index.md"
+#
+#WORKING:FIX:NOW:METAFILE
+#
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -2259,7 +2310,6 @@ $(eval $(call COMPOSER_RESERVED_DOITALL,$(EXAMPLE)$(.)yml,$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(HEADERS)-$(EXAMPLE),$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(UPGRADE),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(CHECKIT),$(HELPOUT)))
-$(eval $(call COMPOSER_RESERVED_DOITALL,$(CONVICT),$(PRINTER)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-library,$(DOITALL)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-library,$(DOFORCE)))
 $(eval $(call COMPOSER_RESERVED_DOITALL,$(PUBLISH)-$(PRINTER),$(DOITALL)))
@@ -3312,9 +3362,8 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M)$(COMPOSER_CMS)$(_D)\` in current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M)$(COMPOSER_CMS)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"Timestamped $(_N)[Git]$(_D) commit of the current directory tree"
+	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"$(_N)[Git]$(_D) commit of current directory tree or $(_C)[c_list]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
-	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(PRINTER)]"		"Use $(_C)[c_list]$(_D) to select and commit only specific files"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish to upstream hosting providers"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
@@ -4015,6 +4064,7 @@ endef
 #		if they are built on the fly, they will likely re-trigger the library, which will wreak havoc with MAKEJOBS
 #	header/footer/append can all be a single value, a list, or an array
 #		identical to metalist, except metalist can't be a list...
+#	document $(PUBLISH)-$(PRINTER) = *.metadata and *.index
 
 #WORKING
 #	features
@@ -4546,6 +4596,13 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(COMPOSER_PANDOC)$(_D) $(_E)c_type="man" c
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
 
+#WORKING:DOCS###################################################################
+
+Finally, note that $(_C)[c_list]$(_D) has alternate meanings to these targets:
+
+  * $(_C)[$(CONVICT)]$(_D)
+  * $(_C)[$(PUBLISH)-$(PRINTER)]$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-section,c_lang)
 
   * Primarily for $(_C)[PDF]$(_D), this specifies the language that the table of contents
@@ -5076,7 +5133,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(DOSETUP) / $(DOSETUP)-$(DOFORCE))
 
 #WORK
 
-$(call $(HELPOUT)-$(DOITALL)-section,$(CONVICT) / $(CONVICT)-$(DOITALL) / $(CONVICT)-$(PRINTER))
+$(call $(HELPOUT)-$(DOITALL)-section,$(CONVICT) / $(CONVICT)-$(DOITALL))
 
   * Using the directory structure in $(_C)[Recommended Workflow]$(_D), `$(_M)$(EXPAND)/$(_D)` is
     considered the top-level directory.  Meaning, it is the last directory
@@ -5094,19 +5151,17 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(CONVICT) / $(CONVICT)-$(DOITALL) / $(CONV
     current directory is used.
   * Using $(_C)[$(CONVICT)-$(DOITALL)]$(_D) automatically does the commit instead of opening the
     text editor in the `$(_C)$$EDITOR$(_D)` variable.
-  * For the $(_C)[$(CONVICT)-$(PRINTER)]$(_D) target specifically, $(_C)[c_list]$(_D) is repurposed to select
-    the limited list of files and/or directories that should be committed.  All
-    selected files and directories must exist in the current directory or
-    somewhere in the subdirectory tree below it.  There is no option to skip the
-    `$(_C)$$EDITOR$(_D)` with this target.
+  * In the context of $(_C)[$(CONVICT)]$(_D), the $(_C)[c_list]$(_D) variable is repurposed to select
+    the limited list of directories and/or files that should be committed.  All
+    selected directories and files must exist in the current directory tree.
 
 Commit title format:
 
 $(CODEBLOCK)$(_E)$(call COMPOSER_TIMESTAMP)$(_D)
 
-Example using $(_C)[$(CONVICT)-$(PRINTER)]$(_D) with $(_C)[c_list]$(_D):
+Example using $(_C)[c_list]$(_D):
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)-$(PRINTER)$(_D) $(_E)c_list="$(MAKEFILE) $(call COMPOSER_CONV,,$(COMPOSER_ART))"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)$(_D) $(_E)c_list="$(MAKEFILE) $(call COMPOSER_CONV,,$(COMPOSER_ART))"$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPORTS)-$(DOFORCE) / \*-$(EXPORTS))
 
@@ -5126,6 +5181,8 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(PUBLISH)-library)
 $(call $(HELPOUT)-$(DOITALL)-section,$(PUBLISH)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DOITALL) / $(PUBLISH)-$(PRINTER)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DONOTDO) / $(PUBLISH)-$(PRINTER)$(.)\*)
 
 #WORK
+
+  * In the context of $(_C)[$(PUBLISH)-$(PRINTER)]$(_D), the $(_C)[c_list]$(_D) variable is repurposed to #WORK
 endef
 
 ########################################
@@ -11310,9 +11367,9 @@ $(HEADERS)-%:
 #> update: $(HEADERS),.*,.*,
 #>	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$(if $(3),$(COMPOSER_OPTIONS_PANDOC),$(COMPOSER_OPTIONS_MAKE)),
 override define $(HEADERS) =
-	$(if $(3),$(LINERULE),$(HEADER_L)); \
+	$(call $(HEADERS)-line,$(3)); \
 	$(call $(HEADERS)-table,$(3)) "$(_H)$(COMPOSER_FULLNAME)" "$(_N)$(COMPOSER_DIR)"; \
-	$(if $(3),$(TABLE_M2_HEADER_L),$(HEADER_L)); \
+	$(call $(HEADERS)-line,$(3),1); \
 	$(foreach FILE,$($(HEADERS)-list-path),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
@@ -11329,24 +11386,37 @@ override define $(HEADERS) =
 	$(if $(or $(COMPOSER_DEBUGIT),$(1),$(3)),$(foreach FILE,$(if $(3),$(COMPOSER_OPTIONS_PANDOC),$(COMPOSER_OPTIONS_MAKE)),\
 		$(call $(HEADERS)-options,$(FILE),1,$(3)); \
 	)) \
-	$(if $(3),$(LINERULE),$(HEADER_L))
+	$(call $(HEADERS)-line,$(3))
 endef
 
-override $(HEADERS)-table = $(if $(1),$(TABLE_M2),$(TABLE_C2))
+override $(HEADERS)-line		= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE)),$(HEADER_L))
+override $(HEADERS)-table		= $(if $(1),$(TABLE_M2),$(TABLE_C2))
 
 #> update: COMPOSER_CONV.*COMPOSER_TINYNAME
 override        $(HEADERS)-options-out :=
 override define $(HEADERS)-options =
 	$(eval override $(HEADERS)-options-out := $(strip \
+		$(if $(filter _EXPORT_%,$(1)),\
+			$(if $(filter _EXPORT_DIRECTORY,$(1)),\
+				$(if $(filter $(COMPOSER_EXPORT),$(COMPOSER_EXPORT_DEFAULT)),	$($(1)) ,\
+				$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$(_H)$(DIVIDE)$(_D) $(_H)$($(1)) ,\
+												$(_N)$(MARKER)$(_D) $(_F)$($(1)) \
+				)) \
+			,\
+				$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$($(1)) ,\
+												$(_N)$(DIVIDE)$(_D) $(_E)$($(1)) \
+				) \
+			) \
+		,\
 		$(if $(filter c_list,$(1)),$(call c_list_var)$(if $(call c_list_var_source),$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,,,1)) ,\
 		$(if $(filter c_css,$(1)),$(call c_css_select,$(c_type)) ,\
 		$(subst ",\",$($(1))) \
-		)) \
+		))) \
 	)) \
 	$(if $(2),\
 		$(call $(HEADERS)-table,$(3)) \
-			"$(_C)$(FILE)" \
-			"$(_M)$(call COMPOSER_CONV,$(EXPAND),$(call COMPOSER_CONV,[$(COMPOSER_TINYNAME)],$($(HEADERS)-options-out),,1,1),1,1,1)$(if $(filter $(FILE),$(COMPOSER_OPTIONS_GLOBAL)),$(if $($(HEADERS)-options-out),$(_D) )$(_H)$(MARKER))" \
+			"$(_C)$(1)" \
+			"$(_M)$(call COMPOSER_CONV,$(EXPAND),$(call COMPOSER_CONV,[$(COMPOSER_TINYNAME)],$($(HEADERS)-options-out),,1,1),1,1,1)$(if $(filter $(1),$(COMPOSER_OPTIONS_GLOBAL)),$(if $($(HEADERS)-options-out),$(_D) )$(_H)$(MARKER))" \
 	)
 endef
 
@@ -13943,7 +14013,7 @@ endif
 
 override GIT_OPTS_CONVICT := \
 	--verbose \
-	$(if $(filter $(PRINTER),$(COMPOSER_DOITALL_$(CONVICT))) ,\
+	$(if $(c_list),\
 		$(call COMPOSER_CONV,.,$(abspath $(c_list)),1,1) ,\
 		$(call COMPOSER_CONV,.,$(CURDIR),1,1) \
 	)
@@ -13955,19 +14025,12 @@ $(CONVICT):
 ifeq ($(wildcard $(firstword $(GIT))),)
 	@$(if $(wildcard $(firstword $(GIT))),,$(MAKE) $(NOTHING)-git)
 else
-ifneq ($(and \
-	$(filter $(PRINTER),$(COMPOSER_DOITALL_$(CONVICT))) ,\
-	$(if $(c_list),,1) \
-),)
-	@$(call $(HEADERS)-note,$(CURDIR),c_list,$(NOTHING))
-else
 	@$(call GIT_RUN_COMPOSER,add --all $(GIT_OPTS_CONVICT))
 	@$(call GIT_RUN_COMPOSER,commit \
 		$(if $(filter $(DOITALL),$(COMPOSER_DOITALL_$(CONVICT))),,--edit) \
 		--message='$(call COMPOSER_TIMESTAMP)' \
 		$(GIT_OPTS_CONVICT) \
 	)
-endif
 endif
 
 ########################################
@@ -14086,20 +14149,9 @@ override define $(EXPORTS)-$(CONFIGS) =
 			_EXPORT_FIRE_ACCT \
 			_EXPORT_FIRE_PROJ \
 			,\
-			$(TABLE_C2) "$(_C)$(FILE)" "[$(strip \
-				$(if $(filter $(FILE),_EXPORT_DIRECTORY),\
-					$(if $(filter $(COMPOSER_EXPORT),$(COMPOSER_EXPORT_DEFAULT)),	$(_H)$(COMPOSER_EXPORT) ,\
-					$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$(_H)$(COMPOSER_ROOT)$(_D)/$(_M)$(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1) ,\
-													$(_E)$(COMPOSER_EXPORT) \
-					)) \
-				,\
-					$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),		$(_M)$($(FILE)) ,\
-					$(_N)$($(FILE)) \
-					) \
-				) \
-			)$(_D)]"; \
+			$(call $(HEADERS)-options,$(FILE),1); \
 		) \
-		$(HEADER_L); \
+		$(call $(HEADERS)-line); \
 	fi
 endef
 
@@ -15498,13 +15550,6 @@ endef
 ### {{{3 $(PUBLISH)-$(PRINTER)
 ########################################
 
-#WORKING:FIX document!
-#		$(if $(COMPOSER_DEBUGIT),| .[] |= (to_entries | (sort_by(.value) | reverse) | from_entries))
-
-#WORKING:FIX:NOW
-#	document *.metadata and *.index
-#	add a search option, to find all files with tag:value... is this too much...?
-
 ########################################
 #### {{{4 $(PUBLISH)-$(PRINTER)
 ########################################
@@ -15513,28 +15558,32 @@ export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.) ?=
 
 .PHONY: $(PUBLISH)-$(PRINTER)$(.)%
 $(PUBLISH)-$(PRINTER)$(.)%:
-	@$(MAKE) COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(*)" $(PUBLISH)-$(PRINTER)
+	@$(MAKE) \
+		$(call COMPOSER_OPTIONS_EXPORT) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),1,$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
+		$(PUBLISH)-$(PRINTER)
 
-override $(PUBLISH)-$(PRINTER)-mods := \
-	metadata \
-	index \
-	$(DOITALL) \
-	$(PRINTER) \
-	$(DONOTDO) \
+#WORKING:FIX:NOW:METAFILE
 
 ifneq ($(or \
 	$(filter $(PUBLISH)-$(PRINTER),$(MAKECMDGOALS)) ,\
 	$(filter $(PUBLISH)-$(PRINTER)-%,$(MAKECMDGOALS)) ,\
 ),)
 override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
-override METAFILE := $(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),$(filter-out $($(PUBLISH)-$(PRINTER)-mods),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))))
-override METACRGX = $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-override METAFRGX = $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-override METATEST = $(if $(METAFILE),(test(\"^$(METAFRGX)$$\") or test(\"[/]$(METAFRGX)$$\")),test(\"^$(METACRGX)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)\"))
+override METAFILE := $(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list))
+override METAFILE := $(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%,$(METAFILE))
+override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+override METACTST := (test(\"^$(METACRGX)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)\"))
+override METACSED :=    -e "/^$(METACRGX)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)/p"
+override METAFTST := (test(\"^$(METAFRGX)$$\")$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)), or test(\"[/]$(METAFRGX)$$\")))
+override METAFSED :=    -e "/^$(METAFRGX)$$/p"$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),      -e "/[/]$(METAFRGX)$$/p")
+override METATEST := $(if $(METAFILE),$(METAFTST),$(METACTST))
 endif
 
 override define $(PUBLISH)-$(PRINTER)-output =
-	| $(SED) -n $(if $(METAFILE),-e "/^$(METAFRGX)$$/p" -e "/[/]$(METAFRGX)$$/p",-e "/^$(METACRGX)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)/p") \
+	| $(SED) -n $(if $(METAFILE),$(METAFSED),$(METACSED)) \
 	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
 	| $(SORT)
 endef
@@ -15547,10 +15596,14 @@ endef
 $(PUBLISH)-$(PRINTER): $(.)set_title-$(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER):
 ifeq ($(or \
-	$(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),metadata) ,\
-	$(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),index) ,\
+	$(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata) ,\
+	$(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index) ,\
 ),)
 	@$(call $(HEADERS))
+ifneq ($(METAFILE),)
+	@$(call $(HEADERS)-options,c_list,1)
+	@$(call $(HEADERS)-line)
+endif
 endif
 ifeq ($(COMPOSER_LIBRARY),)
 	@$(MAKE) $(PUBLISH)-library-$(NOTHING)
@@ -15561,26 +15614,41 @@ else ifeq ($(and \
 #> update: $(HEADERS)-note.*$(_H)
 	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-metadata),$(NOTHING)))
 	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-index),$(NOTHING)))
-else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),metadata)
+else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
 	@$(YQ_WRITE_OUT) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| with_entries(select(.key | $(METATEST))) \
 		" $($(PUBLISH)-library-metadata) \
 		$(YQ_WRITE_OUT_COLOR)
-else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),index)
+else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
-	@$(YQ_WRITE_OUT) " \
+#WORKING:FIX:NOW:METAFILE
+	@\
+	ATTR="$$($(YQ_WRITE_JSON) " \
+		del(.\"$(COMPOSER_CMS)\") \
+		| .[] |= with_entries(select(.key | test(\"^$(METAFRGX)$$\"))) \
+		| .[] |= del(select(length == 0)) \
+		| .[].[] |= with_entries(select(.value | $(METACTST))) \
+		" $($(PUBLISH)-library-index) \
+		)"; \
+	NAME="$$($(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .[].[] |= with_entries(select(.value | $(METATEST))) \
 		| .[].[] |= del(select(length == 0)) \
+		" $($(PUBLISH)-library-index) \
+		)"; \
+	$(YQ_WRITE_OUT) "$${ATTR} *+ $${NAME} \
+		| .[] |= del(select(length == 0)) \
 		| .[].[] |= [ (to_entries | .[].value) ] \
 		| .[].[] |= sort_by(.) \
-		" $($(PUBLISH)-library-index) \
+		" \
 		$(YQ_WRITE_OUT_COLOR)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 	@$(MAKE) \
 		COMPOSER_DOCOLOR= \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
+		c_list= \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 	| $(YQ_WRITE_OUT) " \
 		.[] |= .null \
@@ -15590,13 +15658,23 @@ else
 #>		| .[] |= [ (to_entries | .[].key) ]
 	@$(MAKE) \
 		COMPOSER_DOCOLOR= \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(METAFILE)" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+		c_list="$(METAFILE)" \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 	| $(YQ_WRITE_OUT) " \
 		.[].[] |= length \
-		$(if $(COMPOSER_DEBUGIT),| .[] |= (to_entries | (sort_by(.value) | reverse) | from_entries)) \
+		$(if $(filter $(PRINTER),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),\
+			| .[] |= (to_entries | (sort_by(.value) | reverse) | from_entries) \
+			) \
 		" \
 		$(YQ_WRITE_OUT_COLOR)
+ifneq ($(METAFILE),)
+	@$(LINERULE)
+	@$(MAKE) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+		c_list="$(METAFILE)" \
+		$(PUBLISH)-$(PRINTER)$(.)index
+endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
 		| while read -r FILE; do \
@@ -15610,8 +15688,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 				-type f -name \"*$(COMPOSER_EXT)\" \
 			) \
 			$(call $(PUBLISH)-$(PRINTER)-output) \
-		,\
-		$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+	,\
+		$(foreach FILE,$(filter $(METAFILE),$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
 			$(ECHO) "$(FILE)\n"; \
 		) \
 	)
@@ -15628,8 +15706,8 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
 			$(call $(PUBLISH)-library-metadata-find,$(CURDIR)) \
 				$(call $(PUBLISH)-$(PRINTER)-output); \
-			,\
-			$(foreach FILE,$(addprefix $(METACDIR),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
+		,\
+			$(foreach FILE,$(filter $(METAFILE),$(addprefix $(METACDIR),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)))),\
 				$(ECHO) "$(FILE)\n"; \
 			) \
 		) \
@@ -15647,6 +15725,13 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 			| select($(METATEST)) \
 			" $($(PUBLISH)-library-index) 2>/dev/null \
 		; \
+		$(if $(METAFILE),$(MAKE) \
+			COMPOSER_DOCOLOR= \
+			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+			c_list="$(METAFILE)" \
+			$(PUBLISH)-$(PRINTER)$(.)index \
+			| $(YQ_WRITE) ".[].[].[]" \
+		;) \
 	} \
 	| $(SORT)
 endef
