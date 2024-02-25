@@ -4602,9 +4602,7 @@ $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(COMPOSER_PANDOC)$(_D) $(_E)c_type="man" c
 Any of the file types supported by $(_C)[Pandoc]$(_D) can be created this way.  The only
 limitation is that the input files must be in $(_C)[Markdown]$(_D) format.
 
-#WORKING:DOCS###################################################################
-
-Finally, note that $(_C)[c_list]$(_D) has alternate meanings to these targets:
+Finally, note that $(_C)[c_list]$(_D) has alternate meanings for these targets:
 
   * $(_C)[$(CONVICT)]$(_D)
   * $(_C)[$(PUBLISH)-$(PRINTER)]$(_D)
