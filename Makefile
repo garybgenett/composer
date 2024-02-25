@@ -12443,7 +12443,9 @@ $(TESTING)-$(TOAFILE):
 
 #> $(TESTING)-* > $(TESTING)-%
 
-override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(call /,$(@))))))
+override $(TESTING)-name		= $(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@))))
+override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(call $(TESTING)-name,$(if $(1),$(1),$(call /,$(@)))))
+
 override $(TESTING)-log			= $(call $(TESTING)-pwd,$(1))/$(TESTING_LOGFILE)
 override $(TESTING)-make		= $(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(1))/$(MAKEFILE),-$(INSTALL),$(2),1)
 override $(TESTING)-run			= $(call ENV_MAKE,$(2),$(3),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(TESTING)) --directory $(call $(TESTING)-pwd,$(1))
@@ -12577,7 +12579,7 @@ endef
 
 override define $(TESTING)-fail =
 	$(ENDOLINE); \
-	$(call $(HEADERS)-note,$(call $(TESTING)-pwd,$(1)),FAILED!); \
+	$(call $(HEADERS)-note,$(call $(TESTING)-pwd,$(1)),FAILED!,$(call $(TESTING)-name)); \
 	$(ENDOLINE); \
 	if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
 		exit 1; \
