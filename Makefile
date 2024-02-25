@@ -162,7 +162,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 	#% site-list-list c_list="faqs.md"
 #
 	#% site-list-all
-	#% site-list-all c_list="Gary B. Genett"
+#% site-list-all c_list="Gary B. Genett"
 	#% site-list-all c_list="Tag 0"
 	#% site-list-all c_list="null"
 	#% site-list-all c_list="index.md"
@@ -2447,7 +2447,7 @@ override define COMPOSER_YML_DATA_PARSE =
 		-e "/^$$/d" \
 		-e "/^null$$/d" \
 		-e "/^[{][}]$$/d" \
-		-e "/^.*[\"][\"].*[:].*[[][]].*$$/d" \
+		-e "/^.*[\"\'][\"\'].*[:].*[{[][]}].*$$/d" \
 		$(if $(filter $(1),$(SPECIAL_VAL)),\
 			-e "s|$(PUBLISH_CMD_ROOT)|$(COMPOSER_ROOT)|g" \
 			,\
@@ -7465,7 +7465,7 @@ function COMPOSER_YML_DATA_PARSE {
 		-e "/^$$/d" \\
 		-e "/^null$$/d" \\
 		-e "/^[{][}]$$/d" \\
-		-e "/^.*[\\"][\\"].*[:].*[[][]].*$$/d" \\
+		-e "/^.*[\\"\\'][\\"\\'].*[:].*[{[][]}].*$$/d" \\
 		| if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
 			$${SED} \\
 				-e "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT}|g"
@@ -15568,7 +15568,7 @@ $(PUBLISH)-$(PRINTER)$(.)%:
 	@$(MAKE) \
 		$(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOCOLOR= \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),1,$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),$(*),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
 		$(PUBLISH)-$(PRINTER)
 
@@ -15655,12 +15655,13 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 		"
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 	@$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="1" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
 		c_list= \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 	| $(YQ_WRITE_OUT) " \
 		.[] |= .null \
 		" \
+		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR)
 else
 #>		| .[] |= [ (to_entries | .[].key) ]
@@ -15674,6 +15675,7 @@ else
 			| .[] |= (to_entries | (sort_by(.value) | reverse) | from_entries) \
 			) \
 		" \
+		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR)
 ifneq ($(c_list),)
 	@$(LINERULE)
@@ -15682,6 +15684,7 @@ ifneq ($(c_list),)
 		c_list="$(c_list)" \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 	| $(YQ_WRITE_OUT) \
+		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
@@ -15728,6 +15731,7 @@ $(PUBLISH)-$(PRINTER)-$(TARGETS):
 		$(call $(PUBLISH)-$(PRINTER)-$(EXPORTS),$(FILE)); \
 		$(call NEWLINE) \
 	)
+	@$(ECHO) ""
 
 ########################################
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(LISTING)
@@ -15774,6 +15778,7 @@ endef
 
 #> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
 
+#WORKING:FIX:NOW:METAFILE
 override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
@@ -15789,7 +15794,7 @@ override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 	}; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
 	$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)= \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
 		c_list="$(1)" \
 		$(PUBLISH)-$(PRINTER)$(.)metadata \
 		| $(YQ_WRITE_OUT) " \
@@ -15800,7 +15805,7 @@ override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 		$(YQ_WRITE_OUT_COLOR); \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-index),1,1)"; \
 	$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)= \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
 		c_list="$(1)" \
 		$(PUBLISH)-$(PRINTER)$(.)index \
 		| $(YQ_WRITE_OUT) " \
