@@ -12481,7 +12481,7 @@ override define $(TESTING)-mark =
 	$(RM) $(call $(TESTING)-pwd,$(1))/$(COMPOSER_YML); \
 	$(call $(TESTING)-make,$(1),$(TESTING_MAKEFILE)); \
 	$(call $(TESTING)-run,$(1)) $(CREATOR); \
-	if [ -n "$(q)" ]; then \
+	if [ -n "$(2)" ]; then \
 		$(MV) $(call $(TESTING)-pwd,$(1))/$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(1))/$(OUT_README); \
 		$(MV) $(call $(TESTING)-pwd,$(1))/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT) $(call $(TESTING)-pwd,$(1))/$(OUT_LICENSE); \
 	fi
