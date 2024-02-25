@@ -162,7 +162,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 	#% site-list-list c_list="faqs.md"
 #
 	#% site-list-all
-#% site-list-all c_list="Gary B. Genett"
+	#% site-list-all c_list="Gary B. Genett"
 	#% site-list-all c_list="Tag 0"
 	#% site-list-all c_list="null"
 	#% site-list-all c_list="index.md"
@@ -15637,14 +15637,14 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 	@$(YQ_WRITE_JSON) "$$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| .[] |= with_entries(select(.key | $(METATEST))) \
-		| .[] |= del(select(length == 0)) \
+		| .[].[] |= with_entries(select(.value | $(METATEST))) \
+		| .[].[] |= del(select(length == 0)) \
 		" $($(PUBLISH)-library-index) 2>/dev/null \
 	) $(YQ_EVAL_MERGE) $$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| .[].[] |= with_entries(select(.value | $(METATEST))) \
-		| .[].[] |= del(select(length == 0)) \
+		| .[] |= with_entries(select(.key | $(METATEST))) \
+		| .[] |= del(select(length == 0)) \
 		" $($(PUBLISH)-library-index) 2>/dev/null \
 	) \
 		| .[].[] |= with_entries(select(.value | $(METACTST))) \
@@ -15778,7 +15778,8 @@ endef
 
 #> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
 
-#WORKING:FIX:NOW:METAFILE
+#>		" $($(PUBLISH)-library-metadata) 2>/dev/null
+#>		" $($(PUBLISH)-library-index) 2>/dev/null
 override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
@@ -15793,25 +15794,24 @@ override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 		$(PRINT) "$(_F)$(EXPAND)"; \
 	}; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
-	$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-		c_list="$(1)" \
-		$(PUBLISH)-$(PRINTER)$(.)metadata \
-		| $(YQ_WRITE_OUT) " \
-			.[] \
-			| del(.\"path\") \
-			" \
+	$(YQ_WRITE_OUT) " \
+		del(.\"$(COMPOSER_CMS)\") \
+		| .\"$(1)\" \
+		| del(.\"path\") \
+		" $($(PUBLISH)-library-metadata) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR); \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-index),1,1)"; \
-	$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-		c_list="$(1)" \
-		$(PUBLISH)-$(PRINTER)$(.)index \
-		| $(YQ_WRITE_OUT) " \
-			.[] |= [ (to_entries | .[].key) ] \
-			| .title |= (to_entries | .[0].value) \
-			" \
+	$(YQ_WRITE_OUT) " \
+		del(.\"$(COMPOSER_CMS)\") \
+		| .[].[] |= with_entries(select(.value | test(\"^$$( \
+				$(ECHO) "$(1)" \
+				| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+			)$$\"))) \
+		| .[].[] |= del(select(length == 0)) \
+		| .[] |= [ (to_entries | .[].key) ] \
+		| .title |= (to_entries | .[0].value) \
+		" $($(PUBLISH)-library-index) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR); \
 	$(ECHO) "$(_D)"
