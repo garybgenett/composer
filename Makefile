@@ -140,6 +140,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 	#% site-list.metadata c_list="index.md"
 	#% site-list.metadata c_list="John MacFarlane"
 #WORKING:FIX:NOW:METAFILE
+#	test c_list when there is a matching file and metalist at the same time...
 #
 # cd coding/composer ; while :; do inotifywait Makefile ; sed -n "s|^#% ||gp" Makefile | while read -r file ; do eval make -C _site ${file} ; sleep 2 ; done ; done
 #
@@ -15574,28 +15575,24 @@ $(PUBLISH)-$(PRINTER)$(.)%:
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
 		$(PUBLISH)-$(PRINTER)
 
-#WORKING:FIX:NOW:METAFILE
-#	test c_list when there is a matching file and metalist at the same time...
-#	rename META* variables...?
-
 ifneq ($(or \
 	$(filter $(PUBLISH)-$(PRINTER),$(MAKECMDGOALS)) ,\
 	$(filter $(PUBLISH)-$(PRINTER)-%,$(MAKECMDGOALS)) ,\
 ),)
-override METACDIR := $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
-override METAFILE := $(if $(c_list),$(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list)))
-override METAFILE := $(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%,$(METAFILE))
-override METACRGX := $(shell $(ECHO) "$(METACDIR)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-override METAFRGX := $(shell $(ECHO) "$(METAFILE)" | $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
-override METACTST := (test(\"^$(METACRGX)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)\"))
-override METACSED :=    -e "/^$(METACRGX)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)/p"
-override METAFTST := (test(\"^$(METAFRGX)$$\")$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)), or test(\"[/]$(METAFRGX)$$\")))
-override METAFSED :=    -e "/^$(METAFRGX)$$/p"$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),      -e "/[/]$(METAFRGX)$$/p")
-override METATEST := $(if $(METAFILE),$(METAFTST),$(METACTST))
+override $(PUBLISH)-$(PRINTER)-dir	:= $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
+override $(PUBLISH)-$(PRINTER)-file	:= $(if $(c_list),$(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list)))
+override $(PUBLISH)-$(PRINTER)-file	:= $(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%,$($(PUBLISH)-$(PRINTER)-file))
+override $(PUBLISH)-$(PRINTER)-rgx-dir	:= $(shell $(ECHO) "$($(PUBLISH)-$(PRINTER)-dir)"	| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+override $(PUBLISH)-$(PRINTER)-rgx-file	:= $(shell $(ECHO) "$($(PUBLISH)-$(PRINTER)-file)"	| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
+override $(PUBLISH)-$(PRINTER)-tst-dir	:= (test(\"^$($(PUBLISH)-$(PRINTER)-rgx-dir)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)\"))
+override $(PUBLISH)-$(PRINTER)-sed-dir	:=    -e "/^$($(PUBLISH)-$(PRINTER)-rgx-dir)$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),,[^/]+$$)/p"
+override $(PUBLISH)-$(PRINTER)-tst-file	:= (test(\"^$($(PUBLISH)-$(PRINTER)-rgx-file)$$\")$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)), or test(\"[/]$($(PUBLISH)-$(PRINTER)-rgx-file)$$\")))
+override $(PUBLISH)-$(PRINTER)-sed-file	:=    -e "/^$($(PUBLISH)-$(PRINTER)-rgx-file)$$/p"$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),      -e "/[/]$($(PUBLISH)-$(PRINTER)-rgx-file)$$/p")
+override $(PUBLISH)-$(PRINTER)-tst	:= $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-tst-file),$($(PUBLISH)-$(PRINTER)-tst-dir))
 endif
 
 override define $(PUBLISH)-$(PRINTER)-output =
-	| $(SED) -n $(if $(METAFILE),$(METAFSED),$(METACSED)) \
+	| $(SED) -n $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-sed-file),$($(PUBLISH)-$(PRINTER)-sed-dir)) \
 	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
 	| $(SORT)
 endef
@@ -15630,8 +15627,8 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
 	@$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| with_entries(select(.key | $(METATEST))) \
-		| with_entries(select(.key | $(METACTST))) \
+		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst))) \
+		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
 		" $($(PUBLISH)-library-metadata)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 #>		" $($(PUBLISH)-library-index)
@@ -15639,17 +15636,17 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 	@$(YQ_WRITE_JSON) "$$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| .[].[] |= with_entries(select(.value | $(METATEST))) \
+		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst))) \
 		| .[].[] |= del(select(length == 0)) \
 		" $($(PUBLISH)-library-index) 2>/dev/null \
 	) $(YQ_EVAL_MERGE) $$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| .[] |= with_entries(select(.key | $(METATEST))) \
+		| .[] |= with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst))) \
 		| .[] |= del(select(length == 0)) \
 		" $($(PUBLISH)-library-index) 2>/dev/null \
 	) \
-		| .[].[] |= with_entries(select(.value | $(METACTST))) \
+		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
 		| .[].[] |= del(select(length == 0)) \
 		| .[] |= del(select(length == 0)) \
 		| .[].[] |= [ (to_entries | .[].value) ] \
@@ -15703,8 +15700,8 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 			$(call $(PUBLISH)-$(PRINTER)-output) \
 	,\
 		$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
-			$(if $(METAFILE),\
-				$(if $(filter $(METAFILE),$(FILE)),\
+			$(if $($(PUBLISH)-$(PRINTER)-file),\
+				$(if $(filter $($(PUBLISH)-$(PRINTER)-file),$(FILE)),\
 					$(ECHO) "$(FILE)\n"; \
 				) \
 			,\
@@ -15747,9 +15744,9 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 			$(call $(PUBLISH)-library-metadata-find,$(CURDIR)) \
 				$(call $(PUBLISH)-$(PRINTER)-output); \
 		,\
-			$(foreach FILE,$(addprefix $(METACDIR),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
-				$(if $(METAFILE),\
-					$(if $(filter $(METAFILE),$(FILE)),\
+			$(foreach FILE,$(addprefix $($(PUBLISH)-$(PRINTER)-dir),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
+				$(if $($(PUBLISH)-$(PRINTER)-file),\
+					$(if $(filter $($(PUBLISH)-$(PRINTER)-file),$(FILE)),\
 						$(ECHO) "$(FILE)\n"; \
 					) \
 				,\
