@@ -62,25 +62,25 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #
 ### {{{3 CORE
 #
-#	* `env - USER="${USER}" HOME="${HOME}" PATH="${PATH}" make _setup-all`
+#	* `env - USER="${USER}" HOME="${HOME}" PATH="${PATH}" make +setup-all`
 #		* `rm ~/.vimrc; vi Makefile`
-#	* `make MAKEJOBS="0" COMPOSER_DEBUGIT="1" _release-all`
-#		* `make _update-list`
-#	* `make COMPOSER_DEBUGIT="1" _test-dir`
-#		* `make _test-dir`
-#		* `make _test-list`
-#		* `make _test-file`
-#	* `make COMPOSER_DEBUGIT="check config targets" _debug | less -rX`
-#		* `rm Composer-*._debug-*.txt`
-#			* `make COMPOSER_DEBUGIT="help" _debug-file`
-#			* `mv Composer-*._debug-*.txt artifacts/`
+#	* `make MAKEJOBS="0" COMPOSER_DEBUGIT="1" +release-all`
+#		* `make +update-list`
+#	* `make COMPOSER_DEBUGIT="1" +test-dir`
+#		* `make +test-dir`
+#		* `make +test-list`
+#		* `make +test-file`
+#	* `make COMPOSER_DEBUGIT="check config targets" +debug | less -rX`
+#		* `rm Composer-*.+debug-*.txt`
+#			* `make COMPOSER_DEBUGIT="help" +debug-file`
+#			* `mv Composer-*.+debug-*.txt artifacts/`
 #		* `make COMPOSER_DEBUGIT="1" targets`
 #			* `make COMPOSER_DEBUGIT="1" c_site="1" c_base="README.site" targets`
 #	* `make headers-template`
 #		* `make COMPOSER_DEBUGIT="1" headers-template`
 #		* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
 #		* `make headers-template-all`
-#	* `make _test-targets`
+#	* `make +test-targets`
 #		* README.html.0.0.html
 #		* README.html.1.1.html
 #		* README.html.x.x.html
@@ -108,80 +108,20 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* Text-based
 #	* Pages
 #		* README.site.html
-#			* `make _setup-all`
-#				* `make COMPOSER_DEBUGIT="1" _setup-all`
+#			* `make +setup-all`
+#				* `make COMPOSER_DEBUGIT="1" +setup-all`
 #		* _site/index.html
-#			* `make site-template`
+#			* `make MAKEJOBS="0" site-template`
 #				* `make COMPOSER_DEBUGIT="1" site-template`
-#			* `make site-template-_test`
-#				* `make COMPOSER_DEBUGIT="1" site-template-_test`
+#			* `make site-template-+test`
+#				* `make COMPOSER_DEBUGIT="1" site-template-+test`
 #				* `make site-list`
 #				* `make site-list c_list="null.md"`
+#				* `make site-list c_list="test.md"`
 #			* `make site-template-config`
 #				* `make site-all`
 #				* `make site-force`
-#			* `make MAKEJOBS="0" site-template`
-#		* _site
-#			* `make site-list`
-#			* `make site-list-all`
-#			* `make site-list-list`
-#			* `make site-list-null`
-#			* `make site-list c_list="index.md"`
-#
-#WORKING:FIX:NOW:METAFILE
-	#_site/pandoc:
-	#% site-list c_list="John MacFarlane"
-	#% site-list c_list="../pandoc/README.md"
-	#% site-list c_list="index.md"
-	#% site-list-list c_list="index.md"
-	#% site-list-all c_list="index.md"
-	#% site-list.index c_list="index.md"
-	#% site-list.index c_list="John MacFarlane"
-	#% site-list.metadata c_list="index.md"
-	#% site-list.metadata c_list="John MacFarlane"
-#WORKING:FIX:NOW:METAFILE
-#	test c_list when there is a matching file and metalist at the same time...
-#
-# cd coding/composer ; while :; do inotifywait Makefile ; sed -n "s|^#% ||gp" Makefile | while read -r file ; do eval make -C _site ${file} ; sleep 2 ; done ; done
-#
-	#% site-list
-	#% site-list c_list="Gary B. Genett"
-	#% site-list c_list="Tag 0"
-	#% site-list c_list="null"
-	#% site-list c_list="index.md"
-	#% site-list c_list="index-digest.md"
-	#% site-list c_list="README.md"
-	#% site-list c_list="faqs.md"
-#
-	#% site-list-list
-	#% site-list-list c_list="Gary B. Genett"
-	#% site-list-list c_list="Tag 0"
-	#% site-list-list c_list="null"
-	#% site-list-list c_list="index.md"
-	#% site-list-list c_list="index-digest.md"
-	#% site-list-list c_list="README.md"
-	#% site-list-list c_list="faqs.md"
-#
-	#% site-list-all
-	#% site-list-all c_list="Gary B. Genett"
-	#% site-list-all c_list="Tag 0"
-	#% site-list-all c_list="null"
-	#% site-list-all c_list="index.md"
-	#% site-list-all c_list="index-digest.md"
-	#% site-list-all c_list="README.md"
-	#% site-list-all c_list="faqs.md"
-#
-	#% site-list-null
-#
-	#% site-list.index
-	#% site-list.index c_list="Gary B. Genett"
-	#% site-list.index c_list="index.md"
-	#% site-list.metadata
-	#% site-list.metadata c_list="Gary B. Genett"
-	#% site-list.metadata c_list="index.md"
-#
-#WORKING:FIX:NOW:METAFILE
-#
+#			* `make site-template-list`
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -199,9 +139,9 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `time make -C _site config`
 #		* `time make -C _site/config config`
 #		* `time make -C _site/config/_library-config config`
-#	* `make _test-speed`
-#		* `make MAKEJOBS="[X]" _test-speed`
-#		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" _test-speed`
+#	* `make +test-speed`
+#		* `make MAKEJOBS="[X]" +test-speed`
+#		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-speed`
 #		* Update comments
 #
 ## {{{2 PREPARE
@@ -209,7 +149,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ### {{{3 MAKEFILE
 #
 #	* Formatting
-#		* `make _test-heredoc`
+#		* `make +test-heredoc`
 #	* Markers
 #		* '#>[ ]'
 #		* '#>[^ ]'
@@ -222,14 +162,14 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `override INPUT := commonmark`
 #			* `PANDOC_EXTENSIONS`
 #		* Spell check
-#			* `make _test-heredoc`
+#			* `make +test-heredoc`
 #		* Output
 #			* Fits in $(COLUMNS) characters
 #			* Mouse select color handling
 #			* Test all "Reference" links in browser
 #	* `make README.html`
 #		* Minimize: `<col style="width: *%" />`
-#	* `make _setup-all`
+#	* `make +setup-all`
 #		* Review each, including CSS
 #		* Create screenshot
 #
@@ -237,7 +177,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #
 #	* Check: `git diff main Makefile`
 #	* Update: COMPOSER_VERSION
-#	* Release: `rm -frv {.[^.],}*; make _release-all`
+#	* Release: `rm -frv {.[^.],}*; make +release-all`
 #	* Verify: `git diff main`
 #	* Commit: `git commit`, `git tag`
 #	* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
@@ -441,6 +381,7 @@ override MARKER				:= >>
 override DIVIDE				:= ::
 override EXPAND				:= ...
 override TOKEN				:= ~---~
+override COMMA				:= ,
 override NULL				:=
 
 override define NEWLINE =
@@ -2751,6 +2692,25 @@ override PUBLISH_DIRS_DEBUGIT := \
 #	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
 #	$(PUBLISH_SHOWDIR)/$(DOITALL) \
 
+#> $(PUBLISH)-$(PRINTER)-$(DOITALL) > $(PUBLISH)-$(PRINTER)-$(PRINTER)
+override PUBLISH_DIRS_PRINTER := \
+	$(PUBLISH)-$(PRINTER)$(.)metadata \
+	$(PUBLISH)-$(PRINTER)$(.)index \
+	$(PUBLISH)-$(PRINTER) \
+	$(PUBLISH)-$(PRINTER)-$(PRINTER) \
+	$(PUBLISH)-$(PRINTER)-$(DOITALL) \
+	$(PUBLISH)-$(PRINTER)-$(DONOTDO) \
+
+override PUBLISH_DIRS_PRINTER_LIST := \
+	$(TOKEN) \
+	$(subst $(NULL) ,$(TOKEN),$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT)) \
+	$(subst $(NULL) ,$(TOKEN),$(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT)) \
+	$(subst $(NULL) ,$(TOKEN),$(COMPOSER_COMPOSER)) \
+	$(subst $(NULL) ,$(TOKEN),Tag 0) \
+	$(subst $(NULL) ,$(TOKEN),MANUAL.md) \
+	$(subst $(NULL) ,$(TOKEN),John MacFarlane) \
+	$(subst $(NULL) ,$(TOKEN),null) \
+
 ########################################
 ## {{{2 Filesystem
 ########################################
@@ -3375,10 +3335,12 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
+#WORK need to update these... and c_list...
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_H)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DONOTDO)]"	"List files which are missing metadata fields"
+#WORK *.metadata and *.index
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER).$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
 
 ########################################
@@ -4070,7 +4032,6 @@ endef
 #		if they are built on the fly, they will likely re-trigger the library, which will wreak havoc with MAKEJOBS
 #	header/footer/append can all be a single value, a list, or an array
 #		identical to metalist, except metalist can't be a list...
-#	document $(PUBLISH)-$(PRINTER) = *.metadata and *.index
 
 #WORKING
 #	features
@@ -5185,6 +5146,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(PUBLISH)-library)
 $(call $(HELPOUT)-$(DOITALL)-section,$(PUBLISH)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DOITALL) / $(PUBLISH)-$(PRINTER)-$(PRINTER) / $(PUBLISH)-$(PRINTER)-$(DONOTDO) / $(PUBLISH)-$(PRINTER)$(.)\*)
 
 #WORK
+#	use site-list-list first, to track down, then site-list-all for details, because it can be expensive to run...
 
   * In the context of $(_C)[$(PUBLISH)-$(PRINTER)]$(_D), the $(_C)[c_list]$(_D) variable is repurposed to #WORK
 endef
@@ -5622,7 +5584,7 @@ override define PUBLISH_PAGE_EXAMPLE =
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
 date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
-$(PUBLISH_METALIST): [ Main ]
+$(PUBLISH_METALIST): [ Main$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(COMMA) $(DONOTDO)$(COMPOSER_EXT_DEFAULT)) ]
 ---
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
@@ -11383,7 +11345,7 @@ override define $(HEADERS) =
 	) \
 	$(call $(HEADERS)-table,$(3)) \
 		"$(_E)MAKECMDGOALS" \
-		"$(_N)$(MAKECMDGOALS)$(_D) $(_H)$(MARKER)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
+		"$(if $(MAKECMDGOALS),$(_N)$(MAKECMDGOALS)$(_D) )$(_H)$(MARKER)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
 	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$($(HEADERS)-list-make),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
@@ -15625,31 +15587,38 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
 	@$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst))) \
 		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
+		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst))) \
 		" $($(PUBLISH)-library-metadata)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 #>		" $($(PUBLISH)-library-index)
 #>		" 2>/dev/null
-	@$(YQ_WRITE_JSON) "$$( \
+	@\
+	NAME="$$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
-		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst))) \
-		| .[].[] |= del(select(length == 0)) \
-		" $($(PUBLISH)-library-index) 2>/dev/null \
-	) $(YQ_EVAL_MERGE) $$( \
-		$(YQ_WRITE_JSON) " \
-		del(.\"$(COMPOSER_CMS)\") \
-		| .[] |= with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst))) \
-		| .[] |= del(select(length == 0)) \
-		" $($(PUBLISH)-library-index) 2>/dev/null \
-	) \
 		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
+		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst))) \
+		| .[].[] |= [ (to_entries | .[].value) ] \
 		| .[].[] |= del(select(length == 0)) \
 		| .[] |= del(select(length == 0)) \
+		" $($(PUBLISH)-library-index) 2>/dev/null \
+	)"; \
+	$(if $(c_list),ATTR="$$( \
+		$(YQ_WRITE_JSON) " \
+		del(.\"$(COMPOSER_CMS)\") \
+		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
 		| .[].[] |= [ (to_entries | .[].value) ] \
-		| .[].[] |= sort_by(.) \
-		"
+		| .[].[] |= del(select(length == 0)) \
+		| .[] |= with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst-file))) \
+		| .[] |= del(select(length == 0)) \
+		" $($(PUBLISH)-library-index) 2>/dev/null \
+	)";) \
+	$(ECHO) "$${NAME}" | \
+		$(YQ_WRITE_JSON) " \
+		. $(if $(c_list),$(YQ_EVAL_MERGE) $${ATTR}) \
+		| .[].[] |= (sort_by(.) | unique) \
+		" 2>/dev/null
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 	@$(MAKE) \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
@@ -15657,6 +15626,9 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 		$(PUBLISH)-$(PRINTER)$(.)index \
 	| $(YQ_WRITE_OUT) " \
 		.[] |= .null \
+		$(if $(call COMPOSER_YML_DATA_VAL,config.$(COMPOSER_TINYNAME)),\
+			| (.[] | select(length == 0)) = \"$(subst *,,$(COMPOSER_TAGLINE))\" \
+			) \
 		" \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR)
@@ -15685,10 +15657,11 @@ ifneq ($(c_list),)
 		$(YQ_WRITE_OUT_COLOR)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
-	@$(MAKE) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-		c_list="$(c_list)" \
-		$(PUBLISH)-$(PRINTER)-$(TARGETS)
+	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
+		| while read -r FILE; do \
+			$(LINERULE); \
+			$(call $(PUBLISH)-$(PRINTER)-$(TARGETS),$${FILE}); \
+		done
 	@$(LINERULE)
 	@$(ECHO) "$(_N)"
 	@$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
@@ -15712,29 +15685,8 @@ endif
 endif
 
 ########################################
-#### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
-########################################
-
-#> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
-
-#>	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
-#>		| while read -r FILE; do \
-#>		done
-
-.PHONY: $(PUBLISH)-$(PRINTER)-$(TARGETS)
-$(PUBLISH)-$(PRINTER)-$(TARGETS):
-	@$(foreach FILE,$(shell $(call $(PUBLISH)-$(PRINTER)-$(LISTING))),\
-		$(LINERULE); \
-		$(call $(PUBLISH)-$(PRINTER)-$(EXPORTS),$(FILE)); \
-		$(call NEWLINE) \
-	)
-	@$(ECHO) ""
-
-########################################
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(LISTING)
 ########################################
-
-#> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
 
 override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 	{ \
@@ -15770,14 +15722,12 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 endef
 
 ########################################
-#### {{{4 $(PUBLISH)-$(PRINTER)-$(EXPORTS)
+#### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
 ########################################
-
-#> $(PUBLISH)-$(PRINTER)-$(LISTING) > $(PUBLISH)-$(PRINTER)-$(TARGETS) > $(PUBLISH)-$(PRINTER)-$(EXPORTS)
 
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
-override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
+override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
 	{	cd $(COMPOSER_LIBRARY_ROOT) && \
@@ -15805,7 +15755,9 @@ override define $(PUBLISH)-$(PRINTER)-$(EXPORTS) =
 				$(ECHO) "$(1)" \
 				| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 			)$$\"))) \
+		| .[].[] |= [ (to_entries | .[].value) ] \
 		| .[].[] |= del(select(length == 0)) \
+		| .[] |= del(select(length == 0)) \
 		| .[] |= [ (to_entries | .[].key) ] \
 		| .title |= (to_entries | .[0].value) \
 		" $($(PUBLISH)-library-index) \
@@ -15838,6 +15790,7 @@ endef
 #>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
 #>	$(SHELL)
 #>		$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT) + $(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+#>		$(dir $(PUBLISH_EXAMPLE))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
 #>		$(dir $(PUBLISH_EXAMPLE))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT) + $(dir $(PUBLISH_EXAMPLE))/$(DONOTDO).*
 #>		$(PUBLISH)-$(DOFORCE) [x1]
 #> $(PUBLISH)-$(EXAMPLE)-$(CONFIGS) = COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)
@@ -15941,6 +15894,24 @@ override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
 	$(SED) -i "s|^[#]{1}||g"		$(1)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_DEFAULT),$(word 5,$(PUBLISH_FILES))) \
 						$(1)/$(word 5,$(PUBLISH_DIRS))/*$(COMPOSER_EXT_DEFAULT)
 endef
+
+########################################
+#### {{{4 $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
+########################################
+
+.PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
+$(PUBLISH)-$(EXAMPLE)-$(PRINTER):
+	@\
+	$(foreach FILE,$(PUBLISH_DIRS),\
+	$(foreach VIEW,$(PUBLISH_DIRS_PRINTER),\
+	$(foreach LIST,$(PUBLISH_DIRS_PRINTER_LIST),\
+		$(call $(HEADERS)-action,$(FILE),$(VIEW),$(strip $(subst $(TOKEN), ,$(LIST))),,1); \
+		time $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) \
+			--directory $(PUBLISH_ROOT)/$(FILE) \
+			$(VIEW) \
+			c_list="$(subst $(TOKEN), ,$(LIST))"; \
+		$(call NEWLINE) \
+	)))
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_SETTINGS)
@@ -16200,11 +16171,11 @@ endif
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-	@$(ECHO) "$(_E)"
-	@$(LN)	$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_DEFAULT) \
-		$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT) \
-		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_S)"
+	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
+							$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE)	>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT)
 endif
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
@@ -16242,9 +16213,10 @@ else
 		$(EXPORTS)
 endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE)	>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "$(_S)"
-	@$(RM)	$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO).* \
-		$($(DEBUGIT)-output)
+	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO).* \
+							$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
 endif
