@@ -1486,7 +1486,6 @@ override define FIREBASE_RUN =
 endef
 
 override GITIGNORE_LIST			+= FIREBASE
-#WORKING:FIX best way to do... /.config/ ?
 override define GITIGNORE_FIREBASE =
 /.firebase*
 **firebase**.json
@@ -3335,10 +3334,12 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
+	@$(PRINT) "#WORKING:DOCS###################################################################"
 #WORK need to update these... and c_list...
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"Show $(_H)[COMPOSER_LIBRARY]$(_D) metadata for current directory"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"$(_H)[COMPOSER_LIBRARY]$(_D) view of current directory or $(_C)[c_list]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Output existing metadata fields and values"
+	@$(PRINT) "#WORKING:DOCS###################################################################"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Existing metadata fields and values, sorted by most used"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DONOTDO)]"	"List files which are missing metadata fields"
 #WORK *.metadata and *.index
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER).$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
@@ -5888,30 +5889,38 @@ $(PUBLISH_CMD_BEG) readtime $(PUBLISH_CMD_END)
 
 `$(PUBLISH_CMD_BEG) library date/$(PUBLISH_CREATORS)/$(PUBLISH_METALIST) $(PUBLISH_CMD_END)`
 
+`$(PUBLISH_CMD_BEG) library date/$(PUBLISH_CREATORS)/$(PUBLISH_METALIST) $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
+
 $(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) header 2 Dates $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) library date $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) column-begin col-4 $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) header 2 Authors $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) library $(PUBLISH_CREATORS) $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) header 2 Metalist $(PUBLISH_CMD_END)
-
 $(PUBLISH_CMD_BEG) library $(PUBLISH_METALIST) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
+$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) row-begin $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library date $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-4 $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library $(PUBLISH_CREATORS) $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) column-begin col-3 $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) library $(PUBLISH_METALIST) $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) column-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
@@ -6829,11 +6838,11 @@ $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
       - $(_C)spacer$(_D)
     $(_M)LIBRARY$(_D):
       - $(_M)DATES$(_D):
-        - $(_C)library$(_D) $(_M)date$(_D)
+        - $(_C)library$(_D) $(_M)date$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))), $(SPECIAL_VAL))$(_D)
       - $(_M)AUTHORS$(_D):
-        - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
+        - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))), $(SPECIAL_VAL))$(_D)
       - $(_M)TAGS$(_D):
-        - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
+        - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))), $(SPECIAL_VAL))$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
@@ -6899,13 +6908,13 @@ $(_S)########################################$(_D)
     $(_M)LIBRARY$(_D):
       - $(_C)fold-begin group$(_D) $(_M)library$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) library DATES$(_D)
-      - $(_C)library$(_D) $(_M)date$(_D)
+      - $(_C)library$(_D) $(_M)date$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))), $(SPECIAL_VAL))$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) library AUTHORS$(_D)
-      - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
+      - $(_C)library$(_D) $(_M)$(PUBLISH_CREATORS)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))), $(SPECIAL_VAL))$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) . library TAGS$(_D)
-      - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
+      - $(_C)library$(_D) $(_M)$(PUBLISH_METALIST)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))), $(SPECIAL_VAL))$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-end group$(_D)
     $(_M)END$(_D):
@@ -7550,8 +7559,8 @@ function $(PUBLISH)-parse {
 #> update: YQ_WRITE.*title
 #> update: join(.*)
 
-# 1 $${SPECIAL_VAL} = library || file
-# 2 $${SPECIAL_VAL} = metadata || text
+# 1 file				$${SPECIAL_VAL} = library
+# 2 text				$${SPECIAL_VAL} = metadata
 # 3 file path
 
 function $(PUBLISH)-metainfo-block {
@@ -7648,6 +7657,7 @@ function $(PUBLISH)-metainfo-block {
 
 # 1 menu || list
 # 2 title || date || metalist:*
+# 3 counts				$${SPECIAL_VAL} = false
 
 function $(PUBLISH)-menu-library	{ $(PUBLISH)-library-shelf menu $${@} || return 1; return 0; }
 function $(PUBLISH)-list-library	{ $(PUBLISH)-library-shelf list $${@} || return 1; return 0; }
@@ -7675,11 +7685,15 @@ _EOF_
 				)"
 				if [ "$${1}" = "menu" ]; then
 $${CAT} <<_EOF_
-<li><a class="dropdown-item" href="$${HREF}">$${FILE} ($${TOTL})</a></li>
+<li><a class="dropdown-item" href="$${HREF}">$${FILE}$$(
+	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " ($${TOTL})"; fi
+)</a></li>
 _EOF_
 				else
 $${CAT} <<_EOF_
-<tr><td><a href="$${HREF}">$${FILE}</a></td><td class="text-end">$${TOTL}</td></tr>
+<tr><td><a href="$${HREF}">$${FILE}</a></td>$$(
+	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} "<td class=\"text-end\">$${TOTL}</td>"; fi
+)</tr>
 _EOF_
 				fi
 			done
@@ -8408,7 +8422,7 @@ _EOF_
 # 2 id
 
 # 1 header level			$${SPECIAL_VAL} = none
-# 2 $${SPECIAL_VAL} = collapsed
+# 2 collapsed				$${SPECIAL_VAL} = true
 # 3 id					$${SPECIAL_VAL} = none
 # 4 title				$${@:4} = $${4}++
 
@@ -15785,6 +15799,7 @@ endef
 #>		$(COMPOSER_YML)
 #>			$(*_MOD)
 #>			auto_update: $(LIBRARY_AUTO_UPDATE_ALT)
+#>			library * $(SPECIAL_VAL)
 #>			$(PUBLISH)-info-top: ICON
 #>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
 #>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
