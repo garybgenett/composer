@@ -70,16 +70,9 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `make +test-dir`
 #		* `make +test-list`
 #		* `make +test-file`
-#	* `make COMPOSER_DEBUGIT="check config targets" +debug | less -rX`
-#		* `rm Composer-*.+debug-*.txt`
-#			* `make COMPOSER_DEBUGIT="help" +debug-file`
-#			* `mv Composer-*.+debug-*.txt artifacts/`
-#		* `make COMPOSER_DEBUGIT="1" targets`
-#			* `make COMPOSER_DEBUGIT="1" c_site="1" c_base="README.site" targets`
-#	* `make headers-template`
-#		* `make COMPOSER_DEBUGIT="1" headers-template`
-#		* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
-#		* `make headers-template-all`
+#	* `make +test-COMPOSER_INCLUDE`
+#		* title:	.variables	.options	.defaults
+#		* css:		.variables	.defaults	.options
 #	* `make +test-targets`
 #		* README.html.0.0.html
 #		* README.html.1.1.html
@@ -99,6 +92,16 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* README.docx.0.0.docx
 #		* README.docx.1.1.docx
 #		* README.docx.x.x.docx
+#	* `make headers-template`
+#		* `make COMPOSER_DEBUGIT="1" headers-template`
+#		* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
+#		* `make headers-template-all`
+#	* `make COMPOSER_DEBUGIT="check config targets" +debug | less -rX`
+#		* `rm Composer-*.+debug-*.txt`
+#			* `make COMPOSER_DEBUGIT="help" +debug-file`
+#			* `mv Composer-*.+debug-*.txt artifacts/`
+#		* `make COMPOSER_DEBUGIT="1" targets`
+#			* `make COMPOSER_DEBUGIT="1" c_site="1" c_base="README.site" targets`
 #
 ### {{{3 SITE
 #
@@ -3487,7 +3490,7 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Recommended Workflow)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-workflow)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-formatting)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-settings)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-orders)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-rules)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Specifying Dependencies)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-depends)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Custom Targets)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-custom)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Repository Versions)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-versions)	; $(call TITLE_END)
@@ -4339,7 +4342,7 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(OUT_README).$
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-orders
+### {{{3 $(HELPOUT)-$(DOITALL)-rules
 ########################################
 
 #WORK
@@ -4357,8 +4360,11 @@ endef
 #	since $(COMPOSER_SETTINGS) is neither c_type or c_base specific, there is only a per-directory version
 #		since $(COMPOSER_YML) is not c_type specific, there is only per-directory and c_base versions
 #		all others (header, css, etc.) are directory, c_type and c_base applicable, so all three...
+#	* `make +test-COMPOSER_INCLUDE`
+#		* title:	.variables	.options	.defaults
+#		* css:		.variables	.defaults	.options
 
-override define $(HELPOUT)-$(DOITALL)-orders =
+override define $(HELPOUT)-$(DOITALL)-rules =
 All processing in $(_C)[$(COMPOSER_BASENAME)]$(_D) is done in global-to-local order, so that the most
 local file or value always takes precedence.
 
@@ -6964,6 +6970,7 @@ endef
 
 #> update: COMPOSER_TARGETS.*=
 
+#> magic token!
 override define HEREDOC_COMPOSER_YML_README_HACK =
 	$(SED) -i \
 		-e "s|$(COMPOSER_TECHNAME)[:] |$(patsubst $(COMPOSER_BASENAME) ,,$(COMPOSER_TECHNAME)) |g" \
@@ -13139,8 +13146,6 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-done:
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
 ########################################
 
-#WORKING:FIX add to release checklist to run this manually and review/verify the defaults/variables/options orders in documentation
-
 .PHONY: $(TESTING)-COMPOSER_INCLUDE
 $(TESTING)-COMPOSER_INCLUDE: $(TESTING)-$(_)Think
 $(TESTING)-COMPOSER_INCLUDE:
@@ -15637,7 +15642,7 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 		| .[].[] |= (sort_by(.) | unique) \
 		" 2>/dev/null
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
-#WORKING:FIX:NOW add "update" markers for easter eggs... the other one is the "Composer" name stripping in "-contents"...
+#> magic token!
 	@$(MAKE) \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
 		c_list= \
