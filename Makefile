@@ -3456,13 +3456,13 @@ $(HELPOUT)-$(HEADERS)-%:
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOITALL)-header
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-files)
-#WORKING:FIX:NOW:LINKS move to reference section, via a new target...
+#> update: HELPOUT.*-links
 		@if [ "$(*)" = "$(HELPOUT)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links); \
 		fi
-		@if [ "$(*)" = "$(HELPOUT)" ]; then \
-			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links_ext); \
-		fi
+#>		@if [ "$(*)" = "$(HELPOUT)" ]; then \
+#>			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links_ext); \
+#>		fi
 	@$(call TITLE_LN,2,Overview)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-overview)
 		@$(call TITLE_END)
 	@$(call TITLE_LN,2,Quick Start)		; $(PRINT) "Use \`$(_C)$(DOMAKE) $(HELPOUT)$(_D)\` to get started:"
@@ -3520,7 +3520,9 @@ $(HELPOUT)-%:
 .PHONY: $(HELPOUT)-$(PRINTER)
 $(HELPOUT)-$(PRINTER):
 	@$(call TITLE_LN,1,Reference)
-#WORKING:FIX:NOW:LINKS call new target, for links above...
+#> update: HELPOUT.*-links
+	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links_ext); \
+		$(ENDOLINE)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Pandoc Extensions)"
@@ -3713,10 +3715,12 @@ endef
 #>$(_S)/$(_D)                 $(_S)[$(_N)$(EXTN_TEXT)$(_S)]($(_N)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
 #>$(_S)/$(_D)              $(_S)[$(_N)$(EXTN_LINT)$(_S)]($(_N)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
 
+#> update: HELPOUT.*-links
+
+#>$(_E)[$(COMPOSER_LICENSE)]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)
 override define $(HELPOUT)-$(DOITALL)-links =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
-$(_S)<!-- #$(MARKER)$(_D) $(_S)[$(COMPOSER_LICENSE)]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D) $(_S)-->$(_D)
 $(_E)[$(COMPOSER_LICENSE)]: $(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_CONTACT)]: mailto:$(COMPOSER_CONTACT)?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
@@ -3738,7 +3742,6 @@ override define $(HELPOUT)-$(DOITALL)-links_ext =
 $(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown$(_D) $(_S)-->$(_D)
 $(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: https://commonmark.org$(_D) $(_S)-->$(_D)
 $(_E)[Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown$(_D)
-$(_E)[GitHub]: https://github.com$(_D)
 
 $(_E)[GNU Bash]: http://www.gnu.org/software/bash$(_D)
 $(_E)[GNU Coreutils]: http://www.gnu.org/software/coreutils$(_D)
@@ -3761,6 +3764,8 @@ $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
 $(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
 $(_S)[MacPorts]: https://www.macports.org$(_D)
+
+$(_S)[GitHub]: https://github.com$(_D)
 endef
 
 override define $(HELPOUT)-$(DOITALL)-section =
@@ -11366,7 +11371,7 @@ override define $(HEADERS) =
 	) \
 	$(call $(HEADERS)-table,$(3)) \
 		"$(_E)MAKECMDGOALS" \
-		"$(if $(MAKECMDGOALS),$(_N)$(MAKECMDGOALS)$(_D) )$(_H)$(DIVIDE)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
+		"$(if $(MAKECMDGOALS),$(_N)$(MAKECMDGOALS)$(_D) )$(_S)$(DIVIDE)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
 	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$($(HEADERS)-list-make),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
@@ -16033,6 +16038,7 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_EXT_DEFAULT):
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_HEADER)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_FOOTER)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_FOOTER)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_3_APPEND)		>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
+#> update: HELPOUT.*-links
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links,1)	>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 	@$(ECHO) "\n"						>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
@@ -16134,6 +16140,8 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_SHOWDIR)):
 	)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_SHOWDIR)						>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_SHOWDIR_INCLUDE)					>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
+#> update: HELPOUT.*-links
+#>	@$(ECHO) "\n"										>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links,1)					>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(ECHO) "\n"										>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links_ext,1)					>>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX)$(COMPOSER_EXT_SPECIAL)
