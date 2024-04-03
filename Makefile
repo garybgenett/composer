@@ -264,7 +264,8 @@ override COMPOSER_FULLNAME		:= $(COMPOSER_TECHNAME) $(COMPOSER_VERSION)
 override COMPOSER_FILENAME		:= $(COMPOSER_BASENAME)-$(COMPOSER_VERSION)
 
 override COMPOSER_HEADLINE		:= $(COMPOSER_TECHNAME): Content Make System
-override COMPOSER_LICENSE		:= $(COMPOSER_TECHNAME): License
+override COMPOSER_LICENSE_HEADLINE	:= $(COMPOSER_TECHNAME): License
+override COMPOSER_LICENSE		:= License: GPL
 #>override COMPOSER_CLOSING		:= Go Do A Thing
 override COMPOSER_CLOSING		:= Go Make A Thing
 override COMPOSER_TAGLINE		:= *Happy Making!*
@@ -3459,7 +3460,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOITALL)-header
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-files)
-#WORKING:FIX:NOW move to reference section, via a new target...
+#WORKING:FIX:NOW:LINKS move to reference section, via a new target...
 		@if [ "$(*)" = "$(HELPOUT)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links); \
 		fi
@@ -3523,7 +3524,7 @@ $(HELPOUT)-%:
 .PHONY: $(HELPOUT)-$(PRINTER)
 $(HELPOUT)-$(PRINTER):
 	@$(call TITLE_LN,1,Reference)
-#WORKING:FIX:NOW call new target, for links above...
+#WORKING:FIX:NOW:LINKS call new target, for links above...
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Pandoc Extensions)"
@@ -3700,7 +3701,7 @@ endef
 $(HELPOUT)-$(DOITALL)-header:
 	@$(TABLE_M2) "$(_H)![$(COMPOSER_BASENAME) Icon]"	"$(_H)\"Creating Made Simple.\""
 	@$(TABLE_M2_HEADER_L)
-	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[License: GPL]"
+	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[$(COMPOSER_LICENSE)]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[$(COMPOSER_CONTACT)]"
 
 override define $(HELPOUT)-$(DOITALL)-files =
@@ -3716,12 +3717,11 @@ endef
 #>$(_S)/$(_D)                 $(_S)[$(_N)$(EXTN_TEXT)$(_S)]($(_N)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
 #>$(_S)/$(_D)              $(_S)[$(_N)$(EXTN_LINT)$(_S)]($(_N)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
 
-#WORKING:FIX license gpl -> variable
 override define $(HELPOUT)-$(DOITALL)-links =
 $(_E)[$(COMPOSER_BASENAME)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_FULLNAME)]: $(COMPOSER_REPOPAGE)/tree/$(COMPOSER_VERSION)$(_D)
-$(_S)<!-- #$(MARKER)$(_D) $(_S)[License: GPL]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D) $(_S)-->$(_D)
-$(_E)[License: GPL]: $(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)
+$(_S)<!-- #$(MARKER)$(_D) $(_S)[$(COMPOSER_LICENSE)]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D) $(_S)-->$(_D)
+$(_E)[$(COMPOSER_LICENSE)]: $(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)
 $(_E)[$(COMPOSER_COMPOSER)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_CONTACT)]: mailto:$(COMPOSER_CONTACT)?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
@@ -10199,11 +10199,11 @@ endef
 
 override define HEREDOC_LICENSE =
 ---
-title: "$(COMPOSER_LICENSE)"
+title: "$(COMPOSER_LICENSE_HEADLINE)"
 date: $(COMPOSER_VERSION) ($(call DATEMARK))
 ---
 
-# $(COMPOSER_LICENSE)
+# $(COMPOSER_LICENSE_HEADLINE)
 
 ## Copyright
 
@@ -12937,7 +12937,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) $(OUT_README).$(EXTN_DEFAULT)
 	@$(call $(TESTING)-run) $(OUT_README).$(EXTN_LINT)
 	@$(call $(TESTING)-run) $(OUT_MANUAL).$(EXTN_DEFAULT) c_list="$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)"
-	@$(SED) -n "/$(COMPOSER_LICENSE)/p" \
+	@$(SED) -n "/$(COMPOSER_LICENSE_HEADLINE)/p" \
 		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DEFAULT) \
 		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LINT) \
 		$(call $(TESTING)-pwd)/$(OUT_MANUAL).$(EXTN_DEFAULT)
@@ -12974,8 +12974,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_LINT))
 	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
-#>	$(call $(TESTING)-count,4,$(COMPOSER_LICENSE))
-	$(call $(TESTING)-count,9,$(COMPOSER_LICENSE))
+#>	$(call $(TESTING)-count,4,$(COMPOSER_LICENSE_HEADLINE))
+	$(call $(TESTING)-count,9,$(COMPOSER_LICENSE_HEADLINE))
 	#> margins
 	$(call $(TESTING)-count,17,\|.+c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
