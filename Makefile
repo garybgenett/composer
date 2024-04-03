@@ -3339,15 +3339,11 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
-	@$(PRINT) "#WORKING:DOCS###################################################################"
-#WORK need to update these... and c_list...
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"$(_H)[COMPOSER_LIBRARY]$(_D) view of current directory or $(_C)[c_list]$(_D)"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for entire directory tree"
-	@$(PRINT) "#WORKING:DOCS###################################################################"
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"Existing metadata fields and values, sorted by most used"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"$(_H)[COMPOSER_LIBRARY]$(_D) for current directory or $(_C)[c_list]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DOITALL)]"	"Do $(_C)[$(PUBLISH)-$(PRINTER)]$(_D) for current directory tree"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(PRINTER)]"	"All metadata fields and values, sorted by most used"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)-$(DONOTDO)]"	"List files which are missing metadata fields"
-#WORK *.metadata and *.index
-	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER).$(_N)*$(_C)]"	"Find and export all files named \`$(_N)*$(_D)\` in the tree"
+	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER).$(_N)*$(_C)]"	"Direct export of metadata or index, $(_C)[c_list]$(_D) searchable"
 
 ########################################
 #### {{{4 $(HELPOUT)-targets-internal
@@ -5157,6 +5153,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(PUBLISH)-$(PRINTER) / $(PUBLISH)-$(PRINTE
 
 #WORK
 #	use site-list-list first, to track down, then site-list-all for details, because it can be expensive to run...
+#	*.metadata and *.index
 
   * In the context of $(_C)[$(PUBLISH)-$(PRINTER)]$(_D), the $(_C)[c_list]$(_D) variable is repurposed to #WORK
 endef
