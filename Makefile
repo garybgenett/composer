@@ -376,6 +376,7 @@ override _				:= +
 override /				= $(patsubst $(.)%,$(if $(2),[$(.)])%,$(patsubst $(_)%,$(if $(2),[$(_)])%,$(1)))
 
 override KEY_UPDATED			:= .updated
+override KEY_FILEPATH			:= .path
 
 override MARKER				:= >>
 override DIVIDE				:= ::
@@ -3455,6 +3456,7 @@ $(HELPOUT)-$(HEADERS)-%:
 	@$(call TITLE_LN,-1,$(COMPOSER_TECHNAME))
 		@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(DOITALL)-header
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-files)
+#WORKING:FIX:NOW move to reference section, via a new target...
 		@if [ "$(*)" = "$(HELPOUT)" ] || [ "$(*)" = "$(TYPE_PRES)" ]; then \
 			$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-links); \
 		fi
@@ -3518,6 +3520,7 @@ $(HELPOUT)-%:
 .PHONY: $(HELPOUT)-$(PRINTER)
 $(HELPOUT)-$(PRINTER):
 	@$(call TITLE_LN,1,Reference)
+#WORKING:FIX:NOW call new target, for links above...
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Pandoc Extensions)"
@@ -11359,7 +11362,7 @@ override define $(HEADERS) =
 	) \
 	$(call $(HEADERS)-table,$(3)) \
 		"$(_E)MAKECMDGOALS" \
-		"$(if $(MAKECMDGOALS),$(_N)$(MAKECMDGOALS)$(_D) )$(_H)$(MARKER)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
+		"$(if $(MAKECMDGOALS),$(_N)$(MAKECMDGOALS)$(_D) )$(_H)$(DIVIDE)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
 	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$($(HEADERS)-list-make),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
@@ -14938,7 +14941,7 @@ $($(PUBLISH)-library-metadata):
 			else \
 				$(ECHO) "{ \"$(COMPOSER_CMS)\": null }"; \
 			fi \
-				| $(YQ_WRITE) ". += { \"path\": \"$$( \
+				| $(YQ_WRITE) ". += { \"$(KEY_FILEPATH)\": \"$$( \
 						$(ECHO) "$${FILE}" \
 						| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 					)\" }" 2>/dev/null \
@@ -15089,7 +15092,7 @@ override define $(PUBLISH)-library-index-create =
 				else					$(YQ_WRITE) "map(select(.\"$(1)\" | .[] | contains(\"$${FILE}\")))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
 				fi; \
 			fi \
-				| $(YQ_WRITE) "$(call $(PUBLISH)-library-sort-yq) | .[].path" 2>/dev/null \
+				| $(YQ_WRITE) "$(call $(PUBLISH)-library-sort-yq) | .[].\"$(KEY_FILEPATH)\"" 2>/dev/null \
 				| $(call COMPOSER_YML_DATA_PARSE) \
 				| $(SED) "s|$$|,|g" \
 				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
@@ -15183,7 +15186,7 @@ $($(PUBLISH)-library-digest-src):
 	$(YQ_WRITE) " \
 			map(select(.title != null or .pagetitle != null)) \
 			| $(call $(PUBLISH)-library-sort-yq) \
-			| .[].path \
+			| .[].\"$(KEY_FILEPATH)\" \
 		" $($(PUBLISH)-library-metadata) 2>/dev/null \
 		| $(HEAD) -n$${DIGEST_COUNT} \
 	| while read -r FILE; do \
@@ -15515,9 +15518,9 @@ endef
 ########################################
 
 #> update: $(PUBLISH)-library-sort-yq
-#>	sort_by(.date, .title, .path) | reverse
+#>	sort_by(.date, .title, .\"$(KEY_FILEPATH)\") | reverse
 override define $(PUBLISH)-library-sort-yq =
-	sort_by(.path) \
+	sort_by(.\"$(KEY_FILEPATH)\") \
 	| sort_by(.title) \
 	| (sort_by(.date) | reverse)
 endef
@@ -15634,6 +15637,7 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 		| .[].[] |= (sort_by(.) | unique) \
 		" 2>/dev/null
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
+#WORKING:FIX:NOW add "update" markers for easter eggs... the other one is the "Composer" name stripping in "-contents"...
 	@$(MAKE) \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
 		c_list= \
@@ -15723,7 +15727,7 @@ override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
 			c_list="$(c_list)" \
 			$(PUBLISH)-$(PRINTER)$(.)metadata \
-			| $(YQ_WRITE) ".[].\"path\"" \
+			| $(YQ_WRITE) ".[].\"$(KEY_FILEPATH)\"" \
 			| $(call COMPOSER_YML_DATA_PARSE); \
 		$(MAKE) \
 			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
@@ -15752,13 +15756,13 @@ override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 			| $(call COMPOSER_YML_DATA_PARSE) \
 			$(YQ_WRITE_OUT_COLOR); \
 	} || { \
-		$(PRINT) "$(_F)$(EXPAND)"; \
+		$(PRINT) "$(_F)$(DONOTDO)"; \
 	}; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
 	$(YQ_WRITE_OUT) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .\"$(1)\" \
-		| del(.\"path\") \
+		| del(.\"$(KEY_FILEPATH)\") \
 		" $($(PUBLISH)-library-metadata) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR); \
@@ -15773,7 +15777,7 @@ override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 		| .[].[] |= del(select(length == 0)) \
 		| .[] |= del(select(length == 0)) \
 		| .[] |= [ (to_entries | .[].key) ] \
-		| .title |= (to_entries | .[0].value) \
+		| with(select(.title); (.title |= (to_entries | .[0].value))) \
 		" $($(PUBLISH)-library-index) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR); \
