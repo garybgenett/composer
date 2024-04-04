@@ -5259,7 +5259,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [search] $(DIVIDE) call | null
 | [search] $(DIVIDE) form | null
 | [copyright]             | null
-| [$(COMPOSER_TINYNAME)]  | `$(PUBLISH_COMPOSER)`
+| [$(COMPOSER_TINYNAME)][$(COMPOSER_CMS)] | `$(PUBLISH_COMPOSER)`
 | [header]        | `$(PUBLISH_HEADER)`
 | [footer]        | `$(PUBLISH_FOOTER)`
 | [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`
@@ -5303,6 +5303,7 @@ endef
 
 #>	$(COMPOSER_TINYNAME)
 override define PUBLISH_PAGE_1_CONFIGS_LINKS =
+$(call NEWLINE)[$(COMPOSER_CMS)]: $(PUBLISH_OUT_README)#$(COMPOSER_TINYNAME)
 $(foreach FILE,\
 	brand \
 	homepage \
@@ -5498,7 +5499,7 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | [search] $(DIVIDE) call | null | null
 | [search] $(DIVIDE) form | null | null
 | [copyright]             | null | null
-| [$(COMPOSER_TINYNAME)]  | `$(PUBLISH_COMPOSER)` | `$(PUBLISH_COMPOSER_ALT)`
+| [$(COMPOSER_TINYNAME)][$(COMPOSER_CMS)] | `$(PUBLISH_COMPOSER)` | `$(PUBLISH_COMPOSER_ALT)`
 | [header]        | `$(PUBLISH_HEADER)`        | `$(PUBLISH_HEADER_ALT)`
 | [footer]        | `$(PUBLISH_FOOTER)`        | `$(PUBLISH_FOOTER_ALT)`
 | [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`   | `$(PUBLISH_CSS_OVERLAY_ALT)`
