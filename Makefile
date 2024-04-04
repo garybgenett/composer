@@ -488,7 +488,9 @@ override COMPOSER_INCLUDES_DIRS		:= $(COMPOSER_INCLUDES_DIRS) $(CURDIR)
 endif
 
 ifneq ($(origin COMPOSER_INCLUDE),undefined)
-ifeq ($(COMPOSER_INCLUDE),)
+ifneq ($(wildcard $(COMPOSER_INCLUDE)),)
+override COMPOSER_INCLUDES_DIRS		:= $(abspath $(wildcard $(COMPOSER_INCLUDE)))
+else ifeq ($(COMPOSER_INCLUDE),)
 ifneq ($(firstword $(COMPOSER_INCLUDES_DIRS)),$(lastword $(COMPOSER_INCLUDES_DIRS)))
 override COMPOSER_INCLUDES_DIRS		:= $(firstword $(COMPOSER_INCLUDES_DIRS)) $(lastword $(COMPOSER_INCLUDES_DIRS))
 endif
@@ -2052,19 +2054,15 @@ override COMPOSER_OPTIONS_PANDOC := \
 ### {{{3 Publish
 ########################################
 
-override COMPOSER_OPTIONS_PUBLISH_ENV := \
-	MAKEJOBS \
-	COMPOSER_DEBUGIT \
-	COMPOSER_DOCOLOR \
-	c_base \
-	c_list \
+#> update: includes duplicates
+override NOTHING			:= $(.)null
 
 override COMPOSER_OPTIONS_PUBLISH := \
-	COMPOSER_INCLUDE$(TOKEN)1 \
+	COMPOSER_INCLUDE$(TOKEN)$(subst $(NULL) ,$(TOKEN),$(COMPOSER_INCLUDES_DIRS) \$$(CURDIR)) \
 	COMPOSER_DEPENDS$(TOKEN) \
 	COMPOSER_EXT$(TOKEN)$(COMPOSER_EXT_DEFAULT) \
 	COMPOSER_TARGETS$(TOKEN) \
-	COMPOSER_SUBDIRS$(TOKEN) \
+	COMPOSER_SUBDIRS$(TOKEN)$(NOTHING) \
 	c_site$(TOKEN)1 \
 	c_type$(TOKEN)$(EXTN_HTML) \
 
@@ -5303,13 +5301,14 @@ override define PUBLISH_PAGE_1_CONFIGS =
 $(call PUBLISH_PAGE_1_CONFIGS_LINKS)
 endef
 
+#>	$(COMPOSER_TINYNAME)
 override define PUBLISH_PAGE_1_CONFIGS_LINKS =
 $(foreach FILE,\
 	brand \
 	homepage \
 	search \
 	copyright \
-	$(COMPOSER_TINYNAME) \
+	\
 	header \
 	footer \
 	css_overlay \
@@ -14860,37 +14859,23 @@ $(COMPOSER_LIBRARY)/$(MAKEFILE):
 			>$(COMPOSER_LIBRARY)/$(COMPOSER_$(FILE)); \
 		$(call NEWLINE) \
 	)
-	@if	[ -z "$$($(call ENV_MAKE) --directory $(COMPOSER_LIBRARY_ROOT) c_site="1" $(CONFIGS)$(.)COMPOSER_INCLUDE)" ] && \
-		[ -f "$(COMPOSER_LIBRARY_ROOT)/$(COMPOSER_CSS_PUBLISH)" ]; \
-	then \
-		$(call $(HEADERS)-file,$(COMPOSER_LIBRARY),$(COMPOSER_CSS_PUBLISH)); \
-		$(ECHO) "$(_E)"; \
-		$(filter-out --relative,$(LN)) ../$(COMPOSER_CSS_PUBLISH) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	elif [ -f "$(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH)" ]; then \
-		$(call $(HEADERS)-rm,$(COMPOSER_LIBRARY),$(COMPOSER_CSS_PUBLISH)); \
-		$(ECHO) "$(_S)"; \
-		$(RM) $(COMPOSER_LIBRARY)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
 	@$(call DO_HEREDOC,$(PUBLISH)-library-append-src) >$($(PUBLISH)-library-append)
 	@$(call $(INSTALL)-$(MAKEFILE),$(COMPOSER_LIBRARY)/$(MAKEFILE),-$(INSTALL),,1)
 
 .PHONY: $(PUBLISH)-$(COMPOSER_SETTINGS)
 $(PUBLISH)-$(COMPOSER_SETTINGS):
-	@$(foreach FILE,$(filter-out $(COMPOSER_OPTIONS_PUBLISH_ENV),$(COMPOSER_OPTIONS)),\
+	@$(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(if $(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH)),\
-			$(ECHO) "override $(FILE) := $(word 2,$(subst $(TOKEN), ,$(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH))))\n"; ,\
-			$(ECHO) "override $(FILE) := $(call COMPOSER_CONV,\$$(COMPOSER_ROOT)/,$($(FILE)),1)\n"; \
+			$(ECHO) "override $(FILE) := $(subst $(TOKEN), ,$(patsubst $(FILE)$(TOKEN)%,%,$(filter $(FILE)$(TOKEN)%,$(COMPOSER_OPTIONS_PUBLISH))))\n"; \
+			$(call NEWLINE) \
 		) \
-		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-digest))): $(notdir $($(PUBLISH)-library-digest-src))\n"
 	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-sitemap))): $(notdir $($(PUBLISH)-library-sitemap-src))\n"
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
-	@$(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),$(COMPOSER_LIBRARY).yml) \
+	@$(YQ_READ) $(COMPOSER_LIBRARY).yml \
 		| $(YQ_WRITE_FILE) " \
 			.variables.$(PUBLISH)-library.folder = null \
 			| .variables.$(PUBLISH)-library.auto_update = null \
@@ -16013,8 +15998,6 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_CSS_PUBLISH):
 	@$(ECHO) "$(_E)"
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)	$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
-else
-	@$(LN) $(call CSS_THEME,$(PUBLISH),custom)	$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(COMPOSER_CSS_PUBLISH) $($(DEBUGIT)-output)
 endif
 	@$(ECHO) "$(_D)"
 
