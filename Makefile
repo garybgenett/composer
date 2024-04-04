@@ -15284,7 +15284,7 @@ override define $(PUBLISH)-library-digest-create =
 			$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 			$($(PUBLISH)-library-append) \
 			$${DIGEST_APPEND} \
-		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
+		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
 	) - $$( \
@@ -15304,14 +15304,14 @@ override define $(PUBLISH)-library-digest-create =
 				$(COMPOSER_LIBRARY_ROOT)/$${FILE} \
 				$($(PUBLISH)-library-append) \
 				$${DIGEST_APPEND} \
-			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
+			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
 			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 			| $(PANDOC_MD_TO_JSON) \
 			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
 			| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 			| $(PANDOC_JSON_TO_LINT) \
 		)"; \
-		if [ "$${TEXT}" = "$(COMPOSER_TINYNAME)$(DIVIDE)break" ]; then \
+		if [ "$${TEXT}" = "$(COMPOSER_TINYNAME)$(TOKEN)break" ]; then \
 			$(ECHO) "$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)\n" \
 				| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 			$(ECHO) "\n" \
