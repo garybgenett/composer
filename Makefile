@@ -2060,7 +2060,7 @@ override COMPOSER_OPTIONS_PUBLISH_ENV := \
 	c_list \
 
 override COMPOSER_OPTIONS_PUBLISH := \
-	COMPOSER_INCLUDE$(TOKEN) \
+	COMPOSER_INCLUDE$(TOKEN)1 \
 	COMPOSER_DEPENDS$(TOKEN) \
 	COMPOSER_EXT$(TOKEN)$(COMPOSER_EXT_DEFAULT) \
 	COMPOSER_TARGETS$(TOKEN) \
@@ -13804,7 +13804,7 @@ $(CONFIGS)-env:
 
 .PHONY: $(CONFIGS)$(.)%
 $(CONFIGS)$(.)%:
-	@$(ECHO) "$($(*))\n" \
+	@$(ECHO) '$($(*))\n' \
 		| $(SED) \
 			-e "s|[[:space:]]+|\n|g" \
 			-e "/^$$/d" \
