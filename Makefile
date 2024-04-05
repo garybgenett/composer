@@ -9072,7 +9072,6 @@ endef
 
 override define HEREDOC_CUSTOM_PUBLISH_CSS_PRE =
 endef
-#WORKING:FIX re-validate this...
 override define HEREDOC_CUSTOM_PUBLISH_CSS_POST =
 ::-webkit-scrollbar-track {
 	background-color:		transparent;
@@ -9080,7 +9079,7 @@ override define HEREDOC_CUSTOM_PUBLISH_CSS_POST =
 ::-webkit-scrollbar-thumb {
 	background-color:		rgba(var(--bs-secondary-rgb));
 }
-body {
+:root {
 	scrollbar-color:		rgba(var(--bs-secondary-rgb)) transparent;
 }
 endef
@@ -9213,7 +9212,7 @@ body {
 	border-radius:			10px;
 }
 
-body {
+:root {
 	scrollbar-width:		thin;
 }
 
@@ -9572,7 +9571,7 @@ body {
 ::-webkit-scrollbar-thumb {
 	background-color:		var(--$(COMPOSER_TINYNAME)-line);
 }
-body {
+:root {
 #$(MARKER)	scrollbar-color:		var(--$(COMPOSER_TINYNAME)-line) var(--$(COMPOSER_TINYNAME)-menu);
 	scrollbar-color:		var(--$(COMPOSER_TINYNAME)-line) var(--$(COMPOSER_TINYNAME)-back);
 }
@@ -9809,7 +9808,7 @@ table {
 ::-webkit-scrollbar-thumb {
 	background-color:		white;
 }
-body {
+:root {
 	scrollbar-color:		white red;
 }
 
@@ -10067,11 +10066,13 @@ $(call HEREDOC_CUSTOM_HTML_CSS_SOLARIZED)
 	--text-bright:			var(--solarized-$(if $(filter light,$(1)),dark,light)1);
 	--links:			var(--solarized-yellow);
 	/* layout */
-	--background-alt:		var(--solarized-$(1)2);
 	--background:			var(--solarized-$(1)2);
+	--background-alt:		var(--solarized-$(1)2);
 	--border:			var(--solarized-$(1)1);
 	--focus:			var(--solarized-$(1)1);
 	/* widgets */
+	--scrollbar-thumb:		var(--solarized-$(1)1);
+	--scrollbar-thumb-hover:	var(--solarized-$(1)1);
 	--button-base:			var(--solarized-$(1)1);
 	--button-hover:			var(--solarized-$(1)1);
 	--form-placeholder:		var(--solarized-$(if $(filter light,$(1)),dark,light)0);
@@ -12142,8 +12143,8 @@ endif
 $(CREATOR)$(.)$(COMPOSER_BASENAME): $(filter-out $(CREATOR)$(.)$(COMPOSER_BASENAME),$($(CREATOR)-$(TARGETS)))
 $(CREATOR)$(.)$(COMPOSER_BASENAME):
 ifneq ($(COMPOSER_DEBUGIT),)
-	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) $(OUT_README).$(PUBLISH).$(EXTN_HTML)
 	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) $(OUT_README).$(EXTN_HTML)
+	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) $(OUT_README).$(PUBLISH).$(EXTN_HTML)
 else
 	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) $(CLEANER)
 	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) $(DOITALL)
