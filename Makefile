@@ -5206,7 +5206,7 @@ endef
 ########################################
 
 ########################################
-#### {{{4 #WORKING:FIX
+#### {{{4 #WORKING:FIX:NOW
 ########################################
 
 override PUBLISH_PAGE_1_NAME		:= Introduction
@@ -14177,7 +14177,7 @@ endef
 #### {{{4 $(EXPORTS)-find
 ########################################
 
-#WORKING:FIX:NOW should probably also remove the COMPOSER_TARGETS files, like COMPOSER_IGNORES, for when COMPOSER_EXT= ... do we even want to continue allowing that?
+#WORKING:FIX should probably also remove the COMPOSER_TARGETS files, like COMPOSER_IGNORES, for when COMPOSER_EXT= ... do we even want to continue allowing that?
 
 #>		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\)
 #>			-o \( -path $(COMPOSER_LIBRARY) -prune \)
@@ -14975,7 +14975,7 @@ $($(PUBLISH)-library-metadata):
 ##### {{{5 $(PUBLISH)-library-metadata-find
 ########################################
 
-#WORKING:FIX:NOW why the ,,1 note/marker...?
+#WORKING:FIX why the ,,1 note/marker...?
 #>	$(call $(EXPORTS)-find,$(1),,1)
 
 override define $(PUBLISH)-library-metadata-find =
@@ -15408,7 +15408,7 @@ $(PUBLISH)-library-sitemap-$(TARGETS):
 ##### {{{5 $(PUBLISH)-library-sitemap-create
 ########################################
 
-#WORKING:FIX:NOW
+#WORKING:FIX
 #	break sitemap into individual files for each directory, with just the table for each
 #	add includes in main sitemap.md
 #	parallize, like exports, etc.
