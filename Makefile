@@ -1320,19 +1320,15 @@ override YQ_EVAL_MERGE			:= *+
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . $(YQ_EVAL) $$file)'
 
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
-
-#>				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null
-#>			)) }}' 2>/dev/null
-#>			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' 2>/dev/null
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
 	$(foreach FILE,$(wildcard $(2)),\
 		$(if $(3),\
 			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
-				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) \
-			)) }}' \
+				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null \
+			)) }}' 2>/dev/null \
 		,\
-			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' \
+			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' 2>/dev/null \
 		) \
 	)
 endef
@@ -2298,6 +2294,7 @@ endif
 ### {{{3 YAML Configuration
 ########################################
 
+override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
 override define COMPOSER_YML_DATA_SKEL =
 { variables: {
   title-prefix:				null,
@@ -3438,13 +3435,13 @@ $(HELPOUT)-$(PUBLISH):
 $(HELPOUT)-$(TYPE_PRES):
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
 		$(HELPOUT)-$(HEADERS)-$(TYPE_PRES) \
-		| $(SED) "/^[-][-][-][-]/,+1d"
+		| $(SED) "/^[-][-][-][-]/,+1 d"
 #>	@$(ENDOLINE)
 #>	@$(LINERULE)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) \
 		COMPOSER_DOITALL_$(HELPOUT)="$(TYPE_PRES)" \
 		$(HELPOUT) \
-		| $(SED) "/^[-][-][-][-]/,+1d"
+		| $(SED) "/^[-][-][-][-]/,+1 d"
 
 ########################################
 ## {{{2 $(HELPOUT)-$(DOITALL)
@@ -6245,7 +6242,7 @@ $(.)$(EXAMPLE)$(.)yml:
 			$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
 		) \
 		| $(YQ_WRITE_OUT) $(call YQ_WRITE_OUT_COLOR) \
-		| $(SED) "3,$$ s|^|$(shell $(ECHO) "$(COMMENTED)")|g"
+		| $(SED) "$(COMPOSER_YML_DATA_SKEL_COMMENT),$$ s|^|$(shell $(ECHO) "$(COMMENTED)")|g"
 
 .PHONY: $(.)$(EXAMPLE)$(.)yml-$(DOITALL)
 $(.)$(EXAMPLE)$(.)yml-$(DOITALL): override COMPOSER_DOITALL_$(EXAMPLE)$(.)yml := $(DOITALL)
