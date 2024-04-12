@@ -552,12 +552,12 @@ override NOFAIL				:= --keep-going
 
 #> update: includes duplicates
 override TARGETS			:= targets
+override PHANTOM			:= $(.)$(TARGETS)
 
-#> update: [.]$(TARGETS)
 override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,$(COMPOSER_DEBUGIT_ALL)) $(if $(filter k%,$(MAKEFLAGS)),$(NOFAIL),--stop)
 ifneq ($(or \
+	$(filter $(COMPOSER_DEBUGIT),$(PHANTOM)) ,\
 	$(COMPOSER_DEBUGIT_ALL) ,\
-	$(filter .$(TARGETS),$(COMPOSER_DEBUGIT)) ,\
 ),)
 #>override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose --trace
 override MAKEFLAGS			:= $(MAKEFLAGS) --debug=verbose
@@ -2178,6 +2178,7 @@ override DOITALL			:= all
 override SUBDIRS			:= subdirs
 override PRINTER			:= list
 
+override PHANTOM			:= $(.)$(TARGETS)
 override DONOTDO			:= $(call /,$(NOTHING))
 override DOFORCE			:= force
 override TOAFILE			:= file
@@ -2754,11 +2755,10 @@ override COMPOSER_LIBRARY_ROOT_REGEX	:= $(shell $(ECHO) "$(COMPOSER_LIBRARY_ROOT
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
 
-#> update: [.]$(TARGETS)
-override COMPOSER_TARGETS		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_DEFAULT),$(COMPOSER_TARGETS))
-override COMPOSER_SUBDIRS		:= $(patsubst .$(TARGETS),$(COMPOSER_CONTENTS_DIRS),$(COMPOSER_SUBDIRS))
-override COMPOSER_EXPORTS		:= $(patsubst .$(TARGETS),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
-override COMPOSER_IGNORES		:= $(patsubst .$(TARGETS),$(COMPOSER_TARGETS_DEFAULT) $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_IGNORES))
+override COMPOSER_TARGETS		:= $(patsubst $(PHANTOM),$(COMPOSER_TARGETS_DEFAULT),$(COMPOSER_TARGETS))
+override COMPOSER_SUBDIRS		:= $(patsubst $(PHANTOM),$(COMPOSER_CONTENTS_DIRS),$(COMPOSER_SUBDIRS))
+override COMPOSER_EXPORTS		:= $(patsubst $(PHANTOM),$(COMPOSER_EXPORTS_DEFAULT),$(COMPOSER_EXPORTS))
+override COMPOSER_IGNORES		:= $(patsubst $(PHANTOM),$(COMPOSER_TARGETS_DEFAULT) $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_IGNORES))
 
 ifeq ($(COMPOSER_TARGETS),)
 override COMPOSER_TARGETS		:= $(COMPOSER_TARGETS_DEFAULT)
@@ -3388,8 +3388,6 @@ $(HELPOUT)-targets_internal_%:
 ### {{{3 $(HELPOUT)-examples
 ########################################
 
-#> update: [.]$(TARGETS)
-
 .PHONY: $(HELPOUT)-examples_%
 $(HELPOUT)-examples_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Command Examples); fi
@@ -3405,7 +3403,7 @@ $(HELPOUT)-examples_%:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(EXAMPLE)$(_D) >$(_M)$(COMPOSER_SETTINGS)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)\$$EDITOR$(_D) $(_M)$(COMPOSER_SETTINGS)"
 #>	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D): $(_E)override c_list := $(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)"
-	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_N)override$(_D) $(_C)COMPOSER_TARGETS$(_D) := $(_N).$(TARGETS)$(_D) $(_E)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D)"
+	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_N)override$(_D) $(_C)COMPOSER_TARGETS$(_D) := $(_N)$(PHANTOM)$(_D) $(_E)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D)"
 	@$(PRINT) "$(CODEBLOCK)$(CODEBLOCK)$(_N)override$(_D) $(_M)$(OUT_MANUAL).$(EXTN_DEFAULT)$(_D) := $(_E)$(OUT_README)$(COMPOSER_EXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_EXT_DEFAULT)$(_D)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CLEANER)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)"
@@ -4014,10 +4012,10 @@ endef
 #			same with readtime, although it doesn't matter...
 #		also, "header x" at any old time...
 #	document readtime = <word> / <time>
-#	document .$(TARGETS) special value
+#	document $(PHANTOM) special value
 #		all four of: TARGETS, SUBDIRS, EXPORTS, IGNORES
 #		wildcards work, as "*", but only once is allowed
-#		also, the COMPOSER_DEBUGIT=.$(TARGETS) MAKEFLAGS hack...
+#		also, the COMPOSER_DEBUGIT=$(PHANTOM) MAKEFLAGS hack...
 #	document template.*/reference.* and $(COMPOSER_CUSTOM)-header.*/$(COMPOSER_CUSTOM)-css.* files
 #	maybe a note that all files also "depend" on Makefile, so they will all update along with it?
 #	includes tree is based off of makefile list, so need to $(INSTALL) in order to get $(COMPOSER_SETTINGS/YML)
@@ -4815,7 +4813,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_EXT)
 
 #WORK
 #	document!
-#	.$(TARGETS)
+#	$(PHANTOM)
 #	COMPOSER_TARGETS
 #	COMPOSER_SUBDIRS
 #	COMPOSER_EXPORTS
@@ -4854,7 +4852,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_EXPORTS)
 #	this one will be complicated... maybe?
 #	has, effectively, the same `$(_M)$(NOTHING)$(_D)` behavior as above...
 #	also overridden by $(_C)[COMPOSER_IGNORES]$(_D)
-#	document .$(TARGETS) token...
+#	document $(PHANTOM) token...
 #	hidden variables...
 #		$(_EXPORT_DIRECTORY)
 #		$(_EXPORT_GIT_REPO)
@@ -12914,8 +12912,6 @@ $(TESTING)-speed-done:
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
-#> update: [.]$(TARGETS)
-
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-$(_)Think
 $(TESTING)-$(COMPOSER_BASENAME):
@@ -12928,7 +12924,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
-		\n\t\t * Use of '$(_C).$(TARGETS)$(_D)' targets \
+		\n\t\t * Use of '$(_C)$(PHANTOM)$(_D)' targets \
 		\n\t\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
 	@$(call $(TESTING)-mark)
@@ -12967,8 +12963,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run,,,1) c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> values
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := .$(TARGETS) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(PHANTOM) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(PHANTOM) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)\n"					>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -13341,8 +13337,6 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS
 ########################################
 
-#> update: [.]$(TARGETS)
-
 .PHONY: $(TESTING)-COMPOSER_EXPORTS
 $(TESTING)-COMPOSER_EXPORTS: $(TESTING)-$(_)Think
 $(TESTING)-COMPOSER_EXPORTS:
@@ -13350,7 +13344,7 @@ $(TESTING)-COMPOSER_EXPORTS:
 		Validate '$(_C)COMPOSER_EXPORTS$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included $(_E)(including wildcards)$(_D) \
 		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped $(_E)(including wildcards)$(_D) \
-		\n\t * Use '$(_C).$(TARGETS)$(_D)' \
+		\n\t * Use '$(_C)$(PHANTOM)$(_D)' \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -13362,7 +13356,7 @@ $(TESTING)-COMPOSER_EXPORTS-init:
 	@$(call $(TESTING)-run) $(DOITALL)
 	@$(call $(TESTING)-run) $(EXPORTS)
 	@$(LS) --recursive $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)
-	@$(ECHO) "override COMPOSER_EXPORTS := .$(TARGETS)\n"						>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_EXPORTS := $(PHANTOM)\n"						>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README)* $(call COMPOSER_CONV,,$(COMPOSER_ART))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(EXPORTS)
 	@$(LS) --recursive $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)
@@ -13379,8 +13373,6 @@ $(TESTING)-COMPOSER_EXPORTS-done:
 ### {{{3 $(TESTING)-COMPOSER_IGNORES
 ########################################
 
-#> update: [.]$(TARGETS)
-
 .PHONY: $(TESTING)-COMPOSER_IGNORES
 $(TESTING)-COMPOSER_IGNORES: $(TESTING)-$(_)Think
 $(TESTING)-COMPOSER_IGNORES:
@@ -13388,7 +13380,7 @@ $(TESTING)-COMPOSER_IGNORES:
 		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_EXPORT$(_D)' is added \
 		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped $(_E)(including wildcards)$(_D) \
-		\n\t * Use '$(_C).$(TARGETS)$(_D)' \
+		\n\t * Use '$(_C)$(PHANTOM)$(_D)' \
 	)
 	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
@@ -13403,7 +13395,7 @@ $(TESTING)-COMPOSER_IGNORES-init:
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := .$(TARGETS)\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(PHANTOM)\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
 .PHONY: $(TESTING)-COMPOSER_IGNORES-done
@@ -16061,15 +16053,13 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_EXT_DEFAULT):
 #### {{{4 $(PUBLISH)-$(EXAMPLE)$(.)$(PUBLISH_PAGEDIR)
 ########################################
 
-#> update: [.]$(TARGETS)
-
 override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR))
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR))
 $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR)):
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(PUBLISH_PAGEDIR))
 	@$(ECHO) "ifneq (\$$(COMPOSER_CURDIR),)\n"					>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := .$(TARGETS)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(PHANTOM)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(ECHO) " $(notdir $(PUBLISH_PAGEDIR)).$(EXTN_HTML)"				>>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 endif
