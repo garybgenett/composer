@@ -10201,7 +10201,7 @@ endef
 
 override define HEREDOC_LICENSE =
 ---
-title: "$(COMPOSER_LICENSE_HEADLINE)"
+pagetitle: "$(COMPOSER_LICENSE_HEADLINE)"
 date: $(COMPOSER_VERSION) ($(call DATEMARK))
 ---
 
