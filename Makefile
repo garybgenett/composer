@@ -379,9 +379,6 @@ override .				:= .
 override _				:= +
 override /				= $(patsubst $(.)%,$(if $(2),[$(.)])%,$(patsubst $(_)%,$(if $(2),[$(_)])%,$(1)))
 
-override KEY_UPDATED			:= .updated
-override KEY_FILEPATH			:= .path
-
 override MARKER				:= >>
 override DIVIDE				:= ::
 override EXPAND				:= ...
@@ -394,12 +391,16 @@ $(NULL)
 $(NULL)
 endef
 
+override MENU_SELF			:= _
+
+override KEY_UPDATED			:= .updated
+override KEY_FILEPATH			:= .path
+
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
 #>override HTML_HIDE			:= <br hidden>
 #>override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
 override HTML_HIDE			:= &\#0000;
-override MENU_SELF			:= _
 
 ################################################################################
 # {{{1 Include Files
@@ -2576,10 +2577,10 @@ override PUBLISH_SH_GLOBAL := \
 	TOKEN \
 	$(TOKEN) \
 	\
+	MENU_SELF \
 	HTML_SPACE \
 	HTML_BREAK \
 	HTML_HIDE \
-	MENU_SELF \
 	$(TOKEN) \
 	\
 	SED_ESCAPE_LIST \
@@ -3235,7 +3236,7 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "  * *$(_C)[COMPOSER_DOCOLOR]$(_D) ~ \`$(_E)c_color$(_D)\` ~ \`$(_E)C$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
-	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is no limit / number to keep / \`$(_N)0$(_D)\` is none*"
+	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is none     / number to keep    / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(boolean)$(_D)\`  = empty is disabled / any value enables*"
 
 ########################################
@@ -3259,7 +3260,7 @@ $(HELPOUT)-variables_helper_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_DAT]"	"$(_C)[Pandoc]$(_D) supporting files"				"$(_H)[COMPOSER_ART]$(_D)/$(_M)$(patsubst $(COMPOSER_ART)/%,%,$(COMPOSER_DAT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_TMP]"	"Cache and working directory"					"$(_H)[CURDIR]$(_D)/$(_M)$(notdir $(COMPOSER_TMP))"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *\`$(_N)(mk)$(_D)\` = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`*"
+	@$(PRINT) "  * *\`$(_N)(mk)$(_D)\`  = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(yml)$(_D)\` = configurable in \`$(_M)$(COMPOSER_YML)$(_D)\`*"
 
 ########################################
@@ -3443,6 +3444,8 @@ $(HELPOUT)-$(TYPE_PRES):
 ########################################
 ## {{{2 $(HELPOUT)-$(DOITALL)
 ########################################
+
+#WORKING:FIX:NOW:FOLDING
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)
@@ -3852,7 +3855,7 @@ $(_C)[Google Firebase]$(_D) is only necessary for uploading via the $(_C)[$(EXPO
 $(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.  Binaries are included in the repository, but do not
 seem to work with all versions of their respective operating systems.  If the
 included binary fails, use $(_M)`$(UPGRADE)-$(notdir $(FIREBASE_DIR))`$(_D) to build a local version
-$(_E)(see [_update-*])$(_D).
+$(_E)(see [$(UPGRADE)-*])$(_D).
 
 The versions of the integrated repositories can be changed, if desired $(_E)(see
 [Repository Versions])$(_D).
@@ -4725,11 +4728,10 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_INCLUDE)
     By default, it reads all of them in order starting from the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
     directory.  When this option is disabled, only $(_C)[$(COMPOSER_BASENAME)]$(_D) and the current
     directory will be used.
-  * In the example directory tree below, normally the `$(_M)$(COMPOSER_SETTINGS)$(_D)` in
-    `$(_M)$(COMPOSER_CMS)$(_D)` is read first, and then `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this
-    enabled, it will read all of them in order from top to bottom:
-    `$(_M)$(COMPOSER_CMS)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`, and finally
-    `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.
+  * In the example directory tree below, it will read all of them in order from
+    top to bottom: `$(_M)$(COMPOSER_CMS)/$(COMPOSER_SETTINGS)$(_D)`, `$(_M)$(COMPOSER_SETTINGS)$(_D)`, `$(_M)tld/$(COMPOSER_SETTINGS)$(_D)`,
+    and finally `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)`.  With this disabled, only
+    `$(_M)$(COMPOSER_CMS)/$(COMPOSER_SETTINGS)$(_D)` and `$(_M)tld/sub/$(COMPOSER_SETTINGS)$(_D)` are read.
   * This is why it is best practice to have a `$(_M)$(COMPOSER_CMS)$(_D)` directory at the top
     level for each documentation archive $(_E)(see [Recommended Workflow])$(_D).  Not only
     does it allow for strict version control of $(_C)[$(COMPOSER_BASENAME)]$(_D) per-archive, it also
@@ -4765,7 +4767,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_DEPENDS)
     directories have dependencies on the sub-directories being run first, this
     will support that by doing them in reverse order, processing them from
     bottom to top.
-  * This has no effect on $(_C)[$(INSTALL)]$(_D) or $(_C)[$(CLEANER)]$(_D).
+  * This has no effect on any other targets, such as $(_C)[$(INSTALL)]$(_D) or $(_C)[$(CLEANER)]$(_D).
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_KEEPING)
 
@@ -5206,7 +5208,7 @@ endef
 ########################################
 
 ########################################
-#### {{{4 #WORKING:FIX:NOW
+#### {{{4 #WORKING:FIX:NOW:FOLDING
 ########################################
 
 override PUBLISH_PAGE_1_NAME		:= Introduction
@@ -6171,6 +6173,7 @@ $(EXAMPLE) \
 $(EXAMPLE)$(.)yml \
 $(EXAMPLE)$(.)md \
 :
+#> TITLE_LN := ENDOLINE LINERULE
 	@$(if $(filter-out $(EXAMPLE)$(.)md,$(@)),\
 		$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR))) \
 		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
@@ -7409,10 +7412,6 @@ endef
 ## {{{2 Heredoc: custom_$(PUBLISH)_sh
 ########################################
 
-########################################
-### {{{3 #WORKING:FIX:NOW
-########################################
-
 override define HEREDOC_CUSTOM_PUBLISH_SH =
 #!$(BASH)
 # $(patsubst filetype=%,filetype=sh,$(patsubst foldlevel=%,foldlevel=2,$(subst \,\\,$(VIM_OPTIONS))))
@@ -7435,6 +7434,21 @@ $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)
 ################################################################################
 ### {{{3 Functions (Global)
 ################################################################################
+
+########################################
+#### {{{4 COMPOSER_YML_DATA_VAL
+########################################
+
+# 1 option
+
+#> update: COMPOSER_YML_DATA_VAL
+#>		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null
+function COMPOSER_YML_DATA_VAL {
+	$${ECHO} "$${COMPOSER_YML_DATA}" \\
+		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" \\
+		| COMPOSER_YML_DATA_PARSE
+	return 0
+}
 
 ########################################
 #### {{{4 COMPOSER_YML_DATA_PARSE
@@ -7463,21 +7477,6 @@ function COMPOSER_YML_DATA_PARSE {
 	else
 		$${CAT}
 	fi
-	return 0
-}
-
-########################################
-#### {{{4 COMPOSER_YML_DATA_VAL
-########################################
-
-# 1 option
-
-#> update: COMPOSER_YML_DATA_VAL
-#>		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null
-function COMPOSER_YML_DATA_VAL {
-	$${ECHO} "$${COMPOSER_YML_DATA}" \\
-		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" \\
-		| COMPOSER_YML_DATA_PARSE
 	return 0
 }
 
@@ -9992,8 +9991,6 @@ endef
 ### {{{3 Heredoc: custom_$(TYPE_HTML)_css (Water.css)
 ########################################
 
-#WORKING:FIX:NOW
-
 ########################################
 #### {{{4 Hacks
 ########################################
@@ -11359,6 +11356,10 @@ endif
 $(HEADERS)-%:
 	@$(call $(HEADERS),,$(*))
 
+override $(HEADERS)-line		= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE)),$(HEADER_L))
+override $(HEADERS)-table		= $(if $(1),$(TABLE_M2),$(TABLE_C2))
+override $(HEADERS)-options-out		:=
+
 #> update: $(HEADERS),.*,.*,
 #>	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$(if $(3),$(COMPOSER_OPTIONS_PANDOC),$(COMPOSER_OPTIONS_MAKE)),
 override define $(HEADERS) =
@@ -11384,11 +11385,7 @@ override define $(HEADERS) =
 	$(call $(HEADERS)-line,$(3))
 endef
 
-override $(HEADERS)-line		= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE)),$(HEADER_L))
-override $(HEADERS)-table		= $(if $(1),$(TABLE_M2),$(TABLE_C2))
-
 #> update: COMPOSER_CONV.*COMPOSER_TINYNAME
-override        $(HEADERS)-options-out :=
 override define $(HEADERS)-options =
 	$(eval override $(HEADERS)-options-out := $(strip \
 		$(if $(filter _EXPORT_%,$(1)),\
@@ -12431,6 +12428,10 @@ $(TESTING)-$(TOAFILE):
 
 #> $(TESTING)-* > $(TESTING)-%
 
+########################################
+#### {{{4 $(TESTING)-%
+########################################
+
 override $(TESTING)-name		= $(patsubst %-init,%,$(patsubst %-done,%,$(if $(1),$(1),$(@))))
 override $(TESTING)-pwd			= $(abspath $(TESTING_DIR)/$(call $(TESTING)-name,$(if $(1),$(1),$(call /,$(@)))))
 
@@ -13109,8 +13110,8 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS):
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_INCLUDE :=\n"			>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_KEEPING := $(SPECIAL_VAL)\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_INCLUDE :=\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_KEEPING :=\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(call /,$(TESTING))-$(FILE)-$(EXPORTS)\n$(call /,$(TESTING))-$(FILE)-$(EXPORTS):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
 		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(call /,$(TESTING))-$(FILE)-$(CLEANER)\n$(call /,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
@@ -16323,7 +16324,7 @@ $(CLEANER): $(.)set_title-$(CLEANER)
 $(CLEANER):
 #>	@$(call $(HEADERS))
 	@$(call $(HEADERS)-$(SUBDIRS))
-	@$(call $(CLEANER)-$(CLEANER),$(SPECIAL_VAL))
+	@$(call $(CLEANER)-$(CLEANER),1)
 #>ifneq ($(c_site),)
 	@$(MAKE) c_site="1" $(PUBLISH)-$(CLEANER)
 #>endif
@@ -16377,12 +16378,12 @@ $(addprefix $(CLEANER)-,$(sort \
 ########################################
 
 override define $(CLEANER)-$(CLEANER) =
-	COMPOSER_KEEPING="$(if $(1),$(1),$(COMPOSER_KEEPING))"; \
-	if	[ -n "$${COMPOSER_KEEPING}" ] && \
+	COMPOSER_KEEPING="$(if $(1),,$(COMPOSER_KEEPING))"; \
+	if	[ "$${COMPOSER_KEEPING}" != "$(SPECIAL_VAL)" ] && \
 		[ -n "$(COMPOSER_LOG)" ] && \
 		[ -f "$(CURDIR)/$(COMPOSER_LOG)" ]; \
 	then \
-		if [ "$${COMPOSER_KEEPING}" = "$(SPECIAL_VAL)" ]; then \
+		if [ -z "$${COMPOSER_KEEPING}" ]; then \
 			$(call $(HEADERS)-note,$(CURDIR),$(COMPOSER_LOG),$(CLEANER)); \
 			$(ECHO) "$(_S)"; \
 			$(RM) $(CURDIR)/$(COMPOSER_LOG) $($(DEBUGIT)-output); \
@@ -16394,10 +16395,10 @@ override define $(CLEANER)-$(CLEANER) =
 		fi; \
 		$(ECHO) "$(_D)"; \
 	fi; \
-	if	[ -n "$${COMPOSER_KEEPING}" ] && \
+	if	[ "$${COMPOSER_KEEPING}" != "$(SPECIAL_VAL)" ] && \
 		[ -d "$(COMPOSER_TMP)" ]; \
 	then \
-		if [ "$${COMPOSER_KEEPING}" = "$(SPECIAL_VAL)" ]; then \
+		if [ -z "$${COMPOSER_KEEPING}" ]; then \
 			$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)); \
 			$(ECHO) "$(_S)"; \
 			$(RM) --recursive $(COMPOSER_TMP) $($(DEBUGIT)-output); \
@@ -16610,7 +16611,7 @@ endif
 ifeq ($(c_type),$(TYPE_HTML))
 	@$(call HEREDOC_CUSTOM_HTML_PANDOC_HACK) $(CURDIR)/$(@)
 endif
-ifneq ($(COMPOSER_KEEPING),$(SPECIAL_VAL))
+ifneq ($(COMPOSER_KEEPING),)
 ifneq ($(COMPOSER_LOG),)
 	@$(call $(COMPOSER_PANDOC)-$(PRINTER)) >>$(CURDIR)/$(COMPOSER_LOG)
 endif
