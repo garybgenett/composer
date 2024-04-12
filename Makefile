@@ -484,7 +484,7 @@ $(foreach FILE,$(abspath $(dir $(MAKEFILE_LIST))),\
 	$(eval override COMPOSER_INCLUDES_DIRS := $(FILE) $(COMPOSER_INCLUDES_DIRS)) \
 )
 
-ifneq ($(CURDIR),$(lastword $(COMPOSER_INCLUDES_DIRS)))
+ifneq ($(lastword $(COMPOSER_INCLUDES_DIRS)),$(CURDIR))
 override COMPOSER_INCLUDES_DIRS		:= $(COMPOSER_INCLUDES_DIRS) $(CURDIR)
 endif
 
@@ -534,8 +534,6 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]
 ################################################################################
 # {{{1 Make Settings
 ################################################################################
-
-#WORKING:FIX:NOW:FOLDING
 
 .POSIX:
 .SUFFIXES:
