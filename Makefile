@@ -535,6 +535,8 @@ $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_YML_LIST		[$(COMPOSER_YML_LIST)]
 # {{{1 Make Settings
 ################################################################################
 
+#WORKING:FIX:NOW:FOLDING
+
 .POSIX:
 .SUFFIXES:
 
@@ -727,6 +729,10 @@ override c_list_file			:=
 
 ########################################
 ## {{{2 Publish
+########################################
+
+########################################
+### {{{3 Values
 ########################################
 
 override PUBLISH_KEEPING		:= 256
@@ -1212,7 +1218,7 @@ override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) --wrap=0 --decod
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
 override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv --dereference
-override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date) --iso=seconds
+override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date)
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
 #>override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - USER="$(USER)" HOME="$(HOME)" PATH="$(PATH)"
 override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - USER="$(USER)" HOME="$(COMPOSER_ROOT)" PATH="$(PATH)"
@@ -1295,11 +1301,11 @@ override GITIGNORE_LIST			:=
 ### {{{3 Date
 ########################################
 
-override DATENOW			:= $(shell $(firstword $(DATE)) +%s)
+override DATENOW			:= $(shell $(DATE) +%s)
 
-override DATESTAMP			= $(shell $(DATE) --date="@$(DATENOW)")
-override DATEMARK			= $(shell $(firstword $(DATE)) --date="@$(DATENOW)" +%Y-%m-%d)
-override DATESTRING			= $(shell $(firstword $(DATE)) --date="@$(DATENOW)" +%Y%m%d-%H%M%S%z)
+override DATESTAMP			= $(shell $(DATE) --date="@$(DATENOW)" --iso=seconds)
+override DATEMARK			= $(shell $(DATE) --date="@$(DATENOW)" +%Y-%m-%d)
+override DATESTRING			= $(shell $(DATE) --date="@$(DATENOW)" +%Y%m%d-%H%M%S%z)
 
 ########################################
 ### {{{3 YQ
@@ -1314,6 +1320,7 @@ override YQ_WRITE_OUT			:= $(YQ_WRITE_FILE) $(if $(COMPOSER_DOCOLOR),--colors)
 override YQ_EVAL			:= *
 override YQ_EVAL_MERGE			:= *+
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . $(YQ_EVAL) $$file)'
+
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
 
 #>				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null
@@ -1717,6 +1724,7 @@ $(if $(c_css),\
 #> validate: ./pandoc/pandoc-*-linux-* --list-extensions=markdown
 
 override PANDOC_EXTENSIONS		:=
+
 override PANDOC_EXTENSIONS		+= +ascii_identifiers
 override PANDOC_EXTENSIONS		+= +emoji
 override PANDOC_EXTENSIONS		+= +fancy_lists
@@ -1733,6 +1741,7 @@ override PANDOC_EXTENSIONS		+= +strikeout
 override PANDOC_EXTENSIONS		+= +superscript
 override PANDOC_EXTENSIONS		+= +task_lists
 override PANDOC_EXTENSIONS		+= +yaml_metadata_block
+
 ifneq ($(filter markdown,$(INPUT)),)
 override PANDOC_EXTENSIONS		+= +auto_identifiers
 override PANDOC_EXTENSIONS		+= +header_attributes
