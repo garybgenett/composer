@@ -13110,14 +13110,22 @@ $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS):
 .PHONY: $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init
 $(TESTING)-$(CLEANER)-$(DOITALL)-$(EXPORTS)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_INCLUDE :=\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_KEEPING :=\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(call /,$(TESTING))-$(FILE)-$(EXPORTS)\n$(call /,$(TESTING))-$(FILE)-$(EXPORTS):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(call /,$(TESTING))-$(FILE)-$(CLEANER)\n$(call /,$(TESTING))-$(FILE)-$(CLEANER):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) '$(foreach FILE,1 2 3 4 5 6 7 8 9,\n.PHONY: $(call /,$(TESTING))-$(FILE)-$(DOITALL)\n$(call /,$(TESTING))-$(FILE)-$(DOITALL):\n\t@$$(PRINT) "$$(@): $$(CURDIR)"\n)' \
-		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_INCLUDE :=\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_KEEPING :=\n" >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(foreach FILE,\
+		$(EXPORTS) \
+		$(CLEANER) \
+		$(DOITALL) \
+		,\
+		$(foreach NUM,1 2 3 4 5 6 7 8 9,\
+			{	$(ECHO) '\n'; \
+				$(ECHO) '.PHONY: $(call /,$(TESTING))-$(NUM)-$(FILE)\n'; \
+				$(ECHO) '$(call /,$(TESTING))-$(NUM)-$(FILE):\n'; \
+				$(ECHO) '\t@$$(PRINT) "$$(@): $$(CURDIR)"\n'; \
+			} >>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS); \
+			$(call NEWLINE) \
+		) \
+	)
 	@$(MKDIR) $(call $(TESTING)-pwd)/data/$(notdir $(COMPOSER_TMP))
 #>	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(EXPORTS) $(TESTING)-2-$(EXPORTS)" $(EXPORTS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(TESTING)-1-$(EXPORTS) $(TESTING)-2-$(EXPORTS)" $(CONFIGS)
