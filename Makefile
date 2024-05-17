@@ -14165,16 +14165,9 @@ endef
 #### {{{4 $(EXPORTS)-tree
 ########################################
 
-#WORKING:FIX somehow base on actual gitignore...?  otherwise, need to document...
-
 #>		-o \\\( -path \"$(1)/.*\" -prune \\\)
 override define $(EXPORTS)-tree =
 	$(call $(EXPORTS)-find,$(1)) \
-		$(foreach FILE,$(GITIGNORE_LIST),\
-			$(foreach IGNORE,$(filter-out #%,$(GITIGNORE_$(FILE))),\
-				-o \\\( -path $(1)/$(subst *,\\\*,$(patsubst /%,%,$(patsubst %/,%,$(IGNORE)))) -prune \\\) \
-			) \
-		) \
 		-o \\\( -type d -print \\\)
 endef
 
@@ -14183,6 +14176,7 @@ endef
 ########################################
 
 #WORKING:FIX should probably also remove the COMPOSER_TARGETS files, like COMPOSER_IGNORES, for when COMPOSER_EXT= ... do we even want to continue allowing that?
+#WORKING:FIX somehow base GITIGNORE on actual gitignore...?  otherwise, need to document...
 
 #>		-o \\\( -path $(COMPOSER_LIBRARY) -prune \\\)
 #>			-o \( -path $(COMPOSER_LIBRARY) -prune \)
@@ -14206,6 +14200,11 @@ override define $(EXPORTS)-find =
 						done; \
 				done; \
 		fi) \
+		$(foreach FILE,$(GITIGNORE_LIST),\
+			$(foreach IGNORE,$(filter-out #%,$(GITIGNORE_$(FILE))),\
+				-o \\\( -path $(1)/$(subst *,\\\*,$(patsubst /%,%,$(patsubst %/,%,$(IGNORE)))) -prune \\\) \
+			) \
+		) \
 		$(if $(2),-o \\\( -path /dev/null -print \\\))
 endef
 
