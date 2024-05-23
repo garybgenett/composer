@@ -298,12 +298,16 @@ override COMPOSER_ROOT			:= $(CURDIR)
 endif
 override COMPOSER_CURDIR		:=
 
-override COMPOSER_HIDDEN_FILES		:= +* .*
+#> update: includes duplicates
+override .				:= .
+override _				:= +
+
+override COMPOSER_HIDDEN_FILES		:= $(.)* $(_)*
 
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
 override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTN_OUTPUT).$(call DATESTRING)
 
-override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/+$(COMPOSER_BASENAME)
+override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/$(_)$(COMPOSER_BASENAME)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
 
 override COMPOSER_LIBRARY_ROOT		:=
@@ -377,6 +381,7 @@ override DEPTH_MAX			:= 6
 ## {{{2 Tokens
 ########################################
 
+#> update: includes duplicates
 override .				:= .
 override _				:= +
 override /				= $(patsubst $(.)%,$(if $(2),[$(.)])%,$(patsubst $(_)%,$(if $(2),[$(_)])%,$(1)))
@@ -395,8 +400,8 @@ endef
 
 override MENU_SELF			:= _
 
-override KEY_UPDATED			:= .updated
-override KEY_FILEPATH			:= .path
+override KEY_UPDATED			:= $(.)updated
+override KEY_FILEPATH			:= $(.)path
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
@@ -1220,7 +1225,6 @@ override CHMOD				:= $(call COMPOSER_FIND,$(PATH_LIST),chmod) -v 755
 override CP				:= $(call COMPOSER_FIND,$(PATH_LIST),cp) -afv --dereference
 override DATE				:= $(call COMPOSER_FIND,$(PATH_LIST),date)
 override ECHO				:= $(call COMPOSER_FIND,$(PATH_LIST),echo) -en
-#>override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - USER="$(USER)" HOME="$(HOME)" PATH="$(PATH)"
 override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - USER="$(USER)" HOME="$(COMPOSER_ROOT)" PATH="$(PATH)"
 override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
 override HEAD				:= $(call COMPOSER_FIND,$(PATH_LIST),head)
@@ -1232,7 +1236,8 @@ override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
 override REALPATH			:= $(call COMPOSER_FIND,$(PATH_LIST),realpath) --canonicalize-missing --no-symlinks --relative-to
 override RM				:= $(call COMPOSER_FIND,$(PATH_LIST),rm) -fv
-override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
+override SORT				:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -u
+override SORT_NUM			:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee)
@@ -2729,7 +2734,7 @@ override PUBLISH_DIRS_PRINTER_LIST := \
 ### {{{3 Setup
 ########################################
 
-override COMPOSER_CONTENTS		:= $(sort $(wildcard *))
+override COMPOSER_CONTENTS		:= $(sort $(filter-out . ..,$(wildcard .* *)))
 override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
 override COMPOSER_CONTENTS_FILES	:= $(filter-out $(COMPOSER_CONTENTS_DIRS),$(COMPOSER_CONTENTS))
 override COMPOSER_CONTENTS_EXT		:= $(filter %$(COMPOSER_EXT),$(filter-out %.$(EXTN_OUTPUT),$(COMPOSER_CONTENTS_FILES)))
@@ -2738,8 +2743,12 @@ override COMPOSER_TARGETS_DEFAULT	:= $(patsubst %$(COMPOSER_EXT),%.$(EXTN_OUTPUT
 override COMPOSER_SUBDIRS_DEFAULT	:= $(COMPOSER_CONTENTS_DIRS)
 override COMPOSER_EXPORTS_DEFAULT	:= $(foreach TYPE,$(TYPE_TARGETS_LIST),*.$(EXTN_$(TYPE)))
 override COMPOSER_IGNORES_DEFAULT	:= $(COMPOSER_HIDDEN_FILES)
+#> $(COMPOSER_DIR) > $(COMPOSER_EXPORT)
 ifeq ($(abspath $(dir $(COMPOSER_EXPORT))),$(CURDIR))
 override COMPOSER_IGNORES_DEFAULT	:= $(notdir $(COMPOSER_EXPORT)) $(COMPOSER_IGNORES_DEFAULT)
+endif
+ifeq ($(abspath $(dir $(COMPOSER_DIR))),$(CURDIR))
+override COMPOSER_IGNORES_DEFAULT	:= $(notdir $(COMPOSER_DIR)) $(COMPOSER_IGNORES_DEFAULT)
 endif
 
 override COMPOSER_ROOT_REGEX		:= $(shell $(ECHO) "$(COMPOSER_ROOT)"		| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g")
@@ -2810,6 +2819,22 @@ endif
 endif
 
 ########################################
+### {{{3 Lists
+########################################
+
+override COMPOSER_TARGETS_LIST		:= $(filter $(COMPOSER_TARGETS),$(COMPOSER_CONTENTS_FILES))
+override COMPOSER_SUBDIRS_LIST		:= $(filter $(COMPOSER_SUBDIRS),$(COMPOSER_CONTENTS_DIRS))
+override COMPOSER_EXPORTS_LIST		:= $(filter $(subst *,%,$(COMPOSER_EXPORTS)),$(COMPOSER_CONTENTS_FILES))
+override COMPOSER_EXPORTS_EXT		:= $(filter           %                     ,$(COMPOSER_CONTENTS_EXT))
+override COMPOSER_IGNORES_LIST		:= $(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS))
+override COMPOSER_IGNORES_EXT		:= $(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))
+
+override COMPOSER_IGNORES_LIST		:= $(filter-out $(filter $(subst *,%,$(COMPOSER_HIDDEN_FILES)),$(COMPOSER_EXPORTS_LIST)),$(COMPOSER_IGNORES_LIST))
+override COMPOSER_IGNORES_EXT		:= $(filter-out $(filter $(subst *,%,$(COMPOSER_HIDDEN_FILES)),$(COMPOSER_EXPORTS_EXT)),$(COMPOSER_IGNORES_EXT))
+override COMPOSER_EXPORTS_LIST		:= $(filter-out $(COMPOSER_IGNORES_LIST),$(COMPOSER_EXPORTS_LIST))
+override COMPOSER_EXPORTS_EXT		:= $(filter-out $(COMPOSER_IGNORES_EXT),$(COMPOSER_EXPORTS_EXT))
+
+########################################
 ## {{{2 Testing
 ########################################
 
@@ -2823,7 +2848,7 @@ endif
 
 override TESTING_MAKEFILE		:= $(TESTING_DIR)/$(COMPOSER_CMS)/$(MAKEFILE)
 #>override TESTING_LOGFILE		:= $(COMPOSER_CMS)-$(TESTING).log
-override TESTING_LOGFILE		:= +$(COMPOSER_BASENAME)-$(TESTING).log
+override TESTING_LOGFILE		:= $(_)$(COMPOSER_BASENAME)-$(TESTING).log
 
 override TESTING_MAKEJOBS		:= 8
 ifneq ($(and \
@@ -4823,6 +4848,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_TARGETS)
 #WORK
 #	does not pick up .* files/directories
 #		these are actually excluded in COMPOSER_IGNORES now...
+#	wildcard '*' is taken literally
 
   * The list of output files to create or delete with $(_C)[$(CLEANER)]$(_D) and $(_C)[$(DOITALL)]$(_D).
     $(_C)[$(COMPOSER_BASENAME)]$(_D) does auto-detection using $(_C)[c_type]$(_D) and $(_C)[COMPOSER_EXT]$(_D), so this
@@ -4838,6 +4864,8 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_TARGETS)
   * Use $(_C)[$(CONFIGS)]$(_D) or $(_C)[$(TARGETS)]$(_D) to check the current value.
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_SUBDIRS)
+
+#	wildcard '*' is taken literally
 
   * The list of sub-directories to recurse into with $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and
     $(_C)[$(DOITALL)]$(_D).  The behavior and configuration is identical to $(_C)[COMPOSER_TARGETS]$(_D)
@@ -4860,6 +4888,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_EXPORTS)
 #		$(_EXPORT_GIT_BNCH)
 #		$(_EXPORT_FIRE_ACCT)
 #		$(_EXPORT_FIRE_PROJ)
+#	wildcard '*' globs
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_IGNORES)
 
@@ -4870,6 +4899,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_IGNORES)
 #	$(NOTHING) has no special meaning and is removed if present
 #	hard-coded $(COMPOSER_IGNORES_DEFAULT) / $(COMPOSER_HIDDEN_FILES)
 #		$(COMPOSER_HIDDEN_FILES) should also be documented in the "Operation" section somewhere...
+#	wildcard '*' globs
 
   * The list of $(_C)[COMPOSER_TARGETS]$(_D), $(_C)[COMPOSER_SUBDIRS]$(_D) and $(_C)[COMPOSER_EXPORTS]$(_D) to
     skip with $(_C)[$(EXPORTS)]$(_D), $(_C)[$(PUBLISH)]$(_D), $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and $(_C)[$(DOITALL)]$(_D).  This allows for
@@ -13367,6 +13397,7 @@ $(TESTING)-COMPOSER_EXPORTS:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
+#WORKING:NOW:FIX:IGNORES
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-init
 $(TESTING)-COMPOSER_EXPORTS-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
@@ -13403,6 +13434,7 @@ $(TESTING)-COMPOSER_IGNORES:
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
+#WORKING:NOW:FIX:IGNORES
 .PHONY: $(TESTING)-COMPOSER_IGNORES-init
 $(TESTING)-COMPOSER_IGNORES-init:
 	@$(call $(TESTING)-run) $(INSTALL)-$(DOFORCE)
@@ -13864,30 +13896,20 @@ $(TARGETS):
 	@$(LINERULE)
 	@$(foreach FILE,\
 		TARGETS \
-		,\
-		$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE)"; \
-		$(ECHO) "$(filter $(COMPOSER_$(FILE)),$(COMPOSER_CONTENTS_FILES))" \
-			| $(SED) "s|[ ]+|\n|g" \
-			| $(SORT); \
-		$(call NEWLINE) \
-	)
-	@$(foreach FILE,\
 		SUBDIRS \
-		,\
-		$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE)"; \
-		$(ECHO) "$(filter $(COMPOSER_$(FILE)),$(COMPOSER_CONTENTS_DIRS))" \
-			| $(SED) "s|[ ]+|\n|g" \
-			| $(SORT); \
-		$(call NEWLINE) \
-	)
-	@$(foreach FILE,\
 		EXPORTS \
 		IGNORES \
 		,\
 		$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE)"; \
-		$(ECHO) "$(filter $(subst *,%,$(COMPOSER_$(FILE))),$(COMPOSER_CONTENTS_FILES))" \
-			| $(SED) "s|[ ]+|\n|g" \
-			| $(SORT); \
+		$(LS) --directory $(COMPOSER_$(FILE)_LIST); \
+		if [ -n "$(COMPOSER_LIBRARY)" ] && { \
+			[ "$(FILE)" = "EXPORTS" ] || \
+			[ "$(FILE)" = "IGNORES" ]; \
+		}; then \
+			$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE) ($(COMPOSER_EXT))"; \
+			$(LS) --directory $(COMPOSER_$(FILE)_EXT); \
+		fi; \
+		$(call NEWLINE) \
 	)
 	@$(LINERULE)
 	@$(foreach FILE,\
@@ -13963,8 +13985,8 @@ $(TARGETS)-$(TARGETS):
 		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
-		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(DIVIDE)\n$(_C),$(subst $(TOKEN),\n\t,$(subst ",\",$(FILE))))"; ,\
-						$(ECHO) "$(_M)$(subst : ,$(_D) $(DIVIDE) $(_C),$(subst $(TOKEN), ,$(subst ",\",$(FILE))))"; \
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(_S)$(DIVIDE)$(_D)\n$(_C),$(subst $(TOKEN),\n\t,$(subst ",\",$(FILE))))"; ,\
+						$(ECHO) "$(_M)$(subst : ,$(_D) $(_S)$(DIVIDE)$(_D) $(_C),$(subst $(TOKEN), ,$(subst ",\",$(FILE))))"; \
 		) \
 		$(if $(call c_list_var_source,$(BASE),$(EXTN)),\
 		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_D)\n\t$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; ,\
@@ -14289,47 +14311,36 @@ endef
 
 #> update: $(CONFIGS)$(.)COMPOSER_
 
-#>		$(ECHO) " -o \\\( -path \"$(3)/.*\" -prune \\\)";
+#>		$(ECHO) " -o \\\( -path \"$(1)/.*\" -prune \\\)";
+#WORKING:NOW:FIX:IGNORES
 override define $(EXPORTS)-filter =
-	if [ -z "$(1)" ]; then \
+	if [ -z "$(3)" ]; then \
 		$(ECHO) "-mindepth 1 -maxdepth 1 \\\( -type d -prune \\\)"; \
 	fi; \
-	$(ECHO) "$(sort $(foreach SAFE,$(patsubst $(3)/%,%,$(filter $(3)/%,$(2))),$(word 1,$(subst /, ,$(SAFE)))))" | $(TR) ' ' '\n' \
+	$(ECHO) "$(sort $(foreach SAFE,$(patsubst $(1)/%,%,$(filter $(1)/%,$(2))),$(word 1,$(subst /, ,$(SAFE)))))" | $(TR) ' ' '\n' \
 		| $(SORT) \
 		| $(SED) "/^$$/d" \
 		| while read -r FILE; do \
-			if [ -n "$(1)" ]; then	$(ECHO) "--filter=P_/$$( \
+			if [ -n "$(3)" ]; then	$(ECHO) "--filter=P_/$$( \
 							$(ECHO) "$${FILE}" \
 							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 							| $(SED) "s|\[\*\]|*|g" \
 						)\n"; \
 			fi; \
 		done; \
-	$(call ENV_MAKE) --directory $(3) $(CONFIGS)$(.)COMPOSER_IGNORES 2>/dev/null \
+	$(call ENV_MAKE) --directory $(1) $(CONFIGS)$(.)COMPOSER_EXPORTS_LIST 2>/dev/null \
 		| $(SORT) \
 		| $(SED) "/^$$/d" \
 		| while read -r FILE; do \
-			if [ -n "$(1)" ]; then	$(ECHO) "--filter=-_/$$( \
+			if [ -n "$(3)" ]; then	$(ECHO) "--filter=+_/$$( \
 							$(ECHO) "$${FILE}" \
 							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 							| $(SED) "s|\[\*\]|*|g" \
 						)\n"; \
-			else			$(ECHO) " -o \\\( -path \"$(3)/$${FILE}\" -prune \\\)"; \
+			else			$(ECHO) " -o \\\( -path \"$(1)/$${FILE}\" -print \\\)"; \
 			fi; \
 		done; \
-	$(call ENV_MAKE) --directory $(3) $(CONFIGS)$(.)COMPOSER_EXPORTS 2>/dev/null \
-		| $(SORT) \
-		| $(SED) "/^$$/d" \
-		| while read -r FILE; do \
-			if [ -n "$(1)" ]; then	$(ECHO) "--filter=+_/$$( \
-							$(ECHO) "$${FILE}" \
-							| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
-							| $(SED) "s|\[\*\]|*|g" \
-						)\n"; \
-			else			$(ECHO) " -o \\\( -path \"$(3)/$${FILE}\" -print \\\)"; \
-			fi; \
-		done; \
-	if [ -n "$(1)" ]; then			$(ECHO) "--filter=-_/*"; \
+	if [ -n "$(3)" ]; then			$(ECHO) "--filter=-_/*"; \
 	else					$(ECHO) " -o \\\( -path /dev/null -print \\\)"; \
 						$(ECHO) " -o -prune"; \
 	fi
@@ -14362,7 +14373,7 @@ $(addprefix $(EXPORTS)-$(TARGETS)-,$($(EXPORTS)-$(TARGETS))):
 	@$(RSYNC) \
 		--copy-links \
 		--delete-excluded \
-		$$($(call $(EXPORTS)-filter,1,$($(EXPORTS)-$(TARGETS)),$($(@)))) \
+		$$($(call $(EXPORTS)-filter,$($(@)),$($(EXPORTS)-$(TARGETS)),1)) \
 		$(COMPOSER_ROOT)$(call COMPOSER_CONV,,$($(@)),1,1)/ \
 		$(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$($(@)),1,1)
 
@@ -15493,7 +15504,7 @@ override define $(PUBLISH)-library-sitemap-create =
 	fi; \
 	shopt -s lastpipe; \
 		PRINT=; \
-	eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,,$($(PUBLISH)-library-sitemap-$(PRINTER)),$(FILE))) \
+	eval $(FIND) $(FILE) $$($(call $(EXPORTS)-filter,$(FILE),$($(PUBLISH)-library-sitemap-$(PRINTER))) \
 		| $(SORT) \
 	| while read -r FILE; do \
 		if [ -z "$${PRINT}" ]; then \
@@ -15567,11 +15578,12 @@ override define $(PUBLISH)-library-sort-yq =
 	| (sort_by(.date) | reverse)
 endef
 
+
 override define $(PUBLISH)-library-sort-sh =
 	if [ "$(1)" = "date" ]; then \
-		$(SORT) --reverse; \
+		$(SORT_NUM) --reverse; \
 	else \
-		$(SORT); \
+		$(SORT_NUM); \
 	fi
 endef
 
@@ -15721,13 +15733,14 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 		done
 	@$(LINERULE)
 	@$(ECHO) "$(_N)"
+#WORKING:NOW:FIX:IGNORES
 	@$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
 		$(call $(EXPORTS)-find,$(CURDIR),\
 				-type f -name \"*$(COMPOSER_EXT)\" \
 			) \
 			$(call $(PUBLISH)-$(PRINTER)-output) \
 	,\
-		$(foreach FILE,$(filter $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT)),\
+		$(foreach FILE,$(COMPOSER_IGNORES_EXT),\
 			$(if $($(PUBLISH)-$(PRINTER)-file),\
 				$(if $(filter $($(PUBLISH)-$(PRINTER)-file),$(FILE)),\
 					$(ECHO) "$(FILE)\n"; \
@@ -15745,13 +15758,14 @@ endif
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(LISTING)
 ########################################
 
+#WORKING:NOW:FIX:IGNORES
 override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
 	{ \
 		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
 			$(call $(PUBLISH)-library-metadata-find,$(CURDIR)) \
 				$(call $(PUBLISH)-$(PRINTER)-output); \
 		,\
-			$(foreach FILE,$(addprefix $($(PUBLISH)-$(PRINTER)-dir),$(filter-out $(subst *,%,$(COMPOSER_IGNORES)),$(COMPOSER_CONTENTS_EXT))),\
+			$(foreach FILE,$(addprefix $($(PUBLISH)-$(PRINTER)-dir),$(COMPOSER_EXPORTS_EXT)),\
 				$(if $($(PUBLISH)-$(PRINTER)-file),\
 					$(if $(filter $($(PUBLISH)-$(PRINTER)-file),$(FILE)),\
 						$(ECHO) "$(FILE)\n"; \
