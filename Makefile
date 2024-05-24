@@ -298,14 +298,11 @@ override COMPOSER_ROOT			:= $(CURDIR)
 endif
 override COMPOSER_CURDIR		:=
 
-#> update: includes duplicates
-override .				:= .
-override _				:= +
-
-override COMPOSER_HIDDEN_FILES		:= $(.)* $(_)*
-
 override COMPOSER_TMP			:= $(CURDIR)/.$(COMPOSER_TINYNAME).tmp
 override COMPOSER_TMP_FILE		= $(if $(1),$(notdir $(COMPOSER_TMP)),$(COMPOSER_TMP))/$(notdir $(c_base)).$(EXTN_OUTPUT).$(call DATESTRING)
+
+#> update: includes duplicates
+override _				:= +
 
 override COMPOSER_EXPORT_DEFAULT	:= $(COMPOSER_ROOT)/$(_)$(COMPOSER_BASENAME)
 override COMPOSER_EXPORT		:= $(COMPOSER_EXPORT_DEFAULT)
@@ -2733,6 +2730,8 @@ override PUBLISH_DIRS_PRINTER_LIST := \
 ########################################
 ### {{{3 Setup
 ########################################
+
+override COMPOSER_HIDDEN_FILES		:= $(.)* $(_)*
 
 override COMPOSER_CONTENTS		:= $(sort $(filter-out . ..,$(wildcard .* *)))
 override COMPOSER_CONTENTS_DIRS		:= $(patsubst %/.,%,$(wildcard $(addsuffix /.,$(COMPOSER_CONTENTS))))
@@ -13384,77 +13383,40 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS
 ########################################
 
-.PHONY: $(TESTING)-COMPOSER_EXPORTS
-$(TESTING)-COMPOSER_EXPORTS: $(TESTING)-$(_)Think
-$(TESTING)-COMPOSER_EXPORTS:
+.PHONY: $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES
+$(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES: $(TESTING)-$(_)Think
+$(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES:
 	@$(call $(TESTING)-$(HEADERS),\
-		Validate '$(_C)COMPOSER_EXPORTS$(_D)' behavior ,\
+		Validate '$(_C)COMPOSER_EXPORTS$(_D)' and '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
 		\n\t * Verify '$(_C)COMPOSER_EXPORTS$(_D)' are included $(_E)(including wildcards)$(_D) \
 		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped $(_E)(including wildcards)$(_D) \
+		\n\t * Also with parallel execution \
 		\n\t * Use '$(_C)$(PHANTOM)$(_D)' \
 	)
-	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-load)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
-#WORKING:NOW:FIX:IGNORES
-.PHONY: $(TESTING)-COMPOSER_EXPORTS-init
-$(TESTING)-COMPOSER_EXPORTS-init:
+.PHONY: $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-init
+$(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(EXPORTS)
+	@$(LS) --recursive $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)
+	@$(ECHO) "override COMPOSER_EXPORTS := $(PHANTOM)\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README)* data\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(EXPORTS)
 	@$(LS) --recursive $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)
-	@$(ECHO) "override COMPOSER_EXPORTS := $(PHANTOM)\n"						>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README)* $(call COMPOSER_CONV,,$(COMPOSER_ART))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(EXPORTS)
-	@$(LS) --recursive $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)
 
-.PHONY: $(TESTING)-COMPOSER_EXPORTS-done
-$(TESTING)-COMPOSER_EXPORTS-done:
-	$(call $(TESTING)-count,12,$(MARKER).+$(EXPORTS).+$(subst .,[.],$(EXPAND)))
-	$(call $(TESTING)-count,1,deleting)
-	$(call $(TESTING)-count,6,Removing)
-	$(call $(TESTING)-find,\+\+\+.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,deleting.+$(OUT_README).$(EXTN_DEFAULT))
-
-########################################
-### {{{3 $(TESTING)-COMPOSER_IGNORES
-########################################
-
-.PHONY: $(TESTING)-COMPOSER_IGNORES
-$(TESTING)-COMPOSER_IGNORES: $(TESTING)-$(_)Think
-$(TESTING)-COMPOSER_IGNORES:
-	@$(call $(TESTING)-$(HEADERS),\
-		Validate '$(_C)COMPOSER_IGNORES$(_D)' behavior ,\
-		\n\t * Verify '$(_C)COMPOSER_EXPORT$(_D)' is added \
-		\n\t * Verify '$(_C)COMPOSER_IGNORES$(_D)' are skipped $(_E)(including wildcards)$(_D) \
-		\n\t * Use '$(_C)$(PHANTOM)$(_D)' \
-	)
-	@$(call $(TESTING)-mark)
-	@$(call $(TESTING)-init)
-	@$(call $(TESTING)-done)
-
-#WORKING:NOW:FIX:IGNORES
-.PHONY: $(TESTING)-COMPOSER_IGNORES-init
-$(TESTING)-COMPOSER_IGNORES-init:
-	@$(call $(TESTING)-run) $(INSTALL)-$(DOFORCE)
-	@$(call $(TESTING)-run) --directory $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_ART)) $(CONFIGS)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := $(OUT_README)*\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(CONFIGS)
-	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_IGNORES := $(PHANTOM)\n"		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
-
-.PHONY: $(TESTING)-COMPOSER_IGNORES-done
-$(TESTING)-COMPOSER_IGNORES-done:
-	$(call $(TESTING)-count,1,COMPOSER_IGNORES[^/].+$(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1))
-	$(call $(TESTING)-count,1,COMPOSER_IGNORES.+$(OUT_README)[*])
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT),,1)
-	$(call $(TESTING)-find,Creating.+$(OUT_LICENSE).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,$(NOTHING).+$(CONFIGS)-$(TARGETS))
-	$(call $(TESTING)-count,1,$(NOTHING).+$(CONFIGS)-$(SUBDIRS))
+.PHONY: $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-done
+$(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-done:
+	$(call $(TESTING)-count,46,$(MARKER).+$(EXPORTS).+$(subst .,[.],$(EXPAND)))
+	$(call $(TESTING)-count,7,deleting)
+	$(call $(TESTING)-count,31,Removing)
+	$(call $(TESTING)-count,1,\+\+\+[ ]+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,\+\+\+[ ]+template.html)
+	$(call $(TESTING)-count,1,deleting[ ]+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,1,deleting.+[/]template.html)
 
 ########################################
 ### {{{3 $(TESTING)-CSS
@@ -14107,87 +14069,34 @@ endif
 .PHONY: $(EXPORTS)
 $(EXPORTS): $(.)set_title-$(EXPORTS)
 $(EXPORTS):
-	@$(call $(HEADERS))
+#>	@$(call $(HEADERS))
+	@$(call $(HEADERS)-$(SUBDIRS))
+ifeq ($(MAKELEVEL),0)
 	@$(call $(EXPORTS)-$(CONFIGS),1)
+endif
 ifeq ($(and \
 	$(wildcard $(firstword $(GIT))) ,\
-	$(wildcard $(firstword $(RSYNC))) \
+	$(wildcard $(firstword $(RSYNC))) ,\
+	$(wildcard $(firstword $(FIREBASE))) \
 ),)
 	@$(if $(wildcard $(firstword $(GIT))),,		$(MAKE) $(NOTHING)-git)
 	@$(if $(wildcard $(firstword $(RSYNC))),,	$(MAKE) $(NOTHING)-rsync)
+	@$(if $(wildcard $(firstword $(FIREBASE))),,	$(MAKE) $(NOTHING)-firebase)
 else
 ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(EXPORTS)-$(TARGETS)
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(TARGETS)-$(EXPORTS)
-	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories,,1)
-	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
-		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
-		| while read -r FILE; do \
-			FILE="$$( \
-				$(ECHO) "$${FILE}" \
-				| $(SED) "s|^$(COMPOSER_EXPORT_REGEX)[/]||g" \
-			)"; \
-			$(call $(HEADERS)-rm,$(COMPOSER_EXPORT),$${FILE}); \
-			$(ECHO) "$(_S)"; \
-			$(RM) --dir $(COMPOSER_EXPORT)/$${FILE} $($(DEBUGIT)-output); \
-			$(ECHO) "$(_D)"; \
-		done; \
-	done
-	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files,,1)
-	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
-		| $(SED) \
-			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
-			-e "/[.][/]$$/d"
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(EXPORTS)
+ifeq ($(MAKELEVEL),0)
+	@$(MAKE) $(EXPORTS)-$(CLEANER)
+endif
 endif
 #>	$(_EXPORT_DIRECTORY)
 ifneq ($(and \
 	$(COMPOSER_DOITALL_$(EXPORTS)) ,\
 	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) \
 ),)
-ifneq ($(and \
-	$(_EXPORT_GIT_REPO) ,\
-	$(_EXPORT_GIT_BNCH) \
-),)
-	@$(call GIT_RUN_COMPOSER,subtree split $(if $(COMPOSER_DEBUGIT),-d) --prefix "$(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1)" --branch "$(_EXPORT_GIT_BNCH)")
-	@$(call GIT_RUN_COMPOSER,log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(_EXPORT_GIT_BNCH)")
-	@$(ENDOLINE)
-	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BNCH)")
-else
-	@$(MAKE) $(NOTHING)-$(EXPORTS)-git
-endif
-ifneq ($(and \
-	$(_EXPORT_FIRE_ACCT) ,\
-	$(_EXPORT_FIRE_PROJ) \
-),)
-ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,,1)
-	@$(call FIREBASE_RUN) \
-		--interactive \
-		login
-	@$(call FIREBASE_RUN) \
-		--account $(_EXPORT_FIRE_ACCT) \
-		--project $(_EXPORT_FIRE_PROJ) \
-		--interactive \
-		init hosting
-endif
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,,,1)
-	@$(call FIREBASE_RUN) \
-		--config $(COMPOSER_ROOT)/firebase.json \
-		--account $(_EXPORT_FIRE_ACCT) \
-		--project $(_EXPORT_FIRE_PROJ) \
-		--non-interactive \
-		projects:list
-	@$(call FIREBASE_RUN) \
-		--config $(COMPOSER_ROOT)/firebase.json \
-		--public $(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1) \
-		--account $(_EXPORT_FIRE_ACCT) \
-		--project $(_EXPORT_FIRE_PROJ) \
-		--non-interactive \
-		deploy --only hosting
-else
-	@$(MAKE) $(NOTHING)-$(EXPORTS)-firebase
-endif
-endif
+	@$(MAKE) $(EXPORTS)-$(PUBLISH)
 endif
 
 ########################################
@@ -14219,8 +14128,6 @@ endef
 ########################################
 ### {{{3 $(EXPORTS)-%
 ########################################
-
-#> $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
 
 ########################################
 #### {{{4 $(EXPORTS)-tree
@@ -14350,32 +14257,105 @@ endef
 ### {{{3 $(EXPORTS)-$(TARGETS)
 ########################################
 
-#> $(EXPORTS)-$(TARGETS) > $(EXPORTS)-%
-
-override $(EXPORTS)-$(TARGETS) :=
-ifneq ($(filter $(EXPORTS)-$(TARGETS)%,$(MAKECMDGOALS)),)
-#>override $(EXPORTS)-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(COMPOSER_ROOT))))
-override $(EXPORTS)-$(TARGETS) := $(sort $(shell $(call $(EXPORTS)-tree,$(CURDIR))))
-endif
-
 .PHONY: $(EXPORTS)-$(TARGETS)
-$(EXPORTS)-$(TARGETS): $(addprefix $(EXPORTS)-$(TARGETS)-,$($(EXPORTS)-$(TARGETS)))
 $(EXPORTS)-$(TARGETS):
-	@$(ECHO) ""
-
-.PHONY: $(addprefix $(EXPORTS)-$(TARGETS)-,$($(EXPORTS)-$(TARGETS)))
-$(addprefix $(EXPORTS)-$(TARGETS)-,$($(EXPORTS)-$(TARGETS))):
-	@$(eval override $(@) := $(patsubst $(EXPORTS)-$(TARGETS)-%,%,$(@)))
-	@$(call $(HEADERS)-action,$($(@)),,,$(EXPORTS))
+ifneq ($(or \
+	$(COMPOSER_SUBDIRS_LIST) ,\
+	$(COMPOSER_EXPORTS_LIST) ,\
+),)
+	@$(call $(HEADERS)-action,$(CURDIR),,,$(EXPORTS))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$($(@)),1,1) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(RSYNC) \
 		--copy-links \
 		--delete-excluded \
-		$$($(call $(EXPORTS)-filter,$($(@)),$($(EXPORTS)-$(TARGETS)),1)) \
-		$(COMPOSER_ROOT)$(call COMPOSER_CONV,,$($(@)),1,1)/ \
-		$(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$($(@)),1,1)
+		$(foreach FILE,$(COMPOSER_SUBDIRS_LIST),--filter="P_/$(FILE)") \
+		$(foreach FILE,$(COMPOSER_EXPORTS_LIST),--filter="+_/$(FILE)") \
+		--filter="-_/*" \
+		$(COMPOSER_ROOT)$(call COMPOSER_CONV,,$(CURDIR),1,1)/ \
+		$(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$(CURDIR),1,1)
+endif
+	@$(ECHO) ""
+
+########################################
+### {{{3 $(EXPORTS)-$(PUBLISH)
+########################################
+
+#> update: $(NOTHING)-%
+
+.PHONY: $(EXPORTS)-$(PUBLISH)
+$(EXPORTS)-$(PUBLISH):
+ifneq ($(and \
+	$(_EXPORT_GIT_REPO) ,\
+	$(_EXPORT_GIT_BNCH) \
+),)
+	@$(call GIT_RUN_COMPOSER,subtree split $(if $(COMPOSER_DEBUGIT),-d) --prefix "$(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1)" --branch "$(_EXPORT_GIT_BNCH)")
+	@$(call GIT_RUN_COMPOSER,log --max-count="$(GIT_LOG_COUNT)" --pretty=format:'$(GIT_LOG_FORMAT)' "$(_EXPORT_GIT_BNCH)")
+	@$(ENDOLINE)
+	@$(call GIT_RUN_COMPOSER,push --force "$(_EXPORT_GIT_REPO)" "$(_EXPORT_GIT_BNCH)")
+else
+	@$(MAKE) $(NOTHING)-$(EXPORTS)-git
+endif
+ifneq ($(and \
+	$(_EXPORT_FIRE_ACCT) ,\
+	$(_EXPORT_FIRE_PROJ) \
+),)
+ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,,1)
+	@$(call FIREBASE_RUN) \
+		--interactive \
+		login
+	@$(call FIREBASE_RUN) \
+		--account $(_EXPORT_FIRE_ACCT) \
+		--project $(_EXPORT_FIRE_PROJ) \
+		--interactive \
+		init hosting
+endif
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,,,1)
+	@$(call FIREBASE_RUN) \
+		--config $(COMPOSER_ROOT)/firebase.json \
+		--account $(_EXPORT_FIRE_ACCT) \
+		--project $(_EXPORT_FIRE_PROJ) \
+		--non-interactive \
+		projects:list
+	@$(call FIREBASE_RUN) \
+		--config $(COMPOSER_ROOT)/firebase.json \
+		--public $(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1) \
+		--account $(_EXPORT_FIRE_ACCT) \
+		--project $(_EXPORT_FIRE_PROJ) \
+		--non-interactive \
+		deploy --only hosting
+else
+	@$(MAKE) $(NOTHING)-$(EXPORTS)-firebase
+endif
+endif
+
+########################################
+### {{{3 $(EXPORTS)-$(CLEANER)
+########################################
+
+.PHONY: $(EXPORTS)-$(CLEANER)
+$(EXPORTS)-$(CLEANER):
+	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories,,1)
+	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
+		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
+		| while read -r FILE; do \
+			FILE="$$( \
+				$(ECHO) "$${FILE}" \
+				| $(SED) "s|^$(COMPOSER_EXPORT_REGEX)[/]||g" \
+			)"; \
+			$(call $(HEADERS)-rm,$(COMPOSER_EXPORT),$${FILE}); \
+			$(ECHO) "$(_S)"; \
+			$(RM) --dir $(COMPOSER_EXPORT)/$${FILE} $($(DEBUGIT)-output); \
+			$(ECHO) "$(_D)"; \
+		done; \
+	done
+	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files,,1)
+	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
+		| $(SED) \
+			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
+			-e "/[.][/]$$/d"
 
 ################################################################################
 # {{{1 Composer Targets
@@ -16330,7 +16310,7 @@ else ifneq ($(filter $(NOTHING)%,$(COMPOSER_SUBDIRS)),)
 	@$(MAKE) $(filter $(NOTHING)%,$(COMPOSER_SUBDIRS))
 else
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(INSTALL)-$(TARGETS)
-	@$(MAKE) $(SUBDIRS)-$(INSTALL)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(INSTALL)
 endif
 endif
 
@@ -16397,7 +16377,7 @@ else
 endif
 	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(TARGETS)-$(CLEANER)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@$(MAKE) $(SUBDIRS)-$(CLEANER)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(CLEANER)
 endif
 
 ########################################
@@ -16411,6 +16391,7 @@ $(CLEANER)-$(TARGETS): $(addprefix $(CLEANER)-,$(sort \
 	$(COMPOSER_TARGETS) \
 	$(wildcard $(COMPOSER_FILENAME).*) \
 ))
+$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 .PHONY: $(addprefix $(CLEANER)-,$(sort \
@@ -16487,7 +16468,7 @@ $(DOITALL):
 	@$(call $(HEADERS)-$(SUBDIRS))
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(SUBDIRS)-$(DOITALL)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 #> update: $(NOTHING)%
@@ -16504,7 +16485,7 @@ endif
 	@$(call $(CLEANER)-$(CLEANER))
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(SUBDIRS)-$(DOITALL)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 #>ifneq ($(c_site),)
@@ -16561,6 +16542,7 @@ $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)):
 	)
 endef
 
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(EXPORTS)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
@@ -16585,6 +16567,7 @@ $(SUBDIRS)-$(TARGETS)-$(1)-%:
 endef
 
 $(eval $(call $(SUBDIRS)-$(TARGETS),$(EXPORTS)))
+#>$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(TARGETS),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(TARGETS),$(DOITALL)))
 
