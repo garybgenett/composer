@@ -4369,7 +4369,7 @@ Example configuration files:
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(COMPOSER_SETTINGS))$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(COMPOSER_YML))$(_D)
-$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
+#WORK $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML).yml)$(_D)
 endef
 
@@ -4864,6 +4864,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_TARGETS)
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_SUBDIRS)
 
+#WORK
 #	wildcard '*' is taken literally
 
   * The list of sub-directories to recurse into with $(_C)[$(INSTALL)]$(_D), $(_C)[$(CLEANER)]$(_D), and
@@ -7016,8 +7017,7 @@ endef
 #> magic token!
 override define HEREDOC_COMPOSER_YML_README_HACK =
 	$(SED) -i \
-		-e "s|$(COMPOSER_TECHNAME)[:] |$(patsubst $(COMPOSER_BASENAME) ,,$(COMPOSER_TECHNAME)) |g" \
-		-e "s|$(COMPOSER_BASENAME) ||g"
+		-e "s|([>])$(COMPOSER_BASENAME)[[:space:]]+|\1|g"
 endef
 
 override define HEREDOC_COMPOSER_YML_README =
@@ -13843,6 +13843,58 @@ else
 endif
 
 ########################################
+### {{{3 $(CONFIGS)-$(TARGETS)
+########################################
+
+#>			recurse	library	variable
+#>	exports (dirs)	x	x	COMPOSER_SUBDIRS_LIST + COMPOSER_EXPORTS_LIST
+#>	sitemap (dirs)	x	-	COMPOSER_SUBDIRS_LIST + COMPOSER_EXPORTS_LIST
+#>	metadata	x	-	COMPOSER_EXPORTS_EXT
+#>	publish (all)	x	-	COMPOSER_EXPORTS_EXT || COMPOSER_IGNORES_EXT
+#>	publish		-	-	COMPOSER_EXPORTS_EXT || COMPOSER_IGNORES_EXT
+
+override define $(CONFIGS)-$(TARGETS) =
+.PHONY: $$(CONFIGS)$$(.)$(1)
+$$(CONFIGS)$$(.)$(1):
+	@$$(MAKE) \
+		COMPOSER_DOITALL_$$(CONFIGS)="$$(COMPOSER_DOITALL_$$(CONFIGS))" \
+		$$(CONFIGS)-$$(TARGETS)$$(.)$(1) \
+		$$(if $$(COMPOSER_DOITALL_$$(CONFIGS)),\
+			$$(CONFIGS)-$$(SUBDIRS)$$(.)$(1) \
+		)
+
+.PHONY: $$(CONFIGS)-$$(TARGETS)$$(.)$(1)
+$$(CONFIGS)-$$(TARGETS)$$(.)$(1): $$(addprefix $$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN),$$($(1)))
+$$(CONFIGS)-$$(TARGETS)$$(.)$(1):
+	@$$(ECHO) ""
+
+.PHONY: $$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN)%
+$$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN)%:
+	@$$(ECHO) "$$(CURDIR)/$$(*)$$(if $$(filter $$(CURDIR),$$(COMPOSER_LIBRARY)),$$(TOKEN))\n"
+
+.PHONY: $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)
+$$(CONFIGS)-$$(SUBDIRS)$$(.)$(1): $$(addprefix $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)$$(TOKEN),$$(COMPOSER_SUBDIRS_LIST))
+$$(CONFIGS)-$$(SUBDIRS)$$(.)$(1):
+	@$$(ECHO) ""
+
+.PHONY: $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)$$(TOKEN)%
+$$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)$$(TOKEN)%:
+	@$$(MAKE) \
+		COMPOSER_DOITALL_$$(CONFIGS)="$$(COMPOSER_DOITALL_$$(CONFIGS))" \
+		--directory $$(CURDIR)/$$(*) \
+		$$(CONFIGS)$$(.)$(1)
+endef
+
+$(foreach EXPORT,\
+	COMPOSER_SUBDIRS_LIST \
+	COMPOSER_EXPORTS_LIST \
+	COMPOSER_EXPORTS_EXT \
+	COMPOSER_IGNORES_EXT \
+	,\
+	$(eval $(call $(CONFIGS)-$(TARGETS),$(EXPORT))) \
+)
+
+########################################
 ## {{{2 $(TARGETS)
 ########################################
 
@@ -14071,7 +14123,10 @@ $(EXPORTS): $(.)set_title-$(EXPORTS)
 $(EXPORTS):
 #>	@$(call $(HEADERS))
 	@$(call $(HEADERS)-$(SUBDIRS))
-ifeq ($(MAKELEVEL),0)
+ifneq ($(or \
+	$(filter $(MAKELEVEL),0) ,\
+	$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
+),)
 	@$(call $(EXPORTS)-$(CONFIGS),1)
 endif
 ifeq ($(and \
@@ -14084,10 +14139,13 @@ ifeq ($(and \
 	@$(if $(wildcard $(firstword $(FIREBASE))),,	$(MAKE) $(NOTHING)-firebase)
 else
 ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(EXPORTS)-$(TARGETS)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(TARGETS)-$(EXPORTS)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(EXPORTS)
-ifeq ($(MAKELEVEL),0)
+	@$(MAKE) $(EXPORTS)-$(TARGETS)
+	@$(MAKE) $(SUBDIRS)-$(TARGETS)-$(EXPORTS)
+	@$(MAKE) $(SUBDIRS)-$(EXPORTS)
+ifneq ($(or \
+	$(filter $(MAKELEVEL),0) ,\
+	$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
+),)
 	@$(MAKE) $(EXPORTS)-$(CLEANER)
 endif
 endif
@@ -14932,6 +14990,8 @@ endif
 
 #WORKING:FIX metadata-create, just like index-create...
 
+#WORKING:NOW:FIX:IGNORES
+
 $($(PUBLISH)-library-metadata): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH),,\
 	$($(PUBLISH)-library-metadata) \
 	$($(PUBLISH)-library-index) \
@@ -15013,6 +15073,8 @@ $($(PUBLISH)-library-metadata):
 ########################################
 ##### {{{5 $(PUBLISH)-library-metadata-find
 ########################################
+
+#WORKING:NOW:FIX:IGNORES
 
 #WORKING:FIX why the ,,1 note/marker...?
 #>	$(call $(EXPORTS)-find,$(1),,1)
@@ -15417,6 +15479,8 @@ $($(PUBLISH)-library-sitemap-src):
 	@$(call $(PUBLISH)-library-sitemap-src-file)
 	@$(MAKE) $(PUBLISH)-library-sitemap-$(TARGETS)
 
+#WORKING:NOW:FIX:IGNORES
+
 #> $(PUBLISH)-library-sitemap-$(TARGETS) >> $(PUBLISH)-library-sitemap-$(PRINTER)
 override $(PUBLISH)-library-sitemap-$(PRINTER) :=
 ifneq ($(filter $(PUBLISH)-library-sitemap-$(TARGETS),$(MAKECMDGOALS)),)
@@ -15465,6 +15529,8 @@ override define $(PUBLISH)-library-sitemap-done =
 	$(SED) -i "    N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2); \
 	$(SED) -i "1n; N; s|^([<]table[[:space:]]+class[=].+)\n[<]table[>]$$|\1|g" $(2)
 endef
+
+#WORKING:NOW:FIX:IGNORES
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-create =
@@ -15600,14 +15666,16 @@ override $(PUBLISH)-$(PRINTER)-tst	:= $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUB
 endif
 
 override define $(PUBLISH)-$(PRINTER)-output =
-	| $(SED) -n $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-sed-file),$($(PUBLISH)-$(PRINTER)-sed-dir)) \
 	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
+	| $(SED) -n $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-sed-file),$($(PUBLISH)-$(PRINTER)-sed-dir)) \
 	| $(SORT)
 endef
 
 ########################################
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(@)
 ########################################
+
+#WORKING:NOW:FIX:IGNORES break this target up into smaller sections...
 
 .PHONY: $(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER): $(.)set_title-$(PUBLISH)-$(PRINTER)
@@ -15706,71 +15774,43 @@ ifneq ($(c_list),)
 		$(YQ_WRITE_OUT_COLOR)
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
-	@$(call $(PUBLISH)-$(PRINTER)-$(LISTING)) \
+	@{	$(MAKE) \
+			$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),MAKEJOBS="$(TESTING_MAKEJOBS)") \
+			COMPOSER_DOITALL_$(CONFIGS)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+			$(CONFIGS)$(.)COMPOSER_EXPORTS_EXT \
+			| $(SED) "/^.+$(TOKEN)$$/d" \
+			; \
+		$(MAKE) \
+			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+			c_list="$(c_list)" \
+			$(PUBLISH)-$(PRINTER)$(.)metadata \
+			| $(YQ_WRITE) ".[].\"$(KEY_FILEPATH)\"" \
+			| $(call COMPOSER_YML_DATA_PARSE) \
+			; \
+		$(MAKE) \
+			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+			c_list="$(c_list)" \
+			$(PUBLISH)-$(PRINTER)$(.)index \
+			| $(YQ_WRITE) ".[].[].[]" \
+			| $(call COMPOSER_YML_DATA_PARSE) \
+			; \
+	} \
+		$(call $(PUBLISH)-$(PRINTER)-output) \
 		| while read -r FILE; do \
 			$(LINERULE); \
 			$(call $(PUBLISH)-$(PRINTER)-$(TARGETS),$${FILE}); \
 		done
 	@$(LINERULE)
 	@$(ECHO) "$(_N)"
-#WORKING:NOW:FIX:IGNORES
-	@$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
-		$(call $(EXPORTS)-find,$(CURDIR),\
-				-type f -name \"*$(COMPOSER_EXT)\" \
-			) \
-			$(call $(PUBLISH)-$(PRINTER)-output) \
-	,\
-		$(foreach FILE,$(COMPOSER_IGNORES_EXT),\
-			$(if $($(PUBLISH)-$(PRINTER)-file),\
-				$(if $(filter $($(PUBLISH)-$(PRINTER)-file),$(FILE)),\
-					$(ECHO) "$(FILE)\n"; \
-				) \
-			,\
-				$(ECHO) "$(FILE)\n"; \
-			) \
-		) \
-	)
+	@$(MAKE) \
+		$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),MAKEJOBS="$(TESTING_MAKEJOBS)") \
+		COMPOSER_DOITALL_$(CONFIGS)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+		$(CONFIGS)$(.)COMPOSER_IGNORES_EXT \
+		| $(SED) "/^.+$(TOKEN)$$/d" \
+		$(call $(PUBLISH)-$(PRINTER)-output)
 	@$(ECHO) "$(_D)"
 endif
 endif
-
-########################################
-#### {{{4 $(PUBLISH)-$(PRINTER)-$(LISTING)
-########################################
-
-#WORKING:NOW:FIX:IGNORES
-override define $(PUBLISH)-$(PRINTER)-$(LISTING) =
-	{ \
-		$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),\
-			$(call $(PUBLISH)-library-metadata-find,$(CURDIR)) \
-				$(call $(PUBLISH)-$(PRINTER)-output); \
-		,\
-			$(foreach FILE,$(addprefix $($(PUBLISH)-$(PRINTER)-dir),$(COMPOSER_EXPORTS_EXT)),\
-				$(if $($(PUBLISH)-$(PRINTER)-file),\
-					$(if $(filter $($(PUBLISH)-$(PRINTER)-file),$(FILE)),\
-						$(ECHO) "$(FILE)\n"; \
-					) \
-				,\
-					$(ECHO) "$(FILE)\n"; \
-				) \
-			) \
-			$(ECHO) ""; \
-		) \
-		$(MAKE) \
-			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-			c_list="$(c_list)" \
-			$(PUBLISH)-$(PRINTER)$(.)metadata \
-			| $(YQ_WRITE) ".[].\"$(KEY_FILEPATH)\"" \
-			| $(call COMPOSER_YML_DATA_PARSE); \
-		$(MAKE) \
-			COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
-			c_list="$(c_list)" \
-			$(PUBLISH)-$(PRINTER)$(.)index \
-			| $(YQ_WRITE) ".[].[].[]" \
-			| $(call COMPOSER_YML_DATA_PARSE); \
-	} \
-	| $(SORT)
-endef
 
 ########################################
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
@@ -16291,14 +16331,15 @@ $(INSTALL):
 ifneq ($(COMPOSER_RELEASE),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME))
 else
-	@if	[ "$(MAKELEVEL)" = "0" ] || \
-		[ "$(CURDIR)" = "$(COMPOSER_ROOT)" ]; \
-	then \
-		if [ "$(CURDIR)" = "$(COMPOSER_ROOT)" ]; then \
-			$(call $(HEADERS)-note,$(CURDIR),$(_H)$(MAKEFILE)); \
-		fi; \
-		$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(if $(filter $(CURDIR),$(COMPOSER_ROOT)),$(COMPOSER)),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL)))); \
-	fi
+ifneq ($(or \
+	$(filter $(MAKELEVEL),0) ,\
+	$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
+),)
+ifeq ($(CURDIR),$(COMPOSER_ROOT))
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(MAKEFILE))
+endif
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(if $(filter $(CURDIR),$(COMPOSER_ROOT)),$(COMPOSER)),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))))
+endif
 endif
 ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
 #> update: $(NOTHING)%
@@ -16309,8 +16350,8 @@ else ifeq ($(COMPOSER_SUBDIRS),$(NOTHING))
 else ifneq ($(filter $(NOTHING)%,$(COMPOSER_SUBDIRS)),)
 	@$(MAKE) $(filter $(NOTHING)%,$(COMPOSER_SUBDIRS))
 else
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(INSTALL)-$(TARGETS)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(INSTALL)
+	@$(MAKE) $(INSTALL)-$(TARGETS)
+	@$(MAKE) $(SUBDIRS)-$(INSTALL)
 endif
 endif
 
@@ -16373,11 +16414,11 @@ else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
 else ifneq ($(filter $(NOTHING)%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(filter $(NOTHING)%,$(COMPOSER_TARGETS))
 else
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(CLEANER)-$(TARGETS)
+	@$(MAKE) $(CLEANER)-$(TARGETS)
 endif
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(TARGETS)-$(CLEANER)
+	@$(MAKE) $(SUBDIRS)-$(TARGETS)-$(CLEANER)
 ifneq ($(COMPOSER_DOITALL_$(CLEANER)),)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(CLEANER)
+	@$(MAKE) $(SUBDIRS)-$(CLEANER)
 endif
 
 ########################################
@@ -16468,7 +16509,7 @@ $(DOITALL):
 	@$(call $(HEADERS)-$(SUBDIRS))
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifneq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(DOITALL)
+	@$(MAKE) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 #> update: $(NOTHING)%
@@ -16479,13 +16520,13 @@ else ifeq ($(COMPOSER_TARGETS),$(NOTHING))
 else ifneq ($(filter $(NOTHING)%,$(COMPOSER_TARGETS)),)
 	@$(MAKE) $(filter $(NOTHING)%,$(COMPOSER_TARGETS))
 else
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(DOITALL)-$(TARGETS)
+	@$(MAKE) $(DOITALL)-$(TARGETS)
 endif
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(TARGETS)-$(DOITALL)
+	@$(MAKE) $(SUBDIRS)-$(TARGETS)-$(DOITALL)
 	@$(call $(CLEANER)-$(CLEANER))
 ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
 ifeq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(SUBDIRS)-$(DOITALL)
+	@$(MAKE) $(SUBDIRS)-$(DOITALL)
 endif
 endif
 #>ifneq ($(c_site),)
@@ -16557,13 +16598,13 @@ $(SUBDIRS)-$(TARGETS)-$(1):
 	@$$(eval override $$(TARGETS)-$$(PRINTER)-$(1) := $$(shell $$(call $$(TARGETS)-$$(PRINTER),,$(1))))
 #>		$$(call $$(HEADERS)-action,*-$(1),,,$(1),1);
 	@if [ -n "$$($$(TARGETS)-$$(PRINTER)-$(1))" ]; then \
-		$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(addprefix $$(SUBDIRS)-$$(TARGETS)-$(1)-,$$($$(TARGETS)-$$(PRINTER)-$(1))); \
+		$$(MAKE) $$(addprefix $$(SUBDIRS)-$$(TARGETS)-$(1)-,$$($$(TARGETS)-$$(PRINTER)-$(1))); \
 	fi
 
 .PHONY: $(SUBDIRS)-$(TARGETS)-$(1)-%
 $(SUBDIRS)-$(TARGETS)-$(1)-%:
 	@$$(call $$(HEADERS)-note,$$(CURDIR),$$(*),$(1))
-	@$$(MAKE) $$(call COMPOSER_OPTIONS_EXPORT) $$(*)
+	@$$(MAKE) $$(*)
 endef
 
 $(eval $(call $(SUBDIRS)-$(TARGETS),$(EXPORTS)))
@@ -16700,7 +16741,7 @@ override define TYPE_TARGETS_OPTIONS =
 endef
 
 override define TYPE_TARGETS =
-%.$(2): %$(COMPOSER_EXT)
+%.$(2): %$$(COMPOSER_EXT)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_EXT))
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),extension)
@@ -16712,7 +16753,7 @@ ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),wildcard)
 endif
 
-%.$(2): $(c_list)
+%.$(2): $$(c_list)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
 ifneq ($$(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),list)
