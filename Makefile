@@ -13846,6 +13846,8 @@ endif
 ### {{{3 $(CONFIGS)-$(TARGETS)
 ########################################
 
+#WORKING:NOW:FIX:IGNORES
+
 #>			recurse	library	variable
 #>	exports (dirs)	x	x	COMPOSER_SUBDIRS_LIST + COMPOSER_EXPORTS_LIST
 #>	sitemap (dirs)	x	-	COMPOSER_SUBDIRS_LIST + COMPOSER_EXPORTS_LIST
@@ -13870,7 +13872,11 @@ $$(CONFIGS)-$$(TARGETS)$$(.)$(1):
 
 .PHONY: $$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN)%
 $$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN)%:
-	@$$(ECHO) "$$(CURDIR)/$$(*)$$(if $$(filter $$(CURDIR),$$(COMPOSER_LIBRARY)),$$(TOKEN))\n"
+	@if	[ ! -f "$$(COMPOSER_DOITALL_$(CONFIGS))" ] || \
+		[ "$$(CURDIR)/$$(*)" -nt "$$(COMPOSER_DOITALL_$(CONFIGS))" ]; \
+	then \
+		$$(ECHO) "$$(CURDIR)/$$(*)$$(if $$(filter $$(CURDIR),$$(COMPOSER_LIBRARY)),$$(TOKEN))\n"; \
+	fi
 
 .PHONY: $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)
 $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1): $$(addprefix $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)$$(TOKEN),$$(COMPOSER_SUBDIRS_LIST))
@@ -14984,13 +14990,13 @@ endif
 #### {{{4 $(PUBLISH)-library-metadata
 ########################################
 
+########################################
+##### {{{5 $(PUBLISH)-library-metadata
+########################################
+
 #> update: YQ_WRITE.*title
 #> update: join(.*)
 #> update: $(HEADERS)-note.*$(_H)
-
-#WORKING:FIX metadata-create, just like index-create...
-
-#WORKING:NOW:FIX:IGNORES
 
 $($(PUBLISH)-library-metadata): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH),,\
 	$($(PUBLISH)-library-metadata) \
@@ -15003,45 +15009,13 @@ $($(PUBLISH)-library-metadata):
 	@$(ECHO) "\"$(COMPOSER_CMS)\": { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" },\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(call $(PUBLISH)-library-metadata-find,$(COMPOSER_LIBRARY_ROOT),$(@)) \
+	@$(MAKE) \
+		$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),MAKEJOBS="$(TESTING_MAKEJOBS)") \
+		COMPOSER_DOITALL_$(CONFIGS)="$(@)" \
+		$(CONFIGS)$(.)COMPOSER_EXPORTS_EXT \
+		| $(SED) "/^.+$(TOKEN)$$/d" \
 		| while read -r FILE; do \
-			$(call $(HEADERS)-note,$(@),$$( \
-					$(ECHO) "$${FILE}" \
-					| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
-				),$(PUBLISH)-metadata); \
-			$(ECHO) "$(_N)"; \
-			$(ECHO) "\"$${FILE}\": " \
-				| $(SED) "s|^([\"])$(COMPOSER_LIBRARY_ROOT_REGEX)[/]|\1|g" \
-				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
-			if [ "$$( \
-				$(YQ_READ) $${FILE} 2>/dev/null \
-					| $(YQ_WRITE) "(.title != null or .pagetitle != null)" 2>/dev/null \
-					| $(call COMPOSER_YML_DATA_PARSE) \
-			)" = "true" ]; then \
-				$(YQ_READ) $${FILE} 2>/dev/null \
-					| $(YQ_WRITE) ". += { \"$(COMPOSER_CMS)\": true }" 2>/dev/null \
-					$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),\
-						| if [ -n "$$( \
-							$(YQ_READ) $${FILE} 2>/dev/null \
-							| $(YQ_WRITE) ".\"$(FILE)\"" 2>/dev/null \
-							| $(call COMPOSER_YML_DATA_PARSE) \
-						)" ]; then \
-							$(YQ_WRITE) ". += { \"$(FILE)\": [] + .\"$(FILE)\" }"; \
-						else \
-							$(YQ_WRITE) ". += { \"$(FILE)\": null }"; \
-						fi \
-					) \
-			else \
-				$(ECHO) "{ \"$(COMPOSER_CMS)\": null }"; \
-			fi \
-				| $(YQ_WRITE) ". += { \"$(KEY_FILEPATH)\": \"$$( \
-						$(ECHO) "$${FILE}" \
-						| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
-					)\" }" 2>/dev/null \
-				| $(YQ_WRITE) ". += { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" }" 2>/dev/null \
-				| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
-			$(ECHO) "," >>$(@).$(COMPOSER_BASENAME); \
-			$(ECHO) "$(_D)"; \
+			$(call $(PUBLISH)-library-metadata-create,$${FILE}); \
 		done
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
 	@if [ ! -s "$(@)" ]; then \
@@ -15071,18 +15045,47 @@ $($(PUBLISH)-library-metadata):
 	fi
 
 ########################################
-##### {{{5 $(PUBLISH)-library-metadata-find
+##### {{{5 $(PUBLISH)-library-metadata-create
 ########################################
 
-#WORKING:NOW:FIX:IGNORES
-
-#WORKING:FIX why the ,,1 note/marker...?
-#>	$(call $(EXPORTS)-find,$(1),,1)
-
-override define $(PUBLISH)-library-metadata-find =
-	$(call $(EXPORTS)-find,$(1)) \
-		$$($(call $(EXPORTS)-libraries,$(1),$(COMPOSER_LIBRARY))) \
-		-o \\\( -type f -name \"*$(COMPOSER_EXT)\" $(if $(wildcard $(2)),-newer $(2)) -print \\\)
+override define $(PUBLISH)-library-metadata-create =
+	$(call $(HEADERS)-note,$(@),$$( \
+			$(ECHO) "$(1)" \
+			| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
+		),$(PUBLISH)-metadata); \
+	$(ECHO) "$(_N)"; \
+	$(ECHO) "\"$(1)\": " \
+		| $(SED) "s|^([\"])$(COMPOSER_LIBRARY_ROOT_REGEX)[/]|\1|g" \
+		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
+	if [ "$$( \
+		$(YQ_READ) $(1) 2>/dev/null \
+			| $(YQ_WRITE) "(.title != null or .pagetitle != null)" 2>/dev/null \
+			| $(call COMPOSER_YML_DATA_PARSE) \
+	)" = "true" ]; then \
+		$(YQ_READ) $(1) 2>/dev/null \
+			| $(YQ_WRITE) ". += { \"$(COMPOSER_CMS)\": true }" 2>/dev/null \
+			$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),\
+				| if [ -n "$$( \
+					$(YQ_READ) $(1) 2>/dev/null \
+					| $(YQ_WRITE) ".\"$(FILE)\"" 2>/dev/null \
+					| $(call COMPOSER_YML_DATA_PARSE) \
+				)" ]; then \
+					$(YQ_WRITE) ". += { \"$(FILE)\": [] + .\"$(FILE)\" }"; \
+				else \
+					$(YQ_WRITE) ". += { \"$(FILE)\": null }"; \
+				fi \
+			) \
+	else \
+		$(ECHO) "{ \"$(COMPOSER_CMS)\": null }"; \
+	fi \
+		| $(YQ_WRITE) ". += { \"$(KEY_FILEPATH)\": \"$$( \
+				$(ECHO) "$(1)" \
+				| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
+			)\" }" 2>/dev/null \
+		| $(YQ_WRITE) ". += { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" }" 2>/dev/null \
+		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output); \
+	$(ECHO) "," >>$(@).$(COMPOSER_BASENAME); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
