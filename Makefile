@@ -406,10 +406,6 @@ override HTML_BREAK			:= <p></p>
 #>override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
 override HTML_HIDE			:= &\#0000;
 
-################################################################################
-# {{{1 Include Files
-################################################################################
-
 ########################################
 ## {{{2 Macros
 ########################################
@@ -432,6 +428,10 @@ override define READ_ALIASES =
 	$(eval override undefine $(1)) \
 	$(eval override undefine $(2))
 endef
+
+################################################################################
+# {{{1 Include Files
+################################################################################
 
 ########################################
 ## {{{2 Duplicates
@@ -1259,7 +1259,7 @@ override PDF_LATEX			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PDF_LATEX))
 
 override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git) --no-pager
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
-override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -avv --recursive --itemize-changes --times --delete
+override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -v --verbose --itemize-changes --archive --delete
 
 override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
 override TAR				:= $(call COMPOSER_FIND,$(PATH_LIST),tar) -vvx
@@ -2871,18 +2871,34 @@ endif
 ## {{{2 Functions
 ########################################
 
+########################################
+### {{{3 Note
+########################################
+
 override define $(COMPOSER_TINYNAME)-note =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),note,$(@))
 endef
+
+########################################
+### {{{3 Makefile
+########################################
 
 override define $(COMPOSER_TINYNAME)-makefile =
 	$(call $(INSTALL)-$(MAKEFILE),$(1),-$(INSTALL),,$(2))
 endef
 
+########################################
+### {{{3 Make
+########################################
+
 override define $(COMPOSER_TINYNAME)-make =
 	$(call $(HEADERS)-note,$(CURDIR),$(1),$(notdir $(MAKE)),$(@)); \
 	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(1)
 endef
+
+########################################
+### {{{3 Directory
+########################################
 
 override define $(COMPOSER_TINYNAME)-mkdir =
 	if [ ! -d "$(1)" ]; then \
@@ -2893,16 +2909,9 @@ override define $(COMPOSER_TINYNAME)-mkdir =
 	fi
 endef
 
-override define $(COMPOSER_TINYNAME)-ln =
-	if	[ -d "$(1)" ] || \
-		[ -f "$(1)" ]; \
-	then \
-		$(call $(HEADERS)-file,$(CURDIR),$(_E)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
-		$(ECHO) "$(_S)"; \
-		$(LN) $(1) $(2) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
-endef
+########################################
+### {{{3 Copy
+########################################
 
 override define $(COMPOSER_TINYNAME)-cp =
 	if	[ -d "$(1)" ] || \
@@ -2915,6 +2924,10 @@ override define $(COMPOSER_TINYNAME)-cp =
 	fi
 endef
 
+########################################
+### {{{3 Link
+########################################
+
 override define $(COMPOSER_TINYNAME)-ln =
 	if	[ -d "$(1)" ] || \
 		[ -f "$(1)" ]; \
@@ -2926,6 +2939,10 @@ override define $(COMPOSER_TINYNAME)-ln =
 	fi
 endef
 
+########################################
+### {{{3 Move
+########################################
+
 override define $(COMPOSER_TINYNAME)-mv =
 	if	[ -d "$(1)" ] || \
 		[ -f "$(1)" ]; \
@@ -2936,6 +2953,10 @@ override define $(COMPOSER_TINYNAME)-mv =
 		$(ECHO) "$(_D)"; \
 	fi
 endef
+
+########################################
+### {{{3 Remove
+########################################
 
 override define $(COMPOSER_TINYNAME)-rm =
 	if	[ -d "$(1)" ] || \
@@ -3468,10 +3489,8 @@ $(HELPOUT)-$(TYPE_PRES):
 ## {{{2 $(HELPOUT)-$(DOITALL)
 ########################################
 
-#WORKING:FIX:FOLDING
-
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)
+### {{{3 $(HELPOUT)-$(HEADERS)
 ########################################
 
 .PHONY: $(HELPOUT)-$(HEADERS)-%
@@ -3500,6 +3519,10 @@ $(HELPOUT)-$(HEADERS)-%:
 		@$(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-require_post)
 		@$(call TITLE_END)
 #>	@$(call TITLE_END)
+
+########################################
+### {{{3 $(HELPOUT)-$(@)
+########################################
 
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
@@ -3599,6 +3622,10 @@ $(HELPOUT)-$(PRINTER):
 ### {{{3 $(HELPOUT)-$(PRINTER)-%
 ########################################
 
+########################################
+#### {{{4 $(HELPOUT)-$(PRINTER)-$(EXAMPLE)
+########################################
+
 override define $(HELPOUT)-$(PRINTER)-$(EXAMPLE) =
 	| $(SED) \
 		-e "s|^[\t]+|$(CODEBLOCK)|g" \
@@ -3671,6 +3698,10 @@ endif
 ### {{{3 $(HELPOUT)-$(TARGETS)-%
 ########################################
 
+########################################
+#### {{{4 $(HELPOUT)-$(TARGETS)-titles
+########################################
+
 override define $(HELPOUT)-$(TARGETS)-titles =
 	$(SED) -n -e "s|^.+TITLE_LN[,][^,]+[,]([^,]+).*.$$|\1|gp" $(COMPOSER) \
 	| $(SED) \
@@ -3681,6 +3712,10 @@ override define $(HELPOUT)-$(TARGETS)-titles =
 		-e "s|$$|\||g"
 endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(TARGETS)-sections
+########################################
+
 override define $(HELPOUT)-$(TARGETS)-sections =
 	$(SED) -n "s|^.+[-]section[,](.+)[)][\"]?$$|\1|gp" $(COMPOSER) \
 	| $(SED) \
@@ -3689,6 +3724,10 @@ override define $(HELPOUT)-$(TARGETS)-sections =
 		-e "s|\\\\||g" \
 		-e "s|$$|\||g"
 endef
+
+########################################
+#### {{{4 $(HELPOUT)-$(TARGETS)-format
+########################################
 
 #> update: $(HELPOUT)-$(TARGETS)-format
 override define $(HELPOUT)-$(TARGETS)-format =
@@ -3706,10 +3745,14 @@ override define $(HELPOUT)-$(TARGETS)-format =
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-$(@)
+### {{{3 $(HELPOUT)-$(DOITALL)-%
 ########################################
 
-#> update: COMPOSER_TARGETS.*=
+#> $(HELPOUT)-$(DOITALL)-* > $(HELPOUT)-$(DOITALL)-%
+
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-title
+########################################
 
 override define $(HELPOUT)-$(DOITALL)-title =
 $(_M)---$(_D)
@@ -3719,12 +3762,22 @@ $(_M)$(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)$(_D)
 $(_M)---$(_D)
 endef
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-header
+########################################
+
 .PHONY: $(HELPOUT)-$(DOITALL)-header
 $(HELPOUT)-$(DOITALL)-header:
 	@$(TABLE_M2) "$(_H)![$(COMPOSER_BASENAME) Icon]"	"$(_H)\"Creating Made Simple.\""
 	@$(TABLE_M2_HEADER_L)
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_FULLNAME)]"		"$(_C)[$(COMPOSER_LICENSE)]"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_COMPOSER)]"		"$(_C)[$(COMPOSER_CONTACT)]"
+
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-files
+########################################
+
+#> update: COMPOSER_TARGETS.*=
 
 override define $(HELPOUT)-$(DOITALL)-files =
 $(_S)--$(_D) $(_N)Formats:$(_D)   $(_S)[$(_N)webpage$(_S)]($(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
@@ -3738,6 +3791,11 @@ endef
 #>$(_S)/$(_D)                 $(_S)[$(_N)$(EXTN_TEXT)$(_S)]($(_N)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
 #>$(_S)/$(_D)              $(_S)[$(_N)$(EXTN_LINT)$(_S)]($(_N)$(OUT_README).$(EXTN_LINT)$(_S))$(_D)
 
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-links
+########################################
+
+#> update: COMPOSER_TARGETS.*=
 #> update: HELPOUT.*-links
 
 override define $(HELPOUT)-$(DOITALL)-links =
@@ -3760,6 +3818,12 @@ $(_S)[$(DESC_PPTX)]: #microsoft-word--powerpoint$(_D)
 $(_S)[$(DESC_TEXT)]: #plain-text$(_D)
 $(_S)[$(DESC_LINT)]: #pandoc-markdown$(_D)
 endef
+
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-links_ext
+########################################
+
+#> update: HELPOUT.*-links
 
 override define $(HELPOUT)-$(DOITALL)-links_ext =
 $(_S)<!-- #$(MARKER)$(_D) $(_S)[Markdown]: http://daringfireball.net/projects/markdown$(_D) $(_S)-->$(_D)
@@ -3790,6 +3854,10 @@ $(_S)[MacPorts]: https://www.macports.org$(_D)
 
 $(_S)[GitHub]: https://github.com$(_D)
 endef
+
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-section
+########################################
 
 override define $(HELPOUT)-$(DOITALL)-section =
 $(_S)###$(_D) $(_H)$(1)$(_D) $(_S)###$(_D)
@@ -3959,6 +4027,12 @@ endef
 ### {{{3 $(HELPOUT)-$(DOITALL)-formatting
 ########################################
 
+#> update: COMPOSER_TARGETS.*=
+
+########################################
+#### {{{4 #WORKING:FIX
+########################################
+
 #WORKING:FIX
 #	why all the duplication in water.css for custom builds...?
 #		is this happening for the defaults as well...?
@@ -4084,9 +4158,9 @@ endef
 # epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_DAT)
 # header-includes
 
-################################################################################
-
-#> update: COMPOSER_TARGETS.*=
+########################################
+#### {{{4 $(HELPOUT)-$(DOITALL)-formatting
+########################################
 
 override define $(HELPOUT)-$(DOITALL)-formatting =
 $(_F)
@@ -4483,7 +4557,6 @@ endef
 # $(COMPOSER_TINYNAME)-makefile
 # $(COMPOSER_TINYNAME)-make
 # $(COMPOSER_TINYNAME)-mkdir
-# $(COMPOSER_TINYNAME)-ln
 # $(COMPOSER_TINYNAME)-cp
 # $(COMPOSER_TINYNAME)-ln
 # $(COMPOSER_TINYNAME)-mv
@@ -5241,11 +5314,11 @@ endef
 ### {{{3 $(PUBLISH) Page: Main
 ########################################
 
-########################################
-#### {{{4 #WORKING:FIX:FOLDING
-########################################
-
 override PUBLISH_PAGE_1_NAME		:= Introduction
+
+########################################
+#### {{{4 $(PUBLISH) Page: Main
+########################################
 
 override define PUBLISH_PAGE_1 =
 ---
@@ -5280,104 +5353,9 @@ $(call PUBLISH_PAGE_1_CONFIGS)
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
-#WORK
-#	integrate this in $(HELPOUT)
-#	default css (see "themes" page)
-#	note on example page about logo/icon
-
-override define PUBLISH_PAGE_1_CONFIGS =
-| $(PUBLISH)-config | defaults
-|:---|:------|
-| [brand]                 | null
-| [homepage]              | null
-| [search] $(DIVIDE) name | null
-| [search] $(DIVIDE) site | null
-| [search] $(DIVIDE) call | null
-| [search] $(DIVIDE) form | null
-| [copyright]             | null
-| [$(COMPOSER_TINYNAME)][$(COMPOSER_CMS)] | `$(PUBLISH_COMPOSER)`
-| [header]        | `$(PUBLISH_HEADER)`
-| [footer]        | `$(PUBLISH_FOOTER)`
-| [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`
-| [copy_protect]  | `$(PUBLISH_COPY_PROTECT)`
-| [cols_break]    | `$(PUBLISH_COLS_BREAK)`
-| [cols_scroll]   | `$(PUBLISH_COLS_SCROLL)`
-| [cols_order]    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
-| [cols_reorder]  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
-| [cols_size]     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
-| [cols_resize]   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
-| [metainfo]      | `$(PUBLISH_METAINFO)`      | `$(PUBLISH_METAINFO_ALT)`
-| [metainfo_null] | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
-| [metalist] $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)`
-| [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)`
-| [readtime]      | `$(PUBLISH_READTIME)`
-| [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`
-
-*(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured)*
-
-| $(PUBLISH)-library | defaults
-|:---|:------|
-| [folder]           | `$(LIBRARY_FOLDER)`
-| [auto_update]      | `$(LIBRARY_AUTO_UPDATE)`
-| [append]           | `$(LIBRARY_APPEND)`
-| [digest_title]     | `$(LIBRARY_DIGEST_TITLE)`
-| [digest_continue]  | `$(LIBRARY_DIGEST_CONTINUE)`
-| [digest_permalink] | `$(LIBRARY_DIGEST_PERMALINK)`
-| [digest_chars]     | `$(LIBRARY_DIGEST_CHARS)`
-| [digest_count]     | `$(LIBRARY_DIGEST_COUNT)`
-| [digest_expanded]  | `$(LIBRARY_DIGEST_EXPANDED)`
-| [digest_spacer]    | `$(LIBRARY_DIGEST_SPACER)`
-| [lists_expanded]   | `$(LIBRARY_LISTS_EXPANDED)`
-| [lists_spacer]     | `$(LIBRARY_LISTS_SPACER)`
-| [sitemap_title]    | `$(LIBRARY_SITEMAP_TITLE)`
-| [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)`
-| [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`
-
-*(For this test site, the library [folder] has been enabled as: `$(PUBLISH_LIBRARY)`)*
-$(call PUBLISH_PAGE_1_CONFIGS_LINKS)
-endef
-
-#>	$(COMPOSER_TINYNAME)
-override define PUBLISH_PAGE_1_CONFIGS_LINKS =
-$(call NEWLINE)[$(COMPOSER_CMS)]: $(PUBLISH_OUT_README)#$(COMPOSER_TINYNAME)
-$(foreach FILE,\
-	brand \
-	homepage \
-	search \
-	copyright \
-	\
-	header \
-	footer \
-	css_overlay \
-	copy_protect \
-	cols_break \
-	cols_scroll \
-	cols_order \
-	cols_reorder \
-	cols_size \
-	cols_resize \
-	metainfo \
-	metainfo_null \
-	metalist \
-	readtime \
-	readtime_wpm \
-	folder \
-	auto_update \
-	append \
-	digest_title \
-	digest_continue \
-	digest_permalink \
-	digest_chars \
-	digest_count \
-	digest_expanded \
-	digest_spacer \
-	lists_expanded \
-	lists_spacer \
-	sitemap_title \
-	sitemap_expanded \
-	sitemap_spacer \
-,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(FILE))
-endef
+########################################
+#### {{{4 $(PUBLISH) Page: Main (Include)
+########################################
 
 #> update: $(PUBLISH) Pages
 
@@ -5440,10 +5418,121 @@ override define PUBLISH_PAGE_1_INCLUDE =
 endef
 
 ########################################
+#### {{{4 $(PUBLISH) Page: Main (Config)
+########################################
+
+#WORK
+#	integrate this in $(HELPOUT)
+#	default css (see "themes" page)
+#	note on example page about logo/icon
+
+override define PUBLISH_PAGE_1_CONFIGS =
+| $(PUBLISH)-config | defaults
+|:---|:------|
+| [brand]                 | null
+| [homepage]              | null
+| [search] $(DIVIDE) name | null
+| [search] $(DIVIDE) site | null
+| [search] $(DIVIDE) call | null
+| [search] $(DIVIDE) form | null
+| [copyright]             | null
+| [$(COMPOSER_TINYNAME)][$(COMPOSER_CMS)] | `$(PUBLISH_COMPOSER)`
+| [header]        | `$(PUBLISH_HEADER)`
+| [footer]        | `$(PUBLISH_FOOTER)`
+| [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`
+| [copy_protect]  | `$(PUBLISH_COPY_PROTECT)`
+| [cols_break]    | `$(PUBLISH_COLS_BREAK)`
+| [cols_scroll]   | `$(PUBLISH_COLS_SCROLL)`
+| [cols_order]    | `[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ]`
+| [cols_reorder]  | `[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ]`
+| [cols_size]     | `[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ]`
+| [cols_resize]   | `[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ]`
+| [metainfo]      | `$(PUBLISH_METAINFO)`      | `$(PUBLISH_METAINFO_ALT)`
+| [metainfo_null] | `$(PUBLISH_METAINFO_NULL)` | `$(PUBLISH_METAINFO_NULL_ALT)`
+| [metalist] $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)`
+| [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)`
+| [readtime]      | `$(PUBLISH_READTIME)`
+| [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`
+
+*(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured)*
+
+| $(PUBLISH)-library | defaults
+|:---|:------|
+| [folder]           | `$(LIBRARY_FOLDER)`
+| [auto_update]      | `$(LIBRARY_AUTO_UPDATE)`
+| [append]           | `$(LIBRARY_APPEND)`
+| [digest_title]     | `$(LIBRARY_DIGEST_TITLE)`
+| [digest_continue]  | `$(LIBRARY_DIGEST_CONTINUE)`
+| [digest_permalink] | `$(LIBRARY_DIGEST_PERMALINK)`
+| [digest_chars]     | `$(LIBRARY_DIGEST_CHARS)`
+| [digest_count]     | `$(LIBRARY_DIGEST_COUNT)`
+| [digest_expanded]  | `$(LIBRARY_DIGEST_EXPANDED)`
+| [digest_spacer]    | `$(LIBRARY_DIGEST_SPACER)`
+| [lists_expanded]   | `$(LIBRARY_LISTS_EXPANDED)`
+| [lists_spacer]     | `$(LIBRARY_LISTS_SPACER)`
+| [sitemap_title]    | `$(LIBRARY_SITEMAP_TITLE)`
+| [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)`
+| [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`
+
+*(For this test site, the library [folder] has been enabled as: `$(PUBLISH_LIBRARY)`)*
+$(call PUBLISH_PAGE_1_CONFIGS_LINKS)
+endef
+
+########################################
+#### {{{4 $(PUBLISH) Page: Main (Links)
+########################################
+
+#>	$(COMPOSER_TINYNAME)
+override define PUBLISH_PAGE_1_CONFIGS_LINKS =
+$(call NEWLINE)[$(COMPOSER_CMS)]: $(PUBLISH_OUT_README)#$(COMPOSER_TINYNAME)
+$(foreach FILE,\
+	brand \
+	homepage \
+	search \
+	copyright \
+	\
+	header \
+	footer \
+	css_overlay \
+	copy_protect \
+	cols_break \
+	cols_scroll \
+	cols_order \
+	cols_reorder \
+	cols_size \
+	cols_resize \
+	metainfo \
+	metainfo_null \
+	metalist \
+	readtime \
+	readtime_wpm \
+	folder \
+	auto_update \
+	append \
+	digest_title \
+	digest_continue \
+	digest_permalink \
+	digest_chars \
+	digest_count \
+	digest_expanded \
+	digest_spacer \
+	lists_expanded \
+	lists_spacer \
+	sitemap_title \
+	sitemap_expanded \
+	sitemap_spacer \
+,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(FILE))
+endef
+
+########################################
 ### {{{3 $(PUBLISH) Page: Nothing
 ########################################
 
 override PUBLISH_PAGE_2_NAME		:= Default Site
+
+########################################
+#### {{{4 $(PUBLISH) Page: Nothing
+########################################
 
 #>$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define PUBLISH_PAGE_2 =
@@ -5475,6 +5564,10 @@ endef
 
 override PUBLISH_PAGE_3_NAME		:= Configured Site
 
+########################################
+#### {{{4 $(PUBLISH) Page: Config (Header)
+########################################
+
 override define PUBLISH_PAGE_3_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Header $(PUBLISH_CMD_END)
 
@@ -5483,6 +5576,10 @@ This is a header include from the `$(COMPOSER_YML)` file.
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(call NEWLINE)$(call NEWLINE)[$(PUBLISH)-library.append = LIBRARY_APPEND_MOD]: #)
 endef
+
+########################################
+#### {{{4 $(PUBLISH) Page: Config (Footer)
+########################################
 
 override define PUBLISH_PAGE_3_FOOTER =
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -5493,6 +5590,10 @@ This is a footer include from the `$(COMPOSER_YML)` file.
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
+########################################
+#### {{{4 $(PUBLISH) Page: Config (Append)
+########################################
+
 override define PUBLISH_PAGE_3_APPEND =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) Append $(PUBLISH_CMD_END)
 
@@ -5500,6 +5601,10 @@ This is an append include from the `$(COMPOSER_YML)` file.
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
+
+########################################
+#### {{{4 $(PUBLISH) Page: Config
+########################################
 
 override define PUBLISH_PAGE_3 =
 ---
@@ -5524,6 +5629,10 @@ $(call PUBLISH_PAGE_3_CONFIGS)
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
+
+########################################
+#### {{{4 $(PUBLISH) Page: Config (Config)
+########################################
 
 override define PUBLISH_PAGE_3_CONFIGS =
 | $(PUBLISH)-config | defaults | values
@@ -5583,6 +5692,10 @@ endef
 
 override PUBLISH_PAGE_4_NAME		:= Pandoc Markdown
 
+########################################
+#### {{{4 $(PUBLISH) Page: Pandoc (Header)
+########################################
+
 override define PUBLISH_PAGE_4_HEADER =
 $(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -5606,6 +5719,10 @@ endef
 
 override PUBLISH_PAGE_5_NAME		:= Bootstrap Default
 
+########################################
+#### {{{4 $(PUBLISH) Page: Bootstrap (Header)
+########################################
+
 override define PUBLISH_PAGE_5_HEADER =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -5627,6 +5744,10 @@ endef
 
 override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
 
+########################################
+#### {{{4 $(PUBLISH) Example: Elements
+########################################
+
 override define PUBLISH_PAGE_EXAMPLE =
 ---
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
@@ -5640,6 +5761,10 @@ endef
 #WORK
 #	include in documentation as HEREDOC_*
 
+########################################
+#### {{{4 $(PUBLISH) Example: Elements (Layout)
+########################################
+
 override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
 | | | | |
 |:---|:---|:---|---:|
@@ -5647,6 +5772,10 @@ override define PUBLISH_PAGE_EXAMPLE_LAYOUT =
 | Main Page  | `nav-left` | **`c_list`** | `nav-right`
 | Bottom Bar | `copyright` | `nav-bottom` | `info-bottom` / *(`$(COMPOSER_TINYNAME)`)*
 endef
+
+########################################
+#### {{{4 $(PUBLISH) Example: Elements (Include)
+########################################
 
 #WORK
 
@@ -5977,6 +6106,10 @@ $(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)
 `$(PUBLISH_CMD_BEG) row-end $(PUBLISH_CMD_END)`
 endef
 
+########################################
+#### {{{4 $(PUBLISH) Example: Elements (Display)
+########################################
+
 override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
 "Example Banner":
   type:					banner
@@ -6043,6 +6176,10 @@ endef
 #	also needs a different name...?
 override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 
+########################################
+#### {{{4 $(PUBLISH) Example: Pages (Header)
+########################################
+
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
 title: $(PUBLISH_PAGE_PAGEDIR_NAME)
@@ -6052,6 +6189,10 @@ $(PUBLISH_METALIST): [ Main ]
 ---
 endef
 
+########################################
+#### {{{4 $(PUBLISH) Example: Pages (Footer)
+########################################
+
 override define PUBLISH_PAGE_PAGEDIR_FOOTER =
 endef
 
@@ -6060,6 +6201,10 @@ endef
 ########################################
 
 override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
+
+########################################
+#### {{{4 $(PUBLISH) Example: Testing (Template)
+########################################
 
 #> update: $(PUBLISH)-library-sort-yq
 #>title: Number 0$(word 1,$(1)) in $(word 2,$(1))
@@ -6084,6 +6229,10 @@ endef
 
 override PUBLISH_PAGE_SHOWDIR_NAME	:= Themes & Overlays
 
+########################################
+#### {{{4 $(PUBLISH) Example: Themes
+########################################
+
 override define PUBLISH_PAGE_SHOWDIR =
 ---
 title: $(PUBLISH_PAGE_SHOWDIR_NAME)
@@ -6099,6 +6248,10 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
+
+########################################
+#### {{{4 $(PUBLISH) Example: Themes (Include)
+########################################
 
 #> update: FILE.*CSS_THEMES
 override define PUBLISH_PAGE_SHOWDIR_INCLUDE =
@@ -6146,6 +6299,10 @@ override PUBLISH_PAGE_INCLUDE_NAME	:= Default Digest Page
 override PUBLISH_PAGE_LIBRARY_ALT_NAME	:= Configured Library Page
 override PUBLISH_PAGE_INCLUDE_ALT_NAME	:= Configured Digest Page
 
+########################################
+#### {{{4 $(PUBLISH) Include: Library (Template: Example)
+########################################
+
 override define PUBLISH_PAGE_LIBRARY_EXAMPLE =
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORK $(PUBLISH_CMD_END)
 
@@ -6161,13 +6318,9 @@ $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
 endef
 
-override define PUBLISH_PAGE_LIBRARY =
-$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,1)
-endef
-
-override define PUBLISH_PAGE_LIBRARY_ALT =
-$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,3,_ALT)
-endef
+########################################
+#### {{{4 $(PUBLISH) Include: Library (Template: Include)
+########################################
 
 #>$(call PUBLISH_PAGE_LIBRARY$(2))
 override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
@@ -6180,9 +6333,33 @@ $(PUBLISH_METALIST): [ Main ]
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src))) $(PUBLISH_CMD_END)
 endef
 
+########################################
+#### {{{4 $(PUBLISH) Include: Library (Example)
+########################################
+
+override define PUBLISH_PAGE_LIBRARY =
+$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,1)
+endef
+
+########################################
+#### {{{4 $(PUBLISH) Include: Library (Example Alternate)
+########################################
+
+override define PUBLISH_PAGE_LIBRARY_ALT =
+$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,3,_ALT)
+endef
+
+########################################
+#### {{{4 $(PUBLISH) Include: Library (Include)
+########################################
+
 override define PUBLISH_PAGE_INCLUDE =
 $(call PUBLISH_PAGE_INCLUDE_EXAMPLE,1)
 endef
+
+########################################
+#### {{{4 $(PUBLISH) Include: Library (Include Alternate)
+########################################
 
 override define PUBLISH_PAGE_INCLUDE_ALT =
 $(call PUBLISH_PAGE_INCLUDE_EXAMPLE,3,_ALT)
@@ -11382,17 +11559,17 @@ endif
 
 #> $(HEADERS)-$(@) > $(HEADERS)-$(EXAMPLE)
 
+########################################
+#### {{{4 $(HEADERS)-$(@)
+########################################
+
 #> update: COMPOSER_OPTIONS
+#> update: $(HEADERS),.*,.*,
 
 .PHONY: $(HEADERS)-%
 $(HEADERS)-%:
 	@$(call $(HEADERS),,$(*))
 
-override $(HEADERS)-line		= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE)),$(HEADER_L))
-override $(HEADERS)-table		= $(if $(1),$(TABLE_M2),$(TABLE_C2))
-override $(HEADERS)-options-out		:=
-
-#> update: $(HEADERS),.*,.*,
 #>	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$(if $(3),$(COMPOSER_OPTIONS_PANDOC),$(COMPOSER_OPTIONS_MAKE)),
 override define $(HEADERS) =
 	$(call $(HEADERS)-line,$(3)); \
@@ -11417,7 +11594,13 @@ override define $(HEADERS) =
 	$(call $(HEADERS)-line,$(3))
 endef
 
+########################################
+#### {{{4 $(HEADERS)-options
+########################################
+
+#> update: COMPOSER_OPTIONS
 #> update: COMPOSER_CONV.*COMPOSER_TINYNAME
+
 override define $(HEADERS)-options =
 	$(eval override $(HEADERS)-options-out := $(strip \
 		$(if $(filter _EXPORT_%,$(1)),\
@@ -11448,7 +11631,12 @@ override define $(HEADERS)-options =
 	)
 endef
 
+########################################
+#### {{{4 $(HEADERS)-options-files
+########################################
+
 #> update: $(NOTHING)%
+
 override define $(HEADERS)-options-files =
 	$(subst $(TOKEN) , $(_M),\
 	$(patsubst $(NOTHING)%,$(_F)$(NOTHING)%$(_M),\
@@ -11501,6 +11689,11 @@ endef
 ########################################
 ### {{{3 $(HEADERS)-%
 ########################################
+
+override $(HEADERS)-options-out	:=
+
+override $(HEADERS)-line	= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE)),$(HEADER_L))
+override $(HEADERS)-table	= $(if $(1),$(TABLE_M2),$(TABLE_C2))
 
 override define $(HEADERS)-action =
 	$(if $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);) \
@@ -11643,6 +11836,11 @@ endif
 ## {{{2 $(UPGRADE)
 ########################################
 
+override $(UPGRADE)-commands := \
+	src \
+	bin \
+	bld \
+
 ########################################
 ### {{{3 $(UPGRADE)
 ########################################
@@ -11684,11 +11882,6 @@ else
 		)
 endif
 endif
-
-override $(UPGRADE)-commands := \
-	src \
-	bin \
-	bld \
 
 ########################################
 ### {{{3 $(UPGRADE)-$(NOTHING)
@@ -12262,6 +12455,10 @@ $(DEBUGIT):
 ### {{{3 $(DEBUGIT)-$(@)
 ########################################
 
+########################################
+#### {{{4 $(DEBUGIT)-$(HEADERS)
+########################################
+
 .PHONY: $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(HEADERS):
 	@{	$(LINERULE); \
@@ -12277,6 +12474,10 @@ $(DEBUGIT)-$(HEADERS):
 		$(PRINT) "  * Use '$(_C)$(DEBUGIT)-$(TOAFILE)$(_D)' to create a text file with the results"; \
 		$(LINERULE); \
 	}
+
+########################################
+#### {{{4 $(DEBUGIT)-$(@)
+########################################
 
 .PHONY: $(DEBUGIT)-%
 $(DEBUGIT)-%:
@@ -12400,6 +12601,10 @@ $(TESTING):
 ### {{{3 $(TESTING)-$(@)
 ########################################
 
+########################################
+#### {{{4 $(TESTING)-$(HEADERS)
+########################################
+
 .PHONY: $(TESTING)-$(HEADERS)
 $(TESTING)-$(HEADERS):
 	@{	$(LINERULE); \
@@ -12421,6 +12626,10 @@ $(TESTING)-$(HEADERS)-%:
 	@$(call TITLE_LN ,1,$(call VIM_FOLDING) $(MARKER)[ $($(*)) ]$(MARKER))
 	@$(MAKE) $($(*)) 2>&1
 
+########################################
+#### {{{4 $(TESTING)-dir
+########################################
+
 #> $(TESTING)-$(_)Think > $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)
 .PHONY: $(TESTING)-dir
 $(TESTING)-dir: override COMPOSER_DOITALL_$(TESTING) := dir
@@ -12431,6 +12640,10 @@ $(TESTING)-dir:
 	@$(LS) \
 		$(call $(TESTING)-pwd,/)/ \
 		$(call $(TESTING)-pwd,$(COMPOSER_CMS))/
+
+########################################
+#### {{{4 $(TESTING)-$(PRINTER)
+########################################
 
 .PHONY: $(TESTING)-$(PRINTER)
 $(TESTING)-$(PRINTER):
@@ -13812,9 +14025,17 @@ endif
 ### {{{3 $(CONFIGS)-$(@)
 ########################################
 
+########################################
+#### {{{4 $(CONFIGS)-env
+########################################
+
 .PHONY: $(CONFIGS)-env
 $(CONFIGS)-env:
 	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
+
+########################################
+#### {{{4 $(CONFIGS)$(.)$(*)
+########################################
 
 .PHONY: $(CONFIGS)$(.)%
 $(CONFIGS)$(.)%:
@@ -13824,6 +14045,10 @@ $(CONFIGS)$(.)%:
 			-e "/^$$/d" \
 
 #>		| $(SORT)
+
+########################################
+#### {{{4 $(CONFIGS)$(.)yml
+########################################
 
 .PHONY: $(CONFIGS)$(.)yml
 $(CONFIGS)$(.)yml:
@@ -13862,8 +14087,8 @@ $$(CONFIGS)-$$(TARGETS)$$(.)$(1):
 
 .PHONY: $$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN)%
 $$(CONFIGS)-$$(TARGETS)$$(.)$(1)$$(TOKEN)%:
-	@if	[ ! -f "$$(COMPOSER_DOITALL_$(CONFIGS))" ] || \
-		[ "$$(CURDIR)/$$(*)" -nt "$$(COMPOSER_DOITALL_$(CONFIGS))" ]; \
+	@if	[ ! -f "$$(COMPOSER_DOITALL_$$(CONFIGS))" ] || \
+		[ "$$(CURDIR)/$$(*)" -nt "$$(COMPOSER_DOITALL_$$(CONFIGS))" ]; \
 	then \
 		$$(ECHO) "$$(CURDIR)/$$(*)$$(if $$(filter $$(CURDIR),$$(COMPOSER_LIBRARY)),$$(TOKEN))\n"; \
 	fi
@@ -13984,16 +14209,16 @@ endef
 ### {{{3 $(TARGETS)-$(TARGETS)
 ########################################
 
-#> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
+#WORKING:FIX:TARGETS
 
-override $(TARGETS)-$(TARGETS) :=
-ifneq ($(filter $(TARGETS)-$(TARGETS),$(MAKECMDGOALS)),)
-override $(TARGETS)-$(TARGETS) := $(sort $(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT))))
-endif
+#> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
 
 .PHONY: $(TARGETS)-$(TARGETS)
 $(TARGETS)-$(TARGETS):
-	@$(foreach FILE,$(call COMPOSER_CONV,$(EXPAND),$($(TARGETS)-$(TARGETS)),1,1,1),\
+	@$(foreach FILE,$(call COMPOSER_CONV,$(EXPAND),\
+		$(sort $(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT)))) \
+		,1,1,1) \
+		,\
 		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
@@ -14148,11 +14373,16 @@ ifneq ($(or \
 endif
 endif
 #>	$(_EXPORT_DIRECTORY)
+ifneq ($(or \
+	$(filter $(MAKELEVEL),0) ,\
+	$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
+),)
 ifneq ($(and \
 	$(COMPOSER_DOITALL_$(EXPORTS)) ,\
 	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) \
 ),)
 	@$(MAKE) $(EXPORTS)-$(PUBLISH)
+endif
 endif
 
 ########################################
@@ -14230,7 +14460,7 @@ ifneq ($(and \
 	$(_EXPORT_FIRE_PROJ) \
 ),)
 ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,,1)
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init)
 	@$(call FIREBASE_RUN) \
 		--interactive \
 		login
@@ -14240,7 +14470,7 @@ ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 		--interactive \
 		init hosting
 endif
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,,,1)
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase)
 	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
 		--account $(_EXPORT_FIRE_ACCT) \
@@ -14307,6 +14537,10 @@ $(PUBLISH):
 ### {{{3 $(PUBLISH)-$(CLEANER)
 ########################################
 
+########################################
+#### {{{4 $(PUBLISH)-$(CLEANER)
+########################################
+
 .PHONY: $(PUBLISH)-$(CLEANER)
 $(PUBLISH)-$(CLEANER): $(.)set_title-$(PUBLISH)-$(CLEANER)
 $(PUBLISH)-$(CLEANER):
@@ -14323,6 +14557,10 @@ endif
 		$(RM) --recursive $(COMPOSER_LIBRARY) $($(DEBUGIT)-output); \
 		$(ECHO) "$(_D)"; \
 	fi
+
+########################################
+#### {{{4 $(PUBLISH)-$(CLEANER)-$(TARGETS)
+########################################
 
 #> update: WILDCARD_YML
 
@@ -14353,6 +14591,10 @@ $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*)) \
 
 ########################################
 ### {{{3 $(PUBLISH)-$(TARGETS)
+########################################
+
+########################################
+#### {{{4 $(PUBLISH)-$(TARGETS)
 ########################################
 
 override define $(PUBLISH)-$(TARGETS) =
@@ -14398,10 +14640,10 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-helpers =
 	$(eval override HELPER := $(if $(filter metalist-%,$(2)),metalist,$(2))) \
-	$(eval override TAGGER := $(if $(filter metalist-%,$(2)),$(patsubst metalist-%,%,$(2)),$(NULL))) \
+	$(eval override TAGGER := $(if $(filter metalist-%,$(2)),$(patsubst metalist-%,%,$(2)))) \
 	$(eval override DOFILE := $(1).$(HELPER)$(if $(TAGGER),-$(TAGGER))) \
-	MENU="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-menu$(if $(TAGGER),$(NULL) $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
-	LIST="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-list$(if $(TAGGER),$(NULL) $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
+	MENU="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-menu$(if $(TAGGER), $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
+	LIST="$$($(SED) -n "s|^$(PUBLISH_CMD_BEG) ($(HELPER)-list$(if $(TAGGER), $(TAGGER)).*) $(PUBLISH_CMD_END)$$|\1|gp" $(1) | $(HEAD) -n1)"; \
 	if	[ -n "$${MENU}" ] || \
 		[ -n "$${LIST}" ]; \
 	then \
@@ -14426,8 +14668,8 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 		$(ECHO) "$(_S)"; \
 		$(MV) $(DOFILE)-menu.done $(DOFILE)-menu $($(DEBUGIT)-output); \
 		$(MV) $(DOFILE)-list.done $(DOFILE)-list $($(DEBUGIT)-output); \
-		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-menu$(if $(TAGGER),$(NULL) $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-menu" $(1); \
-		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-list$(if $(TAGGER),$(NULL) $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-list" $(1); \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-menu$(if $(TAGGER), $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-menu" $(1); \
+		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-list$(if $(TAGGER), $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-list" $(1); \
 		if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
 			$(RM) $(DOFILE)-menu $($(DEBUGIT)-output); \
 			$(RM) $(DOFILE)-list $($(DEBUGIT)-output); \
