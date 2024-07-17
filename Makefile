@@ -14164,10 +14164,33 @@ $(TARGETS):
 	@$(MAKE) $(PRINTER)-$(PRINTER)
 
 ########################################
-### {{{3 $(TARGETS)-$(PRINTER)
+### {{{3 $(TARGETS)-$(TARGETS)
 ########################################
 
-#> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
+.PHONY: $(TARGETS)-$(TARGETS)
+$(TARGETS)-$(TARGETS):
+	@$(foreach FILE,$(call COMPOSER_CONV,$(EXPAND),\
+		$(sort $(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT)))) \
+		,1,1,1) \
+		,\
+		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
+		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
+		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(_S)$(DIVIDE)$(_D)\n$(_C),$(subst $(TOKEN),\n\t,$(subst ",\",$(FILE))))"; ,\
+						$(ECHO) "$(_M)$(subst : ,$(_D) $(_S)$(DIVIDE)$(_D) $(_C),$(subst $(TOKEN), ,$(subst ",\",$(FILE))))"; \
+		) \
+		$(if $(call c_list_var_source,$(BASE),$(EXTN)),\
+		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_D)\n\t$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; ,\
+						$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; \
+		)) \
+		$(ENDOLINE); \
+		$(call NEWLINE) \
+	)
+	@$(ECHO) ""
+
+########################################
+### {{{3 $(TARGETS)-$(PRINTER)
+########################################
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
@@ -14204,35 +14227,6 @@ override define $(TARGETS)-$(PRINTER) =
 			-e "s|[[:space:]]+|$(TOKEN)|g" \
 		)
 endef
-
-########################################
-### {{{3 $(TARGETS)-$(TARGETS)
-########################################
-
-#WORKING:FIX:TARGETS
-
-#> $(TARGETS)-$(TARGETS) > $(TARGETS)-$(PRINTER)
-
-.PHONY: $(TARGETS)-$(TARGETS)
-$(TARGETS)-$(TARGETS):
-	@$(foreach FILE,$(call COMPOSER_CONV,$(EXPAND),\
-		$(sort $(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT)))) \
-		,1,1,1) \
-		,\
-		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
-		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
-		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(NAME))))) \
-		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_M)$(subst :\n,$(_D) $(_S)$(DIVIDE)$(_D)\n$(_C),$(subst $(TOKEN),\n\t,$(subst ",\",$(FILE))))"; ,\
-						$(ECHO) "$(_M)$(subst : ,$(_D) $(_S)$(DIVIDE)$(_D) $(_C),$(subst $(TOKEN), ,$(subst ",\",$(FILE))))"; \
-		) \
-		$(if $(call c_list_var_source,$(BASE),$(EXTN)),\
-		$(if $(COMPOSER_DEBUGIT),	$(ECHO) "$(_D)\n\t$(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; ,\
-						$(ECHO) "$(_D) $(_S)#$(MARKER)$(_D) $(_E)$(call c_list_var_source,$(BASE),$(EXTN))"; \
-		)) \
-		$(ENDOLINE); \
-		$(call NEWLINE) \
-	)
-	@$(ECHO) ""
 
 ################################################################################
 # {{{1 Repository Targets
