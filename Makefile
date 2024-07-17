@@ -4033,14 +4033,14 @@ endef
 #### {{{4 #WORKING:FIX
 ########################################
 
-#WORKING:FIX
+#WORK
 #	why all the duplication in water.css for custom builds...?
 #		is this happening for the defaults as well...?
 #	items like README.site.html aren't getting metadata, because sitemap is only looking for *.md...
 #		maybe we can somehow check for $(word 1,$(README.site.html)) variable and use that...?
 #		naw, just document... example of proper use is: _site/config/pages*
 
-#WORKING
+#WORK
 #	try to remove "manual review of output throughout $(TESTING)...
 #	$(TESTING)-speed -> $(TESTING)-stress
 #		add $(CLEANER)/$(DOITALL)/$(TARGETS) for a vary large directory of files
@@ -4051,7 +4051,7 @@ endef
 #		comment/remove cruft from setup-all, such as clean and keeping=0
 #		make demo = peek = replace screenshot with a gif
 
-#WORKING
+#WORK
 #	also update revealjs documentation, based on css behavior change
 #		need to update tests...?  yes!
 #	note that they are intentionally reversed
@@ -4138,7 +4138,7 @@ endef
 #	header/footer/append can all be a single value, a list, or an array
 #		identical to metalist, except metalist can't be a list...
 
-#WORKING
+#WORK
 #	features
 #		100% configurable using simple plain-text files
 #		extremely flexible, complete control over page layout and elements
@@ -4154,9 +4154,9 @@ endef
 #	make sure all the level2 sections have links to the sub-sections...
 
 #WORK
-# styles.html = https://github.com/jgm/pandoc/blob/main/data/templates/styles.html = $(COMPOSER_DAT)
-# epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_DAT)
-# header-includes
+#	styles.html = https://github.com/jgm/pandoc/blob/main/data/templates/styles.html = $(COMPOSER_DAT)
+#	epub.css = https://github.com/jgm/pandoc/blob/master/data/epub.css = $(COMPOSER_DAT)
+#	header-includes
 
 ########################################
 #### {{{4 $(HELPOUT)-$(DOITALL)-formatting
@@ -15367,8 +15367,6 @@ $(PUBLISH)-library-digest-files:
 ##### {{{5 $(PUBLISH)-library-digest
 ########################################
 
-#WORKING:FIX:OUTPUT
-
 $($(PUBLISH)-library-digest): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-src)
 $($(PUBLISH)-library-digest): $($(PUBLISH)-library-digest-files)
@@ -15557,7 +15555,7 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n"
 endef
 
-#WORKING:FIX:NOW merge digest_continue / digest_permalink...?
+#WORKING:FIX merge digest_continue / digest_permalink...?
 
 ########################################
 #### {{{4 $(PUBLISH)-library-sitemap
@@ -15565,7 +15563,7 @@ endef
 
 #> $(PUBLISH)-library-sitemap > $(PUBLISH)-library-sitemap-src > $(PUBLISH)-library-sitemap-list > $(PUBLISH)-library-sitemap-files
 
-#WORKING:FIX:NOW make COMPOSER_ROOT / COMPOSER_LIBRARY_ROOT switch an option: sitemap_local ?
+#WORKING:FIX make COMPOSER_ROOT / COMPOSER_LIBRARY_ROOT switch an option: sitemap_local ?
 
 ########################################
 ##### {{{5 $(PUBLISH)-library-sitemap-list
@@ -15831,7 +15829,7 @@ endef
 #### {{{4 $(PUBLISH)-$(PRINTER)
 ########################################
 
-#WORKING:FIX:NOW find a better way to handle these...
+#WORKING:FIX find a better way to handle these...
 ifneq ($(c_site),)
 export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)		?=
 export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)	?=
@@ -15869,7 +15867,7 @@ endef
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(@)
 ########################################
 
-#WORKING:FIX:NOW break this target up into smaller sections...
+#WORKING:FIX break this target up into smaller sections...
 
 .PHONY: $(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER): $(.)set_title-$(PUBLISH)-$(PRINTER)
