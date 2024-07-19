@@ -855,9 +855,9 @@ override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
 override LIBRARY_DIGEST_TITLE_MOD	:=
-override LIBRARY_DIGEST_CONTINUE	:= [$(EXPAND)]
-override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*
-override LIBRARY_DIGEST_PERMALINK	:= *(permalink to full text)*
+override LIBRARY_DIGEST_CONTINUE	:= *[$(EXPAND)]*
+override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*<br><br>
+override LIBRARY_DIGEST_PERMALINK	:= *(link to full page)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
@@ -14039,6 +14039,7 @@ $(CONFIGS)-env:
 
 .PHONY: $(CONFIGS)$(.)%
 $(CONFIGS)$(.)%:
+	@$(eval override c_list := $(call c_list_var))
 	@$(ECHO) '$($(*))\n' \
 		| $(SED) \
 			-e "s|[[:space:]]+|\n|g" \
@@ -15498,16 +15499,21 @@ override define $(PUBLISH)-library-digest-create =
 			$(COMPOSER_LIBRARY_ROOT)/$(1) \
 			$($(PUBLISH)-library-append) \
 			$${DIGEST_APPEND} \
-		| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
+		| $(SED) \
+			-e "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
+			-e "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
 	) - $$( \
 		$(CAT) \
 			$($(PUBLISH)-library-append) \
 			$${DIGEST_APPEND} \
+		| $(SED) \
+			-e "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
+			-e "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
-	))"; \
+	))" || $(TRUE); \
 	SIZ="0"; BLK="0"; \
 	while \
 		[ "$${BLK}" -lt "$${LEN}" ] && \
@@ -15518,11 +15524,13 @@ override define $(PUBLISH)-library-digest-create =
 				$(COMPOSER_LIBRARY_ROOT)/$(1) \
 				$($(PUBLISH)-library-append) \
 				$${DIGEST_APPEND} \
-			| $(SED) "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
-			| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
+			| $(SED) \
+				-e "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(TOKEN)break|g" \
+				-e "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 			| $(PANDOC_MD_TO_JSON) \
 			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
-			| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
+			| $(SED) \
+				-e "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 			| $(PANDOC_JSON_TO_LINT) \
 		)"; \
 		if [ "$${TEXT}" = "$(COMPOSER_TINYNAME)$(TOKEN)break" ]; then \
@@ -15542,20 +15550,17 @@ override define $(PUBLISH)-library-digest-create =
 		BLK="$$($(EXPR) $${BLK} + 1)"; \
 	done; \
 	if [ "$${BLK}" -lt "$${LEN}" ]; then \
-		$(ECHO) "$${DIGEST_CONTINUE}" | $(SED) -e "s|^[\"]||g" -e "s|[\"]$$||g"; \
-		$(ECHO) "\n\n"; \
+		$(ECHO) "$${DIGEST_CONTINUE}\n"; \
 	fi; \
-	$(ECHO) "["; \
-	$(ECHO) "$${DIGEST_PERMALINK}" | $(SED) -e "s|^[\"]||g" -e "s|[\"]$$||g"; \
-	$(ECHO) "]("; \
-	$(ECHO) "$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/"; \
-	$(ECHO) "$(1)" | $(SED) "s|$(subst .,[.],$(COMPOSER_EXT))$$|.$(EXTN_HTML)|g"; \
-	$(ECHO) ")\n"; \
+	$(ECHO) "[$${DIGEST_PERMALINK}]($(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/$$( \
+		$(ECHO) "$(1)" \
+		| $(SED) "s|$(subst .,[.],$(COMPOSER_EXT))$$|.$(EXTN_HTML)|g" \
+	))\n"; \
 	$(ECHO) "\n"; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n"
 endef
 
-#WORKING:FIX merge digest_continue / digest_permalink...?
+#WORKING:FIX c_list_var on digest
 
 ########################################
 #### {{{4 $(PUBLISH)-library-sitemap
