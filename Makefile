@@ -7692,6 +7692,7 @@ fi
 
 # 1 option
 
+#>	if $${DIGEST_MARKDOWN}; then
 #>		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null
 function COMPOSER_YML_DATA_VAL {
 	$${ECHO} "$${COMPOSER_YML_DATA}" \\
@@ -7806,6 +7807,7 @@ function $(PUBLISH)-error {
 
 # 1 icon || form
 
+#>	if $${DIGEST_MARKDOWN}; then
 function $(PUBLISH)-parse {
 	while read -r FILE; do
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^$${PUBLISH_CMD_BEG} $${1}/p")" ]; then
@@ -7836,6 +7838,7 @@ function $(PUBLISH)-parse {
 # 2 text				$${SPECIAL_VAL} = metadata
 # 3 file path
 
+#>	if $${DIGEST_MARKDOWN}; then
 function $(PUBLISH)-metainfo-block {
 	META=
 	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
@@ -7995,6 +7998,9 @@ _EOF_
 # 1 c_logo
 
 function $(PUBLISH)-brand {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
 <a class="navbar-brand" href="$$(COMPOSER_YML_DATA_VAL config.homepage)">
@@ -8025,6 +8031,9 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-copyright {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
 <p class="$${COMPOSER_TINYNAME}-link navbar-text me-3">
@@ -8045,6 +8054,9 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-search {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	NAME="$$(COMPOSER_YML_DATA_VAL config.search.name)"
 	if [ -n "$${NAME}" ]; then
@@ -8081,6 +8093,9 @@ _EOF_
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 
 function $(PUBLISH)-nav-top {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-nav-begin "top" "$${1}"						|| return 1
 $${CAT} <<_EOF_
@@ -8111,6 +8126,9 @@ _EOF_
 # x $(PUBLISH)-menu-library 1		title || date || metalist:*
 
 function $(PUBLISH)-nav-top-list {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
 	local ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
@@ -8218,6 +8236,9 @@ _EOF_
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 
 function $(PUBLISH)-nav-bottom {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-nav-begin "bottom" ""						|| return 1
 $${CAT} <<_EOF_
@@ -8252,6 +8273,9 @@ _EOF_
 # 1 $(PUBLISH)-nav-bottom.[*]
 
 function $(PUBLISH)-nav-bottom-list {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -8315,6 +8339,9 @@ function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side left $${@} || return 1; retur
 function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right $${@} || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-$${1})" ]; then
 		$(PUBLISH)-column-begin "$${1}"						|| return 1
@@ -8341,6 +8368,9 @@ function $(PUBLISH)-nav-side {
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
 
 function $(PUBLISH)-nav-side-list {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -8410,6 +8440,9 @@ function $(PUBLISH)-nav-side-list {
 # x $(PUBLISH)-info-data-list 1		$(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL info-$${1})" ]; then
 		$(PUBLISH)-nav-divider $${1}-info || return 1
@@ -8431,6 +8464,9 @@ function $(PUBLISH)-info-data {
 # 1 $(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data-list {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -8499,6 +8535,9 @@ _EOF_
 # 2 $(PUBLISH)-brand 1			c_logo
 
 function $(PUBLISH)-nav-begin {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
 <div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#$${COMPOSER_TINYNAME}-nav-$${1}"></div>
@@ -8527,6 +8566,9 @@ _EOF_
 # 1 *-menu || * || *-info		* = top || bottom
 
 function $(PUBLISH)-nav-divider {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
 	if [ "$${1}" = "top-menu" ]; then
@@ -8559,6 +8601,9 @@ _EOF_
 # 1 $(PUBLISH)-info-data 1		top || bottom
 
 function $(PUBLISH)-nav-end {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	$(PUBLISH)-info-data "$${1}" || return 1
 	if [ "$${1}" = "top" ]; then
@@ -9300,6 +9345,9 @@ function $(PUBLISH)-file {
 # @ null || function arguments
 
 function $(PUBLISH)-select {
+	if $${DIGEST_MARKDOWN}; then
+		return 0
+	fi
 	ACTION="$$(
 		$${ECHO} "$${1}" \\
 		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
