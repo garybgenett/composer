@@ -402,9 +402,11 @@ override KEY_FILEPATH			:= $(.)path
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
+#>override HTML_HIDE			:= <wbr>
 #>override HTML_HIDE			:= <br hidden>
 #>override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
-override HTML_HIDE			:= &\#0000;
+#>override HTML_HIDE			:= &\#x0000;
+override HTML_HIDE			:= &\#xfeff;
 
 ########################################
 ## {{{2 Macros
@@ -1334,7 +1336,7 @@ override define YQ_EVAL_DATA =
 			)) }}' 2>/dev/null \
 		,\
 			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' 2>/dev/null \
-		) \
+		) | $(YQ_WRITE) \
 	)
 endef
 
@@ -2303,6 +2305,7 @@ endif
 ########################################
 
 override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
+
 override define COMPOSER_YML_DATA_SKEL =
 { variables: {
   title-prefix:				null,
@@ -2489,9 +2492,7 @@ override $(PUBLISH)-library-sitemap-src	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_L
 override $(PUBLISH)-library-append	:= $(if $(COMPOSER_LIBRARY),$(COMPOSER_LIBRARY),$(COMPOSER_ROOT)/$(notdir $(COMPOSER_TMP)))/$(PUBLISH)-append$(COMPOSER_EXT_SPECIAL)
 
 override define $(PUBLISH)-library-append-src =
-$(NULL)
 $(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)
-$(NULL)
 endef
 
 ########################################
@@ -6450,7 +6451,7 @@ $(.)$(EXAMPLE)$(.)yml:
 			$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
 			$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
 		) \
-		| $(YQ_WRITE_OUT) $(call YQ_WRITE_OUT_COLOR) \
+		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR) \
 		| $(SED) "$(COMPOSER_YML_DATA_SKEL_COMMENT),$$ s|^|$(shell $(ECHO) "$(COMMENTED)")|g"
 
 .PHONY: $(.)$(EXAMPLE)$(.)yml-$(DOITALL)
@@ -7669,7 +7670,9 @@ $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)
 ########################################
 
 #WORKING:FIX:DIGEST
-#	add "#" headers for header, fold, box, etc.
+#	[WARNING] Duplicate identifier '2022-lorem-ipsum-0' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240801-210650-0700.md line 2615 column 1
+#		the metainfo page is doubling up with its source page...?
+#	turn all "if true/false" tests into "= ${SPECIAL_VAL}" instead... consistency and hobgoblins and all that...
 #	need to create a test for this...
 #		maybe add a dedicated directory with a library and use enough bytes to capture the entire elements page?
 #		this would be for site-template-+test only...
@@ -7769,10 +7772,8 @@ function $(HELPOUT)-$(TARGETS)-format {
 # 2 action
 # 3 text
 #
+#>	if $${DIGEST_MARKDOWN}; then
 function $(PUBLISH)-marker {
-	if $${DIGEST_MARKDOWN}; then
-		return 0
-	fi
 	$${ECHO} "<!-- $${1} $${DIVIDE} $${2} $${MARKER}$$(
 		if [ -n "$${3}" ]; then
 			$${ECHO} " $${@:3}" \\
@@ -7942,6 +7943,7 @@ function $(PUBLISH)-library		{ $(PUBLISH)-library-shelf list $${@} || return 1; 
 
 function $(PUBLISH)-library-shelf {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -7999,6 +8001,7 @@ _EOF_
 
 function $(PUBLISH)-brand {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8032,6 +8035,7 @@ _EOF_
 
 function $(PUBLISH)-copyright {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8055,6 +8059,7 @@ _EOF_
 
 function $(PUBLISH)-search {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8094,6 +8099,7 @@ _EOF_
 
 function $(PUBLISH)-nav-top {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8127,6 +8133,7 @@ _EOF_
 
 function $(PUBLISH)-nav-top-list {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8237,6 +8244,7 @@ _EOF_
 
 function $(PUBLISH)-nav-bottom {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8274,6 +8282,7 @@ _EOF_
 
 function $(PUBLISH)-nav-bottom-list {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8340,6 +8349,7 @@ function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right $${@} || return 1; ret
 
 function $(PUBLISH)-nav-side {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8369,6 +8379,7 @@ function $(PUBLISH)-nav-side {
 
 function $(PUBLISH)-nav-side-list {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8441,6 +8452,7 @@ function $(PUBLISH)-nav-side-list {
 
 function $(PUBLISH)-info-data {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8465,6 +8477,7 @@ function $(PUBLISH)-info-data {
 
 function $(PUBLISH)-info-data-list {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8536,6 +8549,7 @@ _EOF_
 
 function $(PUBLISH)-nav-begin {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8567,6 +8581,7 @@ _EOF_
 
 function $(PUBLISH)-nav-divider {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8602,6 +8617,7 @@ _EOF_
 
 function $(PUBLISH)-nav-end {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8634,6 +8650,7 @@ _EOF_
 
 function $(PUBLISH)-row-begin {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8657,6 +8674,7 @@ _EOF_
 
 function $(PUBLISH)-row-end {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8678,6 +8696,7 @@ _EOF_
 
 function $(PUBLISH)-column-begin {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8738,6 +8757,7 @@ _EOF_
 
 function $(PUBLISH)-column-end {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8765,6 +8785,10 @@ _EOF_
 
 function $(PUBLISH)-fold-begin {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+		if [ -n "$${4}" ]; then
+			$(PUBLISH)-header $${MENU_SELF} $${1} $${@:4} || return 1
+		fi
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8813,6 +8837,7 @@ _EOF_
 
 function $(PUBLISH)-fold-end {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8844,6 +8869,10 @@ _EOF_
 
 function $(PUBLISH)-box-begin {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+		if [ -n "$${2}" ]; then
+			$(PUBLISH)-header $${MENU_SELF} $${1} $${@:2} || return 1
+		fi
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8875,6 +8904,7 @@ _EOF_
 
 function $(PUBLISH)-box-end {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -8895,6 +8925,7 @@ _EOF_
 
 function $(PUBLISH)-display {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9097,9 +9128,23 @@ _EOF_
 # 1 header level
 # 2 title				$${@:2} = $${2}++
 
-#><div id="$${COMPOSER_TINYNAME}-header-$$($(HELPOUT)-$(TARGETS)-format $$(
 function $(PUBLISH)-header {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+		if [ "$${1}" = "$${MENU_SELF}" ]; then
+			shift
+			$${ECHO} "\\n"
+			if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
+				$${ECHO} "**$${@:2}**\\n"
+			else
+				NUM="0"
+				while [ "$${NUM}" -lt "$${1}" ]; do
+					$${ECHO} "#"
+					NUM="$$($${EXPR} $${NUM} + 1)"
+				done
+				$${ECHO} " $${@:2}\\n"
+			fi
+		fi
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9124,6 +9169,7 @@ _EOF_
 
 function $(PUBLISH)-spacer {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9140,6 +9186,7 @@ function $(PUBLISH)-spacer {
 
 function $(PUBLISH)-break {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9159,6 +9206,7 @@ function $(PUBLISH)-break {
 
 function $(PUBLISH)-icon {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9223,6 +9271,7 @@ _EOF_
 
 function $(PUBLISH)-form {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9245,6 +9294,7 @@ _EOF_
 
 function $(PUBLISH)-frame {
 	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -9283,6 +9333,10 @@ _EOF_
 # x $(PUBLISH)-*
 
 function $(PUBLISH)-file {
+	if $${DIGEST_MARKDOWN}; then
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+#>		return 0
+	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	FILE_PATH="$$(
 		$${ECHO} "$${1}" \\
@@ -9330,8 +9384,8 @@ function $(PUBLISH)-file {
 		|| return 1
 	$${ECHO} "\\n"
 	if [ -n "$${META_BLD}" ]; then
-		$${ECHO} "$${META_BEG}-finish $${1} $${META_END}\\n"
 		$(PUBLISH)-$$($${ECHO} "$${META_BLD}" | $${SED} "s|[-]begin|-end|g") || return 1
+		$${ECHO} "$${META_BEG}-finish $${1} $${META_END}\\n"
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
@@ -9346,7 +9400,8 @@ function $(PUBLISH)-file {
 
 function $(PUBLISH)-select {
 	if $${DIGEST_MARKDOWN}; then
-		return 0
+		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+#>		return 0
 	fi
 	ACTION="$$(
 		$${ECHO} "$${1}" \\
@@ -14179,7 +14234,7 @@ $(CONFIGS):
 	)
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
-#>		| $(YQ_WRITE_OUT) 2>/dev/null
+#>		| $(YQ_WRITE_OUT) 2>/dev/null $(YQ_WRITE_OUT_COLOR)
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR)
 endif
@@ -15647,12 +15702,17 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_N)"; \
 	{ $(call $(PUBLISH)-library-digest-run,$(1),$(2)); } \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
-	$(ECHO) "$(_S)"; \
-	$(RM) $(1).json $($(DEBUGIT)-output); \
-	$(ECHO) "$(_D)"
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
+		$(ECHO) "$(_S)"; \
+		$(RM) \
+			$(1)$(COMPOSER_EXT_SPECIAL) \
+			$(1).json \
+			$($(DEBUGIT)-output); \
+		$(ECHO) "$(_D)"; \
+	fi
 endef
 
-#WORKING:FIX:DIGEST
 override define $(PUBLISH)-library-digest-run =
 	if [ "$${NUM}" -gt "0" ] && [ -n "$${DIGEST_SPACER}" ]; then \
 		$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n"; \
@@ -15691,6 +15751,7 @@ override define $(PUBLISH)-library-digest-run =
 		| $(SED) \
 			-e "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
 			-e "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
+		$(if $(COMPOSER_DEBUGIT),| $(TEE) $(1)$(COMPOSER_EXT_SPECIAL)) \
 		| $(PANDOC_MD_TO_JSON) \
 		>$(1).json; \
 	LEN="$$($(EXPR) $$( \
@@ -15711,6 +15772,10 @@ override define $(PUBLISH)-library-digest-run =
 		[ "$${BLK}" -lt "$${LEN}" ] && \
 		[ "$${SIZ}" -lt "$${DIGEST_CHARS}" ]; \
 	do \
+		if [ -n "$(COMPOSER_DEBUGIT_ALL)" ]; then \
+			$(ECHO) "<!-- $(MARKER) $(call COMPOSER_CONV,$(EXPAND),$(2),1,1) $(DIVIDE) $${BLK} / $${LEN} = $${SIZ} -->\n"; \
+			$(ECHO) "\n"; \
+		fi; \
 		TEXT="$$( \
 			$(CAT) $(1).json \
 			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
@@ -15943,6 +16008,7 @@ override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_N)"; \
 	{ $(call $(PUBLISH)-library-sitemap-run,$(2)); } \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"
 endef
 
