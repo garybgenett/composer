@@ -402,11 +402,11 @@ override KEY_FILEPATH			:= $(.)path
 
 override HTML_SPACE			:= &nbsp;
 override HTML_BREAK			:= <p></p>
+#>override HTML_HIDE			:= &\#x0000;
+#>override HTML_HIDE			:= &\#xfeff;
 #>override HTML_HIDE			:= <wbr>
 #>override HTML_HIDE			:= <br hidden>
-#>override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
-#>override HTML_HIDE			:= &\#x0000;
-override HTML_HIDE			:= &\#xfeff;
+override HTML_HIDE			:= <span hidden>$(EXPAND)</span>
 
 ########################################
 ## {{{2 Macros
