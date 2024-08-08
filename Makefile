@@ -7672,14 +7672,13 @@ $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)
 #WORKING:FIX:DIGEST
 #	[WARNING] Duplicate identifier '2022-lorem-ipsum-0' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240801-210650-0700.md line 2615 column 1
 #		the metainfo page is doubling up with its source page...?
-#	turn all "if true/false" tests into "= ${SPECIAL_VAL}" instead... consistency and hobgoblins and all that...
 #	need to create a test for this...
 #		maybe add a dedicated directory with a library and use enough bytes to capture the entire elements page?
 #		this would be for site-template-+test only...
 
-DIGEST_MARKDOWN="false"
+DIGEST_MARKDOWN=
 if [ "$${1}" = "$${MENU_SELF}" ]; then
-	DIGEST_MARKDOWN="true"
+	DIGEST_MARKDOWN="$${SPECIAL_VAL}"
 	shift
 fi
 
@@ -7695,7 +7694,7 @@ fi
 
 # 1 option
 
-#>	if $${DIGEST_MARKDOWN}; then
+#>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 #>		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null
 function COMPOSER_YML_DATA_VAL {
 	$${ECHO} "$${COMPOSER_YML_DATA}" \\
@@ -7720,7 +7719,7 @@ function COMPOSER_YML_DATA_PARSE {
 		-e "/^null$$/d" \\
 		-e "/^[{][}]$$/d" \\
 		-e "/^.*[\\"\\'][\\"\\'].*[:].*[{[][]}].*$$/d" \\
-		| if $${DIGEST_MARKDOWN}; then
+		| if [ -n "$${DIGEST_MARKDOWN}" ]; then
 			$${CAT}
 		elif [ "$${1}" = "$${SPECIAL_VAL}" ]; then
 			$${SED} \\
@@ -7748,7 +7747,7 @@ function COMPOSER_YML_DATA_PARSE {
 
 # 1 text
 
-#>	if $${DIGEST_MARKDOWN}; then
+#>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(HELPOUT)-$(TARGETS)-format {
 	$${ECHO} "$${@}" \\
 	| $${TR} 'A-Z' 'a-z' \\
@@ -7772,7 +7771,7 @@ function $(HELPOUT)-$(TARGETS)-format {
 # 2 action
 # 3 text
 #
-#>	if $${DIGEST_MARKDOWN}; then
+#>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-marker {
 	$${ECHO} "<!-- $${1} $${DIVIDE} $${2} $${MARKER}$$(
 		if [ -n "$${3}" ]; then
@@ -7791,7 +7790,7 @@ function $(PUBLISH)-marker {
 # 2 action
 # 3 text
 #
-#>	if $${DIGEST_MARKDOWN}; then
+#>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-error {
 	$${ECHO} "$${MARKER} ERROR [$${0/#*\\/}] ($${1}):$$(
 		if [ -n "$${2}" ]; then
@@ -7808,7 +7807,7 @@ function $(PUBLISH)-error {
 
 # 1 icon || form
 
-#>	if $${DIGEST_MARKDOWN}; then
+#>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-parse {
 	while read -r FILE; do
 		if [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^$${PUBLISH_CMD_BEG} $${1}/p")" ]; then
@@ -7839,7 +7838,7 @@ function $(PUBLISH)-parse {
 # 2 text				$${SPECIAL_VAL} = metadata
 # 3 file path
 
-#>	if $${DIGEST_MARKDOWN}; then
+#>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-metainfo-block {
 	META=
 	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
@@ -7942,7 +7941,7 @@ function $(PUBLISH)-list-library	{ $(PUBLISH)-library-shelf list $${@} || return
 function $(PUBLISH)-library		{ $(PUBLISH)-library-shelf list $${@} || return 1; return 0; }
 
 function $(PUBLISH)-library-shelf {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8000,7 +7999,7 @@ _EOF_
 # 1 c_logo
 
 function $(PUBLISH)-brand {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8034,7 +8033,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-copyright {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8058,7 +8057,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-search {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8098,7 +8097,7 @@ _EOF_
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 
 function $(PUBLISH)-nav-top {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8132,7 +8131,7 @@ _EOF_
 # x $(PUBLISH)-menu-library 1		title || date || metalist:*
 
 function $(PUBLISH)-nav-top-list {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8243,7 +8242,7 @@ _EOF_
 # x $(PUBLISH)-nav-end 1		$(PUBLISH)-info-data 1 top || bottom
 
 function $(PUBLISH)-nav-bottom {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8281,7 +8280,7 @@ _EOF_
 # 1 $(PUBLISH)-nav-bottom.[*]
 
 function $(PUBLISH)-nav-bottom-list {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8348,7 +8347,7 @@ function $(PUBLISH)-nav-left	{ $(PUBLISH)-nav-side left $${@} || return 1; retur
 function $(PUBLISH)-nav-right	{ $(PUBLISH)-nav-side right $${@} || return 1; return 0; }
 
 function $(PUBLISH)-nav-side {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8378,7 +8377,7 @@ function $(PUBLISH)-nav-side {
 # x $(PUBLISH)-select 1+@		file path || function name + null || function arguments
 
 function $(PUBLISH)-nav-side-list {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8451,7 +8450,7 @@ function $(PUBLISH)-nav-side-list {
 # x $(PUBLISH)-info-data-list 1		$(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8476,7 +8475,7 @@ function $(PUBLISH)-info-data {
 # 1 $(PUBLISH)-info-$${1}.[*]
 
 function $(PUBLISH)-info-data-list {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8548,7 +8547,7 @@ _EOF_
 # 2 $(PUBLISH)-brand 1			c_logo
 
 function $(PUBLISH)-nav-begin {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8580,7 +8579,7 @@ _EOF_
 # 1 *-menu || * || *-info		* = top || bottom
 
 function $(PUBLISH)-nav-divider {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8616,7 +8615,7 @@ _EOF_
 # 1 $(PUBLISH)-info-data 1		top || bottom
 
 function $(PUBLISH)-nav-end {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8649,7 +8648,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-row-begin {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8673,7 +8672,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-row-end {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8695,7 +8694,7 @@ _EOF_
 # @ options				$${@}
 
 function $(PUBLISH)-column-begin {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8756,7 +8755,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-column-end {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8784,7 +8783,7 @@ _EOF_
 # x $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-fold-begin {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		if [ -n "$${4}" ]; then
 			$(PUBLISH)-header $${MENU_SELF} $${1} $${@:4} || return 1
@@ -8836,7 +8835,7 @@ _EOF_
 # 1 "group"
 
 function $(PUBLISH)-fold-end {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8868,7 +8867,7 @@ _EOF_
 # x $(PUBLISH)-header 2			title
 
 function $(PUBLISH)-box-begin {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		if [ -n "$${2}" ]; then
 			$(PUBLISH)-header $${MENU_SELF} $${1} $${@:2} || return 1
@@ -8903,7 +8902,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-box-end {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -8924,7 +8923,7 @@ _EOF_
 # 2 name				$${@:2} = $${2}++
 
 function $(PUBLISH)-display {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -9129,7 +9128,7 @@ _EOF_
 # 2 title				$${@:2} = $${2}++
 
 function $(PUBLISH)-header {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		if [ "$${1}" = "$${MENU_SELF}" ]; then
 			shift
@@ -9168,7 +9167,7 @@ _EOF_
 # @ none
 
 function $(PUBLISH)-spacer {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -9185,7 +9184,7 @@ function $(PUBLISH)-spacer {
 # @ none
 
 function $(PUBLISH)-break {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -9205,7 +9204,7 @@ function $(PUBLISH)-break {
 # 4 alt text				$${@:4} = $${4}++
 
 function $(PUBLISH)-icon {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -9270,7 +9269,7 @@ _EOF_
 # 2 value
 
 function $(PUBLISH)-form {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -9293,7 +9292,7 @@ _EOF_
 # 2 name				$${@:2} = $${2}++
 
 function $(PUBLISH)-frame {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 		return 0
 	fi
@@ -9333,7 +9332,7 @@ _EOF_
 # x $(PUBLISH)-*
 
 function $(PUBLISH)-file {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 #>		return 0
 	fi
@@ -9374,7 +9373,7 @@ function $(PUBLISH)-file {
 			else
 				$${PRINTF} "%s\\n" "$${FILE}"
 			fi \\
-			| if $${DIGEST_MARKDOWN}; then
+			| if [ -n "$${DIGEST_MARKDOWN}" ]; then
 				$${CAT}
 			else
 				$${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
@@ -9399,7 +9398,7 @@ function $(PUBLISH)-file {
 # @ null || function arguments
 
 function $(PUBLISH)-select {
-	if $${DIGEST_MARKDOWN}; then
+	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
 #>		return 0
 	fi
@@ -9460,14 +9459,14 @@ function $(PUBLISH)-select {
 
 # x $(PUBLISH)-select 1+@		file path(s) || function name + null || function arguments
 
-FILE_LIST="true"
+FILE_LIST="$${SPECIAL_VAL}"
 for ARGUMENT in "$${@}"; do
 	if [ ! -f "$${ARGUMENT}" ]; then
-		FILE_LIST="false"
+		FILE_LIST=
 	fi
 done
 
-if $${FILE_LIST}; then
+if [ -n "$${FILE_LIST}" ]; then
 	for ARGUMENT in "$${@}"; do
 		$(PUBLISH)-select $${ARGUMENT} || exit 1
 	done
