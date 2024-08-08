@@ -2670,10 +2670,15 @@ override PUBLISH_FILES := \
 	$(word 4,$(PUBLISH_DIRS))/MANUAL.$(EXTN_HTML) \
 	$(word 5,$(PUBLISH_DIRS))/introduction.$(EXTN_HTML) \
 
+override PUBLISH_PAGEDIR_YEARS		:= 2022 2023 2024
+override PUBLISH_PAGEDIR_NUMS		:= 0 1 2 3 4 5 6 7 8 9
+override PUBLISH_PAGEDIR_DATE		:= -01-01
+override PUBLISH_PAGEDIR_JOIN		:= +$(EXAMPLE)_
+
 #> update: $(PUBLISH)-library-sort-yq
 override PUBLISH_EXAMPLE		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/examples)
 override PUBLISH_PAGEDIR		:= $(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/pages)
-override PUBLISH_TESTING		:= $(patsubst ./%,%,$(PUBLISH_PAGEDIR)/2022-01-01+$(EXAMPLE)_00)
+override PUBLISH_TESTING		:= $(patsubst ./%,%,$(PUBLISH_PAGEDIR)/$(word 1,$(PUBLISH_PAGEDIR_YEARS))$(PUBLISH_PAGEDIR_DATE)$(PUBLISH_PAGEDIR_JOIN)$(word 1,$(PUBLISH_PAGEDIR_NUMS)))
 override PUBLISH_SHOWDIR		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/themes)
 override PUBLISH_INCLUDE		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_INDEX)-digest)
 override PUBLISH_INCLUDE_ALT		:= $(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(notdir $(PUBLISH_INCLUDE)))
@@ -6208,18 +6213,16 @@ override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
 ########################################
 
 #> update: $(PUBLISH)-library-sort-yq
-#>title: Number 0$(word 1,$(1)) in $(word 2,$(1))
-#>## $(word 2,$(1)) Lorem Ipsum
 override define PUBLISH_PAGE_TESTING =
 ---
-title: Page Number 0$(word 1,$(1))
-date: $(word 3,$(1))
+title: "Page #$(word 2,$(1)) in $(word 1,$(1))"
+date: $(word 1,$(1))$(PUBLISH_PAGEDIR_DATE)
 $(PUBLISH_CREATORS): [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]
-$(PUBLISH_METALIST): [Tag $(word 1,$(1)), Tag 1, Tag 2, Tag 3]
+$(PUBLISH_METALIST): [Tag $(word 2,$(1)), Tag 1, Tag 2, Tag 3]
 ---
 $(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)
 
-## $(word 2,$(1)) Lorem Ipsum #$(word 1,$(1))
+## Lorem Ipsum #$(word 2,$(1)) in $(word 1,$(1))
 
 $(call $(HELPOUT)-$(DOITALL)-workflow)
 endef
@@ -6800,7 +6803,7 @@ endef
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK =
 	$(SED) -i \
-		-e "s|(HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK)|$(notdir $(PUBLISH_PAGEDIR))/$(notdir $(1)) \\\\\n\t\1|g"
+		-e "s|(HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK)|$(notdir $(PUBLISH_PAGEDIR))/$(1) \\\\\n\t\1|g"
 endef
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK_DONE =
@@ -7670,8 +7673,6 @@ $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)
 ########################################
 
 #WORKING:FIX:DIGEST
-#	[WARNING] Duplicate identifier '2022-lorem-ipsum-0' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240801-210650-0700.md line 2615 column 1
-#		the metainfo page is doubling up with its source page...?
 #	need to create a test for this...
 #		maybe add a dedicated directory with a library and use enough bytes to capture the entire elements page?
 #		this would be for site-template-+test only...
@@ -16582,20 +16583,16 @@ override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $
 $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR)):
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(PUBLISH_PAGEDIR))
 #> update: $(PUBLISH)-library-sort-yq
-#>	@$(foreach YEAR,202 203,
-#>		$(eval override MARK := $(YEAR)$(NUM)-01-01)
-#>		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(NUM) $(YEAR)$(NUM) $(MARK))
-	@$(foreach YEAR,2022 2023 2024,\
-		$(foreach NUM,0 1 2 3 4 5 6 7 8 9,\
-		$(eval override MARK := $(YEAR)-01-01) \
-		$(eval override FILE := $(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(MARK)+$(EXAMPLE)_0$(NUM)$(COMPOSER_EXT_DEFAULT)) \
-		$(call $(HEADERS)-file,$(abspath $(dir $(FILE))),$(notdir $(FILE))); \
-		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(NUM) $(YEAR) $(MARK)) \
+	@$(foreach YEAR,$(PUBLISH_PAGEDIR_YEARS),\
+		$(foreach NUM,$(PUBLISH_PAGEDIR_NUMS),\
+		$(eval override FILE := $(YEAR)$(PUBLISH_PAGEDIR_DATE)$(PUBLISH_PAGEDIR_JOIN)$(NUM)$(COMPOSER_EXT_DEFAULT)) \
+		$(call $(HEADERS)-file,$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR),$(FILE)); \
+		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(YEAR) $(NUM)) \
 			$(if $(COMPOSER_DOCOLOR),| $(SED) \
 				-e "s|$(SED_ESCAPE_CONTROL)||g" \
 				-e "s|$(SED_ESCAPE_COLOR)||g" \
 			) \
-										>$(FILE); \
+										>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(FILE); \
 		$(call HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK,$(FILE))	$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS); \
 		$(call NEWLINE) \
 	))
