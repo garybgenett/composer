@@ -179,7 +179,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ## {{{2 PUBLISH
 #
 #	* Check: `git diff main Makefile`
-#	* Update: COMPOSER_VERSION
+#	* Update: COMPOSER_VERSION + COMPOSER_RELDATE
 #	* Release: `rm -frv {.[^.],}*; make +release-all`
 #	* Verify: `git diff main`
 #	* Commit: `git commit`, `git tag`
@@ -251,6 +251,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TINYNAME		:= composer
 override COMPOSER_VERSION		:= v3.1
+override COMPOSER_RELDATE		:= 2024-08-10
 
 override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_DOMAIN		:= garybgenett.net
@@ -851,6 +852,8 @@ override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
 override LIBRARY_APPEND			:= null
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
+#WORKING:FIX:DIGEST
+#	what is this testing, and why is it not documented...?
 #>override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
 override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 
@@ -863,6 +866,9 @@ override LIBRARY_DIGEST_PERMALINK	:= *(link to full page)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
+#WORKING:FIX:DIGEST
+#	document this test, and add a link in "PAGES"...
+override LIBRARY_DIGEST_CHARS_MOD	:= 54321
 override LIBRARY_DIGEST_COUNT		:= 10
 override LIBRARY_DIGEST_COUNT_ALT	:= 20
 override LIBRARY_DIGEST_EXPANDED	:= $(SPECIAL_VAL)
@@ -2649,11 +2655,14 @@ override PUBLISH_SH_HELPERS := \
 
 override PUBLISH_ROOT			:= $(CURDIR)/_$(PUBLISH)
 override PUBLISH_INDEX			:= index
-override PUBLISH_LIBRARY		:= $(LIBRARY_FOLDER_ALT)
-override PUBLISH_LIBRARY_ALT		:= $(PUBLISH_LIBRARY)-$(CONFIGS)
 
 #>override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)
 override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)
+
+override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
+override PUBLISH_PAGES_NUMS		:= 0 1 2 3 4 5 6 7 8 9
+override PUBLISH_PAGES_DATE		:= -01-01
+override PUBLISH_PAGES_JOIN		:= +$(EXAMPLE)_
 
 override PUBLISH_BOOTSTRAP_TREE		:= $(notdir $(BOOTSTRAP_DIR))/site/content
 override PUBLISH_DIRS := \
@@ -2670,18 +2679,17 @@ override PUBLISH_FILES := \
 	$(word 4,$(PUBLISH_DIRS))/MANUAL.$(EXTN_HTML) \
 	$(word 5,$(PUBLISH_DIRS))/introduction.$(EXTN_HTML) \
 
-override PUBLISH_PAGEDIR_YEARS		:= 2022 2023 2024
-override PUBLISH_PAGEDIR_NUMS		:= 0 1 2 3 4 5 6 7 8 9
-override PUBLISH_PAGEDIR_DATE		:= -01-01
-override PUBLISH_PAGEDIR_JOIN		:= +$(EXAMPLE)_
-
 #> update: $(PUBLISH)-library-sort-yq
 override PUBLISH_EXAMPLE		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/examples)
 override PUBLISH_PAGEDIR		:= $(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/pages)
-override PUBLISH_TESTING		:= $(patsubst ./%,%,$(PUBLISH_PAGEDIR)/$(word 1,$(PUBLISH_PAGEDIR_YEARS))$(PUBLISH_PAGEDIR_DATE)$(PUBLISH_PAGEDIR_JOIN)$(word 1,$(PUBLISH_PAGEDIR_NUMS)))
+override PUBLISH_TESTING		:= $(patsubst ./%,%,$(PUBLISH_PAGEDIR)/$(word 1,$(PUBLISH_PAGES_YEARS))$(PUBLISH_PAGES_DATE)$(PUBLISH_PAGES_JOIN)$(word 1,$(PUBLISH_PAGES_NUMS)))
 override PUBLISH_SHOWDIR		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/themes)
+
+override PUBLISH_LIBRARY		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(LIBRARY_FOLDER_ALT))
+override PUBLISH_LIBRARY_ALT		:= $(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(LIBRARY_FOLDER_ALT)-$(CONFIGS))
 override PUBLISH_INCLUDE		:= $(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_INDEX)-digest)
 override PUBLISH_INCLUDE_ALT		:= $(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(notdir $(PUBLISH_INCLUDE)))
+override PUBLISH_LIBRARY_ITEM		= $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-$(1))))
 
 override PUBLISH_DIRS_CONFIGS := \
 	$(COMPOSER_CMS) \
@@ -2692,8 +2700,11 @@ override PUBLISH_DIRS_CONFIGS := \
 
 #> $(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
 override PUBLISH_DIRS_DEBUGIT := \
-	$(word 1,$(PUBLISH_FILES)) \
-	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
+	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
+
+#WORKING:FIX:DIGEST
+#	$(word 1,$(PUBLISH_FILES)) \
+#	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
 
 #WORKING:DOCS
 #	$(word 1,$(PUBLISH_FILES)) \
@@ -3766,7 +3777,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-title =
 $(_M)---$(_D)
 $(_M)title: "$(COMPOSER_HEADLINE)"$(_D)
-$(_M)date: $(COMPOSER_VERSION) ($(call DATEMARK))$(_D)
+$(_M)date: $(COMPOSER_VERSION) ($(COMPOSER_RELDATE))$(_D)
 $(_M)$(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)$(_D)
 $(_M)---$(_D)
 endef
@@ -5329,7 +5340,7 @@ override PUBLISH_PAGE_1_NAME		:= Introduction
 override define PUBLISH_PAGE_1 =
 ---
 title: $(PUBLISH_PAGE_1_NAME)
-date: $(call DATEMARK)
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5346,7 +5357,7 @@ $(PUBLISH_CMD_BEG) box-begin 1 Example Pages $(PUBLISH_CMD_END)
 
 The entire list of pages in this test site can be found in the [main sitemap].  To understand how the site is configured, and to see demonstrations of all the features, visit the following pages.  This list can be found in the `PAGES` menu on the top bar throughout the site.
 
-[main sitemap]: $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))))
+[main sitemap]: $(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY)/$(call PUBLISH_LIBRARY_ITEM,sitemap)
 
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT_SPECIAL),$(word 1,$(PUBLISH_FILES))) $(PUBLISH_CMD_END)
 
@@ -5408,10 +5419,10 @@ override define PUBLISH_PAGE_1_INCLUDE =
 
 ----
 
-[$(PUBLISH_PAGE_LIBRARY_NAME)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))))
+[$(PUBLISH_PAGE_LIBRARY_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY)/$(call PUBLISH_LIBRARY_ITEM,digest))
 :   Starting page for the library, which is a digest of the most recently dated files.
 
-[$(PUBLISH_PAGE_LIBRARY_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))))
+[$(PUBLISH_PAGE_LIBRARY_ALT_NAME)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY_ALT)/$(call PUBLISH_LIBRARY_ITEM,digest))
 :   Same as above, for a version of the library specific to the `$(word 3,$(PUBLISH_DIRS))` directory.
 
 <!-- #$(MARKER)
@@ -5480,7 +5491,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)`
 | [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`
 
-*(For this test site, the library [folder] has been enabled as: `$(PUBLISH_LIBRARY)`)*
+*(For this test site, the library [folder] has been enabled as: `$(notdir $(PUBLISH_LIBRARY))`)*
 $(call PUBLISH_PAGE_1_CONFIGS_LINKS)
 endef
 
@@ -5544,7 +5555,7 @@ override PUBLISH_PAGE_2_NAME		:= Default Site
 override define PUBLISH_PAGE_2 =
 ---
 title: $(PUBLISH_PAGE_2_NAME)
-date: $(call DATEMARK)
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5615,7 +5626,7 @@ endef
 override define PUBLISH_PAGE_3 =
 ---
 title: $(PUBLISH_PAGE_3_NAME)
-date: $(call DATEMARK)
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5672,7 +5683,7 @@ override define PUBLISH_PAGE_3_CONFIGS =
 
 | $(PUBLISH)-library | defaults | values
 |:---|:------|:------|
-| [folder]           | `$(LIBRARY_FOLDER)`           | `$(PUBLISH_LIBRARY_ALT)`
+| [folder]           | `$(LIBRARY_FOLDER)`           | `$(notdir $(PUBLISH_LIBRARY_ALT))`
 | [auto_update]      | `$(LIBRARY_AUTO_UPDATE)`      | `$(LIBRARY_AUTO_UPDATE_ALT)`
 | [append]           | `$(LIBRARY_APPEND)`           | `$(LIBRARY_APPEND_ALT)`
 | [digest_title]     | `$(LIBRARY_DIGEST_TITLE)`     | `$(LIBRARY_DIGEST_TITLE_ALT)`
@@ -5688,7 +5699,7 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 | [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`   | `$(LIBRARY_SITEMAP_SPACER_ALT)`
 
-*(For this test site, the default library [folder] has been enabled as: `$(PUBLISH_LIBRARY)`)*
+*(For this test site, the default library [folder] has been enabled as: `$(notdir $(PUBLISH_LIBRARY))`)*
 $(call PUBLISH_PAGE_1_CONFIGS_LINKS)
 endef
 
@@ -5757,7 +5768,7 @@ override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
 override define PUBLISH_PAGE_EXAMPLE =
 ---
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
-date: $(call DATEMARK)
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(COMMA) $(DONOTDO)$(COMPOSER_EXT_DEFAULT)) ]
 ---
@@ -6189,7 +6200,7 @@ override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
 title: $(PUBLISH_PAGE_PAGEDIR_NAME)
-date: $(call DATEMARK)
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -6216,7 +6227,7 @@ override PUBLISH_PAGE_TESTING_NAME	:= Metainfo File
 override define PUBLISH_PAGE_TESTING =
 ---
 title: "Page #$(word 2,$(1)) in $(word 1,$(1))"
-date: $(word 1,$(1))$(PUBLISH_PAGEDIR_DATE)
+date: $(word 1,$(1))$(PUBLISH_PAGES_DATE)
 $(PUBLISH_CREATORS): [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]
 $(PUBLISH_METALIST): [Tag $(word 2,$(1)), Tag 1, Tag 2, Tag 3]
 ---
@@ -6240,7 +6251,7 @@ override PUBLISH_PAGE_SHOWDIR_NAME	:= Themes & Overlays
 override define PUBLISH_PAGE_SHOWDIR =
 ---
 title: $(PUBLISH_PAGE_SHOWDIR_NAME)
-date: $(call DATEMARK)
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -6312,11 +6323,11 @@ $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) #WORK $(PUBLISH_CMD_END)
 
 #WORK
 
-: `$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src)))`
-: `$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-sitemap-src)))`
+: `$(PUBLISH_LIBRARY$(1))/$(notdir $($(PUBLISH)-library-digest-src))`
+: `$(PUBLISH_LIBRARY$(1))/$(notdir $($(PUBLISH)-library-sitemap-src))`
 
-  * Library Index Page: [$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest)))]($(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))))
-  * Library Include Page: [$(PUBLISH_INCLUDE$(2)).$(EXTN_HTML)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE$(2)).$(EXTN_HTML))
+  * Library Index Page: [$(PUBLISH_LIBRARY$(1))/$(call PUBLISH_LIBRARY_ITEM,digest)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY$(1))/$(call PUBLISH_LIBRARY_ITEM,digest))
+  * Library Include Page: [$(PUBLISH_INCLUDE$(1)).$(EXTN_HTML)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE$(1)).$(EXTN_HTML))
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -6326,15 +6337,15 @@ endef
 #### {{{4 $(PUBLISH) Include: Library (Template: Include)
 ########################################
 
-#>$(call PUBLISH_PAGE_LIBRARY$(2))
+#>$(call PUBLISH_PAGE_LIBRARY$(1))
 override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 ---
-title: $(LIBRARY_DIGEST_TITLE$(2))
-date: $(call DATEMARK)
+title: $(LIBRARY_DIGEST_TITLE$(1))
+date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
-$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word $(1),$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY$(2))/$(notdir $($(PUBLISH)-library-digest-src))) $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY$(1))/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -6342,7 +6353,7 @@ endef
 ########################################
 
 override define PUBLISH_PAGE_LIBRARY =
-$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,1)
+$(call PUBLISH_PAGE_LIBRARY_EXAMPLE)
 endef
 
 ########################################
@@ -6350,7 +6361,7 @@ endef
 ########################################
 
 override define PUBLISH_PAGE_LIBRARY_ALT =
-$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,3,_ALT)
+$(call PUBLISH_PAGE_LIBRARY_EXAMPLE,_ALT)
 endef
 
 ########################################
@@ -6358,7 +6369,7 @@ endef
 ########################################
 
 override define PUBLISH_PAGE_INCLUDE =
-$(call PUBLISH_PAGE_INCLUDE_EXAMPLE,1)
+$(call PUBLISH_PAGE_INCLUDE_EXAMPLE)
 endef
 
 ########################################
@@ -6366,7 +6377,7 @@ endef
 ########################################
 
 override define PUBLISH_PAGE_INCLUDE_ALT =
-$(call PUBLISH_PAGE_INCLUDE_EXAMPLE,3,_ALT)
+$(call PUBLISH_PAGE_INCLUDE_EXAMPLE,_ALT)
 endef
 
 ########################################
@@ -6760,7 +6771,7 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT
 
 ########################################
 
-$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src)))
+$(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
 $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
 
 ################################################################################
@@ -6799,7 +6810,6 @@ endef
 #	what are all the things we are testing with "pages.*"...?
 #		list them in the $(PUBLISH)-$(EXAMPLE) comments text...
 #	why the addition of "pages.html" for "testing"...?
-#	why was "header" doubled-up, and do we need to keep it...?
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK =
 	$(SED) -i \
@@ -6823,7 +6833,7 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE_ALT))$(COMPOSER_EXT_DEF
 
 ########################################
 
-$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-digest-src)))
+$(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-digest-src))
 
 ########################################
 
@@ -6831,8 +6841,11 @@ $(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(patsubst ./
 override $(notdir $(PUBLISH_PAGEDIR)).* := \\
 	$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL) \\
 	HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK \\
-	$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL) \\
 	$(notdir $(PUBLISH_PAGEDIR))-footer$(COMPOSER_EXT_SPECIAL)
+
+$(notdir $(PUBLISH_PAGEDIR)).$(EXTN_LPDF): \\
+override $(notdir $(PUBLISH_PAGEDIR)).* += \\
+	$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL)
 
 ################################################################################
 endif
@@ -7077,8 +7090,8 @@ $(_S)########################################$(_D)
           - $(_M)$(PUBLISH_PAGE_TESTING_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_TESTING).$(EXTN_HTML)$(_D)
           - $(_M)$(PUBLISH_PAGE_SHOWDIR_NAME)$(_D):		$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(PUBLISH_INDEX).$(EXTN_HTML)$(_D)
         - $(_M)$(PUBLISH_PAGE_LIBRARY_NAME)$(_D):
-          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))$(_D)
-          - $(_M)$(PUBLISH_PAGE_LIBRARY_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-digest))))$(_D)
+          - $(_C)$(MENU_SELF)$(_D):				$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY)/$(call PUBLISH_LIBRARY_ITEM,digest)$(_D)
+          - $(_M)$(PUBLISH_PAGE_LIBRARY_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY_ALT)/$(call PUBLISH_LIBRARY_ITEM,digest)$(_D)
 $(_S)#$(MARKER)$(_D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML)$(_D)
 $(_S)#$(MARKER)$(_D)       - $(_M)$(PUBLISH_PAGE_INCLUDE_ALT_NAME)$(_D):	$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML)$(_D)
     $(_M)CONTENTS$(_D):
@@ -7100,7 +7113,7 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-bottom$(_D):
 
     $(_M)PATH$(_D):
-      - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))))$(_D)
+      - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY)/$(call PUBLISH_LIBRARY_ITEM,sitemap)$(_D)
     $(_M)INFO$(_D):
       - $(_C)metalist$(_D) $(_M)$(PUBLISH_CREATORS)$(_D)
       - $(_C)metalist$(_D) $(_M)$(PUBLISH_METALIST)$(_D)
@@ -7304,7 +7317,7 @@ endef
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(PUBLISH_LIBRARY))
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(notdir $(PUBLISH_LIBRARY)))
 ################################################################################
 
 variables:
@@ -7386,7 +7399,7 @@ variables:
 ########################################
 
   $(PUBLISH)-library:
-    folder:				$(PUBLISH_LIBRARY)
+    folder:				$(notdir $(PUBLISH_LIBRARY))
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_AUTO_UPDATE_ALT),$(LIBRARY_AUTO_UPDATE)))
 
 ################################################################################
@@ -7462,13 +7475,13 @@ variables:
 ########################################
 
   $(PUBLISH)-library:
-    folder:				$(PUBLISH_LIBRARY_ALT)
+    folder:				$(notdir $(PUBLISH_LIBRARY_ALT))
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE_ALT))
     append:				$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_APPEND_MOD),$(LIBRARY_APPEND_ALT))
     digest_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_TITLE_MOD),$(LIBRARY_DIGEST_TITLE_ALT))"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
-    digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
+    digest_chars:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_CHARS_MOD),$(LIBRARY_DIGEST_CHARS_ALT))
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
@@ -7488,7 +7501,7 @@ variables:
 
   $(PUBLISH)-nav-bottom:
     PATH:
-      - SITEMAP:			$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)/$(notdir $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))))
+      - SITEMAP:			$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY_ALT)/$(call PUBLISH_LIBRARY_ITEM,sitemap)
     CHAINED:
       - CHAINED:			$(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES))
 
@@ -7671,11 +7684,6 @@ $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)
 ########################################
 ### {{{3 Arguments
 ########################################
-
-#WORKING:FIX:DIGEST
-#	need to create a test for this...
-#		maybe add a dedicated directory with a library and use enough bytes to capture the entire elements page?
-#		this would be for site-template-+test only...
 
 DIGEST_MARKDOWN=
 if [ "$${1}" = "$${MENU_SELF}" ]; then
@@ -10632,7 +10640,7 @@ endef
 override define HEREDOC_LICENSE =
 ---
 pagetitle: "$(COMPOSER_LICENSE_HEADLINE)"
-date: $(COMPOSER_VERSION) ($(call DATEMARK))
+date: $(COMPOSER_VERSION) ($(COMPOSER_RELDATE))
 ---
 
 # $(COMPOSER_LICENSE_HEADLINE)
@@ -13340,7 +13348,7 @@ override define $(TESTING)-speed-init =
 	else \
 		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1) >$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	fi; \
-	$(RM) --recursive $(call $(TESTING)-pwd)/$(PUBLISH_LIBRARY); \
+	$(RM) --recursive $(call $(TESTING)-pwd)/$(notdir $(PUBLISH_LIBRARY)); \
 	for TLD in {1..3}; do \
 		if [ -z "$(1)" ]; then \
 			$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(call $(TESTING)-pwd)/tld$${TLD},$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))); \
@@ -13348,12 +13356,12 @@ override define $(TESTING)-speed-init =
 		else \
 			$(call DO_HEREDOC,$(1)) >$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		fi; \
-		$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/$(PUBLISH_LIBRARY); \
+		$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/$(notdir $(PUBLISH_LIBRARY)); \
 		for SUB in {1..3}; do \
 			if [ -z "$(1)" ]; then \
 				$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB},$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))); \
 			fi; \
-			$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}/$(PUBLISH_LIBRARY); \
+			$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}/$(notdir $(PUBLISH_LIBRARY)); \
 		done; \
 	done
 endef
@@ -13374,9 +13382,9 @@ endef
 $(TESTING)-speed-done:
 	@$(call $(TESTING)-find,MAKECMDGOALS)
 	@$(call $(TESTING)-find,$(PUBLISH)-$(DOFORCE).+$(DIVIDE))
-	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(PUBLISH_LIBRARY) -prune \) -o \( -type d -print \) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type d -print \) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) $(MAKEFILE)s"	"$(_C)$(shell $(SED) -n "/Creating.+$(MAKEFILE)/p" $(call $(TESTING)-log) | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Sources"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(PUBLISH_LIBRARY) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Sources"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_EXT_DEFAULT))$$/p" | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Outputs"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(MAKEJOBS)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Debug"		"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
@@ -15301,8 +15309,8 @@ $(PUBLISH)-$(COMPOSER_SETTINGS):
 			$(call NEWLINE) \
 		) \
 	)
-	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-digest))): $(notdir $($(PUBLISH)-library-digest-src))\n"
-	@$(ECHO) "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$(notdir $($(PUBLISH)-library-sitemap))): $(notdir $($(PUBLISH)-library-sitemap-src))\n"
+	@$(ECHO) "$(call PUBLISH_LIBRARY_ITEM,digest): $(notdir $($(PUBLISH)-library-digest-src))\n"
+	@$(ECHO) "$(call PUBLISH_LIBRARY_ITEM,sitemap): $(notdir $($(PUBLISH)-library-sitemap-src))\n"
 
 .PHONY: $(PUBLISH)-$(COMPOSER_YML)
 $(PUBLISH)-$(COMPOSER_YML):
@@ -15380,6 +15388,8 @@ $($(PUBLISH)-library-metadata):
 #> update: YQ_WRITE.*title
 #> update: join(.*)
 
+#WORKING:FIX:DIGEST
+#	add a $(FIND) -newer test...
 override define $(PUBLISH)-library-metadata-create =
 	$(call $(HEADERS)-note,$(@),$$( \
 			$(ECHO) "$(1)" \
@@ -16334,6 +16344,7 @@ endef
 #>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
 #>	$(SHELL)
 #WORKING:FIX:PAGEDIR
+#	pages.pdf...?
 #>		$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT) + $(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 #>		$(dir $(PUBLISH_EXAMPLE))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
 #>		$(dir $(PUBLISH_EXAMPLE))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT) + $(dir $(PUBLISH_EXAMPLE))/$(DONOTDO).*
@@ -16494,10 +16505,10 @@ override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER
 $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_YML):
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(COMPOSER_YML))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(COMPOSER_YML)
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY,,$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)$(COMPOSER_EXT_SPECIAL))) \
-									>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY).yml
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY,,$(PUBLISH_CMD_ROOT)/$(patsubst ./%,%,$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)$(COMPOSER_EXT_SPECIAL))) \
-									>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY,,$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY)$(COMPOSER_EXT_SPECIAL)) \
+									>$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY).yml
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_LIBRARY,,$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY_ALT)$(COMPOSER_EXT_SPECIAL)) \
+									>$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY_ALT).yml
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
@@ -16508,10 +16519,10 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_YML):
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
 	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
-	@$(LN)								$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY).yml \
+	@$(LN)								$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY).yml \
 									$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML).yml \
 									$($(DEBUGIT)-output)
-	@$(LN)								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT).yml \
+	@$(LN)								$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY_ALT).yml \
 									$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML).yml \
 									$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
@@ -16583,9 +16594,9 @@ override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $
 $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR)):
 	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(PUBLISH_PAGEDIR))
 #> update: $(PUBLISH)-library-sort-yq
-	@$(foreach YEAR,$(PUBLISH_PAGEDIR_YEARS),\
-		$(foreach NUM,$(PUBLISH_PAGEDIR_NUMS),\
-		$(eval override FILE := $(YEAR)$(PUBLISH_PAGEDIR_DATE)$(PUBLISH_PAGEDIR_JOIN)$(NUM)$(COMPOSER_EXT_DEFAULT)) \
+	@$(foreach YEAR,$(PUBLISH_PAGES_YEARS),\
+		$(foreach NUM,$(PUBLISH_PAGES_NUMS),\
+		$(eval override FILE := $(YEAR)$(PUBLISH_PAGES_DATE)$(PUBLISH_PAGES_JOIN)$(NUM)$(COMPOSER_EXT_DEFAULT)) \
 		$(call $(HEADERS)-file,$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR),$(FILE)); \
 		$(call DO_HEREDOC,PUBLISH_PAGE_TESTING,1,$(YEAR) $(NUM)) \
 			$(if $(COMPOSER_DOCOLOR),| $(SED) \
@@ -16669,9 +16680,9 @@ override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_LIBRARY))
 $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_LIBRARY)):
-	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(PUBLISH_LIBRARY))
-	@$(call DO_HEREDOC,PUBLISH_PAGE_LIBRARY)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY)$(COMPOSER_EXT_SPECIAL)
-	@$(call DO_HEREDOC,PUBLISH_PAGE_LIBRARY_ALT)	>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_LIBRARY_ALT)$(COMPOSER_EXT_SPECIAL)
+	@$(call $(HEADERS)-file,$(PUBLISH_ROOT),$(EXPAND)/$(notdir $(PUBLISH_LIBRARY)))
+	@$(call DO_HEREDOC,PUBLISH_PAGE_LIBRARY)	>$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY)$(COMPOSER_EXT_SPECIAL)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_LIBRARY_ALT)	>$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY_ALT)$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_INCLUDE)	>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE)$(COMPOSER_EXT_DEFAULT)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_INCLUDE_ALT)	>$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE_ALT)$(COMPOSER_EXT_DEFAULT)
 
