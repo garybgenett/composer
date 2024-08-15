@@ -852,8 +852,6 @@ override LIBRARY_AUTO_UPDATE_ALT	:= 1
 
 override LIBRARY_APPEND			:= null
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
-#WORKING:FIX:DIGEST
-#	what is this testing, and why is it not documented...?
 #>override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
 override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 
@@ -866,8 +864,6 @@ override LIBRARY_DIGEST_PERMALINK	:= *(link to full page)*
 override LIBRARY_DIGEST_PERMALINK_ALT	:= *(permalink)*
 override LIBRARY_DIGEST_CHARS		:= 1024
 override LIBRARY_DIGEST_CHARS_ALT	:= 2048
-#WORKING:FIX:DIGEST
-#	document this test, and add a link in "PAGES"...
 override LIBRARY_DIGEST_CHARS_MOD	:= 54321
 override LIBRARY_DIGEST_COUNT		:= 10
 override LIBRARY_DIGEST_COUNT_ALT	:= 20
@@ -2392,7 +2388,7 @@ endef
 
 override define COMPOSER_YML_DATA_SKEL_METALIST =
   title:				{ null: [] },
-  date:				{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),$(NEWLINE)  $(FILE): { null: [] },)
+  date:				{ null: [] },$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),$(call NEWLINE)  $(FILE): { null: [] },)
 endef
 
 ########################################
@@ -2700,11 +2696,8 @@ override PUBLISH_DIRS_CONFIGS := \
 
 #> $(PUBLISH_SHOWDIR) > $(PUBLISH_INCLUDE)
 override PUBLISH_DIRS_DEBUGIT := \
-	$(PUBLISH_INCLUDE_ALT).$(EXTN_HTML) \
-
-#WORKING:FIX:DIGEST
-#	$(word 1,$(PUBLISH_FILES)) \
-#	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
+	$(word 1,$(PUBLISH_FILES)) \
+	$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
 
 #WORKING:DOCS
 #	$(word 1,$(PUBLISH_FILES)) \
@@ -7401,7 +7394,7 @@ variables:
   $(PUBLISH)-library:
     folder:				$(notdir $(PUBLISH_LIBRARY))
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_AUTO_UPDATE_ALT),$(LIBRARY_AUTO_UPDATE)))
-
+$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),    digest_chars:			$(LIBRARY_DIGEST_CHARS_MOD)$(call NEWLINE))
 ################################################################################
 # End Of File
 ################################################################################
@@ -7419,7 +7412,7 @@ override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 $(call COMPOSER_YML_DATA_SKEL)
 
 #>metalist: {
-#>$(subst $(NEWLINE),$(NEWLINE)#>,$(call COMPOSER_YML_DATA_SKEL_METALIST))
+#>$(subst $(call NEWLINE),$(call NEWLINE)#>,$(call COMPOSER_YML_DATA_SKEL_METALIST))
 #>}
 
 ################################################################################
@@ -7481,7 +7474,7 @@ variables:
     digest_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_TITLE_MOD),$(LIBRARY_DIGEST_TITLE_ALT))"
     digest_continue:			"$(LIBRARY_DIGEST_CONTINUE_ALT)"
     digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK_ALT)"
-    digest_chars:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_CHARS_MOD),$(LIBRARY_DIGEST_CHARS_ALT))
+    digest_chars:			$(LIBRARY_DIGEST_CHARS_ALT)
     digest_count:			$(LIBRARY_DIGEST_COUNT_ALT)
     digest_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_DIGEST_EXPANDED_MOD),$(LIBRARY_DIGEST_EXPANDED_ALT))
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
@@ -15388,8 +15381,6 @@ $($(PUBLISH)-library-metadata):
 #> update: YQ_WRITE.*title
 #> update: join(.*)
 
-#WORKING:FIX:DIGEST
-#	add a $(FIND) -newer test...
 override define $(PUBLISH)-library-metadata-create =
 	$(call $(HEADERS)-note,$(@),$$( \
 			$(ECHO) "$(1)" \
@@ -16022,7 +16013,7 @@ override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_D)"
 endef
 
-#WORKING:FIX:DIGEST
+#WORKING:FIX:SITEMAP
 #	c_list_var on sitemap?
 #	make both digest and sitemap run a target?  that would (probably) save on "make" calls...
 
