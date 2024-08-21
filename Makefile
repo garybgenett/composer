@@ -882,6 +882,9 @@ override LIBRARY_LISTS_SPACER_ALT	:= null
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:=
+override LIBRARY_SITEMAP_ANCHORED	:= 1
+override LIBRARY_SITEMAP_ANCHORED_ALT	:= $(LIBRARY_SITEMAP_ANCHORED)
+override LIBRARY_SITEMAP_ANCHORED_MOD	:= null
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
@@ -1309,6 +1312,8 @@ override GITIGNORE_LIST			:=
 ########################################
 
 override DATENOW			:= $(shell $(DATE) +%s)
+#WORKING:FIX
+override DATENOW			:= 1725260400
 
 override DATESTAMP			= $(shell $(DATE) --date="@$(DATENOW)" --iso=seconds)
 override DATEMARK			= $(shell $(DATE) --date="@$(DATENOW)" +%Y-%m-%d)
@@ -2308,6 +2313,14 @@ endif
 
 override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
 
+#WORKING:FIX:CONFIG
+#	break up into sub-lists, like "search":
+#		cols?
+#		metainfo?
+#		readtime?
+#		library.digest
+#		library.lists
+#		library.sitemap
 override define COMPOSER_YML_DATA_SKEL =
 { variables: {
   title-prefix:				null,
@@ -2372,6 +2385,7 @@ override define COMPOSER_YML_DATA_SKEL =
     lists_spacer:			$(LIBRARY_LISTS_SPACER),
 
     sitemap_title:			"$(LIBRARY_SITEMAP_TITLE)",
+    sitemap_anchored:			$(LIBRARY_SITEMAP_ANCHORED),
     sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED),
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER),
   },
@@ -5481,6 +5495,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [lists_expanded]   | `$(LIBRARY_LISTS_EXPANDED)`
 | [lists_spacer]     | `$(LIBRARY_LISTS_SPACER)`
 | [sitemap_title]    | `$(LIBRARY_SITEMAP_TITLE)`
+| [sitemap_anchored] | `$(LIBRARY_SITEMAP_ANCHORED)`
 | [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)`
 | [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`
 
@@ -5529,6 +5544,7 @@ $(foreach FILE,\
 	lists_expanded \
 	lists_spacer \
 	sitemap_title \
+	sitemap_anchored \
 	sitemap_expanded \
 	sitemap_spacer \
 ,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(FILE))
@@ -5689,6 +5705,7 @@ override define PUBLISH_PAGE_3_CONFIGS =
 | [lists_expanded]   | `$(LIBRARY_LISTS_EXPANDED)`   | `$(LIBRARY_LISTS_EXPANDED_ALT)`
 | [lists_spacer]     | `$(LIBRARY_LISTS_SPACER)`     | `$(LIBRARY_LISTS_SPACER_ALT)`
 | [sitemap_title]    | `$(LIBRARY_SITEMAP_TITLE)`    | `$(LIBRARY_SITEMAP_TITLE_ALT)`
+| [sitemap_anchored] | `$(LIBRARY_SITEMAP_ANCHORED)` | `$(LIBRARY_SITEMAP_ANCHORED_ALT)`
 | [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)` | `$(LIBRARY_SITEMAP_EXPANDED_ALT)`
 | [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`   | `$(LIBRARY_SITEMAP_SPACER_ALT)`
 
@@ -7060,6 +7077,7 @@ $(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$
 $(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)sitemap_anchored$(_D):			$(_M)$(LIBRARY_SITEMAP_ANCHORED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_expanded$(_D):			$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)sitemap_spacer$(_D):			$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
 
@@ -7481,6 +7499,7 @@ variables:
     lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
     digest_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_TITLE_MOD),$(LIBRARY_SITEMAP_TITLE_ALT))"
+    sitemap_anchored:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_ANCHORED_MOD),$(LIBRARY_SITEMAP_ANCHORED_ALT))
     sitemap_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
 
@@ -15714,6 +15733,7 @@ override define $(PUBLISH)-library-digest-create =
 	fi
 endef
 
+#WORKING:FIX:SITEMAP
 override define $(PUBLISH)-library-digest-run =
 	if [ "$${NUM}" -gt "0" ] && [ -n "$${DIGEST_SPACER}" ]; then \
 		$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n"; \
@@ -15817,9 +15837,6 @@ endef
 
 #> $(PUBLISH)-library-sitemap > $(PUBLISH)-library-sitemap-src > $(PUBLISH)-library-sitemap-list > $(PUBLISH)-library-sitemap-files
 
-#WORKING:FIX:SITEMAP
-#	make COMPOSER_ROOT / COMPOSER_LIBRARY_ROOT switch an option: sitemap_local ?
-
 ########################################
 ##### {{{5 $(PUBLISH)-library-sitemap-list
 ########################################
@@ -15842,8 +15859,7 @@ ifneq ($(and \
 	) \
 ),)
 $(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-sitemap)))
-#>					-e "s|^$(COMPOSER_ROOT)[/]||g"
-#>					-e "s|^$(COMPOSER_ROOT)|/|g"
+override SITEMAP_ANCHORED := $(call COMPOSER_YML_DATA_VAL,library.sitemap_anchored)
 override $(PUBLISH)-library-sitemap-list := $(shell \
 	$(call ENV_MAKE,$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),$(TESTING_MAKEJOBS),$(MAKEJOBS))) \
 		--directory $(COMPOSER_LIBRARY_ROOT) \
@@ -15857,8 +15873,8 @@ override $(PUBLISH)-library-sitemap-list := $(shell \
 			NAME="$$( \
 				$(ECHO) "$${FILE}" \
 				| $(SED) \
-					-e "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
-					-e "s|^$(COMPOSER_LIBRARY_ROOT)|/|g" \
+					-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))[/]||g" \
+					-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))|/|g" \
 			)"; \
 			FILE="$(COMPOSER_LIBRARY)/sitemap-$$( \
 				$(ECHO) "$${NAME}" \
@@ -15969,19 +15985,16 @@ $($(PUBLISH)-library-sitemap-files):
 		$(call $(HEADERS)-note,$($(PUBLISH)-library-sitemap-src),$(NAME),$(PUBLISH)-sitemap)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "|||\n|:---|:---|\n" >>$(@).$(COMPOSER_BASENAME)
-#>		--directory $(COMPOSER_ROOT)/$(NAME) \
-#>			-e "s|^$(COMPOSER_ROOT)[/]||g"
-#>			-e "s|^$(COMPOSER_ROOT)||g"
 	@shopt -s lastpipe; \
 		$(call $(PUBLISH)-library-sitemap-vars) \
 	$(call ENV_MAKE,$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),$(TESTING_MAKEJOBS),$(MAKEJOBS))) \
-		--directory $(COMPOSER_LIBRARY_ROOT)/$(NAME) \
+		--directory $(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))/$(NAME) \
 		COMPOSER_DOITALL_$(CONFIGS)= \
 		$(CONFIGS)$(.)COMPOSER_EXPORTS_LIST \
 		| $(SED) \
 			-e "s|$(TOKEN)$$||g" \
-			-e "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
-			-e "s|^$(COMPOSER_LIBRARY_ROOT)||g" \
+			-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))[/]||g" \
+			-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))||g" \
 		| $(SORT) \
 	| while read -r FILE; do \
 		$(call $(PUBLISH)-library-sitemap-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
@@ -16000,6 +16013,7 @@ $($(PUBLISH)-library-sitemap-files):
 
 override define $(PUBLISH)-library-sitemap-vars =
 	$(eval override METAINFO_NULL := $(call COMPOSER_YML_DATA_VAL,config.metainfo_null)) \
+	$(eval override SITEMAP_ANCHORED := $(call COMPOSER_YML_DATA_VAL,library.sitemap_anchored)) \
 	$(eval override SITEMAP_EXPANDED := $(call COMPOSER_YML_DATA_VAL,library.sitemap_expanded)) \
 	$(eval override SITEMAP_SPACER := $(call COMPOSER_YML_DATA_VAL,library.sitemap_spacer))
 endef
@@ -16016,10 +16030,9 @@ endef
 #WORKING:FIX:SITEMAP
 #	c_list_var on sitemap?
 #	make both digest and sitemap run a target?  that would (probably) save on "make" calls...
+#	[WARNING] Duplicate identifier '2022-01-01--page-0-in-2022--gary-b-genett-author-1-author-2-author-3' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240816-184554-0700.md line 2559 column 1
 
 #> update: TYPE_TARGETS
-#>		$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT_REGEX)[/]||g";
-#>	$(ECHO) "$(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(COMPOSER_ROOT))/$(1)"; = $(ECHO) "$(COMPOSER_CMD_ROOT)/$(1)";
 override define $(PUBLISH)-library-sitemap-run =
 	$(ECHO) "| "; \
 	INFO=; \
@@ -16044,7 +16057,7 @@ override define $(PUBLISH)-library-sitemap-run =
 	elif [ -L "$(1)" ]; then \
 		INFO="$$($(word 1,$(REALPATH)) $(1))"; \
 		$(ECHO) "["; \
-		$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g"; \
+		$(ECHO) "$${INFO}" | $(SED) "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g"; \
 		$(ECHO) "]("; \
 		$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
 		$(ECHO) ")"; \
@@ -16055,7 +16068,7 @@ override define $(PUBLISH)-library-sitemap-run =
 	$(ECHO) "["; \
 	$(ECHO) "$(1)" | $(SED) "s|^.*[/]([^/]+)$$|\1|g"; \
 	$(ECHO) "]("; \
-	$(ECHO) "$(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(COMPOSER_LIBRARY_ROOT))/$(1)"; \
+	$(ECHO) "$(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT)))/$(1)"; \
 	$(ECHO) ")"; \
 	$(ECHO) " |\n"
 endef
@@ -16357,11 +16370,10 @@ endef
 $(PUBLISH)-$(EXAMPLE): $(.)set_title-$(PUBLISH)-$(EXAMPLE)
 $(PUBLISH)-$(EXAMPLE): $(PUBLISH_ROOT)/.$(PUBLISH)-$(INSTALL)
 $(PUBLISH)-$(EXAMPLE):
-ifeq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS))
+ifeq ($(wildcard $(firstword $(RSYNC))),)
 	@$(if $(wildcard $(firstword $(RSYNC))),,$(MAKE) $(NOTHING)-rsync)
 else
-	@$(call $(HEADERS))
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(call $(HEADERS)-note,$(PUBLISH_ROOT),$(FILE),,$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))); \
 	)
@@ -16383,7 +16395,10 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR)				$(PUBLISH_ROOT) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
-	@$(MAKE) --directory			$(PUBLISH_ROOT) --makefile $(COMPOSER) $(DOSETUP)-$(DOFORCE)
+	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
+		--directory $(PUBLISH_ROOT) \
+		--makefile $(COMPOSER) \
+		$(DOSETUP)-$(DOFORCE)
 	@$(ECHO) "$(_S)"
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(MKDIR)			$(PUBLISH_ROOT)/$(FILE) $($(DEBUGIT)-output); \
@@ -16600,6 +16615,7 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR)):
 	))
 	@$(call HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK_DONE)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_E)"
+#WORKING:FIX:PAGEDIR
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(RM)									$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT) \
 										$($(DEBUGIT)-output)
@@ -16703,9 +16719,34 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
+#WORKING:FIX:SITEMAP
+ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
+		--directory $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS)) \
+		--makefile $(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(MAKEFILE) \
+		$(DOSETUP)-$(DOFORCE)
+	@$(ECHO) "$(_E)"
+	@$(LN) \
+		$(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(COMPOSER_SETTINGS) \
+		$(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(COMPOSER_YML) \
+		$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CMS)/ \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+else
+	@$(ECHO) "$(_S)"
+	@$(RM) --recursive \
+		$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CMS) \
+		$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(MAKEFILE) \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
+		--directory $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS)) \
+		--makefile $(PUBLISH_ROOT)/$(MAKEFILE) \
+		$(INSTALL)
+endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(ECHO) "$(_S)"
-	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
+	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT) \
 							$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE)	>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT)
