@@ -15729,8 +15729,8 @@ override define $(PUBLISH)-library-digest-create =
 			$(1)$(COMPOSER_EXT_SPECIAL) \
 			$(1).json \
 			$($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+	fi; \
+	$(ECHO) "$(_D)"
 endef
 
 #WORKING:FIX:SITEMAP
@@ -15749,6 +15749,7 @@ override define $(PUBLISH)-library-digest-run =
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-digest $$( \
 			$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(2) \
 		) $(PUBLISH_CMD_END)\n"; \
+	$(ECHO) "<!-- $(MARKER) $(2) -->\n"; \
 	$(ECHO) "\n"; \
 	CDIR="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
 	BASE="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$(subst .,[.],$(COMPOSER_EXT))$$|\2|g")"; \
@@ -16021,7 +16022,7 @@ endef
 #>	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-sitemap);
 override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_N)"; \
-	{ $(call $(PUBLISH)-library-sitemap-run,$(2)); } \
+	{ $(call $(PUBLISH)-library-sitemap-run,$(1),$(2)); } \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"
@@ -16038,10 +16039,10 @@ override define $(PUBLISH)-library-sitemap-run =
 	INFO=; \
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		TEST="$$( \
-			$(ECHO) "$(1)" \
+			$(ECHO) "$(2)" \
 			| $(SED) "s|[.]$(EXTN_$(TYPE))$$|$(COMPOSER_EXT)|g" \
 		)"; \
-		if	[ "$${TEST}" != "$(1)" ] && \
+		if	[ "$${TEST}" != "$(2)" ] && \
 			[ -f "$${TEST}" ]; \
 		then \
 			INFO="$${TEST}"; \
@@ -16054,8 +16055,8 @@ override define $(PUBLISH)-library-sitemap-run =
 		else \
 			$(ECHO) "$(METAINFO_NULL)" | $(SED) -e "s|^[\"]||g" -e "s|[\"]$$||g"; \
 		fi; \
-	elif [ -L "$(1)" ]; then \
-		INFO="$$($(word 1,$(REALPATH)) $(1))"; \
+	elif [ -L "$(2)" ]; then \
+		INFO="$$($(word 1,$(REALPATH)) $(2))"; \
 		$(ECHO) "["; \
 		$(ECHO) "$${INFO}" | $(SED) "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g"; \
 		$(ECHO) "]("; \
@@ -16066,9 +16067,9 @@ override define $(PUBLISH)-library-sitemap-run =
 	fi; \
 	$(ECHO) " | "; \
 	$(ECHO) "["; \
-	$(ECHO) "$(1)" | $(SED) "s|^.*[/]([^/]+)$$|\1|g"; \
+	$(ECHO) "$(2)" | $(SED) "s|^.*[/]([^/]+)$$|\1|g"; \
 	$(ECHO) "]("; \
-	$(ECHO) "$(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT)))/$(1)"; \
+	$(ECHO) "$(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT)))/$(2)"; \
 	$(ECHO) ")"; \
 	$(ECHO) " |\n"
 endef
