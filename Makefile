@@ -16719,31 +16719,6 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
-#WORKING:FIX:SITEMAP
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
-		--directory $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS)) \
-		--makefile $(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(MAKEFILE) \
-		$(DOSETUP)-$(DOFORCE)
-	@$(ECHO) "$(_E)"
-	@$(LN) \
-		$(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(COMPOSER_SETTINGS) \
-		$(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(COMPOSER_YML) \
-		$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CMS)/ \
-		$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-else
-	@$(ECHO) "$(_S)"
-	@$(RM) --recursive \
-		$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CMS) \
-		$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(MAKEFILE) \
-		$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
-		--directory $(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS)) \
-		--makefile $(PUBLISH_ROOT)/$(MAKEFILE) \
-		$(INSTALL)
-endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(ECHO) "$(_S)"
 	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT) \
