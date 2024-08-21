@@ -6817,6 +6817,7 @@ endef
 ########################################
 
 #WORKING:FIX:PAGEDIR
+#	[WARNING] Duplicate identifier '2022-01-01--page-0-in-2022--gary-b-genett-author-1-author-2-author-3' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240816-184554-0700.md line 2559 column 1
 #	what are all the things we are testing with "pages.*"...?
 #		list them in the $(PUBLISH)-$(EXAMPLE) comments text...
 #	why the addition of "pages.html" for "testing"...?
@@ -15733,7 +15734,6 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"
 endef
 
-#WORKING:FIX:SITEMAP
 override define $(PUBLISH)-library-digest-run =
 	if [ "$${NUM}" -gt "0" ] && [ -n "$${DIGEST_SPACER}" ]; then \
 		$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n"; \
@@ -16027,10 +16027,6 @@ override define $(PUBLISH)-library-sitemap-create =
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"
 endef
-
-#WORKING:FIX:SITEMAP
-#	make both digest and sitemap run a target?  that would (probably) save on "make" calls...
-#	[WARNING] Duplicate identifier '2022-01-01--page-0-in-2022--gary-b-genett-author-1-author-2-author-3' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240816-184554-0700.md line 2559 column 1
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
