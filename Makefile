@@ -15874,8 +15874,8 @@ override $(PUBLISH)-library-sitemap-list := $(shell \
 			NAME="$$( \
 				$(ECHO) "$${FILE}" \
 				| $(SED) \
-					-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))[/]||g" \
-					-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))|/|g" \
+					-e "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
+					-e "s|^$(COMPOSER_LIBRARY_ROOT)|/|g" \
 			)"; \
 			FILE="$(COMPOSER_LIBRARY)/sitemap-$$( \
 				$(ECHO) "$${NAME}" \
@@ -15989,13 +15989,13 @@ $($(PUBLISH)-library-sitemap-files):
 	@shopt -s lastpipe; \
 		$(call $(PUBLISH)-library-sitemap-vars) \
 	$(call ENV_MAKE,$(if $(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),$(TESTING_MAKEJOBS),$(MAKEJOBS))) \
-		--directory $(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))/$(NAME) \
+		--directory $(COMPOSER_LIBRARY_ROOT)/$(NAME) \
 		COMPOSER_DOITALL_$(CONFIGS)= \
 		$(CONFIGS)$(.)COMPOSER_EXPORTS_LIST \
 		| $(SED) \
 			-e "s|$(TOKEN)$$||g" \
-			-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))[/]||g" \
-			-e "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT))||g" \
+			-e "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
+			-e "s|^$(COMPOSER_LIBRARY_ROOT)||g" \
 		| $(SORT) \
 	| while read -r FILE; do \
 		$(call $(PUBLISH)-library-sitemap-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
@@ -16029,27 +16029,49 @@ override define $(PUBLISH)-library-sitemap-create =
 endef
 
 #WORKING:FIX:SITEMAP
-#	c_list_var on sitemap?
 #	make both digest and sitemap run a target?  that would (probably) save on "make" calls...
 #	[WARNING] Duplicate identifier '2022-01-01--page-0-in-2022--gary-b-genett-author-1-author-2-author-3' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240816-184554-0700.md line 2559 column 1
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
-	$(ECHO) "| "; \
+	CDIR="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
+	NAME="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\2|g")"; \
+	TEST=; \
+	BASE=; \
+	EXTN=; \
+	LIST=; \
 	INFO=; \
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		TEST="$$( \
-			$(ECHO) "$(2)" \
-			| $(SED) "s|[.]$(EXTN_$(TYPE))$$|$(COMPOSER_EXT)|g" \
+			$(ECHO) "$${NAME}" \
+			| $(SED) "s|[.]$(EXTN_$(TYPE))$$||g" \
 		)"; \
-		if	[ "$${TEST}" != "$(2)" ] && \
-			[ -f "$${TEST}" ]; \
-		then \
-			INFO="$${TEST}"; \
+		if [ "$${TEST}" != "$${NAME}" ]; then \
+			BASE="$${TEST}"; \
+			EXTN="$$( \
+				$(ECHO) "$${NAME}" \
+				| $(SED) "s|^$${BASE}[.]||g" \
+			)"; \
 		fi; \
 	) \
-	if [ -f "$${INFO}" ]; then \
-		INFO="$$($(call PUBLISH_SH_RUN) metainfo-block . . $${INFO})"; \
+	if [ -n "$${EXTN}" ]; then \
+		LIST="$$( \
+			$(call ENV_MAKE) \
+				--directory $${CDIR} \
+				c_base="$${BASE}" \
+				c_type="$${EXTN}" \
+				$(CONFIGS).c_list \
+			| $(SED) \
+				-e "s|^([^/].+)$$|$${CDIR}/\1|g" \
+			| $(HEAD) -n1 \
+		)"; \
+		if [ -z "$${LIST}" ]; then \
+			LIST="$${CDIR}/$${BASE}$(COMPOSER_EXT)"; \
+		fi; \
+	fi; \
+	$(ECHO) "| "; \
+	if [ -f "$${LIST}" ]; then \
+		INFO="$$($(call PUBLISH_SH_RUN) metainfo-block . . $${LIST})"; \
 		if [ -n "$${INFO}" ]; then \
 			$(ECHO) "$${INFO}"; \
 		else \
@@ -16057,20 +16079,18 @@ override define $(PUBLISH)-library-sitemap-run =
 		fi; \
 	elif [ -L "$(2)" ]; then \
 		INFO="$$($(word 1,$(REALPATH)) $(2))"; \
-		$(ECHO) "["; \
-		$(ECHO) "$${INFO}" | $(SED) "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g"; \
-		$(ECHO) "]("; \
-		$(ECHO) "$${INFO}" | $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g"; \
-		$(ECHO) ")"; \
+		$(ECHO) "[$$( \
+			$(ECHO) "$${INFO}" \
+			| $(SED) "s|^$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
+		)]($$( \
+			$(ECHO) "$${INFO}" \
+			| $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g" \
+		))"; \
 	else \
 		$(ECHO) "--"; \
 	fi; \
 	$(ECHO) " | "; \
-	$(ECHO) "["; \
-	$(ECHO) "$(2)" | $(SED) "s|^.*[/]([^/]+)$$|\1|g"; \
-	$(ECHO) "]("; \
-	$(ECHO) "$(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT)))/$(2)"; \
-	$(ECHO) ")"; \
+	$(ECHO) "[$${NAME}]($(patsubst $(COMPOSER_ROOT)%,$(PUBLISH_CMD_ROOT)%,$(if $(SITEMAP_ANCHORED),$(COMPOSER_LIBRARY_ROOT),$(COMPOSER_ROOT)))/$(2))"; \
 	$(ECHO) " |\n"
 endef
 
