@@ -820,24 +820,30 @@ override PUBLISH_METAINFO_ALT		:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|>
 override PUBLISH_METAINFO_MOD		:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author>*<br>*. <tags>*
 override PUBLISH_METAINFO_NULL		:= *(none)*
 override PUBLISH_METAINFO_NULL_ALT	:= null
+#WORKING:FIX:EMPTY NULL_MOD ?
 #>override PUBLISH_CONTENTS		:=
 #>override PUBLISH_CONTENTS_ALT		:=
 override PUBLISH_CREATORS		:= author
 override PUBLISH_CREATORS_TITLE		:= Author
 override PUBLISH_CREATORS_TITLE_ALT	:= Creator
+#WORKING:FIX:EMPTY
 override PUBLISH_CREATORS_TITLE_MOD	:= #> null
 override PUBLISH_CREATORS_PRINT		:= *Authors: <|>, <|>*
 override PUBLISH_CREATORS_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
+#WORKING:FIX:EMPTY
 override PUBLISH_CREATORS_PRINT_MOD	:= #> null
 override PUBLISH_METALIST		:= tags
 override PUBLISH_METALIST_TITLE		:= Tag
 override PUBLISH_METALIST_TITLE_ALT	:= Mark
+#WORKING:FIX:EMPTY
 override PUBLISH_METALIST_TITLE_MOD	:= #> null
 override PUBLISH_METALIST_PRINT		:= *Tags: <|>, <|>*
 override PUBLISH_METALIST_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
+#WORKING:FIX:EMPTY
 override PUBLISH_METALIST_PRINT_MOD	:= #> null
 override PUBLISH_READTIME		:= *Reading time: <word> words, <time> minutes*
 override PUBLISH_READTIME_ALT		:= *Words: <word> / Minutes: <time>*
+#WORKING:FIX:EMPTY READTIME_MOD ?
 override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 
@@ -857,6 +863,7 @@ override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
+#WORKING:FIX:EMPTY
 override LIBRARY_DIGEST_TITLE_MOD	:=
 override LIBRARY_DIGEST_CONTINUE	:= *[$(EXPAND)]*
 override LIBRARY_DIGEST_CONTINUE_ALT	:= *(continued)*<br><br>
@@ -881,6 +888,7 @@ override LIBRARY_LISTS_SPACER_ALT	:= null
 
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
+#WORKING:FIX:EMPTY
 override LIBRARY_SITEMAP_TITLE_MOD	:=
 override LIBRARY_SITEMAP_ANCHORED	:= 1
 override LIBRARY_SITEMAP_ANCHORED_ALT	:= $(LIBRARY_SITEMAP_ANCHORED)
@@ -6214,6 +6222,9 @@ date: $(COMPOSER_RELDATE)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
+#WORK metainfo page description text
+
+$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -6241,7 +6252,10 @@ date: $(word 1,$(1))$(PUBLISH_PAGES_DATE)
 $(PUBLISH_CREATORS): [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]
 $(PUBLISH_METALIST): [Tag $(word 2,$(1)), Tag 1, Tag 2, Tag 3]
 ---
-$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)
+$(if $(and \
+	$(filter $(word 1,$(1)),$(word 1,$(PUBLISH_PAGES_YEARS))) ,\
+	$(filter $(word 2,$(1)),$(word 1,$(PUBLISH_PAGES_NUMS))) \
+),#WORK metainfo file description text$(call NEWLINE)$(call NEWLINE))$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin 1 $(PUBLISH_CMD_END)
 
 ## Lorem Ipsum #$(word 2,$(1)) in $(word 1,$(1))
 
@@ -6815,12 +6829,6 @@ endef
 ########################################
 ### {{{3 Heredoc: composer_mk ($(PUBLISH) $(CONFIGS))
 ########################################
-
-#WORKING:FIX:PAGEDIR
-#	[WARNING] Duplicate identifier '2022-01-01--page-0-in-2022--gary-b-genett-author-1-author-2-author-3' at /.g/_data/zactive/coding/composer/_site/_library/.composer.tmp/author-gary-b-genett.html.20240816-184554-0700.md line 2559 column 1
-#	what are all the things we are testing with "pages.*"...?
-#		list them in the $(PUBLISH)-$(EXAMPLE) comments text...
-#	why the addition of "pages.html" for "testing"...?
 
 override define HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK =
 	$(SED) -i \
@@ -7499,7 +7507,7 @@ variables:
     digest_spacer:			$(LIBRARY_DIGEST_SPACER_ALT)
     lists_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_LISTS_EXPANDED_MOD),$(LIBRARY_LISTS_EXPANDED_ALT))
     lists_spacer:			$(LIBRARY_LISTS_SPACER_ALT)
-    digest_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_TITLE_MOD),$(LIBRARY_SITEMAP_TITLE_ALT))"
+    sitemap_title:			"$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_TITLE_MOD),$(LIBRARY_SITEMAP_TITLE_ALT))"
     sitemap_anchored:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_ANCHORED_MOD),$(LIBRARY_SITEMAP_ANCHORED_ALT))
     sitemap_expanded:			$(if $(filter $(TESTING),$(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))),$(LIBRARY_SITEMAP_EXPANDED_MOD),$(LIBRARY_SITEMAP_EXPANDED_ALT))
     sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER_ALT)
@@ -9207,7 +9215,8 @@ function $(PUBLISH)-spacer {
 
 function $(PUBLISH)-break {
 	if [ -n "$${DIGEST_MARKDOWN}" ]; then
-		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+#>		$(PUBLISH)-marker $${FUNCNAME} markdown $${@}
+		$${ECHO} "$${COMPOSER_TINYNAME}$${DIVIDE}break\\n"
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
@@ -15090,6 +15099,7 @@ endef
 
 #> update: join(.*)
 
+#WORKING:FIX:EMPTY
 override define $(PUBLISH)-$(TARGETS)-metalist =
 	META="$(call COMPOSER_YML_DATA_VAL,config.metalist.[\"$(2)\"].display)"; \
 	META_BEG="$$($(ECHO) "$${META}" | $(SED) "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\1|g")"; \
@@ -15503,6 +15513,7 @@ $($(PUBLISH)-library-index):
 
 #>					elif [ "$(1)" = "date" ]; then		$(ECHO) "Date";
 #>					else					$(ECHO) "Metalist ($(1))";
+#WORKING:FIX:EMPTY
 override define $(PUBLISH)-library-index-create =
 	$(ECHO) "$(1): {\n" >>$(@).$(COMPOSER_BASENAME); \
 	if [ "$(1)" = "title" ]; then \
@@ -15626,6 +15637,7 @@ $($(PUBLISH)-library-digest):
 		$(PUBLISH)-library-digest-files
 	@$(call $(PUBLISH)-library-digest-file) >$(@)
 
+#WORKING:FIX:EMPTY
 override define $(PUBLISH)-library-digest-file =
 	{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest_title)\n"; \
@@ -15677,6 +15689,7 @@ $($(PUBLISH)-library-digest-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUB
 $($(PUBLISH)-library-digest-files):
 #>	@$(call $(HEADERS)-note,$(@),*,$(PUBLISH)-digest)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
+#WORKING:FIX:EMPTY
 	@shopt -s lastpipe; \
 		NUM="0"; \
 		$(call $(PUBLISH)-library-digest-vars,lists); \
@@ -15770,9 +15783,7 @@ override define $(PUBLISH)-library-digest-run =
 			$${LIST} \
 			$($(PUBLISH)-library-append) \
 			$${DIGEST_APPEND} \
-		| $(SED) \
-			-e "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
-			-e "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
+		| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 		$(if $(COMPOSER_DEBUGIT),| $(TEE) $(1)$(COMPOSER_EXT_SPECIAL)) \
 		| $(PANDOC_MD_TO_JSON) \
 		>$(1).json; \
@@ -15783,9 +15794,7 @@ override define $(PUBLISH)-library-digest-run =
 		$(PUBLISH_SH_RUN) $(MENU_SELF) \
 			$($(PUBLISH)-library-append) \
 			$${DIGEST_APPEND} \
-		| $(SED) \
-			-e "s|^$(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)$$|$(COMPOSER_TINYNAME)$(DIVIDE)break|g" \
-			-e "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
+		| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 		| $(PANDOC_MD_TO_JSON) \
 		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
 	))" || $(TRUE); \
@@ -15801,8 +15810,7 @@ override define $(PUBLISH)-library-digest-run =
 		TEXT="$$( \
 			$(CAT) $(1).json \
 			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
-			| $(SED) \
-				-e "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
+			| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 			| $(PANDOC_JSON_TO_LINT) \
 		)"; \
 		if [ "$${TEXT}" = "$(COMPOSER_TINYNAME)$(DIVIDE)break" ]; then \
@@ -15913,6 +15921,7 @@ $($(PUBLISH)-library-sitemap):
 		$(PUBLISH)-library-sitemap-files
 	@$(call $(PUBLISH)-library-sitemap-file) >$(@)
 
+#WORKING:FIX:EMPTY
 override define $(PUBLISH)-library-sitemap-file =
 	{	$(ECHO) "---\n"; \
 		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.sitemap_title)\n"; \
@@ -16364,9 +16373,8 @@ endef
 #>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
 #>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
 #>	$(SHELL)
-#WORKING:FIX:PAGEDIR
-#	pages.pdf...?
 #>		$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT) + $(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
+#>		$(PUBLISH_PAGEDIR).$(EXTN_LPDF)
 #>		$(dir $(PUBLISH_EXAMPLE))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
 #>		$(dir $(PUBLISH_EXAMPLE))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT) + $(dir $(PUBLISH_EXAMPLE))/$(DONOTDO).*
 #>		$(PUBLISH)-$(DOFORCE) [x1]
@@ -16609,8 +16617,6 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(COMPOSER_EXT_DEFAULT):
 #### {{{4 $(PUBLISH)-$(EXAMPLE)$(.)$(PUBLISH_PAGEDIR)
 ########################################
 
-#WORKING:FIX:PAGEDIR
-
 override $(PUBLISH)-$(EXAMPLE)-$(TARGETS) += $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR))
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR))
@@ -16632,7 +16638,6 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_PAGEDIR)):
 	))
 	@$(call HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK_DONE)			$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_E)"
-#WORKING:FIX:PAGEDIR
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(RM)									$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)$(COMPOSER_EXT_DEFAULT) \
 										$($(DEBUGIT)-output)
