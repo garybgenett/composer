@@ -5402,8 +5402,6 @@ endef
 
 #WORK
 #	add a header/box to each which describes what to test for that page...
-#	add a sitemap symlink test... maybe themes/index.html...?
-#		they likely break when used across directories, when "composer_root" is used... document!
 
 ########################################
 ### {{{3 $(PUBLISH) Page: Main
@@ -15909,8 +15907,8 @@ override $(PUBLISH)-library-sitemap-list := $(shell \
 			NAME="$$( \
 				$(ECHO) "$${FILE}" \
 				| $(SED) \
-					-e "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
-					-e "s|^$(COMPOSER_LIBRARY_ROOT)|/|g" \
+					-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
+					-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)|/|g" \
 			)"; \
 			FILE="$(COMPOSER_LIBRARY)/sitemap-$$( \
 				$(ECHO) "$${NAME}" \
@@ -15992,7 +15990,12 @@ $($(PUBLISH)-library-sitemap-src):
 					EXPAND="."; \
 				fi; \
 			fi; \
-			{	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-sitemap $(NAME) $(PUBLISH_CMD_END)\n\n"; \
+			{	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-sitemap $$( \
+						$(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(NAME)" \
+						| $(SED) \
+							-e "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
+							-e "s|[/][/]$$||g" \
+					) $(PUBLISH_CMD_END)\n\n"; \
 				$(ECHO) "$(PUBLISH_CMD_BEG) $(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(INCL),1,1) $(PUBLISH_CMD_END)\n\n"; \
 				$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n"; \
 			} >>$(@).$(COMPOSER_BASENAME); \
@@ -16028,8 +16031,8 @@ $($(PUBLISH)-library-sitemap-files):
 		$(CONFIGS)$(.)COMPOSER_EXPORTS_LIST \
 		| $(SED) \
 			-e "s|$(TOKEN)$$||g" \
-			-e "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
-			-e "s|^$(COMPOSER_LIBRARY_ROOT)||g" \
+			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
+			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)||g" \
 		| $(SORT) \
 	| while read -r FILE; do \
 		$(call $(PUBLISH)-library-sitemap-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
@@ -16181,7 +16184,7 @@ override $(PUBLISH)-$(PRINTER)-tst	:= $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUB
 endif
 
 override define $(PUBLISH)-$(PRINTER)-output =
-	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT)[/]||g" \
+	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 	| $(SED) -n $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-sed-file),$($(PUBLISH)-$(PRINTER)-sed-dir)) \
 	| $(SORT)
 endef
@@ -16674,6 +16677,14 @@ else
 endif
 	@$(call DO_HEREDOC,PUBLISH_PAGE_PAGEDIR_HEADER)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)-header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_PAGEDIR_FOOTER)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)-footer$(COMPOSER_EXT_SPECIAL)
+#WORKING:FIX:SITEMAP
+#	add a sitemap symlink test... maybe themes/index.html...?
+#		they likely break when used across directories, when "composer_root" is used... document!
+	@$(ECHO) "$(_E)"
+	@$(LN)							$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
+								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML) \
+								$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)$(.)$(PUBLISH_PAGEDIR)
