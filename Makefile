@@ -2951,7 +2951,7 @@ endif
 ########################################
 
 override define $(COMPOSER_TINYNAME)-note =
-	$(call $(HEADERS)-note,$(CURDIR),$(1),note,$(@))
+	$(call $(HEADERS)-note,$(CURDIR),$(strip $(1)),$(_H)note,$(@))
 endef
 
 ########################################
@@ -2959,7 +2959,8 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-makefile =
-	$(call $(INSTALL)-$(MAKEFILE),$(1),-$(INSTALL),,$(2))
+	$(call $(HEADERS)-note,$(CURDIR),$(strip $(1)),$(_H)makefile,$(@)); \
+	$(call $(INSTALL)-$(MAKEFILE),$(strip $(1)),-$(INSTALL),,$(strip $(2)))
 endef
 
 ########################################
@@ -2967,8 +2968,8 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-make =
-	$(call $(HEADERS)-note,$(CURDIR),$(1),$(notdir $(MAKE)),$(@)); \
-	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(1)
+	$(call $(HEADERS)-note,$(CURDIR),$(strip $(1)),$(_H)$(notdir $(MAKE)),$(@)); \
+	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(strip $(1))
 endef
 
 ########################################
@@ -2976,12 +2977,10 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-mkdir =
-	if [ ! -d "$(1)" ]; then \
-		$(call $(HEADERS)-file,$(CURDIR),$(1),$(@)); \
-		$(ECHO) "$(_S)"; \
-		$(MKDIR) $(1) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+	$(call $(HEADERS)-note,$(CURDIR),$(strip $(1)),$(_H)mkdir,$(@)); \
+	$(ECHO) "$(_S)"; \
+	$(MKDIR) $(strip $(1)) $($(DEBUGIT)-output); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
@@ -2989,14 +2988,10 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-cp =
-	if	[ -d "$(1)" ] || \
-		[ -f "$(1)" ]; \
-	then \
-		$(call $(HEADERS)-file,$(CURDIR),$(_E)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
-		$(ECHO) "$(_S)"; \
-		$(CP) $(1) $(2) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+	$(call $(HEADERS)-note,$(CURDIR),$(_E)$(strip $(1))$(_D) $(_S)$(MARKER)$(_D) $(_M)$(strip $(2)),$(_H)cp,$(@)); \
+	$(ECHO) "$(_S)"; \
+	$(CP) $(strip $(1)) $(strip $(2)) $($(DEBUGIT)-output); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
@@ -3004,14 +2999,10 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-ln =
-	if	[ -d "$(1)" ] || \
-		[ -f "$(1)" ]; \
-	then \
-		$(call $(HEADERS)-file,$(CURDIR),$(_E)$(1)$(_D) $(MARKER) $(_E)$(2),$(@)); \
-		$(ECHO) "$(_S)"; \
-		$(LN) $(1) $(2) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+	$(call $(HEADERS)-note,$(CURDIR),$(_E)$(strip $(1))$(_D) $(_S)$(MARKER)$(_D) $(_E)$(strip $(2)),$(_H)ln,$(@)); \
+	$(ECHO) "$(_S)"; \
+	$(LN) $(strip $(1)) $(strip $(2)) $($(DEBUGIT)-output); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
@@ -3019,14 +3010,10 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-mv =
-	if	[ -d "$(1)" ] || \
-		[ -f "$(1)" ]; \
-	then \
-		$(call $(HEADERS)-file,$(CURDIR),$(_N)$(1)$(_D) $(MARKER) $(_M)$(2),$(@)); \
-		$(ECHO) "$(_S)"; \
-		$(MV) $(1) $(2) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+	$(call $(HEADERS)-note,$(CURDIR),$(_N)$(strip $(1))$(_D) $(_S)$(MARKER)$(_D) $(_M)$(strip $(2)),$(_H)mv,$(@)); \
+	$(ECHO) "$(_S)"; \
+	$(MV) $(strip $(1)) $(strip $(2)) $($(DEBUGIT)-output); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
@@ -3034,14 +3021,10 @@ endef
 ########################################
 
 override define $(COMPOSER_TINYNAME)-rm =
-	if	[ -d "$(1)" ] || \
-		[ -f "$(1)" ]; \
-	then \
-		$(call $(HEADERS)-rm,$(CURDIR),$(1),$(@)); \
-		$(ECHO) "$(_S)"; \
-		$(RM) $(if $(2),--recursive) $(1) $($(DEBUGIT)-output); \
-		$(ECHO) "$(_D)"; \
-	fi
+	$(call $(HEADERS)-note,$(CURDIR),$(_N)$(strip $(1)),$(_H)rm,$(@)); \
+	$(ECHO) "$(_S)"; \
+	$(RM) $(if $(strip $(2)),--recursive) $(strip $(1)) $($(DEBUGIT)-output); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
@@ -4232,6 +4215,9 @@ endef
 #		if they are built on the fly, they will likely re-trigger the library, which will wreak havoc with MAKEJOBS
 #	header/footer/append can all be a single value, a list, or an array
 #		identical to metalist, except metalist can't be a list...
+#	symlinks become essentially 301/302 redirects
+#		denoted as such in sitemap
+#		they will break when used to reach outside of "composer_root"...
 
 #WORK
 #	features
@@ -6308,6 +6294,7 @@ endef
 ########################################
 
 #> update: FILE.*CSS_THEMES
+#> update: Theme:.*Overlay:
 override define PUBLISH_PAGE_SHOWDIR_INCLUDE =
 $(strip \
 $(foreach FILE,$(call CSS_THEMES),\
@@ -6326,7 +6313,7 @@ $(foreach FILE,$(call CSS_THEMES),\
 		<N><N> \
 	) \
 	$(if $(filter-out $(TOKEN),$(OVRLY)),\
-		\t* [Theme: $(FTYPE).$(THEME) -- Overlay: $(OVRLY)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(OVRLY).$(FEXTN)) \
+		\t* [Theme: $(FTYPE).$(THEME)$(COMMA) Overlay: $(OVRLY)]($(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(OVRLY).$(FEXTN)) \
 		$(if $(filter-out $(TOKEN),$(DEFLT)),\
 			**(default: `$(DEFLT)`)** \
 		) \
@@ -6875,6 +6862,21 @@ $(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIB
 
 ########################################
 
+.PHONY: redirects-$(CLEANER)
+redirects-$(CLEANER):
+	@$$(call $(COMPOSER_TINYNAME)-rm,\\
+		$$(CURDIR)/$(EXAMPLE).$(EXTN_HTML) \\
+	)
+
+.PHONY: redirects-$(DOITALL)
+redirects-$(DOITALL):
+	@$$(call $(COMPOSER_TINYNAME)-ln,\\
+		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
+		$$(CURDIR)/$(EXAMPLE).$(EXTN_HTML) \\
+	)
+
+########################################
+
 #$(MARKER)override $(notdir $(PUBLISH_PAGEDIR)).$(EXTN_HTML) :=
 override $(notdir $(PUBLISH_PAGEDIR)).* := \\
 	$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL) \\
@@ -7003,11 +7005,13 @@ endif
 ################################################################################
 endef
 
+#> update: Theme:.*Overlay:
 #> update: $(1).$(2)+$(3).$(4)
 override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET =
 override COMPOSER_TARGETS += $(1).$(2)+$(3).$(4)
 override $(1).$(2)+$(3).$(4) := $(PUBLISH_INDEX)$(if $(filter $(TYPE_PRES),$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)
 $(1).$(2)+$(3).$(4): override c_css := $(1).$(2)
+$(1).$(2)+$(3).$(4): override c_options := --variable="pagetitle=Theme: $(1).$(2)$(COMMA) Overlay: $(3)"
 endef
 
 ########################################
@@ -11823,15 +11827,15 @@ endif
 	@$(call $(HEADERS)-rm,$(CURDIR),removing,$(if $(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),note))
 ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(LINERULE)
-	@$(call $(COMPOSER_TINYNAME)-note,$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-mkdir				,$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE))
+	@$(call $(COMPOSER_TINYNAME)-note,				$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-mkdir,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE))
 	@$(TOUCH)							$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE)
-	@$(call $(COMPOSER_TINYNAME)-makefile				,$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
-	@$(call $(COMPOSER_TINYNAME)-make,COMPOSER_DEBUGIT= --directory $(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE) $(NOTHING))
-	@$(call $(COMPOSER_TINYNAME)-cp					,$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-ln					,$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-mv					,$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
-	@$(call $(COMPOSER_TINYNAME)-rm					,$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE),1)
+	@$(call $(COMPOSER_TINYNAME)-makefile,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
+	@$(call $(COMPOSER_TINYNAME)-make,COMPOSER_DEBUGIT= --directory	$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE) $(NOTHING))
+	@$(call $(COMPOSER_TINYNAME)-cp,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-ln,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-mv,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
+	@$(call $(COMPOSER_TINYNAME)-rm,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE),1)
 endif
 	@$(LINERULE)
 	@$(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(HEADERS)-colors
@@ -12431,8 +12435,7 @@ $(CREATOR)$(.)$(CONFIGS):
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_E)"
-	@$(RM) \
-							$(CURDIR)/$(COMPOSER_YML) \
+	@$(RM)						$(CURDIR)/$(COMPOSER_YML) \
 							$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 
@@ -12581,7 +12584,7 @@ $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 	@$(CP) $(BOOTSTRAP_DIR_CSS)					$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_ART_CSS)) $($(DEBUGIT)-output)
 	@$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)			$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_ART_CSS))
 	@$(SED) -i 's&HEREDOC_CUSTOM_PUBLISH_CSS_HACK&$(strip \
-		$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
+			$(patsubst $(word 1,$(SED))%,$(notdir $(word 1,$(SED)))%,$(call HEREDOC_CUSTOM_PUBLISH_CSS_HACK)) \
 		) $(call COMPOSER_CONV,$(EXPAND)/,$(BOOTSTRAP_ART_CSS))&g' \
 									$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_OVERLAY,light)) \
 									$(call COMPOSER_CONV,$(CURDIR)/,$(call CUSTOM_PUBLISH_CSS_OVERLAY,dark))
@@ -12614,15 +12617,13 @@ $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 			if	[   -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
 				[ ! -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE).$(TMPL_$(TYPE))" ]; then \
 				if [ "$(FILE).$(TMPL_$(TYPE))" = "template.$(TMPL_HTML)" ]; then \
-					$(CP) \
-						$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE)) \
+					$(CP)	$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE)) \
 						$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE).$(TMPL_$(TYPE)) \
 						$($(DEBUGIT)-output); \
 					$(call HEREDOC_CUSTOM_HTML_TEMPLATE_HACK) \
 						$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE).$(TMPL_$(TYPE)); \
 				else \
-					$(LN) \
-						$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE)) \
+					$(LN)	$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE)) \
 						$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE).$(TMPL_$(TYPE)) \
 						$($(DEBUGIT)-output); \
 				fi; \
@@ -12640,8 +12641,7 @@ $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 			2>/dev/null; \
 			if	[   -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
 				[ ! -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(notdir $(FILE))" ]; then \
-				$(LN) \
-					$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(subst .,-default.,$(notdir $(FILE))) \
+				$(LN)	$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(subst .,-default.,$(notdir $(FILE))) \
 					$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(notdir $(FILE)) \
 					$($(DEBUGIT)-output); \
 			fi; \
@@ -14714,6 +14714,7 @@ ifneq ($(or \
 		--filter="-_/*" \
 		$(COMPOSER_ROOT)$(call COMPOSER_CONV,,$(CURDIR),1,1)/ \
 		$(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$(CURDIR),1,1)
+#WORKING:FIX:SITEMAP
 endif
 	@$(ECHO) ""
 
@@ -15760,8 +15761,7 @@ override define $(PUBLISH)-library-digest-create =
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
 		$(ECHO) "$(_S)"; \
-		$(RM) \
-			$(1)$(COMPOSER_EXT_SPECIAL) \
+		$(RM)	$(1)$(COMPOSER_EXT_SPECIAL) \
 			$(1).json \
 			$($(DEBUGIT)-output); \
 	fi; \
@@ -15792,8 +15792,7 @@ override define $(PUBLISH)-library-digest-run =
 			c_base="$${BASE}" \
 			c_type="$(EXTN_HTML)" \
 			$(CONFIGS).c_list \
-		| $(SED) \
-			-e "s|^([^/].+)$$|$${CDIR}/\1|g" \
+		| $(SED) "s|^([^/].+)$$|$${CDIR}/\1|g" \
 		| $(TR) '\n' ' ' \
 	)"; \
 	if [ -z "$${LIST}" ]; then \
@@ -16064,26 +16063,30 @@ override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_D)"
 endef
 
+#WORKING:FIX:SITEMAP
+#	https://stackoverflow.com/questions/5411538/how-to-redirect-one-html-page-to-another-on-load
+#		https://stackoverflow.com/questions/25410701/how-do-i-include-meta-tags-in-pandoc-generated-html
+#		<meta http-equiv="refresh" content="0; url=http://example.com/" />
+
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
-	CDIR="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
-	NAME="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\2|g")"; \
+	DEST="$$($(word 1,$(REALPATH)) $(COMPOSER_LIBRARY_ROOT)/$(2))"; \
+	CDIR="$$($(ECHO) "$${DEST}"				| $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
+	BASE="$$($(ECHO) "$${DEST}"				| $(SED) "s|^(.+)[/]([^/]+)$$|\2|g")"; \
+	LDIR="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)"	| $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
+	NAME="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)"	| $(SED) "s|^(.+)[/]([^/]+)$$|\2|g")"; \
 	TEST=; \
-	BASE=; \
 	EXTN=; \
 	LIST=; \
 	INFO=; \
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		TEST="$$( \
-			$(ECHO) "$${NAME}" \
+			$(ECHO) "$${BASE}" \
 			| $(SED) "s|[.]$(EXTN_$(TYPE))$$||g" \
 		)"; \
-		if [ "$${TEST}" != "$${NAME}" ]; then \
+		if [ "$${TEST}" != "$${BASE}" ]; then \
 			BASE="$${TEST}"; \
-			EXTN="$$( \
-				$(ECHO) "$${NAME}" \
-				| $(SED) "s|^$${BASE}[.]||g" \
-			)"; \
+			EXTN="$(EXTN_$(TYPE))"; \
 		fi; \
 	) \
 	if [ -n "$${EXTN}" ]; then \
@@ -16108,21 +16111,21 @@ override define $(PUBLISH)-library-sitemap-run =
 		else \
 			$(ECHO) "$(METAINFO_NULL)" | $(SED) -e "s|^[\"]||g" -e "s|[\"]$$||g"; \
 		fi; \
-	elif [ -L "$(2)" ]; then \
-		INFO="$$($(word 1,$(REALPATH)) $(2))"; \
-		$(ECHO) "[$$( \
-			$(ECHO) "$${INFO}" \
-			| $(SED) "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
-		)]($$( \
-			$(ECHO) "$${INFO}" \
-			| $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g" \
-		))"; \
 	else \
 		$(ECHO) "--"; \
 	fi; \
 	$(ECHO) " | "; \
-	$(ECHO) "[$${NAME}]($(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/$(2))"; \
-	$(ECHO) " |\n"
+	$(ECHO) "[$${NAME}]($(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/$(2))$$( \
+			if [ -L "$(COMPOSER_LIBRARY_ROOT)/$(2)" ]; then \
+				$(ECHO) " *$(MARKER)* [$$( \
+					$(REALPATH) $${LDIR} $${DEST} \
+					| $(SED) "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
+				)]($$( \
+					$(ECHO) "$${DEST}" \
+					| $(SED) "s|^$(COMPOSER_ROOT_REGEX)|$(PUBLISH_CMD_ROOT)|g" \
+				))"; \
+			fi \
+		)\n"
 endef
 
 ########################################
@@ -16677,14 +16680,6 @@ else
 endif
 	@$(call DO_HEREDOC,PUBLISH_PAGE_PAGEDIR_HEADER)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)-header$(COMPOSER_EXT_SPECIAL)
 	@$(call DO_HEREDOC,PUBLISH_PAGE_PAGEDIR_FOOTER)		>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)-footer$(COMPOSER_EXT_SPECIAL)
-#WORKING:FIX:SITEMAP
-#	add a sitemap symlink test... maybe themes/index.html...?
-#		they likely break when used across directories, when "composer_root" is used... document!
-	@$(ECHO) "$(_E)"
-	@$(LN)							$(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) \
-								$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML) \
-								$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)$(.)$(PUBLISH_PAGEDIR)
