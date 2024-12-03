@@ -15031,7 +15031,9 @@ $(EXPORTS)-$(CLEANER):
 	done
 	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files,$(EXPORTS),1)
 	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
-		| $(SED) "s|$(COMPOSER_EXPORT_REGEX)[/]||g"
+		| $(SED) \
+			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
+			-e "/[.][/]$$/d"
 
 ################################################################################
 # {{{1 Composer Targets
@@ -16232,7 +16234,9 @@ $($(PUBLISH)-library-sitemap-src):
 			fi; \
 			{	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-sitemap $$( \
 						$(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(NAME)" \
-						| $(SED) "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
+						| $(SED) \
+							-e "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
+							-e "s|[/][/]$$||g" \
 					) $(PUBLISH_CMD_END)\n\n"; \
 				$(ECHO) "$(PUBLISH_CMD_BEG) $(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(INCL),1,1) $(PUBLISH_CMD_END)\n\n"; \
 				$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n"; \
