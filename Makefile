@@ -180,7 +180,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #
 #	* Check: `git diff main Makefile`
 #	* Update: COMPOSER_VERSION + COMPOSER_RELDATE
-#	* Release: `rm -frv {.[^.],}*; make +release-all && make site-template-+test`
+#	* Release: `rm -frv {.[^.],}*; make +release-all`
 #	* Verify: `git diff main`
 #	* Commit: `git commit`, `git tag`
 #	* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
@@ -729,8 +729,8 @@ override c_margin_left			?=
 override c_margin_right			?=
 override c_options			?=
 
-override c_list_var			= $(strip $(if $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),                   $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $($(if $(1),$(1),$(c_base)).*),                   $($(if $(1),$(1),$(c_base)).*),$(c_list))))
-override c_list_var_source		= $(strip $(if $($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $(3),\$$$$,\$$)($(if $(1),$(1),$(c_base)).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $($(if $(1),$(1),$(c_base)).*),$(if $(3),\$$$$,\$$)($(if $(1),$(1),$(c_base)).*))))
+override c_list_var			= $(strip $(if $($(notdir $(if $(1),$(1),$(c_base))).$(if $(2),$(2),$(EXTN_OUTPUT))),                   $($(notdir $(if $(1),$(1),$(c_base))).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $($(notdir $(if $(1),$(1),$(c_base))).*),                   $($(notdir $(if $(1),$(1),$(c_base))).*),$(c_list))))
+override c_list_var_source		= $(strip $(if $($(notdir $(if $(1),$(1),$(c_base))).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $(3),\$$$$,\$$)($(notdir $(if $(1),$(1),$(c_base))).$(if $(2),$(2),$(EXTN_OUTPUT))),$(if $($(notdir $(if $(1),$(1),$(c_base))).*),$(if $(3),\$$$$,\$$)($(notdir $(if $(1),$(1),$(c_base))).*))))
 override c_list_file			:=
 
 ########################################
@@ -832,22 +832,35 @@ override PUBLISH_CREATORS		:= author
 override PUBLISH_CREATORS_TITLE		:= Author
 override PUBLISH_CREATORS_TITLE_ALT	:= Creator
 override PUBLISH_CREATORS_TITLE_MOD	:= null
-override PUBLISH_CREATORS_PRINT		:= *Authors: <|>, <|>*
-override PUBLISH_CREATORS_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
-override PUBLISH_CREATORS_PRINT_MOD	:= null
+override PUBLISH_CREATORS_DISPLAY	:= *Authors: <|>, <|>*
+override PUBLISH_CREATORS_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
+override PUBLISH_CREATORS_DISPLAY_MOD	:= null
 override PUBLISH_METALIST		:= tags
 override PUBLISH_METALIST_TITLE		:= Tag
 override PUBLISH_METALIST_TITLE_ALT	:= Mark
 override PUBLISH_METALIST_TITLE_MOD	:= null
-override PUBLISH_METALIST_PRINT		:= *Tags: <|>, <|>*
-override PUBLISH_METALIST_PRINT_ALT	:= <ul><li><|></li><li><|></li></ul>
-override PUBLISH_METALIST_PRINT_MOD	:= null
+override PUBLISH_METALIST_DISPLAY	:= *Tags: <|>, <|>*
+override PUBLISH_METALIST_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
+override PUBLISH_METALIST_DISPLAY_MOD	:= null
 override PUBLISH_READTIME		:= *Reading time: <word> words, <time> minutes*
 override PUBLISH_READTIME_ALT		:= *Words: <word> / Minutes: <time>*
 override PUBLISH_READTIME_MOD		:= $(PUBLISH_READTIME_ALT)
 override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 override PUBLISH_READTIME_WPM_MOD	:= $(PUBLISH_READTIME_WPM_ALT)
+
+override PUBLISH_REDIRECT_TITLE		:= Moved To
+override PUBLISH_REDIRECT_TITLE_ALT	:= Redirecting
+override PUBLISH_REDIRECT_TITLE_MOD	:= null
+override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: <link>**
+override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
+override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
+override PUBLISH_REDIRECT_MATCH		:= *
+override PUBLISH_REDIRECT_MATCH_ALT	:= $(PUBLISH_REDIRECT_MATCH)
+override PUBLISH_REDIRECT_MATCH_MOD	:= null
+override PUBLISH_REDIRECT_TIME		:= 5
+override PUBLISH_REDIRECT_TIME_ALT	:= $(SPECIAL_VAL)
+override PUBLISH_REDIRECT_TIME_MOD	:= null
 
 ########################################
 ### {{{3 Library
@@ -1842,7 +1855,7 @@ override PANDOC_FILES_OVERRIDE = $(strip \
 		$(wildcard $(addsuffix /.$(notdir	$(COMPOSER_CUSTOM))-$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),$(PUBLISH),$(strip $(1))).$(3),$(COMPOSER_INCLUDES_DIRS))) \
 	) \
 	$(if $(2),\
-		$(wildcard $(CURDIR)/$(2).$(3)) \
+		$(wildcard $(abspath $(2).$(3))) \
 	) \
 )
 
@@ -1856,7 +1869,6 @@ override PANDOC_FILES_HEADER = $(strip \
 	$(call PANDOC_FILES_OVERRIDE,$(1),$(2),header) \
 )
 
-#>				$(abspath $(call c_css_select,$(1))) ,
 override PANDOC_FILES_CSS = $(strip \
 	$(if $(and $(c_site),$(filter $(1),$(TYPE_HTML))),\
 						$(patsubst %.css,%-pre.css,$(BOOTSTRAP_ART_CSS)) \
@@ -1872,7 +1884,7 @@ override PANDOC_FILES_CSS = $(strip \
 		),\
 			$(if \
 				$(and $(3),$(wildcard $(call c_css_select,$(1)))) ,\
-				$(realpath $(call c_css_select,$(1))) ,\
+				$(abspath $(call c_css_select,$(1))) ,\
 				$(call c_css_select,$(1)) \
 			) \
 		) \
@@ -1901,6 +1913,8 @@ override PANDOC_FILES_CSS = $(strip \
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
 
+#>	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--include-in-header="$(FILE)")
+#>	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--css="$(FILE)")
 override PANDOC_OPTIONS = $(strip \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
 	\
@@ -1930,8 +1944,8 @@ override PANDOC_OPTIONS = $(strip \
 	$(if $(wildcard $(COMPOSER_DAT)/template.$(TMPL_OUTPUT)),	--template="$(COMPOSER_DAT)/template.$(TMPL_OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_DAT)/reference.$(TMPL_OUTPUT)),	--reference-doc="$(COMPOSER_DAT)/reference.$(TMPL_OUTPUT)") \
 	\
-	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--include-in-header="$(FILE)") \
-	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--css="$(FILE)") \
+	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--include-in-header="$(realpath $(FILE))") \
+	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--css="$(realpath $(FILE))") \
 	\
 	$(if $(c_lang),\
 		--variable=lang="$(c_lang)" \
@@ -1977,7 +1991,7 @@ override PANDOC_OPTIONS = $(strip \
 	$(if $(c_options),$(c_options)) \
 	\
 	--to="$(TMPL_OUTPUT)" \
-	--output="$(CURDIR)/$(c_base).$(EXTN_OUTPUT)" \
+	--output="$(abspath $(c_base).$(EXTN_OUTPUT))" \
 )
 
 ########################################
@@ -2395,16 +2409,22 @@ override define COMPOSER_YML_DATA_SKEL =
     metalist: {
       $(PUBLISH_CREATORS): {
         title:				"$(PUBLISH_CREATORS_TITLE)",
-        display:			"$(PUBLISH_CREATORS_PRINT)",
+        display:			"$(PUBLISH_CREATORS_DISPLAY)",
       },
       $(PUBLISH_METALIST): {
         title:				"$(PUBLISH_METALIST_TITLE)",
-        display:			"$(PUBLISH_METALIST_PRINT)",
+        display:			"$(PUBLISH_METALIST_DISPLAY)",
       },
     },
-
     readtime:				"$(PUBLISH_READTIME)",
     readtime_wpm:			$(PUBLISH_READTIME_WPM),
+
+    redirect: {
+      title:				"$(PUBLISH_REDIRECT_TITLE)",
+      display:				"$(PUBLISH_REDIRECT_DISPLAY)",
+      match:				"$(PUBLISH_REDIRECT_MATCH)",
+      time:				$(PUBLISH_REDIRECT_TIME),
+    },
   },
 
   $(PUBLISH)-library: {
@@ -2488,7 +2508,7 @@ override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)
 #> update: $(COMPOSER_LIBRARY): $($(PUBLISH)-cache): $(COMPOSER_YML_DATA): $(COMPOSER_YML_LIST_FILE)
 override COMPOSER_YML_LIST_FILE		:= $(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTN_OUTPUT),yml)
 ifneq ($(COMPOSER_YML_LIST_FILE),)
-override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root).$(c_base).$(EXTN_OUTPUT)
+override $(PUBLISH)-cache		:= $($(PUBLISH)-cache-root)$(_)$(notdir $(c_base)).$(EXTN_OUTPUT)
 endif
 
 override $(PUBLISH)-caches-begin := \
@@ -3084,10 +3104,13 @@ override PANDOC_FILES_SPLIT = $(strip \
 ########################################
 
 #> update: WILDCARD_YML
+
+#>		$(call PANDOC_FILES_OVERRIDE	,,$(2),yml)
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
 	$(COMPOSER_YML_LIST) \
+	$(call PANDOC_FILES_OVERRIDE,,$(2),yml) \
 	$(if $(filter $(1),$(PUBLISH)-cache),\
 		$(if $(COMPOSER_LIBRARY_AUTO_UPDATE),\
 			$($(PUBLISH)-library) \
@@ -3106,27 +3129,26 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 		$(c_site) ,\
 		$(filter $(1),$(TYPE_HTML)) \
 	),\
+		$(CUSTOM_PUBLISH_SH) \
 		$(if $(call PANDOC_FILES_OVERRIDE,,$(2),yml),\
-			$($(PUBLISH)-cache-root).$(2) ,\
+			$($(PUBLISH)-cache-root)$(_)$(notdir $(2)) ,\
 			$($(PUBLISH)-cache) \
 		) \
 		$(INCLUDE_FILE_HEADER) \
 		$(INCLUDE_FILE_FOOTER) \
-		$(CUSTOM_PUBLISH_SH) \
 	) \
-	$(if \
-		$(filter-out $(PUBLISH)-cache,\
-		$(filter-out $(PUBLISH),\
+	$(if $(filter-out \
+		$(PUBLISH)-cache \
+		$(PUBLISH) \
+		,\
 		$(1) \
-		)) \
-	,\
+	),\
 		$(eval override NAME := $(call PANDOC_FILES_TYPE,$(1))) \
 		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
 		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
 		$(call PANDOC_FILES_MAIN	,$(TYPE_$(NAME)),$(TMPL_$(NAME))) \
 		$(call PANDOC_FILES_HEADER	,$(TYPE_$(NAME)),$(2)) \
 		$(call PANDOC_FILES_CSS		,$(TYPE_$(NAME)),$(2)) \
-		$(call PANDOC_FILES_OVERRIDE	,,$(2),yml) \
 		$(call c_list_var		,$(BASE),$(EXTN)) \
 	) \
 ))
@@ -3148,8 +3170,8 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 			$(filter-out $(c_base).$(EXTN_OUTPUT),$(FILE)) ,\
 			$(call PANDOC_FILES_OVERRIDE,,$(FILE),yml) \
 		),\
-			$(eval $($(PUBLISH)-cache-root).$(FILE): $($(PUBLISH)-cache-root)) \
-			$(eval $($(PUBLISH)-cache-root).$(FILE): ;) \
+			$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): $($(PUBLISH)-cache-root)) \
+			$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): ;) \
 		) \
 	) \
 )
@@ -4404,7 +4426,7 @@ To have different logos for different directories $(_E)(using [Recommended Workf
 #	no longer the best way to do this...
 $(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/presentations$(_D)
 $(CODEBLOCK)$(_C)cp$(_D) $(_N)$(EXPAND)/$(notdir $(COMPOSER_LOGO))$(_D) $(_M)./$(_D)
-$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/$(COMPOSER_CMS)/$(call COMPOSER_CONV,,$(CUSTOM_PRES_CSS))$(_D) $(_M)./.$(notdir $(COMPOSER_CUSTOM))-$(TYPE_PRES).css$(_D)
+$(CODEBLOCK)$(_C)ln$(_D) $(_N)-rs $(EXPAND)/$(call COMPOSER_CONV,$(COMPOSER_CMS)/,$(CUSTOM_PRES_CSS))$(_D) $(_M)./.$(notdir $(COMPOSER_CUSTOM))-$(TYPE_PRES).css$(_D)
 $(CODEBLOCK)$(_C)echo$(_D) $(_N)'$(_E)override c_type := $(TYPE_PRES)'$(_D) >>$(_M)./$(COMPOSER_SETTINGS)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)$(_D)
 
@@ -5529,12 +5551,16 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [cols_resize]   | `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`    $(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
 | [metainfo]      | `$(PUBLISH_METAINFO)`      $(if $(1),| `$(PUBLISH_METAINFO_ALT)`)
 | [metainfo_null] | `$(PUBLISH_METAINFO_NULL)` $(if $(1),| `$(PUBLISH_METAINFO_NULL_ALT)`)
-| [metalist] $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_PRINT)` $(if $(1),| title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_PRINT_ALT)`)
-| [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_PRINT)` $(if $(1),| title: `$(PUBLISH_METALIST_TITLE_ALT)` <br> display: `$(PUBLISH_METALIST_PRINT_ALT)`)
+| [metalist] $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_DISPLAY)` $(if $(1),| title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_DISPLAY_ALT)`)
+| [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_DISPLAY)` $(if $(1),| title: `$(PUBLISH_METALIST_TITLE_ALT)` <br> display: `$(PUBLISH_METALIST_DISPLAY_ALT)`)
 | [readtime]      | `$(PUBLISH_READTIME)`      $(if $(1),| `$(PUBLISH_READTIME_ALT)`)
 | [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`  $(if $(1),| `$(PUBLISH_READTIME_WPM_ALT)`)
+| [redirect] $(DIVIDE) title   | `$(PUBLISH_REDIRECT_TITLE)`   $(if $(1),| `$(PUBLISH_REDIRECT_TITLE_ALT)`)
+| [redirect] $(DIVIDE) display | `$(PUBLISH_REDIRECT_DISPLAY)` $(if $(1),| `$(PUBLISH_REDIRECT_DISPLAY_ALT)`)
+| [redirect] $(DIVIDE) match   | `$(PUBLISH_REDIRECT_MATCH)`   $(if $(1),| `$(PUBLISH_REDIRECT_MATCH_ALT)`)
+| [redirect] $(DIVIDE) time    | `$(PUBLISH_REDIRECT_TIME)`    $(if $(1),| `$(PUBLISH_REDIRECT_TIME_ALT)`)
 
-*(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured.)*
+*(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured.$(if $(1),  In this `$(word 3,$(PUBLISH_DIRS))` sub-directory$(COMMA) the [redirect].`match` option is not changed from default$(COMMA) in order to demonstrate the effects of the other [redirect].`*` options.))*
 
 | $(PUBLISH)-library | defaults $(if $(1),| values)
 |:---|:------|$(if $(1),:------|)
@@ -5585,6 +5611,7 @@ $(foreach FILE,\
 	metalist \
 	readtime \
 	readtime_wpm \
+	redirect \
 	\
 	folder \
 	auto_update \
@@ -5994,6 +6021,8 @@ $(PUBLISH_CMD_BEG) form sites $(COMPOSER_DOMAIN) $(PUBLISH_CMD_END)
 ## Frame
 
 #WORK
+#	the "../*" methodology breaks in COMPOSER_EXPORT... need a different option... ln -s ?
+#		also fix wherever else this shows up...
 #	these produce frames which potentially have their own scrollbars and/or player controls that can go fullscreen...
 #		fullscreen not working, now...?
 #	the example is the first youtube video ever posted...
@@ -6486,7 +6515,7 @@ $(.)$(EXAMPLE):
 
 .PHONY: $(.)$(EXAMPLE)$(.)yml
 $(.)$(EXAMPLE)$(.)yml:
-#>		| $(YQ_WRITE_OUT) 2>/dev/null
+#>		| $(YQ_WRITE_OUT) 2>/dev/null $(YQ_WRITE_OUT_COLOR)
 	@$(if $(COMPOSER_DOITALL_$(call /,$(@))),\
 			$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
 			$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
@@ -6802,6 +6831,21 @@ override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT
 $(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
 $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
 
+########################################
+
+.PHONY: redirect-$(CLEANER)
+redirect-$(CLEANER):
+	@$$(call $(COMPOSER_TINYNAME)-rm,\\
+		$$(CURDIR)/redirect.$(EXTN_HTML) \\
+	)
+
+.PHONY: redirect-$(DOITALL)
+redirect-$(DOITALL):
+	@$$(call $(COMPOSER_TINYNAME)-ln,\\
+		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
+		$$(CURDIR)/redirect.$(EXTN_HTML) \\
+	)
+
 ################################################################################
 endif
 ################################################################################
@@ -6862,17 +6906,17 @@ $(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIB
 
 ########################################
 
-.PHONY: redirects-$(CLEANER)
-redirects-$(CLEANER):
+.PHONY: redirect-$(CLEANER)
+redirect-$(CLEANER):
 	@$$(call $(COMPOSER_TINYNAME)-rm,\\
-		$$(CURDIR)/$(EXAMPLE).$(EXTN_HTML) \\
+		$$(CURDIR)/redirect.$(EXTN_HTML) \\
 	)
 
-.PHONY: redirects-$(DOITALL)
-redirects-$(DOITALL):
+.PHONY: redirect-$(DOITALL)
+redirect-$(DOITALL):
 	@$$(call $(COMPOSER_TINYNAME)-ln,\\
 		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
-		$$(CURDIR)/$(EXAMPLE).$(EXTN_HTML) \\
+		$$(CURDIR)/redirect.$(EXTN_HTML) \\
 	)
 
 ########################################
@@ -7082,13 +7126,18 @@ $(_S)#$(MARKER)$(_D) $(_C)metainfo_null$(_D):			$(_N)"$(_M)$(PUBLISH_METAINFO_NU
 $(_S)#$(MARKER)$(_D) $(_C)metalist$(_D):
 $(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_CREATORS)$(_D):
 $(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_CREATORS_PRINT))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_CREATORS_DISPLAY))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_METALIST)$(_D):
 $(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_METALIST_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METALIST_PRINT))$(_N)"$(_D)
-
+$(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METALIST_DISPLAY))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_READTIME))$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
+
+$(_S)#$(MARKER)$(_D) $(_C)redirect$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_DISPLAY)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)match$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_MATCH)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)time$(_D):				$(_M)$(PUBLISH_REDIRECT_TIME)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-library$(_D):
@@ -7513,12 +7562,17 @@ variables:
     metalist:
       $(PUBLISH_CREATORS):
         title:				"$(PUBLISH_CREATORS_TITLE$(if $(1),_MOD,_ALT))"
-        display:			"$(PUBLISH_CREATORS_PRINT$(if $(1),_MOD,_ALT))"
+        display:			"$(PUBLISH_CREATORS_DISPLAY$(if $(1),_MOD,_ALT))"
       $(PUBLISH_METALIST):
         title:				"$(PUBLISH_METALIST_TITLE$(if $(1),_MOD,_ALT))"
-        display:			"$(PUBLISH_METALIST_PRINT$(if $(1),_MOD,_ALT))"
+        display:			"$(PUBLISH_METALIST_DISPLAY$(if $(1),_MOD,_ALT))"
     readtime:				"$(PUBLISH_READTIME$(if $(1),_MOD,_ALT))"
     readtime_wpm:			$(PUBLISH_READTIME_WPM$(if $(1),_MOD,_ALT))
+    redirect:
+      title:				"$(PUBLISH_REDIRECT_TITLE$(if $(1),_MOD,_ALT))"
+      display:				"$(PUBLISH_REDIRECT_DISPLAY$(if $(1),_MOD,_ALT))"
+      match:				"$(PUBLISH_REDIRECT_MATCH$(if $(1),_MOD,_ALT))"
+      time:				$(PUBLISH_REDIRECT_TIME$(if $(1),_MOD,_ALT))
 
 ########################################
 
@@ -7953,6 +8007,16 @@ function $(PUBLISH)-metainfo-block {
 			fi
 			NUM="$$($${EXPR} $${NUM} + 1)"
 		done
+		$${ECHO} "$${META}" \\
+			| $${YQ_WRITE} " \\
+				del(.title) \\
+				| del(.pagetitle) \\
+				| del(.date) \\
+				$$(for FILE in $${COMPOSER_YML_DATA_METALIST}; do
+					$${ECHO} "| del(.\"$${FILE}\")"
+				done) \\
+				" 2>/dev/null \\
+			| COMPOSER_YML_DATA_PARSE
 		$${ECHO} "---\\n"
 	else
 		META_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo)"
@@ -10682,6 +10746,62 @@ $(call HEREDOC_CUSTOM_HTML_CSS,.reveal *)
 endef
 
 ########################################
+## {{{2 Heredoc: redirect **
+########################################
+
+########################################
+### {{{3 Heredoc: redirect_yml
+########################################
+
+override define HEREDOC_REDIRECT_YML =
+################################################################################
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(EXPORTS) $(DIVIDE) redirect)
+################################################################################
+
+variables:
+
+########################################
+
+  $(PUBLISH)-config:
+    header:				null
+    footer:				null
+
+########################################
+
+  $(PUBLISH)-library:
+    auto_update:			null
+
+########################################
+
+  $(PUBLISH)-nav-top:				null
+  $(PUBLISH)-nav-bottom:			null
+  $(PUBLISH)-nav-left:			null
+  $(PUBLISH)-nav-right:			null
+
+  $(PUBLISH)-info-top:			null
+  $(PUBLISH)-info-bottom:			null
+
+################################################################################
+# End Of File
+################################################################################
+endef
+
+########################################
+### {{{3 Heredoc: redirect_md
+########################################
+
+#> update: REDIRECT_[A-Z]*
+
+override define HEREDOC_REDIRECT_MD =
+---
+title: "$(if $(REDIRECT_TITLE),$(REDIRECT_TITLE): )$(REDIRECT_URL)"
+header-includes: |
+  <meta http-equiv="refresh" content="$(if $(REDIRECT_TIME),$(REDIRECT_TIME); )url=$(REDIRECT_URL)" />
+---
+$(subst <link>,[$(REDIRECT_URL)]($(REDIRECT_URL)),$(REDIRECT_DISPLAY))
+endef
+
+########################################
 ## {{{2 Heredoc: license
 ########################################
 
@@ -11869,7 +11989,7 @@ override define $(HEADERS) =
 	) \
 	$(call $(HEADERS)-table,$(3)) \
 		"$(_E)MAKECMDGOALS" \
-		"$(if $(MAKECMDGOALS),$(_N)$(MAKECMDGOALS)$(_D) )$(_S)$(DIVIDE)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
+		"$(if $(MAKECMDGOALS),$(_H)$(MAKECMDGOALS)$(_D) )$(_S)$(DIVIDE)$(_D) $(_M)$(strip $(if $(2),$(2),$(@))$(if $(COMPOSER_DOITALL_$(if $(2),$(2),$(@))),$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(2),$(2),$(@)))))"; \
 	$(if $(or $(COMPOSER_DEBUGIT),$(1)),$(foreach FILE,$($(HEADERS)-list-make),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
@@ -12055,7 +12175,7 @@ $(LISTING):
 ## {{{2 $(NOTHING)
 ########################################
 
-#WORK
+#WORKING:FIX
 #	move NOTHING_IGNORES to elsewhere...?
 
 #> validate: grep -E "[$][(]NOTHING[)][-]" Makefile
@@ -12116,6 +12236,9 @@ $(DISTRIB):
 ifeq ($(COMPOSER_DOITALL_$(DISTRIB)),$(DOITALL))
 	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)-$(DOITALL)
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)
+ifneq ($(COMPOSER_RELEASE),)
+	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)-$(TESTING)
+endif
 else
 	@$(MAKE) --makefile $(COMPOSER) $(CREATOR)
 endif
@@ -13724,6 +13847,9 @@ $(TESTING)-COMPOSER_INCLUDE-init:
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
 
+#WORKING:FIX
+#	is realpath required ...?
+
 override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(foreach FILE,\
 		$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))) \
@@ -14616,6 +14742,104 @@ endif
 ## {{{2 $(EXPORTS)
 ########################################
 
+#> $(EXPORTS)-$(@) > $(EXPORTS)-redirect-list > $(EXPORTS)-redirect-files
+
+########################################
+### {{{3 $(EXPORTS)-redirect-list
+########################################
+
+#> update: REDIRECT_[A-Z]*
+
+override REDIRECT_TITLE			:=
+override REDIRECT_DISPLAY		:=
+override REDIRECT_MATCH			:=
+override REDIRECT_TIME			:=
+
+override $(EXPORTS)-redirect-list :=
+override $(EXPORTS)-redirect-files :=
+ifneq ($(and \
+	$(c_site) ,\
+	$(filter \
+		$(EXPORTS)-redirect-% \
+		$(EXPORTS)-$(TARGETS) \
+		,\
+		$(MAKECMDGOALS) \
+	) \
+),)
+override REDIRECT_TITLE			:= $(call COMPOSER_YML_DATA_VAL,config.redirect.title)
+override REDIRECT_DISPLAY		:= $(call COMPOSER_YML_DATA_VAL,config.redirect.display)
+override REDIRECT_MATCH			:= $(call COMPOSER_YML_DATA_VAL,config.redirect.match)
+override REDIRECT_TIME			:= $(call COMPOSER_YML_DATA_VAL,config.redirect.time)
+
+#>$(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_MATCH),$(EXPORTS)-redirect)))
+#>	$(foreach FILE,$(filter $(subst *,%,$(REDIRECT_MATCH)),$(COMPOSER_EXPORTS_LIST)),
+override $(EXPORTS)-redirect-list := $(strip \
+	$(foreach FILE,$(filter $(subst *,%,$(REDIRECT_MATCH)),$(filter %.$(EXTN_HTML),$(COMPOSER_EXPORTS_LIST))),\
+		$(if $(filter $(realpath $(CURDIR)/$(FILE)),$(CURDIR)/$(FILE)),,$(call COMPOSER_CONV,,$(CURDIR)/$(FILE),1)) \
+	) \
+)
+override $(EXPORTS)-redirect-files := $(addprefix $(COMPOSER_EXPORT)/,$($(EXPORTS)-redirect-list))
+endif
+
+.PHONY: $(EXPORTS)-redirect-files
+$(EXPORTS)-redirect-files: $($(EXPORTS)-redirect-files)
+$(EXPORTS)-redirect-files:
+	@$(ECHO) ""
+
+########################################
+### {{{3 $(EXPORTS)-redirect-files
+########################################
+
+#> update: REDIRECT_[A-Z]*
+
+#>		$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),$(FILE))
+$(foreach FILE,$($(EXPORTS)-redirect-files),\
+	$(eval $(FILE): \
+		$(call $(COMPOSER_PANDOC)-dependencies) \
+		$(realpath $(CURDIR)/$(notdir $(FILE))) \
+	) \
+)
+$($(EXPORTS)-redirect-files):
+#>	@$(call $(HEADERS)-note,$(@),*,$(EXPORTS)-redirect)
+	@$(eval override REDIRECT_URL	:= $(shell $(REALPATH) $(CURDIR) $(realpath $(CURDIR)/$(notdir $(@))) 2>/dev/null))
+	@$(eval override c_base		:= $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(@)))))
+	@$(eval override c_list_file	:= $(COMPOSER_TMP)/$(EXPORTS)-redirect$(_)$(notdir $(@))$(COMPOSER_EXT_DEFAULT))
+	@$(call $(HEADERS)-action,$(CURDIR),$(notdir $(@)),$(REDIRECT_URL),$(EXPORTS))
+	@$(if $(REDIRECT_URL),,\
+		$(ECHO) "$(_F)"; \
+		$(LS) --dereference $(CURDIR)/$(notdir $(@)) || $(TRUE); \
+		$(ECHO) "$(_D)"; \
+		exit 1; \
+	)
+	@$(ECHO) "$(_S)"
+	@$(MKDIR) \
+		$(abspath $(dir $(c_base))) \
+		$(abspath $(dir $(c_list_file))) \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call DO_HEREDOC,HEREDOC_REDIRECT_MD)		>$(c_list_file)
+	@$(call DO_HEREDOC,HEREDOC_REDIRECT_YML)	>$(c_base).$(EXTN_HTML).yml
+	@$(SED) -n "1,/^---$$/p" $(c_list_file) \
+		| $(YQ_WRITE) ".header-includes" 2>/dev/null \
+		| $(call COMPOSER_YML_DATA_PARSE) \
+							>$(c_base).$(EXTN_HTML).header
+	@$(TOUCH) \
+		$(c_base).$(EXTN_HTML).yml \
+		$(c_base).$(EXTN_HTML).header \
+		$(c_list_file)
+	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) \
+		$(COMPOSER_PANDOC) \
+		c_site="1" \
+		c_type="$(TYPE_HTML)" \
+		c_base="$(c_base)" \
+		c_list="$(c_list_file)"
+	@$(ECHO) "$(_S)"
+	@$(RM) \
+		$(c_base).$(EXTN_HTML).yml \
+		$(c_base).$(EXTN_HTML).header \
+		$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+
 ########################################
 ### {{{3 $(EXPORTS)
 ########################################
@@ -14704,19 +14928,28 @@ ifneq ($(or \
 ),)
 	@$(call $(HEADERS)-action,$(CURDIR),,,$(EXPORTS))
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$($(@)),1,1) $($(DEBUGIT)-output)
+	@$(MKDIR) $(call COMPOSER_CONV,$(COMPOSER_EXPORT),$(CURDIR),1,1) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 	@$(RSYNC) \
 		--copy-links \
 		--delete-excluded \
 		$(foreach FILE,$(COMPOSER_SUBDIRS_LIST),--filter="P_/$(FILE)") \
-		$(foreach FILE,$(COMPOSER_EXPORTS_LIST),--filter="+_/$(FILE)") \
+		$(foreach FILE,$(COMPOSER_EXPORTS_LIST),\
+			$(if $(filter $(FILE),$(notdir $($(EXPORTS)-redirect-files))),\
+				--filter="P_$(FILE)" ,\
+				--filter="+_$(FILE)" \
+			)) \
 		--filter="-_/*" \
-		$(COMPOSER_ROOT)$(call COMPOSER_CONV,,$(CURDIR),1,1)/ \
-		$(COMPOSER_EXPORT)$(call COMPOSER_CONV,,$(CURDIR),1,1)
-#WORKING:FIX:SITEMAP
+		$(call COMPOSER_CONV,$(COMPOSER_ROOT),$(CURDIR),1,1)/ \
+		$(call COMPOSER_CONV,$(COMPOSER_EXPORT),$(CURDIR),1,1)
+ifneq ($(c_site),)
+	@$(MAKE) \
+		c_site="1" \
+		$(EXPORTS)-redirect-files
 endif
-	@$(ECHO) ""
+else
+	@$(MAKE) $(NOTHING)-$(EXPORTS)
+endif
 
 ########################################
 ### {{{3 $(EXPORTS)-$(PUBLISH)
@@ -14742,7 +14975,7 @@ ifneq ($(and \
 	$(_EXPORT_FIRE_PROJ) \
 ),)
 ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init)
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,$(EXPORTS))
 	@$(call FIREBASE_RUN) \
 		--interactive \
 		login
@@ -14752,7 +14985,7 @@ ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 		--interactive \
 		init hosting
 endif
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase)
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,,$(EXPORTS))
 	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
 		--account $(_EXPORT_FIRE_ACCT) \
@@ -14777,7 +15010,7 @@ endif
 
 .PHONY: $(EXPORTS)-$(CLEANER)
 $(EXPORTS)-$(CLEANER):
-	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories,,1)
+	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories,$(EXPORTS),1)
 	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
 		| while read -r FILE; do \
@@ -14791,11 +15024,9 @@ $(EXPORTS)-$(CLEANER):
 			$(ECHO) "$(_D)"; \
 		done; \
 	done
-	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files,,1)
+	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files,$(EXPORTS),1)
 	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
-		| $(SED) \
-			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
-			-e "/[.][/]$$/d"
+		| $(SED) "s|$(COMPOSER_EXPORT_REGEX)[/]||g"
 
 ################################################################################
 # {{{1 Composer Targets
@@ -14849,18 +15080,18 @@ endif
 .PHONY: $(PUBLISH)-$(CLEANER)-$(TARGETS)
 #>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 #>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root).*))
+#>$(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)$(_)*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS): $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*))
 $(PUBLISH)-$(CLEANER)-$(TARGETS):
 	@$(ECHO) ""
 
 #>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 #>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root).*))
+#>.PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)$(_)*))
 .PHONY: $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*))
 #>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-cache))
 #>$(addprefix $(PUBLISH)-$(CLEANER)-,$($(PUBLISH)-caches))
-#>$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root).*))
+#>$(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)$(_)*))
 $(addprefix $(PUBLISH)-$(CLEANER)-,$(wildcard $($(PUBLISH)-cache-root)*)) \
 :
 	@$(eval override $(@) := $(patsubst $(PUBLISH)-$(CLEANER)-%,%,$(@)))
@@ -15142,7 +15373,7 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 			$(SED) -n "1{/^---$$/p}" $${META} \
 		)" ]; then \
 			$(SED) -n "1,/^---$$/p" $${META} \
-			| $(YQ_WRITE) ".$(2)" \
+			| $(YQ_WRITE) ".\"$(2)\"" \
 			| $(call COMPOSER_YML_DATA_PARSE,,$(TOKEN)) \
 			| $(SED) "s|$(TOKEN)|\n|g" \
 			; \
@@ -15218,7 +15449,7 @@ $($(PUBLISH)-caches):
 	@$(eval $(@) := $(patsubst $($(PUBLISH)-cache).%.$(EXTN_HTML),%,$(@)))
 #> update: WILDCARD_YML
 	@$(call $(HEADERS)-note,$(abspath $(dir $($(PUBLISH)-cache))),$($(@)),$(PUBLISH)-cache,$(strip \
-		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root).%.$($(@)).$(EXTN_HTML),%,$(@))) \
+		$(if $(COMPOSER_YML_LIST_FILE),$(patsubst $($(PUBLISH)-cache-root)$(_)%.$($(@)).$(EXTN_HTML),%,$(@))) \
 	))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
@@ -15465,8 +15696,8 @@ override define $(PUBLISH)-library-metadata-create =
 	else \
 		$(ECHO) "{ \"$(COMPOSER_CMS)\": null }"; \
 	fi \
-		| $(YQ_WRITE) ". += { \"$(KEY_FILEPATH)\": \"$(2)\" }" 2>/dev/null \
 		| $(YQ_WRITE) ". += { \"$(KEY_UPDATED)\": \"$(call DATESTAMP)\" }" 2>/dev/null \
+		| $(YQ_WRITE) ". += { \"$(KEY_FILEPATH)\": \"$(2)\" }" 2>/dev/null \
 		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
 	$(ECHO) "," >>$(1); \
 	$(ECHO) "$(_D)"
@@ -16063,10 +16294,8 @@ override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_D)"
 endef
 
-#WORKING:FIX:SITEMAP
-#	https://stackoverflow.com/questions/5411538/how-to-redirect-one-html-page-to-another-on-load
-#		https://stackoverflow.com/questions/25410701/how-do-i-include-meta-tags-in-pandoc-generated-html
-#		<meta http-equiv="refresh" content="0; url=http://example.com/" />
+#WORKING:FIX
+#	contents hyperlink to "/" doesn't work...
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
@@ -16231,8 +16460,7 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 #>		" $($(PUBLISH)-library-index)
 #>		" 2>/dev/null
-	@\
-	NAME="$$( \
+	@NAME="$$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .[].[] |= with_entries(select(.value | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
@@ -17203,7 +17431,25 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),$(c_list))
 endif
 
+.PHONY: COMPOSER_TMP
+COMPOSER_TMP:
+	@$(ECHO) "$(_S)"
+ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+endif
+ifeq ($(c_type),$(TYPE_LPDF))
+	@$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output)
+endif
+ifeq ($(c_type),$(TYPE_PRES))
+ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+	@$(TOUCH) $(call COMPOSER_TMP_FILE).css
+endif
+endif
+	@$(ECHO) "$(_D)"
+
 ifneq ($(c_base),)
+$(c_base).$(EXTN_OUTPUT): COMPOSER_TMP
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
@@ -17215,9 +17461,6 @@ endif
 ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(call c_list_var)$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1)$(COMPOSER_EXT_DEFAULT),$(PUBLISH))
 	@$(eval override c_list_file := $(call COMPOSER_TMP_FILE)$(COMPOSER_EXT_DEFAULT))
-	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
 	@$(call $(PUBLISH)-$(TARGETS),$(c_list_file))
 	@$(foreach FILE,$(PUBLISH_SH_HELPERS),\
 		$(call $(PUBLISH)-$(TARGETS)-helpers,$(c_list_file),$(FILE)); \
@@ -17229,26 +17472,22 @@ ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
 endif
 ifeq ($(c_type),$(TYPE_LPDF))
 	@$(call $(HEADERS)-note,$(CURDIR),$(call c_list_var)$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1),$(TYPE_LPDF))
-	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
 endif
 ifeq ($(c_type),$(TYPE_PRES))
 ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(call c_list_var)$(_D) $(MARKER) $(_E)$(call COMPOSER_TMP_FILE,1).css,$(TYPE_PRES))
-	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 #> update: PANDOC_FILES
+	@$(ECHO) "$(_S)"
 	@$(CP) $(COMPOSER_CUSTOM)-$(c_type).css $(call COMPOSER_TMP_FILE).css $($(DEBUGIT)-output)
-	@$(call HEREDOC_CUSTOM_PRES_CSS_HACK) $(call COMPOSER_TMP_FILE).css
 	@$(ECHO) "$(_D)"
+	@$(call HEREDOC_CUSTOM_PRES_CSS_HACK) $(call COMPOSER_TMP_FILE).css
 endif
 endif
 	@$(ECHO) "$(_F)"
 	@$(PANDOC) $(call PANDOC_OPTIONS) $(if $(c_list_file),$(c_list_file),$(call c_list_var))
 	@$(ECHO) "$(_D)"
 ifeq ($(c_type),$(TYPE_HTML))
-	@$(call HEREDOC_CUSTOM_HTML_PANDOC_HACK) $(CURDIR)/$(@)
+	@$(call HEREDOC_CUSTOM_HTML_PANDOC_HACK) $(abspath $(@))
 endif
 ifneq ($(COMPOSER_KEEPING),)
 ifneq ($(COMPOSER_LOG),)
