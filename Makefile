@@ -12183,9 +12183,6 @@ $(LISTING):
 ## {{{2 $(NOTHING)
 ########################################
 
-#WORKING:FIX
-#	move NOTHING_IGNORES to elsewhere...?
-
 #> validate: grep -E "[$][(]NOTHING[)][-]" Makefile
 override NOTHING_IGNORES := \
 	$(TARGETS) \
@@ -12215,13 +12212,13 @@ $(NOTHING):
 
 .PHONY: $(NOTHING)-%
 $(NOTHING)-%:
-ifeq ($(COMPOSER_DEBUGIT),)
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(call $(HEADERS)-note,$(CURDIR),$(*),$(NOTHING))
+else
 	@$(if $(filter $(*),$(NOTHING_IGNORES)),\
 		$(ECHO) "" ,\
 		$(call $(HEADERS)-note,$(CURDIR),$(*),$(NOTHING)) \
 	)
-else
-	@$(call $(HEADERS)-note,$(CURDIR),$(*),$(NOTHING))
 endif
 
 ################################################################################
@@ -13856,9 +13853,6 @@ $(TESTING)-COMPOSER_INCLUDE-init:
 	@$(call $(TESTING)-make)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
 	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
-
-#WORKING:FIX
-#	is realpath required ...?
 
 override define $(TESTING)-COMPOSER_INCLUDE-init =
 	$(foreach FILE,\
