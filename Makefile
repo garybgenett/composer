@@ -14074,6 +14074,7 @@ $(TESTING)-CSS-init:
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_LPDF); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_LPDF)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_DOCX); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_DOCX)
 
+#> update: PANDOC_FILES
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH))));		$(call $(TESTING)-count,1,$(notdir $(WATERCSS_CSS_SOLAR_ALT)))
@@ -14082,7 +14083,7 @@ $(TESTING)-CSS-done:
 											$(call $(TESTING)-count,1,$(notdir $(BOOTSTRAP_ART_JS)))
 											$(call $(TESTING)-count,2,$(notdir $(BOOTSTRAP_ART_CSS)))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))));		$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
-											$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_HTML).css)
+											$(call $(TESTING)-count,1,$(notdir $(CUSTOM_HTML_CSS)))
 											$(call $(TESTING)-count,2,template.$(TMPL_HTML))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES))));		$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_DARK)))
 											$(call $(TESTING)-count,3,$(OUT_README).$(EXTN_PRES).[-0-9]+.css)
@@ -14092,7 +14093,7 @@ $(TESTING)-CSS-done:
 	$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
 	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(BOOTSWATCH_CSS_ALT)))
 	$(call $(TESTING)-count,14,--css=)
-	$(call $(TESTING)-count,1,$(notdir $(COMPOSER_CUSTOM))-$(TYPE_LPDF).header)
+	$(call $(TESTING)-count,1,$(notdir $(CUSTOM_LPDF_LATEX)))
 	$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
 
 ########################################
@@ -17431,8 +17432,8 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),$(c_list))
 endif
 
-.PHONY: COMPOSER_TMP
-COMPOSER_TMP:
+.PHONY: $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
+$(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)):
 	@$(ECHO) "$(_S)"
 ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
@@ -17449,7 +17450,7 @@ endif
 	@$(ECHO) "$(_D)"
 
 ifneq ($(c_base),)
-$(c_base).$(EXTN_OUTPUT): COMPOSER_TMP
+$(c_base).$(EXTN_OUTPUT): $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
