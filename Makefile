@@ -3834,17 +3834,24 @@ endef
 
 #> update: $(HELPOUT)-$(TARGETS)-format
 override define $(HELPOUT)-$(TARGETS)-format =
-	$(ECHO) "$(strip $(subst $(TOKEN), ,$(1)))" \
-	| $(TR) 'A-Z' 'a-z' \
-	| $(SED) \
-		-e "s|-|DASH|g" \
-		-e "s|_|UNDER|g" \
-	| $(SED) \
-		-e "s|[[:punct:]]||g" \
-		-e "s|[[:space:]]|-|g" \
-	| $(SED) \
-		-e "s|DASH|-|g" \
-		-e "s|UNDER|_|g"
+	FORMAT="$$( \
+		$(ECHO) "$(strip $(subst $(TOKEN), ,$(1)))" \
+		| $(TR) 'A-Z' 'a-z' \
+		| $(SED) \
+			-e "s|-|DASH|g" \
+			-e "s|_|UNDER|g" \
+		| $(SED) \
+			-e "s|[[:punct:]]||g" \
+			-e "s|[[:space:]]|-|g" \
+		| $(SED) \
+			-e "s|DASH|-|g" \
+			-e "s|UNDER|_|g" \
+	)"; \
+	if [ -n "$${FORMAT}" ]; then \
+		$(ECHO) "$${FORMAT}"; \
+	else \
+		$(ECHO) "$(1)"; \
+	fi
 endef
 
 ########################################
@@ -7860,17 +7867,24 @@ function COMPOSER_YML_DATA_PARSE {
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(HELPOUT)-$(TARGETS)-format {
-	$${ECHO} "$${@}" \\
-	| $${TR} 'A-Z' 'a-z' \\
-	| $${SED} \\
-		-e "s|-|DASH|g" \\
-		-e "s|_|UNDER|g" \\
-	| $${SED} \\
-		-e "s|[[:punct:]]||g" \\
-		-e "s|[[:space:]]|-|g" \\
-	| $${SED} \\
-		-e "s|DASH|-|g" \\
-		-e "s|UNDER|_|g"
+	FORMAT="$$(
+		$${ECHO} "$${@}" \\
+		| $${TR} 'A-Z' 'a-z' \\
+		| $${SED} \\
+			-e "s|-|DASH|g" \\
+			-e "s|_|UNDER|g" \\
+		| $${SED} \\
+			-e "s|[[:punct:]]||g" \\
+			-e "s|[[:space:]]|-|g" \\
+		| $${SED} \\
+			-e "s|DASH|-|g" \\
+			-e "s|UNDER|_|g" \\
+	)"
+	if [ -n "$${FORMAT}" ]; then
+		$${ECHO} "$${FORMAT}"
+	else
+		$${ECHO} "$${@}"
+	fi
 	return 0
 }
 
@@ -16145,8 +16159,7 @@ override $(PUBLISH)-library-sitemap-list := $(shell \
 			)"; \
 			FILE="$(COMPOSER_LIBRARY)/sitemap-$$( \
 				$(ECHO) "$${NAME}" \
-				| $(SED) \
-					-e "s|[/]|$(_)|g" \
+				| $(SED) "s|[/]|$(_)|g" \
 			)$(COMPOSER_EXT_SPECIAL)"; \
 			$(ECHO) "$${FILE}$(TOKEN)$${NAME}\n"; \
 		done \
@@ -16225,9 +16238,7 @@ $($(PUBLISH)-library-sitemap-src):
 			fi; \
 			{	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-sitemap $$( \
 						$(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(NAME)" \
-						| $(SED) \
-							-e "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
-							-e "s|[/][/]$$||g" \
+						| $(SED) "s|^$(if $(COMPOSER_LIBRARY_ANCHOR_LINKS),$(COMPOSER_LIBRARY_ROOT_REGEX),$(COMPOSER_ROOT_REGEX))[/]||g" \
 					) $(PUBLISH_CMD_END)\n\n"; \
 				$(ECHO) "$(PUBLISH_CMD_BEG) $(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(INCL),1,1) $(PUBLISH_CMD_END)\n\n"; \
 				$(ECHO) "$(PUBLISH_CMD_BEG) fold-end $(PUBLISH_CMD_END)\n"; \
@@ -16296,9 +16307,6 @@ override define $(PUBLISH)-library-sitemap-create =
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"
 endef
-
-#WORKING:FIX
-#	contents hyperlink to "/" doesn't work...
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
