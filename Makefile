@@ -12816,9 +12816,9 @@ endif
 .PHONY: $(DEBUGIT)
 ifneq ($(filter $(DEBUGIT),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
+export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
+export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 endif
-$(DEBUGIT): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
-$(DEBUGIT): export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(DEBUGIT): $(.)set_title-$(DEBUGIT)
 $(DEBUGIT): $(HEADERS)-$(DEBUGIT)
 $(DEBUGIT): $(DEBUGIT)-$(HEADERS)
@@ -12917,14 +12917,15 @@ $(DEBUGIT)-%:
 ########################################
 
 ifneq ($(filter $(DEBUGIT)-$(TOAFILE),$(MAKECMDGOALS)),)
+.NOTPARALLEL:
 export override COMPOSER_DOITALL_$(DEBUGIT) := file
 export override DEBUGIT_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(DEBUGIT))
 endif
 .PHONY: $(DEBUGIT)-$(TOAFILE)
 $(DEBUGIT)-$(TOAFILE): $(.)set_title-$(DEBUGIT)-$(TOAFILE)
+$(DEBUGIT)-$(TOAFILE): $(HEADERS)-$(DEBUGIT)
+$(DEBUGIT)-$(TOAFILE): $(DEBUGIT)-$(HEADERS)
 $(DEBUGIT)-$(TOAFILE):
-	@$(MAKE) $(HEADERS)-$(DEBUGIT)
-	@$(MAKE) $(DEBUGIT)-$(HEADERS)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
@@ -12955,9 +12956,9 @@ $(DEBUGIT)-$(TOAFILE):
 .PHONY: $(TESTING)
 ifneq ($(filter $(TESTING),$(MAKECMDGOALS)),)
 .NOTPARALLEL:
+export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
+export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 endif
-$(TESTING): export override COMPOSER_DOITALL_$(CHECKIT) := $(DOITALL)
-$(TESTING): export override COMPOSER_DOITALL_$(CONFIGS) := $(DOITALL)
 $(TESTING): $(.)set_title-$(TESTING)
 $(TESTING): $(HEADERS)-$(TESTING)
 $(TESTING): $(TESTING)-$(HEADERS)
@@ -13063,14 +13064,15 @@ $(TESTING)-$(PRINTER):
 ########################################
 
 ifneq ($(filter $(TESTING)-$(TOAFILE),$(MAKECMDGOALS)),)
+.NOTPARALLEL:
 export override COMPOSER_DOITALL_$(TESTING) := file
 export override TESTING_FILE := $(CURDIR)/$(call OUTPUT_FILENAME,$(TESTING))
 endif
 .PHONY: $(TESTING)-$(TOAFILE)
 $(TESTING)-$(TOAFILE): $(.)set_title-$(TESTING)-$(TOAFILE)
+$(TESTING)-$(TOAFILE): $(HEADERS)-$(TESTING)
+$(TESTING)-$(TOAFILE): $(TESTING)-$(HEADERS)
 $(TESTING)-$(TOAFILE):
-	@$(MAKE) $(HEADERS)-$(TESTING)
-	@$(MAKE) $(TESTING)-$(HEADERS)
 	@$(ENDOLINE)
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
