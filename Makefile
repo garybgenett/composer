@@ -3833,25 +3833,19 @@ endef
 ########################################
 
 #> update: $(HELPOUT)-$(TARGETS)-format
+
 override define $(HELPOUT)-$(TARGETS)-format =
-	FORMAT="$$( \
-		$(ECHO) "$(strip $(subst $(TOKEN), ,$(1)))" \
-		| $(TR) 'A-Z' 'a-z' \
-		| $(SED) \
-			-e "s|-|DASH|g" \
-			-e "s|_|UNDER|g" \
-		| $(SED) \
-			-e "s|[[:punct:]]||g" \
-			-e "s|[[:space:]]|-|g" \
-		| $(SED) \
-			-e "s|DASH|-|g" \
-			-e "s|UNDER|_|g" \
-	)"; \
-	if [ -n "$${FORMAT}" ]; then \
-		$(ECHO) "$${FORMAT}"; \
-	else \
-		$(ECHO) "$(1)"; \
-	fi
+	$(ECHO) "$(strip $(subst $(TOKEN), ,$(1)))" \
+	| $(TR) 'A-Z' 'a-z' \
+	| $(SED) \
+		-e "s|-|DASH|g" \
+		-e "s|_|UNDER|g" \
+	| $(SED) \
+		-e "s|[[:punct:]]||g" \
+		-e "s|[[:space:]]|-|g" \
+	| $(SED) \
+		-e "s|DASH|-|g" \
+		-e "s|UNDER|_|g"
 endef
 
 ########################################
@@ -7867,24 +7861,17 @@ function COMPOSER_YML_DATA_PARSE {
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(HELPOUT)-$(TARGETS)-format {
-	FORMAT="$$(
-		$${ECHO} "$${@}" \\
-		| $${TR} 'A-Z' 'a-z' \\
-		| $${SED} \\
-			-e "s|-|DASH|g" \\
-			-e "s|_|UNDER|g" \\
-		| $${SED} \\
-			-e "s|[[:punct:]]||g" \\
-			-e "s|[[:space:]]|-|g" \\
-		| $${SED} \\
-			-e "s|DASH|-|g" \\
-			-e "s|UNDER|_|g" \\
-	)"
-	if [ -n "$${FORMAT}" ]; then
-		$${ECHO} "$${FORMAT}"
-	else
-		$${ECHO} "$${@}"
-	fi
+	$${ECHO} "$${@}" \\
+	| $${TR} 'A-Z' 'a-z' \\
+	| $${SED} \\
+		-e "s|-|DASH|g" \\
+		-e "s|_|UNDER|g" \\
+	| $${SED} \\
+		-e "s|[[:punct:]]||g" \\
+		-e "s|[[:space:]]|-|g" \\
+	| $${SED} \\
+		-e "s|DASH|-|g" \\
+		-e "s|UNDER|_|g"
 	return 0
 }
 
@@ -9259,6 +9246,8 @@ _EOF_
 #### {{{4 $(PUBLISH)-header
 ########################################
 
+#> update: $(HELPOUT)-$(TARGETS)-format
+
 # 1 header level
 # 2 title				$${@:2} = $${2}++
 
@@ -9282,13 +9271,18 @@ function $(PUBLISH)-header {
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
+	TITLE="$$(
+		$${ECHO} "$${@:2}" | $${SED} "s|^(.*)$$(
+			$${ECHO} "$${HTML_HIDE}" \\
+			| $${SED} "s|([$${SED_ESCAPE_LIST}])|[\\1]|g"
+		)(.*)$$|\\1|g"
+	)"
+	ID="$$($(HELPOUT)-$(TARGETS)-format $${TITLE})"
+	if [ -z "$${ID}" ]; then
+		ID="$${TITLE}"
+	fi
 $${CAT} <<_EOF_
-<div id="$$($(HELPOUT)-$(TARGETS)-format $$(
-	$${ECHO} "$${@:2}" | $${SED} "s|^(.*)$$(
-		$${ECHO} "$${HTML_HIDE}" \\
-		| $${SED} "s|([$${SED_ESCAPE_LIST}])|[\\1]|g"
-	)(.*)$$|\\1|g"
-))">
+<div id="$${ID}">
 </div>
 _EOF_
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
@@ -15231,6 +15225,8 @@ endef
 #### {{{4 $(PUBLISH)-$(TARGETS)-contents
 ########################################
 
+#> update: $(HELPOUT)-$(TARGETS)-format
+
 #>			LIST_TXT="$${TXT}"; \
 #>			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then \
 #>				LIST_TXT="$$( ... )"; \
@@ -15268,12 +15264,16 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1]" 2>/dev/null)"; \
 			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\1|g")"; \
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
-			LNK="$$($(call $(HELPOUT)-$(TARGETS)-format,$$( \
+			TTL="$$( \
 				$(ECHO) "$${TXT}" | $(SED) "s|^(.*)$$( \
 					$(ECHO) "$(HTML_HIDE)" \
 					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 				)(.*)$$|\1|g" \
-			)))"; \
+			)"; \
+			LNK="$$($(call $(HELPOUT)-$(TARGETS)-format,$${TTL}))"; \
+			if [ -z "$${LNK}" ]; then \
+				LNK="$${TTL}"; \
+			fi; \
 		else \
 			if [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then MENU_HDR=; fi; \
 			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then LIST_HDR=; fi; \
