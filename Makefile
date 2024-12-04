@@ -357,6 +357,24 @@ ifeq ($(COMPOSER_DIR),$(CURDIR))
 override COMPOSER_RELEASE		:= 1
 endif
 
+#> update: includes duplicates
+override HELPOUT			:= help
+override EXAMPLE			:= template
+override PUBLISH			:= site
+
+export COMPOSER_RELEASE_EXAMPLE		?=
+ifneq ($(or \
+	$(filter \
+		$(HELPOUT)% \
+		$(PUBLISH)-$(EXAMPLE)% \
+		,\
+		$(MAKECMDGOALS) \
+	) ,\
+	$(COMPOSER_RELEASE_EXAMPLE) ,\
+),)
+export COMPOSER_RELEASE_EXAMPLE		:= 1
+endif
+
 #> update: TYPE_TARGETS
 override TYPE_DEFAULT			:= html
 override EXTN_DEFAULT			:= $(TYPE_DEFAULT)
@@ -878,11 +896,9 @@ override LIBRARY_ANCHOR_LINKS_MOD	:= null
 
 override LIBRARY_APPEND			:= null
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
-override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+#>override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
 override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
-endif
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
@@ -1364,12 +1380,8 @@ override GITIGNORE_LIST			:=
 ### {{{3 Date
 ########################################
 
-#> update: includes duplicates
-override EXAMPLE			:= template
-override PUBLISH			:= site
-
 override DATENOW			:= $(shell $(DATE) +%s)
-ifneq ($(filter $(PUBLISH)-$(EXAMPLE)%,$(MAKECMDGOALS)),)
+ifneq ($(COMPOSER_RELEASE_EXAMPLE),)
 #>override DATENOW			:= 1725260400
 override DATENOW			:= 1733284800
 endif
@@ -2709,6 +2721,7 @@ override PUBLISH_SH_LOCAL := \
 	$(TOKEN) \
 	\
 	YQ_WRITE \
+	YQ_WRITE_FILE \
 	COMPOSER_YML_DATA \
 	COMPOSER_YML_DATA_METALIST \
 	$(TOKEN) \
@@ -2727,11 +2740,12 @@ override PUBLISH_SH_RUN = \
 		$(filter-out $(TOKEN),$(PUBLISH_SH_LOCAL)) \
 		,\
 		$(if $(filter $(FILE),YQ_WRITE),			$(FILE)="$(subst ",,$($(FILE)))" ,\
+		$(if $(filter $(FILE),YQ_WRITE_FILE),			$(FILE)="$(subst ",,$($(FILE)))" ,\
 		$(if $(filter $(FILE),COMPOSER_YML_DATA),		$(FILE)='$(call YQ_EVAL_DATA_FORMAT,$($(FILE)))' ,\
 		$(if $(filter $(FILE),COMPOSER_LIBRARY_METADATA),	$(FILE)="$($(PUBLISH)-library-metadata)" ,\
 		$(if $(filter $(FILE),COMPOSER_LIBRARY_INDEX),		$(FILE)="$($(PUBLISH)-library-index)" ,\
 		$(FILE)="$($(FILE))" \
-		)))) \
+		))))) \
 	) \
 	$(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 
@@ -3692,13 +3706,13 @@ $(HELPOUT)-$(PRINTER):
 	)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Templates)"
 	@$(ENDOLINE); $(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
-	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(.)$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
-	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(.)$(EXAMPLE)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
-	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(.)$(EXAMPLE)$(.)yml	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)$(.)yml	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
-	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(.)$(EXAMPLE)$(.)md	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)$(.)md	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Defaults)"
 	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
 	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)				$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
@@ -6301,8 +6315,8 @@ override define PUBLISH_PAGE_PAGEONE =
 ---
 title: "Page #$(word 2,$(1)) in $(word 1,$(1))"
 date: $(word 1,$(1))$(PUBLISH_PAGES_DATE)
-$(PUBLISH_CREATORS): [$(COMPOSER_COMPOSER), Author 1, Author 2, Author 3]
-$(PUBLISH_METALIST): [Tag $(word 2,$(1)), Tag 1, Tag 2, Tag 3]
+$(PUBLISH_CREATORS): [ $(COMPOSER_COMPOSER), Author 1, Author 2, Author 3 ]
+$(PUBLISH_METALIST): [ Tag $(word 2,$(1)), Tag 1, Tag 2, Tag 3 ]
 ---
 $(if $(and \
 	$(filter $(word 1,$(1)),$(word 1,$(PUBLISH_PAGES_YEARS))) ,\
@@ -7525,7 +7539,7 @@ variables:
   $(PUBLISH)-library:
     folder:				$(notdir $(PUBLISH_LIBRARY))
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD)))
-$(if $(1),    digest_chars:			$(LIBRARY_DIGEST_CHARS_MOD)$(call NEWLINE))
+$(if $(1),    digest.chars:			$(LIBRARY_DIGEST_CHARS_MOD)$(call NEWLINE))
 ################################################################################
 # End Of File
 ################################################################################
@@ -7587,7 +7601,7 @@ variables:
       reorder:				[ $(strip $(PUBLISH_COLS_REORDER_L$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_R$(if $(1),_MOD,_ALT))	) ]
       size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
       resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
-    metainfo:				"$(PUBLISH_METAINFO_DISPLAY$(if $(1),_MOD,_ALT))"
+    metainfo:
       display:				"$(PUBLISH_METAINFO_DISPLAY$(if $(1),_MOD,_ALT))"
       null:				"$(PUBLISH_METAINFO_NULL$(if $(1),_MOD,_ALT))"
     metalist:
@@ -8043,7 +8057,7 @@ function $(PUBLISH)-metainfo-block {
 			NUM="$$($${EXPR} $${NUM} + 1)"
 		done
 		$${ECHO} "$${META}" \\
-			| $${YQ_WRITE} " \\
+			| $${YQ_WRITE_FILE} " \\
 				del(.title) \\
 				| del(.pagetitle) \\
 				| del(.date) \\
@@ -16225,7 +16239,7 @@ $($(PUBLISH)-library-sitemap):
 
 override define $(PUBLISH)-library-sitemap-file =
 	{	$(ECHO) "---\n"; \
-		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.sitemap_title)\n"; \
+		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.sitemap.title)\n"; \
 		$(ECHO) "date: $(call DATEMARK)\n"; \
 		$(ECHO) "---\n"; \
 		$(ECHO) "$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-library-sitemap-src)) $(PUBLISH_CMD_END)\n"; \
@@ -16733,7 +16747,8 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 	)
 	@$(ECHO) "$(_D)"
 	@$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(PUBLISH_ROOT),$(COMPOSER_DEBUGIT))
-	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
+#>	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR))
+	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) \
 		--directory $(PUBLISH_ROOT) \
 		--makefile $(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(MAKEFILE) \
 		$(INSTALL)-$(DOFORCE)
@@ -16860,6 +16875,7 @@ else
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS,,1)	>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 else
@@ -17116,12 +17132,13 @@ ifneq ($(COMPOSER_DEBUGIT),)
 		$(call NEWLINE) \
 	)
 else
+#>		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR))
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
 		$(PUBLISH)-$(DOFORCE) \
 		$(if $(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)),,$(PUBLISH)-$(DOFORCE)) \
 		,\
-		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
+		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) \
 			--directory $(PUBLISH_ROOT) \
 			$(FILE); \
 		$(call NEWLINE) \
@@ -17200,6 +17217,7 @@ $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS)):
 ### {{{3 $(INSTALL)-%
 ########################################
 
+#>		$(call ENV_MAKE)
 override define $(INSTALL)-$(MAKEFILE) =
 	if	[ -f "$(1)" ] && \
 		[ -z "$(4)" ]; \
@@ -17207,7 +17225,11 @@ override define $(INSTALL)-$(MAKEFILE) =
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(call ENV_MAKE) --directory $(abspath $(dir $(1))) --makefile $(COMPOSER) $(EXAMPLE)$(2) >$(1); \
+		$(call ENV_MAKE,,,,COMPOSER_RELEASE_EXAMPLE) \
+			--directory $(abspath $(dir $(1))) \
+			--makefile $(COMPOSER) \
+			$(EXAMPLE)$(2) \
+			>$(1); \
 		if [ -n "$(3)" ]; then \
 			$(SED) -i \
 				"s|^($(call COMPOSER_REGEX_OVERRIDE,COMPOSER_TEACHER)).*$$|\1 \$$(abspath \$$(COMPOSER_MY_PATH)/`$(REALPATH) $(abspath $(dir $(1))) $(3)`)|g" \
