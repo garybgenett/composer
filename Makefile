@@ -7539,7 +7539,7 @@ variables:
   $(PUBLISH)-library:
     folder:				$(notdir $(PUBLISH_LIBRARY))
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD)))
-$(if $(1),    digest.chars:			$(LIBRARY_DIGEST_CHARS_MOD)$(call NEWLINE))
+$(if $(1),    digest:$(call NEWLINE)      chars:				$(LIBRARY_DIGEST_CHARS_MOD)$(call NEWLINE))
 ################################################################################
 # End Of File
 ################################################################################
