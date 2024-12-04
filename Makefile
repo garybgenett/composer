@@ -179,7 +179,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 ## {{{2 PUBLISH
 #
 #	* Check: `git diff main Makefile`
-#	* Update: COMPOSER_VERSION + COMPOSER_RELDATE
+#	* Update: COMPOSER_VERSION + COMPOSER_RELDATE + DATENOW
 #	* Release: `rm -frv {.[^.],}*; make +release-all`
 #	* Verify: `git diff main`
 #	* Commit: `git commit`, `git tag`
@@ -1364,9 +1364,15 @@ override GITIGNORE_LIST			:=
 ### {{{3 Date
 ########################################
 
+#> update: includes duplicates
+override EXAMPLE			:= template
+override PUBLISH			:= site
+
 override DATENOW			:= $(shell $(DATE) +%s)
-#WORKING:FIX
-override DATENOW			:= 1725260400
+ifneq ($(filter $(PUBLISH)-$(EXAMPLE)%,$(MAKECMDGOALS)),)
+#>override DATENOW			:= 1725260400
+override DATENOW			:= 1733284800
+endif
 
 override DATESTAMP			= $(shell $(DATE) --date="@$(DATENOW)" --iso=seconds)
 override DATEMARK			= $(shell $(DATE) --date="@$(DATENOW)" +%Y-%m-%d)
@@ -5429,7 +5435,7 @@ override PUBLISH_PAGE_1_NAME		:= Introduction
 override define PUBLISH_PAGE_1 =
 ---
 title: $(PUBLISH_PAGE_1_NAME)
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5664,7 +5670,7 @@ override PUBLISH_PAGE_2_NAME		:= Default Site
 override define PUBLISH_PAGE_2 =
 ---
 title: $(PUBLISH_PAGE_2_NAME)
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5739,7 +5745,7 @@ endef
 override define PUBLISH_PAGE_3 =
 ---
 title: $(PUBLISH_PAGE_3_NAME)
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -5828,7 +5834,7 @@ override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
 override define PUBLISH_PAGE_EXAMPLE =
 ---
 title: $(PUBLISH_PAGE_EXAMPLE_NAME)
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main$(if $(1),$(COMMA) $(DONOTDO)$(COMPOSER_EXT_DEFAULT)) ]
 ---
@@ -6264,7 +6270,7 @@ override PUBLISH_PAGE_PAGEDIR_NAME	:= Metainfo Page
 override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
 title: $(PUBLISH_PAGE_PAGEDIR_NAME)
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -6321,7 +6327,7 @@ override PUBLISH_PAGE_SHOWDIR_NAME	:= Themes & Overlays
 override define PUBLISH_PAGE_SHOWDIR =
 ---
 title: $(PUBLISH_PAGE_SHOWDIR_NAME)
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -6412,7 +6418,7 @@ endef
 override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 ---
 title: $(LIBRARY_DIGEST_TITLE$(1))
-date: $(COMPOSER_RELDATE)
+date: $(call DATEMARK)
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
