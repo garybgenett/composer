@@ -819,9 +819,9 @@ override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 
 #> talk: 183 / read: 234
-override PUBLISH_METAINFO		:= <date> $(DIVIDE) <title><|> -- <author|; >
-override PUBLISH_METAINFO_ALT		:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author| -- >*<br>*. <tags| . >*
-override PUBLISH_METAINFO_MOD		:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author>*<br>*. <tags>*
+override PUBLISH_METAINFO_DISPLAY	:= <date> $(DIVIDE) <title><|> -- <author|; >
+override PUBLISH_METAINFO_DISPLAY_ALT	:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author| -- >*<br>*. <tags| . >*
+override PUBLISH_METAINFO_DISPLAY_MOD	:= <title>$(HTML_SPACE)$(HTML_SPACE)*(<date>)*<|><br>*-- <author>*<br>*. <tags>*
 override PUBLISH_METAINFO_NULL		:= *(none)*
 override PUBLISH_METAINFO_NULL_ALT	:= null
 override PUBLISH_METAINFO_NULL_MOD	:= $(PUBLISH_METAINFO_NULL_ALT)
@@ -842,9 +842,9 @@ override PUBLISH_METALIST_TITLE_MOD	:= null
 override PUBLISH_METALIST_DISPLAY	:= *Tags: <|>, <|>*
 override PUBLISH_METALIST_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_METALIST_DISPLAY_MOD	:= null
-override PUBLISH_READTIME		:= *Reading time: <word> words, <time> minutes*
-override PUBLISH_READTIME_ALT		:= *Words: <word> / Minutes: <time>*
-override PUBLISH_READTIME_MOD		:= $(PUBLISH_READTIME_ALT)
+override PUBLISH_READTIME_DISPLAY	:= *Reading time: <word> words, <time> minutes*
+override PUBLISH_READTIME_DISPLAY_ALT	:= *Words: <word> / Minutes: <time>*
+override PUBLISH_READTIME_DISPLAY_MOD	:= $(PUBLISH_READTIME_DISPLAY_ALT)
 override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 override PUBLISH_READTIME_WPM_MOD	:= $(PUBLISH_READTIME_WPM_ALT)
@@ -2367,14 +2367,6 @@ endif
 
 override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
 
-#WORKING:FIX:CONFIG
-#	break up into sub-lists, like "search":
-#		cols?
-#		metainfo?
-#		readtime?
-#		library.digest
-#		library.lists
-#		library.sitemap
 override define COMPOSER_YML_DATA_SKEL =
 { variables: {
   title-prefix:				null,
@@ -2397,15 +2389,19 @@ override define COMPOSER_YML_DATA_SKEL =
     css_overlay:			$(PUBLISH_CSS_OVERLAY),
     copy_protect:			$(PUBLISH_COPY_PROTECT),
 
-    cols_break:				$(PUBLISH_COLS_BREAK),
-    cols_scroll:			$(PUBLISH_COLS_SCROLL),
-    cols_order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ],
-    cols_reorder:			[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
-    cols_size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
-    cols_resize:			[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
+    cols: {
+      break:				$(PUBLISH_COLS_BREAK),
+      scroll:				$(PUBLISH_COLS_SCROLL),
+      order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ],
+      reorder:				[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
+      size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
+      resize:				[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
+    },
 
-    metainfo:				"$(PUBLISH_METAINFO)",
-    metainfo_null:			"$(PUBLISH_METAINFO_NULL)",
+    metainfo: {
+      display:				"$(PUBLISH_METAINFO_DISPLAY)",
+      null:				"$(PUBLISH_METAINFO_NULL)",
+    },
     metalist: {
       $(PUBLISH_CREATORS): {
         title:				"$(PUBLISH_CREATORS_TITLE)",
@@ -2416,8 +2412,10 @@ override define COMPOSER_YML_DATA_SKEL =
         display:			"$(PUBLISH_METALIST_DISPLAY)",
       },
     },
-    readtime:				"$(PUBLISH_READTIME)",
-    readtime_wpm:			$(PUBLISH_READTIME_WPM),
+    readtime: {
+      display:				"$(PUBLISH_READTIME_DISPLAY)",
+      wpm:				$(PUBLISH_READTIME_WPM),
+    },
 
     redirect: {
       title:				"$(PUBLISH_REDIRECT_TITLE)",
@@ -2434,20 +2432,26 @@ override define COMPOSER_YML_DATA_SKEL =
 
     append:				$(LIBRARY_APPEND),
 
-    digest_title:			"$(LIBRARY_DIGEST_TITLE)",
-    digest_continue:			"$(LIBRARY_DIGEST_CONTINUE)",
-    digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
-    digest_chars:			$(LIBRARY_DIGEST_CHARS),
-    digest_count:			$(LIBRARY_DIGEST_COUNT),
-    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED),
-    digest_spacer:			$(LIBRARY_DIGEST_SPACER),
+    digest: {
+      title:				"$(LIBRARY_DIGEST_TITLE)",
+      continue:				"$(LIBRARY_DIGEST_CONTINUE)",
+      permalink:			"$(LIBRARY_DIGEST_PERMALINK)",
+      chars:				$(LIBRARY_DIGEST_CHARS),
+      count:				$(LIBRARY_DIGEST_COUNT),
+      expanded:				$(LIBRARY_DIGEST_EXPANDED),
+      spacer:				$(LIBRARY_DIGEST_SPACER),
+    },
 
-    lists_expanded:			$(LIBRARY_LISTS_EXPANDED),
-    lists_spacer:			$(LIBRARY_LISTS_SPACER),
+    lists: {
+      expanded:				$(LIBRARY_LISTS_EXPANDED),
+      spacer:				$(LIBRARY_LISTS_SPACER),
+    },
 
-    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE)",
-    sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED),
-    sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER),
+    sitemap: {
+      title:				"$(LIBRARY_SITEMAP_TITLE)",
+      expanded:				$(LIBRARY_SITEMAP_EXPANDED),
+      spacer:				$(LIBRARY_SITEMAP_SPACER),
+    },
   },
 
   $(PUBLISH)-nav-top:				null,
@@ -5530,57 +5534,59 @@ endef
 #	note on example page about logo/icon
 
 override define PUBLISH_PAGE_1_CONFIGS =
-| $(PUBLISH)-config | defaults $(if $(1),| values)
+| $(PUBLISH)-config			| defaults						$(if $(1),| values)
 |:---|:------|$(if $(1),:------|)
-| [brand]                 | null $(if $(1),| null)
-| [homepage]              | null $(if $(1),| null)
-| [search] $(DIVIDE) name | null $(if $(1),| null)
-| [search] $(DIVIDE) site | null $(if $(1),| null)
-| [search] $(DIVIDE) call | null $(if $(1),| null)
-| [search] $(DIVIDE) form | null $(if $(1),| null)
-| [copyright]             | null $(if $(1),| null)
-| [$(COMPOSER_TINYNAME)][$(.)$(COMPOSER_TINYNAME)] | `$(PUBLISH_COMPOSER)` $(if $(1),| `$(PUBLISH_COMPOSER_ALT)`)
-| [header]        | `$(PUBLISH_HEADER)`        $(if $(1),| `$(PUBLISH_HEADER_ALT)`)
-| [footer]        | `$(PUBLISH_FOOTER)`        $(if $(1),| `$(PUBLISH_FOOTER_ALT)`)
-| [css_overlay]   | `$(PUBLISH_CSS_OVERLAY)`   $(if $(1),| `$(PUBLISH_CSS_OVERLAY_ALT)`)
-| [copy_protect]  | `$(PUBLISH_COPY_PROTECT)`  $(if $(1),| `$(PUBLISH_COPY_PROTECT_ALT)`)
-| [cols_break]    | `$(PUBLISH_COLS_BREAK)`    $(if $(1),| `$(PUBLISH_COLS_BREAK_ALT)`)
-| [cols_scroll]   | `$(PUBLISH_COLS_SCROLL)`   $(if $(1),| `$(PUBLISH_COLS_SCROLL_ALT)`)
-| [cols_order]    | `[ $(PUBLISH_COLS_ORDER_L)$(COMMA) $(PUBLISH_COLS_ORDER_C)$(COMMA) $(PUBLISH_COLS_ORDER_R) ]`       $(if $(1),| `[ $(PUBLISH_COLS_ORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_ORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_ORDER_R_ALT) ]`)
-| [cols_reorder]  | `[ $(PUBLISH_COLS_REORDER_L)$(COMMA) $(PUBLISH_COLS_REORDER_C)$(COMMA) $(PUBLISH_COLS_REORDER_R) ]` $(if $(1),| `[ $(PUBLISH_COLS_REORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_R_ALT) ]`)
-| [cols_size]     | `[ $(PUBLISH_COLS_SIZE_L)$(COMMA) $(PUBLISH_COLS_SIZE_C)$(COMMA) $(PUBLISH_COLS_SIZE_R) ]`          $(if $(1),| `[ $(PUBLISH_COLS_SIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_R_ALT) ]`)
-| [cols_resize]   | `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`    $(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
-| [metainfo]      | `$(PUBLISH_METAINFO)`      $(if $(1),| `$(PUBLISH_METAINFO_ALT)`)
-| [metainfo_null] | `$(PUBLISH_METAINFO_NULL)` $(if $(1),| `$(PUBLISH_METAINFO_NULL_ALT)`)
-| [metalist] $(DIVIDE) $(PUBLISH_CREATORS) | *title:* `$(PUBLISH_CREATORS_TITLE)` <br> *display:* `$(PUBLISH_CREATORS_DISPLAY)` $(if $(1),| title: `$(PUBLISH_CREATORS_TITLE_ALT)` <br> display: `$(PUBLISH_CREATORS_DISPLAY_ALT)`)
-| [metalist] $(DIVIDE) $(PUBLISH_METALIST) | *title:* `$(PUBLISH_METALIST_TITLE)` <br> *display:* `$(PUBLISH_METALIST_DISPLAY)` $(if $(1),| title: `$(PUBLISH_METALIST_TITLE_ALT)` <br> display: `$(PUBLISH_METALIST_DISPLAY_ALT)`)
-| [readtime]      | `$(PUBLISH_READTIME)`      $(if $(1),| `$(PUBLISH_READTIME_ALT)`)
-| [readtime_wpm]  | `$(PUBLISH_READTIME_WPM)`  $(if $(1),| `$(PUBLISH_READTIME_WPM_ALT)`)
-| [redirect] $(DIVIDE) title   | `$(PUBLISH_REDIRECT_TITLE)`   $(if $(1),| `$(PUBLISH_REDIRECT_TITLE_ALT)`)
-| [redirect] $(DIVIDE) display | `$(PUBLISH_REDIRECT_DISPLAY)` $(if $(1),| `$(PUBLISH_REDIRECT_DISPLAY_ALT)`)
-| [redirect] $(DIVIDE) match   | `$(PUBLISH_REDIRECT_MATCH)`   $(if $(1),| `$(PUBLISH_REDIRECT_MATCH_ALT)`)
-| [redirect] $(DIVIDE) time    | `$(PUBLISH_REDIRECT_TIME)`    $(if $(1),| `$(PUBLISH_REDIRECT_TIME_ALT)`)
+| [brand]			| `null`						$(if $(1),| `null`)
+| [homepage]			| `null`						$(if $(1),| `null`)
+| [search.name]			| `null`						$(if $(1),| `null`)
+| [search.site]			| `null`						$(if $(1),| `null`)
+| [search.call]			| `null`						$(if $(1),| `null`)
+| [search.form]			| `null`						$(if $(1),| `null`)
+| [copyright]			| `null`						$(if $(1),| `null`)
+| [$(COMPOSER_TINYNAME)][$(.)$(COMPOSER_TINYNAME)]		| `$(PUBLISH_COMPOSER)`							$(if $(1),| `$(PUBLISH_COMPOSER_ALT)`)
+| [header]			| `$(PUBLISH_HEADER)`						$(if $(1),| `$(PUBLISH_HEADER_ALT)`)
+| [footer]			| `$(PUBLISH_FOOTER)`						$(if $(1),| `$(PUBLISH_FOOTER_ALT)`)
+| [css_overlay]			| `$(PUBLISH_CSS_OVERLAY)`						$(if $(1),| `$(PUBLISH_CSS_OVERLAY_ALT)`)
+| [copy_protect]		| `$(PUBLISH_COPY_PROTECT)`						$(if $(1),| `$(PUBLISH_COPY_PROTECT_ALT)`)
+| [cols.break]			| `$(PUBLISH_COLS_BREAK)`							$(if $(1),| `$(PUBLISH_COLS_BREAK_ALT)`)
+| [cols.scroll]			| `$(PUBLISH_COLS_SCROLL)`							$(if $(1),| `$(PUBLISH_COLS_SCROLL_ALT)`)
+| [cols.order]			| `[ $(PUBLISH_COLS_ORDER_L)$(COMMA) $(PUBLISH_COLS_ORDER_C)$(COMMA) $(PUBLISH_COLS_ORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_ORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_ORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_ORDER_R_ALT) ]`)
+| [cols.reorder]		| `[ $(PUBLISH_COLS_REORDER_L)$(COMMA) $(PUBLISH_COLS_REORDER_C)$(COMMA) $(PUBLISH_COLS_REORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_REORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_R_ALT) ]`)
+| [cols.size]			| `[ $(PUBLISH_COLS_SIZE_L)$(COMMA) $(PUBLISH_COLS_SIZE_C)$(COMMA) $(PUBLISH_COLS_SIZE_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_SIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_R_ALT) ]`)
+| [cols.resize]			| `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`					$(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
+| [metainfo.display]		| `$(PUBLISH_METAINFO_DISPLAY)`			$(if $(1),| `$(PUBLISH_METAINFO_DISPLAY_ALT)`)
+| [metainfo.null]		| `$(PUBLISH_METAINFO_NULL)`						$(if $(1),| `$(PUBLISH_METAINFO_NULL_ALT)`)
+| [metalist.$(PUBLISH_CREATORS).title]	| `$(PUBLISH_CREATORS_TITLE)`						$(if $(1),| `$(PUBLISH_CREATORS_TITLE_ALT)`)
+| [metalist.$(PUBLISH_CREATORS).display]	| `$(PUBLISH_CREATORS_DISPLAY)`					$(if $(1),| `$(PUBLISH_CREATORS_DISPLAY_ALT)`)
+| [metalist.$(PUBLISH_METALIST).title]		| `$(PUBLISH_METALIST_TITLE)`							$(if $(1),| `$(PUBLISH_METALIST_TITLE_ALT)`)
+| [metalist.$(PUBLISH_METALIST).display]	| `$(PUBLISH_METALIST_DISPLAY)`					$(if $(1),| `$(PUBLISH_METALIST_DISPLAY_ALT)`)
+| [readtime.display]		| `$(PUBLISH_READTIME_DISPLAY)`	$(if $(1),| `$(PUBLISH_READTIME_DISPLAY_ALT)`)
+| [readtime.wpm]		| `$(PUBLISH_READTIME_WPM)`							$(if $(1),| `$(PUBLISH_READTIME_WPM_ALT)`)
+| [redirect.title]		| `$(PUBLISH_REDIRECT_TITLE)`						$(if $(1),| `$(PUBLISH_REDIRECT_TITLE_ALT)`)
+| [redirect.display]		| `$(PUBLISH_REDIRECT_DISPLAY)`	$(if $(1),| `$(PUBLISH_REDIRECT_DISPLAY_ALT)`)
+| [redirect.match]		| `$(PUBLISH_REDIRECT_MATCH)`							$(if $(1),| `$(PUBLISH_REDIRECT_MATCH_ALT)`)
+| [redirect.time]		| `$(PUBLISH_REDIRECT_TIME)`							$(if $(1),| `$(PUBLISH_REDIRECT_TIME_ALT)`)
 
 *(For this test site, the [brand], [homepage], [search], and [copyright] options have all been configured.$(if $(1),  In this `$(word 3,$(PUBLISH_DIRS))` sub-directory$(COMMA) the [redirect].`match` option is not changed from default$(COMMA) in order to demonstrate the effects of the other [redirect].`*` options.))*
 
-| $(PUBLISH)-library | defaults $(if $(1),| values)
+| $(PUBLISH)-library		| defaults			$(if $(1),| values)
 |:---|:------|$(if $(1),:------|)
-| [folder]           | `$(LIBRARY_FOLDER)`           $(if $(1),| `$(notdir $(PUBLISH_LIBRARY_ALT))`)
-| [auto_update]      | `$(LIBRARY_AUTO_UPDATE)`      $(if $(1),| `$(LIBRARY_AUTO_UPDATE_ALT)`)
-| [anchor_links]     | `$(LIBRARY_ANCHOR_LINKS)`     $(if $(1),| `$(LIBRARY_ANCHOR_LINKS_ALT)`)
-| [append]           | `$(LIBRARY_APPEND)`           $(if $(1),| `$(LIBRARY_APPEND_ALT)`)
-| [digest_title]     | `$(LIBRARY_DIGEST_TITLE)`     $(if $(1),| `$(LIBRARY_DIGEST_TITLE_ALT)`)
-| [digest_continue]  | `$(LIBRARY_DIGEST_CONTINUE)`  $(if $(1),| `$(LIBRARY_DIGEST_CONTINUE_ALT)`)
-| [digest_permalink] | `$(LIBRARY_DIGEST_PERMALINK)` $(if $(1),| `$(LIBRARY_DIGEST_PERMALINK_ALT)`)
-| [digest_chars]     | `$(LIBRARY_DIGEST_CHARS)`     $(if $(1),| `$(LIBRARY_DIGEST_CHARS_ALT)`)
-| [digest_count]     | `$(LIBRARY_DIGEST_COUNT)`     $(if $(1),| `$(LIBRARY_DIGEST_COUNT_ALT)`)
-| [digest_expanded]  | `$(LIBRARY_DIGEST_EXPANDED)`  $(if $(1),| `$(LIBRARY_DIGEST_EXPANDED_ALT)`)
-| [digest_spacer]    | `$(LIBRARY_DIGEST_SPACER)`    $(if $(1),| `$(LIBRARY_DIGEST_SPACER_ALT)`)
-| [lists_expanded]   | `$(LIBRARY_LISTS_EXPANDED)`   $(if $(1),| `$(LIBRARY_LISTS_EXPANDED_ALT)`)
-| [lists_spacer]     | `$(LIBRARY_LISTS_SPACER)`     $(if $(1),| `$(LIBRARY_LISTS_SPACER_ALT)`)
-| [sitemap_title]    | `$(LIBRARY_SITEMAP_TITLE)`    $(if $(1),| `$(LIBRARY_SITEMAP_TITLE_ALT)`)
-| [sitemap_expanded] | `$(LIBRARY_SITEMAP_EXPANDED)` $(if $(1),| `$(LIBRARY_SITEMAP_EXPANDED_ALT)`)
-| [sitemap_spacer]   | `$(LIBRARY_SITEMAP_SPACER)`   $(if $(1),| `$(LIBRARY_SITEMAP_SPACER_ALT)`)
+| [folder]		| `$(LIBRARY_FOLDER)`			$(if $(1),| `$(notdir $(PUBLISH_LIBRARY_ALT))`)
+| [auto_update]		| `$(LIBRARY_AUTO_UPDATE)`			$(if $(1),| `$(LIBRARY_AUTO_UPDATE_ALT)`)
+| [anchor_links]	| `$(LIBRARY_ANCHOR_LINKS)`				$(if $(1),| `$(LIBRARY_ANCHOR_LINKS_ALT)`)
+| [append]		| `$(LIBRARY_APPEND)`			$(if $(1),| `$(LIBRARY_APPEND_ALT)`)
+| [digest.title]	| `$(LIBRARY_DIGEST_TITLE)`		$(if $(1),| `$(LIBRARY_DIGEST_TITLE_ALT)`)
+| [digest.continue]	| `$(LIBRARY_DIGEST_CONTINUE)`			$(if $(1),| `$(LIBRARY_DIGEST_CONTINUE_ALT)`)
+| [digest.permalink]	| `$(LIBRARY_DIGEST_PERMALINK)`	$(if $(1),| `$(LIBRARY_DIGEST_PERMALINK_ALT)`)
+| [digest.chars]	| `$(LIBRARY_DIGEST_CHARS)`			$(if $(1),| `$(LIBRARY_DIGEST_CHARS_ALT)`)
+| [digest.count]	| `$(LIBRARY_DIGEST_COUNT)`				$(if $(1),| `$(LIBRARY_DIGEST_COUNT_ALT)`)
+| [digest.expanded]	| `$(LIBRARY_DIGEST_EXPANDED)`				$(if $(1),| `$(LIBRARY_DIGEST_EXPANDED_ALT)`)
+| [digest.spacer]	| `$(LIBRARY_DIGEST_SPACER)`				$(if $(1),| `$(LIBRARY_DIGEST_SPACER_ALT)`)
+| [lists.expanded]	| `$(LIBRARY_LISTS_EXPANDED)`				$(if $(1),| `$(LIBRARY_LISTS_EXPANDED_ALT)`)
+| [lists.spacer]	| `$(LIBRARY_LISTS_SPACER)`				$(if $(1),| `$(LIBRARY_LISTS_SPACER_ALT)`)
+| [sitemap.title]	| `$(LIBRARY_SITEMAP_TITLE)`			$(if $(1),| `$(LIBRARY_SITEMAP_TITLE_ALT)`)
+| [sitemap.expanded]	| `$(LIBRARY_SITEMAP_EXPANDED)`				$(if $(1),| `$(LIBRARY_SITEMAP_EXPANDED_ALT)`)
+| [sitemap.spacer]	| `$(LIBRARY_SITEMAP_SPACER)`				$(if $(1),| `$(LIBRARY_SITEMAP_SPACER_ALT)`)
 
 *(For this test site, the $(if $(1),default )library [folder] has been enabled as `$(notdir $(PUBLISH_LIBRARY))`.$(if $(1),  In this `$(word 3,$(PUBLISH_DIRS))` sub-directory$(COMMA) the [anchor_links] option is not changed from default$(COMMA) in order to demonstrate how it produces different results for a library that is not in [COMPOSER_ROOT][$(.)composer_root].))*
 endef
@@ -5593,7 +5599,10 @@ override define PUBLISH_PAGE_1_CONFIGS_LINKS =
 $(foreach FILE,\
 	brand \
 	homepage \
-	search \
+	search.name \
+	search.site \
+	search.call \
+	search.form \
 	copyright \
 	$(.)$(COMPOSER_TINYNAME)
 	\
@@ -5601,38 +5610,44 @@ $(foreach FILE,\
 	footer \
 	css_overlay \
 	copy_protect \
-	cols_break \
-	cols_scroll \
-	cols_order \
-	cols_reorder \
-	cols_size \
-	cols_resize \
-	metainfo \
-	metainfo_null \
-	metalist \
-	readtime \
-	readtime_wpm \
-	redirect \
+	cols.break \
+	cols.scroll \
+	cols.order \
+	cols.reorder \
+	cols.size \
+	cols.resize \
+	metainfo.display \
+	metainfo.null \
+	metalist.$(PUBLISH_CREATORS).title \
+	metalist.$(PUBLISH_CREATORS).display \
+	metalist.$(PUBLISH_METALIST).title \
+	metalist.$(PUBLISH_METALIST).display \
+	readtime.display \
+	readtime.wpm \
+	redirect.title \
+	redirect.display \
+	redirect.match \
+	redirect.time \
 	\
 	folder \
 	auto_update \
 	anchor_links \
 	append \
-	digest_title \
-	digest_continue \
-	digest_permalink \
-	digest_chars \
-	digest_count \
-	digest_expanded \
-	digest_spacer \
-	lists_expanded \
-	lists_spacer \
-	sitemap_title \
-	sitemap_expanded \
-	sitemap_spacer \
+	digest.title \
+	digest.continue \
+	digest.permalink \
+	digest.chars \
+	digest.count \
+	digest.expanded \
+	digest.spacer \
+	lists.expanded \
+	lists.spacer \
+	sitemap.title \
+	sitemap.expanded \
+	sitemap.spacer \
 	\
 	$(.)composer_root \
-,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(call /,$(FILE)))
+,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(subst .,-,$(subst _,-,$(call /,$(FILE)))))
 endef
 
 ########################################
@@ -5659,7 +5674,7 @@ This is a default page, where all menus and settings are empty.  All aspects of 
 
 $(call PUBLISH_PAGE_EXAMPLE_LAYOUT)
 
-In the layout, this page column is `c_list`, and the default `cols_size` for the center column is `$(PUBLISH_COLS_SIZE_C)` and `cols_resize` for the mobile view is `$(PUBLISH_COLS_RESIZE_C)`.  Since `nav-left` and `nav-right` are both empty, this column is positioned at the left edge.
+In the layout, this page column is `c_list`, and the default `cols.size` for the center column is `$(PUBLISH_COLS_SIZE_C)` and `cols.resize` for the mobile view is `$(PUBLISH_COLS_RESIZE_C)`.  Since `nav-left` and `nav-right` are both empty, this column is positioned at the left edge.
 
 In the absence of the `PAGES` menu, use the list below to navigate to the other example pages.
 
@@ -7115,15 +7130,17 @@ $(_S)#$(MARKER)$(_D) $(_C)footer$(_D):				$(_M)$(PUBLISH_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)css_overlay$(_D):			$(_M)$(PUBLISH_CSS_OVERLAY)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)cols_break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_scroll$(_D):			$(_M)$(PUBLISH_COLS_SCROLL)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_order$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_ORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_R)$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_reorder$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)cols_resize$(_D):			$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)cols$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)scroll$(_D):				$(_M)$(PUBLISH_COLS_SCROLL)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)order$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_ORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)reorder$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)metainfo$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO))$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)metainfo_null$(_D):			$(_N)"$(_M)$(PUBLISH_METAINFO_NULL)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)metainfo$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO_DISPLAY))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)null$(_D):				$(_N)"$(_M)$(PUBLISH_METAINFO_NULL)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)metalist$(_D):
 $(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_CREATORS)$(_D):
 $(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_CREATORS_TITLE)$(_N)"$(_D)
@@ -7131,8 +7148,9 @@ $(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_
 $(_S)#$(MARKER)$(_D)   $(_M)$(PUBLISH_METALIST)$(_D):
 $(_S)#$(MARKER)$(_D)     $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_METALIST_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)     $(_C)display$(_D):			$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METALIST_DISPLAY))$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_READTIME))$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)readtime_wpm$(_D):			$(_M)$(PUBLISH_READTIME_WPM)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)readtime$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_READTIME_DISPLAY))$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)wpm$(_D):				$(_M)$(PUBLISH_READTIME_WPM)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)redirect$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_TITLE)$(_N)"$(_D)
@@ -7149,20 +7167,23 @@ $(_S)#$(MARKER)$(_D) $(_C)anchor_links$(_D):			$(_M)$(LIBRARY_ANCHOR_LINKS)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)append$(_D):				$(_M)$(LIBRARY_APPEND)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)digest_title$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_continue$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_chars$(_D):			$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_count$(_D):			$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_expanded$(_D):			$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)digest_spacer$(_D):			$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)digest$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)continue$(_D):				$(_N)"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)permalink$(_D):			$(_N)"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)chars$(_D):				$(_M)$(LIBRARY_DIGEST_CHARS)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)count$(_D):				$(_M)$(LIBRARY_DIGEST_COUNT)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)expanded$(_D):				$(_M)$(LIBRARY_DIGEST_EXPANDED)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_DIGEST_SPACER)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)lists_expanded$(_D):			$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)lists_spacer$(_D):			$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)lists$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)expanded$(_D):				$(_M)$(LIBRARY_LISTS_EXPANDED)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
-$(_S)#$(MARKER)$(_D) $(_C)sitemap_title$(_D):			$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)sitemap_expanded$(_D):			$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
-$(_S)#$(MARKER)$(_D) $(_C)sitemap_spacer$(_D):			$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
+$(_S)#$(MARKER)$(_D) $(_C)sitemap$(_D):
+$(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)expanded$(_D):				$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-nav-top$(_D):
@@ -7343,9 +7364,10 @@ variables:
       $(PUBLISH_CMD_BEG) icon gpl $(OUT_LICENSE).$(EXTN_HTML) $(PUBLISH_CMD_END)
       $(COPYRIGHT_SHORT)
 
-    cols_break:				md
-    cols_size:				[ 4, 8, $(SPECIAL_VAL) ]
-    cols_resize:			[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
+    cols:
+      break:				md
+      size:				[ 4, 8, $(SPECIAL_VAL) ]
+      resize:				[ $(SPECIAL_VAL), 12, $(SPECIAL_VAL) ]
 
 ########################################
 
@@ -7552,14 +7574,16 @@ variables:
     footer:				$(PUBLISH_FOOTER$(if $(1),_MOD,_ALT))
     css_overlay:			$(PUBLISH_CSS_OVERLAY$(if $(1),_MOD,_ALT))
     copy_protect:			$(PUBLISH_COPY_PROTECT$(if $(1),_MOD,_ALT))
-    cols_break:				$(PUBLISH_COLS_BREAK$(if $(1),_MOD,_ALT))
-    cols_scroll:			$(PUBLISH_COLS_SCROLL$(if $(1),_MOD,_ALT))
-    cols_order:				[ $(strip $(PUBLISH_COLS_ORDER_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_ORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_ORDER_R$(if $(1),_MOD,_ALT))	) ]
-    cols_reorder:			[ $(strip $(PUBLISH_COLS_REORDER_L$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_R$(if $(1),_MOD,_ALT))	) ]
-    cols_size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
-    cols_resize:			[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
-    metainfo:				"$(PUBLISH_METAINFO$(if $(1),_MOD,_ALT))"
-    metainfo_null:			"$(PUBLISH_METAINFO_NULL$(if $(1),_MOD,_ALT))"
+    cols:
+      break:				$(PUBLISH_COLS_BREAK$(if $(1),_MOD,_ALT))
+      scroll:				$(PUBLISH_COLS_SCROLL$(if $(1),_MOD,_ALT))
+      order:				[ $(strip $(PUBLISH_COLS_ORDER_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_ORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_ORDER_R$(if $(1),_MOD,_ALT))	) ]
+      reorder:				[ $(strip $(PUBLISH_COLS_REORDER_L$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_R$(if $(1),_MOD,_ALT))	) ]
+      size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
+      resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
+    metainfo:				"$(PUBLISH_METAINFO_DISPLAY$(if $(1),_MOD,_ALT))"
+      display:				"$(PUBLISH_METAINFO_DISPLAY$(if $(1),_MOD,_ALT))"
+      null:				"$(PUBLISH_METAINFO_NULL$(if $(1),_MOD,_ALT))"
     metalist:
       $(PUBLISH_CREATORS):
         title:				"$(PUBLISH_CREATORS_TITLE$(if $(1),_MOD,_ALT))"
@@ -7567,8 +7591,9 @@ variables:
       $(PUBLISH_METALIST):
         title:				"$(PUBLISH_METALIST_TITLE$(if $(1),_MOD,_ALT))"
         display:			"$(PUBLISH_METALIST_DISPLAY$(if $(1),_MOD,_ALT))"
-    readtime:				"$(PUBLISH_READTIME$(if $(1),_MOD,_ALT))"
-    readtime_wpm:			$(PUBLISH_READTIME_WPM$(if $(1),_MOD,_ALT))
+    readtime:
+      display:				"$(PUBLISH_READTIME_DISPLAY$(if $(1),_MOD,_ALT))"
+      wpm:				$(PUBLISH_READTIME_WPM$(if $(1),_MOD,_ALT))
     redirect:
       title:				"$(PUBLISH_REDIRECT_TITLE$(if $(1),_MOD,_ALT))"
       display:				"$(PUBLISH_REDIRECT_DISPLAY$(if $(1),_MOD,_ALT))"
@@ -7582,18 +7607,21 @@ variables:
     auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD,_ALT)))
     anchor_links:			$(LIBRARY_ANCHOR_LINKS$(if $(1),_MOD,_ALT))
     append:				$(LIBRARY_APPEND$(if $(1),_MOD,_ALT))
-    digest_title:			"$(LIBRARY_DIGEST_TITLE$(if $(1),_MOD,_ALT))"
-    digest_continue:			"$(LIBRARY_DIGEST_CONTINUE$(if $(1),_MOD,_ALT))"
-    digest_permalink:			"$(LIBRARY_DIGEST_PERMALINK$(if $(1),_MOD,_ALT))"
-    digest_chars:			$(LIBRARY_DIGEST_CHARS$(if $(1),_MOD,_ALT))
-    digest_count:			$(LIBRARY_DIGEST_COUNT$(if $(1),_MOD,_ALT))
-    digest_expanded:			$(LIBRARY_DIGEST_EXPANDED$(if $(1),_MOD,_ALT))
-    digest_spacer:			$(LIBRARY_DIGEST_SPACER$(if $(1),_MOD,_ALT))
-    lists_expanded:			$(LIBRARY_LISTS_EXPANDED$(if $(1),_MOD,_ALT))
-    lists_spacer:			$(LIBRARY_LISTS_SPACER$(if $(1),_MOD,_ALT))
-    sitemap_title:			"$(LIBRARY_SITEMAP_TITLE$(if $(1),_MOD,_ALT))"
-    sitemap_expanded:			$(LIBRARY_SITEMAP_EXPANDED$(if $(1),_MOD,_ALT))
-    sitemap_spacer:			$(LIBRARY_SITEMAP_SPACER$(if $(1),_MOD,_ALT))
+    digest:
+      title:				"$(LIBRARY_DIGEST_TITLE$(if $(1),_MOD,_ALT))"
+      continue:				"$(LIBRARY_DIGEST_CONTINUE$(if $(1),_MOD,_ALT))"
+      permalink:			"$(LIBRARY_DIGEST_PERMALINK$(if $(1),_MOD,_ALT))"
+      chars:				$(LIBRARY_DIGEST_CHARS$(if $(1),_MOD,_ALT))
+      count:				$(LIBRARY_DIGEST_COUNT$(if $(1),_MOD,_ALT))
+      expanded:				$(LIBRARY_DIGEST_EXPANDED$(if $(1),_MOD,_ALT))
+      spacer:				$(LIBRARY_DIGEST_SPACER$(if $(1),_MOD,_ALT))
+    lists:
+      expanded:				$(LIBRARY_LISTS_EXPANDED$(if $(1),_MOD,_ALT))
+      spacer:				$(LIBRARY_LISTS_SPACER$(if $(1),_MOD,_ALT))
+    sitemap:
+      title:				"$(LIBRARY_SITEMAP_TITLE$(if $(1),_MOD,_ALT))"
+      expanded:				$(LIBRARY_SITEMAP_EXPANDED$(if $(1),_MOD,_ALT))
+      spacer:				$(LIBRARY_SITEMAP_SPACER$(if $(1),_MOD,_ALT))
 
 ########################################
 
@@ -8020,8 +8048,8 @@ function $(PUBLISH)-metainfo-block {
 			| COMPOSER_YML_DATA_PARSE
 		$${ECHO} "---\\n"
 	else
-		META_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo)"
-		NULL_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo_null)"
+		META_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo.display)"
+		NULL_TXT="$$(COMPOSER_YML_DATA_VAL config.metainfo.null)"
 		if [ -z "$${TITL}" ]; then TITL="$${NULL_TXT}"; fi
 		if [ -z "$${DATE}" ]; then DATE="$${NULL_TXT}"; fi
 		$${ECHO} "$${META_TXT}" \\
@@ -8258,7 +8286,7 @@ function $(PUBLISH)-nav-top-list {
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
+	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols.break)"
 	local ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
@@ -8676,7 +8704,7 @@ function $(PUBLISH)-nav-begin {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 $${CAT} <<_EOF_
 <div class="$${COMPOSER_TINYNAME}-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#$${COMPOSER_TINYNAME}-nav-$${1}"></div>
-<nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols_break) fixed-$${1}">
+<nav class="navbar navbar-expand-$$(COMPOSER_YML_DATA_VAL config.cols.break) fixed-$${1}">
 <div class="container-fluid">
 <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#$${COMPOSER_TINYNAME}-nav-$${1}">
 <span class="navbar-toggler-icon"></span>
@@ -8706,7 +8734,7 @@ function $(PUBLISH)-nav-divider {
 		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols_break)"
+	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols.break)"
 	if [ "$${1}" = "top-menu" ]; then
 $${CAT} <<_EOF_
 <li class="$${COMPOSER_TINYNAME}-menu-div nav-item nav-link d-$${COLS_BREAK}-block d-none">$${HTML_HIDE}</li>
@@ -8831,12 +8859,12 @@ $${CAT} <<_EOF_
 		if [ "$${1}" = "left" ]; then		NUM="0"
 		elif [ "$${1}" = "right" ]; then	NUM="2"
 		fi
-		COLS_BREAK="$$(		COMPOSER_YML_DATA_VAL config.cols_break)"
-		COLS_SCROLL="$$(	COMPOSER_YML_DATA_VAL config.cols_scroll)"
-		COLS_ORDER="$$(		COMPOSER_YML_DATA_VAL config.cols_order[$${NUM}])"
-		COLS_REORDER="$$(	COMPOSER_YML_DATA_VAL config.cols_reorder[$${NUM}])"
-		COLS_SIZE="$$(		COMPOSER_YML_DATA_VAL config.cols_size[$${NUM}])"
-		COLS_RESIZE="$$(	COMPOSER_YML_DATA_VAL config.cols_resize[$${NUM}])"
+		COLS_BREAK="$$(		COMPOSER_YML_DATA_VAL config.cols.break)"
+		COLS_SCROLL="$$(	COMPOSER_YML_DATA_VAL config.cols.scroll)"
+		COLS_ORDER="$$(		COMPOSER_YML_DATA_VAL config.cols.order[$${NUM}])"
+		COLS_REORDER="$$(	COMPOSER_YML_DATA_VAL config.cols.reorder[$${NUM}])"
+		COLS_SIZE="$$(		COMPOSER_YML_DATA_VAL config.cols.size[$${NUM}])"
+		COLS_RESIZE="$$(	COMPOSER_YML_DATA_VAL config.cols.resize[$${NUM}])"
 		if [ "$${COLS_SCROLL}" = "$${SPECIAL_VAL}" ]; then	$${ECHO} " $${COMPOSER_TINYNAME}-scroll"
 		elif [ -n "$${COLS_SCROLL}" ]; then			$${ECHO} " $${COMPOSER_TINYNAME}-scroll-$${COLS_BREAK}"
 		fi
@@ -11627,6 +11655,7 @@ num
 nums
 os
 pagedir
+pageone
 proj
 reldate
 repo
@@ -15351,7 +15380,7 @@ override define $(PUBLISH)-$(TARGETS)-contents-done =
 	if [ -n "$${ROOT}" ]; then \
 		$(call HEREDOC_COMPOSER_YML_README_HACK) $(1).contents-menu.done; \
 		R_DD="<li class=\"nav-item dropdown\">"; \
-		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols_break) dropdown-menu\">"; \
+		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols.break) dropdown-menu\">"; \
 		R_CL="class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\""; \
 		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
 		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
@@ -15433,11 +15462,11 @@ override define $(PUBLISH)-$(TARGETS)-readtime =
 		| $(WC_WORD) \
 	)"; \
 	TIME="1"; \
-	WPM="$(call COMPOSER_YML_DATA_VAL,config.readtime_wpm)"; \
+	WPM="$(call COMPOSER_YML_DATA_VAL,config.readtime.wpm)"; \
 	if [ "$${WORD}" -gt "$${WPM}" ]; then \
 		TIME="$$($(EXPR) $${WORD} / $${WPM})"; \
 	fi; \
-	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.readtime)\n" \
+	$(ECHO) "$(call COMPOSER_YML_DATA_VAL,config.readtime.display)\n" \
 		| $(SED) \
 			-e "s|<word>|$${WORD}|g" \
 			-e "s|<time>|$${TIME}|g" \
@@ -15914,7 +15943,7 @@ $($(PUBLISH)-library-digest):
 
 override define $(PUBLISH)-library-digest-file =
 	{	$(ECHO) "---\n"; \
-		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest_title)\n"; \
+		$(ECHO) "pagetitle: $(call COMPOSER_YML_DATA_VAL,library.digest.title)\n"; \
 		$(ECHO) "date: $(call DATEMARK)\n"; \
 		$(ECHO) "---\n"; \
 		$(ECHO) "$(PUBLISH_CMD_BEG) $(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)\n"; \
@@ -15989,12 +16018,12 @@ $($(PUBLISH)-library-digest-files):
 
 override define $(PUBLISH)-library-digest-vars =
 	DIGEST_APPEND="$(INCLUDE_FILE_APPEND)"; \
-	DIGEST_CONTINUE="$(call COMPOSER_YML_DATA_VAL,library.digest_continue)"; \
-	DIGEST_PERMALINK="$(call COMPOSER_YML_DATA_VAL,library.digest_permalink)"; \
-	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest_chars)"; \
-	DIGEST_COUNT="$(call COMPOSER_YML_DATA_VAL,library.digest_count)"; \
-	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.$(1)_expanded)"; \
-	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1)_spacer)"
+	DIGEST_CONTINUE="$(call COMPOSER_YML_DATA_VAL,library.digest.continue)"; \
+	DIGEST_PERMALINK="$(call COMPOSER_YML_DATA_VAL,library.digest.permalink)"; \
+	DIGEST_CHARS="$(call COMPOSER_YML_DATA_VAL,library.digest.chars)"; \
+	DIGEST_COUNT="$(call COMPOSER_YML_DATA_VAL,library.digest.count)"; \
+	DIGEST_EXPANDED="$(call COMPOSER_YML_DATA_VAL,library.$(1).expanded)"; \
+	DIGEST_SPACER="$(call COMPOSER_YML_DATA_VAL,library.$(1).spacer)"
 endef
 
 override define $(PUBLISH)-library-digest-create =
@@ -16292,9 +16321,9 @@ $($(PUBLISH)-library-sitemap-files):
 ########################################
 
 override define $(PUBLISH)-library-sitemap-vars =
-	$(eval override METAINFO_NULL := $(call COMPOSER_YML_DATA_VAL,config.metainfo_null)) \
-	$(eval override SITEMAP_EXPANDED := $(call COMPOSER_YML_DATA_VAL,library.sitemap_expanded)) \
-	$(eval override SITEMAP_SPACER := $(call COMPOSER_YML_DATA_VAL,library.sitemap_spacer))
+	$(eval override METAINFO_NULL := $(call COMPOSER_YML_DATA_VAL,config.metainfo.null)) \
+	$(eval override SITEMAP_EXPANDED := $(call COMPOSER_YML_DATA_VAL,library.sitemap.expanded)) \
+	$(eval override SITEMAP_SPACER := $(call COMPOSER_YML_DATA_VAL,library.sitemap.spacer))
 endef
 
 #>	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-sitemap);
