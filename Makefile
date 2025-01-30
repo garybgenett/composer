@@ -417,6 +417,7 @@ endef
 
 override MENU_SELF			:= _
 
+#> update: del(.*)
 override KEY_UPDATED			:= $(.)updated
 override KEY_FILEPATH			:= $(.)path
 override KEY_DATE			:= $(.)date
@@ -890,10 +891,10 @@ override PUBLISH_METATITL_DISPLAY_MOD	:= null
 override PUBLISH_METATITL_EMPTY		:= *(no $(PUBLISH_METATITL))*
 override PUBLISH_METATITL_EMPTY_ALT	:= *(none)*
 override PUBLISH_METATITL_EMPTY_MOD	:= null
-override PUBLISH_METADATE_TITLE		:= Year: <name>
-override PUBLISH_METADATE_TITLE_ALT	:= Date: <name>
+override PUBLISH_METADATE_TITLE		:= Date: <name>
+override PUBLISH_METADATE_TITLE_ALT	:= Year: <name>
 override PUBLISH_METADATE_TITLE_MOD	:= null
-override PUBLISH_METADATE_DISPLAY	:= Year: <|>, <|>
+override PUBLISH_METADATE_DISPLAY	:= Date: <|>, <|>
 override PUBLISH_METADATE_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_METADATE_DISPLAY_MOD	:= null
 override PUBLISH_METADATE_EMPTY		:= *(no $(PUBLISH_METADATE))*
@@ -2639,9 +2640,6 @@ override COMPOSER_YML_DATA_VAL = $(shell \
 	| $(call COMPOSER_YML_DATA_PARSE,$(2),$(3)) \
 )
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#		-e "s|^[\"]||g" -e "s|[\"]$$||g" \
-
 #> update: COMPOSER_YML_DATA_PARSE
 #> update: join(.*)
 override define COMPOSER_YML_DATA_PARSE =
@@ -2919,6 +2917,7 @@ override PUBLISH_SH_RUN = \
 		$(FILE)="$($(FILE))" \
 		))))) \
 	) \
+	COMPOSER_FILE="$(1)" \
 	$(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(CUSTOM_PUBLISH_SH)
 
 override PUBLISH_SH_HELPERS := \
@@ -6108,6 +6107,9 @@ endef
 #WORK
 
 override define PUBLISH_PAGE_EXAMPLE_INCLUDE =
+---
+$(PUBLISH_METATITL): $(PUBLISH_PAGE_EXAMPLE_NAME) [Include File]
+---
 # Page Layout
 
 $(call PUBLISH_PAGE_EXAMPLE_LAYOUT)
@@ -8177,8 +8179,6 @@ $(foreach FILE,$(PUBLISH_SH_GLOBAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE
 ########################################
 $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)),,$(FILE)="$${$(FILE)}"))
 
-FILE_PATH=()
-
 ########################################
 ### {{{3 Arguments
 ########################################
@@ -8188,6 +8188,14 @@ if [ "$${1}" = "$${MENU_SELF}" ]; then
 	DIGEST_MARKDOWN="$${SPECIAL_VAL}"
 	shift
 fi
+
+########################################
+### {{{3 Files
+########################################
+
+COMPOSER_FILE="$${COMPOSER_FILE}"
+
+COMPOSER_FILES=()
 
 ################################################################################
 ### {{{3 Functions (Global)
@@ -8219,9 +8227,6 @@ function COMPOSER_YML_DATA_VAL {
 
 # 1 root path				$${SPECIAL_VAL} = absolute || relative || null
 # 2 join separator
-
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#		-e "s|^[\"]||g" -e "s|[\"]$$||g" \\
 
 function COMPOSER_YML_DATA_PARSE {
 	$${SED} \\
@@ -8346,6 +8351,7 @@ function $(PUBLISH)-parse {
 #> update: title / date / metalist:*
 #> update: YQ_WRITE.*title
 #> update: join(.*)
+#> update: del(.*)
 
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
 # 1 file				$${SPECIAL_VAL} = library
@@ -8458,7 +8464,6 @@ function $(PUBLISH)-metainfo-block {
 					| COMPOSER_YML_DATA_PARSE "" $${TOKEN}
 				)"
 			else
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
 				INFO_LIST[$${NUM}]="$$(
 					for INCL in $${@:3}; do
 						if [ "$$($${SED} -n "1{/^---$$/p}" $${INCL})" ]; then
@@ -8505,10 +8510,9 @@ function $(PUBLISH)-metainfo-block {
 		if [ -z "$${META_SEP}" ]; then
 			META_SEP=" "
 		fi
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+#	turn off "[]()" links when not COMPOSER_LIBRARY...
 #	verify composer_library_path is working everywhere, particularly non-library-root folders...
-#	keep track of need to update "del(.*)" somehow... test?
-#	test "metalist-title" and "metalist-date", for fun...!
 #	[ ] sorting/display of v3.1 (2024-08-10) dates
 		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 			if [ "$${FILE}" = "$${META_LIST}" ]; then
@@ -8517,10 +8521,10 @@ function $(PUBLISH)-metainfo-block {
 				then
 					$${ECHO} "$${LIST_BEG}$${INFO_LIST[$${NUM}]}$${LIST_END}\\n"
 				else
+#>							| $(subst $(SORT_NUM),$${SORT_NUM},$(strip $(call $(PUBLISH)-library-sort-sh,$${FILE})))
 					TEXT="$$(
-						$${ECHO} "$${INFO_LIST[$${NUM}]}" \\
+						$${ECHO} "$${INFO_LIST[$${NUM}]}\\n" \\
 							| $${SED} "s|$${TOKEN}|\\n|g" \\
-							| $(subst $(SORT_NUM),$${SORT_NUM},$(strip $(call $(PUBLISH)-library-sort-sh,$${FILE}))) \\
 							| while read -r ITEM; do
 								if [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
 									$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$${DATE_LIBRARY}.$${EXTN_HTML})$${TOKEN}"
@@ -8580,9 +8584,6 @@ function $(PUBLISH)-metainfo-block {
 		$${ECHO} "$${META_EMPTY}"
 	else
 		META_DISPLAY="$$(COMPOSER_YML_DATA_VAL helpers.metainfo.display)"
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#> update: \\\\[^0-9n$]
-# \\ = 12
 		$${ECHO} "$${META_DISPLAY}" \\
 			| eval $${SED} \\
 				-e "\"s|<[|]>|$$($${ECHO} "$${HTML_HIDE}" | $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g\"" \\
@@ -10023,17 +10024,17 @@ function $(PUBLISH)-file {
 #>		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	FILE_PATH=("$$(
+	COMPOSER_FILES=("$$(
 			$${ECHO} "$${1}" \\
 			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-		)" "$${FILE_PATH[@]}")
+		)" "$${COMPOSER_FILES[@]}")
 	$${ECHO} "\\n"
 	if [ -n "$$(
-		$${SED} -n "1{/^---$$/p}" $${FILE_PATH[0]}
+		$${SED} -n "1{/^---$$/p}" $${COMPOSER_FILES[0]}
 	)" ]; then
-		$${SED} "1,/^---$$/d" $${FILE_PATH[0]}
+		$${SED} "1,/^---$$/d" $${COMPOSER_FILES[0]}
 	else
-		$${CAT} $${FILE_PATH[0]}
+		$${CAT} $${COMPOSER_FILES[0]}
 	fi \\
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
@@ -10054,7 +10055,7 @@ function $(PUBLISH)-file {
 		done \\
 		|| return 1
 	$${ECHO} "\\n"
-	FILE_PATH=("$${FILE_PATH[@]:1}")
+	COMPOSER_FILES=("$${COMPOSER_FILES[@]:1}")
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -10082,12 +10083,16 @@ function $(PUBLISH)-select {
 		[ "$${ACTION}" = "readtime" ];
 	then
 		if [ "$${ACTION}" = "metainfo" ] && [ -n "$${1}" ]; then
-			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-run $${@} $${PUBLISH_CMD_END}\\n"
-			META_FILE="$${FILE_PATH[-1]}"
+#>			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-run $${@} $${PUBLISH_CMD_END}\\n"
+			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-run $${@}"
+#>			META_FILE="$${COMPOSER_FILES[-1]}"
+			META_FILE="$${COMPOSER_FILE}"
 			if [ "$${1}" = "$${MENU_SELF}" ]; then
-				META_FILE="$${FILE_PATH[0]}"
+				META_FILE="$${COMPOSER_FILES[0]}"
 				shift
 			fi
+#>			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-run $${@} $${PUBLISH_CMD_END}\\n"
+			$${ECHO} " [$${META_FILE}] $${PUBLISH_CMD_END}\\n"
 			if [ -n "$${1}" ]; then
 				$(PUBLISH)-$${@} $$(
 						$(PUBLISH)-metainfo-block . . $${META_FILE}
@@ -15732,7 +15737,7 @@ endef
 override define $(PUBLISH)-$(TARGETS)-file =
 	{	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS)-file $(MARKER) $(2) -->\n" \
 			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
-		$(call PUBLISH_SH_RUN) $(2); \
+		$(call PUBLISH_SH_RUN,$(word 1,$(call c_list_var))) $(2); \
 	} \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -16269,9 +16274,9 @@ override define $(PUBLISH)-library-metadata-create =
 			| $(YQ_WRITE) "(.title != null or .pagetitle != null)" 2>/dev/null \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 	)" = "true" ]; then \
-		META="$$($(call PUBLISH_SH_RUN) metainfo-block . $(TOKEN) $${FILE})"; \
-		DATE_PARSE="$$(		$(ECHO) "$${META}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")"; \
-		DATE_LIBRARY="$$(	$(ECHO) "$${META}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")"; \
+		DATE_META="$$($(call PUBLISH_SH_RUN) metainfo-block . $(TOKEN) $${FILE})"; \
+		DATE_PARSE="$$(		$(ECHO) "$${DATE_META}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")"; \
+		DATE_LIBRARY="$$(	$(ECHO) "$${DATE_META}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")"; \
 		$(YQ_READ) $(2) 2>/dev/null \
 			| $(YQ_WRITE) ". += { \"$(COMPOSER_CMS)\": true }" 2>/dev/null \
 			| $(YQ_WRITE) ". += { \"$(KEY_DATE)\": { \
@@ -16318,7 +16323,8 @@ endef
 #> update: title / date / metalist:*
 
 #>	$(MAKE) $(PUBLISH)-library-metadata-$$($(ECHO) "$${FILE}" | $(SED) "s|[/]|$(TOKEN)|g");
-#>	$(MAKE) $(PUBLISH)-library-metadata-c_list c_base="pages"
+#>	$(MAKE) $(PUBLISH)-library-metadata-c_list c_base="index" c_list="index.md"
+#>	$(MAKE) $(PUBLISH)-library-metadata-c_list c_base="pages" c_list="pages.md"
 
 .PHONY: $(PUBLISH)-library-metadata-%
 $(PUBLISH)-library-metadata-%:
@@ -16637,6 +16643,7 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"
 endef
 
+#>			$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(2)
 override define $(PUBLISH)-library-digest-run =
 	if [ "$${NUM}" -gt "0" ] && [ -n "$(DIGEST_SPACER)" ]; then \
 		$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n"; \
@@ -16650,7 +16657,7 @@ override define $(PUBLISH)-library-digest-run =
 		fi; \
 	fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-digest $$( \
-			$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(2) \
+			$(call PUBLISH_SH_RUN) metainfo-block . . $(COMPOSER_LIBRARY_ROOT)/$(2) \
 		) $(PUBLISH_CMD_END)\n"; \
 	$(ECHO) "<!-- $(MARKER) $(2) -->\n\n"; \
 	CDIR="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
@@ -17079,6 +17086,8 @@ endef
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(@)
 ########################################
 
+#> update: del(.*)
+
 #WORKING:FIX:PRINTER
 #	break this target up into smaller sections...
 
@@ -17219,6 +17228,8 @@ endif
 #### {{{4 $(PUBLISH)-$(PRINTER)-$(TARGETS)
 ########################################
 
+#> update: del(.*)
+
 #>		" $($(PUBLISH)-library-metadata) 2>/dev/null
 #>		" $($(PUBLISH)-library-index) 2>/dev/null
 override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
@@ -17238,6 +17249,7 @@ override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 	$(YQ_WRITE_OUT) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| .\"$(1)\" \
+		| del(.\"$(KEY_UPDATED)\") \
 		| del(.\"$(KEY_FILEPATH)\") \
 		" $($(PUBLISH)-library-metadata) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
