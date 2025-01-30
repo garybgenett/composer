@@ -2639,11 +2639,13 @@ override COMPOSER_YML_DATA_VAL = $(shell \
 	| $(call COMPOSER_YML_DATA_PARSE,$(2),$(3)) \
 )
 
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+#		-e "s|^[\"]||g" -e "s|[\"]$$||g" \
+
 #> update: COMPOSER_YML_DATA_PARSE
 #> update: join(.*)
 override define COMPOSER_YML_DATA_PARSE =
 	$(SED) \
-		-e "s|^[\"]||g" -e "s|[\"]$$||g" \
 		-e "/^null$$/d" \
 		-e "/^[{][}]$$/d" \
 		-e "/^.*[\"\'][\"\'].*[:].*[{[][]}].*$$/d" \
@@ -2886,11 +2888,13 @@ override PUBLISH_SH_LOCAL := \
 	EXPR \
 	HEAD \
 	PRINTF \
+	SORT \
 	SORT_NUM \
 	TR \
 	$(TOKEN) \
 	\
 	YQ_WRITE \
+	YQ_WRITE_JSON \
 	YQ_WRITE_FILE \
 	COMPOSER_YML_DATA \
 	COMPOSER_YML_DATA_METALIST \
@@ -2941,10 +2945,13 @@ override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_H
 
 #> update: $(PUBLISH)-library-sort-yq
 #> update: PUBLISH_DATES_PARSE_ALT / PUBLISH_PAGES_DATE_FORMAT
-override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+# override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
+override PUBLISH_PAGES_YEARS		:= 2022
 override PUBLISH_PAGES_DATE		:= -01-01
 override PUBLISH_PAGES_DATE_FORMAT	:= +%B %e, %Y %l:%M %p %Z %:z
-override PUBLISH_PAGES_NUMS		:= 0 1 2 3 4 5 6 7 8 9
+# override PUBLISH_PAGES_NUMS		:= 0 1 2 3 4 5 6 7 8 9
+override PUBLISH_PAGES_NUMS		:= 0 1 2 3
 override PUBLISH_PAGES_JOIN		:= +$(EXAMPLE)_
 
 override PUBLISH_BOOTSTRAP_TREE		:= $(notdir $(BOOTSTRAP_DIR))/site/content
@@ -8218,11 +8225,14 @@ function COMPOSER_YML_DATA_VAL {
 # 1 root path				$${SPECIAL_VAL} = absolute || relative || null
 # 2 join separator
 
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+#		-e "s|^[\"]||g" -e "s|[\"]$$||g" \\
+
 function COMPOSER_YML_DATA_PARSE {
 	$${SED} \\
 		-e "/^null$$/d" \\
 		-e "/^[{][}]$$/d" \\
-		-e "/^.*[\\"\\'][\\"\\'].*[:].*[{[][]}].*$$/d" \\
+		-e "/^.*[\"\'][\"\'].*[:].*[{[][]}].*$$/d" \\
 		| if [ -n "$${DIGEST_MARKDOWN}" ]; then
 			$${CAT}
 		elif [ "$${1}" = "$${SPECIAL_VAL}" ]; then
@@ -8297,7 +8307,7 @@ function $(PUBLISH)-marker {
 #
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-error {
-	$${ECHO} "$${MARKER} ERROR [$${0/#*\\/}] ($${1}):$$(
+	$${ECHO} "$${MARKER} ERROR [$${0/#*\/}] ($${1}):$$(
 		if [ -n "$${2}" ]; then
 			$${ECHO} " $${@:2}" \\
 			| $${SED} "s|$${COMPOSER_ROOT_REGEX}|$${EXPAND}|g"
@@ -8345,7 +8355,7 @@ function $(PUBLISH)-parse {
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
 # 1 file				$${SPECIAL_VAL} = library
 # 2 text				$${SPECIAL_VAL} = metadata || $${TOKEN} = $(KEY_DATE).$(KEY_DATE_PARSE) $${TOKEN} $(KEY_DATE).$(KEY_DATE_LIBRARY) || title / date / metalist:*
-# 3 file path
+# 3 file path(s)
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-metainfo-block {
@@ -8355,15 +8365,43 @@ function $(PUBLISH)-metainfo-block {
 			$${YQ_WRITE} ".\"$${3}\"" $${COMPOSER_LIBRARY_METADATA} 2>/dev/null \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#	yaml metadata on all of c_list_var has definite benefits... (e.g. pages.html)
-#		what about includes, though...?
-#		what is the best way to grab *all* the metadata...?
 	elif [ "$$($${SED} -n "1{/^---$$/p}" $${3})" ]; then
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+#	else
+#	2>/dev/null
 		META="$$(
-			$${SED} -n "1,/^---$$/p" $${3}
+			$${SED} -n "1,/^---$$/p" $${3} \\
+			| $${SED} "/^---$$/d"
 		)"
+#$${ECHO} "$${META}\\n"
+		for FILE in $${COMPOSER_YML_DATA_METALIST}; do
+			if	[ "$${FILE}" != "$(PUBLISH_METATITL)" ] &&
+				[ "$${FILE}" != "$(PUBLISH_METADATE)" ];
+			then
+				DATA="$$(
+					for INPUT in $${@:3}; do
+						if [ "$$($${SED} -n "1{/^---$$/p}" $${INPUT})" ]; then
+							$${SED} -n "1,/^---$$/p" $${INPUT}
+						fi \\
+						| $${YQ_WRITE} "[] + .\"$${FILE}\"" \\
+						| COMPOSER_YML_DATA_PARSE
+					done \\
+						| $${SORT} \\
+						| $${YQ_WRITE_JSON}
+				)"
+#$${ECHO} "SUCCESS! >>>\\n"
+				META="$$(
+					$${ECHO} "$${META}" \\
+					| $${YQ_WRITE_JSON} ". + { \"$${FILE}\": $${DATA} }"
+				)"
+#$${ECHO} "$${META}\\n"
+#$${ECHO} ">>> <<<\\n"
+#$${ECHO} "$${DATA}\\n"
+#$${ECHO} "SUCCESS! <<<\\n"
+			fi
+		done
 	fi
+#$${ECHO} "$${META}\\n" | $${YQ_WRITE_JSON}
 	TITLE="$$(
 		$${ECHO} "$${META}" \\
 		| $${YQ_WRITE} ".title" 2>/dev/null \\
@@ -8393,7 +8431,7 @@ function $(PUBLISH)-metainfo-block {
 			| COMPOSER_YML_DATA_PARSE \\
 			| while read -r FORMAT; do
 				$${ECHO} "$${META}" \\
-				| $${YQ_WRITE} ".date |= with_dtf(\\"$${FORMAT}\\"; format_datetime(\\"$(.)$${PUBLISH_DATES_INTERNAL_FORMAT}\\")) | .date" 2>/dev/null \\
+				| $${YQ_WRITE} ".date |= with_dtf(\"$${FORMAT}\"; format_datetime(\"$(.)$${PUBLISH_DATES_INTERNAL_FORMAT}\")) | .date" 2>/dev/null \\
 				| COMPOSER_YML_DATA_PARSE \\
 				| if	[ -z "$$($${ECHO} "$${FORMAT}" | $${SED} -n "/$${PUBLISH_DATES_TIMEZONE_FORMAT}/p")" ] &&
 					[ -n "$${DATE_TIMEZONE}" ];
@@ -8415,7 +8453,7 @@ function $(PUBLISH)-metainfo-block {
 	if [ -n "$${DATE_DISPLAY}" ]; then
 		DATE_DISPLAY="$$(
 			$${ECHO} "display: $${DATE_DISPLAY}" \\
-			| $${YQ_WRITE} ".display |= format_datetime(\\"$$(COMPOSER_YML_DATA_VAL config.dates.display)\\") | .display" 2>/dev/null
+			| $${YQ_WRITE} ".display |= format_datetime(\"$$(COMPOSER_YML_DATA_VAL config.dates.display)\") | .display" 2>/dev/null
 		)"
 	fi
 	if [ -z "$${DATE_DISPLAY}" ]; then
@@ -8428,7 +8466,7 @@ function $(PUBLISH)-metainfo-block {
 	if [ -n "$${DATE_LIBRARY}" ]; then
 		DATE_LIBRARY="$$(
 			$${ECHO} "library: $${DATE_LIBRARY}" \\
-			| $${YQ_WRITE} ".library |= format_datetime(\\"$$(COMPOSER_YML_DATA_VAL config.dates.library)\\") | .library" 2>/dev/null
+			| $${YQ_WRITE} ".library |= format_datetime(\"$$(COMPOSER_YML_DATA_VAL config.dates.library)\") | .library" 2>/dev/null
 		)"
 	fi
 	if [ -z "$${DATE_LIBRARY}" ]; then
@@ -8529,9 +8567,9 @@ function $(PUBLISH)-metainfo-block {
 			fi
 			if [ -n "$${INFO_LIST[$${NUM}]}" ]; then
 				if [ "$${FILE}" = "$(PUBLISH_METATITL)" ]; then
-					$${ECHO} " \\"$${INFO_LIST[$${NUM}]}\\""
+					$${ECHO} " \"$${INFO_LIST[$${NUM}]}\""
 				elif [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
-					$${ECHO} " \\"$${INFO_LIST[$${NUM}]}\\""
+					$${ECHO} " \"$${INFO_LIST[$${NUM}]}\""
 				else
 					$${ECHO} "\\n  - \"$${INFO_LIST[$${NUM}]}\"" \\
 					| $${SED} "s|$${TOKEN}|\"\\n  - \"|g"
@@ -8542,10 +8580,10 @@ function $(PUBLISH)-metainfo-block {
 		done
 		$${ECHO} "$${META}" \\
 			| $${YQ_WRITE_FILE} " \\
-				del(.\\"$${COMPOSER_CMS}\\") \\
-				| del(.\\"$${KEY_UPDATED}\\") \\
-				| del(.\\"$${KEY_FILEPATH}\\") \\
-				| del(.\\"$${KEY_DATE}\\") \\
+				del(.\"$${COMPOSER_CMS}\") \\
+				| del(.\"$${KEY_UPDATED}\") \\
+				| del(.\"$${KEY_FILEPATH}\") \\
+				| del(.\"$${KEY_DATE}\") \\
 				| del(.pagetitle) \\
 				$$(for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 					$${ECHO} "| del(.\"$${FILE}\")"
@@ -8557,18 +8595,21 @@ function $(PUBLISH)-metainfo-block {
 		$${ECHO} "$${META_EMPTY}"
 	else
 		META_DISPLAY="$$(COMPOSER_YML_DATA_VAL helpers.metainfo.display)"
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+#> update: \\\\[^0-9n$]
+# \\ = 12
 		$${ECHO} "$${META_DISPLAY}" \\
 			| eval $${SED} \\
-				-e "\\"s|<[|]>|$$($${ECHO} "$${HTML_HIDE}" | $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g")|g\\"" \\
+				-e "\"s|<[|]>|$$($${ECHO} "$${HTML_HIDE}" | $${SED} "s|([$${SED_ESCAPE_LIST}])|\\1|g")|g\"" \\
 				$$(
 					NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 						SEP="$$($${ECHO} "$${META_DISPLAY}" | $${SED} -n "s|^.*<$${FILE}[|]([^>]*)>.*$$|\\1|gp")"
 						if [ -z "$${SEP}" ]; then SEP=" "; fi
-						$${ECHO} " -e \\"s|<$${FILE}[^>]*>|$$(
+						$${ECHO} " -e \"s|<$${FILE}[^>]*>|$$(
 							$${ECHO} "$${INFO_LIST[$${NUM}]}" \\
 							| $${SED} "s|$${TOKEN}|$${SEP}|g" \\
-							| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\\\\\\\\\\\1|g"
-						)|g\\""
+							| $${SED} "s|([$${SED_ESCAPE_LIST}])|\\1|g"
+						)|g\""
 						NUM="$$($${EXPR} $${NUM} + 1)"
 					done
 				)
@@ -8789,7 +8830,7 @@ function $(PUBLISH)-nav-top-list {
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	COLS_BREAK="$$(COMPOSER_YML_DATA_VAL config.cols.break)"
-	local ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\\"][^]\\"]+[\\"][]]$$/p")"
+	local ROOT="$$($${ECHO} "$${1}" | $${SED} -n "/^nav-top.[[][\"][^]\"]+[\"][]]$$/p")"
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(PUBLISH)-marker $${FUNCNAME} start $${1}[$${NUM}]
@@ -9472,7 +9513,7 @@ $${@:4}
 <div class="accordion-collapse collapse$$(
 	if [ "$${2}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " show"; fi
 )"$$(
-	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\\"#$${COMPOSER_TINYNAME}-fold-group-$${3}\\""; fi
+	if [ "$${3}" != "$${SPECIAL_VAL}" ]; then $${ECHO} " data-bs-parent=\"#$${COMPOSER_TINYNAME}-fold-group-$${3}\""; fi
 ) id="$${COMPOSER_TINYNAME}-fold-$$($(HELPOUT)-$(TARGETS)-format "$${@:4}")-target">
 <div class="accordion-body">
 _EOF_
@@ -9676,7 +9717,7 @@ _EOF_
 				LINK="#"
 			fi
 			if [ -z "$${NAME}" ]; then
-				NAME="$${FILE/#*\\/}"
+				NAME="$${FILE/#*\/}"
 			fi
 			if {	[ "$${TYPE}" = "banner" ] ||
 				{ [ "$${TYPE}" = "shelf" ] && [ "$${SHW}" = "0" ]; };
@@ -9964,11 +10005,11 @@ $${CAT} <<_EOF_
 	fi
 )" id="$${COMPOSER_TINYNAME}-frame-$$($(HELPOUT)-$(TARGETS)-format "$${@:2}")" $$(
 	if [ "$${1}" = "youtube" ]; then
-		$${ECHO} "title=\\"YouTube: $${@:2}\\""
-		$${ECHO} "src=\\"https://www.youtube-nocookie.com/embed/$${@:2}\\""
+		$${ECHO} "title=\"YouTube: $${@:2}\""
+		$${ECHO} "src=\"https://www.youtube-nocookie.com/embed/$${@:2}\""
 	else
-		$${ECHO} "title=\\"$${@:2}\\""
-		$${ECHO} "src=\\"$${1}\\""
+		$${ECHO} "title=\"$${@:2}\""
+		$${ECHO} "src=\"$${1}\""
 	fi
 )>
 </iframe>
@@ -10055,7 +10096,6 @@ function $(PUBLISH)-select {
 		[ "$${ACTION}" = "contents" ] ||
 		[ "$${ACTION}" = "readtime" ];
 	then
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
 		if [ "$${ACTION}" = "metainfo" ] && [ -n "$${1}" ]; then
 			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-run $${@} $${PUBLISH_CMD_END}\\n"
 			META_FILE="$${FILE_PATH[-1]}"
@@ -15682,7 +15722,7 @@ override define $(PUBLISH)-$(TARGETS) =
 	FOOTER="$(INCLUDE_FILE_FOOTER)"; \
 	$(ECHO) "$(_E)"; \
 	$(ECHO) "" >$(1); \
-	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $(call COMPOSER_CONV,$(EXPAND),$(1),1,1) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
+	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS)-metainfo $(MARKER) $(call COMPOSER_CONV,$(EXPAND),$(word 1,$(call c_list_var)),1,1) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(call PUBLISH_SH_RUN) metainfo-block . $(SPECIAL_VAL) $(word 1,$(call c_list_var)) \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
@@ -15696,7 +15736,7 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-cache =
 	for FILE in $(2); do \
-		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML) -->\n" \
+		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS)-cache $(MARKER) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML) -->\n" \
 			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
 		$(CAT) $($(PUBLISH)-cache).$${FILE}.$(EXTN_HTML); \
 	done \
@@ -15705,7 +15745,10 @@ override define $(PUBLISH)-$(TARGETS)-cache =
 endef
 
 override define $(PUBLISH)-$(TARGETS)-file =
-	$(call PUBLISH_SH_RUN) $(2) \
+	{	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS)-file $(MARKER) $(2) -->\n" \
+			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
+		$(call PUBLISH_SH_RUN) $(2); \
+	} \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
@@ -15779,18 +15822,17 @@ endef
 #> update: title / date / metalist:*
 
 #WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#	back to $(word 1,$(call c_list_var)) ...?
-#		repercussions...?  document!
 override define $(PUBLISH)-$(TARGETS)-metalist =
 	META="$$( \
-			$(call PUBLISH_SH_RUN) metainfo-block . "$(2)" $(if $(or \
-					$(filter $(2),$(PUBLISH_METATITL)) ,\
-					$(filter $(2),$(PUBLISH_METADATE)) ,\
-				),\
-					$(word 1,$(call c_list_var)) ,\
-					$(call c_list_var) \
-				) \
-		)"; \
+		$(call PUBLISH_SH_RUN) metainfo-block . "$(2)" \
+			$(if $(or \
+				$(filter $(2),$(PUBLISH_METATITL)) ,\
+				$(filter $(2),$(PUBLISH_METADATE)) ,\
+			),\
+				$(word 1,$(call c_list_var)) ,\
+				$(call c_list_var) \
+			) \
+	)"; \
 	$(ECHO) "$${META}\n" \
 		| $(HEAD) -n1 \
 		>>$(1).metalist-$(2)-list; \
@@ -16292,18 +16334,23 @@ endef
 #> update: title / date / metalist:*
 
 #>	$(MAKE) $(PUBLISH)-library-metadata-$$($(ECHO) "$${FILE}" | $(SED) "s|[/]|$(TOKEN)|g");
+#>	$(MAKE) $(PUBLISH)-library-metadata-c_list c_base="pages"
 
 .PHONY: $(PUBLISH)-library-metadata-%
 $(PUBLISH)-library-metadata-%:
-	@$(PRINT) "$(_F)$(MARKER) $(subst $(TOKEN),/,$(*))"
-	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(TOKEN)	$(subst $(TOKEN),/,$(*)); $(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block .		$(TOKEN)	$(subst $(TOKEN),/,$(*)); $(ENDOLINE)
+	@$(eval override META := $(if $(filter $(*),c_list),$(call c_list_var),$(subst $(TOKEN),/,$(*))))
+	@$(PRINT) "$(_F)$(MARKER) $(META)"
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(TOKEN)	$(META); $(ENDOLINE)
+#	@exit 1
+	@$(call PUBLISH_SH_RUN) metainfo-block .		$(TOKEN)	$(META); $(ENDOLINE)
+#	@exit 1
 	@$(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	.		$(subst $(TOKEN),/,$(*)); $(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block .		.		$(subst $(TOKEN),/,$(*)); $(ENDOLINE)
+	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	.		$(META); $(ENDOLINE)
+	@$(call PUBLISH_SH_RUN) metainfo-block .		.		$(META); $(ENDOLINE)
 	@$(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(SPECIAL_VAL)	$(subst $(TOKEN),/,$(*))
-	@$(call PUBLISH_SH_RUN) metainfo-block .		$(SPECIAL_VAL)	$(subst $(TOKEN),/,$(*))
+	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(SPECIAL_VAL)	$(META)
+	@$(call PUBLISH_SH_RUN) metainfo-block .		$(SPECIAL_VAL)	$(META)
 	@$(foreach FILE,\
 		$(PUBLISH_METATITL) \
 		$(PUBLISH_METADATE) \
@@ -16311,8 +16358,8 @@ $(PUBLISH)-library-metadata-%:
 		$(PUBLISH_METATAGS) \
 		,\
 		$(ENDOLINE); \
-		$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(FILE)	$(subst $(TOKEN),/,$(*)); \
-		$(call PUBLISH_SH_RUN) metainfo-block .			$(FILE)	$(subst $(TOKEN),/,$(*)); \
+		$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(FILE)	$(META); \
+		$(call PUBLISH_SH_RUN) metainfo-block .			$(FILE)	$(META); \
 		$(call NEWLINE) \
 	)
 
