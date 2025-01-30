@@ -772,13 +772,12 @@ override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
 #WORKING:FIX:EXCLUDE:DATE
 #	https://mikefarah.gitbook.io/yq/operators/datetime
 #		https://pkg.go.dev/time#pkg-constants
-#	need to put "zone_iso" into "input_yq" and markdown files in order to get full timezone support...
+#	need to put "zone_iso" into "time.input" and markdown files in order to get full timezone support...
 #		otherwise, all dates/times are considered local...
 override LIBRARY_TIME_INTERNAL		:= 2006-01-02T15:04:05-07:00
 override LIBRARY_TIME_INTERNAL_NULL	:= 1970-01-01T00:00:00+00:00
 override LIBRARY_TIME_ZONE_DEFAULT	:= [+]00[:]00
 override LIBRARY_TIME_ZONE_ISO		:= [-]07[:]00
-override LIBRARY_TIME_ZONE_IANA		:= MST
 override LIBRARY_TIME_ZONE_DATE		:= +%:z
 
 ########################################
@@ -922,20 +921,20 @@ override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(P
 override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
 
 #WORKING:FIX:EXCLUDE:DATE
-override LIBRARY_TIME_INPUT_YQ_1	:= $(LIBRARY_TIME_INTERNAL)
-override LIBRARY_TIME_INPUT_YQ_2	:= 2006-01-02
-override LIBRARY_TIME_INPUT_YQ_3	:= 2006-01-02 15:04
-override LIBRARY_TIME_INPUT_YQ_4	:= January 2, 2006
-#WORKING:FIX:EXCLUDE:DATE
-override LIBRARY_TIME_INPUT_YQ_ALT	:= $(COMPOSER_VERSION) (2006-01-02)
-#WORKING:FIX:EXCLUDE:DATE
-override LIBRARY_TIME_INPUT_YQ_MOD	:= 2006-01-02 15:04 -0700
-override LIBRARY_TIME_INDEX_DATE	:= +%Y
-override LIBRARY_TIME_INDEX_DATE_ALT	:= +%Y-%m
-override LIBRARY_TIME_INDEX_DATE_MOD	:= null
-override LIBRARY_TIME_OUTPUT_DATE	:= +%Y-%m-%d
-override LIBRARY_TIME_OUTPUT_DATE_ALT	:= +%Y-%m-%d %H:%M
-override LIBRARY_TIME_OUTPUT_DATE_MOD	:= null
+#> update: LIBRARY_TIME_INPUT_ALT = PUBLISH_PAGES_DATE_FORMAT
+override LIBRARY_TIME_INPUT_1		:= $(LIBRARY_TIME_INTERNAL)
+override LIBRARY_TIME_INPUT_2		:= 2006-01-02
+override LIBRARY_TIME_INPUT_3		:= 2006-01-02 15:04 -07:00
+override LIBRARY_TIME_INPUT_4		:= January 2, 2006
+override LIBRARY_TIME_INPUT_ALT		:= January _2, 2006  3:04 PM MST -07:00
+override LIBRARY_TIME_INPUT_MOD		:= $(COMPOSER_VERSION) (2006-01-02)
+#WORKING:FIX:EXCLUDE:DATE:CONV
+override LIBRARY_TIME_INDEX		:= +%Y
+override LIBRARY_TIME_INDEX_ALT		:= +%Y-%m
+override LIBRARY_TIME_INDEX_MOD		:= null
+override LIBRARY_TIME_OUTPUT		:= +%Y-%m-%d
+override LIBRARY_TIME_OUTPUT_ALT	:= +%Y-%m-%d %H:%M %p %Z
+override LIBRARY_TIME_OUTPUT_MOD	:= null
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
@@ -2501,9 +2500,9 @@ override define COMPOSER_YML_DATA_SKEL =
     append:				$(LIBRARY_APPEND),
 
     time: {
-      input_yq:				[ "$(LIBRARY_TIME_INPUT_YQ_1)", "$(LIBRARY_TIME_INPUT_YQ_2)", "$(LIBRARY_TIME_INPUT_YQ_3)", "$(LIBRARY_TIME_INPUT_YQ_4)" ],
-      index_date:			"$(LIBRARY_TIME_INDEX_DATE)",
-      output_date:			"$(LIBRARY_TIME_OUTPUT_DATE)",
+      input:				[ "$(LIBRARY_TIME_INPUT_1)", "$(LIBRARY_TIME_INPUT_2)", "$(LIBRARY_TIME_INPUT_3)", "$(LIBRARY_TIME_INPUT_4)" ],
+      index:				"$(LIBRARY_TIME_INDEX)",
+      output:				"$(LIBRARY_TIME_OUTPUT)",
     },
 
     digest: {
@@ -2741,9 +2740,10 @@ endif
 endif
 
 override PUBLISH_SH_GLOBAL := \
-	COMPOSER_HOMEPAGE \
 	COMPOSER_TINYNAME \
+	COMPOSER_HOMEPAGE \
 	CREATED_TAGLINE \
+	COMPOSER_CMS \
 	$(TOKEN) \
 	\
 	SPECIAL_VAL \
@@ -2757,9 +2757,24 @@ override PUBLISH_SH_GLOBAL := \
 	$(TOKEN) \
 	\
 	MENU_SELF \
+	$(TOKEN) \
+	\
+	KEY_UPDATED \
+	KEY_FILEPATH \
+	KEY_DATE \
+	KEY_DATE_INPUT \
+	$(TOKEN) \
+	\
 	HTML_SPACE \
 	HTML_BREAK \
 	HTML_HIDE \
+	$(TOKEN) \
+	\
+	LIBRARY_TIME_INTERNAL \
+	LIBRARY_TIME_INTERNAL_NULL \
+	LIBRARY_TIME_ZONE_DEFAULT \
+	LIBRARY_TIME_ZONE_ISO \
+	LIBRARY_TIME_ZONE_DATE \
 	$(TOKEN) \
 	\
 	DISPLAY_SHOW_DEFAULT \
@@ -2772,6 +2787,8 @@ override PUBLISH_SH_GLOBAL := \
 	PUBLISH_CMD_BEG \
 	PUBLISH_CMD_END \
 
+#WORKING:FIX:EXCLUDE:DATE:CONV
+#	DATENOW?
 override PUBLISH_SH_LOCAL := \
 	SED \
 	$(TOKEN) \
@@ -2783,6 +2800,9 @@ override PUBLISH_SH_LOCAL := \
 	HEAD \
 	PRINTF \
 	TR \
+	$(TOKEN) \
+	\
+	DATENOW \
 	$(TOKEN) \
 	\
 	YQ_WRITE \
@@ -2835,13 +2855,10 @@ override PUBLISH_INDEX			:= index
 override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)
 
 #> update: $(PUBLISH)-library-sort-yq
+#> update: LIBRARY_TIME_INPUT_ALT / PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
 override PUBLISH_PAGES_DATE		:= -01-01
-override PUBLISH_PAGES_HOURS		:=
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-override PUBLISH_PAGES_DATE		:= -06-01
-override PUBLISH_PAGES_HOURS		:= 15:04 -0700
-endif
+override PUBLISH_PAGES_DATE_FORMAT	:= +%B %e, %Y %l:%M %p %Z %:z
 override PUBLISH_PAGES_NUMS		:= 0 1 2 3 4 5 6 7 8 9
 override PUBLISH_PAGES_JOIN		:= +$(EXAMPLE)_
 
@@ -5630,7 +5647,7 @@ endef
 #	default css (see "themes" page)
 #	note on example page about logo/icon
 
-#>| [time.input_yq]	| `$(LIBRARY_TIME_INPUT_YQ)`	$(if $(1),| `$(LIBRARY_TIME_INPUT_YQ_ALT)`)
+#>| [time.input]	| `$(LIBRARY_TIME_INPUT)`	$(if $(1),| `$(LIBRARY_TIME_INPUT_ALT)`)
 override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config			| defaults						$(if $(1),| values)
 |:---|:------|$(if $(1),:------|)
@@ -5673,9 +5690,9 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [auto_update]		| `$(LIBRARY_AUTO_UPDATE)`			$(if $(1),| `$(LIBRARY_AUTO_UPDATE_ALT)`)
 | [anchor_links]	| `$(LIBRARY_ANCHOR_LINKS)`				$(if $(1),| `$(LIBRARY_ANCHOR_LINKS_ALT)`)
 | [append]		| `$(LIBRARY_APPEND)`			$(if $(1),| `$(LIBRARY_APPEND_ALT)`)
-| [time.input_yq]	| *(see `$(COMPOSER_YML)`)*	$(if $(1),| *(see `$(COMPOSER_YML)`)*)
-| [time.index_date]	| `$(LIBRARY_TIME_INDEX_DATE)`				$(if $(1),| `$(LIBRARY_TIME_INDEX_DATE_ALT)`)
-| [time.output_date]	| `$(LIBRARY_TIME_OUTPUT_DATE)`			$(if $(1),| `$(LIBRARY_TIME_OUTPUT_DATE_ALT)`)
+| [time.input]		| *(see `$(COMPOSER_YML)`)*	$(if $(1),| *(see `$(COMPOSER_YML)`)*)
+| [time.index]		| `$(LIBRARY_TIME_INDEX)`				$(if $(1),| `$(LIBRARY_TIME_INDEX_ALT)`)
+| [time.output]		| `$(LIBRARY_TIME_OUTPUT)`			$(if $(1),| `$(LIBRARY_TIME_OUTPUT_ALT)`)
 | [digest.title]	| `$(LIBRARY_DIGEST_TITLE)`		$(if $(1),| `$(LIBRARY_DIGEST_TITLE_ALT)`)
 | [digest.continue]	| `$(LIBRARY_DIGEST_CONTINUE)`			$(if $(1),| `$(LIBRARY_DIGEST_CONTINUE_ALT)`)
 | [digest.permalink]	| `$(LIBRARY_DIGEST_PERMALINK)`	$(if $(1),| `$(LIBRARY_DIGEST_PERMALINK_ALT)`)
@@ -5736,9 +5753,9 @@ $(foreach FILE,\
 	auto_update \
 	anchor_links \
 	append \
-	time.input_yq \
-	time.index_date \
-	time.output_date \
+	time.input \
+	time.index \
+	time.output \
 	digest.title \
 	digest.continue \
 	digest.permalink \
@@ -5844,10 +5861,11 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
+#>date: $(call DATEMARK,$(DATENOW))
 override define PUBLISH_PAGE_3 =
 ---
 title: $(PUBLISH_PAGE_3_NAME)
-date: $(call DATEMARK,$(DATENOW))$(if $(and $(1),$(PUBLISH_PAGES_HOURS)), $(PUBLISH_PAGES_HOURS))
+date: $(shell $(call DATEFORMAT,$(DATENOW),$(PUBLISH_PAGES_DATE_FORMAT)))
 $(PUBLISH_CREATORS): $(COMPOSER_COMPOSER)
 $(PUBLISH_METALIST): [ Main ]
 ---
@@ -7276,9 +7294,9 @@ $(_S)#$(MARKER)$(_D) $(_C)anchor_links$(_D):			$(_M)$(LIBRARY_ANCHOR_LINKS)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)append$(_D):				$(_M)$(LIBRARY_APPEND)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)time$(_D):
-$(_S)#$(MARKER)$(_D)   $(_C)input_yq$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_YQ_1)$(_N)",$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_YQ_2)$(_N)",$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_YQ_3)$(_N)",$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_YQ_4)$(_N)"$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)index_date$(_D):			$(_N)"$(_M)$(LIBRARY_TIME_INDEX_DATE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)output_date$(_D):			$(_N)"$(_M)$(LIBRARY_TIME_OUTPUT_DATE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)input$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_1)$(_N)",$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_2)$(_N)",$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_3)$(_N)",$(_D) $(_N)"$(_M)$(LIBRARY_TIME_INPUT_4)$(_N)"$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)index$(_D):				$(_N)"$(_M)$(LIBRARY_TIME_INDEX)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)output$(_D):				$(_N)"$(_M)$(LIBRARY_TIME_OUTPUT)$(_N)"$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)digest$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
@@ -7666,7 +7684,7 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
-#>      input_yq:				"$(LIBRARY_TIME_INPUT_YQ$(if $(1),_MOD,_ALT))"
+#>      input:				"$(LIBRARY_TIME_INPUT$(if $(1),_MOD,_ALT))"
 override define HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(CONFIGS))
@@ -7724,9 +7742,9 @@ variables:
     anchor_links:			$(LIBRARY_ANCHOR_LINKS$(if $(1),_MOD,_ALT))
     append:				$(LIBRARY_APPEND$(if $(1),_MOD,_ALT))
     time:
-      input_yq:				[ "$(LIBRARY_TIME_INPUT_YQ_1)", "$(LIBRARY_TIME_INPUT_YQ_2)", "$(LIBRARY_TIME_INPUT_YQ_3)", "$(LIBRARY_TIME_INPUT_YQ_4)", "$(LIBRARY_TIME_INPUT_YQ$(if $(1),_MOD,_ALT))" ]
-      index_date:			"$(LIBRARY_TIME_INDEX_DATE$(if $(1),_MOD,_ALT))"
-      output_date:			"$(LIBRARY_TIME_OUTPUT_DATE$(if $(1),_MOD,_ALT))"
+      input:				[ "$(LIBRARY_TIME_INPUT_1)", "$(LIBRARY_TIME_INPUT_2)", "$(LIBRARY_TIME_INPUT_3)", "$(LIBRARY_TIME_INPUT_4)", "$(LIBRARY_TIME_INPUT$(if $(1),_MOD,_ALT))" ]
+      index:				"$(LIBRARY_TIME_INDEX$(if $(1),_MOD,_ALT))"
+      output:				"$(LIBRARY_TIME_OUTPUT$(if $(1),_MOD,_ALT))"
     digest:
       title:				"$(LIBRARY_DIGEST_TITLE$(if $(1),_MOD,_ALT))"
       continue:				"$(LIBRARY_DIGEST_CONTINUE$(if $(1),_MOD,_ALT))"
@@ -8097,7 +8115,7 @@ function $(PUBLISH)-parse {
 #> update: join(.*)
 
 # 1 file				$${SPECIAL_VAL} = library
-# 2 text				$${SPECIAL_VAL} = metadata
+# 2 text				$${SPECIAL_VAL} = metadata || $${TOKEN} = $(KEY_DATE).$(KEY_DATE_INPUT) $${TOKEN} $(KEY_DATE).$(KEY_DATE_INDEX)
 # 3 file path
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
@@ -8132,17 +8150,54 @@ function $(PUBLISH)-metainfo-block {
 		TITL="$$($${ECHO} "$${3}" | $${SED} "s|^.+[/]||g")"
 	fi
 #WORKING:FIX:EXCLUDE:DATE:CONV
-	DATE_OUT="$$(
-		$${ECHO} "$${META}" \\
-		| $${YQ_WRITE} ".date" 2>/dev/null \\
-		| COMPOSER_YML_DATA_PARSE
-	)"
-	DOUT="$${DATE_OUT}"
+	DATE_IN=
+	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
+		DATE_IN="$$(
+			$${ECHO} "$${META}" \\
+			| $${YQ_WRITE} ".\"$${KEY_DATE}\".\"$${KEY_DATE_INPUT}\"" 2>/dev/null \\
+			| COMPOSER_YML_DATA_PARSE
+		)"
+	else
+		DATE_IN="$$(
+			$${ECHO} "$$(COMPOSER_YML_DATA_VAL library.time.input)" \\
+			| $${YQ_WRITE} ".[]" 2>/dev/null \\
+			| COMPOSER_YML_DATA_PARSE \\
+			| while read -r FORMAT; do
+				$${ECHO} "$${META}" \\
+				| $${YQ_WRITE} ".date |= with_dtf(\\"$${FORMAT}\\"; format_datetime(\\"$(.)$${LIBRARY_TIME_INTERNAL}\\")) | .date" 2>/dev/null \\
+				| COMPOSER_YML_DATA_PARSE \\
+				| if [ -z "$$($${ECHO} "$${FORMAT}" | $${SED} -n "/$${LIBRARY_TIME_ZONE_ISO}/p")" ]; then
+					$${SED} "s|$${LIBRARY_TIME_ZONE_DEFAULT}$$|$$($(patsubst $(word 1,$(DATE))%,$${DATE}%,$(call DATEFORMAT,$${DATENOW},$${LIBRARY_TIME_ZONE_DATE})) 2>/dev/null)|g"
+				else
+					$${CAT}
+				fi
+			done
+		)"
+	fi
+	DATE_INDEX="$$(	$${ECHO} "$${DATE_IN}" | $${SED} "s|^[$(.)]||g")"
+	DOUT="$$(	$${ECHO} "$${DATE_IN}" | $${SED} "s|^[$(.)]||g")"
+	if [ -z "$${DATE_IN}" ]; then
+		DATE_IN="$(.)$${LIBRARY_TIME_INTERNAL_NULL}"
+	fi
+	if [ -n "$${DATE_INDEX}" ]; then
+		DATE_INDEX="$$($(patsubst $(word 1,$(DATE))%,$${DATE}%,$(call DATEFORMAT,$${DATE_INDEX},$$(COMPOSER_YML_DATA_VAL library.time.index))) 2>/dev/null)"
+	fi
+	if [ -z "$${DATE_INDEX}" ]; then
+		DATE_INDEX="null"
+	fi
 	if [ -n "$${DOUT}" ]; then
-		DOUT="$$($(patsubst $(word 1,$(DATE))%,$${DATE}%,$(call DATEFORMAT,$${DOUT},$$(COMPOSER_YML_DATA_VAL library.time.output_date))) 2>/dev/null)"
-		if [ -z "$${DOUT}" ]; then
-			DOUT="$${DATE_OUT}"
-		fi
+		DOUT="$$($(patsubst $(word 1,$(DATE))%,$${DATE}%,$(call DATEFORMAT,$${DOUT},$$(COMPOSER_YML_DATA_VAL library.time.output))) 2>/dev/null)"
+	fi
+	if [ -z "$${DOUT}" ]; then
+		DOUT="$$(
+			$${ECHO} "$${META}" \\
+			| $${YQ_WRITE} ".date" 2>/dev/null \\
+			| COMPOSER_YML_DATA_PARSE
+		)"
+	fi
+	if [ "$${2}" = "$${TOKEN}" ]; then
+		$${ECHO} "$${DATE_IN}$${TOKEN}$${DATE_INDEX}"
+		return 0
 	fi
 	TAGS=()
 	NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
@@ -8165,6 +8220,10 @@ function $(PUBLISH)-metainfo-block {
 			fi
 			NUM="$$($${EXPR} $${NUM} + 1)"
 		done
+#>				del(.\\"$${COMPOSER_CMS}\\") \\
+#>				| del(.\\"$${KEY_UPDATED}\\") \\
+#>				| del(.\\"$${KEY_FILEPATH}\\") \\
+#>				| del(.\\"$${KEY_DATE}\\") \\
 		$${ECHO} "$${META}" \\
 			| $${YQ_WRITE_FILE} " \\
 				del(.title) \\
@@ -15816,6 +15875,7 @@ $($(PUBLISH)-library-metadata):
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "," >>$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_D)"
+#WORKING:FIX:EXCLUDE:DATE:CONV
 	@$(call ENV_MAKE,$(TESTING_MAKEJOBS)) \
 		--directory $(COMPOSER_LIBRARY_ROOT) \
 		COMPOSER_DOITALL_$(CONFIGS)="$(@)" \
@@ -15825,6 +15885,8 @@ $($(PUBLISH)-library-metadata):
 			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 		| while read -r FILE; do \
 			$(call $(PUBLISH)-library-metadata-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
+$(MAKE) $(PUBLISH)-library-metadata-$$($(ECHO) "$${FILE}" | $(SED) "s|[/]|$(TOKEN)|g"); \
+exit 1; \
 		done
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
 	@if [ ! -s "$(@)" ]; then \
@@ -15863,10 +15925,7 @@ $($(PUBLISH)-library-metadata):
 
 #WORKING:FIX:EXCLUDE:DATE:SED
 #				| $(SED) -e "s|^[\"]||g" -e "s|[\"]$$||g"; \
-#WORKING:FIX:EXCLUDE:DATE:CONV
-#>			DATE_INDEX="$$($(call DATEFORMAT,$${DATE_INDEX},$(call COMPOSER_YML_DATA_VAL,library.time.index_date)) 2>/dev/null)" || $(TRUE); \
 
-#>					[ -z "$$($(ECHO) "$${FORMAT}" | $(SED) -n "/$(LIBRARY_TIME_ZONE_IANA)/p")" ];
 override define $(PUBLISH)-library-metadata-create =
 	$(call $(HEADERS)-note,$(patsubst %.$(COMPOSER_BASENAME),%,$(1)),$(2),$(PUBLISH)-metadata); \
 	$(ECHO) "$(_N)"; \
@@ -15877,30 +15936,9 @@ override define $(PUBLISH)-library-metadata-create =
 			| $(YQ_WRITE) "(.title != null or .pagetitle != null)" 2>/dev/null \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 	)" = "true" ]; then \
-		DATE_IN="$$( \
-			$(ECHO) '$(call COMPOSER_YML_DATA_VAL,library.time.input_yq)' \
-			| $(YQ_WRITE) ".[]" 2>/dev/null \
-			| $(call COMPOSER_YML_DATA_PARSE) \
-			| while read -r FORMAT; do \
-				$(YQ_READ) ".date |= with_dtf(\"$${FORMAT}\"; format_datetime(\"$(.)$(LIBRARY_TIME_INTERNAL)\")) | .date" $(2) 2>/dev/null \
-				| $(call COMPOSER_YML_DATA_PARSE) \
-				| if [ -z "$$($(ECHO) "$${FORMAT}" | $(SED) -n "/$(LIBRARY_TIME_ZONE_ISO)/p")" ]; then \
-					$(SED) "s|$(LIBRARY_TIME_ZONE_DEFAULT)$$|$$($(call DATEFORMAT,$(DATENOW),$(LIBRARY_TIME_ZONE_DATE)))|g"; \
-				else \
-					$(CAT); \
-				fi; \
-			done \
-		)"; \
-		DATE_INDEX="$$($(ECHO) "$${DATE_IN}" | $(SED) "s|^[$(.)]||g")"; \
-		if [ -n "$${DATE_INDEX}" ]; then \
-			DATE_INDEX="$$($(call DATEFORMAT,$${DATE_INDEX},$(call COMPOSER_YML_DATA_VAL,library.time.index_date)) 2>/dev/null)"; \
-		fi; \
-		if [ -z "$${DATE_IN}" ]; then \
-			DATE_IN="$(.)$(LIBRARY_TIME_INTERNAL_NULL)"; \
-		fi; \
-		if [ -z "$${DATE_INDEX}" ]; then \
-			DATE_INDEX="null"; \
-		fi; \
+		DATE_PARSE="$$($(call PUBLISH_SH_RUN) metainfo-block . $(TOKEN) $${FILE})"; \
+		DATE_IN="$$(	$(ECHO) "$${DATE_PARSE}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")"; \
+		DATE_INDEX="$$(	$(ECHO) "$${DATE_PARSE}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")"; \
 		$(YQ_READ) $(2) 2>/dev/null \
 			| $(YQ_WRITE) ". += { \"$(COMPOSER_CMS)\": true }" 2>/dev/null \
 			| $(YQ_WRITE) ". += { \"$(KEY_DATE)\": { \
@@ -15934,6 +15972,22 @@ override define $(PUBLISH)-library-metadata-create =
 	$(ECHO) "," >>$(1); \
 	$(ECHO) "$(_D)"
 endef
+
+########################################
+##### {{{5 $(PUBLISH)-library-metadata-%
+########################################
+
+#>	$(MAKE) $(PUBLISH)-library-metadata-$$($(ECHO) "$${FILE}" | $(SED) "s|[/]|$(TOKEN)|g");
+
+.PHONY: $(PUBLISH)-library-metadata-%
+$(PUBLISH)-library-metadata-%:
+	@$(PRINT) "$(_F)$(MARKER) $(subst $(TOKEN),/,$(*))"
+	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(TOKEN)	$(subst $(TOKEN),/,$(*)); $(ECHO) "\n"
+	@$(call PUBLISH_SH_RUN) metainfo-block .		$(TOKEN)	$(subst $(TOKEN),/,$(*)); $(ECHO) "\n"
+	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	.		$(subst $(TOKEN),/,$(*)); $(ECHO) "\n"
+	@$(call PUBLISH_SH_RUN) metainfo-block .		.		$(subst $(TOKEN),/,$(*)); $(ECHO) "\n"
+	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(SPECIAL_VAL)	$(subst $(TOKEN),/,$(*))
+	@$(call PUBLISH_SH_RUN) metainfo-block .		$(SPECIAL_VAL)	$(subst $(TOKEN),/,$(*))
 
 ########################################
 #### {{{4 $(PUBLISH)-library-index
@@ -16620,6 +16674,12 @@ override define $(PUBLISH)-library-sort-yq =
 	| sort_by( \
 		with_dtf(\"$(.)$(LIBRARY_TIME_INTERNAL)\"; .\"$(KEY_DATE)\".\"$(KEY_DATE_INPUT)\") \
 	) | reverse
+endef
+#WORKING:FIX:EXCLUDE:DATE:CONV
+override define $(PUBLISH)-library-sort-yq =
+	sort_by(.\"$(KEY_FILEPATH)\") \
+	| sort_by(.title) \
+	| (sort_by(.date) | reverse)
 endef
 
 override define $(PUBLISH)-library-sort-sh =
