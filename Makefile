@@ -2698,6 +2698,7 @@ override $(PUBLISH)-caches := \
 ### {{{3 Library
 ########################################
 
+#> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 #> update: library.folder
 ifneq ($(COMPOSER_YML_LIST),)
 override COMPOSER_LIBRARY_DIR		:=
@@ -2707,12 +2708,14 @@ $(if $(wildcard $(FILE)),\
 		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder.name" $(FILE) 2>/dev/null \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 	)) \
-	$(if $(filter usage:%,$(subst $(NULL) ,,$(strip $(COMPOSER_LIBRARY_DIR)))),\
-		$(eval override COMPOSER_LIBRARY_DIR :=) \
-	) \
 	$(if $(COMPOSER_LIBRARY_DIR),\
-		$(eval override COMPOSER_LIBRARY_ROOT	:= $(abspath $(dir $(FILE)))) \
-		$(eval override COMPOSER_LIBRARY	:= $(COMPOSER_LIBRARY_ROOT)/$(notdir $(COMPOSER_LIBRARY_DIR))) \
+		$(if $(filter $(COMPOSER_LIBRARY_DIR),$(TESTING)),\
+			$(eval override COMPOSER_LIBRARY_ROOT	:=) \
+			$(eval override COMPOSER_LIBRARY	:=) \
+		,\
+			$(eval override COMPOSER_LIBRARY_ROOT	:= $(abspath $(dir $(FILE)))) \
+			$(eval override COMPOSER_LIBRARY	:= $(COMPOSER_LIBRARY_ROOT)/$(notdir $(COMPOSER_LIBRARY_DIR))) \
+		) \
 	) \
 ))
 endif
@@ -4398,6 +4401,7 @@ endef
 #	booleans are true with 1, disabled with any other value (0 recommended), and otherwise default
 #	library folder name can not be "null", and will be shortened to basename
 #		note about how yml processing for this one is special
+#		$(testing) = disable... other than testing, what would/could this be for...?
 #	COMPOSER_INCLUDE + c_site = for the win!
 #	note: a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
@@ -7838,6 +7842,7 @@ endef
 ########################################
 
 #WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/.composer.yml
+
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE =
@@ -7853,10 +7858,15 @@ variables:
     folder:
       name:				$(notdir $(PUBLISH_LIBRARY))
       auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD)))
-$(if $(1),    digest:$(call NEWLINE)      chars:				$(LIBRARY_DIGEST_CHARS_MOD)$(call NEWLINE))
+$(if $(1),$(call HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE_TESTING)$(call NEWLINE))
 ################################################################################
 # End Of File
 ################################################################################
+endef
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE_TESTING =
+    digest:
+      chars:				$(LIBRARY_DIGEST_CHARS_MOD)
 endef
 
 ########################################
@@ -7865,12 +7875,16 @@ endef
 
 #WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
 
+#> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
+
 override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
 ################################################################################
 
-$(call COMPOSER_YML_DATA_SKEL,1)
+$(if $(1),$(call HEREDOC_COMPOSER_YML_PUBLISH_NOTHING_TESTING),$(call COMPOSER_YML_DATA_SKEL))
+
+########################################
 
 #>metalist: {$(subst $(call NEWLINE),$(call NEWLINE)#>,$(call COMPOSER_YML_DATA_SKEL_METALIST))
 #>}
@@ -7878,6 +7892,17 @@ $(call COMPOSER_YML_DATA_SKEL,1)
 ################################################################################
 # End Of File
 ################################################################################
+endef
+
+override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING_TESTING =
+variables:
+
+########################################
+
+  $(PUBLISH)-library:
+    folder:
+      name:				$(TESTING)
+      auto_update:			null
 endef
 
 ########################################
@@ -7900,14 +7925,14 @@ variables:
 
   $(PUBLISH)-config:
     navbars:
-#$(MARKER)   brand:				null,
-#$(MARKER)   homepage:				null,
+#$(MARKER)   brand:				null
+#$(MARKER)   homepage:				null
 #$(MARKER)   search:
-#$(MARKER)     name:				null,
-#$(MARKER)     site:				null,
-#$(MARKER)     call:				null,
-#$(MARKER)     form:				null,
-#$(MARKER)   copyright:			null,
+#$(MARKER)     name:				null
+#$(MARKER)     site:				null
+#$(MARKER)     call:				null
+#$(MARKER)     form:				null
+#$(MARKER)   copyright:			null
       $(COMPOSER_TINYNAME):				$(PUBLISH_COMPOSER$(if $(1),_MOD,_ALT))
     pages:
       css_overlay:			$(PUBLISH_CSS_OVERLAY$(if $(1),_MOD,_ALT))
@@ -8511,9 +8536,9 @@ function $(PUBLISH)-metainfo-block {
 			META_SEP=" "
 		fi
 #WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#	turn off "[]()" links when not COMPOSER_LIBRARY...
 #	verify composer_library_path is working everywhere, particularly non-library-root folders...
-#	[ ] sorting/display of v3.1 (2024-08-10) dates
+#	test $(publish_metadate) of something non-numeric, like "%Y %b"...
+#	sorting/display of v3.1 (2024-08-10) dates...
 		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 			if [ "$${FILE}" = "$${META_LIST}" ]; then
 				if	[ "$${FILE}" = "$(PUBLISH_METATITL)" ] ||
@@ -8526,8 +8551,12 @@ function $(PUBLISH)-metainfo-block {
 						$${ECHO} "$${INFO_LIST[$${NUM}]}\\n" \\
 							| $${SED} "s|$${TOKEN}|\\n|g" \\
 							| while read -r ITEM; do
-								if [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
-									$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$${DATE_LIBRARY}.$${EXTN_HTML})$${TOKEN}"
+								if [ -z "$${COMPOSER_LIBRARY_PATH}" ]; then
+									$${ECHO} "$${ITEM}$${TOKEN}"
+								elif [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
+									$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$$(
+											$(HELPOUT)-$(TARGETS)-format "$${DATE_LIBRARY}"
+										).$${EXTN_HTML})$${TOKEN}"
 								else
 									$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$$(
 											$(HELPOUT)-$(TARGETS)-format "$${ITEM}"
@@ -12416,13 +12445,24 @@ endef
 ## {{{2 YQ Colors
 ########################################
 
+override YQ_WRITE_OUT_COLOR_NULL := \
+	null \
+	true \
+	false \
+
+override YQ_WRITE_OUT_COLOR_MARK := \
+	spacer \
+
 override YQ_WRITE_OUT_COLOR := \
 	$(if $(COMPOSER_DOCOLOR),| $(SED) \
-		$(foreach FILE,null true false,\
+		$(foreach FILE,$(YQ_WRITE_OUT_COLOR_NULL),\
 			-e "s|([[:space:]]+)[\"]?($(FILE))[\"]?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?$$|\1[_N]\2|g" \
 		) \
+		$(foreach FILE,$(YQ_WRITE_OUT_COLOR_MARK),\
+			-e "s|([[:space:]]+)[\"]?($(FILE))[\"]?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?($(SED_ESCAPE_COLOR))?$$|\1[_M]\2|g" \
+		) \
 		-e "s|$$|[_D]|g" \
-		$(foreach FILE,_D _N,\
+		$(foreach FILE,_D _N _M,\
 			-e "s|[[]$(FILE)[]]|$(shell $(ECHO) "$($(FILE))")|g" \
 		) \
 	)
@@ -15827,9 +15867,7 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 		>>$(1).metalist-$(2)-list; \
 	$(ECHO) "$${META}\n" \
 		| $(TAIL) -n+2 \
-		| $(SED) \
-			-e "s|^|  * |g" \
-			-e "s|$$|{.breadcrumb-item}|g" \
+		| $(SED) "s|^|  * |g" \
 		>>$(1).metalist-$(2)-menu
 endef
 
@@ -15837,7 +15875,7 @@ override define $(PUBLISH)-$(TARGETS)-metalist-done =
 	$(SED) -i \
 		-e "1d" \
 		-e '$$d' \
-		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
+		-e "s|^[<]li[>]|<li class=\"breadcrumb-item\">|g" \
 		$(1).metalist-$(2)-menu-done
 endef
 
@@ -17479,14 +17517,11 @@ endif
 									>$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY_ALT).yml
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE,,1)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-else
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-endif
-	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
-ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING,,1)	>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS,,1)	>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 else
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)	>$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_NOTHING)	>$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)	>$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML)
 endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PANDOC_DIR)	>$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(COMPOSER_YML)
@@ -17494,7 +17529,14 @@ endif
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_BOOTSTRAP_TREE)	>$(PUBLISH_ROOT)/$(PUBLISH_BOOTSTRAP_TREE)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_PAGEDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(COMPOSER_YML)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)	>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
-	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
+	@$(SED) -i "s|[[:space:]]*$$||g"				$(PUBLISH_ROOT)/$(word 1,$(PUBLISH_DIRS))/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(word 2,$(PUBLISH_DIRS))/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(word 4,$(PUBLISH_DIRS))/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(word 5,$(PUBLISH_DIRS))/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(PUBLISH_BOOTSTRAP_TREE)/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(PUBLISH_PAGEDIR)/$(COMPOSER_YML) \
+									$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
 	@$(LN)								$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY).yml \
 									$(PUBLISH_ROOT)/$(PUBLISH_INCLUDE).$(EXTN_HTML).yml \
