@@ -679,6 +679,7 @@ endif
 #> update: READ_ALIASES
 $(call READ_ALIASES,V,COMPOSER_DEBUGIT)
 $(call READ_ALIASES,C,COMPOSER_DOCOLOR)
+$(call READ_ALIASES,K,COMPOSER_KEEPING)
 
 #> update: COMPOSER_INCLUDE[^S]
 override COMPOSER_DEBUGIT		?=
@@ -3585,6 +3586,7 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "  * *$(_C)[MAKEJOBS]$(_D)         ~ \`$(_E)J$(_D)\`*"
 	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)V$(_D)\`*"
 	@$(PRINT) "  * *$(_C)[COMPOSER_DOCOLOR]$(_D) ~ \`$(_E)C$(_D)\`*"
+	@$(PRINT) "  * *$(_C)[COMPOSER_KEEPING]$(_D) ~ \`$(_E)K$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
 	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is none     / number to keep    / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
