@@ -2882,16 +2882,12 @@ override PUBLISH_SH_LOCAL := \
 	$(TOKEN) \
 	\
 	CAT \
-	DATE \
 	ECHO \
 	EXPR \
 	HEAD \
 	PRINTF \
 	SORT_NUM \
 	TR \
-	$(TOKEN) \
-	\
-	DATENOW \
 	$(TOKEN) \
 	\
 	YQ_WRITE \
@@ -6318,12 +6314,36 @@ $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_EXT
 
 ## Metainfo
 
+$(PUBLISH_CMD_BEG) metainfo header 3 $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) metainfo header 3 $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) metainfo box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
+
 `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
 
 $(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)
 
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
+$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)`
+
+`$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) $(PUBLISH_CMD_END)
+
+`$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)`
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
+
 #WORK
-#	demonstrated elsewhere...
+#	other demonstrations...
 
   * `$(PUBLISH)-nav-left: { metainfo }` + `$(PUBLISH_CMD_BEG) metainfo $(PUBLISH_CMD_END)`
     * [$(PUBLISH_PAGE_1_NAME)]($(PUBLISH_CMD_ROOT)/$(word 1,$(PUBLISH_FILES)))
@@ -6559,6 +6579,8 @@ $(if $(and \
 ## Lorem Ipsum #$(word 2,$(1)) in $(word 1,$(1))
 
 $(call $(HELPOUT)-$(DOITALL)-workflow)
+
+$(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 endef
 
 ########################################
@@ -8043,9 +8065,7 @@ variables:
   $(PUBLISH)-nav-left:
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#	metainfo and metainfo-box/fold should co-exist just fine...?
-#      - metainfo
+      - metainfo
       - metalist $(PUBLISH_METATITL)
       - metalist $(PUBLISH_METADATE)
       - metalist $(PUBLISH_METAAUTH)
@@ -8154,6 +8174,8 @@ $(foreach FILE,$(PUBLISH_SH_GLOBAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE
 ### {{{3 Variables
 ########################################
 $(foreach FILE,$(PUBLISH_SH_LOCAL),$(call NEWLINE)$(if $(filter $(TOKEN),$(FILE)),,$(FILE)="$${$(FILE)}"))
+
+FILE_PATH=()
 
 ########################################
 ### {{{3 Arguments
@@ -9975,32 +9997,17 @@ function $(PUBLISH)-file {
 #>		return 0
 	fi
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
-	FILE_PATH="$$(
-		$${ECHO} "$${1}" \\
-		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
-	)"
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-	META_BEG=
-	META_BLD=
-	META_END=
-	if [ -n "$$($${SED} -n "/^$${PUBLISH_CMD_BEG} metainfo $${MENU_SELF}/p" $${FILE_PATH})" ]; then
-		META_BEG="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\1|gp" $${FILE_PATH} | $${HEAD} -n1)"
-		META_BLD="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\2|gp" $${FILE_PATH} | $${HEAD} -n1)"
-		META_END="$$($${SED} -n "s|^($${PUBLISH_CMD_BEG} metainfo) $${MENU_SELF} (.*)($${PUBLISH_CMD_END})$$|\\3|gp" $${FILE_PATH} | $${HEAD} -n1)"
-	fi
-	if [ -n "$${META_BLD}" ]; then
-		$${ECHO} "$${META_BEG}-start $${1} $${META_END}\\n"
-		$(PUBLISH)-$${META_BLD} $$(
-			$(PUBLISH)-metainfo-block . . $${FILE_PATH}
-		) || return 1
-	fi
+	FILE_PATH=("$$(
+			$${ECHO} "$${1}" \\
+			| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
+		)" "$${FILE_PATH[@]}")
 	$${ECHO} "\\n"
 	if [ -n "$$(
-		$${SED} -n "1{/^---$$/p}" $${FILE_PATH}
+		$${SED} -n "1{/^---$$/p}" $${FILE_PATH[0]}
 	)" ]; then
-		$${SED} "1,/^---$$/d" $${FILE_PATH}
+		$${SED} "1,/^---$$/d" $${FILE_PATH[0]}
 	else
-		$${CAT} $${FILE_PATH}
+		$${CAT} $${FILE_PATH[0]}
 	fi \\
 		| while IFS=$$'\\n' read -r FILE; do
 			BUILD_CMD="$${FILE}"
@@ -10021,10 +10028,7 @@ function $(PUBLISH)-file {
 		done \\
 		|| return 1
 	$${ECHO} "\\n"
-	if [ -n "$${META_BLD}" ]; then
-		$(PUBLISH)-$$($${ECHO} "$${META_BLD}" | $${SED} "s|[-]begin|-end|g") || return 1
-		$${ECHO} "$${META_BEG}-finish $${1} $${META_END}\\n"
-	fi
+	FILE_PATH=("$${FILE_PATH[@]:1}")
 	$(PUBLISH)-marker $${FUNCNAME} finish $${@}
 	return 0
 }
@@ -10052,13 +10056,21 @@ function $(PUBLISH)-select {
 		[ "$${ACTION}" = "readtime" ];
 	then
 #WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-		if [ "$${ACTION}" = "metainfo" ] && [ "$${1}" = "$${MENU_SELF}" ]; then
-			shift
-			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-self$$(
-				if [ -n "$${1}" ]; then
-					$${ECHO} " $${@}"
-				fi
-			) $${PUBLISH_CMD_END}\\n"
+		if [ "$${ACTION}" = "metainfo" ] && [ -n "$${1}" ]; then
+			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-run $${@} $${PUBLISH_CMD_END}\\n"
+			META_FILE="$${FILE_PATH[-1]}"
+			if [ "$${1}" = "$${MENU_SELF}" ]; then
+				META_FILE="$${FILE_PATH[0]}"
+				shift
+			fi
+			if [ -n "$${1}" ]; then
+				$(PUBLISH)-$${@} $$(
+						$(PUBLISH)-metainfo-block . . $${META_FILE}
+					) || return 1
+			else
+				$(PUBLISH)-metainfo-block . . $${META_FILE}
+				$${ECHO} "\\n"
+			fi
 		else
 			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-list$$(
 				if [ -n "$${1}" ]; then
@@ -12766,7 +12778,7 @@ endif
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)-$(TESTING)
-ifneq ($(COMPOSER_DOITALL_$(DISTRIB)),$(TESTING))
+ifeq ($(COMPOSER_DOITALL_$(DISTRIB)),$(TESTING))
 	@$(MAKE) --makefile $(COMPOSER) $(DEBUGIT)-$(TOAFILE)
 endif
 endif
@@ -13461,7 +13473,7 @@ $(DEBUGIT)-$(TOAFILE):
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(DEBUGIT_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
-	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(DEBUGIT_FILE)
+	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(subst %4s,%5s,$(subst %5s,%6s,$(VIM_OPTIONS)))))\n' >$(DEBUGIT_FILE)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT)) \
 		COMPOSER_DOITALL_$(call /,$(DEBUGIT))="$(COMPOSER_DOITALL_$(DEBUGIT))" \
 		COMPOSER_DOITALL_$(call /,$(TESTING))="$(DEBUGIT)" \
@@ -13470,8 +13482,7 @@ $(DEBUGIT)-$(TOAFILE):
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
 	@$(ENDOLINE)
-	@$(TAIL) -n10 $(DEBUGIT_FILE)
-	@$(LS) $(DEBUGIT_FILE)
+	@$(call $(TESTING)-$(TESTING),$(DEBUGIT_FILE))
 
 ########################################
 ## {{{2 $(TESTING)
@@ -13608,7 +13619,7 @@ $(TESTING)-$(TOAFILE):
 	@$(PRINT) "$(_H)$(MARKER) Printing to file$(_D) $(DIVIDE) $(_M)$(notdir $(TESTING_FILE))"
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
-	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(VIM_OPTIONS)))\n' >$(TESTING_FILE)
+	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(subst %4s,%5s,$(subst %5s,%6s,$(VIM_OPTIONS)))))\n' >$(TESTING_FILE)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT)) \
 		COMPOSER_DOITALL_$(call /,$(DEBUGIT))="$(TESTING)" \
 		COMPOSER_DOITALL_$(call /,$(TESTING))="$(COMPOSER_DOITALL_$(TESTING))" \
@@ -13617,8 +13628,7 @@ $(TESTING)-$(TOAFILE):
 		| $(SED) "s|^.*$$||g" \
 		| $(TR) '\n' '.'
 	@$(ENDOLINE)
-	@$(TAIL) -n10 $(TESTING_FILE)
-	@$(LS) $(TESTING_FILE)
+	@$(call $(TESTING)-$(TESTING),$(TESTING_FILE))
 
 ########################################
 ### {{{3 $(TESTING)-%
@@ -13654,6 +13664,19 @@ override define $(TESTING)-$(HEADERS) =
 	then \
 		$(DIFF) $(COMPOSER) $(TESTING_MAKEFILE); \
 	fi
+endef
+
+########################################
+#### {{{4 $(TESTING)-$(TESTING)
+########################################
+
+override define $(TESTING)-$(TESTING) =
+	$(LINERULE); \
+	$(LS) $(1); \
+	$(TAIL) -n10 $(1); \
+	$(ECHO) "$(_F)"; \
+	$(SED) -n "/FAILED[!]$$/p" $(1); \
+	$(ECHO) "$(_D)"
 endef
 
 ########################################
@@ -14125,7 +14148,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	#> precedence
-	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="1000" J="10" $(CONFIGS)
+	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="100" J="10" $(CONFIGS)
 	@$(call $(TESTING)-run,,$(NOTHING)) J="10" $(CONFIGS)
 	#> input
 	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
@@ -14165,8 +14188,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
 	#> precedence
-	$(call $(TESTING)-count,1,MAKEJOBS.+1000)
-	$(call $(TESTING)-count,1,MAKEJOBS.+100[^0])
+	$(call $(TESTING)-count,1,MAKEJOBS.+100)
 	$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
 	#> input
 	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT))
@@ -14176,7 +14198,7 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 #>	$(call $(TESTING)-count,4,$(COMPOSER_LICENSE_HEADLINE))
 	$(call $(TESTING)-count,5,$(COMPOSER_LICENSE_HEADLINE))
 	#> margins
-	$(call $(TESTING)-count,17,\|.+c_margin)
+	$(call $(TESTING)-count,16,\|.+c_margin)
 	$(call $(TESTING)-find,c_margin_top.+1in)
 	$(call $(TESTING)-find,c_margin_bottom.+2in)
 	$(call $(TESTING)-find,c_margin_left.+3in)
@@ -14185,8 +14207,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	$(call $(TESTING)-count,6,[\"]$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)[\"])
 	$(call $(TESTING)-count,6,[']$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)['])
 	#> values
-	$(call $(TESTING)-count,16,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,16,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-count,15,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,15,COMPOSER_SUBDIRS.+artifacts)
 	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT) $(notdir $(call $(TESTING)-pwd)))
 	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+artifacts $(notdir $(call $(TESTING)-pwd)))
 	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING))
@@ -15683,11 +15705,7 @@ override define $(PUBLISH)-$(TARGETS)-cache =
 endef
 
 override define $(PUBLISH)-$(TARGETS)-file =
-	for FILE in $(2); do \
-		$(ECHO) "<!-- $(PUBLISH)-$(TARGETS) $(MARKER) $${FILE} -->\n" \
-			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
-		$(call PUBLISH_SH_RUN) $${FILE}; \
-	done \
+	$(call PUBLISH_SH_RUN) $(2) \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 endef
@@ -15724,6 +15742,10 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call $(PUBLISH)-$(TARGETS)-$(HELPER)-done,$(1),$(TAGGER)); \
 		$(ECHO) "$(_S)"; \
+		if [ -n "$(COMPOSER_DEBUGIT)" ]; then \
+			$(MV) $(DOFILE)-menu $(DOFILE)-menu-src $($(DEBUGIT)-output); \
+			$(MV) $(DOFILE)-list $(DOFILE)-list-src $($(DEBUGIT)-output); \
+		fi; \
 		$(MV) $(DOFILE)-menu-done $(DOFILE)-menu $($(DEBUGIT)-output); \
 		$(MV) $(DOFILE)-list-done $(DOFILE)-list $($(DEBUGIT)-output); \
 		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-menu$(if $(TAGGER), $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-menu" $(1); \
@@ -15741,14 +15763,8 @@ endef
 ########################################
 
 override define $(PUBLISH)-$(TARGETS)-metainfo =
-	if [ -n "$${LIST}" ]; then \
-		$(ECHO) "$(PUBLISH_CMD_BEG) $${LIST} "	>>$(1).metainfo-list; \
-	fi; \
 	$(call PUBLISH_SH_RUN) metainfo-block . . $(1)	>>$(1).metainfo-list; \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
-	if [ -n "$${LIST}" ]; then \
-		$(ECHO) " $(PUBLISH_CMD_END)"		>>$(1).metainfo-list; \
-	fi; \
 	$(ECHO) "\n"					>>$(1).metainfo-list
 endef
 
@@ -15760,11 +15776,21 @@ endef
 #### {{{4 $(PUBLISH)-$(TARGETS)-metalist
 ########################################
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
+#> update: title / date / metalist:*
+
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
 #	back to $(word 1,$(call c_list_var)) ...?
 #		repercussions...?  document!
 override define $(PUBLISH)-$(TARGETS)-metalist =
-	META="$$($(call PUBLISH_SH_RUN) metainfo-block . "$(2)" $(word 1,$(call c_list_var)))"; \
+	META="$$( \
+			$(call PUBLISH_SH_RUN) metainfo-block . "$(2)" $(if $(or \
+					$(filter $(2),$(PUBLISH_METATITL)) ,\
+					$(filter $(2),$(PUBLISH_METADATE)) ,\
+				),\
+					$(word 1,$(call c_list_var)) ,\
+					$(call c_list_var) \
+				) \
+		)"; \
 	$(ECHO) "$${META}\n" \
 		| $(HEAD) -n1 \
 		>>$(1).metalist-$(2)-list; \
@@ -15943,8 +15969,8 @@ override define $(PUBLISH)-$(TARGETS)-readtime =
 		| $(PANDOC_MD_TO_TEXT) \
 		| $(WC_WORD) \
 	)"; \
-	TIME="1"; \
 	WPM="$(call COMPOSER_YML_DATA_VAL,helpers.readtime.wpm)"; \
+	TIME="1"; \
 	if [ "$${WORD}" -gt "$${WPM}" ]; then \
 		TIME="$$($(EXPR) $${WORD} / $${WPM})"; \
 	fi; \
@@ -16889,6 +16915,8 @@ override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_D)"
 endef
 
+#		$(ECHO) "-- #WORKING:FIX make sure this gets tested..."; \
+
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
 	DEST="$$($(word 1,$(REALPATH)) $(COMPOSER_LIBRARY_ROOT)/$(2))"; \
@@ -16930,7 +16958,7 @@ override define $(PUBLISH)-library-sitemap-run =
 				$(call PUBLISH_SH_RUN) metainfo-block . . $${LIST} \
 			)]($(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/$(2))"; \
 	else \
-		$(ECHO) "-- #WORKING:FIX make sure this gets tested..."; \
+		$(ECHO) "--"; \
 	fi; \
 	$(ECHO) " | "; \
 	$(ECHO) "[$${NAME}]($(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/$(2))$$( \
