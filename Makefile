@@ -164,7 +164,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `make COMPOSER_DEBUGIT="1" c_site= help-help | less -rX`
 #			* `make COMPOSER_DEBUGIT="1" COMPOSER_DOCOLOR= help-help | less -rX`
 #		* `override INPUT := commonmark`
-#			* `PANDOC_EXTENSIONS`
+#			* `PANDOC_EXTENSIONS_*`
 #		* Spell check
 #			* `make +test-heredoc`
 #		* Output
@@ -772,13 +772,13 @@ override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
 #WORKING:FIX:EXCLUDE:DATE
 #	https://mikefarah.gitbook.io/yq/operators/datetime
 #		https://pkg.go.dev/time#pkg-constants
-#	need to put "timezone_format" into "config.date.parse" and markdown files in order to get full timezone support...
+#	need to put "publish_date_timezone_format" into "config.dates.parse" and markdown files in order to get full timezone support...
 #		otherwise, all dates/times are considered local...
-override PUBLISH_DATE_FORMAT_DEFAULT	:= 2006-01-02 15:04 -07:00
-override PUBLISH_DATE_INTERNAL_FORMAT	:= 2006-01-02T15:04:05-07:00
-override PUBLISH_DATE_INTERNAL_NULL	:= 1970-01-01T00:00:00+00:00
-override PUBLISH_DATE_TIMEZONE_FORMAT	:= [-]07[:]00
-override PUBLISH_DATE_TIMEZONE_DEFAULT	:= [+]00[:]00
+override PUBLISH_DATES_FORMAT_DEFAULT	:= 2006-01-02 15:04 -07:00
+override PUBLISH_DATES_INTERNAL_FORMAT	:= 2006-01-02T15:04:05-07:00
+override PUBLISH_DATES_INTERNAL_NULL	:= 1970-01-01T00:00:00+00:00
+override PUBLISH_DATES_TIMEZONE_FORMAT	:= [-]07[:]00
+override PUBLISH_DATES_TIMEZONE_DEFAULT	:= [+]00[:]00
 
 ########################################
 ### {{{3 Configuration
@@ -851,26 +851,26 @@ override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 
 #WORKING:FIX:EXCLUDE:DATE
-#> update: PUBLISH_DATE_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
-override PUBLISH_DATE_PARSE_1		:= $(PUBLISH_DATE_INTERNAL_FORMAT)
-override PUBLISH_DATE_PARSE_2		:= $(PUBLISH_DATE_FORMAT_DEFAULT)
-override PUBLISH_DATE_PARSE_3		:= 2006-01-02
-override PUBLISH_DATE_PARSE_4		:= January 2, 2006
-override PUBLISH_DATE_PARSE_ALT		:= January _2, 2006  3:04 PM MST -07:00
-override PUBLISH_DATE_PARSE_MOD		:= $(COMPOSER_VERSION) (2006-01-02)
-override PUBLISH_DATE_DISPLAY		:= 2006-01-02
+#> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
+override PUBLISH_DATES_PARSE_1		:= $(PUBLISH_DATES_INTERNAL_FORMAT)
+override PUBLISH_DATES_PARSE_2		:= $(PUBLISH_DATES_FORMAT_DEFAULT)
+override PUBLISH_DATES_PARSE_3		:= 2006-01-02
+override PUBLISH_DATES_PARSE_4		:= January 2, 2006
+override PUBLISH_DATES_PARSE_ALT	:= January _2, 2006  3:04 PM MST -07:00
+override PUBLISH_DATES_PARSE_MOD	:= $(COMPOSER_VERSION) (2006-01-02)
+override PUBLISH_DATES_DISPLAY		:= 2006-01-02
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
-#override PUBLISH_DATE_DISPLAY_ALT	:= 2006-01-02 03:04 PM MST
-override PUBLISH_DATE_DISPLAY_ALT	:= 2006-01-02
-override PUBLISH_DATE_DISPLAY_MOD	:= null
-override PUBLISH_DATE_LIBRARY		:= 2006
+#override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02 03:04 PM MST
+override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02
+override PUBLISH_DATES_DISPLAY_MOD	:= null
+override PUBLISH_DATES_LIBRARY		:= 2006
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
-#override PUBLISH_DATE_LIBRARY_ALT	:= 2006-01
-override PUBLISH_DATE_LIBRARY_ALT	:= 2006
-override PUBLISH_DATE_LIBRARY_MOD	:= null
-override PUBLISH_DATE_TIMEZONE		:= -08:00
-override PUBLISH_DATE_TIMEZONE_ALT	:= -07:00
-override PUBLISH_DATE_TIMEZONE_MOD	:= null
+#override PUBLISH_DATES_LIBRARY_ALT	:= 2006-01
+override PUBLISH_DATES_LIBRARY_ALT	:= 2006
+override PUBLISH_DATES_LIBRARY_MOD	:= null
+override PUBLISH_DATES_TIMEZONE		:= -08:00
+override PUBLISH_DATES_TIMEZONE_ALT	:= -07:00
+override PUBLISH_DATES_TIMEZONE_MOD	:= null
 
 ########################################
 ### {{{3 Helpers
@@ -893,7 +893,7 @@ override PUBLISH_METAINFO_EMPTY_MOD	:= null
 override PUBLISH_METATITL_TITLE		:= Title: <name>
 override PUBLISH_METATITL_TITLE_ALT	:= Article: <name>
 override PUBLISH_METATITL_TITLE_MOD	:= null
-override PUBLISH_METATITL_DISPLAY	:= *Title: <|>, <|>*
+override PUBLISH_METATITL_DISPLAY	:= Title: <|>, <|>
 override PUBLISH_METATITL_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_METATITL_DISPLAY_MOD	:= null
 override PUBLISH_METATITL_EMPTY		:= *(no $(PUBLISH_METATITL))*
@@ -902,7 +902,7 @@ override PUBLISH_METATITL_EMPTY_MOD	:= null
 override PUBLISH_METADATE_TITLE		:= Year: <name>
 override PUBLISH_METADATE_TITLE_ALT	:= Date: <name>
 override PUBLISH_METADATE_TITLE_MOD	:= null
-override PUBLISH_METADATE_DISPLAY	:= *Year: <|>, <|>*
+override PUBLISH_METADATE_DISPLAY	:= Year: <|>, <|>
 override PUBLISH_METADATE_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_METADATE_DISPLAY_MOD	:= null
 override PUBLISH_METADATE_EMPTY		:= *(no $(PUBLISH_METADATE))*
@@ -911,7 +911,7 @@ override PUBLISH_METADATE_EMPTY_MOD	:= null
 override PUBLISH_METAAUTH_TITLE		:= Author: <name>
 override PUBLISH_METAAUTH_TITLE_ALT	:= Creator: <name>
 override PUBLISH_METAAUTH_TITLE_MOD	:= null
-override PUBLISH_METAAUTH_DISPLAY	:= *Authors: <|>, <|>*
+override PUBLISH_METAAUTH_DISPLAY	:= Authors: <|>, <|>
 override PUBLISH_METAAUTH_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_METAAUTH_DISPLAY_MOD	:= null
 override PUBLISH_METAAUTH_EMPTY		:= *(no $(PUBLISH_METAAUTH))*
@@ -920,7 +920,7 @@ override PUBLISH_METAAUTH_EMPTY_MOD	:= null
 override PUBLISH_METATAGS_TITLE		:= Tag: <name>
 override PUBLISH_METATAGS_TITLE_ALT	:= Mark: <name>
 override PUBLISH_METATAGS_TITLE_MOD	:= null
-override PUBLISH_METATAGS_DISPLAY	:= *Tags: <|>, <|>*
+override PUBLISH_METATAGS_DISPLAY	:= Tags: <|>, <|>
 override PUBLISH_METATAGS_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
 override PUBLISH_METATAGS_DISPLAY_MOD	:= null
 override PUBLISH_METATAGS_EMPTY		:= *(no $(PUBLISH_METATAGS))*
@@ -1880,38 +1880,63 @@ $(if $(c_css),\
 ## {{{2 Extensions
 ########################################
 
-#> validate: ./pandoc/pandoc-*-linux-* --list-extensions=commonmark
-#> validate: ./pandoc/pandoc-*-linux-* --list-extensions=markdown
+#> validate: ./pandoc/pandoc-*-linux --list-extensions=commonmark
+#> validate: ./pandoc/pandoc-*-linux --list-extensions=markdown
 
-override PANDOC_EXTENSIONS		:=
+override PANDOC_EXTENSIONS_COMMONMARK := \
+	+ascii_identifiers \
+	+emoji \
+	+fancy_lists \
+	+fenced_divs \
+	+footnotes \
+	+gfm_auto_identifiers \
+	+implicit_figures \
+	+implicit_header_references \
+	+link_attributes \
+	+pipe_tables \
+	+raw_attribute \
+	+raw_html \
+	+smart \
+	+strikeout \
+	+superscript \
+	+task_lists \
+	+yaml_metadata_block \
 
-override PANDOC_EXTENSIONS		+= +ascii_identifiers
-override PANDOC_EXTENSIONS		+= +emoji
-override PANDOC_EXTENSIONS		+= +fancy_lists
-override PANDOC_EXTENSIONS		+= +fenced_divs
-override PANDOC_EXTENSIONS		+= +footnotes
-override PANDOC_EXTENSIONS		+= +gfm_auto_identifiers
-override PANDOC_EXTENSIONS		+= +implicit_figures
-override PANDOC_EXTENSIONS		+= +implicit_header_references
-override PANDOC_EXTENSIONS		+= +link_attributes
-override PANDOC_EXTENSIONS		+= +pipe_tables
-override PANDOC_EXTENSIONS		+= +raw_html
-override PANDOC_EXTENSIONS		+= +smart
-override PANDOC_EXTENSIONS		+= +strikeout
-override PANDOC_EXTENSIONS		+= +superscript
-override PANDOC_EXTENSIONS		+= +task_lists
-override PANDOC_EXTENSIONS		+= +yaml_metadata_block
+override PANDOC_EXTENSIONS_MARKDOWN := \
+	+auto_identifiers \
+	+header_attributes \
+	+inline_notes \
+	+intraword_underscores \
+	+line_blocks \
+	+lists_without_preceding_blankline \
+	+markdown_in_html_blocks \
+	+pandoc_title_block \
+	+raw_tex \
+	+shortcut_reference_links \
 
-ifneq ($(filter markdown,$(INPUT)),)
-override PANDOC_EXTENSIONS		+= +auto_identifiers
-override PANDOC_EXTENSIONS		+= +header_attributes
-override PANDOC_EXTENSIONS		+= +inline_notes
-override PANDOC_EXTENSIONS		+= +intraword_underscores
-override PANDOC_EXTENSIONS		+= +line_blocks
-override PANDOC_EXTENSIONS		+= +markdown_in_html_blocks
-override PANDOC_EXTENSIONS		+= +pandoc_title_block
-override PANDOC_EXTENSIONS		+= +raw_tex
-override PANDOC_EXTENSIONS		+= +shortcut_reference_links
+override PANDOC_EXTENSIONS_DOCX := \
+	-empty_paragraphs \
+	-styles \
+
+override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
+	$(PANDOC_EXTENSIONS_COMMONMARK) \
+	$(if $(filter markdown,$(INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
+))
+override PANDOC_EXTENSIONS_TO		:=
+
+#WORKING:IMPORT:DOCX
+
+#> update: includes duplicates
+override EXTRACT			:= extract
+
+ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
+override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
+	$(if $(filter $(TYPE_DOCX),$(c_type)),$(PANDOC_EXTENSIONS_DOCX)) \
+))
+override PANDOC_EXTENSIONS_TO		:= $(sort $(strip \
+	$(PANDOC_EXTENSIONS_COMMONMARK) \
+	$(PANDOC_EXTENSIONS_MARKDOWN) \
+))
 endif
 
 ########################################
@@ -1919,14 +1944,30 @@ endif
 ########################################
 
 ########################################
+### {{{3 Extract
+########################################
+
+#WORKING:IMPORT:DOCX
+#	make: Circular /.g/_data/zactive/_drive/_todo.docx <- /.g/_data/zactive/_drive/_todo.docx dependency dropped.
+
+#> update: includes duplicates
+override EXTRACT			:= extract
+
+ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
+override INPUT				:= $(c_type)
+override TMPL_OUTPUT			:= $(TMPL_LINT)
+override EXTN_OUTPUT			:= $(EXTN_LINT)
+endif
+
+########################################
 ### {{{3 Converters
 ########################################
 
 override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
 
-override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_HTML)"
-override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="$(TMPL_TEXT)"
-override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" --to="json"
+override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_HTML)"
+override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_TEXT)"
+override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="json"
 override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
 ########################################
@@ -2024,6 +2065,7 @@ override PANDOC_OPTIONS = $(strip \
 	--columns="$(COLUMNS)" \
 	--eol="$(EOL)" \
 	$(if $(or \
+		$(filter $(EXTRACT),$(MAKECMDGOALS)) ,\
 		$(filter $(c_type),$(TYPE_HTML)) ,\
 		$(filter $(c_type),$(TYPE_PRES)) ,\
 		),--wrap="none",--wrap="auto" \
@@ -2038,7 +2080,7 @@ override PANDOC_OPTIONS = $(strip \
 		--variable=revealjs-url="$(REVEALJS_DIR)" \
 	) \
 	\
-	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS))" \
+	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" \
 	--data-dir="$(COMPOSER_DAT)" \
 	$(if $(wildcard $(COMPOSER_DAT)/template.$(TMPL_OUTPUT)),	--template="$(COMPOSER_DAT)/template.$(TMPL_OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_DAT)/reference.$(TMPL_OUTPUT)),	--reference-doc="$(COMPOSER_DAT)/reference.$(TMPL_OUTPUT)") \
@@ -2089,7 +2131,7 @@ override PANDOC_OPTIONS = $(strip \
 	) \
 	$(if $(c_options),$(c_options)) \
 	\
-	--to="$(TMPL_OUTPUT)" \
+	--to="$(TMPL_OUTPUT)$(subst $(NULL) ,,$(call PANDOC_EXTENSIONS_TO))" \
 	--output="$(abspath $(c_base).$(EXTN_OUTPUT))" \
 )
 
@@ -2331,6 +2373,7 @@ override TARGETS			:= targets
 
 override DOSETUP			:= init
 override CONVICT			:= commit
+override EXTRACT			:= extract
 override EXPORTS			:= export
 
 override PUBLISH			:= site
@@ -2508,10 +2551,10 @@ override define COMPOSER_YML_DATA_SKEL =
       resize:				[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
     },
     dates: {
-      parse:				[ "$(PUBLISH_DATE_PARSE_1)", "$(PUBLISH_DATE_PARSE_2)", "$(PUBLISH_DATE_PARSE_3)", "$(PUBLISH_DATE_PARSE_4)" ],
-      display:				"$(PUBLISH_DATE_DISPLAY)",
-      library:				"$(PUBLISH_DATE_LIBRARY)",
-      timezone:				"$(PUBLISH_DATE_TIMEZONE)",
+      parse:				[ "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)" ],
+      display:				"$(PUBLISH_DATES_DISPLAY)",
+      library:				"$(PUBLISH_DATES_LIBRARY)",
+      timezone:				"$(PUBLISH_DATES_TIMEZONE)",
     },
   },
 
@@ -2824,10 +2867,10 @@ override PUBLISH_SH_GLOBAL := \
 	HTML_HIDE \
 	$(TOKEN) \
 	\
-	PUBLISH_DATE_INTERNAL_FORMAT \
-	PUBLISH_DATE_INTERNAL_NULL \
-	PUBLISH_DATE_TIMEZONE_FORMAT \
-	PUBLISH_DATE_TIMEZONE_DEFAULT \
+	PUBLISH_DATES_INTERNAL_FORMAT \
+	PUBLISH_DATES_INTERNAL_NULL \
+	PUBLISH_DATES_TIMEZONE_FORMAT \
+	PUBLISH_DATES_TIMEZONE_DEFAULT \
 	$(TOKEN) \
 	\
 	DISPLAY_SHOW_DEFAULT \
@@ -2844,6 +2887,9 @@ override PUBLISH_SH_GLOBAL := \
 	PUBLISH_CMD_END \
 
 override PUBLISH_SH_LOCAL := \
+	COMPOSER_EXT \
+	$(TOKEN) \
+	\
 	SED \
 	$(TOKEN) \
 	\
@@ -2910,7 +2956,7 @@ override PUBLISH_INDEX			:= index
 override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)
 
 #> update: $(PUBLISH)-library-sort-yq
-#> update: PUBLISH_DATE_PARSE_ALT / PUBLISH_PAGES_DATE_FORMAT
+#> update: PUBLISH_DATES_PARSE_ALT / PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
 override PUBLISH_PAGES_DATE		:= -01-01
 override PUBLISH_PAGES_DATE_FORMAT	:= +%B %e, %Y %l:%M %p %Z %:z
@@ -3844,7 +3890,8 @@ $(HELPOUT)-$(PRINTER):
 	@$(call TITLE_LN,2,Configuration,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Pandoc Extensions)"
 	@$(ENDOLINE); $(PRINT) "$(_C)[$(COMPOSER_BASENAME)]$(_D) uses the \`$(_C)$(INPUT)$(_D)\` input format, with these extensions:"
-	@$(ENDOLINE); $(foreach FILE,$(sort $(subst +,,$(PANDOC_EXTENSIONS))),\
+#WORKING:IMPORT:DOCX
+	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_FROM),\
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 	)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Templates)"
@@ -4412,6 +4459,7 @@ endef
 #	symlinks become essentially 301/302 redirects
 #		denoted as such in sitemap
 #		they will break when used to reach outside of "composer_root"...
+#	"helpers.metalist.title.empty" does not work for "metainfo-block = pagetitle"... it is "*[.md]" instead...
 
 #WORK
 #	features
@@ -5703,7 +5751,7 @@ endef
 #	default css (see "themes" page)
 #	note on example page about logo/icon
 
-#>| [date.parse]	| `$(PUBLISH_DATE_PARSE)`	$(if $(1),| `$(PUBLISH_DATE_PARSE_ALT)`)
+#>| [dates.parse]			| `$(PUBLISH_DATES_PARSE_1)`				$(if $(1),| `$(PUBLISH_DATES_PARSE_ALT)`)
 override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config			| defaults						$(if $(1),| values)
 |:---				|:------$(if $(1),,|)						$(if $(1),|:------|)
@@ -5725,10 +5773,10 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [cols.reorder]		| `[ $(PUBLISH_COLS_REORDER_L)$(COMMA) $(PUBLISH_COLS_REORDER_C)$(COMMA) $(PUBLISH_COLS_REORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_REORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_R_ALT) ]`)
 | [cols.size]			| `[ $(PUBLISH_COLS_SIZE_L)$(COMMA) $(PUBLISH_COLS_SIZE_C)$(COMMA) $(PUBLISH_COLS_SIZE_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_SIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_R_ALT) ]`)
 | [cols.resize]			| `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`					$(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
-| [dates.parse]			| *(see [date.parse] and `$(COMPOSER_YML)`)*		$(if $(1),| *(see [date.parse] and `$(COMPOSER_YML)`)*)
-| [dates.display]		| `$(PUBLISH_DATE_DISPLAY)`						$(if $(1),| `$(PUBLISH_DATE_DISPLAY_ALT)`)
-| [dates.library]		| `$(PUBLISH_DATE_LIBRARY)`						$(if $(1),| `$(PUBLISH_DATE_LIBRARY_ALT)`)
-| [dates.timezone]		| `$(PUBLISH_DATE_TIMEZONE)`						$(if $(1),| `$(PUBLISH_DATE_TIMEZONE_ALT)`)
+| [dates.parse]			| *(see [dates.parse] and `$(COMPOSER_YML)`)*		$(if $(1),| *(see [dates.parse] and `$(COMPOSER_YML)`)*)
+| [dates.display]		| `$(PUBLISH_DATES_DISPLAY)`						$(if $(1),| `$(PUBLISH_DATES_DISPLAY_ALT)`)
+| [dates.library]		| `$(PUBLISH_DATES_LIBRARY)`						$(if $(1),| `$(PUBLISH_DATES_LIBRARY_ALT)`)
+| [dates.timezone]		| `$(PUBLISH_DATES_TIMEZONE)`						$(if $(1),| `$(PUBLISH_DATES_TIMEZONE_ALT)`)
 
 *(For this test site, the [navbars.brand], [navbars.homepage], [navbars.search], and [navbars.copyright] options have all been configured.)*
 
@@ -6671,11 +6719,11 @@ endef
 
 #> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
-.PHONY: $(EXAMPLE)-install
+.PHONY: $(EXAMPLE)-$(INSTALL)
 .PHONY: $(EXAMPLE)
 .PHONY: $(EXAMPLE)$(.)yml
 .PHONY: $(EXAMPLE)$(.)md
-$(EXAMPLE)-install \
+$(EXAMPLE)-$(INSTALL) \
 $(EXAMPLE) \
 $(EXAMPLE)$(.)yml \
 $(EXAMPLE)$(.)md \
@@ -6775,7 +6823,7 @@ $(.)$(EXAMPLE)$(.)md:
 		,$(if $(filter $(FILE),$(PUBLISH_METADATE)),\
 			$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$$( \
 					$(ECHO) "display: $(call DATESTAMP,$(DATENOW))" \
-					| $(YQ_WRITE) ".display |= format_datetime(\"$(PUBLISH_DATE_FORMAT_DEFAULT)\") | .display" 2>/dev/null \
+					| $(YQ_WRITE) ".display |= format_datetime(\"$(PUBLISH_DATES_FORMAT_DEFAULT)\") | .display" 2>/dev/null \
 				)) \
 		,\
 			$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D):); \
@@ -7368,10 +7416,10 @@ $(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L
 $(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)dates$(_D):
-$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(PUBLISH_DATE_PARSE_1)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATE_PARSE_2)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATE_PARSE_3)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATE_PARSE_4)$(_N)"$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_DATE_DISPLAY)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)library$(_D):				$(_N)"$(_M)$(PUBLISH_DATE_LIBRARY)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)timezone$(_D):				$(_N)"$(_M)$(PUBLISH_DATE_TIMEZONE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_1)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_2)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_3)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_4)$(_N)"$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_DISPLAY)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)library$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_LIBRARY)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)timezone$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_TIMEZONE)$(_N)"$(_D)
 
 $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-helpers$(_D):
@@ -7483,6 +7531,8 @@ $(_S)########################################$(_D)
     $(_M)PATH$(_D):
       - $(_M)SITEMAP$(_D):			$(_E)$(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY)/$(call PUBLISH_LIBRARY_ITEM,sitemap)$(_D)
     $(_M)INFO$(_D):
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATITL)$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_METADATE)$(_D)
       - $(_C)metalist$(_D) $(_M)$(PUBLISH_METAAUTH)$(_D)
       - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATAGS)$(_D)
 
@@ -7509,6 +7559,8 @@ $(_S)########################################$(_D)
     $(_M)CONTENTS$(_D):
       - $(_C)box-begin$(_D) $(_M)$(SPECIAL_VAL) CONTENTS$(_D)
       - $(_C)metainfo$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATITL)$(_D)
+      - $(_C)metalist$(_D) $(_M)$(PUBLISH_METADATE)$(_D)
       - $(_C)metalist$(_D) $(_M)$(PUBLISH_METAAUTH)$(_D)
       - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATAGS)$(_D)
       - $(_C)contents$(_D)
@@ -7560,6 +7612,8 @@ $(_S)########################################$(_D)
           TOP TEXT
     $(_M)INFO$(_D):
 $(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATITL)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METADATE)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METAAUTH)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATAGS)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)readtime$(_D)
@@ -7578,6 +7632,8 @@ $(_S)########################################$(_D)
           BOTTOM TEXT
     $(_M)INFO$(_D):
 $(_S)#$(MARKER)$(_D)   - $(_C)metainfo$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATITL)$(_D)
+$(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METADATE)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METAAUTH)$(_D)
 $(_S)#$(MARKER)$(_D)   - $(_C)metalist$(_D) $(_M)$(PUBLISH_METATAGS)$(_D)
       - $(_C)readtime$(_D)
@@ -7845,10 +7901,10 @@ variables:
       size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
       resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
     dates:
-      parse:				[ "$(PUBLISH_DATE_PARSE_1)", "$(PUBLISH_DATE_PARSE_2)", "$(PUBLISH_DATE_PARSE_3)", "$(PUBLISH_DATE_PARSE_4)", "$(PUBLISH_DATE_PARSE$(if $(1),_MOD,_ALT))" ]
-      display:				"$(PUBLISH_DATE_DISPLAY$(if $(1),_MOD,_ALT))"
-      library:				"$(PUBLISH_DATE_LIBRARY$(if $(1),_MOD,_ALT))"
-      timezone:				"$(PUBLISH_DATE_TIMEZONE$(if $(1),_MOD,_ALT))"
+      parse:				[ "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)", "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))" ]
+      display:				"$(PUBLISH_DATES_DISPLAY$(if $(1),_MOD,_ALT))"
+      library:				"$(PUBLISH_DATES_LIBRARY$(if $(1),_MOD,_ALT))"
+      timezone:				"$(PUBLISH_DATES_TIMEZONE$(if $(1),_MOD,_ALT))"
 
 ########################################
 
@@ -7994,6 +8050,8 @@ variables:
       - box-begin $(SPECIAL_VAL) CONTENTS
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
 #      - metainfo
+      - metalist $(PUBLISH_METATITL)
+      - metalist $(PUBLISH_METADATE)
       - metalist $(PUBLISH_METAAUTH)
       - metalist $(PUBLISH_METATAGS)
       - contents 3
@@ -8317,12 +8375,12 @@ function $(PUBLISH)-metainfo-block {
 			| COMPOSER_YML_DATA_PARSE \\
 			| while read -r FORMAT; do
 				$${ECHO} "$${META}" \\
-				| $${YQ_WRITE} ".date |= with_dtf(\\"$${FORMAT}\\"; format_datetime(\\"$(.)$${PUBLISH_DATE_INTERNAL_FORMAT}\\")) | .date" 2>/dev/null \\
+				| $${YQ_WRITE} ".date |= with_dtf(\\"$${FORMAT}\\"; format_datetime(\\"$(.)$${PUBLISH_DATES_INTERNAL_FORMAT}\\")) | .date" 2>/dev/null \\
 				| COMPOSER_YML_DATA_PARSE \\
-				| if	[ -z "$$($${ECHO} "$${FORMAT}" | $${SED} -n "/$${PUBLISH_DATE_TIMEZONE_FORMAT}/p")" ] &&
+				| if	[ -z "$$($${ECHO} "$${FORMAT}" | $${SED} -n "/$${PUBLISH_DATES_TIMEZONE_FORMAT}/p")" ] &&
 					[ -n "$${DATE_TIMEZONE}" ];
 				then
-					$${SED} "s|$${PUBLISH_DATE_TIMEZONE_DEFAULT}$$|$${DATE_TIMEZONE}|g"
+					$${SED} "s|$${PUBLISH_DATES_TIMEZONE_DEFAULT}$$|$${DATE_TIMEZONE}|g"
 				else
 					$${CAT}
 				fi
@@ -8330,9 +8388,9 @@ function $(PUBLISH)-metainfo-block {
 		)"
 	fi
 	if [ -z "$${DATE_PARSE}" ]; then
-		DATE_PARSE="$(.)$${PUBLISH_DATE_INTERNAL_NULL}"
+		DATE_PARSE="$(.)$${PUBLISH_DATES_INTERNAL_NULL}"
 	fi
-	if [ "$${DATE_PARSE}" != "$(.)$${PUBLISH_DATE_INTERNAL_NULL}" ]; then
+	if [ "$${DATE_PARSE}" != "$(.)$${PUBLISH_DATES_INTERNAL_NULL}" ]; then
 		DATE_DISPLAY="$$($${ECHO} "$${DATE_PARSE}" | $${SED} "s|^[$(.)]||g")"
 		DATE_LIBRARY="$$($${ECHO} "$${DATE_PARSE}" | $${SED} "s|^[$(.)]||g")"
 	fi
@@ -8382,7 +8440,12 @@ function $(PUBLISH)-metainfo-block {
 			if	[ "$${FILE}" = "$(PUBLISH_METATITL)" ] &&
 				[ "$${2}" = "$${SPECIAL_VAL}" ];
 			then
-				INFO_LIST[$${NUM}]="$$($${ECHO} "$${3}" | $${SED} "s|^.+[/]||g")"
+				INFO_LIST[$${NUM}]="$$(
+					$${ECHO} "$${3}" \\
+					| $${SED} \\
+						-e "s|^.+[/]||g" \\
+						-e "s|^$${COMPOSER_EXT}$$||g" \\
+				)"
 			else
 				INFO_LIST[$${NUM}]="$$(COMPOSER_YML_DATA_VAL helpers.metalist.[\"$${FILE}\"].empty)"
 			fi
@@ -8402,37 +8465,34 @@ function $(PUBLISH)-metainfo-block {
 			META_SEP=" "
 		fi
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
-#	verify COMPOSER_LIBRARY_PATH output in non-library-root folders...
-#	warning message for $(PUBLISH_METATITL) being skipped...?
-#	document: "helpers.metalist.title.empty" does not work for "metainfo-block = pagetitle"... it is "*.md" instead...
+#	verify composer_library_path is working everywhere, particularly non-library-root folders...
 #	keep track of need to update "del(.*)" somehow... test?
 #	test "metalist-title" and "metalist-date", for fun...!
+#	[ ] sorting/display of v3.1 (2024-08-10) dates
 		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 			if [ "$${FILE}" = "$${META_LIST}" ]; then
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#	[x] date needs to go *.empty in output when it is *_default... what is 1970-01-01...?
-#	[x] when *.empty or $(PUBLISH_METATITL), do not href
-#	[-] change author name to composer/null for library digest/list/sitemap/redirect files...?
-#	[x] also make metainfo a href link in sitemap
-#	[ ] sorting/display of v3.1 (2024-08-10) dates
-				TEXT="$$(
-					$${ECHO} "$${INFO_LIST[$${NUM}]}" \\
-						| $${SED} "s|$${TOKEN}|\\n|g" \\
-						| $(subst $(SORT_NUM),$${SORT_NUM},$(strip $(call $(PUBLISH)-library-sort-sh,$${FILE}))) \\
-						| while read -r ITEM; do
-							$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$$(
-									$(HELPOUT)-$(TARGETS)-format "$${ITEM}"
-								).$${EXTN_HTML})$${TOKEN}"
-						done \\
-						| $${SED} "s|$${TOKEN}$$||g"
-				)"
-				$${ECHO} "$${LIST_BEG}$${TEXT}$${LIST_END}\\n" \\
-					| $${SED} "s|$${TOKEN}|$${LIST_SEP}|g"
-				if	[ "$${FILE}" != "$(PUBLISH_METATITL)" ] &&
-					[ -z "$${INFO_EMPT[$${NUM}]}" ];
+				if	[ "$${FILE}" = "$(PUBLISH_METATITL)" ] ||
+					[ -n "$${INFO_EMPT[$${NUM}]}" ];
 				then
-					$${ECHO} "$${TEXT}\\n" \\
-						| $${SED} "s|$${TOKEN}|\\n|g"
+					$${ECHO} "$${LIST_BEG}$${INFO_LIST[$${NUM}]}$${LIST_END}\\n"
+				else
+					TEXT="$$(
+						$${ECHO} "$${INFO_LIST[$${NUM}]}" \\
+							| $${SED} "s|$${TOKEN}|\\n|g" \\
+							| $(subst $(SORT_NUM),$${SORT_NUM},$(strip $(call $(PUBLISH)-library-sort-sh,$${FILE}))) \\
+							| while read -r ITEM; do
+								$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$$(
+										$(HELPOUT)-$(TARGETS)-format "$${ITEM}"
+									).$${EXTN_HTML})$${TOKEN}"
+							done \\
+							| $${SED} "s|$${TOKEN}$$||g"
+					)"
+					$${ECHO} "$${LIST_BEG}$${TEXT}$${LIST_END}\\n" \\
+						| $${SED} "s|$${TOKEN}|$${LIST_SEP}|g"
+					if [ "$${FILE}" != "$(PUBLISH_METATITL)" ]; then
+						$${ECHO} "$${TEXT}\\n" \\
+							| $${SED} "s|$${TOKEN}|\\n|g"
+					fi
 				fi
 			fi
 			NUM="$$($${EXPR} $${NUM} + 1)"
@@ -15208,6 +15268,17 @@ else
 endif
 
 ########################################
+## {{{2 $(EXTRACT)
+########################################
+
+#WORKING:IMPORT:DOCX
+
+.PHONY: $(EXTRACT)
+$(EXTRACT): $(COMPOSER_PANDOC)
+$(EXTRACT):
+	@$(ECHO) ""
+
+########################################
 ## {{{2 $(EXPORTS)
 ########################################
 
@@ -15641,19 +15712,19 @@ override define $(PUBLISH)-$(TARGETS)-helpers =
 		$(ECHO) "" >$(DOFILE)-list; \
 		$(call $(PUBLISH)-$(TARGETS)-$(HELPER),$(1),$(TAGGER)); \
 		$(PANDOC_MD_TO_HTML) $(DOFILE)-menu \
-			>$(DOFILE)-menu.done; \
+			>$(DOFILE)-menu-done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call PUBLISH_SH_RUN) $(DOFILE)-list \
 			| $(SED) "/[/]$$( \
 					$(ECHO) "$(notdir $(DOFILE)-list)" \
 					| $(SED) "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
 				) -->$$/d" \
-			>$(DOFILE)-list.done; \
+			>$(DOFILE)-list-done; \
 			if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 		$(call $(PUBLISH)-$(TARGETS)-$(HELPER)-done,$(1),$(TAGGER)); \
 		$(ECHO) "$(_S)"; \
-		$(MV) $(DOFILE)-menu.done $(DOFILE)-menu $($(DEBUGIT)-output); \
-		$(MV) $(DOFILE)-list.done $(DOFILE)-list $($(DEBUGIT)-output); \
+		$(MV) $(DOFILE)-menu-done $(DOFILE)-menu $($(DEBUGIT)-output); \
+		$(MV) $(DOFILE)-list-done $(DOFILE)-list $($(DEBUGIT)-output); \
 		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-menu$(if $(TAGGER), $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-menu" $(1); \
 		$(SED) -i "/^$(PUBLISH_CMD_BEG) $(HELPER)-list$(if $(TAGGER), $(TAGGER)).* $(PUBLISH_CMD_END)$$/r $(DOFILE)-list" $(1); \
 		if [ -z "$(COMPOSER_DEBUGIT)" ]; then \
@@ -15693,10 +15764,10 @@ endef
 #		repercussions...?  document!
 override define $(PUBLISH)-$(TARGETS)-metalist =
 	META="$$($(call PUBLISH_SH_RUN) metainfo-block . "$(2)" $(word 1,$(call c_list_var)))"; \
-	$(ECHO) "$${META}" \
+	$(ECHO) "$${META}\n" \
 		| $(HEAD) -n1 \
 		>>$(1).metalist-$(2)-list; \
-	$(ECHO) "$${META}" \
+	$(ECHO) "$${META}\n" \
 		| $(TAIL) -n+2 \
 		| $(SED) \
 			-e "s|^|  * |g" \
@@ -15709,7 +15780,7 @@ override define $(PUBLISH)-$(TARGETS)-metalist-done =
 		-e "1d" \
 		-e '$$d' \
 		-e "s|^([<]li)([>][<]a .+)( class[=][\"].*breadcrumb-item.*[\"])(.+)$$|\1\3\2\4|g" \
-		$(1).metalist-$(2)-menu.done
+		$(1).metalist-$(2)-menu-done
 endef
 
 ########################################
@@ -15844,21 +15915,21 @@ endef
 
 override define $(PUBLISH)-$(TARGETS)-contents-done =
 	if [ -n "$${ROOT}" ]; then \
-		$(call HEREDOC_COMPOSER_YML_README_HACK) $(1).contents-menu.done; \
+		$(call HEREDOC_COMPOSER_YML_README_HACK) $(1).contents-menu-done; \
 		R_DD="<li class=\"nav-item dropdown\">"; \
 		R_UL="<ul class=\"$(COMPOSER_TINYNAME)-menu-$(call COMPOSER_YML_DATA_VAL,config.cols.break) dropdown-menu\">"; \
 		R_CL="class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\""; \
-		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
-		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
-		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
-		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu.done; \
-		$(ECHO) "</li>\n\n" >>$(1).contents-menu.done; \
+		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu-done; \
+		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu-done; \
+		$(SED) -i "    N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu-done; \
+		$(SED) -i "1n; N; s|^[<]p[>](.*)class[=][\"][^\"]+[\"](.*)[<][/]p[>]\n[<]ul[>]$$|</li>\n$${R_DD}\n\1$${R_CL}\2\n$${R_UL}|g" $(1).contents-menu-done; \
+		$(ECHO) "</li>\n\n" >>$(1).contents-menu-done; \
 	fi; \
 	$(SED) -i \
 		-e "1d" \
 		-e '$$d' \
 		-e "s|^([<]ul)([>])$$|\1 class=\"$(COMPOSER_TINYNAME)-menu-list\"\2|g" \
-		$(1).contents-menu.done
+		$(1).contents-menu-done
 endef
 
 ########################################
@@ -15884,7 +15955,7 @@ override define $(PUBLISH)-$(TARGETS)-readtime =
 endef
 
 override define $(PUBLISH)-$(TARGETS)-readtime-done =
-	$(SED) -i "/^$$/d" $(1).readtime-list.done
+	$(SED) -i "/^$$/d" $(1).readtime-list-done
 endef
 
 ########################################
@@ -16082,17 +16153,13 @@ $($(PUBLISH)-library-metadata):
 			\"$(COMPOSER_CMS)\": { \
 				\"$(KEY_UPDATED)\": \"$(call DATESTAMP,$(DATENOW))\", \
 				\"$(KEY_DATE)\": { \
-					\"$(KEY_DATE_PARSE)\": \"$(.)$(PUBLISH_DATE_INTERNAL_NULL)\" \
+					\"$(KEY_DATE_PARSE)\": \"$(.)$(PUBLISH_DATES_INTERNAL_NULL)\" \
 				} \
 			} \
 		)\n" \
 		| $(TEE) --append $(@).$(COMPOSER_BASENAME) $($(DEBUGIT)-output)
 	@$(ECHO) "," >>$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_D)"
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#$(MAKE) $(PUBLISH)-library-metadata-$$($(ECHO) "$${FILE}" | $(SED) "s|[/]|$(TOKEN)|g"); \
-#exit 1; \
-#
 	@$(call ENV_MAKE,$(TESTING_MAKEJOBS)) \
 		--directory $(COMPOSER_LIBRARY_ROOT) \
 		COMPOSER_DOITALL_$(CONFIGS)="$(@)" \
@@ -16178,7 +16245,7 @@ override define $(PUBLISH)-library-metadata-create =
 		$(ECHO) "{ \
 			\"$(COMPOSER_CMS)\": null, \
 			\"$(KEY_DATE)\": { \
-				\"$(KEY_DATE_PARSE)\": \"$(.)$(PUBLISH_DATE_INTERNAL_NULL)\" \
+				\"$(KEY_DATE_PARSE)\": \"$(.)$(PUBLISH_DATES_INTERNAL_NULL)\" \
 			} \
 		}"; \
 	fi \
@@ -16898,7 +16965,7 @@ override define $(PUBLISH)-library-sort-yq =
 		.\"$(KEY_FILEPATH)\" \
 	) | reverse \
 	| sort_by( \
-		with_dtf(\"$(.)$(PUBLISH_DATE_INTERNAL_FORMAT)\"; .\"$(KEY_DATE)\".\"$(KEY_DATE_PARSE)\") \
+		with_dtf(\"$(.)$(PUBLISH_DATES_INTERNAL_FORMAT)\"; .\"$(KEY_DATE)\".\"$(KEY_DATE_PARSE)\") \
 	) | reverse
 endef
 #WORKING:FIX:EXCLUDE:DATE:CONV
