@@ -444,14 +444,11 @@ override define READ_ALIASES =
 	$(if $(COMPOSER_DEBUGIT_ALL),\
 		$(info #> ALIAS			[$(1)|$($(1))|$(origin $(1))]) \
 		$(info #> ALIAS			[$(2)|$($(2))|$(origin $(2))]) \
-		$(info #> ALIAS			[$(3)|$($(3))|$(origin $(3))]) \
 	) \
-	$(if $(filter undefined,$(origin $(3))),\
-		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(3) := $($(1)))) \
-		$(if $(filter-out undefined,$(origin $(2))),$(eval override $(3) := $($(2)))) \
+	$(if $(filter undefined,$(origin $(2))),\
+		$(if $(filter-out undefined,$(origin $(1))),$(eval override $(2) := $($(1)))) \
 	) \
-	$(eval override undefine $(1)) \
-	$(eval override undefine $(2))
+	$(eval override undefine $(1))
 endef
 
 ################################################################################
@@ -465,7 +462,7 @@ endef
 #> update: includes duplicates
 #> update: READ_ALIASES
 
-$(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
+$(call READ_ALIASES,V,COMPOSER_DEBUGIT)
 override COMPOSER_DEBUGIT_ALL		:=
 ifeq ($(COMPOSER_DEBUGIT),$(SPECIAL_VAL))
 override COMPOSER_DEBUGIT_ALL		:= $(COMPOSER_DEBUGIT)
@@ -603,7 +600,7 @@ export override MAKEFLAGS		:= $(MAKEFLAGS) $(MAKEFLAGS_END)
 override MAKEJOBS_DEFAULT		:= 1
 
 #> update: READ_ALIASES
-$(call READ_ALIASES,J,c_jobs,MAKEJOBS)
+$(call READ_ALIASES,J,MAKEJOBS)
 override MAKEJOBS			?= $(MAKEJOBS_DEFAULT)
 ifeq ($(MAKEJOBS),)
 override MAKEJOBS			:= $(MAKEJOBS_DEFAULT)
@@ -679,8 +676,8 @@ endif
 ########################################
 
 #> update: READ_ALIASES
-$(call READ_ALIASES,V,c_debug,COMPOSER_DEBUGIT)
-$(call READ_ALIASES,C,c_color,COMPOSER_DOCOLOR)
+$(call READ_ALIASES,V,COMPOSER_DEBUGIT)
+$(call READ_ALIASES,C,COMPOSER_DOCOLOR)
 
 #> update: COMPOSER_INCLUDE[^S]
 override COMPOSER_DEBUGIT		?=
@@ -714,22 +711,22 @@ override COMPOSER_IGNORES		?=
 ########################################
 
 #> update: READ_ALIASES
-$(call READ_ALIASES,S,S,c_site)
-$(call READ_ALIASES,T,T,c_type)
-$(call READ_ALIASES,B,B,c_base)
-$(call READ_ALIASES,L,L,c_list)
-$(call READ_ALIASES,a,a,c_lang)
-$(call READ_ALIASES,g,g,c_logo)
-$(call READ_ALIASES,i,i,c_icon)
-$(call READ_ALIASES,c,c,c_css)
-$(call READ_ALIASES,t,t,c_toc)
-$(call READ_ALIASES,l,l,c_level)
-$(call READ_ALIASES,m,m,c_margin)
-$(call READ_ALIASES,mt,mt,c_margin_top)
-$(call READ_ALIASES,mb,mb,c_margin_bottom)
-$(call READ_ALIASES,ml,ml,c_margin_left)
-$(call READ_ALIASES,mr,mr,c_margin_right)
-$(call READ_ALIASES,o,o,c_options)
+$(call READ_ALIASES,S,c_site)
+$(call READ_ALIASES,T,c_type)
+$(call READ_ALIASES,B,c_base)
+$(call READ_ALIASES,L,c_list)
+$(call READ_ALIASES,a,c_lang)
+$(call READ_ALIASES,g,c_logo)
+$(call READ_ALIASES,i,c_icon)
+$(call READ_ALIASES,c,c_css)
+$(call READ_ALIASES,t,c_toc)
+$(call READ_ALIASES,l,c_level)
+$(call READ_ALIASES,m,c_margin)
+$(call READ_ALIASES,mt,c_margin_top)
+$(call READ_ALIASES,mb,c_margin_bottom)
+$(call READ_ALIASES,ml,c_margin_left)
+$(call READ_ALIASES,mr,c_margin_right)
+$(call READ_ALIASES,o,c_options)
 
 #>override c_base			?= $(OUT_README)
 #>override c_list			?= $(c_base)$(COMPOSER_EXT)
@@ -769,11 +766,6 @@ override PUBLISH_FILE_HEADER		:= _header$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_FOOTER		:= _footer$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
 
-#WORKING:FIX:EXCLUDE:DATE
-#	https://mikefarah.gitbook.io/yq/operators/datetime
-#		https://pkg.go.dev/time#pkg-constants
-#	need to put "publish_date_timezone_format" into "config.dates.parse" and markdown files in order to get full timezone support...
-#		otherwise, all dates/times are considered local...
 override PUBLISH_DATES_FORMAT_DEFAULT	:= 2006-01-02 15:04 -07:00
 override PUBLISH_DATES_INTERNAL_FORMAT	:= 2006-01-02T15:04:05-07:00
 override PUBLISH_DATES_INTERNAL_NULL	:= 1970-01-01T00:00:00+00:00
@@ -850,7 +842,6 @@ override PUBLISH_COLS_RESIZE_L_MOD	:= $(PUBLISH_COLS_RESIZE_L_ALT)
 override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 
-#WORKING:FIX:EXCLUDE:DATE
 #> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_DATES_PARSE_1		:= $(PUBLISH_DATES_INTERNAL_FORMAT)
 override PUBLISH_DATES_PARSE_2		:= $(PUBLISH_DATES_FORMAT_DEFAULT)
@@ -862,12 +853,12 @@ override PUBLISH_DATES_DISPLAY		:= 2006-01-02
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
 #override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02 03:04 PM MST
 override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02
-override PUBLISH_DATES_DISPLAY_MOD	:= null
+override PUBLISH_DATES_DISPLAY_MOD	:= $(PUBLISH_DATES_DISPLAY_ALT)
 override PUBLISH_DATES_LIBRARY		:= 2006
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
 #override PUBLISH_DATES_LIBRARY_ALT	:= 2006-01
 override PUBLISH_DATES_LIBRARY_ALT	:= 2006
-override PUBLISH_DATES_LIBRARY_MOD	:= null
+override PUBLISH_DATES_LIBRARY_MOD	:= $(PUBLISH_DATES_LIBRARY_ALT)
 override PUBLISH_DATES_TIMEZONE		:= -08:00
 override PUBLISH_DATES_TIMEZONE_ALT	:= -07:00
 override PUBLISH_DATES_TIMEZONE_MOD	:= null
@@ -2648,9 +2639,6 @@ override COMPOSER_YML_DATA_VAL = $(shell \
 	| $(call COMPOSER_YML_DATA_PARSE,$(2),$(3)) \
 )
 
-#WORKING:FIX:EXCLUDE:DATE:SED
-#		-e "s|^[\"]||g" -e "s|[\"]$$||g" \
-
 #> update: COMPOSER_YML_DATA_PARSE
 #> update: join(.*)
 override define COMPOSER_YML_DATA_PARSE =
@@ -3574,6 +3562,8 @@ $(HELPOUT)-variables_format_%:
 #### {{{4 $(HELPOUT)-variables-control
 ########################################
 
+#> update: READ_ALIASES
+
 .PHONY: $(HELPOUT)-variables_control_%
 $(HELPOUT)-variables_control_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
@@ -3592,9 +3582,9 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"See: $(_C)[c_site]$(_E)/$(_C)[$(EXPORTS)]$(_D)"				"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_EXPORTS),$(_M)$(COMPOSER_EXPORTS))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"See: $(_C)[c_site]$(_E)/$(_C)[$(EXPORTS)]$(_D)"				"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_IGNORES),$(_M)$(COMPOSER_IGNORES))"
 	@$(ENDOLINE)
-	@$(PRINT) "  * *$(_C)[MAKEJOBS]$(_D)         ~ \`$(_E)c_jobs$(_D)\`  ~ \`$(_E)J$(_D)\`*"
-	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)c_debug$(_D)\` ~ \`$(_E)V$(_D)\`*"
-	@$(PRINT) "  * *$(_C)[COMPOSER_DOCOLOR]$(_D) ~ \`$(_E)c_color$(_D)\` ~ \`$(_E)C$(_D)\`*"
+	@$(PRINT) "  * *$(_C)[MAKEJOBS]$(_D)         ~ \`$(_E)J$(_D)\`*"
+	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)V$(_D)\`*"
+	@$(PRINT) "  * *$(_C)[COMPOSER_DOCOLOR]$(_D) ~ \`$(_E)C$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
 	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is none     / number to keep    / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
@@ -4460,6 +4450,11 @@ endef
 #		denoted as such in sitemap
 #		they will break when used to reach outside of "composer_root"...
 #	"helpers.metalist.title.empty" does not work for "metainfo-block = pagetitle"... it is "*[.md]" instead...
+#	"config.dates"
+#		https://mikefarah.gitbook.io/yq/operators/datetime
+#			https://pkg.go.dev/time#pkg-constants
+#		need to put "publish_date_timezone_format" into "config.dates.parse" and markdown files in order to get full timezone support...
+#			otherwise, all dates/times are considered local...
 
 #WORK
 #	features
@@ -5778,7 +5773,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [dates.library]		| `$(PUBLISH_DATES_LIBRARY)`						$(if $(1),| `$(PUBLISH_DATES_LIBRARY_ALT)`)
 | [dates.timezone]		| `$(PUBLISH_DATES_TIMEZONE)`						$(if $(1),| `$(PUBLISH_DATES_TIMEZONE_ALT)`)
 
-*(For this test site, the [navbars.brand], [navbars.homepage], [navbars.search], and [navbars.copyright] options have all been configured.)*
+*(For this test site, the [navbars.brand], [navbars.homepage], [navbars.search.name], and [navbars.copyright] options have all been configured.)*
 
 | $(PUBLISH)-helpers			| defaults						$(if $(1),| values)
 |:---				|:------$(if $(1),,|)						$(if $(1),|:------|)
@@ -5929,9 +5924,9 @@ This is a default page, where all menus and settings are empty.  All aspects of 
 
 $(call PUBLISH_PAGE_EXAMPLE_LAYOUT)
 
-In the layout, this page column is `c_list`, and the default `cols.size` for the center column is `$(PUBLISH_COLS_SIZE_C)` and `cols.resize` for the mobile view is `$(PUBLISH_COLS_RESIZE_C)`.  Since `nav-left` and `nav-right` are both empty, this column is positioned at the left edge.
+In the layout, the main page contents are in `c_list`.  Since `nav-left` and `nav-right` are both empty, this column is positioned at the left edge.
 
-In the absence of the `PAGES` menu, use the list below to navigate to the other example pages.
+Due to the absence of the `PAGES` menu, use the list below to navigate to the other example pages.
 
 $(PUBLISH_CMD_BEG) box-end $(PUBLISH_CMD_END)
 $(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)
@@ -8048,7 +8043,8 @@ variables:
   $(PUBLISH)-nav-left:
     CONTENTS:
       - box-begin $(SPECIAL_VAL) CONTENTS
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+#	metainfo and metainfo-box/fold should co-exist just fine...?
 #      - metainfo
       - metalist $(PUBLISH_METATITL)
       - metalist $(PUBLISH_METADATE)
@@ -8444,7 +8440,7 @@ function $(PUBLISH)-metainfo-block {
 					$${ECHO} "$${3}" \\
 					| $${SED} \\
 						-e "s|^.+[/]||g" \\
-						-e "s|^$${COMPOSER_EXT}$$||g" \\
+						-e "s|$${COMPOSER_EXT}$$||g" \\
 				)"
 			else
 				INFO_LIST[$${NUM}]="$$(COMPOSER_YML_DATA_VAL helpers.metalist.[\"$${FILE}\"].empty)"
@@ -8481,9 +8477,13 @@ function $(PUBLISH)-metainfo-block {
 							| $${SED} "s|$${TOKEN}|\\n|g" \\
 							| $(subst $(SORT_NUM),$${SORT_NUM},$(strip $(call $(PUBLISH)-library-sort-sh,$${FILE}))) \\
 							| while read -r ITEM; do
-								$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$$(
-										$(HELPOUT)-$(TARGETS)-format "$${ITEM}"
-									).$${EXTN_HTML})$${TOKEN}"
+								if [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
+									$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$${DATE_LIBRARY}.$${EXTN_HTML})$${TOKEN}"
+								else
+									$${ECHO} "[$${ITEM}]($${COMPOSER_LIBRARY_PATH}/$${FILE}-$$(
+											$(HELPOUT)-$(TARGETS)-format "$${ITEM}"
+										).$${EXTN_HTML})$${TOKEN}"
+								fi
 							done \\
 							| $${SED} "s|$${TOKEN}$$||g"
 					)"
@@ -8514,8 +8514,8 @@ function $(PUBLISH)-metainfo-block {
 					$${ECHO} "\\n  - \"$${INFO_LIST[$${NUM}]}\"" \\
 					| $${SED} "s|$${TOKEN}|\"\\n  - \"|g"
 				fi
-				$${ECHO} "\\n"
 			fi
+			$${ECHO} "\\n"
 			NUM="$$($${EXPR} $${NUM} + 1)"
 		done
 		$${ECHO} "$${META}" \\
@@ -9979,6 +9979,7 @@ function $(PUBLISH)-file {
 		$${ECHO} "$${1}" \\
 		| $${SED} "s|$${PUBLISH_CMD_ROOT}|$${COMPOSER_ROOT_PATH}|g"
 	)"
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
 	META_BEG=
 	META_BLD=
 	META_END=
@@ -10050,6 +10051,7 @@ function $(PUBLISH)-select {
 		[ "$${ACTION}" = "contents" ] ||
 		[ "$${ACTION}" = "readtime" ];
 	then
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
 		if [ "$${ACTION}" = "metainfo" ] && [ "$${1}" = "$${MENU_SELF}" ]; then
 			shift
 			$${ECHO} "$${PUBLISH_CMD_BEG} $${ACTION}-self$$(
@@ -14123,8 +14125,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-init
 $(TESTING)-$(COMPOSER_BASENAME)-init:
 	#> precedence
-	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="1000" c_jobs="100" J="10" $(CONFIGS)
-	@$(call $(TESTING)-run,,$(NOTHING)) c_jobs="100" J="10" $(CONFIGS)
+	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="1000" J="10" $(CONFIGS)
 	@$(call $(TESTING)-run,,$(NOTHING)) J="10" $(CONFIGS)
 	#> input
 	@$(call $(TESTING)-run) $(OUT_README)$(COMPOSER_EXT_DEFAULT).$(EXTN_DEFAULT)
@@ -16397,8 +16398,6 @@ endef
 ##### {{{5 $(PUBLISH)-library-index-title
 ########################################
 
-#WORKING:FIX:EXCLUDE
-
 #> update: title / date / metalist:*
 
 override define $(PUBLISH)-library-index-title =
@@ -16967,12 +16966,6 @@ override define $(PUBLISH)-library-sort-yq =
 	| sort_by( \
 		with_dtf(\"$(.)$(PUBLISH_DATES_INTERNAL_FORMAT)\"; .\"$(KEY_DATE)\".\"$(KEY_DATE_PARSE)\") \
 	) | reverse
-endef
-#WORKING:FIX:EXCLUDE:DATE:CONV
-override define $(PUBLISH)-library-sort-yq =
-	sort_by(.\"$(KEY_FILEPATH)\") \
-	| sort_by(.title) \
-	| (sort_by(.date) | reverse)
 endef
 
 override define $(PUBLISH)-library-sort-sh =
