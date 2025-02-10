@@ -844,12 +844,15 @@ override PUBLISH_COLS_RESIZE_L_MOD	:= $(PUBLISH_COLS_RESIZE_L_ALT)
 override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 
+#WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
+
 #> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
-override PUBLISH_DATES_PARSE_1		:= $(PUBLISH_DATES_INTERNAL_FORMAT)
-override PUBLISH_DATES_PARSE_2		:= $(PUBLISH_DATES_FORMAT_DEFAULT)
-override PUBLISH_DATES_PARSE_3		:= 2006-01-02
-override PUBLISH_DATES_PARSE_4		:= January 2, 2006
-override PUBLISH_DATES_PARSE_ALT	:= January _2, 2006  3:04 PM MST -07:00
+override PUBLISH_DATES_PARSE_0		:= $(PUBLISH_DATES_INTERNAL_FORMAT)
+override PUBLISH_DATES_PARSE_1		:= $(PUBLISH_DATES_FORMAT_DEFAULT)
+override PUBLISH_DATES_PARSE_2		:= 2006-01-02
+override PUBLISH_DATES_PARSE_3		:= January 2, 2006
+override PUBLISH_DATES_PARSE_4		:= January 2, 2006 3:04 PM MST -07:00
+override PUBLISH_DATES_PARSE_ALT	:= #> $(PUBLISH_DATES_PARSE_4)
 override PUBLISH_DATES_PARSE_MOD	:= $(COMPOSER_VERSION) (2006-01-02)
 override PUBLISH_DATES_DISPLAY		:= 2006-01-02
 #WORKING:FIX:EXCLUDE:DATE:CONV:META
@@ -2544,7 +2547,7 @@ override define COMPOSER_YML_DATA_SKEL =
       resize:				[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
     },
     dates: {
-      parse:				[ "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)" ],
+      parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)" ],
       display:				"$(PUBLISH_DATES_DISPLAY)",
       library:				"$(PUBLISH_DATES_LIBRARY)",
       timezone:				"$(PUBLISH_DATES_TIMEZONE)",
@@ -2945,7 +2948,7 @@ override PUBLISH_INDEX			:= index
 override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)
 
 #> update: $(PUBLISH)-library-sort-yq
-#> update: PUBLISH_DATES_PARSE_ALT / PUBLISH_PAGES_DATE_FORMAT
+#> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
 override PUBLISH_PAGES_DATE		:= -01-01
 override PUBLISH_PAGES_DATE_FORMAT	:= +%B %e, %Y %l:%M %p %Z %:z
@@ -5749,7 +5752,7 @@ endef
 #	default css (see "themes" page)
 #	note on example page about logo/icon
 
-#>| [dates.parse]			| `$(PUBLISH_DATES_PARSE_1)`				$(if $(1),| `$(PUBLISH_DATES_PARSE_ALT)`)
+#>| [dates.parse]			| `$(PUBLISH_DATES_PARSE_0)`				$(if $(1),| `$(PUBLISH_DATES_PARSE_ALT)`)
 override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config			| defaults						$(if $(1),| values)
 |:---				|:------$(if $(1),,|)						$(if $(1),|:------|)
@@ -5909,10 +5912,6 @@ override PUBLISH_PAGE_2_NAME		:= Default Site
 #### {{{4 $(PUBLISH) Page: Nothing
 ########################################
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#	$(PUBLISH_METADATE): $(shell $(call DATEFORMAT,$(DATENOW),$(PUBLISH_PAGES_DATE_FORMAT)))
-
-#>$(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
 #>$(PUBLISH_CMD_BEG) metainfo $(MENU_SELF) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 override define PUBLISH_PAGE_2 =
 ---
@@ -5989,10 +5988,11 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
+#>$(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
 override define PUBLISH_PAGE_3 =
 ---
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_3_NAME)
-$(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
+$(PUBLISH_METADATE): $(shell $(call DATEFORMAT,$(DATENOW),$(PUBLISH_PAGES_DATE_FORMAT)))
 $(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
 $(PUBLISH_METATAGS): [ Main ]
 ---
@@ -7443,7 +7443,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L
 $(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)dates$(_D):
-$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_1)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_2)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_3)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_4)$(_N)"$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_0)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_1)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_2)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_3)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_4)$(_N)"$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_DISPLAY)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)library$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_LIBRARY)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)timezone$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_TIMEZONE)$(_N)"$(_D)
@@ -7916,6 +7916,7 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
+#>    parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)", "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))" ]
 override define HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(CONFIGS))
@@ -7949,7 +7950,7 @@ variables:
       size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
       resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
     dates:
-      parse:				[ "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)", "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))" ]
+      parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)"$(if $(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT)),$(COMMA) "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))") ]
       display:				"$(PUBLISH_DATES_DISPLAY$(if $(1),_MOD,_ALT))"
       library:				"$(PUBLISH_DATES_LIBRARY$(if $(1),_MOD,_ALT))"
       timezone:				"$(PUBLISH_DATES_TIMEZONE$(if $(1),_MOD,_ALT))"
@@ -8538,8 +8539,6 @@ function $(PUBLISH)-metainfo-block {
 			META_SEP=" "
 		fi
 #WORKING:FIX:EXCLUDE:DATE:CONV:META:SELF
-#	verify composer_library_path is working everywhere, particularly non-library-root folders...
-#	test $(publish_metadate) of something non-numeric, like "%Y %b"...
 #	sorting/display of v3.1 (2024-08-10) dates...
 		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 			if [ "$${FILE}" = "$${META_LIST}" ]; then
