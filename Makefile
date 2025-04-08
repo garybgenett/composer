@@ -398,10 +398,12 @@ override DEPTH_MAX			:= 6
 ## {{{2 Tokens
 ########################################
 
+override MENU_SELF			:= _
+
 #> update: includes duplicates
 override .				:= .
 override _				:= +
-override /				= $(patsubst $(.)%,$(if $(2),[$(.)])%,$(patsubst $(_)%,$(if $(2),[$(_)])%,$(1)))
+override /				= $(patsubst $(.)%,$(if $(2),[$(.)],$(if $(3),$(MENU_SELF)))%,$(patsubst $(_)%,$(if $(2),[$(_)],$(if $(3),$(MENU_SELF)))%,$(1)))
 
 override MARKER				:= >>
 override DIVIDE				:= ::
@@ -414,8 +416,6 @@ override define NEWLINE =
 $(NULL)
 $(NULL)
 endef
-
-override MENU_SELF			:= _
 
 #> update: del(.*)
 override KEY_UPDATED			:= $(.)updated
@@ -769,6 +769,7 @@ override PUBLISH_FILE_FOOTER		:= _footer$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
 
 override PUBLISH_DATES_FORMAT_DEFAULT	:= 2006-01-02 15:04 -07:00
+override PUBLISH_DATES_FORMAT_PANDOC	:= 2006-01-02
 override PUBLISH_DATES_INTERNAL_FORMAT	:= 2006-01-02T15:04:05-07:00
 override PUBLISH_DATES_INTERNAL_NULL	:= 1970-01-01T00:00:00+00:00
 override PUBLISH_DATES_TIMEZONE_FORMAT	:= [-]07[:]00
@@ -853,14 +854,10 @@ override PUBLISH_DATES_PARSE_4		:= January 2, 2006 3:04 PM MST -07:00
 override PUBLISH_DATES_PARSE_ALT	:= #> $(PUBLISH_DATES_PARSE_4)
 override PUBLISH_DATES_PARSE_MOD	:= #> $(PUBLISH_DATES_PARSE_4)
 override PUBLISH_DATES_DISPLAY		:= 2006-01-02
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02 03:04 PM MST
-override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02
+override PUBLISH_DATES_DISPLAY_ALT	:= 2006-01-02 03:04 PM MST
 override PUBLISH_DATES_DISPLAY_MOD	:= $(PUBLISH_DATES_DISPLAY_ALT)
 override PUBLISH_DATES_LIBRARY		:= 2006
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#override PUBLISH_DATES_LIBRARY_ALT	:= 2006-01
-override PUBLISH_DATES_LIBRARY_ALT	:= 2006
+override PUBLISH_DATES_LIBRARY_ALT	:= 2006-01
 override PUBLISH_DATES_LIBRARY_MOD	:= $(PUBLISH_DATES_LIBRARY_ALT)
 override PUBLISH_DATES_TIMEZONE		:= -08:00
 override PUBLISH_DATES_TIMEZONE_ALT	:= -07:00
@@ -893,8 +890,8 @@ override PUBLISH_METATITL_DISPLAY_MOD	:= null
 override PUBLISH_METATITL_EMPTY		:= *(no $(PUBLISH_METATITL))*
 override PUBLISH_METATITL_EMPTY_ALT	:= *(none)*
 override PUBLISH_METATITL_EMPTY_MOD	:= null
-override PUBLISH_METADATE_TITLE		:= Date: <name>
-override PUBLISH_METADATE_TITLE_ALT	:= Year: <name>
+override PUBLISH_METADATE_TITLE		:= Year: <name>
+override PUBLISH_METADATE_TITLE_ALT	:= Date: <name>
 override PUBLISH_METADATE_TITLE_MOD	:= null
 override PUBLISH_METADATE_DISPLAY	:= Date: <|>, <|>
 override PUBLISH_METADATE_DISPLAY_ALT	:= <ul><li><|></li><li><|></li></ul>
@@ -2860,6 +2857,7 @@ override PUBLISH_SH_GLOBAL := \
 	HTML_HIDE \
 	$(TOKEN) \
 	\
+	PUBLISH_DATES_FORMAT_PANDOC \
 	PUBLISH_DATES_INTERNAL_FORMAT \
 	PUBLISH_DATES_INTERNAL_NULL \
 	PUBLISH_DATES_TIMEZONE_FORMAT \
@@ -2936,7 +2934,7 @@ override PUBLISH_SH_HELPERS := \
 ########################################
 
 override PUBLISH_ROOT			:= $(CURDIR)/_$(PUBLISH)
-override PUBLISH_ROOT_TESTING		:= $(PUBLISH_ROOT)/$(call /,$(TESTING))
+override PUBLISH_ROOT_TESTING		:= $(PUBLISH_ROOT)/$(call /,$(TESTING),,1)
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 override PUBLISH_ROOT			:= $(PUBLISH_ROOT_TESTING)
 endif
@@ -3758,8 +3756,8 @@ $(HELPOUT)-examples_%:
 	@$(PRINT) "$(_E)(see [Recommended Workflow])$(_D):"
 	@$(ENDOLINE)
 	@$(PRINT) "$(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/documents"
-	@$(PRINT) "$(CODEBLOCK)$(_C)mv$(_D) $(_M)$(EXPAND)/$(notdir $(COMPOSER_DIR)) $(COMPOSER_CMS)"
-	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(DOSETUP)"
+	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)"
 	@$(ENDOLINE)
 	@$(PRINT) "See \`$(_C)$(HELPOUT)-$(DOITALL)$(_D)\` for full details and additional targets."
@@ -4277,15 +4275,14 @@ $(CODEBLOCK)$(EXPAND)/
 $(CODEBLOCK)$(EXPAND)/tld/
 $(CODEBLOCK)$(EXPAND)/tld/sub/
 
-To save on disk space, using a central $(_C)[$(COMPOSER_BASENAME)]$(_D) install for multiple directory
-trees, the $(_C)[$(DOSETUP)]$(_D) target can be used to create a linked `$(_M)$(COMPOSER_CMS)$(_D)` directory:
+To save on disk space using a central $(_C)[$(COMPOSER_BASENAME)]$(_D) install for multiple directory
+trees, the $(_C)[$(DOSETUP)]$(_D) target can be used to create a linked `$(_M)$(COMPOSER_CMS)$(_D)` directory,
+and then the entire directory tree can be converted to a $(_C)[$(COMPOSER_BASENAME)]$(_D)
+documentation archive $(_E)([Quick Start] example)$(_D):
 
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(MAKEFILE)$(_D) $(_M)$(DOSETUP)$(_D)
-
-The directory tree can then be converted to a $(_C)[$(COMPOSER_BASENAME)]$(_D) documentation archive
-$(_E)([Quick Start] example)$(_D):
-
-$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
+$(CODEBLOCK)$(_C)cd$(_D) $(_M)$(EXPAND)/documents$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(DOSETUP)$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)$(_D)
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-section,Customization)
@@ -7133,7 +7130,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
-override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT)$(if $(1),, $(call /,$(TESTING)))
+override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT)$(if $(1),, $(call /,$(TESTING),,1))
 
 ########################################
 
@@ -8449,7 +8446,13 @@ function $(PUBLISH)-metainfo-block {
 	if [ -n "$${DATE_DISPLAY}" ]; then
 		DATE_DISPLAY="$$(
 			$${ECHO} "display: $${DATE_DISPLAY}" \\
-			| $${YQ_WRITE} ".display |= format_datetime(\"$$(COMPOSER_YML_DATA_VAL config.dates.display)\") | .display" 2>/dev/null
+			| $${YQ_WRITE} ".display |= format_datetime(\"$$(
+					if [ "$${2}" = "$${SPECIAL_VAL}" ]; then
+						$${ECHO} "$${PUBLISH_DATES_FORMAT_PANDOC}"
+					else
+						$${ECHO} "$$(COMPOSER_YML_DATA_VAL config.dates.display)"
+					fi
+				)\") | .display" 2>/dev/null
 		)"
 	fi
 	if [ -z "$${DATE_DISPLAY}" ]; then
