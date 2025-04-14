@@ -762,6 +762,8 @@ override c_list_file			:=
 ### {{{3 Values
 ########################################
 
+override PUBLISH_TAGSMAIN		:= Main
+
 override PUBLISH_KEEPING		:= 256
 
 override PUBLISH_FILE_HEADER		:= _header$(COMPOSER_EXT_SPECIAL)
@@ -928,7 +930,7 @@ override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 override PUBLISH_READTIME_WPM_MOD	:= $(PUBLISH_READTIME_WPM_ALT)
 
-#WORKING:FIX:EXCLUDE
+#WORKING:FIX:EXCLUDE:CURRENT
 #	eureka!  handle this just like the filtering for "md" files...
 #	see $(TARGETS), output of COMPOSER_* variables...
 override PUBLISH_REDIRECT_TITLE		:= Moved To: <link>
@@ -5642,7 +5644,7 @@ override define PUBLISH_PAGE_1 =
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_1_NAME)
 $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
 $(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN) ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 Introduction $(PUBLISH_CMD_END)
 
@@ -5912,8 +5914,8 @@ override define PUBLISH_PAGE_2 =
 ---
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_2_NAME)
 $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
-$(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main ]
+$(PUBLISH_METAAUTH): [ $(COMPOSER_COMPOSER) ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN) ]
 ---
 $(PUBLISH_CMD_BEG) box-begin $(SPECIAL_VAL) $(PUBLISH_CMD_END)
 
@@ -5988,8 +5990,8 @@ override define PUBLISH_PAGE_3 =
 ---
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_3_NAME)
 $(PUBLISH_METADATE): $(shell $(call DATEFORMAT,$(DATENOW),$(PUBLISH_PAGES_DATE_FORMAT)))
-$(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main ]
+$(PUBLISH_METAAUTH): [ $(COMPOSER_COMPOSER) ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN) ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 #WORK $(PUBLISH_CMD_END)
 
@@ -6073,15 +6075,12 @@ override PUBLISH_PAGE_EXAMPLE_NAME	:= Layout & Elements
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#$(PUBLISH_METAAUTH): [ this guy, $(COMPOSER_COMPOSER), that guy, every guy ]
-#$(PUBLISH_METATAGS): [ this tag, Main$(if $(1),$(COMMA) $(DONOTDO)$(COMPOSER_EXT_DEFAULT)), that tag, every tag ]
 override define PUBLISH_PAGE_EXAMPLE =
 ---
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_EXAMPLE_NAME)
 $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
-$(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main$(if $(1),$(COMMA) $(DONOTDO)$(COMPOSER_EXT_DEFAULT)) ]
+$(PUBLISH_METAAUTH): [ $(COMPOSER_COMPOSER)$(if	$(1),$(COMMA) $(DONOTDO)-$(PUBLISH_METAAUTH)) ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN)$(if	$(1),$(COMMA) $(DONOTDO)-$(PUBLISH_METATAGS)) ]
 ---
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_EXAMPLE)$(COMPOSER_EXT_SPECIAL) $(PUBLISH_CMD_END)
 endef
@@ -6543,8 +6542,8 @@ override define PUBLISH_PAGE_PAGEDIR_HEADER =
 ---
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_PAGEDIR_NAME)
 $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
-$(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main ]
+$(PUBLISH_METAAUTH): [ $(COMPOSER_COMPOSER) ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN) ]
 ---
 #WORK metainfo page description text
 
@@ -6602,8 +6601,8 @@ override define PUBLISH_PAGE_SHOWDIR =
 ---
 $(PUBLISH_METATITL): $(PUBLISH_PAGE_SHOWDIR_NAME)
 $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
-$(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main ]
+$(PUBLISH_METAAUTH): [ $(COMPOSER_COMPOSER) ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN) ]
 ---
 $(PUBLISH_CMD_BEG) box-begin 1 $(PUBLISH_PAGE_SHOWDIR_NAME) $(PUBLISH_CMD_END)
 
@@ -6693,8 +6692,8 @@ override define PUBLISH_PAGE_INCLUDE_EXAMPLE =
 ---
 $(PUBLISH_METATITL): $(LIBRARY_DIGEST_TITLE$(1))
 $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
-$(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
-$(PUBLISH_METATAGS): [ Main ]
+$(PUBLISH_METAAUTH): [ $(COMPOSER_COMPOSER) ]
+$(PUBLISH_METATAGS): [ $(PUBLISH_TAGSMAIN) ]
 ---
 $(PUBLISH_CMD_BEG) $(PUBLISH_CMD_ROOT)/$(PUBLISH_LIBRARY$(1))/$(notdir $($(PUBLISH)-library-digest-src)) $(PUBLISH_CMD_END)
 endef
@@ -6829,8 +6828,9 @@ $(.)$(EXAMPLE)$(.)yml-$(DOITALL):
 ### {{{3 $(EXAMPLE)$(.)md
 ########################################
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-#	spaghetti...!
+########################################
+#### {{{4 $(EXAMPLE)$(.)md
+########################################
 
 .PHONY: $(.)$(EXAMPLE)$(.)md
 $(.)$(EXAMPLE)$(.)md:
@@ -6843,7 +6843,7 @@ $(.)$(EXAMPLE)$(.)md:
 					$(COMPOSER_HEADLINE) \
 				))$(_N)\") \
 		,$(if $(filter $(FILE),$(PUBLISH_METADATE)),\
-			$(call $(EXAMPLE)-print,,$(_C)date$(_D): $(_M)$$( \
+			$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D): $(_M)$$( \
 					$(ECHO) "display: $(call DATESTAMP,$(DATENOW))" \
 					| $(YQ_WRITE) ".display |= format_datetime(\"$(PUBLISH_DATES_FORMAT_DEFAULT)\") | .display" 2>/dev/null \
 				)) \
@@ -6862,27 +6862,30 @@ $(.)$(EXAMPLE)$(.)md:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(call $(EXAMPLE)-print,,$(COMPOSER_TAGLINE))
 
+########################################
+#### {{{4 $(EXAMPLE)$(.)md-$(TOAFILE)
+########################################
+
 .PHONY: $(EXAMPLE)$(.)md-$(TOAFILE)
 $(EXAMPLE)$(.)md-$(TOAFILE): $(.)$(EXAMPLE)$(.)md-$(TOAFILE)
 $(EXAMPLE)$(.)md-$(TOAFILE):
 	@$(ECHO) ""
 
 .PHONY: $(.)$(EXAMPLE)$(.)md-$(TOAFILE)
+$(.)$(EXAMPLE)$(.)md-$(TOAFILE): $(.)set_title-$(EXAMPLE)$(.)md
 $(.)$(EXAMPLE)$(.)md-$(TOAFILE):
-#>		read -p "$(COMPOSER_FULLNAME) $(DIVIDE) $(EXAMPLE)$(.)md $(MARKER) " FILE;
-	@$(eval override COMPOSER_DOITALL_$(EXAMPLE)$(.)md := $(shell \
-		read -p "title $(MARKER) " FILE; \
-		$(ECHO) "$${FILE}" \
-	))
-	@FILE="$(CURDIR)/$(call DATEMARK,$(DATENOW))-$(shell $(call $(HELPOUT)-$(TARGETS)-format,$(COMPOSER_DOITALL_$(EXAMPLE)$(.)md)))$(COMPOSER_EXT)"; \
+	@$(call $(HEADERS))
+	@$(ECHO) "$(_H)$(MARKER)$(_D) $(_C)$(EXAMPLE)$(.)md$(_D) $(DIVIDE) $(_C)$(PUBLISH_METATITL)$(_D) $(_H)$(MARKER)$(_D) "; \
+		read MD_TITL; \
+	MD_FILE="$(CURDIR)/$(call DATEMARK,$(DATENOW))-$$($(call $(HELPOUT)-$(TARGETS)-format,$${MD_TITL}))$(COMPOSER_EXT)"; \
 		$(MAKE) \
 			--directory $(abspath $(dir $(COMPOSER_SELF))) \
 			--makefile $(COMPOSER_SELF) \
-			COMPOSER_DOITALL_$(EXAMPLE)$(.)md="$(subst ",\",$(COMPOSER_DOITALL_$(EXAMPLE)$(.)md))" \
+			COMPOSER_DOITALL_$(EXAMPLE)$(.)md="$${MD_TITL}" \
 			COMPOSER_DOCOLOR= \
 			$(.)$(EXAMPLE)$(.)md \
-			>$${FILE}; \
-		$(EDITOR) $${FILE}
+			>$${MD_FILE}; \
+		$(EDITOR) $${MD_FILE}
 
 ########################################
 ### {{{3 $(EXAMPLE)-%
@@ -15403,9 +15406,9 @@ override REDIRECT_TITLE			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.title
 override REDIRECT_DISPLAY		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.display)
 override REDIRECT_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.exclude)
 override REDIRECT_TIME			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.time)
-
+#> $(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_EXCLUDE),$(EXPORTS)-redirect)))
+#WORKING:EXCLUDE:CURRENT
 #>	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(COMPOSER_EXPORTS_LIST)),
-#>$(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_EXCLUDE),$(EXPORTS)-redirect)))
 override $(EXPORTS)-redirect-list := $(strip \
 	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(filter %.$(EXTN_HTML),$(COMPOSER_EXPORTS_LIST))),\
 		$(if $(filter $(realpath $(CURDIR)/$(FILE)),$(CURDIR)/$(FILE)),,$(call COMPOSER_CONV,,$(CURDIR)/$(FILE),1)) \
