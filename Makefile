@@ -930,15 +930,13 @@ override PUBLISH_READTIME_WPM		:= 220
 override PUBLISH_READTIME_WPM_ALT	:= 200
 override PUBLISH_READTIME_WPM_MOD	:= $(PUBLISH_READTIME_WPM_ALT)
 
-#WORKING:FIX:EXCLUDE:CURRENT
-#	eureka!  handle this just like the filtering for "md" files...
-#	see $(TARGETS), output of COMPOSER_* variables...
 override PUBLISH_REDIRECT_TITLE		:= Moved To: <link>
 override PUBLISH_REDIRECT_TITLE_ALT	:= Redirecting: <link>
 override PUBLISH_REDIRECT_TITLE_MOD	:= null
 override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: <link>**
 override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
+#WORKING:FIX:EXCLUDE:MATCH:CURRENT
 override PUBLISH_REDIRECT_EXCLUDE	:= null
 override PUBLISH_REDIRECT_EXCLUDE_ALT	:= $(PUBLISH_REDIRECT_EXCLUDE)
 override PUBLISH_REDIRECT_EXCLUDE_MOD	:= *
@@ -996,15 +994,14 @@ override LIBRARY_LISTS_SPACER		:= 1
 override LIBRARY_LISTS_SPACER_ALT	:= null
 override LIBRARY_LISTS_SPACER_MOD	:= $(LIBRARY_LISTS_SPACER_ALT)
 
-#WORKING:FIX:EXCLUDE
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
+#WORKING:FIX:EXCLUDE:MATCH:CURRENT
 override LIBRARY_SITEMAP_EXCLUDE	:= null
-#WORKING:FIX:EXCLUDE:MATCH
-# override LIBRARY_SITEMAP_EXCLUDE_ALT	:= $(LIBRARY_SITEMAP_EXCLUDE)
+# override LIBRARY_SITEMAP_EXCLUDE_ALT	:= redirect.* author-author-1.html 2022-01-01+template_0.html
 override LIBRARY_SITEMAP_EXCLUDE_ALT	:= redirect.*
-override LIBRARY_SITEMAP_EXCLUDE_MOD	:= *
+override LIBRARY_SITEMAP_EXCLUDE_MOD	:= $(LIBRARY_SITEMAP_EXCLUDE_ALT)
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
@@ -5741,7 +5738,6 @@ endef
 #### {{{4 $(PUBLISH) Page: Main (Config)
 ########################################
 
-#WORKING:FIX:EXCLUDE
 #WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/config/index.md
 
 #WORK
@@ -15407,7 +15403,6 @@ override REDIRECT_DISPLAY		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.disp
 override REDIRECT_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.exclude)
 override REDIRECT_TIME			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.time)
 #> $(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_EXCLUDE),$(EXPORTS)-redirect)))
-#WORKING:EXCLUDE:CURRENT
 #>	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(COMPOSER_EXPORTS_LIST)),
 override $(EXPORTS)-redirect-list := $(strip \
 	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(filter %.$(EXTN_HTML),$(COMPOSER_EXPORTS_LIST))),\
@@ -16172,7 +16167,6 @@ $($(PUBLISH)-library)-$(DOITALL):
 	@$(ECHO) "$(call COMPOSER_TIMESTAMP)\n" >$(@)
 
 #> update: $(PUBLISH)-library-$(@)
-#WORKING:FIX:EXCLUDE:MATCH
 $($(PUBLISH)-library-sitemap) \
 $($(PUBLISH)-library-sitemap-src) \
 $($(PUBLISH)-library-sitemap-files) \
@@ -16843,7 +16837,6 @@ $(PUBLISH)-library-sitemap-files:
 	@$(ECHO) ""
 
 #> update: $(PUBLISH)-library-$(@)
-#WORKING:FIX:EXCLUDE:MATCH
 $($(PUBLISH)-library-sitemap-files) \
 	: \
 	$($(PUBLISH)-library)-$(TARGETS)
@@ -16852,7 +16845,6 @@ $($(PUBLISH)-library-sitemap-files) \
 ##### {{{5 $(PUBLISH)-library-sitemap
 ########################################
 
-#WORKING:FIX:EXCLUDE:MATCH
 $($(PUBLISH)-library-sitemap): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap): $($(PUBLISH)-library-sitemap-src)
 $($(PUBLISH)-library-sitemap): $($(PUBLISH)-library-sitemap-files)
@@ -16886,7 +16878,6 @@ endef
 ##### {{{5 $(PUBLISH)-library-sitemap-src
 ########################################
 
-#WORKING:FIX:EXCLUDE:MATCH
 $($(PUBLISH)-library-sitemap-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-src): $($(PUBLISH)-library-sitemap-files)
 $($(PUBLISH)-library-sitemap-src):
@@ -16933,7 +16924,6 @@ $($(PUBLISH)-library-sitemap-src):
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 #> update: table class
 
-#WORKING:FIX:EXCLUDE:MATCH
 $($(PUBLISH)-library-sitemap-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-files):
 #>	@$(call $(HEADERS)-note,$(@),*,$(PUBLISH)-sitemap)
@@ -16943,11 +16933,6 @@ $($(PUBLISH)-library-sitemap-files):
 		$(call $(HEADERS)-note,$($(PUBLISH)-library-sitemap-src),$(NAME),$(PUBLISH)-sitemap)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "|||\n|:---|:---|\n" >>$(@).$(COMPOSER_BASENAME)
-#WORKING:FIX:EXCLUDE:MATCH
-#		$(if $(SITEMAP_EXCLUDE),\
-#			| $(SED) $(foreach FILE,$(subst *,.*,$(notdir $(SITEMAP_EXCLUDE))), -e "/^$(FILE)$$/d") \
-#		) \
-#
 	@shopt -s lastpipe; \
 		$(call $(PUBLISH)-library-sitemap-vars) \
 	$(call ENV_MAKE,$(TESTING_MAKEJOBS)) \
@@ -16956,6 +16941,14 @@ $($(PUBLISH)-library-sitemap-files):
 		$(CONFIGS)$(.)COMPOSER_EXPORTS_LIST \
 		| $(SED) \
 			-e "s|$(TOKEN)$$||g" \
+			$(foreach FILE,$(SITEMAP_EXCLUDE),\
+				-e "/[/]$(shell \
+					$(ECHO) "$(FILE)" \
+					| $(SED) \
+						-e "s|([$(SED_ESCAPE_LIST)])|[\1]|g" \
+						-e "s|[[][*][]]|.*|g" \
+				)$$/d" \
+			) \
 			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)||g" \
 		| $(SORT) \
@@ -16974,7 +16967,6 @@ $($(PUBLISH)-library-sitemap-files):
 ##### {{{5 $(PUBLISH)-library-sitemap-create
 ########################################
 
-#WORKING:FIX:EXCLUDE:MATCH
 override define $(PUBLISH)-library-sitemap-vars =
 	$(eval override ANCHOR_LINKS		:= $(call COMPOSER_YML_DATA_VAL,library.pages.anchor_links)) \
 	$(eval override SITEMAP_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,library.sitemap.exclude)) \
