@@ -762,9 +762,9 @@ override c_list_file			:=
 ### {{{3 Values
 ########################################
 
-override PUBLISH_TAGSMAIN		:= Main
-
 override PUBLISH_KEEPING		:= 256
+
+override PUBLISH_TAGSMAIN		:= Main
 
 override PUBLISH_FILE_HEADER		:= _header$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_FOOTER		:= _footer$(COMPOSER_EXT_SPECIAL)
@@ -806,7 +806,7 @@ override PUBLISH_COLS_SCROLL		:= 1
 override PUBLISH_COLS_SCROLL_ALT	:= null
 override PUBLISH_COLS_SCROLL_MOD	:= $(SPECIAL_VAL)
 
-#WORKING:FIX:ARRAY
+#WORKING:FIX:ARRAY:CURRENT
 
 override PUBLISH_COLS_ORDER		:= 1 2 3
 override PUBLISH_COLS_ORDER_ALT		:= 1 3 2
@@ -2130,6 +2130,24 @@ override PANDOC_OPTIONS_ERROR		:=
 ################################################################################
 
 ########################################
+## {{{2 Values
+########################################
+
+override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
+override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
+
+override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9+_.-]*
+override COMPOSER_REGEX_PREFIX		:= [$(.)$(_)]
+override SED_ESCAPE_LIST		:= ^[:alnum:]
+
+#> update: includes duplicates
+override DEBUGIT			:= $(_)debug
+override PUBLISH			:= site
+
+override $(DEBUGIT)-output		:= $(if $(COMPOSER_DEBUGIT),,>/dev/null)
+override $(PUBLISH)-$(DEBUGIT)-output	:= $(if $(COMPOSER_DEBUGIT),$(if $(COMPOSER_DEBUGIT_ALL),,| $(SED) -n "/^<!--[[:space:]]/p"),>/dev/null)
+
+########################################
 ## {{{2 Macros
 ########################################
 
@@ -2146,19 +2164,13 @@ override COMPOSER_CONV = \
 		$(patsubst	$(if $(3),$(COMPOSER_ROOT),$(COMPOSER_DIR))$(if $(4),,/)%,$(1)%,$(2)) \
 	))
 
-override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
-override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
-
-override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9+_.-]*
-override COMPOSER_REGEX_PREFIX		:= [$(.)$(_)]
-override SED_ESCAPE_LIST		:= ^[:alnum:]
-
-#> update: includes duplicates
-override DEBUGIT			:= $(_)debug
-override PUBLISH			:= site
-
-override $(DEBUGIT)-output		:= $(if $(COMPOSER_DEBUGIT),,>/dev/null)
-override $(PUBLISH)-$(DEBUGIT)-output	:= $(if $(COMPOSER_DEBUGIT),$(if $(COMPOSER_DEBUGIT_ALL),,| $(SED) -n "/^<!--[[:space:]]/p"),>/dev/null)
+#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
+override COMPOSER_YML_ARRAY = \
+	$(strip \
+		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_NOCOLOR))) \
+		$(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(1),$(if $(3),$(_N)")$(_M)$(FILE)$(if $(3),$(_N)")$(_D)$(TOKEN))))) \
+		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_COLOR))) \
+	)
 
 ########################################
 ## {{{2 Options
@@ -2529,7 +2541,7 @@ override define COMPOSER_YML_DATA_SKEL =
     cols: {
       break:				$(PUBLISH_COLS_BREAK),
       scroll:				$(PUBLISH_COLS_SCROLL),
-      order:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER),$(FILE)$(TOKEN))))) ],
+      order:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER),1) ],
       reorder:				[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
       size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
       resize:				[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
@@ -2571,7 +2583,7 @@ override define COMPOSER_YML_DATA_SKEL =
     redirect: {
       title:				"$(PUBLISH_REDIRECT_TITLE)",
       display:				"$(PUBLISH_REDIRECT_DISPLAY)",
-      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),"$(FILE)"$(TOKEN))))) ],
+      exclude:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_REDIRECT_EXCLUDE),1,1) ],
       time:				$(PUBLISH_REDIRECT_TIME),
     },
   },
@@ -2600,7 +2612,7 @@ override define COMPOSER_YML_DATA_SKEL =
     },
     sitemap: {
       title:				"$(LIBRARY_SITEMAP_TITLE)",
-      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),"$(FILE)"$(TOKEN))))) ],
+      exclude:				[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_SITEMAP_EXCLUDE),1,1) ],
       expanded:				$(LIBRARY_SITEMAP_EXPANDED),
       spacer:				$(LIBRARY_SITEMAP_SPACER),
     },
@@ -5759,7 +5771,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [pages.footer]		| `$(PUBLISH_FOOTER)`						$(if $(1),| `$(PUBLISH_FOOTER_ALT)`)
 | [cols.break]			| `$(PUBLISH_COLS_BREAK)`							$(if $(1),| `$(PUBLISH_COLS_BREAK_ALT)`)
 | [cols.scroll]			| `$(PUBLISH_COLS_SCROLL)`							$(if $(1),| `$(PUBLISH_COLS_SCROLL_ALT)`)
-| [cols.order]			| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER),$(FILE)$(TOKEN))))) ]`						$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER_ALT),$(FILE)$(TOKEN))))) ]`)
+| [cols.order]			| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER),1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER_ALT),1) ]`)
 | [cols.reorder]		| `[ $(PUBLISH_COLS_REORDER_L)$(COMMA) $(PUBLISH_COLS_REORDER_C)$(COMMA) $(PUBLISH_COLS_REORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_REORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_R_ALT) ]`)
 | [cols.size]			| `[ $(PUBLISH_COLS_SIZE_L)$(COMMA) $(PUBLISH_COLS_SIZE_C)$(COMMA) $(PUBLISH_COLS_SIZE_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_SIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_R_ALT) ]`)
 | [cols.resize]			| `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`					$(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
@@ -5790,7 +5802,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [readtime.wpm]		| `$(PUBLISH_READTIME_WPM)`							$(if $(1),| `$(PUBLISH_READTIME_WPM_ALT)`)
 | [redirect.title]		| `$(PUBLISH_REDIRECT_TITLE)`					$(if $(1),| `$(PUBLISH_REDIRECT_TITLE_ALT)`)
 | [redirect.display]		| `$(PUBLISH_REDIRECT_DISPLAY)`	$(if $(1),| `$(PUBLISH_REDIRECT_DISPLAY_ALT)`)
-| [redirect.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`						$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
+| [redirect.exclude]		| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_REDIRECT_EXCLUDE),1,1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_REDIRECT_EXCLUDE_ALT),1,1) ]`)
 | [redirect.time]		| `$(PUBLISH_REDIRECT_TIME)`							$(if $(1),| `$(PUBLISH_REDIRECT_TIME_ALT)`)
 
 *(For this test site, [metalist.$(PUBLISH_METATAGS).title] has been added.$(if $(1),  In this `$(word 3,$(PUBLISH_DIRS))` sub-directory$(COMMA) the [redirect.exclude] option is not changed from default$(COMMA) in order to demonstrate the effects of the other `redirect.*` options.))*
@@ -5811,7 +5823,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [lists.expanded]		| `$(LIBRARY_LISTS_EXPANDED)`							$(if $(1),| `$(LIBRARY_LISTS_EXPANDED_ALT)`)
 | [lists.spacer]		| `$(LIBRARY_LISTS_SPACER)`							$(if $(1),| `$(LIBRARY_LISTS_SPACER_ALT)`)
 | [sitemap.title]		| `$(LIBRARY_SITEMAP_TITLE)`						$(if $(1),| `$(LIBRARY_SITEMAP_TITLE_ALT)`)
-| [sitemap.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`						$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
+| [sitemap.exclude]		| `[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_SITEMAP_EXCLUDE),1,1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_SITEMAP_EXCLUDE_ALT),1,1) ]`)
 | [sitemap.expanded]		| `$(LIBRARY_SITEMAP_EXPANDED)`							$(if $(1),| `$(LIBRARY_SITEMAP_EXPANDED_ALT)`)
 | [sitemap.spacer]		| `$(LIBRARY_SITEMAP_SPACER)`							$(if $(1),| `$(LIBRARY_SITEMAP_SPACER_ALT)`)
 
@@ -6741,7 +6753,8 @@ $(EXAMPLE) \
 $(EXAMPLE)$(.)yml \
 $(EXAMPLE)$(.)md \
 :
-#> TITLE_LN := ENDOLINE LINERULE
+#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
+#> update: TITLE_LN := ENDOLINE LINERULE
 	@$(if $(filter-out $(EXAMPLE)$(.)md,$(@)),\
 		$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR))) \
 		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
@@ -6922,6 +6935,8 @@ override EXT_ICON_CC			:= iVBORw0KGgoAAAANSUhEUgAAAFgAAAAfCAMAAABUFvrSAAAAIGNIUk
 ########################################
 ## {{{2 Heredoc Function
 ########################################
+
+#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
 
 override define DO_HEREDOC =
 	$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_NOCOLOR))) \
@@ -7427,7 +7442,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)footer$(_D):				$(_M)$(PUBLISH_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)scroll$(_D):				$(_M)$(PUBLISH_COLS_SCROLL)$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)order$(_D):				$(_N)[$(_D) $(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER),$(_N)$(_M)$(FILE)$(_N)$(_D)$(TOKEN))))) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)order$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER)) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)reorder$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
@@ -7470,7 +7485,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)wpm$(_D):				$(_M)$(PUBLISH_READTIME_WPM)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)redirect$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_DISPLAY)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)[$(_D) $(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),$(_N)"$(_M)$(FILE)$(_N)"$(_D)$(TOKEN))))) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_REDIRECT_EXCLUDE),,1) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)time$(_D):				$(_M)$(PUBLISH_REDIRECT_TIME)$(_D)
 
 $(_S)########################################$(_D)
@@ -7499,7 +7514,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)sitemap$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)[$(_D) $(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),$(_N)"$(_M)$(FILE)$(_N)"$(_D)$(TOKEN))))) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(LIBRARY_SITEMAP_EXCLUDE),,1) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)expanded$(_D):				$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
 
@@ -7935,7 +7950,7 @@ variables:
     cols:
       break:				$(PUBLISH_COLS_BREAK$(if $(1),_MOD,_ALT))
       scroll:				$(PUBLISH_COLS_SCROLL$(if $(1),_MOD,_ALT))
-      order:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER$(if $(1),_MOD,_ALT)),$(FILE)$(TOKEN))))) ]
+      order:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER$(if $(1),_MOD,_ALT)),1) ]
       reorder:				[ $(strip $(PUBLISH_COLS_REORDER_L$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_R$(if $(1),_MOD,_ALT))	) ]
       size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
       resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
@@ -7974,7 +7989,7 @@ variables:
     redirect:
       title:				"$(PUBLISH_REDIRECT_TITLE$(if $(1),_MOD,_ALT))"
       display:				"$(PUBLISH_REDIRECT_DISPLAY$(if $(1),_MOD,_ALT))"
-      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE$(if $(1),_MOD,_ALT)),"$(FILE)"$(TOKEN))))) ]
+      exclude:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_REDIRECT_EXCLUDE$(if $(1),_MOD,_ALT)),1,1) ]
       time:				$(PUBLISH_REDIRECT_TIME$(if $(1),_MOD,_ALT))
 
 ########################################
@@ -7999,7 +8014,7 @@ variables:
       spacer:				$(LIBRARY_LISTS_SPACER$(if $(1),_MOD,_ALT))
     sitemap:
       title:				"$(LIBRARY_SITEMAP_TITLE$(if $(1),_MOD,_ALT))"
-      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE$(if $(1),_MOD,_ALT)),"$(FILE)"$(TOKEN))))) ]
+      exclude:				[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_SITEMAP_EXCLUDE$(if $(1),_MOD,_ALT)),1,1) ]
       expanded:				$(LIBRARY_SITEMAP_EXPANDED$(if $(1),_MOD,_ALT))
       spacer:				$(LIBRARY_SITEMAP_SPACER$(if $(1),_MOD,_ALT))
 
@@ -12364,7 +12379,7 @@ endif
 ## {{{2 Formatting
 ########################################
 
-#> TITLE_LN := ENDOLINE LINERULE
+#> update: TITLE_LN := ENDOLINE LINERULE
 override COMMENTED			:= $(_S)\#$(_D) $(NULL)
 override CODEBLOCK			:= $(NULL)    $(NULL)
 override ENDOLINE			= $(ECHO) "$(_D)\n"
@@ -12393,7 +12408,7 @@ override TABLE_M3_HEADER_L		:= $(TABLE_M3) "$(_S):---" "$(_S):---" "$(_S):---"
 ## {{{2 Titles
 ########################################
 
-#> TITLE_LN := ENDOLINE LINERULE
+#> update: TITLE_LN := ENDOLINE LINERULE
 
 #>		if	[ "$(1)" = "-1" ]; \
 #>		then	$(ECHO) "$(_D)\n$(_N)$(PUBLISH_CMD_BEG) fold-begin	1	1		$(SPECIAL_VAL) $(2) $(PUBLISH_CMD_END)$(_D)\n\n"; \
