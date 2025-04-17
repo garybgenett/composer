@@ -808,23 +808,16 @@ override PUBLISH_COLS_SCROLL_MOD	:= $(SPECIAL_VAL)
 
 #WORKING:FIX:ARRAY
 
-override PUBLISH_COLS_ORDER_L		:= 1
-override PUBLISH_COLS_ORDER_C		:= 2
-override PUBLISH_COLS_ORDER_R		:= 3
+override PUBLISH_COLS_ORDER		:= 1 2 3
+override PUBLISH_COLS_ORDER_ALT		:= 1 3 2
+override PUBLISH_COLS_ORDER_MOD		:= $(PUBLISH_COLS_ORDER_ALT)
+
 override PUBLISH_COLS_REORDER_L		:= 1
 override PUBLISH_COLS_REORDER_C		:= 3
 override PUBLISH_COLS_REORDER_R		:= 2
-
-override PUBLISH_COLS_ORDER_L_ALT	:= 1
-override PUBLISH_COLS_ORDER_C_ALT	:= 3
-override PUBLISH_COLS_ORDER_R_ALT	:= 2
 override PUBLISH_COLS_REORDER_L_ALT	:= 2
 override PUBLISH_COLS_REORDER_C_ALT	:= 3
 override PUBLISH_COLS_REORDER_R_ALT	:= 1
-
-override PUBLISH_COLS_ORDER_L_MOD	:= $(PUBLISH_COLS_ORDER_L_ALT)
-override PUBLISH_COLS_ORDER_C_MOD	:= $(PUBLISH_COLS_ORDER_C_ALT)
-override PUBLISH_COLS_ORDER_R_MOD	:= $(PUBLISH_COLS_ORDER_R_ALT)
 override PUBLISH_COLS_REORDER_L_MOD	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_REORDER_C_MOD	:= $(PUBLISH_COLS_REORDER_C_ALT)
 override PUBLISH_COLS_REORDER_R_MOD	:= $(PUBLISH_COLS_REORDER_R_ALT)
@@ -832,20 +825,19 @@ override PUBLISH_COLS_REORDER_R_MOD	:= $(PUBLISH_COLS_REORDER_R_ALT)
 override PUBLISH_COLS_SIZE_L		:= 3
 override PUBLISH_COLS_SIZE_C		:= 7
 override PUBLISH_COLS_SIZE_R		:= 2
-override PUBLISH_COLS_RESIZE_L		:= 6
-override PUBLISH_COLS_RESIZE_C		:= 12
-override PUBLISH_COLS_RESIZE_R		:= 6
-
 override PUBLISH_COLS_SIZE_L_ALT	:= 12
 override PUBLISH_COLS_SIZE_C_ALT	:= 9
 override PUBLISH_COLS_SIZE_R_ALT	:= 3
-override PUBLISH_COLS_RESIZE_L_ALT	:= 12
-override PUBLISH_COLS_RESIZE_C_ALT	:= 12
-override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
-
 override PUBLISH_COLS_SIZE_L_MOD	:= $(PUBLISH_COLS_SIZE_L_ALT)
 override PUBLISH_COLS_SIZE_C_MOD	:= $(PUBLISH_COLS_SIZE_C_ALT)
 override PUBLISH_COLS_SIZE_R_MOD	:= $(PUBLISH_COLS_SIZE_R_ALT)
+
+override PUBLISH_COLS_RESIZE_L		:= 6
+override PUBLISH_COLS_RESIZE_C		:= 12
+override PUBLISH_COLS_RESIZE_R		:= 6
+override PUBLISH_COLS_RESIZE_L_ALT	:= 12
+override PUBLISH_COLS_RESIZE_C_ALT	:= 12
+override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_COLS_RESIZE_L_MOD	:= $(PUBLISH_COLS_RESIZE_L_ALT)
 override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_MOD	:= 12
@@ -2537,7 +2529,7 @@ override define COMPOSER_YML_DATA_SKEL =
     cols: {
       break:				$(PUBLISH_COLS_BREAK),
       scroll:				$(PUBLISH_COLS_SCROLL),
-      order:				[ $(PUBLISH_COLS_ORDER_L), $(PUBLISH_COLS_ORDER_C), $(PUBLISH_COLS_ORDER_R) ],
+      order:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER),$(FILE)$(TOKEN))))) ],
       reorder:				[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
       size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
       resize:				[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
@@ -5767,7 +5759,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [pages.footer]		| `$(PUBLISH_FOOTER)`						$(if $(1),| `$(PUBLISH_FOOTER_ALT)`)
 | [cols.break]			| `$(PUBLISH_COLS_BREAK)`							$(if $(1),| `$(PUBLISH_COLS_BREAK_ALT)`)
 | [cols.scroll]			| `$(PUBLISH_COLS_SCROLL)`							$(if $(1),| `$(PUBLISH_COLS_SCROLL_ALT)`)
-| [cols.order]			| `[ $(PUBLISH_COLS_ORDER_L)$(COMMA) $(PUBLISH_COLS_ORDER_C)$(COMMA) $(PUBLISH_COLS_ORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_ORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_ORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_ORDER_R_ALT) ]`)
+| [cols.order]			| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER),$(FILE)$(TOKEN))))) ]`						$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER_ALT),$(FILE)$(TOKEN))))) ]`)
 | [cols.reorder]		| `[ $(PUBLISH_COLS_REORDER_L)$(COMMA) $(PUBLISH_COLS_REORDER_C)$(COMMA) $(PUBLISH_COLS_REORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_REORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_R_ALT) ]`)
 | [cols.size]			| `[ $(PUBLISH_COLS_SIZE_L)$(COMMA) $(PUBLISH_COLS_SIZE_C)$(COMMA) $(PUBLISH_COLS_SIZE_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_SIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_R_ALT) ]`)
 | [cols.resize]			| `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`					$(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
@@ -7435,7 +7427,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)footer$(_D):				$(_M)$(PUBLISH_FOOTER)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)cols$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)scroll$(_D):				$(_M)$(PUBLISH_COLS_SCROLL)$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)order$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_ORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_ORDER_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)order$(_D):				$(_N)[$(_D) $(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER),$(_N)$(_M)$(FILE)$(_N)$(_D)$(TOKEN))))) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)reorder$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
@@ -7943,7 +7935,7 @@ variables:
     cols:
       break:				$(PUBLISH_COLS_BREAK$(if $(1),_MOD,_ALT))
       scroll:				$(PUBLISH_COLS_SCROLL$(if $(1),_MOD,_ALT))
-      order:				[ $(strip $(PUBLISH_COLS_ORDER_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_ORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_ORDER_R$(if $(1),_MOD,_ALT))	) ]
+      order:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_COLS_ORDER$(if $(1),_MOD,_ALT)),$(FILE)$(TOKEN))))) ]
       reorder:				[ $(strip $(PUBLISH_COLS_REORDER_L$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_R$(if $(1),_MOD,_ALT))	) ]
       size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
       resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
