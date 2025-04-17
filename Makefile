@@ -909,6 +909,7 @@ override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: 
 override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
 override PUBLISH_REDIRECT_EXCLUDE	:= null
+#WORKING:FIX:CURRENT:REDIRECT_EXCLUDE
 override PUBLISH_REDIRECT_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
 override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).*
 override PUBLISH_REDIRECT_TIME		:= 5
@@ -969,6 +970,7 @@ override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
 override LIBRARY_SITEMAP_EXCLUDE	:= null
+#WORKING:FIX:CURRENT:SITEMAP_EXCLUDE
 override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
 override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).*
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
@@ -2762,31 +2764,33 @@ override COMPOSER_YML_DATA_METALIST := $(shell \
 ########################################
 
 #> update: library.folder
+
 override COMPOSER_LIBRARY_AUTO_UPDATE	:=
 ifneq ($(and \
 	$(c_site) ,\
 	$(COMPOSER_LIBRARY) ,\
-	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) ,\
-	$(or \
-		$(call COMPOSER_YML_DATA_VAL,library.folder.auto_update) ,\
-		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
-		$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-library)) ,\
-	) \
+	$(filter-out $(CURDIR),$(COMPOSER_LIBRARY)) \
+),)
+ifneq ($(or \
+	$(call COMPOSER_YML_DATA_VAL,library.folder.auto_update) ,\
+	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH))) ,\
+	$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(PUBLISH)-library)) ,\
 ),)
 override COMPOSER_LIBRARY_AUTO_UPDATE	:= 1
+endif
 endif
 
 ########################################
 ### {{{3 Library Anchor Links
 ########################################
 
+override COMPOSER_LIBRARY_ANCHOR_LINKS	:=
+ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
+ifneq ($(call COMPOSER_YML_DATA_VAL,library.pages.anchor_links),)
 #WORKING:FIX:CURRENT:$(ANCHOR_LINKS)
-#	make this not so global...?
-
-#override COMPOSER_LIBRARY_ANCHOR_LINKS	:=
-#ifneq ($(call COMPOSER_YML_DATA_VAL,library.pages.anchor_links),)
-#override COMPOSER_LIBRARY_ANCHOR_LINKS	:= 1
-#endif
+# override COMPOSER_LIBRARY_ANCHOR_LINKS	:= 1
+endif
+endif
 
 #######################################
 ### {{{3 Build Script
