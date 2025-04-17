@@ -910,7 +910,7 @@ override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
 override PUBLISH_REDIRECT_EXCLUDE	:= null
 override PUBLISH_REDIRECT_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
-override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).*
+override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) *
 override PUBLISH_REDIRECT_TIME		:= 5
 override PUBLISH_REDIRECT_TIME_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_REDIRECT_TIME_MOD	:= null
@@ -970,7 +970,7 @@ override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
 override LIBRARY_SITEMAP_EXCLUDE	:= null
 override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
-override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).*
+override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) *
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
@@ -7105,6 +7105,32 @@ override c_icon				:= $(call COMPOSER_CONV,$$(COMPOSER_DIR)/,$(COMPOSER_IMAGES))
 endef
 
 ########################################
+### {{{3 Heredoc: composer_mk ($(PUBLISH) $(PUBLISH_REDIRECT_FILE))
+########################################
+
+#> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
+
+override define HEREDOC_COMPOSER_MK_PUBLISH_REDIRECT_FILE =
+.PHONY: $(PUBLISH_REDIRECT_FILE)-$(CLEANER)
+$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
+	@$$(call $(COMPOSER_TINYNAME)-rm,\\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
+	)$(if $(1),$(call NEWLINE)	@$$(call $(COMPOSER_TINYNAME)-rm,\\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).$(EXTN_HTML) \\
+	))
+
+.PHONY: $(PUBLISH_REDIRECT_FILE)-$(DOITALL)
+$(PUBLISH_REDIRECT_FILE)-$(DOITALL):
+	@$$(call $(COMPOSER_TINYNAME)-ln,\\
+		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
+	)$(if $(1),$(call NEWLINE)	@$$(call $(COMPOSER_TINYNAME)-ln,\\
+		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).$(EXTN_HTML) \\
+	))
+endef
+
+########################################
 ### {{{3 Heredoc: composer_mk ($(PUBLISH) $(EXAMPLE))
 ########################################
 
@@ -7126,18 +7152,7 @@ $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
 
 ########################################
 
-.PHONY: $(PUBLISH_REDIRECT_FILE)-$(CLEANER)
-$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
-	@$$(call $(COMPOSER_TINYNAME)-rm,\\
-		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
-	)
-
-.PHONY: $(PUBLISH_REDIRECT_FILE)-$(DOITALL)
-$(PUBLISH_REDIRECT_FILE)-$(DOITALL):
-	@$$(call $(COMPOSER_TINYNAME)-ln,\\
-		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
-		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
-	)
+$(call HEREDOC_COMPOSER_MK_PUBLISH_REDIRECT_FILE,$(1))
 
 ################################################################################
 endif
@@ -7199,23 +7214,7 @@ $(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIB
 
 ########################################
 
-.PHONY: $(PUBLISH_REDIRECT_FILE)-$(CLEANER)
-$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
-	@$$(call $(COMPOSER_TINYNAME)-rm,\\
-		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
-	)$(if $(1),$(call NEWLINE)	@$$(call $(COMPOSER_TINYNAME)-rm,\\
-		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).$(EXTN_HTML) \\
-	))
-
-.PHONY: $(PUBLISH_REDIRECT_FILE)-$(DOITALL)
-$(PUBLISH_REDIRECT_FILE)-$(DOITALL):
-	@$$(call $(COMPOSER_TINYNAME)-ln,\\
-		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
-		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
-	)$(if $(1),$(call NEWLINE)	@$$(call $(COMPOSER_TINYNAME)-ln,\\
-		$$(COMPOSER_ROOT)/$(PUBLISH_PAGEDIR).$(EXTN_HTML) ,\\
-		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).$(EXTN_HTML) \\
-	))
+$(call HEREDOC_COMPOSER_MK_PUBLISH_REDIRECT_FILE,$(1))
 
 ########################################
 
