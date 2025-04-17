@@ -910,7 +910,7 @@ override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
 override PUBLISH_REDIRECT_EXCLUDE	:= null
 override PUBLISH_REDIRECT_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
-override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(notdir $(PUBLISH_EXAMPLE)).*
+override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(notdir $(PUBLISH_PAGEDIR)).*
 override PUBLISH_REDIRECT_TIME		:= 5
 override PUBLISH_REDIRECT_TIME_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_REDIRECT_TIME_MOD	:= null
@@ -969,7 +969,7 @@ override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
 override LIBRARY_SITEMAP_EXCLUDE	:= null
-override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(notdir $(PUBLISH_EXAMPLE)).*
+override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(notdir $(PUBLISH_PAGEDIR)).*
 override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(LIBRARY_SITEMAP_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE).*
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
@@ -8353,16 +8353,13 @@ function $(PUBLISH)-parse {
 #### {{{4 $(PUBLISH)-metainfo-block
 ########################################
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META:TITLE YQ_WRITE.*title
-
 #> update: title / date / metalist:*
 #> update: YQ_WRITE.*title
 #> update: join(.*)
 #> update: del(.*)
 
-#WORKING:FIX:EXCLUDE:DATE:CONV:META
-# 1 file				$${SPECIAL_VAL} = library
-# 2 text				$${SPECIAL_VAL} = metadata || $${TOKEN} = $(KEY_DATE).$(KEY_DATE_PARSE) $${TOKEN} $(KEY_DATE).$(KEY_DATE_LIBRARY) || title / date / metalist:*
+# 1 file				null = markdown || $${SPECIAL_VAL} = library
+# 2 text				null = metainfo || $${SPECIAL_VAL} = metadata || $${TOKEN} = $(KEY_DATE).$(KEY_DATE_PARSE) $${TOKEN} $(KEY_DATE).$(KEY_DATE_LIBRARY) || title / date / metalist:*
 # 3 file path(s)
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
