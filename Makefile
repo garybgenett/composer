@@ -791,13 +791,12 @@ override PUBLISH_CSS_OVERLAY_MOD	:= $(PUBLISH_CSS_OVERLAY_ALT)
 override PUBLISH_COPY_PROTECT		:= null
 override PUBLISH_COPY_PROTECT_ALT	:= 1
 override PUBLISH_COPY_PROTECT_MOD	:= $(PUBLISH_COPY_PROTECT_ALT)
-#WORKING:FIX:ARRAY
 override PUBLISH_HEADER			:= null
 override PUBLISH_HEADER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER)
-override PUBLISH_HEADER_MOD		= [ $(PUBLISH_HEADER_ALT), $(PUBLISH_HEADER_ALT) ]
+override PUBLISH_HEADER_MOD		= $(PUBLISH_HEADER_ALT) $(PUBLISH_HEADER_ALT)
 override PUBLISH_FOOTER			:= null
 override PUBLISH_FOOTER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_FOOTER)
-override PUBLISH_FOOTER_MOD		= [ $(PUBLISH_FOOTER_ALT), $(PUBLISH_FOOTER_ALT) ]
+override PUBLISH_FOOTER_MOD		= $(PUBLISH_FOOTER_ALT) $(PUBLISH_FOOTER_ALT)
 
 override PUBLISH_COLS_BREAK		:= lg
 override PUBLISH_COLS_BREAK_ALT		:= md
@@ -929,12 +928,11 @@ override LIBRARY_AUTO_UPDATE_MOD	:= $(LIBRARY_AUTO_UPDATE_ALT)
 override LIBRARY_ANCHOR_LINKS		:= 1
 override LIBRARY_ANCHOR_LINKS_ALT	:= $(LIBRARY_ANCHOR_LINKS)
 override LIBRARY_ANCHOR_LINKS_MOD	:= null
-#WORKING:FIX:ARRAY
 override LIBRARY_APPEND			:= null
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
-#>override LIBRARY_APPEND_MOD		= [ $(LIBRARY_APPEND_ALT), $(LIBRARY_APPEND_ALT) ]
-override LIBRARY_APPEND_MOD		= [ $(PUBLISH_HEADER_ALT), $(LIBRARY_APPEND_ALT) ]
+#>override LIBRARY_APPEND_MOD		= $(LIBRARY_APPEND_ALT) $(LIBRARY_APPEND_ALT)
+override LIBRARY_APPEND_MOD		= $(PUBLISH_HEADER_ALT) $(LIBRARY_APPEND_ALT)
 
 override LIBRARY_DIGEST_TITLE		:= Latest Updates
 override LIBRARY_DIGEST_TITLE_ALT	:= Digest
@@ -5743,8 +5741,8 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [navbars.$(COMPOSER_TINYNAME)]		| `$(PUBLISH_COMPOSER)`							$(if $(1),| `$(PUBLISH_COMPOSER_ALT)`)
 | [pages.css_overlay]		| `$(PUBLISH_CSS_OVERLAY)`						$(if $(1),| `$(PUBLISH_CSS_OVERLAY_ALT)`)
 | [pages.copy_protect]		| `$(PUBLISH_COPY_PROTECT)`						$(if $(1),| `$(PUBLISH_COPY_PROTECT_ALT)`)
-| [pages.header]		| `$(PUBLISH_HEADER)`						$(if $(1),| `$(PUBLISH_HEADER_ALT)`)
-| [pages.footer]		| `$(PUBLISH_FOOTER)`						$(if $(1),| `$(PUBLISH_FOOTER_ALT)`)
+| [pages.header]		| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_HEADER),1,1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_HEADER_ALT),1,1) ]`)
+| [pages.footer]		| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_FOOTER),1,1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_FOOTER_ALT),1,1) ]`)
 | [cols.break]			| `$(PUBLISH_COLS_BREAK)`							$(if $(1),| `$(PUBLISH_COLS_BREAK_ALT)`)
 | [cols.scroll]			| `$(PUBLISH_COLS_SCROLL)`							$(if $(1),| `$(PUBLISH_COLS_SCROLL_ALT)`)
 | [cols.order]			| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER),1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER_ALT),1) ]`)
@@ -5788,7 +5786,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [folder.name]			| `$(LIBRARY_FOLDER)`						$(if $(1),| `$(notdir $(PUBLISH_LIBRARY_ALT))`)
 | [folder.auto_update]		| `$(LIBRARY_AUTO_UPDATE)`						$(if $(1),| `$(LIBRARY_AUTO_UPDATE_ALT)`)
 | [pages.anchor_links]		| `$(LIBRARY_ANCHOR_LINKS)`							$(if $(1),| `$(LIBRARY_ANCHOR_LINKS_ALT)`)
-| [pages.append]		| `$(LIBRARY_APPEND)`						$(if $(1),| `$(LIBRARY_APPEND_ALT)`)
+| [pages.append]		| `[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_APPEND),1,1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_APPEND_ALT),1,1) ]`)
 | [digest.title]		| `$(LIBRARY_DIGEST_TITLE)`					$(if $(1),| `$(LIBRARY_DIGEST_TITLE_ALT)`)
 | [digest.continue]		| `$(LIBRARY_DIGEST_CONTINUE)`						$(if $(1),| `$(LIBRARY_DIGEST_CONTINUE_ALT)`)
 | [digest.permalink]		| `$(LIBRARY_DIGEST_PERMALINK)`				$(if $(1),| `$(LIBRARY_DIGEST_PERMALINK_ALT)`)
@@ -7412,8 +7410,8 @@ $(_S)#$(MARKER)$(_D)   $(_C)$(COMPOSER_TINYNAME)$(_D):				$(_M)$(PUBLISH_COMPOSE
 $(_S)#$(MARKER)$(_D) $(_C)pages$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)css_overlay$(_D):			$(_M)$(PUBLISH_CSS_OVERLAY)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)copy_protect$(_D):			$(_M)$(PUBLISH_COPY_PROTECT)$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)header$(_D):				$(_M)$(PUBLISH_HEADER)$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)footer$(_D):				$(_M)$(PUBLISH_FOOTER)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)header$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_HEADER),,1) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)footer$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_FOOTER),,1) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)cols$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
@@ -7473,7 +7471,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)pages$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)anchor_links$(_D):			$(_M)$(LIBRARY_ANCHOR_LINKS)$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)append$(_D):				$(_M)$(LIBRARY_APPEND)$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)append$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(LIBRARY_APPEND),,1) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)digest$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)"$(_D)
@@ -7921,8 +7919,8 @@ variables:
     pages:
       css_overlay:			$(PUBLISH_CSS_OVERLAY$(if $(1),_MOD,_ALT))
       copy_protect:			$(PUBLISH_COPY_PROTECT$(if $(1),_MOD,_ALT))
-      header:				$(PUBLISH_HEADER$(if $(1),_MOD,_ALT))
-      footer:				$(PUBLISH_FOOTER$(if $(1),_MOD,_ALT))
+      header:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_HEADER$(if $(1),_MOD,_ALT)),1,1) ]
+      footer:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_FOOTER$(if $(1),_MOD,_ALT)),1,1) ]
     cols:
       break:				$(PUBLISH_COLS_BREAK$(if $(1),_MOD,_ALT))
       scroll:				$(PUBLISH_COLS_SCROLL$(if $(1),_MOD,_ALT))
@@ -7976,7 +7974,7 @@ variables:
       auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD,_ALT)))
     pages:
       anchor_links:			$(LIBRARY_ANCHOR_LINKS$(if $(1),_MOD,_ALT))
-      append:				$(LIBRARY_APPEND$(if $(1),_MOD,_ALT))
+      append:				[ $(call COMPOSER_YML_ARRAY,$(LIBRARY_APPEND$(if $(1),_MOD,_ALT)),1,1) ]
     digest:
       title:				"$(LIBRARY_DIGEST_TITLE$(if $(1),_MOD,_ALT))"
       continue:				"$(LIBRARY_DIGEST_CONTINUE$(if $(1),_MOD,_ALT))"
