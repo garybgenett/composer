@@ -817,20 +817,13 @@ override PUBLISH_COLS_RESIZE		:= 6 12 6
 override PUBLISH_COLS_RESIZE_ALT	:= 12 12 $(SPECIAL_VAL)
 override PUBLISH_COLS_RESIZE_MOD	:= 12 12 12
 
-#WORKING:FIX:ARRAY
-#> update: PUBLISH_DATES_PARSE_4 = PUBLISH_PAGES_DATE_FORMAT
-override PUBLISH_DATES_PARSE_0		:= $(PUBLISH_DATES_INTERNAL_FORMAT)
-override PUBLISH_DATES_PARSE_1		:= $(PUBLISH_DATES_FORMAT_DEFAULT)
-override PUBLISH_DATES_PARSE_2		:= 2006-01-02
-override PUBLISH_DATES_PARSE_3		:= January 2, 2006
-override PUBLISH_DATES_PARSE_4		:= January 2, 2006 3:04 PM MST -07:00
-
+#> update: PUBLISH_DATES_PARSE [4] = PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_DATES_PARSE := \
-	$(PUBLISH_DATES_PARSE_0) \
-	$(PUBLISH_DATES_PARSE_1) \
-	$(PUBLISH_DATES_PARSE_2) \
-	$(PUBLISH_DATES_PARSE_3) \
-	$(PUBLISH_DATES_PARSE_4) \
+	$(subst $(NULL) ,$(HTML_SPACE),$(PUBLISH_DATES_INTERNAL_FORMAT)) \
+	$(subst $(NULL) ,$(HTML_SPACE),$(PUBLISH_DATES_FORMAT_DEFAULT)) \
+	$(subst $(NULL) ,$(HTML_SPACE),2006-01-02) \
+	$(subst $(NULL) ,$(HTML_SPACE),January 2, 2006) \
+	$(subst $(NULL) ,$(HTML_SPACE),January 2, 2006 3:04 PM MST -07:00) \
 
 override PUBLISH_DATES_PARSE_ALT	:= $(PUBLISH_DATES_PARSE)
 override PUBLISH_DATES_PARSE_MOD	:= $(PUBLISH_DATES_PARSE)
@@ -2529,7 +2522,7 @@ override define COMPOSER_YML_DATA_SKEL =
       resize:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE),1) ],
     },
     dates: {
-      parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)" ],
+      parse:				[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),1,1)) ],
       display:				"$(PUBLISH_DATES_DISPLAY)",
       library:				"$(PUBLISH_DATES_LIBRARY)",
       timezone:				"$(PUBLISH_DATES_TIMEZONE)",
@@ -2933,7 +2926,7 @@ override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_H
 override PUBLISH_REDIRECT_FILE		:= redirect
 
 #> update: $(PUBLISH)-library-sort-yq
-#> update: PUBLISH_DATES_PARSE_4 = PUBLISH_PAGES_DATE_FORMAT
+#> update: PUBLISH_DATES_PARSE [4] = PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_PAGES_YEARS		:= 2022 2023 2024
 override PUBLISH_PAGES_DATE		:= -01-01
 override PUBLISH_PAGES_DATE_FORMAT	:= +%B %e, %Y %l:%M %p %Z %:z
@@ -5735,7 +5728,7 @@ endef
 #	default css (see "themes" page)
 #	note on example page about logo/icon
 
-#>| [dates.parse]			| `$(PUBLISH_DATES_PARSE_0)`				$(if $(1),| `$(PUBLISH_DATES_PARSE_ALT)`)
+#>| [dates.parse]			| `[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),1,1)) ]`	$(if $(1),| `[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE_ALT),1,1)) ]`)
 override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config			| defaults						$(if $(1),| values)
 |:---				|:------$(if $(1),,|)						$(if $(1),|:------|)
@@ -7430,7 +7423,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,
 $(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE)) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)dates$(_D):
-$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_0)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_1)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_2)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_3)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_4)$(_N)"$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),,1)) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_DISPLAY)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)library$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_LIBRARY)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)timezone$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_TIMEZONE)$(_N)"$(_D)
@@ -7903,7 +7896,6 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
-#>    parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)", "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))" ]
 override define HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(CONFIGS))
@@ -7937,7 +7929,7 @@ variables:
       size:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE$(if $(1),_MOD,_ALT)),1) ]
       resize:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE$(if $(1),_MOD,_ALT)),1) ]
     dates:
-      parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)"$(if $(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT)),$(COMMA) "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))") ]
+      parse:				[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT)),1,1)) ]
       display:				"$(PUBLISH_DATES_DISPLAY$(if $(1),_MOD,_ALT))"
       library:				"$(PUBLISH_DATES_LIBRARY$(if $(1),_MOD,_ALT))"
       timezone:				"$(PUBLISH_DATES_TIMEZONE$(if $(1),_MOD,_ALT))"
