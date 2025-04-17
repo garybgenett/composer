@@ -909,7 +909,6 @@ override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: 
 override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
 override PUBLISH_REDIRECT_EXCLUDE	:= null
-#WORKING:FIX:CURRENT:REDIRECT_EXCLUDE
 override PUBLISH_REDIRECT_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
 override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).*
 override PUBLISH_REDIRECT_TIME		:= 5
@@ -970,7 +969,6 @@ override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
 override LIBRARY_SITEMAP_EXCLUDE	:= null
-#WORKING:FIX:CURRENT:SITEMAP_EXCLUDE
 override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
 override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(EXAMPLE).*
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
@@ -15391,7 +15389,7 @@ ifneq ($(and \
 ),)
 override REDIRECT_TITLE			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.title)
 override REDIRECT_DISPLAY		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.display)
-override REDIRECT_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.exclude)
+override REDIRECT_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.exclude,, $(NULL))
 override REDIRECT_TIME			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.time)
 #> $(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_EXCLUDE),$(EXPORTS)-redirect)))
 #>	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(COMPOSER_EXPORTS_LIST)),
@@ -16960,7 +16958,7 @@ $($(PUBLISH)-library-sitemap-files):
 
 override define $(PUBLISH)-library-sitemap-vars =
 	$(eval override ANCHOR_LINKS		:= $(call COMPOSER_YML_DATA_VAL,library.pages.anchor_links)) \
-	$(eval override SITEMAP_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,library.sitemap.exclude)) \
+	$(eval override SITEMAP_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.exclude,, $(NULL))) \
 	$(eval override SITEMAP_EXPANDED	:= $(call COMPOSER_YML_DATA_VAL,library.sitemap.expanded)) \
 	$(eval override SITEMAP_SPACER		:= $(call COMPOSER_YML_DATA_VAL,library.sitemap.spacer))
 endef
