@@ -805,42 +805,18 @@ override PUBLISH_COLS_BREAK_MOD		:= $(PUBLISH_COLS_BREAK_ALT)
 override PUBLISH_COLS_SCROLL		:= 1
 override PUBLISH_COLS_SCROLL_ALT	:= null
 override PUBLISH_COLS_SCROLL_MOD	:= $(SPECIAL_VAL)
-
-#WORKING:FIX:ARRAY:CURRENT
-
 override PUBLISH_COLS_ORDER		:= 1 2 3
 override PUBLISH_COLS_ORDER_ALT		:= 1 3 2
 override PUBLISH_COLS_ORDER_MOD		:= $(PUBLISH_COLS_ORDER_ALT)
-
-override PUBLISH_COLS_REORDER_L		:= 1
-override PUBLISH_COLS_REORDER_C		:= 3
-override PUBLISH_COLS_REORDER_R		:= 2
-override PUBLISH_COLS_REORDER_L_ALT	:= 2
-override PUBLISH_COLS_REORDER_C_ALT	:= 3
-override PUBLISH_COLS_REORDER_R_ALT	:= 1
-override PUBLISH_COLS_REORDER_L_MOD	:= $(SPECIAL_VAL)
-override PUBLISH_COLS_REORDER_C_MOD	:= $(PUBLISH_COLS_REORDER_C_ALT)
-override PUBLISH_COLS_REORDER_R_MOD	:= $(PUBLISH_COLS_REORDER_R_ALT)
-
-override PUBLISH_COLS_SIZE_L		:= 3
-override PUBLISH_COLS_SIZE_C		:= 7
-override PUBLISH_COLS_SIZE_R		:= 2
-override PUBLISH_COLS_SIZE_L_ALT	:= 12
-override PUBLISH_COLS_SIZE_C_ALT	:= 9
-override PUBLISH_COLS_SIZE_R_ALT	:= 3
-override PUBLISH_COLS_SIZE_L_MOD	:= $(PUBLISH_COLS_SIZE_L_ALT)
-override PUBLISH_COLS_SIZE_C_MOD	:= $(PUBLISH_COLS_SIZE_C_ALT)
-override PUBLISH_COLS_SIZE_R_MOD	:= $(PUBLISH_COLS_SIZE_R_ALT)
-
-override PUBLISH_COLS_RESIZE_L		:= 6
-override PUBLISH_COLS_RESIZE_C		:= 12
-override PUBLISH_COLS_RESIZE_R		:= 6
-override PUBLISH_COLS_RESIZE_L_ALT	:= 12
-override PUBLISH_COLS_RESIZE_C_ALT	:= 12
-override PUBLISH_COLS_RESIZE_R_ALT	:= $(SPECIAL_VAL)
-override PUBLISH_COLS_RESIZE_L_MOD	:= $(PUBLISH_COLS_RESIZE_L_ALT)
-override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
-override PUBLISH_COLS_RESIZE_R_MOD	:= 12
+override PUBLISH_COLS_REORDER		:= 1 3 2
+override PUBLISH_COLS_REORDER_ALT	:= 2 3 1
+override PUBLISH_COLS_REORDER_MOD	:= $(SPECIAL_VAL) 3 1
+override PUBLISH_COLS_SIZE		:= 3 7 2
+override PUBLISH_COLS_SIZE_ALT		:= 12 9 3
+override PUBLISH_COLS_SIZE_MOD		:= $(PUBLISH_COLS_SIZE_ALT)
+override PUBLISH_COLS_RESIZE		:= 6 12 6
+override PUBLISH_COLS_RESIZE_ALT	:= 12 12 $(SPECIAL_VAL)
+override PUBLISH_COLS_RESIZE_MOD	:= 12 12 12
 
 #WORKING:FIX:ARRAY
 #> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
@@ -2542,9 +2518,9 @@ override define COMPOSER_YML_DATA_SKEL =
       break:				$(PUBLISH_COLS_BREAK),
       scroll:				$(PUBLISH_COLS_SCROLL),
       order:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER),1) ],
-      reorder:				[ $(PUBLISH_COLS_REORDER_L), $(PUBLISH_COLS_REORDER_C), $(PUBLISH_COLS_REORDER_R) ],
-      size:				[ $(PUBLISH_COLS_SIZE_L), $(PUBLISH_COLS_SIZE_C), $(PUBLISH_COLS_SIZE_R) ],
-      resize:				[ $(PUBLISH_COLS_RESIZE_L), $(PUBLISH_COLS_RESIZE_C), $(PUBLISH_COLS_RESIZE_R) ],
+      reorder:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_REORDER),1) ],
+      size:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE),1) ],
+      resize:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE),1) ],
     },
     dates: {
       parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)" ],
@@ -5772,9 +5748,9 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [cols.break]			| `$(PUBLISH_COLS_BREAK)`							$(if $(1),| `$(PUBLISH_COLS_BREAK_ALT)`)
 | [cols.scroll]			| `$(PUBLISH_COLS_SCROLL)`							$(if $(1),| `$(PUBLISH_COLS_SCROLL_ALT)`)
 | [cols.order]			| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER),1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER_ALT),1) ]`)
-| [cols.reorder]		| `[ $(PUBLISH_COLS_REORDER_L)$(COMMA) $(PUBLISH_COLS_REORDER_C)$(COMMA) $(PUBLISH_COLS_REORDER_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_REORDER_L_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_C_ALT)$(COMMA) $(PUBLISH_COLS_REORDER_R_ALT) ]`)
-| [cols.size]			| `[ $(PUBLISH_COLS_SIZE_L)$(COMMA) $(PUBLISH_COLS_SIZE_C)$(COMMA) $(PUBLISH_COLS_SIZE_R) ]`						$(if $(1),| `[ $(PUBLISH_COLS_SIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_SIZE_R_ALT) ]`)
-| [cols.resize]			| `[ $(PUBLISH_COLS_RESIZE_L)$(COMMA) $(PUBLISH_COLS_RESIZE_C)$(COMMA) $(PUBLISH_COLS_RESIZE_R) ]`					$(if $(1),| `[ $(PUBLISH_COLS_RESIZE_L_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_C_ALT)$(COMMA) $(PUBLISH_COLS_RESIZE_R_ALT) ]`)
+| [cols.reorder]		| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_REORDER),1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_REORDER_ALT),1) ]`)
+| [cols.size]			| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE),1) ]`						$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE_ALT),1) ]`)
+| [cols.resize]			| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE),1) ]`					$(if $(1),| `[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE_ALT),1) ]`)
 | [dates.parse]			| *(see [dates.parse] and `$(COMPOSER_YML)`)*		$(if $(1),| *(see [dates.parse] and `$(COMPOSER_YML)`)*)
 | [dates.display]		| `$(PUBLISH_DATES_DISPLAY)`						$(if $(1),| `$(PUBLISH_DATES_DISPLAY_ALT)`)
 | [dates.library]		| `$(PUBLISH_DATES_LIBRARY)`						$(if $(1),| `$(PUBLISH_DATES_LIBRARY_ALT)`)
@@ -7443,9 +7419,9 @@ $(_S)#$(MARKER)$(_D) $(_C)cols$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)break$(_D):				$(_M)$(PUBLISH_COLS_BREAK)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)scroll$(_D):				$(_M)$(PUBLISH_COLS_SCROLL)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)order$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER)) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)reorder$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_REORDER_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_REORDER_R)$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_SIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_SIZE_R)$(_D) $(_N)]$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(_M)$(PUBLISH_COLS_RESIZE_L)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_C)$(_N),$(_D) $(_M)$(PUBLISH_COLS_RESIZE_R)$(_D) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)reorder$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_REORDER)) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE)) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE)) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)dates$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_0)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_1)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_2)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_3)$(_N)",$(_D) $(_N)"$(_M)$(PUBLISH_DATES_PARSE_4)$(_N)"$(_D) $(_N)]$(_D)
@@ -7951,9 +7927,9 @@ variables:
       break:				$(PUBLISH_COLS_BREAK$(if $(1),_MOD,_ALT))
       scroll:				$(PUBLISH_COLS_SCROLL$(if $(1),_MOD,_ALT))
       order:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER$(if $(1),_MOD,_ALT)),1) ]
-      reorder:				[ $(strip $(PUBLISH_COLS_REORDER_L$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_REORDER_R$(if $(1),_MOD,_ALT))	) ]
-      size:				[ $(strip $(PUBLISH_COLS_SIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_SIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_SIZE_R$(if $(1),_MOD,_ALT))	) ]
-      resize:				[ $(strip $(PUBLISH_COLS_RESIZE_L$(if $(1),_MOD,_ALT)),		$(PUBLISH_COLS_RESIZE_C$(if $(1),_MOD,_ALT)),	$(PUBLISH_COLS_RESIZE_R$(if $(1),_MOD,_ALT))	) ]
+      reorder:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_REORDER$(if $(1),_MOD,_ALT)),1) ]
+      size:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE$(if $(1),_MOD,_ALT)),1) ]
+      resize:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE$(if $(1),_MOD,_ALT)),1) ]
     dates:
       parse:				[ "$(PUBLISH_DATES_PARSE_0)", "$(PUBLISH_DATES_PARSE_1)", "$(PUBLISH_DATES_PARSE_2)", "$(PUBLISH_DATES_PARSE_3)", "$(PUBLISH_DATES_PARSE_4)"$(if $(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT)),$(COMMA) "$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT))") ]
       display:				"$(PUBLISH_DATES_DISPLAY$(if $(1),_MOD,_ALT))"
