@@ -940,10 +940,9 @@ override PUBLISH_REDIRECT_TITLE_MOD	:= null
 override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: <link>**
 override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
-#WORKING:FIX:ARRAY
 override PUBLISH_REDIRECT_EXCLUDE	:= null
-override PUBLISH_REDIRECT_EXCLUDE_ALT	:= $(PUBLISH_REDIRECT_EXCLUDE)
-override PUBLISH_REDIRECT_EXCLUDE_MOD	:= *
+override PUBLISH_REDIRECT_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
+override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(notdir $(PUBLISH_EXAMPLE)).*
 override PUBLISH_REDIRECT_TIME		:= 5
 override PUBLISH_REDIRECT_TIME_ALT	:= $(SPECIAL_VAL)
 override PUBLISH_REDIRECT_TIME_MOD	:= null
@@ -1002,13 +1001,9 @@ override LIBRARY_LISTS_SPACER_MOD	:= $(LIBRARY_LISTS_SPACER_ALT)
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
-#WORKING:FIX:ARRAY
-# override LIBRARY_SITEMAP_EXCLUDE_ALT	:= redirect.* author-author-1.html 2022-01-01+template_0.html
 override LIBRARY_SITEMAP_EXCLUDE	:= null
-#>override LIBRARY_SITEMAP_EXCLUDE_ALT	:= $(PUBLISH_REDIRECT_FILE).*
-override LIBRARY_SITEMAP_EXCLUDE_ALT	:= redirect.*
-#>override LIBRARY_SITEMAP_EXCLUDE_MOD	:= $(LIBRARY_SITEMAP_EXCLUDE_ALT) $(notdir $(PUBLISH_PAGEDIR)).*
-override LIBRARY_SITEMAP_EXCLUDE_MOD	:= $(LIBRARY_SITEMAP_EXCLUDE_ALT) pages.*
+override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(notdir $(PUBLISH_EXAMPLE)).*
+override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(LIBRARY_SITEMAP_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE).*
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
@@ -5803,7 +5798,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [readtime.wpm]		| `$(PUBLISH_READTIME_WPM)`							$(if $(1),| `$(PUBLISH_READTIME_WPM_ALT)`)
 | [redirect.title]		| `$(PUBLISH_REDIRECT_TITLE)`					$(if $(1),| `$(PUBLISH_REDIRECT_TITLE_ALT)`)
 | [redirect.display]		| `$(PUBLISH_REDIRECT_DISPLAY)`	$(if $(1),| `$(PUBLISH_REDIRECT_DISPLAY_ALT)`)
-| [redirect.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`	$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
+| [redirect.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`						$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
 | [redirect.time]		| `$(PUBLISH_REDIRECT_TIME)`							$(if $(1),| `$(PUBLISH_REDIRECT_TIME_ALT)`)
 
 *(For this test site, [metalist.$(PUBLISH_METATAGS).title] has been added.$(if $(1),  In this `$(word 3,$(PUBLISH_DIRS))` sub-directory$(COMMA) the [redirect.exclude] option is not changed from default$(COMMA) in order to demonstrate the effects of the other `redirect.*` options.))*
@@ -5824,7 +5819,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [lists.expanded]		| `$(LIBRARY_LISTS_EXPANDED)`							$(if $(1),| `$(LIBRARY_LISTS_EXPANDED_ALT)`)
 | [lists.spacer]		| `$(LIBRARY_LISTS_SPACER)`							$(if $(1),| `$(LIBRARY_LISTS_SPACER_ALT)`)
 | [sitemap.title]		| `$(LIBRARY_SITEMAP_TITLE)`						$(if $(1),| `$(LIBRARY_SITEMAP_TITLE_ALT)`)
-| [sitemap.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`	$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
+| [sitemap.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`						$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
 | [sitemap.expanded]		| `$(LIBRARY_SITEMAP_EXPANDED)`							$(if $(1),| `$(LIBRARY_SITEMAP_EXPANDED_ALT)`)
 | [sitemap.spacer]		| `$(LIBRARY_SITEMAP_SPACER)`							$(if $(1),| `$(LIBRARY_SITEMAP_SPACER_ALT)`)
 
@@ -7221,7 +7216,7 @@ $(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIB
 ########################################
 
 .PHONY: $(PUBLISH_REDIRECT_FILE)-$(CLEANER)
-r$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
+$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
 	@$$(call $(COMPOSER_TINYNAME)-rm,\\
 		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
 	)
