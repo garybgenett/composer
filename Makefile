@@ -791,6 +791,7 @@ override PUBLISH_CSS_OVERLAY_MOD	:= $(PUBLISH_CSS_OVERLAY_ALT)
 override PUBLISH_COPY_PROTECT		:= null
 override PUBLISH_COPY_PROTECT_ALT	:= 1
 override PUBLISH_COPY_PROTECT_MOD	:= $(PUBLISH_COPY_PROTECT_ALT)
+#WORKING:FIX:ARRAY
 override PUBLISH_HEADER			:= null
 override PUBLISH_HEADER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER)
 override PUBLISH_HEADER_MOD		= [ $(PUBLISH_HEADER_ALT), $(PUBLISH_HEADER_ALT) ]
@@ -804,6 +805,8 @@ override PUBLISH_COLS_BREAK_MOD		:= $(PUBLISH_COLS_BREAK_ALT)
 override PUBLISH_COLS_SCROLL		:= 1
 override PUBLISH_COLS_SCROLL_ALT	:= null
 override PUBLISH_COLS_SCROLL_MOD	:= $(SPECIAL_VAL)
+
+#WORKING:FIX:ARRAY
 
 override PUBLISH_COLS_ORDER_L		:= 1
 override PUBLISH_COLS_ORDER_C		:= 2
@@ -847,6 +850,7 @@ override PUBLISH_COLS_RESIZE_L_MOD	:= $(PUBLISH_COLS_RESIZE_L_ALT)
 override PUBLISH_COLS_RESIZE_C_MOD	:= $(PUBLISH_COLS_RESIZE_C_ALT)
 override PUBLISH_COLS_RESIZE_R_MOD	:= 12
 
+#WORKING:FIX:ARRAY
 #> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_DATES_PARSE_0		:= $(PUBLISH_DATES_INTERNAL_FORMAT)
 override PUBLISH_DATES_PARSE_1		:= $(PUBLISH_DATES_FORMAT_DEFAULT)
@@ -936,7 +940,7 @@ override PUBLISH_REDIRECT_TITLE_MOD	:= null
 override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: <link>**
 override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= null
-#WORKING:FIX:EXCLUDE:MATCH:CURRENT
+#WORKING:FIX:ARRAY
 override PUBLISH_REDIRECT_EXCLUDE	:= null
 override PUBLISH_REDIRECT_EXCLUDE_ALT	:= $(PUBLISH_REDIRECT_EXCLUDE)
 override PUBLISH_REDIRECT_EXCLUDE_MOD	:= *
@@ -958,6 +962,7 @@ override LIBRARY_AUTO_UPDATE_MOD	:= $(LIBRARY_AUTO_UPDATE_ALT)
 override LIBRARY_ANCHOR_LINKS		:= 1
 override LIBRARY_ANCHOR_LINKS_ALT	:= $(LIBRARY_ANCHOR_LINKS)
 override LIBRARY_ANCHOR_LINKS_MOD	:= null
+#WORKING:FIX:ARRAY
 override LIBRARY_APPEND			:= null
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
@@ -997,11 +1002,13 @@ override LIBRARY_LISTS_SPACER_MOD	:= $(LIBRARY_LISTS_SPACER_ALT)
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= null
-#WORKING:FIX:EXCLUDE:MATCH:CURRENT
-override LIBRARY_SITEMAP_EXCLUDE	:= null
+#WORKING:FIX:ARRAY
 # override LIBRARY_SITEMAP_EXCLUDE_ALT	:= redirect.* author-author-1.html 2022-01-01+template_0.html
+override LIBRARY_SITEMAP_EXCLUDE	:= null
+#>override LIBRARY_SITEMAP_EXCLUDE_ALT	:= $(PUBLISH_REDIRECT_FILE).*
 override LIBRARY_SITEMAP_EXCLUDE_ALT	:= redirect.*
-override LIBRARY_SITEMAP_EXCLUDE_MOD	:= $(LIBRARY_SITEMAP_EXCLUDE_ALT)
+#>override LIBRARY_SITEMAP_EXCLUDE_MOD	:= $(LIBRARY_SITEMAP_EXCLUDE_ALT) $(notdir $(PUBLISH_PAGEDIR)).*
+override LIBRARY_SITEMAP_EXCLUDE_MOD	:= $(LIBRARY_SITEMAP_EXCLUDE_ALT) pages.*
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
 override LIBRARY_SITEMAP_EXPANDED_ALT	:= null
 override LIBRARY_SITEMAP_EXPANDED_MOD	:= 2
@@ -2577,7 +2584,7 @@ override define COMPOSER_YML_DATA_SKEL =
     redirect: {
       title:				"$(PUBLISH_REDIRECT_TITLE)",
       display:				"$(PUBLISH_REDIRECT_DISPLAY)",
-      exclude:				"$(PUBLISH_REDIRECT_EXCLUDE)",
+      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),"$(FILE)"$(TOKEN))))) ],
       time:				$(PUBLISH_REDIRECT_TIME),
     },
   },
@@ -2606,7 +2613,7 @@ override define COMPOSER_YML_DATA_SKEL =
     },
     sitemap: {
       title:				"$(LIBRARY_SITEMAP_TITLE)",
-      exclude:				"$(LIBRARY_SITEMAP_EXCLUDE)",
+      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),"$(FILE)"$(TOKEN))))) ],
       expanded:				$(LIBRARY_SITEMAP_EXPANDED),
       spacer:				$(LIBRARY_SITEMAP_SPACER),
     },
@@ -2941,6 +2948,8 @@ endif
 override PUBLISH_INDEX			:= index
 #>override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(OUT_README).$(PUBLISH).$(EXTN_HTML)
 override PUBLISH_OUT_README		:= $(PUBLISH_CMD_ROOT)/../$(PUBLISH_INDEX).$(EXTN_HTML)
+
+override PUBLISH_REDIRECT_FILE		:= redirect
 
 #> update: $(PUBLISH)-library-sort-yq
 #> update: PUBLISH_DATES_PARSE_ALT = PUBLISH_PAGES_DATE_FORMAT
@@ -5794,7 +5803,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [readtime.wpm]		| `$(PUBLISH_READTIME_WPM)`							$(if $(1),| `$(PUBLISH_READTIME_WPM_ALT)`)
 | [redirect.title]		| `$(PUBLISH_REDIRECT_TITLE)`					$(if $(1),| `$(PUBLISH_REDIRECT_TITLE_ALT)`)
 | [redirect.display]		| `$(PUBLISH_REDIRECT_DISPLAY)`	$(if $(1),| `$(PUBLISH_REDIRECT_DISPLAY_ALT)`)
-| [redirect.exclude]		| `$(PUBLISH_REDIRECT_EXCLUDE)`						$(if $(1),| `$(PUBLISH_REDIRECT_EXCLUDE_ALT)`)
+| [redirect.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`	$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
 | [redirect.time]		| `$(PUBLISH_REDIRECT_TIME)`							$(if $(1),| `$(PUBLISH_REDIRECT_TIME_ALT)`)
 
 *(For this test site, [metalist.$(PUBLISH_METATAGS).title] has been added.$(if $(1),  In this `$(word 3,$(PUBLISH_DIRS))` sub-directory$(COMMA) the [redirect.exclude] option is not changed from default$(COMMA) in order to demonstrate the effects of the other `redirect.*` options.))*
@@ -5815,7 +5824,7 @@ override define PUBLISH_PAGE_1_CONFIGS =
 | [lists.expanded]		| `$(LIBRARY_LISTS_EXPANDED)`							$(if $(1),| `$(LIBRARY_LISTS_EXPANDED_ALT)`)
 | [lists.spacer]		| `$(LIBRARY_LISTS_SPACER)`							$(if $(1),| `$(LIBRARY_LISTS_SPACER_ALT)`)
 | [sitemap.title]		| `$(LIBRARY_SITEMAP_TITLE)`						$(if $(1),| `$(LIBRARY_SITEMAP_TITLE_ALT)`)
-| [sitemap.exclude]		| `$(LIBRARY_SITEMAP_EXCLUDE)`						$(if $(1),| `$(LIBRARY_SITEMAP_EXCLUDE_ALT)`)
+| [sitemap.exclude]		| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),"$(FILE)"$(TOKEN))))) ]`	$(if $(1),| `[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE_ALT),"$(FILE)"$(TOKEN))))) ]`)
 | [sitemap.expanded]		| `$(LIBRARY_SITEMAP_EXPANDED)`							$(if $(1),| `$(LIBRARY_SITEMAP_EXPANDED_ALT)`)
 | [sitemap.spacer]		| `$(LIBRARY_SITEMAP_SPACER)`							$(if $(1),| `$(LIBRARY_SITEMAP_SPACER_ALT)`)
 
@@ -7138,17 +7147,17 @@ $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
 
 ########################################
 
-.PHONY: redirect-$(CLEANER)
-redirect-$(CLEANER):
+.PHONY: $(PUBLISH_REDIRECT_FILE)-$(CLEANER)
+$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
 	@$$(call $(COMPOSER_TINYNAME)-rm,\\
-		$$(CURDIR)/redirect.$(EXTN_HTML) \\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
 	)
 
-.PHONY: redirect-$(DOITALL)
-redirect-$(DOITALL):
+.PHONY: $(PUBLISH_REDIRECT_FILE)-$(DOITALL)
+$(PUBLISH_REDIRECT_FILE)-$(DOITALL):
 	@$$(call $(COMPOSER_TINYNAME)-ln,\\
 		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
-		$$(CURDIR)/redirect.$(EXTN_HTML) \\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
 	)
 
 ################################################################################
@@ -7211,17 +7220,17 @@ $(notdir $(PUBLISH_INCLUDE_ALT)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIB
 
 ########################################
 
-.PHONY: redirect-$(CLEANER)
-redirect-$(CLEANER):
+.PHONY: $(PUBLISH_REDIRECT_FILE)-$(CLEANER)
+r$(PUBLISH_REDIRECT_FILE)-$(CLEANER):
 	@$$(call $(COMPOSER_TINYNAME)-rm,\\
-		$$(CURDIR)/redirect.$(EXTN_HTML) \\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
 	)
 
-.PHONY: redirect-$(DOITALL)
-redirect-$(DOITALL):
+.PHONY: $(PUBLISH_REDIRECT_FILE)-$(DOITALL)
+$(PUBLISH_REDIRECT_FILE)-$(DOITALL):
 	@$$(call $(COMPOSER_TINYNAME)-ln,\\
 		$$(COMPOSER_ROOT)/$(PUBLISH_EXAMPLE).$(EXTN_HTML) ,\\
-		$$(CURDIR)/redirect.$(EXTN_HTML) \\
+		$$(CURDIR)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML) \\
 	)
 
 ########################################
@@ -7474,7 +7483,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)wpm$(_D):				$(_M)$(PUBLISH_READTIME_WPM)$(_D)
 $(_S)#$(MARKER)$(_D) $(_C)redirect$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_TITLE)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_DISPLAY)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)"$(_M)$(PUBLISH_REDIRECT_EXCLUDE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)[$(_D) $(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE),$(_N)"$(_M)$(FILE)$(_N)"$(_D)$(TOKEN))))) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)time$(_D):				$(_M)$(PUBLISH_REDIRECT_TIME)$(_D)
 
 $(_S)########################################$(_D)
@@ -7503,7 +7512,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_LISTS_SPACER)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)sitemap$(_D):
 $(_S)#$(MARKER)$(_D)   $(_C)title$(_D):				$(_N)"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)"$(_D)
-$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)"$(_M)$(LIBRARY_SITEMAP_EXCLUDE)$(_N)"$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)exclude$(_D):				$(_N)[$(_D) $(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE),$(_N)"$(_M)$(FILE)$(_N)"$(_D)$(TOKEN))))) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)expanded$(_D):				$(_M)$(LIBRARY_SITEMAP_EXPANDED)$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)spacer$(_D):				$(_M)$(LIBRARY_SITEMAP_SPACER)$(_D)
 
@@ -7978,7 +7987,7 @@ variables:
     redirect:
       title:				"$(PUBLISH_REDIRECT_TITLE$(if $(1),_MOD,_ALT))"
       display:				"$(PUBLISH_REDIRECT_DISPLAY$(if $(1),_MOD,_ALT))"
-      exclude:				"$(PUBLISH_REDIRECT_EXCLUDE$(if $(1),_MOD,_ALT))"
+      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(PUBLISH_REDIRECT_EXCLUDE$(if $(1),_MOD,_ALT)),"$(FILE)"$(TOKEN))))) ]
       time:				$(PUBLISH_REDIRECT_TIME$(if $(1),_MOD,_ALT))
 
 ########################################
@@ -8003,7 +8012,7 @@ variables:
       spacer:				$(LIBRARY_LISTS_SPACER$(if $(1),_MOD,_ALT))
     sitemap:
       title:				"$(LIBRARY_SITEMAP_TITLE$(if $(1),_MOD,_ALT))"
-      exclude:				"$(LIBRARY_SITEMAP_EXCLUDE$(if $(1),_MOD,_ALT))"
+      exclude:				[ $(subst $(TOKEN),$(COMMA) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(LIBRARY_SITEMAP_EXCLUDE$(if $(1),_MOD,_ALT)),"$(FILE)"$(TOKEN))))) ]
       expanded:				$(LIBRARY_SITEMAP_EXPANDED$(if $(1),_MOD,_ALT))
       spacer:				$(LIBRARY_SITEMAP_SPACER$(if $(1),_MOD,_ALT))
 
@@ -11334,16 +11343,16 @@ $(call HEREDOC_CUSTOM_HTML_CSS,.reveal *)
 endef
 
 ########################################
-## {{{2 Heredoc: redirect **
+## {{{2 Heredoc: $(PUBLISH_REDIRECT_FILE) **
 ########################################
 
 ########################################
-### {{{3 Heredoc: redirect_yml
+### {{{3 Heredoc: $(PUBLISH_REDIRECT_FILE)_yml
 ########################################
 
 override define HEREDOC_REDIRECT_YML =
 ################################################################################
-# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(EXPORTS) $(DIVIDE) redirect)
+# $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(EXPORTS) $(DIVIDE) $(PUBLISH_REDIRECT_FILE))
 ################################################################################
 
 variables:
@@ -11377,7 +11386,7 @@ variables:
 endef
 
 ########################################
-### {{{3 Heredoc: redirect_md
+### {{{3 Heredoc: $(PUBLISH_REDIRECT_FILE)_md
 ########################################
 
 #> update: REDIRECT_[A-Z]*
@@ -11392,7 +11401,7 @@ $(if $(REDIRECT_DISPLAY),$(subst <link>,[$(REDIRECT_URL)]($(REDIRECT_URL)),$(RED
 endef
 
 ########################################
-## {{{2 Heredoc: license
+## {{{2 Heredoc: $(OUT_LICENSE)
 ########################################
 
 #>$(PUBLISH_METATITL): "$(COMPOSER_LICENSE_HEADLINE)"
