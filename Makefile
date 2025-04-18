@@ -2778,18 +2778,6 @@ override COMPOSER_LIBRARY_AUTO_UPDATE	:= 1
 endif
 endif
 
-########################################
-### {{{3 Library Anchor Links
-########################################
-
-override COMPOSER_LIBRARY_ANCHOR_LINKS	:=
-ifneq ($(COMPOSER_LIBRARY_AUTO_UPDATE),)
-ifneq ($(call COMPOSER_YML_DATA_VAL,library.pages.anchor_links),)
-#WORKING:FIX:CURRENT:$(ANCHOR_LINKS)
-# override COMPOSER_LIBRARY_ANCHOR_LINKS	:= 1
-endif
-endif
-
 #######################################
 ### {{{3 Build Script
 ########################################
