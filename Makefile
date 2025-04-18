@@ -2391,6 +2391,7 @@ override COMPOSER_RESERVED := \
 	\
 	$(DOSETUP) \
 	$(CONVICT) \
+	$(EXTRACT) \
 	$(EXPORTS) \
 	\
 	$(PUBLISH) \
