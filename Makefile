@@ -1877,26 +1877,27 @@ override PANDOC_EXTENSIONS_DOCX := \
 	-empty_paragraphs \
 	-styles \
 
-override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
-	$(PANDOC_EXTENSIONS_COMMONMARK) \
-	$(if $(filter markdown,$(INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
-))
-override PANDOC_EXTENSIONS_TO		:=
-
 #WORKING:IMPORT:DOCX
 
 #> update: includes duplicates
 override EXTRACT			:= extract
 
-ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
 override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
-	$(if $(filter $(TYPE_DOCX),$(c_type)),$(PANDOC_EXTENSIONS_DOCX)) \
+	$(if $(filter $(EXTRACT),$(MAKECMDGOALS)),\
+		$(if $(filter $(TYPE_DOCX),$(c_type)),$(PANDOC_EXTENSIONS_DOCX)) \
+	,\
+		$(PANDOC_EXTENSIONS_COMMONMARK) \
+		$(if $(filter markdown,$(INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
+	) \
 ))
+
 override PANDOC_EXTENSIONS_TO		:= $(sort $(strip \
-	$(PANDOC_EXTENSIONS_COMMONMARK) \
-	$(PANDOC_EXTENSIONS_MARKDOWN) \
+	$(if $(filter $(EXTRACT),$(MAKECMDGOALS)),\
+		$(PANDOC_EXTENSIONS_COMMONMARK) \
+		$(PANDOC_EXTENSIONS_MARKDOWN) \
+	,\
+	) \
 ))
-endif
 
 ########################################
 ## {{{2 Command
@@ -1908,6 +1909,7 @@ endif
 
 #WORKING:IMPORT:DOCX
 #	make: Circular /.g/_data/zactive/_drive/_todo.docx <- /.g/_data/zactive/_drive/_todo.docx dependency dropped.
+#	document!  make extract c_type="docx" c_base="text_output_base" c_list="docx_import_file" = output will always be "$*_LINT" ... admittedly wonky...
 
 #> update: includes duplicates
 override EXTRACT			:= extract
