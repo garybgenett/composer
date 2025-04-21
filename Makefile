@@ -4429,6 +4429,7 @@ endef
 #			https://pkg.go.dev/time#pkg-constants
 #		need to put "publish_date_timezone_format" into "config.dates.parse" and markdown files in order to get full timezone support...
 #			otherwise, all dates/times are considered local...
+#	note in the code about "$(realpath ...)" and using sparingly for specific cases
 
 #WORK
 #	features
@@ -15400,15 +15401,16 @@ $(EXPORTS)-redirect-files:
 
 #> update: REDIRECT_[A-Z]*
 
-#WORKING:FIX:EXCLUDE
-#		$(realpath $(CURDIR)/$(notdir $(FILE))) \
+#>	$(eval $(EXPORTS)-source-$(FILE) := $(shell $(subst --no-symlinks,,$(REALPATH)) $(CURDIR) $(CURDIR)/$(notdir $(FILE)))) \
+#>		$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),$($(EXPORTS)-source-$(FILE))) \
+#>		$($(EXPORTS)-source-$(FILE)) \
 
-#>		$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),$(FILE))
 $(foreach FILE,$($(EXPORTS)-redirect-files),\
 	$(eval $(FILE): \
 		$(call $(COMPOSER_PANDOC)-dependencies) \
 	) \
 )
+
 $($(EXPORTS)-redirect-files):
 #>	@$(call $(HEADERS)-note,$(@),*,$(EXPORTS)-redirect)
 	@$(eval override REDIRECT_URL	:= $(shell $(REALPATH) $(CURDIR) $(realpath $(CURDIR)/$(notdir $(@))) 2>/dev/null))
