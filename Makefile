@@ -163,7 +163,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	* `make COMPOSER_DEBUGIT="1" help-help | less -rX`
 #		* `make COMPOSER_DEBUGIT="1" c_site= help-help | less -rX`
 #			* `make COMPOSER_DEBUGIT="1" COMPOSER_DOCOLOR= help-help | less -rX`
-#		* `override INPUT := commonmark`
+#		* `override TMPL_INPUT := commonmark`
 #			* `PANDOC_EXTENSIONS_*`
 #		* Spell check
 #			* `make +test-heredoc`
@@ -1629,8 +1629,8 @@ endef
 # {{{1 Pandoc Options
 ################################################################################
 
-#>override INPUT			:= commonmark
-override INPUT				:= markdown
+#>override TMPL_INPUT			:= commonmark
+override TMPL_INPUT			:= markdown
 override TMPL_OUTPUT			:= $(c_type)
 override EXTN_OUTPUT			:= $(c_type)
 
@@ -1657,7 +1657,7 @@ override TYPE_PRES			:= revealjs
 override TYPE_DOCX			:= docx
 override TYPE_PPTX			:= pptx
 override TYPE_TEXT			:= text
-override TYPE_LINT			:= $(INPUT)
+override TYPE_LINT			:= $(TMPL_INPUT)
 
 override TMPL_HTML			:= html5
 override TMPL_LPDF			:= latex
@@ -1877,7 +1877,7 @@ override PANDOC_EXTENSIONS_DOCX := \
 	-empty_paragraphs \
 	-styles \
 
-#WORKING:IMPORT:DOCX
+#> update: EXTRACT.*MAKECMDGOALS
 
 #> update: includes duplicates
 override EXTRACT			:= extract
@@ -1887,7 +1887,7 @@ override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
 		$(if $(filter $(TYPE_DOCX),$(c_type)),$(PANDOC_EXTENSIONS_DOCX)) \
 	,\
 		$(PANDOC_EXTENSIONS_COMMONMARK) \
-		$(if $(filter markdown,$(INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
+		$(if $(filter markdown,$(TMPL_INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
 	) \
 ))
 
@@ -1907,15 +1907,14 @@ override PANDOC_EXTENSIONS_TO		:= $(sort $(strip \
 ### {{{3 Extract
 ########################################
 
-#WORKING:IMPORT:DOCX
-#	make: Circular /.g/_data/zactive/_drive/_todo.docx <- /.g/_data/zactive/_drive/_todo.docx dependency dropped.
-#	document!  make extract c_type="docx" c_base="text_output_base" c_list="docx_import_file" = output will always be "$*_LINT" ... admittedly wonky...
+#> update: EXTRACT.*MAKECMDGOALS
 
 #> update: includes duplicates
 override EXTRACT			:= extract
 
 ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
-override INPUT				:= $(c_type)
+#>override TMPL_INPUT			:= $(TMPL_$(call PANDOC_FILES_TYPE,$(c_type)))
+override TMPL_INPUT			= $(TMPL_$(call PANDOC_FILES_TYPE,$(c_type)))
 override TMPL_OUTPUT			:= $(TMPL_LINT)
 override EXTN_OUTPUT			:= $(EXTN_LINT)
 endif
@@ -1926,9 +1925,9 @@ endif
 
 override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
 
-override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_HTML)"
-override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_TEXT)"
-override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="json"
+override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_HTML)"
+override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_TEXT)"
+override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="json"
 override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
 ########################################
@@ -2013,6 +2012,7 @@ override PANDOC_FILES_CSS = $(strip \
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
+#> update: EXTRACT.*MAKECMDGOALS
 
 #>	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--include-in-header="$(FILE)")
 #>	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--css="$(FILE)")
@@ -2041,7 +2041,7 @@ override PANDOC_OPTIONS = $(strip \
 		--variable=revealjs-url="$(REVEALJS_DIR)" \
 	) \
 	\
-	--from="$(INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" \
+	--from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" \
 	--data-dir="$(COMPOSER_DAT)" \
 	$(if $(wildcard $(COMPOSER_DAT)/template.$(TMPL_OUTPUT)),	--template="$(COMPOSER_DAT)/template.$(TMPL_OUTPUT)") \
 	$(if $(wildcard $(COMPOSER_DAT)/reference.$(TMPL_OUTPUT)),	--reference-doc="$(COMPOSER_DAT)/reference.$(TMPL_OUTPUT)") \
@@ -3332,11 +3332,18 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 #### {{{4 Targets
 ########################################
 
+#> update: EXTRACT.*MAKECMDGOALS
 ifneq ($(c_base),)
+ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
+$(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(TMPL_OUTPUT),$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,$(c_type))))
+$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,$(c_type))): ;
+else
 ifeq ($(filter $(c_base).$(EXTN_OUTPUT),$(COMPOSER_TARGETS)),)
 $(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTN_OUTPUT))
 endif
 endif
+endif
+
 #> update: WILDCARD_YML
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	$(foreach FILE,$(call PANDOC_FILES_LIST,$(TYPE_$(TYPE)),$(COMPOSER_TARGETS)),\
@@ -3396,6 +3403,23 @@ override define $(COMPOSER_PANDOC)-$(PRINTER) =
 	$(ECHO) "$(call COMPOSER_TIMESTAMP) $$( \
 		$(call $(HEADERS)-$(COMPOSER_PANDOC)-options) \
 	)$(if $(c_list_file), #$(MARKER) $(c_list_file))\n"
+endef
+
+########################################
+#### {{{4 $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
+########################################
+
+override define $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)) =
+	$(ECHO) "$(_S)"; \
+	if [ -n "$(c_site)" ] && [ "$(c_type)" = "$(TYPE_HTML)" ]; then \
+		$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output); \
+	elif [ "$(c_type)" = "$(TYPE_LPDF)" ]; then \
+		$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output); \
+	elif [ "$(c_type)" = "$(TYPE_PRES)" ] && [ -f "$(COMPOSER_CUSTOM)-$(c_type).css" ]; then \
+		$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output); \
+		$(TOUCH) $(call COMPOSER_TMP_FILE).css; \
+	fi; \
+	$(ECHO) "$(_D)"
 endef
 
 ################################################################################
@@ -3615,7 +3639,7 @@ $(HELPOUT)-targets_primary_%:
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(DOITALL)]"		"Console version of \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` $(_E)(no reference sections)$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)]"			"Print settings template: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(EXAMPLE)$(.)yml]"			"Print settings template: \`$(_M)$(COMPOSER_YML)$(_D)\`"
-	@$(TABLE_M2) "$(_C)[$(EXAMPLE)$(.)md]"			"Print \`$(_C)$(INPUT)$(_D)\` file template"
+	@$(TABLE_M2) "$(_C)[$(EXAMPLE)$(.)md]"			"Print \`$(_C)$(TMPL_INPUT)$(_D)\` file template"
 	@$(TABLE_M2) "$(_C)[$(COMPOSER_PANDOC)]"		"Document creation engine $(_E)(see [c_type])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)]"			"Build $(_C)[HTML]$(_D) files as $(_C)[Static Websites]$(_D) $(_E)(see [c_site])$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(DOITALL)]"		"Do $(_C)[$(PUBLISH)]$(_D) recursively: $(_C)[COMPOSER_SUBDIRS]$(_D)"
@@ -3855,11 +3879,15 @@ $(HELPOUT)-$(PRINTER):
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-$(TARGETS)
 	@$(call TITLE_LN,2,Configuration,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Pandoc Extensions)"
-	@$(ENDOLINE); $(PRINT) "$(_C)[$(COMPOSER_BASENAME)]$(_D) uses the \`$(_C)$(INPUT)$(_D)\` input format, with these extensions:"
-#WORKING:IMPORT:DOCX
+	@$(ENDOLINE); $(PRINT) "$(_C)[$(COMPOSER_BASENAME)]$(_D) uses the \`$(_C)$(TMPL_INPUT)$(_D)\` input format, with these extensions:"
 	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_FROM),\
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 	)
+#WORKING:EXTRACT
+#> update: EXTRACT.*MAKECMDGOALS
+#	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_FROM),\
+#		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
+#	)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Templates)"
 	@$(ENDOLINE); $(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
@@ -3867,7 +3895,7 @@ $(HELPOUT)-$(PRINTER):
 	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
 	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)$(.)yml	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
-	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)md]$(_D) target to create new \`$(_C)$(INPUT)$(_D)\` files:"
+	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)md]$(_D) target to create new \`$(_C)$(TMPL_INPUT)$(_D)\` files:"
 	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)$(.)md	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Defaults)"
 	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
@@ -4432,6 +4460,7 @@ endef
 #		need to put "publish_date_timezone_format" into "config.dates.parse" and markdown files in order to get full timezone support...
 #			otherwise, all dates/times are considered local...
 #	note in the code about "$(realpath ...)" and using sparingly for specific cases
+#	document extract = make extract c_type="docx" c_base="text_output_base" c_list="docx_import_file" = output will always be "$*_LINT" ... admittedly wonky...
 
 #WORK
 #	features
@@ -5366,7 +5395,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(EXAMPLE) / $(EXAMPLE)$(.)yml / $(EXAMPLE)
       * $(_C)[$(COMPOSER_BASENAME)]$(_D) `$(_M)$(COMPOSER_SETTINGS)$(_D)` $(_E)(see [Configuration Settings])$(_D)
       * $(_C)[$(COMPOSER_BASENAME)]$(_D) $(_C)[c_site]$(_D) and $(_C)[Pandoc]$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)(see [Static Websites]
         and [Configuration Settings])$(_D)
-      * $(_C)[Pandoc]$(_D) `$(_C)$(INPUT)$(_D)`
+      * $(_C)[Pandoc]$(_D) `$(_C)$(TMPL_INPUT)$(_D)`
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(COMPOSER_PANDOC))
 
@@ -15343,7 +15372,7 @@ endif
 ## {{{2 $(EXTRACT)
 ########################################
 
-#WORKING:IMPORT:DOCX
+#> update: EXTRACT.*MAKECMDGOALS
 
 .PHONY: $(EXTRACT)
 $(EXTRACT): $(COMPOSER_PANDOC)
@@ -18123,28 +18152,11 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),$(c_list))
 endif
 
-.PHONY: $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
-$(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)):
-	@$(ECHO) "$(_S)"
-ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
-endif
-ifeq ($(c_type),$(TYPE_LPDF))
-	@$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output)
-endif
-ifeq ($(c_type),$(TYPE_PRES))
-ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
-	@$(TOUCH) $(call COMPOSER_TMP_FILE).css
-endif
-endif
-	@$(ECHO) "$(_D)"
-
 ifneq ($(c_base),)
-$(c_base).$(EXTN_OUTPUT): $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
+	@$(call $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)))
 #>	@$(eval override c_list := $(call c_list_var))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(PRINT) "$(_F)$(MARKER) ERROR [$(@)]: $(call PANDOC_OPTIONS_ERROR)" >&2
