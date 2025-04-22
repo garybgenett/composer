@@ -585,11 +585,11 @@ ifneq ($(or \
 	$(filter $(COMPOSER_DEBUGIT),$(PHANTOM)) ,\
 	$(COMPOSER_DEBUGIT_ALL) ,\
 ),)
-#>override MAKEFLAGS			:= $(MAKEFLAGS_ENV,1) --debug=verbose --trace
-override MAKEFLAGS			:= $(MAKEFLAGS_ENV,1) --debug=verbose
+#>override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,1) --debug=verbose --trace
+override MAKEFLAGS			:= $(call MAKEFLAGS_ENV,1) --debug=verbose
 else
-#>override MAKEFLAGS			:= $(MAKEFLAGS_ENV) --debug=none --silent
-override MAKEFLAGS			:= $(MAKEFLAGS_ENV) --debug=none
+#>override MAKEFLAGS			:= $(call MAKEFLAGS_ENV) --debug=none --silent
+override MAKEFLAGS			:= $(call MAKEFLAGS_ENV) --debug=none
 endif
 
 export override MAKEFLAGS		:= $(MAKEFLAGS) $(MAKEFLAGS_END)
