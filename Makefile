@@ -7245,12 +7245,9 @@ override $(notdir $(PUBLISH_PAGEDIR)).* := \\
 	HEREDOC_COMPOSER_MK_PUBLISH_CONFIGS_HACK \\
 	$(notdir $(PUBLISH_PAGEDIR))-footer$(COMPOSER_EXT_SPECIAL)
 
-#WORKING:FIX
-#	still need to do this after metainfo-block refactor...?
-#	keep it anyway...?
-#override $(notdir $(PUBLISH_PAGEDIR)).$(EXTN_LPDF) := \\
-#	$$($(notdir $(PUBLISH_PAGEDIR)).*) \\
-#	$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL)
+override $(notdir $(PUBLISH_PAGEDIR)).$(EXTN_LPDF) := \\
+	$$($(notdir $(PUBLISH_PAGEDIR)).*) \\
+	$(notdir $(PUBLISH_PAGEDIR))-header$(COMPOSER_EXT_SPECIAL)
 
 ################################################################################
 endif
