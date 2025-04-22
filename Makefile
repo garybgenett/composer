@@ -18236,30 +18236,22 @@ override define TYPE_TARGETS_OPTIONS =
 endef
 
 override define TYPE_TARGETS =
-%.$(2):
-	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(strip \
-		$$(if \
-			$$(c_list) ,\
-			$$(c_list) \
-		,$$(if \
-			$$(wildcard $$(*)$$(COMPOSER_EXT)) ,\
-			$$(*)$$(COMPOSER_EXT) \
-		,\
-			$$(*) \
-		)) \
-	))
+%.$(2): %$$(COMPOSER_EXT)
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_EXT))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(strip \
-		$$(if \
-			$$(c_list) ,\
-			c_list \
-		,$$(if \
-			$$(wildcard $$(*)$$(COMPOSER_EXT)) ,\
-			COMPOSER_EXT \
-		,\
-			$$(call /,$$(NOTHING)) \
-		)) \
-	))
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),COMPOSER_EXT)
+endif
+
+%.$(2): %
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
+ifneq ($$(COMPOSER_DEBUGIT),)
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(call /,$$(NOTHING)))
+endif
+
+%.$(2): $$(c_list)
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
+ifneq ($$(COMPOSER_DEBUGIT),)
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),c_list)
 endif
 endef
 
