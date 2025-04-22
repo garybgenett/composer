@@ -3405,23 +3405,6 @@ override define $(COMPOSER_PANDOC)-$(PRINTER) =
 	)$(if $(c_list_file), #$(MARKER) $(c_list_file))\n"
 endef
 
-########################################
-#### {{{4 $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
-########################################
-
-override define $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)) =
-	$(ECHO) "$(_S)"; \
-	if [ -n "$(c_site)" ] && [ "$(c_type)" = "$(TYPE_HTML)" ]; then \
-		$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output); \
-	elif [ "$(c_type)" = "$(TYPE_LPDF)" ]; then \
-		$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output); \
-	elif [ "$(c_type)" = "$(TYPE_PRES)" ] && [ -f "$(COMPOSER_CUSTOM)-$(c_type).css" ]; then \
-		$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output); \
-		$(TOUCH) $(call COMPOSER_TMP_FILE).css; \
-	fi; \
-	$(ECHO) "$(_D)"
-endef
-
 ################################################################################
 # }}}1
 ################################################################################
@@ -18149,11 +18132,28 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),$(c_list))
 endif
 
+.PHONY: $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
+$(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)):
+	@$(ECHO) "$(_S)"
+ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+endif
+ifeq ($(c_type),$(TYPE_LPDF))
+	@$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output)
+endif
+ifeq ($(c_type),$(TYPE_PRES))
+ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
+	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
+	@$(TOUCH) $(call COMPOSER_TMP_FILE).css
+endif
+endif
+	@$(ECHO) "$(_D)"
+
 ifneq ($(c_base),)
+$(c_base).$(EXTN_OUTPUT): $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
-	@$(call $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)))
 #>	@$(eval override c_list := $(call c_list_var))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(PRINT) "$(_F)$(MARKER) ERROR [$(@)]: $(call PANDOC_OPTIONS_ERROR)" >&2
@@ -18236,22 +18236,30 @@ override define TYPE_TARGETS_OPTIONS =
 endef
 
 override define TYPE_TARGETS =
-%.$(2): %$$(COMPOSER_EXT)
-	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_EXT))
+%.$(2):
+	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(strip \
+		$$(if \
+			$$(c_list) ,\
+			$$(c_list) \
+		,$$(if \
+			$$(wildcard $$(*)$$(COMPOSER_EXT)) ,\
+			$$(*)$$(COMPOSER_EXT) \
+		,\
+			$$(*) \
+		)) \
+	))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),extension)
-endif
-
-%.$(2): %
-	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
-ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),wildcard)
-endif
-
-%.$(2): $$(c_list)
-	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
-ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),list)
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(strip \
+		$$(if \
+			$$(c_list) ,\
+			c_list \
+		,$$(if \
+			$$(wildcard $$(*)$$(COMPOSER_EXT)) ,\
+			COMPOSER_EXT \
+		,\
+			$$(call /,$$(NOTHING)) \
+		)) \
+	))
 endif
 endef
 
