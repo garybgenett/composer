@@ -18150,10 +18150,10 @@ endif
 	@$(ECHO) "$(_D)"
 
 ifneq ($(c_base),)
-$(c_base).$(EXTN_OUTPUT): $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
 #>	@$(eval override c_list := $(call c_list_var))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(PRINT) "$(_F)$(MARKER) ERROR [$(@)]: $(call PANDOC_OPTIONS_ERROR)" >&2
