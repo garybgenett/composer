@@ -18132,31 +18132,19 @@ ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),$(c_list))
 endif
 
-.PHONY: $(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
-$(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP)):
-	@$(ECHO) "$(_S)"
-ifneq ($(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),)
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
-endif
-ifeq ($(c_type),$(TYPE_LPDF))
-	@$(MKDIR) $(call COMPOSER_TMP_FILE) $($(DEBUGIT)-output)
-endif
-ifeq ($(c_type),$(TYPE_PRES))
-ifneq ($(wildcard $(COMPOSER_CUSTOM)-$(c_type).css),)
-	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
-	@$(TOUCH) $(call COMPOSER_TMP_FILE).css
-endif
-endif
-	@$(ECHO) "$(_D)"
-
 ifneq ($(c_base),)
+$(c_base).$(EXTN_OUTPUT): \
+	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),$(shell \
+		$(MKDIR) $(COMPOSER_TMP) >/dev/null 2>&1; \
+	),$(if $(filter $(c_type),$(TYPE_LPDF)),$(shell \
+		$(MKDIR) $(call COMPOSER_TMP_FILE) >/dev/null 2>&1; \
+	),$(if $(and $(filter $(c_type),$(TYPE_PRES)),$(wildcard $(COMPOSER_CUSTOM)-$(c_type).css)),$(shell \
+		$(MKDIR) $(COMPOSER_TMP) >/dev/null 2>&1; \
+		$(TOUCH) $(call COMPOSER_TMP_FILE).css >/dev/null 2>&1; \
+	))))
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC),$(@),$(COMPOSER_DEBUGIT))
-	@$(MAKE) \
-		$(if $(wildcard $(CURDIR)/$(MAKEFILE)),,--makefile $(COMPOSER_SELF)) \
-		$(call COMPOSER_OPTIONS_EXPORT) \
-		$(COMPOSER_PANDOC)-$(notdir $(COMPOSER_TMP))
 #>	@$(eval override c_list := $(call c_list_var))
 ifneq ($(PANDOC_OPTIONS_ERROR),)
 	@$(PRINT) "$(_F)$(MARKER) ERROR [$(@)]: $(call PANDOC_OPTIONS_ERROR)" >&2
