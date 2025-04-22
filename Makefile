@@ -1894,7 +1894,7 @@ override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
 override PANDOC_EXTENSIONS_TO		:= $(sort $(strip \
 	$(if $(filter $(EXTRACT),$(MAKECMDGOALS)),\
 		$(PANDOC_EXTENSIONS_COMMONMARK) \
-		$(PANDOC_EXTENSIONS_MARKDOWN) \
+		$(if $(filter markdown,$(TMPL_INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
 	,\
 	) \
 ))
@@ -3866,11 +3866,11 @@ $(HELPOUT)-$(PRINTER):
 	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_FROM),\
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 	)
-#WORKING:EXTRACT
 #> update: EXTRACT.*MAKECMDGOALS
-#	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_FROM),\
-#		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
-#	)
+	@$(ENDOLINE); $(PRINT) "When reading \`$(_C)$(TYPE_DOCX)$(_D)\` files with $(_C)[$(EXTRACT)]$(_D), these import extensions are used:"
+	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_DOCX),\
+		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
+	)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Templates)"
 	@$(ENDOLINE); $(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
 	@$(ENDOLINE); $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) $(.)$(EXAMPLE)-$(INSTALL)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
