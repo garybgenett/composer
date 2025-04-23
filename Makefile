@@ -2485,8 +2485,8 @@ endif
 
 override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
 
-#WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
-#WORKING:NOW update.*metalist
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
+#WORKING:META update.*metalist
 #> update: metalist
 
 #>$(PUBLISH_METATAGS): {
@@ -2753,7 +2753,7 @@ endif
 
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
-#WORKING:NOW update.*metalist
+#WORKING:META update.*metalist
 #> update: metalist
 override COMPOSER_YML_DATA_METALIST := $(shell \
 	$(ECHO) '$(call COMPOSER_YML_DATA_VAL,helpers.metalist)' \
@@ -4328,7 +4328,7 @@ endef
 #### {{{4 #WORKING:FIX
 ########################################
 
-#WORKING:FIX:NULL
+#WORKING:NULL
 #	remove 2>/dev/null from all "yq" commands... and then run a full test...
 #	need to make debugging *WAY* more achievable...
 
@@ -5728,7 +5728,7 @@ endef
 #### {{{4 $(PUBLISH) Page: Main (Config)
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/config/index.md
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/config/index.md
 
 #WORK
 #	integrate this in $(HELPOUT)
@@ -5816,7 +5816,7 @@ endef
 #### {{{4 $(PUBLISH) Page: Main (Links)
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW links
+#WORKING:CONFIGS links
 override define PUBLISH_PAGE_1_CONFIGS_LINKS =
 $(foreach FILE,\
 	navbars.brand \
@@ -7364,13 +7364,13 @@ endef
 ## {{{2 Heredoc: composer_yml **
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW *.yml
+#WORKING:CONFIGS *.yml
 
 ########################################
 ### {{{3 Heredoc: composer_yml
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/.Composer/.composer.yml
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/.Composer/.composer.yml
 #> update: $(PUBLISH) Pages
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
@@ -7831,7 +7831,7 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/.composer.yml
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/.composer.yml
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
@@ -7863,7 +7863,7 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(NOTHING))
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
@@ -7899,8 +7899,8 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(CONFIGS))
 ########################################
 
-#WORKING:CONFIGS:UPDATE:NOW make J=0 V=1 site-template-config ; cat _site/config/.composer.yml
-#WORKING:CONFIGS:UPDATE:NOW make -C _site/config template.md
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/config/.composer.yml
+#WORKING:CONFIGS make -C _site/config template.md
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
@@ -16974,7 +16974,9 @@ override define $(PUBLISH)-library-sitemap-create =
 	$(ECHO) "$(_D)"
 endef
 
-#		$(ECHO) "-- #WORKING:FIX make sure this gets tested..."; \
+#WORKING:SITEMAP
+#	make sure this gets tested...
+#		$(ECHO) "-- #WORKING:SITEMAP"; \
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
