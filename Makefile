@@ -819,11 +819,11 @@ override PUBLISH_COLS_RESIZE_MOD	:= 12 12 12
 
 #> update: PUBLISH_DATES_PARSE [4] = PUBLISH_PAGES_DATE_FORMAT
 override PUBLISH_DATES_PARSE := \
-	$(subst $(NULL) ,$(HTML_SPACE),$(PUBLISH_DATES_INTERNAL_FORMAT)) \
-	$(subst $(NULL) ,$(HTML_SPACE),$(PUBLISH_DATES_FORMAT_DEFAULT)) \
-	$(subst $(NULL) ,$(HTML_SPACE),2006-01-02) \
-	$(subst $(NULL) ,$(HTML_SPACE),January 2, 2006) \
-	$(subst $(NULL) ,$(HTML_SPACE),January 2, 2006 3:04 PM MST -07:00) \
+	$(subst $(NULL) ,$(TOKEN),$(PUBLISH_DATES_INTERNAL_FORMAT)) \
+	$(subst $(NULL) ,$(TOKEN),$(PUBLISH_DATES_FORMAT_DEFAULT)) \
+	$(subst $(NULL) ,$(TOKEN),2006-01-02) \
+	$(subst $(NULL) ,$(TOKEN),January 2, 2006) \
+	$(subst $(NULL) ,$(TOKEN),January 2, 2006 3:04 PM MST -07:00) \
 
 override PUBLISH_DATES_PARSE_ALT	:= $(PUBLISH_DATES_PARSE)
 override PUBLISH_DATES_PARSE_MOD	:= $(PUBLISH_DATES_PARSE)
@@ -2145,7 +2145,7 @@ override COMPOSER_CONV = \
 override COMPOSER_YML_ARRAY = \
 	$(strip \
 		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_NOCOLOR))) \
-		$(subst $(TOKEN),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(TOKEN),%,$(subst $(NULL) ,,$(foreach FILE,$(1),$(if $(3),$(_N)")$(_M)$(FILE)$(if $(3),$(_N)")$(_D)$(TOKEN))))) \
+		$(subst $(HTML_SPACE),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(HTML_SPACE),%,$(subst $(NULL) ,,$(foreach FILE,$(1),$(if $(3),$(_N)")$(_M)$(FILE)$(if $(3),$(_N)")$(_D)$(HTML_SPACE))))) \
 		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_COLOR))) \
 	)
 
@@ -2525,7 +2525,7 @@ override define COMPOSER_YML_DATA_SKEL =
       resize:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE),1) ],
     },
     dates: {
-      parse:				[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),1,1)) ],
+      parse:				[ $(subst $(TOKEN), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),1,1)) ],
       display:				"$(PUBLISH_DATES_DISPLAY)",
       library:				"$(PUBLISH_DATES_LIBRARY)",
       timezone:				"$(PUBLISH_DATES_TIMEZONE)",
@@ -5734,7 +5734,7 @@ endef
 #	default css (see "themes" page)
 #	note on example page about logo/icon
 
-#>| [dates.parse]			| `[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),1,1)) ]`	$(if $(1),| `[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE_ALT),1,1)) ]`)
+#>| [dates.parse]			| `[ $(subst $(TOKEN), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),1,1)) ]`	$(if $(1),| `[ $(subst $(TOKEN), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE_ALT),1,1)) ]`)
 override define PUBLISH_PAGE_1_CONFIGS =
 | $(PUBLISH)-config			| defaults						$(if $(1),| values)
 |:---				|:------$(if $(1),,|)						$(if $(1),|:------|)
@@ -7430,7 +7430,7 @@ $(_S)#$(MARKER)$(_D)   $(_C)size$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,
 $(_S)#$(MARKER)$(_D)   $(_C)resize$(_D):				$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE)) $(_N)]$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)dates$(_D):
-$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),,1)) $(_N)]$(_D)
+$(_S)#$(MARKER)$(_D)   $(_C)parse$(_D):				$(_N)[$(_D) $(subst $(TOKEN), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),,1)) $(_N)]$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)display$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_DISPLAY)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)library$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_LIBRARY)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)timezone$(_D):				$(_N)"$(_M)$(PUBLISH_DATES_TIMEZONE)$(_N)"$(_D)
@@ -7936,7 +7936,7 @@ variables:
       size:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE$(if $(1),_MOD,_ALT)),1) ]
       resize:				[ $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE$(if $(1),_MOD,_ALT)),1) ]
     dates:
-      parse:				[ $(subst $(HTML_SPACE), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT)),1,1)) ]
+      parse:				[ $(subst $(TOKEN), ,$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE$(if $(1),_MOD,_ALT)),1,1)) ]
       display:				"$(PUBLISH_DATES_DISPLAY$(if $(1),_MOD,_ALT))"
       library:				"$(PUBLISH_DATES_LIBRARY$(if $(1),_MOD,_ALT))"
       timezone:				"$(PUBLISH_DATES_TIMEZONE$(if $(1),_MOD,_ALT))"
