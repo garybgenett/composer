@@ -125,7 +125,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* `make site-template-config`
 #				* `make site-all`
 #				* `make site-force`
-#			* `make site-template-list`
+#			* `make site-template-list COMPOSER_DOCOLOR= >_site/Composer.site-list.txt`
+#				* `make site-template-list COMPOSER_DOCOLOR= COMPOSER_DOITALL_site-template="+test" >_site/_test/Composer.site-list.txt`
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -2131,8 +2132,8 @@ override $(PUBLISH)-$(DEBUGIT)-output	:= $(if $(COMPOSER_DEBUGIT),$(if $(COMPOSE
 override ENV_MAKE = \
 	$(ENV) $(REALMAKE) $(call MAKEFLAGS_ENV) \
 	$(if $(filter $(NOTHING),$(1)),,MAKEJOBS="$(1)") \
-	$(if $(filter $(NOTHING),$(3)),,COMPOSER_DEBUGIT="$(2)") \
-	$(if $(filter $(NOTHING),$(2)),,COMPOSER_DOCOLOR="$(3)") \
+	$(if $(filter $(NOTHING),$(2)),,COMPOSER_DEBUGIT="$(2)") \
+	$(if $(filter $(NOTHING),$(3)),,COMPOSER_DOCOLOR="$(3)") \
 	$(foreach FILE,$(4),$(FILE)="$($(FILE))")
 
 override COMPOSER_CONV = \
@@ -17067,26 +17068,14 @@ endef
 ########################################
 
 ########################################
-#### {{{4 $(PUBLISH)-$(PRINTER)
+#### {{{4 $(PUBLISH)-$(PRINTER)-$(@)
 ########################################
 
-#WORKING:FIX:PRINTER
-#	find a better way to handle these...
-ifneq ($(c_site),)
-#>export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)		?=
-#>export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)	?=
-endif
+#> $(PUBLISH)-$(PRINTER) > $(PUBLISH)-$(PRINTER)-$(@)
 
-.PHONY: $(PUBLISH)-$(PRINTER)$(.)%
-$(PUBLISH)-$(PRINTER)$(.)%:
-	@$(MAKE) \
-		$(call COMPOSER_OPTIONS_EXPORT) \
-		COMPOSER_DOCOLOR= \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),$(*),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
-		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
-		$(PUBLISH)-$(PRINTER)
-
+ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(filter $(PUBLISH)-$(PRINTER)%,$(MAKECMDGOALS)),)
+
 override $(PUBLISH)-$(PRINTER)-dir	:= $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
 override $(PUBLISH)-$(PRINTER)-file	:= $(if $(c_list),$(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list)))
 override $(PUBLISH)-$(PRINTER)-file	:= $(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%,$($(PUBLISH)-$(PRINTER)-file))
@@ -17097,7 +17086,6 @@ override $(PUBLISH)-$(PRINTER)-sed-dir	:=    -e "/^$($(PUBLISH)-$(PRINTER)-rgx-d
 override $(PUBLISH)-$(PRINTER)-tst-file	:= (test(\"^$($(PUBLISH)-$(PRINTER)-rgx-file)$$\")$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)), or test(\"[/]$($(PUBLISH)-$(PRINTER)-rgx-file)$$\")))
 override $(PUBLISH)-$(PRINTER)-sed-file	:=    -e "/^$($(PUBLISH)-$(PRINTER)-rgx-file)$$/p"$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),      -e "/[/]$($(PUBLISH)-$(PRINTER)-rgx-file)$$/p")
 override $(PUBLISH)-$(PRINTER)-tst	:= $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-tst-file),$($(PUBLISH)-$(PRINTER)-tst-dir))
-endif
 
 override define $(PUBLISH)-$(PRINTER)-output =
 	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
@@ -17105,14 +17093,26 @@ override define $(PUBLISH)-$(PRINTER)-output =
 	| $(SORT)
 endef
 
+endif
+endif
+
+.PHONY: $(PUBLISH)-$(PRINTER)$(.)%
+$(PUBLISH)-$(PRINTER)$(.)%: export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.) ?=
+$(PUBLISH)-$(PRINTER)$(.)%:
+	@$(MAKE) \
+		$(call COMPOSER_OPTIONS_EXPORT) \
+		COMPOSER_DOCOLOR= \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),$(*),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
+		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
+		$(PUBLISH)-$(PRINTER)
+
 ########################################
-#### {{{4 $(PUBLISH)-$(PRINTER)-$(@)
+#### {{{4 $(PUBLISH)-$(PRINTER)
 ########################################
+
+#> $(PUBLISH)-$(PRINTER) > $(PUBLISH)-$(PRINTER)-$(@)
 
 #> update: del(.*)
-
-#WORKING:FIX:PRINTER
-#	break this target up into smaller sections...
 
 .PHONY: $(PUBLISH)-$(PRINTER)
 $(PUBLISH)-$(PRINTER): $(.)set_title-$(PUBLISH)-$(PRINTER)
@@ -17434,6 +17434,8 @@ endef
 #### {{{4 $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 ########################################
 
+#> update: COMPOSER_CONV.*COMPOSER_TINYNAME
+
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
 $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	@\
@@ -17441,10 +17443,12 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 	$(foreach VIEW,$(PUBLISH_DIRS_PRINTER),\
 	$(foreach LIST,$(PUBLISH_DIRS_PRINTER_LIST),\
 		$(call $(HEADERS)-action,$(FILE),$(VIEW),$(strip $(subst $(TOKEN), ,$(LIST))),,1); \
-		time $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) \
+		time $(call ENV_MAKE,,,$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)) \
 			--directory $(PUBLISH_ROOT)/$(FILE) \
 			$(VIEW) \
-			c_list="$(subst $(TOKEN), ,$(LIST))"; \
+			c_list="$(subst $(TOKEN), ,$(LIST))" \
+			| $(SED) "s|$(CURDIR)|[$(COMPOSER_TINYNAME)]|g" \
+			; \
 		$(call NEWLINE) \
 	)))
 
