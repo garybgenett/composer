@@ -842,7 +842,7 @@ override PUBLISH_DATES_TIMEZONE_MOD	:= null
 ### {{{3 Helpers
 ########################################
 
-#> update: metalist
+#> update: title / date / metalist:*
 
 override PUBLISH_METATITL		:= title
 override PUBLISH_METADATE		:= date
@@ -2486,8 +2486,8 @@ endif
 override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
 
 #WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
-#WORKING:META update.*metalist
-#> update: metalist
+
+#> update: title / date / metalist:*
 
 #>$(PUBLISH_METATAGS): {
 #>  title:				"$(PUBLISH_METATAGS_TITLE)",
@@ -2753,8 +2753,7 @@ endif
 
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
-#WORKING:META update.*metalist
-#> update: metalist
+#> update: title / date / metalist:*
 override COMPOSER_YML_DATA_METALIST := $(shell \
 	$(ECHO) '$(call COMPOSER_YML_DATA_VAL,helpers.metalist)' \
 	| $(YQ_WRITE) "keys | .[]" 2>/dev/null \
