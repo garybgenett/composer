@@ -1356,7 +1356,7 @@ override SORT_NUM			:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee)
-override TOUCH				:= $(call COMPOSER_FIND,$(PATH_LIST),touch) --no-dereference --date="@0"
+override TOUCH				:= $(call COMPOSER_FIND,$(PATH_LIST),touch) --date="@0"
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
@@ -16876,9 +16876,7 @@ endef
 override define $(PUBLISH)-library-sitemap-self =
 	if [ ! -f "$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap))" ]; then \
 		$(call $(PUBLISH)-library-sitemap-file) >$($(PUBLISH)-library-sitemap); \
-		$(TOUCH) \
-			$($(PUBLISH)-library-sitemap) \
-			$(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap)); \
+		$(TOUCH) $(patsubst %$(COMPOSER_EXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap)); \
 	fi
 endef
 
@@ -16890,6 +16888,7 @@ $($(PUBLISH)-library-sitemap-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBL
 $($(PUBLISH)-library-sitemap-src): $($(PUBLISH)-library-sitemap-files)
 $($(PUBLISH)-library-sitemap-src):
 #>	@$(call $(HEADERS)-note,$(@),*,$(PUBLISH)-sitemap)
+	@$(call $(PUBLISH)-library-sitemap-self)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-sitemap $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME)
 	@$(eval override NUM := 0) \
@@ -16934,10 +16933,10 @@ $($(PUBLISH)-library-sitemap-src):
 $($(PUBLISH)-library-sitemap-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-files):
 #>	@$(call $(HEADERS)-note,$(@),*,$(PUBLISH)-sitemap)
-	@$(call $(PUBLISH)-library-sitemap-self)
 #>		$(call $(HEADERS)-note,$(@),$(NAME),$(PUBLISH)-sitemap)
 	@$(eval override NAME := $(word 2,$(subst $(TOKEN), ,$(filter $(@)$(TOKEN)%,$($(PUBLISH)-library-sitemap-list))))) \
 		$(call $(HEADERS)-note,$($(PUBLISH)-library-sitemap-src),$(NAME),$(PUBLISH)-sitemap)
+	@$(call $(PUBLISH)-library-sitemap-self)
 	@$(ECHO) "" >$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "|||\n|:---|:---|\n" >>$(@).$(COMPOSER_BASENAME)
 	@shopt -s lastpipe; \
@@ -17789,7 +17788,7 @@ else
 		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
 		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
 		| while read -r FILE; do \
-			$(TOUCH) --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
+			$(TOUCH) --no-dereference --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
 		done
 #>		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR))
 	@$(foreach FILE,\
