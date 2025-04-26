@@ -2487,8 +2487,6 @@ endif
 
 override COMPOSER_YML_DATA_SKEL_COMMENT	:= 3
 
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
-
 #> update: title / date / metalist:*
 
 #>$(PUBLISH_METATAGS): {
@@ -5730,6 +5728,7 @@ endef
 #### {{{4 $(PUBLISH) Page: Main (Config)
 ########################################
 
+#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/index.md
 #WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/config/index.md
 
 #WORK
@@ -5819,6 +5818,7 @@ endef
 ########################################
 
 #WORKING:CONFIGS links
+
 override define PUBLISH_PAGE_1_CONFIGS_LINKS =
 $(foreach FILE,\
 	navbars.brand \
@@ -7389,6 +7389,7 @@ endef
 ########################################
 
 #WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/.Composer/.composer.yml
+
 #> update: $(PUBLISH) Pages
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
