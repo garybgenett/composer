@@ -4428,7 +4428,7 @@ endef
 #	document "$(c_base).$(EXTN_OUTPUT).header" and "$(c_base).$(EXTN_OUTPUT).css" special files, and add to testing
 #	note: never run in the "/" directory
 #	document test case of proper PUBLISH_PAGE_PAGEONE sorting in $(CONFIGS) library
-#	document $(EXAMPLE)$(.)md-$(TOAFILE) and $(EXAMPLE)$(.)yml-$(DOITALL)
+#	document $(EXAMPLE)$(.)md-$(TOAFILE)
 #	document all the possible quoting options for c_options...?  see: $(TESTING)-$(COMPOSER_BASENAME)
 #	COMPOSER_DEPENDS and the library... library rebuild will happen before subdirs, so any *.md targets may be missed or outdated
 #		if they are built on the fly, they will likely re-trigger the library, which will wreak havoc with MAKEJOBS
@@ -5814,7 +5814,8 @@ endef
 #### {{{4 $(PUBLISH) Page: Main (Links)
 ########################################
 
-#WORKING:CONFIGS links
+#WORK
+#	test all of these...
 
 override define PUBLISH_PAGE_1_CONFIGS_LINKS =
 $(foreach FILE,\
@@ -5881,7 +5882,7 @@ $(foreach FILE,\
 	sitemap.spacer \
 	\
 	$(.)composer_root \
-,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(subst .,-,$(subst _,-,$(call /,$(FILE)))))
+,$(call NEWLINE)[$(FILE)]: $(PUBLISH_OUT_README)#$(shell $(call $(HELPOUT)-$(TARGETS)-format,$(FILE))))
 endef
 
 ########################################
@@ -6719,8 +6720,6 @@ endef
 ## {{{2 $(EXAMPLE)
 ########################################
 
-#WORKING:CONFIGS make -C _site/config template.md
-
 ########################################
 ### {{{3 $(EXAMPLE)-$(@)
 ########################################
@@ -6798,19 +6797,11 @@ $(.)$(EXAMPLE):
 
 .PHONY: $(.)$(EXAMPLE)$(.)yml
 $(.)$(EXAMPLE)$(.)yml:
+#>	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
 #>		| $(YQ_WRITE_OUT) 2>/dev/null $(YQ_WRITE_OUT_COLOR)
-	@$(if $(COMPOSER_DOITALL_$(call /,$(@))),\
-			$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' ,\
-			$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
-		) \
+	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR) \
 		| $(SED) "$(COMPOSER_YML_DATA_SKEL_COMMENT),$$ s|^|$(shell $(ECHO) "$(COMMENTED)")|g"
-
-.PHONY: $(.)$(EXAMPLE)$(.)yml-$(DOITALL)
-$(.)$(EXAMPLE)$(.)yml-$(DOITALL): override COMPOSER_DOITALL_$(EXAMPLE)$(.)yml := $(DOITALL)
-$(.)$(EXAMPLE)$(.)yml-$(DOITALL): $(.)$(EXAMPLE)$(.)yml
-$(.)$(EXAMPLE)$(.)yml-$(DOITALL):
-	@$(ECHO) ""
 
 ########################################
 ### {{{3 $(EXAMPLE)$(.)md
