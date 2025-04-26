@@ -5728,9 +5728,6 @@ endef
 #### {{{4 $(PUBLISH) Page: Main (Config)
 ########################################
 
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/index.md
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/config/index.md
-
 #WORK
 #	integrate this in $(HELPOUT)
 #	default css (see "themes" page)
@@ -6722,6 +6719,8 @@ endef
 ## {{{2 $(EXAMPLE)
 ########################################
 
+#WORKING:CONFIGS make -C _site/config template.md
+
 ########################################
 ### {{{3 $(EXAMPLE)-$(@)
 ########################################
@@ -7382,13 +7381,9 @@ endef
 ## {{{2 Heredoc: composer_yml **
 ########################################
 
-#WORKING:CONFIGS *.yml
-
 ########################################
 ### {{{3 Heredoc: composer_yml
 ########################################
-
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/.Composer/.composer.yml
 
 #> update: $(PUBLISH) Pages
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
@@ -7850,8 +7845,6 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(EXAMPLE))
 ########################################
 
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/.composer.yml
-
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE =
@@ -7882,8 +7875,6 @@ endef
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(NOTHING))
 ########################################
 
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/null/.composer.yml
-
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
 override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
@@ -7910,16 +7901,13 @@ variables:
 
   $(PUBLISH)-library:
     folder:
-      name:				$(TESTING)
+      name:				$(notdir $(PUBLISH_ROOT_TESTING))
       auto_update:			null
 endef
 
 ########################################
 ### {{{3 Heredoc: composer_yml ($(PUBLISH) $(CONFIGS))
 ########################################
-
-#WORKING:CONFIGS make J=0 V=1 site-template-config ; cat _site/config/.composer.yml
-#WORKING:CONFIGS make -C _site/config template.md
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
@@ -12195,6 +12183,7 @@ bld
 bnch
 cmd
 cmt
+commonmark
 conv
 curdir
 dat
@@ -12232,6 +12221,7 @@ rgx
 showdir
 skel
 src
+tagsmain
 techname
 tinyname
 tmp
@@ -12243,6 +12233,7 @@ wordlist
 
 abspath
 ascii
+blankline
 cd
 divs
 endif
