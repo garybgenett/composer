@@ -17751,7 +17751,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 endif
 	@$(FIND) $(PUBLISH_ROOT) \
-		\( -path "$(PUBLISH_ROOT_TESTING)" -prune \) \
+		\( -path "$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT_TESTING))" -prune \) \
 		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
 		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
 		| while read -r FILE; do \
