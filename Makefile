@@ -125,8 +125,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* `make site-template-config`
 #				* `make site-all`
 #				* `make site-force`
-#			* `make site-template-list COMPOSER_DOCOLOR= >_site/Composer.site-list.txt`
-#				* `make site-template-list COMPOSER_DOCOLOR= COMPOSER_DOITALL_site-template="+test" >_site/_test/Composer.site-list.txt`
+#			* `make site-template-list COMPOSER_DOCOLOR= >_site/.Composer.site-list.txt`
+#				* `make site-template-list COMPOSER_DOCOLOR= COMPOSER_DOITALL_site-template="+test" >_site/_test/.Composer.site-list.txt`
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -404,7 +404,7 @@ override MENU_SELF			:= _
 #> update: includes duplicates
 override .				:= .
 override _				:= +
-override /				= $(patsubst $(.)%,$(if $(2),[$(.)],$(if $(3),$(MENU_SELF)))%,$(patsubst $(_)%,$(if $(2),[$(_)],$(if $(3),$(MENU_SELF)))%,$(1)))
+override /				= $(patsubst $(.)%,$(if $(2),[$(.)])%,$(patsubst $(_)%,$(if $(2),[$(_)])%,$(1)))
 
 override MARKER				:= >>
 override DIVIDE				:= ::
@@ -770,6 +770,8 @@ override PUBLISH_TAGSMAIN		:= Main
 override PUBLISH_FILE_HEADER		:= _header$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_FOOTER		:= _footer$(COMPOSER_EXT_SPECIAL)
 override PUBLISH_FILE_APPEND		:= _append$(COMPOSER_EXT_SPECIAL)
+
+override PUBLISH_TABLE_CLASS		:= table table-borderless align-top
 
 override PUBLISH_DATES_FORMAT_DEFAULT	:= 2006-01-02 15:04 -07:00
 override PUBLISH_DATES_FORMAT_PANDOC	:= 2006-01-02
@@ -1354,7 +1356,7 @@ override SORT_NUM			:= $(call COMPOSER_FIND,$(PATH_LIST),sort) -uV
 override SPLIT				:= $(call COMPOSER_FIND,$(PATH_LIST),split) --verbose --bytes="1000000" --numeric-suffixes="0" --suffix-length="3" --additional-suffix="-split"
 override TAIL				:= $(call COMPOSER_FIND,$(PATH_LIST),tail)
 override TEE				:= $(call COMPOSER_FIND,$(PATH_LIST),tee)
-override TOUCH				:= $(call COMPOSER_FIND,$(PATH_LIST),touch) --date="@0"
+override TOUCH				:= $(call COMPOSER_FIND,$(PATH_LIST),touch) --no-dereference --date="@0"
 override TR				:= $(call COMPOSER_FIND,$(PATH_LIST),tr)
 override TRUE				:= $(call COMPOSER_FIND,$(PATH_LIST),true)
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
@@ -2907,7 +2909,7 @@ override PUBLISH_SH_HELPERS := \
 ########################################
 
 override PUBLISH_ROOT			:= $(CURDIR)/_$(PUBLISH)
-override PUBLISH_ROOT_TESTING		:= $(PUBLISH_ROOT)/$(call /,$(TESTING),,1)
+override PUBLISH_ROOT_TESTING		:= $(PUBLISH_ROOT)/_$(call /,$(TESTING))
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 override PUBLISH_ROOT			:= $(PUBLISH_ROOT_TESTING)
 endif
@@ -4329,6 +4331,7 @@ endef
 
 #WORKING:NULL
 #	remove 2>/dev/null from all "yq" commands... and then run a full test...
+#	what about >/dev/null and 2>&1 commands...?
 #	need to make debugging *WAY* more achievable...
 
 #WORK
@@ -7147,12 +7150,28 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
 
-override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT)$(if $(1),, $(call /,$(TESTING),,1))
+override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_ROOT_TESTING)) $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_EXT_DEFAULT)
 
 ########################################
 
 $(notdir $(PUBLISH_INCLUDE)).$(EXTN_HTML):			$$(COMPOSER_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-digest-src))
 $(notdir $(PUBLISH_EXAMPLE)).$(EXTN_HTML):				$(PUBLISH_EXAMPLE).yml
+
+########################################
+
+.PHONY: $(OUT_README)-$(CLEANER)
+$(OUT_README)-$(CLEANER):
+	@$$(call $(COMPOSER_TINYNAME)-rm,\\
+		$(OUT_README).$(EXTN_TEXT) \\
+	)
+
+.PHONY: $(OUT_README)-$(DOITALL)
+$(OUT_README)-$(DOITALL):
+	@$$(MAKE) \\
+		c_type="$(TYPE_TEXT)" \\
+		c_base="$(OUT_README)" \\
+		c_list="$(PUBLISH_INDEX)$(COMPOSER_EXT_DEFAULT)" \\
+		$(COMPOSER_PANDOC)
 
 ########################################
 
@@ -8626,7 +8645,6 @@ function $(PUBLISH)-metainfo-block {
 
 #> update: title / date / metalist:*
 #> update: join(.*)
-#> update: table class
 
 # 1 menu || list
 # 2 title || date || metalist:*
@@ -8647,7 +8665,7 @@ function $(PUBLISH)-library-shelf {
 	else
 		if [ "$${1}" = "list" ]; then
 $${CAT} <<_EOF_
-<table class="$${COMPOSER_TINYNAME}-table table table-borderless align-top">
+<table class="$${COMPOSER_TINYNAME}-table$(if $(PUBLISH_TABLE_CLASS), $(PUBLISH_TABLE_CLASS))">
 _EOF_
 		fi
 		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
@@ -12546,7 +12564,6 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(LINERULE)
 	@$(call $(COMPOSER_TINYNAME)-note,				$(TESTING))
 	@$(call $(COMPOSER_TINYNAME)-mkdir,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE))
-	@$(TOUCH)							$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE)
 	@$(call $(COMPOSER_TINYNAME)-makefile,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),1)
 	@$(call $(COMPOSER_TINYNAME)-make,COMPOSER_DEBUGIT= --directory	$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE) $(NOTHING))
 	@$(call $(COMPOSER_TINYNAME)-cp,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
@@ -15447,9 +15464,9 @@ $($(EXPORTS)-redirect-files):
 		| $(call COMPOSER_YML_DATA_PARSE) \
 							>$(c_base).$(EXTN_HTML).header
 	@$(TOUCH) \
+		$(c_list_file) \
 		$(c_base).$(EXTN_HTML).yml \
-		$(c_base).$(EXTN_HTML).header \
-		$(c_list_file)
+		$(c_base).$(EXTN_HTML).header
 	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR)) \
 		$(COMPOSER_PANDOC) \
 		c_site="1" \
@@ -16692,7 +16709,7 @@ override define $(PUBLISH)-library-digest-run =
 			--directory $${CDIR} \
 			c_base="$${BASE}" \
 			c_type="$(EXTN_HTML)" \
-			$(CONFIGS).c_list \
+			$(CONFIGS)$(.)c_list \
 		| $(SED) "s|^([^/].+)$$|$${CDIR}/\1|g" \
 		| $(TR) '\n' ' ' \
 	)"; \
@@ -16912,7 +16929,6 @@ $($(PUBLISH)-library-sitemap-src):
 ########################################
 
 #> update: $(CONFIGS)$(.)COMPOSER_.*
-#> update: table class
 
 $($(PUBLISH)-library-sitemap-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 $($(PUBLISH)-library-sitemap-files):
@@ -16939,14 +16955,13 @@ $($(PUBLISH)-library-sitemap-files):
 						-e "s|[[][*][]]|.*|g" \
 				)$$/d" \
 			) \
-			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)||g" \
 		| $(SORT) \
 	| while read -r FILE; do \
 		$(call $(PUBLISH)-library-sitemap-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
 	done
 	@$(PANDOC_MD_TO_HTML) $(@).$(COMPOSER_BASENAME) \
-		| $(SED) "s|^[<]table.+$$|<table class=\"$(COMPOSER_TINYNAME)-table table table-borderless align-top\">|g" \
+		| $(SED) "s|^[<]table.+$$|<table class=\"$(COMPOSER_TINYNAME)-table$(if $(PUBLISH_TABLE_CLASS), $(PUBLISH_TABLE_CLASS))\">|g" \
 		>$(@).$(PUBLISH)
 	@$(ECHO) "$(_S)"
 	@$(RM) $(@).$(COMPOSER_BASENAME)	$($(DEBUGIT)-output)
@@ -16972,10 +16987,6 @@ override define $(PUBLISH)-library-sitemap-create =
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"
 endef
-
-#WORKING:SITEMAP
-#	make sure this gets tested...
-#		$(ECHO) "-- #WORKING:SITEMAP"; \
 
 #> update: TYPE_TARGETS
 override define $(PUBLISH)-library-sitemap-run =
@@ -17004,7 +17015,7 @@ override define $(PUBLISH)-library-sitemap-run =
 				--directory $${CDIR} \
 				c_base="$${BASE}" \
 				c_type="$${EXTN}" \
-				$(CONFIGS).c_list \
+				$(CONFIGS)$(.)c_list \
 			| $(SED) "s|^([^/].+)$$|$${CDIR}/\1|g" \
 			| $(HEAD) -n1 \
 		)"; \
@@ -17738,6 +17749,13 @@ ifneq ($(COMPOSER_DEBUGIT),)
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
 endif
+	@$(FIND) $(PUBLISH_ROOT) \
+		\( -path "$(PUBLISH_ROOT_TESTING)" -prune \) \
+		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
+		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
+		| while read -r FILE; do \
+			$(TOUCH) --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
+		done
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 	@$(ECHO) "$(_S)"
 #>							$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-metadata))
@@ -18138,6 +18156,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 ifneq ($(c_base),)
+#WORKING:NULL
 $(c_base).$(EXTN_OUTPUT): \
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),$(shell \
 		$(MKDIR) $(COMPOSER_TMP) >/dev/null 2>&1; \
