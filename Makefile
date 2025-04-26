@@ -17750,13 +17750,6 @@ ifneq ($(COMPOSER_DEBUGIT),)
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
 endif
-	@$(FIND) $(PUBLISH_ROOT) \
-		\( -path "$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT_TESTING))" -prune \) \
-		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
-		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
-		| while read -r FILE; do \
-			$(TOUCH) --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
-		done
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
 	@$(ECHO) "$(_S)"
 #>							$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-metadata))
@@ -17791,6 +17784,13 @@ ifneq ($(COMPOSER_DEBUGIT),)
 		$(call NEWLINE) \
 	)
 else
+	@$(FIND) $(PUBLISH_ROOT) \
+		\( -path "$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT_TESTING))" -prune \) \
+		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
+		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
+		| while read -r FILE; do \
+			$(TOUCH) --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
+		done
 #>		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR))
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
