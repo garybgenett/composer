@@ -4743,7 +4743,8 @@ Example configuration files:
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(COMPOSER_SETTINGS))$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(COMPOSER_YML))$(_D)
-#WORK $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
+#WORK
+$(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML).yml)$(_D)
 endef
 
@@ -5441,7 +5442,8 @@ endef
 override define $(HELPOUT)-$(DOITALL)-targets_additional =
 $(call $(HELPOUT)-$(DOITALL)-section,$(DISTRIB) / $(DISTRIB)-$(DOITALL) / $(UPGRADE) / $(UPGRADE)-$(DOITALL) / $(UPGRADE)-$(PRINTER) / $(UPGRADE)-\*)
 
-#WORK break this up into two sections...
+#WORK
+#	break this up into two sections...
 
   * Using the repository configuration $(_E)(see [Repository Versions])$(_D), these fetch
     and build all external components.
@@ -5506,7 +5508,8 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(CHECKIT) / $(CHECKIT)-$(DOITALL))
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONFIGS)$(.)\* / $(CONFIGS)$(.)yml / $(TARGETS))
 
-#WORK break this up into two sections...
+#WORK
+#	break this up into two sections...
 
   * The current values of all $(_C)[Composer Variables]$(_D) is output by $(_C)[$(CONFIGS)]$(_D), and
     $(_C)[$(CONFIGS)-$(DOITALL)]$(_D) will additionally output all environment variables.
@@ -6531,7 +6534,8 @@ $(PUBLISH_METADATE): $(call DATEMARK,$(DATENOW))
 $(PUBLISH_METAAUTH): $(COMPOSER_COMPOSER)
 $(PUBLISH_METATAGS): $(PUBLISH_TAGSMAIN)
 ---
-#WORK metainfo page description text
+#WORK
+#	metainfo page description text
 
 $(PUBLISH_CMD_BEG) break $(PUBLISH_CMD_END)
 endef
