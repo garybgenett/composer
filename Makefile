@@ -7877,6 +7877,7 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
+#>      name:				$(notdir $(PUBLISH_ROOT_TESTING))
 override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
@@ -7901,7 +7902,7 @@ variables:
 
   $(PUBLISH)-library:
     folder:
-      name:				$(notdir $(PUBLISH_ROOT_TESTING))
+      name:				$(TESTING)
       auto_update:			null
 endef
 
