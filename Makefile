@@ -16955,7 +16955,7 @@ $($(PUBLISH)-library-sitemap-files):
 						-e "s|[[][*][]]|.*|g" \
 				)$$/d" \
 			) \
-			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)||g" \
+			-e "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 		| $(SORT) \
 	| while read -r FILE; do \
 		$(call $(PUBLISH)-library-sitemap-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
