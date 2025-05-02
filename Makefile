@@ -632,7 +632,7 @@ export override MAKEFLAGS		:= $(MAKEFLAGS) $(MAKEJOBS_OPTS)
 #> update: includes duplicates
 override UNAME				:= $(call COMPOSER_FIND,$(PATH_LIST),uname) --all
 
-override OS_UNAME			:= $(shell $(UNAME) 2>/dev/null)
+override OS_UNAME			:= $(shell $(UNAME))
 override OS_TYPE			:=
 ifneq ($(filter Linux,$(OS_UNAME)),)
 override OS_TYPE			:= Linux
@@ -1453,10 +1453,10 @@ override define YQ_EVAL_DATA =
 	$(foreach FILE,$(wildcard $(2)),\
 		$(if $(3),\
 			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
-				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) 2>/dev/null \
-			)) }}' 2>/dev/null \
+				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) \
+			)) }}' \
 		,\
-			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' 2>/dev/null \
+			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' \
 		) | $(YQ_WRITE) \
 	)
 endef
@@ -2124,8 +2124,12 @@ override SED_ESCAPE_LIST		:= ^[:alnum:]
 override DEBUGIT			:= $(_)debug
 override PUBLISH			:= site
 
+#> $($(PUBLISH)-$(DEBUGIT)-date) = PUBLISH_SH_RUN metainfo-block . || c_list
+#> $($(PUBLISH)-$(DEBUGIT)-keys) = COMPOSER_YML_DATA_VAL keys
 override $(DEBUGIT)-output		:= $(if $(COMPOSER_DEBUGIT),,>/dev/null)
 override $(PUBLISH)-$(DEBUGIT)-output	:= $(if $(COMPOSER_DEBUGIT),$(if $(COMPOSER_DEBUGIT_ALL),,| $(SED) -n "/^<!--[[:space:]]/p"),>/dev/null)
+override $(PUBLISH)-$(DEBUGIT)-date	:= $(if $(COMPOSER_DEBUGIT),,2> >($(SED) "/not parse datetime/d" >&2))
+override $(PUBLISH)-$(DEBUGIT)-keys	:= $(if $(COMPOSER_DEBUGIT),,2> >($(SED) "/keys only works/d" >&2))
 
 ########################################
 ## {{{2 Macros
@@ -2616,7 +2620,6 @@ endef
 ########################################
 
 #> update: COMPOSER_YML_DATA_VAL
-#>	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" 2>/dev/null
 override COMPOSER_YML_DATA_VAL = $(shell \
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 	| $(YQ_WRITE) ".variables.$(PUBLISH)-$(1)" \
@@ -2688,7 +2691,7 @@ override COMPOSER_LIBRARY_DIR		:=
 $(foreach FILE,$(COMPOSER_YML_LIST),\
 $(if $(wildcard $(FILE)),\
 	$(eval override COMPOSER_LIBRARY_DIR := $(shell \
-		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder.name" $(FILE) 2>/dev/null \
+		$(YQ_WRITE) ".variables.$(PUBLISH)-library.folder.name" $(FILE) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 	)) \
 	$(if $(COMPOSER_LIBRARY_DIR),\
@@ -2754,9 +2757,9 @@ endif
 #>override COMPOSER_YML_DATA		:= $(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))
 
 #> update: title / date / metalist:*
-override COMPOSER_YML_DATA_METALIST := $(shell \
+override COMPOSER_YML_DATA_METALIST = $(shell \
 	$(ECHO) '$(call COMPOSER_YML_DATA_VAL,helpers.metalist)' \
-	| $(YQ_WRITE) "keys | .[]" 2>/dev/null \
+	| $(YQ_WRITE) "keys | .[]" \
 	| $(call COMPOSER_YML_DATA_PARSE) \
 )
 
@@ -2793,9 +2796,9 @@ override PUBLISH_CMD_END		:= -->
 override COMPOSER_ROOT_PATH		:=
 override COMPOSER_LIBRARY_PATH		:=
 ifneq ($(c_site),)
-override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT) 2>/dev/null)
+override COMPOSER_ROOT_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_ROOT))
 ifneq ($(COMPOSER_LIBRARY),)
-override COMPOSER_LIBRARY_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_LIBRARY) 2>/dev/null)
+override COMPOSER_LIBRARY_PATH		:= $(shell $(REALPATH) $(CURDIR) $(COMPOSER_LIBRARY))
 endif
 endif
 
@@ -4326,11 +4329,6 @@ endef
 ########################################
 #### {{{4 #WORKING:FIX
 ########################################
-
-#WORKING:NULL
-#	remove 2>/dev/null from all "yq" commands... and then run a full test...
-#	what about >/dev/null and 2>&1 commands...?
-#	need to make debugging *WAY* more achievable...
 
 #WORK
 #	why all the duplication in water.css for custom builds...?
@@ -6801,8 +6799,7 @@ $(.)$(EXAMPLE):
 
 .PHONY: $(.)$(EXAMPLE)$(.)yml
 $(.)$(EXAMPLE)$(.)yml:
-#>	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))' \
-#>		| $(YQ_WRITE_OUT) 2>/dev/null $(YQ_WRITE_OUT_COLOR)
+#>	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))'
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR) \
 		| $(SED) "$(COMPOSER_YML_DATA_SKEL_COMMENT),$$ s|^|$(shell $(ECHO) "$(COMMENTED)")|g"
@@ -6828,12 +6825,12 @@ $(.)$(EXAMPLE)$(.)md:
 		,$(if $(filter $(FILE),$(PUBLISH_METADATE)),\
 			$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D): $(_M)$$( \
 					$(ECHO) "display: $(call DATESTAMP,$(DATENOW))" \
-					| $(YQ_WRITE) ".display |= format_datetime(\"$(PUBLISH_DATES_FORMAT_DEFAULT)\") | .display" 2>/dev/null \
+					| $(YQ_WRITE) ".display |= format_datetime(\"$(PUBLISH_DATES_FORMAT_DEFAULT)\") | .display" \
 				)) \
 		,\
 			$(call $(EXAMPLE)-print,,$(_C)$(FILE)$(_D):); \
 			if [ "$(FILE)" = "$(PUBLISH_METAAUTH)" ]; then \
-				FILE="$$($(GIT) config --get user.name 2>/dev/null || $(TRUE))"; \
+				FILE="$$($(GIT) config --get user.name || $(TRUE))"; \
 				if [ -n "$${FILE}" ]; then	$(call $(EXAMPLE)-print,,  - $(_M)$${FILE}); \
 					else			$(call $(EXAMPLE)-print,,  - $(_M)$${USER}); \
 				fi; \
@@ -8228,7 +8225,6 @@ COMPOSER_FILES=()
 # 1 option
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
-#>		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" 2>/dev/null
 function COMPOSER_YML_DATA_VAL {
 	$${ECHO} "$${COMPOSER_YML_DATA}" \\
 		| $${YQ_WRITE} ".variables.$(PUBLISH)-$${@}" \\
@@ -8378,7 +8374,7 @@ function $(PUBLISH)-metainfo-block {
 	META=
 	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
 		META="$$(
-			$${YQ_WRITE} ".\"$${3}\"" $${COMPOSER_LIBRARY_METADATA} 2>/dev/null \\
+			$${YQ_WRITE} ".\"$${3}\"" $${COMPOSER_LIBRARY_METADATA} \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 	elif [ "$$($${SED} -n "1{/^---$$/p}" $${3})" ]; then
@@ -8389,13 +8385,13 @@ function $(PUBLISH)-metainfo-block {
 	fi
 	TITLE="$$(
 		$${ECHO} "$${META}" \\
-		| $${YQ_WRITE} ".title" 2>/dev/null \\
+		| $${YQ_WRITE} ".title" \\
 		| $${SED} "/^null$$/d"
 	)"
 	if [ -z "$${TITLE}" ]; then
 		TITLE="$$(
 			$${ECHO} "$${META}" \\
-			| $${YQ_WRITE} ".pagetitle" 2>/dev/null \\
+			| $${YQ_WRITE} ".pagetitle" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 	fi
@@ -8406,17 +8402,17 @@ function $(PUBLISH)-metainfo-block {
 	if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
 		DATE_PARSE="$$(
 			$${ECHO} "$${META}" \\
-			| $${YQ_WRITE} ".\"$${KEY_DATE}\".\"$${KEY_DATE_PARSE}\"" 2>/dev/null \\
+			| $${YQ_WRITE} ".\"$${KEY_DATE}\".\"$${KEY_DATE_PARSE}\"" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 	else
 		DATE_PARSE="$$(
 			$${ECHO} "$$(COMPOSER_YML_DATA_VAL config.dates.parse)" \\
-			| $${YQ_WRITE} ".[]" 2>/dev/null \\
+			| $${YQ_WRITE} ".[]" \\
 			| COMPOSER_YML_DATA_PARSE \\
 			| while read -r FORMAT; do
 				$${ECHO} "$${META}" \\
-				| $${YQ_WRITE} ".date |= with_dtf(\"$${FORMAT}\"; format_datetime(\"$(.)$${PUBLISH_DATES_INTERNAL_FORMAT}\")) | .date" 2>/dev/null \\
+				| $${YQ_WRITE} ".date |= with_dtf(\"$${FORMAT}\"; format_datetime(\"$(.)$${PUBLISH_DATES_INTERNAL_FORMAT}\")) | .date" \\
 				| COMPOSER_YML_DATA_PARSE \\
 				| if	[ -z "$$($${ECHO} "$${FORMAT}" | $${SED} -n "/$${PUBLISH_DATES_TIMEZONE_FORMAT}/p")" ] &&
 					[ -n "$${DATE_TIMEZONE}" ];
@@ -8444,20 +8440,20 @@ function $(PUBLISH)-metainfo-block {
 					else
 						$${ECHO} "$$(COMPOSER_YML_DATA_VAL config.dates.display)"
 					fi
-				)\") | .display" 2>/dev/null
+				)\") | .display"
 		)"
 	fi
 	if [ -z "$${DATE_DISPLAY}" ]; then
 		DATE_DISPLAY="$$(
 			$${ECHO} "$${META}" \\
-			| $${YQ_WRITE} ".date" 2>/dev/null \\
+			| $${YQ_WRITE} ".date" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 	fi
 	if [ -n "$${DATE_LIBRARY}" ]; then
 		DATE_LIBRARY="$$(
 			$${ECHO} "library: $${DATE_LIBRARY}" \\
-			| $${YQ_WRITE} ".library |= format_datetime(\"$$(COMPOSER_YML_DATA_VAL config.dates.library)\") | .library" 2>/dev/null
+			| $${YQ_WRITE} ".library |= format_datetime(\"$$(COMPOSER_YML_DATA_VAL config.dates.library)\") | .library"
 		)"
 	fi
 	if [ -z "$${DATE_LIBRARY}" ]; then
@@ -8481,7 +8477,7 @@ function $(PUBLISH)-metainfo-block {
 			then
 				INFO_LIST[$${NUM}]="$$(
 					$${ECHO} "$${META}" \\
-					| $${YQ_WRITE} ".\"$${FILE}\"" 2>/dev/null \\
+					| $${YQ_WRITE} ".\"$${FILE}\"" \\
 					| COMPOSER_YML_DATA_PARSE "" $${TOKEN}
 				)"
 			else
@@ -8489,7 +8485,7 @@ function $(PUBLISH)-metainfo-block {
 					for INCL in $${@:3}; do
 						if [ "$$($${SED} -n "1{/^---$$/p}" $${INCL})" ]; then
 							$${SED} -n "1,/^---$$/p" $${INCL} \\
-							| $${YQ_WRITE} ".\"$${FILE}\"" 2>/dev/null \\
+							| $${YQ_WRITE} ".\"$${FILE}\"" \\
 							| COMPOSER_YML_DATA_PARSE "" $${TOKEN} \\
 							| $${SED} "s|$${TOKEN}|\\n|g"
 						fi
@@ -8598,7 +8594,7 @@ function $(PUBLISH)-metainfo-block {
 				$$(for FILE in $${COMPOSER_YML_DATA_METALIST}; do
 					$${ECHO} "| del(.\"$${FILE}\")"
 				done) \\
-				" 2>/dev/null \\
+				" \\
 			| COMPOSER_YML_DATA_PARSE
 		$${ECHO} "---\\n"
 	elif [ -n "$${META_EMPTY}" ]; then
@@ -8653,14 +8649,14 @@ $${CAT} <<_EOF_
 <table class="$${COMPOSER_TINYNAME}-table$(if $(PUBLISH_TABLE_CLASS), $(PUBLISH_TABLE_CLASS))">
 _EOF_
 		fi
-		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
+		$${YQ_WRITE} ".$${2} | keys | .[]" $${COMPOSER_LIBRARY_INDEX} \\
 			| COMPOSER_YML_DATA_PARSE \\
 			| while read -r FILE; do
 				HREF="$${COMPOSER_LIBRARY_PATH}/$${2}-$$(
 					$(HELPOUT)-$(TARGETS)-format "$${FILE}"
 				).$(EXTN_HTML)"
 				TOTL="$$(
-					$${YQ_WRITE} ".$${2}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} 2>/dev/null \\
+					$${YQ_WRITE} ".$${2}.[\"$${FILE}\"] | length" $${COMPOSER_LIBRARY_INDEX} \\
 					| COMPOSER_YML_DATA_PARSE
 				)"
 				if [ "$${1}" = "menu" ]; then
@@ -8806,7 +8802,7 @@ $${CAT} <<_EOF_
 <ul class="navbar-nav navbar-nav-scroll me-auto">
 _EOF_
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-top)" ]; then
-		COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" \\
+		COMPOSER_YML_DATA_VAL "nav-top | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)) \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-top-list "nav-top.[\"$${MENU}\"]"	|| return 1
 			done
@@ -8840,8 +8836,7 @@ function $(PUBLISH)-nav-top-list {
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(PUBLISH)-marker $${FUNCNAME} start $${1}[$${NUM}]
-#>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
-		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)))"
 		if [ -z "$${FILE}" ]; then
 			FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		else
@@ -8954,7 +8949,7 @@ _EOF_
 $${CAT} <<_EOF_
 <li class="breadcrumb-item">$${HTML_HIDE}</li>
 _EOF_
-		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" \\
+		COMPOSER_YML_DATA_VAL "nav-bottom | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)) \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-bottom-list "nav-bottom.[\"$${MENU}\"]"	|| return 1
 			done
@@ -8987,8 +8982,7 @@ function $(PUBLISH)-nav-bottom-list {
 	local SIZE="$$(COMPOSER_YML_DATA_VAL "$${1} | length")"
 	local NUM="0"; while [ "$${NUM}" -lt "$${SIZE}" ]; do
 		$(PUBLISH)-marker $${FUNCNAME} start $${1}[$${NUM}]
-#>		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")"
-		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)"
+		FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)))"
 		if [ -z "$${FILE}" ]; then
 			FILE="$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}]")"
 		else
@@ -9053,7 +9047,7 @@ function $(PUBLISH)-nav-side {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL nav-$${1})" ]; then
 		$(PUBLISH)-column-begin "$${1}"						|| return 1
-		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" \\
+		COMPOSER_YML_DATA_VAL "nav-$${1} | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)) \\
 			| while read -r MENU; do
 				$(PUBLISH)-nav-side-list "nav-$${1}.[\"$${MENU}\"]"	|| return 1
 			done
@@ -9123,8 +9117,7 @@ function $(PUBLISH)-nav-side-list {
 			$${ECHO} "\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-list-$${FILE} || return 1
-#>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
-		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
+		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)))" = "$${MENU_SELF}" ]; then
 			$${ECHO} "\\n"
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
 				| $(PUBLISH)-parse \\
@@ -9156,7 +9149,7 @@ function $(PUBLISH)-info-data {
 	$(PUBLISH)-marker $${FUNCNAME} start $${@}
 	if [ -n "$$(COMPOSER_YML_DATA_VAL info-$${1})" ]; then
 		$(PUBLISH)-nav-divider $${1}-info || return 1
-		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" \\
+		COMPOSER_YML_DATA_VAL "info-$${1} | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)) \\
 			| while read -r MENU; do
 				$(PUBLISH)-info-data-list "info-$${1}.[\"$${MENU}\"]" || return 1
 			done
@@ -9213,8 +9206,7 @@ _EOF_
 			) $${PUBLISH_CMD_END}\\n"
 		elif [ -n "$$($${ECHO} "$${FILE}" | $${SED} -n "/^library/p")" ]; then
 			$(PUBLISH)-marker $${FUNCNAME} skip $${FILE}
-#>		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]")" = "$${MENU_SELF}" ]; then
-		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" 2>/dev/null)" = "$${MENU_SELF}" ]; then
+		elif [ "$$(COMPOSER_YML_DATA_VAL "$${1}[$${NUM}] | keys | .[]" $(subst $(SED),$${SED},$($(PUBLISH)-$(DEBUGIT)-keys)))" = "$${MENU_SELF}" ]; then
 #>			$${ECHO} "\\n"
 #>				| $${SED} "s|^|  |g" \\
 			COMPOSER_YML_DATA_VAL "$${1}[$${NUM}].[\"$${MENU_SELF}\"]" \\
@@ -9635,32 +9627,32 @@ function $(PUBLISH)-display {
 		$(PUBLISH)-error $${FUNCNAME} $${@} "$${MARKER} display file missing"
 	else
 		DISP="$${@:2}"
-		local IMGS="$$($${YQ_WRITE} ".[\"$${DISP}\"]" $${FILE} 2>/dev/null)"
+		local IMGS="$$($${YQ_WRITE} ".[\"$${DISP}\"]" $${FILE})"
 		TYPE="$$(
 			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[\"type\"]" 2>/dev/null \\
+			| $${YQ_WRITE} ".[\"type\"]" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 		AUTO="$$(
 			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[\"auto\"]" 2>/dev/null \\
+			| $${YQ_WRITE} ".[\"auto\"]" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 		TIME="$$(
 			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[\"time\"]" 2>/dev/null \\
+			| $${YQ_WRITE} ".[\"time\"]" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 		SHOW="$$(
 			$${ECHO} "$${IMGS}" \\
-			| $${YQ_WRITE} ".[\"show\"]" 2>/dev/null \\
+			| $${YQ_WRITE} ".[\"show\"]" \\
 			| COMPOSER_YML_DATA_PARSE
 		)"
 		if [ -z "$${SHOW}" ]; then
 			SHOW="$${DISPLAY_SHOW_DEFAULT}"
 		fi
 		COLS="$$($${EXPR} 12 / $${SHOW})"
-		local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} ".[\"list\"] | length" 2>/dev/null)"
+		local SIZE="$$($${ECHO} "$${IMGS}" | $${YQ_WRITE} ".[\"list\"] | length")"
 $${CAT} <<_EOF_
 <div class="$${COMPOSER_TINYNAME}-display carousel slide" data-bs-ride="$$(
 	if [ -n "$${AUTO}" ]; then
@@ -9701,22 +9693,22 @@ _EOF_
 			fi
 			FILE="$$(
 				$${ECHO} "$${IMGS}" \\
-				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"file\"]" 2>/dev/null \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"file\"]" \\
 				| COMPOSER_YML_DATA_PARSE $${SPECIAL_VAL}
 			)"
 			LINK="$$(
 				$${ECHO} "$${IMGS}" \\
-				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"link\"]" 2>/dev/null \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"link\"]" \\
 				| COMPOSER_YML_DATA_PARSE 1
 			)"
 			NAME="$$(
 				$${ECHO} "$${IMGS}" \\
-				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"name\"]" 2>/dev/null \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"name\"]" \\
 				| COMPOSER_YML_DATA_PARSE
 			)"
 			WIDE="$$(
 				$${ECHO} "$${IMGS}" \\
-				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"size\"]" 2>/dev/null \\
+				| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"size\"]" \\
 				| COMPOSER_YML_DATA_PARSE
 			)"
 			if [ -z "$${LINK}" ]; then
@@ -9748,7 +9740,7 @@ $${CAT} <<_EOF_
 _EOF_
 				$${ECHO} "\\n"
 				$${ECHO} "$${IMGS}" \\
-					| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" 2>/dev/null \\
+					| $${YQ_WRITE} ".[\"list\"][$${NUM}].[\"$${MENU_SELF}\"]" \\
 					| $(PUBLISH)-parse \\
 					| $${SED} "s|^|  |g"
 				$${ECHO} "\\n"
@@ -13340,9 +13332,10 @@ $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 			,\
 			$(PANDOC_BIN) --verbose \
 				--output="$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE))" \
-				$(if $(filter $(FILE),template),--print-default-template="$(TMPL_$(TYPE))" ,\
-								--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
-				) 2>/dev/null || $(TRUE); \
+				$(if $(filter $(FILE),template),	--print-default-template="$(TMPL_$(TYPE))" ,\
+									--print-default-data-file="$(FILE).$(TMPL_$(TYPE))" \
+				) \
+				|| $(TRUE); \
 			if	[   -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE)-default.$(TMPL_$(TYPE))" ] && \
 				[ ! -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(FILE).$(TMPL_$(TYPE))" ]; then \
 				if [ "$(FILE).$(TMPL_$(TYPE))" = "template.$(TMPL_HTML)" ]; then \
@@ -13367,7 +13360,7 @@ $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 		$(PANDOC_BIN) --verbose \
 			--output="$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(subst .,-default.,$(notdir $(FILE)))" \
 			--print-default-data-file="$(FILE)" \
-			2>/dev/null; \
+			; \
 			if	[   -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(subst .,-default.,$(notdir $(FILE)))" ] && \
 				[ ! -f "$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(notdir $(FILE))" ]; then \
 				$(LN)	$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_DAT))/$(subst .,-default.,$(notdir $(FILE))) \
@@ -14303,6 +14296,7 @@ $(TESTING)-$(TARGETS)-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override c_list := $(OUT_README)$(COMPOSER_EXT_DEFAULT)\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_TARGETS :=\n"				>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+#>				$(call $(TESTING)-run) $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)) || $(TRUE)
 	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(foreach TOC,x 0 1 2 3 4 5 6,\
 			$(foreach LEVEL,x 0 1 2 3 4 5 6,\
@@ -14313,7 +14307,6 @@ $(TESTING)-$(TARGETS)-init:
 			) \
 		) \
 	)
-#>				$(call $(TESTING)-run) $(OUT_README).$(EXTN_$(TYPE)).$(TOC).$(LEVEL).$(EXTN_$(TYPE)) || $(TRUE)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(MAKEFLAGS_NOFAIL) $(DOITALL) || $(TRUE)
 	@$(LS) $(call $(TESTING)-pwd)/$(OUT_README).*.[x0-9].*
 
@@ -14673,7 +14666,7 @@ $(TESTING)-CSS:
 
 .PHONY: $(TESTING)-CSS-init
 $(TESTING)-CSS-init:
-	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS) >/dev/null
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run,,,1) c_site="1" $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_HTML)
 	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_PRES); $(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_PRES)
@@ -15035,7 +15028,6 @@ $(CONFIGS):
 	)
 ifneq ($(COMPOSER_YML_LIST),)
 	@$(LINERULE)
-#>		| $(YQ_WRITE_OUT) 2>/dev/null $(YQ_WRITE_OUT_COLOR)
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR)
 endif
@@ -15079,7 +15071,6 @@ $(CONFIGS)$(.)%:
 .PHONY: $(CONFIGS)$(.)yml
 $(CONFIGS)$(.)yml:
 ifneq ($(COMPOSER_YML_LIST),)
-#>	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE) 2>/dev/null
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' | $(YQ_WRITE)
 else
 	@$(ECHO) "{}\n"
@@ -15280,13 +15271,11 @@ else
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(CURDIR)/$(COMPOSER_CMS)
 ifeq ($(COMPOSER_DOITALL_$(DOSETUP)),$(DOFORCE))
-	@$(foreach FILE,$(shell \
-			$(FIND) $(CURDIR)/$(COMPOSER_CMS) -mindepth 1 -maxdepth 1 -type l 2>/dev/null \
-			| $(SORT) \
-		),\
-		$(RM) $(FILE); \
-		$(call NEWLINE) \
-	)
+	@$(FIND) $(CURDIR)/$(COMPOSER_CMS) -mindepth 1 -maxdepth 1 -type l \
+		| $(SORT) \
+		| while read -r file; do \
+			$(RM) $${FILE}; \
+		done
 endif
 	@$(ECHO) "$(_D)"
 	@$(foreach FILE,\
@@ -15319,7 +15308,7 @@ else
 	@$(DIFF) \
 		$(CURDIR)/$(COMPOSER_CMS)/.gitignore \
 		$(CURDIR)/.gitignore \
-		2>/dev/null || $(TRUE)
+		|| $(TRUE)
 	@$(ECHO) "$(_D)"
 endif
 	@$(LS) $(CURDIR)/$(COMPOSER_CMS)
@@ -15429,7 +15418,7 @@ $(foreach FILE,$($(EXPORTS)-redirect-files),\
 
 $($(EXPORTS)-redirect-files):
 #>	@$(call $(HEADERS)-note,$(@),*,$(EXPORTS)-redirect)
-	@$(eval override REDIRECT_URL	:= $(shell $(REALPATH) $(CURDIR) $(realpath $(CURDIR)/$(notdir $(@))) 2>/dev/null))
+	@$(eval override REDIRECT_URL	:= $(shell $(REALPATH) $(CURDIR) $(realpath $(CURDIR)/$(notdir $(@)))))
 	@$(eval override c_base		:= $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(@)))))
 	@$(eval override c_list_file	:= $(COMPOSER_TMP)/$(EXPORTS)-redirect$(_)$(notdir $(@))$(COMPOSER_EXT_DEFAULT))
 	@$(call $(HEADERS)-action,$(CURDIR),$(notdir $(@)),$(REDIRECT_URL),$(EXPORTS))
@@ -15448,7 +15437,7 @@ $($(EXPORTS)-redirect-files):
 	@$(call DO_HEREDOC,HEREDOC_REDIRECT_MD)		>$(c_list_file)
 	@$(call DO_HEREDOC,HEREDOC_REDIRECT_YML)	>$(c_base).$(EXTN_HTML).yml
 	@$(SED) -n "1,/^---$$/p" $(c_list_file) \
-		| $(YQ_WRITE) ".header-includes" 2>/dev/null \
+		| $(YQ_WRITE) ".header-includes" \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 							>$(c_base).$(EXTN_HTML).header
 	@$(TOUCH) \
@@ -15639,7 +15628,7 @@ endif
 .PHONY: $(EXPORTS)-$(CLEANER)
 $(EXPORTS)-$(CLEANER):
 	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories,$(EXPORTS),1)
-	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty 2>/dev/null)" ]; do \
+	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty)" ]; do \
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
 		| while read -r FILE; do \
 			FILE="$$( \
@@ -15747,6 +15736,7 @@ override define $(PUBLISH)-$(TARGETS) =
 	$(ECHO) "" >$(1); \
 	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS)-metainfo $(MARKER) $(call COMPOSER_CONV,$(EXPAND),$(word 1,$(call c_list_var)),1,1) -->\n" $($(PUBLISH)-$(DEBUGIT)-output); \
 	$(call PUBLISH_SH_RUN) metainfo-block . $(SPECIAL_VAL) $(word 1,$(call c_list_var)) \
+		$($(PUBLISH)-$(DEBUGIT)-date) \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(call $(PUBLISH)-$(TARGETS)-cache,$(1),$($(PUBLISH)-caches-begin)); \
@@ -15770,7 +15760,9 @@ endef
 override define $(PUBLISH)-$(TARGETS)-file =
 	{	$(ECHO) "<!-- $(PUBLISH)-$(TARGETS)-file $(MARKER) $(2) -->\n" \
 			| $(SED) "s|$(COMPOSER_ROOT_REGEX)|$(EXPAND)|g"; \
-		$(call PUBLISH_SH_RUN,$(word 1,$(call c_list_var))) $(2); \
+		$(call PUBLISH_SH_RUN,$(word 1,$(call c_list_var))) $(2) \
+			$($(PUBLISH)-$(DEBUGIT)-date) \
+			; \
 	} \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
@@ -15829,7 +15821,9 @@ endef
 ########################################
 
 override define $(PUBLISH)-$(TARGETS)-metainfo =
-	$(call PUBLISH_SH_RUN) metainfo-block . . $(1)	>>$(1).metainfo-list; \
+	$(call PUBLISH_SH_RUN) metainfo-block . . $(1) \
+		$($(PUBLISH)-$(DEBUGIT)-date) \
+							>>$(1).metainfo-list; \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "\n"					>>$(1).metainfo-list
 endef
@@ -15854,6 +15848,7 @@ override define $(PUBLISH)-$(TARGETS)-metalist =
 				$(word 1,$(call c_list_var)) ,\
 				$(call c_list_var) \
 			) \
+			$($(PUBLISH)-$(DEBUGIT)-date) \
 	)"; \
 	$(ECHO) "$${META}\n" \
 		| $(HEAD) -n1 \
@@ -15890,7 +15885,6 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 				(.t == \"Header\") or \
 				(select(.t == \"RawBlock\") | .c[1] | contains(\"<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) \")) \
 			) | .c]" \
-			2>/dev/null \
 		| $(SED) "s|\\\\|\\\\\\\\|g" \
 	)"; \
 	ROOT=; \
@@ -15906,13 +15900,13 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		elif [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then	LIST_MAX="$(DEPTH_MAX)"; \
 		else						LIST_MAX="$${LIST}"; \
 		fi; \
-	CNT="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) "length" 2>/dev/null)"; \
+	CNT="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) "length")"; \
 	NUM="0"; while [ "$${NUM}" -lt "$${CNT}" ]; do \
 		MENU_HDR="$(SPECIAL_VAL)"; \
 		LIST_HDR="$(SPECIAL_VAL)"; \
-		LVL="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][0]" 2>/dev/null)"; \
+		LVL="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][0]")"; \
 		if [ "$${LVL}" = "html" ]; then \
-			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1]" 2>/dev/null)"; \
+			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1]")"; \
 			LVL="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\1|g")"; \
 			TXT="$$($(ECHO) "$${LNK}" | $(SED) "s|^<!-- $(PUBLISH)-header $(DIVIDE) start $(MARKER) ([0-9]+) (.*) -->$$|\2|g")"; \
 			TTL="$$( \
@@ -15928,24 +15922,24 @@ override define $(PUBLISH)-$(TARGETS)-contents =
 		else \
 			if [ "$${MENU}" = "$(SPECIAL_VAL)" ]; then MENU_HDR=; fi; \
 			if [ "$${LIST}" = "$(SPECIAL_VAL)" ]; then LIST_HDR=; fi; \
-			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1][0]" 2>/dev/null)"; \
-			LEN="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][2] | length" 2>/dev/null)"; \
+			LNK="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][1][0]")"; \
+			LEN="$$($(ECHO) "$${PAST}" | $(YQ_WRITE) ".[$${NUM}][2] | length")"; \
 			TXT=; STR="0"; while [ "$${STR}" -lt "$${LEN}" ]; do \
 				TYP="$$( \
 					$(ECHO) "$${PAST}" \
-					| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"t\"]" 2>/dev/null \
+					| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"t\"]" \
 				)"; \
 				if [ "$${TYP}" = "Space" ]; then \
 					TXT="$${TXT} "; \
 				elif [ "$${TYP}" = "Code" ]; then \
 					TXT="$${TXT}$$( \
 						$(ECHO) "$${PAST}" \
-						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"][1]" 2>/dev/null \
+						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"][1]" \
 					)"; \
 				elif [ "$${TYP}" = "Str" ]; then \
 					TXT="$${TXT}$$( \
 						$(ECHO) "$${PAST}" \
-						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"]" 2>/dev/null \
+						| $(YQ_WRITE) ".[$${NUM}][2][$${STR}].[\"c\"]" \
 					)"; \
 				fi; \
 				STR="$$($(EXPR) $${STR} + 1)"; \
@@ -16028,6 +16022,7 @@ endef
 override define $(PUBLISH)-$(TARGETS)-readtime =
 	WORD="$$( \
 		$(call PUBLISH_SH_RUN) $(call c_list_var) \
+		$($(PUBLISH)-$(DEBUGIT)-date) \
 		| $(PANDOC_MD_TO_TEXT) \
 		| $(WC_WORD) \
 	)"; \
@@ -16213,7 +16208,7 @@ ifneq ($(wildcard $(COMPOSER_LIBRARY).yml),)
 		| $(YQ_WRITE_FILE) " \
 			.variables.$(PUBLISH)-library.folder.name = null \
 			| .variables.$(PUBLISH)-library.folder.auto_update = null \
-			" 2>/dev/null
+			"
 else
 	@$(ECHO) "{}"
 endif
@@ -16270,8 +16265,7 @@ $($(PUBLISH)-library-metadata):
 	@$(YQ_EVAL_FILES) \
 			$(@).$(PRINTER) \
 			$(@).$(COMPOSER_BASENAME) \
-			2>/dev/null \
-		| $(YQ_WRITE_FILE) "sort_keys(..)" 2>/dev/null \
+		| $(YQ_WRITE_FILE) "sort_keys(..)" \
 		>$(@).$(PUBLISH); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 	@$(ECHO) "$(_D)"
@@ -16299,20 +16293,19 @@ override define $(PUBLISH)-library-metadata-create =
 	$(ECHO) "$(_N)"; \
 	$(ECHO) "\"$(2)\": " \
 		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
-	if [ "$$( \
-		$(YQ_READ) $(2) 2>/dev/null \
-			| $(YQ_WRITE) "(.title != null or .pagetitle != null)" 2>/dev/null \
-			| $(call COMPOSER_YML_DATA_PARSE) \
-	)" = "true" ]; then \
-		DATE_META="$$($(call PUBLISH_SH_RUN) metainfo-block . $(TOKEN) $${FILE})"; \
+	if [ -n "$$($(SED) -n "1{/^---$$/p}" $(2))" ]; then \
+		DATE_META="$$( \
+			$(call PUBLISH_SH_RUN) metainfo-block . $(TOKEN) $${FILE} \
+			$($(PUBLISH)-$(DEBUGIT)-date) \
+		)"; \
 		DATE_PARSE="$$(		$(ECHO) "$${DATE_META}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\1|g")"; \
 		DATE_LIBRARY="$$(	$(ECHO) "$${DATE_META}" | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g")"; \
-		$(YQ_READ) $(2) 2>/dev/null \
-			| $(YQ_WRITE) ". += { \"$(COMPOSER_CMS)\": true }" 2>/dev/null \
+		$(YQ_READ) $(2) \
+			| $(YQ_WRITE) ". += { \"$(COMPOSER_CMS)\": true }" \
 			| $(YQ_WRITE) ". += { \"$(KEY_DATE)\": { \
 					\"$(KEY_DATE_PARSE)\":		\"$${DATE_PARSE}\", \
 					\"$(KEY_DATE_LIBRARY)\":	\"$${DATE_LIBRARY}\" \
-				} }" 2>/dev/null \
+				} }" \
 			$(foreach FILE,$(filter-out \
 					$(PUBLISH_METATITL) \
 					$(PUBLISH_METADATE) \
@@ -16320,13 +16313,13 @@ override define $(PUBLISH)-library-metadata-create =
 					$(COMPOSER_YML_DATA_METALIST) \
 				),\
 				| if [ -n "$$( \
-					$(YQ_READ) $(2) 2>/dev/null \
-					| $(YQ_WRITE) ".\"$(FILE)\"" 2>/dev/null \
+					$(YQ_READ) $(2) \
+					| $(YQ_WRITE) ".\"$(FILE)\"" \
 					| $(call COMPOSER_YML_DATA_PARSE) \
 				)" ]; then \
-					$(YQ_WRITE) ". += { \"$(FILE)\": [] + .\"$(FILE)\" }" 2>/dev/null; \
+					$(YQ_WRITE) ". += { \"$(FILE)\": [] + .\"$(FILE)\" }"; \
 				else \
-					$(YQ_WRITE) ". += { \"$(FILE)\": null }" 2>/dev/null; \
+					$(YQ_WRITE) ". += { \"$(FILE)\": null }"; \
 				fi \
 			) \
 	else \
@@ -16340,7 +16333,7 @@ override define $(PUBLISH)-library-metadata-create =
 		| $(YQ_WRITE) ". += { \
 				\"$(KEY_UPDATED)\":	\"$(call DATESTAMP,$(DATENOW))\", \
 				\"$(KEY_FILEPATH)\":	\"$(2)\" \
-			}" 2>/dev/null \
+			}" \
 		| $(TEE) --append $(1) $($(DEBUGIT)-output); \
 	$(ECHO) "," >>$(1); \
 	$(ECHO) "$(_D)"
@@ -16360,23 +16353,18 @@ endef
 $(PUBLISH)-library-metadata-%:
 	@$(eval override META := $(if $(filter $(*),c_list),$(call c_list_var),$(subst $(TOKEN),/,$(*))))
 	@$(PRINT) "$(_F)$(MARKER) $(META)"
-	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(TOKEN)	$(META); $(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block .		$(TOKEN)	$(META); $(ENDOLINE)
-	@$(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	.		$(META); $(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block .		.		$(META); $(ENDOLINE)
-	@$(ENDOLINE)
-	@$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(SPECIAL_VAL)	$(META)
-	@$(call PUBLISH_SH_RUN) metainfo-block .		$(SPECIAL_VAL)	$(META)
 	@$(foreach FILE,\
+		$(TOKEN) \
+		. \
+		$(SPECIAL_VAL) \
 		$(PUBLISH_METATITL) \
 		$(PUBLISH_METADATE) \
 		$(PUBLISH_METAAUTH) \
 		$(PUBLISH_METATAGS) \
 		,\
 		$(ENDOLINE); \
-		$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(FILE)	$(META); \
-		$(call PUBLISH_SH_RUN) metainfo-block .			$(FILE)	$(META); \
+		$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL)	$(FILE)	$(META)					; $(if $(filter $(TOKEN) .,$(FILE)),$(ENDOLINE);) \
+		$(call PUBLISH_SH_RUN) metainfo-block .			$(FILE)	$(META) $($(PUBLISH)-$(DEBUGIT)-date)	; $(if $(filter $(TOKEN) .,$(FILE)),$(ENDOLINE);) \
 		$(call NEWLINE) \
 	)
 
@@ -16410,12 +16398,11 @@ $($(PUBLISH)-library-index):
 	)
 	@$(ECHO) "}" >>$(@).$(COMPOSER_BASENAME)
 	@$(ECHO) "$(_F)"
-#>		| $(YQ_WRITE_FILE) "sort_keys(..)" 2>/dev/null
+#>		| $(YQ_WRITE_FILE) "sort_keys(..)"
 	@$(YQ_EVAL_FILES) \
 			$(@).$(PRINTER) \
 			$(@).$(COMPOSER_BASENAME) \
-			2>/dev/null \
-		| $(YQ_WRITE_FILE) 2>/dev/null \
+		| $(YQ_WRITE_FILE) \
 		>$(@).$(PUBLISH); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
 	@$(ECHO) "$(_D)"
@@ -16439,14 +16426,14 @@ $($(PUBLISH)-library-index):
 override define $(PUBLISH)-library-index-create =
 	$(ECHO) "$(2): {\n" >>$(1); \
 	if [ "$(2)" = "title" ]; then \
-		$(YQ_WRITE_FILE) ".[].[\"$(COMPOSER_CMS)\"]" $($(PUBLISH)-library-metadata) 2>/dev/null; \
+		$(YQ_WRITE_FILE) ".[].[\"$(COMPOSER_CMS)\"]" $($(PUBLISH)-library-metadata); \
 	elif [ "$(2)" = "date" ]; then \
-		$(YQ_WRITE_FILE) ".[].\"$(KEY_DATE)\".\"$(KEY_DATE_LIBRARY)\"" $($(PUBLISH)-library-metadata) 2>/dev/null; \
+		$(YQ_WRITE_FILE) ".[].\"$(KEY_DATE)\".\"$(KEY_DATE_LIBRARY)\"" $($(PUBLISH)-library-metadata); \
 	else \
-		if [ -n "$$($(YQ_WRITE) "map(select(.\"$(2)\" == null))" $($(PUBLISH)-library-metadata) 2>/dev/null)" ]; then \
+		if [ -n "$$($(YQ_WRITE) "map(select(.\"$(2)\" == null))" $($(PUBLISH)-library-metadata))" ]; then \
 			$(ECHO) "null\n"; \
 		fi; \
-		$(YQ_WRITE) ".[].$(2).[]" $($(PUBLISH)-library-metadata) 2>/dev/null \
+		$(YQ_WRITE) ".[].$(2).[]" $($(PUBLISH)-library-metadata) \
 		| $(call COMPOSER_YML_DATA_PARSE); \
 	fi \
 		| $(call $(PUBLISH)-library-sort-sh,$(2)) \
@@ -16456,22 +16443,22 @@ override define $(PUBLISH)-library-index-create =
 			$(ECHO) "\"$${FILE}\": [\n" \
 				| $(TEE) --append $(1) $($(DEBUGIT)-output); \
 			if [ "$(2)" = "title" ]; then \
-				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(COMPOSER_CMS)\" == null))"		$($(PUBLISH)-library-metadata) 2>/dev/null; \
-				else					$(YQ_WRITE) "map(select(.\"$(COMPOSER_CMS)\" == \"$${FILE}\"))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
+				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(COMPOSER_CMS)\" == null))"		$($(PUBLISH)-library-metadata); \
+				else					$(YQ_WRITE) "map(select(.\"$(COMPOSER_CMS)\" == \"$${FILE}\"))"	$($(PUBLISH)-library-metadata); \
 				fi; \
 			elif [ "$(2)" = "date" ]; then \
-				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(KEY_DATE)\".\"$(KEY_DATE_LIBRARY)\" == null))"		$($(PUBLISH)-library-metadata) 2>/dev/null; \
-				else					$(YQ_WRITE) "map(select(.\"$(KEY_DATE)\".\"$(KEY_DATE_LIBRARY)\" == \"$${FILE}\"))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
+				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(KEY_DATE)\".\"$(KEY_DATE_LIBRARY)\" == null))"		$($(PUBLISH)-library-metadata); \
+				else					$(YQ_WRITE) "map(select(.\"$(KEY_DATE)\".\"$(KEY_DATE_LIBRARY)\" == \"$${FILE}\"))"	$($(PUBLISH)-library-metadata); \
 				fi; \
 			else \
-				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(2)\" == null))"				$($(PUBLISH)-library-metadata) 2>/dev/null; \
-				else					$(YQ_WRITE) "map(select(.\"$(2)\" | .[] | contains(\"$${FILE}\")))"	$($(PUBLISH)-library-metadata) 2>/dev/null; \
+				if [ "$${FILE}" = "null" ]; then	$(YQ_WRITE) "map(select(.\"$(2)\" == null))"				$($(PUBLISH)-library-metadata); \
+				else					$(YQ_WRITE) "map(select(.\"$(2)\" | .[] | contains(\"$${FILE}\")))"	$($(PUBLISH)-library-metadata); \
 				fi; \
 			fi \
 				| $(YQ_WRITE) " \
 						$(call $(PUBLISH)-library-sort-yq) \
 						| .[].\"$(KEY_FILEPATH)\" \
-					" 2>/dev/null \
+					" \
 				| $(call COMPOSER_YML_DATA_PARSE) \
 				| $(SED) "s|$$|,|g" \
 				| $(TEE) --append $(1) $($(DEBUGIT)-output); \
@@ -16509,6 +16496,7 @@ endef
 ##### {{{5 $(PUBLISH)-library-digest-list
 ########################################
 
+#> update: title / date / metalist:*
 #> update: $(PUBLISH)-library-$(@)
 #> update: $(HEADERS)-note.*$(_H)
 #> update: $(CONFIGS)$(.)COMPOSER_.*
@@ -16528,13 +16516,14 @@ ifneq ($(and \
 ),)
 #>$(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-digest)))
 #>		$(PUBLISH_METATITL)
+ifneq ($(wildcard $($(PUBLISH)-library-index)),)
 override $(PUBLISH)-library-digest-list := $(shell \
 	for TYPE in $(filter-out \
 		$(PUBLISH_METATITL) \
 		,\
 		$(COMPOSER_YML_DATA_METALIST) \
 	); do \
-		$(YQ_WRITE) ".$${TYPE} | keys | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
+		$(YQ_WRITE) ".$${TYPE} | keys | .[]" $($(PUBLISH)-library-index) \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 			| while read -r FILE; do \
 				$(ECHO) "$(COMPOSER_LIBRARY)/$${TYPE}-$$( \
@@ -16547,6 +16536,7 @@ override $(PUBLISH)-library-digest-list := $(shell \
 	done \
 )
 override $(PUBLISH)-library-digest-files := $(filter $(COMPOSER_LIBRARY)/%,$(subst $(TOKEN), ,$($(PUBLISH)-library-digest-list)))
+endif
 endif
 
 .PHONY: $(PUBLISH)-library-digest-files
@@ -16585,7 +16575,6 @@ endef
 
 #> update: YQ_WRITE.*title
 
-#>			map(select(.title != null or .pagetitle != null))
 $($(PUBLISH)-library-digest-src): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
 #>$($(PUBLISH)-library-digest-src): $($(PUBLISH)-library-digest-files)
 $($(PUBLISH)-library-digest-src):
@@ -16599,7 +16588,7 @@ $($(PUBLISH)-library-digest-src):
 			map(select(.\"$(COMPOSER_CMS)\" != null)) \
 			| $(call $(PUBLISH)-library-sort-yq) \
 			| .[].\"$(KEY_FILEPATH)\" \
-		" $($(PUBLISH)-library-metadata) 2>/dev/null \
+		" $($(PUBLISH)-library-metadata) \
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		| $(HEAD) -n$(DIGEST_COUNT) \
 	| while read -r FILE; do \
@@ -16634,7 +16623,7 @@ $($(PUBLISH)-library-digest-files):
 			$(ECHO) "---\n"; \
 		} >>$(@).$(COMPOSER_BASENAME); \
 		$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin group library-digest $(PUBLISH_CMD_END)\n" >>$(@).$(COMPOSER_BASENAME); \
-	$(YQ_WRITE) ".[\"$(TYPE)\"].[\"$(NAME)\"] | .[]" $($(PUBLISH)-library-index) 2>/dev/null \
+	$(YQ_WRITE) ".[\"$(TYPE)\"].[\"$(NAME)\"] | .[]" $($(PUBLISH)-library-index) \
 	| while read -r FILE; do \
 		$(call $(PUBLISH)-library-digest-create,$(@).$(COMPOSER_BASENAME),$${FILE}); \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
@@ -16673,7 +16662,7 @@ override define $(PUBLISH)-library-digest-create =
 	$(ECHO) "$(_D)"
 endef
 
-#>			$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(2)
+#>			$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(COMPOSER_LIBRARY_ROOT)/$(2)
 override define $(PUBLISH)-library-digest-run =
 	if [ "$${NUM}" -gt "0" ] && [ -n "$(DIGEST_SPACER)" ]; then \
 		$(ECHO) "$(PUBLISH_CMD_BEG) spacer $(PUBLISH_CMD_END)\n"; \
@@ -16688,6 +16677,7 @@ override define $(PUBLISH)-library-digest-run =
 	fi; \
 	$(ECHO) "$(PUBLISH_CMD_BEG) fold-begin 1 $${EXPAND} library-digest $$( \
 			$(call PUBLISH_SH_RUN) metainfo-block . . $(COMPOSER_LIBRARY_ROOT)/$(2) \
+			$($(PUBLISH)-$(DEBUGIT)-date) \
 		) $(PUBLISH_CMD_END)\n"; \
 	$(ECHO) "<!-- $(MARKER) $(2) -->\n\n"; \
 	CDIR="$$($(ECHO) "$(COMPOSER_LIBRARY_ROOT)/$(2)" | $(SED) "s|^(.+)[/]([^/]+)$$|\1|g")"; \
@@ -16708,20 +16698,21 @@ override define $(PUBLISH)-library-digest-run =
 			$${LIST} \
 			$($(PUBLISH)-library-append) \
 			$(INCLUDE_FILE_APPEND) \
+		$($(PUBLISH)-$(DEBUGIT)-date) \
 		| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 		$(if $(COMPOSER_DEBUGIT),| $(TEE) $(1)$(COMPOSER_EXT_SPECIAL)) \
 		| $(PANDOC_MD_TO_JSON) \
 		>$(1).json; \
 	LEN="$$($(EXPR) $$( \
 		$(CAT) $(1).json \
-		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
+		| $(YQ_WRITE) ".blocks | length" \
 	) - $$( \
 		$(call PUBLISH_SH_RUN) $(MENU_SELF) \
 			$($(PUBLISH)-library-append) \
 			$(INCLUDE_FILE_APPEND) \
 		| $(SED) "s|$(PUBLISH_CMD_ROOT)|$(TOKEN)|g" \
 		| $(PANDOC_MD_TO_JSON) \
-		| $(YQ_WRITE) ".blocks | length" 2>/dev/null \
+		| $(YQ_WRITE) ".blocks | length" \
 	))" || $(TRUE); \
 	SIZ="0"; BLK="0"; \
 	while \
@@ -16733,7 +16724,7 @@ override define $(PUBLISH)-library-digest-run =
 		fi; \
 		TEXT="$$( \
 			$(CAT) $(1).json \
-			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" 2>/dev/null \
+			| $(YQ_WRITE) ".blocks |= pick([$${BLK}])" \
 			| $(SED) "s|$(TOKEN)|$(PUBLISH_CMD_ROOT)|g" \
 			| $(PANDOC_JSON_TO_LINT) \
 		)"; \
@@ -17014,6 +17005,7 @@ override define $(PUBLISH)-library-sitemap-run =
 	if [ -f "$${LIST}" ]; then \
 		$(ECHO) "[$$( \
 				$(call PUBLISH_SH_RUN) metainfo-block . . $${LIST} \
+				$($(PUBLISH)-$(DEBUGIT)-date) \
 			)]($(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT),$(COMPOSER_LIBRARY_ROOT),1,1)/$(2))"; \
 	else \
 		$(ECHO) "--"; \
@@ -17074,7 +17066,6 @@ endef
 
 ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(filter $(PUBLISH)-$(PRINTER)%,$(MAKECMDGOALS)),)
-
 override $(PUBLISH)-$(PRINTER)-dir	:= $(patsubst $(COMPOSER_LIBRARY_ROOT),,$(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%/,$(CURDIR)))
 override $(PUBLISH)-$(PRINTER)-file	:= $(if $(c_list),$(if $(wildcard $(CURDIR)/$(c_list)),$(abspath $(CURDIR)/$(c_list)),$(c_list)))
 override $(PUBLISH)-$(PRINTER)-file	:= $(patsubst $(COMPOSER_LIBRARY_ROOT)/%,%,$($(PUBLISH)-$(PRINTER)-file))
@@ -17085,13 +17076,11 @@ override $(PUBLISH)-$(PRINTER)-sed-dir	:=    -e "/^$($(PUBLISH)-$(PRINTER)-rgx-d
 override $(PUBLISH)-$(PRINTER)-tst-file	:= (test(\"^$($(PUBLISH)-$(PRINTER)-rgx-file)$$\")$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)), or test(\"[/]$($(PUBLISH)-$(PRINTER)-rgx-file)$$\")))
 override $(PUBLISH)-$(PRINTER)-sed-file	:=    -e "/^$($(PUBLISH)-$(PRINTER)-rgx-file)$$/p"$(if $(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),      -e "/[/]$($(PUBLISH)-$(PRINTER)-rgx-file)$$/p")
 override $(PUBLISH)-$(PRINTER)-tst	:= $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-tst-file),$($(PUBLISH)-$(PRINTER)-tst-dir))
-
 override define $(PUBLISH)-$(PRINTER)-output =
 	| $(SED) "s|^$(COMPOSER_LIBRARY_ROOT_REGEX)[/]||g" \
 	| $(SED) -n $(if $($(PUBLISH)-$(PRINTER)-file),$($(PUBLISH)-$(PRINTER)-sed-file),$($(PUBLISH)-$(PRINTER)-sed-dir)) \
 	| $(SORT)
 endef
-
 endif
 endif
 
@@ -17136,15 +17125,12 @@ else ifeq ($(and \
 	@$(if $(wildcard $($(PUBLISH)-library-metadata)),,	$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-metadata),$(NOTHING)))
 	@$(if $(wildcard $($(PUBLISH)-library-index)),,		$(call $(HEADERS)-note,$(CURDIR),$(_H)$($(PUBLISH)-library-index),$(NOTHING)))
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),metadata)
-#>		" $($(PUBLISH)-library-metadata) 2>/dev/null
 	@$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
 		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst-dir))) \
 		| with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst))) \
 		" $($(PUBLISH)-library-metadata)
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
-#>		" $($(PUBLISH)-library-index)
-#>		" 2>/dev/null
 	@NAME="$$( \
 		$(YQ_WRITE_JSON) " \
 		del(.\"$(COMPOSER_CMS)\") \
@@ -17153,7 +17139,7 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 		| .[].[] |= [ (to_entries | .[].value) ] \
 		| .[].[] |= del(select(length == 0)) \
 		| .[] |= del(select(length == 0)) \
-		" $($(PUBLISH)-library-index) 2>/dev/null \
+		" $($(PUBLISH)-library-index) \
 	)"; \
 	$(if $(c_list),ATTR="$$( \
 		$(YQ_WRITE_JSON) " \
@@ -17163,13 +17149,13 @@ else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)),index)
 		| .[].[] |= del(select(length == 0)) \
 		| .[] |= with_entries(select(.key | $($(PUBLISH)-$(PRINTER)-tst-file))) \
 		| .[] |= del(select(length == 0)) \
-		" $($(PUBLISH)-library-index) 2>/dev/null \
+		" $($(PUBLISH)-library-index) \
 	)";) \
 	$(ECHO) "$${NAME}" | \
 		$(YQ_WRITE_JSON) " \
 		. $(if $(c_list),$(YQ_EVAL_MERGE) $${ATTR}) \
 		| .[].[] |= (sort_by(.) | unique) \
-		" 2>/dev/null
+		"
 else ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(DONOTDO))
 #> magic token!
 	@$(MAKE) \
@@ -17252,15 +17238,13 @@ endif
 
 #> update: del(.*)
 
-#>		" $($(PUBLISH)-library-metadata) 2>/dev/null
-#>		" $($(PUBLISH)-library-index) 2>/dev/null
 override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
 	{	cd $(COMPOSER_LIBRARY_ROOT) && \
-		$(LS) --color=none $(1) 2>/dev/null && \
+		$(LS) --color=none $(1) && \
 		$(ECHO) "$(_D)" && \
-		$(YQ_READ) $(COMPOSER_LIBRARY_ROOT)/$(1) 2>/dev/null \
+		$(YQ_READ) $(COMPOSER_LIBRARY_ROOT)/$(1) \
 			| $(YQ_WRITE_OUT) \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 			$(YQ_WRITE_OUT_COLOR); \
@@ -17377,7 +17361,6 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 	)
 	@$(ECHO) "$(_D)"
 	@$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(PUBLISH_ROOT),$(COMPOSER_DEBUGIT))
-#>	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR))
 	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) \
 		--directory $(PUBLISH_ROOT) \
 		--makefile $(PUBLISH_ROOT)/$(COMPOSER_CMS)/$(MAKEFILE) \
@@ -17736,26 +17719,29 @@ ifneq ($(COMPOSER_DEBUGIT),)
 #> update: HEREDOC_CUSTOM_PUBLISH
 endif
 endif
+	@$(FIND) $(PUBLISH_ROOT) \
+		\( -path "$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT_TESTING))" -prune \) \
+		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
+		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
+		| while read -r FILE; do \
+			$(TOUCH) --no-dereference --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
+		done
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(CONFIGS))
-	@$(ECHO) "$(_S)"
-#>							$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-metadata))
-#>							$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY)/$(notdir $($(PUBLISH)-library-index))
-#>							$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-metadata))
-#>							$(PUBLISH_ROOT)/$(PUBLISH_LIBRARY_ALT)/$(notdir $($(PUBLISH)-library-index))
-	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT) \
-							$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO).* \
-							$($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE,,1)	>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT)
+	@$(ECHO) "$(_S)"
+	@$(RM)								$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT) \
+									$($(DEBUGIT)-output)
+	@$(ECHO) "$(_D)"
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE,,1)			>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT)
+	@$(TOUCH) --no-dereference --date="$(call DATEMARK,$(DATENOW))"	$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO)$(COMPOSER_EXT_DEFAULT)
 endif
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		{	$(call TITLE_LN ,$(DEPTH_MAX),$(FILE)); \
-			$(ECHO) "$(_M)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_SETTINGS)		2>/dev/null || $(TRUE); \
-			$(ECHO) "$(_C)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_YML)			2>/dev/null || $(TRUE); \
-			$(ECHO) "$(_E)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY).yml		2>/dev/null || $(TRUE); \
-			$(ECHO) "$(_E)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY_ALT).yml	2>/dev/null || $(TRUE); \
+			$(ECHO) "$(_M)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_SETTINGS)		|| $(TRUE); \
+			$(ECHO) "$(_C)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(COMPOSER_YML)			|| $(TRUE); \
+			$(ECHO) "$(_E)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY).yml		|| $(TRUE); \
+			$(ECHO) "$(_E)"; $(CAT) $(PUBLISH_ROOT)/$(FILE)/$(PUBLISH_LIBRARY_ALT).yml	|| $(TRUE); \
 			$(ECHO) "$(_D)"; \
 		}; \
 		$(call NEWLINE) \
@@ -17770,14 +17756,6 @@ ifneq ($(COMPOSER_DEBUGIT),)
 		$(call NEWLINE) \
 	)
 else
-	@$(FIND) $(PUBLISH_ROOT) \
-		\( -path "$(PUBLISH_ROOT)/$(notdir $(PUBLISH_ROOT_TESTING))" -prune \) \
-		-o \( -path "**/$(notdir $(COMPOSER_TMP))" -prune \) \
-		-o \( -path "*$(COMPOSER_EXT_DEFAULT)" -print \) \
-		| while read -r FILE; do \
-			$(TOUCH) --no-dereference --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
-		done
-#>		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR))
 	@$(foreach FILE,\
 		$(PUBLISH)-$(DOITALL) \
 		$(PUBLISH)-$(DOFORCE) \
@@ -17793,10 +17771,11 @@ else
 		$(EXPORTS)
 endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
-	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE,,1)	>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
+	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE,,1)			>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
+	@$(TOUCH) --no-dereference --date="$(call DATEMARK,$(DATENOW))"	$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_EXT_DEFAULT)
 	@$(ECHO) "$(_S)"
-	@$(RM)						$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO).* \
-							$($(DEBUGIT)-output)
+	@$(RM)								$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO).* \
+									$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
 endif
 endif
@@ -17862,7 +17841,6 @@ $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS)):
 ### {{{3 $(INSTALL)-%
 ########################################
 
-#>		$(call ENV_MAKE)
 override define $(INSTALL)-$(MAKEFILE) =
 	if	[ -f "$(1)" ] && \
 		[ -z "$(4)" ]; \
@@ -17980,7 +17958,7 @@ override define $(CLEANER)-$(CLEANER) =
 			$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)); \
 			$(ECHO) "$(_S)"; \
 			$(RM) --recursive $$( \
-					$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null \
+					$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* \
 					| $(TAIL) -n+$$($(EXPR) $${COMPOSER_KEEPING} + 1) \
 				) $($(DEBUGIT)-output); \
 		fi; \
@@ -18143,15 +18121,14 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 
 ifneq ($(c_base),)
-#WORKING:NULL
 $(c_base).$(EXTN_OUTPUT): \
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),$(shell \
-		$(MKDIR) $(COMPOSER_TMP) >/dev/null 2>&1; \
+		$(MKDIR) $(COMPOSER_TMP) >/dev/null; \
 	),$(if $(filter $(c_type),$(TYPE_LPDF)),$(shell \
-		$(MKDIR) $(call COMPOSER_TMP_FILE) >/dev/null 2>&1; \
+		$(MKDIR) $(call COMPOSER_TMP_FILE) >/dev/null; \
 	),$(if $(and $(filter $(c_type),$(TYPE_PRES)),$(wildcard $(COMPOSER_CUSTOM)-$(c_type).css)),$(shell \
-		$(MKDIR) $(COMPOSER_TMP) >/dev/null 2>&1; \
-		$(TOUCH) $(call COMPOSER_TMP_FILE).css >/dev/null 2>&1; \
+		$(MKDIR) $(COMPOSER_TMP) >/dev/null; \
+		$(TOUCH) $(call COMPOSER_TMP_FILE).css >/dev/null; \
 	))))
 $(c_base).$(EXTN_OUTPUT):
 	@$(call $(COMPOSER_PANDOC)-$(NOTHING))
@@ -18219,9 +18196,8 @@ $(COMPOSER_LOG): $(if $(wildcard $(COMPOSER_LOG)),,\
 )
 $(COMPOSER_LOG):
 	@$(LS) --directory \
-		$(COMPOSER_LOG) \
-		$(?) \
-		2>/dev/null \
+		$(wildcard $(COMPOSER_LOG)) \
+		$(wildcard $(?)) \
 		|| $(TRUE)
 
 ########################################
