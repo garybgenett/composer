@@ -177,6 +177,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	* `make +setup-all`
 #		* Review each, including CSS
 #		* Create screenshot
+#			* `make help-template`
 #
 ## {{{2 PUBLISH
 #
@@ -1595,7 +1596,7 @@ override define NPM_BUILD =
 		$(call NPM_SETUP,$(1)); \
 		$(call NPM_RUN,$(1),run-script) build; \
 	else \
-		(cd $(1) && $(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(1)/build.sh); \
+		cd $(1) && $(BASH) -e $(if $(COMPOSER_DEBUGIT_ALL),-x) $(1)/build.sh; \
 	fi
 endef
 
@@ -3667,7 +3668,6 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M)$(COMPOSER_CMS)$(_D)\` in current directory"
-	@$(TABLE_M2) "$(_C)[$(DOSETUP)-$(DOFORCE)]"		"Completely reset and relink an existing \`$(_M)$(COMPOSER_CMS)$(_D)\`"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"$(_N)[Git]$(_D) commit of current directory tree or $(_C)[c_list]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
@@ -3776,6 +3776,55 @@ $(HELPOUT)-$(TYPE_PRES):
 		COMPOSER_DOITALL_$(HELPOUT)="$(TYPE_PRES)" \
 		$(HELPOUT) \
 		| $(SED) "/^[-][-][-][-]/,+1 d"
+
+########################################
+## {{{2 $(HELPOUT)-$(EXAMPLE)
+########################################
+
+override $(HELPOUT)-$(EXAMPLE)-$(DOSETUP) := \
+	$(subst $(NULL) ,$(TOKEN),mkdir $(notdir $(PUBLISH_ROOT_TESTING))) \
+	$(subst $(NULL) ,$(TOKEN),cd $(notdir $(PUBLISH_ROOT_TESTING))) \
+
+override $(HELPOUT)-$(EXAMPLE)-$(LISTING) := \
+	$(subst $(NULL) ,$(TOKEN),ls $(wordlist 4,$(words $(LS)),$(LS))) \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) -f ../$(MAKEFILE) $(DOSETUP)) \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(EXAMPLE)$(.)md >$(COMPOSER_TINYNAME).md) \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(DOITALL)) \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(COMPOSER_TINYNAME).$(EXTN_TEXT)) \
+	$(subst $(NULL) ,$(TOKEN),ls $(wordlist 4,$(words $(LS)),$(LS))) \
+	$(subst $(NULL) ,$(TOKEN),cat $(COMPOSER_TINYNAME).md) \
+	$(subst $(NULL) ,$(TOKEN),head -n9 $(COMPOSER_TINYNAME).$(EXTN_HTML)) \
+	$(subst $(NULL) ,$(TOKEN),sed -n '/<body>/,/<\/body>/p' $(COMPOSER_TINYNAME).$(EXTN_HTML)) \
+	$(subst $(NULL) ,$(TOKEN),cat $(COMPOSER_TINYNAME).$(EXTN_TEXT)) \
+
+.PHONY: $(HELPOUT)-$(EXAMPLE)
+$(HELPOUT)-$(EXAMPLE):
+	@$(RM) --recursive	$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
+	@$(MKDIR)		$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
+	@$(foreach FILE,$($(HELPOUT)-$(EXAMPLE)-$(DOSETUP)),\
+		$(call $(HELPOUT)-$(EXAMPLE)-$(PRINTER),$(subst $(TOKEN), ,$(FILE))); \
+		$(call NEWLINE) \
+	)
+	@$(foreach FILE,$($(HELPOUT)-$(EXAMPLE)-$(LISTING)),\
+		$(call $(HELPOUT)-$(EXAMPLE)-$(PRINTER),$(subst $(TOKEN), ,$(FILE))); \
+		cd $(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) && \
+			$(subst $(TOKEN), ,$(FILE)) | $(SED) "s|$(COMPOSER_ROOT)|[$(COMPOSER_TINYNAME)]|g"; \
+		$(call NEWLINE) \
+	)
+
+override define $(HELPOUT)-$(EXAMPLE)-$(PRINTER) =
+	FILE="$(subst $(TOKEN), ,$(1))"; \
+	$(ENDOLINE); \
+	$(ECHO) "$(_F)# "; \
+	sleep 0.5; \
+	NUM="0"; while [ "$${NUM}" -lt "$${#FILE}" ]; do \
+		$(ECHO) "$${FILE:$${NUM}:1}"; \
+		NUM="$$($(EXPR) $${NUM} + 1)"; \
+		sleep 0.1; \
+	done; \
+	sleep 0.5; \
+	$(ENDOLINE)
+endef
 
 ########################################
 ## {{{2 $(HELPOUT)-$(DOITALL)
@@ -4339,11 +4388,6 @@ endef
 #	$(TESTING)-speed -> $(TESTING)-stress
 #		add $(CLEANER)/$(DOITALL)/$(TARGETS) for a vary large directory of files
 #		make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
-#	add "demo" target
-#		slowly, sleep 0.1 per character, print a series of commands and then run them
-#		add to help and/or quick start
-#		comment/remove cruft from setup-all, such as clean and keeping=0
-#		make demo = peek = replace screenshot with a gif
 
 #WORK
 #	also update revealjs documentation, based on css behavior change
@@ -5521,7 +5565,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(CONFIGS) / $(CONFIGS)-$(DOITALL) / $(CONF
   * Together, $(_C)[$(CONFIGS)]$(_D) and $(_C)[$(TARGETS)]$(_D) reveal the entire internal state of
     $(_C)[$(COMPOSER_BASENAME)]$(_D).
 
-$(call $(HELPOUT)-$(DOITALL)-section,$(DOSETUP) / $(DOSETUP)-$(DOFORCE))
+$(call $(HELPOUT)-$(DOITALL)-section,$(DOSETUP))
 
 #WORK
 
@@ -6988,7 +7032,13 @@ override define HEREDOC_GITIGNORE =
 
 /$(COMPOSER_CMS)-*
 /$(COMPOSER_BASENAME)-*
+$(if $(1),$(call NEWLINE)$(call HEREDOC_GITIGNORE_COMPOSER)$(call NEWLINE))
+################################################################################
+# End Of File
+################################################################################
+endef
 
+override define HEREDOC_GITIGNORE_COMPOSER =
 ########################################
 # $(UPGRADE)
 
@@ -7013,10 +7063,6 @@ override define HEREDOC_GITIGNORE =
 	),\
 	$(call NEWLINE)$(call NEWLINE)#$(DIVIDE) $(notdir $(word 1,$($(FILE))))$(call NEWLINE)$(call GITIGNORE_$(FILE)) \
 )
-
-################################################################################
-# End Of File
-################################################################################
 endef
 
 ########################################
@@ -9829,8 +9875,7 @@ function $(PUBLISH)-header {
 			if [ "$${1}" = "$${SPECIAL_VAL}" ]; then
 				$${ECHO} "**$${@:2}**\\n"
 			else
-				NUM="0"
-				while [ "$${NUM}" -lt "$${1}" ]; do
+				local NUM="0"; while [ "$${NUM}" -lt "$${1}" ]; do
 					$${ECHO} "#"
 					NUM="$$($${EXPR} $${NUM} + 1)"
 				done
@@ -13107,6 +13152,9 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ## {{{2 $(CREATOR)
 ########################################
 
+#WORKING:NOW
+#	comment/remove cruft from setup-all, such as clean and keeping=0
+
 ########################################
 ### {{{3 $(CREATOR)
 ########################################
@@ -13147,13 +13195,12 @@ override $(CREATOR)-$(TARGETS) += $(CREATOR)$(.)$(CONFIGS)
 endif
 endif
 
-#> update: HEREDOC_GITIGNORE
 .PHONY: $(CREATOR)$(.)$(CONFIGS)
 $(CREATOR)$(.)$(CONFIGS):
 	@$(call $(HEADERS)-file,$(CURDIR),$(CONFIGS))
 	@$(call DO_HEREDOC,HEREDOC_GITATTRIBUTES)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitattributes
 	@$(call DO_HEREDOC,HEREDOC_GITCONFIG)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitconfig
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)		| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE,,1)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK,1)	| $(SED) "s|[[:space:]]+$$||g" >$(CURDIR)/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(_E)"
 	@$(RM)						$(CURDIR)/$(COMPOSER_YML) \
@@ -13254,6 +13301,7 @@ override $(CREATOR)-$(TARGETS) += $(CREATOR)$(.)$(notdir $(COMPOSER_ART))
 .PHONY: $(CREATOR)$(.)$(notdir $(COMPOSER_ART))
 $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 	@$(call $(HEADERS)-file,$(CURDIR),$(call COMPOSER_CONV,,$(COMPOSER_ART)))
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)				| $(SED) "s|[[:space:]]+$$||g" >$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""							>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_LOGO))
@@ -14785,11 +14833,9 @@ $(TESTING)-other-init:
 	)
 	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
 	#> convict
-#> update: HEREDOC_GITIGNORE
-#>	@$(RSYNC) \
-#>		$(call $(TESTING)-pwd,$(COMPOSER_CMS))/.gitignore \
-#>		$(call $(TESTING)-pwd)/.gitignore
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE) | $(SED) "s|[[:space:]]+$$||g" >$(call $(TESTING)-pwd)/.gitignore
+	@$(RSYNC) \
+		$(call $(TESTING)-pwd,$(COMPOSER_ART))/.gitignore \
+		$(call $(TESTING)-pwd)/.gitignore
 	@$(RM) --recursive $(call $(TESTING)-pwd)/.git
 	@cd $(call $(TESTING)-pwd) \
 		&& $(GIT) init \
@@ -15268,34 +15314,29 @@ ifneq ($(or \
 ),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)--makefile $(EXPAND)/$(MAKEFILE),$(NOTHING))
 else
+	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(CURDIR)/$(COMPOSER_CMS)/$(MAKEFILE),1)
 	@$(ECHO) "$(_S)"
-	@$(MKDIR) $(CURDIR)/$(COMPOSER_CMS)
-ifeq ($(COMPOSER_DOITALL_$(DOSETUP)),$(DOFORCE))
+	@$(MKDIR) $(CURDIR)/$(COMPOSER_CMS) $($(DEBUGIT)-output)
 	@$(FIND) $(CURDIR)/$(COMPOSER_CMS) -mindepth 1 -maxdepth 1 -type l \
 		| $(SORT) \
-		| while read -r file; do \
-			$(RM) $${FILE}; \
+		| while read -r FILE; do \
+			$(RM) $${FILE} $($(DEBUGIT)-output); \
 		done
-endif
 	@$(ECHO) "$(_D)"
 	@$(foreach FILE,\
 		$(COMPOSER) \
-		$(COMPOSER_DIR)/.gitignore \
+		$(COMPOSER_ART)/.gitignore \
 		$(COMPOSER_SRC) \
 		$(COMPOSER_ART) \
 		$(foreach FILE,$(REPOSITORIES_LIST),$($(FILE)_DIR)) \
 		,\
 		if [ ! -e "$(CURDIR)/$(COMPOSER_CMS)/$(notdir $(FILE))" ]; then \
 			$(ECHO) "$(_E)"; \
-			$(LN) $(FILE) $(CURDIR)/$(COMPOSER_CMS)/$(notdir $(FILE)); \
+			$(LN) $(FILE) $(CURDIR)/$(COMPOSER_CMS)/$(notdir $(FILE)) $($(DEBUGIT)-output); \
 			$(ECHO) "$(_D)"; \
 		fi; \
 		$(call NEWLINE) \
 	)
-	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(CURDIR)/$(COMPOSER_CMS)/$(MAKEFILE),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(DOSETUP))))
-	@$(ECHO) "$(_M)"
-	@$(CAT) $(CURDIR)/$(MAKEFILE) | $(SED) "/^$$/d"
-	@$(ECHO) "$(_D)"
 	@if [ ! -e "$(CURDIR)/.gitignore" ]; then \
 		$(ECHO) "$(_E)"; \
 		$(CP) $(CURDIR)/$(COMPOSER_CMS)/.gitignore $(CURDIR)/.gitignore; \
@@ -15422,6 +15463,8 @@ $($(EXPORTS)-redirect-files):
 	@$(eval override c_base		:= $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(@)))))
 	@$(eval override c_list_file	:= $(COMPOSER_TMP)/$(EXPORTS)-redirect$(_)$(notdir $(@))$(COMPOSER_EXT_DEFAULT))
 	@$(call $(HEADERS)-action,$(CURDIR),$(notdir $(@)),$(REDIRECT_URL),$(EXPORTS))
+#WORKING:NOW
+#	test this... one last time...
 	@$(if $(REDIRECT_URL),,\
 		$(ECHO) "$(_F)"; \
 		$(LS) --dereference $(CURDIR)/$(notdir $(@)) || $(TRUE); \
@@ -17353,7 +17396,7 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
 		--directory $(PUBLISH_ROOT) \
 		--makefile $(COMPOSER) \
-		$(DOSETUP)-$(DOFORCE)
+		$(DOSETUP)
 	@$(ECHO) "$(_S)"
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(MKDIR)			$(PUBLISH_ROOT)/$(FILE) $($(DEBUGIT)-output); \
