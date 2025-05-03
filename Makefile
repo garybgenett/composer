@@ -3811,6 +3811,7 @@ $(HELPOUT)-$(EXAMPLE):
 			$(subst $(TOKEN), ,$(FILE)) | $(SED) "s|$(COMPOSER_ROOT)|[$(COMPOSER_TINYNAME)]|g"; \
 		$(call NEWLINE) \
 	)
+	@$(RM) --recursive	$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
 
 override define $(HELPOUT)-$(EXAMPLE)-$(PRINTER) =
 	FILE="$(subst $(TOKEN), ,$(1))"; \
