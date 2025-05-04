@@ -13153,9 +13153,6 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ## {{{2 $(CREATOR)
 ########################################
 
-#WORKING:NOW
-#	comment/remove cruft from setup-all, such as clean and keeping=0
-
 ########################################
 ### {{{3 $(CREATOR)
 ########################################
