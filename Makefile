@@ -15667,11 +15667,8 @@ $(EXPORTS)-$(CLEANER):
 	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,directories,$(EXPORTS),1)
 	@while [ -n "$$($(FIND) $(COMPOSER_EXPORT) -type d -empty)" ]; do \
 		$(FIND) $(COMPOSER_EXPORT) -type d -empty \
+		| $(SED) "s|^$(COMPOSER_EXPORT_REGEX)[/]||g" \
 		| while read -r FILE; do \
-			FILE="$$( \
-				$(ECHO) "$${FILE}" \
-				| $(SED) "s|^$(COMPOSER_EXPORT_REGEX)[/]||g" \
-			)"; \
 			$(call $(HEADERS)-rm,$(COMPOSER_EXPORT),$${FILE}); \
 			$(ECHO) "$(_S)"; \
 			$(RM) --dir $(COMPOSER_EXPORT)/$${FILE} $($(DEBUGIT)-output); \
@@ -15679,10 +15676,13 @@ $(EXPORTS)-$(CLEANER):
 		done; \
 	done
 	@$(call $(HEADERS)-action,$(COMPOSER_EXPORT),empty,files,$(EXPORTS),1)
-	@$(LS) --directory $$($(FIND) $(COMPOSER_EXPORT) -empty) \
-		| $(SED) \
-			-e "s|$(COMPOSER_EXPORT_REGEX)[/]||g" \
-			-e "/[.][/]$$/d"
+	@FILE="$$( \
+		$(FIND) $(COMPOSER_EXPORT) -empty \
+		| $(SED) "s|^$(COMPOSER_EXPORT_REGEX)[/]||g" \
+	)"; \
+	if [ -n "$${FILE}" ]; then \
+		cd $(COMPOSER_EXPORT) && $(LS) --directory $${FILE}; \
+	fi
 
 ################################################################################
 # {{{1 Composer Targets
