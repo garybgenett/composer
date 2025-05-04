@@ -12744,11 +12744,11 @@ override $(HEADERS)-line	= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE))
 override $(HEADERS)-table	= $(if $(1),$(TABLE_M2),$(TABLE_C2))
 
 override define $(HEADERS)-action =
-	$(if $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);) \
-	$(PRINT) "$(_H)$(MARKER) $(if $(4),$(4),$(@))$(_D) $(_S)$(DIVIDE)$(_D) $(_M)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(_E)$(3)$(_D))))"
+	$(if $(and $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(filter-out $(NOTHING),$(3))),$(LINERULE);) \
+	$(PRINT) "$(_H)$(MARKER) $(if $(4),$(4),$(@))$(_D) $(_S)$(DIVIDE)$(_D) $(_M)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(if $(filter $(NOTHING),$(3)),$(_F),$(_E))$(3)$(_D))))"
 endef
 
-override $(HEADERS)-note	= $(TABLE_M2) "$(_M)$(MARKER) Processing"	"$(_E)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(_D) $(_S)$(DIVIDE)$(_D) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(_C)$(if $(3),$(3),$(@))$(_D)]$(if $(2), $(_C)$(call COMPOSER_CONV,$(EXPAND),$(2),1,1,1))"
+override $(HEADERS)-note	= $(TABLE_M2) "$(_M)$(MARKER) Processing"	"$(_E)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(_D) $(_S)$(DIVIDE)$(_D) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(if $(filter $(NOTHING),$(3)),$(_F),$(_C))$(if $(3),$(3),$(@))$(_D)]$(if $(2), $(_C)$(call COMPOSER_CONV,$(EXPAND),$(2),1,1,1))"
 override $(HEADERS)-dir		= $(TABLE_M2) "$(_C)$(MARKER) Directory"	"$(_E)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) $(_S)$(DIVIDE)$(_D) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call COMPOSER_CONV,$(EXPAND),$(2),1,1,1))"
 override $(HEADERS)-file	= $(TABLE_M2) "$(_H)$(MARKER) Creating"		"$(_N)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) $(_S)$(DIVIDE)$(_D) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_M)$(call COMPOSER_CONV,$(EXPAND),$(2),1,1,1))"
 override $(HEADERS)-skip	= $(TABLE_M2) "$(_H)$(MARKER) Skipping"		"$(_N)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) $(_S)$(DIVIDE)$(_D) $(if $(3),$(_D)($(_H)$(3)$(_D)) )$(_C)$(call COMPOSER_CONV,$(EXPAND),$(2),1,1,1))"
@@ -15463,15 +15463,10 @@ $($(EXPORTS)-redirect-files):
 	@$(eval override REDIRECT_URL	:= $(shell $(REALPATH) $(CURDIR) $(realpath $(CURDIR)/$(notdir $(@)))))
 	@$(eval override c_base		:= $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(@)))))
 	@$(eval override c_list_file	:= $(COMPOSER_TMP)/$(EXPORTS)-redirect$(_)$(notdir $(@))$(COMPOSER_EXT_DEFAULT))
-	@$(call $(HEADERS)-action,$(CURDIR),$(notdir $(@)),$(REDIRECT_URL),$(EXPORTS))
-#WORKING:NOW
-#	test this... one last time...
-	@$(if $(REDIRECT_URL),,\
-		$(ECHO) "$(_F)"; \
-		$(LS) --dereference $(CURDIR)/$(notdir $(@)) || $(TRUE); \
-		$(ECHO) "$(_D)"; \
+	@$(call $(HEADERS)-action,$(CURDIR),$(notdir $(@)),$(if $(REDIRECT_URL),$(REDIRECT_URL),$(NOTHING)),$(EXPORTS))
+	@if [ -z "$(REDIRECT_URL)" ]; then \
 		exit 1; \
-	)
+	fi
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) \
 		$(abspath $(dir $(c_base))) \
@@ -17285,16 +17280,16 @@ endif
 override define $(PUBLISH)-$(PRINTER)-$(TARGETS) =
 	$(PRINT) "$(_M)$(MARKER) $(1)"; \
 	$(ECHO) "$(_N)$(DIVIDE) "; \
-	{	cd $(COMPOSER_LIBRARY_ROOT) && \
-		$(LS) --color=none $(1) && \
-		$(ECHO) "$(_D)" && \
+	if [ -f "$(COMPOSER_LIBRARY_ROOT)/$(1)" ]; then \
+		cd $(COMPOSER_LIBRARY_ROOT) && $(LS) --color=none $(1); \
+		$(ECHO) "$(_D)"; \
 		$(YQ_READ) $(COMPOSER_LIBRARY_ROOT)/$(1) \
 			| $(YQ_WRITE_OUT) \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 			$(YQ_WRITE_OUT_COLOR); \
-	} || { \
+	else \
 		$(PRINT) "$(_F)$(DONOTDO)"; \
-	}; \
+	fi; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
 	$(YQ_WRITE_OUT) " \
 		del(.\"$(COMPOSER_CMS)\") \
@@ -18267,7 +18262,7 @@ endif
 %.$(2): %
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
 ifneq ($$(COMPOSER_DEBUGIT),)
-	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(call /,$$(NOTHING)))
+	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(NOTHING))
 endif
 
 %.$(2): $$(c_list)
