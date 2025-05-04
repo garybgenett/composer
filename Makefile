@@ -1449,6 +1449,7 @@ override YQ_EVAL_MERGE			:= *+
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . $(YQ_EVAL) $$file)'
 
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
+#WORKING:NOW
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
 	$(foreach FILE,$(wildcard $(2)),\
@@ -8432,7 +8433,7 @@ function $(PUBLISH)-metainfo-block {
 	TITLE="$$(
 		$${ECHO} "$${META}" \\
 		| $${YQ_WRITE} ".title" \\
-		| $${SED} "/^null$$/d"
+		| COMPOSER_YML_DATA_PARSE
 	)"
 	if [ -z "$${TITLE}" ]; then
 		TITLE="$$(
@@ -12743,7 +12744,7 @@ override $(HEADERS)-line	= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE))
 override $(HEADERS)-table	= $(if $(1),$(TABLE_M2),$(TABLE_C2))
 
 override define $(HEADERS)-action =
-	$(if $(and $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(filter-out $(NOTHING),$(3))),$(LINERULE);) \
+	$(if $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);) \
 	$(PRINT) "$(_H)$(MARKER) $(if $(4),$(4),$(@))$(_D) $(_S)$(DIVIDE)$(_D) $(_M)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(if $(filter $(NOTHING),$(3)),$(_F),$(_E))$(3)$(_D))))"
 endef
 
