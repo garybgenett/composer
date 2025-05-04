@@ -4391,9 +4391,7 @@ endef
 #		add $(CLEANER)/$(DOITALL)/$(TARGETS) for a vary large directory of files
 #		make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
 
-#WORK
-#	also update revealjs documentation, based on css behavior change
-#		need to update tests...?  yes!
+#WORKING:NOW
 #	note that they are intentionally reversed
 #		bootstrap is just supporting where the markdown-viewer themes fall through
 #		revealjs is usually using a theme, which we are refining
