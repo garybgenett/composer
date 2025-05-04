@@ -1345,7 +1345,7 @@ override ENV				:= $(call COMPOSER_FIND,$(PATH_LIST),env) - USER="$(USER)" HOME=
 override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
 override HEAD				:= $(call COMPOSER_FIND,$(PATH_LIST),head)
 override LN				:= $(call COMPOSER_FIND,$(PATH_LIST),ln) -fsv --relative
-override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) $(if $(COMPOSER_DOCOLOR),--color=auto,--color=none) --time-style=long-iso -asF -l
+override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) $(if $(COMPOSER_DOCOLOR),--color=always,--color=none) --time-style=long-iso -asF -l
 override LS_TIME			:= $(call COMPOSER_FIND,$(PATH_LIST),ls) -dt
 override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
 override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
@@ -3691,6 +3691,7 @@ $(HELPOUT)-targets_internal_%:
 	@$(TABLE_M2) "$(_H)Target"				"$(_H)Purpose"
 	@$(TABLE_M2_HEADER_L)
 	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(HELPOUT)]"		"Complete \`$(_M)$(OUT_README)$(COMPOSER_EXT_DEFAULT)$(_D)\` content $(_E)(similar to [$(HELPOUT)-$(DOITALL)])$(_D)"
+	@$(TABLE_M2) "$(_C)[$(HELPOUT)-$(EXAMPLE)]"		"Animated demonstration, for screenshots and for fun!$(_D)"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)]"			"Series of targets that handle all informational output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)]"		"For testing default $(_C)[$(HEADERS)]$(_D) output"
 	@$(TABLE_M2) "$(_C)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]"	"For testing complete $(_C)[$(HEADERS)]$(_D) output"
@@ -15312,6 +15313,7 @@ ifneq ($(or \
 ),)
 	@$(call $(HEADERS)-note,$(CURDIR),$(_H)--makefile $(EXPAND)/$(MAKEFILE),$(NOTHING))
 else
+	@$(call $(HEADERS)-file,$(CURDIR),$(COMPOSER_CMS))
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(CURDIR)/$(COMPOSER_CMS)/$(MAKEFILE),1)
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(CURDIR)/$(COMPOSER_CMS) $($(DEBUGIT)-output)
@@ -15350,7 +15352,6 @@ else
 		|| $(TRUE)
 	@$(ECHO) "$(_D)"
 endif
-	@$(LS) $(CURDIR)/$(COMPOSER_CMS)
 endif
 
 ########################################
