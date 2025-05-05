@@ -96,7 +96,9 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	* `make headers-template`
 #		* `make COMPOSER_DEBUGIT="1" headers-template`
 #		* `make COMPOSER_DEBUGIT="1" c_type="[X]" headers-template-all`
+#		* `make MAKEJOBS="[X]" headers-template-all`
 #		* `make headers-template-all`
+#		* `make template.md-file`
 #	* `make COMPOSER_DEBUGIT="check config targets" +debug | less -rX`
 #		* `rm Composer-*.+debug-*.txt`
 #			* `make COMPOSER_DEBUGIT="help" +debug-file`
@@ -1449,17 +1451,22 @@ override YQ_EVAL_MERGE			:= *+
 override YQ_EVAL_FILES			:= $(YQ_READ) eval-all '. as $$file ireduce ({}; . $(YQ_EVAL) $$file)'
 
 override YQ_EVAL_DATA_FORMAT		= $(subst ','"'"',$(subst \n,\\n,$(1)))
-#WORKING:NOW
 override define YQ_EVAL_DATA =
 	$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(1))' \
 	$(foreach FILE,$(wildcard $(2)),\
-		$(if $(3),\
-			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
-				$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) \
-			)) }}' \
-		,\
-			| $(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")' \
-		) | $(YQ_WRITE) \
+		| if [ -s "$(FILE)" ]; then \
+			if [ -n "$(3)" ]; then \
+				$(YQ_WRITE_JSON) '. $(YQ_EVAL) { "variables": { "$(PUBLISH)-$(3)": $(call YQ_EVAL_DATA_FORMAT,$(shell \
+					$(YQ_READ) ".variables.$(PUBLISH)-$(3)" $(FILE) \
+				)) }}' \
+				; \
+			else \
+				$(YQ_WRITE_JSON) '. $(YQ_EVAL) load("$(FILE)")'; \
+			fi; \
+		else \
+			$(CAT); \
+		fi \
+		| $(YQ_WRITE) \
 	)
 endef
 
@@ -2150,14 +2157,6 @@ override COMPOSER_CONV = \
 		$(patsubst	$(if $(3),$(COMPOSER_ROOT),$(COMPOSER_DIR))$(if $(4),,/)%,$(1)%,$(2)) \
 	))
 
-#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
-override COMPOSER_YML_ARRAY = \
-	$(subst $(TOKEN), ,$(strip \
-		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_NOCOLOR))) \
-		$(subst $(HTML_SPACE),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(HTML_SPACE),%,$(subst $(NULL) ,,$(foreach FILE,$(1),$(if $(3),$(_N)")$(_M)$(FILE)$(if $(3),$(_N)")$(_D)$(HTML_SPACE))))) \
-		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_COLOR))) \
-	))
-
 ########################################
 ## {{{2 Options
 ########################################
@@ -2263,7 +2262,7 @@ override COMPOSER_OPTIONS_PUBLISH := \
 	c_type$(TOKEN)$(EXTN_HTML) \
 
 ########################################
-### {{{3 List & Export
+### {{{3 List / Export
 ########################################
 
 override COMPOSER_OPTIONS := \
@@ -2482,7 +2481,7 @@ export override COMPOSER_DOITALL_$(DOITALL) := $(COMPOSER_DOITALL_$(PUBLISH))
 endif
 
 ########################################
-## {{{2 Publish
+## {{{2 YAML / Publish
 ########################################
 
 #> COMPOSER_YML_DATA > $(PUBLISH)-cache > $(PUBLISH)-library > COMPOSER_LIBRARY_AUTO_UPDATE
@@ -2647,6 +2646,14 @@ override define COMPOSER_YML_DATA_PARSE =
 	) \
 	| $(SED) "/^$$/d"
 endef
+
+#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
+override COMPOSER_YML_ARRAY = \
+	$(subst $(TOKEN), ,$(strip \
+		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_NOCOLOR))) \
+		$(subst $(HTML_SPACE),$(_N)$(COMMA)$(_D) $(NULL),$(patsubst %$(HTML_SPACE),%,$(subst $(NULL) ,,$(foreach FILE,$(1),$(if $(3),$(_N)")$(_M)$(FILE)$(if $(3),$(_N)")$(_D)$(HTML_SPACE))))) \
+		$(if $(and $(2),$(COMPOSER_DOCOLOR)),$(eval $(call COMPOSER_COLOR))) \
+	))
 
 ########################################
 ### {{{3 Caches
@@ -6773,6 +6780,8 @@ endef
 
 #> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
+#> update: .PHONY: $(EXAMPLE)
+
 .PHONY: $(EXAMPLE)-$(INSTALL)
 .PHONY: $(EXAMPLE)
 .PHONY: $(EXAMPLE)$(.)yml
@@ -6782,20 +6791,27 @@ $(EXAMPLE) \
 $(EXAMPLE)$(.)yml \
 $(EXAMPLE)$(.)md \
 :
-#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
-#> update: TITLE_LN := ENDOLINE LINERULE
-	@$(if $(filter-out $(EXAMPLE)$(.)md,$(@)),\
-		$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR))) \
-		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
-		$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR))) \
-	)
 	@$(MAKE) \
 		--directory $(abspath $(dir $(COMPOSER_SELF))) \
 		--makefile $(COMPOSER_SELF) \
 		$(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOITALL_$(@)="$(COMPOSER_DOITALL_$(@))" \
+		COMPOSER_DOITALL_$(EXAMPLE)="$(EXAMPLE)" \
 		COMPOSER_DOCOLOR= \
 		$(.)$(@)
+
+########################################
+### {{{3 $(EXAMPLE)-$(HEADERS)
+########################################
+
+#> update: COMPOSER_DOCOLOR.*COMPOSER_NOCOLOR
+#> update: TITLE_LN := ENDOLINE LINERULE
+.PHONY: $(EXAMPLE)-$(HEADERS)
+$(EXAMPLE)-$(HEADERS):
+	@\
+	$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR))) \
+	$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
+	$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR)))
 
 ########################################
 ### {{{3 $(EXAMPLE)-$(INSTALL)
@@ -6804,6 +6820,9 @@ $(EXAMPLE)$(.)md \
 #> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
 .PHONY: $(.)$(EXAMPLE)-$(INSTALL)
+ifneq ($(COMPOSER_DOITALL_$(EXAMPLE)),)
+$(.)$(EXAMPLE)-$(INSTALL): $(EXAMPLE)-$(HEADERS)
+endif
 $(.)$(EXAMPLE)-$(INSTALL):
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_MY_PATH)
 	@$(call $(EXAMPLE)-var-static,,COMPOSER_TEACHER)
@@ -6817,6 +6836,9 @@ $(.)$(EXAMPLE)-$(INSTALL):
 
 #> update: COMPOSER_OPTIONS
 .PHONY: $(.)$(EXAMPLE)
+ifneq ($(COMPOSER_DOITALL_$(EXAMPLE)),)
+$(.)$(EXAMPLE): $(EXAMPLE)-$(HEADERS)
+endif
 $(.)$(EXAMPLE):
 #>	@$(call $(EXAMPLE)-print,,$(_S)########################################)
 #>	@$(call $(EXAMPLE)-print,1,$(_H)$(MARKER) Global Variables)
@@ -6843,6 +6865,9 @@ $(.)$(EXAMPLE):
 ########################################
 
 .PHONY: $(.)$(EXAMPLE)$(.)yml
+ifneq ($(COMPOSER_DOITALL_$(EXAMPLE)),)
+$(.)$(EXAMPLE)$(.)yml: $(EXAMPLE)-$(HEADERS)
+endif
 $(.)$(EXAMPLE)$(.)yml:
 #>	@$(ECHO) '$(strip $(call COMPOSER_YML_DATA_SKEL))'
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
@@ -6858,6 +6883,9 @@ $(.)$(EXAMPLE)$(.)yml:
 ########################################
 
 .PHONY: $(.)$(EXAMPLE)$(.)md
+#>ifneq ($(COMPOSER_DOITALL_$(EXAMPLE)),)
+#>$(.)$(EXAMPLE)$(.)md: $(EXAMPLE)-$(HEADERS)
+#>endif
 $(.)$(EXAMPLE)$(.)md:
 	@$(call $(EXAMPLE)-print,,$(_S)---)
 	@$(foreach FILE,$(COMPOSER_YML_DATA_METALIST),\
@@ -12544,6 +12572,18 @@ override $(HEADERS)-list-make := \
 	MAKEFLAGS \
 	MAKELEVEL \
 
+#> update: .PHONY: $(EXAMPLE)
+
+override $(HEADERS)-$(EXAMPLE)-prefix := \
+	$(.) \
+	"" \
+
+override $(HEADERS)-$(EXAMPLE)-extension := \
+	-$(INSTALL) \
+	"" \
+	$(.)yml \
+	$(.)md \
+
 .PHONY: $(HEADERS)
 $(HEADERS): $(.)set_title-$(HEADERS)
 $(HEADERS):
@@ -12596,6 +12636,14 @@ ifneq ($(COMPOSER_DOITALL_$(HEADERS)-$(EXAMPLE)),)
 	@$(call $(COMPOSER_TINYNAME)-ln,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
 	@$(call $(COMPOSER_TINYNAME)-mv,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE),$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE)/$(MAKEFILE).$(TESTING))
 	@$(call $(COMPOSER_TINYNAME)-rm,				$(CURDIR)/$(COMPOSER_CMS)-$(HEADERS)-$(EXAMPLE),1)
+#> update: .PHONY: $(EXAMPLE)
+	@\
+	$(foreach PRE,$($(HEADERS)-$(EXAMPLE)-prefix),\
+	$(foreach EXT,$($(HEADERS)-$(EXAMPLE)-extension),\
+		$(call $(HEADERS)-action,$(PRE)$(EXAMPLE)$(EXT)); \
+		$(MAKE) $(PRE)$(EXAMPLE)$(EXT); \
+		$(call NEWLINE) \
+	))
 endif
 	@$(LINERULE)
 	@$(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) $(HEADERS)-colors
