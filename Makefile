@@ -127,8 +127,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* `make site-template-config`
 #				* `make site-all`
 #				* `make site-force`
-#			* `make site-template-list COMPOSER_DOCOLOR= >_site/.Composer.site-list.txt`
-#				* `make site-template-list COMPOSER_DOCOLOR= COMPOSER_DOITALL_site-template="+test" >_site/_test/.Composer.site-list.txt`
+#			* `make site-template-list`
+#				* `make COMPOSER_DOITALL_site-template="+test" site-template-list`
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -317,8 +317,8 @@ override COMPOSER_LIBRARY_ROOT		:=
 override COMPOSER_LIBRARY		:=
 
 override COMPOSER_SRC			:= $(COMPOSER_DIR)/.sources
-override COMPOSER_ART			:= $(COMPOSER_DIR)/artifacts
-override COMPOSER_BIN			:= $(COMPOSER_DIR)/bin
+override COMPOSER_ART			:= $(COMPOSER_DIR)/_artifacts
+override COMPOSER_BIN			:= $(COMPOSER_DIR)/_bin
 
 #> update: includes duplicates
 override TYPE_HTML			:= html
@@ -12927,6 +12927,16 @@ endif
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)-$(TESTING)
+	@$(MAKE) --makefile $(COMPOSER) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)="" \
+		COMPOSER_DOCOLOR= \
+		$(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
+		| $(TEE) $(PUBLISH_ROOT)/$(COMPOSER_CMS)$(.)$(PUBLISH)-$(PRINTER).$(EXTN_TEXT)
+	@$(MAKE) --makefile $(COMPOSER) \
+		COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)="$(TESTING)" \
+		COMPOSER_DOCOLOR= \
+		$(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
+		| $(TEE) $(PUBLISH_ROOT_TESTING)/$(COMPOSER_CMS)$(.)$(PUBLISH)-$(PRINTER).$(EXTN_TEXT)
 ifeq ($(COMPOSER_DOITALL_$(DISTRIB)),$(TESTING))
 	@$(MAKE) --makefile $(COMPOSER) $(DEBUGIT)-$(TOAFILE)
 endif
@@ -13347,7 +13357,7 @@ override $(CREATOR)-$(TARGETS) += $(CREATOR)$(.)$(notdir $(COMPOSER_ART))
 .PHONY: $(CREATOR)$(.)$(notdir $(COMPOSER_ART))
 $(CREATOR)$(.)$(notdir $(COMPOSER_ART)):
 	@$(call $(HEADERS)-file,$(CURDIR),$(call COMPOSER_CONV,,$(COMPOSER_ART)))
-	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)				| $(SED) "s|[[:space:]]+$$||g" >$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/.gitignore
+	@$(call DO_HEREDOC,HEREDOC_GITIGNORE,,1)			| $(SED) "s|[[:space:]]+$$||g" >$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/.gitignore
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""							>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_LOGO))
@@ -15211,8 +15221,8 @@ $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1):
 $$(CONFIGS)-$$(SUBDIRS)$$(.)$(1)$$(TOKEN)%:
 	@if [ -f "$$(CURDIR)/$$(*)/$$(MAKEFILE)" ]; then \
 		$$(MAKE) \
-			COMPOSER_DOITALL_$$(CONFIGS)="$$(COMPOSER_DOITALL_$$(CONFIGS))" \
 			--directory $$(CURDIR)/$$(*) \
+			COMPOSER_DOITALL_$$(CONFIGS)="$$(COMPOSER_DOITALL_$$(CONFIGS))" \
 			$$(CONFIGS)$$(.)$(1); \
 	fi
 endef
@@ -17173,9 +17183,9 @@ $(PUBLISH)-$(PRINTER)$(.)%: export override COMPOSER_DOITALL_$(PUBLISH)-$(PRINTE
 $(PUBLISH)-$(PRINTER)$(.)%:
 	@$(MAKE) \
 		$(call COMPOSER_OPTIONS_EXPORT) \
-		COMPOSER_DOCOLOR= \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)="$(if $(filter undefined,$(origin COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))),$(*),$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)))" \
 		COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)$(.)="$(*)" \
+		COMPOSER_DOCOLOR= \
 		$(PUBLISH)-$(PRINTER)
 
 ########################################
@@ -17282,6 +17292,7 @@ endif
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 	@{	$(call ENV_MAKE,$(TESTING_MAKEJOBS)) \
 			COMPOSER_DOITALL_$(CONFIGS)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+			c_list="$(c_list)" \
 			$(CONFIGS)$(.)COMPOSER_EXPORTS_EXT \
 			| $(SED) "/^.+$(TOKEN)$$/d" \
 			; \
@@ -17309,6 +17320,7 @@ ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 	@$(ECHO) "$(_N)"
 	@$(call ENV_MAKE,$(TESTING_MAKEJOBS)) \
 		COMPOSER_DOITALL_$(CONFIGS)="$(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER))" \
+		c_list="$(c_list)" \
 		$(CONFIGS)$(.)COMPOSER_IGNORES_EXT \
 		| $(SED) "/^.+$(TOKEN)$$/d" \
 		$(call $(PUBLISH)-$(PRINTER)-output)
