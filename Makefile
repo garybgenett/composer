@@ -4400,48 +4400,6 @@ endef
 #		make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
 
 #WORKING:NOW
-#	note that they are intentionally reversed
-#		bootstrap is just supporting where the markdown-viewer themes fall through
-#		revealjs is usually using a theme, which we are refining
-#	these can now be removed to be disabled
-#	breakpoints = https://getbootstrap.com/docs/5.2/layout/grid/#grid-options
-#	the *-info-* fields will accept any markdown, html, or bootstrap
-#		it is a simple span within the navbar, so flex and others will work
-#		https://getbootstrap.com/docs/5.2/components/navbar
-#		https://getbootstrap.com/docs/5.2/utilities/flex
-#	any simple css should do...
-#		https://getbootstrap.com/docs/5.2/utilities/colors
-#	$(PUBLISH_CMD_BEG) fold-begin . $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
-#		(the . as a blank placeholder)
-#	$(DO_PAGE)-% must end in $(EXTN_HTML)...
-#		$(PUBLISH) requires $(EXTN_HTML) to work... hard-change it if required...
-#	$(PUBLISH) rebuilds indexes, force recursively
-#	examples of description/etc. metadata in $(COMPOSER_YML)
-#	how to do an include of the digest file
-#		it can only be used in the directory parallel to the library...
-#		files must have a title or pagetitle to be included in the digest
-#	$(PUBLISH)-* targets can reach up the tree, back to the closest COMPOSER_YML_LIST directory...
-#	note: removed yaml fields will not update in the index = make site
-#	note: pretty much everything is linked to COMPOSER_YML_LIST, so when those get updated...
-#	COMPOSER_EXT="" and c_site="1" do not mix very well!
-#		COMPOSER_EXT needs to be global when library is enabled
-#	the library indexes as a merge for new files
-#		removed files and fields will remain
-#		rm _library/site-library.yml or do "make site" to rebuild
-#	c_site = metainfo = title-prefix/pagetitle behavior
-#		regardless of include, main file, etc...
-#	any date format that yq can understand [link] can be used, but be consisitent...
-#	$(PUBLISH)-spacer[spacer] / box-begin / box-end
-#	need to do "null" to override on sub-composer.yml files
-#	all it takes is c_site to make a site page... site/page are just wrappers
-#		this is essentially what site-force does, is c_site=1 all, recursively
-#	booleans are true with 1, disabled with any other value (0 recommended), and otherwise default
-#	library folder name can not be "null", and will be shortened to basename
-#		note about how yml processing for this one is special
-#		$(testing) = disable... other than testing, what would/could this be for...?
-#	COMPOSER_INCLUDE + c_site = for the win!
-#	note: a first troubleshooting step is to do MAKEJOBS="1"
-#		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 #	need to document "header 0" for fold-begin and box-begin
 #		need to document "contents 0"
 #			first instance of "contents.*" wins...
@@ -4476,7 +4434,7 @@ endef
 #	document "config.navbars.composer" option
 #	document "$(c_base).$(extension)" and "$(c_base).*" variables...
 #	document "$(c_base).$(EXTN_OUTPUT).header" and "$(c_base).$(EXTN_OUTPUT).css" special files, and add to testing
-#	note: never run in the "/" directory
+#	never run in the "/" directory
 #	document test case of proper PUBLISH_PAGE_PAGEONE sorting in $(CONFIGS) library
 #	document $(EXAMPLE)$(.)md-$(TOAFILE)
 #	document all the possible quoting options for c_options...?  see: $(TESTING)-$(COMPOSER_BASENAME)
@@ -4882,7 +4840,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,Pandoc Options)
 
 #WORK
 #	does not seem to be documented anywhere... test it, with examples here, regardless...
-#	seems to be: yaml_metadata, --defaults, --metadata*, etc.
+#	seems to be: yaml_metadata_block, --defaults, --metadata*, etc.
 endef
 
 ########################################
@@ -5141,6 +5099,8 @@ $(call $(HELPOUT)-$(DOITALL)-section,MAKEJOBS)
 #		processors=2
 #		memory=2GB
 #		swap=0
+#	a first troubleshooting step is to do MAKEJOBS="1"
+#		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 
   * By default, $(_C)[$(COMPOSER_BASENAME)]$(_D) progresses linearly, doing one task at a time.  If
     there are dependencies between items, this can be beneficial, since it
@@ -5412,6 +5372,47 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_TMP)
 
 #WORK
 endef
+
+########################################
+### {{{3 $(HELPOUT)-$(DOITALL)-site-config
+########################################
+
+#WORKING:NOW
+#	need to create sections for all the composer.yml site configuration options
+
+#WORK
+#	$(PUBLISH) requires $(EXTN_HTML) to work... hard-change it if required...
+#		COMPOSER_EXT="" and c_site="1" do not mix very well!
+#			COMPOSER_EXT needs to be global when library is enabled
+#		all it takes is c_site to make a site page... the site targets are helpful wrappers
+#			COMPOSER_INCLUDE + c_site = for the win!
+#		c_site = metainfo = title-prefix/pagetitle behavior
+#			regardless of include, main file, etc...
+#		booleans are true with any value, and disabled with "null"
+#			other fields use the default with "null", on a case-by-case basis
+#	$(PUBLISH_CMD_BEG) fold-begin . $(SPECIAL_VAL) $(SPECIAL_VAL) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
+#		(the . as a blank placeholder)
+#	breakpoints = https://getbootstrap.com/docs/5.2/layout/grid/#grid-options
+#	any simple css should do...
+#		https://getbootstrap.com/docs/5.2/utilities/colors
+#	the *-info-* fields will accept any markdown, html, or bootstrap
+#		it is a simple span within the navbar, so flex and others will work
+#		https://getbootstrap.com/docs/5.2/components/navbar
+#		https://getbootstrap.com/docs/5.2/utilities/flex
+#	$(PUBLISH)-library-* targets can reach up the tree, back to the closest COMPOSER_YML_LIST directory...
+#		always test new composer.yml files with make config before running make site commands
+#			yq errors can bleed through as values, which will cause unexpected behavior
+#		library folder name can not be "null", and will be shortened to basename
+#			note about how yml processing for this one is special
+#			$(testing) = disable... other than testing, what would/could this be for...?
+#		removed yml fields will not update in the index = make site-clean && make site-force
+#		pretty much everything is linked to COMPOSER_YML_LIST, so when those get updated...
+#		the library indexes as a merge for new files
+#			removed files and fields will remain
+#			rm _library/site-library.yml or do "make site" to rebuild
+#	how to do an include of the digest/sitemap files
+#		files must have a yml block "1{/^---$$/p}" to be included in the digest
+#		sitemap is based on COMPOSER_EXPORTS
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-targets_primary
