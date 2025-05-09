@@ -7968,6 +7968,10 @@ variables:
 
 ########################################
 
+  $(PUBLISH)-config:
+    $(TESTING):				$(TESTING)
+  $(PUBLISH)-helpers:
+    $(TESTING):				$(TESTING)
   $(PUBLISH)-library:
     folder:
       name:				$(TESTING)
@@ -12928,16 +12932,6 @@ endif
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)
 ifneq ($(COMPOSER_RELEASE),)
 	@$(MAKE) --makefile $(COMPOSER) $(PUBLISH)-$(EXAMPLE)-$(TESTING)
-	@$(MAKE) --makefile $(COMPOSER) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)="" \
-		COMPOSER_DOCOLOR= \
-		$(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
-		| $(TEE) $(PUBLISH_ROOT)/$(.)$(PUBLISH)-$(PRINTER).$(EXTN_TEXT)
-	@$(MAKE) --makefile $(COMPOSER) \
-		COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)="$(TESTING)" \
-		COMPOSER_DOCOLOR= \
-		$(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
-		| $(TEE) $(PUBLISH_ROOT_TESTING)/$(.)$(PUBLISH)-$(PRINTER).$(EXTN_TEXT)
 ifeq ($(COMPOSER_DOITALL_$(DISTRIB)),$(TESTING))
 	@$(MAKE) --makefile $(COMPOSER) $(DEBUGIT)-$(TOAFILE)
 endif
@@ -17874,6 +17868,11 @@ ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(RM)								$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(DONOTDO).* \
 									$($(DEBUGIT)-output)
 	@$(ECHO) "$(_D)"
+endif
+ifneq ($(COMPOSER_RELEASE),)
+	@$(call ENV_MAKE,,,,COMPOSER_RELEASE_EXAMPLE $(if $(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)),COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE))) \
+		$(PUBLISH)-$(EXAMPLE)-$(PRINTER) \
+		| $(TEE) $(PUBLISH_ROOT)/$(.)$(PUBLISH)-$(PRINTER).$(EXTN_TEXT)
 endif
 endif
 	@$(ECHO) ""
