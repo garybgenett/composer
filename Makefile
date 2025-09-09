@@ -146,9 +146,9 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `time make -C _site config`
 #		* `time make -C _site/config config`
 #		* `time make -C _site/config/_library-config config`
-#	* `make +test-speed`
-#		* `make MAKEJOBS="[X]" +test-speed`
-#		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-speed`
+#	* `make +test-stress`
+#		* `make MAKEJOBS="[X]" +test-stress`
+#		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-stress`
 #		* Update comments
 #
 ## {{{2 PREPARE
@@ -3448,6 +3448,7 @@ $(HELPOUT): $(HELPOUT)-variables_title_1
 $(HELPOUT): $(HELPOUT)-variables_format_2
 $(HELPOUT): $(HELPOUT)-variables_control_2
 $(HELPOUT): $(HELPOUT)-variables_helper_2
+$(HELPOUT): $(HELPOUT)-variables_yaml_2
 $(HELPOUT): $(HELPOUT)-targets_title_1
 $(HELPOUT): $(HELPOUT)-targets_primary_2
 $(HELPOUT): $(HELPOUT)-targets_additional_2
@@ -3608,6 +3609,20 @@ $(HELPOUT)-variables_helper_%:
 	@$(ENDOLINE)
 	@$(PRINT) "  * *\`$(_N)(mk)$(_D)\`  = configurable in \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(yml)$(_D)\` = configurable in \`$(_M)$(COMPOSER_YML)$(_D)\`*"
+
+########################################
+#### {{{4 $(HELPOUT)-variables-yaml
+########################################
+
+#WORKING:YML
+#	need to create sections for all the composer.yml site configuration options
+
+.PHONY: $(HELPOUT)-variables_yaml_%
+$(HELPOUT)-variables_yaml_%:
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),YAML Variables); fi
+	@$(TABLE_M3) "$(_H)Variable"	"$(_H)Purpose"	"$(_H)Value"
+	@$(TABLE_M3_HEADER_L)
+	@$(TABLE_M3) "$(_C)#WORK"	"#WORK"		"#WORK"
 
 ########################################
 ### {{{3 $(HELPOUT)-targets
@@ -3894,6 +3909,7 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_format_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_format)	; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_control_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_control)	; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_helper_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_helper)	; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_yaml_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_yaml)		; $(call TITLE_END)
 #>	@$(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-targets_title_1
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-targets_primary_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-targets_primary)		; $(call TITLE_END)
@@ -4389,17 +4405,8 @@ endef
 #### {{{4 #WORKING:FIX
 ########################################
 
-#WORK
-#	why all the duplication in water.css for custom builds...?
-#		is this happening for the defaults as well...?
-
-#WORK
-#	try to remove "manual review of output throughout $(TESTING)...
-#	$(TESTING)-speed -> $(TESTING)-stress
-#		add $(CLEANER)/$(DOITALL)/$(TARGETS) for a vary large directory of files
-#		make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
-
 #WORKING:NOW
+#	try to remove "manual review of output throughout $(TESTING)...
 #	need to document "header 0" for fold-begin and box-begin
 #		need to document "contents 0"
 #			first instance of "contents.*" wins...
@@ -5374,10 +5381,10 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_TMP)
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-site-config
+### {{{3 $(HELPOUT)-$(DOITALL)-variables_yml
 ########################################
 
-#WORKING:NOW
+#WORKING:YML
 #	need to create sections for all the composer.yml site configuration options
 
 #WORK
@@ -5413,6 +5420,10 @@ endef
 #	how to do an include of the digest/sitemap files
 #		files must have a yml block "1{/^---$$/p}" to be included in the digest
 #		sitemap is based on COMPOSER_EXPORTS
+
+override define $(HELPOUT)-$(DOITALL)-variables_yaml =
+#WORK
+endef
 
 ########################################
 ### {{{3 $(HELPOUT)-$(DOITALL)-targets_primary
@@ -13680,7 +13691,7 @@ $(TESTING): $(TESTING)-$(HEADERS)-CONFIGS
 #>$(TESTING): $(TESTING)-$(_)Think
 $(TESTING): $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)
 #>$(TESTING): $(TESTING)-heredoc
-#>$(TESTING): $(TESTING)-speed
+#>$(TESTING): $(TESTING)-stress
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
 $(TESTING): $(TESTING)-$(INSTALL)-MAKEJOBS
@@ -14151,7 +14162,7 @@ endif
 endif
 
 ########################################
-### {{{3 $(TESTING)-speed
+### {{{3 $(TESTING)-stress
 ########################################
 
 #> uname -a
@@ -14191,9 +14202,13 @@ endif
 #>	site (showdir):		~ 249m
 #>	site (example):		~ 276m
 
-.PHONY: $(TESTING)-speed
-$(TESTING)-speed: $(TESTING)-$(_)Think
-$(TESTING)-speed:
+#WORKING:NOW
+#	add $(CLEANER)/$(DOITALL)/$(TARGETS) for a vary large directory of files
+#	make targets = Argument list too long ... how many is too many, and does it matter ...?  seems to be around ~400-55, depending...
+
+.PHONY: $(TESTING)-stress
+$(TESTING)-stress: $(TESTING)-$(_)Think
+$(TESTING)-stress:
 	@$(call $(TESTING)-$(HEADERS),\
 		Measure processing speed with a large directory \
 		\n\t $(_N)$(MARKER) For performance testing and fun$(_D) \
@@ -14213,21 +14228,21 @@ $(TESTING)-speed:
 	@$(call $(TESTING)-done)
 	@$(call $(TESTING)-hold)
 
-.PHONY: $(TESTING)-speed-init
-$(TESTING)-speed-init:
-	@$(call $(TESTING)-speed-init)
+.PHONY: $(TESTING)-stress-init
+$(TESTING)-stress-init:
+	@$(call $(TESTING)-stress-init)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(INSTALL)-$(DOFORCE)
 #> $(PUBLISH) > $(CLEANER) > $(DOITALL)
 #>	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(MAKEJOBS)) $(CLEANER)-$(DOITALL)
-	@$(call $(TESTING)-speed-init-$(PUBLISH))
-	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_TESTING)
-#>	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)
-	@$(call $(TESTING)-speed-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)
+	@$(call $(TESTING)-stress-init-$(PUBLISH))
+	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_TESTING)
+#>	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)
+	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)
 
 #> update: $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
-override define $(TESTING)-speed-init =
+override define $(TESTING)-stress-init =
 	if [ -z "$(1)" ]; then \
 		$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(call $(TESTING)-pwd),$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))); \
 		$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_YML); \
@@ -14252,8 +14267,8 @@ override define $(TESTING)-speed-init =
 	done
 endef
 
-override define $(TESTING)-speed-init-$(PUBLISH) =
-	$(call $(TESTING)-speed-init,$(1)); \
+override define $(TESTING)-stress-init-$(PUBLISH) =
+	$(call $(TESTING)-stress-init,$(1)); \
 	FILE="$$($(SED) -n "/Creating.+[.]$(EXTN_HTML)/p" $(call $(TESTING)-log) | $(WC))"; \
 	$(call $(HEADERS)-note,$(PUBLISH)-$(DOFORCE),$(if $(1),$(1),$(NOTHING)),$${FILE}); \
 	$(CAT) \
@@ -14264,8 +14279,8 @@ override define $(TESTING)-speed-init-$(PUBLISH) =
 	time $(call $(TESTING)-run,,$(MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 endef
 
-.PHONY: $(TESTING)-speed-done
-$(TESTING)-speed-done:
+.PHONY: $(TESTING)-stress-done
+$(TESTING)-stress-done:
 	@$(call $(TESTING)-find,MAKECMDGOALS)
 	@$(call $(TESTING)-find,$(PUBLISH)-$(DOFORCE).+$(DIVIDE))
 	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type d -print \) | $(WC))"
