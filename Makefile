@@ -2574,7 +2574,7 @@ override define COMPOSER_YML_DATA_SKEL =
 
   $(PUBLISH)-library: {
     folder: {
-      name:				$(LIBRARY_FOLDER),
+      name:				"$(LIBRARY_FOLDER)",
       auto_update:			$(LIBRARY_AUTO_UPDATE),
     },
     pages: {
@@ -3448,7 +3448,10 @@ $(HELPOUT): $(HELPOUT)-variables_title_1
 $(HELPOUT): $(HELPOUT)-variables_format_2
 $(HELPOUT): $(HELPOUT)-variables_control_2
 $(HELPOUT): $(HELPOUT)-variables_helper_2
-$(HELPOUT): $(HELPOUT)-variables_yaml_2
+$(HELPOUT): $(HELPOUT)-website_title_1
+$(HELPOUT): $(HELPOUT)-website_config_2
+$(HELPOUT): $(HELPOUT)-website_helpers_2
+$(HELPOUT): $(HELPOUT)-website_library_2
 $(HELPOUT): $(HELPOUT)-targets_title_1
 $(HELPOUT): $(HELPOUT)-targets_primary_2
 $(HELPOUT): $(HELPOUT)-targets_additional_2
@@ -3562,16 +3565,16 @@ $(HELPOUT)-variables_format_%:
 .PHONY: $(HELPOUT)-variables_control_%
 $(HELPOUT)-variables_control_%:
 	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Control Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"					"$(_H)Value"
+	@$(TABLE_M3) "$(_H)Variable"		"$(_H)Purpose"						"$(_H)Value"
 	@$(TABLE_M3_HEADER_L)
-	@$(TABLE_M3) "$(_C)[MAKEJOBS]"		"Parallel processing threads"			"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )\`$(_N)(makejobs)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DEBUGIT]"	"Use verbose output"				"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )\`$(_N)(debugit)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DOCOLOR]"	"Enable title/color sequences"			"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )\`$(_N)(boolean)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_INCLUDE]"	"Include all: \`$(_M)$(COMPOSER_SETTINGS)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )\`$(_N)(boolean)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_DEPENDS]"	"Sub-directories first: $(_C)[$(DOITALL)]"	"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )\`$(_N)(boolean)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_KEEPING]"	"Log entries / cache files"			"$(if $(COMPOSER_KEEPING),$(_M)$(COMPOSER_KEEPING)$(_D) )\`$(_N)(keeping)$(_D)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_LOG]"	"Timestamped command log"			"$(if $(COMPOSER_LOG),$(_M)$(COMPOSER_LOG))"
-	@$(TABLE_M3) "$(_C)[COMPOSER_EXT]"	"Markdown file extension"			"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
+	@$(TABLE_M3) "$(_C)[MAKEJOBS]"		"Parallel processing threads"				"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )\`$(_N)(makejobs)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DEBUGIT]"	"Use verbose output"					"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )\`$(_N)(debugit)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DOCOLOR]"	"Enable title/color sequences"				"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )\`$(_N)(boolean)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_INCLUDE]"	"Include all: \`$(_M)$(COMPOSER_SETTINGS)$(_D)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )\`$(_N)(boolean)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_DEPENDS]"	"Sub-directories first: $(_C)[$(DOITALL)]"		"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )\`$(_N)(boolean)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_KEEPING]"	"Log entries / cache files"				"$(if $(COMPOSER_KEEPING),$(_M)$(COMPOSER_KEEPING)$(_D) )\`$(_N)(keeping)$(_D)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_LOG]"	"Timestamped command log"				"$(if $(COMPOSER_LOG),$(_M)$(COMPOSER_LOG))"
+	@$(TABLE_M3) "$(_C)[COMPOSER_EXT]"	"Markdown file extension"				"$(if $(COMPOSER_EXT),$(_M)$(COMPOSER_EXT))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_TARGETS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_D)"				"$(_C)[$(CONFIGS)]$(_E)/$(_C)[$(TARGETS)]"	#> "$(if $(COMPOSER_TARGETS),$(_M)$(COMPOSER_TARGETS))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_SUBDIRS]"	"See: $(_C)[$(DOITALL)]$(_E)/$(_C)[$(CLEANER)]$(_E)/$(_C)[$(INSTALL)]$(_D)"	"$(_C)[$(CONFIGS)]$(_E)/$(_C)[$(TARGETS)]"	#> "$(if $(COMPOSER_SUBDIRS),$(_M)$(COMPOSER_SUBDIRS))"
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"See: $(_C)[c_site]$(_E)/$(_C)[$(EXPORTS)]$(_D)"				"$(_C)[$(CONFIGS)]"				#> "$(if $(COMPOSER_EXPORTS),$(_M)$(COMPOSER_EXPORTS))"
@@ -3611,18 +3614,121 @@ $(HELPOUT)-variables_helper_%:
 	@$(PRINT) "  * *\`$(_N)(yml)$(_D)\` = configurable in \`$(_M)$(COMPOSER_YML)$(_D)\`*"
 
 ########################################
-#### {{{4 $(HELPOUT)-variables-yaml
+#### {{{4 $(HELPOUT)-website_title
+########################################
+
+.PHONY: $(HELPOUT)-website_title_%
+$(HELPOUT)-website_title_%:
+	@$(call TITLE_LN,$(*),$(COMPOSER_BASENAME) Websites,1)
+
+########################################
+#### {{{4 $(HELPOUT)-website_config
 ########################################
 
 #WORKING:YML
-#	need to create sections for all the composer.yml site configuration options
 
-.PHONY: $(HELPOUT)-variables_yaml_%
-$(HELPOUT)-variables_yaml_%:
-	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),YAML Variables); fi
-	@$(TABLE_M3) "$(_H)Variable"	"$(_H)Purpose"	"$(_H)Value"
+.PHONY: $(HELPOUT)-website_config_%
+$(HELPOUT)-website_config_%:
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Website Configuration); fi
+	@$(TABLE_M3) "$(_H)[YAML].$(PUBLISH)-config"		"$(_H)Purpose"				"$(_H)Default"
 	@$(TABLE_M3_HEADER_L)
-	@$(TABLE_M3) "$(_C)#WORK"	"#WORK"		"#WORK"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[navbars.brand]"			"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.homepage]"			"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.search.name]"		"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.search.site]"		"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.search.call]"		"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.search.form]"		"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.copyright]"			"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.$(COMPOSER_TINYNAME)]"	"#WORK"					"$(_M)$(PUBLISH_COMPOSER)"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[pages.css_overlay]"			"#WORK"					"$(_M)$(PUBLISH_CSS_OVERLAY)"
+	@$(TABLE_M3) "$(_C)[pages.copy_protect]"		"#WORK"					"$(_M)$(PUBLISH_COPY_PROTECT)"
+	@$(TABLE_M3) "$(_C)[pages.header]"			"#WORK"					"$(_N)[$(_D) $(subst ",\",$(call COMPOSER_YML_ARRAY,$(PUBLISH_HEADER),,1)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[pages.footer]"			"#WORK"					"$(_N)[$(_D) $(subst ",\",$(call COMPOSER_YML_ARRAY,$(PUBLISH_FOOTER),,1)) $(_N)]"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[cols.break]"			"#WORK"					"$(_M)$(PUBLISH_COLS_BREAK)"
+	@$(TABLE_M3) "$(_C)[cols.scroll]"			"#WORK"					"$(_M)$(PUBLISH_COLS_SCROLL)"
+	@$(TABLE_M3) "$(_C)[cols.order]"			"#WORK"					"$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_ORDER)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[cols.reorder]"			"#WORK"					"$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_REORDER)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[cols.size]"				"#WORK"					"$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_SIZE)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[cols.resize]"			"#WORK"					"$(_N)[$(_D) $(call COMPOSER_YML_ARRAY,$(PUBLISH_COLS_RESIZE)) $(_N)]"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+#WORK	@$(TABLE_M3) "$(_C)[dates.parse]"			"#WORK"					"See: $(_C)[dates.parse]"
+	@$(TABLE_M3) "$(_C)[dates.parse]"			"#WORK"					"$(_N)[$(_D) $(subst ",\",$(call COMPOSER_YML_ARRAY,$(PUBLISH_DATES_PARSE),,1)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[dates.display]"			"#WORK"					"$(_M)$(PUBLISH_DATES_DISPLAY)"
+	@$(TABLE_M3) "$(_C)[dates.library]"			"#WORK"					"$(_M)$(PUBLISH_DATES_LIBRARY)"
+	@$(TABLE_M3) "$(_C)[dates.timezone]"			"#WORK"					"$(_M)$(PUBLISH_DATES_TIMEZONE)"
+
+########################################
+#### {{{4 $(HELPOUT)-website_helpers
+########################################
+
+#WORKING:YML
+
+.PHONY: $(HELPOUT)-website_helpers_%
+$(HELPOUT)-website_helpers_%:
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Website Helpers); fi
+	@$(TABLE_M3) "$(_H)[YAML].$(PUBLISH)-helpers"		"$(_H)Purpose"				"$(_H)Default"
+	@$(TABLE_M3_HEADER_L)
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[metainfo.display]"			"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAINFO_DISPLAY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[metainfo.empty]"			"#WORK"					"$(_N)\"$(_M)$(PUBLISH_METAINFO_EMPTY)$(_N)\""
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METATITL).title]"	"#WORK"					"$(_N)\"$(_M)$(PUBLISH_METATITL_TITLE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METATITL).display]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METATITL_DISPLAY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METATITL).empty]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METATITL_EMPTY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METADATE).title]"	"#WORK"					"$(_N)\"$(_M)$(PUBLISH_METADATE_TITLE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METADATE).display]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METADATE_DISPLAY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METADATE).empty]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METADATE_EMPTY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METAAUTH).title]"	"#WORK"					"$(_N)\"$(_M)$(PUBLISH_METAAUTH_TITLE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METAAUTH).display]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAAUTH_DISPLAY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METAAUTH).empty]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METAAUTH_EMPTY))$(_N)\""
+#>	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METATAGS).title]"	"#WORK"					"$(_N)\"$(_M)$(PUBLISH_METATAGS_TITLE)$(_N)\""
+#>	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METATAGS).display]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METATAGS_DISPLAY))$(_N)\""
+#>	@$(TABLE_M3) "$(_C)[metalist.$(PUBLISH_METATAGS).empty]"	"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_METATAGS_EMPTY))$(_N)\""
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[readtime.display]"			"#WORK"					"$(_N)\"$(_M)$(subst <|>,$(_N)<|>$(_M),$(PUBLISH_READTIME_DISPLAY))$(_N)\""
+	@$(TABLE_M3) "$(_C)[readtime.wpm]"			"#WORK"					"$(_M)$(PUBLISH_READTIME_WPM)"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[redirect.title]"			"#WORK"					"$(_N)\"$(_M)$(PUBLISH_REDIRECT_TITLE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[redirect.display]"			"#WORK"					"$(_N)\"$(_M)$(PUBLISH_REDIRECT_DISPLAY)$(_N)\""
+	@$(TABLE_M3) "$(_C)[redirect.exclude]"			"#WORK"					"$(_N)[$(_D) $(subst ",\",$(call COMPOSER_YML_ARRAY,$(PUBLISH_REDIRECT_EXCLUDE),,1)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[redirect.time]"			"#WORK"					"$(_M)$(PUBLISH_REDIRECT_TIME)"
+
+########################################
+#### {{{4 $(HELPOUT)-website_library
+########################################
+
+#WORKING:YML
+
+.PHONY: $(HELPOUT)-website_library_%
+$(HELPOUT)-website_library_%:
+	@if [ "$(*)" != "0" ]; then $(call TITLE_LN,$(*),Website Library); fi
+	@$(TABLE_M3) "$(_H)[YAML].$(PUBLISH)-library"		"$(_H)Purpose"				"$(_H)Default"
+	@$(TABLE_M3_HEADER_L)
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[folder.name]"			"#WORK"					"$(_N)\"$(_M)$(LIBRARY_FOLDER)$(_N)\""
+	@$(TABLE_M3) "$(_C)[folder.auto_update]"		"#WORK"					"$(_M)$(LIBRARY_AUTO_UPDATE)"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[pages.anchor_links]"		"#WORK"					"$(_M)$(LIBRARY_ANCHOR_LINKS)"
+	@$(TABLE_M3) "$(_C)[pages.append]"			"#WORK"					"$(_N)[$(_D) $(subst ",\",$(call COMPOSER_YML_ARRAY,$(LIBRARY_APPEND),,1)) $(_N)]"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[digest.title]"			"#WORK"					"$(_N)\"$(_M)$(LIBRARY_DIGEST_TITLE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[digest.continue]"			"#WORK"					"$(_N)\"$(_M)$(LIBRARY_DIGEST_CONTINUE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[digest.permalink]"			"#WORK"					"$(_N)\"$(_M)$(LIBRARY_DIGEST_PERMALINK)$(_N)\""
+	@$(TABLE_M3) "$(_C)[digest.chars]"			"#WORK"					"$(_M)$(LIBRARY_DIGEST_CHARS)"
+	@$(TABLE_M3) "$(_C)[digest.count]"			"#WORK"					"$(_M)$(LIBRARY_DIGEST_COUNT)"
+	@$(TABLE_M3) "$(_C)[digest.expanded]"			"#WORK"					"$(_M)$(LIBRARY_DIGEST_EXPANDED)"
+	@$(TABLE_M3) "$(_C)[digest.spacer]"			"#WORK"					"$(_M)$(LIBRARY_DIGEST_SPACER)"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[lists.expanded]"			"#WORK"					"$(_M)$(LIBRARY_LISTS_EXPANDED)"
+	@$(TABLE_M3) "$(_C)[lists.spacer]"			"#WORK"					"$(_M)$(LIBRARY_LISTS_SPACER)"
+	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
+	@$(TABLE_M3) "$(_C)[sitemap.title]"			"#WORK"					"$(_N)\"$(_M)$(LIBRARY_SITEMAP_TITLE)$(_N)\""
+	@$(TABLE_M3) "$(_C)[sitemap.exclude]"			"#WORK"					"$(_N)[$(_D) $(subst ",\",$(call COMPOSER_YML_ARRAY,$(LIBRARY_SITEMAP_EXCLUDE),,1)) $(_N)]"
+	@$(TABLE_M3) "$(_C)[sitemap.expanded]"			"#WORK"					"$(_M)$(LIBRARY_SITEMAP_EXPANDED)"
+	@$(TABLE_M3) "$(_C)[sitemap.spacer]"			"#WORK"					"$(_M)$(LIBRARY_SITEMAP_SPACER)"
 
 ########################################
 ### {{{3 $(HELPOUT)-targets
@@ -3909,7 +4015,13 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_format_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_format)	; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_control_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_control)	; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_helper_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_helper)	; $(call TITLE_END)
-	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_yaml_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_yaml)		; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_title_1
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_config_2		\
+		$(if $(filter $(HELPOUT),$(*)),| $(SED) -e "s|([<>*])|\\\\\1|g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g")	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_config)		; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_helpers_2		\
+		$(if $(filter $(HELPOUT),$(*)),| $(SED) -e "s|([<>*])|\\\\\1|g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g")	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_helpers)		; $(call TITLE_END)
+	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_library_2		\
+		$(if $(filter $(HELPOUT),$(*)),| $(SED) -e "s|([<>*])|\\\\\1|g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g")	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_library)		; $(call TITLE_END)
 #>	@$(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-targets_title_1
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-targets_primary_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-targets_primary)		; $(call TITLE_END)
@@ -4727,6 +4839,8 @@ $(call $(HELPOUT)-$(DOITALL)-section,GNU Make ($(COMPOSER_SETTINGS)))
 
 $(call $(HELPOUT)-$(DOITALL)-section,Pandoc & Bootstrap ($(COMPOSER_YML)))
 
+$(_S)[YAML]: #pandoc--bootstrap-composeryml$(_D)
+
 $(_C)[$(COMPOSER_BASENAME)]$(_D) uses `$(_M)$(COMPOSER_SETTINGS)$(_D)` files for persistent settings and definition of
 $(_C)[Custom Targets]$(_D).  By default, they are chained together across their `$(_M)$(MAKEFILE)$(_D)`
 tree $(_E)(see [COMPOSER_INCLUDE] in [Control Variables])$(_D).  A `$(_M)$(COMPOSER_SETTINGS)$(_D)` in the
@@ -4824,7 +4938,7 @@ $(CODEBLOCK)./$(_M)$(OUT_README).$(EXTN_DEFAULT).css$(_D)
 
   1. $(_C)[c_site]$(_D) $(_E)$(MARKER)$(_D) $(_C)[Bootstrap]$(_D)
   1. $(_C)[c_css]$(_D)
-  1. $(_C)[c_site]$(_D) $(_E)$(MARKER)$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)$(DIVIDE)$(_D) $(_C)[$(PUBLISH)-config]$(_D).$(_C)[css_overlay]$(_D)
+  1. $(_C)[c_site]$(_D) $(_E)$(MARKER)$(_D) `$(_M)$(COMPOSER_YML)$(_D)` $(_E)$(DIVIDE)$(_D) $(_M)$(PUBLISH)-config$(_D).$(_C)[pages.css_overlay]$(_D)
 #WORK
 #	comment 1. $(call COMPOSER_CONV,$(_H)[COMPOSER_DIR]$(_D)/$(_M),$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
   1. $(patsubst $(COMPOSER_ART)/%,$(_H)[COMPOSER_ART]$(_D)/$(_M)%,$(COMPOSER_CUSTOM))$(_D)-$(_C)[c_type]$(_D).css
@@ -5381,11 +5495,10 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_TMP)
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-variables_yml
+### {{{3 $(HELPOUT)-$(DOITALL)-website_config
 ########################################
 
 #WORKING:YML
-#	need to create sections for all the composer.yml site configuration options
 
 #WORK
 #	$(PUBLISH) requires $(EXTN_HTML) to work... hard-change it if required...
@@ -5421,7 +5534,257 @@ endef
 #		files must have a yml block "1{/^---$$/p}" to be included in the digest
 #		sitemap is based on COMPOSER_EXPORTS
 
-override define $(HELPOUT)-$(DOITALL)-variables_yaml =
+override define $(HELPOUT)-$(DOITALL)-website_config =
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.brand)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.homepage)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.search.name)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.search.site)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.search.call)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.search.form)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.copyright)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,navbars.$(COMPOSER_TINYNAME))
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,pages.css_overlay)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,pages.copy_protect)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,pages.header)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,pages.footer)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,cols.break)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,cols.scroll)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,cols.order)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,cols.reorder)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,cols.size)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,cols.resize)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,dates.parse)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,dates.display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,dates.library)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,dates.timezone)
+
+#WORK
+endef
+
+########################################
+### {{{3 $(HELPOUT)-$(DOITALL)-website_helpers
+########################################
+
+#WORKING:YML
+
+override define $(HELPOUT)-$(DOITALL)-website_helpers =
+$(call $(HELPOUT)-$(DOITALL)-section,metainfo.display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metainfo.empty)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METATITL).title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METATITL).display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METATITL).empty)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METADATE).title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METADATE).display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METADATE).empty)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METAAUTH).title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METAAUTH).display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METAAUTH).empty)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METATAGS).title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METATAGS).display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,metalist.$(PUBLISH_METATAGS).empty)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,readtime.display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,readtime.wpm)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,redirect.title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,redirect.display)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,redirect.exclude)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,redirect.time)
+
+#WORK
+endef
+
+########################################
+### {{{3 $(HELPOUT)-$(DOITALL)-website_library
+########################################
+
+#WORKING:YML
+
+override define $(HELPOUT)-$(DOITALL)-website_library =
+$(call $(HELPOUT)-$(DOITALL)-section,folder.name)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,folder.auto_update)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,pages.anchor_links)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,pages.append)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.continue)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.permalink)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.chars)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.count)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.expanded)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,digest.spacer)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,lists.expanded)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,lists.spacer)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,sitemap.title)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,sitemap.exclude)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,sitemap.expanded)
+
+#WORK
+
+$(call $(HELPOUT)-$(DOITALL)-section,sitemap.spacer)
+
 #WORK
 endef
 
@@ -5652,12 +6015,14 @@ $(_N)*None of these are intended to be run directly during normal use.*$(_D)
 $(_N)*They are only listed here for completeness.*$(_D)
 
 $(_S)[$(HELPOUT)-$(HELPOUT)]: #internal-targets$(_D)
+$(_S)[$(HELPOUT)-$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)]: #internal-targets$(_D)
 $(_S)[$(HEADERS)-$(EXAMPLE)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(MAKE_DB)]: #internal-targets$(_D)
 $(_S)[$(LISTING)]: #internal-targets$(_D)
 $(_S)[$(NOTHING)]: #internal-targets$(_D)
+$(_S)[$(DISTRIB)-$(TESTING)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)]: #internal-targets$(_D)
 $(_S)[$(CREATOR)-$(DOITALL)]: #internal-targets$(_D)
 $(_S)[$(TESTING)]: #internal-targets$(_D)
@@ -7568,7 +7933,7 @@ $(_S)########################################$(_D)
   $(_H)$(PUBLISH)-library$(_D):
 
     $(_C)folder$(_D):
-      $(_C)name$(_D):				$(_M)$(LIBRARY_FOLDER)$(_D)
+      $(_C)name$(_D):				$(_N)"$(_M)$(LIBRARY_FOLDER)$(_N)"$(_D)
 $(_S)#$(MARKER)$(_D)   $(_C)auto_update$(_D):			$(_M)$(LIBRARY_AUTO_UPDATE)$(_D)
 
 $(_S)#$(MARKER)$(_D) $(_C)pages$(_D):
@@ -7937,7 +8302,7 @@ variables:
 
   $(PUBLISH)-library:
     folder:
-      name:				$(notdir $(PUBLISH_LIBRARY))
+      name:				"$(notdir $(PUBLISH_LIBRARY))"
       auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD)))
 $(if $(1),$(call HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE_TESTING)$(call NEWLINE))
 ################################################################################
@@ -7956,7 +8321,6 @@ endef
 
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
-#>      name:				$(notdir $(PUBLISH_ROOT_TESTING))
 override define HEREDOC_COMPOSER_YML_PUBLISH_NOTHING =
 ################################################################################
 # $(COMPOSER_TECHNAME) $(DIVIDE) YAML Configuration ($(PUBLISH) $(DIVIDE) $(NOTHING))
@@ -7985,7 +8349,7 @@ variables:
     $(TESTING):				$(TESTING)
   $(PUBLISH)-library:
     folder:
-      name:				$(TESTING)
+      name:				"$(TESTING)"
       auto_update:			null
 endef
 
@@ -8069,7 +8433,7 @@ variables:
 
   $(PUBLISH)-library:
     folder:
-      name:				$(notdir $(PUBLISH_LIBRARY_ALT))
+      name:				"$(notdir $(PUBLISH_LIBRARY_ALT))"
       auto_update:			$(if $(COMPOSER_DEBUGIT),null,$(LIBRARY_AUTO_UPDATE$(if $(1),_MOD,_ALT)))
     pages:
       anchor_links:			$(LIBRARY_ANCHOR_LINKS$(if $(1),_MOD,_ALT))
