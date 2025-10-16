@@ -684,6 +684,7 @@ endif
 $(call READ_ALIASES,V,COMPOSER_DEBUGIT)
 $(call READ_ALIASES,C,COMPOSER_DOCOLOR)
 $(call READ_ALIASES,K,COMPOSER_KEEPING)
+$(call READ_ALIASES,G,COMPOSER_LOG)
 
 #> update: COMPOSER_INCLUDE[^S]
 override COMPOSER_DEBUGIT		?=
@@ -3584,6 +3585,7 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "  * *$(_C)[COMPOSER_DEBUGIT]$(_D) ~ \`$(_E)V$(_D)\`*"
 	@$(PRINT) "  * *$(_C)[COMPOSER_DOCOLOR]$(_D) ~ \`$(_E)C$(_D)\`*"
 	@$(PRINT) "  * *$(_C)[COMPOSER_KEEPING]$(_D) ~ \`$(_E)K$(_D)\`*"
+	@$(PRINT) "  * *$(_C)[COMPOSER_LOG]$(_D)     ~ \`$(_E)G$(_D)\`*"
 	@$(PRINT) "  * *\`$(_N)(makejobs)$(_D)\` = empty is disabled / number of threads / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
 	@$(PRINT) "  * *\`$(_N)(debugit)$(_D)\`  = empty is disabled / any value enables / \`$(_N)$(SPECIAL_VAL)$(_D)\` is full tracing*"
 	@$(PRINT) "  * *\`$(_N)(keeping)$(_D)\`  = empty is none     / number to keep    / \`$(_N)$(SPECIAL_VAL)$(_D)\` is no limit*"
@@ -3633,8 +3635,8 @@ $(HELPOUT)-website_config_%:
 	@$(TABLE_M3) "$(_H)[YAML].$(PUBLISH)-config"		"$(_H)Purpose"				"$(_H)Default"
 	@$(TABLE_M3_HEADER_L)
 	@$(TABLE_M3) "$(_F)#WORKING:YML#####123"		"$(_F)#WORKING:YML###############123"	"$(_F)#WORKING:YML#########123"
-	@$(TABLE_M3) "$(_C)[navbars.brand]"			"#WORK"					"$(_M)null"
-	@$(TABLE_M3) "$(_C)[navbars.homepage]"			"#WORK"					"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.brand]"			"Navigation bar branding text"		"$(_M)null"
+	@$(TABLE_M3) "$(_C)[navbars.homepage]"			"Link to website homepage"		"$(_M)null"
 	@$(TABLE_M3) "$(_C)[navbars.search.name]"		"#WORK"					"$(_M)null"
 	@$(TABLE_M3) "$(_C)[navbars.search.site]"		"#WORK"					"$(_M)null"
 	@$(TABLE_M3) "$(_C)[navbars.search.call]"		"#WORK"					"$(_M)null"
