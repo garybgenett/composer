@@ -7436,6 +7436,7 @@ override define HEREDOC_GITIGNORE =
 ########################################
 # $(DEBUGIT) / $(TESTING)
 
+#$(MARKER)/$(COMPOSER_CMS)-*/
 /$(COMPOSER_CMS)-*
 /$(COMPOSER_BASENAME)-*
 $(if $(1),$(call NEWLINE)$(call HEREDOC_GITIGNORE_COMPOSER)$(call NEWLINE))
