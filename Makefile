@@ -4018,11 +4018,14 @@ $(HELPOUT)-%:
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_helper_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_helper)	; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_title_1
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_config_2		\
-		$(if $(filter $(HELPOUT),$(*)),| $(SED) -e "s|([<>*])|\\\\\1|g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g")	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_config)		; $(call TITLE_END)
+		$(if $(filter $(COMPOSER_DOCOLOR)$(HELPOUT),$(*)),| $(SED) -e "s|([<*])|\\\\\1|g" -e "s|^[\\\\]||g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g") \
+																	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_config)		; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_helpers_2		\
-		$(if $(filter $(HELPOUT),$(*)),| $(SED) -e "s|([<>*])|\\\\\1|g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g")	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_helpers)		; $(call TITLE_END)
+		$(if $(filter $(COMPOSER_DOCOLOR)$(HELPOUT),$(*)),| $(SED) -e "s|([<*])|\\\\\1|g" -e "s|^[\\\\]||g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g") \
+																	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_helpers)		; $(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-website_library_2		\
-		$(if $(filter $(HELPOUT),$(*)),| $(SED) -e "s|([<>*])|\\\\\1|g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g")	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_library)		; $(call TITLE_END)
+		$(if $(filter $(COMPOSER_DOCOLOR)$(HELPOUT),$(*)),| $(SED) -e "s|([<*])|\\\\\1|g" -e "s|^[\\\\]||g" -e "s%([^[:space:]])[|]([^[:space:]])%\1\\\\|\2%g") \
+																	; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-website_library)		; $(call TITLE_END)
 #>	@$(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-targets_title_1
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-targets_primary_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-targets_primary)		; $(call TITLE_END)
