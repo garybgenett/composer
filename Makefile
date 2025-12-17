@@ -1036,6 +1036,7 @@ endif
 override PANDOC_LIC			:= GPL
 override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
+override PANDOC_DIR_TESTING		:= test
 
 override PANDOC_URL			:= https://github.com/jgm/pandoc/releases/download/$(PANDOC_VER)
 override PANDOC_LNX_SRC			:= pandoc-$(PANDOC_VER)-linux-amd64.tar.gz
@@ -14245,7 +14246,7 @@ override define $(TESTING)-load =
 			--filter="-_/$(TESTING_LOGFILE)" \
 			--filter="P_/$(TESTING_LOGFILE)" \
 			$(foreach VAR,$(OS_VAR_LIST),--filter="-_/$(PANDOC_$(VAR)_BIN)") \
-			--filter="-_/test" \
+			--filter="-_/$(PANDOC_DIR_TESTING)" \
 			$(PANDOC_DIR)/ \
 			$(call $(TESTING)-pwd,$(1)); \
 		$(call $(TESTING)-make,$(1),$(TESTING_MAKEFILE)); \
@@ -17760,7 +17761,7 @@ endef
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 
 #> $(PUBLISH)-$(EXAMPLE): $(.)$(PUBLISH)-$(INSTALL)
-#>	$(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(COMPOSER_DEBUGIT) || --filter="-_/test/**"
+#>	$(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(COMPOSER_DEBUGIT) || --filter="-_/$(PANDOC_DIR_TESTING)/**"
 #> $(PUBLISH)-$(EXAMPLE)-$(TESTING) = $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 #>	$(CONFIGS)
 #>		$(COMPOSER_SETTINGS)
@@ -17844,7 +17845,7 @@ endif
 override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
 	$(MKDIR) $(1); \
 	if [ -z "$(2)" ]; then \
-		$(RM) --recursive		$(1)/$(notdir $(PANDOC_DIR))/test; \
+		$(RM) --recursive		$(1)/$(notdir $(PANDOC_DIR))/$(PANDOC_DIR_TESTING); \
 	fi; \
 	$(RSYNC) \
 		--delete-excluded \
@@ -17857,7 +17858,7 @@ override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL) =
 		--filter="P_/**/$(MAKEFILE)" \
 		\
 		--filter="+_/**/" \
-		$(if $(2),,--filter="-_/test/**") \
+		$(if $(2),,--filter="-_/$(PANDOC_DIR_TESTING)/**") \
 		--filter="+_/**$(COMPOSER_EXT_DEFAULT)" \
 		--filter="-_/**" \
 		$(PANDOC_DIR)/			$(1)/$(notdir $(PANDOC_DIR)); \
