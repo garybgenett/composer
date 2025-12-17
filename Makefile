@@ -7816,10 +7816,10 @@ endef
 
 #> update: Theme:.*Overlay:
 #> update: $(1).$(2)+$(3).$(4)
-#>$(1).$(2)+$(3).$(4): override c_css := $(1).$(2)
 override define HEREDOC_COMPOSER_MK_PUBLISH_SHOWDIR_TARGET =
 override COMPOSER_TARGETS += $(1).$(2)+$(3).$(4)
 override $(1).$(2)+$(3).$(4) := $(PUBLISH_INDEX)$(if $(filter $(TYPE_PRES),$(1)),.$(TYPE_PRES))$(COMPOSER_EXT_DEFAULT)
+$(1).$(2)+$(3).$(4): override c_css := $(1).$(2)
 $(1).$(2)+$(3).$(4): override c_options := --variable="pagetitle=Theme: $(1).$(2)$(COMMA) Overlay: $(3)"
 endef
 
@@ -18111,6 +18111,9 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_SHOWDIR)):
 #> update: FILE.*CSS_THEMES
 #> update: Theme:.*Overlay:
 #> update: $(1).$(2)+$(3).$(4)
+#>			$(filter-out --relative,$(LN))						$(call COMPOSER_CONV,,$(call CSS_THEME,$(FTYPE),$(THEME))) \
+#>												$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(OVRLY).$(FEXTN).css \
+#>												$($(DEBUGIT)-output);
 	@$(foreach FILE,$(call CSS_THEMES),\
 		$(eval override FTYPE := $(word 1,$(subst ;, ,$(FILE)))) \
 		$(eval override THEME := $(word 2,$(subst ;, ,$(FILE)))) \
@@ -18125,9 +18128,6 @@ $(PUBLISH)-$(EXAMPLE)$(.)$(notdir $(PUBLISH_SHOWDIR)):
 			$(call DO_HEREDOC,HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR,,$(OVRLY))	>$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(COMPOSER_YML)-$(OVRLY); \
 			$(filter-out --relative,$(LN))						$(COMPOSER_YML)-$(OVRLY) \
 												$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(OVRLY).$(FEXTN).yml \
-												$($(DEBUGIT)-output); \
-			$(filter-out --relative,$(LN))						$(call COMPOSER_CONV,,$(call CSS_THEME,$(FTYPE),$(THEME))) \
-												$(PUBLISH_ROOT)/$(PUBLISH_SHOWDIR)/$(FTYPE).$(THEME)+$(OVRLY).$(FEXTN).css \
 												$($(DEBUGIT)-output); \
 			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
