@@ -1673,10 +1673,12 @@ override TYPE_TEXT			:= text
 override TYPE_LINT			:= $(TMPL_INPUT)
 
 override TMPL_HTML			:= html5
+override TMPL_HTML_EXTRACT		:= html
 override TMPL_LPDF			:= latex
 override TMPL_EPUB			:= epub3
 override TMPL_PRES			:= $(TYPE_PRES)
 override TMPL_DOCX			:= $(TYPE_DOCX)
+override TMPL_DOCX_EXTRACT		:= $(TMPL_DOCX)
 override TMPL_PPTX			:= $(TYPE_PPTX)
 override TMPL_TEXT			:= plain
 override TMPL_LINT			:= $(TYPE_LINT)
@@ -1886,6 +1888,11 @@ override PANDOC_EXTENSIONS_MARKDOWN := \
 	+raw_tex \
 	+shortcut_reference_links \
 
+#> update: EXTRACT.*MAKECMDGOALS
+
+override PANDOC_EXTENSIONS_HTML := \
+	-empty_paragraphs \
+
 override PANDOC_EXTENSIONS_DOCX := \
 	-empty_paragraphs \
 	-styles \
@@ -1897,7 +1904,8 @@ override EXTRACT			:= extract
 
 override PANDOC_EXTENSIONS_FROM		:= $(sort $(strip \
 	$(if $(filter $(EXTRACT),$(MAKECMDGOALS)),\
-		$(if $(filter $(TYPE_DOCX),$(c_type)),$(PANDOC_EXTENSIONS_DOCX)) \
+		$(if $(filter $(c_type),$(TYPE_HTML)),$(PANDOC_EXTENSIONS_HTML)) \
+		$(if $(filter $(c_type),$(TYPE_DOCX)),$(PANDOC_EXTENSIONS_DOCX)) \
 	,\
 		$(PANDOC_EXTENSIONS_COMMONMARK) \
 		$(if $(filter markdown,$(TMPL_INPUT)),$(PANDOC_EXTENSIONS_MARKDOWN)) \
@@ -1927,7 +1935,10 @@ override EXTRACT			:= extract
 
 ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
 #>override TMPL_INPUT			:= $(TMPL_$(call PANDOC_FILES_TYPE,$(c_type)))
-override TMPL_INPUT			= $(TMPL_$(call PANDOC_FILES_TYPE,$(c_type)))
+override TMPL_INPUT			= $(strip $(if	$(TMPL_$(call PANDOC_FILES_TYPE,$(c_type))_EXTRACT) ,\
+							$(TMPL_$(call PANDOC_FILES_TYPE,$(c_type))_EXTRACT) ,\
+							$(TMPL_$(call PANDOC_FILES_TYPE,$(c_type))) \
+						))
 override TMPL_OUTPUT			:= $(TMPL_LINT)
 override EXTN_OUTPUT			:= $(EXTN_LINT)
 endif
@@ -2029,6 +2040,7 @@ override PANDOC_FILES_CSS = $(strip \
 
 #>	$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--include-in-header="$(FILE)")
 #>	$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base).$(EXTN_OUTPUT),1),--css="$(FILE)")
+
 override PANDOC_OPTIONS = $(strip \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
 	\
@@ -4061,6 +4073,10 @@ $(HELPOUT)-$(PRINTER):
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
 	)
 #> update: EXTRACT.*MAKECMDGOALS
+	@$(ENDOLINE); $(PRINT) "When reading \`$(_C)$(TYPE_HTML)$(_D)\` files with $(_C)[$(EXTRACT)]$(_D), these import extensions are used:"
+	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_HTML),\
+		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
+	)
 	@$(ENDOLINE); $(PRINT) "When reading \`$(_C)$(TYPE_DOCX)$(_D)\` files with $(_C)[$(EXTRACT)]$(_D), these import extensions are used:"
 	@$(ENDOLINE); $(foreach FILE,$(PANDOC_EXTENSIONS_DOCX),\
 		$(PRINT) "$(CODEBLOCK)$(_E)$(FILE)"; \
@@ -4575,7 +4591,8 @@ endef
 #		need to put "publish_date_timezone_format" into "config.dates.parse" and markdown files in order to get full timezone support...
 #			otherwise, all dates/times are considered local...
 #	note in the code about "$(realpath ...)" and using sparingly for specific cases
-#	document extract = make extract c_type="docx" c_base="text_output_base" c_list="docx_import_file" = output will always be "$*_LINT" ... admittedly wonky...
+#	document extract = make extract c_type="(html|docx)" c_base="text_output_base" c_list="(html|docx)_import_file" = output will always be "$*_LINT" ... admittedly wonky...
+#		need to verify syntax that was decided on...
 
 #WORK
 #	features
