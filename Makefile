@@ -17841,17 +17841,15 @@ ifneq ($(wildcard $(firstword $(RSYNC))),)
 	@$(call $(HEADERS),,$(PUBLISH)-$(EXAMPLE))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR)				$(PUBLISH_ROOT) $($(DEBUGIT)-output)
-	@$(ECHO) "$(_D)"
-	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
-		--directory $(PUBLISH_ROOT) \
-		--makefile $(COMPOSER) \
-		$(DOSETUP)
-	@$(ECHO) "$(_S)"
 	@$(foreach FILE,$(PUBLISH_DIRS_CONFIGS),\
 		$(MKDIR)			$(PUBLISH_ROOT)/$(FILE) $($(DEBUGIT)-output); \
 		$(call NEWLINE) \
 	)
 	@$(ECHO) "$(_D)"
+	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR)) \
+		--directory $(PUBLISH_ROOT) \
+		--makefile $(COMPOSER) \
+		$(DOSETUP)
 	@$(call $(PUBLISH)-$(EXAMPLE)-$(INSTALL),$(PUBLISH_ROOT),$(COMPOSER_DEBUGIT))
 	@$(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) \
 		--directory $(PUBLISH_ROOT) \
