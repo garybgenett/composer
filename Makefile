@@ -3312,6 +3312,7 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER_YML_LIST) \
 	$(call PANDOC_FILES_OVERRIDE,,$(2),yml) \
 	$(if $(filter $(1),$(PUBLISH)-cache),\
+		$(CUSTOM_PUBLISH_SH) \
 		$(if $(COMPOSER_LIBRARY_AUTO_UPDATE),\
 			$($(PUBLISH)-library) \
 		) \
@@ -7179,6 +7180,9 @@ endef
 #> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
 #> update: .PHONY: $(EXAMPLE)
+
+#WORKING:FIX
+#	COMPOSER_DOCOLOR is breaking...!?
 
 .PHONY: $(EXAMPLE)-$(INSTALL)
 .PHONY: $(EXAMPLE)
@@ -15640,6 +15644,9 @@ $(foreach EXPORT,\
 ### {{{3 $(TARGETS)
 ########################################
 
+#WORKING:FIX
+#	it is not finding all the "_context" directory dependencies correctly...!?
+
 .PHONY: $(TARGETS)
 $(TARGETS): $(.)set_title-$(TARGETS)
 $(TARGETS):
@@ -18585,11 +18592,19 @@ $(eval $(call $(SUBDIRS)-$(TARGETS),$(DOITALL)))
 ## {{{2 $(PRINTER)
 ########################################
 
+########################################
+### {{{3 $(PRINTER)
+########################################
+
 .PHONY: $(PRINTER)
 $(PRINTER): $(.)set_title-$(PRINTER)
 $(PRINTER):
 	@$(call $(HEADERS))
 	@$(MAKE) $(PRINTER)-$(PRINTER)
+
+########################################
+### {{{3 $(PRINTER)-$(PRINTER)
+########################################
 
 .PHONY: $(PRINTER)-$(PRINTER)
 $(PRINTER)-$(PRINTER): $(if $(COMPOSER_LOG),\
