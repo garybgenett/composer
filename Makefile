@@ -16160,7 +16160,8 @@ ifeq ($(and \
 ),)
 	@$(MAKE) $(NOTHING)-$(EXPORTS)-firebase
 else ifeq ($(wildcard $(firstword $(FIREBASE))),)
-	@$(if $(wildcard $(firstword $(FIREBASE))),,$(MAKE) $(NOTHING)-firebase)
+#>	@$(if $(wildcard $(firstword $(FIREBASE))),,$(MAKE) $(NOTHING)-firebase)
+	@$(call $(HEADERS)-note,$(CURDIR),firebase$(_D) $(MARKER) $(_H)$(UPGRADE)-$(notdir $(FIREBASE_DIR)),$(NOTHING))
 else
 ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,$(EXPORTS))
