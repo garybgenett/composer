@@ -2072,10 +2072,10 @@ override PANDOC_OPTIONS = $(strip \
 		),--wrap="none",--wrap="auto" \
 	) \
 	\
+	--syntax-highlighting="idiomatic" \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PDF_LATEX)" \
 		--pdf-engine-opt="-output-directory=$(call COMPOSER_TMP_FILE)" \
-		--syntax-highlighting="default" \
 	) \
 	$(if $(filter $(c_type),$(TYPE_PRES)),\
 		--variable=revealjs-url="$(REVEALJS_DIR)" \
@@ -11775,6 +11775,8 @@ override define HEREDOC_CUSTOM_LPDF_LATEX =
 
 \\usepackage{listings}
 \\lstset{xleftmargin=1.5em}
+
+\\setlength{\\leftmargini}{3.0em}
 
 % ##############################################################################
 % End Of File
