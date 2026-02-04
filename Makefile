@@ -2155,8 +2155,8 @@ override PANDOC_OPTIONS_ERROR		:=
 override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
 
-#>override COMPOSER_REGEX			:= [[:alnum:]+,-.@^_~]+
-override COMPOSER_REGEX			:= [[:alnum:]+,.@^_~-]+
+#>override COMPOSER_REGEX			:= [[:alnum:]+-.@_~]+
+override COMPOSER_REGEX			:= [[:alnum:]+.@_~-]+
 override COMPOSER_REGEX_PREFIX		:= [$(.)$(_)]
 override SED_ESCAPE_LIST		:= ^[:alnum:]
 
@@ -4521,7 +4521,9 @@ $(call $(HELPOUT)-$(DOITALL)-section,Important Notes)
 
 $(_C)[GNU Make]$(_D) does not support file and directory names with spaces in them, and
 neither does $(_C)[$(COMPOSER_BASENAME)]$(_D).  Documentation archives which have such files or
-directories will produce unexpected results.
+directories will produce unexpected results.  In addtion, all file names must
+match the regular expression `$(_N)$(COMPOSER_REGEX)$(_D)`, and files starting with the
+regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are skipped by auto-detection $(_E)(see [Custom Targets])$(_D).
 
 It is fully supported for input files to be symbolic links to files that reside
 outside the documentation archive:
@@ -5069,7 +5071,6 @@ endef
 # migrate to *-target-[pre|post]
 #	update "targets:" filter
 #	sorted? use numbers, like udev, etc... 00-*, 10-*, etc.
-# a note about $(COMPOSER_REGEX) matching for custom targets...
 
 override define $(HELPOUT)-$(DOITALL)-custom =
 If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
@@ -5084,7 +5085,12 @@ in $(_C)[COMPOSER_TARGETS]$(_D).
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
 Additionally, there is a list of reserved targets in $(_C)[Reserved]$(_D), along with a
-list of reserved variables.
+list of reserved variables.  $(_C)[GNU Make]$(_D) allows a very permissive list of
+characters in target names, but because $(_C)[$(COMPOSER_BASENAME)]$(_D) is doing file-based
+operations via $(_C)[GNU Bash]$(_D), any characters that require shell-escaping have the
+potential to be problematic.  The most robust solution was to limit file names
+to a limited list of safe characters, so all targets and files must also match
+the regular expression `$(_N)$(COMPOSER_REGEX)$(_D)` $(_E)(see [Important Notes])$(_D).
 
 Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced early in the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
 `$(_M)$(MAKEFILE)$(_D)`, so matching targets and most variables will be overridden.  In the
