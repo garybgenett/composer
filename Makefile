@@ -2072,10 +2072,10 @@ override PANDOC_OPTIONS = $(strip \
 		),--wrap="none",--wrap="auto" \
 	) \
 	\
-	--syntax-highlighting="idiomatic" \
 	$(if $(filter $(c_type),$(TYPE_LPDF)),\
 		--pdf-engine="$(PDF_LATEX)" \
 		--pdf-engine-opt="-output-directory=$(call COMPOSER_TMP_FILE)" \
+		--syntax-highlighting="idiomatic" \
 	) \
 	$(if $(filter $(c_type),$(TYPE_PRES)),\
 		--variable=revealjs-url="$(REVEALJS_DIR)" \
@@ -2155,7 +2155,8 @@ override PANDOC_OPTIONS_ERROR		:=
 override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
 
-override COMPOSER_REGEX			:= [a-zA-Z0-9][a-zA-Z0-9+_.-]*
+#>override COMPOSER_REGEX			:= [[:alnum:]+,-.@^_~]+
+override COMPOSER_REGEX			:= [[:alnum:]+,.@^_~-]+
 override COMPOSER_REGEX_PREFIX		:= [$(.)$(_)]
 override SED_ESCAPE_LIST		:= ^[:alnum:]
 
@@ -7209,9 +7210,6 @@ endef
 #> $(EXAMPLE) > $(EXAMPLE)-$(@) > $(EXAMPLE)-*
 
 #> update: .PHONY: $(EXAMPLE)
-
-#WORKING:FIX
-#	COMPOSER_DOCOLOR is breaking...!?
 
 .PHONY: $(EXAMPLE)-$(INSTALL)
 .PHONY: $(EXAMPLE)
@@ -15718,9 +15716,6 @@ $(foreach EXPORT,\
 ########################################
 ### {{{3 $(TARGETS)
 ########################################
-
-#WORKING:FIX
-#	it is not finding all the "_context" directory dependencies correctly...!?
 
 .PHONY: $(TARGETS)
 $(TARGETS): $(.)set_title-$(TARGETS)
