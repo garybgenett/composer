@@ -1037,13 +1037,14 @@ override PANDOC_SRC			:= https://github.com/jgm/pandoc.git
 override PANDOC_DIR			:= $(COMPOSER_DIR)/pandoc
 override PANDOC_DIR_TESTING		:= test
 
+override PANDOC_BIN_NAME		:= pandoc
 override PANDOC_URL			:= https://github.com/jgm/pandoc/releases/download/$(PANDOC_VER)
-override PANDOC_LNX_SRC			:= pandoc-$(PANDOC_VER)-linux-amd64.tar.gz
-override PANDOC_WIN_SRC			:= pandoc-$(PANDOC_VER)-windows-x86_64.zip
-override PANDOC_MAC_SRC			:= pandoc-$(PANDOC_VER)-arm64-macOS.zip
-override PANDOC_LNX_DST			:= $(patsubst %.tar.gz,%,$(PANDOC_LNX_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/bin/pandoc
-override PANDOC_WIN_DST			:= $(patsubst %.zip,%,$(PANDOC_WIN_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)/pandoc.exe
-override PANDOC_MAC_DST			:= $(patsubst %.zip,%,$(PANDOC_MAC_SRC))-$(PANDOC_VER)/pandoc-$(PANDOC_VER)-arm64/bin/pandoc
+override PANDOC_LNX_SRC			:= $(PANDOC_BIN_NAME)-$(PANDOC_VER)-linux-amd64.tar.gz
+override PANDOC_WIN_SRC			:= $(PANDOC_BIN_NAME)-$(PANDOC_VER)-windows-x86_64.zip
+override PANDOC_MAC_SRC			:= $(PANDOC_BIN_NAME)-$(PANDOC_VER)-arm64-macOS.zip
+override PANDOC_LNX_DST			:= $(patsubst %.tar.gz,%,$(PANDOC_LNX_SRC))-$(PANDOC_VER)/$(PANDOC_BIN_NAME)-$(PANDOC_VER)/bin/$(PANDOC_BIN_NAME)
+override PANDOC_WIN_DST			:= $(patsubst %.zip,%,$(PANDOC_WIN_SRC))-$(PANDOC_VER)/$(PANDOC_BIN_NAME)-$(PANDOC_VER)/$(PANDOC_BIN_NAME).exe
+override PANDOC_MAC_DST			:= $(patsubst %.zip,%,$(PANDOC_MAC_SRC))-$(PANDOC_VER)/$(PANDOC_BIN_NAME)-$(PANDOC_VER)-arm64/bin/$(PANDOC_BIN_NAME)
 override PANDOC_LNX_BIN			:= $(notdir $(PANDOC_DIR))-$(PANDOC_VER)-$(OS_VAR_LNX)
 override PANDOC_WIN_BIN			:= $(notdir $(PANDOC_DIR))-$(PANDOC_VER)-$(OS_VAR_WIN).exe
 override PANDOC_MAC_BIN			:= $(notdir $(PANDOC_DIR))-$(PANDOC_VER)-$(OS_VAR_MAC).bin
@@ -1060,8 +1061,8 @@ endif
 
 override PDF_LATEX_NAME			:= TeX Live
 override PDF_LATEX_HOME			:= https://tug.org/texlive
-override PDF_LATEX			:= pdflatex
-override PDF_LATEX_VER			:= 2024 3.141592653-2.6-1.40.26
+override PDF_LATEX_VER_COMPOSER		:= 2024 3.141592653-2.6-1.40.26
+override PDF_LATEX_BIN_NAME		:= pdflatex
 
 ########################################
 ## {{{2 YQ
@@ -1082,10 +1083,11 @@ override YQ_LIC				:= MIT
 override YQ_SRC				:= https://github.com/mikefarah/yq.git
 override YQ_DIR				:= $(COMPOSER_DIR)/yq
 
+override YQ_BIN_NAME			:= yq
 override YQ_URL				:= https://github.com/mikefarah/yq/releases/download/v$(YQ_VER)
-override YQ_LNX_SRC			:= yq_linux_amd64.tar.gz
-override YQ_WIN_SRC			:= yq_windows_amd64.zip
-override YQ_MAC_SRC			:= yq_darwin_amd64.tar.gz
+override YQ_LNX_SRC			:= $(YQ_BIN_NAME)_linux_amd64.tar.gz
+override YQ_WIN_SRC			:= $(YQ_BIN_NAME)_windows_amd64.zip
+override YQ_MAC_SRC			:= $(YQ_BIN_NAME)_darwin_amd64.tar.gz
 override YQ_LNX_DST			:= $(patsubst %.tar.gz,%,$(YQ_LNX_SRC))-$(YQ_VER)/$(patsubst %.tar.gz,%,$(YQ_LNX_SRC))
 override YQ_WIN_DST			:= $(patsubst %.zip,%,$(YQ_WIN_SRC))-$(YQ_VER)/$(patsubst %.zip,%,$(YQ_WIN_SRC)).exe
 override YQ_MAC_DST			:= $(patsubst %.tar.gz,%,$(YQ_MAC_SRC))-$(YQ_VER)/$(patsubst %.tar.gz,%,$(YQ_MAC_SRC))
@@ -1119,7 +1121,6 @@ override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
 
-override BOOTSTRAP_DOC_VER		:= 5.1
 override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
 override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
 
@@ -1259,10 +1260,11 @@ override FIREBASE_LIC			:= MIT
 override FIREBASE_SRC			:= https://github.com/firebase/firebase-tools.git
 override FIREBASE_DIR			:= $(COMPOSER_DIR)/firebase-tools
 
+override FIREBASE_BIN_NAME		:= firebase
 override FIREBASE_URL			:= https://github.com/firebase/firebase-tools/releases/download/v$(FIREBASE_VER)
-override FIREBASE_LNX_SRC		:= firebase-tools-linux
-override FIREBASE_WIN_SRC		:= firebase-tools-win.exe
-override FIREBASE_MAC_SRC		:= firebase-tools-macos
+override FIREBASE_LNX_SRC		:= $(FIREBASE_BIN_NAME)-tools-linux
+override FIREBASE_WIN_SRC		:= $(FIREBASE_BIN_NAME)-tools-win.exe
+override FIREBASE_MAC_SRC		:= $(FIREBASE_BIN_NAME)-tools-macos
 override FIREBASE_LNX_DST		:= $(patsubst %,%,$(FIREBASE_LNX_SRC))-$(FIREBASE_VER)/$(FIREBASE_LNX_SRC)
 override FIREBASE_WIN_DST		:= $(patsubst %.exe,%,$(FIREBASE_WIN_SRC))-$(FIREBASE_VER)/$(FIREBASE_WIN_SRC)
 override FIREBASE_MAC_DST		:= $(patsubst %,%,$(FIREBASE_MAC_SRC))-$(FIREBASE_VER)/$(FIREBASE_MAC_SRC)
@@ -1279,17 +1281,7 @@ override FIREBASE_BIN			:= $(FIREBASE_DIR)/$(FIREBASE_WIN_BIN)
 else ifeq ($(OS_TYPE),Darwin)
 override FIREBASE_BIN			:= $(FIREBASE_DIR)/$(FIREBASE_MAC_BIN)
 endif
-
-#> FIREBASE_BIN -> FIREBASE_BIN_BLD
-override FIREBASE_LNX_BIN		:=
-override FIREBASE_WIN_BIN		:=
-override FIREBASE_MAC_BIN		:=
-override FIREBASE_BIN			:=
-
-override FIREBASE_BIN_BLD		:= $(FIREBASE_DIR)/node_modules/.bin/firebase
-ifneq ($(wildcard $(FIREBASE_BIN_BLD)),)
-override FIREBASE_BIN			:= $(FIREBASE_BIN_BLD)
-endif
+override FIREBASE_BIN_BLD		:= $(FIREBASE_DIR)/node_modules/.bin/$(FIREBASE_BIN_NAME)
 
 ########################################
 ## {{{2 External Tools
@@ -1301,9 +1293,9 @@ override FINDUTILS_VER			:= 4.10.0
 override SED_VER			:= 4.9
 
 override MAKE_VER			:= 4.4.1
-override PANDOC_VER			:= $(PANDOC_VER)
-override YQ_VER				:= $(YQ_VER)
-override PDF_LATEX_VER			:= $(PDF_LATEX_VER)
+#>override PANDOC_VER			:= $(PANDOC_VER_COMPOSER)
+#>override YQ_VER			:= $(YQ_VER_COMPOSER)
+#>override PDF_LATEX_VER		:= $(PDF_LATEX_VER_COMPOSER)
 
 override GIT_VER			:= 2.49.1
 override DIFFUTILS_VER			:= 3.12
@@ -1316,7 +1308,7 @@ override 7Z_VER				:= 17.05
 override NPM_VER			:= 10.9.2
 override CURL_VER			:= 8.15.0
 
-override FIREBASE_VER			:= $(FIREBASE_VER)
+#>override FIREBASE_VER			:= $(FIREBASE_VER_COMPOSER)
 
 ################################################################################
 # {{{1 Tooling Options
@@ -1375,9 +1367,9 @@ override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --words
 override DOMAKE				:= $(notdir $(MAKE))
 override REALMAKE			:= $(call COMPOSER_FIND,$(PATH_LIST),$(DOMAKE))
 
-override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),pandoc)
-override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),yq)
-override PDF_LATEX			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PDF_LATEX))
+override PANDOC				:= $(call COMPOSER_FIND,$(PATH_LIST),$(PANDOC_BIN_NAME))
+override YQ				:= $(call COMPOSER_FIND,$(PATH_LIST),$(YQ_BIN_NAME))
+override PDF_LATEX			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PDF_LATEX_BIN_NAME))
 
 #> update: $(NOTHING)-%
 
@@ -1393,7 +1385,7 @@ override NPM				:= $(call COMPOSER_FIND,$(PATH_LIST),npm) --verbose --local
 override CURL				:= $(call COMPOSER_FIND,$(PATH_LIST),curl)
 export override GZIP			:=
 
-override FIREBASE			:= $(call COMPOSER_FIND,$(PATH_LIST),firebase)
+override FIREBASE			:= $(call COMPOSER_FIND,$(PATH_LIST),$(FIREBASE_BIN_NAME))
 
 override ASPELL				:= $(call COMPOSER_FIND,$(PATH_LIST),aspell)
 override ASPELL_DIR			:= /usr/lib*/aspell*
@@ -1403,19 +1395,43 @@ override ASPELL_DIR			:= /usr/lib*/aspell*
 ########################################
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
-	$(if $($(FILE)_BIN),\
-	$(if $(wildcard $($(FILE)_BIN)),\
-		$(eval override $(FILE) := $($(FILE)_BIN)) \
-		,\
-		$(if $(wildcard $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).*),\
+	$(if $(and \
+		$($(FILE)_BIN) ,\
+		$(filter-out $(NOTHING),$($(FILE)_VER)) \
+	),\
+		$(if $(wildcard $($(FILE)_BIN)),\
+			$(eval override $(FILE) := $($(FILE)_BIN)) \
+		,$(if $(wildcard $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).*),\
 			$(shell \
 				$(MKDIR) $($(FILE)_DIR) >/dev/null; \
 				$(CAT) $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).* >$($(FILE)_BIN); \
 				$(CHMOD) $($(FILE)_BIN) >/dev/null; \
 			) \
 			$(eval override $(FILE) := $($(FILE)_BIN)) \
+		)) \
+	) \
+)
+
+########################################
+## {{{2 Builds
+########################################
+
+#> update: includes duplicates
+override NOTHING			:= $(.)null
+
+$(foreach FILE,$(REPOSITORIES_LIST),\
+	$(if $($(FILE)_BIN_BLD),\
+		$(foreach VAR,$(OS_VAR_LIST),\
+			$(eval override $(FILE)_$(VAR)_BIN :=) \
 		) \
-	)) \
+		$(eval override $(FILE)_BIN := $($(FILE)_BIN_BLD)) \
+		$(if $(and \
+			$(filter-out $(NOTHING),$($(FILE)_CMT)) ,\
+			$(wildcard $($(FILE)_BIN_BLD)) \
+		),\
+			$(eval override $(FILE) := $($(FILE)_BIN_BLD)) \
+		) \
+	) \
 )
 
 ########################################
@@ -5094,17 +5110,17 @@ and binary versions of integrated components $(_E)(see [Requirements])$(_D).  Th
 exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 $(foreach FILE,$(REPOSITORIES_LIST),\
 $(if $($(FILE)_VER),\
-$(call NEWLINE)  * `$(_C)$(FILE)_VER$(_D)` $(_E)(must be a binary version number)$(_D) \
-$(call NEWLINE)  * `$(_C)$(FILE)_CMT$(_D)` $(_E)(defaults to `$(FILE)_VER`)$(_D) \
-,\
-$(call NEWLINE)  * `$(_C)$(FILE)_CMT$(_D)` \
-))
+$(call NEWLINE)  * `$(_C)$(FILE)_VER$(_D)` $(_E)*(must be a binary version number)*$(_D) \
+)$(call NEWLINE)  * `$(_C)$(FILE)_CMT$(_D)`$(if \
+	$($(FILE)_VER), $(_E)*(defaults to `$(FILE)_VER`)*$(_D))$(if \
+	$($(FILE)_BIN_BLD), $(_S)$(DIVIDE)$(_D) $(_C)[$(UPGRADE)]$(_D)-$(_N)$(notdir $($(FILE)_DIR)))$(_D) \
+)
 
-Binaries for $(_C)[$(PANDOC_NAME)], $(_C)[$(YQ_NAME)]$(_D) and $(_C)[$(FIREBASE_NAME)]$(_D) are installed in their
-respective directories.  By moving or removing them, or changing the version
-numbers and foregoing all relevant variations of $(_C)[$(UPGRADE)]$(_D), the system versions
-will be used instead.  This will work as long as the commit versions match, so
-that supporting files are in alignment, particularly for $(_C)[$(PANDOC_NAME)]$(_D).
+Binaries for $(_C)[$(PANDOC_NAME)]$(_D) and $(_C)[$(YQ_NAME)]$(_D) are installed in their respective directories.
+By moving or removing them, or changing the version numbers and foregoing all
+relevant variations of $(_C)[$(UPGRADE)]$(_D), the system versions will be used instead.
+This will work as long as the commit versions match, so that supporting files
+are in alignment, particularly for $(_C)[$(PANDOC_NAME)]$(_D).
 
 It is possible that changing the versions will introduce incompatibilities with
 $(_C)[$(COMPOSER_BASENAME)]$(_D), which are usually impacts to the prettification of output files $(_E)(see
@@ -5542,6 +5558,7 @@ override define $(HELPOUT)-$(DOITALL)-variables_export =
 $(call $(HELPOUT)-$(DOITALL)-section,C_EXPORT_DESTDIR)
 
 #WORK
+These are exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
 $(_C)[COMPOSER_EXPORTS]$(_D)
 $(_C)[COMPOSER_EXPORT]$(_D)
 $(_C)[Export Variables]$(_D)
@@ -14521,7 +14538,7 @@ $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)-init:
 
 .PHONY: $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)-done-env
 $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)-done-env:
-	@$(LS) $(sort \
+	@$(LS) \
 		$(foreach FILE,$(REPOSITORIES_LIST),\
 			$(foreach VAR,$(OS_VAR_LIST),\
 				$(if $($(FILE)_$(VAR)_BIN),\
@@ -14529,8 +14546,7 @@ $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)-done-env:
 				) \
 			) \
 			$($(FILE)_BIN) \
-		) \
-	)
+		)
 
 .PHONY: $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)-done
 $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)-done:
@@ -15340,28 +15356,37 @@ $(TESTING)-other:
 
 .PHONY: $(TESTING)-other-init
 $(TESTING)-other-init:
-	#> binaries
-	@$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_BIN_BLD),\
-			if [ -f "$($(FILE)_BIN_BLD)" ]; then \
-				$(MV) $($(FILE)_BIN_BLD) $($(FILE)_BIN_BLD).$(COMPOSER_BASENAME); \
-			fi \
-		) \
-	)
 	#> versions
+	@$(MKDIR) $(call $(TESTING)-pwd)/_bin
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_BIN_NAME),\
+			$(ECHO) "$(ECHO) \"$(PHANTOM)\\\\n\"" >$(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
+			$(CHMOD) $(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
+		) \
+		$(call NEWLINE) \
+	)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run) PATH="$(call $(TESTING)-pwd)/_bin:$(PATH)" $(CHECKIT)-$(DOITALL)
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(ECHO) "override $(FILE)_CMT := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 		$(call NEWLINE) \
 	)
-	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
+	@$(call $(TESTING)-run) PATH="$(call $(TESTING)-pwd)/_bin:$(PATH)" $(CHECKIT)-$(DOITALL)
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_VER),\
 			$(ECHO) "override $(FILE)_VER := $(NOTHING)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 			$(call NEWLINE) \
 		) \
 	)
-	@$(call $(TESTING)-run) $(CHECKIT)-$(DOITALL)
+	@$(call $(TESTING)-run) PATH="$(call $(TESTING)-pwd)/_bin:$(PATH)" $(CHECKIT)-$(DOITALL)
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_VER),\
+			$(ECHO) "override $(FILE)_CMT := $($(FILE)_VER)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+			$(call NEWLINE) \
+		) \
+	)
+	@$(call $(TESTING)-run) PATH="$(call $(TESTING)-pwd)/_bin:$(PATH)" $(CHECKIT)-$(DOITALL)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	#> convict
 	@$(RSYNC) \
 		$(call $(TESTING)-pwd,$(call COMPOSER_CONV,$(COMPOSER_CMS),$(COMPOSER_ART),,1))/.gitignore \
@@ -15390,28 +15415,22 @@ $(TESTING)-other-init:
 
 .PHONY: $(TESTING)-other-done-env
 $(TESTING)-other-done-env:
-	@$(ECHO) "$(_C)"
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_BIN),\
-			$(ECHO) "$($(FILE)_NAME):\n"; \
-			$(ECHO) "\tfile:\t$($(FILE))\n"; \
-			$(ECHO) "\tbin:\t$($(FILE)_BIN)\n"; \
-			$(if $($(FILE)_BIN_BLD),\
-				$(ECHO) "\tbuild:\t$($(FILE)_BIN_BLD)\n"; \
-			) \
-		) \
+		$(call $(HEADERS)-options,$(FILE)); \
+		$(if $($(FILE)_BIN),		$(call $(HEADERS)-options,$(FILE)_BIN);) \
+		$(if $($(FILE)_BIN_BLD),	$(call $(HEADERS)-options,$(FILE)_BIN_BLD);) \
 		$(call NEWLINE) \
 	)
-	@$(ECHO) "$(_D)"
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_BIN),\
-			if [ "$($(FILE))" != "$($(FILE)_BIN)" ]; then \
+		$(foreach VAR,\
+			$(FILE)_BIN \
+			$(FILE)_BIN_BLD \
+		,\
+			$(if $(and \
+				$($(VAR)) ,\
+				$(filter-out $($(FILE)),$($(VAR))) \
+			),\
 				$(call $(TESTING)-fail); \
-			fi; \
-			$(if $($(FILE)_BIN_BLD),\
-				if [ ! -f "$($(FILE)_BIN_BLD).$(COMPOSER_BASENAME)" ]; then \
-					$(call $(TESTING)-fail); \
-				fi; \
 			) \
 		) \
 		$(call NEWLINE) \
@@ -15421,33 +15440,44 @@ $(TESTING)-other-done-env:
 $(TESTING)-other-done:
 	#> binaries
 	@$(call $(TESTING)-run) $(@)-env
-	@$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_BIN_BLD),\
-			if [ -f "$($(FILE)_BIN_BLD).$(COMPOSER_BASENAME)" ]; then \
-				$(MV) $($(FILE)_BIN_BLD).$(COMPOSER_BASENAME) $($(FILE)_BIN_BLD); \
-			fi \
-		) \
-	)
 	#> versions
 	$(foreach FILE,$(REPOSITORIES_LIST),\
-		$(if $($(FILE)_VER),\
-			$(call $(TESTING)-find,[(].*$($(FILE)_VER_COMPOSER).*[)]); \
+		$(if $($(FILE)_VER_COMPOSER),\
+			$(call $(TESTING)-count,$(strip \
+					$(if $(filter PANDOC,$(FILE)),11 ,\
+					$(if $($(FILE)_BIN_BLD),8,10 \
+				))),$($(FILE)_VER_COMPOSER)); \
+			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
 		) \
 	)
-	$(call $(TESTING)-count,28,$(subst .,[.],$(NOTHING)))
 	$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN),\
-			$(call $(TESTING)-count,$(if $(filter PANDOC,$(FILE)),2,1),$(subst /,[/],$(call COMPOSER_CONV,,$($(FILE)_BIN)))); \
+			$(call $(TESTING)-count,$(strip \
+					$(if $(filter PANDOC,$(FILE)),3 ,\
+					$(if $($(FILE)_BIN_BLD),2,2 \
+				))),$(subst /,[/],$(call COMPOSER_CONV,,$($(FILE)_BIN)))); \
+			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
 		) \
 	)
+	$(foreach FILE,$(REPOSITORIES_LIST),\
+		$(if $($(FILE)_BIN_NAME),\
+			$(call $(TESTING)-count,$(strip \
+					$(if $($(FILE)_BIN_BLD),3,3 \
+				)),[/][_]bin[/]$($(FILE)_BIN_NAME)); \
+			$(ECHO) "$(_D)"; \
+			$(call NEWLINE) \
+		) \
+	)
+	$(call $(TESTING)-count,8,$(subst .,[.],$(PHANTOM)))
+	$(call $(TESTING)-count,39,$(subst .,[.],$(NOTHING)))
 	#> convict
 	$(call $(TESTING)-find,create mode.+$(MAKEFILE)$$)
 	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
 	#> exports
 	$(call $(TESTING)-count,5,C_EXPORT_)
-	$(call $(TESTING)-count,28,$(subst .,[.],$(NOTHING)))
+	$(call $(TESTING)-count,39,$(subst .,[.],$(NOTHING)))
 	#> c_type
 	$(call $(TESTING)-find,pandoc-api-version)
 
@@ -15488,10 +15518,9 @@ $(TESTING)-$(EXAMPLE)-done:
 ########################################
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
-	$(eval override $(FILE)_CMT_DISPLAY := $($(FILE)_CMT)) \
-	$(if $(filter-out $(patsubst v%,%,$($(FILE)_CMT)),$($(FILE)_VER)),\
-		$(eval override $(FILE)_CMT_DISPLAY := $($(FILE)_CMT)$(_D) ($(_N)$($(FILE)_VER)$(_D))) \
-	) \
+	$(eval override $(FILE)_CMT_DISPLAY := $($(FILE)_CMT)$(_D)$(if \
+		$(filter-out $(patsubst v%,%,$($(FILE)_CMT)),$($(FILE)_VER))		, ($(_F)$($(FILE)_VER)$(_D)))$(if \
+		$(filter-out $(patsubst v%,%,$($(FILE)_VER)),$($(FILE)_VER_COMPOSER))	, [$(_N)$($(FILE)_VER_COMPOSER)$(_D)])) \
 )
 
 #> update: COMPOSER_CONV.*COMPOSER_TINYNAME
@@ -15519,7 +15548,7 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "$(_C)[GNU Make]"						"$(_M)$(MAKE_VER)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(PANDOC_NAME)]"			"$(_M)$(PANDOC_VER_COMPOSER)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(YQ_NAME)]"				"$(_M)$(YQ_VER_COMPOSER)"
-	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER)"
+	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER_COMPOSER)"
 	@$(TABLE_M2) "$(_H)Supporting Tools:"					"$(_S)--"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_E)$(GIT_VER)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"
@@ -15534,7 +15563,7 @@ else
 	@$(TABLE_M3) "$(_C)[GNU Make]"						"$(_M)$(MAKE_VER)"			"$(_D)$$($(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PANDOC_NAME)]"			"$(_M)$(PANDOC_VER_COMPOSER)"		"$(_D)$$($(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(YQ_NAME)]"				"$(_M)$(YQ_VER_COMPOSER)"		"$(_D)$$($(YQ) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER)"			"$(_D)$$($(PDF_LATEX) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER_COMPOSER)"	"$(_D)$$($(PDF_LATEX) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_H)Supporting Tools:"					"$(_S)--"				"$(_S)--"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_E)$(GIT_VER)"			"$(_N)$$($(GIT) --version		2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$$($(DIFF) --version		2>/dev/null | $(HEAD) -n1)"
@@ -15606,10 +15635,8 @@ ifneq ($(COMPOSER_YML_LIST),)
 		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR)
 endif
 ifeq ($(COMPOSER_DOITALL_$(CONFIGS)),$(DOITALL))
-	@$(LINERULE)
-	@$(subst $(NULL) - , ,$(ENV)) | $(SORT)
-	@$(LINERULE)
-	@$(call ENV_MAKE) $(CONFIGS)-env
+	@$(LINERULE); $(MAKE)		$(CONFIGS)-env
+	@$(LINERULE); $(call ENV_MAKE)	$(CONFIGS)-env
 endif
 
 ########################################
