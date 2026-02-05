@@ -1615,8 +1615,8 @@ override NPM_BUILD = \
 		$(1)/tmp \
 		; \
 	$(SED) -i \
-		-e "s|^[^[:space:]]*(npm install)|#$(MARKER)\1|g" \
-		-e "s|^[^[:space:]]*(rm -rf)|#$(MARKER)\1|g" \
+		-e "s|^[^[:space:]]*(npm install)|\#$(MARKER)\1|g" \
+		-e "s|^[^[:space:]]*(rm -rf)|\#$(MARKER)\1|g" \
 		$(1)/build.sh; \
 	if [ -f "$(1)/package.json" ]; then \
 		$(YQ_WRITE_JSON) --inplace ". += { \"scripts\": { \"build\": \"./build.sh\" } }" $(1)/package.json; \
