@@ -3914,7 +3914,7 @@ $(HELPOUT)-examples_%:
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_N)-f $(EXPAND)/$(COMPOSER_CMS)/$(MAKEFILE)$(_D) $(_M)$(INSTALL)-$(DOITALL)"
 	@$(PRINT) "$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(DOITALL)-$(DOITALL)"
 	@$(ENDOLINE)
-	@$(PRINT) "See \`$(_C)$(HELPOUT)-$(DOITALL)$(_D)\` for full details and additional targets."
+	@$(PRINT) "See $(_C)[$(HELPOUT)-$(DOITALL)]$(_D) for full details and additional targets."
 
 ########################################
 ## {{{2 $(HELPOUT)-$(HELPOUT)
@@ -4395,7 +4395,7 @@ endef
 ########################################
 
 override define $(HELPOUT)-$(DOITALL)-overview =
-**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[$(PANDOC_NAME)], $(_C)[$(BOOTSTRAP_NAME)]$(_D) and
+**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[$(PANDOC_NAME)]$(_D), $(_C)[$(BOOTSTRAP_NAME)]$(_D) and
 $(_C)[GNU Make]$(_D).**  It is a document and website build system that processes
 directories or individual files in $(_C)[Markdown]$(_D) format.
 
@@ -4405,7 +4405,7 @@ plain text, which can be crafted with simple editors and tracked with revision
 control.  However, professional documentation, publications, and websites
 require formatting that is dynamic and feature-rich.
 
-$(_C)[$(PANDOC_NAME)] is an extremely powerful document conversion tool, and is a widely used
+$(_C)[$(PANDOC_NAME)]$(_D) is an extremely powerful document conversion tool, and is a widely used
 standard for processing $(_C)[Markdown]$(_D) into other formats.  While it has reasonable
 defaults, there are a large number of options, and additional tools are required
 for some formats and features.
@@ -4448,7 +4448,7 @@ endef
 
 override define $(HELPOUT)-$(DOITALL)-require =
 $(_C)[$(COMPOSER_BASENAME)]$(_D) has almost no external dependencies.  All needed components are
-integrated directly into the repository, including $(_C)[$(PANDOC_NAME)] and $(_C)[$(YQ_NAME)]$(_D).
+integrated directly into the repository, including $(_C)[$(PANDOC_NAME)]$(_D) and $(_C)[$(YQ_NAME)]$(_D).
 $(_C)[$(COMPOSER_BASENAME)]$(_D) does require a minimal command-line environment based on $(_N)[GNU]$(_D) tools,
 particularly $(_C)[GNU Make]$(_D), which is standard for all $(_N)[GNU/Linux]$(_D) systems.  The
 $(_N)[Windows Subsystem for Linux]$(_D) for Windows and $(_N)[MacPorts]$(_D) for macOS both provide
@@ -4472,9 +4472,8 @@ rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, 
 instructions in the `$(_M)README.md$(_D)`.
 
 $(_C)[$(FIREBASE_NAME)]$(_D) is only necessary when configured for uploading via the
-$(_C)[$(EXPORTS)-$(DOITALL)]$(_D) and $(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.  Use the `$(_M)$(UPGRADE)-$(notdir $(FIREBASE_DIR))$(_D)`
-target to build the $(_C)[$(COMPOSER_BASENAME)]$(_D) version with $(_C)[npm]$(_D) $(_E)(see [$(UPGRADE)-*])$(_D).
-################################################################################
+$(_C)[$(EXPORTS)-$(DOITALL)]$(_D) and $(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.  Use the $(_C)[$(UPGRADE)]$(_D)-`$(_M)$(notdir $(FIREBASE_DIR))$(_D)`
+target to build the $(_C)[$(COMPOSER_BASENAME)]$(_D) version with $(_C)[npm]$(_D).
 endef
 
 ########################################
@@ -4658,14 +4657,14 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(PUBLISH).
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_CUSTOM))-$(TYPE_HTML).css$(_D)
 
 As outlined in $(_C)[Overview]$(_D) and $(_C)[Principles]$(_D), a primary goal of $(_C)[$(COMPOSER_BASENAME)]$(_D) is to
-produce beautiful and professional output.  $(_C)[$(PANDOC_NAME)] does reasonably well at
+produce beautiful and professional output.  $(_C)[$(PANDOC_NAME)]$(_D) does reasonably well at
 this, and yet its primary focus is document conversion, not document formatting.
 $(_C)[$(COMPOSER_BASENAME)]$(_D) fills this gap by specifically tuning a select list of the most
 commonly used document formats.
 
-The input $(_C)[Markdown]$(_D) format used by $(_C)[$(COMPOSER_BASENAME)]$(_D) is the $(_C)[$(PANDOC_NAME)] default.
+The input $(_C)[Markdown]$(_D) format used by $(_C)[$(COMPOSER_BASENAME)]$(_D) is the $(_C)[$(PANDOC_NAME)]$(_D) default.
 However, the $(_C)[$(PANDOC_NAME) Extensions]$(_D) list has been modified slightly.  See that
-section and the $(_C)[$(PANDOC_NAME)] $(_C)[Markdown]$(_D) documentation for the exact list and details
+section and the $(_C)[$(PANDOC_NAME)]$(_D) $(_C)[Markdown]$(_D) documentation for the exact list and details
 for each.
 
 Further options for each document type are in $(_C)[Formatting Variables]$(_D).  All
@@ -4732,7 +4731,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,HTML)
 
 In addition to being a helpful real-time rendering tool, $(_C)[$(MDVIEWER_NAME)]$(_D)
 includes several $(_M)CSS$(_D) stylesheets that are much more visually appealing than the
-$(_C)[$(PANDOC_NAME)] default, and which behave like normal webpages, so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses them
+$(_C)[$(PANDOC_NAME)]$(_D) default, and which behave like normal webpages, so $(_C)[$(COMPOSER_BASENAME)]$(_D) uses them
 for all $(_C)[HTML]$(_D)-based document types, including $(_C)[EPUB]$(_D).
 
 Information on installing $(_C)[$(MDVIEWER_NAME)]$(_D) for use as a $(_C)[Markdown]$(_D) rendering
@@ -4752,7 +4751,7 @@ The default formatting for $(_C)[PDF]$(_D) is geared towards academic papers and
 typesetting of printed books, instead of documents that are intended to be
 purely digital.
 
-Internally, $(_C)[$(PANDOC_NAME)] first converts to $(_M)LaTeX$(_D), and then uses $(_C)[$(PDF_LATEX_NAME)]$(_D) to
+Internally, $(_C)[$(PANDOC_NAME)]$(_D) first converts to $(_M)LaTeX$(_D), and then uses $(_C)[$(PDF_LATEX_NAME)]$(_D) to
 convert into the final $(_C)[PDF]$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) inserts customized $(_M)LaTeX$(_D) to modify the
 final output:
 
@@ -4823,7 +4822,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-formatting-office =
 $(call $(HELPOUT)-$(DOITALL)-section,Microsoft Word & PowerPoint)
 
-The internal $(_C)[$(PANDOC_NAME)] templates for these are exported by $(_C)[$(COMPOSER_BASENAME)]$(_D), so they
+The internal $(_C)[$(PANDOC_NAME)]$(_D) templates for these are exported by $(_C)[$(COMPOSER_BASENAME)]$(_D), so they
 are available for customization:
 
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DAT))/reference.$(EXTN_DOCX)$(_D)
@@ -4842,14 +4841,14 @@ endef
 override define $(HELPOUT)-$(DOITALL)-formatting-text =
 $(call $(HELPOUT)-$(DOITALL)-section,Plain Text)
 
-This output format is still parsable by $(_C)[$(PANDOC_NAME)] as valid $(_C)[Markdown]$(_D), but is
+This output format is still parsable by $(_C)[$(PANDOC_NAME)]$(_D) as valid $(_C)[Markdown]$(_D), but is
 formatted to read as pure plain text that is only `$(_M)$(COLUMNS)$(_D)` columns wide.  There are
 cases where this conversion is desirable, such as technical documentation, where
-it is easier to write and format as $(_C)[$(PANDOC_NAME)] $(_C)[Markdown]$(_D) but the output needs to
+it is easier to write and format as $(_C)[$(PANDOC_NAME)]$(_D) $(_C)[Markdown]$(_D) but the output needs to
 be in a universally accepted text layout and presentation.
 
 $(_C)[$(COMPOSER_BASENAME)]$(_D) currently does not modify this format, other than using the
-`$(_M)--columns=$(COLUMNS)$(_D)` and `$(_M)--wrap=auto$(_D)` options to $(_C)[$(PANDOC_NAME)].
+`$(_M)--columns=$(COLUMNS)$(_D)` and `$(_M)--wrap=auto$(_D)` options to $(_C)[$(PANDOC_NAME)]$(_D).
 endef
 #>$(_S)--$(_D) $(_N)Example:$(_D) $(_S)[$(_N)$(OUT_README).$(EXTN_TEXT)$(_S)]($(_S)$(OUT_README).$(EXTN_TEXT)$(_S))$(_D)
 
@@ -4860,7 +4859,7 @@ endef
 override define $(HELPOUT)-$(DOITALL)-formatting-pandoc =
 $(call $(HELPOUT)-$(DOITALL)-section,$(PANDOC_NAME) Markdown)
 
-Output $(_C)[Markdown]$(_D) that is specific to $(_C)[$(PANDOC_NAME)].  This is for linting or creating
+Output $(_C)[Markdown]$(_D) that is specific to $(_C)[$(PANDOC_NAME)]$(_D).  This is for linting or creating
 standardized versions of source files for shared archives.
 
 Due to the expressed purposes of this format, $(_C)[$(COMPOSER_BASENAME)]$(_D) will never modify it.
@@ -5113,7 +5112,7 @@ $(if $($(FILE)_VER),\
 $(call NEWLINE)  * `$(_C)$(FILE)_VER$(_D)` $(_E)*(must be a binary version number)*$(_D) \
 )$(call NEWLINE)  * `$(_C)$(FILE)_CMT$(_D)`$(if \
 	$($(FILE)_VER), $(_E)*(defaults to `$(FILE)_VER`)*$(_D))$(if \
-	$($(FILE)_BIN_BLD), $(_S)$(DIVIDE)$(_D) $(_C)[$(UPGRADE)]$(_D)-$(_N)$(notdir $($(FILE)_DIR)))$(_D) \
+	$($(FILE)_BIN_BLD), $(_S)$(DIVIDE)$(_D) $(_C)[$(UPGRADE)]$(_D)-`$(_M)$(notdir $($(FILE)_DIR))$(_D)`) \
 )
 
 Binaries for $(_C)[$(PANDOC_NAME)]$(_D) and $(_C)[$(YQ_NAME)]$(_D) are installed in their respective directories.
