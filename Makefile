@@ -15360,7 +15360,7 @@ $(TESTING)-other-init:
 	@$(MKDIR) $(call $(TESTING)-pwd)/_bin
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN_NAME),\
-			$(ECHO) "$(ECHO) \"$(PHANTOM)\\\\n\"" >$(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
+			$(ECHO) "[[ \$${@} == --version ]] && $(ECHO) \"$(PHANTOM)\\\\n\"" >$(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
 			$(CHMOD) $(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
 		) \
 		$(call NEWLINE) \
@@ -15470,7 +15470,7 @@ $(TESTING)-other-done:
 			$(call NEWLINE) \
 		) \
 	)
-	$(call $(TESTING)-count,8,$(subst .,[.],$(PHANTOM)))
+	$(call $(TESTING)-count,6,$(subst .,[.],$(PHANTOM)))
 	$(call $(TESTING)-count,39,$(subst .,[.],$(NOTHING)))
 	#> convict
 	$(call $(TESTING)-find,create mode.+$(MAKEFILE)$$)
