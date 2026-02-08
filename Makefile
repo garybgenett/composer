@@ -1420,16 +1420,16 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 override NOTHING			:= $(.)null
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
-	$(if $($(FILE)_BIN_BLD),\
-		$(foreach VAR,$(OS_VAR_LIST),\
-			$(eval override $(FILE)_$(VAR)_BIN :=) \
-		) \
-		$(eval override $(FILE)_BIN := $($(FILE)_BIN_BLD)) \
-		$(if $(and \
-			$(filter-out $(NOTHING),$($(FILE)_CMT)) ,\
-			$(wildcard $($(FILE)_BIN_BLD)) \
-		),\
+	$(if $(and \
+		$($(FILE)_BIN_BLD) ,\
+		$(filter-out $(NOTHING),$($(FILE)_CMT)) \
+	),\
+		$(if $(wildcard $($(FILE)_BIN_BLD)),\
 			$(eval override $(FILE) := $($(FILE)_BIN_BLD)) \
+			$(eval override $(FILE)_BIN := $($(FILE)_BIN_BLD)) \
+			$(foreach VAR,$(OS_VAR_LIST),\
+				$(eval override $(FILE)_$(VAR)_BIN :=) \
+			) \
 		) \
 	) \
 )
