@@ -1391,39 +1391,28 @@ override ASPELL				:= $(call COMPOSER_FIND,$(PATH_LIST),aspell)
 override ASPELL_DIR			:= /usr/lib*/aspell*
 
 ########################################
-## {{{2 Binaries
-########################################
-
-$(foreach FILE,$(REPOSITORIES_LIST),\
-	$(if $(and \
-		$($(FILE)_BIN) ,\
-		$(filter-out $(NOTHING),$($(FILE)_VER)) \
-	),\
-		$(if $(wildcard $($(FILE)_BIN)),\
-			$(eval override $(FILE) := $($(FILE)_BIN)) \
-		,$(if $(wildcard $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).*),\
-			$(shell \
-				$(MKDIR) $($(FILE)_DIR) >/dev/null; \
-				$(CAT) $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).* >$($(FILE)_BIN); \
-				$(CHMOD) $($(FILE)_BIN) >/dev/null; \
-			) \
-			$(eval override $(FILE) := $($(FILE)_BIN)) \
-		)) \
-	) \
-)
-
-########################################
-## {{{2 Builds
+## {{{2 Binaries & Builds
 ########################################
 
 #> update: includes duplicates
 override NOTHING			:= $(.)null
 
 $(foreach FILE,$(REPOSITORIES_LIST),\
-	$(if $(and \
-		$($(FILE)_BIN_BLD) ,\
-		$(filter-out $(NOTHING),$($(FILE)_CMT)) \
-	),\
+$(if $(filter-out $(NOTHING),$($(FILE)_VER)),\
+	$(if $($(FILE)_BIN),\
+		$(if $(wildcard $($(FILE)_BIN)),,\
+		$(if $(wildcard $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).*),\
+			$(shell \
+				$(MKDIR) $($(FILE)_DIR) >/dev/null; \
+				$(CAT) $(COMPOSER_BIN)/$(notdir $($(FILE)_BIN)).* >$($(FILE)_BIN); \
+				$(CHMOD) $($(FILE)_BIN) >/dev/null; \
+			) \
+		)) \
+		$(if $(wildcard $($(FILE)_BIN)),\
+			$(eval override $(FILE) := $($(FILE)_BIN)) \
+		) \
+	) \
+	$(if $($(FILE)_BIN_BLD),\
 		$(if $(wildcard $($(FILE)_BIN_BLD)),\
 			$(eval override $(FILE) := $($(FILE)_BIN_BLD)) \
 			$(eval override $(FILE)_BIN := $($(FILE)_BIN_BLD)) \
@@ -1432,7 +1421,7 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 			) \
 		) \
 	) \
-)
+))
 
 ########################################
 ## {{{2 Wrappers
