@@ -3200,8 +3200,6 @@ override PUBLISH_DIRS_PRINTER_LIST := \
 ### {{{3 Setup
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:CONFIGS
-
 override COMPOSER_HIDDEN_LIST		:= $(.)* $(_)*
 override COMPOSER_HIDDEN_EXCLUDE	:=
 ifeq ($(abspath $(dir $(COMPOSER_DIR))),$(CURDIR))
@@ -3234,7 +3232,6 @@ override COMPOSER_IGNORES_DEFAULT	:= $(COMPOSER_HIDDEN_FILES)
 #### {{{4 $(COMPOSER_PHANTOM)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:CONFIGS
 override COMPOSER_PHANTOM = $(strip \
 	$(if $(filter		$(PHANTOM)%,$($(1))),\
 		$(patsubst	$(PHANTOM)%,$($(1)_DEFAULT),$(filter-out $($(1)_DEFAULT),$($(1)))) \
@@ -3247,11 +3244,9 @@ override COMPOSER_PHANTOM = $(strip \
 #### {{{4 $(COMPOSER_FILTERS)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:CONFIGS
 override COMPOSER_FILTERS = $(strip \
 	$(filter \
 		$(if $(filter \
@@ -3302,11 +3297,8 @@ override COMPOSER_LISTING = $(strip \
 ### {{{3 Configuration
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:CONFIGS
 
 override COMPOSER_TARGETS_CONFIGS	:= $(COMPOSER_TARGETS)
 override COMPOSER_SUBDIRS_CONFIGS	:= $(COMPOSER_SUBDIRS)
@@ -13450,7 +13442,6 @@ override $(HEADERS)-options-files-maxlist = \
 ##### {{{5 $(HEADERS)-options-files-out
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:CONFIGS
 override $(HEADERS)-options-files-out = $(_D)$(strip $(if \
 	$(call COMPOSER_FILTERS,$(1)_CONFIGS)		,[$(_F)$(call COMPOSER_FILTERS,$(1)_CONFIGS)$(_D)] )$(if \
 	$(filter	$($(1)_DEFAULT),$($(1)))	,$(_H)$(filter $($(1)_DEFAULT),$($(1)))$(if \
@@ -19058,7 +19049,6 @@ endif
 ### {{{3 $(INSTALL)-$(TARGETS)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:NOTHING
 override $(INSTALL)-$(TARGETS) := $(sort \
 	$(addprefix $(INSTALL)-,\
 		$(call $(COMPOSER_PANDOC)-$(CHECKIT),SUBDIRS,$(COMPOSER_SUBDIRS)) \
