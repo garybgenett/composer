@@ -16222,6 +16222,8 @@ endif
 
 #> $(EXPORTS)-$(@) > $(EXPORTS)-redirect-list > $(EXPORTS)-redirect-files
 
+#WORKING:FIX:SIZE:OPTS
+
 ########################################
 ### {{{3 $(EXPORTS)-redirect-list
 ########################################
@@ -18658,46 +18660,45 @@ endif
 ### {{{3 $(INSTALL)
 ########################################
 
+override $(INSTALL)-$(LISTING) := \
+	$(if $(or \
+		$(filter $(MAKELEVEL),0) ,\
+		$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
+	),\
+		$(INSTALL)-$(INSTALL) \
+	) \
+
+override $(INSTALL)-$(LISTING)-done := \
+
+########################################
+### {{{3 $(INSTALL)-$(INSTALL)
+########################################
+
+#> $(INSTALL)-$(TARGETS) > $(INSTALL)-$(INSTALL)
+
 #> update: $(HEADERS)-note.*$(_H)
 
-.PHONY: $(INSTALL)
-$(INSTALL): $(.)set_title-$(INSTALL)
-$(INSTALL):
-#>	@$(call $(HEADERS))
-	@$(call $(HEADERS)-$(SUBDIRS))
+.PHONY: $(INSTALL)-$(INSTALL)
+$(INSTALL)-$(INSTALL):
 ifneq ($(COMPOSER_RELEASE),)
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME))
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_BASENAME),$(INSTALL))
 else
-ifneq ($(or \
-	$(filter $(MAKELEVEL),0) ,\
-	$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
-),)
 ifeq ($(CURDIR),$(COMPOSER_ROOT))
-	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(MAKEFILE))
+	@$(call $(HEADERS)-note,$(CURDIR),$(_H)$(MAKEFILE),$(INSTALL))
 endif
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$(MAKEFILE),-$(INSTALL),$(if $(filter $(CURDIR),$(COMPOSER_ROOT)),$(COMPOSER)),$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))))
 endif
-endif
-ifneq ($(COMPOSER_DOITALL_$(INSTALL)),)
-	@$(MAKE) $(call $(NOTHING)-$(CHECKIT),SUBDIRS,\
-		$(INSTALL)-$(TARGETS) \
-		$(SUBDIRS)-$(INSTALL) \
-	)
-endif
-
-$(SUBDIRS)-$(INSTALL): $(INSTALL)-$(TARGETS)
 
 ########################################
 ### {{{3 $(INSTALL)-$(TARGETS)
 ########################################
 
-.PHONY: $(INSTALL)-$(TARGETS)
-$(INSTALL)-$(TARGETS): $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
-$(INSTALL)-$(TARGETS):
-	@$(ECHO) ""
+#> $(INSTALL)-$(TARGETS) > $(INSTALL)-$(INSTALL)
 
-.PHONY: $(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS))
-$(addprefix $(INSTALL)-,$(COMPOSER_SUBDIRS)):
+override $(INSTALL)-$(TARGETS) := $(addprefix $(INSTALL)-,$(filter-out $(NOTHING)%,$(COMPOSER_SUBDIRS)))
+
+.PHONY: $($(INSTALL)-$(TARGETS))
+$($(INSTALL)-$(TARGETS)):
 	@$(eval override $(@) := $(patsubst $(INSTALL)-%,%,$(@)))
 	@$(call $(INSTALL)-$(MAKEFILE),$(CURDIR)/$($(@))/$(MAKEFILE),-$(INSTALL),,$(filter $(DOFORCE),$(COMPOSER_DOITALL_$(INSTALL))))
 
@@ -18727,8 +18728,6 @@ override $(INSTALL)-$(MAKEFILE) = \
 ########################################
 ## {{{2 $(CLEANER)
 ########################################
-
-#WORKING:FIX:SIZE:OPTS
 
 ########################################
 ### {{{3 $(CLEANER)
@@ -18898,7 +18897,7 @@ $(1):
 .PHONY: $(1)-$(TARGETS)
 $(1)-$(TARGETS): $(1)-$(HEADERS)
 $(1)-$(TARGETS): $(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
-$(1)-$(TARGETS): $(call $(NOTHING)-$(CHECKIT),TARGETS,$($(1)-$(TARGETS)))
+$(1)-$(TARGETS): $(call $(NOTHING)-$(CHECKIT),$(if $(1),SUBDIRS,TARGETS),$($(1)-$(TARGETS)))
 $(1)-$(TARGETS):
 	@$(ECHO) ""
 
@@ -18911,14 +18910,14 @@ $(SUBDIRS)-$(1):
 
 $$($(1)-$(SUBDIRS)-$(LISTING)) \
 $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
-$(call $(NOTHING)-$(CHECKIT),TARGETS,$($(1)-$(TARGETS))) \
+$(call $(NOTHING)-$(CHECKIT),$(if $(1),SUBDIRS,TARGETS),$($(1)-$(TARGETS))) \
 $(call $(NOTHING)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))) \
 : \
 	$(1)-$(HEADERS)
 
 $$($(1)-$(SUBDIRS)-$(LISTING)) \
 $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
-$(call $(NOTHING)-$(CHECKIT),TARGETS,$($(1)-$(TARGETS))) \
+$(call $(NOTHING)-$(CHECKIT),$(if $(1),SUBDIRS,TARGETS),$($(1)-$(TARGETS))) \
 : \
 	$(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
 
@@ -18939,7 +18938,7 @@ $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)):
 endef
 
 #$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(EXPORTS)))
-#$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL),1))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 
