@@ -1657,6 +1657,7 @@ override FIREBASE_RUN = \
 
 override GITIGNORE_LIST			+= FIREBASE
 override define GITIGNORE_FIREBASE =
+**/*firebase*.json
 /.firebase*
 /.config/
 endef
@@ -1851,7 +1852,6 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 ### {{{3 Selector
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
 override c_css_select_theme = $(strip $(subst $(NULL) ,,\
 	$(call CSS_THEME,\
 		$(if $(and $(3),$(filter $(1),$(TYPE_HTML))),$(PUBLISH) ,\
@@ -1863,7 +1863,6 @@ override c_css_select_theme = $(strip $(subst $(NULL) ,,\
 	) \
 ))
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 override c_css_select = $(strip $(subst $(NULL) ,,\
 	$(if $(or \
 		$(filter $(1),$(TYPE_HTML)) ,\
@@ -1990,7 +1989,6 @@ override PANDOC_FILES_SPLIT = $(strip \
 	) \
 )
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 override PANDOC_FILES_MAIN = $(strip \
 	$(wildcard $(COMPOSER_DAT)/template.$(4)) \
 	$(wildcard $(COMPOSER_DAT)/reference.$(4)) \
@@ -2106,7 +2104,6 @@ override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)
 
 #>		$(foreach FILE,$(call PANDOC_FILES_HEADER	,$(c_type),$(c_base),$(EXTN_OUTPUT),,1),--include-in-header="$(FILE)")
 #>		$(foreach FILE,$(call PANDOC_FILES_CSS		,$(c_type),$(c_base),$(EXTN_OUTPUT),,1),--css="$(FILE)")
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 override PANDOC_OPTIONS = $(strip \
 	$(if $(COMPOSER_DEBUGIT_ALL),--verbose) \
 	\
@@ -2429,7 +2426,6 @@ override COMPOSER_OPTIONS_EXPORT = \
 	)
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 #WORKIT
 override COMPOSER_VARIABLES = \
 	$(if $(2),\
@@ -3486,11 +3482,6 @@ endif
 
 #> update: WILDCARD_YML
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
-#			$(eval $($(PUBLISH)-cache-root)$(_)$(notdir $(2)): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)-cache)) \
-#			$(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))),$(strip
-#				: | $(DOITALL)-$(HEADERS)
-
 #WORKIT
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER) \
@@ -3542,7 +3533,6 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 ))
 
 #$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN <$(1)/$(2)/$(3)/$(NAME)/$(BASE)/$(EXTN)>)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 override $(COMPOSER_PANDOC)-c_list_match = $(strip \
 	$(eval override NAME := $(call PANDOC_FILES_TYPE,TYPE,$(1))) \
 	$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
@@ -3652,7 +3642,6 @@ else
 #$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN {$($(COMPOSER_PANDOC)-$(LISTING))}{$(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$($(COMPOSER_PANDOC)-$(LISTING)))})
 #endif
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
 #	$(eval $(FILE): $($(PUBLISH)-cache-root)) \
 #	$(DOITALL): $($(PUBLISH)-cache-root))
 #			$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): ;) \
@@ -3681,7 +3670,6 @@ $(foreach FILE,\
 		) \
 	) \
 )
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
 #	$(if $(call c_variable,$(strip \
 #		$(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))),$(strip \
 #		$(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))),$(strip \
@@ -3892,7 +3880,7 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"Directories/files to export"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_EXPORTS),$(call $(HEADERS)-options-val,COMPOSER_EXPORTS)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"Exempt diretories/files"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_IGNORES),$(call $(HEADERS)-options-val,COMPOSER_IGNORES)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(ENDOLINE)
-	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH:INSTALL #########################"
+	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
 	@$(ENDOLINE)
 #>	@$(TABLE_M5) "$(_H)Variable$(_D) $(_E)/$(_D) $(_H)Target"	"$(_C)[$(EXPORTS)]"	"$(_C)[$(INSTALL)]"	"$(_C)[$(CLEANER)]"	"$(_C)[$(DOITALL)]"
 	@$(TABLE_M5) "$(_S)\`$(_N)(files)$(_S)\`"			"$(_C)[$(EXPORTS)]"	"$(_C)[$(INSTALL)]"	"$(_C)[$(CLEANER)]"	"$(_C)[$(DOITALL)]"
@@ -3902,7 +3890,7 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M5) "$(_C)[COMPOSER_EXPORTS]"				"$(_M)yes"		"$(_S)~~$(_N)no$(_S)~~"	"$(_S)~~$(_N)no$(_S)~~"	"$(_S)~~$(_N)no$(_S)~~"
 	@$(TABLE_M5) "$(_C)[COMPOSER_IGNORES]"				"$(_M)yes"		"$(_M)yes"		"$(_M)yes"		"$(_M)yes"
 	@$(ENDOLINE)
-	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH:INSTALL #########################"
+	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
 	@$(PRINT) "  * $(_S)*$(_D)Aliases:$(_S)*"
 	@$(PRINT) "    * $(_S)*$(_C)[MAKEJOBS]$(_D)         ~ $(_S)\`$(_E)J$(_S)\`*"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_DEBUGIT]$(_D) ~ $(_S)\`$(_E)V$(_S)\`*"
@@ -3914,7 +3902,7 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "  * $(_S)*\`$(_N)(keeping)$(_S)\`$(_D)  -- empty is none     / number to keep    / $(_S)\`$(_N)$(SPECIAL_VAL)$(_S)\`$(_D) is no limit$(_S)*"
 	@$(PRINT) "  * $(_S)*\`$(_N)(boolean)$(_S)\`$(_D)  -- empty is disabled / any value enables$(_S)*"
 	@$(PRINT) "  * $(_S)*\`$(_N)(files)$(_S)\`$(_D)    -- complete list of variable and target interactions:$(_S)*"
-	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH:INSTALL #########################"
+	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_MAXLIST]$(_S)*"
 	@$(PRINT) "    * $(_S)*$(_C)[$(CONFIGS)]$(_S)*"
 	@$(PRINT) "    * $(_S)*$(_C)[$(TARGETS)]$(_S)*"
@@ -6426,10 +6414,9 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(TARGETS))
 #WORK
 #	$(COMPOSER_VARIABLES_LIST)
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH:INSTALL
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL
 ################################################################################
   * Prints a structured list of all detected targets, along with their dependencies and   (including custom $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D), $(_C)[$(_N)*$(_C)-$(INSTALL)]$(_D), $(_C)[$(_N)*$(_C)-$(CLEANER)]$(_D), and $(_C)[$(_N)*$(_C)-$(DOITALL)]$(_D)),
-  *
   *
     * $(_C)[COMPOSER_TARGETS]$(_D)
     * $(_C)[COMPOSER_SUBDIRS]$(_D)
@@ -9603,9 +9590,6 @@ _EOF_
 ########################################
 #### {{{4 $(PUBLISH)-brand
 ########################################
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
-#	need to still change the path in the <!-- ... top logo --> comments...
 
 # 1 c_logo
 
@@ -13494,7 +13478,6 @@ override $(HEADERS)-options-files-out = $(_D)$(strip $(if \
 
 #>			$(if $(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),	$(_H)$($(1))$(_D) $(_E)$(MARKER)
 #>							$(_N)$(MARKER)$(_D)	$(_F)$($(1))
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 override $(HEADERS)-options-val = $(strip \
 	$(if $(filter C_EXPORT_%,$(1)),\
 		$(if $(filter C_EXPORT_DESTDIR,$(1)),\
@@ -15445,7 +15428,6 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-init:
 	)
 	@$(ECHO) "\n"		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "endif\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(call /,$(TESTING))-1-$(EXPORTS) $(call /,$(TESTING))-2-$(EXPORTS)" $(EXPORTS)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(call /,$(TESTING))-1-$(INSTALL) $(call /,$(TESTING))-2-$(INSTALL)" $(INSTALL)
 	@$(call $(TESTING)-run) --directory $(call $(TESTING)-pwd)/data COMPOSER_TARGETS="$(call /,$(TESTING))-1-$(INSTALL) $(call /,$(TESTING))-2-$(CLEANER)" $(CLEANER)
@@ -15455,7 +15437,7 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-init:
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(EXPORTS)-$(DOITALL)
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
-	@exit 1
+#	@exit 1
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 
 .PHONY: $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-done
@@ -15513,7 +15495,6 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 #> $(CONFIGS) > $(TARGETS) > $(EXPORTS) > $(INSTALL) > $(CLEANER) > $(DOITALL)
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
 #	@$(call $(HEADERS)-action, ... )
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
 	@RUN="1"; while [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-runs)" ]; do \
 		$(LINERULE); \
 		$(PRINT) "$(_F)$(MARKER) $${RUN}"; \
@@ -16220,7 +16201,6 @@ $(CONFIGS): $(.)set_title-$(CONFIGS)
 $(CONFIGS):
 	@$(call $(HEADERS))
 	@$(call $(EXPORTS)-$(CONFIGS))
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 	@$(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(call $(HEADERS)-options,$(FILE),1); \
 	)
@@ -16372,7 +16352,6 @@ $(TARGETS):
 .PHONY: $(TARGETS)-$(MAKE_DB)
 $(TARGETS)-$(MAKE_DB):
 #>	@$(call $(HEADERS)-action,$(DOMAKE),,,$(TARGETS),1)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 #WORKIT
 	@$(foreach FILE,\
 		$(call COMPOSER_CONV,$(EXPAND),$(sort $(shell $(call $(TARGETS)-$(TARGETS),$(COMPOSER_DEBUGIT)))),1,1,1) \
@@ -16472,15 +16451,6 @@ $(TARGETS)-$(CHECKIT):
 ########################################
 ### {{{3 $(TARGETS)-$(TARGETS)
 ########################################
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
-.PHONY: $(LISTING)-$(TARGETS)
-$(LISTING)-$(TARGETS):
-	@$(call $(TARGETS)-$(TARGETS))
-#WORKIT
-#	@$(ECHO) "$(_C)"
-#	@$(CAT) $(call COMPOSER_TMP_FILE,,$(TARGETS))
-#	@$(ECHO) "$(_D)"
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
@@ -17340,10 +17310,8 @@ $($(PUBLISH)-caches):
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(COMPOSER_TMP) $($(DEBUGIT)-output)
 	@$(ECHO) "$(_E)"
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
-#	need to still change the path in the <!-- ... top logo --> comments...
 	@if [ "$($(@))" = "nav-top" ]; then \
-		$(call PUBLISH_SH_RUN) "$($(@))" "$(if $(c_logo),$(abspath $(c_logo)),c_logo)"; \
+		$(call PUBLISH_SH_RUN) "$($(@))" "$(if $(c_logo),$(abspath $(c_logo)))"; \
 	elif [ "$($(@))" = "column-begin" ]; then \
 		$(call PUBLISH_SH_RUN) "$($(@))" "center"; \
 	else \
@@ -18585,7 +18553,6 @@ override $(PUBLISH)-$(PRINTER)-$(TARGETS) = \
 #>			$(*_MOD)
 #>			folder.auto_update: $(LIBRARY_AUTO_UPDATE_MOD) = 1
 #>			library * $(SPECIAL_VAL)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 #>			$(PUBLISH)-info-top: ICON
 #>		$(word 3,$(PUBLISH_DIRS))/$(COMPOSER_CSS_PUBLISH)
 #>		$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE_DISPLAY)
@@ -19363,10 +19330,6 @@ $(SUBDIRS)-$(1): $(call $(COMPOSER_PANDOC)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBD
 $(SUBDIRS)-$(1):
 	@$$(ECHO) ""
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
-#WORKING:FIX:SIZE:OPTS:DEPS
-#		$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
-
 $$($(1)-$(SUBDIRS)-$(LISTING)) \
 $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 $$($(1)-$(SUBDIRS)-$(CHECKIT)) \
@@ -19539,7 +19502,6 @@ endif
 ########################################
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:NOTHING:MAKECMDGOALS
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO
 
 #WORKIT
 .PHONY: $(COMPOSER_PANDOC)
@@ -19632,9 +19594,6 @@ override $(COMPOSER_PANDOC)-$(HEADERS) = \
 ## {{{2 $(COMPOSER_PANDOC)-$(PUBLISH)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:LOGO:SH
-#	need to still change the path in the <!-- ... top logo --> comments...
-
 override $(COMPOSER_PANDOC)-$(PUBLISH) = \
 	$(if $(and \
 		$(c_site) ,\
@@ -19651,10 +19610,6 @@ override $(COMPOSER_PANDOC)-$(PUBLISH) = \
 			$(call $(PUBLISH)-$(TARGETS)-helpers,$(c_list_file),$(FILE)); \
 			$(call NEWLINE) \
 		) \
-		$(SED) -i \
-			-e "s|^(.+class=[\"]$(COMPOSER_TINYNAME)-logo[\"].+src=[\"])$(if $($(.)c_logo),$(abspath $($(.)c_logo)),c_logo)([\"].+)$$|\1$(if $(c_logo),$(abspath $(c_logo)),c_logo)\2|g" \
-			-e "s|^(.+class=[\"]$(COMPOSER_TINYNAME)-logo[\"].+src=[\"])c_logo([\"].+)$$||g" \
-			$(c_list_file); \
 		$(call NEWLINE) \
 	)
 
