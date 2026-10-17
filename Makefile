@@ -3316,6 +3316,16 @@ override PANDOC_FILES_SPLIT = $(strip \
 
 #> update: WILDCARD_YML
 
+override $(COMPOSER_PANDOC)-dependencies-filter := \
+	$(COMPOSER) \
+	$(COMPOSER_INCLUDES) \
+	$(COMPOSER_YML_LIST) \
+	$(CUSTOM_PUBLISH_SH) \
+	$(INCLUDE_FILE_APPEND) \
+	$(INCLUDE_FILE_HEADER) \
+	$(INCLUDE_FILE_FOOTER) \
+	$(COMPOSER_CONTENTS_EXT) \
+
 #>		$(call PANDOC_FILES_OVERRIDE	,,$(2),yml)
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER) \
@@ -3371,7 +3381,7 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 #> update: EXTRACT.*MAKECMDGOALS
 ifneq ($(c_base),)
 ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
-$(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(TMPL_OUTPUT),$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,$(c_type))))
+$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,$(c_type))): $(call $(COMPOSER_PANDOC)-dependencies,$(TMPL_OUTPUT),$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,$(c_type))))
 $(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,$(c_type))): ;
 else
 ifeq ($(filter $(c_base).$(EXTN_OUTPUT),$(COMPOSER_TARGETS)),)
@@ -3379,6 +3389,8 @@ $(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_b
 endif
 endif
 endif
+
+$($(COMPOSER_PANDOC)-dependencies-filter): ;
 
 #> update: WILDCARD_YML
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
@@ -3396,6 +3408,8 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 $(sort \
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(call PANDOC_FILES_MAIN	,$(TYPE_$(TYPE)),$(TMPL_$(TYPE))) \
+		$(call PANDOC_FILES_HEADER	,$(TYPE_$(TYPE))) \
+		$(call PANDOC_FILES_CSS		,$(TYPE_$(TYPE))) \
 	) \
 ): ;
 
@@ -18876,8 +18890,12 @@ $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 $$($(1)-$(SUBDIRS)-$(CHECKIT)) \
 $(call $(NOTHING)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))) \
 $(if $(filter $(1),$(DOITALL)),\
-	$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
-	$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)) \
+	$(filter-out \
+		$($(COMPOSER_PANDOC)-dependencies-filter) \
+		,\
+		$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
+		$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)) \
+	) \
 ) \
 : | \
 	$(1)-$(HEADERS)
