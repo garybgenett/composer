@@ -1701,17 +1701,15 @@ override TYPE_TARGETS_LIST := \
 	TEXT \
 	LINT \
 
+override TYPE_TARGET :=
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	$(if $(filter $(c_type),$(TYPE_$(TYPE))),\
-		$(eval override TMPL_OUTPUT := $(TMPL_$(TYPE))); \
-		$(eval override EXTN_OUTPUT := $(EXTN_$(TYPE))); \
+		$(eval override TYPE_TARGET := $(c_type)) \
+		$(eval override TMPL_OUTPUT := $(TMPL_$(TYPE))) \
+		$(eval override EXTN_OUTPUT := $(EXTN_$(TYPE))) \
 	) \
 )
-
-$(if $(and \
-	$(filter $(c_type),$(TMPL_OUTPUT)) ,\
-	$(filter $(c_type),$(EXTN_OUTPUT)) \
-),\
+$(if $(TYPE_TARGET),,\
 	$(eval override TYPE_TARGETS_LIST += $(c_type)) \
 	$(foreach FILE,TYPE TMPL EXTN,\
 		$(eval override $(FILE)_$(c_type) := $(c_type)) \
@@ -1934,36 +1932,6 @@ override PANDOC_EXTENSIONS_TO		:= $(sort $(strip \
 ########################################
 
 ########################################
-### {{{3 Extract
-########################################
-
-#> update: EXTRACT.*MAKECMDGOALS
-
-#> update: includes duplicates
-override EXTRACT			:= extract
-
-ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
-#>override TMPL_INPUT			:= $(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type)))
-override TMPL_INPUT			= $(strip $(if	$(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))_EXTRACT) ,\
-							$(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))_EXTRACT) ,\
-							$(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))) \
-						))
-override TMPL_OUTPUT			:= $(TMPL_LINT)
-override EXTN_OUTPUT			:= $(EXTN_LINT)
-endif
-
-########################################
-### {{{3 Converters
-########################################
-
-override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
-
-override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_HTML)"
-override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_TEXT)"
-override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="json"
-override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
-
-########################################
 ### {{{3 Macros
 ########################################
 
@@ -2063,6 +2031,35 @@ override PANDOC_FILES_CSS = $(strip \
 		$(call PANDOC_FILES_OVERRIDE,$(1),$(2),css) \
 	) \
 )
+
+########################################
+### {{{3 Extract
+########################################
+
+#> update: EXTRACT.*MAKECMDGOALS
+
+#> update: includes duplicates
+override EXTRACT			:= extract
+
+ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
+override TMPL_INPUT			:= $(strip $(if	$(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))_EXTRACT) ,\
+							$(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))_EXTRACT) ,\
+							$(TMPL_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))) \
+						))
+override TMPL_OUTPUT			:= $(TMPL_LINT)
+override EXTN_OUTPUT			:= $(EXTN_LINT)
+endif
+
+########################################
+### {{{3 Converters
+########################################
+
+override PANDOC_FROM			:= $(PANDOC) --strip-comments --wrap="none"
+
+override PANDOC_MD_TO_HTML		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_HTML)"
+override PANDOC_MD_TO_TEXT		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="$(TMPL_TEXT)"
+override PANDOC_MD_TO_JSON		:= $(PANDOC_FROM) --from="$(TMPL_INPUT)$(subst $(NULL) ,,$(PANDOC_EXTENSIONS_FROM))" --to="json"
+override PANDOC_JSON_TO_LINT		:= $(PANDOC_FROM) --from="json" --to="$(TMPL_LINT)"
 
 ########################################
 ### {{{3 Options
@@ -2383,6 +2380,10 @@ override COMPOSER_OPTIONS_EXPORT = \
 	$(foreach FILE,$(filter-out $(COMPOSER_OPTIONS_MAXLIST),$(COMPOSER_OPTIONS)),\
 		$(FILE)="$(subst ",\",$($(FILE)))" \
 	)
+
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+#	=
+# =
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
 override COMPOSER_VARIABLES = \
@@ -15414,8 +15415,8 @@ $(TESTING)-$(EXPORTS)-$(CLEANER)-$(DOITALL)-done:
 ### {{{3 $(TESTING)-COMPOSER_MAXLIST
 ########################################
 
-override $(TESTING)-COMPOSER_MAXLIST-runs	:= 1
-override $(TESTING)-COMPOSER_MAXLIST-files	:= 10000
+override $(TESTING)-COMPOSER_MAXLIST-runs	:= 5
+override $(TESTING)-COMPOSER_MAXLIST-files	:= 2000
 #WORKING:FIX:SIZE:OPTS
 override $(TESTING)-COMPOSER_MAXLIST-append	:= ..
 
@@ -15424,7 +15425,7 @@ $(TESTING)-COMPOSER_MAXLIST: $(TESTING)-$(_)Think
 $(TESTING)-COMPOSER_MAXLIST:
 #WORKING:FIX:SIZE
 #	@$(call $(TESTING)-$(HEADERS),\
-#		\#WORK: steal/borrow content from stress... including "Jobs" count in "done"... \
+#		\#WORK: steal/borrow content from stress... \
 #	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -15514,11 +15515,13 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[/].+[/]$(subst +,[+],$(notdir $(COMPOSER_EXPORT_DEFAULT)))[/])
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),Removing.+$(OUT_README).+$(EXTN_DEFAULT)$(SED_ESCAPE_COLOR)$$)
 	$(call $(TESTING)-count,$(COMPOSER_KEEPING),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 2),MAKECMDGOALS)
 	@$(TABLE_M2) "$(_H)$(MARKER) Runs"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-runs)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-files)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Count"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-count)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Total"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-total)"
-	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 2),MAKECMDGOALS)
+	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"	"$(_C)$(TESTING_MAKEJOBS)"
+	@$(TABLE_M2) "$(_H)$(MARKER) Debug"	"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
 	@$(call $(TESTING)-find,^real)
 
 ########################################
