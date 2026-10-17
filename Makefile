@@ -15182,7 +15182,7 @@ $(TESTING)-$(EXPORTS)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+changelog.html)
 	$(call $(TESTING)-find,Removing.+getting-started.html)
 	$(call $(TESTING)-count,5,$(CLEANER).+$(COMPOSER_LOGFILE_DEFAULT))
-	$(call $(TESTING)-count,3,$(CLEANER).+$(notdir $(COMPOSER_TMP)))
+	$(call $(TESTING)-count,2,$(CLEANER).+$(notdir $(COMPOSER_TMP)))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
 	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
@@ -19067,9 +19067,7 @@ $(COMPOSER_PANDOC):
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$(call $(HEADERS)-note,$(+) $(MARKER) $(c_type),$(c_list))
 endif
-ifeq ($(MAKELEVEL),0)
-	@$(call $(CLEANER)-$(CLEANER))
-endif
+	@$(call TYPE_TARGETS_CLEANER,$$(c_base),$(EXTN_OUTPUT))
 
 ifneq ($(c_base),)
 $(c_base).$(EXTN_OUTPUT): \
@@ -19132,9 +19130,7 @@ else
 	@$(call $(HEADERS)-note,$(@) $(MARKER) $(c_type),$(if $(c_list_file),$(c_list_file),$(call c_list_var)))
 endif
 endif
-ifeq ($(MAKELEVEL),0)
-	@$(call $(CLEANER)-$(CLEANER))
-endif
+	@$(call TYPE_TARGETS_CLEANER,$$(c_base),$(EXTN_OUTPUT))
 endif
 
 ########################################
@@ -19169,33 +19165,34 @@ override TYPE_TARGETS_OPTIONS = \
 	$(COMPOSER_PANDOC) \
 	c_type="$(1)" c_base="$(*)" c_list="$(2)"
 
+override TYPE_TARGETS_CLEANER = \
+	if	[ "$(MAKELEVEL)" = "0" ] && \
+		[ "$(MAKECMDGOALS)" = "$(1).$(2)" ]; \
+	then \
+		$(call $(CLEANER)-$(CLEANER)); \
+	fi
+
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_FILEEXT)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_FILEEXT))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),COMPOSER_FILEEXT)
 endif
-ifeq ($(MAKELEVEL),0)
-	@$$(call $$(CLEANER)-$$(CLEANER))
-endif
+	@$$(call TYPE_TARGETS_CLEANER,$$(*),$(2))
 
 %.$(2): %
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(NOTHING))
 endif
-ifeq ($(MAKELEVEL),0)
-	@$$(call $$(CLEANER)-$$(CLEANER))
-endif
+	@$$(call TYPE_TARGETS_CLEANER,$$(*),$(2))
 
 %.$(2): $(c_list)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),c_list)
 endif
-ifeq ($(MAKELEVEL),0)
-	@$$(call $$(CLEANER)-$$(CLEANER))
-endif
+	@$$(call TYPE_TARGETS_CLEANER,$$(*),$(2))
 endef
 
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
