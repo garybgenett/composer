@@ -13564,27 +13564,33 @@ endif
 ## {{{2 $(MAKE_DB)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
 .PHONY: $(MAKE_DB)
 $(MAKE_DB):
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) \
+	@$(call $(.)$(MAKE_DB))
+
+override $(.)$(MAKE_DB) = { \
+	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) \
 		--question \
 		--print-data-base \
 		--no-builtin-rules \
 		--no-builtin-variables \
-		|| $(TRUE)
+		|| $(TRUE); \
+}
 
 ########################################
 ## {{{2 $(LISTING)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
 .PHONY: $(LISTING)
 $(LISTING):
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(MAKE_DB) \
-		| $(SED) -n "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" \
+	@$(call $(.)$(LISTING))
+
+override $(.)$(LISTING) = { \
+	$(call $(.)$(MAKE_DB)) \
+		| $(SED) -n "/^[\#][ ]Files$$/,/^[\#][ ]Finished[ ]Make[ ]data[ ]base/p" \
 		| $(SED) -n "/^$(COMPOSER_REGEX_PREFIX)?$(COMPOSER_REGEX)[:]+/p" \
-		| $(SORT)
+		| $(SORT); \
+}
 
 ########################################
 ## {{{2 $(NOTHING)
@@ -15422,7 +15428,6 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 	@RUN="1"; while [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-runs)" ]; do \
 		$(LINERULE); \
 		$(PRINT) "$(_F)$(MARKER) $${RUN}"; \
-		$(ECHO) "$(_S)"; \
 		NUM="0"; while [ "$${NUM}" -lt "$($(TESTING)-COMPOSER_MAXLIST-files)" ]; do \
 			$(ECHO) "\n.PHONY: $${RUN}-$${NUM}-$(EXPORTS)\n$${RUN}-$${NUM}-$(EXPORTS):\n\t@\$$(ECHO) \"\$$(@)-$(TARGETS)\\\n\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 			$(ECHO) "\n.PHONY: $${RUN}-$${NUM}-$(CLEANER)\n$${RUN}-$${NUM}-$(CLEANER):\n\t@\$$(ECHO) \"\$$(@)-$(TARGETS)\\\n\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
@@ -15488,7 +15493,7 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1 + $($(TESTING)-COMPOSER_MAXLIST-count) \* 2),$(SUBDIRS)[.][0-9]+[.][0-9]+.+$(NOTHING).+$(MAKEFILE))
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[/].+[/]$(subst +,[+],$(notdir $(COMPOSER_EXPORT_DEFAULT)))[/])
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),Removing.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
-	$(call $(TESTING)-count,$$($(EXPR) $(COMPOSER_KEEPING) + 1),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
+	$(call $(TESTING)-count,$$($(EXPR) $(COMPOSER_KEEPING)),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 2),MAKECMDGOALS)
 	@$(TABLE_M2) "$(_H)$(MARKER) Runs"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-runs)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-files)"
@@ -16234,64 +16239,34 @@ $(foreach EXPORT,\
 ### {{{3 $(TARGETS)
 ########################################
 
+#> $(TARGETS)-$(CHECKIT) > $(TARGETS)-$(CLEANER) > $(TARGETS)-$(PRINTER)
+
 .PHONY: $(TARGETS)
+ifneq ($(filter $(TARGETS),$(MAKECMDGOALS)),)
+.NOTPARALLEL:
+endif
 $(TARGETS): $(.)set_title-$(TARGETS)
+$(TARGETS): $(HEADERS)-$(TARGETS)
+$(TARGETS): $(TARGETS)-$(MAKE_DB)
+$(TARGETS): $(TARGETS)-$(LISTING)
+$(TARGETS): $(TARGETS)-$(PRINTER)
+$(TARGETS): $(PRINTER)-$(PRINTER)
+$(TARGETS): $(TARGETS)-$(CHECKIT)
+$(TARGETS): $(TARGETS)-$(CLEANER)
 $(TARGETS):
-	@$(call $(HEADERS))
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
-	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(TARGETS)-$(TARGETS)
-	@$(LINERULE)
-	@$(foreach FILE,\
-		TARGETS \
-		SUBDIRS \
-		EXPORTS \
-		IGNORES \
-		,\
-		$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE)"; \
-		$(foreach LIST,$(COMPOSER_$(FILE)_LIST),\
-			$(LS) --directory $(LIST) || $(TRUE); \
-			$(call NEWLINE) \
-		) \
-		$(if $(COMPOSER_LIBRARY),$(if $(filter \
-			EXPORTS \
-			IGNORES \
-			,\
-			$(FILE) \
-		),\
-			$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE) ($(COMPOSER_FILEEXT))"; \
-			$(foreach LIST,$(COMPOSER_$(FILE)_EXT),\
-				$(LS) --directory $(LIST) || $(TRUE); \
-				$(call NEWLINE) \
-			) \
-		)) \
-	)
-	@$(LINERULE)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
-	@$(MAKE) $(PRINTER)-$(PRINTER)
-	@$(LINERULE)
-	@$(foreach FILE,\
-		EXPORTS \
-		CLEANER \
-		DOITALL \
-		,\
-		$(PRINT) "$(_H)$(MARKER) *-$($(FILE))"; \
-		$(call $(TARGETS)-$(PRINTER),,$($(FILE))) \
-			| $(SED) "s|[ ]+|\n|g" \
-			| $(SORT); \
-		$(call NEWLINE) \
-	)
+	@$(ECHO) ""
 
 ########################################
-### {{{3 $(TARGETS)-$(TARGETS)
+### {{{3 $(TARGETS)-$(MAKE_DB)
 ########################################
 
 #> update: MARKER.*c_list_var
 
-.PHONY: $(TARGETS)-$(TARGETS)
-$(TARGETS)-$(TARGETS):
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
+.PHONY: $(TARGETS)-$(MAKE_DB)
+$(TARGETS)-$(MAKE_DB):
+#>	@$(call $(HEADERS)-action,$(DOMAKE),,,$(TARGETS),1)
 	@$(foreach FILE,\
-		$(call COMPOSER_CONV,$(EXPAND),$(sort $(shell $(call $(TARGETS)-$(PRINTER),$(COMPOSER_DEBUGIT)))),1,1,1) \
+		$(call COMPOSER_CONV,$(EXPAND),$(sort $(shell $(call $(TARGETS)-$(TARGETS),$(COMPOSER_DEBUGIT)))),1,1,1) \
 		,\
 		$(eval override NAME := $(word 1,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
 		$(eval override DEPS := $(word 2,$(subst :, ,$(filter $(FILE),$(subst :=,,$(FILE)))))) \
@@ -16334,18 +16309,68 @@ $(TARGETS)-$(TARGETS):
 			$(call NEWLINE) \
 		) \
 	)
-	@$(ECHO) ""
 
 ########################################
-### {{{3 $(TARGETS)-$(PRINTER)
+### {{{3 $(TARGETS)-$(LISTING)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
+.PHONY: $(TARGETS)-$(LISTING)
+$(TARGETS)-$(LISTING):
+	@$(foreach FILE,\
+		TARGETS \
+		SUBDIRS \
+		EXPORTS \
+		IGNORES \
+		,\
+		$(call $(HEADERS)-action,COMPOSER_$(FILE),,,$(TARGETS),1); \
+		$(foreach LIST,$(COMPOSER_$(FILE)_LIST),\
+			$(LS) --directory $(LIST) || $(TRUE); \
+			$(call NEWLINE) \
+		) \
+		$(if $(COMPOSER_LIBRARY),$(if $(filter \
+			EXPORTS \
+			IGNORES \
+			,\
+			$(FILE) \
+		),\
+			$(PRINT) "$(_H)$(MARKER) COMPOSER_$(FILE) ($(COMPOSER_FILEEXT))"; \
+			$(foreach LIST,$(COMPOSER_$(FILE)_EXT),\
+				$(LS) --directory $(LIST) || $(TRUE); \
+				$(call NEWLINE) \
+			) \
+		)) \
+	)
+
+########################################
+### {{{3 $(TARGETS)-$(CHECKIT)
+########################################
+
+.PHONY: $(TARGETS)-$(CHECKIT)
+$(TARGETS)-$(CHECKIT):
+	@$(foreach FILE,\
+		EXPORTS \
+		CLEANER \
+		DOITALL \
+		,\
+		$(call $(HEADERS)-action,*-$($(FILE)),,,$(TARGETS),1); \
+		$(call $(TARGETS)-$(TARGETS),,$($(FILE))) \
+			| $(SED) "s|[ ]+|\n|g" \
+			| $(SORT); \
+		$(call NEWLINE) \
+	)
+
+########################################
+### {{{3 $(TARGETS)-$(TARGETS)
+########################################
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
-override $(TARGETS)-$(PRINTER) = \
-	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
+override $(TARGETS)-$(TARGETS) = \
+	$(if $(wildcard $(call COMPOSER_TMP_FILE,,$(TARGETS))),,\
+		$(MKDIR) $(COMPOSER_TMP) >/dev/null; \
+		$(call $(.)$(LISTING)) >$(call COMPOSER_TMP_FILE,,$(TARGETS)); \
+	) \
+	$(CAT) $(call COMPOSER_TMP_FILE,,$(TARGETS)) | $(SED) \
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(foreach FILE,$(COMPOSER_RESERVED),\
@@ -16378,6 +16403,22 @@ override $(TARGETS)-$(PRINTER) = \
 			-e "s|[[:space:]]*$$||g" \
 			-e "s|[[:space:]]+|$(TOKEN)|g" \
 		)
+
+########################################
+### {{{3 $(TARGETS)-$(CLEANER)
+########################################
+
+.PHONY: $(TARGETS)-$(CLEANER)
+$(TARGETS)-$(CLEANER):
+	@$(call $(CLEANER)-$(CLEANER))
+
+########################################
+### {{{3 $(TARGETS)-$(PRINTER)
+########################################
+
+.PHONY: $(TARGETS)-$(PRINTER)
+$(TARGETS)-$(PRINTER):
+	@$(call $(HEADERS)-action,$(PRINTER),,,$(TARGETS),1)
 
 ################################################################################
 # {{{1 Repository Targets
@@ -16693,7 +16734,7 @@ else ifeq ($(wildcard $(firstword $(FIREBASE))),)
 	@$(call $(HEADERS)-note,$(CURDIR),firebase$(_D) $(MARKER) $(_H)$(UPGRADE)-$(notdir $(FIREBASE_DIR)),$(NOTHING))
 else
 ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,$(EXPORTS))
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,init,$(EXPORTS),1)
 	@$(call FIREBASE_RUN) \
 		--interactive \
 		login
@@ -16703,7 +16744,7 @@ ifeq ($(wildcard $(COMPOSER_ROOT)/firebase.json),)
 		--interactive \
 		init hosting
 endif
-	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,,$(EXPORTS))
+	@$(call $(HEADERS)-action,$(COMPOSER_ROOT),firebase,,$(EXPORTS),1)
 	@$(call FIREBASE_RUN) \
 		--config $(COMPOSER_ROOT)/firebase.json \
 		--account $(C_EXPORT_FIRACCT) \
@@ -16745,6 +16786,7 @@ $(EXPORTS)-$(CLEANER):
 		| while read -r FILE; do \
 			$(LS) --directory $${FILE}; \
 		done
+	@$(call $(CLEANER)-$(CLEANER))
 
 ################################################################################
 # {{{1 Composer Targets
@@ -16778,6 +16820,7 @@ $(PUBLISH)-$(CLEANER): $(.)set_title-$(PUBLISH)-$(CLEANER)
 $(PUBLISH)-$(CLEANER): $(PUBLISH)-$(CLEANER)-$(HEADERS)
 $(PUBLISH)-$(CLEANER): $(PUBLISH)-$(CLEANER)-$(TARGETS)
 $(PUBLISH)-$(CLEANER): $(PUBLISH)-$(CLEANER)-$(CLEANER)
+#>$(PUBLISH)-$(CLEANER): $(CLEANER)-$(CLEANER)
 $(PUBLISH)-$(CLEANER):
 	@$(ECHO) ""
 
@@ -19203,7 +19246,7 @@ $(SUBDIRS)-$(TARGETS)-$(1):
 	@$$(ECHO) ""
 
 $(if $(filter $(1)%,$(MAKECMDGOALS)),\
-	$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER),,$(1))),\
+	$(foreach FILE,$(shell $(call $(TARGETS)-$(TARGETS),,$(1))),\
 		$(eval $(call $(SUBDIRS)-$(TARGETS)-$(HEADERS),$(1),$(FILE))) \
 		$(eval \
 			$(SUBDIRS)-$(TARGETS)-$(1)-$(FILE)-$(HEADERS) \
@@ -19236,7 +19279,7 @@ $(eval $(call $(SUBDIRS)-$(TARGETS),$(DOITALL)))
 .PHONY: $(EXTRACT)
 $(EXTRACT): $(COMPOSER_PANDOC)
 $(EXTRACT):
-	@$(ECHO) ""
+	@$(call $(CLEANER)-$(CLEANER))
 
 ########################################
 ## {{{2 $(PRINTER)
@@ -19247,31 +19290,14 @@ $(EXTRACT):
 ########################################
 
 .PHONY: $(PRINTER)
-$(PRINTER): $(PRINTER)-$(HEADERS)
+ifneq ($(filter $(PRINTER),$(MAKECMDGOALS)),)
+.NOTPARALLEL:
+endif
+$(PRINTER): $(.)set_title-$(PRINTER)
+$(PRINTER): $(HEADERS)-$(PRINTER)
 $(PRINTER): $(PRINTER)-$(PRINTER)
 $(PRINTER):
 	@$(ECHO) ""
-
-########################################
-### {{{3 $(PRINTER)-$(HEADERS)
-########################################
-
-.PHONY: $(PRINTER)-$(HEADERS)
-$(PRINTER)-$(HEADERS): $(.)set_title-$(PRINTER)
-$(PRINTER)-$(HEADERS):
-	@$(call $(HEADERS),,$(PRINTER))
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-# : |
-ifneq ($(filter-out $(PRINTER)-$(PRINTER),$(MAKECMDGOALS)),)
-$(PRINTER)-$(PRINTER) \
-$(COMPOSER_LOGFILE) \
-$(NOTHING)-$(COMPOSER_LOGFILE) \
-$(NOTHING)-COMPOSER_LOGFILE \
-$(NOTHING)-COMPOSER_FILEEXT \
-: | \
-	$(PRINTER)-$(HEADERS)
-endif
 
 ########################################
 ### {{{3 $(PRINTER)-$(PRINTER)
