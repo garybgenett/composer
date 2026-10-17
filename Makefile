@@ -7967,7 +7967,7 @@ $(_N)override$(_D) $(_C)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_E)$(>)$(_C)c_toc
 $(_N)override$(_D) $(_C)$(OUT_README).$(EXTN_LPDF)$(_D)			:= $(_M)$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT) $(OUT_LICENSE)$(COMPOSER_FILEEXT_DEFAULT)$(_D)
 
 $(_N)override$(_D) $(_C)$(OUT_README).$(EXTN_PRES)$(_D)		:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))/$(OUT_README).$(TYPE_PRES)$(COMPOSER_FILEEXT_DEFAULT)$(_D)
-#$(_N)override$(_D) $(_C)$(OUT_README).$(EXTN_PRES)$(_E)$(>)$(_C)c_toc$(_D)	:=
+$(_N)override$(_D) $(_C)$(OUT_README).$(EXTN_PRES)$(_E)$(>)$(_C)c_toc$(_D)	:=
 
 $(_N)override$(_D) $(_C)$(OUT_LICENSE).$(EXTN_HTML)$(_E)$(>)$(_C)c_site$(_D)		:= $(_M)1$(_D)
 $(_N)override$(_D) $(_C)$(OUT_LICENSE).$(EXTN_HTML)$(_E)$(>)$(_C)c_toc$(_D)		:=
