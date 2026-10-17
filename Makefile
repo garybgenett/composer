@@ -3863,7 +3863,7 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)]"			"Synchronize \`$(_M)$(notdir $(COMPOSER_EXPORT_DEFAULT))$(_D)\` export of $(_H)[COMPOSER_ROOT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOITALL)]"		"Also publish to upstream hosting providers"
-	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(DOFORCE)]"		"Publish only, without synchronizing first"
+	@$(TABLE_M2) "$(_C)[$(EXPORTS)-$(PUBLISH)]"		"Publish only, without synchronizing first"
 	@$(TABLE_M2) "$(_C)[$(_N)*$(_C)-$(EXPORTS)]"		"Any targets named this way will also be run by $(_C)[$(EXPORTS)]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-library]"		"Build or update the $(_H)[COMPOSER_LIBRARY]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PUBLISH)-$(PRINTER)]"		"$(_H)[COMPOSER_LIBRARY]$(_D) for current directory or $(_C)[c_list]$(_D)"
@@ -4528,7 +4528,7 @@ rendering of $(_C)[Markdown]$(_D) files as they are being written.  To install, 
 instructions in the `$(_M)README.md$(_D)`.
 
 $(_C)[$(FIREBASE_NAME)]$(_D) is only necessary when configured for uploading via the
-$(_C)[$(EXPORTS)-$(DOITALL)]$(_D) and $(_C)[$(EXPORTS)-$(DOFORCE)]$(_D) targets.  Use the $(_C)[$(UPGRADE)]$(_D)-`$(_M)$(notdir $(FIREBASE_DIR))$(_D)`
+$(_C)[$(EXPORTS)-$(DOITALL)]$(_D) and $(_C)[$(EXPORTS)-$(PUBLISH)]$(_D) targets.  Use the $(_C)[$(UPGRADE)]$(_D)-`$(_M)$(notdir $(FIREBASE_DIR))$(_D)`
 target to build the $(_C)[$(COMPOSER_BASENAME)]$(_D) version with $(_C)[npm]$(_D).
 endef
 
@@ -6147,7 +6147,7 @@ Example using $(_C)[c_list]$(_D):
 
 $(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(CONVICT)$(_D) $(_E)c_list="$(MAKEFILE) $(call COMPOSER_CONV,,$(COMPOSER_ART))"$(_D)
 
-$(call $(HELPOUT)-$(DOITALL)-section,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPORTS)-$(DOFORCE) / \*-$(EXPORTS))
+$(call $(HELPOUT)-$(DOITALL)-section,$(EXPORTS) / $(EXPORTS)-$(DOITALL) / $(EXPORTS)-$(PUBLISH) / \*-$(EXPORTS))
 
 #WORK
 #	... and then runs all $(_C)[$(_N)*$(_C)-$(EXPORTS)]$(_D) targets.
@@ -13349,6 +13349,7 @@ override $(HEADERS)-options-val = $(strip \
 override $(HEADERS)-$(SUBDIRS) = \
 	if [ "$(MAKELEVEL)" = "0" ]; then \
 		$(call $(HEADERS),,$(1)); \
+		$(call $(1)-$(CONFIGS),1) \
 	fi; \
 	if [ -n "$(COMPOSER_DOITALL_$(1))" ]; then \
 		if [ -n "$(COMPOSER_DEBUGIT)" ]; then \
@@ -13394,8 +13395,15 @@ override $(HEADERS)-$(COMPOSER_PANDOC)-options = \
 override $(HEADERS)-line	= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE)),$(HEADER_L))
 override $(HEADERS)-table	= $(if $(1),$(TABLE_M2),$(TABLE_C2))
 
+override $(HEADERS)-linerule = \
+	$(if $(2),\
+		$(if $(filter-out $(MAKEJOBS),$(MAKEJOBS_DEFAULT)),$(LINERULE);) \
+	,\
+		$(if $(or $(1),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);) \
+	)
+
 override $(HEADERS)-action = \
-	$(if $(or $(5),$(filter $(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);) \
+	$(call $(HEADERS)-linerule,$(5)) \
 	$(PRINT) "$(_H)$(MARKER) $(if $(4),$(4),$(@))$(_D) $(_S)$(DIVIDE)$(_D) $(_M)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(if $(2),$(_D) ($(_E)$(2)$(_D)$(if $(3), $(MARKER) $(if $(filter $(NOTHING),$(3)),$(_F),$(_E))$(3)$(_D))))"
 
 override $(HEADERS)-note	= $(TABLE_M2) "$(_M)$(MARKER) Processing"	"$(_E)$(call COMPOSER_CONV,$(EXPAND),$(1),1,1)$(_D) $(_S)$(DIVIDE)$(_D) $(if $(4),$(_D)($(_H)$(4)$(_D)) )[$(if $(filter $(NOTHING),$(3)),$(_F),$(_C))$(if $(3),$(3),$(@))$(_D)]$(if $(2), $(_C)$(call COMPOSER_CONV,$(EXPAND),$(2),1,1,1))"
@@ -13467,8 +13475,6 @@ $(LISTING):
 ########################################
 ## {{{2 $(NOTHING)
 ########################################
-
-#WORKING:FIX:SIZE:OPTS
 
 ########################################
 ### {{{3 $(NOTHING)
@@ -16222,8 +16228,6 @@ endif
 
 #> $(EXPORTS)-$(@) > $(EXPORTS)-redirect-list > $(EXPORTS)-redirect-files
 
-#WORKING:FIX:SIZE:OPTS
-
 ########################################
 ### {{{3 $(EXPORTS)-redirect-list
 ########################################
@@ -16239,12 +16243,7 @@ override $(EXPORTS)-redirect-list :=
 override $(EXPORTS)-redirect-files :=
 ifneq ($(and \
 	$(c_site) ,\
-	$(filter \
-		$(EXPORTS)-redirect-% \
-		$(EXPORTS)-$(TARGETS) \
-		,\
-		$(MAKECMDGOALS) \
-	) \
+	$(filter $(EXPORTS)%,$(MAKECMDGOALS)) \
 ),)
 override REDIRECT_TITLE			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.title)
 override REDIRECT_DISPLAY		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.display)
@@ -16259,27 +16258,13 @@ override $(EXPORTS)-redirect-list := \
 override $(EXPORTS)-redirect-files := $(addprefix $(COMPOSER_EXPORT)/,$($(EXPORTS)-redirect-list))
 endif
 
-.PHONY: $(EXPORTS)-redirect-files
-$(EXPORTS)-redirect-files: $($(EXPORTS)-redirect-files)
-$(EXPORTS)-redirect-files:
-	@$(ECHO) ""
-
 ########################################
 ### {{{3 $(EXPORTS)-redirect-files
 ########################################
 
 #> update: REDIRECT_[A-Z]*
 
-#>	$(eval $(EXPORTS)-source-$(FILE) := $(shell $(subst --no-symlinks,,$(REALPATH)) $(CURDIR) $(CURDIR)/$(notdir $(FILE)))) \
-#>		$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML),$($(EXPORTS)-source-$(FILE))) \
-#>		$($(EXPORTS)-source-$(FILE)) \
-
-$(foreach FILE,$($(EXPORTS)-redirect-files),\
-	$(eval $(FILE): \
-		$(call $(COMPOSER_PANDOC)-dependencies) \
-	) \
-)
-
+$($(EXPORTS)-redirect-files): $(filter-out $($(PUBLISH)-cache),$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)))
 $($(EXPORTS)-redirect-files):
 #>	@$(call $(HEADERS)-note,$(@),*,$(EXPORTS)-redirect)
 	@$(eval override REDIRECT_URL	:= $(shell $(REALPATH) $(CURDIR) $(realpath $(CURDIR)/$(notdir $(@)))))
@@ -16324,35 +16309,32 @@ $($(EXPORTS)-redirect-files):
 
 #> update: $(NOTHING)-%
 
-.PHONY: $(EXPORTS)
-$(EXPORTS): $(.)set_title-$(EXPORTS)
-$(EXPORTS):
-#>	@$(call $(HEADERS))
-	@$(call $(HEADERS)-$(SUBDIRS))
-ifneq ($(or \
-	$(filter $(MAKELEVEL),0) ,\
-	$(filter $(CURDIR),$(COMPOSER_ROOT)) ,\
-),)
-	@$(call $(EXPORTS)-$(CONFIGS),1)
-endif
 ifeq ($(wildcard $(firstword $(RSYNC))),)
-	@$(if $(wildcard $(firstword $(RSYNC))),,$(MAKE) $(NOTHING)-rsync)
+#>	@$(if $(wildcard $(firstword $(RSYNC))),,$(MAKE) $(NOTHING)-rsync)
+override $(EXPORTS)-$(LISTING) := $(NOTHING)-rsync
+override $(EXPORTS)-$(LISTING)-done :=
 else
-ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),$(DOFORCE))
-	@$(MAKE) $(EXPORTS)-$(TARGETS)
-	@$(MAKE) $(SUBDIRS)-$(EXPORTS)
-	@$(MAKE) $(SUBDIRS)-$(TARGETS)-$(EXPORTS)
-	@$(call $(CLEANER)-$(CLEANER))
-endif
-ifeq ($(MAKELEVEL),0)
-	@$(MAKE) $(EXPORTS)-$(CLEANER)
-ifneq ($(and \
-	$(COMPOSER_DOITALL_$(EXPORTS)) ,\
-	$(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)) \
-),)
-	@$(MAKE) $(EXPORTS)-$(PUBLISH)
-endif
-endif
+override $(EXPORTS)-$(LISTING) := \
+	$(if $(COMPOSER_EXPORTS_LIST),\
+		$(EXPORTS)-$(EXPORTS) ,\
+		$(NOTHING)-$(EXPORTS) \
+	) \
+
+override $(EXPORTS)-$(LISTING)-done := \
+	$($(EXPORTS)-redirect-files) \
+	$(if $(filter $(MAKELEVEL),0),\
+		$(EXPORTS)-$(CLEANER) \
+		$(if $(COMPOSER_DOITALL_$(EXPORTS)),\
+			$(EXPORTS)-$(PUBLISH) \
+		) \
+	) \
+
+$(EXPORTS)-$(CLEANER): $($(EXPORTS)-redirect-files)
+$(EXPORTS)-$(PUBLISH): \
+	$(if $(COMPOSER_DOITALL_$(EXPORTS)),\
+		$($(EXPORTS)-redirect-files) \
+		$(EXPORTS)-$(CLEANER) \
+	)
 endif
 
 ########################################
@@ -16375,22 +16357,23 @@ override $(EXPORTS)-$(CONFIGS) = \
 			C_EXPORT_FIRACCT \
 			C_EXPORT_FIRPROJ \
 			,\
-			$(call $(HEADERS)-options,$(FILE)) \
-			$(call NEWLINE) \
+			$(call $(HEADERS)-options,$(FILE)); \
 		) \
-		$(call $(HEADERS)-line) \
+		$(call $(HEADERS)-line); \
 	)
 
 ########################################
 ### {{{3 $(EXPORTS)-$(TARGETS)
 ########################################
 
-.PHONY: $(EXPORTS)-$(TARGETS)
-$(EXPORTS)-$(TARGETS):
-ifneq ($(or \
-	$(COMPOSER_SUBDIRS_LIST) ,\
-	$(COMPOSER_EXPORTS_LIST) ,\
-),)
+override $(EXPORTS)-$(TARGETS) :=
+
+########################################
+### {{{3 $(EXPORTS)-$(EXPORTS)
+########################################
+
+.PHONY: $(EXPORTS)-$(EXPORTS)
+$(EXPORTS)-$(EXPORTS):
 	@$(call $(HEADERS)-action,$(CURDIR),,,$(EXPORTS))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR) $(call COMPOSER_CONV,$(COMPOSER_EXPORT),$(CURDIR),1,1) $($(DEBUGIT)-output)
@@ -16426,13 +16409,8 @@ endif
 		) \
 		$(call COMPOSER_CONV,$(COMPOSER_ROOT),$(CURDIR),1,1)/ \
 		$(call COMPOSER_CONV,$(COMPOSER_EXPORT),$(CURDIR),1,1)
-ifneq ($(c_site),)
-	@$(MAKE) \
-		c_site="1" \
-		$(EXPORTS)-redirect-files
-endif
-else
-	@$(MAKE) $(NOTHING)-$(EXPORTS)
+ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),)
+	@$(call $(HEADERS)-linerule)
 endif
 
 ########################################
@@ -16443,6 +16421,15 @@ endif
 
 .PHONY: $(EXPORTS)-$(PUBLISH)
 $(EXPORTS)-$(PUBLISH):
+ifeq ($(COMPOSER_DOITALL_$(EXPORTS)),)
+	@$(call $(HEADERS))
+	@$(call $(EXPORTS)-$(CONFIGS),1)
+else
+	@$(call $(HEADERS)-linerule,,1)
+endif
+ifeq ($(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),)
+	@$(call $(HEADERS)-note,$(COMPOSER_EXPORT),$(_H)C_EXPORT_DESTDIR$(_D) $(MARKER) $(_H)COMPOSER_ROOT,$(NOTHING))
+else
 ifeq ($(and \
 	$(C_EXPORT_GITREPO) ,\
 	$(C_EXPORT_GITBNCH) \
@@ -16491,6 +16478,7 @@ endif
 		deploy \
 			--public $(call COMPOSER_CONV,,$(COMPOSER_EXPORT),1) \
 			--only hosting
+endif
 endif
 
 ########################################
@@ -18656,6 +18644,8 @@ endif
 ## {{{2 $(INSTALL)
 ########################################
 
+#> $(INSTALL)-$(TARGETS) > $(INSTALL)-$(INSTALL)
+
 ########################################
 ### {{{3 $(INSTALL)
 ########################################
@@ -18674,8 +18664,6 @@ override $(INSTALL)-$(LISTING)-done := \
 ### {{{3 $(INSTALL)-$(INSTALL)
 ########################################
 
-#> $(INSTALL)-$(TARGETS) > $(INSTALL)-$(INSTALL)
-
 #> update: $(HEADERS)-note.*$(_H)
 
 .PHONY: $(INSTALL)-$(INSTALL)
@@ -18692,8 +18680,6 @@ endif
 ########################################
 ### {{{3 $(INSTALL)-$(TARGETS)
 ########################################
-
-#> $(INSTALL)-$(TARGETS) > $(INSTALL)-$(INSTALL)
 
 override $(INSTALL)-$(TARGETS) := $(addprefix $(INSTALL)-,$(filter-out $(NOTHING)%,$(COMPOSER_SUBDIRS)))
 
@@ -18899,7 +18885,7 @@ $(1)-$(TARGETS): $(1)-$(HEADERS)
 $(1)-$(TARGETS): $(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
 $(1)-$(TARGETS): $(call $(NOTHING)-$(CHECKIT),$(if $(1),SUBDIRS,TARGETS),$($(1)-$(TARGETS)))
 $(1)-$(TARGETS):
-	@$(ECHO) ""
+	@$$(ECHO) ""
 
 .PHONY: $(SUBDIRS)-$(1)
 $(SUBDIRS)-$(1): $(1)-$(HEADERS)
@@ -18915,16 +18901,15 @@ $(call $(NOTHING)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUB
 : \
 	$(1)-$(HEADERS)
 
-$$($(1)-$(SUBDIRS)-$(LISTING)) \
-$$($(1)-$(SUBDIRS)-$(LISTING)-done) \
-$(call $(NOTHING)-$(CHECKIT),$(if $(1),SUBDIRS,TARGETS),$($(1)-$(TARGETS))) \
-: \
-	$(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
-
 $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 : \
 	$$($(1)-$(SUBDIRS)-$(LISTING)) \
 	$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1))
+
+$$($(1)-$(SUBDIRS)-$(LISTING)) \
+$(call $(NOTHING)-$(CHECKIT),$(if $(1),SUBDIRS,TARGETS),$($(1)-$(TARGETS))) \
+: \
+	$(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
 
 .PHONY: $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)): $(1)-$(HEADERS)
@@ -18937,10 +18922,13 @@ $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)):
 	)
 endef
 
-#$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(EXPORTS)))
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(EXPORTS)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL),1))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
+
+#WORKING:FIX:SIZE:OPTS
+$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)): | $(DOITALL)-$(HEADERS)
 
 ########################################
 ### {{{3 $(SUBDIRS)-$(TARGETS)
