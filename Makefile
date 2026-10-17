@@ -19251,6 +19251,12 @@ $(SUBDIRS):
 ### {{{3 $(SUBDIRS)-$(EXAMPLE)
 ########################################
 
+#WORKIT
+$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
+$($(PUBLISH)-library-digest) \
+$($(PUBLISH)-library-sitemap) \
+	: | $(DOITALL)-$(HEADERS)
+
 #WORKING:FIX:SIZE:OPTS:DEPS
 
 override define $(SUBDIRS)-$(EXAMPLE) =
@@ -19277,25 +19283,25 @@ override $(1)-$(SUBDIRS)-$(CHECKIT) := \
 
 .PHONY: $(1)-$(HEADERS)
 $(1)-$(HEADERS): \
-	$$(if $$(or \
-		$$(and \
-			$$(filter $(1),$$(DOITALL)) ,\
-			$$(filter $$(MAKELEVEL),0) ,\
-			$$(if $$(MAKECMDGOALS),,1) \
+	$(if $(or \
+		$(and \
+			$(filter $(1),$(DOITALL)) ,\
+			$(filter $(MAKELEVEL),0) ,\
+			$(if $(MAKECMDGOALS),,1) \
 		),\
-		$$(filter $(1)%,$$(MAKECMDGOALS)) \
+		$(filter $(1)%,$(MAKECMDGOALS)) \
 	),\
 		$(.)set_title-$(1) \
 	)
 $(1)-$(HEADERS):
-#>		$$(call $$(HEADERS),,$(1))
-	@$$(if $$(or \
-		$$(and \
-			$$(filter $(1),$$(DOITALL)) ,\
-			$$(filter $$(MAKELEVEL),0) ,\
-			$$(if $$(MAKECMDGOALS),,1) \
+#>		$(call $(HEADERS),,$(1))
+	@$(if $(or \
+		$(and \
+			$(filter $(1),$(DOITALL)) ,\
+			$(filter $(MAKELEVEL),0) ,\
+			$(if $(MAKECMDGOALS),,1) \
 		),\
-		$$(filter $(1)%,$$(MAKECMDGOALS)) \
+		$(filter $(1)%,$(MAKECMDGOALS)) \
 	),\
 		$$(call $$(HEADERS)-$$(SUBDIRS),$(1)) ,\
 		$$(ECHO) "" \
@@ -19521,6 +19527,7 @@ ifneq ($(or \
 $($(COMPOSER_PANDOC)-$(LISTING)) \
 $($(COMPOSER_PANDOC)-$(TARGETS)) \
 :
+#WORKIT
 	@$(call COMPOSER_VARIABLES,$(@))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC)-$(NOTHING))
 #> update: WILDCARD_YML
