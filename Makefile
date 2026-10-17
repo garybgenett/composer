@@ -2426,7 +2426,6 @@ override COMPOSER_OPTIONS_EXPORT = \
 	)
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-#WORKIT
 override COMPOSER_VARIABLES = \
 	$(if $(2),\
 		$(eval override c_opt_base			:= $(1)) \
@@ -3482,7 +3481,6 @@ endif
 
 #> update: WILDCARD_YML
 
-#WORKIT
 override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 	$(COMPOSER) \
 	$(COMPOSER_INCLUDES) \
@@ -16352,7 +16350,6 @@ $(TARGETS):
 .PHONY: $(TARGETS)-$(MAKE_DB)
 $(TARGETS)-$(MAKE_DB):
 #>	@$(call $(HEADERS)-action,$(DOMAKE),,,$(TARGETS),1)
-#WORKIT
 	@$(foreach FILE,\
 		$(call COMPOSER_CONV,$(EXPAND),$(sort $(shell $(call $(TARGETS)-$(TARGETS),$(COMPOSER_DEBUGIT)))),1,1,1) \
 		,\
@@ -16454,7 +16451,6 @@ $(TARGETS)-$(CHECKIT):
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
-#WORKIT
 override $(TARGETS)-$(TARGETS) = \
 	$(if $(wildcard $(call COMPOSER_TMP_FILE,,$(TARGETS))),,\
 		$(MKDIR) $(COMPOSER_TMP) >/dev/null; \
@@ -19503,7 +19499,6 @@ endif
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:NOTHING:MAKECMDGOALS
 
-#WORKIT
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(.)set_title-$(COMPOSER_PANDOC)
 ifneq ($($(COMPOSER_PANDOC)-$(LISTING)),)
@@ -19523,7 +19518,6 @@ $(COMPOSER_PANDOC):
 ## {{{2 $(COMPOSER_PANDOC)-$(COMPOSER_TARGETS)
 ########################################
 
-#WORKIT
 ifneq ($(or \
 	$($(COMPOSER_PANDOC)-$(LISTING)) ,\
 	$($(COMPOSER_PANDOC)-$(TARGETS)) ,\
