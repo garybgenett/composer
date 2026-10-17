@@ -549,9 +549,7 @@ $(foreach FILE,$(addsuffix /$(COMPOSER_SETTINGS),$(COMPOSER_INCLUDES_DIRS)),\
 		$(eval include $(FILE)) \
 	) \
 )
-$(if $(wildcard $(COMPOSER_ENV)),$(eval include $(COMPOSER_ENV)))
 $(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_INCLUDES		[$(COMPOSER_INCLUDES)]))
-$(if $(COMPOSER_DEBUGIT_ALL),$(info #> COMPOSER_ENV			[$(COMPOSER_ENV)]))
 
 #> update: WILDCARD_YML
 override COMPOSER_YML_LIST		:=
@@ -2312,7 +2310,6 @@ $(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
 
 #WORKING:FIX:SIZE:OPTS
-unexport override COMPOSER_ENV :=
 
 override COMPOSER_OPTIONS_MAXLIST := \
 	COMPOSER_TARGETS \
@@ -2320,27 +2317,11 @@ override COMPOSER_OPTIONS_MAXLIST := \
 	COMPOSER_EXPORTS \
 	COMPOSER_IGNORES \
 
-override COMPOSER_ENV_EXPORT = $(strip \
-	$(foreach FILE,$(COMPOSER_OPTIONS_MAXLIST),\
-		$(wordlist $(COMPOSER_MAXLIST),$(words $($(FILE))),$($(FILE))) \
-	) \
-)
-
 override COMPOSER_OPTIONS_EXPORT = \
-	$(if $(call COMPOSER_ENV_EXPORT),\
-		$(if $(wildcard $(call COMPOSER_ENV_FILE,,1)),,\
-			$(shell $(MKDIR) $(COMPOSER_TMP) >/dev/null) \
-			$(file >$(call COMPOSER_ENV_FILE,,1)) \
-			$(foreach FILE,$(COMPOSER_OPTIONS),\
-				$(file >>$(call COMPOSER_ENV_FILE,,1),override $(FILE) ?= $($(FILE))) \
-				$(eval unexport $(FILE)) \
-			) \
-		) \
-		$(eval export override COMPOSER_ENV := $(call COMPOSER_ENV_FILE,,1)) \
-	,\
-		$(foreach FILE,$(COMPOSER_OPTIONS),\
-			$(eval export $(FILE)) \
-		) \
+	$(foreach FILE,\
+		$(filter-out $(COMPOSER_OPTIONS_MAXLIST),$(COMPOSER_OPTIONS)) \
+		,\
+		$(FILE)="$(subst ",\",$($(FILE)))" \
 	)
 
 ########################################
@@ -3223,12 +3204,9 @@ override $(COMPOSER_TINYNAME)-makefile = \
 ### {{{3 Make
 ########################################
 
-#WORKING:FIX:SIZE:OPTS
-#	$(call COMPOSER_OPTIONS_EXPORT) \
-
 override $(COMPOSER_TINYNAME)-make = \
 	$(call $(HEADERS)-note,$(CURDIR),$(strip $(1)),$(_H)$(notdir $(MAKE)),$(@)); \
-	$(MAKE) $(strip $(1))
+	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(strip $(1))
 
 ########################################
 ### {{{3 Directory
@@ -4692,7 +4670,6 @@ endef
 #		see $(TESTING)-COMPOSER_INCLUDE for all details
 #	document the stealth COMPOSER_INCLUDE := <file list> feature (used for the library)?
 #		is it already documented?
-#		what about COMPOSER_ENV, now...?
 #	goal: stay in memory and off the filesystem as much as possible
 #		maxlist
 #		c_site
@@ -7348,10 +7325,10 @@ $(EXAMPLE) \
 $(EXAMPLE)$(.)yml \
 $(EXAMPLE)$(.)md \
 :
-	@$(call COMPOSER_OPTIONS_EXPORT)
 	@$(MAKE) \
 		--directory $(abspath $(dir $(COMPOSER_SELF))) \
 		--makefile $(COMPOSER_SELF) \
+		$(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOITALL_$(@)="$(COMPOSER_DOITALL_$(@))" \
 		COMPOSER_DOITALL_$(EXAMPLE)="$(EXAMPLE)" \
 		COMPOSER_DOCOLOR= \
@@ -13456,8 +13433,7 @@ endif
 
 .PHONY: $(MAKE_DB)
 $(MAKE_DB):
-	@$(call COMPOSER_OPTIONS_EXPORT)
-	@$(MAKE) \
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) \
 		--question \
 		--print-data-base \
 		--no-builtin-rules \
@@ -13470,8 +13446,7 @@ $(MAKE_DB):
 
 .PHONY: $(LISTING)
 $(LISTING):
-	@$(call COMPOSER_OPTIONS_EXPORT)
-	@$(MAKE) $(MAKE_DB) \
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(MAKE_DB) \
 		| $(SED) -n "/^[#][ ]Files$$/,/^[#][ ]Finished[ ]Make[ ]data[ ]base/p" \
 		| $(SED) -n "/^$(COMPOSER_REGEX_PREFIX)?$(COMPOSER_REGEX)[:]+/p" \
 		| $(SORT)
@@ -14309,8 +14284,7 @@ $(DEBUGIT)-$(TOAFILE):
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
 	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(subst %4s,%5s,$(subst %5s,%6s,$(VIM_OPTIONS)))))\n' >$(DEBUGIT_FILE)
-	@$(call COMPOSER_OPTIONS_EXPORT)
-	@$(MAKE) \
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOCOLOR= \
 		COMPOSER_DOITALL_$(call /,$(DEBUGIT))="$(COMPOSER_DOITALL_$(DEBUGIT))" \
 		COMPOSER_DOITALL_$(call /,$(TESTING))="$(DEBUGIT)" \
@@ -14460,8 +14434,7 @@ $(TESTING)-$(TOAFILE):
 	@$(PRINT) "$(_H)$(MARKER) This may take a few minutes..."
 	@$(ENDOLINE)
 	@$(ECHO) '# $(subst ','"'"',$(subst \,\\,$(subst %4s,%5s,$(subst %5s,%6s,$(VIM_OPTIONS)))))\n' >$(TESTING_FILE)
-	@$(call COMPOSER_OPTIONS_EXPORT)
-	@$(MAKE) \
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) \
 		COMPOSER_DOCOLOR= \
 		COMPOSER_DOITALL_$(call /,$(DEBUGIT))="$(TESTING)" \
 		COMPOSER_DOITALL_$(call /,$(TESTING))="$(COMPOSER_DOITALL_$(TESTING))" \
@@ -16040,8 +16013,7 @@ $(foreach EXPORT,\
 $(TARGETS): $(.)set_title-$(TARGETS)
 $(TARGETS):
 	@$(call $(HEADERS))
-	@$(call COMPOSER_OPTIONS_EXPORT)
-	@$(MAKE) $(TARGETS)-$(TARGETS)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(TARGETS)-$(TARGETS)
 	@$(LINERULE)
 	@$(foreach FILE,\
 		TARGETS \
@@ -16116,7 +16088,7 @@ $(TARGETS)-$(TARGETS):
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
 override $(TARGETS)-$(PRINTER) = \
-	$(MAKE) $(LISTING) | $(SED) \
+	$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(LISTING) | $(SED) \
 		-e "/^$(MAKEFILE)[:]/d" \
 		-e "/^$(COMPOSER_REGEX_PREFIX)/d" \
 		$(foreach FILE,$(COMPOSER_RESERVED),\
@@ -16525,9 +16497,7 @@ $(EXPORTS)-$(CLEANER):
 $(PUBLISH): $(.)set_title-$(PUBLISH)
 $(PUBLISH):
 	@$(call $(HEADERS))
-#WORKING:FIX:SIZE:OPTS
-#	@$(call COMPOSER_OPTIONS_EXPORT)
-	@$(MAKE) c_site="1" $(DOITALL)
+	@$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) c_site="1" $(DOITALL)
 
 ########################################
 ### {{{3 $(PUBLISH)-$(CLEANER)
@@ -19139,12 +19109,12 @@ $(COMPOSER_LOGFILE):
 
 override TYPE_TARGETS_OPTIONS = \
 	$(if $(wildcard $(CURDIR)/$(MAKEFILE)),,--makefile $(COMPOSER_SELF)) \
+	$(call COMPOSER_OPTIONS_EXPORT) \
 	$(COMPOSER_PANDOC) \
 	c_type="$(1)" c_base="$(*)" c_list="$(2)"
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_FILEEXT)
-#	@$$(call COMPOSER_OPTIONS_EXPORT)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*)$$(COMPOSER_FILEEXT))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),COMPOSER_FILEEXT)
@@ -19154,7 +19124,6 @@ ifeq ($(MAKELEVEL),0)
 endif
 
 %.$(2): %
-#	@$$(call COMPOSER_OPTIONS_EXPORT)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(*))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),$$(NOTHING))
@@ -19164,7 +19133,6 @@ ifeq ($(MAKELEVEL),0)
 endif
 
 %.$(2): $(c_list)
-#	@$$(call COMPOSER_OPTIONS_EXPORT)
 	@$$(MAKE) $$(call TYPE_TARGETS_OPTIONS,$(1),$$(c_list))
 ifneq ($(COMPOSER_DEBUGIT),)
 	@$$(call $$(HEADERS)-note,$$(@) $$(MARKER) $(1),$$(c_list),c_list)
