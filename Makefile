@@ -2309,8 +2309,6 @@ override COMPOSER_OPTIONS := \
 $(foreach FILE,$(COMPOSER_OPTIONS_GLOBAL)	,$(eval export $(FILE)))
 $(foreach FILE,$(COMPOSER_OPTIONS_LOCAL)	,$(eval unexport $(FILE)))
 
-#WORKING:FIX:SIZE:OPTS
-
 override COMPOSER_OPTIONS_MAXLIST := \
 	COMPOSER_TARGETS \
 	COMPOSER_SUBDIRS \
@@ -3390,7 +3388,8 @@ endif
 endif
 endif
 
-$($(COMPOSER_PANDOC)-dependencies-filter): ;
+#WORKING:FIX:SIZE:OPTS
+#$($(COMPOSER_PANDOC)-dependencies-filter): ;
 
 #> update: WILDCARD_YML
 $(foreach TYPE,$(TYPE_TARGETS_LIST),\
@@ -15194,9 +15193,10 @@ $(TESTING)-$(EXPORTS)-$(CLEANER)-$(DOITALL)-done:
 ### {{{3 $(TESTING)-COMPOSER_MAXLIST
 ########################################
 
-#WORKING:FIX:SIZE
 override $(TESTING)-COMPOSER_MAXLIST-runs	:= 1
 override $(TESTING)-COMPOSER_MAXLIST-files	:= 10000
+#WORKING:FIX:SIZE:OPTS
+override $(TESTING)-COMPOSER_MAXLIST-append	:= ..
 
 .PHONY: $(TESTING)-COMPOSER_MAXLIST
 $(TESTING)-COMPOSER_MAXLIST: $(TESTING)-$(_)Think
@@ -15233,6 +15233,7 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 			$(ECHO) "\n.PHONY: $${RUN}-$${NUM}-$(EXPORTS)\n$${RUN}-$${NUM}-$(EXPORTS):\n\t@\$$(ECHO) \"\$$(@)-$(TARGETS)\\\n\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 			$(ECHO) "\n.PHONY: $${RUN}-$${NUM}-$(CLEANER)\n$${RUN}-$${NUM}-$(CLEANER):\n\t@\$$(ECHO) \"\$$(@)-$(TARGETS)\\\n\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 			$(ECHO) "\n.PHONY: $${RUN}-$${NUM}-$(DOITALL)\n$${RUN}-$${NUM}-$(DOITALL):\n\t@\$$(ECHO) \"\$$(@)-$(TARGETS)\\\n\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+			$(ECHO) "    - $${RUN}-$${NUM}$($(TESTING)-COMPOSER_MAXLIST-append)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 			$(ECHO) "" >$(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP))/$(CLEANER).$${RUN}.$${NUM}; \
 			$(ECHO) "$(SPECIAL_VAL)" >$(call $(TESTING)-pwd)/$(OUT_README).$${RUN}.$${NUM}$(COMPOSER_FILEEXT_DEFAULT); \
 			$(MKDIR) $(call $(TESTING)-pwd)/$(SUBDIRS).$${RUN}.$${NUM} >/dev/null; \
@@ -15257,13 +15258,13 @@ override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS) =
 override c_css := $(SPECIAL_VAL)
 endef
 
-#WORKING:FIX:SIZE:OPTS
 override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_YML) =
 variables:
   $(PUBLISH)-library:
     folder:
       name:		$(LIBRARY_FOLDER_ALT)
       auto_update:	$(LIBRARY_AUTO_UPDATE_ALT)
+  maxlist:
 endef
 
 .PHONY: $(TESTING)-COMPOSER_MAXLIST-done
@@ -15951,7 +15952,6 @@ $(CONFIGS)-env:
 #### {{{4 $(CONFIGS)$(.)$(*)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS
 .PHONY: $(CONFIGS)$(.)%
 $(CONFIGS)$(.)%:
 	@$(eval override c_list := $(call c_list_var))
@@ -15966,7 +15966,6 @@ $(CONFIGS)$(.)%:
 #### {{{4 $(CONFIGS)$(.)yml
 ########################################
 
-#WORKING:FIX:SIZE:OPTS
 .PHONY: $(CONFIGS)$(.)yml
 $(CONFIGS)$(.)yml:
 ifneq ($(COMPOSER_YML_LIST),)
@@ -16072,6 +16071,8 @@ $(TARGETS):
 		)) \
 	)
 	@$(LINERULE)
+	@$(MAKE) $(PRINTER)-$(PRINTER)
+	@$(LINERULE)
 	@$(foreach FILE,\
 		EXPORTS \
 		CLEANER \
@@ -16083,8 +16084,6 @@ $(TARGETS):
 			| $(SORT); \
 		$(call NEWLINE) \
 	)
-	@$(LINERULE)
-	@$(MAKE) $(PRINTER)-$(PRINTER)
 
 ########################################
 ### {{{3 $(TARGETS)-$(TARGETS)
@@ -16147,8 +16146,9 @@ override $(TARGETS)-$(PRINTER) = \
 			-e "/^[^:]+[-]$(EXPORTS)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(CLEANER)[:]+.*$$/d" \
 			-e "/^[^:]+[-]$(DOITALL)[:]+.*$$/d" \
-			-e "s|[:]+[[:space:]]*$$||g" \
+			-e "s|[|].*$$||g" \
 			-e "s|([=])+[[:space:]]*$$|\\1|g" \
+			-e "s|[:]+[[:space:]]*$$||g" \
 			-e "s|[[:space:]]+|$(TOKEN)|g" \
 		)
 
@@ -19028,6 +19028,16 @@ $(PRINTER)-$(HEADERS): $(.)set_title-$(PRINTER)
 $(PRINTER)-$(HEADERS):
 	@$(call $(HEADERS),,$(PRINTER))
 
+ifneq ($(filter-out $(PRINTER)-$(PRINTER),$(MAKECMDGOALS)),)
+$(PRINTER)-$(PRINTER) \
+$(COMPOSER_LOGFILE) \
+$(NOTHING)-$(COMPOSER_LOGFILE) \
+$(NOTHING)-COMPOSER_LOGFILE \
+$(NOTHING)-COMPOSER_FILEEXT \
+: | \
+	$(PRINTER)-$(HEADERS)
+endif
+
 ########################################
 ### {{{3 $(PRINTER)-$(PRINTER)
 ########################################
@@ -19039,16 +19049,6 @@ $(PRINTER)-$(PRINTER): $(if $(COMPOSER_LOGFILE),\
 )
 $(PRINTER)-$(PRINTER):
 	@$(ECHO) ""
-
-$(PRINTER)-$(PRINTER) \
-$(if $(COMPOSER_LOGFILE),\
-	$(COMPOSER_LOGFILE) \
-	$(NOTHING)-$(COMPOSER_LOGFILE) \
-) \
-$(NOTHING)-COMPOSER_LOGFILE \
-$(NOTHING)-COMPOSER_FILEEXT \
-: | \
-	$(PRINTER)-$(HEADERS)
 
 ################################################################################
 # {{{1 Pandoc Targets
@@ -19069,6 +19069,7 @@ ifneq ($(COMPOSER_DEBUGIT),)
 endif
 	@$(call TYPE_TARGETS_CLEANER,$$(c_base),$(EXTN_OUTPUT))
 
+#WORKING:FIX:SIZE:OPTS
 ifneq ($(c_base),)
 $(c_base).$(EXTN_OUTPUT): \
 	$(if $(and $(c_site),$(filter $(c_type),$(TYPE_HTML))),$(shell \
@@ -19171,6 +19172,8 @@ override TYPE_TARGETS_CLEANER = \
 	then \
 		$(call $(CLEANER)-$(CLEANER)); \
 	fi
+
+#WORKING:FIX:SIZE:OPTS
 
 override define TYPE_TARGETS =
 %.$(2): %$(COMPOSER_FILEEXT)
