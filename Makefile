@@ -1708,6 +1708,16 @@ $(foreach TYPE,$(TYPE_TARGETS_LIST),\
 	) \
 )
 
+$(if $(and \
+	$(filter $(c_type),$(TMPL_OUTPUT)) ,\
+	$(filter $(c_type),$(EXTN_OUTPUT)) \
+),\
+	$(eval override TYPE_TARGETS_LIST += $(c_type)) \
+	$(foreach FILE,TYPE TMPL EXTN,\
+		$(eval override $(FILE)_$(c_type) := $(c_type)) \
+	) \
+)
+
 ########################################
 ## {{{2 CSS
 ########################################
@@ -2423,12 +2433,14 @@ override c_variable = $(strip \
 		$(if $(filter override,$(origin $(c_src_wild))),$(if $(5),$(c_src_wild),$($(c_src_wild))) ,\
 			$(4) \
 		)) \
+	,\
+		$(4) \
 	) \
 )
 
 override c_list_file			:=
-override c_list_var			= $(call c_variable,$(1),$(2),,$(call c_variable,$(1),$(2),c_list,$(c_list)))
-override c_list_var_source		= $(call c_variable,$(1),$(2),,$(call c_variable,$(1),$(2),c_list,,1),1)
+override c_list_var			= $(call c_variable,$(1),$(2),c_list,$(call c_variable,$(1),$(2),,$(c_list)))
+override c_list_var_source		= $(call c_variable,$(1),$(2),c_list,$(call c_variable,$(1),$(2),,,1),1)
 override c_list_match = $(strip \
 	$(if	$(call c_list_var,$(1),$(2)),\
 		$(call c_list_var,$(1),$(2)) \
@@ -3369,39 +3381,7 @@ endif
 endif
 
 ########################################
-### {{{3 Targets
-########################################
-
-#> $(LISTING) > $(CHECKIT) > $(TARGETS)
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-
-override $(COMPOSER_PANDOC)-$(CHECKIT) = $(strip \
-	$(if $(COMPOSER_$(1)),\
-		$(if $(filter $(NOTHING),$(COMPOSER_$(1))),	$(NOTHING)-$(NOTHING)-$($(1)) ,\
-		$(if $(filter $(NOTHING)%,$(COMPOSER_$(1))),	$(filter $(NOTHING)%,$(COMPOSER_$(1))) ,\
-								$(2) \
-	)),							$(NOTHING)-$($(1)) \
-	) \
-)
-
-override $(COMPOSER_PANDOC)-$(LISTING) := \
-	$(if $(and $(c_base),$(EXTN_OUTPUT)),$(c_base).$(EXTN_OUTPUT))
-
-override $(COMPOSER_PANDOC)-$(TARGETS) := \
-	$($(COMPOSER_PANDOC)-$(LISTING)) \
-	\
-	$(filter-out $($(COMPOSER_PANDOC)-$(LISTING)),\
-	$(filter-out $(NOTHING)%,\
-		$(call $(COMPOSER_PANDOC)-$(CHECKIT),TARGETS,$(COMPOSER_TARGETS)) \
-	))
-
-########################################
-### {{{3 Dependencies
-########################################
-
-########################################
-#### {{{4 Pandoc
+### {{{3 Macros
 ########################################
 
 #> update: WILDCARD_YML
@@ -3454,9 +3434,21 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 		,\
 		$(1) \
 	),\
-		$(eval override NAME := $(call PANDOC_FILES_TYPE,TYPE,$(1))) \
-		$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
-		$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
+		$(call $(COMPOSER_PANDOC)-c_list_match,$(1),$(2)) \
+	) \
+))
+
+#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN <$(1)/$(2)/$(3)/$(NAME)/$(BASE)/$(EXTN)>)
+override $(COMPOSER_PANDOC)-c_list_match = $(strip \
+	$(eval override NAME := $(call PANDOC_FILES_TYPE,TYPE,$(1))) \
+	$(eval override BASE := $(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
+	$(eval override EXTN := $(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(2))))) \
+	$(if $(3),\
+		$(if $(and $(BASE),$(EXTN)),\
+			$(BASE) ,\
+			$(c_base) \
+		) \
+	,\
 		$(call PANDOC_FILES_MAIN	,$(TYPE_$(NAME)),$(TMPL_$(NAME))) \
 		$(call PANDOC_FILES_HEADER	,$(TYPE_$(NAME)),$(2)) \
 		$(call PANDOC_FILES_CSS		,$(TYPE_$(NAME)),$(2)) \
@@ -3466,22 +3458,81 @@ override $(COMPOSER_PANDOC)-dependencies = $(strip $(filter-out $(3),\
 			$(call c_list_match	,$(c_base),$(c_type)) \
 		) \
 	) \
-))
+)
 
 ########################################
-#### {{{4 Targets
+### {{{3 Targets
 ########################################
+
+#> $(LISTING) > $(CHECKIT) > $(TARGETS)
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
 
+override $(COMPOSER_PANDOC)-$(CHECKIT) = $(strip \
+	$(if $(COMPOSER_$(1)),\
+		$(if $(filter $(NOTHING),$(COMPOSER_$(1))),	$(NOTHING)-$(NOTHING)-$($(1)) ,\
+		$(if $(filter $(NOTHING)%,$(COMPOSER_$(1))),	$(filter $(NOTHING)%,$(COMPOSER_$(1))) ,\
+								$(2) \
+	)),							$(NOTHING)-$($(1)) \
+	) \
+)
+
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+#$(info #WORK:BROKEN ^$(MAKECMDGOALS))
+#$(info #WORK:BROKEN ^$(call $(COMPOSER_PANDOC)-c_list_match,$(c_type),$(MAKECMDGOALS),1))
+override $(COMPOSER_PANDOC)-$(LISTING) := $(strip \
+	$(if $(and $(c_base),$(EXTN_OUTPUT)),\
+		$(c_base).$(EXTN_OUTPUT) \
+	,$(if $(and \
+		$(filter 1,$(words $(MAKECMDGOALS))) ,\
+		$(call $(COMPOSER_PANDOC)-c_list_match,$(c_type),$(MAKECMDGOALS),1) \
+	),\
+		$(call $(COMPOSER_PANDOC)-c_list_match,$(c_type),$(MAKECMDGOALS),1).$(EXTN_OUTPUT) \
+	)) \
+)
+
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+override $(COMPOSER_PANDOC)-$(TARGETS) := \
+	$(filter-out \
+		$(NOTHING)% \
+		$($(COMPOSER_PANDOC)-$(LISTING)) \
+	,\
+		$(call $(COMPOSER_PANDOC)-$(CHECKIT),TARGETS,$(COMPOSER_TARGETS)) \
+	)
+
+override $(COMPOSER_PANDOC)-$(TARGETS) += \
+	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+		$(filter %.$(EXTN_$(TYPE)),$(filter-out \
+			$($(COMPOSER_PANDOC)-$(LISTING)) \
+			$($(COMPOSER_PANDOC)-$(TARGETS)) \
+			,\
+			$(MAKECMDGOALS)) \
+		) \
+	)
+
+########################################
+### {{{3 Dependencies
+########################################
+
 #> update: EXTRACT.*MAKECMDGOALS
-ifneq ($(c_base),)
-ifneq ($(filter $(EXTRACT),$(MAKECMDGOALS)),)
+ifneq ($(and \
+	$(c_base) ,\
+	$(filter $(EXTRACT),$(MAKECMDGOALS)) \
+),)
 $(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))): $(call $(COMPOSER_PANDOC)-dependencies,$(TMPL_OUTPUT),$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))))
 $(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))): ;
-else ifneq ($($(COMPOSER_PANDOC)-$(LISTING)),)
-$(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTN_OUTPUT))
 endif
+
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN $(c_base).$(EXTN_OUTPUT)
+ifneq ($($(COMPOSER_PANDOC)-$(LISTING)),)
+ifneq ($(c_base),)
+$(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTN_OUTPUT))
+else
+$($(COMPOSER_PANDOC)-$(LISTING)): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$($(COMPOSER_PANDOC)-$(LISTING)))
+endif
+#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN [$(MAKECMDGOALS)/$(c_type)/$(c_base)/$(EXTN_OUTPUT)][$(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTN_OUTPUT))])
+#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN {$($(COMPOSER_PANDOC)-$(LISTING))}{$(call $(COMPOSER_PANDOC)-c_list_match,$(c_type),$(MAKECMDGOALS),1)})
+#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN {$($(COMPOSER_PANDOC)-$(LISTING))}{$(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$($(COMPOSER_PANDOC)-$(LISTING)))})
 endif
 
 #WORKING:FIX:SIZE:OPTS:DEPS
@@ -3494,20 +3545,20 @@ $(foreach FILE,$(filter-out \
 	),\
 	$(eval override MATCH :=) \
 	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-		$(if $(filter $(FILE),$(call PANDOC_FILES_LIST,$(TYPE_$(TYPE)),$(COMPOSER_TARGETS))),\
+		$(if $(filter $(FILE),$(call PANDOC_FILES_LIST,$(TYPE_$(TYPE)),$($(COMPOSER_PANDOC)-$(TARGETS)))),\
 			$(eval override MATCH := $(TYPE)) \
 			$(eval $(FILE): $(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_$(TYPE)),$(FILE))) \
-			$(if $(and \
-				$(filter-out $(c_base).$(EXTN_OUTPUT),$(FILE)) ,\
-				$(call PANDOC_FILES_OVERRIDE,,$(FILE),yml) \
-			),\
-				$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): $($(PUBLISH)-cache-root)) \
-				$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): ;) \
-			) \
 		) \
 	) \
 	$(if $(MATCH),,\
-		$(eval $(FILE): $(call $(COMPOSER_PANDOC)-dependencies)) \
+		$(eval $(FILE): \
+			$(call $(COMPOSER_PANDOC)-dependencies) \
+			$(call c_list_var) \
+		) \
+	) \
+	$(if $(call PANDOC_FILES_OVERRIDE,,$(FILE),yml),\
+		$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): $($(PUBLISH)-cache-root)) \
+		$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): ;) \
 	) \
 )
 $(sort \
@@ -3519,7 +3570,7 @@ $(sort \
 ): ;
 
 ########################################
-#### {{{4 Library Auto Update
+### {{{3 Library Auto Update
 ########################################
 
 #> $(COMPOSER_TARGETS) = $(DOITALL)-$(TARGETS) $(filter %.$(EXTN_HTML),$(COMPOSER_TARGETS))
@@ -4687,6 +4738,7 @@ endef
 
 #WORKING:NOW
 #	add a test for extract ...?
+#		yes, use readme.docx...
 #	standardize
 #		on $( over ` subshells
 #		use [[:space:]] instead of [ ]
@@ -13823,6 +13875,8 @@ $(UPGRADE)-$(notdir $($(1)_DIR))-bld: $(UPGRADE)-$(notdir $($(1)_DIR))-bld-build
 $(UPGRADE)-$(notdir $($(1)_DIR))-bld:
 	@$$(ECHO) ""
 
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+# : |
 $(UPGRADE)-$(notdir $($(1)_DIR))-bld-fetch \
 $(UPGRADE)-$(notdir $($(1)_DIR))-bld-build \
 : | \
@@ -15058,9 +15112,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 		\n\t\t * Use of '$(_C)$(PHANTOM)$(_D)' targets \
 		\n\t\t * Use of '$(_C)$(NOTHING)$(_D)' targets \
 	)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-#	@$(RM) $(call $(TESTING)-pwd)/$(OUT_README)*
-#	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-mark)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
 
@@ -15069,54 +15121,18 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	#> precedence
 	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="100" J="10" $(CONFIGS)
 	@$(call $(TESTING)-run,,$(NOTHING)) J="10" $(CONFIGS)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-#	#> input
-#	c_list
-#		c_list
-#		readme.ext
-#		readme.*
-#	auto/compose
-#		readme c_list
-#		readme.ext
-#		readme
+	#> targets
+	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""		c_base=""		c_list=""						|| $(TRUE)
+	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type="$(TYPE_DEFAULT)"	c_base=""		c_list=""						|| $(TRUE)
+	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""		c_base="$(OUT_MANUAL)"	c_list=""						|| $(TRUE)
+	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""		c_base=""		c_list="$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)"	|| $(TRUE)
+	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type="$(TYPE_DEFAULT)"	c_base="$(OUT_MANUAL)"	c_list="$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)"	|| $(TRUE)
 	@$(foreach FILE,LIST EXTN WILD BASE,\
 		$(CP)	$(call $(TESTING)-pwd)/$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT) \
 			$(call $(TESTING)-pwd)/$(OUT_README)$(.)$(FILE)$(if $(filter $(FILE),BASE),,$(COMPOSER_FILEEXT_DEFAULT)); \
 	)
-
-#	@$(LS) $(call $(TESTING)-pwd)
-#	exit 1
-
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""	c_base=""		c_list=""						|| $(TRUE)
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type="json"	c_base=""		c_list=""						|| $(TRUE)
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""	c_base="$(OUT_README)"	c_list=""						|| $(TRUE)
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""	c_base=""		c_list="$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)"	|| $(TRUE)
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type="json"	c_base="$(OUT_README)"	c_list="$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)"	|| $(TRUE)
-
-	@$(ECHO) "override c_type := json\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_base="$(OUT_README)$(_)LIST" c_list="$(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)"
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_base="$(OUT_README)$(.)EXTN"
-	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_base="$(OUT_README)$(.)BASE"
-	@$(call $(TESTING)-run,,,1) $(TARGETS)
-
-	@$(RM) $(call $(TESTING)-pwd)/*.json
-#	@$(call $(TESTING)-run,,,1) $(OUT_README)$(_)LIST.json c_list="$(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)"
-#	@$(call $(TESTING)-run,,,1) $(OUT_README)$(.)EXTN.json
-#	@$(call $(TESTING)-run,,,1) $(OUT_README)$(.)BASE.json
-
-	@$(RM) $(call $(TESTING)-pwd)/*.json
-	@$(call DO_HEREDOC,$(TESTING)-$(COMPOSER_BASENAME)-$(COMPOSER_SETTINGS),json,json) >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-#	@$(call $(TESTING)-run,,,1) $(OUT_README)$(.)EXTN.json
-#	@$(call $(TESTING)-run,,,1) $(OUT_README)$(.)WILD.json
-#	@$(call $(TESTING)-run,,,1) $(OUT_README)$(.)LIST.json
-	@$(call $(TESTING)-run,,,1) $(TARGETS)
-
-	@$(call DO_HEREDOC,$(TESTING)-$(COMPOSER_BASENAME)-$(COMPOSER_SETTINGS),$(TYPE_DEFAULT),$(EXTN_DEFAULT)) >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run,,,1) $(TARGETS)
-
-	@exit 1
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+	@$(call $(TESTING)-$(COMPOSER_BASENAME)-init,$(TYPE_DEFAULT))
+	@$(call $(TESTING)-$(COMPOSER_BASENAME)-init,json)
 	#> margins
 	@$(call $(TESTING)-run,,,1) c_margin= c_margin_top="1in" c_margin_bottom="2in" c_margin_left="3in" c_margin_right="4in" $(OUT_README).$(EXTN_LPDF)
 	#> options
@@ -15139,44 +15155,101 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
+override $(TESTING)-$(COMPOSER_BASENAME)-$(CONFIGS) = \
+	$(if $(filter $(1),$(TYPE_DEFAULT)),\
+		$(eval override TYPE := $(TYPE_DEFAULT)) \
+		$(eval override EXTN := $(EXTN_DEFAULT)) \
+	,\
+		$(eval override TYPE := $(1)) \
+		$(eval override EXTN := $(1)) \
+	)
+
+override $(TESTING)-$(COMPOSER_BASENAME)-init = \
+	$(call $(TESTING)-$(COMPOSER_BASENAME)-$(CONFIGS),$(1)) \
+	$(RM) $(call $(TESTING)-pwd)/*.$(EXTN); \
+	$(ECHO) "override c_type := $(TYPE)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_base="$(OUT_README)$(_)LIST" c_list="$(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)"; \
+	$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_base="$(OUT_README)$(.)EXTN"; \
+	$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_base="$(OUT_README)$(.)BASE"; \
+	$(call $(TESTING)-run,,,1) $(TARGETS); \
+	$(ECHO) "override c_type := $(TYPE)\n" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run,,,1) $(OUT_README)$(_)LIST.$(EXTN) c_list="$(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)"; \
+	$(call $(TESTING)-run,,,1) $(OUT_README)$(.)EXTN.$(EXTN); \
+	$(call $(TESTING)-run,,,1) $(OUT_README)$(.)BASE.$(EXTN); \
+	$(call DO_HEREDOC,$(TESTING)-$(COMPOSER_BASENAME)-$(COMPOSER_SETTINGS)) >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(call $(TESTING)-run,,,1) $(OUT_README)$(_)LIST.$(EXTN); \
+	$(call $(TESTING)-run,,,1) $(OUT_README)$(.)EXTN.$(EXTN); \
+	$(call $(TESTING)-run,,,1) $(OUT_README)$(.)WILD.$(EXTN); \
+	$(call $(TESTING)-run,,,1) $(TARGETS); \
+	$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(RM) $(call $(TESTING)-pwd)/*.$(EXTN); \
+
 override define $(TESTING)-$(COMPOSER_BASENAME)-$(COMPOSER_SETTINGS) =
-override c_type := $(1)
-override $(OUT_README)$(.)LIST.$(2)$(>)c_list	:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-override $(OUT_README)$(.)LIST.$(2)		:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-override $(OUT_README)$(.)LIST.*		:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-#>override $(OUT_README)$(.)EXTN.$(2)$(>)c_list	:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-override $(OUT_README)$(.)EXTN.$(2)		:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-override $(OUT_README)$(.)EXTN.*		:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-#>override $(OUT_README)$(.)WILD.$(2)$(>)c_list	:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-#>override $(OUT_README)$(.)WILD.$(2)		:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-override $(OUT_README)$(.)WILD.*		:= $(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN $(TARGETS)
+override COMPOSER_TARGETS				:= $(PHANTOM) $(OUT_README)$(_)LIST.$(EXTN)
+override c_type						:= $(TYPE)
+override $(OUT_README)$(_)LIST.$(EXTN)$(>)c_list	:= $(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)
+override $(OUT_README)$(_)LIST.$(EXTN)			:= $(OUT_README)$(.)EXTN$(COMPOSER_FILEEXT_DEFAULT)
+override $(OUT_README)$(_)LIST.*			:= $(OUT_README)$(.)WILD$(COMPOSER_FILEEXT_DEFAULT)
+#>override $(OUT_README)$(.)EXTN.$(EXTN)$(>)c_list	:= $(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)
+override $(OUT_README)$(.)EXTN.$(EXTN)			:= $(OUT_README)$(.)EXTN$(COMPOSER_FILEEXT_DEFAULT)
+override $(OUT_README)$(.)EXTN.*			:= $(OUT_README)$(.)WILD$(COMPOSER_FILEEXT_DEFAULT)
+#>override $(OUT_README)$(.)WILD.$(EXTN)$(>)c_list	:= $(OUT_README)$(.)LIST$(COMPOSER_FILEEXT_DEFAULT)
+#>override $(OUT_README)$(.)WILD.$(EXTN)		:= $(OUT_README)$(.)EXTN$(COMPOSER_FILEEXT_DEFAULT)
+override $(OUT_README)$(.)WILD.*			:= $(OUT_README)$(.)WILD$(COMPOSER_FILEEXT_DEFAULT)
 endef
+
+override $(TESTING)-$(COMPOSER_BASENAME)-done = \
+	$(call $(TESTING)-$(COMPOSER_BASENAME)-$(CONFIGS),$(1)) \
+	$(call NEWLINE) $(call $(TESTING)-count,2,\#$(MARKER).+$(OUT_README)[$(_)]LIST.$(EXTN)[$(>)]c_list); \
+	$(call NEWLINE) $(call $(TESTING)-count,2,c_list := $(OUT_README).LIST$(COMPOSER_FILEEXT_DEFAULT)); \
+	$(call NEWLINE) $(call $(TESTING)-count,1,\#$(MARKER).+$(OUT_README)[$(.)]EXTN.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,2,\#$(MARKER).+$(OUT_README)[$(.)]WILD.[*]); \
+	$(call NEWLINE) $(call $(TESTING)-count,0,\#$(MARKER).+$(OUT_README)[$(.)]BASE); \
+	$(call NEWLINE) $(call $(TESTING)-count,3,^[0-9].+$(OUT_README)[$(_)]LIST.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,4,^[0-9].+$(OUT_README)[$(.)]EXTN.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,2,^[0-9].+$(OUT_README)[$(.)]WILD.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,2,^[0-9].+$(OUT_README)[$(.)]BASE.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,1,$(COMPOSER_PANDOC).+$(DIVIDE).+$(OUT_README)[$(_)]LIST.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,1,$(COMPOSER_PANDOC).+$(DIVIDE).+$(OUT_README)[$(.)]EXTN.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,0,$(COMPOSER_PANDOC).+$(DIVIDE).+$(OUT_README)[$(.)]WILD.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,1,$(COMPOSER_PANDOC).+$(DIVIDE).+$(OUT_README)[$(.)]BASE.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,3,MAKECMDGOALS.+$(OUT_README)[$(_)]LIST.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,3,MAKECMDGOALS.+$(OUT_README)[$(.)]EXTN.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,1,MAKECMDGOALS.+$(OUT_README)[$(.)]WILD.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,2,MAKECMDGOALS.+$(OUT_README)[$(.)]BASE.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,3,output[=].+$(OUT_README)[$(_)]LIST.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,3,output[=].+$(OUT_README)[$(.)]EXTN.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,1,output[=].+$(OUT_README)[$(.)]WILD.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,2,output[=].+$(OUT_README)[$(.)]BASE.$(EXTN)); \
+	$(call NEWLINE) $(call $(TESTING)-count,0,Nothing to be done); \
+	$(call NEWLINE) $(call $(TESTING)-count,0,is up to date); \
 
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
 	#> precedence
 	$(call $(TESTING)-count,1,MAKEJOBS.+100)
 	$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-	#> input
-	$(call $(TESTING)-find,Creating.+$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_LINT))
-	$(call $(TESTING)-find,Creating.+$(OUT_MANUAL).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,5,$(COMPOSER_LICENSE_HEADLINE))
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+	#> targets
+	$(call NEWLINE) $(call $(TESTING)-count,3,c_type=[\"][\"])
+	$(call NEWLINE) $(call $(TESTING)-count,3,c_base=[\"][\"])
+	$(call NEWLINE) $(call $(TESTING)-count,3,c_list=[\"][\"])
+	$(call NEWLINE) $(call $(TESTING)-count,4,c_list_var=[\"][\"])
+	$(call NEWLINE) $(call $(TESTING)-count,1,output[=].+$(subst +,[+],$(OUT_MANUAL).$(EXTN_DEFAULT)))
+	$(call $(TESTING)-$(COMPOSER_BASENAME)-done,$(TYPE_DEFAULT))
+	$(call $(TESTING)-$(COMPOSER_BASENAME)-done,json)
 	#> margins
-	$(call $(TESTING)-count,17,\|.+c_margin)
-	$(call $(TESTING)-find,c_margin_top.+1in)
-	$(call $(TESTING)-find,c_margin_bottom.+2in)
-	$(call $(TESTING)-find,c_margin_left.+3in)
-	$(call $(TESTING)-find,c_margin_right.+4in)
+	$(call $(TESTING)-count,36,\|.+c_margin)
+	$(call $(TESTING)-count,1,\|.+c_margin_top.+1in)
+	$(call $(TESTING)-count,1,\|.+c_margin_bottom.+2in)
+	$(call $(TESTING)-count,1,\|.+c_margin_left.+3in)
+	$(call $(TESTING)-count,1,\|.+c_margin_right.+4in)
 	#> options
 	$(call $(TESTING)-count,6,[\"]$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)[\"])
 	$(call $(TESTING)-count,6,[']$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)['])
 	#> values
-	$(call $(TESTING)-count,15,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,15,COMPOSER_SUBDIRS.+artifacts)
+	$(call $(TESTING)-count,17,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT))
+	$(call $(TESTING)-count,19,COMPOSER_SUBDIRS.+artifacts)
 	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(OUT_README).$(EXTN_DEFAULT).+$(notdir $(call $(TESTING)-pwd)))
 	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+artifacts.+$(notdir $(call $(TESTING)-pwd)))
 	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING))
@@ -15390,8 +15463,8 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 		$(ECHO) "$(_F)$(DIVIDE) "; \
 			find $(call $(TESTING)-pwd) -name "$(OUT_README).*$(COMPOSER_FILEEXT_DEFAULT)" | $(WC); \
 			$(ECHO) "$(_D)"; \
-		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL); \
 		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CONFIGS); \
+		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL); \
 		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(TARGETS); \
 		RUN="$$($(EXPR) $${RUN} + 1)"; \
 	done
@@ -16727,10 +16800,7 @@ $(PUBLISH)-$(CLEANER):
 
 .PHONY: $(PUBLISH)-$(CLEANER)-$(HEADERS)
 $(PUBLISH)-$(CLEANER)-$(HEADERS):
-ifneq ($(filter $(PUBLISH)-$(CLEANER),$(MAKECMDGOALS)),)
 	@$(call $(HEADERS),,$(PUBLISH)-$(CLEANER))
-endif
-	@$(ECHO) ""
 
 ########################################
 #### {{{4 $(PUBLISH)-$(CLEANER)-$(TARGETS)
@@ -17542,6 +17612,7 @@ override $(PUBLISH)-library-index-title = \
 #> update: $(HEADERS)-note.*$(_H)
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN $(c_base).$(EXTN_OUTPUT)
 override $(PUBLISH)-library-digest-list :=
 override $(PUBLISH)-library-digest-files :=
 ifneq ($(and \
@@ -17816,6 +17887,7 @@ override $(PUBLISH)-library-digest-run = \
 #> update: $(HEADERS)-note.*$(_H)
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN $(c_base).$(EXTN_OUTPUT)
 override $(PUBLISH)-library-sitemap-list :=
 override $(PUBLISH)-library-sitemap-files :=
 #>		$(PUBLISH)-library-%
@@ -19102,6 +19174,8 @@ $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 	$$($(1)-$(SUBDIRS)-$(LISTING)) \
 	$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1))
 
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+# : |
 $($(1)-$(LISTING)-done) \
 : \
 	$(SUBDIRS)-$(TARGETS)-$(1)
@@ -19200,6 +19274,8 @@ $(PRINTER)-$(HEADERS): $(.)set_title-$(PRINTER)
 $(PRINTER)-$(HEADERS):
 	@$(call $(HEADERS),,$(PRINTER))
 
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
+# : |
 ifneq ($(filter-out $(PRINTER)-$(PRINTER),$(MAKECMDGOALS)),)
 $(PRINTER)-$(PRINTER) \
 $(COMPOSER_LOGFILE) \
@@ -19267,17 +19343,22 @@ $(COMPOSER_PANDOC):
 ## {{{2 $(COMPOSER_PANDOC)-$(COMPOSER_TARGETS)
 ########################################
 
-ifneq ($($(COMPOSER_PANDOC)-$(TARGETS)),)
-$($(COMPOSER_PANDOC)-$(TARGETS)):
+ifneq ($(or \
+	$($(COMPOSER_PANDOC)-$(LISTING)) ,\
+	$($(COMPOSER_PANDOC)-$(TARGETS)) ,\
+),)
+$($(COMPOSER_PANDOC)-$(LISTING)) \
+$($(COMPOSER_PANDOC)-$(TARGETS)) \
+:
 	@$(call COMPOSER_VARIABLES,$(@))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC)-$(NOTHING))
 #> update: WILDCARD_YML
 	@$(if $(or \
 		$(and \
-			$(filter-out $(MAKECMDGOALS),$(@)) ,\
-			$(call PANDOC_FILES_OVERRIDE,,$(c_base).$(EXTN_OUTPUT),yml) \
+			$(filter-out $(@),$(MAKECMDGOALS)), \
+			$(call PANDOC_FILES_OVERRIDE,,$(@),yml) \
 		) ,\
-		$(filter-out $(>)$($(.)c_site),$(>)$(c_site)) ,\
+		$(filter-out $(TOKEN)$($(.)c_site),$(TOKEN)$(c_site)) ,\
 	),\
 		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(@) \
 	,\
