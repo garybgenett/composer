@@ -3236,7 +3236,12 @@ override COMPOSER_FILTERS = $(strip \
 		$(NOTHING)% \
 		$(PHANTOM)% \
 		$(if $(filter COMPOSER_IGNORES%,$(1)),,\
-			$(subst *,%,$(COMPOSER_IGNORES)) \
+			$(subst *,%,\
+				$(if $(filter COMPOSER_EXPORTS%,$(1)),\
+					$(filter-out $(subst *,%,$(COMPOSER_HIDDEN_FILES)),$(COMPOSER_IGNORES)) ,\
+					$(COMPOSER_IGNORES) \
+				) \
+			) \
 		) \
 		%-$(EXPORTS) \
 		%-$(INSTALL) \
@@ -13457,7 +13462,7 @@ override $(HEADERS)-options-files-maxlist = \
 
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS:CONFIGS
 override $(HEADERS)-options-files-out = $(_D)$(strip $(if \
-	$(call COMPOSER_FILTERS,$(1)_CONFIGS)		,[$(_F)$(call COMPOSER_FILTERS,$(1)_CONFIGS)$(_D)])$(if \
+	$(call COMPOSER_FILTERS,$(1)_CONFIGS)		,[$(_F)$(call COMPOSER_FILTERS,$(1)_CONFIGS)$(_D)] )$(if \
 	$(filter	$($(1)_DEFAULT),$($(1)))	,$(_H)$(filter $($(1)_DEFAULT),$($(1)))$(if \
 	$(filter-out	$($(1)_DEFAULT),$($(1)))	,$(_D) $(_S)$(DIVIDE)$(_D) ))$(_M)$(filter-out $($(1)_DEFAULT),$($(1))) \
 )
@@ -19272,12 +19277,26 @@ override $(1)-$(SUBDIRS)-$(CHECKIT) := \
 
 .PHONY: $(1)-$(HEADERS)
 $(1)-$(HEADERS): \
-	$$(if $$(filter $(1)%,$$(MAKECMDGOALS)),\
+	$$(if $$(or \
+		$$(and \
+			$$(filter $(1),$$(DOITALL)) ,\
+			$$(filter $$(MAKELEVEL),0) ,\
+			$$(if $$(MAKECMDGOALS),,1) \
+		),\
+		$$(filter $(1)%,$$(MAKECMDGOALS)) \
+	),\
 		$(.)set_title-$(1) \
 	)
 $(1)-$(HEADERS):
 #>		$$(call $$(HEADERS),,$(1))
-	@$$(if $$(filter $(1)%,$$(MAKECMDGOALS)),\
+	@$$(if $$(or \
+		$$(and \
+			$$(filter $(1),$$(DOITALL)) ,\
+			$$(filter $$(MAKELEVEL),0) ,\
+			$$(if $$(MAKECMDGOALS),,1) \
+		),\
+		$$(filter $(1)%,$$(MAKECMDGOALS)) \
+	),\
 		$$(call $$(HEADERS)-$$(SUBDIRS),$(1)) ,\
 		$$(ECHO) "" \
 	)
@@ -19504,16 +19523,6 @@ $($(COMPOSER_PANDOC)-$(TARGETS)) \
 :
 	@$(call COMPOSER_VARIABLES,$(@))
 	@$(call $(HEADERS)-$(COMPOSER_PANDOC)-$(NOTHING))
-	@$(eval override $(.)$(@) := $(if $(and \
-		$(filter 1,$(words $(MAKECMDGOALS))) ,\
-		$(filter \
-			$(EXTRACT) \
-			$(COMPOSER_PANDOC) \
-			$(@) \
-			,\
-			$(MAKECMDGOALS) \
-		) \
-	),$(SPECIAL_VAL)))
 #> update: WILDCARD_YML
 	@$(if $(or \
 		$(and \
@@ -19522,7 +19531,7 @@ $($(COMPOSER_PANDOC)-$(TARGETS)) \
 		) ,\
 		$(filter-out $(TOKEN)$($(.)c_site),$(TOKEN)$(c_site)) ,\
 	),\
-		$(MAKE) $(call COMPOSER_OPTIONS_EXPORT) $(@) \
+		$(MAKE) $(.)$(@)="$(@)" $(call COMPOSER_OPTIONS_EXPORT) $(@) \
 	,\
 		$(call $(COMPOSER_PANDOC)-$(HEADERS)) \
 		$(call $(COMPOSER_PANDOC)-$(PUBLISH)) \
@@ -19530,6 +19539,18 @@ $($(COMPOSER_PANDOC)-$(TARGETS)) \
 		$(call $(COMPOSER_PANDOC)-$(TYPE_PRES)) \
 		$(call $(COMPOSER_PANDOC)-$(PANDOC_BIN_NAME)) \
 		$(call $(COMPOSER_PANDOC)-$(COMPOSER_LOGFILE)) \
+	) \
+	$(if $(and \
+		$(if $($(.)$(@)),,1) ,\
+		$(filter 1,$(words $(MAKECMDGOALS))) ,\
+		$(filter \
+			$(EXTRACT) \
+			$(COMPOSER_PANDOC) \
+			$(@) \
+			,\
+			$(MAKECMDGOALS) \
+		) \
+	),\
 		$(call $(COMPOSER_PANDOC)-$(CLEANER)) \
 	)
 endif
@@ -19641,13 +19662,7 @@ override $(COMPOSER_PANDOC)-$(COMPOSER_LOGFILE) = \
 ########################################
 
 override $(COMPOSER_PANDOC)-$(CLEANER) = \
-	$(if $(and \
-		$(filter $(MAKELEVEL),0) ,\
-		$($(.)$(@)) \
-	),\
-		$(call $(CLEANER)-$(CLEANER)); \
-		$(call NEWLINE) \
-	)
+	$(call $(CLEANER)-$(CLEANER))
 
 ################################################################################
 # }}}1
