@@ -15852,7 +15852,7 @@ $(TESTING)-other-init:
 	@$(MKDIR) $(call $(TESTING)-pwd)/_bin
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN_NAME),\
-			$(ECHO) "[ \"\$${@}\" == \"--version\" ] && $(ECHO) \"$(PHANTOM)\\\\n\"" >$(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
+			$(ECHO) "[ \"\$${1}\" == \"--version\" ] && $(ECHO) \"$(PHANTOM)\"" >$(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
 			$(CHMOD) $(call $(TESTING)-pwd)/_bin/$($(FILE)_BIN_NAME); \
 		) \
 		$(call NEWLINE) \
@@ -15931,9 +15931,8 @@ $(TESTING)-other-done:
 	$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_VER_COMPOSER),\
 			$(call $(TESTING)-count,$(strip \
-					$(if $(filter PANDOC,$(FILE)),11 ,\
 					$(if $($(FILE)_BIN_BLD),8,10 \
-				))),$($(FILE)_VER_COMPOSER)); \
+				)),$($(FILE)_NAME).+$($(FILE)_VER_COMPOSER)); \
 			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
 		) \
@@ -15941,9 +15940,8 @@ $(TESTING)-other-done:
 	$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN),\
 			$(call $(TESTING)-count,$(strip \
-					$(if $(filter PANDOC,$(FILE)),3 ,\
 					$(if $($(FILE)_BIN_BLD),2,2 \
-				))),$(subst /,[/],$(call COMPOSER_CONV,,$($(FILE)_BIN)))); \
+				)),$($(FILE)_NAME).+$(subst /,[/],$(call COMPOSER_CONV,,$($(FILE)_BIN)))); \
 			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
 		) \
@@ -15951,8 +15949,8 @@ $(TESTING)-other-done:
 	$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN_NAME),\
 			$(call $(TESTING)-count,$(strip \
-					$(if $($(FILE)_BIN_BLD),3,3 \
-				)),[/][_]bin[/]$($(FILE)_BIN_NAME)); \
+					$(if $($(FILE)_BIN_BLD),2,2 \
+				)),$($(FILE)_NAME).+[/][_]bin[/]$($(FILE)_BIN_NAME)); \
 			$(ECHO) "$(_D)"; \
 			$(call NEWLINE) \
 		) \
@@ -15965,8 +15963,6 @@ $(TESTING)-other-done:
 	#> exports
 	$(call $(TESTING)-count,5,C_EXPORT_)
 	$(call $(TESTING)-count,39,$(subst .,[.],$(NOTHING)))
-	#> c_type
-	$(call $(TESTING)-find,pandoc-api-version)
 
 ########################################
 ### {{{3 $(TESTING)-$(EXAMPLE)
@@ -16563,7 +16559,7 @@ $($(EXPORTS)-redirect-files):
 ifeq ($(wildcard $(firstword $(RSYNC))),)
 override $(EXPORTS)-$(LISTING) := $(NOTHING)-rsync
 override $(EXPORTS)-$(LISTING)-done :=
-else ifndef ($(filter $(EXPORTS)-$(PUBLISH),$(MAKECMDGOALS)),)
+else ifneq ($(filter $(EXPORTS)-$(PUBLISH),$(MAKECMDGOALS)),)
 override $(EXPORTS)-$(LISTING) :=
 override $(EXPORTS)-$(LISTING)-done :=
 else
