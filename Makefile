@@ -7476,12 +7476,16 @@ $(EXAMPLE) \
 $(EXAMPLE)$(.)yml \
 $(EXAMPLE)$(.)md \
 :
-	@$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR)))
-	@$(if $(filter $(@),$(EXAMPLE)$(.)md),,\
-		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)) \
-	)
-	@$(call $(.)$(@)) | $(SED) "s|$(SED_ESCAPE_COLOR)||g"
-	@$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR)))
+	@$(call $(EXAMPLE),$(patsubst $(EXAMPLE)%,%,$(@)))
+
+override $(EXAMPLE) = { \
+	$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_NOCOLOR))) \
+	$(if $(filter $(EXAMPLE)$(1),$(EXAMPLE)$(.)md),,\
+		$(call TITLE_LN ,$(DEPTH_MAX),$(_H)$(call COMPOSER_TIMESTAMP)); \
+	) \
+	$(call $(.)$(EXAMPLE)$(1)) | $(SED) "s|$(SED_ESCAPE_COLOR)||g"; \
+	$(if $(COMPOSER_DOCOLOR),$(eval $(call COMPOSER_COLOR))) \
+}
 
 ########################################
 ### {{{3 $(EXAMPLE)-$(INSTALL)
@@ -14774,9 +14778,9 @@ $(TESTING)-$(_)Think-init:
 	@$(call $(TESTING)-make,/,$(TESTING_MAKEFILE))
 	@$(call $(TESTING)-run) --makefile $(TESTING_MAKEFILE) $(INSTALL)-$(DOFORCE)
 	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS),,,1)
-	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_YML),.yml,,1)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,/)/$(COMPOSER_YML),$(.)yml,,1)
 	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(COMPOSER_CMS))/$(COMPOSER_SETTINGS),,,1)
-	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(COMPOSER_CMS))/$(COMPOSER_YML),.yml,,1)
+	@$(call $(INSTALL)-$(MAKEFILE),$(call $(TESTING)-pwd,$(COMPOSER_CMS))/$(COMPOSER_YML),$(.)yml,,1)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(ENDOLINE)
 	@$(LS) \
@@ -18943,7 +18947,7 @@ override $(INSTALL)-$(MAKEFILE) = \
 		$(call $(HEADERS)-skip,$(abspath $(dir $(1))),$(notdir $(1))); \
 	else \
 		$(call $(HEADERS)-file,$(abspath $(dir $(1))),$(notdir $(1))); \
-		$(call $(.)$(EXAMPLE)$(2),1) \
+		$(call $(EXAMPLE),$(2)) \
 			| $(SED) "s|$(SED_ESCAPE_COLOR)||g" \
 			>$(1); \
 		if [ -n "$(3)" ]; then \
