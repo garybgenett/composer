@@ -18736,7 +18736,9 @@ override $(INSTALL)-$(MAKEFILE) = \
 
 #>	$(if $(c_site),$(PUBLISH)-$(CLEANER))
 override $(CLEANER)-$(LISTING) := \
-	$(CLEANER)-$(CLEANER)
+	$(CLEANER)-$(CLEANER) \
+
+override $(CLEANER)-$(LISTING)-done := \
 
 ########################################
 ### {{{3 $(CLEANER)-$(TARGETS)
@@ -18811,41 +18813,42 @@ override $(CLEANER)-$(CLEANER) = \
 ## {{{2 $(DOITALL)
 ########################################
 
+#WORKING:FIX:SIZE:OPTS
+
 ########################################
 ### {{{3 $(DOITALL)
 ########################################
 
-.PHONY: $(DOITALL)
-$(DOITALL): $(.)set_title-$(DOITALL)
-$(DOITALL):
-#>	@$(call $(HEADERS))
-	@$(call $(HEADERS)-$(SUBDIRS))
-ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
-ifneq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(SUBDIRS)-$(DOITALL)
-endif
-endif
-#> update: $(NOTHING)%
-	@$(MAKE) $(call $(NOTHING)-$(CHECKIT),TARGETS,$(DOITALL)-$(TARGETS))
-ifneq ($(COMPOSER_DOITALL_$(DOITALL)),)
-ifeq ($(COMPOSER_DEPENDS),)
-	@$(MAKE) $(SUBDIRS)-$(DOITALL)
-endif
-endif
-	@$(MAKE) $(SUBDIRS)-$(TARGETS)-$(DOITALL)
-	@$(call $(CLEANER)-$(CLEANER))
-ifneq ($(c_site),)
-	@$(MAKE) c_site="1" $(PUBLISH)-library-$(DOITALL)
-endif
+override $(DOITALL)-$(LISTING) := \
+
+override $(DOITALL)-$(LISTING)-done := \
+	$(DOITALL)-$(PUBLISH) \
+	$(DOITALL)-$(CLEANER) \
 
 ########################################
 ### {{{3 $(DOITALL)-$(TARGETS)
 ########################################
 
-.PHONY: $(DOITALL)-$(TARGETS)
-$(DOITALL)-$(TARGETS): $(COMPOSER_TARGETS)
-$(DOITALL)-$(TARGETS):
+override $(DOITALL)-$(TARGETS) := $(COMPOSER_TARGETS)
+
+########################################
+### {{{3 $(DOITALL)-$(PUBLISH)
+########################################
+
+.PHONY: $(DOITALL)-$(PUBLISH)
+$(DOITALL)-$(PUBLISH):
+ifneq ($(c_site),)
+	@$(MAKE) c_site="1" $(PUBLISH)-library-$(DOITALL)
+endif
 	@$(ECHO) ""
+
+########################################
+### {{{3 $(DOITALL)-$(CLEANER)
+########################################
+
+.PHONY: $(DOITALL)-$(CLEANER)
+$(DOITALL)-$(CLEANER):
+	@$(call $(CLEANER)-$(CLEANER))
 
 ########################################
 ## {{{2 $(SUBDIRS)
@@ -18865,13 +18868,15 @@ $(SUBDIRS):
 ########################################
 
 #WORKING:FIX:SIZE:OPTS
-#	*-$(1) targets are now before subdirs and not after
 
 override define $(SUBDIRS)-$(EXAMPLE) =
 override $(1)-$(SUBDIRS)-$(LISTING) := \
 	$($(1)-$(LISTING)) \
 	$(1)-$(TARGETS) \
-	$(SUBDIRS)-$(TARGETS)-$(1)
+
+override $(1)-$(SUBDIRS)-$(LISTING)-done := \
+	$($(1)-$(LISTING)-done) \
+	$(SUBDIRS)-$(TARGETS)-$(1) \
 
 .PHONY: $(1)-$(HEADERS)
 $(1)-$(HEADERS): $(.)set_title-$(1)
@@ -18885,13 +18890,14 @@ $(1)-$(HEADERS):
 .PHONY: $(1)
 $(1): $(1)-$(HEADERS)
 $(1): $$($(1)-$(SUBDIRS)-$(LISTING))
+$(1): $$($(1)-$(SUBDIRS)-$(LISTING)-done)
 $(1): $(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1))
 $(1):
 	@$$(ECHO) ""
 
 .PHONY: $(1)-$(TARGETS)
 $(1)-$(TARGETS): $(1)-$(HEADERS)
-$(1)-$(TARGETS): $(if $(COMPOSER_DEPENDS),$(SUBDIRS)-$(1))
+$(1)-$(TARGETS): $(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
 $(1)-$(TARGETS): $(call $(NOTHING)-$(CHECKIT),TARGETS,$($(1)-$(TARGETS)))
 $(1)-$(TARGETS):
 	@$(ECHO) ""
@@ -18904,15 +18910,22 @@ $(SUBDIRS)-$(1):
 	@$$(ECHO) ""
 
 $$($(1)-$(SUBDIRS)-$(LISTING)) \
+$$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 $(call $(NOTHING)-$(CHECKIT),TARGETS,$($(1)-$(TARGETS))) \
 $(call $(NOTHING)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))) \
 : \
 	$(1)-$(HEADERS)
 
 $$($(1)-$(SUBDIRS)-$(LISTING)) \
+$$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 $(call $(NOTHING)-$(CHECKIT),TARGETS,$($(1)-$(TARGETS))) \
 : \
-	$(if $(COMPOSER_DEPENDS),$(SUBDIRS)-$(1))
+	$(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
+
+$$($(1)-$(SUBDIRS)-$(LISTING)-done) \
+: \
+	$$($(1)-$(SUBDIRS)-$(LISTING)) \
+	$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1))
 
 .PHONY: $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))
 $(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS)): $(1)-$(HEADERS)
@@ -18928,7 +18941,7 @@ endef
 #$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(EXPORTS)))
 #$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(INSTALL)))
 $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
-#$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
+$(eval $(call $(SUBDIRS)-$(EXAMPLE),$(DOITALL)))
 
 ########################################
 ### {{{3 $(SUBDIRS)-$(TARGETS)
@@ -18937,7 +18950,7 @@ $(eval $(call $(SUBDIRS)-$(EXAMPLE),$(CLEANER)))
 override define $(SUBDIRS)-$(TARGETS)-$(HEADERS) =
 .PHONY: $(SUBDIRS)-$(TARGETS)-$(1)-$(2)-$(HEADERS)
 $(SUBDIRS)-$(TARGETS)-$(1)-$(2)-$(HEADERS): $(1)-$(HEADERS)
-$(SUBDIRS)-$(TARGETS)-$(1)-$(2)-$(HEADERS): $(if $(COMPOSER_DEPENDS),$(SUBDIRS)-$(1))
+$(SUBDIRS)-$(TARGETS)-$(1)-$(2)-$(HEADERS): $(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
 $(SUBDIRS)-$(TARGETS)-$(1)-$(2)-$(HEADERS):
 	@$$(call $$(HEADERS)-note,$$(CURDIR),$(2),$(1))
 endef
@@ -18945,7 +18958,7 @@ endef
 override define $(SUBDIRS)-$(TARGETS) =
 .PHONY: $(SUBDIRS)-$(TARGETS)-$(1)
 $(SUBDIRS)-$(TARGETS)-$(1): $(1)-$(HEADERS)
-$(SUBDIRS)-$(TARGETS)-$(1): $(if $(COMPOSER_DEPENDS),$(SUBDIRS)-$(1))
+$(SUBDIRS)-$(TARGETS)-$(1): $(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))
 $(SUBDIRS)-$(TARGETS)-$(1):
 	@$$(ECHO) ""
 
@@ -18953,7 +18966,7 @@ $(if $(filter $(1)%,$(MAKECMDGOALS)),\
 	$(foreach FILE,$(shell $(call $(TARGETS)-$(PRINTER),,$(1))),\
 		$(eval $(call $(SUBDIRS)-$(TARGETS)-$(HEADERS),$(1),$(FILE))) \
 		$(eval $(FILE): $(SUBDIRS)-$(TARGETS)-$(1)-$(FILE)-$(HEADERS)) \
-		$(eval $(FILE): $(if $(COMPOSER_DEPENDS),$(SUBDIRS)-$(1))) \
+		$(eval $(FILE): $(if $(COMPOSER_DEPENDS),$(if $(COMPOSER_DOITALL_$(1)),$(SUBDIRS)-$(1)))) \
 		$(eval $(SUBDIRS)-$(TARGETS)-$(1): $(FILE)) \
 	) \
 )
