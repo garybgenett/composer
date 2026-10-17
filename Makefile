@@ -13809,9 +13809,13 @@ $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-fetch:
 .PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build
 $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build:
 	@$(call $(HEADERS)-action,$(MDVIEWER_DIR),build)
-	@$(MKDIR)									$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
-	@$(LN)										$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
-											$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/manifest.json
+	@$(MKDIR)	$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/vendor
+	@$(LN)		$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/$(MDVIEWER_MANIFEST) \
+			$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/manifest.json
+	@$(MAKE) $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build-modules
+
+.PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build-modules
+$(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build-modules:
 	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
 		$(call NPM_BUILD,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
