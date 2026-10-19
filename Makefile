@@ -3561,7 +3561,6 @@ override $(COMPOSER_PANDOC)-$(CHECKIT) = $(strip \
 	))) \
 )
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
 override $(COMPOSER_PANDOC)-$(LISTING) := $(strip \
 	$(if $(and $(c_base),$(EXTN_OUTPUT)),\
 		$(c_base).$(EXTN_OUTPUT) \
@@ -3573,7 +3572,6 @@ override $(COMPOSER_PANDOC)-$(LISTING) := $(strip \
 	)) \
 )
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
 override $(COMPOSER_PANDOC)-$(TARGETS) := \
 	$(filter-out \
 		$(NOTHING)% \
@@ -15421,11 +15419,11 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-done:
 	$(call $(TESTING)-find,Removing.+getting-started.html)
 	$(call $(TESTING)-count,5,$(CLEANER).+$(COMPOSER_LOGFILE_DEFAULT))
 #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
-	$(call $(TESTING)-count,1,$(CLEANER).+$(notdir $(COMPOSER_TMP)))
-	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(EXPORTS))
-	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(INSTALL))
-	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(CLEANER))
-	$(call $(TESTING)-count,1,$(NOTHING).+$(TARGETS)-$(DOITALL))
+#	$(call $(TESTING)-count,1,$(CLEANER).+$(notdir $(COMPOSER_TMP)))
+#	$(call $(TESTING)-count,1,$(NOTHING).+$(EXPORTS))
+#	$(call $(TESTING)-count,1,$(NOTHING).+$(INSTALL))
+#	$(call $(TESTING)-count,1,$(NOTHING).+$(CLEANER))
+#	$(call $(TESTING)-count,1,$(NOTHING).+$(DOITALL))
 	$(call $(TESTING)-count,4,$(call /,$(TESTING))-1-$(EXPORTS))
 	$(call $(TESTING)-count,4,$(call /,$(TESTING))-1-$(INSTALL))
 	$(call $(TESTING)-count,4,$(call /,$(TESTING))-1-$(CLEANER))
@@ -15757,7 +15755,7 @@ $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-init:
 	@$(call DO_HEREDOC,$(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-init)	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(MKDIR) $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)/$(call /,$(TESTING))
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(call /,$(TESTING)).$(EXTN_HTML)
-	@$(LN) $(call $(TESTING)-pwd)/$(call /,$(TESTING)).$(EXTN_HTML) $(call $(TESTING)-pwd)/redirect.$(EXTN_HTML)
+	@$(LN) $(call $(TESTING)-pwd)/$(call /,$(TESTING)).$(EXTN_HTML) $(call $(TESTING)-pwd)/$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML)
 	@$(call $(TESTING)-run) $(EXPORTS)-$(DOITALL)
 	@$(LS) --recursive $(call COMPOSER_CONV,$(call $(TESTING)-pwd)/,$(COMPOSER_EXPORT),1)
 
@@ -15775,7 +15773,7 @@ $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-done:
 	$(call $(TESTING)-count,12,deleting)
 	$(call $(TESTING)-count,1,Removing.+$(call /,$(TESTING)))
 	$(call $(TESTING)-count,4,[ ]$(call /,$(TESTING)).$(EXTN_HTML))
-	$(call $(TESTING)-count,4,[ ]redirect.$(EXTN_HTML))
+	$(call $(TESTING)-count,4,[ ]$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML))
 	$(call $(TESTING)-count,4,\+\+\+[ ]+$(OUT_README).$(EXTN_DEFAULT))
 	$(call $(TESTING)-count,1,\+\+\+[ ]+template.html)
 	$(call $(TESTING)-count,4,deleting[ ]+$(OUT_README).$(EXTN_DEFAULT))
@@ -16600,8 +16598,7 @@ override REDIRECT_TITLE			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.title
 override REDIRECT_DISPLAY		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.display)
 override REDIRECT_EXCLUDE		:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.exclude,, $(NULL))
 override REDIRECT_TIME			:= $(call COMPOSER_YML_DATA_VAL,helpers.redirect.time)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS
-#> $(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_EXCLUDE),$(EXPORTS)-redirect)))
+#>$(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(REDIRECT_EXCLUDE),$(EXPORTS)-redirect)))
 #>	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(COMPOSER_EXPORTS_LISTING)),
 override $(EXPORTS)-redirect-list := \
 	$(foreach FILE,$(filter-out $(subst *,%,$(REDIRECT_EXCLUDE)),$(filter %.$(EXTN_HTML),$(COMPOSER_EXPORTS_LISTING))),\
@@ -16727,7 +16724,6 @@ override $(EXPORTS)-$(TARGETS) := \
 ### {{{3 $(EXPORTS)-$(EXPORTS)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS
 .PHONY: $(EXPORTS)-$(EXPORTS)
 $(EXPORTS)-$(EXPORTS):
 #>	@$(call $(HEADERS)-action,$(CURDIR),,,$(EXPORTS))
@@ -17731,9 +17727,9 @@ ifneq ($(and \
 		$(MAKECMDGOALS) \
 	) \
 ),)
+ifneq ($(wildcard $($(PUBLISH)-library-index)),)
 #>$(info $(shell $(call $(HEADERS)-note,$(CURDIR),$(_H)$(COMPOSER_LIBRARY),$(PUBLISH)-digest)))
 #>		$(PUBLISH_METATITL)
-ifneq ($(wildcard $($(PUBLISH)-library-index)),)
 override $(PUBLISH)-library-digest-list := $(shell \
 	for TYPE in $(filter-out \
 		$(PUBLISH_METATITL) \
@@ -19235,7 +19231,6 @@ override $(1)-$(SUBDIRS)-$(LISTING)-done := \
 	$(SUBDIRS)-$(TARGETS)-$(1) \
 	$($(1)-$(LISTING)-done) \
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:EXPORTS
 override $(1)-$(SUBDIRS)-$(CHECKIT) := \
 	$(if $(filter $(1),$(EXPORTS)),\
 		$(call $(COMPOSER_PANDOC)-$(CHECKIT),EXPORTS,$($(1)-$(TARGETS))) \
@@ -19286,14 +19281,16 @@ $(SUBDIRS)-$(1): $(call $(COMPOSER_PANDOC)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBD
 $(SUBDIRS)-$(1):
 	@$$(ECHO) ""
 
+#>$(if $(filter $(1),$(EXPORTS) $(DOITALL)),\
+#>	$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
+#>	$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)) \
+#>)
 $$($(1)-$(SUBDIRS)-$(LISTING)) \
 $$($(1)-$(SUBDIRS)-$(LISTING)-done) \
 $$($(1)-$(SUBDIRS)-$(CHECKIT)) \
 $(call $(COMPOSER_PANDOC)-$(CHECKIT),SUBDIRS,$(addprefix $(SUBDIRS)-$(1)-,$(COMPOSER_SUBDIRS))) \
-$(if $(filter $(1),$(DOITALL)),\
-	$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
-	$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)) \
-) \
+$(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)) \
+$(call $(COMPOSER_PANDOC)-dependencies,$(TYPE_HTML)) \
 : | \
 	$(1)-$(HEADERS)
 
