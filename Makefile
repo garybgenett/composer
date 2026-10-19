@@ -15443,7 +15443,7 @@ $(TESTING)-COMPOSER_MAXLIST: $(TESTING)-$(_)Think
 $(TESTING)-COMPOSER_MAXLIST:
 #WORKING:FIX:SIZE
 #	@$(call $(TESTING)-$(HEADERS),\
-#		\#WORK: steal/borrow content from stress... \
+#		\#WORK steal/borrow content from stress... \
 #	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -15464,7 +15464,7 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 	@$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS))	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_YML))		>$(call $(TESTING)-pwd)/$(COMPOSER_YML)
 #> $(CONFIGS) > $(TARGETS) > $(EXPORTS) > $(INSTALL) > $(CLEANER) > $(DOITALL)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
 #	@$(call $(HEADERS)-action, ... )
 	@RUN="1"; while [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-runs)" ]; do \
 		$(LINERULE); \
@@ -16750,8 +16750,7 @@ $(EXPORTS)-$(EXPORTS):
 		$(call COMPOSER_CONV,$(COMPOSER_ROOT),$(CURDIR),1,1)/ \
 		$(call COMPOSER_CONV,$(COMPOSER_EXPORT),$(CURDIR),1,1)
 ifneq ($(COMPOSER_DOITALL_$(EXPORTS)),)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
-#	@$(LINERULE)
+#>	@$(LINERULE)
 	@$(call $(HEADERS)-linerule)
 endif
 
@@ -16767,8 +16766,7 @@ ifeq ($(COMPOSER_DOITALL_$(EXPORTS)),)
 	@$(call $(HEADERS))
 	@$(call $(EXPORTS)-$(CONFIGS),1)
 else
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
-#	@$(LINERULE)
+#>	@$(LINERULE)
 	@$(call $(HEADERS)-linerule,1)
 endif
 ifeq ($(filter $(COMPOSER_ROOT)/%,$(COMPOSER_EXPORT)),)
