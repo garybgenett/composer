@@ -2462,7 +2462,7 @@ override COMPOSER_VARIABLES = \
 	) \
 	$(if $(2),,\
 		$(if $(and \
-			$(call c_variable,$(c_opt_base),$(c_opt_extn),c_site) ,\
+			$(call c_variable,$(c_opt_base),$(c_opt_extn),c_site,$(c_site)) ,\
 			$(filter $(TYPE_$(call PANDOC_FILES_TYPE,EXTN,$(c_opt_extn))),$(TYPE_HTML)) \
 		),\
 			$(eval $(3): override c_list_file := $(call COMPOSER_TMP_FILE,,$(1))$(COMPOSER_FILEEXT_DEFAULT)) \
