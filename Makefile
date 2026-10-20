@@ -2405,7 +2405,6 @@ override COMPOSER_VARIABLES_LIST := \
 		$(COMPOSER_OPTIONS_PANDOC) \
 	)
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
 override COMPOSER_VARIABLES_TARGETS := \
 	$(COMPOSER_PANDOC) \
 	$(DOITALL)% \
@@ -8022,11 +8021,6 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ################################################################################
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-
-override COMPOSER_TARGETS := examples.html
-override COMPOSER_SUBDIRS := .null
 
 override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_ROOT_TESTING)) $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_FILEEXT_DEFAULT)
 
@@ -16641,8 +16635,6 @@ $($(EXPORTS)-redirect-files):
 #>		$($(@)_LIST) \
 #>		$($(@)_BASE).$(EXTN_HTML).yml \
 #>		$($(@)_BASE).$(EXTN_HTML).header
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-#	@$(call ENV_MAKE,$(MAKEJOBS),$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR))
 	@$(MAKE) \
 		$(COMPOSER_PANDOC) \
 		c_site="1" \
@@ -18975,23 +18967,17 @@ ifneq ($(COMPOSER_DEBUGIT),)
 		$(call NEWLINE) \
 	)
 else
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-#		$(PUBLISH)-$(DOITALL) \
-#		$(PUBLISH)-$(DOFORCE) \
-#		$(if $(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)),,$(PUBLISH)-$(DOFORCE)) \
-#		$(EXPORTS)-$(DOITALL) \
-#
 	@$(foreach FILE,\
-		$(PUBLISH) \
-		$(EXPORTS) \
+		$(PUBLISH)-$(DOITALL) \
+		$(PUBLISH)-$(DOFORCE) \
+		$(if $(filter $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)),,$(PUBLISH)-$(DOFORCE)) \
+		$(EXPORTS)-$(DOITALL) \
 		,\
 		time $(call ENV_MAKE,$(MAKEJOBS),,$(COMPOSER_DOCOLOR),COMPOSER_RELEASE_EXAMPLE) \
 			--directory $(PUBLISH_ROOT) \
 			$(FILE); \
 		$(call NEWLINE) \
 	)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-	@$(PRINT) "$(_F)success!"; exit 1
 endif
 ifeq ($(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING))
 	@$(call DO_HEREDOC,PUBLISH_PAGE_EXAMPLE,,1)	>$(abspath $(dir $(PUBLISH_ROOT)/$(PUBLISH_EXAMPLE)))/$(call /,$(TESTING))$(COMPOSER_FILEEXT_DEFAULT)
@@ -19182,10 +19168,7 @@ override $(CLEANER)-$(CLEANER) = \
 ### {{{3 $(DOITALL)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-#	$(TARGETS)-$(PRINTER)
 override $(DOITALL)-$(LISTING) := \
-	$(TARGETS)-$(PRINTER)
 
 override $(DOITALL)-$(LISTING)-done := \
 	$(DOITALL)-$(CLEANER) \
@@ -19234,7 +19217,7 @@ $(SUBDIRS):
 
 #> update: COMPOSER_RECURSIVE
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
+#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE
 #	MAKECMDGOALS
 
 $(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
@@ -19430,14 +19413,6 @@ endif
 ## {{{2 $(COMPOSER_PANDOC)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-#$(if $(filter \
-#	$(COMPOSER_VARIABLES_TARGETS) \
-#	,\
-#	$(MAKECMDGOALS) \
-#),\
-#)
-
 .PHONY: $(COMPOSER_PANDOC)
 $(COMPOSER_PANDOC): $(.)set_title-$(COMPOSER_PANDOC)
 ifneq ($($(COMPOSER_PANDOC)-$(LISTING)),)
@@ -19450,15 +19425,6 @@ $(COMPOSER_PANDOC):
 ########################################
 ## {{{2 $(COMPOSER_PANDOC)-$(COMPOSER_TARGETS)
 ########################################
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-#	$(if $(filter \
-#		$(COMPOSER_VARIABLES_TARGETS) \
-#		$(TARGET) \
-#		,\
-#		$(MAKECMDGOALS) \
-#	),\
-#	) \
 
 ifneq ($(or \
 	$($(COMPOSER_PANDOC)-$(LISTING)) ,\
@@ -19499,13 +19465,11 @@ $($(COMPOSER_PANDOC)-$(TARGETS)) \
 		$(call $(COMPOSER_PANDOC)-$(PANDOC_BIN_NAME)) \
 		$(call $(COMPOSER_PANDOC)-$(COMPOSER_LOGFILE)) \
 	)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING:MAKE:LOOP
-	$(if $(and \
+	@$(if $(and \
 		$(filter $(MAKELEVEL),0) ,\
 		$(filter 1,$(words $(MAKECMDGOALS))) ,\
 		$(filter \
-			$(COMPOSER_PANDOC) \
-			$(EXTRACT) \
+			$(filter-out $(DOITALL)%,$(COMPOSER_VARIABLES_TARGETS)) \
 			$(@) \
 			,\
 			$(MAKECMDGOALS) \
