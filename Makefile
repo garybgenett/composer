@@ -3809,8 +3809,6 @@ endif
 ### {{{3 $(HELPOUT)-variables
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
-
 ########################################
 #### {{{4 $(HELPOUT)-variables-title
 ########################################
@@ -4347,8 +4345,6 @@ $(HELPOUT)-$(HEADERS)-%:
 ########################################
 ### {{{3 $(HELPOUT)-$(@)
 ########################################
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
 
 .PHONY: $(HELPOUT)-%
 $(HELPOUT)-%:
@@ -14051,8 +14047,6 @@ $(foreach FILE,$(REPOSITORIES_LIST),\
 ## {{{2 $(CREATOR)
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
-
 ########################################
 ### {{{3 $(CREATOR)
 ########################################
@@ -14504,9 +14498,6 @@ $(DEBUGIT)-$(TOAFILE):
 ## {{{2 $(TESTING)
 ########################################
 
-#WORKIT:TESTING
-#	override COMPOSER_KEEPING :=
-
 ########################################
 ### {{{3 $(TESTING)
 ########################################
@@ -14784,9 +14775,8 @@ override $(TESTING)-done = \
 #### {{{4 $(TESTING)-find
 ########################################
 
-#WORKING:TESTING
-#	add header and @ all calls
 override $(TESTING)-find = \
+	$(PRINT) "$(_H)$(DIVIDE) find ($(3)) {$(1)}"; \
 	$(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(2),init); \
 	if [ $(if $(3),-n,-z) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(2),init) | $(SED) "s|[$$]|.|g")" ]; then \
 		$(call $(TESTING)-fail); \
@@ -14796,9 +14786,8 @@ override $(TESTING)-find = \
 #### {{{4 $(TESTING)-count
 ########################################
 
-#WORKING:TESTING
-#	add header and @ all calls
 override $(TESTING)-count = \
+	$(PRINT) "$(_H)$(DIVIDE) count ($(1)) {$(2)}"; \
 	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(3),init); \
 	$(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(3),init) | $(WC); \
 	if [ "$(shell $(SED) -n "/$(2)/p" $(call $(TESTING)-log,$(3),init) | $(WC))" != "$(1)" ]; then \
@@ -14876,8 +14865,8 @@ $(TESTING)-$(_)Think-init:
 
 .PHONY: $(TESTING)-$(_)Think-done
 $(TESTING)-$(_)Think-done:
-	$(call $(TESTING)-find,COMPOSER_TARGETS)
-	$(call $(TESTING)-count,2,override COMPOSER_TEACHER := .+[/]$(subst .,[.],$(COMPOSER_CMS))[/]$(MAKEFILE))
+	@$(call $(TESTING)-find,COMPOSER_TARGETS)
+	@$(call $(TESTING)-count,2,override COMPOSER_TEACHER := .+[/]$(subst .,[.],$(COMPOSER_CMS))[/]$(MAKEFILE))
 
 ########################################
 ### {{{3 $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)
@@ -15294,36 +15283,36 @@ override $(TESTING)-$(COMPOSER_BASENAME)-done = \
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)-done
 $(TESTING)-$(COMPOSER_BASENAME)-done:
 	#> precedence
-	$(call $(TESTING)-count,1,MAKEJOBS.+100)
-	$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
+	@$(call $(TESTING)-count,1,MAKEJOBS.+100)
+	@$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
 	#> targets
-	$(call NEWLINE) $(call $(TESTING)-count,3,c_type=[\"][\"])
-	$(call NEWLINE) $(call $(TESTING)-count,3,c_base=[\"][\"])
-	$(call NEWLINE) $(call $(TESTING)-count,3,c_list=[\"][\"])
-	$(call NEWLINE) $(call $(TESTING)-count,4,c_list_var=[\"][\"])
-	$(call NEWLINE) $(call $(TESTING)-count,1,output[=].+$(subst +,[+],$(OUT_MANUAL).$(EXTN_DEFAULT)))
-	$(call $(TESTING)-$(COMPOSER_BASENAME)-done,$(TYPE_DEFAULT))
-	$(call $(TESTING)-$(COMPOSER_BASENAME)-done,json)
+	@$(call $(TESTING)-count,3,c_type=[\"][\"])
+	@$(call $(TESTING)-count,3,c_base=[\"][\"])
+	@$(call $(TESTING)-count,3,c_list=[\"][\"])
+	@$(call $(TESTING)-count,4,c_list_var=[\"][\"])
+	@$(call $(TESTING)-count,1,output[=].+$(subst +,[+],$(OUT_MANUAL).$(EXTN_DEFAULT)))
+	@$(call $(TESTING)-$(COMPOSER_BASENAME)-done,$(TYPE_DEFAULT))
+	@$(call $(TESTING)-$(COMPOSER_BASENAME)-done,json)
 	#> margins
-	$(call $(TESTING)-count,37,\|.+c_margin)
-	$(call $(TESTING)-count,1,\|.+c_margin_top.+1in)
-	$(call $(TESTING)-count,1,\|.+c_margin_bottom.+2in)
-	$(call $(TESTING)-count,1,\|.+c_margin_left.+3in)
-	$(call $(TESTING)-count,1,\|.+c_margin_right.+4in)
+	@$(call $(TESTING)-count,37,\|.+c_margin)
+	@$(call $(TESTING)-count,1,\|.+c_margin_top.+1in)
+	@$(call $(TESTING)-count,1,\|.+c_margin_bottom.+2in)
+	@$(call $(TESTING)-count,1,\|.+c_margin_left.+3in)
+	@$(call $(TESTING)-count,1,\|.+c_margin_right.+4in)
 	#> options
-	$(call $(TESTING)-count,6,[\"]$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)[\"])
-	$(call $(TESTING)-count,6,[']$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)['])
+	@$(call $(TESTING)-count,6,[\"]$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)[\"])
+	@$(call $(TESTING)-count,6,[']$(call /,$(TESTING),1)=$(call /,$(DEBUGIT),1)['])
 	#> values
-	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(PHANTOM).+$(OUT_README).$(EXTN_DEFAULT).+$(DIVIDE).+$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(PHANTOM).+artifacts.+$(DIVIDE).+$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING)[^-]+$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(NOTHING)[^-]+$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,0,Processing.+$(DOITALL).+$(NOTHING).+$(NOTHING))
-	$(call $(TESTING)-count,0,Processing.+$(DOITALL).+$(NOTHING).+$(NOTHING))
-	$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING)[-]$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(NOTHING)[-]$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(PHANTOM).+$(OUT_README).$(EXTN_DEFAULT).+$(DIVIDE).+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(PHANTOM).+artifacts.+$(DIVIDE).+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING)[^-]+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(NOTHING)[^-]+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,0,Processing.+$(DOITALL).+$(NOTHING).+$(NOTHING))
+	@$(call $(TESTING)-count,0,Processing.+$(DOITALL).+$(NOTHING).+$(NOTHING))
+	@$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING)[-]$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(NOTHING)[-]$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)))
 
 ########################################
 ### {{{3 $(TESTING)-$(TARGETS)
@@ -15365,7 +15354,7 @@ $(TESTING)-$(TARGETS)-init:
 
 .PHONY: $(TESTING)-$(TARGETS)-done
 $(TESTING)-$(TARGETS)-done:
-	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
+	@$(foreach TYPE,$(TYPE_TARGETS_LIST),\
 		$(eval override COUNT := 64) \
 		$(call $(TESTING)-count,$(COUNT), $(subst /,[/],$(call $(TESTING)-pwd))[/]$(OUT_README)[.]$(EXTN_$(TYPE))[.][x0-9][.][x0-9][.]$(EXTN_$(TYPE))); \
 		$(call NEWLINE) \
@@ -15409,8 +15398,8 @@ $(TESTING)-$(INSTALL)-MAKEJOBS-init:
 
 .PHONY: $(TESTING)-$(INSTALL)-MAKEJOBS-done
 $(TESTING)-$(INSTALL)-MAKEJOBS-done:
-	$(call $(TESTING)-find,Processing.+$(DOITALL).+$(NOTHING).+$(MAKEFILE))
-	$(call $(TESTING)-find,Processing.+$(CLEANER).+$(NOTHING).+$(MAKEFILE))
+	@$(call $(TESTING)-find,Processing.+$(DOITALL).+$(NOTHING).+$(MAKEFILE))
+	@$(call $(TESTING)-find,Processing.+$(CLEANER).+$(NOTHING).+$(MAKEFILE))
 
 ########################################
 ### {{{3 $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)
@@ -15483,26 +15472,26 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-init:
 
 .PHONY: $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-done
 $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-done:
-	$(call $(TESTING)-find,Creating.+changelog.html)
-	$(call $(TESTING)-find,Creating.+getting-started.html)
-	$(call $(TESTING)-find,Removing.+changelog.html)
-	$(call $(TESTING)-find,Removing.+getting-started.html)
-	$(call $(TESTING)-count,0,changelog.html.+$(DIVIDE).+changelog.md)
-	$(call $(TESTING)-count,1,COMPOSER_EXPORTS.*[[].*$(call /,$(TESTING))-1-$(EXPORTS).*[]])
-	$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.*[[].*$(call /,$(TESTING))-1-$(INSTALL).*[]])
-	$(call $(TESTING)-count,1,COMPOSER_TARGETS.*[[].*$(call /,$(TESTING))-1-$(CLEANER).*[]])
-	$(call $(TESTING)-count,1,COMPOSER_TARGETS.*[[].*$(call /,$(TESTING))-1-$(DOITALL).*[]])
-	$(call $(TESTING)-count,4,Processing.+[[]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[]].+$(COMPOSER_LOGFILE_DEFAULT))
-	$(call $(TESTING)-count,83,Processing.+[[]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[]].+$(notdir $(COMPOSER_TMP)))
-	$(call $(TESTING)-count,8,$(EXPORTS).+$(notdir $(word 1,$(RSYNC))))
-	$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(EXPORTS)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
-	$(call $(TESTING)-count,1,Processing.+[(]($(SED_ESCAPE_COLOR))?$(EXPORTS)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(EXPORTS))
-	$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(INSTALL)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
-	$(call $(TESTING)-count,1,Processing.+[(]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(TARGETS))
-	$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
-	$(call $(TESTING)-count,1,Processing.+[(]($(SED_ESCAPE_COLOR))?$(DOITALL)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(TARGETS))
-	$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(DOITALL)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
-	$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
+	@$(call $(TESTING)-find,Creating.+changelog.html)
+	@$(call $(TESTING)-find,Creating.+getting-started.html)
+	@$(call $(TESTING)-find,Removing.+changelog.html)
+	@$(call $(TESTING)-find,Removing.+getting-started.html)
+	@$(call $(TESTING)-count,0,changelog.html.+$(DIVIDE).+changelog.md)
+	@$(call $(TESTING)-count,1,COMPOSER_EXPORTS.*[[].*$(call /,$(TESTING))-1-$(EXPORTS).*[]])
+	@$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.*[[].*$(call /,$(TESTING))-1-$(INSTALL).*[]])
+	@$(call $(TESTING)-count,1,COMPOSER_TARGETS.*[[].*$(call /,$(TESTING))-1-$(CLEANER).*[]])
+	@$(call $(TESTING)-count,1,COMPOSER_TARGETS.*[[].*$(call /,$(TESTING))-1-$(DOITALL).*[]])
+	@$(call $(TESTING)-count,4,Processing.+[[]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[]].+$(COMPOSER_LOGFILE_DEFAULT))
+	@$(call $(TESTING)-count,83,Processing.+[[]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[]].+$(notdir $(COMPOSER_TMP)))
+	@$(call $(TESTING)-count,8,$(EXPORTS).+$(notdir $(word 1,$(RSYNC))))
+	@$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(EXPORTS)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
+	@$(call $(TESTING)-count,1,Processing.+[(]($(SED_ESCAPE_COLOR))?$(EXPORTS)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(EXPORTS))
+	@$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(INSTALL)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
+	@$(call $(TESTING)-count,1,Processing.+[(]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(TARGETS))
+	@$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(CLEANER)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
+	@$(call $(TESTING)-count,1,Processing.+[(]($(SED_ESCAPE_COLOR))?$(DOITALL)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(TARGETS))
+	@$(call $(TESTING)-count,2,Processing.+[(]($(SED_ESCAPE_COLOR))?$(DOITALL)($(SED_ESCAPE_COLOR))?[)].+$(NOTHING).+$(SUBDIRS))
+	@$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
 		$(call $(TESTING)-count,3,$(call /,$(TESTING))-1-$(RECURSIVE)); \
 		$(call NEWLINE) \
 	)
@@ -15618,19 +15607,19 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 		done; \
 		$(ECHO) "$${CNT}"; \
 	))
-	$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
+	@$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)$$)		$(call NEWLINE) \
 	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)-$(TARGETS)$$)	$(call NEWLINE) \
 	)
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),Creating.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^($(SED_ESCAPE_COLOR))?$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT).+$(DIVIDE).+$(OUT_README)[.][0-9]+[.][0-9]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT)))
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 2),^[0-9].+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)$$)
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^[0-9].+$(SUBDIRS)[.][0-9]+[.][0-9]+[/]?$$)
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),$(OUT_README)[.][0-9]+[.][0-9]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))$$)
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1 + $($(TESTING)-COMPOSER_MAXLIST-count) \* 2),$(SUBDIRS)[.][0-9]+[.][0-9]+.+$(NOTHING).+$(MAKEFILE))
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[/].+[/]$(subst +,[+],$(notdir $(COMPOSER_EXPORT_DEFAULT)))[/])
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),Removing.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
-	$(call $(TESTING)-count,$$($(EXPR) $(COMPOSER_KEEPING)),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),Creating.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^($(SED_ESCAPE_COLOR))?$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT).+$(DIVIDE).+$(OUT_README)[.][0-9]+[.][0-9]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT)))
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 2),^[0-9].+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^[0-9].+$(SUBDIRS)[.][0-9]+[.][0-9]+[/]?$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),$(OUT_README)[.][0-9]+[.][0-9]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1 + $($(TESTING)-COMPOSER_MAXLIST-count) \* 2),$(SUBDIRS)[.][0-9]+[.][0-9]+.+$(NOTHING).+$(MAKEFILE))
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[/].+[/]$(subst +,[+],$(notdir $(COMPOSER_EXPORT_DEFAULT)))[/])
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),Removing.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $(COMPOSER_KEEPING)),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 2),MAKECMDGOALS)
 	@$(TABLE_M2) "$(_H)$(MARKER) Runs"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-runs)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-files)"
@@ -15744,47 +15733,47 @@ endef
 .PHONY: $(TESTING)-COMPOSER_INCLUDE-done
 $(TESTING)-COMPOSER_INCLUDE-done:
 	#> $(call $(TESTING)-pwd)
-	$(call $(TESTING)-count,2,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd)))($(SED_ESCAPE_COLOR))?[ ]))
-	$(call $(TESTING)-count,2,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[<]))
-	$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[[:space:]]))
-	$(call $(TESTING)-count,4,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_YML))))
-	$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_CSS))))
+	@$(call $(TESTING)-count,2,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd)))($(SED_ESCAPE_COLOR))?[ ]))
+	@$(call $(TESTING)-count,2,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[<]))
+	@$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[[:space:]]))
+	@$(call $(TESTING)-count,4,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_YML))))
+	@$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_CSS))))
 	#> $(call $(TESTING)-pwd,/)
-	$(call $(TESTING)-count,1,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,/)))($(SED_ESCAPE_COLOR))?[ ]))
-	$(call $(TESTING)-count,1,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[<]))
-	$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[[:space:]]))
-	$(call $(TESTING)-count,2,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_YML))))
-	$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_CSS))))
+	@$(call $(TESTING)-count,1,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,/)))($(SED_ESCAPE_COLOR))?[ ]))
+	@$(call $(TESTING)-count,1,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[<]))
+	@$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[[:space:]]))
+	@$(call $(TESTING)-count,2,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_YML))))
+	@$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_CSS))))
 	#> $(call $(TESTING)-pwd,$(COMPOSER_CMS))
-	$(call $(TESTING)-count,3,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))($(SED_ESCAPE_COLOR))?[ ]))
-	$(call $(TESTING)-count,3,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[<]))
-	$(call $(TESTING)-count,6,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[[:space:]]))
-	$(call $(TESTING)-count,6,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_YML))))
-	$(call $(TESTING)-count,6,^[^|]+--css=.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_CSS))))
+	@$(call $(TESTING)-count,3,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))($(SED_ESCAPE_COLOR))?[ ]))
+	@$(call $(TESTING)-count,3,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[<]))
+	@$(call $(TESTING)-count,6,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[[:space:]]))
+	@$(call $(TESTING)-count,6,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_YML))))
+	@$(call $(TESTING)-count,6,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_CSS))))
 	#> $(CONFIGS)
-	$(call $(TESTING)-count,4,COMPOSER_DEPENDS$(strip	[^-]+$(MARKER)))
-	$(call $(TESTING)-count,2,^[#]COMPOSER_CURDIR)
+	@$(call $(TESTING)-count,4,COMPOSER_DEPENDS$(strip	[^-]+$(MARKER)))
+	@$(call $(TESTING)-count,2,^[#]COMPOSER_CURDIR)
 	#> validation
-	$(call $(TESTING)-count,10,COMPOSER_DEPENDS)
-	$(call $(TESTING)-count,10,^[^<]+<title>)
-	$(call $(TESTING)-count,36,^<!-- css:)
-	$(call $(TESTING)-count,12,^<!-- css: .defaults)
-	$(call $(TESTING)-count,6,^<!-- css: .variables)
-	$(call $(TESTING)-count,8,^<!-- css: .options)
-	$(call $(TESTING)-count,10,^<!-- css: $(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))))
-	$(call $(TESTING)-count,12,^[^|]+--defaults=)
-#>	$(call $(TESTING)-count,40,^[^|]+--css=)
-	$(call $(TESTING)-count,38,^[^|]+--css=)
-	$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(WATERCSS_CSS_ALT)))
-	$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(CUSTOM_HTML_CSS)))
-	$(call $(TESTING)-count,10,^[^|]+--css=.+[/][.]$(notdir $(COMPOSER_CUSTOM)-$(TYPE_HTML).css))
-	$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(call $(TESTING)-pwd)))
-	$(call $(TESTING)-count,10,^[^|]+--output=)
-	$(call $(TESTING)-count,2,<title>.+$(COMPOSER_HEADLINE)[<])
-	$(call $(TESTING)-count,2,<title>[.]defaults[[:space:]])
-	$(call $(TESTING)-count,0,<title>[.]variables[[:space:]])
-	$(call $(TESTING)-count,6,<title>[.]variables[.]options[[:space:]])
-	$(call $(TESTING)-count,2,<title>[.]options[[:space:]])
+	@$(call $(TESTING)-count,10,COMPOSER_DEPENDS)
+	@$(call $(TESTING)-count,10,^[^<]+<title>)
+	@$(call $(TESTING)-count,36,^<!-- css:)
+	@$(call $(TESTING)-count,12,^<!-- css: .defaults)
+	@$(call $(TESTING)-count,6,^<!-- css: .variables)
+	@$(call $(TESTING)-count,8,^<!-- css: .options)
+	@$(call $(TESTING)-count,10,^<!-- css: $(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))))
+	@$(call $(TESTING)-count,12,^[^|]+--defaults=)
+#>	@$(call $(TESTING)-count,40,^[^|]+--css=)
+	@$(call $(TESTING)-count,38,^[^|]+--css=)
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(WATERCSS_CSS_ALT)))
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(CUSTOM_HTML_CSS)))
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/][.]$(notdir $(COMPOSER_CUSTOM)-$(TYPE_HTML).css))
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,10,^[^|]+--output=)
+	@$(call $(TESTING)-count,2,<title>.+$(COMPOSER_HEADLINE)[<])
+	@$(call $(TESTING)-count,2,<title>[.]defaults[[:space:]])
+	@$(call $(TESTING)-count,0,<title>[.]variables[[:space:]])
+	@$(call $(TESTING)-count,6,<title>[.]variables[.]options[[:space:]])
+	@$(call $(TESTING)-count,2,<title>[.]options[[:space:]])
 	@$(call $(TESTING)-find,^(($(SED_ESCAPE_COLOR)$(SED_ESCAPE_COLOR))?$(MARKER)[ ]COMPOSER_INCLUDE|[^<]+<title>|<!-- css:))
 
 ########################################
@@ -15828,7 +15817,7 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 
 .PHONY: $(TESTING)-COMPOSER_DEPENDS-done
 $(TESTING)-COMPOSER_DEPENDS-done:
-	$(call $(TESTING)-find,$(subst .,[.],$(EXPAND))[/]data)
+	@$(call $(TESTING)-find,$(subst .,[.],$(EXPAND))[/]data)
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES
@@ -15873,15 +15862,15 @@ endef
 
 .PHONY: $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-done
 $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES-done:
-	$(call $(TESTING)-count,21,$(MARKER).+$(EXPORTS).+$(subst .,[.],$(EXPAND)))
-	$(call $(TESTING)-count,12,deleting)
-	$(call $(TESTING)-count,1,Removing.+$(call /,$(TESTING)))
-	$(call $(TESTING)-count,4,[ ]$(call /,$(TESTING)).$(EXTN_HTML))
-	$(call $(TESTING)-count,4,[ ]$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML))
-	$(call $(TESTING)-count,4,\+\+\+[ ]+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,\+\+\+[ ]+template.html)
-	$(call $(TESTING)-count,4,deleting[ ]+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-count,1,deleting.+[/]template.html)
+	@$(call $(TESTING)-count,21,$(MARKER).+$(EXPORTS).+$(subst .,[.],$(EXPAND)))
+	@$(call $(TESTING)-count,12,deleting)
+	@$(call $(TESTING)-count,1,Removing.+$(call /,$(TESTING)))
+	@$(call $(TESTING)-count,4,[ ]$(call /,$(TESTING)).$(EXTN_HTML))
+	@$(call $(TESTING)-count,4,[ ]$(PUBLISH_REDIRECT_FILE).$(EXTN_HTML))
+	@$(call $(TESTING)-count,4,\+\+\+[ ]+$(OUT_README).$(EXTN_DEFAULT))
+	@$(call $(TESTING)-count,1,\+\+\+[ ]+template.html)
+	@$(call $(TESTING)-count,4,deleting[ ]+$(OUT_README).$(EXTN_DEFAULT))
+	@$(call $(TESTING)-count,1,deleting.+[/]template.html)
 
 ########################################
 ### {{{3 $(TESTING)-CSS
@@ -15927,24 +15916,30 @@ $(TESTING)-CSS-init:
 #> update: PANDOC_FILES
 .PHONY: $(TESTING)-CSS-done
 $(TESTING)-CSS-done:
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH))));		$(call $(TESTING)-count,1,$(notdir $(WATERCSS_CSS_SOLAR_ALT)))
-											$(call $(TESTING)-count,1,$(notdir $(call CUSTOM_PUBLISH_CSS_OVERLAY,dark)))
-											$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
-											$(call $(TESTING)-count,1,$(notdir $(BOOTSTRAP_ART_JS)))
-											$(call $(TESTING)-count,2,$(notdir $(BOOTSTRAP_ART_CSS)))
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))));		$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
-											$(call $(TESTING)-count,1,$(notdir $(CUSTOM_HTML_CSS)))
-											$(call $(TESTING)-count,2,template.$(TMPL_HTML))
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES))));		$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_DARK)))
-											$(call $(TESTING)-count,3,$(OUT_README).$(EXTN_PRES).[-0-9]+.css)
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES),$(CSS_ALT))));	$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_ALT)))
-	$(call $(TESTING)-count,1,c_css[^/]+$$)
-	$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
-	$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH),$(CSS_ALT))));	$(call $(TESTING)-count,2,$(notdir $(BOOTSWATCH_CSS_ALT)))
-	$(call $(TESTING)-count,14,--css=)
-	$(call $(TESTING)-count,1,$(notdir $(CUSTOM_LPDF_LATEX)))
-	$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
+	@$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH))))
+		@$(call $(TESTING)-count,1,$(notdir $(WATERCSS_CSS_SOLAR_ALT)))
+		@$(call $(TESTING)-count,1,$(notdir $(call CUSTOM_PUBLISH_CSS_OVERLAY,dark)))
+		@$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
+		@$(call $(TESTING)-count,1,$(notdir $(BOOTSTRAP_ART_JS)))
+		@$(call $(TESTING)-count,2,$(notdir $(BOOTSTRAP_ART_CSS)))
+	@$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML))))
+		@$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
+		@$(call $(TESTING)-count,1,$(notdir $(CUSTOM_HTML_CSS)))
+		@$(call $(TESTING)-count,2,template.$(TMPL_HTML))
+	@$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES))))
+		@$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_DARK)))
+		@$(call $(TESTING)-count,3,$(OUT_README).$(EXTN_PRES).[-0-9]+.css)
+	@$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))))
+		@$(call $(TESTING)-count,2,$(notdir $(WATERCSS_CSS_ALT)))
+	@$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(TYPE_PRES),$(CSS_ALT))))
+		@$(call $(TESTING)-count,1,$(notdir $(REVEALJS_CSS_ALT)))
+	@$(call $(TESTING)-count,1,c_css[^/]+$$)
+	@$(call $(TESTING)-count,3,$(notdir $(CUSTOM_PUBLISH_CSS)))
+	@$(call $(TESTING)-count,1,$(notdir $(call CSS_THEME,$(PUBLISH),$(CSS_ALT))))
+		@$(call $(TESTING)-count,2,$(notdir $(BOOTSWATCH_CSS_ALT)))
+	@$(call $(TESTING)-count,14,--css=)
+	@$(call $(TESTING)-count,1,$(notdir $(CUSTOM_LPDF_LATEX)))
+	@$(call $(TESTING)-count,1,reference.$(TMPL_DOCX))
 
 ########################################
 ### {{{3 $(TESTING)-$(COMPOSER_LOGFILE)$(COMPOSER_FILEEXT)
@@ -15977,12 +15972,12 @@ $(TESTING)-$(COMPOSER_LOGFILE_DEFAULT)$(COMPOSER_FILEEXT_DEFAULT)-init:
 
 .PHONY: $(TESTING)-$(COMPOSER_LOGFILE_DEFAULT)$(COMPOSER_FILEEXT_DEFAULT)-done
 $(TESTING)-$(COMPOSER_LOGFILE_DEFAULT)$(COMPOSER_FILEEXT_DEFAULT)-done:
-	$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Removing.+$(OUT_README).$(EXTN_DEFAULT))
-	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_LOGFILE)
-	$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_FILEEXT)
-	$(call $(TESTING)-find, $(subst .,[.],$(COMPOSER_LOGFILE_DEFAULT))$$)
-	$(call $(TESTING)-find, $(patsubst .%,%,$(COMPOSER_LOGFILE_DEFAULT))$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))[*]?$$)
+	@$(call $(TESTING)-find,Creating.+$(OUT_README).$(EXTN_DEFAULT))
+	@$(call $(TESTING)-find,Removing.+$(OUT_README).$(EXTN_DEFAULT))
+	@$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_LOGFILE)
+	@$(call $(TESTING)-find,Processing.+$(NOTHING).+COMPOSER_FILEEXT)
+	@$(call $(TESTING)-find, $(subst .,[.],$(COMPOSER_LOGFILE_DEFAULT))$$)
+	@$(call $(TESTING)-find, $(patsubst .%,%,$(COMPOSER_LOGFILE_DEFAULT))$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))[*]?$$)
 
 ########################################
 ### {{{3 $(TESTING)-other
@@ -16084,7 +16079,7 @@ $(TESTING)-other-done:
 	#> binaries
 	@$(call $(TESTING)-run) $(@)-env
 	#> versions
-	$(foreach FILE,$(REPOSITORIES_LIST),\
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_VER_COMPOSER),\
 			$(call $(TESTING)-count,$(strip \
 					$(if $($(FILE)_BIN_BLD),8,10 \
@@ -16093,7 +16088,7 @@ $(TESTING)-other-done:
 			$(call NEWLINE) \
 		) \
 	)
-	$(foreach FILE,$(REPOSITORIES_LIST),\
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN),\
 			$(call $(TESTING)-count,$(strip \
 					$(if $($(FILE)_BIN_BLD),2,2 \
@@ -16102,7 +16097,7 @@ $(TESTING)-other-done:
 			$(call NEWLINE) \
 		) \
 	)
-	$(foreach FILE,$(REPOSITORIES_LIST),\
+	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(if $($(FILE)_BIN_NAME),\
 			$(call $(TESTING)-count,$(strip \
 					$(if $($(FILE)_BIN_BLD),2,2 \
@@ -16111,14 +16106,14 @@ $(TESTING)-other-done:
 			$(call NEWLINE) \
 		) \
 	)
-	$(call $(TESTING)-count,6,$(subst .,[.],$(PHANTOM)))
-	$(call $(TESTING)-count,38,$(subst .,[.],$(NOTHING)))
+	@$(call $(TESTING)-count,6,$(subst .,[.],$(PHANTOM)))
+	@$(call $(TESTING)-count,38,$(subst .,[.],$(NOTHING)))
 	#> convict
-	$(call $(TESTING)-find,create mode.+$(MAKEFILE)$$)
-	$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
+	@$(call $(TESTING)-find,create mode.+$(MAKEFILE)$$)
+	@$(call $(TESTING)-find,$(COMPOSER_FULLNAME).+$(COMPOSER_BASENAME)@example.com)
 	#> exports
-	$(call $(TESTING)-count,5,C_EXPORT_)
-	$(call $(TESTING)-count,38,$(subst .,[.],$(NOTHING)))
+	@$(call $(TESTING)-count,5,C_EXPORT_)
+	@$(call $(TESTING)-count,38,$(subst .,[.],$(NOTHING)))
 
 ########################################
 ### {{{3 $(TESTING)-$(EXAMPLE)
@@ -16145,8 +16140,8 @@ $(TESTING)-$(EXAMPLE)-init:
 
 .PHONY: $(TESTING)-$(EXAMPLE)-done
 $(TESTING)-$(EXAMPLE)-done:
-	$(call $(TESTING)-find,Processing.+$(NOTHING)$$)
-	$(call $(TESTING)-find,Processing.+$(TESTING)[ ]$(EXAMPLE)$$)
+	@$(call $(TESTING)-find,Processing.+$(NOTHING)$$)
+	@$(call $(TESTING)-find,Processing.+$(TESTING)[ ]$(EXAMPLE)$$)
 
 ################################################################################
 # {{{1 Information Targets
