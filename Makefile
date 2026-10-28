@@ -2422,9 +2422,11 @@ $(foreach FILE,$(COMPOSER_VARIABLES_LIST),	$(eval override $(.)$(FILE) := $($(FI
 override COMPOSER_OPTIONS_EXPORT = \
 	$(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(if $(filter $(FILE),$(COMPOSER_OPTIONS_MAXLIST)),\
-			$(if $(wordlist $(COMPOSER_MAXLIST),$(words $($(FILE))),$($(FILE))),,\
-			$(FILE)="$(subst ",\",$($(FILE)_CONFIGS))" \
-		),\
+			$(if $(wordlist $(COMPOSER_MAXLIST),$(words $($(FILE))),$($(FILE))),\
+				$(warning #> $(COMPOSER_FULLNAME): COMPOSER_MAXLIST ($(COMPOSER_MAXLIST)): $(FILE)) ,\
+				$(FILE)="$(subst ",\",$($(FILE)_CONFIGS))" \
+			) \
+		,\
 			$(FILE)="$(subst ",\",$($(FILE)))" \
 		) \
 	)
