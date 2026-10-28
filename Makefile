@@ -3847,7 +3847,7 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_TARGETS]"	"Files to build or remove"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_TARGETS),$(call $(HEADERS)-options-val,COMPOSER_TARGETS)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_SUBDIRS]"	"Recursion sub-directories"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_SUBDIRS),$(call $(HEADERS)-options-val,COMPOSER_SUBDIRS)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"Directories/files to export"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_EXPORTS),$(call $(HEADERS)-options-val,COMPOSER_EXPORTS)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
-	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"Exempt diretories/files"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_IGNORES),$(call $(HEADERS)-options-val,COMPOSER_IGNORES)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"Exempt directories/files"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_IGNORES),$(call $(HEADERS)-options-val,COMPOSER_IGNORES)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(ENDOLINE)
 	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
 	@$(ENDOLINE)
@@ -5400,7 +5400,7 @@ $(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\n  * $(_C)[$(_N)*$(_C)-$(RECURSIVE)]$
 
 Note that targets matching this list are internally removed from
 $(_C)[COMPOSER_TARGETS]$(_D) and other $(_C)[Control Variables]$(_D).  The output of $(_C)[$(CONFIGS)]$(_D) will
-reveal cases where this has occured.
+reveal cases where this has occurred.
 
 There are a few limitations when naming custom targets.  Targets starting with
 the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
@@ -13029,7 +13029,6 @@ genett
 gpl
 js
 json
-macos
 macports
 makefile
 pre
@@ -14908,8 +14907,6 @@ $(TESTING)-heredoc-init:
 		>$(call $(TESTING)-pwd)/.DO_HEREDOC.$(EXTN_TEXT)
 
 #> update: $(NOTHING)-%
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
 
 .PHONY: $(TESTING)-heredoc-done
 $(TESTING)-heredoc-done:
