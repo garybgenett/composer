@@ -3643,35 +3643,14 @@ override $(COMPOSER_PANDOC)-$(TARGETS) += \
 ### {{{3 Dependencies
 ########################################
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN $(c_base).$(EXTN_OUTPUT)
-#	extract is now broken again...
-#	make: Circular /.g/_data/zactive/_drive/_todo.docx <- /.g/_data/zactive/_drive/_todo.docx dependency dropped.
-
 #> update: EXTRACT.*MAKECMDGOALS
+
 ifneq ($(and \
 	$(c_base) ,\
 	$(filter $(EXTRACT)%,$(MAKECMDGOALS)) \
 ),)
 $(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(TMPL_OUTPUT),$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))))
-#$(c_base).$(EXTN_$(call PANDOC_FILES_TYPE,TYPE,$(c_type))): ;
 else
-
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN $(c_base).$(EXTN_OUTPUT)
-#ifneq ($($(COMPOSER_PANDOC)-$(LISTING)),)
-#ifneq ($(c_base),)
-#$(c_base).$(EXTN_OUTPUT): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTN_OUTPUT))
-#else
-#$($(COMPOSER_PANDOC)-$(LISTING)): $(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$($(COMPOSER_PANDOC)-$(LISTING)))
-#endif
-#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN [$(MAKECMDGOALS)/$(c_type)/$(c_base)/$(EXTN_OUTPUT)][$(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$(c_base).$(EXTN_OUTPUT))])
-#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN {$($(COMPOSER_PANDOC)-$(LISTING))}{$(call $(COMPOSER_PANDOC)-c_list_match,$(c_type),$(MAKECMDGOALS),1)})
-#$(info #WORKING:FIX:SIZE:OPTS:DEPS:BROKEN {$($(COMPOSER_PANDOC)-$(LISTING))}{$(call $(COMPOSER_PANDOC)-dependencies,$(c_type),$($(COMPOSER_PANDOC)-$(LISTING)))})
-#endif
-
-#	$(eval $(FILE): $($(PUBLISH)-cache-root)) \
-#	$(DOITALL): $($(PUBLISH)-cache-root))
-#			$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): ;) \
-
 $(foreach FILE,\
 	$($(COMPOSER_PANDOC)-$(LISTING)) \
 	$($(COMPOSER_PANDOC)-$(TARGETS)) \
@@ -3690,35 +3669,6 @@ $(foreach FILE,\
 		) \
 	) \
 )
-
-#	$(if $(call c_variable,$(strip \
-#		$(word 1,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))),$(strip \
-#		$(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$(FILE))))),$(strip \
-#		c_site),$(strip \
-#		$(c_site))) \
-#	,\
-#		$(if $(call PANDOC_FILES_OVERRIDE,,$(FILE),yml),\
-#			$(eval $(FILE): $($(PUBLISH)-cache-root)$(_)$(FILE)) \
-#			$(eval $($(PUBLISH)-cache-root)$(_)$(FILE): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH)-cache)) \
-#		,\
-#			$(eval $(FILE): $($(PUBLISH)-cache-root)) \
-#		) \
-#		$(if $(filter $(DOITALL)%,$(MAKECMDGOALS)),\
-#			$(eval \
-#				$($(PUBLISH)-cache) \
-#				$($(PUBLISH)-caches) \
-#				: | \
-#				$(DOITALL)-$(HEADERS) \
-#			) \
-#		) \
-#	) \
-#$(sort \
-#	$(foreach TYPE,$(TYPE_TARGETS_LIST),\
-#		$(call PANDOC_FILES_MAIN	,$(TYPE_$(TYPE)),,,$(TMPL_$(TYPE))) \
-#		$(call PANDOC_FILES_HEADER	,$(TYPE_$(TYPE))) \
-#		$(call PANDOC_FILES_CSS		,$(TYPE_$(TYPE))) \
-#	) \
-#): ;
 endif
 
 ########################################
