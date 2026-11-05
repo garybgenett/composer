@@ -2210,7 +2210,6 @@ override PANDOC_OPTIONS_ERROR		:=
 override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
 
-#WORKING:FIX:MAXLIST
 #>override COMPOSER_REGEX		:= [[:alnum:]+-./@_~]+
 #>override COMPOSER_REGEX		:= [[:alnum:]+-.@_~]+
 override COMPOSER_REGEX			:= [[:alnum:]+.@_~-]+
@@ -14735,11 +14734,9 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
 $(TESTING): $(TESTING)-$(INSTALL)-MAKEJOBS
 $(TESTING): $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)
-#WORKING:FIX:MAXLIST
-#	relocate this to below COMPOSER_DEPENDS...
-#>$(TESTING): $(TESTING)-COMPOSER_MAXLIST
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
+#>$(TESTING): $(TESTING)-COMPOSER_MAXLIST
 $(TESTING): $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES
 $(TESTING): $(TESTING)-CSS
 $(TESTING): $(TESTING)-$(COMPOSER_LOGFILE_DEFAULT)$(COMPOSER_FILEEXT_DEFAULT)
@@ -15713,6 +15710,196 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-done:
 		)"
 
 ########################################
+### {{{3 $(TESTING)-COMPOSER_INCLUDE
+########################################
+
+.PHONY: $(TESTING)-COMPOSER_INCLUDE
+$(TESTING)-COMPOSER_INCLUDE: $(TESTING)-$(_)Think
+$(TESTING)-COMPOSER_INCLUDE:
+	@$(call $(TESTING)-$(HEADERS),\
+		Validate '$(_C)COMPOSER_INCLUDE$(_D)' behavior ,\
+		\n\t * Use '$(_C)COMPOSER_DEPENDS$(_D)' in '$(_C)$(COMPOSER_SETTINGS)$(_D)' \
+		\n\t * One run each with '$(_C)COMPOSER_INCLUDE$(_D)' enabled and disabled: \
+		\n\t\t * All files in place \
+		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
+		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
+		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(COMPOSER_CMS)))$(_D)' \
+		\n\t * Verify '$(_C)$(COMPOSER_YML)$(_D)' and '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
+		\n\t * Ensure $(PANDOC_NAME) precedence $(_E)(using 'title-prefix' and 'css')$(_D) \
+		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
+	)
+	@$(call $(TESTING)-mark)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+#>	@$(call $(TESTING)-hold)
+
+.PHONY: $(TESTING)-COMPOSER_INCLUDE-init
+$(TESTING)-COMPOSER_INCLUDE-init:
+	@$(call $(TESTING)-make)
+	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
+	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
+
+override $(TESTING)-COMPOSER_INCLUDE-init = \
+	$(PRINT) "$(_F)$(MARKER) COMPOSER_INCLUDE [$(1)]"; \
+	$(foreach FILE,\
+		$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))) \
+		$(realpath $(call $(TESTING)-pwd,/)) \
+		$(realpath $(call $(TESTING)-pwd)) \
+		,\
+		$(ECHO) "override COMPOSER_DEPENDS := $(subst /,-,$(FILE))\n"			>$(FILE)/$(COMPOSER_SETTINGS); \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML),,$(FILE))		>$(FILE)/$(COMPOSER_YML); \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS),,$(FILE))		>$(FILE)/$(COMPOSER_CSS); \
+	) \
+	$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS)-/)			>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
+	$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS),,$(1))		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+	$(foreach FILE,.defaults .variables .options,\
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS),,$(FILE))		>$(call $(TESTING)-pwd)/$(FILE).css; \
+	) \
+	$(foreach FILE,\
+		$(call $(TESTING)-pwd) \
+		$(call $(TESTING)-pwd,/) \
+		$(call $(TESTING)-pwd,$(COMPOSER_CMS)) \
+		$(call $(TESTING)-pwd) \
+		,\
+		$(call $(TESTING)-COMPOSER_INCLUDE-init-run,$(FILE)); \
+	) \
+	$(eval override FILE := $(call $(TESTING)-pwd)) \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS),,$(1))	>$(FILE)/$(COMPOSER_SETTINGS); \
+		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML),,$(FILE))		>$(FILE)/$(COMPOSER_YML); \
+		$(SED) -i -e "/title-prefix/d" -e "/css/d"					$(FILE)/$(COMPOSER_SETTINGS); \
+		$(SED) -i "/variables/d"							$(FILE)/$(COMPOSER_YML); \
+		$(call $(TESTING)-COMPOSER_INCLUDE-init-run,$(FILE)); \
+	$(call $(TESTING)-run,/) $(CONFIGS) | $(SED) -n "/COMPOSER_CURDIR/p"; \
+	$(RM) $(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
+
+override $(TESTING)-COMPOSER_INCLUDE-init-run = \
+	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
+	$(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_HTML); \
+	$(SED) -n \
+		-e "/<title>/p" \
+		-e "/<!-- css/p" \
+		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
+	$(SED) -i "/COMPOSER_DEPENDS/d"	$(1)/$(COMPOSER_SETTINGS); \
+	$(RM)				$(1)/$(COMPOSER_YML); \
+	$(RM)				$(1)/$(COMPOSER_CSS)
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS)-/ =
+ifneq ($$(COMPOSER_CURDIR),)
+$$(info #COMPOSER_CURDIR)
+endif
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS) =
+override COMPOSER_INCLUDE := $(1)
+override c_options := \\
+	--title-prefix=".options" \\
+	--css="$(call $(TESTING)-pwd)/.options.css"
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML) =
+title-prefix: ".defaults"
+css: "$(call $(TESTING)-pwd)/.defaults.css"
+variables:
+  title-prefix: ".variables"
+  css: "$(call $(TESTING)-pwd)/.variables.css"
+metadata:
+  title: "$(1)"
+endef
+
+override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS) =
+<!-- css: $(1) -->
+endef
+
+.PHONY: $(TESTING)-COMPOSER_INCLUDE-done
+$(TESTING)-COMPOSER_INCLUDE-done:
+	#> $(call $(TESTING)-pwd)
+	@$(call $(TESTING)-count,2,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd)))($(SED_ESCAPE_COLOR))?[ ]))
+	@$(call $(TESTING)-count,2,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[<]))
+	@$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[[:space:]]))
+	@$(call $(TESTING)-count,4,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_YML))))
+	@$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_CSS))))
+	#> $(call $(TESTING)-pwd,/)
+	@$(call $(TESTING)-count,1,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,/)))($(SED_ESCAPE_COLOR))?[ ]))
+	@$(call $(TESTING)-count,1,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[<]))
+	@$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[[:space:]]))
+	@$(call $(TESTING)-count,2,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_YML))))
+	@$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_CSS))))
+	#> $(call $(TESTING)-pwd,$(COMPOSER_CMS))
+	@$(call $(TESTING)-count,3,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))($(SED_ESCAPE_COLOR))?[ ]))
+	@$(call $(TESTING)-count,3,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[<]))
+	@$(call $(TESTING)-count,6,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[[:space:]]))
+	@$(call $(TESTING)-count,6,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_YML))))
+	@$(call $(TESTING)-count,6,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_CSS))))
+	#> $(CONFIGS)
+	@$(call $(TESTING)-count,4,COMPOSER_DEPENDS$(strip	[^-]+$(MARKER)))
+	@$(call $(TESTING)-count,2,^[#]COMPOSER_CURDIR)
+	#> validation
+	@$(call $(TESTING)-count,10,COMPOSER_DEPENDS)
+	@$(call $(TESTING)-count,10,^[^<]+<title>)
+	@$(call $(TESTING)-count,36,^<!-- css:)
+	@$(call $(TESTING)-count,12,^<!-- css: .defaults)
+	@$(call $(TESTING)-count,6,^<!-- css: .variables)
+	@$(call $(TESTING)-count,8,^<!-- css: .options)
+	@$(call $(TESTING)-count,10,^<!-- css: $(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))))
+	@$(call $(TESTING)-count,12,^[^|]+--defaults=)
+#>	@$(call $(TESTING)-count,40,^[^|]+--css=)
+	@$(call $(TESTING)-count,38,^[^|]+--css=)
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(WATERCSS_CSS_ALT)))
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(CUSTOM_HTML_CSS)))
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/][.]$(notdir $(COMPOSER_CUSTOM)-$(TYPE_HTML).css))
+	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,10,^[^|]+--output=)
+	@$(call $(TESTING)-count,2,<title>.+$(COMPOSER_HEADLINE)[<])
+	@$(call $(TESTING)-count,2,<title>[.]defaults[[:space:]])
+	@$(call $(TESTING)-count,0,<title>[.]variables[[:space:]])
+	@$(call $(TESTING)-count,6,<title>[.]variables[.]options[[:space:]])
+	@$(call $(TESTING)-count,2,<title>[.]options[[:space:]])
+	@$(call $(TESTING)-find,^(($(SED_ESCAPE_COLOR)$(SED_ESCAPE_COLOR))?$(MARKER)[ ]COMPOSER_INCLUDE|[^<]+<title>|<!-- css:))
+
+########################################
+### {{{3 $(TESTING)-COMPOSER_DEPENDS
+########################################
+
+.PHONY: $(TESTING)-COMPOSER_DEPENDS
+$(TESTING)-COMPOSER_DEPENDS: $(TESTING)-$(_)Think
+$(TESTING)-COMPOSER_DEPENDS:
+	@$(call $(TESTING)-$(HEADERS),\
+		Validate '$(_C)COMPOSER_DEPENDS$(_D)' behavior ,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+		\n\t * Reverse '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' processing \
+		\n\t * Manual '$(_C)$(DOITALL)-$(DOITALL)$(_D)' dependencies $(_E)('templates' before 'docx')$(_D) \
+		\n\t * Manual '$(_C)$(DOITALL)$(_D)' dependencies $(_E)('$(OUT_README).$(EXTN_DEFAULT)' before '$(OUT_LICENSE).$(EXTN_DEFAULT)')$(_D) \
+	)
+	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+	@$(call $(TESTING)-hold)
+
+.PHONY: $(TESTING)-COMPOSER_DEPENDS-init
+$(TESTING)-COMPOSER_DEPENDS-init:
+	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_FILEEXT_DEFAULT)
+	@$(RM) $(call $(TESTING)-pwd)/data/*.$(EXTN_DEFAULT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_LICENSE)$(COMPOSER_FILEEXT_DEFAULT)
+	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"					>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(sort \
+		$(filter-out $(DOITALL)-$(SUBDIRS)-docx,\
+		$(filter-out $(DOITALL)-$(SUBDIRS)-templates,\
+		$(addprefix $(DOITALL)-$(SUBDIRS)-,\
+		$(notdir \
+		$(patsubst %/.,%,$(wildcard $(addsuffix /.,$(call $(TESTING)-pwd)/data/*))) \
+		))))): $(DOITALL)-$(SUBDIRS)-docx\n" \
+											>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
+
+.PHONY: $(TESTING)-COMPOSER_DEPENDS-done
+$(TESTING)-COMPOSER_DEPENDS-done:
+	@$(call $(TESTING)-find,$(subst .,[.],$(EXPAND))[/]data)
+
+########################################
 ### {{{3 $(TESTING)-COMPOSER_MAXLIST
 ########################################
 
@@ -15917,196 +16104,6 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 	@$(TABLE_M2) "$(_H)$(MARKER) Y-Count"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-ymlcnt)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"	"$(_C)$(TESTING_MAKEJOBS)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Debug"	"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
-
-########################################
-### {{{3 $(TESTING)-COMPOSER_INCLUDE
-########################################
-
-.PHONY: $(TESTING)-COMPOSER_INCLUDE
-$(TESTING)-COMPOSER_INCLUDE: $(TESTING)-$(_)Think
-$(TESTING)-COMPOSER_INCLUDE:
-	@$(call $(TESTING)-$(HEADERS),\
-		Validate '$(_C)COMPOSER_INCLUDE$(_D)' behavior ,\
-		\n\t * Use '$(_C)COMPOSER_DEPENDS$(_D)' in '$(_C)$(COMPOSER_SETTINGS)$(_D)' \
-		\n\t * One run each with '$(_C)COMPOSER_INCLUDE$(_D)' enabled and disabled: \
-		\n\t\t * All files in place \
-		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd))$(_D)' \
-		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,/))$(_D)' \
-		\n\t\t * Remove from '$(_C)$(notdir $(call $(TESTING)-pwd,$(COMPOSER_CMS)))$(_D)' \
-		\n\t * Verify '$(_C)$(COMPOSER_YML)$(_D)' and '$(_C)$(COMPOSER_CSS)$(_D)' in parallel \
-		\n\t * Ensure $(PANDOC_NAME) precedence $(_E)(using 'title-prefix' and 'css')$(_D) \
-		\n\t * Check '$(_C)COMPOSER_CURDIR$(_D)' variable \
-	)
-	@$(call $(TESTING)-mark)
-	@$(call $(TESTING)-init)
-	@$(call $(TESTING)-done)
-#>	@$(call $(TESTING)-hold)
-
-.PHONY: $(TESTING)-COMPOSER_INCLUDE-init
-$(TESTING)-COMPOSER_INCLUDE-init:
-	@$(call $(TESTING)-make)
-	@$(call $(TESTING)-COMPOSER_INCLUDE-init,1)
-	@$(call $(TESTING)-COMPOSER_INCLUDE-init)
-
-override $(TESTING)-COMPOSER_INCLUDE-init = \
-	$(PRINT) "$(_F)$(MARKER) COMPOSER_INCLUDE [$(1)]"; \
-	$(foreach FILE,\
-		$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))) \
-		$(realpath $(call $(TESTING)-pwd,/)) \
-		$(realpath $(call $(TESTING)-pwd)) \
-		,\
-		$(ECHO) "override COMPOSER_DEPENDS := $(subst /,-,$(FILE))\n"			>$(FILE)/$(COMPOSER_SETTINGS); \
-		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML),,$(FILE))		>$(FILE)/$(COMPOSER_YML); \
-		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS),,$(FILE))		>$(FILE)/$(COMPOSER_CSS); \
-	) \
-	$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS)-/)			>>$(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS); \
-	$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS),,$(1))		>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-	$(foreach FILE,.defaults .variables .options,\
-		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS),,$(FILE))		>$(call $(TESTING)-pwd)/$(FILE).css; \
-	) \
-	$(foreach FILE,\
-		$(call $(TESTING)-pwd) \
-		$(call $(TESTING)-pwd,/) \
-		$(call $(TESTING)-pwd,$(COMPOSER_CMS)) \
-		$(call $(TESTING)-pwd) \
-		,\
-		$(call $(TESTING)-COMPOSER_INCLUDE-init-run,$(FILE)); \
-	) \
-	$(eval override FILE := $(call $(TESTING)-pwd)) \
-		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS),,$(1))	>$(FILE)/$(COMPOSER_SETTINGS); \
-		$(call DO_HEREDOC,$(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML),,$(FILE))		>$(FILE)/$(COMPOSER_YML); \
-		$(SED) -i -e "/title-prefix/d" -e "/css/d"					$(FILE)/$(COMPOSER_SETTINGS); \
-		$(SED) -i "/variables/d"							$(FILE)/$(COMPOSER_YML); \
-		$(call $(TESTING)-COMPOSER_INCLUDE-init-run,$(FILE)); \
-	$(call $(TESTING)-run,/) $(CONFIGS) | $(SED) -n "/COMPOSER_CURDIR/p"; \
-	$(RM) $(call $(TESTING)-pwd,/)/$(COMPOSER_SETTINGS)
-
-override $(TESTING)-COMPOSER_INCLUDE-init-run = \
-	$(RM) $(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
-	$(call $(TESTING)-run,,,1) $(OUT_README).$(EXTN_HTML); \
-	$(SED) -n \
-		-e "/<title>/p" \
-		-e "/<!-- css/p" \
-		$(call $(TESTING)-pwd)/$(OUT_README).$(EXTN_HTML); \
-	$(SED) -i "/COMPOSER_DEPENDS/d"	$(1)/$(COMPOSER_SETTINGS); \
-	$(RM)				$(1)/$(COMPOSER_YML); \
-	$(RM)				$(1)/$(COMPOSER_CSS)
-
-override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS)-/ =
-ifneq ($$(COMPOSER_CURDIR),)
-$$(info #COMPOSER_CURDIR)
-endif
-endef
-
-override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_SETTINGS) =
-override COMPOSER_INCLUDE := $(1)
-override c_options := \\
-	--title-prefix=".options" \\
-	--css="$(call $(TESTING)-pwd)/.options.css"
-endef
-
-override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_YML) =
-title-prefix: ".defaults"
-css: "$(call $(TESTING)-pwd)/.defaults.css"
-variables:
-  title-prefix: ".variables"
-  css: "$(call $(TESTING)-pwd)/.variables.css"
-metadata:
-  title: "$(1)"
-endef
-
-override define $(TESTING)-COMPOSER_INCLUDE-$(COMPOSER_CSS) =
-<!-- css: $(1) -->
-endef
-
-.PHONY: $(TESTING)-COMPOSER_INCLUDE-done
-$(TESTING)-COMPOSER_INCLUDE-done:
-	#> $(call $(TESTING)-pwd)
-	@$(call $(TESTING)-count,2,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd)))($(SED_ESCAPE_COLOR))?[ ]))
-	@$(call $(TESTING)-count,2,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[<]))
-	@$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd)))[[:space:]]))
-	@$(call $(TESTING)-count,4,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_YML))))
-	@$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd))/$(COMPOSER_CSS))))
-	#> $(call $(TESTING)-pwd,/)
-	@$(call $(TESTING)-count,1,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,/)))($(SED_ESCAPE_COLOR))?[ ]))
-	@$(call $(TESTING)-count,1,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[<]))
-	@$(call $(TESTING)-count,2,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/)))[[:space:]]))
-	@$(call $(TESTING)-count,2,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_YML))))
-	@$(call $(TESTING)-count,2,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))/$(COMPOSER_CSS))))
-	#> $(call $(TESTING)-pwd,$(COMPOSER_CMS))
-	@$(call $(TESTING)-count,3,COMPOSER_DEPENDS.+$(strip	$(subst /,[-],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))($(SED_ESCAPE_COLOR))?[ ]))
-	@$(call $(TESTING)-count,3,^[^<]+<title>.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[<]))
-	@$(call $(TESTING)-count,6,^<!-- css.+$(strip		$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS))))[[:space:]]))
-	@$(call $(TESTING)-count,6,^[^|]+--defaults=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_YML))))
-	@$(call $(TESTING)-count,6,^[^|]+--css=.+$(strip	$(subst /,[/],$(realpath $(call $(TESTING)-pwd,$(COMPOSER_CMS)))/$(COMPOSER_CSS))))
-	#> $(CONFIGS)
-	@$(call $(TESTING)-count,4,COMPOSER_DEPENDS$(strip	[^-]+$(MARKER)))
-	@$(call $(TESTING)-count,2,^[#]COMPOSER_CURDIR)
-	#> validation
-	@$(call $(TESTING)-count,10,COMPOSER_DEPENDS)
-	@$(call $(TESTING)-count,10,^[^<]+<title>)
-	@$(call $(TESTING)-count,36,^<!-- css:)
-	@$(call $(TESTING)-count,12,^<!-- css: .defaults)
-	@$(call $(TESTING)-count,6,^<!-- css: .variables)
-	@$(call $(TESTING)-count,8,^<!-- css: .options)
-	@$(call $(TESTING)-count,10,^<!-- css: $(subst /,[/],$(realpath $(call $(TESTING)-pwd,/))))
-	@$(call $(TESTING)-count,12,^[^|]+--defaults=)
-#>	@$(call $(TESTING)-count,40,^[^|]+--css=)
-	@$(call $(TESTING)-count,38,^[^|]+--css=)
-	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(WATERCSS_CSS_ALT)))
-	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(CUSTOM_HTML_CSS)))
-	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/][.]$(notdir $(COMPOSER_CUSTOM)-$(TYPE_HTML).css))
-	@$(call $(TESTING)-count,10,^[^|]+--css=.+[/]$(notdir $(call $(TESTING)-pwd)))
-	@$(call $(TESTING)-count,10,^[^|]+--output=)
-	@$(call $(TESTING)-count,2,<title>.+$(COMPOSER_HEADLINE)[<])
-	@$(call $(TESTING)-count,2,<title>[.]defaults[[:space:]])
-	@$(call $(TESTING)-count,0,<title>[.]variables[[:space:]])
-	@$(call $(TESTING)-count,6,<title>[.]variables[.]options[[:space:]])
-	@$(call $(TESTING)-count,2,<title>[.]options[[:space:]])
-	@$(call $(TESTING)-find,^(($(SED_ESCAPE_COLOR)$(SED_ESCAPE_COLOR))?$(MARKER)[ ]COMPOSER_INCLUDE|[^<]+<title>|<!-- css:))
-
-########################################
-### {{{3 $(TESTING)-COMPOSER_DEPENDS
-########################################
-
-.PHONY: $(TESTING)-COMPOSER_DEPENDS
-$(TESTING)-COMPOSER_DEPENDS: $(TESTING)-$(_)Think
-$(TESTING)-COMPOSER_DEPENDS:
-	@$(call $(TESTING)-$(HEADERS),\
-		Validate '$(_C)COMPOSER_DEPENDS$(_D)' behavior ,\
-		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
-		\n\t * Reverse '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' processing \
-		\n\t * Manual '$(_C)$(DOITALL)-$(DOITALL)$(_D)' dependencies $(_E)('templates' before 'docx')$(_D) \
-		\n\t * Manual '$(_C)$(DOITALL)$(_D)' dependencies $(_E)('$(OUT_README).$(EXTN_DEFAULT)' before '$(OUT_LICENSE).$(EXTN_DEFAULT)')$(_D) \
-	)
-	@$(call $(TESTING)-load)
-	@$(call $(TESTING)-init)
-	@$(call $(TESTING)-done)
-	@$(call $(TESTING)-hold)
-
-.PHONY: $(TESTING)-COMPOSER_DEPENDS-init
-$(TESTING)-COMPOSER_DEPENDS-init:
-	@$(RM) $(call $(TESTING)-pwd)/data/*$(COMPOSER_FILEEXT_DEFAULT)
-	@$(RM) $(call $(TESTING)-pwd)/data/*.$(EXTN_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(OUT_LICENSE)$(COMPOSER_FILEEXT_DEFAULT)
-	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"					>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(sort \
-		$(filter-out $(DOITALL)-$(SUBDIRS)-docx,\
-		$(filter-out $(DOITALL)-$(SUBDIRS)-templates,\
-		$(addprefix $(DOITALL)-$(SUBDIRS)-,\
-		$(notdir \
-		$(patsubst %/.,%,$(wildcard $(addsuffix /.,$(call $(TESTING)-pwd)/data/*))) \
-		))))): $(DOITALL)-$(SUBDIRS)-docx\n" \
-											>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
-
-.PHONY: $(TESTING)-COMPOSER_DEPENDS-done
-$(TESTING)-COMPOSER_DEPENDS-done:
-	@$(call $(TESTING)-find,$(subst .,[.],$(EXPAND))[/]data)
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_EXPORTS-COMPOSER_IGNORES
@@ -16560,10 +16557,6 @@ $(CONFIGS):
 		$(call $(HEADERS)-options,$(FILE),1); \
 	)
 ifneq ($(COMPOSER_YML_LIST),)
-#WORKING:FIX:MAXLIST
-#	do a word/character count and truncate with a note?
-#	change config.yml to spit out complete yml instead of json?
-#	reuse $(debugit) or $(c_list) to export json instead?
 	@$(LINERULE)
 	@$(ECHO) '$(call YQ_EVAL_DATA_FORMAT,$(COMPOSER_YML_DATA))' \
 		| $(YQ_WRITE_OUT) $(YQ_WRITE_OUT_COLOR)
@@ -16704,10 +16697,6 @@ $(TARGETS):
 
 #> update: MARKER.*c_list_var
 
-#WORKING:FIX:MAXLIST
-#	is COMPOSER_CONV a breakage waiting to happen...?
-#	should we just give up on full-path targets...?
-#	rm .composer.* ; make V=1 COMPOSER_TARGETS=${PWD}/README.html .targets | grep README.html: ; make COMPOSER_TARGETS=${PWD}/README.html targets ; cat .composer.tmp/targets.*
 .PHONY: $(TARGETS)-$(MAKE_DB)
 $(TARGETS)-$(MAKE_DB):
 	@$(foreach FILE,\
@@ -16807,7 +16796,6 @@ $(TARGETS)-$(CHECKIT):
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
-#WORKING:FIX:MAXLIST
 override $(TARGETS)-$(TARGETS) = \
 	$(if $(wildcard $(call COMPOSER_TMP_FILE,,$(TARGETS))),,\
 		$(call $(HEADERS)-note,$(CURDIR),$(call COMPOSER_TMP_FILE,1,$(TARGETS)),$(TARGETS)) 1>&2; \
