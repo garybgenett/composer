@@ -150,6 +150,10 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #		* `make MAKEJOBS="[X]" +test-stress`
 #		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-stress`
 #		* Update comments
+#	* `make +test-COMPOSER_MAXLIST`
+#		* `make MAKEJOBS="[X]" +test-COMPOSER_MAXLIST`
+#		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-COMPOSER_MAXLIST`
+#		* Tune numbers to maximum successful
 #
 ## {{{2 PREPARE
 #
@@ -339,9 +343,7 @@ override COMPOSER_CSS			:= .$(notdir $(COMPOSER_CUSTOM))-$(TYPE_HTML).css
 
 override COMPOSER_IMAGES		:= $(COMPOSER_ART)/images
 override COMPOSER_LOGO			:= $(COMPOSER_IMAGES)/logo.img
-override COMPOSER_LOGO_VER		:= v1.0
 override COMPOSER_ICON			:= $(COMPOSER_IMAGES)/icon.img
-override COMPOSER_ICON_VER		:= v1.0
 
 override COMPOSER_DAT			:= $(COMPOSER_ART)/pandoc
 
@@ -706,9 +708,14 @@ endif
 #>endif
 override COMPOSER_FILEEXT		:= $(notdir $(COMPOSER_FILEEXT))
 
+#> update: COMPOSER_MAXLIST
 #> update: COMPOSER_TARGETS.*=
 #> update: COMPOSER_SUBDIRS.*=
 
+override COMPOSER_TARGETS_ORIGIN	:= $(origin COMPOSER_TARGETS)
+override COMPOSER_SUBDIRS_ORIGIN	:= $(origin COMPOSER_SUBDIRS)
+override COMPOSER_EXPORTS_ORIGIN	:= $(origin COMPOSER_EXPORTS)
+override COMPOSER_IGNORES_ORIGIN	:= $(origin COMPOSER_IGNORES)
 override COMPOSER_TARGETS		?=
 override COMPOSER_SUBDIRS		?=
 override COMPOSER_EXPORTS		?=
@@ -1313,7 +1320,7 @@ export override LC_ALL			:=
 export override LC_COLLATE		:= C
 
 ########################################
-## {{{2 Paths
+## {{{2 Paths & Arguments
 ########################################
 
 #> validate: sed -nr "s|^override[[:space:]]+([^[:space:]]+).+[(]PATH_LIST[)].+$|\1|gp" Makefile | while read -r FILE; do echo "--- ${FILE} ---"; grep -E "[(]${FILE}[)]" Makefile; done
@@ -1321,6 +1328,7 @@ export override LC_COLLATE		:= C
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
 override FIND_ALL			:= $(call COMPOSER_FIND,$(PATH_LIST),find) -L
+override FIND_TIME			= $(FIND) $(1) -mindepth 1 -maxdepth 1 $(if $(2),-path "$(1)/$(2)") -printf "%T@$(TOKEN)%p\n" | $(SORT_NUM) -r | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g"
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
 
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) --wrap=0 --decode
@@ -1334,7 +1342,6 @@ override EXPR				:= $(call COMPOSER_FIND,$(PATH_LIST),expr)
 override HEAD				:= $(call COMPOSER_FIND,$(PATH_LIST),head)
 override LN				:= $(call COMPOSER_FIND,$(PATH_LIST),ln) -fsv --relative
 override LS				:= $(call COMPOSER_FIND,$(PATH_LIST),ls) $(if $(COMPOSER_DOCOLOR),--color=always,--color=none) --time-style=long-iso -asF -l
-override LS_TIME			:= $(call COMPOSER_FIND,$(PATH_LIST),ls) -dt
 override MKDIR				:= $(call COMPOSER_FIND,$(PATH_LIST),install) -dv
 override MV				:= $(call COMPOSER_FIND,$(PATH_LIST),mv) -fv
 override PRINTF				:= $(call COMPOSER_FIND,$(PATH_LIST),printf)
@@ -1354,8 +1361,7 @@ override WC_CHAR			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --bytes
 override WC_WORD			:= $(call COMPOSER_FIND,$(PATH_LIST),wc) --words
 
 override COLUMN				:= $(call COMPOSER_FIND,$(PATH_LIST),column) --output-separator ' ' --table --table-noheadings
-override COLUMN_LS			:= $(if $(call COMPOSER_FIND,$(PATH_LIST),column),\
-	| $(COLUMN) \
+override COLUMN_LS			:= | $(COLUMN) \
 	--table-column width=4$(COMMA)right \
 	--table-column width=10 \
 	--table-column width=2$(COMMA)right \
@@ -1364,7 +1370,6 @@ override COLUMN_LS			:= $(if $(call COMPOSER_FIND,$(PATH_LIST),column),\
 	--table-column width=8$(COMMA)right \
 	--table-column width=10 \
 	--table-column width=5 \
-)
 
 #>override MAKE				:= $(call COMPOSER_FIND,$(PATH_LIST),make)
 override DOMAKE				:= $(notdir $(MAKE))
@@ -2205,7 +2210,9 @@ override PANDOC_OPTIONS_ERROR		:=
 override COMPOSER_MY_PATH		:= \$$(abspath \$$(dir \$$(lastword \$$(MAKEFILE_LIST))))
 override COMPOSER_TEACHER		:= \$$(abspath \$$(dir \$$(COMPOSER_MY_PATH)))/$(MAKEFILE)
 
-#>override COMPOSER_REGEX			:= [[:alnum:]+-.@_~]+
+#WORKING:FIX:MAXLIST
+#>override COMPOSER_REGEX		:= [[:alnum:]+-./@_~]+
+#>override COMPOSER_REGEX		:= [[:alnum:]+-.@_~]+
 override COMPOSER_REGEX			:= [[:alnum:]+.@_~-]+
 override COMPOSER_REGEX_PREFIX		:= [$(.)$(_)]
 override SED_ESCAPE_LIST		:= [^[:alnum:]]
@@ -2333,6 +2340,8 @@ override COMPOSER_OPTIONS_PANDOC := \
 ### {{{3 Maxlist
 ########################################
 
+#> update: COMPOSER_MAXLIST
+
 override COMPOSER_OPTIONS_MAXLIST := \
 	COMPOSER_TARGETS \
 	COMPOSER_SUBDIRS \
@@ -2422,10 +2431,13 @@ $(foreach FILE,$(COMPOSER_VARIABLES_LIST),	$(eval override $(.)$(FILE) := $($(FI
 override COMPOSER_OPTIONS_EXPORT = \
 	$(foreach FILE,$(COMPOSER_OPTIONS),\
 		$(if $(filter $(FILE),$(COMPOSER_OPTIONS_MAXLIST)),\
-			$(if $(wordlist $(COMPOSER_MAXLIST),$(words $($(FILE))),$($(FILE))),\
-				$(warning #> $(COMPOSER_FULLNAME): COMPOSER_MAXLIST ($(COMPOSER_MAXLIST)): $(FILE)) ,\
+			$(if $(filter override,$($(FILE)_ORIGIN)),\
+				$(NULL) \
+			,$(if $(wordlist $(COMPOSER_MAXLIST),$(words $($(FILE)_CONFIGS)),$($(FILE)_CONFIGS)),\
+				$(warning #> $(COMPOSER_FULLNAME): COMPOSER_MAXLIST ($(COMPOSER_MAXLIST)): $(FILE)) \
+			,\
 				$(FILE)="$(subst ",\",$($(FILE)_CONFIGS))" \
-			) \
+			)) \
 		,\
 			$(FILE)="$(subst ",\",$($(FILE)))" \
 		) \
@@ -3283,11 +3295,11 @@ override COMPOSER_FILTERS = $(strip \
 		),\
 			$(subst *,%,$(COMPOSER_IGNORES)) \
 		) \
-		$(NOTHING)% \
-		$(PHANTOM)% \
 		$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
 			%-$(RECURSIVE) \
 		) \
+		$(NOTHING)% \
+		$(PHANTOM)% \
 	,\
 		$($(1)) \
 	) \
@@ -3569,6 +3581,7 @@ override $(COMPOSER_PANDOC)-c_list_match = $(strip \
 
 #> $(LISTING) > $(TESTING) > $(CHECKIT) > $(TARGETS)
 
+#WORKING:FIX:CBASE
 override $(COMPOSER_PANDOC)-$(TESTING) = $(strip \
 	$(if $(2),\
 		$(and \
@@ -3849,7 +3862,7 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M3) "$(_C)[COMPOSER_EXPORTS]"	"Directories/files to export"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_EXPORTS),$(call $(HEADERS)-options-val,COMPOSER_EXPORTS)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_IGNORES]"	"Exempt directories/files"				"$(_E)$(MARKER)$(_D) $(_S)\`$(_N)(files)$(_S)\`"	#> "$(if $(COMPOSER_IGNORES),$(call $(HEADERS)-options-val,COMPOSER_IGNORES)$(_D) )$(_S)\`$(_N)(files)$(_S)\`"
 	@$(ENDOLINE)
-	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
+	@$(PRINT) "  * $(_F)#WORKING:FIX:INSTALL #######################################################"
 	@$(ENDOLINE)
 #> update: COMPOSER_RECURSIVE
 #>	@$(TABLE_M5) "$(_H)Variable$(_D) $(_E)/$(_D) $(_H)Target"	"$(_C)[$(EXPORTS)]"	"$(_C)[$(INSTALL)]"	"$(_C)[$(CLEANER)]"	"$(_C)[$(DOITALL)]"
@@ -3860,7 +3873,7 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M5) "$(_C)[COMPOSER_EXPORTS]"				"$(_M)yes"		"$(_S)~~$(_N)no$(_S)~~"	"$(_S)~~$(_N)no$(_S)~~"	"$(_S)~~$(_N)no$(_S)~~"
 	@$(TABLE_M5) "$(_C)[COMPOSER_IGNORES]"				"$(_M)yes"		"$(_M)yes"		"$(_M)yes"		"$(_M)yes"
 	@$(ENDOLINE)
-	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
+	@$(PRINT) "  * $(_F)#WORKING:FIX:INSTALL #######################################################"
 	@$(PRINT) "  * $(_S)*$(_D)Aliases:$(_S)*"
 	@$(PRINT) "    * $(_S)*$(_C)[MAKEJOBS]$(_D)         ~ $(_S)\`$(_E)J$(_S)\`*"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_DEBUGIT]$(_D) ~ $(_S)\`$(_E)V$(_S)\`*"
@@ -3872,7 +3885,7 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "  * $(_S)*\`$(_N)(keeping)$(_S)\`$(_D)  -- empty is none     / number to keep    / $(_S)\`$(_N)$(SPECIAL_VAL)$(_S)\`$(_D) is no limit$(_S)*"
 	@$(PRINT) "  * $(_S)*\`$(_N)(boolean)$(_S)\`$(_D)  -- empty is disabled / any value enables$(_S)*"
 	@$(PRINT) "  * $(_S)*\`$(_N)(files)$(_S)\`$(_D)    -- complete list of variable and target interactions:$(_S)*"
-	@$(PRINT) "  * $(_F)#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL #################################"
+	@$(PRINT) "  * $(_F)#WORKING:FIX:INSTALL #######################################################"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_MAXLIST]$(_S)*"
 	@$(PRINT) "    * $(_S)*$(_C)[$(CONFIGS)]$(_S)*"
 	@$(PRINT) "    * $(_S)*$(_C)[$(TARGETS)]$(_S)*"
@@ -4215,17 +4228,18 @@ $(HELPOUT)-$(TYPE_PRES):
 ########################################
 
 override $(HELPOUT)-$(EXAMPLE)-$(DOSETUP) := \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) J=$(TESTING_MAKEJOBS) $(CREATOR)-$(DOITALL)) \
 	$(subst $(NULL) ,$(TOKEN),mkdir $(notdir $(PUBLISH_ROOT_TESTING))) \
 	$(subst $(NULL) ,$(TOKEN),cd $(notdir $(PUBLISH_ROOT_TESTING))) \
 
 override $(HELPOUT)-$(EXAMPLE)-$(LISTING) := \
-	$(subst $(NULL) ,$(TOKEN),ls $(wordlist 4,$(words $(LS)),$(LS))) \
+	$(subst $(NULL) ,$(TOKEN),ls) \
 	$(subst $(NULL) ,$(TOKEN),$(MAKE) -f ../$(MAKEFILE) $(DOSETUP)) \
 	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(EXAMPLE)$(.)md >$(COMPOSER_TINYNAME).md) \
-	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(DOITALL)) \
-	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(COMPOSER_TINYNAME).$(EXTN_TEXT)) \
-	$(subst $(NULL) ,$(TOKEN),ls $(wordlist 4,$(words $(LS)),$(LS))) \
 	$(subst $(NULL) ,$(TOKEN),cat $(COMPOSER_TINYNAME).md) \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) V=1 $(DOITALL)) \
+	$(subst $(NULL) ,$(TOKEN),$(MAKE) $(COMPOSER_TINYNAME).$(EXTN_TEXT)) \
+	$(subst $(NULL) ,$(TOKEN),ls) \
 	$(subst $(NULL) ,$(TOKEN),head -n9 $(COMPOSER_TINYNAME).$(EXTN_HTML)) \
 	$(subst $(NULL) ,$(TOKEN),sed -n '/<body>/,/<\/body>/p' $(COMPOSER_TINYNAME).$(EXTN_HTML)) \
 	$(subst $(NULL) ,$(TOKEN),cat $(COMPOSER_TINYNAME).$(EXTN_TEXT)) \
@@ -4233,25 +4247,35 @@ override $(HELPOUT)-$(EXAMPLE)-$(LISTING) := \
 .PHONY: $(HELPOUT)-$(EXAMPLE)
 $(HELPOUT)-$(EXAMPLE):
 	@$(RM) --recursive	$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
-	@$(MKDIR)		$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
 	@$(foreach FILE,$($(HELPOUT)-$(EXAMPLE)-$(DOSETUP)),\
-		$(call $(HELPOUT)-$(EXAMPLE)-$(PRINTER),$(subst $(TOKEN), ,$(FILE))); \
+		$(call $(HELPOUT)-$(EXAMPLE)-$(PRINTER),$(FILE)); \
+		$(call $(HELPOUT)-$(EXAMPLE)-$(DOITALL),$(FILE)); \
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$($(HELPOUT)-$(EXAMPLE)-$(LISTING)),\
-		$(call $(HELPOUT)-$(EXAMPLE)-$(PRINTER),$(subst $(TOKEN), ,$(FILE))); \
-		cd $(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) && \
-			$(subst $(TOKEN), ,$(FILE)) | $(SED) "s|$(COMPOSER_ROOT)|[$(COMPOSER_TINYNAME)]|g"; \
+		$(call $(HELPOUT)-$(EXAMPLE)-$(PRINTER),$(FILE)); \
+		$(call $(HELPOUT)-$(EXAMPLE)-$(DOITALL),$(FILE),1); \
 		$(call NEWLINE) \
 	)
 	@$(RM) --recursive	$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
 
+override $(HELPOUT)-$(EXAMPLE)-$(DOITALL) = \
+	cd $(COMPOSER_DIR)$(if $(2),/$(notdir $(PUBLISH_ROOT_TESTING))) && \
+		$(patsubst $(MAKE),$(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)),\
+		$(patsubst J=%,MAKEJOBS=%,\
+		$(patsubst V=%,COMPOSER_DEBUGIT=%,\
+		$(patsubst ls,$(LS),\
+		$(patsubst mkdir,$(MKDIR),\
+			$(subst $(TOKEN), ,$(1)) \
+		))))) \
+		| $(SED) "s|$(COMPOSER_ROOT)|[$(COMPOSER_TINYNAME)]|g"
+
 override $(HELPOUT)-$(EXAMPLE)-$(PRINTER) = \
 	FILE="$(subst $(TOKEN), ,$(1))"; \
 	$(ENDOLINE); \
-	$(ECHO) "$(_F)# "; \
+	$(ECHO) "$(_F)\# "; \
 	sleep 0.5; \
-	NUM="0"; while [ "$${NUM}" -lt "$${#FILE}" ]; do \
+	NUM="0"; while [ "$${NUM}" -lt "$${\#FILE}" ]; do \
 		$(ECHO) "$${FILE:$${NUM}:1}"; \
 		NUM="$$($(EXPR) $${NUM} + 1)"; \
 		sleep 0.1; \
@@ -4628,8 +4652,8 @@ $(_E)[$(COMPOSER_COMPOSER)]: $(COMPOSER_HOMEPAGE)$(_D)
 $(_E)[$(COMPOSER_CONTACT)]: mailto:$(COMPOSER_CONTACT)?subject=$(subst $(NULL) ,%20,$(COMPOSER_TECHNAME))%20Submission&body=Thank%20you%20for%20sending%20a%20message%21$(_D)
 
 $(_S)<!-- #$(MARKER)$(_D) $(_S)[$(COMPOSER_LICENSE)]: $(COMPOSER_REPOPAGE)/blob/main/$(OUT_LICENSE)$(COMPOSER_FILEEXT_DEFAULT)$(_D) $(_S)-->$(_D)
-$(_S)[$(COMPOSER_BASENAME) Icon]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-v1.0.png$(_D)
-$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Icon]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-$(lastword $(DIST_ICON_VER)).png$(_D)
+$(_S)[$(COMPOSER_BASENAME) Screenshot]: $(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-$(lastword $(DIST_SHOT_VER)).png$(_D)
 
 $(_S)[$(DESC_HTML)]: #html$(_D)
 $(_S)[$(DESC_LPDF)]: #pdf$(_D)
@@ -4711,7 +4735,7 @@ and prettifies the output formats, all in one place.  It also serves as a build
 system, so that large repositories can be managed as documentation archives or
 published as $(_C)[Static Websites]$(_D).
 
-$(_N)![$(COMPOSER_BASENAME) Screenshot]($(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-v4.0.png)$(_S)\\$(_D)
+$(_N)![$(COMPOSER_BASENAME) Screenshot]($(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/screenshot-$(lastword $(DIST_SHOT_VER)).png)$(_S)\\$(_D)
 endef
 
 ########################################
@@ -4852,10 +4876,10 @@ endef
 #> update: COMPOSER_TARGETS.*=
 
 ########################################
-#### {{{4 #WORKING:FIX
+#### {{{4 #WORKING:NOW
 ########################################
 
-#WORKING:NOW
+#WORK
 #	almost everything should work in "make -f" format...
 #		double-check all recursion, especially "env_make" for $(HELPOUT) and other documentation...
 #	strip as much $(strip ...) as possible
@@ -5701,9 +5725,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_KEEPING)
 #	$(CLEANER)-$(CLEANER) only runs on $(DOITALL), so single files could go forever...?
 #		actually, cleaner-cleaner now after all build/export targets
 #		every $(COMPOSER_RECURSIVE)
-#		makelevel = 0
-#			$(COMPOSER_PANDOC)
-#			$(c_base).$(EXTN_OUTPUT)
+#		also $(COMPOSER_PANDOC)-$(TESTING)
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_LOGFILE)
 
@@ -6378,7 +6400,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(TARGETS))
 #WORK
 #	$(COMPOSER_VARIABLES_LIST)
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:INSTALL
+#WORKING:FIX:INSTALL
 #WORKING:DOCS###################################################################
   * Prints a structured list of all detected targets and their dependencies.
   *
@@ -7137,13 +7159,13 @@ $(PUBLISH_CMD_BEG) icon gpl $(PUBLISH_CMD_ROOT)/../$(OUT_LICENSE).$(EXTN_DEFAULT
 
 $(PUBLISH_CMD_BEG) icon github $(COMPOSER_REPOPAGE) $(COMPOSER_TECHNAME) $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) icon icon-$(lastword $(DIST_ICON_VER)).png $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) icon icon-$(lastword $(DIST_ICON_VER)).png $(PUBLISH_CMD_END)
 
-`$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(subst <,{,$(subst >,},$(PUBLISH_OUT_README))) Gary B. Genett $(PUBLISH_CMD_END)`
+`$(PUBLISH_CMD_BEG) icon icon-$(lastword $(DIST_ICON_VER)).png author $(subst <,{,$(subst >,},$(PUBLISH_OUT_README))) Gary B. Genett $(PUBLISH_CMD_END)`
 
-$(PUBLISH_CMD_BEG) icon icon-$(COMPOSER_ICON_VER).png author $(PUBLISH_OUT_README) Gary B. Genett $(PUBLISH_CMD_END)
+$(PUBLISH_CMD_BEG) icon icon-$(lastword $(DIST_ICON_VER)).png author $(PUBLISH_OUT_README) Gary B. Genett $(PUBLISH_CMD_END)
 
 ## Form
 
@@ -7343,17 +7365,17 @@ override define PUBLISH_PAGE_EXAMPLE_DISPLAY =
   auto:					$(DISPLAY_BANNER_AUTO$(if $(1),_MOD))
   time:					$(DISPLAY_BANNER_TIME$(if $(1),_MOD))
   list:
-    - file:				$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/,$(COMPOSER_IMAGES))/screenshot-v4.0.png
+    - file:				$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/,$(COMPOSER_IMAGES))/screenshot-$(lastword $(DIST_SHOT_VER)).png
       link:				"#displays"
       name:				"Banner #1"
 #$(MARKER)   $(MENU_SELF): |
 #$(MARKER)       <p style="background-color: gray; color: black;">Lorem Ipsum</p>
-    - file:				$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/,$(COMPOSER_IMAGES))/screenshot-v3.0.png
+    - file:				$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/,$(COMPOSER_IMAGES))/screenshot-$(word 2,$(DIST_SHOT_VER)).png
       link:				"#displays"
       name:				"Banner #2"
       $(MENU_SELF): |
           <p style="background-color: gray; color: black;">Lorem Ipsum</p>
-    - file:				$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/,$(COMPOSER_IMAGES))/screenshot-v1.0.png
+    - file:				$(call COMPOSER_CONV,$(PUBLISH_CMD_ROOT)/$(PUBLISH_SHOWDIR)/,$(COMPOSER_IMAGES))/screenshot-$(word 1,$(DIST_SHOT_VER)).png
       link:				"#displays"
       name:				"Banner #3"
       $(MENU_SELF): |
@@ -7757,11 +7779,15 @@ override $(EXAMPLE)-var = \
 ## {{{2 Images
 ########################################
 
+override DIST_LOGO_VER			:= v1.0
+override DIST_ICON_VER			:= v1.0
+override DIST_SHOT_VER			:= v1.0 v3.0 v4.0
+
 override DIST_LOGO_v1.0			:= iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQ4y8VTQQ7AIAgrZA/z6fwMD8vcQCDspBcN0GIrAqcXNes0w1OQpBAsLjrujVdSwm4WPF7gE+MvW0gitqM/87pyRWLl0S4hJ6nMJwDEm3l9EgDAVRrWeFb+CVZfywU4lyRWt6bgxiB1JrEc5eOfEROp5CKUZInHTAAAAABJRU5ErkJggg==
 override DIST_ICON_v1.0			:= $(DIST_LOGO_v1.0)
-override DIST_SCREENSHOT_v1.0		:= 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
-override DIST_SCREENSHOT_v3.0		:= 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
-override DIST_SCREENSHOT_v4.0		:= $(DIST_SCREENSHOT_v3.0)
+override DIST_SHOT_v1.0			:= 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
+override DIST_SHOT_v3.0			:= iVBORw0KGgoAAAANSUhEUgAAAeMAAADICAIAAABUCR4uAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9ba6VUOthBxCFDdWpBVMRRq1CECqFWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APE0clJ0UVK/F9SaBHjwXE/3t173L0D/M0aU82eMUDVLCObTgn5wooQekUQYfQiioTETH1WFDPwHF/38PH1LsmzvM/9OfqVoskAn0A8w3TDIl4nntq0dM77xDFWkRTic+KEQRckfuS67PIb57LDfp4ZM3LZOeIYsVDuYrmLWcVQiSeJ44qqUb4/77LCeYuzWquz9j35CyNFbXmJ6zSHkcYCFiFCgIw6qqjBQpJWjRQTWdpPefiHHL9ILplcVTByzGMDKiTHD/4Hv7s1SxPjblIkBQRfbPtjBAjtAq2GbX8f23brBAg8A1dax7/RBKY/SW90tPgREN0GLq47mrwHXO4Ag0+6ZEiOFKDpL5WA9zP6pgIwcAuEV93e2vs4fQBy1FXmBjg4BEbLlL3m8e6+7t7+PdPu7wc213KP0n9sFQAAAAlwSFlzAAAYJQAAGMMBG9cmzQAAAAd0SU1FB+YFCgYdDrfNAIIAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAQfklEQVR42u2dW5LjKBBF6YreUddyWB7LqdnTfHhaI/NMXlYC50RHhytLQgiVr9MpuDJ/jPljAABAL18MAQDAQkrtbv8TIUKECBEtEXJqAADt/HoVqf95k3NjjDVEiBAhQkRFxJjbHUW+axAhQoSIxgg5NREiRIiQUxMhQoQIkb4IdxQBANTDyhcAAOWQUwMAoNQAAIBSAwCg1AAAsIpSO0EktaMTb/wIXg9d7BwbzsK9/6saWx2jAgAqyM6nHiHWTv1bv22m40DZc0oHB6UGWFOpG8Ra/9vdJXJh78UkzRN/Bvz8/BQjyDTAlnzF8rrsm1Sy+rGh2uASpQaX3ksS8QRXzuukbF9ufr22vdfpJcp3aQ4jU1W7OMzaLiDA2Tl1bWbtxNUGV1l/EEZcaw9T2lOl1G17PZ1TO8Hl0nMBAbbnd+IdZwvvY1uKfIArl7e3o7vYZt4LefvRH6tO1g4bou/v72JklExb2ZAov4AA+yn19W1/EZm+v3edjnezeAhB5wUEUEvlfOpOmW6b4mZLrdmOGYTCvea1ZqXfZNqqH64yku+F/gsIsCWXP/VMmXaxUkAqp8qkpcV28i3Le+hiVQsny/q8I0r6XCPTV8UjjJhpA6b/AgJsjlIvvb0Tqqaz+0xOzQUEQKl5o58CFxDgAKUGAIC/4NAEAIBSAwDAOKXm+ZJEiBAhojFCTg0AoJ1rPnXRdYkIESJEiDwSKTg0ESFChAiR5yPk1ESIECFCTk2ECBEiRPoi3FEEAFAPaxQBAJRDTg0AgFIDAABKDQCwN78ZAoVInhIAXAtAqSM44+zf52/IX7v3uYHRyGtj70f7/qyP6F6ZHoY73jsWPXSm5c8zVhf0PzklfFJMqs/yc7kep9u8wXUh5j0GHkBEdj61SWnl9fr1wvsx+quU5ubbL+7V03L+iBryuIE6qJzUhNLmc3Gx7Zufd4NSw7N8Vb6dfF1+ZaBhphxNb7Vhz3hE3yoJtShfaLnK8dcAK1Y/3Pv/NiVt0ZqGpAoBelJXk33CrHkvRLiY0jU/u7ZYcLDvW5r0o4Zd6THCDbUO4WONAZ5Sapt9qHRd3p0qMacqxVUZfWcufP+YOeHjJFX5zdSFwz+F4l7Cll324e/FpNiJX7uYNNtSql7VKwC9OXWobmFyfeXdmSJDm0SOEtbo/c/T6h5jT/ueLId5bnjQvCDaRJ6bOS+XSMybv3MAbJVTh2lyVKxhe8JkecjlT5U43JwCNH+yoJOvae9b61QmKG7ZtMlVRpygaCs/tMs26LIVBlef8hc7nCpluGmjDaAhpzZBTXKKOKYS7WtWSSpJr2on3Cs6TWWhrN8lEsx8xKTVzSYi0dTS1rdjB92ds+83OaMlDltzRzEzYpY7iqCV60kCK+aYGlesDCG6Ls5lJz80ZKkN9YcDYY0iqADXU6AOAKAcHJqgXH8AgGfBoYlv3MA1hb2UWuJ2lHFoyqx8KbomSW4nSvpjZG5QxbOQ+Ez1cKZD0x5EzwWnJ+iix6HpM5HU0YX9TJlJ1R4r005tD+X510Dt0K9u2+A+eGXhEBrr1MWstlmqPjmFY96xVE1EIaEG2Kb6IV1NLhEpiYvTJ+WYBZNhuqfWoWm5PodH5xMI5in1MIemTDnCZi36vG1G+TrNVL23/uhcU7O6Q5POPgd/wBVPQgBQkVOHOiWRrfC+X9TXqS07npTgZ5ynlGTxizo0Gd19pp4De+bUlDJOYJJD06J9tog1DKXxjuLYFLWqtbYEOfXcxafOoi1Broqs69DkFPdZ3hPL8k6YkFObokNTWIdtq8wK2xFOoI7KZSbvlhwr3OY+oUW+13CZPsGhqeia9Hifo+NsyaxhJjg0aeRwh6b+I87uc0P7rFGELnBogtqqC30GQKkBAOANHJo0cs43ZWoCAOOVusGPSeLQ1HbzcG8OcWjCtwhAxGyHpugL4Wty6oFKfdT5AmzGeIcm0AYTxQBWZ8pqctCs2n8/a+MRhQ5NADB+NXnb6o8Vnxe+XEK9hNsRAIR8JXLqdlL+SjP2gua6xwy3IxfIukuk5FxmgDaltsH/XWLdZs3B7cR1sYHThb39A4AhSt1Y4kCsP5kgV0X0OzQBgJDpDk0ZbyP8S2tl+gSHJgCIwGpyhfz8pSennpfLzz5TAECpQZFSA4CEL4YA8lC7AECpYWJNQN7OkGNx4QBmIa9+1Lp2XLcN7/+uX3k/Zva6/6oYMQIXkehe2pRaUpRwpYiwteIGr/HKRxBrgM8odbVDkwmMmfKeTZJtUr5OVXtF+yPU8VWU2ojvKPYr9UuaixGUGkBF9SPUwXC6nverPOG8PUk3MjMCU/2paue0Sssoh9Xv72/EGmCqUotWk78UsChwDROlhS0fi0sXN8Yfy8WLGwDwFFMcmjzBVeW+NPUJ4jO7/b9kz+60tf9LtuWjE0CTUktdT1MqnMmOhYIo3Mxb7hj9rfBAC2Xxn0xwyaYBdsupwwduzS5l5GvQ0f6sjouZPs+T6XtODQAamDWfWnhP7/N6urSCz+h66jZgg0wPvDkJANGc2oyyPM2LozW2zdepzR+q7ejasO+PYrmrdpVDk+hY9j+Nvl5cqh2m2xSyAT4Evh8KYY0iAKDUAAArge8HAIB2fjMECrkqCZkbdJJtAGATPu/QFPXiyGwjb2c/pX4fJemWALBxTt0yn/o1bzo/e7rKAKRzm11hZjPAyTzs0ARCmWYoAVBq87hDE2S/TADA0WhxaIquavE+GFZ0VgIAGKjUDzs0UacGAEjx9f4Nu3pB+Wt9tqehQtMPAACoUurB9Is1zxYAAHjxgEOTMNLWzpZ4rkx8dgGcxq/Xspd/GAlNsEYRAN7AoQkAQDk4NAEAoNQAAIBSAwCco9ThUnIiRIgQIfJ8hJwaAEA71yw9b5WKNUSIECFCREXkbZYe3zWIECFCRGOEnJoIESJEyKmJECFChEhfhDuKAADqYTU5AIByyKkBAFBqAABAqQEAUGoAAFCj1Jc5fRwniKR2dIYHK1ZRuBbdbH81nPvv33IdLnZb/tvhp985pF7fHJog5z73o6wODWLtxsmDO0hyUOpOQZmnVh/uf/RXxQ3mnfsQpQ5fQEVOXUayoCa/+3B4qmCTTK81bOHnlvyTzK72F+Jcss/Xr6ztUnM9WN6/Mn63KKP3RreVb31303cb5HipyH3NjreNrWwZYsl1fuDvF9nFPihdfSR6uVIy/fPzcz0xMoxUJXQvdXj9+JK8e8RTEG8vSeTV4NV+UY5Tr3vk794HSQ+jfQjPtCrjDscHPlX9aCiDRLf0nrbtZC0Xqx+1LR9Z/XDZ16mIE2zTEHGyi1ObU4fSENYEUv+n0tKqiCeRYQ06WqMoFqkllY3UGRV7WDV68h6mxoc69eScOvrlufbrtE2nW53CSuLcWvcYO3L3ZDlzka3s6GHu/NQT2e+paCZnvH51FSuqSgH9mbW3e6aHVR94A8eQusdkpe6XaYlOuOz7G1bABldyj/dmWC5oEJ17gWK2ZnmVjal7wSQq7yh2yrSr36ZzvofdeY6gq4zkr5WrPLTLNuiC5Lrn+1LPHcUqlbm+lWfqy15yPSoJzVczvIN6PRQeV7JZw0l5GxTHECbn1G0ybQX39MJt7PudrPAb9f0dn+/Gprm5S3z3cDXDkxl4E9w2Ntkfi+3Y1pu7DXcU7zIaTpa4K4inJuGPxXZSLdcWAaLthLocpuFR7U5VbFKyG24T3Ss8VrSHqTGEdjb30lv2juKMnHrecWfTk1P3Z7UPX2Wnveerz15HqdXoGSskF1dqPZoIjCFKDQAAEXBoAgDQztsdxcKir+aJH6wSrKd2AV71t9Str0a4Us77Vp5aHxju5W2Zasc7etu0h/yyRjgaHJrUKvVcLdv6rzq/Ui7zq+LKveb7ewMn0sGB4NB0Ikc5NGU0cTO3I0Cpx4m1iZk+mNgMDZfw8UgZfchbhsqB94w7nGCv5kuakum7NIeReTQvI0y5f3i/5TMAJlQ/GsogODQpq34c4tDkeQBFI6mih8m6OEl8lIpGzHlnKAAPHJqoe0wZuccdmsJcOMyLhbKYX8co2QXg40qNQxPUXNIHHZqKhQsciGAVcGhaO0Guihzo0PQx04kqjzqAmTk1Dk36ZBqHpjYxTc2DNoJJzanJ2sX8PWw56iKNCx1EwKHpnJx63nFn8xmHps/k1AAodfaLOiyr1AAoNQ5NAACqwaEJAEA7ODQpBYemrrN71KGp2DfviNw/hDI4NKlV6rlatvVf9bMOTcK+pZYvAoTg0HQiODQZTQ5N5NRQV/2oEGubjUh0IjozOhO5m0d429jKliGWXOcH/n6RXeyD0tVHopcrJdP986mbZTRa96iqvZA4w2erHw1lEByalFU/cGhKVUjMOIemYoFF0g5AR05tcGjas+6BQ5OwOjGkWNFspgoo9adkWqITODStDw5NAKPAoWntBLkqgkPTxGsR2E+//pE1w8dzahya9Mk0Dk1tYjrboSksmJC2Qxc4NJ2TU8877mzWcmhClAGlbtIVHJoWV+rFxocBApQaAOA0cGgCANAODk1KwaGp6+wUOzRl+sxEEUiCQ5NapZ6rZVv/VWt2aJL0GcADh6YTwaHJaHJoAiiCQxOqLRp4HJqqxPraOKy9pOoq4V4ArdWPhjIIDk3Kqh84NKUqJOazDk2SIgxAa05tcGjas+6BQ1OmqcyPRbEGeEKpcWiCmkt6pkMT5QsYCw5NayfIVREcmiZeC1eIpzybyL5hdE6NQ5M+mcahqU1Mpzo03T8eip5N9425owhJcGg6J6eed9zZrOXQVPtbgOOV2uDQtINSLz9iDBmg1AAAe4NDEwCAdnBoUgoOTV1nt6BDU9WpdR632Q1qyNGhBRya1Cr13Df81n/VKzo0tZ1dPjijBWruj4BD04ng0GS2c2giz0Wph4q1iZk+mNgMDZfw8UgZfchbhsqB94w7nGCv5kuakum7NIeRqQpYWyu4O4TcgxLXkfxemSN27hX2+XpNEr1g9aOhDIJDk7LqBw5Nea0MU+kGh6aqKorEoano35Q/r2IPw43Dc6f68SA4NFH3mDJyhzs0hUsTJcfKC3TVl4DXC4nnCWyq1Dg0Qc0lPdOhSSL312SS1Irz1LwU4bF43NdO4NC0doJcFcGhaeK1cCO3jBYiatv3zn1sD0FxTo1Dkz6ZxqGpTUynOjTlPzDuGbSXUHvbZFyc7o+JSXk/hV8ait8wwnOPOv+RrT8ADk3n5NTzjjub1R2aPnBcyUwPQKl16xmz9BZXashLMCqMUgMAwMPg0AQAoB0cmpSCQ1NnQeDiWYcmbr7BGHBoUqvUc7Vs679qPQ5NVJBhCDg0nQgOTWY7hybYm/o1ijZ4o9v69S+pmdGZyN08wtvGVrYMseQ6P/D3i+xiH5SuPhK9XCmZ7p9P3ZgJ2HjdozaVTs1xzlRaAFqrHw1lEByalFU/cGhKVUjMOIemYoFFWHIBaM2pDQ5Ne9Y9cGjKNJX5cUjanuozQKtS49AENZcUhyaAfnBoWjtBrorg0DTxWrgB+zYUxIGcepBM49A0U6ZxaGoT06kOTdFp1yn3JRPcUaQGAhFwaDonp5533Nng0AQoNQ5NoF2pAVBqHJoAAFSDQxMAAEoNAAAoNQAASg0AACg1AACk+Re1n+/TbyIf6gAAAABJRU5ErkJggg==
+override DIST_SHOT_v4.0			:= $(DIST_SHOT_v3.0)
 
 # https://www.gnu.org/graphics/license-logos.html
 # https://creativecommons.org/licenses/by-nc-nd
@@ -7920,8 +7946,8 @@ $(_S)########################################$(_D)
 $(_S)#$(_D) $(_H)Defaults$(_D)
 
 $(_E)$$(foreach$(_D) $(_C)FILE$(_D),$(_M)$(OUT_README).$(PUBLISH) $(OUT_README) $(OUT_LICENSE)$(_D),$(_N)\\$(_D)
-$(_E)$$(eval$(_D) $(_N)override$(_D) $(_C)$$(FILE).*$(_E)$(>)$(_C)c_logo$(_D)	:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png$(_E))$(_D) $(_N)\\$(_D)
-$(_E)$$(eval$(_D) $(_N)override$(_D) $(_C)$$(FILE).*$(_E)$(>)$(_C)c_icon$(_D)	:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png$(_E))$(_D) $(_N)\\$(_D)
+$(_E)$$(eval$(_D) $(_N)override$(_D) $(_C)$$(FILE).*$(_E)$(>)$(_C)c_logo$(_D)	:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/logo-$(lastword $(DIST_LOGO_VER)).png$(_E))$(_D) $(_N)\\$(_D)
+$(_E)$$(eval$(_D) $(_N)override$(_D) $(_C)$$(FILE).*$(_E)$(>)$(_C)c_icon$(_D)	:= $(_M)$(call COMPOSER_CONV,,$(COMPOSER_IMAGES))/icon-$(lastword $(DIST_ICON_VER)).png$(_E))$(_D) $(_N)\\$(_D)
 $(_E)$$(eval$(_D) $(_N)override$(_D) $(_C)$$(FILE).*$(_E)$(>)$(_C)c_toc$(_D)		:= $(_M)$(SPECIAL_VAL)$(_E))$(_D) $(_N)\\$(_D)
 $(_E))$(_D)
 
@@ -7957,8 +7983,8 @@ override define HEREDOC_COMPOSER_MK_PUBLISH =
 ################################################################################
 
 override c_site				:= 1
-override c_logo				:= $(call COMPOSER_CONV,$$(COMPOSER_DIR)/,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
-override c_icon				:= $(call COMPOSER_CONV,$$(COMPOSER_DIR)/,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
+override c_logo				:= $(call COMPOSER_CONV,$$(COMPOSER_DIR)/,$(COMPOSER_IMAGES))/logo-$(lastword $(DIST_LOGO_VER)).png
+override c_icon				:= $(call COMPOSER_CONV,$$(COMPOSER_DIR)/,$(COMPOSER_IMAGES))/icon-$(lastword $(DIST_ICON_VER)).png
 
 ################################################################################
 # End Of File
@@ -12955,10 +12981,19 @@ override define HEREDOC_SPELL_WORDLIST =
 ########################################
 # targets
 
+bld
 config
+configyml
 debugit
+distrib
+doforce
+doitall
+donotdo
+dosetup
 init
 subdirs
+templatemd
+templateyml
 
 ########################################
 # options
@@ -12976,43 +13011,243 @@ toc
 
 bootlint
 bootswatch
+chmod
 coreutils
+cp
 diffutils
+domake
+env
 findutils
 fontawes
+gzip
+ls
 mdthemes
 mdviewer
+mkdir
+mv
 npm
 pandoc
+printf
+realmake
+realpath
+rs
 rsync
 scm
 sed
+uname
 util
 watercss
+wget
 yq
 
 ########################################
 # variables
 
+basename
+checkit
+cmd
 cmt
+codeblock
+configs
+conv
 curdir
+dateformat
+datemark
+datenow
+datestamp
+datestring
+desc
 destdir
+dirs
+dofail
+endoline
+eol
+eval
+expr
+extn
 fileext
+filepath
 firacct
 firproj
+fullname
+gitattributes
 gitbnch
+gitconfig
+gitignore
 gitrepo
+helpout
+heredoc
+lic
+linerule
+lnx
 logfile
+lpdf
+makeflags
 maxlist
+metaauth
+metadate
+metatags
+metatitl
+nocolor
+nofail
+num
+nums
+pagedir
+pageone
+reldate
+repopage
+rgx
+showdir
+skel
 src
+tagsmain
+techname
+tinyname
 tmp
+tmpl
+toafile
+tst
 ver
+
+########################################
+# configuration
+
+colsbreak
+colsorder
+colsreorder
+colsresize
+colsscroll
+colssize
+datesdisplay
+dateslibrary
+datesparse
+datestimezone
+digestchars
+digestcontinue
+digestcount
+digestexpanded
+digestpermalink
+digestspacer
+digesttitle
+folderauto
+foldername
+listsexpanded
+listsspacer
+metainfodisplay
+metainfoempty
+metalist
+metalistauthordisplay
+metalistauthorempty
+metalistauthortitle
+metalistdatedisplay
+metalistdateempty
+metalistdatetitle
+metalisttagsdisplay
+metalisttagsempty
+metalisttagstitle
+metalisttitledisplay
+metalisttitleempty
+metalisttitletitle
+navbarsbrand
+navbarscomposer
+navbarscopyright
+navbarshomepage
+navbarssearchcall
+navbarssearchform
+navbarssearchname
+navbarssearchsite
+pagesanchor
+pagesappend
+pagescopy
+pagescss
+pagesfooter
+pagesheader
+readtimedisplay
+readtimewpm
+redirectdisplay
+redirectexclude
+redirecttime
+redirecttitle
+sitemapexclude
+sitemapexpanded
+sitemapspacer
+sitemaptitle
+
+########################################
+# extensions
+
+articleauthoring
+asciidoc
+asciidoctor
+atx
+autolink
+backtick
+bbcode
+beamer
+biblatex
+bibtex
+blankline
+blockquote
+chunkedhtml
+commonmark
+csljson
+djot
+docbook
+dokuwiki
+dzslides
+escapable
+exts
+fb
+fluxbb
+gfm
+hubzilla
+icml
+intraword
+ipynb
+jats
+jira
+markua
+mediawiki
+mmd
+multiline
+odt
+opendocument
+opml
+phpbb
+phpextra
+rebase
+rst
+rtf
+slideous
+slidy
+solarized
+startnum
+subsuperscripts
+tagsmain
+techname
+tei
+texinfo
+typst
+vimdoc
+wikilinks
+xenforo
+xwiki
+zimwiki
 
 ########################################
 # examples
 
+abspath
+endif
+foreach
+ifneq
 img
+kae
+kv
+kz
+lastword
 metainfo
+nav
 navbars
 permalink
 pwd
@@ -13024,7 +13259,10 @@ yml
 # text
 
 cms
+composermk
+composeryml
 divs
+garybgenett
 genett
 gpl
 js
@@ -13041,6 +13279,7 @@ yaml
 parsable
 prettification
 recurse
+recursing
 stylesheet
 stylesheets
 webpages
@@ -14160,15 +14399,20 @@ $(CREATOR)$(_)$(notdir $(COMPOSER_ART)):
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""							>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_LOGO))
-	@$(ECHO) "$(DIST_LOGO_$(COMPOSER_LOGO_VER))"	| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png
 	@$(ECHO) ""							>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ICON))
-#>	@$(ECHO) "$(DIST_ICON_$(COMPOSER_ICON_VER))"	| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png
-	@$(LN)								$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/logo-$(COMPOSER_LOGO_VER).png \
-									$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/icon-$(COMPOSER_ICON_VER).png \
-									$($(DEBUGIT)-output)
-	@$(ECHO) "$(DIST_SCREENSHOT_v1.0)"		| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/screenshot-v1.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v3.0)"		| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/screenshot-v3.0.png
-	@$(ECHO) "$(DIST_SCREENSHOT_v4.0)"		| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/screenshot-v4.0.png
+#> DIST_LOGO > DIST_ICON > DIST_SHOT
+	@$(foreach DIST_SHOT,$(DIST_SHOT_VER),\
+		$(ECHO) "$(DIST_SHOT_$(DIST_SHOT))"	| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/screenshot-$(DIST_SHOT).png; \
+		$(call NEWLINE))
+	@$(foreach DIST_LOGO,$(DIST_LOGO_VER),\
+		$(ECHO) "$(DIST_LOGO_$(DIST_LOGO))"	| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/logo-$(DIST_LOGO).png; \
+		$(call NEWLINE))
+#>		$(ECHO) "$(DIST_ICON_$(DIST_ICON))"	| $(BASE64)	>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/icon-$(DIST_ICON).png;
+	@$(foreach DIST_ICON,$(DIST_ICON_VER),\
+		$(LN)							$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/logo-$(DIST_ICON).png \
+									$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_IMAGES))/icon-$(DIST_ICON).png \
+									$($(DEBUGIT)-output); \
+		$(call NEWLINE))
 	@$(foreach CSS_ICON,$(call CSS_ICONS),\
 		$(eval override NAME := $(word 1,$(subst ;, ,$(CSS_ICON)))) \
 		$(eval override TYPE := $(word 2,$(subst ;, ,$(CSS_ICON)))) \
@@ -14491,7 +14735,8 @@ $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
 $(TESTING): $(TESTING)-$(INSTALL)-MAKEJOBS
 $(TESTING): $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)
-#WORKING:FIX:SIZE
+#WORKING:FIX:MAXLIST
+#	relocate this to below COMPOSER_DEPENDS...
 #>$(TESTING): $(TESTING)-COMPOSER_MAXLIST
 $(TESTING): $(TESTING)-COMPOSER_INCLUDE
 $(TESTING): $(TESTING)-COMPOSER_DEPENDS
@@ -14727,9 +14972,9 @@ override $(TESTING)-done = \
 ########################################
 
 override $(TESTING)-find = \
-	$(PRINT) "$(_H)$(DIVIDE) find ($(3)) {$(1)}"; \
+	$(PRINT) "$(_H)$(DIVIDE) find ($(if $(3),-z,-n)) {$(1)}"; \
 	$(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(2),init); \
-	if [ $(if $(3),-n,-z) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(2),init) | $(SED) "s|[$$]|.|g")" ]; then \
+	if [ ! $(if $(3),-z,-n) "$(shell $(SED) -n "/$(1)/p" $(call $(TESTING)-log,$(2),init) | $(SED) "s|[$$]|.|g")" ]; then \
 		$(call $(TESTING)-fail); \
 	fi
 
@@ -14887,7 +15132,8 @@ $(TESTING)-heredoc-init:
 		$(call NEWLINE) \
 	)
 	@$(foreach FILE,$(shell \
-		$(SED) -n "/^[#].*[ ]Embedded[ ]Files.*$$/,/[{][{][{]/p" $(COMPOSER) \
+		$(SED) -n "/^[#].*[ ]Embedded[ ]Files.*$$/,/^[#].*[ ]Heredoc[ ]Function.*$$/p" $(COMPOSER) \
+		| $(SED) "/[[:space:]][A-Z_]+_VER[[:space:]]/d" \
 		| $(SED) -n "s|^$(call COMPOSER_REGEX_OVERRIDE).*$$|\1|gp" \
 		),\
 		$(ECHO) "$($(FILE))" | $(BASE64)				>$(call $(TESTING)-pwd)/$(FILE).png; \
@@ -14912,16 +15158,16 @@ $(TESTING)-heredoc-init:
 $(TESTING)-heredoc-done:
 	@$(CAT) $(call $(TESTING)-pwd)/.DO_HEREDOC.$(EXTN_TEXT)
 	@$(call $(HEADERS)-action,HEREDOC_SPELL_WORDLIST.$(HELPOUT),,,heredoc,1)
-	@$(MAKE) COMPOSER_DOCOLOR= $(HELPOUT)-$(HELPOUT) \
+	@$(call ENV_MAKE) --directory $(COMPOSER_DIR) $(HELPOUT)-$(HELPOUT) \
 		| $(SED) \
-			-e "/^[[][^]]+[]][:][[:space:]]/d" \
-			-e "/^$(CODEBLOCK)/d" \
+			-e "/^[#][>]/d" \
+			-e "s|[[:space:]]+$$||g" \
 		>$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.$(HELPOUT)
 	@$(call $(HEADERS)-action,HEREDOC_SPELL_WORDLIST.$(HELPOUT).$(if $(COMPOSER_DOCOLOR),$(COMPOSER_DOCOLOR),$(NOTHING)),COMPOSER_DOCOLOR,$(if $(COMPOSER_DOCOLOR),$(COMPOSER_DOCOLOR),$(NOTHING)),heredoc,1)
-	@$(MAKE) $(HELPOUT)-$(HELPOUT) \
+	@$(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)) --directory $(COMPOSER_DIR) $(HELPOUT)-$(HELPOUT) \
 		| $(SED) \
-			-e "/^($(SED_ESCAPE_COLOR))?[[][^]]+[]][:][[:space:]]/d" \
-			-e "/^($(SED_ESCAPE_COLOR))?$(CODEBLOCK)/d" \
+			-e "/^$(SED_ESCAPE_COLOR)[#][>]/d" \
+			-e "s|[[:space:]]+$$||g" \
 		>$(call $(TESTING)-pwd)/HEREDOC_SPELL_WORDLIST.$(HELPOUT).$(if $(COMPOSER_DOCOLOR),$(COMPOSER_DOCOLOR),$(NOTHING))
 ifeq ($(and \
 	$(wildcard $(firstword $(ASPELL))) ,\
@@ -15015,13 +15261,13 @@ $(TESTING)-stress:
 		,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 		\n\t * Test runs: \
-		\n\t\t * '$(INSTALL)-$(DOFORCE)' \
-		\n\t\t * '$(DOITALL)-$(DOITALL)' \
-		\n\t\t * '$(CLEANER)-$(DOITALL)' \
-		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(no configuration)$(_D) \
-		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_TESTING)$(_D) \
-		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_SHOWDIR)$(_D) \
-		\n\t\t * '$(PUBLISH)-$(DOFORCE)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_EXAMPLE)$(_D) \
+		\n\t\t * '$(_C)$(INSTALL)-$(DOFORCE)$(_D)' \
+		\n\t\t * '$(_C)$(DOITALL)-$(DOITALL)$(_D)' \
+		\n\t\t * '$(_C)$(CLEANER)-$(DOITALL)$(_D)' \
+		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(no configuration)$(_D) \
+		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_TESTING)$(_D) \
+		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_SHOWDIR)$(_D) \
+		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_EXAMPLE)$(_D) \
 	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -15080,18 +15326,20 @@ override $(TESTING)-stress-init-$(PUBLISH) = \
 $(TESTING)-stress-done:
 	@$(call $(TESTING)-find,MAKECMDGOALS)
 	@$(call $(TESTING)-find,$(PUBLISH)-$(DOFORCE).+$(DIVIDE))
+	@$(call $(TESTING)-find,^real)
 	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type d -print \) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) $(MAKEFILE)s"	"$(_C)$(shell $(SED) -n "/Creating.+$(MAKEFILE)/p" $(call $(TESTING)-log,,init) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Sources"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))$$/p" | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Outputs"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_DEFAULT)/p" $(call $(TESTING)-log,,init) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(TESTING_MAKEJOBS)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Debug"		"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
-	@$(call $(TESTING)-find,^real)
 
 ########################################
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
+#WORKING:FIX:TESTING
+#	git reset ; vdiff -g 4606d256c6e7610442b4c7a64fb1a333807e904b Makefile
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-$(_)Think
 $(TESTING)-$(COMPOSER_BASENAME):
@@ -15099,7 +15347,7 @@ $(TESTING)-$(COMPOSER_BASENAME):
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
 		\n\t * Variable alias precedence \
 \
-		\n\t * \#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN \
+		\n\t * \#WORKING:FIX:TESTING \
 		\n\t\t * Automatic input file detection \
 		\n\t\t * Variable-defined '$(_C)c_list$(_D)' override $(_E)(plus wildcard)$(_D) \
 		\n\t\t * Command-line '$(_C)c_list$(_D)' shortcut \
@@ -15364,13 +15612,13 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL):
 	@$(call $(TESTING)-$(HEADERS),\
 		Test recursive targets behavior: \
 			$(wordlist 2,$(COMPOSER_MAXLIST),$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
-				/ $(_C)$(RECURSIVE)$(_D) \
+				/ '$(_C)$(RECURSIVE)$(_D)' \
 			)) ,\
 		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
 		\n\t * Creation / export / deletion of files \
 		\n\t * Verify user-defined targets $(_E)(also with parallel execution)$(_D): \
 		$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
-			\n\t\t * $(_N)*$(_C)-$(RECURSIVE)$(_D) \
+			\n\t\t * '$(_N)*$(_C)-$(RECURSIVE)$(_D)' \
 		) \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' detection \
 	)
@@ -15468,57 +15716,88 @@ $(TESTING)-$(EXPORTS)-$(INSTALL)-$(CLEANER)-$(DOITALL)-done:
 ### {{{3 $(TESTING)-COMPOSER_MAXLIST
 ########################################
 
-override $(TESTING)-COMPOSER_MAXLIST-runs	:= 5
-override $(TESTING)-COMPOSER_MAXLIST-files	:= 2000
-#WORKING:FIX:SIZE:OPTS
-override $(TESTING)-COMPOSER_MAXLIST-append	:= ..
+#> update: COMPOSER_MAXLIST
+
+#> validate: grep -aE -e ">> [0-9]+" -e "MAKECMDGOALS" -e "^real" .Composer-*/*-COMPOSER_MAXLIST/+Composer-*-init.log
+override $(TESTING)-COMPOSER_MAXLIST-files	:= 1000
+override $(TESTING)-COMPOSER_MAXLIST-runs	:= $(if $(or $(COMPOSER_DEBUGIT),$(wildcard $(call $(TESTING)-pwd,$(call /,$(TESTING))-COMPOSER_MAXLIST)/.$(DEBUGIT))),8,22)
+override $(TESTING)-COMPOSER_MAXLIST-target	:= $(if $(or $(COMPOSER_DEBUGIT),$(wildcard $(call $(TESTING)-pwd,$(call /,$(TESTING))-COMPOSER_MAXLIST)/.$(DEBUGIT))),8,0)
+override $(TESTING)-COMPOSER_MAXLIST-yml	:= $(if $(or $(COMPOSER_DEBUGIT),$(wildcard $(call $(TESTING)-pwd,$(call /,$(TESTING))-COMPOSER_MAXLIST)/.$(DEBUGIT))),9,13)
+override $(TESTING)-COMPOSER_MAXLIST-append	:= $(if $(or $(COMPOSER_DEBUGIT),$(wildcard $(call $(TESTING)-pwd,$(call /,$(TESTING))-COMPOSER_MAXLIST)/.$(DEBUGIT))),$(NULL) $(EXPAND))
 
 .PHONY: $(TESTING)-COMPOSER_MAXLIST
 $(TESTING)-COMPOSER_MAXLIST: $(TESTING)-$(_)Think
 $(TESTING)-COMPOSER_MAXLIST:
-#WORKING:FIX:SIZE
-#	@$(call $(TESTING)-$(HEADERS),\
-#		\#WORK steal/borrow content from stress... \
-#	)
+	@$(call $(TESTING)-$(HEADERS),\
+		Measure processing capacity with a large directory \
+		\n\t $(_N)$(MARKER) For performance testing and fun$(_D) \
+		\n\t $(_N)$(MARKER) Tool to determine appropriate '$(_C)COMPOSER_MAXLIST$(_N)' value for system$(_D) \
+		,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+		\n\t * Test runs: \
+		\n\t\t * '$(_C)$(CONFIGS)$(_D)' \
+		\n\t\t * '$(_C)$(INSTALL)-$(DOITALL)$(_D)' \
+		\n\t\t * '$(_C)$(DOITALL)-$(DOITALL)$(_D)' \
+		\n\t\t * '$(_C)$(TARGETS)$(_D)' \
+		\n\t\t * '$(_C)$(EXPORTS)-$(DOITALL)$(_D)' \
+		\n\t\t * '$(_C)$(CLEANER)-$(DOITALL)$(_D)' \
+	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
-#>	@$(call $(TESTING)-hold)
+	@$(call $(TESTING)-hold)
 
 .PHONY: $(TESTING)-COMPOSER_MAXLIST-init
 $(TESTING)-COMPOSER_MAXLIST-init:
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
-	@$(LS_TIME) \
-		$(call $(TESTING)-pwd)/$(notdir $(COMPOSER_EXPORT_DEFAULT)) \
-		$(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP)) \
-		$(call $(TESTING)-pwd)/$(OUT_README).* \
-		$(call $(TESTING)-pwd)/$(SUBDIRS).* \
-	| while read -r FILE; do \
-		$(RM) --recursive $${FILE}; \
-	done
-	@$(MKDIR) $(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP))
+	@$(foreach FILE,\
+		$(notdir $(COMPOSER_EXPORT_DEFAULT)) \
+		$(notdir $(COMPOSER_LOGFILE_DEFAULT)) \
+		$(notdir $(COMPOSER_TMP)) \
+		$(OUT_README).* \
+		$(SUBDIRS).* \
+		,\
+		$(call FIND_TIME,$(call $(TESTING)-pwd),$(FILE)) \
+			| while read -r FILE; do \
+				$(RM) --recursive $${FILE}; \
+			done \
+		$(call NEWLINE) \
+	)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(RM) $(call $(TESTING)-pwd)/$(COMPOSER_YML)
+	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) \
+		COMPOSER_MAXLIST="1" \
+		COMPOSER_TARGETS="1 2 3" \
+		COMPOSER_SUBDIRS="1 2 3" \
+		COMPOSER_EXPORTS="1 2 3" \
+		COMPOSER_IGNORES="A B C" \
+		$(TARGETS)
 	@$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS))	>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_YML))		>$(call $(TESTING)-pwd)/$(COMPOSER_YML)
+	@$(MKDIR) $(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP))
 #> $(CONFIGS) > $(TARGETS) > $(EXPORTS) > $(INSTALL) > $(CLEANER) > $(DOITALL)
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN:TESTING
-#	@$(call $(HEADERS)-action, ... )
 	@RUN="1"; while [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-runs)" ]; do \
 		$(LINERULE); \
 		$(PRINT) "$(_F)$(MARKER) $${RUN}"; \
 		NUM="0"; while [ "$${NUM}" -lt "$($(TESTING)-COMPOSER_MAXLIST-files)" ]; do \
-			$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
-				$(ECHO) "\n.PHONY: $${RUN}-$${NUM}-$(RECURSIVE)\n$${RUN}-$${NUM}-$(RECURSIVE):\n\t@\$$(ECHO) \"\$$(@)-$(TARGETS)\\\n\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
-			) \
-			$(ECHO) "    - $${RUN}-$${NUM}$($(TESTING)-COMPOSER_MAXLIST-append)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
+			$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS)-$(CONFIGS),,RUN$(TOKEN)NUM) >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+			if [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-target)" ]; then \
+				$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS)-$(TARGETS),,RUN$(TOKEN)NUM) >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+			fi; \
+			$(SED) -i -e "s|RUN|$${RUN}|g" -e "s|NUM|$${NUM}|g" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
+			if [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-yml)" ]; then \
+				$(ECHO) "    - \"$${RUN}-$${NUM}$($(TESTING)-COMPOSER_MAXLIST-append)\"\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
+			fi; \
 			$(ECHO) "" >$(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP))/$(CLEANER).$${RUN}.$${NUM}; \
-			$(ECHO) "$(SPECIAL_VAL)" >$(call $(TESTING)-pwd)/$(OUT_README).$${RUN}.$${NUM}$(COMPOSER_FILEEXT_DEFAULT); \
+			$(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-title,1) >$(call $(TESTING)-pwd)/$(OUT_README).$${RUN}.$${NUM}$(COMPOSER_FILEEXT_DEFAULT); \
 			$(MKDIR) $(call $(TESTING)-pwd)/$(SUBDIRS).$${RUN}.$${NUM} >/dev/null; \
+			$(call DO_HEREDOC,$(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS)-$(SUBDIRS)) >>$(call $(TESTING)-pwd)/$(SUBDIRS).$${RUN}.$${NUM}/$(COMPOSER_SETTINGS); \
 			$(ECHO) "."; \
 			NUM="$$($(EXPR) $${NUM} + 1)"; \
 		done; \
 		$(ENDOLINE); \
-		$(ECHO) "$(_F)$(DIVIDE) "; \
-			find $(call $(TESTING)-pwd) -name "$(OUT_README).*$(COMPOSER_FILEEXT_DEFAULT)" | $(WC); \
-			$(ECHO) "$(_D)"; \
+		$(ECHO) "$(_F)$(MARKER) ";	$(call FIND_TIME,$(call $(TESTING)-pwd),$(OUT_README).*$(COMPOSER_FILEEXT_DEFAULT))		| $(WC) | $(TR) '\n' '\0'; \
+		$(ECHO) " $(DIVIDE) ";		$(SED) -n "/[-]$(DOITALL)[:]$$/p" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)			| $(WC) | $(TR) '\n' '\0'; \
+		$(ECHO) " $(DIVIDE) ";		$(YQ_READ) $(call $(TESTING)-pwd)/$(COMPOSER_YML) | $(YQ_WRITE_OUT) ".variables.maxlist"	| $(WC) | $(TR) '\n' '\0'; \
+		$(ENDOLINE); \
 		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CONFIGS); \
 		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(INSTALL)-$(DOITALL); \
 		time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL); \
@@ -15526,12 +15805,37 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 		RUN="$$($(EXPR) $${RUN} + 1)"; \
 	done
 	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(EXPORTS)-$(DOITALL)
-	@$(LS_TIME) $(call $(TESTING)-pwd)/$(notdir $(COMPOSER_EXPORT_DEFAULT))/{.[^.],}* 2>/dev/null || $(TRUE)
-	@$(LS_TIME) $(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP))/{.[^.],}* 2>/dev/null || $(TRUE)
+	@$(call FIND_TIME,$(call $(TESTING)-pwd)/$(notdir $(COMPOSER_EXPORT_DEFAULT)))
+	@$(call FIND_TIME,$(call $(TESTING)-pwd)/$(notdir $(COMPOSER_TMP)))
 	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 
 override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS) =
+override COMPOSER_TARGETS :=
+override COMPOSER_SUBDIRS :=
+override COMPOSER_EXPORTS :=
 override c_css := $(SPECIAL_VAL)
+endef
+
+override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS)-$(CONFIGS) =
+$(NULL)
+ifneq ($$(COMPOSER_CURDIR),)
+override COMPOSER_TARGETS += $(OUT_README).$(word 1,$(subst $(TOKEN), ,$(1))).$(word 2,$(subst $(TOKEN), ,$(1))).$(EXTN_DEFAULT)
+override COMPOSER_SUBDIRS +=    $(SUBDIRS).$(word 1,$(subst $(TOKEN), ,$(1))).$(word 2,$(subst $(TOKEN), ,$(1)))
+override COMPOSER_EXPORTS += $(OUT_README).$(word 1,$(subst $(TOKEN), ,$(1))).$(word 2,$(subst $(TOKEN), ,$(1))).$(EXTN_DEFAULT)
+endif
+endef
+
+override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS)-$(TARGETS) =
+ifneq ($$(COMPOSER_CURDIR),)
+.PHONY: \\
+$(strip $(foreach RECURSIVE,$(COMPOSER_RECURSIVE), $(word 1,$(subst $(TOKEN), ,$(1)))-$(word 2,$(subst $(TOKEN), ,$(1)))-$(RECURSIVE)))
+$(strip $(foreach RECURSIVE,$(COMPOSER_RECURSIVE), $(word 1,$(subst $(TOKEN), ,$(1)))-$(word 2,$(subst $(TOKEN), ,$(1)))-$(RECURSIVE))):
+	@$$(ECHO) "$$(@)-$(TARGETS)\\n"
+endif
+endef
+
+override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_SETTINGS)-$(SUBDIRS) =
+override COMPOSER_INCLUDE :=
 endef
 
 override define $(TESTING)-COMPOSER_MAXLIST-$(COMPOSER_YML) =
@@ -15556,27 +15860,63 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 		done; \
 		$(ECHO) "$${CNT}"; \
 	))
-	@$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)$$)		$(call NEWLINE) \
-	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)-$(TARGETS)$$)	$(call NEWLINE) \
+	@$(eval override $(TESTING)-COMPOSER_MAXLIST-tgtcnt := $(shell \
+		$(EXPR) $($(TESTING)-COMPOSER_MAXLIST-target) \* $($(TESTING)-COMPOSER_MAXLIST-files) \
+	))
+	@$(eval override $(TESTING)-COMPOSER_MAXLIST-tgtttl := $(shell \
+		CNT="0"; \
+		RUN="1"; while [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-runs)" ]; do \
+			if [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-target)" ]; then \
+				CNT="$$($(EXPR) $${CNT} + \( $${RUN} \* $($(TESTING)-COMPOSER_MAXLIST-files) \))"; \
+			else	CNT="$$($(EXPR) $${CNT} + \( $($(TESTING)-COMPOSER_MAXLIST-target) \* $($(TESTING)-COMPOSER_MAXLIST-files) \))" || $(TRUE); \
+			fi; \
+			RUN="$$($(EXPR) $${RUN} + 1)"; \
+		done; \
+		$(ECHO) "$${CNT}"; \
+	))
+	@$(eval override $(TESTING)-COMPOSER_MAXLIST-ymlcnt := $(shell \
+		CNT="0"; \
+		RUN="1"; while [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-runs)" ]; do \
+			if [ "$${RUN}" -le "$($(TESTING)-COMPOSER_MAXLIST-yml)" ]; then \
+				CNT="$$($(EXPR) $${CNT} + \( $${RUN} \* $($(TESTING)-COMPOSER_MAXLIST-files) \))"; \
+			else	CNT="$$($(EXPR) $${CNT} + \( $($(TESTING)-COMPOSER_MAXLIST-yml) \* $($(TESTING)-COMPOSER_MAXLIST-files) \))" || $(TRUE); \
+			fi; \
+			RUN="$$($(EXPR) $${RUN} + 1)"; \
+		done; \
+		$(ECHO) "$${CNT}"; \
+	))
+#>	@$(foreach FILE,$(filter-out COMPOSER_IGNORES,$(COMPOSER_OPTIONS_MAXLIST)),\
+#>	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 3),COMPOSER_MAXLIST.+$(FILE))			$(call NEWLINE) \
+#>	)
+	@$(foreach FILE,$(COMPOSER_OPTIONS_MAXLIST),\
+	$(call $(TESTING)-count,1,COMPOSER_MAXLIST.+$(FILE))										$(call NEWLINE) \
 	)
+	@$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
+	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-tgtttl) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)$$)		$(call NEWLINE) \
+	$(if $(filter $(INSTALL) $(DOITALL),$(RECURSIVE)),\
+	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-tgtttl) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)-$(TARGETS)$$)	$(call NEWLINE) ,\
+	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-tgtcnt) \* 1),^[0-9]+[-][0-9]+[-]$(RECURSIVE)-$(TARGETS)$$)	$(call NEWLINE) \
+	))
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-ymlcnt) \* 1),^($(SED_ESCAPE_COLOR))?[[:space:]]{4}($(SED_ESCAPE_COLOR))?[-]($(SED_ESCAPE_COLOR))?[[:space:]][0-9]+[-][0-9]+)
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),Creating.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^($(SED_ESCAPE_COLOR))?$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT).+$(DIVIDE).+$(OUT_README)[.][0-9]+[.][0-9]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT)))
-	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 2),^[0-9].+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)$$)
-	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^[0-9].+$(SUBDIRS)[.][0-9]+[.][0-9]+[/]?$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 2),^[[:space:]]*[0-9].+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)$$)
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),^[[:space:]]*[0-9].+$(SUBDIRS)[.][0-9]+[.][0-9]+[/]?$$)
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1),$(OUT_README)[.][0-9]+[.][0-9]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))$$)
-	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-total) \* 1 + $($(TESTING)-COMPOSER_MAXLIST-count) \* 2),$(SUBDIRS)[.][0-9]+[.][0-9]+.+$(NOTHING).+$(MAKEFILE))
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),^[/].+[/]$(subst +,[+],$(notdir $(COMPOSER_EXPORT_DEFAULT)))[/])
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),Removing.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
 	@$(call $(TESTING)-count,$$($(EXPR) $(COMPOSER_KEEPING)),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
-	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 2),MAKECMDGOALS)
-	@$(TABLE_M2) "$(_H)$(MARKER) Runs"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-runs)"
+	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 4 + 3),MAKECMDGOALS)
+	@$(call $(TESTING)-find,^real)
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-files)"
+	@$(TABLE_M2) "$(_H)$(MARKER) Runs"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-runs)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Count"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-count)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Total"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-total)"
+	@$(TABLE_M2) "$(_H)$(MARKER) T-Count"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-tgtcnt)"
+	@$(TABLE_M2) "$(_H)$(MARKER) T-Total"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-tgtttl)"
+	@$(TABLE_M2) "$(_H)$(MARKER) Y-Count"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-ymlcnt)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"	"$(_C)$(TESTING_MAKEJOBS)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Debug"	"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
-	@$(call $(TESTING)-find,^real)
 
 ########################################
 ### {{{3 $(TESTING)-COMPOSER_INCLUDE
@@ -16220,7 +16560,7 @@ $(CONFIGS):
 		$(call $(HEADERS)-options,$(FILE),1); \
 	)
 ifneq ($(COMPOSER_YML_LIST),)
-#WORKING:FIX:SIZE:OPTS
+#WORKING:FIX:MAXLIST
 #	do a word/character count and truncate with a note?
 #	change config.yml to spit out complete yml instead of json?
 #	reuse $(debugit) or $(c_list) to export json instead?
@@ -16364,6 +16704,10 @@ $(TARGETS):
 
 #> update: MARKER.*c_list_var
 
+#WORKING:FIX:MAXLIST
+#	is COMPOSER_CONV a breakage waiting to happen...?
+#	should we just give up on full-path targets...?
+#	rm .composer.* ; make V=1 COMPOSER_TARGETS=${PWD}/README.html .targets | grep README.html: ; make COMPOSER_TARGETS=${PWD}/README.html targets ; cat .composer.tmp/targets.*
 .PHONY: $(TARGETS)-$(MAKE_DB)
 $(TARGETS)-$(MAKE_DB):
 	@$(foreach FILE,\
@@ -16463,8 +16807,10 @@ $(TARGETS)-$(CHECKIT):
 
 #> update: TYPE_TARGETS
 #> update: PANDOC_FILES
+#WORKING:FIX:MAXLIST
 override $(TARGETS)-$(TARGETS) = \
 	$(if $(wildcard $(call COMPOSER_TMP_FILE,,$(TARGETS))),,\
+		$(call $(HEADERS)-note,$(CURDIR),$(call COMPOSER_TMP_FILE,1,$(TARGETS)),$(TARGETS)) 1>&2; \
 		$(MKDIR) $(COMPOSER_TMP) >/dev/null; \
 		$(call $(.)$(LISTING)) 2>/dev/null | $(SED) \
 			-e "/^$(MAKEFILE)[:]/d" \
@@ -17754,8 +18100,7 @@ override $(PUBLISH)-library-index-title = \
 #> update: $(HEADERS)-note.*$(_H)
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-#	$(c_base).$(EXTN_OUTPUT)
+#WORKING:FIX:CBASE
 override $(PUBLISH)-library-digest-list :=
 override $(PUBLISH)-library-digest-files :=
 ifneq ($(and \
@@ -17763,8 +18108,7 @@ ifneq ($(and \
 	$(filter \
 		$(PUBLISH)-library-% \
 		$(PUBLISH)-library-digest-% \
-		$(DOITALL)% \
-		$(c_base).$(EXTN_OUTPUT) \
+		$(call $(COMPOSER_PANDOC)-$(TESTING),$(c_base).$(EXTN_OUTPUT)) \
 		,\
 		$(MAKECMDGOALS) \
 	) \
@@ -18030,13 +18374,11 @@ override $(PUBLISH)-library-digest-run = \
 #> update: $(HEADERS)-note.*$(_H)
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
-#WORKING:FIX:SIZE:OPTS:DEPS:BROKEN
-#	$(c_base).$(EXTN_OUTPUT)
+#WORKING:FIX:CBASE
 override $(PUBLISH)-library-sitemap-list :=
 override $(PUBLISH)-library-sitemap-files :=
 #>		$(PUBLISH)-library-%
-#>		$(DOITALL)%
-#>		$(c_base).$(EXTN_OUTPUT)
+#>		$(call $(COMPOSER_PANDOC)-$(TESTING),$(c_base).$(EXTN_OUTPUT))
 ifneq ($(and \
 	$(COMPOSER_LIBRARY_AUTO_UPDATE) ,\
 	$(filter \
@@ -19198,10 +19540,10 @@ override $(CLEANER)-$(CLEANER) = \
 			$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)); \
 			$(ECHO) "$(_S)"; \
 			$(RM) --recursive $(COMPOSER_TMP) $($(DEBUGIT)-output); \
-		elif [ "$$($(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null | $(WC))" -gt "$${COMPOSER_KEEPING}" ]; then \
+		elif [ "$$($(call FIND_TIME,$(COMPOSER_TMP)) | $(WC))" -gt "$${COMPOSER_KEEPING}" ]; then \
 			$(call $(HEADERS)-note,$(CURDIR),$(notdir $(COMPOSER_TMP)),$(CLEANER)); \
 			$(ECHO) "$(_S)"; \
-			$(LS_TIME) $(COMPOSER_TMP)/{.[^.],}* 2>/dev/null \
+			$(call FIND_TIME,$(COMPOSER_TMP)) \
 				| $(TAIL) -n+$$($(EXPR) $${COMPOSER_KEEPING} + 1) \
 				| while read -r FILE; do \
 					$(RM) --recursive $${FILE} $($(DEBUGIT)-output); \
@@ -19289,7 +19631,7 @@ $(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
 	$(eval override $(RECURSIVE)-$(SUBDIRS)-$(TARGETS)-$(HEADERS)	:=) \
 	$(if $(or \
 		$(filter $(RECURSIVE)%,$(MAKECMDGOALS)) ,\
-		$(call $(COMPOSER_PANDOC)-$(TESTING)) \
+		$(call $(COMPOSER_PANDOC)-$(TESTING)) ,\
 	),\
 		$(eval override $(RECURSIVE)-$(SUBDIRS)-$(TARGETS)		:= $(shell $(call $(TARGETS)-$(TARGETS),,$(RECURSIVE)))) \
 		$(eval override $(RECURSIVE)-$(SUBDIRS)-$(TARGETS)-$(HEADERS)	:= $(addsuffix -$(HEADERS),$($(RECURSIVE)-$(SUBDIRS)-$(TARGETS)))) \
