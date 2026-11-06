@@ -19040,7 +19040,7 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 			--directory $(PUBLISH_ROOT)/$(FILE) \
 			$(VIEW) \
 			c_list="$(subst $(TOKEN), ,$(LIST))" \
-			| $(SED) "s|$(PUBLISH_ROOT)[/]|$(EXPAND)|g" \
+			| $(SED) "s|$(PUBLISH_ROOT)|$(EXPAND)|g" \
 			; \
 		$(call NEWLINE) \
 	)))
