@@ -8436,7 +8436,7 @@ $(_S)#$(MARKER)$(_D)     - $(_C)contents$(_D) $(_M)$(SPECIAL_VAL)$(_D)
       - $(_C)spacer$(_D)
     $(_M)LIBRARY$(_D):
       - $(_M)DATES$(_D):
-        - $(_C)library$(_D) $(_M)date$(if $(1), $(SPECIAL_VAL))$(_D)
+        - $(_C)library$(_D) $(_M)$(PUBLISH_METADATE)$(if $(1), $(SPECIAL_VAL))$(_D)
       - $(_M)AUTHORS$(_D):
         - $(_C)library$(_D) $(_M)$(PUBLISH_METAAUTH)$(if $(1), $(SPECIAL_VAL))$(_D)
       - $(_M)TAGS$(_D):
@@ -8510,7 +8510,7 @@ $(_S)########################################$(_D)
     $(_M)LIBRARY$(_D):
       - $(_C)fold-begin group$(_D) $(_M)library$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) library DATES$(_D)
-      - $(_C)library$(_D) $(_M)date$(if $(1), $(SPECIAL_VAL))$(_D)
+      - $(_C)library$(_D) $(_M)$(PUBLISH_METADATE)$(if $(1), $(SPECIAL_VAL))$(_D)
       - $(_C)fold-end$(_D)
       - $(_C)fold-begin$(_D) $(_M)$(SPECIAL_VAL) $(SPECIAL_VAL) library AUTHORS$(_D)
       - $(_C)library$(_D) $(_M)$(PUBLISH_METAAUTH)$(if $(1), $(SPECIAL_VAL))$(_D)
