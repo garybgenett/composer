@@ -13999,10 +13999,10 @@ endif
 		$(call NEWLINE) \
 	)
 	@$(LINERULE)
-	@cd $(COMPOSER_DIR) && \
-		$(LS) --directory $$( \
-			$(FIND) -name "node_modules" \
-		)
+	@cd $(COMPOSER_DIR) && $(LS) --directory $$( \
+		$(FIND) $(COMPOSER_DIR) -name "node_modules" \
+		| $(SED) "s|^$(COMPOSER_DIR)[/]||g" \
+	)
 endif
 
 ########################################
@@ -15321,6 +15321,7 @@ override $(TESTING)-stress-init = \
 	else \
 		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1) >$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	fi; \
+	$(call $(TESTING)-stress-init-$(CONFIGS),$(call $(TESTING)-pwd),$(filter $(1),HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)); \
 	$(RM) --recursive $(call $(TESTING)-pwd)/$(notdir $(PUBLISH_LIBRARY)); \
 	for TLD in {1..3}; do \
 		if [ -z "$(1)" ]; then \
@@ -15329,6 +15330,7 @@ override $(TESTING)-stress-init = \
 		else \
 			$(call DO_HEREDOC,$(1)) >$(call $(TESTING)-pwd)/tld$${TLD}/$(COMPOSER_YML); \
 		fi; \
+		$(call $(TESTING)-stress-init-$(CONFIGS),$(call $(TESTING)-pwd)/tld$${TLD},$(filter $(1),HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)); \
 		$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/$(notdir $(PUBLISH_LIBRARY)); \
 		for SUB in {1..3}; do \
 			if [ -z "$(1)" ]; then \
@@ -15338,14 +15340,26 @@ override $(TESTING)-stress-init = \
 		done; \
 	done
 
+override $(TESTING)-stress-init-$(CONFIGS) = \
+	if [ -z "$(2)" ]; then \
+		$(RM) --recursive $(1)/$(word 3,$(PUBLISH_DIRS)); \
+	else \
+		$(MKDIR) $(1)/$(word 3,$(PUBLISH_DIRS)) $($(DEBUGIT)-output); \
+		$(call $(INSTALL)-$(MAKEFILE),$(1)/$(word 3,$(PUBLISH_DIRS))/$(MAKEFILE),-$(INSTALL)); \
+		$(call DO_HEREDOC,PUBLISH_PAGE_3_HEADER) >$(1)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER); \
+		$(call DO_HEREDOC,PUBLISH_PAGE_3_FOOTER) >$(1)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_FOOTER); \
+		$(call DO_HEREDOC,PUBLISH_PAGE_3_APPEND) >$(1)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND); \
+	fi
+
 override $(TESTING)-stress-init-$(PUBLISH) = \
 	$(call $(TESTING)-stress-init,$(1)); \
 	FILE="$$($(SED) -n "/Creating.+[.]$(EXTN_DEFAULT)/p" $(call $(TESTING)-log,,init) | $(WC))"; \
 	$(call $(HEADERS)-note,$(PUBLISH)-$(DOFORCE),$(if $(1),$(1),$(NOTHING)),$${FILE}); \
-	$(CAT) \
+	$(LS) \
 		$(call $(TESTING)-pwd)/$(COMPOSER_YML) \
 		$(call $(TESTING)-pwd)/tld*/$(COMPOSER_YML) \
 		$(call $(TESTING)-pwd)/tld*/sub*/$(COMPOSER_YML) \
+		2>/dev/null \
 		|| $(TRUE); \
 	time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 
