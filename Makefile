@@ -189,7 +189,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #
 #	* Check: `git diff main Makefile`
 #	* Update: COMPOSER_VERSION + COMPOSER_RELDATE + DATENOW
-#	* Release: `rm -frv {.[^.],}*; make +release-all`
+#	* Release: `rm-all; git checkout Makefile; make +release-all`
 #	* Verify: `git diff main`
 #	* Commit: `git commit`, `git tag`
 #	* Branch: `git branch -D main`, `git checkout -B main`, `git checkout devel`
@@ -480,7 +480,7 @@ endif
 override PATH_LIST			:= $(subst :, ,$(PATH))
 export override SHELL			:= $(call COMPOSER_FIND,$(PATH_LIST),bash) $(if $(COMPOSER_DEBUGIT_ALL),-x)
 
-override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
+override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r --follow-symlinks
 
 ########################################
 ## {{{2 Source Files
@@ -1117,8 +1117,10 @@ override BOOTSTRAP_LIC			:= MIT
 override BOOTSTRAP_SRC			:= https://github.com/twbs/bootstrap.git
 override BOOTSTRAP_DIR			:= $(COMPOSER_DIR)/bootstrap
 
+#> update: BOOTSTRAP_MODULES
 override BOOTSTRAP_DIR_JS		:= $(BOOTSTRAP_DIR)/dist/js/bootstrap.bundle.js
 override BOOTSTRAP_DIR_CSS		:= $(BOOTSTRAP_DIR)/dist/css/bootstrap.css
+override BOOTSTRAP_MODULES		= $(call FIND_TIME,$(BOOTSTRAP_DIR),2,*/node_modules) | $(SED) "s|^$(BOOTSTRAP_DIR)[/](.+)[/]node_modules$$|\1|g"
 
 ########################################
 ## {{{2 Bootlint
@@ -1198,7 +1200,8 @@ override MDVIEWER_SRC			:= https://github.com/simov/markdown-viewer.git
 override MDVIEWER_DIR			:= $(COMPOSER_DIR)/markdown-viewer
 
 #> update: MDVIEWER_MODULES
-override MDVIEWER_MODULES		= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
+override MDVIEWER_MODULES		= $(call FIND_TIME,$(MDVIEWER_DIR),3,build/*/node_modules) | $(SED) "s|^$(MDVIEWER_DIR)[/]build[/](.+)[/]node_modules$$|\1|g"
+override MDVIEWER_MODULES_BLD		= $(SED) -n "s|^[[:space:]]*sh[ ]([^/]+)[/]build.sh$$|\1|gp" $(MDVIEWER_DIR)/build/package.sh
 override MDVIEWER_MANIFEST		:= manifest.firefox.json
 
 override MDVIEWER_SASS_VER		:= ^1.97.3
@@ -1327,9 +1330,8 @@ export override LC_COLLATE		:= C
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
-override FIND_ALL			:= $(call COMPOSER_FIND,$(PATH_LIST),find) -L
-override FIND_TIME			= $(FIND) $(1) -mindepth 1 -maxdepth 1 $(if $(2),-path "$(1)/$(2)") -printf "%T@$(TOKEN)%p\n" | $(SORT_NUM) -r | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g"
-override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r
+override FIND_TIME			= $(FIND) $(1) -mindepth $(if $(2),$(2),1) -maxdepth $(if $(2),$(2),1) $(if $(3),-path "$(1)/$(3)") -printf "%T@$(TOKEN)%p\n" | $(SORT_NUM) -r | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g"
+override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r --follow-symlinks
 
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) --wrap=0 --decode
 override CAT				:= $(call COMPOSER_FIND,$(PATH_LIST),cat)
@@ -1596,6 +1598,12 @@ override NPM_RUN = \
 
 override NPM_SETUP = \
 	$(MKDIR) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm; \
+	if [ ! -L $(1)/node_modules ] && [ -d $(1)/node_modules ]; then \
+		$(RSYNC) $(1)/node_modules/ $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules; \
+	fi; \
+	if [ ! -L $(1)/package.json ] && [ -f $(1)/package.json ]; then \
+		$(RSYNC) $(1)/package.json $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/package.json; \
+	fi; \
 	$(RM) --recursive $(1)/node_modules; \
 	$(LN) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/node_modules $(1)/; \
 	$(RM) $(COMPOSER_SRC)/$(call NPM_NAME,$(1)).npm/package.json; \
@@ -13953,6 +13961,7 @@ $(UPGRADE):
 	@$(call $(HEADERS))
 ifeq ($(and \
 	$(wildcard $(firstword $(GIT))) ,\
+	$(wildcard $(firstword $(RSYNC))) ,\
 	$(wildcard $(firstword $(WGET))) ,\
 	$(wildcard $(firstword $(TAR))) ,\
 	$(wildcard $(firstword $(GZIP_BIN))) ,\
@@ -13961,6 +13970,7 @@ ifeq ($(and \
 	$(wildcard $(firstword $(CURL))) \
 ),)
 	@$(if $(wildcard $(firstword $(GIT))),,$(call $(NOTHING)-$(NOTHING),,git))
+	@$(if $(wildcard $(firstword $(RSYNC))),,$(call $(NOTHING)-$(NOTHING),,rsync))
 	@$(if $(wildcard $(firstword $(WGET))),,$(call $(NOTHING)-$(NOTHING),,wget))
 	@$(if $(wildcard $(firstword $(TAR))),,$(call $(NOTHING)-$(NOTHING),,tar))
 	@$(if $(wildcard $(firstword $(GZIP_BIN))),,$(call $(NOTHING)-$(NOTHING),,gzip))
@@ -13968,7 +13978,14 @@ ifeq ($(and \
 	@$(if $(wildcard $(firstword $(NPM))),,$(call $(NOTHING)-$(NOTHING),,npm))
 	@$(if $(wildcard $(firstword $(CURL))),,$(call $(NOTHING)-$(NOTHING),,curl))
 else
-ifeq ($(COMPOSER_DOITALL_$(UPGRADE)),$(PRINTER))
+ifneq ($(COMPOSER_DOITALL_$(UPGRADE)),$(PRINTER))
+	@$(MAKE) --makefile $(COMPOSER) \
+		$(UPGRADE)-src \
+		$(UPGRADE)-bin \
+		$(if $(COMPOSER_DOITALL_$(UPGRADE)),\
+			$(UPGRADE)-bld \
+		)
+endif
 	@$(foreach FILE,$(REPOSITORIES_LIST),\
 		$(eval override $(UPGRADE)_$(FILE)_CMT := $(shell		$(call GIT_RUN_REPO_TAGS,$($(FILE)_DIR),1))) \
 		$(call $(HEADERS)-action,$($(FILE)_DIR),$($(FILE)_CMT),$(filter-out $($(FILE)_CMT),$($(UPGRADE)_$(FILE)_CMT)),$($(FILE)_NAME),1); \
@@ -13981,14 +13998,11 @@ ifeq ($(COMPOSER_DOITALL_$(UPGRADE)),$(PRINTER))
 		$(call GIT_RUN_REPO,$($(FILE)_DIR),diff,1); \
 		$(call NEWLINE) \
 	)
-else
-	@$(MAKE) --makefile $(COMPOSER) \
-		$(UPGRADE)-src \
-		$(UPGRADE)-bin \
-		$(if $(COMPOSER_DOITALL_$(UPGRADE)),\
-			$(UPGRADE)-bld \
+	@$(LINERULE)
+	@cd $(COMPOSER_DIR) && \
+		$(LS) --directory $$( \
+			$(FIND) -name "node_modules" \
 		)
-endif
 endif
 
 ########################################
@@ -14118,15 +14132,23 @@ override $(UPGRADE)-bld-list :=
 #### {{{4 $(UPGRADE)-bld-$(BOOTSTRAP_DIR)
 ########################################
 
+#> update: BOOTSTRAP_MODULES
+
 override $(UPGRADE)-bld-list += BOOTSTRAP
 
 .PHONY: $(UPGRADE)-$(notdir $(BOOTSTRAP_DIR))-bld-fetch
 $(UPGRADE)-$(notdir $(BOOTSTRAP_DIR))-bld-fetch:
+	@$(call BOOTSTRAP_MODULES) | while read -r FILE; do \
+		$(call NPM_SETUP,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_DIR))/$${FILE}); \
+	done
 	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_DIR)))
 
 .PHONY: $(UPGRADE)-$(notdir $(BOOTSTRAP_DIR))-bld-build
 $(UPGRADE)-$(notdir $(BOOTSTRAP_DIR))-bld-build:
 	@$(call NPM_RUN,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_DIR)),run-script docs-build)
+	@$(call BOOTSTRAP_MODULES) | while read -r FILE; do \
+		$(call NPM_SETUP,$(call COMPOSER_CONV,$(CURDIR)/,$(BOOTSTRAP_DIR))/$${FILE}); \
+	done
 
 ########################################
 #### {{{4 $(UPGRADE)-bld-$(BOOTLINT_DIR)
@@ -14187,6 +14209,9 @@ override $(UPGRADE)-bld-list += MDVIEWER
 $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-fetch:
 #>	@$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR)))
 	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
+		$(call NPM_SETUP,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
+	done
+	@$(call MDVIEWER_MODULES_BLD) | while read -r FILE; do \
 		$(call NPM_INSTALL,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 
@@ -14200,8 +14225,11 @@ $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build:
 
 .PHONY: $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build-modules
 $(UPGRADE)-$(notdir $(MDVIEWER_DIR))-bld-build-modules:
-	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
+	@$(call MDVIEWER_MODULES_BLD) | while read -r FILE; do \
 		$(call NPM_BUILD,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
+	done
+	@$(call MDVIEWER_MODULES) | while read -r FILE; do \
+		$(call NPM_SETUP,$(call COMPOSER_CONV,$(CURDIR)/,$(MDVIEWER_DIR))/build/$${FILE}); \
 	done
 
 ########################################
@@ -15211,6 +15239,8 @@ endif
 ### {{{3 $(TESTING)-stress
 ########################################
 
+#WORKING:FIX:TESTING
+
 #> uname -a
 #>	Linux phoenix 5.10.154-gentoo.gary-os #1 SMP PREEMPT Mon Jan 2 10:51:39 -00 2023 x86_64 Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz GenuineIntel GNU/Linux
 #> grep -i -e "^model name" -e "^siblings" /proc/cpuinfo | head -n2
@@ -15263,8 +15293,8 @@ $(TESTING)-stress:
 		\n\t\t * '$(_C)$(CLEANER)-$(DOITALL)$(_D)' \
 		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(no configuration)$(_D) \
 		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_TESTING)$(_D) \
-		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_SHOWDIR)$(_D) \
 		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_EXAMPLE)$(_D) \
+		\n\t\t * '$(_C)$(PUBLISH)-$(DOFORCE)$(_D)' $(_E)(HEREDOC_COMPOSER_YML + $(_N)*$(_E)_PUBLISH_CONFIGS)$(_D) \
 	)
 	@$(call $(TESTING)-init)
 	@$(call $(TESTING)-done)
@@ -15273,15 +15303,15 @@ $(TESTING)-stress:
 .PHONY: $(TESTING)-stress-init
 $(TESTING)-stress-init:
 	@$(call $(TESTING)-stress-init)
+#> $(PUBLISH) > $(INSTALL) > $(CLEANER) > $(DOITALL)
 	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(INSTALL)-$(DOFORCE)
-#> $(PUBLISH) > $(CLEANER) > $(DOITALL)
 #>	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(PUBLISH)-$(DOFORCE)
 	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 	@time $(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(CLEANER)-$(DOITALL)
 	@$(call $(TESTING)-stress-init-$(PUBLISH))
 	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_TESTING)
-#>	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_SHOWDIR)
 	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE)
+	@$(call $(TESTING)-stress-init-$(PUBLISH),HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)
 
 #> update: $(PUBLISH)-$(EXAMPLE)-$(INSTALL)
 override $(TESTING)-stress-init = \
@@ -15324,9 +15354,9 @@ $(TESTING)-stress-done:
 	@$(call $(TESTING)-find,MAKECMDGOALS)
 	@$(call $(TESTING)-find,$(PUBLISH)-$(DOFORCE).+$(DIVIDE))
 	@$(call $(TESTING)-find,^real)
-	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type d -print \) | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Directories"	"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type d -print \) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) $(MAKEFILE)s"	"$(_C)$(shell $(SED) -n "/Creating.+$(MAKEFILE)/p" $(call $(TESTING)-log,,init) | $(WC))"
-	@$(TABLE_M2) "$(_H)$(MARKER) Sources"		"$(_C)$(shell $(FIND_ALL) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))$$/p" | $(WC))"
+	@$(TABLE_M2) "$(_H)$(MARKER) Sources"		"$(_C)$(shell $(FIND) $(call $(TESTING)-pwd) \( -path \*/$(notdir $(COMPOSER_TMP)) -prune \) -o \( -path \*/$(notdir $(PUBLISH_LIBRARY)) -prune \) -o \( -type f -print \) | $(SED) -n "/[^/]+$(subst .,[.],$(COMPOSER_FILEEXT_DEFAULT))$$/p" | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Outputs"		"$(_C)$(shell $(SED) -n "/Creating.+[.]$(EXTN_DEFAULT)/p" $(call $(TESTING)-log,,init) | $(WC))"
 	@$(TABLE_M2) "$(_H)$(MARKER) Jobs"		"$(_C)$(TESTING_MAKEJOBS)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Debug"		"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
@@ -15942,7 +15972,7 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 		$(OUT_README).* \
 		$(SUBDIRS).* \
 		,\
-		$(call FIND_TIME,$(call $(TESTING)-pwd),$(FILE)) \
+		$(call FIND_TIME,$(call $(TESTING)-pwd),,$(FILE)) \
 			| while read -r FILE; do \
 				$(RM) --recursive $${FILE}; \
 			done \
@@ -15981,7 +16011,7 @@ $(TESTING)-COMPOSER_MAXLIST-init:
 			NUM="$$($(EXPR) $${NUM} + 1)"; \
 		done; \
 		$(ENDOLINE); \
-		$(ECHO) "$(_F)$(MARKER) ";	$(call FIND_TIME,$(call $(TESTING)-pwd),$(OUT_README).*$(COMPOSER_FILEEXT_DEFAULT))		| $(WC) | $(TR) '\n' '\0'; \
+		$(ECHO) "$(_F)$(MARKER) ";	$(call FIND_TIME,$(call $(TESTING)-pwd),,$(OUT_README).*$(COMPOSER_FILEEXT_DEFAULT))		| $(WC) | $(TR) '\n' '\0'; \
 		$(ECHO) " $(DIVIDE) ";		$(SED) -n "/[-]$(DOITALL)[:]$$/p" $(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)			| $(WC) | $(TR) '\n' '\0'; \
 		$(ECHO) " $(DIVIDE) ";		$(YQ_READ) $(call $(TESTING)-pwd)/$(COMPOSER_YML) | $(YQ_WRITE_OUT) ".variables.maxlist"	| $(WC) | $(TR) '\n' '\0'; \
 		$(ENDOLINE); \
