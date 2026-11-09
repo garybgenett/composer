@@ -1584,15 +1584,6 @@ endef
 ########################################
 
 #WORKING:FIX:TESTING
-override PROCESS			:= proc
-.PHONY: $(PROCESS)
-$(PROCESS): $(PROCESS)-$(PROCESS)
-$(PROCESS):
-	@$(ECHO) ""
-
-.PHONY: $(PROCESS)-%
-$(PROCESS)-%:
-	@$(call PROCPS,$(*),$(CURDIR),$(c_list))
 
 #> update: $(NOTHING)-%
 ifeq ($(wildcard $(firstword $(PS))),)
@@ -2665,6 +2656,8 @@ override TESTING			:= $(_)test
 override CHECKIT			:= check
 override CONFIGS			:= config
 override TARGETS			:= targets
+#WORKING:FIX:TESTING
+override PROCESS			:= proc
 
 override DOSETUP			:= init
 override CONVICT			:= commit
@@ -2712,6 +2705,7 @@ override COMPOSER_RESERVED := \
 	$(CHECKIT) \
 	$(CONFIGS) \
 	$(TARGETS) \
+	$(PROCESS) \
 	\
 	$(DOSETUP) \
 	$(CONVICT) \
@@ -4235,6 +4229,9 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)$(_N)*$(_C)]"		"Export individual $(_C)[Composer Variables]$(_D) values"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
+#WORKING:FIX:TESTING
+	@$(TABLE_M2) "$(_C)[$(PROCESS)]"			"#WORKING:FIX:TESTING"
+	@$(TABLE_M2) "$(_C)[$(PROCESS)-$(_N)*$(_C)]"		"#WORKING:FIX:TESTING"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M)$(COMPOSER_CMS)$(_D)\` in current directory"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"$(_C)[Git]$(_D) commit of current directory tree or $(_C)[c_list]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
@@ -6575,6 +6572,12 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(TARGETS))
   *
   * Together, $(_C)[$(CONFIGS)]$(_D) and $(_C)[$(TARGETS)]$(_D) reveal the entire internal state of
     $(_C)[$(COMPOSER_BASENAME)]$(_D).
+
+$(call $(HELPOUT)-$(DOITALL)-section,$(PROCESS) / $(PROCESS)-\*)
+
+#WORKING:FIX:TESTING
+#	c_list=*
+#	c_list=$(PHANTOM)
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(DOSETUP))
 
@@ -17108,6 +17111,23 @@ $(TARGETS)-$(CLEANER):
 $(TARGETS)-$(PRINTER):
 #>	@$(call $(HEADERS)-action,$(PRINTER),,,$(TARGETS),1)
 	@$(call $(HEADERS)-action,$(TMPL_INPUT),,,$(TARGETS),1)
+
+########################################
+## {{{2 $(PROCESS)
+########################################
+
+#WORKING:FIX:TESTING
+
+.PHONY: $(PROCESS)
+$(PROCESS): $(PROCESS)-$(PROCESS)
+$(PROCESS):
+	@$(ECHO) ""
+
+.PHONY: $(PROCESS)-%
+$(PROCESS)-%:
+#WORKING:FIX:TESTING
+#>	@$(call PROCPS,$(*),$(CURDIR),$(c_list))
+	@$(call PROCPS,$(*),$(COMPOSER_ROOT),$(c_list))
 
 ################################################################################
 # {{{1 Repository Targets
