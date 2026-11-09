@@ -129,6 +129,9 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* `make site-force`
 #			* `make site-template-list`
 #				* `make COMPOSER_DOITALL_site-template="+test" site-template-list`
+#WORKING:FIX:TESTING
+#			* `while :; do make -C _site PROCESS-site-all ; sleep 10 ; done`
+#			* `while :; do make -C _site PROCESS-site-force ; sleep 10 ; done`
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -149,11 +152,15 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	* `make +test-stress`
 #		* `make MAKEJOBS="[X]" +test-stress`
 #		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-stress`
-#		* Update comments
+#		* `while :; do make COMPOSER_DEBUGIT="1" +test-stress-done ; sleep 10 ; done`
+#		* Update results comments
+#		* Review "Optimizing Performance" section
 #	* `make +test-COMPOSER_MAXLIST`
 #		* `make MAKEJOBS="[X]" +test-COMPOSER_MAXLIST`
 #		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-COMPOSER_MAXLIST`
-#		* Tune numbers to maximum successful
+#		* `while :; do make COMPOSER_DEBUGIT="1" +test-COMPOSER_MAXLIST-done ; sleep 10 ; done`
+#		* Update numbers to maximum successful
+#		* Review "Optimizing Performance" section
 #
 ## {{{2 PREPARE
 #
@@ -500,6 +507,9 @@ override SOURCE_INCLUDES = \
 		$(eval $(subst $(TOKEN), ,$(FILE))) \
 	))
 
+#WORKING:FIX:TESTING
+#> update: $(HOME)
+$(call SOURCE_INCLUDES,$(HOME))
 $(call SOURCE_INCLUDES,$(COMPOSER_DIR))
 ifeq ($(COMPOSER_RELEASE),)
 $(call SOURCE_INCLUDES,$(CURDIR))
@@ -517,7 +527,6 @@ override COMPOSER_INCLUDES_DIRS		:=
 $(foreach FILE,$(abspath $(dir $(MAKEFILE_LIST))),\
 	$(eval override COMPOSER_INCLUDES_DIRS := $(FILE) $(COMPOSER_INCLUDES_DIRS)) \
 )
-
 ifneq ($(lastword $(COMPOSER_INCLUDES_DIRS)),$(CURDIR))
 override COMPOSER_INCLUDES_DIRS		:= $(COMPOSER_INCLUDES_DIRS) $(CURDIR)
 endif
@@ -530,6 +539,21 @@ ifneq ($(firstword $(COMPOSER_INCLUDES_DIRS)),$(lastword $(COMPOSER_INCLUDES_DIR
 override COMPOSER_INCLUDES_DIRS		:= $(firstword $(COMPOSER_INCLUDES_DIRS)) $(lastword $(COMPOSER_INCLUDES_DIRS))
 endif
 endif
+endif
+
+#WORKING:FIX:TESTING
+#> update: $(HOME)
+ifneq ($(and \
+	$(if $(COMPOSER_RELEASE),,1) ,\
+	$(filter-out \
+		$(abspath $(dir $(realpath $(MAKEFILE_LIST)))) \
+		$(realpath $(COMPOSER_ROOT)) \
+		,\
+		$(realpath $(HOME)) \
+	) ,\
+	$(wildcard $(HOME)/$(COMPOSER_SETTINGS)) \
+),)
+override COMPOSER_INCLUDES_DIRS		:= $(HOME) $(COMPOSER_INCLUDES_DIRS)
 endif
 
 override COMPOSER_INCLUDES_DIRS		:= $(strip $(COMPOSER_INCLUDES_DIRS))
@@ -605,13 +629,14 @@ export override MAKEFLAGS		:= $(MAKEFLAGS) $(MAKEFLAGS_END)
 ## {{{2 Jobs
 ########################################
 
-override MAKEJOBS_DEFAULT		:= 1
+override MAKEJOBS_DEFAULT		:= 4
+override MAKEJOBS_SINGLE		:= 1
 
 #> update: READ_ALIASES
 $(call READ_ALIASES,J,MAKEJOBS)
 override MAKEJOBS			?= $(MAKEJOBS_DEFAULT)
 ifeq ($(MAKEJOBS),)
-override MAKEJOBS			:= $(MAKEJOBS_DEFAULT)
+override MAKEJOBS			:= $(MAKEJOBS_SINGLE)
 endif
 
 ifeq ($(MAKEJOBS),1)
@@ -686,11 +711,13 @@ endif
 #> update: READ_ALIASES
 $(call READ_ALIASES,V,COMPOSER_DEBUGIT)
 $(call READ_ALIASES,C,COMPOSER_DOCOLOR)
+$(call READ_ALIASES,F,COMPOSER_FAILIFW)
 $(call READ_ALIASES,K,COMPOSER_KEEPING)
 
 #> update: COMPOSER_INCLUDE[^S]
 override COMPOSER_DEBUGIT		?=
 override COMPOSER_DOCOLOR		?= 1
+override COMPOSER_FAILIFW		?= 1
 override COMPOSER_INCLUDE		?= 1
 override COMPOSER_DEPENDS		?=
 override COMPOSER_MAXLIST		?= 100
@@ -705,8 +732,9 @@ endif
 
 #>ifeq ($(COMPOSER_FILEEXT),)
 #>override COMPOSER_FILEEXT		:= $(COMPOSER_FILEEXT_DEFAULT)
-#>endif
+#>else
 override COMPOSER_FILEEXT		:= $(notdir $(COMPOSER_FILEEXT))
+#>endif
 
 #> update: COMPOSER_MAXLIST
 #> update: COMPOSER_TARGETS.*=
@@ -1297,8 +1325,9 @@ override MAKE_VER			:= 4.4.1
 #>override YQ_VER			:= $(YQ_VER_COMPOSER)
 #>override PDF_LATEX_VER		:= $(PDF_LATEX_VER_COMPOSER)
 
-override GIT_VER			:= 2.55.0
 override DIFFUTILS_VER			:= 3.12
+override GIT_VER			:= 2.55.0
+override PROCPS_VER			:= 4.0.6
 override RSYNC_VER			:= 3.4.4
 
 override WGET_VER			:= 1.25.0
@@ -1330,7 +1359,7 @@ export override LC_COLLATE		:= C
 
 override BASH				:= $(call COMPOSER_FIND,$(PATH_LIST),bash)
 override FIND				:= $(call COMPOSER_FIND,$(PATH_LIST),find)
-override FIND_TIME			= $(FIND) $(1) -mindepth $(if $(2),$(2),1) -maxdepth $(if $(2),$(2),1) $(if $(3),-path "$(1)/$(3)") -printf "%T@$(TOKEN)%p\n" | $(SORT_NUM) -r | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g"
+override FIND_TIME			= $(FIND) $(1) -mindepth $(if $(2),$(2),1) -maxdepth $(if $(2),$(2),1) $(if $(3),-path "$(1)/$(3)") -printf "%T@$(TOKEN)%p\n" | $(SORT_NUM) --reverse | $(SED) "s|^(.+)$(TOKEN)(.+)$$|\2|g"
 override SED				:= $(call COMPOSER_FIND,$(PATH_LIST),sed) -r --follow-symlinks
 
 override BASE64				:= $(call COMPOSER_FIND,$(PATH_LIST),base64) --wrap=0 --decode
@@ -1383,8 +1412,9 @@ override PDF_LATEX			:= $(call COMPOSER_FIND,$(PATH_LIST),$(PDF_LATEX_BIN_NAME))
 
 #> update: $(NOTHING)-%
 
-override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git) --no-pager
 override DIFF				:= $(call COMPOSER_FIND,$(PATH_LIST),diff) -u -U10
+override GIT				:= $(call COMPOSER_FIND,$(PATH_LIST),git) --no-pager
+override PS				:= $(call COMPOSER_FIND,$(PATH_LIST),ps) u -ww --no-headers --sort=pid
 override RSYNC				:= $(call COMPOSER_FIND,$(PATH_LIST),rsync) -v --verbose --itemize-changes --archive --delete
 
 override WGET				:= $(call COMPOSER_FIND,$(PATH_LIST),wget) --verbose --progress=dot --timestamping
@@ -1548,6 +1578,81 @@ override define GITIGNORE_GIT =
 #$(MARKER)**/.git/
 **/.git
 endef
+
+########################################
+### {{{3 Procps
+########################################
+
+#WORKING:FIX:TESTING
+override PROCESS			:= proc
+.PHONY: $(PROCESS)
+$(PROCESS): $(PROCESS)-$(PROCESS)
+$(PROCESS):
+	@$(ECHO) ""
+
+.PHONY: $(PROCESS)-%
+$(PROCESS)-%:
+	@$(call PROCPS,$(*),$(CURDIR),$(c_list))
+
+#> update: $(NOTHING)-%
+ifeq ($(wildcard $(firstword $(PS))),)
+override PROCPS = \
+	$(if $(wildcard $(firstword $(PS))),,$(call $(NOTHING)-$(NOTHING),,procps))
+else
+#>	$(call $(HEADERS)-action,$(PROCPS_LDIR),$(PROCPS_LIST),,$(PROCPS_MAIN),1);
+override PROCPS = \
+	$(eval override PROCPS_MAIN := $(strip $(1))) \
+	$(eval override PROCPS_LDIR := $(strip $(2))) \
+	$(eval override PROCPS_LDIR += $(filter-out $(PROCPS_LDIR),$(realpath $(PROCPS_LDIR)))) \
+	$(eval override PROCPS_LIST := $(if $(3),$(sort $(patsubst $(PHANTOM),$(PROCPS_TARGETS),$(3))),$(SPECIAL_VAL))) \
+	$(call $(HEADERS)-action,$(filter-out $(SPECIAL_VAL),$(PROCPS_LIST)),,,$(PROCPS_MAIN),1); \
+	$(TABLE_M2) "$(_C)[GNU Make]"		"$(_M)$$($(PS) -C $(DOMAKE)		| $(WC))"; \
+	$(TABLE_M2) "$(_C)[$(PANDOC_NAME)]"	"$(_M)$$($(PS) -C $(notdir $(PANDOC))	| $(WC))"; \
+	$(TABLE_M2) "$(_C)[$(YQ_NAME)]"		"$(_M)$$($(PS) -C $(notdir $(YQ))	| $(WC))"; \
+	$(call NEWLINE) \
+	$(call PROCPS_LISTING,$(PROCPS_MAIN))	$(call NEWLINE) \
+	$(foreach DIR,				$(PROCPS_LDIR),\
+	$(foreach TGT,				$(PROCPS_LIST),\
+	$(call PROCPS_LISTING,$(DIR),$(TGT))	$(call NEWLINE) \
+	)) \
+	$(LINERULE)
+endif
+
+override PROCPS_LISTING = \
+	$(ECHO) "$(if $(2),$(_N),$(_E))"; \
+	$(PS) | $(SED) -n "/[0-9:]+[[:space:]]+$(strip			$(subst /,[/],[^[:space:]]*$(DOMAKE)) \
+		)[[:space:]](.+[[:space:]])?$(strip			$(subst /,[/],$(subst $(.),[$(.)],$(subst $(_),[$(_)],$(1)))) \
+		)$(if $(2),([/].+)?[[:space:]]$(if \
+			$(filter $(SPECIAL_VAL),$(2)),.+,$(strip	$(subst /,[/],$(subst $(.),[$(.)],$(subst $(_),[$(_)],$(2)))) \
+		)))$$/p" \
+		$(if $(2),,\
+			| $(SED) "/$(DOMAKE)[[:space:]]+--directory/d" \
+			| $(SED) "s|^|$(MARKER) |g" \
+		); \
+	$(ECHO) "$(_D)"
+
+override PROCPS_TESTING = \
+	$(call PROCPS,\
+		$(call $(TESTING)-name) ,\
+		$(call $(TESTING)-pwd) ,\
+		$(PHANTOM) \
+	)
+
+override PROCPS_TARGETS = \
+	$(foreach FILE,\
+		$(CONFIGS) \
+		$(TARGETS) \
+		$(PUBLISH) \
+		$(COMPOSER_RECURSIVE) \
+		,\
+		$(FILE) \
+		$(FILE)-$(DOITALL) \
+		$(FILE)-$(DOFORCE) \
+	)
+
+#>override GITIGNORE_LIST		+= PS
+#>override define GITIGNORE_PS =
+#>endef
 
 ########################################
 ### {{{3 Wget
@@ -2122,6 +2227,7 @@ override PANDOC_OPTIONS = $(strip \
 	\
 	--standalone \
 	--embed-resources \
+	--fail-if-warnings="$(if $(COMPOSER_FAILIFW),true,false)" \
 	--columns="$(COLUMNS)" \
 	--eol="$(EOL)" \
 	$(if $(or \
@@ -2267,6 +2373,7 @@ override COMPOSER_OPTIONS_GLOBAL := \
 	MAKEJOBS \
 	COMPOSER_DEBUGIT \
 	COMPOSER_DOCOLOR \
+	COMPOSER_FAILIFW \
 	COMPOSER_INCLUDE \
 	COMPOSER_DEPENDS \
 	COMPOSER_MAXLIST \
@@ -2304,6 +2411,7 @@ override COMPOSER_OPTIONS_MAKE := \
 	MAKEJOBS \
 	COMPOSER_DEBUGIT \
 	COMPOSER_DOCOLOR \
+	COMPOSER_FAILIFW \
 	COMPOSER_INCLUDE \
 	COMPOSER_DEPENDS \
 	COMPOSER_MAXLIST \
@@ -3858,6 +3966,7 @@ $(HELPOUT)-variables_control_%:
 	@$(TABLE_M3) "$(_C)[MAKEJOBS]"		"Parallel processing threads"				"$(if $(MAKEJOBS),$(_M)$(MAKEJOBS)$(_D) )$(_S)\`$(_N)(makejobs)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DEBUGIT]"	"Use verbose output"					"$(if $(COMPOSER_DEBUGIT),$(_M)$(COMPOSER_DEBUGIT)$(_D) )$(_S)\`$(_N)(debugit)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DOCOLOR]"	"Enable title/color sequences"				"$(if $(COMPOSER_DOCOLOR),$(_M)$(COMPOSER_DOCOLOR)$(_D) )$(_S)\`$(_N)(boolean)$(_S)\`"
+	@$(TABLE_M3) "$(_C)[COMPOSER_FAILIFW]"	"Treat warnings as failures"				"$(if $(COMPOSER_FAILIFW),$(_M)$(COMPOSER_FAILIFW)$(_D) )$(_S)\`$(_N)(boolean)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_INCLUDE]"	"Include all: $(_S)\`$(_M)$(COMPOSER_SETTINGS)$(_S)\`"	"$(if $(COMPOSER_INCLUDE),$(_M)$(COMPOSER_INCLUDE)$(_D) )$(_S)\`$(_N)(boolean)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_DEPENDS]"	"Sub-directories first: $(_C)[$(DOITALL)]"		"$(if $(COMPOSER_DEPENDS),$(_M)$(COMPOSER_DEPENDS)$(_D) )$(_S)\`$(_N)(boolean)$(_S)\`"
 	@$(TABLE_M3) "$(_C)[COMPOSER_MAXLIST]"	"Limit output of file lists"				"$(if $(COMPOSER_MAXLIST),$(_M)$(COMPOSER_MAXLIST)$(_D) )$(_S)\`$(_N)(maxlist)$(_S)\`"
@@ -3885,6 +3994,7 @@ $(HELPOUT)-variables_control_%:
 	@$(PRINT) "    * $(_S)*$(_C)[MAKEJOBS]$(_D)         ~ $(_S)\`$(_E)J$(_S)\`*"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_DEBUGIT]$(_D) ~ $(_S)\`$(_E)V$(_S)\`*"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_DOCOLOR]$(_D) ~ $(_S)\`$(_E)C$(_S)\`*"
+	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_FAILIFW]$(_D) ~ $(_S)\`$(_E)F$(_S)\`*"
 	@$(PRINT) "    * $(_S)*$(_C)[COMPOSER_KEEPING]$(_D) ~ $(_S)\`$(_E)K$(_S)\`*"
 	@$(PRINT) "  * $(_S)*\`$(_N)(makejobs)$(_S)\`$(_D) -- empty is disabled / number of threads / $(_S)\`$(_N)$(SPECIAL_VAL)$(_S)\`$(_D) is no limit$(_S)*"
 	@$(PRINT) "  * $(_S)*\`$(_N)(debugit)$(_S)\`$(_D)  -- empty is disabled / any value enables / $(_S)\`$(_N)$(SPECIAL_VAL)$(_S)\`$(_D) is full trace$(_S)*"
@@ -4068,6 +4178,11 @@ $(HELPOUT)-targets_title_%:
 ########################################
 #### {{{4 $(HELPOUT)-targets-primary
 ########################################
+
+#WORK
+#	move $(DOSETUP) to here...
+#	move $(EXPORTS) to here, also...?
+#	move $(PRINTER) to "Additional Targets"...?
 
 .PHONY: $(HELPOUT)-targets_primary_%
 $(HELPOUT)-targets_primary_%:
@@ -4340,9 +4455,7 @@ $(HELPOUT)-%:
 	@$(call TITLE_LN,2,Document Formatting)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-formatting)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Configuration Settings)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-settings)	; $(call TITLE_END)
 	@$(call TITLE_LN,2,Precedence Rules)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-rules)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Specifying Dependencies)	; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-depends)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Custom Targets)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-custom)	; $(call TITLE_END)
-	@$(call TITLE_LN,2,Repository Versions)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-versions)	; $(call TITLE_END)
+	@$(call TITLE_LN,2,Advanced Usage)		; $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-advanced)	; $(call TITLE_END)
 #>	@$(call TITLE_END)
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_title_1
 	@$(call ENV_MAKE,,$(COMPOSER_DEBUGIT),$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(HELPOUT)) $(HELPOUT)-variables_format_2		; $(ENDOLINE); $(call DO_HEREDOC,$(HELPOUT)-$(DOITALL)-variables_format)	; $(call TITLE_END)
@@ -4405,18 +4518,21 @@ $(HELPOUT)-$(PRINTER):
 	@$(ENDOLINE); $(call $(HELPOUT)-$(PRINTER)-formats)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Templates)"
 	@$(ENDOLINE); $(PRINT) "The $(_C)[$(INSTALL)]$(_D) target \`$(_M)$(MAKEFILE)$(_D)\` template $(_E)(for reference only)$(_D):"
-	@$(ENDOLINE); $(call $(.)$(EXAMPLE)-$(INSTALL))		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call $(.)$(EXAMPLE)-$(INSTALL))			$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)]$(_D) target to create \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` files:"
-	@$(ENDOLINE); $(call $(.)$(EXAMPLE))			$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call $(.)$(EXAMPLE))				$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)yml]$(_D) target to create \`$(_M)$(COMPOSER_YML)$(_D)\` files:"
-	@$(ENDOLINE); $(call $(.)$(EXAMPLE)$(.)yml)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call $(.)$(EXAMPLE)$(.)yml)			$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "Use the $(_C)[$(EXAMPLE)$(.)md]$(_D) target to create new \`$(_M)$(TMPL_INPUT)$(_D)\` files:"
-	@$(ENDOLINE); $(call $(.)$(EXAMPLE)$(.)md)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(call $(.)$(EXAMPLE)$(.)md)			$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Defaults)"
-	@$(ENDOLINE); $(PRINT) "The default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
-	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
-	@$(ENDOLINE); $(PRINT) "The template \`$(_M)$(COMPOSER_YML)$(_D)\` in the \`$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))$(_D)\` directory:"
-	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(PRINT) "Default \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the $(_C)[$(COMPOSER_BASENAME)]$(_D) directory:"
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+#> update: $(HOME)
+	@$(ENDOLINE); $(PRINT) "Example user \`$(_M)$(COMPOSER_SETTINGS)$(_D)\` in the \`$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))$(_D)\` directory:"
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_MK_HOME)	$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
+	@$(ENDOLINE); $(PRINT) "Template \`$(_M)$(COMPOSER_YML)$(_D)\` in the \`$(_M)$(call COMPOSER_CONV,,$(COMPOSER_ART))$(_D)\` directory:"
+	@$(ENDOLINE); $(call DO_HEREDOC,HEREDOC_COMPOSER_YML)		$(call $(HELPOUT)-$(PRINTER)-$(EXAMPLE))
 	@$(call TITLE_END)
 	@$(call TITLE_LN,2,Reserved,1)
 	@$(ENDOLINE); $(PRINT) "$(call $(HELPOUT)-$(DOITALL)-section,Target Names)"
@@ -4695,9 +4811,10 @@ $(call NEWLINE)$(_E)[$($(FILE)_NAME)]: $($(FILE)_HOME)$(_D) \
 
 $(_E)[$(PDF_LATEX_NAME)]: $(PDF_LATEX_HOME)$(_D)
 
-$(_S)[Git]: https://git-scm.com$(_D)
-$(_S)[Git SCM]: https://git-scm.com$(_D)
 $(_S)[GNU Diffutils]: http://www.gnu.org/software/diffutils$(_D)
+$(_S)[Git SCM]: https://git-scm.com$(_D)
+$(_S)[Git]: https://git-scm.com$(_D)
+$(_S)[Procps]: https://gitlab.com/procps-ng/procps$(_D)
 $(_S)[Rsync]: https://rsync.samba.org$(_D)
 $(_S)[npm]: https://www.npmjs.com$(_D)
 
@@ -4808,6 +4925,8 @@ endef
 ########################################
 
 override define $(HELPOUT)-$(DOITALL)-workflow =
+#WORK
+
 $(call $(HELPOUT)-$(DOITALL)-section,Directory Tree)
 
 The ideal workflow is to put $(_C)[$(COMPOSER_BASENAME)]$(_D) in a top-level `$(_M)$(COMPOSER_CMS)$(_D)` for each
@@ -4973,8 +5092,24 @@ endef
 #		add fontawesome rss to icons
 #		add icon to examples/configurations and personal sites
 #	oxford commas, everywhere
+#	standardize on 2-space indents for all lists, instead of 4-spaces
 #	create a "clean" target that only removes ".composer.*" directories/files...?
 #	note about the potential perils of running multiple targets at onces, such as extract/all, clean/all, etc.
+#	note that composer_debugit is the one variable that precedes/overrides .composer.mk files
+#		this is due to a chicken-and-egg situation
+#		and also was decided as acceptable behavior, for ability to set a default =1 and to =$(PHANTOM) or =0 troubleshooting on-demand
+
+#> update: $(HOME)
+#	composer_include - home directory .composer.mk, then composer, then curdur
+#		home directory .composer.mk and composer will both always be included
+#		composer .composer.mk should hard-set *all* variables that need to be absolute
+#			is this desired?  what about *-all and other such targets that a user has...?
+#			only parse a few "user" variables, such as makejobs, debugit, docolor, keeping, etc.?
+#			or, trust that if anyone actually uses this in a multi-user environment, that they have a central build repository, or commit validation, or some other mechanism...?
+#			goodness, since this is hooked in at composer_includes_dirs, it extends to .composer.yml and .composer-* resource files, also...
+#			current thought, at addition time, is that this may be desired behavior in a single-user environment (the likely widespread case), such as my own...
+#				...as a user, i can have my own personal defaults, so that it works as i want it to ad-hoc, and then follows repositories like my own case...
+#				...a central composer for universal use, and then specific configurations per-site/repository
 
 #WORK
 #	features
@@ -5069,8 +5204,8 @@ $(_C)[$(BOOTSWATCH_NAME)]$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(BOOTSWATCH_DIR))/docs/index.html$(_D)
 
 $(_S)--$(_D) $(_N)Examples:$(_D)
-    $(_S)[$(_N)Example Website$(_S)]($(_E)$(call COMPOSER_CONV,,$(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))$(_S))$(_D)
-  $(_S)/$(_D) $(_S)[$(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S)]($(_S)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
+  $(_S)[$(_N)Example Website$(_S)]($(_E)$(call COMPOSER_CONV,,$(PUBLISH_ROOT))/$(word 1,$(PUBLISH_FILES))$(_S))$(_D)
+$(_S)/$(_D) $(_S)[$(_N)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S)]($(_S)$(OUT_README).$(PUBLISH).$(EXTN_HTML)$(_S))$(_D)
 endef
 
 ########################################
@@ -5279,6 +5414,82 @@ $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(COMPOSER_YML)
 #WORK
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_ART)/$(OUT_README).$(PUBLISH).yml)$(_D)
 $(CODEBLOCK)$(call COMPOSER_CONV,$(EXPAND)/$(_M),$(COMPOSER_DIR)/$(OUT_README).$(PUBLISH).$(EXTN_HTML).yml)$(_D)
+
+$(call $(HELPOUT)-$(DOITALL)-section,Specifying Dependencies)
+
+If there are files or directories that have dependencies on other files or
+directories being processed first, this can be done simply using $(_C)[GNU Make]$(_D)
+syntax in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
+
+$(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)
+$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(PANDOC_DIR))$(_D)
+
+This would require `$(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)`, and for
+`$(_E)$(notdir $(PANDOC_DIR))$(_D)` to be processed before `$(_M)$(notdir $(COMPOSER_ART))$(_D)`.  Directories need to be specified
+with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with target names
+$(_E)(see [Custom Targets])$(_D).
+
+Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
+support.  Note that if a file or directory is set to depend on a target, that
+target will be run whenever the file or directory is called.
+
+$(call $(HELPOUT)-$(DOITALL)-section,Custom Targets)
+
+#WORK
+# $(COMPOSER_TINYNAME)-note
+# $(COMPOSER_TINYNAME)-makefile
+# $(COMPOSER_TINYNAME)-make
+# $(COMPOSER_TINYNAME)-mkdir
+# $(COMPOSER_TINYNAME)-cp
+# $(COMPOSER_TINYNAME)-ln
+# $(COMPOSER_TINYNAME)-mv
+# $(COMPOSER_TINYNAME)-rm
+
+#WORK
+# = Tooling Options
+# command variables?  $(SED), $(PRINT), etc., etc.
+# colors?  $(_F), etc.
+# DO_HEREDOC?
+# $($(DEBUGIT)-output)?
+
+#WORK
+# it's just basic shell scripting...
+#	@command1
+#	@command2
+#	@if ; then ...
+#	exits on fail = $(TRUE)
+#	helper targets and variables
+# migrate to *-target-[pre|post]
+#	update "targets:" filter
+#	sorted? use numbers, like udev, etc... 00-*, 10-*, etc.
+
+If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
+[Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Names matching the
+below list will include them in runs of the respective targets.  Targets with
+any other names will need to be included in $(_C)[COMPOSER_TARGETS]$(_D), defined as a
+dependency of another target $(_E)(see [Specifying Dependencies])$(_D), or otherwise run
+manually.
+$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\n  * $(_C)[$(_N)*$(_C)-$(RECURSIVE)]$(_D))
+
+Note that targets matching this list are internally removed from
+$(_C)[COMPOSER_TARGETS]$(_D) and other $(_C)[Control Variables]$(_D).  The output of $(_C)[$(CONFIGS)]$(_D) will
+reveal cases where this has occurred.
+
+There are a few limitations when naming custom targets.  Targets starting with
+the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
+Additionally, there is a list of reserved targets in $(_C)[Reserved]$(_D), along with a
+list of reserved variables.  $(_C)[GNU Make]$(_D) allows a very permissive list of
+characters in target names, but because $(_C)[$(COMPOSER_BASENAME)]$(_D) is doing file-based
+operations via $(_C)[GNU Bash]$(_D), any characters that require shell-escaping have the
+potential to be problematic.  The most robust solution was to limit file names
+to a limited list of safe characters, so all targets and files must also match
+the regular expression `$(_N)$(COMPOSER_REGEX)$(_D)` $(_E)(see [Important Notes])$(_D).
+
+Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced early in the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
+`$(_M)$(MAKEFILE)$(_D)`, so matching targets and most variables will be overridden.  In the
+case of conflicting targets, $(_C)[GNU Make]$(_D) will produce warning messages.
+Variables will have their values changed silently.  Changing the values of
+internal $(_C)[$(COMPOSER_BASENAME)]$(_D) variables is not recommended or supported.
 endef
 
 ########################################
@@ -5367,94 +5578,19 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(PANDOC_NAME) Options)
 endef
 
 ########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-depends
+### {{{3 $(HELPOUT)-$(DOITALL)-advanced
 ########################################
 
-override define $(HELPOUT)-$(DOITALL)-depends =
-If there are files or directories that have dependencies on other files or
-directories being processed first, this can be done simply using $(_C)[GNU Make]$(_D)
-syntax in `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
+override define $(HELPOUT)-$(DOITALL)-advanced =
+#WORK
 
-$(CODEBLOCK)$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D): $(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)
-$(CODEBLOCK)$(_M)$(DOITALL)-$(SUBDIRS)-$(notdir $(COMPOSER_ART))$(_D): $(_E)$(DOITALL)-$(SUBDIRS)-$(notdir $(PANDOC_DIR))$(_D)
-
-This would require `$(_E)$(OUT_README).$(EXTN_DEFAULT)$(_D)` to be completed before `$(_M)$(OUT_LICENSE).$(EXTN_DEFAULT)$(_D)`, and for
-`$(_E)$(notdir $(PANDOC_DIR))$(_D)` to be processed before `$(_M)$(notdir $(COMPOSER_ART))$(_D)`.  Directories need to be specified
-with the `$(_C)$(DOITALL)-$(SUBDIRS)-$(_N)*$(_C)$(_D)` syntax in order to avoid conflicts with target names
-$(_E)(see [Custom Targets])$(_D).
-
-Chaining of dependencies can be as complex and layered as $(_C)[GNU Make]$(_D) will
-support.  Note that if a file or directory is set to depend on a target, that
-target will be run whenever the file or directory is called.
-endef
-
-########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-custom
-########################################
+$(call $(HELPOUT)-$(DOITALL)-section,Optimizing Performance)
 
 #WORK
-# $(COMPOSER_TINYNAME)-note
-# $(COMPOSER_TINYNAME)-makefile
-# $(COMPOSER_TINYNAME)-make
-# $(COMPOSER_TINYNAME)-mkdir
-# $(COMPOSER_TINYNAME)-cp
-# $(COMPOSER_TINYNAME)-ln
-# $(COMPOSER_TINYNAME)-mv
-# $(COMPOSER_TINYNAME)-rm
+#	cpu will max out first, but memory exhaustion and disk thrashing are the real concerns
 
-#WORK
-# = Tooling Options
-# command variables?  $(SED), $(PRINT), etc., etc.
-# colors?  $(_F), etc.
-# DO_HEREDOC?
-# $($(DEBUGIT)-output)?
+$(call $(HELPOUT)-$(DOITALL)-section,Repository Versions)
 
-#WORK
-# it's just basic shell scripting...
-#	@command1
-#	@command2
-#	@if ; then ...
-#	exits on fail = $(TRUE)
-#	helper targets and variables
-# migrate to *-target-[pre|post]
-#	update "targets:" filter
-#	sorted? use numbers, like udev, etc... 00-*, 10-*, etc.
-
-override define $(HELPOUT)-$(DOITALL)-custom =
-If needed, custom targets can be defined inside a `$(_M)$(COMPOSER_SETTINGS)$(_D)` file $(_E)(see
-[Configuration Settings])$(_D), using standard $(_C)[GNU Make]$(_D) syntax.  Names matching the
-below list will include them in runs of the respective targets.  Targets with
-any other names will need to be included in $(_C)[COMPOSER_TARGETS]$(_D), defined as a
-dependency of another target $(_E)(see [Specifying Dependencies])$(_D), or otherwise run
-manually.
-$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\n  * $(_C)[$(_N)*$(_C)-$(RECURSIVE)]$(_D))
-
-Note that targets matching this list are internally removed from
-$(_C)[COMPOSER_TARGETS]$(_D) and other $(_C)[Control Variables]$(_D).  The output of $(_C)[$(CONFIGS)]$(_D) will
-reveal cases where this has occurred.
-
-There are a few limitations when naming custom targets.  Targets starting with
-the regular expression `$(_N)$(COMPOSER_REGEX_PREFIX)$(_D)` are hidden, and are skipped by auto-detection.
-Additionally, there is a list of reserved targets in $(_C)[Reserved]$(_D), along with a
-list of reserved variables.  $(_C)[GNU Make]$(_D) allows a very permissive list of
-characters in target names, but because $(_C)[$(COMPOSER_BASENAME)]$(_D) is doing file-based
-operations via $(_C)[GNU Bash]$(_D), any characters that require shell-escaping have the
-potential to be problematic.  The most robust solution was to limit file names
-to a limited list of safe characters, so all targets and files must also match
-the regular expression `$(_N)$(COMPOSER_REGEX)$(_D)` $(_E)(see [Important Notes])$(_D).
-
-Any included `$(_M)$(COMPOSER_SETTINGS)$(_D)` files are sourced early in the main $(_C)[$(COMPOSER_BASENAME)]$(_D)
-`$(_M)$(MAKEFILE)$(_D)`, so matching targets and most variables will be overridden.  In the
-case of conflicting targets, $(_C)[GNU Make]$(_D) will produce warning messages.
-Variables will have their values changed silently.  Changing the values of
-internal $(_C)[$(COMPOSER_BASENAME)]$(_D) variables is not recommended or supported.
-endef
-
-########################################
-### {{{3 $(HELPOUT)-$(DOITALL)-versions
-########################################
-
-override define $(HELPOUT)-$(DOITALL)-versions =
 There are a few internal variables used by $(_C)[$(UPGRADE)]$(_D) to select the repository
 and binary versions of integrated components $(_E)(see [Requirements])$(_D).  These are
 exposed for configuration, but only within `$(_M)$(COMPOSER_SETTINGS)$(_D)`:
@@ -5633,25 +5769,31 @@ $(call $(HELPOUT)-$(DOITALL)-section,MAKEJOBS)
 #	a first troubleshooting step is to do MAKEJOBS="1"
 #		this came up with site-library when two different sub-directories triggered a rebuild simultaneously
 
-  * By default, $(_C)[$(COMPOSER_BASENAME)]$(_D) progresses linearly, doing one task at a time.  If
-    there are dependencies between items, this can be beneficial, since it
-    ensures things will happen in a particular order.  The downside, however, is
-    that it is very slow.
-  * $(_C)[$(COMPOSER_BASENAME)]$(_D) supports $(_C)[GNU Make]$(_D) parallel execution, where multiple threads
-    can be working through tasks independently.  Experiment with lower values
-    first.  When recursing through large directories, each `$(_C)$(DOMAKE)$(_D)` that
-    instantiates into a sub-directory has it's own jobs server, so the total
-    number of threads running can proliferate rapidly.
-  * This can drastically speed up execution, processing thousands of files and
-    directories in minutes.  However, values that are too high can exhaust
-    system resources.  With great power comes great responsibility.
-  * A value of `$(_N)$(SPECIAL_VAL)$(_D)` does parallel execution with no thread limit.
+  * $(_C)[$(COMPOSER_BASENAME)]$(_D) is highly parallelized using the built-in $(_C)[GNU Make]$(_D) jobserver
+    mechanism, supporting an arbitrary number of threads for multiple concurrent
+    tasks.  To strike a balance between speed and modest resource consumption,
+    the default is `$(_N)$(MAKEJOBS_DEFAULT)$(_D)`.
+  * Increasing this number can drastically speed up execution, processing
+    thousands of files and directories in minutes $(_E)(see [Optimizing
+    Performance])$(_D).  However, values that are too high can exhaust system
+    resources, particularly when utilizing the suite of $(_C)[Static Websites]$(_D)
+    features.  With great power comes great responsibility.
+  * Experiment with lower values first.  While the jobserver manages the number
+    of active `$(_M)$(DOMAKE)$(_D)` processes, each sub-directory recursion results in another
+    fork.  Additionally, $(_C)[$(COMPOSER_BASENAME)]$(_D) makes full use of $(_C)[GNU Bash]$(_D) piping and
+    subshells, along with a necessary number of internal $(_C)[GNU Make]$(_D), $(_C)[$(PANDOC_NAME)]$(_D),
+    and $(_C)[$(YQ_NAME)]$(_D) calls.  All this can compound quickly and cause the total number of
+    running processes to proliferate rapidly.
+  * An empty value or `$(_N)$(MAKEJOBS_SINGLE)$(_D)` will disable the $(_C)[GNU Make]$(_D) jobserver, and tasks will
+    be processed sequentially and linearly.
+  * A value of `$(_N)$(SPECIAL_VAL)$(_D)` does parallel execution with no thread limit, at maximum
+    possible speed.  Use with caution.  Full speed ahead.
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_DEBUGIT)
 
   * Provides more explicit details about what is happening at each step.  It
     generates a lot more output, and can be slower.  It will also be hard to
-    read unless $(_C)[MAKEJOBS]$(_D) is set to `$(_N)$(MAKEJOBS_DEFAULT)$(_D)`.
+    read unless $(_C)[MAKEJOBS]$(_D) is set to `$(_N)$(MAKEJOBS_SINGLE)$(_D)`.
   * Full tracing using `$(_N)$(SPECIAL_VAL)$(_D)` outputs complete $(_C)[GNU Make]$(_D) and $(_C)[GNU Bash]$(_D) debugging
     information.  This is extraordinarily verbose, and it is recommended to pipe
     it to a file for review.
@@ -5665,6 +5807,17 @@ $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_DOCOLOR)
     some.
   * This is also used internally for targets like $(_C)[$(DEBUGIT)-$(TOAFILE)]$(_D), $(_C)[$(TESTING)-$(TOAFILE)]$(_D)
     and $(_C)[$(EXAMPLE)]$(_D), where plain text is required.
+
+$(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_FAILIFW)
+
+  * $(_C)[$(PANDOC_NAME)]$(_D) produces warnings for invalid syntax, missing resources or images,
+    and other issues that do not preclude successfully creating an output file.
+  * $(_C)[$(COMPOSER_BASENAME)]$(_D) treats all such warnings as failures, for two reasons:
+    * Assist in ensuring input files produce the desired output, by making it
+      clear when there are issues.
+    * In cases of automation or when a large number of files are being
+      processed, output may not be actively monitored for these warnings.
+  * Disable this if the default $(_C)[$(PANDOC_NAME)]$(_D) behavior is desired instead.
 
 $(call $(HELPOUT)-$(DOITALL)-section,COMPOSER_INCLUDE)
 
@@ -7981,6 +8134,25 @@ $(_S)###########################################################################
 endef
 
 ########################################
+### {{{3 Heredoc: composer_mk ($(HOME))
+########################################
+
+#> update: $(HOME)
+override define HEREDOC_COMPOSER_MK_HOME =
+$(_S)################################################################################$(_D)
+$(_S)#$(_D) $(_H)$(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration$(_D)
+$(_S)################################################################################$(_D)
+
+$(_N)override$(_D) $(_C)MAKEJOBS$(_D)			:= $(_M)$(SPECIAL_VAL)$(_D)
+$(_N)override$(_D) $(_C)COMPOSER_DEBUGIT$(_D)		:= $(_M)1$(_D)
+$(_N)override$(_D) $(_C)COMPOSER_KEEPING$(_D)		:=
+
+$(_S)################################################################################$(_D)
+$(_S)#$(_D) $(_H)End Of File$(_D)
+$(_S)################################################################################$(_D)
+endef
+
+########################################
 ### {{{3 Heredoc: composer_mk ($(PUBLISH))
 ########################################
 
@@ -8036,7 +8208,7 @@ override define HEREDOC_COMPOSER_MK_PUBLISH_EXAMPLE =
 ################################################################################
 ifneq ($$(COMPOSER_CURDIR),)
 ################################################################################
-
+$(if $(1),$(call NEWLINE)override COMPOSER_FAILIFW		:=)
 override COMPOSER_IGNORES		:= $(notdir $(PUBLISH_ROOT_TESTING)) $(notdir $(PUBLISH_INCLUDE))$(COMPOSER_FILEEXT_DEFAULT)
 
 ########################################
@@ -13008,6 +13180,7 @@ templateyml
 docolor
 docx
 epub
+failifw
 makejobs
 pptx
 revealjs
@@ -13035,6 +13208,7 @@ mv
 npm
 pandoc
 printf
+procps
 realmake
 realpath
 rs
@@ -13283,6 +13457,7 @@ yaml
 ########################################
 # exceptions
 
+jobserver
 parsable
 prettification
 recurse
@@ -13598,14 +13773,14 @@ override $(HEADERS) = \
 	$(foreach FILE,$($(HEADERS)-list-path),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
-			"$(_N)$(if $(filter COMPOSER_ROOT,$(FILE)),$(COMPOSER_ROOT),$(call $(HEADERS)-options-conv,$($(FILE))))"; \
+			"$(_N)$(if $(filter COMPOSER_ROOT,$(FILE)),$(COMPOSER_ROOT),$(call $(HEADERS)-options-conv,$(_N),$($(FILE))))"; \
 	) \
 	$(call $(HEADERS)-table,$(3)) \
 		"$(_E)MAKECMDGOALS" \
-		"$(_H)$(call $(HEADERS)-options-conv,\
+		"$(_H)$(call $(HEADERS)-options-conv,$(_H),\
 			$(if $(1),$(1),$(@)))$(if \
 			$(COMPOSER_DOITALL_$(if $(1),$(1),$(@)))	,$(_D)-$(_E)$(COMPOSER_DOITALL_$(if $(1),$(1),$(@))))$(_D) $(_S)$(DIVIDE)$(if \
-			$(MAKECMDGOALS)					,$(_D) $(_M)$(MAKECMDGOALS))"; \
+			$(MAKECMDGOALS)					,$(_D) $(_M)$(call $(HEADERS)-options-conv,$(_M),$(MAKECMDGOALS)))"; \
 	$(if $(or $(COMPOSER_DEBUGIT),$(2)),$(foreach FILE,$($(HEADERS)-list-make),\
 		$(call $(HEADERS)-table,$(3)) \
 			"$(_E)$(FILE)" \
@@ -13629,7 +13804,7 @@ override $(HEADERS) = \
 override $(HEADERS)-options = \
 	$(call $(HEADERS)-table,$(2)) \
 		"$(_C)$(1)" \
-		"$(_M)$(call $(HEADERS)-options-conv,$(call $(HEADERS)-options-val,$(1)))$(if \
+		"$(_M)$(call $(HEADERS)-options-conv,$(_M),$(call $(HEADERS)-options-val,$(1)))$(if \
 			$(filter $(1),$(COMPOSER_OPTIONS_GLOBAL) \
 			),$(if $(call $(HEADERS)-options-val,$(1)),$(_D) )$(_E)$(MARKER))"
 
@@ -13639,8 +13814,11 @@ override $(HEADERS)-options = \
 
 #> update: COMPOSER_CONV.*COMPOSER_TINYNAME
 
+#> update: $(HOME)
 override $(HEADERS)-options-conv = \
-	$(call COMPOSER_CONV,$(EXPAND),$(call COMPOSER_CONV,[$(COMPOSER_TINYNAME)],$(1),,1,1),1,1,1)
+	$(patsubst $(HOME)/%,$(_F)(~)/%$(1),\
+		$(call COMPOSER_CONV,$(EXPAND),$(call COMPOSER_CONV,[$(COMPOSER_TINYNAME)],$(2),,1,1),1,1,1) \
+	)
 
 ########################################
 ##### {{{5 $(HEADERS)-options-files
@@ -13790,7 +13968,7 @@ override $(HEADERS)-line	= $(if $(1),$(if $(2),$(TABLE_M2_HEADER_L),$(LINERULE))
 override $(HEADERS)-table	= $(if $(1),$(TABLE_M2),$(TABLE_C2))
 
 override $(HEADERS)-linerule = \
-	$(if $(or $(1),$(filter	$(MAKEJOBS),$(MAKEJOBS_DEFAULT))),$(LINERULE);)
+	$(if $(or $(1),$(filter	$(MAKEJOBS),$(MAKEJOBS_SINGLE))),$(LINERULE);)
 
 override $(HEADERS)-action = \
 	$(call $(HEADERS)-linerule,$(5)) \
@@ -14423,6 +14601,8 @@ override $(CREATOR)-$(TARGETS) += $(CREATOR)$(_)$(notdir $(COMPOSER_ART))
 $(CREATOR)$(_)$(notdir $(COMPOSER_ART)):
 	@$(call $(HEADERS)-file,$(CURDIR),$(call COMPOSER_CONV,,$(COMPOSER_ART)))
 	@$(call DO_HEREDOC,HEREDOC_GITIGNORE)				| $(SED) "s|[[:space:]]+$$||g" >$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/.gitignore
+#> update: $(HOME)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_HOME,1)			>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(COMPOSER_SETTINGS)
 	@$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1)			>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_ART))/$(COMPOSER_YML)
 	@$(ECHO) "$(_E)"
 	@$(ECHO) ""							>$(call COMPOSER_CONV,$(CURDIR)/,$(COMPOSER_LOGO))
@@ -14990,7 +15170,8 @@ override $(TESTING)-done = \
 	$(ECHO) "" >$(call $(TESTING)-log,$(1),done); \
 	$(call ENV_MAKE,$(TESTING_MAKEJOBS),,$(COMPOSER_DOCOLOR),COMPOSER_DOITALL_$(TESTING)) $(@)-done 2>&1 \
 		| $(TEE) $(call $(TESTING)-log,$(1),done); \
-		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi
+		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
+	$(call $(TESTING)-success)
 
 ########################################
 #### {{{4 $(TESTING)-find
@@ -15016,13 +15197,18 @@ override $(TESTING)-count = \
 	fi
 
 ########################################
+#### {{{4 $(TESTING)-success
+########################################
+
+override $(TESTING)-success = \
+	$(PRINT) "$(_M)$(MARKER) [$(@)]$(_D) $(_H)SUCCESS!"
+
+########################################
 #### {{{4 $(TESTING)-fail
 ########################################
 
 override $(TESTING)-fail = \
-	$(ENDOLINE); \
-	$(call $(HEADERS)-note,$(call $(TESTING)-pwd,$(1)),FAILED!,$(call $(TESTING)-name)); \
-	$(ENDOLINE); \
+	$(PRINT) "$(_M)$(MARKER) [$(@)]$(_D) $(_F)FAILED!"; \
 	if [ -z "$(COMPOSER_DOITALL_$(TESTING))" ]; then \
 		exit 1; \
 	fi
@@ -15239,44 +15425,43 @@ endif
 ### {{{3 $(TESTING)-stress
 ########################################
 
-#WORKING:FIX:TESTING
-
 #> uname -a
-#>	Linux phoenix 5.10.154-gentoo.gary-os #1 SMP PREEMPT Mon Jan 2 10:51:39 -00 2023 x86_64 Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz GenuineIntel GNU/Linux
+#>	Linux phoenix 6.18.50-gentoo.gary-os #1 SMP PREEMPT_DYNAMIC Tue Sep 29 02:04:24 -00 2026 x86_64 Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz GenuineIntel GNU/Linux
 #> grep -i -e "^model name" -e "^siblings" /proc/cpuinfo | head -n2
 #>	model name: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 #>	siblings: 20
 #> grep -i "^memtotal" /proc/meminfo
-#>	MemTotal: 65739512 kB
+#>	MemTotal: 65714020 kB
 
-#> DEBUGIT=""
-#>	Directories:		( 17 * 13 )		=   221
-#>	Makefiles:		( . + 3 )		=   224
-#>	Sources:		( 117 * 13 )		=  1521
-#>	Outputs:		( . * 4 ) + ( 8 * 3 )	=  6108
-#>				( . * 5 ) + ( 8 * 3 )	=  7629
-#> DEBUGIT="1"
-#>	Directories:		( . + ( 6 * 13 ) )	=   299
-#>	Makefiles:		( . + ( 6 * 13 ) )	=   302
-#>	Sources:		( 836 * 13 )		= 10868
-#>	Outputs:		( . * 4 ) + ( 8 * 3 )	= 43496
-#>				( . * 5 ) + ( 8 * 3 )	= 54364
-#> MAKEJOBS: 20 / DEBUGIT: -
-#>	install:		~ <1m
-#>	all:			~  2m
-#>	clean:			~ <1m
-#>	site (null):		~  8m
-#>	site (testing):		~ 12m
-#>	site (showdir):		~ 21m
-#>	site (example):		~ 25m
-#> MAKEJOBS: 20 / DEBUGIT: 1
-#>	install:		~  <1m
-#>	all:			~   7m
-#>	clean:			~   1m
-#>	site (null):		~ 212m
-#>	site (testing):		~ 223m
-#>	site (showdir):		~ 249m
-#>	site (example):		~ 276m
+#> COMPOSER_DEBUGIT=""
+#>	Directories |  228
+#>	Makefiles   |  231
+#>	Sources     |  439
+#>	Outputs     | 2276
+#>	Jobs        |   16
+#>	Debug       |    -
+#>	<10s	install-force
+#>	<2m	all-all
+#>	<10s	clean-all
+#>	<10m	site-force  [442] .null
+#>	<10m	site-force  [884] HEREDOC_COMPOSER_YML_PUBLISH_TESTING
+#>	<25m	site-force [1326] HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE
+#>	<25m	site-force [1798] HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS
+
+#> COMPOSER_DEBUGIT="1"
+#>	Directories |   306
+#>	Makefiles   |   309
+#>	Sources     | 13894
+#>	Outputs     | 69551
+#>	Jobs        |    16
+#>	Debug       |     1
+#>	<30s	install-force
+#>	<10m	all-all
+#>	<30s	clean-all
+#>	<90m	site-force [13897] .null
+#>	<90m	site-force [27794] HEREDOC_COMPOSER_YML_PUBLISH_TESTING
+#>	<180m	site-force [41691] HEREDOC_COMPOSER_YML_PUBLISH_EXAMPLE
+#>	<180m	site-force [55618] HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS
 
 .PHONY: $(TESTING)-stress
 $(TESTING)-stress: $(TESTING)-$(_)Think
@@ -15321,6 +15506,7 @@ override $(TESTING)-stress-init = \
 	else \
 		$(call DO_HEREDOC,HEREDOC_COMPOSER_YML,1) >$(call $(TESTING)-pwd)/$(COMPOSER_YML); \
 	fi; \
+	$(call DO_HEREDOC,$(TESTING)-stress-init-$(COMPOSER_SETTINGS),,$(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT))) >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS); \
 	$(call $(TESTING)-stress-init-$(CONFIGS),$(call $(TESTING)-pwd),$(filter $(1),HEREDOC_COMPOSER_YML_PUBLISH_CONFIGS)); \
 	$(RM) --recursive $(call $(TESTING)-pwd)/$(notdir $(PUBLISH_LIBRARY)); \
 	for TLD in {1..3}; do \
@@ -15339,6 +15525,10 @@ override $(TESTING)-stress-init = \
 			$(RM) --recursive $(call $(TESTING)-pwd)/tld$${TLD}/sub$${SUB}/$(notdir $(PUBLISH_LIBRARY)); \
 		done; \
 	done
+
+override define $(TESTING)-stress-init-$(COMPOSER_SETTINGS) =
+$(if $(1),override COMPOSER_FAILIFW :=)
+endef
 
 override $(TESTING)-stress-init-$(CONFIGS) = \
 	if [ -z "$(2)" ]; then \
@@ -15365,6 +15555,9 @@ override $(TESTING)-stress-init-$(PUBLISH) = \
 
 .PHONY: $(TESTING)-stress-done
 $(TESTING)-stress-done:
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(call PROCPS_TESTING)
+endif
 	@$(call $(TESTING)-find,MAKECMDGOALS)
 	@$(call $(TESTING)-find,$(PUBLISH)-$(DOFORCE).+$(DIVIDE))
 	@$(call $(TESTING)-find,^real)
@@ -15379,21 +15572,20 @@ $(TESTING)-stress-done:
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
-#WORKING:FIX:TESTING
-#	git reset ; vdiff -g 4606d256c6e7610442b4c7a64fb1a333807e904b Makefile
 .PHONY: $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING)-$(COMPOSER_BASENAME): $(TESTING)-$(_)Think
 $(TESTING)-$(COMPOSER_BASENAME):
 	@$(call $(TESTING)-$(HEADERS),\
 		Basic '$(_C)$(COMPOSER_BASENAME)$(_D)' functionality ,\
 		\n\t * Variable alias precedence \
-\
-		\n\t * \#WORKING:FIX:TESTING \
+		\n\t * Input file selection methods: \
 		\n\t\t * Automatic input file detection \
-		\n\t\t * Variable-defined '$(_C)c_list$(_D)' override $(_E)(plus wildcard)$(_D) \
-		\n\t\t * Command-line '$(_C)c_list$(_D)' shortcut \
+		\n\t\t * Variable-defined '$(_C)c_list$(_D)' overrides: \
+		\n\t\t\t * '$(_M)<filename>.<extension>$(_D)' \
+		\n\t\t\t * '$(_M)<filename>.<extension>$(_D)/$(_C)c_list$(_D)' \
+		\n\t\t\t * '$(_M)<filename>.$(_N)*$(_D)/$(_C)c_list$(_D)' \
+		\n\t\t * Command-line '$(_C)c_list$(_D)' options \
 		\n\t\t * $(PANDOC_NAME) '$(_C)c_type$(_D)' pass-through \
-\
 		\n\t * Expansion of '$(_C)c_margins$(_D)' variable \
 		\n\t * Quoting in '$(_C)c_options$(_D)' variable \
 		\n\t * Empty '$(_C)COMPOSER_TARGETS$(_D)' and '$(_C)COMPOSER_SUBDIRS$(_D)' values \
@@ -15409,7 +15601,9 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	#> precedence
 	@$(call $(TESTING)-run,,$(NOTHING)) MAKEJOBS="100" J="10" $(CONFIGS)
 	@$(call $(TESTING)-run,,$(NOTHING)) J="10" $(CONFIGS)
-	#> targets
+	#> input
+	@$(call $(TESTING)-run) $(OUT_LICENSE)$(COMPOSER_FILEEXT_DEFAULT).$(EXTN_DEFAULT)
+	@$(call $(TESTING)-run) $(OUT_LICENSE).$(EXTN_DEFAULT)
 	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""		c_base=""		c_list=""						|| $(TRUE)
 	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type="$(TYPE_DEFAULT)"	c_base=""		c_list=""						|| $(TRUE)
 	@$(call $(TESTING)-run,,,1) $(COMPOSER_PANDOC) c_type=""		c_base="$(OUT_MANUAL)"	c_list=""						|| $(TRUE)
@@ -15434,18 +15628,18 @@ $(TESTING)-$(COMPOSER_BASENAME)-init:
 	@$(call $(TESTING)-run,,,1) c_options='--variable='"'$(TESTING)=$(DEBUGIT)'" $(CLEANER) $(OUT_README).$(EXTN_DEFAULT)
 	#> values
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := $(PHANTOM) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := $(PHANTOM) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(PHANTOM) $(notdir $(call $(TESTING)-pwd))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(PHANTOM) $(notdir $(call $(TESTING)-pwd))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 #>	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING) $(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING) $(notdir $(call $(TESTING)-pwd))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING) $(notdir $(call $(TESTING)-pwd))\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)-$(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
-	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)-$(notdir $(call $(TESTING)-pwd))\n"	>>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_TARGETS := $(NOTHING)-$(notdir $(call $(TESTING)-pwd))$(_)$(TARGETS)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
+	@$(ECHO) "override COMPOSER_SUBDIRS := $(NOTHING)-$(notdir $(call $(TESTING)-pwd))$(_)$(SUBDIRS)\n" >>$(call $(TESTING)-pwd)/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run) $(CONFIGS)
 	@$(call $(TESTING)-run) $(DOITALL)-$(DOITALL)
 
@@ -15523,7 +15717,9 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	#> precedence
 	@$(call $(TESTING)-count,1,MAKEJOBS.+100)
 	@$(call $(TESTING)-count,1,MAKEJOBS.+10[^0])
-	#> targets
+	#> input
+	@$(call $(TESTING)-count,1,Creating.+$(OUT_LICENSE)$(COMPOSER_FILEEXT_DEFAULT).$(EXTN_DEFAULT))
+	@$(call $(TESTING)-count,1,Creating.+$(OUT_LICENSE).$(EXTN_DEFAULT))
 	@$(call $(TESTING)-count,3,c_type=[\"][\"])
 	@$(call $(TESTING)-count,3,c_base=[\"][\"])
 	@$(call $(TESTING)-count,3,c_list=[\"][\"])
@@ -15549,8 +15745,8 @@ $(TESTING)-$(COMPOSER_BASENAME)-done:
 	@$(call $(TESTING)-count,0,Processing.+$(DOITALL).+$(NOTHING).+$(NOTHING))
 	@$(call $(TESTING)-count,1,COMPOSER_TARGETS.+$(NOTHING)[-]$(notdir $(call $(TESTING)-pwd)))
 	@$(call $(TESTING)-count,1,COMPOSER_SUBDIRS.+$(NOTHING)[-]$(notdir $(call $(TESTING)-pwd)))
-	@$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)))
-	@$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)))
+	@$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)).+$(TARGETS))
+	@$(call $(TESTING)-count,1,Processing.+$(DOITALL).+$(NOTHING).+$(notdir $(call $(TESTING)-pwd)).+$(SUBDIRS))
 
 ########################################
 ### {{{3 $(TESTING)-$(TARGETS)
@@ -15949,7 +16145,6 @@ $(TESTING)-COMPOSER_DEPENDS-done:
 
 #> update: COMPOSER_MAXLIST
 
-#> validate: grep -aE -e ">> [0-9]+" -e "MAKECMDGOALS" -e "^real" .Composer-*/*-COMPOSER_MAXLIST/+Composer-*-init.log
 override $(TESTING)-COMPOSER_MAXLIST-files	:= 1000
 override $(TESTING)-COMPOSER_MAXLIST-runs	:= $(if $(or $(COMPOSER_DEBUGIT),$(wildcard $(call $(TESTING)-pwd,$(call /,$(TESTING))-COMPOSER_MAXLIST)/.$(DEBUGIT))),8,22)
 override $(TESTING)-COMPOSER_MAXLIST-target	:= $(if $(or $(COMPOSER_DEBUGIT),$(wildcard $(call $(TESTING)-pwd,$(call /,$(TESTING))-COMPOSER_MAXLIST)/.$(DEBUGIT))),8,0)
@@ -16080,6 +16275,11 @@ endef
 
 .PHONY: $(TESTING)-COMPOSER_MAXLIST-done
 $(TESTING)-COMPOSER_MAXLIST-done:
+ifneq ($(COMPOSER_DEBUGIT),)
+	@$(call PROCPS_TESTING)
+	@$(SED) -n "/$(MARKER) [0-9]+..$(DIVIDE)/p" $(call $(TESTING)-log,,init)
+	@$(LINERULE)
+endif
 	@$(eval override $(TESTING)-COMPOSER_MAXLIST-count := $(shell \
 		$(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* $($(TESTING)-COMPOSER_MAXLIST-files) \
 	))
@@ -16116,6 +16316,7 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 		done; \
 		$(ECHO) "$${CNT}"; \
 	))
+ifeq ($(COMPOSER_DEBUGIT),)
 #>	@$(foreach FILE,$(filter-out COMPOSER_IGNORES,$(COMPOSER_OPTIONS_MAXLIST)),\
 #>	$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 3 + 3),COMPOSER_MAXLIST.+$(FILE))			$(call NEWLINE) \
 #>	)
@@ -16138,6 +16339,9 @@ $(TESTING)-COMPOSER_MAXLIST-done:
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-count) \* 1),Removing.+$(OUT_README)[.][0-9]+[.][0-9]+[.]$(EXTN_DEFAULT)($(SED_ESCAPE_COLOR))?$$)
 	@$(call $(TESTING)-count,$$($(EXPR) $(COMPOSER_KEEPING)),^[/].+[/]$(notdir $(COMPOSER_TMP))[/])
 	@$(call $(TESTING)-count,$$($(EXPR) $($(TESTING)-COMPOSER_MAXLIST-runs) \* 4 + 3),MAKECMDGOALS)
+else
+	@$(call $(TESTING)-find,MAKECMDGOALS)
+endif
 	@$(call $(TESTING)-find,^real)
 	@$(TABLE_M2) "$(_H)$(MARKER) Files"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-files)"
 	@$(TABLE_M2) "$(_H)$(MARKER) Runs"	"$(_C)$($(TESTING)-COMPOSER_MAXLIST-runs)"
@@ -16519,35 +16723,37 @@ ifeq ($(COMPOSER_DOITALL_$(CHECKIT)),$(HELPOUT))
 	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(YQ_NAME)]"				"$(_M)$(YQ_VER_COMPOSER)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER_COMPOSER)"
 	@$(TABLE_M2) "$(_H)Supporting Tools:"					"$(_S)--"
-	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_E)$(GIT_VER)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"
+	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_E)$(GIT_VER)"
+	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Procps]"				"$(_E)$(PROCPS_VER)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Rsync]"				"$(_E)$(RSYNC_VER)"
 else
 	@$(TABLE_M3) "$(_H)Project"						"$(_H)$(COMPOSER_BASENAME) Version"	"$(_H)System Version"
 	@$(TABLE_M3_HEADER_L)
-	@$(TABLE_M3) "$(_C)[GNU Bash]"						"$(_M)$(BASH_VER)"			"$(_D)$$($(BASH) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[GNU Coreutils]"			"$(_M)$(COREUTILS_VER)"			"$(_D)$$($(LS) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[GNU Findutils]"			"$(_M)$(FINDUTILS_VER)"			"$(_D)$$($(FIND) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[GNU Sed]"				"$(_M)$(SED_VER)"			"$(_D)$$($(SED) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[Util-Linux]"				"$(_M)$(UTIL_LINUX_VER)"		"$(_D)$$($(COLUMN) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_C)[GNU Make]"						"$(_M)$(MAKE_VER)"			"$(_D)$$($(REALMAKE) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PANDOC_NAME)]"			"$(_M)$(PANDOC_VER_COMPOSER)"		"$(_D)$$($(PANDOC) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(YQ_NAME)]"				"$(_M)$(YQ_VER_COMPOSER)"		"$(_D)$$($(YQ) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER_COMPOSER)"	"$(_D)$$($(PDF_LATEX) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)[GNU Bash]"						"$(_M)$(BASH_VER)"			"$(_D)$$($(word 1,$(BASH))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[GNU Coreutils]"			"$(_M)$(COREUTILS_VER)"			"$(_D)$$($(word 1,$(LS))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[GNU Findutils]"			"$(_M)$(FINDUTILS_VER)"			"$(_D)$$($(word 1,$(FIND))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[GNU Sed]"				"$(_M)$(SED_VER)"			"$(_D)$$($(word 1,$(SED))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[Util-Linux]"				"$(_M)$(UTIL_LINUX_VER)"		"$(_D)$$($(word 1,$(COLUMN))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_C)[GNU Make]"						"$(_M)$(MAKE_VER)"			"$(_D)$$($(word 1,$(REALMAKE))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PANDOC_NAME)]"			"$(_M)$(PANDOC_VER_COMPOSER)"		"$(_D)$$($(word 1,$(PANDOC))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(YQ_NAME)]"				"$(_M)$(YQ_VER_COMPOSER)"		"$(_D)$$($(word 1,$(YQ))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_M)$(PDF_LATEX_VER_COMPOSER)"	"$(_D)$$($(word 1,$(PDF_LATEX))	--version	2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_H)Supporting Tools:"					"$(_S)--"				"$(_S)--"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_E)$(GIT_VER)"			"$(_N)$$($(GIT) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$$($(DIFF) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Rsync]"				"$(_E)$(RSYNC_VER)"			"$(_N)$$($(RSYNC) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[GNU Diffutils]"			"$(_E)$(DIFFUTILS_VER)"			"$(_N)$$($(word 1,$(DIFF))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_E)$(GIT_VER)"			"$(_N)$$($(word 1,$(GIT))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Procps]"				"$(_E)$(PROCPS_VER)"			"$(_N)$$($(word 1,$(PS))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[Rsync]"				"$(_E)$(RSYNC_VER)"			"$(_N)$$($(word 1,$(RSYNC))	--version	2>/dev/null | $(HEAD) -n1)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M3) "$(_H)Target: [$(UPGRADE)]"				"$(_S)--"				"$(_S)--"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Wget"					"$(_E)$(WGET_VER)"			"$(_N)$$($(WGET) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)GNU Tar"				"$(_E)$(TAR_VER)"			"$(_N)$$($(TAR) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)GNU Gzip"				"$(_E)$(GZIP_VER)"			"$(_N)$$($(GZIP_BIN) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)7z"					"$(_E)$(7Z_VER)"			"$(_N)$$($(7Z)				2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Node.js ([npm])"			"$(_E)$(NPM_VER)"			"$(_N)$$($(NPM) --version		2>/dev/null | $(HEAD) -n1)"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Curl"					"$(_E)$(CURL_VER)"			"$(_N)$$($(CURL) --version		2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Wget"					"$(_E)$(WGET_VER)"			"$(_N)$$($(word 1,$(WGET))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)GNU Tar"				"$(_E)$(TAR_VER)"			"$(_N)$$($(word 1,$(TAR))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)GNU Gzip"				"$(_E)$(GZIP_VER)"			"$(_N)$$($(word 1,$(GZIP_BIN))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)7z"					"$(_E)$(7Z_VER)"			"$(_N)$$($(word 1,$(7Z))			2>/dev/null | $(HEAD) -n2 | $(TAIL) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Node.js ([npm])"			"$(_E)$(NPM_VER)"			"$(_N)$$($(word 1,$(NPM))	--version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)Curl"					"$(_E)$(CURL_VER)"			"$(_N)$$($(word 1,$(CURL))	--version	2>/dev/null | $(HEAD) -n1)"
 	@$(TABLE_M3) "$(_H)Target: [$(EXPORTS)]"				"$(_S)--"				"$(_S)--"
-	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[$(FIREBASE_NAME)]"			"$(_E)$(FIREBASE_VER_COMPOSER)"		"$(_N)$$($(call FIREBASE_RUN) --version	2>/dev/null | $(HEAD) -n1)"
+	@$(TABLE_M3) "$(_S)--$(_D) $(_E)[$(FIREBASE_NAME)]"			"$(_E)$(FIREBASE_VER_COMPOSER)"		"$(_N)$$($(call FIREBASE_RUN)	--version	2>/dev/null | $(HEAD) -n1)"
 endif
 	@$(ENDOLINE)
 	@$(TABLE_M2) "$(_H)Project"						"$(_H)Location & Options"
@@ -16562,8 +16768,9 @@ endif
 	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(YQ_NAME)]"				"$(call $(CHECKIT)-path,YQ)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_C)[$(PDF_LATEX_NAME)]$(_D) $(_C)[PDF]"	"$(_D)$(PDF_LATEX)"
 	@$(TABLE_M2) "$(_H)Supporting Tools:"					"$(_S)--"
-	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_N)$(GIT)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[GNU Diffutils]"			"$(_N)$(DIFF)"
+	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Git SCM]"				"$(_N)$(GIT)"
+	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Procps]"				"$(_N)$(PS)"
 	@$(TABLE_M2) "$(_S)--$(_D) $(_E)[Rsync]"				"$(_N)$(RSYNC)"
 ifneq ($(COMPOSER_DOITALL_$(CHECKIT)),)
 	@$(TABLE_M2) "$(_H)Target: [$(UPGRADE)]"				"$(_S)--"
@@ -16842,7 +17049,7 @@ $(TARGETS)-$(CHECKIT):
 #> update: PANDOC_FILES
 override $(TARGETS)-$(TARGETS) = \
 	$(if $(wildcard $(call COMPOSER_TMP_FILE,,$(TARGETS))),,\
-		$(call $(HEADERS)-note,$(CURDIR),$(call COMPOSER_TMP_FILE,1,$(TARGETS)),$(TARGETS)) 1>&2; \
+		$(call $(HEADERS)-note,$(CURDIR),$(_E)$(call COMPOSER_TMP_FILE,1,$(TARGETS)),$(TARGETS)) 1>&2; \
 		$(MKDIR) $(COMPOSER_TMP) >/dev/null; \
 		$(call $(.)$(LISTING)) 2>/dev/null | $(SED) \
 			-e "/^$(MAKEFILE)[:]/d" \
@@ -19018,6 +19225,10 @@ override $(PUBLISH)-$(EXAMPLE)-$(INSTALL) = \
 		--filter="+_/**$(COMPOSER_FILEEXT_DEFAULT)" \
 		--filter="-_/**" \
 		$(PANDOC_DIR)/					$(1)/$(notdir $(PANDOC_DIR)); \
+	if [ -n "$(2)" ]; then \
+		$(call DO_HEREDOC,$(PUBLISH)-$(EXAMPLE)-$(INSTALL)-$(PANDOC_BIN_NAME)) \
+								>$(1)/$(notdir $(PANDOC_DIR))/$(PANDOC_DIR_TESTING)/$(COMPOSER_SETTINGS); \
+	fi; \
 	$(RSYNC) $(PANDOC_DIR)/MANUAL.txt			$(1)/$(patsubst %.$(EXTN_HTML),%$(COMPOSER_FILEEXT_DEFAULT),$(word 4,$(PUBLISH_FILES))); \
 	$(RSYNC) \
 		--delete-excluded \
@@ -19036,6 +19247,11 @@ override $(PUBLISH)-$(EXAMPLE)-$(INSTALL) = \
 			$(SED) -i -e "s|^[\#]{1}||g" -e "s|[<]img[ ][^>]+[>]||g" $${FILE}; \
 			$(TOUCH) --date="$(call DATEMARK,$(DATENOW))" $${FILE}; \
 		done
+
+override define $(PUBLISH)-$(EXAMPLE)-$(INSTALL)-$(PANDOC_BIN_NAME) =
+override COMPOSER_FAILIFW :=
+override COMPOSER_IGNORES := horizontalRule.md
+endef
 
 ########################################
 #### {{{4 $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
