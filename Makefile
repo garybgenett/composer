@@ -121,17 +121,16 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #				* `make COMPOSER_DEBUGIT="1" site-template`
 #			* `make site-template-+test`
 #				* `make COMPOSER_DEBUGIT="1" site-template-+test`
-#				* `make site-list`
-#				* `make site-list c_list="null.md"`
-#				* `make site-list c_list="test.md"`
 #			* `make site-template-config`
 #				* `make site-all`
 #				* `make site-force`
-#			* `make site-template-list`
-#				* `make COMPOSER_DOITALL_site-template="+test" site-template-list`
-#WORKING:FIX:TESTING
-#			* `while :; do make -C _site PROCESS-site-all ; sleep 10 ; done`
-#			* `while :; do make -C _site PROCESS-site-force ; sleep 10 ; done`
+#			* `while :; do \
+#				make -C _site proc; \
+#				make -C _site proc-site-all; \
+#				make -C _site proc-site-all c_list=".targets"; \
+#				make -C _site proc-site-all c_list="all all-all all-force"; \
+#				sleep 2; \
+#			done`
 #	* Paths
 #		* `override COMPOSER_EXPORT_DEFAULT := $(COMPOSER_ROOT)/../+$(COMPOSER_BASENAME)`
 #		* `override PUBLISH_ROOT := $(CURDIR)/+$(PUBLISH)`
@@ -152,13 +151,13 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #	* `make +test-stress`
 #		* `make MAKEJOBS="[X]" +test-stress`
 #		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-stress`
-#		* `while :; do make COMPOSER_DEBUGIT="1" +test-stress-done ; sleep 10 ; done`
+#		* `while :; do make COMPOSER_DEBUGIT="1" +test-stress-done; sleep 10; done`
 #		* Update results comments
 #		* Review "Optimizing Performance" section
 #	* `make +test-COMPOSER_MAXLIST`
 #		* `make MAKEJOBS="[X]" +test-COMPOSER_MAXLIST`
 #		* `make MAKEJOBS="[X]" COMPOSER_DEBUGIT="1" +test-COMPOSER_MAXLIST`
-#		* `while :; do make COMPOSER_DEBUGIT="1" +test-COMPOSER_MAXLIST-done ; sleep 10 ; done`
+#		* `while :; do make COMPOSER_DEBUGIT="1" +test-COMPOSER_MAXLIST-done; sleep 10; done`
 #		* Update numbers to maximum successful
 #		* Review "Optimizing Performance" section
 #
@@ -251,7 +250,7 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #
 ## {{{2 DOCX
 #
-#	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx ; vdiff README.md.txt README.markdown
+#	pandoc --from docx --to markdown --extract-media=README.markdown.files --track-changes=all --output=README.markdown README.docx; vdiff README.md.txt README.markdown
 #	--from "docx+styles"
 #	--from "docx" --track-changes="all"
 #	--from "docx|epub" --extract-media="[...]"
@@ -507,7 +506,7 @@ override SOURCE_INCLUDES = \
 		$(eval $(subst $(TOKEN), ,$(FILE))) \
 	))
 
-#WORKING:FIX:TESTING
+#WORKING:FIX:TESTING:HOME
 #> update: $(HOME)
 $(call SOURCE_INCLUDES,$(HOME))
 $(call SOURCE_INCLUDES,$(COMPOSER_DIR))
@@ -541,7 +540,7 @@ endif
 endif
 endif
 
-#WORKING:FIX:TESTING
+#WORKING:FIX:TESTING:HOME
 #> update: $(HOME)
 ifneq ($(and \
 	$(if $(COMPOSER_RELEASE),,1) ,\
@@ -1582,8 +1581,6 @@ endef
 ########################################
 ### {{{3 Procps
 ########################################
-
-#WORKING:FIX:TESTING
 
 #> update: $(NOTHING)-%
 ifeq ($(wildcard $(firstword $(PS))),)
@@ -2656,7 +2653,6 @@ override TESTING			:= $(_)test
 override CHECKIT			:= check
 override CONFIGS			:= config
 override TARGETS			:= targets
-#WORKING:FIX:TESTING
 override PROCESS			:= proc
 
 override DOSETUP			:= init
@@ -3075,6 +3071,7 @@ override COMPOSER_YML_DATA		:= $(shell $(call YQ_EVAL_DATA,$(COMPOSER_YML_DATA),
 endif
 endif
 
+#WORKING:FIX:TESTING:CLIST
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 ifneq ($(COMPOSER_LIBRARY),)
 ifneq ($(COMPOSER_LIBRARY),$(CURDIR))
@@ -4229,9 +4226,8 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)$(_N)*$(_C)]"		"Export individual $(_C)[Composer Variables]$(_D) values"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
-#WORKING:FIX:TESTING
-	@$(TABLE_M2) "$(_C)[$(PROCESS)]"			"#WORKING:FIX:TESTING"
-	@$(TABLE_M2) "$(_C)[$(PROCESS)-$(_N)*$(_C)]"		"#WORKING:FIX:TESTING"
+	@$(TABLE_M2) "$(_C)[$(PROCESS)]"			"Display proccess information for current $(_H)[COMPOSER_ROOT]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PROCESS)-$(_N)*$(_C)]"		"Additionally select matching top-level processes"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M)$(COMPOSER_CMS)$(_D)\` in current directory"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"$(_C)[Git]$(_D) commit of current directory tree or $(_C)[c_list]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)-$(DOITALL)]"		"Automatic $(_C)[$(CONVICT)]$(_D), without \`$(_C)\$$EDITOR$(_D)\` step"
@@ -4819,6 +4815,7 @@ $(_S)[GNU]: http://www.gnu.org$(_D)
 $(_S)[GNU/Linux]: https://gnu.org/gnu/linux-and-gnu.html$(_D)
 $(_S)[Windows Subsystem for Linux]: https://docs.microsoft.com/en-us/windows/wsl$(_D)
 $(_S)[MacPorts]: https://www.macports.org$(_D)
+$(_S)[htop]: https://htop.dev$(_D)
 
 $(_S)[GitHub]: https://github.com$(_D)
 endef
@@ -5586,6 +5583,8 @@ $(call $(HELPOUT)-$(DOITALL)-section,Optimizing Performance)
 #WORK
 #	cpu will max out first, but memory exhaustion and disk thrashing are the real concerns
 
+$(_N)*Side note that [htop] is a powerful tool for monitoring large process trees, their run times, and their resource consumption.  It is a highly recommended counterpart to [Static Websites] and other [Advanced Usage].*$(_D)
+
 $(call $(HELPOUT)-$(DOITALL)-section,Repository Versions)
 
 There are a few internal variables used by $(_C)[$(UPGRADE)]$(_D) to select the repository
@@ -5776,7 +5775,7 @@ $(call $(HELPOUT)-$(DOITALL)-section,MAKEJOBS)
     resources, particularly when utilizing the suite of $(_C)[Static Websites]$(_D)
     features.  With great power comes great responsibility.
   * Experiment with lower values first.  While the jobserver manages the number
-    of active `$(_M)$(DOMAKE)$(_D)` processes, each sub-directory recursion results in another
+    of active `$(_C)$(DOMAKE)$(_D)` processes, each sub-directory recursion results in another
     fork.  Additionally, $(_C)[$(COMPOSER_BASENAME)]$(_D) makes full use of $(_C)[GNU Bash]$(_D) piping and
     subshells, along with a necessary number of internal $(_C)[GNU Make]$(_D), $(_C)[$(PANDOC_NAME)]$(_D),
     and $(_C)[$(YQ_NAME)]$(_D) calls.  All this can compound quickly and cause the total number of
@@ -6575,9 +6574,30 @@ $(call $(HELPOUT)-$(DOITALL)-section,$(TARGETS))
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(PROCESS) / $(PROCESS)-\*)
 
-#WORKING:FIX:TESTING
-#	c_list=*
-#	c_list=$(PHANTOM)
+  * Outputs counts for key processes, along with `$(_C)$(notdir $(word 1,$(PS)))$(_D)` information, for all
+    recursive processes in $(_H)[COMPOSER_ROOT]$(_D).
+  * Using $(_C)[$(PROCESS)-$(_N)*$(_C)]$(_D) will also highlight all matching top-level `$(_C)$(DOMAKE)$(_D)` targets for
+    the entire system.  This is not limited to the current $(_H)[COMPOSER_ROOT]$(_D), and
+    will capture all process that are not a recursion fork.
+  * For these targets, the $(_C)[c_list]$(_D) variable is repurposed to filter the
+    recursive processes.  For `$(_C)$(_N)*$(_C)-$(DOITALL)$(_D)` or `$(_C)$(_N)*$(_C)-$(DOFORCE)$(_D)` runs in large directory trees
+    with a large number of files $(_E)(see [Directory Tree], [Optimizing
+    Performance], and [MAKEJOBS])$(_D), this can potentially be a large number of
+    processes, and it may be desired to limit the output to a specific list of
+    targets.
+    * The value `$(_M)$(PHANTOM)$(_D)` expands to a comprehensive list of commonly
+      used $(_C)[Primary Targets]$(_D) and core targets that are most likely to incur the
+      burden of long run times.
+
+Examples using $(_C)[c_list]$(_D):
+
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(PROCESS)$(_D) $(_E)c_list="$(PHANTOM)"$(_D)
+$(CODEBLOCK)$(_C)$(DOMAKE)$(_D) $(_M)$(PROCESS)-$(PUBLISH)-$(DOITALL)$(_D) $(_E)c_list="$(DOITALL) $(DOITALL)-$(DOITALL) $(DOITALL)-$(DOFORCE)"$(_D)
+
+To emulate a running monitor instead of a single snapshot, similar to something
+like $(_C)[htop]$(_D), use a simple `$(_N)while$(_D)` loop:
+
+$(CODEBLOCK)$(_N)while :$(_S);$(_N) do clear$(_S);$(_D) $(_C)$(DOMAKE)$(_D) $(_M)$(PROCESS)-$(PUBLISH)-$(DOITALL)$(_D) $(_E)c_list="$(PHANTOM)"$(_S);$(_N) sleep 2$(_S);$(_N) done$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-section,$(DOSETUP))
 
@@ -17116,8 +17136,6 @@ $(TARGETS)-$(PRINTER):
 ## {{{2 $(PROCESS)
 ########################################
 
-#WORKING:FIX:TESTING
-
 .PHONY: $(PROCESS)
 $(PROCESS): $(PROCESS)-$(PROCESS)
 $(PROCESS):
@@ -17125,7 +17143,6 @@ $(PROCESS):
 
 .PHONY: $(PROCESS)-%
 $(PROCESS)-%:
-#WORKING:FIX:TESTING
 #>	@$(call PROCPS,$(*),$(CURDIR),$(c_list))
 	@$(call PROCPS,$(*),$(COMPOSER_ROOT),$(c_list))
 
@@ -18081,6 +18098,7 @@ override $(PUBLISH)-$(COMPOSER_YML) = { \
 ########################################
 
 #> update: $(HEADERS)-note.*$(_H)
+#WORKING:FIX:TESTING:CLIST
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
 $($(PUBLISH)-library-metadata): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH),,\
@@ -18357,7 +18375,6 @@ override $(PUBLISH)-library-index-title = \
 #> update: title / date / metalist:*
 #> update: $(PUBLISH)-library-$(@)
 #> update: $(HEADERS)-note.*$(_H)
-#> update: $(CONFIGS)$(.)COMPOSER_.*
 
 #WORKING:FIX:CBASE
 override $(PUBLISH)-library-digest-list :=
@@ -18520,6 +18537,9 @@ override $(PUBLISH)-library-digest-create = \
 	fi; \
 	$(ECHO) "$(_D)"
 
+#WORKING:FIX:TESTING:CLISTVAR
+#> update: $(CONFIGS)$(.)COMPOSER_.*
+
 #>			$(call PUBLISH_SH_RUN) metainfo-block $(SPECIAL_VAL) . $(COMPOSER_LIBRARY_ROOT)/$(2)
 override $(PUBLISH)-library-digest-run = \
 	if [ "$${NUM}" -gt "0" ] && [ -n "$(DIGEST_SPACER)" ]; then \
@@ -18631,6 +18651,7 @@ override $(PUBLISH)-library-digest-run = \
 
 #> update: $(PUBLISH)-library-$(@)
 #> update: $(HEADERS)-note.*$(_H)
+#WORKING:FIX:TESTING:CLIST
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
 #WORKING:FIX:CBASE
@@ -18764,6 +18785,7 @@ $($(PUBLISH)-library-sitemap-src):
 ##### {{{5 $(PUBLISH)-library-sitemap-files
 ########################################
 
+#WORKING:FIX:TESTING:CLIST
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 
 $($(PUBLISH)-library-sitemap-files): $(call $(COMPOSER_PANDOC)-dependencies,$(PUBLISH))
@@ -18821,6 +18843,9 @@ override $(PUBLISH)-library-sitemap-create = \
 		| $(TEE) --append $(1) $($(PUBLISH)-$(DEBUGIT)-output); \
 		if [ "$${PIPESTATUS[0]}" != "0" ]; then exit 1; fi; \
 	$(ECHO) "$(_D)"
+
+#WORKING:FIX:TESTING:CLISTVAR
+#> update: $(CONFIGS)$(.)COMPOSER_.*
 
 #> update: TYPE_TARGETS
 override $(PUBLISH)-library-sitemap-run = \
@@ -19046,6 +19071,7 @@ ifneq ($(c_list),)
 		| $(call COMPOSER_YML_DATA_PARSE) \
 		$(YQ_WRITE_OUT_COLOR)
 endif
+#WORKING:FIX:TESTING:CLIST
 #> update: $(CONFIGS)$(.)COMPOSER_.*
 ifneq ($(COMPOSER_DOITALL_$(PUBLISH)-$(PRINTER)),$(PRINTER))
 	@{ \
