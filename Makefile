@@ -105,6 +105,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 #			* `mv Composer-*.+debug-*.txt artifacts/`
 #		* `make COMPOSER_DEBUGIT="1" targets`
 #			* `make COMPOSER_DEBUGIT="1" c_site="1" c_base="README.site" targets`
+#> update: $(HOME)
+#	* `make +test-HOME`
 #
 ### {{{3 SITE
 #
@@ -267,8 +269,8 @@ override VIM_FOLDING = $(subst -,$(if $(2),},{),---$(if $(1),$(1),1))
 
 override COMPOSER_BASENAME		:= Composer
 override COMPOSER_TINYNAME		:= composer
-override COMPOSER_VERSION		:= v3.1
-override COMPOSER_RELDATE		:= 2024-08-10
+override COMPOSER_VERSION		:= v4.beta
+override COMPOSER_RELDATE		:= 2026-11-09
 
 override COMPOSER_COMPOSER		:= Gary B. Genett
 override COMPOSER_DOMAIN		:= garybgenett.net
@@ -506,7 +508,6 @@ override SOURCE_INCLUDES = \
 		$(eval $(subst $(TOKEN), ,$(FILE))) \
 	))
 
-#WORKING:FIX:TESTING:HOME
 #> update: $(HOME)
 $(call SOURCE_INCLUDES,$(HOME))
 $(call SOURCE_INCLUDES,$(COMPOSER_DIR))
@@ -540,7 +541,6 @@ endif
 endif
 endif
 
-#WORKING:FIX:TESTING:HOME
 #> update: $(HOME)
 ifneq ($(and \
 	$(if $(COMPOSER_RELEASE),,1) ,\
@@ -1480,7 +1480,8 @@ override DATENOW			:= $(DATENOW_REAL)
 ifneq ($(COMPOSER_RELEASE_EXAMPLE),)
 #>override DATENOW			:= @1725260400
 #>override DATENOW			:= @1733284800
-override DATENOW			:= @1778050800
+#>override DATENOW			:= @1778050800
+override DATENOW			:= @1794211200
 endif
 
 override DATEFORMAT			= $(DATE) --date="$(1)" "$(2)"
@@ -4374,6 +4375,7 @@ $(HELPOUT)-$(EXAMPLE):
 	)
 	@$(RM) --recursive	$(COMPOSER_DIR)/$(notdir $(PUBLISH_ROOT_TESTING)) $($(DEBUGIT)-output)
 
+#> update: COMPOSER_CONV.*COMPOSER_TINYNAME
 override $(HELPOUT)-$(EXAMPLE)-$(DOITALL) = \
 	cd $(COMPOSER_DIR)$(if $(2),/$(notdir $(PUBLISH_ROOT_TESTING))) && \
 		$(patsubst $(MAKE),$(call ENV_MAKE,,,$(COMPOSER_DOCOLOR)),\
@@ -4833,9 +4835,21 @@ endef
 ########################################
 
 override define $(HELPOUT)-$(DOITALL)-overview =
-**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a simple but powerful CMS based on $(_C)[$(PANDOC_NAME)]$(_D), $(_C)[$(BOOTSTRAP_NAME)]$(_D) and
-$(_C)[GNU Make]$(_D).**  It is a document and website build system that processes
-directories or individual files in $(_C)[Markdown]$(_D) format.
+**$(_C)[$(COMPOSER_BASENAME)]$(_D) is a powerful and feature-rich $(_C)[Markdown]$(_D) publisher and static
+website generator** based on $(_C)[$(PANDOC_NAME)]$(_D), $(_C)[$(BOOTSTRAP_NAME)]$(_D) and $(_C)[GNU Make]$(_D).  It is a
+document and website build system that processes directories or individual files
+in an extended $(_C)[Markdown]$(_D) format.  It has years of development, with a complete
+testing suite, and is highly performant.  It's unique and comprehensive library
+feature does not exist in any other known static website generator, making it an
+ideal choice for publishing repositories of written content.  It also supplants
+all known $(_C)[$(PANDOC_NAME)]$(_D) wrapping tools.
+
+$(_F)**COMPOSER IS CURRENTLY IN ACTIVE DEVELOPMENT TOWARDS v4.0 AND v5.0 RELEASE
+MILESTONES COMING IN EARLY 2027, WHICH WILL BE STABLE, FEATURE-COMPLETE, AND
+READY FOR PRODUCTION.  THE v3.1 RELEASE IS STABLE, BUT ANTIQUATED.  ONLY USE
+LATEST COMMITS FOR EXPLORATION OF PENDING FINALIZATION FOR EXPANSIVE LIST OF NEW
+FEATURES.  EACH COMMIT SHOULD GENERALLY BE RUN-STABLE, BUT BEHAVIOR AND
+CONFIGURATION OPTIONS MAY CHANGE AS DEVELOPMENT CONTINUES.**$(_D)
 
 Traditionally, CMS stands for $(_M)Content Management System$(_D).  $(_C)[$(COMPOSER_BASENAME)]$(_D) is designed
 to be a $(_M)Content **Make** System$(_D).  Written content is vastly easier to manage as
@@ -5091,7 +5105,7 @@ endef
 #	note about the potential perils of running multiple targets at onces, such as extract/all, clean/all, etc.
 #	note that composer_debugit is the one variable that precedes/overrides .composer.mk files
 #		this is due to a chicken-and-egg situation
-#		and also was decided as acceptable behavior, for ability to set a default =1 and to =$(PHANTOM) or =0 troubleshooting on-demand
+#		and also was decided as acceptable behavior, for ability to set a default =1 and to do =$(PHANTOM) or =$(SPECIAL_VAL) troubleshooting on-demand, such as $(HOME) example
 
 #> update: $(HOME)
 #	composer_include - home directory .composer.mk, then composer, then curdur
@@ -5583,7 +5597,9 @@ $(call $(HELPOUT)-$(DOITALL)-section,Optimizing Performance)
 #WORK
 #	cpu will max out first, but memory exhaustion and disk thrashing are the real concerns
 
-$(_N)*Side note that [htop] is a powerful tool for monitoring large process trees, their run times, and their resource consumption.  It is a highly recommended counterpart to [Static Websites] and other [Advanced Usage].*$(_D)
+$(_N)*Side note that [htop] is a powerful tool for monitoring large process trees,
+their run times, and their resource consumption.  It is a highly recommended
+counterpart to [Static Websites] and other [Advanced Usage].*$(_D)
 
 $(call $(HELPOUT)-$(DOITALL)-section,Repository Versions)
 
@@ -8166,9 +8182,9 @@ $(_S)###########################################################################
 $(_S)#$(_D) $(_H)$(COMPOSER_TECHNAME) $(DIVIDE) GNU Make Configuration$(_D)
 $(_S)################################################################################$(_D)
 
-$(_N)override$(_D) $(_C)MAKEJOBS$(_D)			:= $(_M)$(SPECIAL_VAL)$(_D)
-$(_N)override$(_D) $(_C)COMPOSER_DEBUGIT$(_D)		:= $(_M)1$(_D)
-$(_N)override$(_D) $(_C)COMPOSER_KEEPING$(_D)		:=
+$(_N)override$(_D) $(_C)MAKEJOBS$(_D)			?= $(_M)$(SPECIAL_VAL)$(_D)
+$(_N)override$(_D) $(_C)COMPOSER_DEBUGIT$(_D)		?= $(_M)1$(_D)
+$(_N)override$(_D) $(_C)COMPOSER_KEEPING$(_D)		?=
 
 $(_S)################################################################################$(_D)
 $(_S)#$(_D) $(_H)End Of File$(_D)
@@ -13835,9 +13851,9 @@ override $(HEADERS)-options = \
 ##### {{{5 $(HEADERS)-options-conv
 ########################################
 
+#> update: $(HOME)
 #> update: COMPOSER_CONV.*COMPOSER_TINYNAME
 
-#> update: $(HOME)
 override $(HEADERS)-options-conv = \
 	$(patsubst $(HOME)/%,$(_F)(~)/%$(1),\
 		$(call COMPOSER_CONV,$(EXPAND),$(call COMPOSER_CONV,[$(COMPOSER_TINYNAME)],$(2),,1,1),1,1,1) \
@@ -14961,6 +14977,8 @@ $(TESTING): $(TESTING)-$(DISTRIB)$(_)$(DOSETUP)
 #>$(TESTING): $(TESTING)-$(_)Think
 #>$(TESTING): $(TESTING)-heredoc
 #>$(TESTING): $(TESTING)-stress
+#> update: $(HOME)
+$(TESTING): $(TESTING)-HOME
 $(TESTING): $(TESTING)-$(COMPOSER_BASENAME)
 $(TESTING): $(TESTING)-$(TARGETS)
 $(TESTING): $(TESTING)-$(INSTALL)-MAKEJOBS
@@ -15592,6 +15610,83 @@ endif
 	@$(TABLE_M2) "$(_H)$(MARKER) Debug"		"$(_C)$(if $(wildcard $(call $(TESTING)-pwd)/.$(DEBUGIT)),1,-)"
 
 ########################################
+### {{{3 $(TESTING)-$(HOME)
+########################################
+
+#> update: $(HOME)
+#> update: COMPOSER_CONV.*COMPOSER_TINYNAME
+
+override $(TESTING)-HOME-dir := _home
+
+.PHONY: $(TESTING)-HOME
+$(TESTING)-HOME: $(TESTING)-$(_)Think
+$(TESTING)-HOME:
+	@$(call $(TESTING)-$(HEADERS),\
+		Validate '$(_C)$(COMPOSER_SETTINGS)$(_D)' in the '$(_C)\$$HOME$(_D)' directory behavior ,\
+		\n\t * $(_H)Successful run $(DIVIDE) Manual review of output$(_D) \
+	)
+	@$(call $(TESTING)-load)
+	@$(call $(TESTING)-init)
+	@$(call $(TESTING)-done)
+	@$(call $(TESTING)-hold)
+
+#> $(HEADERS)-list-path
+.PHONY: $(TESTING)-HOME-init
+$(TESTING)-HOME-init:
+$(TESTING)-HOME-init:
+	@$(MKDIR)							$(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_HOME,1)			>$(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)/$(COMPOSER_SETTINGS)
+	@$(ECHO) ""							>$(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)/$(COMPOSER_CSS)
+	@$(ECHO) ""							>$(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)/$(OUT_README)$(COMPOSER_FILEEXT_DEFAULT)
+	@$(MKDIR)							$(call $(TESTING)-pwd)/$(PANDOC_DIR_TESTING)
+#>	@$(RM)								$(call $(TESTING)-pwd)/$(PANDOC_DIR_TESTING)/$(COMPOSER_SETTINGS)
+	@$(call DO_HEREDOC,HEREDOC_COMPOSER_MK_HOME,1)			>$(call $(TESTING)-pwd)/$(PANDOC_DIR_TESTING)/$(COMPOSER_SETTINGS)
+	@{ \
+		set -x; \
+		export HOME="$(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)"; \
+		$(eval unexport MAKEJOBS COMPOSER_DEBUGIT COMPOSER_KEEPING) \
+		$(MAKE) --directory $(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)	--makefile $(TESTING_MAKEFILE) $(OUT_README).$(EXTN_DEFAULT)			| $(SED) -n "/--css=/p"; \
+		$(MAKE) --directory $(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)	--makefile $(TESTING_MAKEFILE) $(CONFIGS) COMPOSER_DEBUGIT="$(SPECIAL_VAL)"	| $(HEAD) -n80; \
+		$(MAKE) --directory $(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)	--makefile $(TESTING_MAKEFILE) $(CONFIGS) COMPOSER_KEEPING="1"			| $(HEAD) -n20; \
+		$(MAKE) --directory $(call $(TESTING)-pwd)/$(PANDOC_DIR_TESTING)	--makefile $(TESTING_MAKEFILE) $(CONFIGS)					| $(HEAD) -n20; \
+		$(MAKE) --directory $(call $(TESTING)-pwd)				$(CONFIGS)									| $(HEAD) -n20; \
+		$(MAKE) --directory $(call $(TESTING)-pwd)/data				$(CONFIGS)									| $(HEAD) -n20; \
+		$(MAKE) --directory $(call $(TESTING)-pwd)/data/odt			$(CONFIGS)									| $(HEAD) -n20; \
+	} 2>&1 \
+		| $(SED) "/^[+][[:space:]].+$(notdir $(word 1,$(PRINTF)))/d" \
+		| $(SED) -n \
+			-e "/^[+][[:space:]]cd/p" \
+			-e "/^[+][[:space:]].+$(notdir $(word 1,$(REALMAKE)))/p" \
+			-e "/--css=/p" \
+			\
+			-e "/COMPOSER_INCLUDES/p" \
+			-e "/COMPOSER_ROOT/p" \
+			-e "/CURDIR/p" \
+			-e "/MAKEFILE_LIST/p" \
+			\
+			-e "/MAKEJOBS/p" \
+			-e "/COMPOSER_DEBUGIT/p" \
+			-e "/COMPOSER_KEEPING/p" \
+	;
+
+.PHONY: $(TESTING)-HOME-done
+$(TESTING)-HOME-done:
+	@$(call $(TESTING)-find,^[#][>])
+	@$(call $(TESTING)-count,1,--css=.+$(subst /,[/],$(realpath $(call $(TESTING)-pwd)/$($(TESTING)-HOME-dir)/$(COMPOSER_CSS))))
+	@$(call $(TESTING)-count,6,MAKEJOBS.+[#].+[[:space:]]($(SED_ESCAPE_COLOR))?$(SPECIAL_VAL))
+	@$(call $(TESTING)-count,1,COMPOSER_DEBUGIT.+[#].+[[:space:]]($(SED_ESCAPE_COLOR))?$(SPECIAL_VAL))
+	@$(call $(TESTING)-count,5,COMPOSER_DEBUGIT.+[#].+[[:space:]]($(SED_ESCAPE_COLOR))?1)
+	@$(call $(TESTING)-count,1,COMPOSER_KEEPING.+[#].+[[:space:]]($(SED_ESCAPE_COLOR))?1)
+	@$(call $(TESTING)-count,5,COMPOSER_KEEPING.+[#][^1]+$$)
+	@$(call $(TESTING)-count,2,COMPOSER_ROOT.+[#].+$(subst /,[/],$(realpath $($(TESTING)-pwd)/$($(TESTING)-HOME-dir))))
+	@$(call $(TESTING)-count,1,COMPOSER_ROOT.+[#].+$(subst /,[/],$(realpath $($(TESTING)-pwd)/$(PANDOC_DIR_TESTING))))
+	@$(call $(TESTING)-count,3,COMPOSER_ROOT.+[#].+$(subst /,[/],$(realpath $($(TESTING)-pwd)))[^/]*$$)
+	@$(call $(TESTING)-count,4,COMPOSER_INCLUDES.+[#].+[(][~][)][/]$(COMPOSER_SETTINGS))
+	@$(call $(TESTING)-count,6,COMPOSER_INCLUDES.+[#].+[[]$(COMPOSER_TINYNAME)[]][/]$(COMPOSER_SETTINGS))
+#>	@$(call $(TESTING)-count,2,COMPOSER_INCLUDES.+[#].+$(subst .,[.],$(EXPAND))[/]$(COMPOSER_SETTINGS))
+	@$(call $(TESTING)-count,3,COMPOSER_INCLUDES.+[#].+$(subst .,[.],$(EXPAND))[/]$(COMPOSER_SETTINGS))
+
+########################################
 ### {{{3 $(TESTING)-$(COMPOSER_BASENAME)
 ########################################
 
@@ -16147,14 +16242,14 @@ $(TESTING)-COMPOSER_DEPENDS-init:
 	@$(ECHO) "" >$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "override COMPOSER_DEPENDS := 1\n"					>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(OUT_LICENSE).$(EXTN_DEFAULT): $(OUT_README).$(EXTN_DEFAULT)\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
-	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-docx: $(DOITALL)-$(SUBDIRS)-templates\n"	>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
+	@$(ECHO) "$(DOITALL)-$(SUBDIRS)-odt: $(DOITALL)-$(SUBDIRS)-templates\n"		>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(ECHO) "$(sort \
-		$(filter-out $(DOITALL)-$(SUBDIRS)-docx,\
+		$(filter-out $(DOITALL)-$(SUBDIRS)-odt,\
 		$(filter-out $(DOITALL)-$(SUBDIRS)-templates,\
 		$(addprefix $(DOITALL)-$(SUBDIRS)-,\
 		$(notdir \
 		$(patsubst %/.,%,$(wildcard $(addsuffix /.,$(call $(TESTING)-pwd)/data/*))) \
-		))))): $(DOITALL)-$(SUBDIRS)-docx\n" \
+		))))): $(DOITALL)-$(SUBDIRS)-odt\n" \
 											>>$(call $(TESTING)-pwd)/data/$(COMPOSER_SETTINGS)
 	@$(call $(TESTING)-run,,$(TESTING_MAKEJOBS)) $(DOITALL)-$(DOITALL)
 
