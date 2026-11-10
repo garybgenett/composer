@@ -4227,7 +4227,7 @@ $(HELPOUT)-targets_additional_%:
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)$(_N)*$(_C)]"		"Export individual $(_C)[Composer Variables]$(_D) values"
 	@$(TABLE_M2) "$(_C)[$(CONFIGS)$(.)yml]"			"JSON export of \`$(_M)$(COMPOSER_YML)$(_D)\` configuration"
 	@$(TABLE_M2) "$(_C)[$(TARGETS)]"			"List all available targets for the current directory"
-	@$(TABLE_M2) "$(_C)[$(PROCESS)]"			"Display proccess information for current $(_H)[COMPOSER_ROOT]$(_D)"
+	@$(TABLE_M2) "$(_C)[$(PROCESS)]"			"All process counts and details under $(_H)[COMPOSER_ROOT]$(_D)"
 	@$(TABLE_M2) "$(_C)[$(PROCESS)-$(_N)*$(_C)]"		"Additionally select matching top-level processes"
 	@$(TABLE_M2) "$(_C)[$(DOSETUP)]"			"Create and link a \`$(_M)$(COMPOSER_CMS)$(_D)\` in current directory"
 	@$(TABLE_M2) "$(_C)[$(CONVICT)]"			"$(_C)[Git]$(_D) commit of current directory tree or $(_C)[c_list]$(_D)"
