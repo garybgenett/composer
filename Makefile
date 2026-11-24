@@ -2565,7 +2565,6 @@ $(foreach FILE,$(COMPOSER_OPTIONS),\
 ########################################
 
 #> update: COMPOSER_MAXLIST
-#> update: MARKER.*c_list_var
 
 override COMPOSER_VARIABLES_LIST := \
 	$(filter-out \
@@ -3234,10 +3233,6 @@ override PUBLISH_SH_GLOBAL := \
 	PUBLISH_CMD_BEG \
 	PUBLISH_CMD_END \
 
-#WORKING:FIX:TESTING:FILEEXT
-#	need to determine how reliant the script is on composer_fileext... this may need to be more dynamic, based on directory...
-#	ideally, we can switch to the key_file_base/key_file_ext combination from metadata...
-#	at the least, we need to ensure a composer_fileext= pass from the enviornment chains down correctly... maybe in our env_make review/exterminate pass...
 override PUBLISH_SH_LOCAL := \
 	COMPOSER_FILEEXT \
 	$(TOKEN) \
@@ -9607,6 +9602,7 @@ function $(PUBLISH)-parse {
 #### {{{4 $(PUBLISH)-metainfo-block
 ########################################
 
+#> update: metainfo-block
 #> update: title / date / metalist:*
 #> update: YQ_WRITE.*title
 #> update: join(.*)
@@ -9614,14 +9610,17 @@ function $(PUBLISH)-parse {
 
 #WORKING:FIX:TESTING:CLISTVAR:LIST:KEY_META
 #	maybe chage the sorting to be only when there are -n ${3} files...?  it might be nice to respect input ordering... then, again, that can create it's own mess...
-#	reorder output code to match ${1} option... except that metainfo will necessarily be last... leave an ordering note...
-#	connect this with $(PUBLISH)-library-metadata ...?
 
 # 1 text				$${TOKEN} = metadata.yml || $${SPECIAL_VAL} = metadata || null = metainfo || title / date / metalist:*
 # 2 file path(s)			$${@:2} = $${2}++
 
 #>	if [ -n "$${DIGEST_MARKDOWN}" ]; then
 function $(PUBLISH)-metainfo-block {
+
+########################################
+#### {{{5 $(PUBLISH)-metainfo-block (parse)
+########################################
+
 	META=
 	META_KEY=
 	if [ "$$($${SED} -n "1{/^---$$/p}" $${2})" ]; then
@@ -9712,8 +9711,13 @@ function $(PUBLISH)-metainfo-block {
 			DATE_LIBRARY="$${KEY_FALSE}"
 		fi
 	fi
-	META_EMPTY="$$(COMPOSER_YML_DATA_VAL helpers.metainfo.empty)"
+
+########################################
+#### {{{5 $(PUBLISH)-metainfo-block (values)
+########################################
+
 	META_LIST=
+	META_EMPT=
 	INFO_LIST=()
 	INFO_EMPT=()
 	NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
@@ -9743,8 +9747,6 @@ function $(PUBLISH)-metainfo-block {
 		fi
 		if [ -z "$${INFO_LIST[$${NUM}]}" ]; then
 			INFO_EMPT[$${NUM}]="$${SPECIAL_VAL}"
-#WORKING:FIX:TESTING:FILEEXT
-#	this is the only place where it is called... right now, i can't think of any better behavior in these caess...
 #> magic token!
 			if	[ "$${FILE}" = "$(PUBLISH_METATITL)" ] &&
 				[ "$${1}" = "$${SPECIAL_VAL}" ];
@@ -9759,10 +9761,15 @@ function $(PUBLISH)-metainfo-block {
 				INFO_LIST[$${NUM}]="$$(COMPOSER_YML_DATA_VAL helpers.metalist.[\"$${FILE}\"].empty)"
 			fi
 		else
-			META_EMPTY=
+			META_EMPT="$$(COMPOSER_YML_DATA_VAL helpers.metainfo.empty)"
 		fi
 		NUM="$$($${EXPR} $${NUM} + 1)"
 	done
+
+########################################
+#### {{{5 $(PUBLISH)-metainfo-block (metadata.yml)
+########################################
+
 	if [ "$${1}" = "$${TOKEN}" ]; then
 		$${ECHO} "$${COMPOSER_CMS}:\\n  $${KEY_META}: $${META_KEY}\\n  $${KEY_DATE}:\\n"
 		if [ "$${DATE_PARSE}" != "$${KEY_NULL}" ] && [ "$${DATE_PARSE}" != "$${KEY_FALSE}" ]; then
@@ -9800,6 +9807,46 @@ function $(PUBLISH)-metainfo-block {
 				done) \\
 				" \\
 			| COMPOSER_YML_DATA_PARSE
+
+########################################
+#### {{{5 $(PUBLISH)-metainfo-block (metadata)
+########################################
+
+	elif [ "$${1}" = "$${SPECIAL_VAL}" ]; then
+		$${ECHO} "---\\n"
+		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
+			if [ "$${FILE}" = "$(PUBLISH_METATITL)" ]; then
+				$${ECHO} "pagetitle:"
+			else
+				$${ECHO} "$${FILE}:"
+			fi
+			if [ -n "$${INFO_LIST[$${NUM}]}" ]; then
+				if [ "$${FILE}" = "$(PUBLISH_METATITL)" ]; then
+					$${ECHO} " \"$${INFO_LIST[$${NUM}]}\""
+				elif [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
+					$${ECHO} " \"$${INFO_LIST[$${NUM}]}\""
+				else
+					$${ECHO} "\\n  - \"$${INFO_LIST[$${NUM}]}\"" \\
+					| $${SED} "s|$${TOKEN}|\"\\n  - \"|g"
+				fi
+			fi
+			$${ECHO} "\\n"
+			NUM="$$($${EXPR} $${NUM} + 1)"
+		done
+		$${ECHO} "$${META}" \\
+			| $${YQ_WRITE_FILE} " \\
+				del(.pagetitle) \\
+				$$(for FILE in $${COMPOSER_YML_DATA_METALIST}; do
+					$${ECHO} "| del(.\"$${FILE}\")"
+				done) \\
+				" \\
+			| COMPOSER_YML_DATA_PARSE
+		$${ECHO} "---\\n"
+
+########################################
+#### {{{5 $(PUBLISH)-metainfo-block (metalist)
+########################################
+
 	elif [ -n "$${META_LIST}" ]; then
 		LIST_DISP="$$(COMPOSER_YML_DATA_VAL helpers.metalist.[\"$${META_LIST}\"].display)"
 		LIST_BEG="$$($${ECHO} "$${LIST_DISP}" | $${SED} "s|^(.*)[<][|][>](.*)[<][|][>](.*)$$|\\1|g")"
@@ -9843,38 +9890,13 @@ function $(PUBLISH)-metainfo-block {
 			fi
 			NUM="$$($${EXPR} $${NUM} + 1)"
 		done
-	elif [ "$${1}" = "$${SPECIAL_VAL}" ]; then
-		$${ECHO} "---\\n"
-		NUM="0"; for FILE in $${COMPOSER_YML_DATA_METALIST}; do
-			if [ "$${FILE}" = "$(PUBLISH_METATITL)" ]; then
-				$${ECHO} "pagetitle:"
-			else
-				$${ECHO} "$${FILE}:"
-			fi
-			if [ -n "$${INFO_LIST[$${NUM}]}" ]; then
-				if [ "$${FILE}" = "$(PUBLISH_METATITL)" ]; then
-					$${ECHO} " \"$${INFO_LIST[$${NUM}]}\""
-				elif [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
-					$${ECHO} " \"$${INFO_LIST[$${NUM}]}\""
-				else
-					$${ECHO} "\\n  - \"$${INFO_LIST[$${NUM}]}\"" \\
-					| $${SED} "s|$${TOKEN}|\"\\n  - \"|g"
-				fi
-			fi
-			$${ECHO} "\\n"
-			NUM="$$($${EXPR} $${NUM} + 1)"
-		done
-		$${ECHO} "$${META}" \\
-			| $${YQ_WRITE_FILE} " \\
-				del(.pagetitle) \\
-				$$(for FILE in $${COMPOSER_YML_DATA_METALIST}; do
-					$${ECHO} "| del(.\"$${FILE}\")"
-				done) \\
-				" \\
-			| COMPOSER_YML_DATA_PARSE
-		$${ECHO} "---\\n"
-	elif [ -n "$${META_EMPTY}" ]; then
-		$${ECHO} "$${META_EMPTY}"
+
+########################################
+#### {{{5 $(PUBLISH)-metainfo-block (metainfo)
+########################################
+
+	elif [ -n "$${META_EMPT}" ]; then
+		$${ECHO} "$${META_EMPT}"
 	else
 		META_DISPLAY="$$(COMPOSER_YML_DATA_VAL helpers.metainfo.display)"
 		$${ECHO} "$${META_DISPLAY}" \\
@@ -14030,9 +14052,11 @@ override $(HEADERS) = \
 override $(HEADERS)-options = \
 	$(call $(HEADERS)-table,$(2)) \
 		"$(_C)$(1)" \
-		"$(_M)$(call $(HEADERS)-options-conv,$(_M),$(call $(HEADERS)-options-val,$(1)))$(if \
-			$(filter $(1),$(COMPOSER_OPTIONS_GLOBAL) \
-			),$(if $(call $(HEADERS)-options-val,$(1)),$(_D) )$(_E)$(MARKER))"
+		"$(if $(filter $(1),$(COMPOSER_OPTIONS_GLOBAL)),$(_E)$(MARKER))$(if \
+			$(call $(HEADERS)-options-val,$(1)),$(strip \
+				$(if $(filter $(1),$(COMPOSER_OPTIONS_GLOBAL)),$(_D) )$(strip \
+				$(_M)$(call $(HEADERS)-options-conv,$(_M),$(call $(HEADERS)-options-val,$(1))) \
+			)))"
 
 ########################################
 ##### {{{5 $(HEADERS)-options-conv
@@ -17270,8 +17294,6 @@ $(TARGETS):
 ### {{{3 $(TARGETS)-$(MAKE_DB)
 ########################################
 
-#> update: MARKER.*c_list_var
-
 .PHONY: $(TARGETS)-$(MAKE_DB)
 $(TARGETS)-$(MAKE_DB):
 	@$(foreach FILE,\
@@ -17359,9 +17381,11 @@ $(TARGETS)-$(LISTING):
 $(TARGETS)-$(CHECKIT):
 	@$(foreach RECURSIVE,$(COMPOSER_RECURSIVE),\
 		$(call $(HEADERS)-action,$(_N)*$(_M)-$(RECURSIVE),,,$(TARGETS),1); \
+		$(ECHO) "$(_E)"; \
 		$(call $(TARGETS)-$(TARGETS),,$(RECURSIVE)) \
 			| $(SED) "s|[ ]+|\n|g" \
 			| $(SORT); \
+		$(ECHO) "$(_D)"; \
 		$(call NEWLINE) \
 	)
 
@@ -18464,7 +18488,6 @@ override $(PUBLISH)-$(COMPOSER_YML) = { \
 #	change format of entries, to centralize metadata: .Composer: { .updated: date, .(newkey=title): <true|false>, ... }
 #	this is going to ripple out *ev-er-y-where*...
 #	ensure all three metadata files have a consistent structure...
-#	update "del(" stanzas, since much fewer of them will be needed...
 #	consider creating some macros for *everything*... doing a lot of copy/pasta...
 #	add a file to site-template-+test that has metadata, but not a title... want to see "empty" come through...
 #	use PUBLISH_META(TITL|DATE) instead of title/date everywhere... along with $(KEY_NULL) instead of null...
@@ -18534,7 +18557,6 @@ $($(PUBLISH)-library-metadata):
 #> update: title / date / metalist:*
 #> update: YQ_WRITE.*title
 
-#WORKING:FIX:TESTING:CLISTVAR:LIST:KEY_META
 override $(PUBLISH)-library-metadata-create = \
 	FILEPATH="$$($(ECHO) "$(2)" | $(SED) "s|^(.+)$(TOKEN)(.+)$(TOKEN)$(TOKEN)(.+)|\1\2|g")"; \
 	FILEBASE="$$($(ECHO) "$(2)" | $(SED) "s|^(.+)$(TOKEN)(.+)$(TOKEN)$(TOKEN)(.+)|\1|g")"; \
@@ -18564,14 +18586,11 @@ override $(PUBLISH)-library-metadata-create = \
 ##### {{{5 $(PUBLISH)-library-metadata-$(@)
 ########################################
 
-#> update: MARKER.*c_list_var
+#> update: metainfo-block
 #> update: title / date / metalist:*
 
 #> make -C _site/config site-library-metadata metadata="index.html"
 #> make -C _site/config site-library-metadata metadata="pages.pdf"
-
-#WORKING:FIX:TESTING:CLISTVAR:LIST:KEY_META
-#	link this with metadata-create and metainfo-block
 
 .PHONY: $(PUBLISH)-library-metadata
 $(PUBLISH)-library-metadata: override c_type := $(TYPE_$(call PANDOC_FILES_TYPE,EXTN,	$(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$($(call /,$(KEY_META))))))))
@@ -19855,7 +19874,7 @@ endef
 override $(PUBLISH)-$(EXAMPLE)-$(PRINTER) := \
 	$(foreach PDIR,$(PUBLISH_DIRS),\
 	$(foreach PCMD,$(PUBLISH_DIRS_PRINTER),\
-		$(PDIR)$(TOKEN)$(PCMD) \
+		$(PCMD)$(TOKEN)$(PDIR) \
 	))
 
 .PHONY: $(PUBLISH)-$(EXAMPLE)-$(PRINTER)
@@ -19865,8 +19884,8 @@ $(PUBLISH)-$(EXAMPLE)-$(PRINTER):
 
 $($(PUBLISH)-$(EXAMPLE)-$(PRINTER)):
 	@$(eval override PDST := $(PUBLISH_ROOT)/$(.)$(PUBLISH)-$(PRINTER))
-	@$(eval override PDIR := $(word 1,$(subst $(TOKEN), ,$(@))))
-	@$(eval override PCMD := $(word 2,$(subst $(TOKEN), ,$(@))))
+	@$(eval override PDIR := $(word 2,$(subst $(TOKEN), ,$(@))))
+	@$(eval override PCMD := $(word 1,$(subst $(TOKEN), ,$(@))))
 	@$(eval override POUT := $(patsubst .,_$(PUBLISH_INDEX),$(subst /,$(.),$(PDIR)))$(.)$(PCMD))
 	@$(ECHO) "$(_S)"
 	@$(MKDIR)	$(PUBLISH_ROOT)/$(.)$(PUBLISH)-$(PRINTER)		$($(DEBUGIT)-output)
