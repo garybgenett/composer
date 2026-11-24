@@ -9608,9 +9608,6 @@ function $(PUBLISH)-parse {
 #> update: join(.*)
 #> update: del(.*)
 
-#WORKING:FIX:TESTING:CLISTVAR:LIST:KEY_META
-#	maybe chage the sorting to be only when there are -n ${3} files...?  it might be nice to respect input ordering... then, again, that can create it's own mess...
-
 # 1 text				$${TOKEN} = metadata.yml || $${SPECIAL_VAL} = metadata || null = metainfo || title / date / metalist:*
 # 2 file path(s)			$${@:2} = $${2}++
 
@@ -9729,6 +9726,12 @@ function $(PUBLISH)-metainfo-block {
 		elif [ "$${FILE}" = "$(PUBLISH_METADATE)" ]; then
 			INFO_LIST[$${NUM}]="$${DATE_DISPLAY}"
 		else
+#>					| if [ -n "$${@:3}" ]; then
+#>					| if [ -n "$${3}" ]; then
+#>						$(subst $(SORT_NUM),$${SORT_NUM},$(strip $(call $(PUBLISH)-library-sort-sh,$${FILE})))
+#>					else
+#>						$${CAT}
+#>					fi
 			INFO_LIST[$${NUM}]="$$(
 				for INCL in $${@:2}; do
 					if [ "$$($${SED} -n "1{/^---$$/p}" $${INCL})" ]; then
@@ -18591,6 +18594,7 @@ override $(PUBLISH)-library-metadata-create = \
 
 #> make -C _site/config site-library-metadata metadata="index.html"
 #> make -C _site/config site-library-metadata metadata="pages.pdf"
+#> make -C _site/pandoc/doc site-library-metadata metadata="customizing-pandoc.html"
 
 .PHONY: $(PUBLISH)-library-metadata
 $(PUBLISH)-library-metadata: override c_type := $(TYPE_$(call PANDOC_FILES_TYPE,EXTN,	$(word 2,$(subst $(TOKEN), ,$(call PANDOC_FILES_SPLIT,$($(call /,$(KEY_META))))))))
@@ -18598,11 +18602,11 @@ $(PUBLISH)-library-metadata: override c_base :=						$(word 1,$(subst $(TOKEN), 
 $(PUBLISH)-library-metadata: $(call COMPOSER_VARIABLES,$($(call /,$(KEY_META))),,$(PUBLISH)-library-metadata)
 $(PUBLISH)-library-metadata:
 	@$(call $(HEADERS)-action,$(call c_list_var),,,,1)
+#>			| $(call COMPOSER_YML_DATA_PARSE)
 	@$(foreach FILE,$(call c_list_var),\
 		$(call TITLE_LN ,-1,$(FILE),1); \
 		$(ECHO) "$(_E)"; \
 		$(YQ_READ) $(FILE) \
-			| $(call COMPOSER_YML_DATA_PARSE) \
 			| $(YQ_WRITE_FILE) \
 			; \
 		$(ECHO) "$(_D)"; \
