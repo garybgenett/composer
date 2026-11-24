@@ -3747,7 +3747,6 @@ override $(COMPOSER_PANDOC)-c_list_match = $(strip \
 
 #> update: $(PUBLISH).*$(MAKECMDGOALS)
 
-#WORKING:FIX:CBASE
 override $(COMPOSER_PANDOC)-$(TESTING) = $(strip \
 	$(if $(filter-out $(SPECIAL_VAL),$(2)),\
 		$(and \
@@ -18807,12 +18806,10 @@ override $(PUBLISH)-library-digest-vars = \
 	$(eval override DIGEST_EXPANDED		:= $(call COMPOSER_YML_DATA_VAL,library.$(1).expanded)) \
 	$(eval override DIGEST_SPACER		:= $(call COMPOSER_YML_DATA_VAL,library.$(1).spacer)) \
 
-#WORKING:FIX:CBASE
 override $(PUBLISH)-library-digest-glob :=
 override $(PUBLISH)-library-digest-files :=
 override $(PUBLISH)-library-digests-glob :=
 override $(PUBLISH)-library-digests-files :=
-
 ifneq ($(and \
 	$(COMPOSER_LIBRARY_AUTO_UPDATE) ,\
 	$(filter \
@@ -19166,10 +19163,8 @@ override $(PUBLISH)-library-sitemap-vars = \
 	$(eval override SITEMAP_EXPANDED	:= $(call COMPOSER_YML_DATA_VAL,library.sitemap.expanded)) \
 	$(eval override SITEMAP_SPACER		:= $(call COMPOSER_YML_DATA_VAL,library.sitemap.spacer)) \
 
-#WORKING:FIX:CBASE
 override $(PUBLISH)-library-sitemap-glob :=
 override $(PUBLISH)-library-sitemap-files :=
-
 ifneq ($(and \
 	$(COMPOSER_LIBRARY_AUTO_UPDATE) ,\
 	$(filter \
@@ -19193,7 +19188,7 @@ override $(PUBLISH)-library-sitemap-glob := $(shell \
 		--directory $(COMPOSER_LIBRARY_ROOT) \
 		COMPOSER_DOITALL_$(CONFIGS)="$(DOITALL)" \
 		$(CONFIGS)$(.)COMPOSER_EXPORTS_LISTING \
-) \
+	) \
 	$(abspath $(dir			$($(PUBLISH)-library-sitemap) \
 	))$(TOKEN)$(notdir		$(patsubst %$(COMPOSER_FILEEXT_DEFAULT),%.$(EXTN_HTML),$($(PUBLISH)-library-sitemap) \
 	))$(TOKEN)$(TOKEN)$(notdir	$($(PUBLISH)-library-sitemap) \
