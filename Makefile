@@ -863,10 +863,10 @@ override PUBLISH_CSS_OVERLAY_MOD	:= $(PUBLISH_CSS_OVERLAY_ALT)
 override PUBLISH_COPY_PROTECT		:= $(KEY_NULL)
 override PUBLISH_COPY_PROTECT_ALT	:= 1
 override PUBLISH_COPY_PROTECT_MOD	:= $(PUBLISH_COPY_PROTECT_ALT)
-override PUBLISH_HEADER			:= $(KEY_NULL)
+override PUBLISH_HEADER			= $(KEY_NULL)
 override PUBLISH_HEADER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_HEADER)
 override PUBLISH_HEADER_MOD		= $(PUBLISH_HEADER_ALT) $(PUBLISH_HEADER_ALT)
-override PUBLISH_FOOTER			:= $(KEY_NULL)
+override PUBLISH_FOOTER			= $(KEY_NULL)
 override PUBLISH_FOOTER_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_FOOTER)
 override PUBLISH_FOOTER_MOD		= $(PUBLISH_FOOTER_ALT) $(PUBLISH_FOOTER_ALT)
 
@@ -980,7 +980,7 @@ override PUBLISH_REDIRECT_TITLE_MOD	:= $(KEY_NULL)
 override PUBLISH_REDIRECT_DISPLAY	:= **This link has been permanently moved to: <link>**
 override PUBLISH_REDIRECT_DISPLAY_ALT	:= **Redirecting: <link>**
 override PUBLISH_REDIRECT_DISPLAY_MOD	:= $(KEY_NULL)
-override PUBLISH_REDIRECT_EXCLUDE	:= $(KEY_NULL)
+override PUBLISH_REDIRECT_EXCLUDE	= $(KEY_NULL)
 override PUBLISH_REDIRECT_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
 override PUBLISH_REDIRECT_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(call /,$(TESTING)).*
 override PUBLISH_REDIRECT_TIME		:= 5
@@ -1001,7 +1001,7 @@ override LIBRARY_AUTO_UPDATE_MOD	:= $(LIBRARY_AUTO_UPDATE_ALT)
 override LIBRARY_ANCHOR_LINKS		:= 1
 override LIBRARY_ANCHOR_LINKS_ALT	:= $(LIBRARY_ANCHOR_LINKS)
 override LIBRARY_ANCHOR_LINKS_MOD	:= $(KEY_NULL)
-override LIBRARY_APPEND			:= $(KEY_NULL)
+override LIBRARY_APPEND			= $(KEY_NULL)
 override LIBRARY_APPEND_ALT		= $(PUBLISH_CMD_ROOT)/$(word 3,$(PUBLISH_DIRS))/$(PUBLISH_FILE_APPEND)
 #> update: $(COMPOSER_DOITALL_$(PUBLISH)-$(EXAMPLE)),$(TESTING)
 #>override LIBRARY_APPEND_MOD		= $(LIBRARY_APPEND_ALT) $(LIBRARY_APPEND_ALT)
@@ -1040,7 +1040,7 @@ override LIBRARY_LISTS_SPACER_MOD	:= $(LIBRARY_LISTS_SPACER_ALT)
 override LIBRARY_SITEMAP_TITLE		:= Site Map
 override LIBRARY_SITEMAP_TITLE_ALT	:= Directory
 override LIBRARY_SITEMAP_TITLE_MOD	:= $(KEY_NULL)
-override LIBRARY_SITEMAP_EXCLUDE	:= $(KEY_NULL)
+override LIBRARY_SITEMAP_EXCLUDE	= $(KEY_NULL)
 override LIBRARY_SITEMAP_EXCLUDE_ALT	= $(PUBLISH_REDIRECT_FILE).*
 override LIBRARY_SITEMAP_EXCLUDE_MOD	= $(PUBLISH_REDIRECT_EXCLUDE_ALT) $(PUBLISH_REDIRECT_FILE)$(_)$(call /,$(TESTING)).*
 override LIBRARY_SITEMAP_EXPANDED	:= $(SPECIAL_VAL)
@@ -1957,10 +1957,6 @@ override REVEALJS_CSS_SOLAR_LIGHT	:= $(REVEALJS_DIR)/dist/theme/solarized.css
 override REVEALJS_CSS_SOLAR_DARK	:= $(REVEALJS_DIR)/dist/theme/moon.css
 override REVEALJS_CSS_ALT		:= $(REVEALJS_DIR)/dist/theme/league.css
 
-#> update: includes duplicates
-override NOTHING			:= $(.)null
-override DONOTDO			:= $(call /,$(NOTHING))
-
 #> update: FILE.*CSS_THEMES
 override CSS_THEME			= $(COMPOSER_ART)/themes/theme.$(1)$(if $(filter-out $(SPECIAL_VAL),$(2)),.$(2),-default).css
 override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
@@ -1968,7 +1964,7 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 		custom \
 		custom-solar \
 		,\
-		|$(PUBLISH)	;$(FILE)	;$(call CUSTOM_PUBLISH_CSS_OVERLAY,$(FILE))		;$(DONOTDO)	$(if $(filter custom,$(FILE)),;[$(COMPOSER_BASENAME)]) \
+		|$(PUBLISH)	;$(FILE)	;$(call CUSTOM_PUBLISH_CSS_OVERLAY,$(FILE))		;$(KEY_NULL)	$(if $(filter custom,$(FILE)),;[$(COMPOSER_BASENAME)]) \
 		|$(TYPE_HTML)	;$(FILE)	;$(call CUSTOM_PUBLISH_CSS_OVERLAY,$(FILE)) \
 		|$(TYPE_PRES)	;$(FILE)	;$(call CUSTOM_PUBLISH_CSS_OVERLAY,$(FILE)) \
 	) \
@@ -1978,17 +1974,17 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 	|$(PUBLISH)	;solar-light		;$(BOOTSWATCH_CSS_SOLAR_LIGHT)				;light \
 	|$(PUBLISH)	;solar-dark		;$(BOOTSWATCH_CSS_SOLAR_DARK)				;light \
 	|$(PUBLISH)	;$(CSS_ALT)		;$(BOOTSWATCH_CSS_ALT)					;light \
-	|$(PUBLISH)	;$(CSS_ALT)		;$(BOOTSWATCH_CSS_ALT)					;$(DONOTDO) \
+	|$(PUBLISH)	;$(CSS_ALT)		;$(BOOTSWATCH_CSS_ALT)					;$(KEY_NULL) \
 	\
 	|$(TYPE_HTML)	;$(SPECIAL_VAL)		;$(call CSS_THEME,$(TYPE_HTML),$(CSS_ALT))		;$(TOKEN)	;[$(subst $(NULL) ,$(TOKEN),$(WATERCSS_NAME))] \
 	|$(TYPE_HTML)	;light			;$(WATERCSS_CSS_LIGHT)					;light \
 	|$(TYPE_HTML)	;dark			;$(WATERCSS_CSS_DARK)					;dark \
 	|$(TYPE_HTML)	;$(CSS_ALT)		;$(WATERCSS_CSS_ALT)					;dark \
-	|$(TYPE_HTML)	;$(CSS_ALT)		;$(WATERCSS_CSS_ALT)					;$(DONOTDO)	;$(TOKEN)	;$(TYPE_HTML) \
+	|$(TYPE_HTML)	;$(CSS_ALT)		;$(WATERCSS_CSS_ALT)					;$(KEY_NULL)	;$(TOKEN)	;$(TYPE_HTML) \
 	|$(TYPE_HTML)	;solar-light		;$(WATERCSS_CSS_SOLAR_LIGHT)				;dark \
 	|$(TYPE_HTML)	;solar-dark		;$(WATERCSS_CSS_SOLAR_DARK)				;dark \
 	|$(TYPE_HTML)	;solar-$(CSS_ALT)	;$(WATERCSS_CSS_SOLAR_ALT)				;dark		;$(TOKEN)	;$(PUBLISH) \
-	|$(TYPE_HTML)	;solar-$(CSS_ALT)	;$(WATERCSS_CSS_SOLAR_ALT)				;$(DONOTDO) \
+	|$(TYPE_HTML)	;solar-$(CSS_ALT)	;$(WATERCSS_CSS_SOLAR_ALT)				;$(KEY_NULL) \
 	\
 	|$(TOKEN)	;$(TOKEN)		;$(TOKEN)						;$(TOKEN)	;[$(subst $(NULL) ,$(TOKEN),$(MDVIEWER_NAME))] \
 	|$(TYPE_HTML)	;alt-light		;$(MDVIEWER_CSS_LIGHT)					;light \
@@ -1998,11 +1994,11 @@ override CSS_THEMES := $(subst |, ,$(subst $(NULL) ,,$(strip \
 	|$(TYPE_HTML)	;alt-$(CSS_ALT)		;$(MDVIEWER_CSS_ALT)					;dark \
 	\
 	|$(TYPE_PRES)	;$(SPECIAL_VAL)		;$(call CSS_THEME,$(TYPE_PRES),solar-dark)		;$(TOKEN)	;[$(subst $(NULL) ,$(TOKEN),$(REVEALJS_NAME))] \
-	|$(TYPE_PRES)	;light			;$(REVEALJS_CSS_LIGHT)					;$(DONOTDO) \
-	|$(TYPE_PRES)	;dark			;$(REVEALJS_CSS_DARK)					;$(DONOTDO) \
-	|$(TYPE_PRES)	;solar-light		;$(REVEALJS_CSS_SOLAR_LIGHT)				;$(DONOTDO) \
-	|$(TYPE_PRES)	;solar-dark		;$(REVEALJS_CSS_SOLAR_DARK)				;$(DONOTDO)	;$(TOKEN)	;$(TYPE_PRES) \
-	|$(TYPE_PRES)	;$(CSS_ALT)		;$(REVEALJS_CSS_ALT)					;$(DONOTDO) \
+	|$(TYPE_PRES)	;light			;$(REVEALJS_CSS_LIGHT)					;$(KEY_NULL) \
+	|$(TYPE_PRES)	;dark			;$(REVEALJS_CSS_DARK)					;$(KEY_NULL) \
+	|$(TYPE_PRES)	;solar-light		;$(REVEALJS_CSS_SOLAR_LIGHT)				;$(KEY_NULL) \
+	|$(TYPE_PRES)	;solar-dark		;$(REVEALJS_CSS_SOLAR_DARK)				;$(KEY_NULL)	;$(TOKEN)	;$(TYPE_PRES) \
+	|$(TYPE_PRES)	;$(CSS_ALT)		;$(REVEALJS_CSS_ALT)					;$(KEY_NULL) \
 )))
 
 ########################################
@@ -9127,11 +9123,11 @@ variables:
 ########################################
 
   $(PUBLISH)-config:
-    $(TESTING):				$(TESTING)
+    "$(TESTING)":				"$(TESTING)"
   $(PUBLISH)-helpers:
-    $(TESTING):				$(TESTING)
+    "$(TESTING)":				"$(TESTING)"
   $(PUBLISH)-library:
-    $(TESTING):				$(TESTING)
+    "$(TESTING)":				"$(TESTING)"
     folder:
       name:				"$(NOTHING)"
       auto_update:			$(KEY_NULL)
@@ -18471,7 +18467,7 @@ override $(PUBLISH)-$(COMPOSER_YML) = { \
 #	update "del(" stanzas, since much fewer of them will be needed...
 #	consider creating some macros for *everything*... doing a lot of copy/pasta...
 #	add a file to site-template-+test that has metadata, but not a title... want to see "empty" come through...
-#	use PUBLISH_META(TITL|DATE) instead of title/date everywhere... along with $(DONOTDO) instead of null...
+#	use PUBLISH_META(TITL|DATE) instead of title/date everywhere... along with $(KEY_NULL) instead of null...
 
 ########################################
 ##### {{{5 $(PUBLISH)-library-metadata
@@ -19682,7 +19678,7 @@ override $(PUBLISH)-$(PRINTER)-$(TARGETS) = \
 			| $(call COMPOSER_YML_DATA_PARSE) \
 			$(YQ_WRITE_OUT_COLOR); \
 	else \
-		$(PRINT) "$(_F)$(DONOTDO)"; \
+		$(PRINT) "$(_F)$(KEY_NULL)"; \
 	fi; \
 	$(PRINT) "$(_E)$(DIVIDE) $(call COMPOSER_CONV,$(EXPAND),$($(PUBLISH)-library-metadata),1,1)"; \
 	$(YQ_WRITE_OUT) ".\"$(1)\" " $($(PUBLISH)-library-metadata) \
